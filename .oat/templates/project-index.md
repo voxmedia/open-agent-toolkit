@@ -1,9 +1,7 @@
 ---
-oat_generated: true
-oat_generated_at: YYYY-MM-DD
-oat_source_head_sha: {sha}
-oat_source_main_merge_base_sha: {merge_base_sha}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_generated: false
+oat_template: true
+oat_template_name: project-index
 ---
 
 # {Project Name}
@@ -43,10 +41,10 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
 **Generated Knowledge Base Files:**
-- [stack.md](.oat/knowledge/stack.md) - Technologies and dependencies
-- [architecture.md](.oat/knowledge/architecture.md) - System design and patterns
-- [structure.md](.oat/knowledge/structure.md) - Directory layout
-- [integrations.md](.oat/knowledge/integrations.md) - External services
-- [testing.md](.oat/knowledge/testing.md) - Test structure and practices
-- [conventions.md](.oat/knowledge/conventions.md) - Code style and patterns
-- [concerns.md](.oat/knowledge/concerns.md) - Technical debt and issues
+- [stack.md](stack.md) - Technologies and dependencies
+- [architecture.md](architecture.md) - System design and patterns
+- [structure.md](structure.md) - Directory layout
+- [integrations.md](integrations.md) - External services
+- [testing.md](testing.md) - Test structure and practices
+- [conventions.md](conventions.md) - Code style and patterns
+- [concerns.md](concerns.md) - Technical debt and issues

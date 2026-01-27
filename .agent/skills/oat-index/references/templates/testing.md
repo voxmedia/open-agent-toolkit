@@ -5,8 +5,9 @@ oat_template_name: testing
 ---
 
 <!--
-Template vendored from: workflow-research/get-shit-done/agents/gsd-codebase-mapper.md
+Template vendored from: https://github.com/glittercowboy/get-shit-done
 License: MIT
+Original: agents/gsd-codebase-mapper.md (embedded template)
 -->
 
 # Testing Patterns

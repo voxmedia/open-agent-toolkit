@@ -1,7 +1,7 @@
 <!--
-Vendored from: workflow-research/get-shit-done/agents/gsd-codebase-mapper.md
+Vendored from: https://github.com/glittercowboy/get-shit-done
 License: MIT
-Attribution: Original work from Get Shit Done workflow system
+Original: agents/gsd-codebase-mapper.md
 Modified: 2026-01-27 - Adapted for OAT project structure
 -->
 
@@ -95,20 +95,25 @@ cat package.json 2>/dev/null | head -100
 # Config files
 ls -la *.config.* .env* tsconfig.json .nvmrc .python-version 2>/dev/null
 
-# Find SDK/API imports
-grep -r "import.*stripe\|import.*supabase\|import.*aws\|import.*@" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | head -50
+# Find SDK/API imports (search common source directories)
+find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
+  -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" \
+  -exec grep -l "import.*stripe\|import.*supabase\|import.*aws\|import.*@" {} \; 2>/dev/null | head -50
 ```
 
 **For arch focus:**
 ```bash
 # Directory structure
-find . -type d -not -path '*/node_modules/*' -not -path '*/.git/*' | head -50
+find . -type d -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' | head -50
 
-# Entry points
-ls src/index.* src/main.* src/app.* src/server.* app/page.* 2>/dev/null
+# Entry points (search common locations)
+find . -maxdepth 3 \( -name "index.*" -o -name "main.*" -o -name "app.*" -o -name "server.*" \) \
+  -not -path "*/node_modules/*" 2>/dev/null
 
 # Import patterns to understand layers
-grep -r "^import" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | head -100
+find . -type f \( -name "*.ts" -o -name "*.tsx" \) \
+  -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" \
+  -exec grep "^import" {} \; 2>/dev/null | head -100
 ```
 
 **For quality focus:**
@@ -119,22 +124,28 @@ cat .prettierrc 2>/dev/null
 
 # Test files and config
 ls jest.config.* vitest.config.* 2>/dev/null
-find . -name "*.test.*" -o -name "*.spec.*" | head -30
+find . \( -name "*.test.*" -o -name "*.spec.*" \) -not -path "*/node_modules/*" 2>/dev/null | head -30
 
 # Sample source files for convention analysis
-ls src/**/*.ts 2>/dev/null | head -10
+find . -type f -name "*.ts" -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" 2>/dev/null | head -10
 ```
 
 **For concerns focus:**
 ```bash
 # TODO/FIXME comments
-grep -rn "TODO\|FIXME\|HACK\|XXX" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | head -50
+find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
+  -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" \
+  -exec grep -Hn "TODO\|FIXME\|HACK\|XXX" {} \; 2>/dev/null | head -50
 
 # Large files (potential complexity)
-find src/ -name "*.ts" -o -name "*.tsx" | xargs wc -l 2>/dev/null | sort -rn | head -20
+find . -type f \( -name "*.ts" -o -name "*.tsx" \) \
+  -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" \
+  -exec wc -l {} \; 2>/dev/null | sort -rn | head -20
 
 # Empty returns/stubs
-grep -rn "return null\|return \[\]\|return {}" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | head -30
+find . -type f \( -name "*.ts" -o -name "*.tsx" \) \
+  -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" \
+  -exec grep -Hn "return null\|return \[\]\|return {}" {} \; 2>/dev/null | head -30
 ```
 
 Read key files identified during exploration. Use Glob and Grep liberally.
