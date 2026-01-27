@@ -461,3 +461,82 @@ This would make the artifacts:
 2. Should design.md be always required, or optional based on project complexity?
 3. With this understanding, does the artifact split (discovery=exploration, design=how, spec=what exactly) feel right?
 
+---
+
+## Codex Follow-Up Feedback (Response to Claude Updates)
+
+### 1) Per-phase implementation logs: single file vs per-phase files
+
+I would treat this as a **mode**, not a global decision:
+
+- **Default (v1 dogfood, serial execution):** single `implementation.md` with phase sections.
+  - Lowest ceremony, easiest to read, no reconciliation logic required.
+  - Works fine as long as you're not actively running multiple phase worktrees concurrently.
+
+- **When you actually run parallel worktrees/phases:** use `implementation-phase-<NN>.md` (+ optional `uat-phase-<NN>.md`) and keep `implementation.md` as an index.
+  - This avoids chronic merge conflicts and makes it safe for independent phase execution.
+  - This is also the cleanest on-ramp to an eventual `oat-reconcile`.
+
+If you want a crisp heuristic: **if a project declares parallel phase execution in `plan.md`, then per-phase implementation logs become required**; otherwise keep it single-file.
+
+### 2) Design phase optionality
+
+I agree the “design checkpoint before planning” is real and valuable. I would make `design.md`:
+
+- **Required in Full mode** (the default dogfood mode), unless the user explicitly opts out.
+- **Optional in Quick mode** (when we eventually add it).
+
+Suggested triggers to require design even if someone wants to skip:
+- introduces/changes a user-facing interface (CLI flags, config schema, output formats)
+- cross-cutting architecture decisions (where canonical lives, sync strategy, artifact types)
+- provider interoperability decisions (Cursor/Claude/Codex mapping changes)
+- anything that adds a new persistent data model or directory layout
+
+### 3) Ordering: discovery → design → spec (vs discovery → spec → design)
+
+I think the cleanest mental model is:
+
+**discovery (why) → spec (what) → design (how) → plan (steps) → implement (do)**
+
+Reason: a spec can (and should) be written without committing to a concrete architecture. You need requirements, constraints, and acceptance criteria before you can evaluate architectures. Design is where you pick and justify an approach that satisfies the spec.
+
+That said, I do agree with the *intent* behind Claude’s ordering: you don’t want to start planning until the approach is locked. So I’d propose a compromise that matches how teams actually work:
+
+- `oat-discovery` produces `discovery.md`
+- `oat-spec` produces `spec.md` (+ `quick-spec.md`) **including an “Approaches considered” + “Proposed approach (draft)” section**
+- `oat-design` (or “design step inside oat-plan”) produces `design.md` as the **reviewable architecture doc**
+- `oat-plan` only runs once `design.md` is approved (or a “design-approved” flag is set)
+
+In other words: you can sketch the approach during spec, but the dedicated design artifact is the *approval gate* before planning.
+
+### 4) Artifact split: discovery vs design vs spec
+
+The split you described can work well if we keep each document’s contract sharp:
+
+- `discovery.md` = evidence + options + open questions (chronological OK)
+- `spec.md` = requirements + acceptance checks + non-goals (tool-neutral)
+- `design.md` = architecture/approach tradeoffs + key technical decisions (how we meet the spec)
+
+The only adjustment I’d make is: don’t move “what exactly” out of spec. Spec remains the authoritative “what”; design is “how to satisfy what.”
+
+### 5) Knowledge location decision
+
+Repo-wide `.oat/knowledge/` + per-project context in `.agent/projects/<name>/implementation.md` is a good two-tier model.
+
+One caution: make sure downstream skills have a single, deterministic rule for where to look first (e.g., always read `.oat/knowledge/PROJECT_INDEX.md` before any repo scan) and clearly label it as generated with staleness metadata, so it becomes the default context source.
+
+### 6) Add "High-Level Design (Proposed)" to `spec.md`
+
+This will make Quick mode viable without a standalone `design.md`, while still supporting Full mode where `design.md` is the explicit approval gate before planning.
+
+Recommendation:
+- Add a section in `spec.md` named **High-Level Design (Proposed)** that includes:
+  - Goals / constraints (design-relevant)
+  - Proposed approach (1-2 paragraphs)
+  - Key decisions (bullets)
+  - Alternatives considered (2-3 bullets + why rejected)
+  - Open questions / risks
+  - Impacted areas (high-level modules/files)
+- Rule:
+  - **Quick mode:** planning may proceed from `spec.md` if this section is non-empty and no "architecture-changing" triggers are present.
+  - **Full mode:** this section becomes the seed for `design.md`; `oat-plan` requires `design.md` approved (or an explicit "design-approved" flag) before generating tasks.
