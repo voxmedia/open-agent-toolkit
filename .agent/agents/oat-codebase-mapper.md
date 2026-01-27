@@ -36,18 +36,22 @@ Your job: Explore thoroughly, then write document(s) directly. Return confirmati
 | API design | architecture.md, conventions.md, integrations.md |
 | Testing strategy | testing.md, conventions.md |
 
-**`/oat:plan`** loads relevant codebase docs when creating implementation plans:
-| Phase Type | Documents Loaded |
-|------------|------------------|
-| UI, frontend, components | conventions.md, structure.md |
-| API, backend, endpoints | architecture.md, conventions.md |
-| database, schema, models | architecture.md, stack.md |
-| testing, tests | testing.md, conventions.md |
-| integration, external API | integrations.md, stack.md |
-| refactor, cleanup | concerns.md, architecture.md |
-| setup, config | stack.md, structure.md |
+**`/oat:plan`** references the design document (not codebase docs directly):
+- Design document already contains architectural context
+- Plan breaks design into bite-sized implementation tasks
+- No need to reload codebase docs
 
-**`/oat:implement`** references codebase docs to:
+**`/oat:implement`** loads relevant codebase docs when writing code:
+| Task Type | Documents Loaded |
+|-----------|------------------|
+| UI, frontend, components | conventions.md, structure.md, testing.md |
+| API, backend, endpoints | architecture.md, conventions.md, testing.md |
+| database, schema, models | architecture.md, stack.md, conventions.md |
+| testing, tests | testing.md, conventions.md |
+| integration, external API | integrations.md, stack.md, conventions.md |
+| refactor, cleanup | concerns.md, architecture.md, conventions.md |
+
+**`/oat:implement`** also references codebase docs to:
 - Follow existing conventions when writing code
 - Know where to place new files (structure.md)
 - Match testing patterns (testing.md)
