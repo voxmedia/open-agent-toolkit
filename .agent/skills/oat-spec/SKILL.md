@@ -284,16 +284,13 @@ oat_last_updated: {today}
 
 Update `.agent/projects/{project-name}/state.md`:
 
-```yaml
----
-oat_current_task: null
-oat_last_commit: {commit_sha_from_step_19}
-oat_blockers: []
-oat_hil_completed: ["discovery", "spec"]  # Track completed HIL checkpoints
-oat_phase: spec
-oat_phase_status: complete
----
-```
+**Frontmatter updates:**
+- `oat_current_task: null`
+- `oat_last_commit: {commit_sha_from_step_19}`
+- `oat_blockers: []`
+- `oat_phase: spec`
+- `oat_phase_status: complete`
+- Append `"spec"` to `oat_hil_completed` array (do not overwrite existing entries)
 
 Update content:
 ```markdown

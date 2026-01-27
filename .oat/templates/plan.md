@@ -3,6 +3,8 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: YYYY-MM-DD
+oat_phase: plan
+oat_phase_status: in_progress
 oat_generated: false
 oat_template: true
 oat_template_name: plan
@@ -18,78 +20,96 @@ oat_template_name: plan
 
 **Tech Stack:** {Key technologies from design}
 
+**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+
 ---
 
 ## Phase 1: {Phase Name}
 
-### Task 1: {Task Name}
+### Task p01-t01: {Task Name}
 
 **Files:**
 - Create: `{path/to/file.ts}`
 - Modify: `{path/to/existing.ts}`
 
-**Step 1: {Action description}**
-
-{Detailed instructions}
-
-**Step 2: {Action description}**
-
-{Detailed instructions}
-
-**Step 3: Verify**
-
-Run: `{verification command}`
-Expected: {Expected output}
-
-**Step 4: Commit**
-
-```bash
-git add {files}
-git commit -m "{conventional commit message}"
-```
-
----
-
-### Task 2: {Task Name}
-
-**Files:**
-- {File list}
-
-**Step 1: {Action description}**
-
-{Detailed instructions with code blocks if needed}
+**Step 1: Write test (RED)**
 
 ```typescript
-// Example code to write
+// {path/to/file.test.ts}
+describe('{feature}', () => {
+  it('{test case}', () => {
+    // Test implementation
+  });
+});
 ```
 
-**Step 2: Write tests first (TDD)**
+Run: `pnpm test {path/to/file.test.ts}`
+Expected: Test fails (RED)
 
-{Test file and test cases}
+**Step 2: Implement (GREEN)**
 
-**Step 3: Implement**
+```typescript
+// {path/to/file.ts}
+// Implementation code or interface signatures
+```
 
-{Implementation details}
+Run: `pnpm test {path/to/file.test.ts}`
+Expected: Test passes (GREEN)
 
-**Step 4: Verify tests pass**
+**Step 3: Refactor**
 
-Run: `pnpm test`
-Expected: All tests pass
+{Any cleanup or improvements while tests stay green}
+
+**Step 4: Verify**
+
+Run: `pnpm lint && pnpm type-check`
+Expected: No errors
 
 **Step 5: Commit**
 
 ```bash
 git add {files}
-git commit -m "{message}"
+git commit -m "feat(p01-t01): {description}"
+```
+
+---
+
+### Task p01-t02: {Task Name}
+
+**Files:**
+- {File list}
+
+**Step 1: Write test (RED)**
+
+{Test code}
+
+**Step 2: Implement (GREEN)**
+
+{Implementation code or signatures}
+
+**Step 3: Refactor**
+
+{Optional cleanup}
+
+**Step 4: Verify**
+
+Run: `{verification command}`
+Expected: {output}
+
+**Step 5: Commit**
+
+```bash
+git add {files}
+git commit -m "feat(p01-t02): {description}"
 ```
 
 ---
 
 ## Phase 2: {Phase Name}
 
-### Task 3: {Task Name}
+### Task p02-t01: {Task Name}
 
-{Continue pattern...}
+{Continue TDD pattern...}
 
 ---
 

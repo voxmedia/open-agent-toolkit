@@ -248,14 +248,12 @@ oat_ready_for: oat-spec
 
 Update `.agent/projects/{project-name}/state.md`:
 
-```yaml
----
-oat_phase: discovery
-oat_phase_status: complete
----
-```
+**Frontmatter updates:**
+- `oat_phase: discovery`
+- `oat_phase_status: complete`
+- Append `"discovery"` to `oat_hil_completed` array (do not overwrite existing entries)
 
-Update content:
+**Content updates:**
 - Set **Last Updated:** to today
 - Update **Artifacts** section: Discovery status to "complete"
 - Update **Progress** section

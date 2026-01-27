@@ -15,7 +15,7 @@ Transform detailed design into an executable implementation plan with bite-sized
 
 **OAT MODE: Planning**
 
-**Purpose:** Break design into executable tasks with exact files, code, and commands.
+**Purpose:** Break design into executable tasks with exact files, signatures/test cases, and commands.
 
 **BLOCKED Activities:**
 - No implementation code
@@ -25,8 +25,8 @@ Transform detailed design into an executable implementation plan with bite-sized
 **ALLOWED Activities:**
 - Breaking design into phases
 - Creating bite-sized tasks (2-5 minutes each)
-- Specifying exact files and code
-- Defining verification commands
+- Specifying exact files and interface signatures
+- Defining test cases and verification commands
 - Planning test-first approach
 
 **Self-Correction Protocol:**
@@ -82,6 +82,8 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: {today}
+oat_phase: plan
+oat_phase_status: in_progress
 oat_generated: false
 oat_template: false
 ---
@@ -107,28 +109,33 @@ For each phase, create bite-sized tasks.
 - Clear verification
 - Atomic commit
 
+**Task IDs:** Use stable IDs in format `p{phase}-t{task}` (e.g., `p01-t03`).
+
 **Task template:**
 ```markdown
-### Task N: {Task Name}
+### Task p{NN}-t{NN}: {Task Name}
 
 **Files:**
 - Create: `{path/to/new.ts}`
 - Modify: `{path/to/existing.ts}`
 
-**Step 1: {Action}**
-{Detailed instructions}
+**Step 1: Write test (RED)**
+{Test code or test case description}
 
-**Step 2: {Action}**
-{Detailed instructions}
+**Step 2: Implement (GREEN)**
+{Interface signatures or implementation outline}
 
-**Step 3: Verify**
+**Step 3: Refactor**
+{Optional cleanup}
+
+**Step 4: Verify**
 Run: `{command}`
 Expected: {output}
 
-**Step 4: Commit**
+**Step 5: Commit**
 ```bash
 git add {files}
-git commit -m "{message}"
+git commit -m "feat(p{NN}-t{NN}): {description}"
 ```
 ```
 
@@ -152,24 +159,28 @@ For each task that involves code:
 
 For each task, include:
 - **Files:** Exact paths for create/modify/delete
-- **Code:** Interface signatures, test cases (pseudocode OK)
+- **Signatures:** Interface definitions, function signatures, type declarations
+- **Test cases:** Test file paths and test descriptions (pseudocode OK for test bodies)
 - **Commands:** Exact verification commands
-- **Commit:** Conventional commit message
+- **Commit:** Conventional commit message with task ID (e.g., `feat(p01-t03): ...`)
 
 **Avoid:**
 - Vague instructions ("update the file")
 - Missing verification steps
 - Bundled unrelated changes
+- Full implementation code (leave that for oat-implement)
 
 ### Step 9: Update Requirement Index
 
 Go back to spec.md and fill in the "Planned Tasks" column in the Requirement Index:
 
 For each requirement (FR/NFR):
-- List the task numbers that implement it
-- Example: "Tasks 3, 5, 7"
+- List the stable task IDs that implement it
+- Example: "p01-t03, p02-t01, p02-t05"
 
 This creates traceability: Requirement → Tasks → Implementation
+
+**Why stable IDs:** Using `p01-t03` instead of "Task 3" prevents broken references when tasks are inserted or reordered.
 
 ### Step 10: Review Plan with User
 
@@ -198,16 +209,13 @@ oat_last_updated: {today}
 
 Update `.agent/projects/{project-name}/state.md`:
 
-```yaml
----
-oat_current_task: null
-oat_last_commit: {commit_sha_from_step_13}
-oat_blockers: []
-oat_hil_completed: ["discovery", "spec", "design", "plan"]
-oat_phase: plan
-oat_phase_status: complete
----
-```
+**Frontmatter updates:**
+- `oat_current_task: null`
+- `oat_last_commit: {commit_sha_from_step_13}`
+- `oat_blockers: []`
+- `oat_phase: plan`
+- `oat_phase_status: complete`
+- Append `"plan"` to `oat_hil_completed` array (do not overwrite existing entries)
 
 Update content:
 ```markdown
