@@ -70,9 +70,9 @@ cat .agent/projects/{project-name}/implementation.md 2>/dev/null | head -20
 ```
 
 **If exists and has progress:**
-- Read current phase and task from frontmatter
-- Resume from that point
-- Ask user: "Resume from Task N or start fresh?"
+- Read `oat_current_task_id` from frontmatter (e.g., "p01-t03")
+- Resume from that task
+- Ask user: "Resume from {task_id} or start fresh?"
 
 **If doesn't exist:**
 - Initialize from template (Step 4)
@@ -88,8 +88,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: {today}
-oat_current_phase: 1
-oat_current_task: 1
+oat_current_task_id: p01-t01  # Stable task ID from plan
 ---
 ```
 
@@ -99,7 +98,7 @@ For the current task in plan.md:
 
 **5a. Announce task:**
 ```
-Starting Task {N}: {Task Name}
+Starting {task_id}: {Task Name}
 Files: {file list}
 ```
 
@@ -137,13 +136,13 @@ After each task:
 
 **Update frontmatter:**
 ```yaml
-oat_current_task: {next_task_number}
+oat_current_task_id: {next_task_id}  # e.g., p01-t02
 oat_last_updated: {today}
 ```
 
 **Update task entry:**
 ```markdown
-### Task N: {Task Name}
+### Task {task_id}: {Task Name}
 
 **Status:** completed
 **Commit:** {sha}
@@ -156,19 +155,20 @@ oat_last_updated: {today}
 
 ### Step 8: Check Phase Completion
 
-When all tasks in current phase complete:
+When all tasks in current phase complete (e.g., all p01-* tasks done):
 
 **Update frontmatter:**
 ```yaml
-oat_current_phase: {next_phase_number}
-oat_current_task: {first_task_of_next_phase}
+oat_current_task_id: {first_task_of_next_phase}  # e.g., p02-t01
 ```
 
 **Check if HiL checkpoint:**
-If phase is in `oat_hil_checkpoints`:
+If current phase name (e.g., "plan", "implement") is in `oat_hil_checkpoints` array (which contains strings like `["discovery", "spec", "design"]`):
 - Output phase summary
-- Ask user: "Phase {N} complete. Review and approve to continue?"
+- Ask user: "Phase {phase_name} complete. Review and approve to continue?"
 - Wait for user approval before proceeding
+
+**Phase mapping:** Task ID prefix maps to phase: `p01` → phase 1, `p02` → phase 2, etc. The phase NAME (for HiL checking) comes from plan.md section headers.
 
 ### Step 9: Repeat Until Complete
 

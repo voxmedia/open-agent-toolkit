@@ -3,8 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: YYYY-MM-DD
-oat_current_phase: 1
-oat_current_task: 1
+oat_current_task_id: p01-t01
 oat_generated: false
 oat_template: true
 oat_template_name: implementation
@@ -31,7 +30,7 @@ oat_template_name: implementation
 **Status:** in_progress
 **Started:** YYYY-MM-DD
 
-### Task 1: {Task Name}
+### Task p01-t01: {Task Name}
 
 **Status:** completed / in_progress / pending / blocked
 **Commit:** {sha} (if completed)
@@ -45,7 +44,7 @@ oat_template_name: implementation
 
 ---
 
-### Task 2: {Task Name}
+### Task p01-t02: {Task Name}
 
 **Status:** pending
 **Commit:** -
@@ -60,7 +59,7 @@ oat_template_name: implementation
 **Status:** pending
 **Started:** -
 
-### Task 3: {Task Name}
+### Task p02-t01: {Task Name}
 
 **Status:** pending
 **Commit:** -
