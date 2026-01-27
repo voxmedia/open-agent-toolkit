@@ -5,9 +5,10 @@ oat_template_name: architecture
 ---
 
 <!--
-Template vendored from: https://github.com/glittercowboy/get-shit-done
+Vendored from: https://github.com/glittercowboy/get-shit-done
 License: MIT
 Original: agents/gsd-codebase-mapper.md (embedded template)
+Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 -->
 
 # Architecture
