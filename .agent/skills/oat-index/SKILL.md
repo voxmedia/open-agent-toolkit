@@ -205,14 +205,33 @@ wc -l .oat/knowledge/repo/*.md
 
 ### Step 7: Generate project-index.md
 
-Read all 7 knowledge files to extract key information.
+Read all 7 knowledge files to extract key information:
+- `stack.md` - Technologies, runtime, key dependencies
+- `architecture.md` - Overall pattern, key abstractions
+- `structure.md` - Directory layout, file organization
+- `integrations.md` - External services, APIs
+- `testing.md` - Test framework, approach
+- `conventions.md` - Code style, patterns
+- `concerns.md` - Technical debt, issues
+
+**Synthesis approach:**
+1. **Overview**: 2-3 sentences capturing what this codebase does (from architecture.md + stack.md)
+2. **Purpose**: Why it exists, problems it solves (from architecture.md intro)
+3. **Technology Stack**: High-level summary (primary language, framework, key tools from stack.md)
+4. **Architecture**: Brief pattern description (from architecture.md "Pattern Overview")
+5. **Key Features**: 3-5 main capabilities (from architecture.md layers + integrations.md)
+6. **Project Structure**: Brief directory overview (from structure.md top-level dirs)
+7. **Getting Started**: Quick start from stack.md (runtime, package manager, build commands)
+8. **Development Workflow**: Common commands (from stack.md + conventions.md)
+9. **Testing**: Testing approach summary (from testing.md framework + run commands)
+10. **Known Issues**: Link to concerns.md with 1-2 line summary
 
 Use template: `.oat/templates/project-index.md`
 
 Write `.oat/knowledge/repo/project-index.md` with:
-- Frontmatter with same SHAs as other files
-- High-level overview synthesized from detailed files
-- Links to all 7 knowledge files
+- Frontmatter with same SHAs as other files (oat_generated: true, oat_generated_at, oat_source_head_sha, oat_source_main_merge_base_sha)
+- High-level overview synthesized from detailed files (following template structure)
+- Links to all 7 knowledge files at bottom
 
 ### Step 8: Verify project-index
 
