@@ -69,21 +69,51 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 
 1. **Age check:** Compare `$GENERATED_AT` vs today (warn if >7 days)
    ```bash
-   # Calculate days since generation
-   DAYS_OLD=$(( ($(date +%s) - $(date -j -f "%Y-%m-%d" "$GENERATED_AT" +%s 2>/dev/null || echo 0)) / 86400 ))
+   # Skip age check if GENERATED_AT is missing or invalid
+   if [ -n "$GENERATED_AT" ] && echo "$GENERATED_AT" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+     # macOS: use date -j -f, Linux: use date -d
+     if date -j -f "%Y-%m-%d" "$GENERATED_AT" +%s >/dev/null 2>&1; then
+       GENERATED_TS=$(date -j -f "%Y-%m-%d" "$GENERATED_AT" +%s)
+     else
+       GENERATED_TS=$(date -d "$GENERATED_AT" +%s 2>/dev/null || echo "")
+     fi
+
+     if [ -n "$GENERATED_TS" ]; then
+       DAYS_OLD=$(( ($(date +%s) - $GENERATED_TS) / 86400 ))
+     else
+       DAYS_OLD="unknown"
+     fi
+   else
+     DAYS_OLD="unknown"
+   fi
    ```
 
 2. **Git diff check:** Compare recorded merge base to current HEAD
    ```bash
-   # Check files changed since knowledge was generated
-   FILES_CHANGED=$(git diff --stat $SOURCE_MERGE_BASE_SHA..HEAD | tail -1 | awk '{print $1}')
-   LINES_CHANGED=$(git diff --shortstat $SOURCE_MERGE_BASE_SHA..HEAD)
+   # Use --numstat for reliable file count (one line per file)
+   if [ -n "$SOURCE_MERGE_BASE_SHA" ]; then
+     FILES_CHANGED=$(git diff --numstat "$SOURCE_MERGE_BASE_SHA..HEAD" 2>/dev/null | wc -l | tr -d ' ')
+     # Also get summary for display
+     CHANGES_SUMMARY=$(git diff --shortstat "$SOURCE_MERGE_BASE_SHA..HEAD" 2>/dev/null)
+   else
+     FILES_CHANGED="unknown"
+     CHANGES_SUMMARY=""
+   fi
    ```
 
-**If stale (>7 days OR >20 files changed OR significant line changes):**
-- Display prominent warning with specifics
+**Staleness thresholds:**
+- Age: >7 days old
+- Changes: >20 files changed
+
+**If stale (age or changes exceed thresholds):**
+- Display prominent warning with specifics (days old, files changed)
+- Show `$CHANGES_SUMMARY` if available
 - Recommend `/oat:index` to refresh
 - Ask user: "Continue with stale knowledge or refresh first?"
+
+**If unable to determine staleness (missing SHAs/dates):**
+- Warn that staleness could not be verified
+- Recommend refreshing knowledge base to ensure accuracy
 
 ### Step 3: Create Project Directory
 

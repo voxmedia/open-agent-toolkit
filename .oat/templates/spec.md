@@ -67,8 +67,7 @@ oat_template_name: spec
 **Alternatives Considered:**
 - {Alternative 1} - {Why rejected}
 
-**Open Questions:**
-- {Question needing resolution}
+*Design-related open questions are tracked in the [Open Questions](#open-questions) section below.*
 
 ## Success Metrics
 

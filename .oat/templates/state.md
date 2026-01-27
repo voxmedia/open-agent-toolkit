@@ -2,7 +2,8 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
-oat_hil_phases: []  # List of completed HIL checkpoint phases as strings: ["discovery", "spec", "design"]
+oat_hil_checkpoints: ["discovery", "spec", "design"]  # Configured: which phases require human-in-loop approval
+oat_hil_completed: []  # Progress: which HIL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: discovery  # Current phase: discovery | spec | design | plan | implement
 oat_phase_status: in_progress  # Status: in_progress | complete

@@ -157,7 +157,7 @@ Transform Key Decisions and Success Criteria into structured requirements.
 - **P1:** Should have - important but not blocking
 - **P2:** Nice to have - future enhancement
 
-Start with draft requirements, then iterate with user in Step 9.
+Start with draft requirements, then iterate with user in Step 10.
 
 ### Step 10: Refine Requirements with User
 
@@ -289,7 +289,7 @@ Update `.agent/projects/{project-name}/state.md`:
 oat_current_task: null
 oat_last_commit: {commit_sha_from_step_19}
 oat_blockers: []
-oat_hil_phases: ["discovery", "spec"]
+oat_hil_completed: ["discovery", "spec"]  # Track completed HIL checkpoints
 oat_phase: spec
 oat_phase_status: complete
 ---
