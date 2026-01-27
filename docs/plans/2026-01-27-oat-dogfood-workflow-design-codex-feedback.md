@@ -395,24 +395,48 @@ But there's a gap: by the time you get to `plan.md`, architectural decisions sho
 **Proposed workflow addition:**
 
 ```
-discovery → spec → design → plan → implement
+discovery → design → spec → plan → implement
             ↑           ↑         ↑
-          WHAT/WHY     HOW      STEPS
+       EXPLORATION    HOW     WHAT EXACTLY
 ```
 
-**design.md would contain:**
-- Architecture decisions (directory structure, data models, patterns)
-- Technical approach (which libraries, frameworks, algorithms)
-- Integration points (how it fits into existing codebase)
-- Trade-offs analysis
-- Alternative approaches considered
+**Clarification from user on artifact relationships:**
 
-This would make the workflow:
-1. **discovery.md** - What problem, who are users, constraints, success criteria
-2. **spec.md** - Requirements (must/should/could), acceptance criteria, scope
-3. **design.md** - Architecture, data models, technical decisions, how to build it
-4. **plan.md** - Phased tasks, verification steps, specific file changes
-5. **implementation.md** - Execution log
+**discovery.md** = Conversation record (iteratively updated during `oat-discovery`)
+- Questions asked and answers received
+- Options considered with tradeoffs
+- Decisions made and rationale
+- The thinking process and exploration
+- Raw, chronological conversation log
+- Updated continuously during discovery conversation
+
+**design.md** = Synthesized design output (created when discovery is complete)
+- Architecture decisions (directory structure, data models, patterns)
+- Technical approach (chosen from options explored in discovery)
+- Integration points with existing codebase
+- Trade-offs analysis (refined from discovery options)
+- Clean, structured document for review
+
+**spec.md** = Requirements specification (created from approved design)
+- Must/should/could requirements
+- Acceptance criteria
+- Explicit scope boundaries (in/out)
+- Success metrics
+
+**Workflow:**
+1. **`oat-discovery`** - Interactive conversation, continuously updates discovery.md as you go
+2. When all questions answered → Generate **design.md** from discovery
+3. Design review/feedback cycle → Iterate on design.md
+4. **`oat-spec`** - Turn approved design into requirements spec
+5. **`oat-plan`** - Turn spec into phased execution plan
+6. **`oat-implement`** - Execute plan with state tracking
+
+This would make the artifacts:
+1. **discovery.md** - Exploration record (thinking, questions, options, decisions)
+2. **design.md** - Architecture & approach (how to build it)
+3. **spec.md** - Requirements (what exactly to build, acceptance criteria)
+4. **plan.md** - Execution tasks (phased steps, verification)
+5. **implementation.md** - Execution log (work done, decisions, ADRs)
 
 **Benefits:**
 - Clear separation: what/why → what exactly → how → steps → doing
@@ -421,9 +445,19 @@ This would make the workflow:
 - Easier to revise architecture without touching spec or plan
 - Matches actual usage: this design doc was the natural output before planning
 
-**Open question for scope:**
+**Key insight:** Design comes BEFORE spec because:
+- Design = architectural approach (HOW to build it)
+- Spec = detailed requirements (WHAT to build, given the approach)
+- Can't write good requirements without knowing the architecture
+- Design review happens before committing to detailed spec
+
+**Open questions:**
 - Should design.md be required for all projects, or optional (skip for simple features)?
 - If optional, what's the heuristic? Complexity tier? User choice during discovery?
+- Does the ordering (discovery → design → spec → plan) make sense, or should spec come before design?
 
-**Question for Codex:** Does adding an explicit design phase make the workflow stronger, or does it add unnecessary ceremony? Should it be always/sometimes/never?
+**Question for Codex:**
+1. Does the discovery→design→spec flow make sense? Or should spec come before design?
+2. Should design.md be always required, or optional based on project complexity?
+3. With this understanding, does the artifact split (discovery=exploration, design=how, spec=what exactly) feel right?
 
