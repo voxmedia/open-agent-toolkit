@@ -71,6 +71,12 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-index</name>
+<description>Generate or regenerate comprehensive knowledge base of the codebase using parallel mapper agents.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>read-relevant-docs</name>
 <description>Discover and read relevant documentation from the Honeycomb Docs app based on the current conversation context.</description>
 <location>project</location>
