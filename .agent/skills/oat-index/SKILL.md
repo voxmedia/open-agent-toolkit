@@ -18,7 +18,7 @@ ls -la .oat/knowledge/repo/ 2>/dev/null
 **If exists:**
 - List current files with timestamps
 - Ask: "Refresh (delete + regenerate) or Skip?"
-- If Refresh: `rm -rf .oat/knowledge/repo/*.md && mkdir -p .oat/knowledge/repo/repo`
+- If Refresh: `rm -rf .oat/knowledge/repo/*.md && mkdir -p .oat/knowledge/repo`
 - If Skip: Exit
 
 **If doesn't exist:**
@@ -42,7 +42,114 @@ MERGE_BASE_SHA=$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse HE
 
 Store as `HEAD_SHA` and `MERGE_BASE_SHA` for frontmatter.
 
-### Step 4: Spawn Parallel Mapper Agents
+### Step 4: Generate Thin Project Index
+
+**Purpose:** Create a fast, lightweight index immediately so other skills can load it without waiting for full analysis.
+
+```bash
+# Get current date
+DATE=$(date +%F)
+
+# Quick directory tree (2 levels, exclude common noise)
+TREE=$(find . -maxdepth 2 -mindepth 1 \
+  -not -path '*/.git/*' \
+  -not -path '*/node_modules/*' \
+  -not -path '*/dist/*' \
+  -not -path '*/build/*' \
+  -not -path '*/.next/*' \
+  -not -path '*/.turbo/*' \
+  -not -path '*/coverage/*' \
+  -print | sed 's#^\./##' | sort | head -200)
+
+# Detect package manager
+PKG_MANAGER="unknown"
+[ -f pnpm-lock.yaml ] && PKG_MANAGER="pnpm"
+[ -f yarn.lock ] && PKG_MANAGER="yarn"
+[ -f package-lock.json ] && PKG_MANAGER="npm"
+[ -f Pipfile.lock ] && PKG_MANAGER="pipenv"
+[ -f poetry.lock ] && PKG_MANAGER="poetry"
+[ -f Cargo.lock ] && PKG_MANAGER="cargo"
+[ -f go.mod ] && PKG_MANAGER="go"
+
+# Extract scripts from package.json if Node project
+SCRIPTS=""
+if [ -f package.json ]; then
+  SCRIPTS=$(node -pe "try{Object.keys(require('./package.json').scripts||{}).join(', ')}catch(e){''}" 2>/dev/null)
+fi
+
+# Find entry points (cheap heuristics)
+ENTRYPOINTS=$(find . -maxdepth 4 -type f \
+  \( -name 'index.*' -o -name 'main.*' -o -name 'app.*' -o -name 'server.*' -o -name 'cli.*' \) \
+  -not -path '*/node_modules/*' \
+  -not -path '*/.git/*' \
+  -not -path '*/dist/*' \
+  -not -path '*/build/*' \
+  -print | sed 's#^\./##' | sort | head -50)
+
+# Detect key config files
+CONFIGS=$(ls -1 2>/dev/null \
+  package.json pnpm-lock.yaml yarn.lock package-lock.json \
+  tsconfig.json biome.json eslint.config.* .eslintrc* \
+  vitest.config.* jest.config.* pytest.ini pyproject.toml \
+  go.mod Cargo.toml Makefile \
+  | tr '\n' ' ')
+```
+
+Write thin `.oat/knowledge/repo/project-index.md`:
+
+```markdown
+---
+oat_generated: true
+oat_generated_at: ${DATE}
+oat_source_head_sha: ${HEAD_SHA}
+oat_source_main_merge_base_sha: ${MERGE_BASE_SHA}
+oat_index_type: thin
+oat_warning: "GENERATED FILE - Thin index, will be enriched after mapper completion"
+---
+
+# {Repo Name from directory or package.json}
+
+## Overview
+
+{1-2 sentence placeholder - will be enriched}
+
+## Quick Orientation
+
+**Package Manager:** ${PKG_MANAGER}
+**Entry Points:** {List from ENTRYPOINTS}
+**Key Scripts:** ${SCRIPTS}
+
+## Project Structure (Top-Level)
+
+{Format TREE as markdown tree}
+
+## Configuration Files
+
+{List from CONFIGS}
+
+## Testing
+
+{Extract test command from SCRIPTS if available}
+
+## Next Steps
+
+This is a thin index generated for quick orientation. Full details will be available after codebase analysis completes in:
+
+- [stack.md](stack.md) - Technologies and dependencies (pending)
+- [architecture.md](architecture.md) - System design and patterns (pending)
+- [structure.md](structure.md) - Directory layout (pending)
+- [integrations.md](integrations.md) - External services (pending)
+- [testing.md](testing.md) - Test structure and practices (pending)
+- [conventions.md](conventions.md) - Code style and patterns (pending)
+- [concerns.md](concerns.md) - Technical debt and issues (pending)
+```
+
+**Why thin first:**
+- Other skills can immediately load project-index.md for orientation
+- Mappers can run in parallel without blocking on index generation
+- Index gets enriched with full details after mappers complete
+
+### Step 5: Spawn Parallel Mapper Agents
 
 Use Task tool with `subagent_type="oat-codebase-mapper"` and `run_in_background=true`.
 
@@ -177,7 +284,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 Explore thoroughly. Write document directly. Return confirmation only.
 ```
 
-### Step 5: Wait for Agent Completion
+### Step 6: Wait for Agent Completion
 
 Read each agent's output file to collect confirmations.
 
@@ -191,7 +298,7 @@ Expected format:
 - `.oat/knowledge/{DOC2}.md` ({N} lines)
 ```
 
-### Step 6: Verify All Documents Created
+### Step 7: Verify All Documents Created
 
 ```bash
 ls -la .oat/knowledge/repo/
@@ -203,7 +310,9 @@ wc -l .oat/knowledge/repo/*.md
 - No empty documents (each >20 lines)
 - All have frontmatter with oat_generated: true
 
-### Step 7: Generate project-index.md
+### Step 8: Enrich Project Index
+
+Now that all 7 detailed knowledge files exist, enrich the thin project-index.md with full details.
 
 Read all 7 knowledge files to extract key information:
 - `stack.md` - Technologies, runtime, key dependencies
@@ -214,7 +323,12 @@ Read all 7 knowledge files to extract key information:
 - `conventions.md` - Code style, patterns
 - `concerns.md` - Technical debt, issues
 
-**Synthesis approach:**
+**Enrichment approach:**
+
+Read existing `.oat/knowledge/repo/project-index.md` (thin version from Step 4).
+
+Replace placeholder sections with full details:
+
 1. **Overview**: 2-3 sentences capturing what this codebase does (from architecture.md + stack.md)
 2. **Purpose**: Why it exists, problems it solves (from architecture.md intro)
 3. **Technology Stack**: High-level summary (primary language, framework, key tools from stack.md)
@@ -226,14 +340,24 @@ Read all 7 knowledge files to extract key information:
 9. **Testing**: Testing approach summary (from testing.md framework + run commands)
 10. **Known Issues**: Link to concerns.md with 1-2 line summary
 
-Use template: `.oat/templates/project-index.md`
+Update frontmatter:
+- Change `oat_index_type: thin` → `oat_index_type: full`
+- Keep same SHAs (already set in Step 4)
+- Update warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 
-Write `.oat/knowledge/repo/project-index.md` with:
-- Frontmatter with same SHAs as other files (oat_generated: true, oat_generated_at, oat_source_head_sha, oat_source_main_merge_base_sha)
-- High-level overview synthesized from detailed files (following template structure)
-- Links to all 7 knowledge files at bottom
+Update links at bottom to show files are available (not "pending"):
+```markdown
+**Generated Knowledge Base Files:**
+- [stack.md](stack.md) - Technologies and dependencies
+- [architecture.md](architecture.md) - System design and patterns
+- [structure.md](structure.md) - Directory layout
+- [integrations.md](integrations.md) - External services
+- [testing.md](testing.md) - Test structure and practices
+- [conventions.md](conventions.md) - Code style and patterns
+- [concerns.md](concerns.md) - Technical debt and issues
+```
 
-### Step 8: Verify project-index
+### Step 9: Verify Project Index
 
 ```bash
 cat .oat/knowledge/repo/project-index.md | head -50
@@ -241,7 +365,7 @@ cat .oat/knowledge/repo/project-index.md | head -50
 
 Expected: Complete overview with frontmatter and links
 
-### Step 9: Commit Knowledge Base
+### Step 10: Commit Knowledge Base
 
 ```bash
 git add .oat/knowledge/repo/
@@ -259,7 +383,7 @@ git commit -m "docs: generate knowledge base
 Generated from commit: {MERGE_BASE_SHA}"
 ```
 
-### Step 10: Output Summary
+### Step 11: Output Summary
 
 ```
 Knowledge base generated in .oat/knowledge/repo/
