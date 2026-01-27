@@ -362,6 +362,51 @@ Or use the Claude/Cursor command: `/start-agent-project`
 - Agent-agnostic (works with any AI assistant)
 - Kept local (gitignored by default)
 
+### OAT Workflow (`.oat/` and `.agent/skills/oat-*/`)
+
+A structured workflow system for AI-assisted development with human-in-the-loop checkpoints.
+
+**Workflow Phases:**
+
+```
+/oat:index → /oat:discovery → /oat:spec → /oat:design → /oat:plan → /oat:implement
+```
+
+1. **Knowledge Generation** (`/oat:index`) - Generate codebase analysis using parallel mapper agents
+2. **Discovery** (`/oat:discovery`) - Gather requirements through structured dialogue
+3. **Specification** (`/oat:spec`) - Create formal requirements with acceptance criteria
+4. **Design** (`/oat:design`) - Create detailed technical design
+5. **Planning** (`/oat:plan`) - Break design into bite-sized TDD tasks
+6. **Implementation** (`/oat:implement`) - Execute plan with state tracking
+
+**Check Progress:**
+```bash
+npx openskills read oat-progress
+```
+
+**Key Features:**
+- Knowledge-first enforcement (requires codebase analysis)
+- Staleness detection (warns when knowledge is outdated)
+- Phase-based human-in-the-loop gates
+- TDD discipline enforcement
+- Full traceability (requirements → tasks → implementation)
+
+**Directory Structure:**
+```
+.oat/
+├── knowledge/repo/       # Generated codebase analysis
+├── templates/            # Document templates
+└── scripts/              # Utility scripts
+
+.agent/projects/<name>/   # Project-specific documents
+├── discovery.md          # Requirements and decisions
+├── spec.md               # Formal specification
+├── design.md             # Technical design
+├── plan.md               # Implementation tasks
+├── implementation.md     # Progress tracking
+└── state.md              # Workflow state
+```
+
 ---
 
 ## CI/CD Pipeline
