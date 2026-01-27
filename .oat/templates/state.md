@@ -2,10 +2,13 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
-oat_hil_phases: []
+oat_hil_phases: []  # List of completed HIL checkpoint phases as strings: ["discovery", "spec", "design"]
 oat_parallel_execution: false
-oat_phase: discovery
-oat_phase_status: in_progress
+oat_phase: discovery  # Current phase: discovery | spec | design | plan | implement
+oat_phase_status: in_progress  # Status: in_progress | complete
+oat_generated: false
+oat_template: true
+oat_template_name: state
 ---
 
 # Project State: {Project Name}

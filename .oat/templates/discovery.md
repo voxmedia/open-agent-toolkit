@@ -3,6 +3,9 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: YYYY-MM-DD
+oat_generated: false
+oat_template: true
+oat_template_name: discovery
 ---
 
 # Discovery: {Project Name}

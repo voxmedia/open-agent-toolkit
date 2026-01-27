@@ -1,5 +1,5 @@
 ---
-oat_status: draft
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: YYYY-MM-DD
