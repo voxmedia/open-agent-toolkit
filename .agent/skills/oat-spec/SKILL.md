@@ -290,7 +290,9 @@ Update `.agent/projects/{project-name}/state.md`:
 - `oat_blockers: []`
 - `oat_phase: spec`
 - `oat_phase_status: complete`
-- Append `"spec"` to `oat_hil_completed` array (do not overwrite existing entries)
+- **If** `"spec"` is in `oat_hil_checkpoints`: append `"spec"` to `oat_hil_completed` array
+
+**Note:** Only append to `oat_hil_completed` when the phase is configured as a HiL gate.
 
 Update content:
 ```markdown

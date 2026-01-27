@@ -182,18 +182,29 @@ This creates traceability: Requirement → Tasks → Implementation
 
 **Why stable IDs:** Using `p01-t03` instead of "Task 3" prevents broken references when tasks are inserted or reordered.
 
-### Step 10: Review Plan with User
+### Step 10: Configure Plan Phase Checkpoints
+
+Ask user: "During implementation, should I stop for review at every phase boundary, or only at specific phases?"
+
+**Options:**
+- **Every phase** (default): Leave `oat_plan_hil_phases: []` - stop at end of every plan phase
+- **Specific phases**: Set `oat_plan_hil_phases: ["p01", "p04"]` - only stop at listed phases
+
+Update plan.md frontmatter with user's choice.
+
+### Step 11: Review Plan with User
 
 Present plan summary:
 - Number of phases
 - Tasks per phase
 - Key milestones
+- HiL checkpoints configured
 
 Ask: "Does this breakdown make sense? Any tasks missing?"
 
 Iterate until user confirms.
 
-### Step 11: Mark Plan Complete
+### Step 12: Mark Plan Complete
 
 Update frontmatter:
 ```yaml
@@ -205,17 +216,19 @@ oat_last_updated: {today}
 ---
 ```
 
-### Step 12: Update Project State
+### Step 13: Update Project State
 
 Update `.agent/projects/{project-name}/state.md`:
 
 **Frontmatter updates:**
 - `oat_current_task: null`
-- `oat_last_commit: {commit_sha_from_step_13}`
+- `oat_last_commit: {commit_sha_from_step_14}`
 - `oat_blockers: []`
 - `oat_phase: plan`
 - `oat_phase_status: complete`
-- Append `"plan"` to `oat_hil_completed` array (do not overwrite existing entries)
+- **If** `"plan"` is in `oat_hil_checkpoints`: append `"plan"` to `oat_hil_completed` array
+
+**Note:** Only append to `oat_hil_completed` when the phase is configured as a HiL gate.
 
 Update content:
 ```markdown
@@ -232,7 +245,7 @@ Planning - Ready for implementation
 - ⧗ Awaiting implementation
 ```
 
-### Step 13: Commit Plan
+### Step 14: Commit Plan
 
 ```bash
 git add .agent/projects/{project-name}/
@@ -247,7 +260,7 @@ Total: {N} tasks
 Ready for implementation"
 ```
 
-### Step 14: Output Summary
+### Step 15: Output Summary
 
 ```
 Planning phase complete for {project-name}.

@@ -162,15 +162,20 @@ When all tasks in current plan phase complete (e.g., all p01-* tasks done):
 oat_current_task_id: {first_task_of_next_phase}  # e.g., p02-t01
 ```
 
-**Plan phase checkpoint (always):**
-At the end of each plan phase (p01, p02, etc.):
+**Plan phase checkpoint:**
+At the end of each plan phase (p01, p02, etc.), check `oat_plan_hil_phases` in plan.md:
+
+- **If `oat_plan_hil_phases` is empty or missing:** Stop at every phase boundary (default behavior)
+- **If `oat_plan_hil_phases` has values:** Only stop at listed phases (e.g., `["p01", "p04"]`)
+
+When stopping:
 - Output phase summary (tasks completed, commits made)
 - Ask user: "Phase {N} ({phase_name}) complete. Continue to next phase?"
 - Wait for user approval before proceeding to next plan phase
 
 **Note on HiL types:**
 - **Workflow HiL** (`oat_hil_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-progress router.
-- **Plan phase checkpoints**: Always occur at plan phase boundaries during implementation. Not configurable - always stop and check in.
+- **Plan phase checkpoints** (`oat_plan_hil_phases` in plan.md): Gates at plan phase boundaries during implementation. Default: stop at every phase. Configure to stop only at specific phases.
 
 ### Step 9: Repeat Until Complete
 
@@ -213,7 +218,7 @@ Options:
 
 ### Step 11: Mark Implementation Complete
 
-When all phases complete:
+When all plan phases complete:
 
 Update frontmatter:
 ```yaml
@@ -235,7 +240,9 @@ Update `.agent/projects/{project-name}/state.md`:
 - `oat_blockers: []`
 - `oat_phase: implement`
 - `oat_phase_status: complete`
-- Append `"implement"` to `oat_hil_completed` array (do not overwrite existing entries)
+- **If** `"implement"` is in `oat_hil_checkpoints`: append `"implement"` to `oat_hil_completed` array
+
+**Note:** Only append to `oat_hil_completed` when the phase is configured as a HiL gate.
 
 Update content:
 ```markdown

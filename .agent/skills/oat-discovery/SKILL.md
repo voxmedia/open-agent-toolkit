@@ -251,7 +251,9 @@ Update `.agent/projects/{project-name}/state.md`:
 **Frontmatter updates:**
 - `oat_phase: discovery`
 - `oat_phase_status: complete`
-- Append `"discovery"` to `oat_hil_completed` array (do not overwrite existing entries)
+- **If** `"discovery"` is in `oat_hil_checkpoints`: append `"discovery"` to `oat_hil_completed` array
+
+**Note:** Only append to `oat_hil_completed` when the phase is configured as a HiL gate. This keeps `oat_hil_completed` meaning "HiL gates passed" rather than "phases completed" (which is tracked by `oat_phase` and `oat_phase_status`).
 
 **Content updates:**
 - Set **Last Updated:** to today

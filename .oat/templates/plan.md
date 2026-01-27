@@ -5,6 +5,7 @@ oat_blockers: []
 oat_last_updated: YYYY-MM-DD
 oat_phase: plan
 oat_phase_status: in_progress
+oat_plan_hil_phases: []
 oat_generated: false
 oat_template: true
 oat_template_name: plan
