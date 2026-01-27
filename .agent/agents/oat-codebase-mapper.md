@@ -108,10 +108,11 @@ cat package.json 2>/dev/null | head -100
 # Config files
 ls -la *.config.* .env* tsconfig.json .nvmrc .python-version 2>/dev/null
 
-# Find SDK/API imports (search common source directories)
+# Find SDK/API imports for external services
+# Note: Intentionally slow (-exec per file) for thoroughness; fine for v1
 find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
   -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" \
-  -exec grep -l "import.*stripe\|import.*supabase\|import.*aws\|import.*@" {} \; 2>/dev/null | head -50
+  -exec grep -l "import.*stripe\|import.*supabase\|import.*aws-sdk\|import.*@aws\|import.*@google-cloud\|import.*@azure" {} \; 2>/dev/null | head -50
 ```
 
 **For arch focus:**
