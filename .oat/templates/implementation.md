@@ -74,8 +74,8 @@ Chronological log of implementation progress.
 
 **Session Start:** {time}
 
-- [x] Task 1: {Task name} - {commit sha}
-- [ ] Task 2: {Task name} - in progress
+- [x] p01-t01: {Task name} - {commit sha}
+- [ ] p01-t02: {Task name} - in progress
 
 **Decisions:**
 - {Decision made and rationale}

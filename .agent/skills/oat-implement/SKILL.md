@@ -184,7 +184,7 @@ Continue Steps 5-8 until all plan phases complete.
 **Batch execution:**
 - Default: Execute tasks one at a time
 - If user requests: Execute N tasks before checking in
-- Always stop at plan phase boundaries for review
+- Stop at configured plan phase boundaries for review
 
 ### Step 10: Handle Blockers
 

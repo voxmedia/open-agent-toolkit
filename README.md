@@ -14,18 +14,19 @@ OAT provides a disciplined approach to AI-assisted development through:
 
 ## Quick Start
 
-```bash
-# Check OAT status and get guidance
-/oat:progress
-
-# Generate codebase knowledge base (required first)
-/oat:index
-
-# Start a new project
-/oat:discovery
+**In Claude Code or Cursor:**
+```
+/oat:progress    # Check status and get guidance
+/oat:index       # Generate codebase knowledge base (required first)
+/oat:discovery   # Start a new project
 ```
 
-> **CLI alternative:** Use `npx openskills read oat-progress` if slash commands aren't available in your environment.
+**Via CLI:**
+```bash
+npx openskills read oat-progress
+npx openskills read oat-index
+npx openskills read oat-discovery
+```
 
 ## Workflow Phases
 
@@ -94,7 +95,7 @@ oat_hil_completed: ["discovery"]
 ```
 
 - **Workflow HiL** - Gates between workflow phases (discovery → spec → design → plan → implement)
-- **Plan phase checkpoints** - Always occur at plan phase boundaries during implementation
+- **Plan phase checkpoints** - Gates at plan phase boundaries during implementation. Configure via `oat_plan_hil_phases` in plan.md (empty = stop at every phase, or list specific phases like `["p01", "p04"]`)
 
 ## Directory Structure
 
