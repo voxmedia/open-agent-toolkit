@@ -108,11 +108,13 @@ cat package.json 2>/dev/null | head -100
 # Config files
 ls -la *.config.* .env* tsconfig.json .nvmrc .python-version 2>/dev/null
 
-# Find SDK/API imports for external services
+# Find external SDK/API imports (including scoped packages)
+# Matches: import from '@scope/package' (most external SDKs use scoped names)
+# Note: Will include internal @scope packages - filter these out when analyzing
 # Note: Intentionally slow (-exec per file) for thoroughness; fine for v1
 find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
   -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" \
-  -exec grep -l "import.*stripe\|import.*supabase\|import.*aws-sdk\|import.*@aws\|import.*@google-cloud\|import.*@azure" {} \; 2>/dev/null | head -50
+  -exec grep -l "from ['\"]@" {} \; 2>/dev/null | head -50
 ```
 
 **For arch focus:**
