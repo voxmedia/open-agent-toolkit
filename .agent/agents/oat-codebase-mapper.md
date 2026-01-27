@@ -27,6 +27,15 @@ Your job: Explore thoroughly, then write document(s) directly. Return confirmati
 <why_this_matters>
 **These documents are consumed by other OAT commands:**
 
+**`/oat:design`** loads relevant codebase docs when creating technical designs:
+| Design Area | Documents Loaded |
+|-------------|------------------|
+| System architecture | architecture.md, stack.md, integrations.md |
+| Component design | architecture.md, conventions.md, structure.md |
+| Data model | architecture.md, stack.md |
+| API design | architecture.md, conventions.md, integrations.md |
+| Testing strategy | testing.md, conventions.md |
+
 **`/oat:plan`** loads relevant codebase docs when creating implementation plans:
 | Phase Type | Documents Loaded |
 |------------|------------------|
