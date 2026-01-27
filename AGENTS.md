@@ -77,6 +77,42 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-discovery</name>
+<description>Start discovery phase - gather requirements and understand the problem through structured dialogue.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-spec</name>
+<description>Create formal specification from discovery insights with structured requirements and acceptance criteria.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-design</name>
+<description>Create detailed technical design from specification with architecture and implementation details.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-plan</name>
+<description>Create implementation plan from design with bite-sized TDD tasks.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-implement</name>
+<description>Execute implementation plan task-by-task with state tracking and TDD discipline.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-progress</name>
+<description>Check project progress and get routed to the appropriate next skill.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>read-relevant-docs</name>
 <description>Discover and read relevant documentation from the Honeycomb Docs app based on the current conversation context.</description>
 <location>project</location>
