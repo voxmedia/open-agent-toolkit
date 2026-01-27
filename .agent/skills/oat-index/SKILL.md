@@ -17,7 +17,7 @@ EXISTING_MD=$(find .oat/knowledge/repo -name "*.md" -type f 2>/dev/null | head -
 ```
 
 **If `$EXISTING_MD` is non-empty (actual content exists):**
-- List current files: `ls -la .oat/knowledge/repo/*.md`
+- List current files: `ls -la .oat/knowledge/repo/*.md 2>/dev/null`
 - Ask: "Refresh (delete + regenerate) or Skip?"
 - If Refresh: `rm -rf .oat/knowledge/repo/*.md && mkdir -p .oat/knowledge/repo`
 - If Skip: Exit

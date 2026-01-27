@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # generate-thin-index.sh - Generate thin project-index.md for quick orientation
 #
 # Usage: ./generate-thin-index.sh [HEAD_SHA] [MERGE_BASE_SHA]
@@ -6,7 +6,7 @@
 # If SHAs not provided, computes them from current git state.
 # Output: Writes .oat/knowledge/repo/project-index.md
 
-set -e
+set -euo pipefail
 
 # Get SHAs from args or compute
 HEAD_SHA="${1:-$(git rev-parse HEAD 2>/dev/null || echo "unknown")}"
@@ -191,7 +191,10 @@ This is a thin index generated for quick orientation. Full details will be avail
 - [concerns.md](concerns.md) - Technical debt and issues (pending)
 EOF
 
+# Count non-empty lines for accurate entrypoint count
+ENTRYPOINT_COUNT=$(printf "%s\n" "$ENTRYPOINTS" | sed '/^$/d' | wc -l | tr -d ' ')
+
 echo "Generated .oat/knowledge/repo/project-index.md (thin index)"
 echo "  Repo: ${REPO_NAME}"
 echo "  Package Manager: ${PKG_MANAGER}"
-echo "  Entry Points: $(echo "$ENTRYPOINTS" | wc -l | tr -d ' ') detected"
+echo "  Entry Points: ${ENTRYPOINT_COUNT} detected"
