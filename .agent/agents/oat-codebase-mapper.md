@@ -101,20 +101,21 @@ Explore the codebase thoroughly for your focus area.
 
 **For tech focus:**
 ```bash
-# Package manifests
+# Package manifests (parse these first to identify dependencies)
 ls package.json requirements.txt Cargo.toml go.mod pyproject.toml 2>/dev/null
 cat package.json 2>/dev/null | head -100
 
 # Config files
 ls -la *.config.* .env* tsconfig.json .nvmrc .python-version 2>/dev/null
 
-# Find external SDK/API imports (including scoped packages)
-# Matches: import from '@scope/package' (most external SDKs use scoped names)
-# Note: Will include internal @scope packages - filter these out when analyzing
+# Find scoped package imports (@scope/pkg pattern)
+# Matches both ESM and CommonJS: import from "@..." or require("@...")
+# Note: Will include internal @scope packages - cross-reference with package.json to filter
 # Note: Intentionally slow (-exec per file) for thoroughness; fine for v1
+# Performance: If ripgrep available, use: rg -l 'from ["\x27]@|require\(["\x27]@' --type-add 'js:*.{js,jsx,ts,tsx}' -tjs
 find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
   -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" \
-  -exec grep -l "from ['\"]@" {} \; 2>/dev/null | head -50
+  -exec grep -l "from ['\"]@\|require(['\"]@" {} \; 2>/dev/null | head -50
 ```
 
 **For arch focus:**
