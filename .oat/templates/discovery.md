@@ -33,7 +33,9 @@ oat_last_updated: YYYY-MM-DD
 - {Drawback 1}
 - {Drawback 2}
 
-**Chosen:** {A/B/Neither} - {Rationale}
+**Chosen:** {A/B/Neither}
+
+**Summary:** {1-2 sentence summary of the chosen approach and why}
 
 ## Key Decisions
 
@@ -53,7 +55,37 @@ oat_last_updated: YYYY-MM-DD
 ## Out of Scope
 
 - {Thing we explicitly decided not to do}
-- {Thing we might do later}
+- {Thing we explicitly decided not to include in this phase}
+
+## Deferred Ideas
+
+{Ideas that came up during discovery but are intentionally out of scope for now}
+
+- {Idea 1} - {Why deferred}
+- {Idea 2} - {Why deferred}
+
+## Open Questions
+
+{Questions that need resolution before or during specification}
+
+- **{Question Category}:** {Question that needs answering}
+- **{Question Category}:** {Question that needs answering}
+
+## Assumptions
+
+{Assumptions we're making that need validation}
+
+- {Assumption 1}
+- {Assumption 2}
+
+## Risks
+
+{Potential risks identified during discovery}
+
+- **{Risk Name}:** {Description}
+  - **Likelihood:** Low / Medium / High
+  - **Impact:** Low / Medium / High
+  - **Mitigation Ideas:** {How to address}
 
 ## Next Steps
 

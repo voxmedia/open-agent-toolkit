@@ -4,6 +4,8 @@ oat_last_commit: null
 oat_blockers: []
 oat_hil_phases: []
 oat_parallel_execution: false
+oat_phase: discovery
+oat_phase_status: in_progress
 ---
 
 # Project State: {Project Name}
@@ -15,6 +17,14 @@ oat_parallel_execution: false
 ## Current Phase
 
 Discovery - Gathering requirements and understanding the problem space
+
+## Artifacts
+
+- **Discovery:** `.agent/projects/{project-name}/discovery.md` (in_progress)
+- **Spec:** Not yet created
+- **Design:** Not yet created
+- **Plan:** Not yet created
+- **Implementation:** Not yet created
 
 ## Progress
 
