@@ -100,13 +100,15 @@ Read `.agent/projects/{project-name}/state.md` frontmatter:
 - `oat_phase` - Current phase
 - `oat_phase_status` - in_progress or complete
 - `oat_blockers` - Any blockers
+- `oat_hil_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
 - `oat_hil_completed` - Completed HiL checkpoints
 
 **Display format:**
 ```
 📁 {project-name}
    Phase: {oat_phase} ({oat_phase_status})
-   Progress: {oat_hil_completed as checkmarks}
+   HiL Gates: {oat_hil_checkpoints}
+   Completed: {oat_hil_completed as checkmarks}
    Blockers: {oat_blockers or "None"}
    Next: {recommended_skill}
 ```

@@ -328,39 +328,31 @@ Allows Claude to access the `.agents/` directory for project context.
 **Commands:**
 Same as Claude Code commands in `.cursor/commands/`.
 
-### Agent Project Workflow (`.agents/`)
+### Agent Project Workflow (`.agent/`)
 
 A system for tracking multi-session development work:
 
 ```
-.agents/
-├── scripts/
-│   └── new-agent-project.ts    # Scaffolding tool
-└── projects/
-    └── <project-name>/
-        ├── discovery.md        # Requirements gathering
-        ├── planning.md         # Implementation planning
-        └── implementation.md   # Progress tracking
+.agent/
+├── skills/                     # Skill definitions
+├── projects/                   # Project-specific documents
+│   └── <project-name>/
+│       ├── discovery.md        # Requirements gathering
+│       ├── spec.md             # Formal specification
+│       ├── design.md           # Technical design
+│       ├── plan.md             # Implementation tasks
+│       └── implementation.md   # Progress tracking
+└── README.md                   # Documentation
 ```
 
 **Creating a New Agent Project:**
-```bash
-npx tsx .agents/scripts/new-agent-project.ts my-feature
-```
-
-Or use the Claude/Cursor command: `/start-agent-project`
-
-**Workflow Phases:**
-
-1. **Discovery** - Gather requirements, identify constraints, ask clarifying questions
-2. **Planning** - Design implementation approach, document architecture decisions
-3. **Implementation** - Track progress, log decisions, note deviations from plan
+Use the skill: `npx openskills read oat-discovery` or `/oat:discovery` in Claude/Cursor.
 
 **Benefits:**
 - Maintains context across coding sessions
 - Rich context for PR descriptions
 - Agent-agnostic (works with any AI assistant)
-- Kept local (gitignored by default)
+- Full traceability from requirements to implementation
 
 ### OAT Workflow (`.oat/` and `.agent/skills/oat-*/`)
 
@@ -379,10 +371,9 @@ A structured workflow system for AI-assisted development with human-in-the-loop 
 5. **Planning** (`/oat:plan`) - Break design into bite-sized TDD tasks
 6. **Implementation** (`/oat:implement`) - Execute plan with state tracking
 
-**Check Progress:**
-```bash
-npx openskills read oat-progress
-```
+**Running Skills:**
+- In Claude Code or Cursor: `/oat:progress`, `/oat:discovery`, etc.
+- Via CLI: `npx openskills read oat-progress`
 
 **Key Features:**
 - Knowledge-first enforcement (requires codebase analysis)

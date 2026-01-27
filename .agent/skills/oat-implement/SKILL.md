@@ -153,31 +153,33 @@ oat_last_updated: {today}
 
 **Update progress overview table.**
 
-### Step 8: Check Phase Completion
+### Step 8: Check Plan Phase Completion
 
-When all tasks in current phase complete (e.g., all p01-* tasks done):
+When all tasks in current plan phase complete (e.g., all p01-* tasks done):
 
 **Update frontmatter:**
 ```yaml
 oat_current_task_id: {first_task_of_next_phase}  # e.g., p02-t01
 ```
 
-**Check if HiL checkpoint:**
-If current phase name (e.g., "plan", "implement") is in `oat_hil_checkpoints` array (which contains strings like `["discovery", "spec", "design"]`):
-- Output phase summary
-- Ask user: "Phase {phase_name} complete. Review and approve to continue?"
-- Wait for user approval before proceeding
+**Plan phase checkpoint (always):**
+At the end of each plan phase (p01, p02, etc.):
+- Output phase summary (tasks completed, commits made)
+- Ask user: "Phase {N} ({phase_name}) complete. Continue to next phase?"
+- Wait for user approval before proceeding to next plan phase
 
-**Phase mapping:** Task ID prefix maps to phase: `p01` → phase 1, `p02` → phase 2, etc. The phase NAME (for HiL checking) comes from plan.md section headers.
+**Note on HiL types:**
+- **Workflow HiL** (`oat_hil_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-progress router.
+- **Plan phase checkpoints**: Always occur at plan phase boundaries during implementation. Not configurable - always stop and check in.
 
 ### Step 9: Repeat Until Complete
 
-Continue Steps 5-8 until all phases complete.
+Continue Steps 5-8 until all plan phases complete.
 
 **Batch execution:**
 - Default: Execute tasks one at a time
 - If user requests: Execute N tasks before checking in
-- Always stop at phase boundaries for HiL checkpoints
+- Always stop at plan phase boundaries for review
 
 ### Step 10: Handle Blockers
 
@@ -186,14 +188,14 @@ If a task cannot be completed:
 **Mark as blocked:**
 ```yaml
 oat_blockers:
-  - task: {task_number}
+  - task_id: {task_id}  # e.g., p01-t03
     reason: "{description}"
     since: {date}
 ```
 
 **Update task status:**
 ```markdown
-### Task N: {Task Name}
+### Task {task_id}: {Task Name}
 
 **Status:** blocked
 **Blocker:** {description}
@@ -201,7 +203,7 @@ oat_blockers:
 
 **Notify user:**
 ```
-Task {N} blocked: {reason}
+Task {task_id} blocked: {reason}
 
 Options:
 1. Resolve blocker and continue
