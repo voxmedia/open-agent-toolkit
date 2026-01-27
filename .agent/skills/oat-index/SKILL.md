@@ -12,16 +12,17 @@ Generate a comprehensive analysis of the codebase using parallel mapper agents.
 ### Step 1: Check Existing Knowledge
 
 ```bash
-ls -la .oat/knowledge/repo/ 2>/dev/null
+# Check for actual knowledge files (not just .gitkeep)
+EXISTING_MD=$(find .oat/knowledge/repo -name "*.md" -type f 2>/dev/null | head -1)
 ```
 
-**If exists:**
-- List current files with timestamps
+**If `$EXISTING_MD` is non-empty (actual content exists):**
+- List current files: `ls -la .oat/knowledge/repo/*.md`
 - Ask: "Refresh (delete + regenerate) or Skip?"
 - If Refresh: `rm -rf .oat/knowledge/repo/*.md && mkdir -p .oat/knowledge/repo`
 - If Skip: Exit
 
-**If doesn't exist:**
+**If `$EXISTING_MD` is empty (no content or only .gitkeep):**
 - Continue to Step 2
 
 ### Step 2: Create Knowledge Directory
@@ -47,102 +48,13 @@ Store as `HEAD_SHA` and `MERGE_BASE_SHA` for frontmatter.
 **Purpose:** Create a fast, lightweight index immediately so other skills can load it without waiting for full analysis.
 
 ```bash
-# Get current date
-DATE=$(date +%F)
-
-# Quick directory tree (2 levels, exclude common noise)
-TREE=$(find . -maxdepth 2 -mindepth 1 \
-  -not -path '*/.git/*' \
-  -not -path '*/node_modules/*' \
-  -not -path '*/dist/*' \
-  -not -path '*/build/*' \
-  -not -path '*/.next/*' \
-  -not -path '*/.turbo/*' \
-  -not -path '*/coverage/*' \
-  -print | sed 's#^\./##' | sort | head -200)
-
-# Detect package manager
-PKG_MANAGER="unknown"
-[ -f pnpm-lock.yaml ] && PKG_MANAGER="pnpm"
-[ -f yarn.lock ] && PKG_MANAGER="yarn"
-[ -f package-lock.json ] && PKG_MANAGER="npm"
-[ -f Pipfile.lock ] && PKG_MANAGER="pipenv"
-[ -f poetry.lock ] && PKG_MANAGER="poetry"
-[ -f Cargo.lock ] && PKG_MANAGER="cargo"
-[ -f go.mod ] && PKG_MANAGER="go"
-
-# Extract scripts from package.json if Node project
-SCRIPTS=""
-if [ -f package.json ]; then
-  SCRIPTS=$(node -pe "try{Object.keys(require('./package.json').scripts||{}).join(', ')}catch(e){''}" 2>/dev/null)
-fi
-
-# Find entry points (cheap heuristics)
-ENTRYPOINTS=$(find . -maxdepth 4 -type f \
-  \( -name 'index.*' -o -name 'main.*' -o -name 'app.*' -o -name 'server.*' -o -name 'cli.*' \) \
-  -not -path '*/node_modules/*' \
-  -not -path '*/.git/*' \
-  -not -path '*/dist/*' \
-  -not -path '*/build/*' \
-  -print | sed 's#^\./##' | sort | head -50)
-
-# Detect key config files
-CONFIGS=$(ls -1 2>/dev/null \
-  package.json pnpm-lock.yaml yarn.lock package-lock.json \
-  tsconfig.json biome.json eslint.config.* .eslintrc* \
-  vitest.config.* jest.config.* pytest.ini pyproject.toml \
-  go.mod Cargo.toml Makefile \
-  | tr '\n' ' ')
+bash .oat/scripts/generate-thin-index.sh "$HEAD_SHA" "$MERGE_BASE_SHA"
 ```
 
-Write thin `.oat/knowledge/repo/project-index.md`:
-
-```markdown
----
-oat_generated: true
-oat_generated_at: ${DATE}
-oat_source_head_sha: ${HEAD_SHA}
-oat_source_main_merge_base_sha: ${MERGE_BASE_SHA}
-oat_index_type: thin
-oat_warning: "GENERATED FILE - Thin index, will be enriched after mapper completion"
----
-
-# {Repo Name from directory or package.json}
-
-## Overview
-
-{1-2 sentence placeholder - will be enriched}
-
-## Quick Orientation
-
-**Package Manager:** ${PKG_MANAGER}
-**Entry Points:** {List from ENTRYPOINTS}
-**Key Scripts:** ${SCRIPTS}
-
-## Project Structure (Top-Level)
-
-{Format TREE as markdown tree}
-
-## Configuration Files
-
-{List from CONFIGS}
-
-## Testing
-
-{Extract test command from SCRIPTS if available}
-
-## Next Steps
-
-This is a thin index generated for quick orientation. Full details will be available after codebase analysis completes in:
-
-- [stack.md](stack.md) - Technologies and dependencies (pending)
-- [architecture.md](architecture.md) - System design and patterns (pending)
-- [structure.md](structure.md) - Directory layout (pending)
-- [integrations.md](integrations.md) - External services (pending)
-- [testing.md](testing.md) - Test structure and practices (pending)
-- [conventions.md](conventions.md) - Code style and patterns (pending)
-- [concerns.md](concerns.md) - Technical debt and issues (pending)
-```
+This script:
+- Detects repo name from package.json or directory
+- Extracts package manager, scripts, entry points, and config files
+- Generates `.oat/knowledge/repo/project-index.md` with thin metadata
 
 **Why thin first:**
 - Other skills can immediately load project-index.md for orientation
