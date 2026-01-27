@@ -137,13 +137,47 @@ Read for context:
 - `.oat/knowledge/repo/conventions.md`
 - `.oat/knowledge/repo/concerns.md`
 
-### Step 7: Ask Clarifying Questions
+### Step 7: Infer Gray Areas
 
-**One question at a time.** After each answer:
-1. Add to discovery.md "Clarifying Questions" section
-2. Update frontmatter: `oat_last_updated: {today}`
+Based on the initial request and knowledge base context, infer 3-5 "gray areas" - topics that need clarification.
 
-### Step 8: Explore Approaches
+**Examples of gray areas:**
+- **Scope:** What features are in/out of scope?
+- **Integration:** How does this interact with existing systems?
+- **Data:** What data needs to be stored/accessed?
+- **Users:** Who will use this and how?
+- **Performance:** What are the scale/latency requirements?
+- **Security:** What are the auth/privacy requirements?
+- **Testing:** What testing approach is needed?
+
+Present as multi-select question using AskUserQuestion tool:
+```
+Which areas should we explore during discovery?
+(Select all that apply)
+
+□ {Gray area 1}
+□ {Gray area 2}
+□ {Gray area 3}
+□ {Gray area 4}
+□ {Gray area 5}
+```
+
+This focuses the conversation on what matters most to the user.
+
+### Step 8: Ask Clarifying Questions
+
+**For each selected gray area:**
+- Ask targeted questions one at a time
+- After each answer:
+  1. Add to discovery.md "Clarifying Questions" section
+  2. Update frontmatter: `oat_last_updated: {today}`
+
+**Question quality:**
+- Open-ended where possible
+- Domain-aware (reference knowledge base context)
+- Focused on decisions, not implementation details
+
+### Step 9: Explore Approaches
 
 Propose 2-3 approaches with pros/cons. Document in discovery.md "Options Considered".
 
@@ -154,7 +188,7 @@ When an approach is selected, add a "Summary" line explaining the choice.
 - If uncertainty arises → add to "Open Questions"
 - Keep discovery focused on the core problem
 
-### Step 9: Document Decisions and Boundaries
+### Step 10: Document Decisions and Boundaries
 
 Update discovery.md sections:
 
@@ -170,7 +204,7 @@ Update discovery.md sections:
 - **Assumptions:** What we're assuming is true (needs validation)
 - **Risks:** Potential problems identified (helps planning)
 
-### Step 10: Mark Discovery Complete
+### Step 11: Mark Discovery Complete
 
 Update frontmatter:
 ```yaml
@@ -180,7 +214,23 @@ oat_ready_for: oat-spec
 ---
 ```
 
-### Step 11: Commit Discovery
+### Step 12: Update Project State
+
+Update `.agent/projects/{project-name}/state.md`:
+
+```yaml
+---
+oat_phase: discovery
+oat_phase_status: complete
+---
+```
+
+Update content:
+- Set **Last Updated:** to today
+- Update **Artifacts** section: Discovery status to "complete"
+- Update **Progress** section
+
+### Step 13: Commit Discovery
 
 **Note:** This shows what users will do when USING oat-discovery.
 During implementation of OAT itself, use standard commit format.
@@ -196,7 +246,7 @@ Key decisions:
 Ready for specification phase"
 ```
 
-### Step 12: Output Summary
+### Step 14: Output Summary
 
 ```
 Discovery phase complete for {project-name}.
