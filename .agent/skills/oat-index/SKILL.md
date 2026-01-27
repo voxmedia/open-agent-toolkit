@@ -12,13 +12,13 @@ Generate a comprehensive analysis of the codebase using parallel mapper agents.
 ### Step 1: Check Existing Knowledge
 
 ```bash
-ls -la .oat/knowledge/ 2>/dev/null
+ls -la .oat/knowledge/repo/ 2>/dev/null
 ```
 
 **If exists:**
 - List current files with timestamps
 - Ask: "Refresh (delete + regenerate) or Skip?"
-- If Refresh: `rm -rf .oat/knowledge/*.md && mkdir -p .oat/knowledge`
+- If Refresh: `rm -rf .oat/knowledge/repo/*.md && mkdir -p .oat/knowledge/repo/repo`
 - If Skip: Exit
 
 **If doesn't exist:**
@@ -27,7 +27,7 @@ ls -la .oat/knowledge/ 2>/dev/null
 ### Step 2: Create Knowledge Directory
 
 ```bash
-mkdir -p .oat/knowledge
+mkdir -p .oat/knowledge/repo
 ```
 
 ### Step 3: Get Git SHAs for Frontmatter
@@ -61,7 +61,7 @@ Focus: tech
 
 Analyze this codebase for technology stack and external integrations.
 
-Write these documents to .oat/knowledge/:
+Write these documents to .oat/knowledge/repo/:
 - stack.md - Languages, runtime, frameworks, dependencies, configuration
 - integrations.md - External APIs, databases, auth providers, webhooks
 
@@ -94,7 +94,7 @@ Focus: arch
 
 Analyze this codebase architecture and directory structure.
 
-Write these documents to .oat/knowledge/:
+Write these documents to .oat/knowledge/repo/:
 - architecture.md - Pattern, layers, data flow, abstractions, entry points
 - structure.md - Directory layout, key locations, naming conventions
 
@@ -127,7 +127,7 @@ Focus: quality
 
 Analyze this codebase for coding conventions and testing patterns.
 
-Write these documents to .oat/knowledge/:
+Write these documents to .oat/knowledge/repo/:
 - conventions.md - Code style, naming, patterns, error handling
 - testing.md - Framework, structure, mocking, coverage
 
@@ -160,7 +160,7 @@ Focus: concerns
 
 Analyze this codebase for technical debt, known issues, and areas of concern.
 
-Write this document to .oat/knowledge/:
+Write this document to .oat/knowledge/repo/:
 - concerns.md - Tech debt, bugs, security, performance, fragile areas
 
 Use template from .agent/skills/oat-index/references/templates/
@@ -194,8 +194,8 @@ Expected format:
 ### Step 6: Verify All Documents Created
 
 ```bash
-ls -la .oat/knowledge/
-wc -l .oat/knowledge/*.md
+ls -la .oat/knowledge/repo/
+wc -l .oat/knowledge/repo/*.md
 ```
 
 **Checklist:**
@@ -209,7 +209,7 @@ Read all 7 knowledge files to extract key information.
 
 Use template: `.oat/templates/project-index.md`
 
-Write `.oat/knowledge/project-index.md` with:
+Write `.oat/knowledge/repo/project-index.md` with:
 - Frontmatter with same SHAs as other files
 - High-level overview synthesized from detailed files
 - Links to all 7 knowledge files
@@ -217,7 +217,7 @@ Write `.oat/knowledge/project-index.md` with:
 ### Step 8: Verify project-index
 
 ```bash
-cat .oat/knowledge/project-index.md | head -50
+cat .oat/knowledge/repo/project-index.md | head -50
 ```
 
 Expected: Complete overview with frontmatter and links
@@ -225,7 +225,7 @@ Expected: Complete overview with frontmatter and links
 ### Step 9: Commit Knowledge Base
 
 ```bash
-git add .oat/knowledge/
+git add .oat/knowledge/repo/
 git commit -m "docs: generate knowledge base
 
 - project-index.md - High-level codebase overview
@@ -243,7 +243,7 @@ Generated from commit: {MERGE_BASE_SHA}"
 ### Step 10: Output Summary
 
 ```
-Knowledge base generated in .oat/knowledge/
+Knowledge base generated in .oat/knowledge/repo/
 
 Files created:
 - project-index.md ({N} lines) - High-level overview
@@ -262,7 +262,7 @@ Next: Start a project with /new-agent-project or explore knowledge files
 
 ## Success Criteria
 
-- .oat/knowledge/ directory with 8 files (7 analysis + 1 index)
+- .oat/knowledge/repo/ directory with 8 files (7 analysis + 1 index)
 - All files have frontmatter with both head_sha and merge_base_sha
 - Commit created with conventional format
 - User presented with clear summary and next steps

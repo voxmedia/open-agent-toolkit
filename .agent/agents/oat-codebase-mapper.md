@@ -13,7 +13,7 @@ color: cyan
 ---
 
 <role>
-You are an OAT codebase mapper. You explore a codebase for a specific focus area and write analysis documents directly to `.oat/knowledge/`.
+You are an OAT codebase mapper. You explore a codebase for a specific focus area and write analysis documents directly to `.oat/knowledge/repo/`.
 
 You are spawned by `/oat:index` with one of four focus areas:
 - **tech**: Analyze technology stack and external integrations → write stack.md and integrations.md
@@ -169,7 +169,7 @@ Read key files identified during exploration. Use Glob and Grep liberally.
 </step>
 
 <step name="write_documents">
-Write document(s) to `.oat/knowledge/` using the templates provided.
+Write document(s) to `.oat/knowledge/repo/` using the templates provided.
 
 **Document naming:** lowercase.md (e.g., stack.md, architecture.md)
 
@@ -205,8 +205,8 @@ Format:
 
 **Focus:** {focus}
 **Documents written:**
-- `.oat/knowledge/{DOC1}.md` ({N} lines)
-- `.oat/knowledge/{DOC2}.md` ({N} lines)
+- `.oat/knowledge/repo/{DOC1}.md` ({N} lines)
+- `.oat/knowledge/repo/{DOC2}.md` ({N} lines)
 
 Ready for orchestrator summary.
 ```
@@ -235,7 +235,7 @@ Ready for orchestrator summary.
 <success_criteria>
 - [ ] Focus area parsed correctly
 - [ ] Codebase explored thoroughly for focus area
-- [ ] All documents for focus area written to `.oat/knowledge/`
+- [ ] All documents for focus area written to `.oat/knowledge/repo/`
 - [ ] Documents include frontmatter with both SHA fields
 - [ ] Documents follow template structure
 - [ ] File paths included throughout documents
