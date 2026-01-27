@@ -247,10 +247,22 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 **Staleness check (enhanced):**
 ```
 1. Age: (now - oat_generated_at) > 7 days → warn
-2. Scoped files: git diff --name-only <sha>..HEAD | match paths → count
-3. Scoped lines: git diff --shortstat <sha>..HEAD → parse +/- lines
-4. If age high OR file count > threshold OR line delta > threshold → warn
-5. v1: warn only, no hard block
+
+2. Git-based change detection (if available):
+   - git diff --name-only <sha>..HEAD | match paths → count changed files
+   - git diff --shortstat <sha>..HEAD → parse +/- lines
+   - If file count > threshold OR line delta > threshold → warn
+
+3. Fallbacks for non-git or problematic git state:
+   - Non-git directory → age-only, warn "git-based staleness unavailable"
+   - Missing origin/main → use HEAD as anchor, warn "no upstream reference"
+   - Shallow clone → age-only, warn "shallow clone limits diff accuracy"
+   - Detached HEAD → age-only, warn "detached HEAD, no stable diff anchor"
+
+4. Decision logic:
+   - If age high OR (git changes high when available) → warn
+   - v1: warn only, no hard block
+   - Future: strict mode can block on stale knowledge
 ```
 
 ### Workflow Artifacts (Working Docs)
@@ -292,22 +304,30 @@ oat_ready_for: oat-implement
 oat_blockers: []
 oat_last_updated: 2026-01-27
 oat_hil_phases: [1, 4, 5, 7] # phase numbers requiring HiL gates
-oat_parallel_execution: false # true = use per-phase logs
+oat_parallel_execution: false # true = use per-phase logs + UAT files
 ---
 ```
+
+**Parallel execution requirements:**
+When `oat_parallel_execution: true`:
+- **Required:** Per-phase implementation logs (`implementation-phase-<NN>.md`)
+- **Required:** Per-phase UAT files for HiL phases (`uat-phase-<NN>.md`)
+- **Required:** `implementation.md` becomes index only (not directly edited)
+- **Benefit:** Avoids merge conflicts across worktrees
+- **Setup:** Each worktree works on independent phase(s)
+- **Reconciliation:** Use `oat-reconcile` skill (future) to merge phase results
 
 **state.md (routing + recovery)**
 ```yaml
 ---
-oat_current_phase: 2
-oat_current_task: p02-t03
+oat_current_task: p02-t03  # Phase derived from prefix (p02 = Phase 2)
 oat_last_commit: abc123
 oat_last_updated: 2026-01-27
 oat_blockers: []
 ---
 
 ## Current Position
-Phase 2: Implementation
+Phase 2: Implementation (derived from p02-*)
 Task: p02-t03 - Implement user authentication
 
 ## Next Actions
@@ -318,6 +338,12 @@ Task: p02-t03 - Implement user authentication
 ## Blockers
 (none)
 ```
+
+**Phase numbering convention:**
+- Phase N is identified by task prefix `pNN`
+- No separate `oat_current_phase` field (derived from `oat_current_task`)
+- Example: `p02-t03` → Phase 2, Task 3
+- Prevents drift between phase number and task prefix
 
 **implementation.md**
 ```yaml
@@ -770,12 +796,24 @@ feat(p02-t03): implement user authentication
 - `.oat/knowledge/` (for staleness check)
 
 **Process:**
-1. Read state.md to determine current position
-2. Check all artifact statuses (frontmatter)
-3. Check knowledge staleness (age + scoped changes)
+1. **Check knowledge status FIRST (knowledge-first enforcement):**
+   - Check if `.oat/knowledge/project-index.md` exists
+   - If missing → recommend `/oat:index` immediately, block other recommendations
+   - If exists → check staleness (age + git diff if available)
+   - If stale → warn prominently, recommend `/oat:index` as first priority
+
+2. Read state.md to determine current position
+3. Check all artifact statuses (frontmatter)
 4. Determine what's complete, in progress, blocked
-5. Recommend next skill to run
+5. Recommend next skill to run:
+   - Priority 1: `/oat:index` if knowledge missing/stale
+   - Priority 2: Next workflow skill based on state
 6. Report clear next actions
+
+**Knowledge-first routing:**
+- Always check knowledge before recommending workflow skills
+- Stale/missing knowledge = prominent warning + index recommendation
+- Ensures "knowledge-first" is behaviorally enforced, not just suggested
 
 **Output format:**
 ```
@@ -903,12 +941,28 @@ oat_last_commit: abc123def456
 ### Phase 1: Knowledge Generation (oat-index)
 
 1. Create `.oat/knowledge/` directory structure
-2. Vendor GSD's codebase-mapper agents to `.agent/agents/`
+2. **Vendor GSD's codebase-mapper agents** to `.agent/agents/`:
+   - Copy `gsd-codebase-mapper.md` → `oat-codebase-mapper-*.md` (one per focus area)
+   - **Include attribution in each vendored file:**
+     ```markdown
+     <!--
+     Source: get-shit-done/agents/gsd-codebase-mapper.md
+     Original: /Users/thomas.stang/Code/workflow-research/get-shit-done/...
+     License: MIT
+     Modified: Adapted for OAT knowledge generation
+     -->
+     ```
+   - Add `THIRD_PARTY_NOTICES.md` in `.agent/agents/` listing all vendored content
 3. Adapt SuperClaude's index-repo pattern for project-index.md generation
 4. Integrate GSD's parallel mapper orchestration
-5. Implement enhanced staleness check (age + scoped changes)
-6. Create `oat-index` skill orchestrator
-7. Test on OAT codebase itself
+5. Implement enhanced staleness check (age + scoped changes + fallbacks)
+6. **Decide knowledge commit policy:**
+   - **Recommended for dogfood:** Commit `.oat/knowledge/` to version control
+   - Rationale: Shared team context, traceable changes, safe defaults
+   - Alternative: Gitignore if knowledge is purely local cache (add to .gitignore)
+   - Document choice in repo README
+7. Create `oat-index` skill orchestrator
+8. Test on OAT codebase itself
 
 ### Phase 2: Workflow Skills
 
@@ -980,7 +1034,7 @@ Use the OAT workflow to build the OAT workflow:
 3. **Quick mode toggle**
    - Current: Full mode only (thorough questioning)
    - Future: Quick mode for small features
-   - Benefit: Faster for trivial work, design.md optional
+   - Benefit: Faster for trivial work; design.md optional when no architecture-changing triggers are present
 
 4. **Standalone `oat-state-update` skill**
    - Current: Each skill updates state inline
@@ -996,6 +1050,19 @@ Use the OAT workflow to build the OAT workflow:
    - Current: `.oat/knowledge/` and `.agent/projects/` only
    - Future: `.oat/memory/` for conversation context, learned patterns
    - Benefit: Better cross-session continuity
+
+7. **Strict mode for knowledge staleness**
+   - Current: Warn-only mode (v1 default)
+   - Future: Strict mode blocks execution when knowledge missing/stale beyond thresholds
+   - Configuration: `oat_strict_staleness: true` in project or global config
+   - Use case: Critical projects where stale knowledge = bad decisions
+
+8. **Provider capability matrix**
+   - Current: Assumes uniform capability across Cursor/Claude/Codex
+   - Future: Explicit matrix documenting provider-specific behaviors
+   - Examples: Subagent support, background tasks, tool availability
+   - Status: Pending validation across providers
+   - Purpose: Avoid baking in provider assumptions
 
 ---
 
@@ -1021,3 +1088,65 @@ Use the OAT workflow to build the OAT workflow:
 - Cross-cutting architecture decisions
 - Provider interoperability changes
 - New data models or directory layouts
+
+---
+
+## Codex Additional Feedback (Integrated)
+
+**Post-v2 review identified 6 refinements:**
+
+1. ✅ **Phase numbering clarity** - Removed redundant `oat_current_phase` field, derive from task prefix (`p02-t03` → Phase 2)
+2. ✅ **Knowledge diff fallbacks** - Added fallback handling for non-git dirs, shallow clones, detached HEAD
+3. ✅ **GSD vendoring provenance** - Added attribution requirements: MIT license note + original source paths in each vendored file
+4. ✅ **Knowledge commit policy** - Decided: commit `.oat/knowledge/` for shared team context (document in README)
+5. ✅ **Router enforcement** - `oat-progress` now explicitly checks knowledge first, blocks/warns if missing/stale
+6. ✅ **Parallel mode requirements** - When `oat_parallel_execution: true`, requires per-phase logs + UAT files
+
+**Future enhancements noted:**
+- Strict mode (block on stale knowledge)
+- Provider capability matrix (pending validation)
+
+**Status:** v2 is ready to implement (per Codex final review)
+
+---
+
+## Reference File Paths (GSD + SuperClaude)
+
+These are the concrete upstream reference files used to design `oat-index`, knowledge generation, routing, and phase/task execution patterns.
+
+### Get Shit Done (GSD)
+
+**Core commands (workflow + routing):**
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/commands/gsd/map-codebase.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/commands/gsd/new-project.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/commands/gsd/progress.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/commands/gsd/discuss-phase.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/commands/gsd/plan-phase.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/commands/gsd/execute-phase.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/commands/gsd/verify-work.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/commands/gsd/quick.md` (atomic docs commits + STATE table rows)
+
+**Key subagents (prompts to vendor/adapt):**
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/agents/gsd-codebase-mapper.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/agents/gsd-planner.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/agents/gsd-plan-checker.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/agents/gsd-executor.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/agents/gsd-verifier.md`
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/agents/gsd-phase-researcher.md`
+
+**Workflow reference (called by gsd:map-codebase):**
+- `/Users/thomas.stang/Code/workflow-research/get-shit-done/get-shit-done/workflows/map-codebase.md`
+
+### SuperClaude
+
+**Indexing command (project index structure):**
+- `/Users/thomas.stang/Code/workflow-research/SuperClaude_Framework/src/superclaude/commands/index-repo.md`
+
+**Dispatcher (namespacing conventions):**
+- `/Users/thomas.stang/Code/workflow-research/SuperClaude_Framework/src/superclaude/commands/sc.md`
+
+**Repo index agent (freshness + brief):**
+- `/Users/thomas.stang/Code/workflow-research/SuperClaude_Framework/src/superclaude/agents/repo-index.md`
+
+**Context readiness / freshness checks (staleness signal pattern):**
+- `/Users/thomas.stang/Code/workflow-research/SuperClaude_Framework/src/superclaude/execution/reflection.py`
