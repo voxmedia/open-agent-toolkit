@@ -9,6 +9,8 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Roadmap: `.oat/internal-project-reference/roadmap.md`
 - Deferred phases: `.oat/internal-project-reference/deferred-phases.md`
 - Implementation deep-dive: `.oat/internal-project-reference/dogfood-workflow-implementation.md`
+- Backlog: `.oat/internal-project-reference/backlog.md`
+- Decision record: `.oat/internal-project-reference/decision-record.md`
 - Workflow user feedback (dogfood log): `.oat/internal-project-reference/temp/workflow-user-feedback.md`
 - Review loop proposal: `.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`
 - Past artifacts (archival): `.oat/internal-project-reference/past-artifacts/`

@@ -55,6 +55,14 @@ Update these files (as applicable):
    - Update usage guide to include new commands/flows
    - Fix any outdated terminology (e.g., verification column names, status strings)
 
+5. `.oat/internal-project-reference/backlog.md`
+   - Capture new tasks/ideas discovered during dogfooding that are not ready to implement
+   - Link to friction logs, commits, or PRs where relevant
+
+6. `.oat/internal-project-reference/decision-record.md`
+   - Record notable decisions (especially workflow contracts, directory layout, and phase guardrails)
+   - Include rationale and consequences so future sessions don’t re-litigate decisions
+
 ### Step 3: Update Pointer Docs (If Applicable)
 
 If we keep compatibility pointers in `docs/plans/`, ensure they still point at the canonical internal docs:
@@ -72,7 +80,12 @@ rg -n "pending\\)|planned\\)|not yet implemented|Remaining:" .oat/internal-proje
 rg -n "docs/plans/|\\.oat/internal-project-reference/2026-01-27" .oat/internal-project-reference
 ```
 
-3. Ensure new skills are registered in `AGENTS.md` (if meant to be discoverable):
+3. Search for hardcoded legacy project root references (prefer `.oat/projects-root` + `.oat/active-project`):
+```bash
+rg -n "\\.agent/projects/" .agent/skills/oat-*/SKILL.md .oat/templates .oat/internal-project-reference -S
+```
+
+4. Ensure new skills are registered in `AGENTS.md` (if meant to be discoverable):
 ```bash
 rg -n "<name>update-internal-project-reference</name>" AGENTS.md || true
 ```
