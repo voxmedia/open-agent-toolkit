@@ -47,6 +47,7 @@ Add entries as you notice them. Prefer specific reproduction steps and concrete 
 - **Follow-up / Mitigation implemented:** Added lightweight “Spec guardrails” to keep requirements outcome-level and push design details to `/oat:design`:
   - Template: `.oat/templates/spec.md`
   - Skill: `.agent/skills/oat-spec/SKILL.md`
+- **Open Question:** How should “quick mode” work if it intentionally skips `/oat:design` and expects spec to carry enough implementation detail? Options: separate `quick-plan.md`, or an explicitly-allowed “Quick Mode” section in `spec.md`.
 
 ### YYYY-MM-DD: {Short Title}
 
