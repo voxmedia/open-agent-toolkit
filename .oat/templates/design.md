@@ -171,6 +171,22 @@ interface Response {
 
 ## Testing Strategy
 
+### Requirement-to-Test Mapping
+
+{Maps spec requirements to test levels and key scenarios — ensures every requirement has a verification plan}
+
+| ID | Verification | Key Scenarios |
+|----|--------------|---------------|
+| FR1 | {unit/integration/e2e/manual/perf} | {Scenario 1}, {Scenario 2} |
+| FR2 | {unit/integration/e2e/manual/perf} | {Scenario 1} |
+| NFR1 | {unit/integration/e2e/manual/perf} | {Scenario 1} |
+
+**Notes:**
+- Pull ID from spec.md Requirement Index
+- Copy the **method** (left side of `method: pointer`) into Verification
+- Use the **pointer** (right side) to seed Key Scenarios, then expand based on design
+- Multiple test levels are valid (e.g., "unit + integration")
+
 ### Unit Tests
 
 - **Scope:** {What gets unit tested}

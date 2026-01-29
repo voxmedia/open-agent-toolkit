@@ -78,17 +78,20 @@ oat_template_name: spec
 
 {Traceability matrix for tracking requirements through implementation}
 
-| ID | Description | Priority | Acceptance Tests | Planned Tasks |
-|----|-------------|----------|------------------|---------------|
-| FR1 | {Brief description} | P0 | {Test reference} | {To be filled by oat-plan} |
-| FR2 | {Brief description} | P1 | {Test reference} | {To be filled by oat-plan} |
-| NFR1 | {Brief description} | P0 | {Test reference} | {To be filled by oat-plan} |
+| ID | Description | Priority | Verification | Planned Tasks |
+|----|-------------|----------|--------------|---------------|
+| FR1 | {Brief description} | P0 | {method: pointer} | {To be filled by oat-plan} |
+| FR2 | {Brief description} | P1 | {method: pointer} | {To be filled by oat-plan} |
+| NFR1 | {Brief description} | P0 | {method: pointer} | {To be filled by oat-plan} |
 
 **Notes:**
 - ID: Unique requirement identifier (FR# for functional, NFR# for non-functional)
 - Description: Brief 1-sentence summary of the requirement
 - Priority: P0 (must have) / P1 (should have) / P2 (nice to have)
-- Acceptance Tests: Reference to how this will be verified
+- Verification: How this will be verified — format is `method: pointer`
+  - **method**: unit, integration, e2e, manual, perf (can combine: `unit + integration`)
+  - **pointer**: brief scope hint for design phase
+  - **Examples**: `unit: auth token validation`, `e2e: login flow`, `unit + integration: API contract`, `perf: cache latency`
 - Planned Tasks: Filled in during planning phase to ensure traceability
 
 ## Open Questions

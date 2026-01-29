@@ -175,12 +175,33 @@ Reference performance patterns from concerns.md.
 
 Based on spec success metrics + testing.md:
 
-**Test Levels:**
-- Unit tests: scope and coverage
-- Integration tests: key scenarios
-- E2E tests: critical paths
+**Step 12a: Create Requirement-to-Test Mapping**
+
+Pull from spec.md Requirement Index and expand:
+
+| ID | Verification | Key Scenarios |
+|----|--------------|---------------|
+| {from spec} | {method from spec} | {scenarios seeded from pointer + design} |
+
+For each requirement:
+1. Copy the ID from spec.md
+2. Copy the **method** (left side of `method: pointer`) into Verification
+3. Use the **pointer** (right side) to seed Key Scenarios
+4. Expand scenarios based on component design decisions
+5. Note if multiple test levels apply (e.g., "unit + integration")
+
+**Step 12b: Define Test Levels**
+
+- Unit tests: scope and coverage target
+- Integration tests: key scenarios and test environment
+- E2E tests: critical user paths
 
 Follow testing patterns from testing.md.
+
+**Why mapping matters:**
+- Ensures every requirement has a verification plan
+- Feeds directly into `oat-plan` task breakdown
+- Prevents "untested requirements" gaps
 
 ### Step 13: Plan Deployment
 

@@ -231,13 +231,25 @@ Create traceability matrix in spec.md "Requirement Index" section:
 | ID | FR1, FR2, NFR1, etc. (sequential) |
 | Description | Brief 1-sentence summary |
 | Priority | P0/P1/P2 from requirement |
-| Acceptance Tests | Reference to acceptance criteria |
+| Verification | `method: pointer` — how this will be verified |
 | Planned Tasks | Leave as "TBD - see plan.md" |
+
+**Verification column format:** `method: pointer`
+- **method** — test level or verification type:
+  - `unit` — isolated unit tests
+  - `integration` — tests spanning components/services
+  - `e2e` — end-to-end user flow tests
+  - `manual` — human verification required
+  - `perf` — performance/load testing
+- **pointer** — brief scope hint for the design phase:
+  - Good: `unit: auth token validation`, `e2e: login flow`, `perf: API latency`
+  - Bad: `see acceptance criteria` (too vague)
 
 **Why this matters:**
 - Enables tracing from requirements → tests → tasks → implementation
 - Prevents "lost requirements" during execution
 - Supports `oat-plan` in breaking down work systematically
+- Gives design phase clear guidance on test strategy per requirement
 
 ### Step 16: Spec Quality Gate
 
@@ -246,6 +258,7 @@ Before marking complete, run through this quality checklist:
 **Completeness Check:**
 - [ ] All P0 requirements have testable acceptance criteria
 - [ ] All P0 requirements have priorities assigned
+- [ ] All P0 requirements have a Verification entry in the Requirement Index (not blank/TBD)
 - [ ] Dependencies are identified
 - [ ] Constraints are documented
 - [ ] Success metrics are measurable
