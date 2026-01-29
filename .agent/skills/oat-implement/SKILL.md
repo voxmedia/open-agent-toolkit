@@ -356,8 +356,11 @@ Choose:
 ```
 
 **If user chooses to open PR:**
-- (Future: `/oat:pr-project` skill will handle this)
-- For now: Guide user through manual PR creation:
+- Prefer using `/oat:pr-project` to generate a final PR description from OAT artifacts:
+  ```
+  /oat:pr-project
+  ```
+- If the environment cannot run skills for any reason, fall back to manual PR creation:
   ```
   To create PR manually:
   1. Push branch: git push -u origin {branch}

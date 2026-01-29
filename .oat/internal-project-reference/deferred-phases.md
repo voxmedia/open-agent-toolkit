@@ -24,7 +24,7 @@ Dogfood v1 baseline is:
 
 **Status:** In progress
 - Done: `oat-request-review`, `oat-receive-review`, `.agent/agents/oat-reviewer.md`, plan `## Reviews` table, and `oat-implement` final-review gate/prompt
-- Remaining: `oat-pr-progress` and `oat-pr-project`
+- Done: `oat-pr-progress` and `oat-pr-project` (PR description generation; optional `gh pr create`)
 
 **When to start:**
 - After we successfully dogfood at least one end-to-end feature using the baseline workflow (index -> implement), and
@@ -33,7 +33,7 @@ Dogfood v1 baseline is:
 **Deliverables:**
 - Skills:
   - `oat-request-review`, `oat-receive-review` (implemented)
-  - `oat-pr-progress`, `oat-pr-project` (pending)
+  - `oat-pr-progress`, `oat-pr-project` (implemented)
 - Subagent prompt(s) in `.agent/agents/`: a single general `oat-reviewer` (expand later) (implemented)
 - Templates:
   - plan `## Reviews` table is the v1 canonical format (implemented)

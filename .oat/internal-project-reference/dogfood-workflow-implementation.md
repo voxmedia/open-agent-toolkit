@@ -40,7 +40,7 @@ The Open Agent Toolkit (OAT) is a structured workflow system for AI-assisted sof
 ### Implementation Scope
 
 This implementation delivered:
-- **9 workflow skills** - oat-index, oat-progress, oat-discovery, oat-spec, oat-design, oat-plan, oat-implement, oat-request-review, oat-receive-review
+- **11 workflow skills** - oat-index, oat-progress, oat-discovery, oat-spec, oat-design, oat-plan, oat-implement, oat-request-review, oat-receive-review, oat-pr-progress, oat-pr-project
 - **Templates** - state.md, discovery.md, spec.md, design.md, plan.md, implementation.md, project-index.md
 - **State management** - YAML frontmatter-based workflow state tracking
 - **Two HiL systems** - Workflow gates and plan phase checkpoints
@@ -469,7 +469,9 @@ ALLOWED: Task execution, minor adaptations, blocker logging
 
 **PR prompt:**
 - After the final review `Status: passed`, `oat-implement` prompts the user to open a PR.
-- OAT-native PR automation skills (`oat-pr-progress`, `oat-pr-project`) are planned but not required for the review loop to function.
+- OAT-native PR description skills exist:
+  - `oat-pr-progress` (phase/progress PR description)
+  - `oat-pr-project` (final project PR description into main)
 
 ---
 
@@ -702,6 +704,36 @@ oat_blockers:
 - Updates `implementation.md` with a "Review Received" entry
 - Enforces bounded loops: 3-cycle cap per scope before requiring user intervention
 - Routes back to `/oat:implement` (execute now vs review plan first)
+
+---
+
+### oat-pr-progress
+
+**Location:** `.agent/skills/oat-pr-progress/SKILL.md`
+
+**Purpose:** Generate a progress PR description scoped to a plan phase (`pNN`) or an explicit git range.
+
+**Key Features:**
+- Resolves active project via `.oat/active-project` (fallback: prompt then write pointer)
+- Phase-scoped commit discovery via commit convention grep (`type(pNN-tNN): ...`)
+- Defensive fallback to explicit scope (`base_sha=<sha>` or `range=<sha1>..<sha2>`) when conventions are missing
+- Writes a PR description artifact under `{PROJECT_PATH}/pr/`
+- Optional best-effort guidance to open a PR via `gh pr create` (does not require `gh`)
+
+---
+
+### oat-pr-project
+
+**Location:** `.agent/skills/oat-pr-project/SKILL.md`
+
+**Purpose:** Generate the final project PR description (into `main`) grounded in spec/design/plan/implementation and final review status.
+
+**Key Features:**
+- Resolves active project via `.oat/active-project` (fallback: prompt then write pointer)
+- Checks `plan.md` `## Reviews` row `final` is `passed` (recommended to proceed)
+- Includes references to review artifacts + OAT docs for reviewers
+- Writes a PR description artifact under `{PROJECT_PATH}/pr/`
+- Optional best-effort guidance to open a PR via `gh pr create` (does not require `gh`)
 
 ---
 
@@ -1224,7 +1256,11 @@ In implementation.md:
 │   │   └── SKILL.md
 │   ├── oat-request-review/
 │   │   └── SKILL.md
-│   └── oat-receive-review/
+│   ├── oat-receive-review/
+│   │   └── SKILL.md
+│   ├── oat-pr-progress/
+│   │   └── SKILL.md
+│   └── oat-pr-project/
 │       └── SKILL.md
 └── projects/                 # Project-specific documents
     └── <project-name>/
@@ -1234,7 +1270,8 @@ In implementation.md:
         ├── design.md         # Technical design
         ├── plan.md           # Implementation tasks
         ├── implementation.md # Progress tracking
-        └── reviews/          # Review artifacts (created by oat-request-review)
+        ├── reviews/          # Review artifacts (created by oat-request-review)
+        └── pr/               # PR description artifacts (created by oat-pr-*)
 ```
 
 ---
@@ -1321,6 +1358,16 @@ At the end of implementation, a final code review is required before opening a P
    /oat:implement
    ```
 4. Repeat until the final review status is `passed` (capped at 3 cycles per scope).
+
+After final review passes, generate the final PR description:
+```
+/oat:pr-project
+```
+
+Optionally, create a progress PR description for a phase boundary:
+```
+/oat:pr-progress p02
+```
 
 Non-final reviews are manual. Examples:
 ```

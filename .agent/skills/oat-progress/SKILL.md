@@ -145,7 +145,7 @@ Based on project state, recommend next action:
 | plan | in_progress | Continue `/oat:plan` |
 | plan | complete | `/oat:implement` |
 | implement | in_progress | Continue `/oat:implement` |
-| implement | complete | Ready for code review |
+| implement | complete | Ready for final review / PR |
 
 **If blockers exist:**
 ```
@@ -171,6 +171,14 @@ Workflow:
 
 Status:
   /oat:progress  - Check project progress (this skill)
+
+Reviews:
+  /oat:request-review - Request a fresh-context code/artifact review (writes review artifact)
+  /oat:receive-review - Convert review findings into plan tasks (gap closure)
+
+PRs:
+  /oat:pr-progress - Create a progress PR description (phase-scoped)
+  /oat:pr-project  - Create the final project PR description (after final review)
 ```
 
 ### Step 7: Output Summary

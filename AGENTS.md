@@ -125,6 +125,18 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-pr-progress</name>
+<description>Create a progress PR description for a specific plan phase (pNN) using OAT artifacts and commit conventions; optionally open a PR.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-pr-project</name>
+<description>Create the final project PR description (into main) using OAT artifacts and final review status; optionally open a PR.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>read-relevant-docs</name>
 <description>Discover and read relevant documentation from the Honeycomb Docs app based on the current conversation context.</description>
 <location>project</location>
@@ -139,6 +151,12 @@ Usage notes:
 <skill>
 <name>update-doc-refs</name>
 <description>Check and apply @docs reference comments to source files.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>update-internal-project-reference</name>
+<description>Use when OAT implementation changes and you need to update .oat/internal-project-reference docs to match (temporary while dogfooding).</description>
 <location>project</location>
 </skill>
 

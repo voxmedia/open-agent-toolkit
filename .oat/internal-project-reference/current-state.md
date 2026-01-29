@@ -25,6 +25,9 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - `oat-request-review`
   - `oat-receive-review`
   - Reviewer prompt: `.agent/agents/oat-reviewer.md`
+- PR skills:
+  - `oat-pr-progress`
+  - `oat-pr-project`
 
 ### Templates / Scripts
 
@@ -71,12 +74,14 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
    - `/oat:receive-review`
    - `/oat:implement` (executes new fix tasks, if any)
    - Repeat until `final` review is `passed` (3-cycle cap per scope)
+5. PR description generation:
+   - `/oat:pr-progress pNN` (optional progress PR)
+   - `/oat:pr-project` (final PR)
 
 ## Known Gaps / Next Steps
 
-- PR automation:
-  - `oat-pr-progress` (phase/progress PRs) (not yet implemented)
-  - `oat-pr-project` (final PR into main) (not yet implemented)
+- PR automation enhancements:
+  - PR opening automation beyond best-effort `gh pr create` guidance (optional; not required for v1 dogfood)
 - Repo-level dashboard:
   - `.oat/state.md` summary view (active project + phase + blockers + knowledge freshness) (not yet implemented)
 - Multi-project model:
@@ -88,4 +93,3 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 - `.agent/projects/**` is gitignored in this repo by default. That means project artifacts (including review artifacts under `reviews/`) are local-only unless you change ignore rules or copy artifacts elsewhere.
 - `.oat/active-project` is local-only (gitignored). It won’t exist until you run a skill that creates/selects a project.
-

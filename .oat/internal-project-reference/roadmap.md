@@ -35,9 +35,9 @@ Baseline dogfood workflow is implemented:
      - Reviewer prompt: `.agent/agents/oat-reviewer.md`
      - `plan.md` template includes a `## Reviews` table with a documented status progression
      - `oat-implement` triggers a final-review gate and then prompts for PR
-   - Missing (PR automation):
-     - `oat-pr-progress` (phase/progress PRs)
-     - `oat-pr-project` (final PR into main)
+   - Implemented (PR automation):
+     - `oat-pr-progress` (phase/progress PR descriptions)
+     - `oat-pr-project` (final PR description into main)
    - Optional (nice-to-have templates):
      - `.oat/templates/code-review.md`, `.oat/templates/artifact-review.md` (currently the canonical format is in `.agent/agents/oat-reviewer.md`)
 
@@ -58,7 +58,7 @@ Baseline dogfood workflow is implemented:
 
 **Status:** In progress
 - Done: review loop (request-review, receive-review, reviewer prompt, plan Reviews table, implement final gate)
-- Remaining: PR skills (progress + project) and any desired PR automation
+- Done: PR skills (progress + project) (PR description generation; optional `gh pr create`)
 
 **When to do it:**
 - After we successfully dogfood at least one end-to-end feature using the baseline workflow (index -> implement), or
@@ -68,8 +68,8 @@ Baseline dogfood workflow is implemented:
 - Skills:
   - `oat-request-review` (supports both code review and artifact review)
   - `oat-receive-review` (plan-driven gap closure: findings -> new plan tasks -> rerun implement)
-  - `oat-pr-progress` (phase/progress PRs) (pending)
-  - `oat-pr-project` (final PR into main, using OAT artifacts as sources) (pending)
+  - `oat-pr-progress` (phase/progress PR descriptions) (implemented)
+  - `oat-pr-project` (final PR description into main, using OAT artifacts as sources) (implemented)
 - Subagent prompt(s) (syncable): `.agent/agents/oat-reviewer.md` (single general reviewer in v1)
 - Templates:
   - `plan.md` includes `## Reviews` table (v1 canonical)
