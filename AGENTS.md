@@ -113,6 +113,18 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-request-review</name>
+<description>Use when ready to review completed work before merging - after implementing a task, phase, or full project; when quality gate needed before PR.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-receive-review</name>
+<description>Use after running oat-request-review - when a review artifact exists and findings need to be converted into actionable plan tasks for gap closure.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>read-relevant-docs</name>
 <description>Discover and read relevant documentation from the Honeycomb Docs app based on the current conversation context.</description>
 <location>project</location>

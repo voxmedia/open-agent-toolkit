@@ -296,9 +296,76 @@ pnpm type-check
 pnpm build
 ```
 
-All must pass before marking complete.
+All must pass before proceeding.
 
-### Step 14: Output Summary
+### Step 14: Trigger Final Review
+
+**At the final plan phase boundary, a code review is required before PR.**
+
+Check if final review already completed (preferred source of truth: plan.md Reviews table):
+```bash
+FINAL_ROW=$(grep -E "^\\|\\s*final\\s*\\|" "$PROJECT_PATH/plan.md" 2>/dev/null | head -1)
+echo "$FINAL_ROW"
+```
+
+**If final review row exists and status is `passed`:**
+- Example row:
+  - `| final | code | passed | 2026-01-28 | reviews/final-review-2026-01-28.md |`
+- Check:
+  ```bash
+  echo "$FINAL_ROW" | grep -qE "^\\|\\s*final\\s*\\|.*\\|\\s*passed\\s*\\|" && echo "passed"
+  ```
+- Skip to Step 15 (PR prompt)
+
+**If final review is not marked `passed`:**
+- Tell user: "All tasks complete. Final review required before PR."
+- Offer review options (3-tier capability model):
+
+```
+Implementation complete. Final review required.
+
+Review options:
+1. Run review via subagent (recommended if available)
+2. Run review in fresh session (recommended fallback)
+3. Run review inline (less reliable)
+
+Choose, or run: /oat:request-review code final
+```
+
+**After user chooses:**
+- If subagent/fresh session: User runs `/oat:request-review code final` in appropriate context
+- If inline: Proceed with inline review per oat-request-review skill
+- After review: User runs `/oat:receive-review` to process findings
+- If Critical/Important findings: Fix tasks added, re-run `/oat:implement`
+- Loop until final review passes (max 3 cycles per oat-receive-review)
+
+### Step 15: Prompt for PR
+
+After final review passes (no Critical/Important findings):
+
+```
+Final review passed for {project-name}.
+
+All tasks complete and verified. Ready to create PR.
+
+Options:
+1. Open PR now (will generate PR description from OAT artifacts)
+2. Exit (create PR manually later)
+
+Choose:
+```
+
+**If user chooses to open PR:**
+- (Future: `/oat:pr-project` skill will handle this)
+- For now: Guide user through manual PR creation:
+  ```
+  To create PR manually:
+  1. Push branch: git push -u origin {branch}
+  2. Create PR with summary from implementation.md
+  3. Reference: spec.md, design.md for context
+  ```
+
+### Step 16: Output Summary
 
 ```
 Implementation complete for {project-name}.
@@ -314,7 +381,11 @@ Final verification:
 - Types: ✓ valid
 - Build: ✓ success
 
-Ready for code review and merge.
+Final review:
+- Status: ✓ passed
+- Artifact: reviews/final-review-{date}.md
+
+Next: Create PR or run /oat:pr-project (when available)
 ```
 
 ## Success Criteria
@@ -324,4 +395,5 @@ Ready for code review and merge.
 - Each task has a commit
 - Implementation.md tracks all progress
 - Final verification passes
+- Final review passes (no Critical/Important findings)
 - No unresolved blockers

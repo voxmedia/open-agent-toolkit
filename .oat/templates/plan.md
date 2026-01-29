@@ -114,6 +114,22 @@ git commit -m "feat(p01-t02): {description}"
 
 ---
 
+## Reviews
+
+{Track reviews here after running /oat:request-review and /oat:receive-review.}
+
+| Scope | Type | Status | Date | Artifact |
+|-------|------|--------|------|----------|
+| p01 | code | pending | - | - |
+| p02 | code | pending | - | - |
+| final | code | pending | - | - |
+| spec | artifact | pending | - | - |
+| design | artifact | pending | - | - |
+
+**Status values:** `pending` → `received` → `fixes_added` | `passed`
+
+---
+
 ## Implementation Complete
 
 **Summary:**
