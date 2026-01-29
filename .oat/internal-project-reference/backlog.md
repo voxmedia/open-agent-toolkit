@@ -24,6 +24,20 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
   - Created: YYYY-MM-DD
 
+- [ ] **(P2) [workflow] Backlog Refinement Flow (Jira ticket generation)**
+  - Context: Need a structured, conversational way to break large initiatives into epics/stories/tasks during planning, then create them in Jira with minimal manual effort.
+  - Proposed change:
+    - Add a “Backlog Refinement Flow” skill that interviews the user and produces a structured backlog artifact (epics/stories/tasks) using templates.
+    - Add an integration step that can create the resulting items in Jira (via Atlassian CLI) after user confirmation and iterative refinement.
+  - Success criteria:
+    - User can run a single flow to go from “idea” → “structured backlog” (epics/stories/tasks) → “Jira tickets created”.
+    - Supports iterative refinement before ticket creation (multiple passes).
+    - Uses a template-driven output format for consistency.
+  - Links:
+    - Skill idea source: this backlog entry
+    - Integration: Atlassian CLI (and/or existing `create-ticket` plumbing if applicable)
+  - Created: 2026-01-29
+
 ## Planned
 
 - [ ] **(P?) [area] {Title}**
