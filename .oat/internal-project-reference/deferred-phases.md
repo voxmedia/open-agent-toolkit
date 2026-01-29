@@ -3,9 +3,10 @@
 This document lists the next phases of work that are explicitly deferred beyond the current dogfood workflow baseline, plus concrete "when to do it" triggers.
 
 Primary references:
-- `docs/plans/2026-01-27-oat-dogfood-workflow-design-v2.md`
+- `.oat/internal-project-reference/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`
 - `.agent/projects/project-setup/reference/agentic_development_framework_v_1_plan.md`
 - `.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`
+- Current snapshot: `.oat/internal-project-reference/current-state.md`
 
 ## Baseline (Already In Scope)
 
@@ -13,6 +14,7 @@ Dogfood v1 baseline is:
 - `oat-index` + `.oat/knowledge/**`
 - `oat-discovery` -> `oat-spec` -> `oat-design` -> `oat-plan` -> `oat-implement`
 - `oat-progress` router
+- Active project selection: `.oat/active-project` (single-line path, local-only; gitignored)
 
 ## Deferred Phases
 
@@ -20,18 +22,25 @@ Dogfood v1 baseline is:
 
 **What:** Add first-class review workflows (artifact review + code review) plus PR creation skills integrated with `oat-implement`.
 
+**Status:** In progress
+- Done: `oat-request-review`, `oat-receive-review`, `.agent/agents/oat-reviewer.md`, plan `## Reviews` table, and `oat-implement` final-review gate/prompt
+- Remaining: `oat-pr-progress` and `oat-pr-project`
+
 **When to start:**
 - After we successfully dogfood at least one end-to-end feature using the baseline workflow (index -> implement), and
 - We feel pain around quality drift / missed requirements / lack of "fresh-context" review.
 
 **Deliverables:**
-- Skills: `oat-request-review`, `oat-receive-review`, `oat-pr-progress`, `oat-pr-project`
-- Subagent prompt(s) in `.agent/agents/`: a single general `oat-reviewer` (expand later)
+- Skills:
+  - `oat-request-review`, `oat-receive-review` (implemented)
+  - `oat-pr-progress`, `oat-pr-project` (pending)
+- Subagent prompt(s) in `.agent/agents/`: a single general `oat-reviewer` (expand later) (implemented)
 - Templates:
-  - `.oat/templates/code-review.md`
-  - `.oat/templates/artifact-review.md`
-- Plan controls:
-  - Frontmatter fields for "auto review + auto PR prompt" at configured checkpoints (and documented fallbacks where args aren't supported)
+  - plan `## Reviews` table is the v1 canonical format (implemented)
+  - Optional future: `.oat/templates/code-review.md`, `.oat/templates/artifact-review.md`
+- Optional plan controls (future):
+  - If we want non-final reviews/PR prompts to be automatic, add a small plan-level config (possibly frontmatter) for when to auto-trigger review and when to prompt for PRs.
+  - v1 behavior: final review is required at the end; non-final reviews are manual by default.
 - Implement wiring:
   - Auto-trigger final review at final phase boundary
   - Always ask "Open PR now?" after final review findings are resolved
@@ -40,13 +49,17 @@ Dogfood v1 baseline is:
 **Exit criteria:**
 - Review scope discovery works via commit convention grep, with `base_sha` override support.
 - Review findings reliably become new plan tasks, and rerunning `oat-implement` closes the loop.
-- PR skills can generate a usable progress PR and a final project PR from OAT artifacts.
+- PR skills can generate a usable progress PR and a final project PR from OAT artifacts (or manual PR path is documented until those ship).
 
 ---
 
 ### Phase 4 (Dogfood v1.2): Active Project Pointer + Repo State Dashboard
 
 **What:** Make "which project is active" unambiguous and machine-readable, without migrating to the full `.oat/projects/**` model yet.
+
+**Status:** In progress
+- Done: `.oat/active-project` pointer + all `oat-*` skills resolve project from it
+- Remaining: `.oat/state.md` dashboard and a documented project switching workflow
 
 **When to start:**
 - As soon as we have >1 `.agent/projects/<name>/` in a repo, or

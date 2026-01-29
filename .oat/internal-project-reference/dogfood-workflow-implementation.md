@@ -3,8 +3,7 @@
 > Comprehensive documentation of the Open Agent Toolkit (OAT) workflow system implementation for deep understanding review.
 
 **Implementation Date:** January 2026
-**PR:** https://github.com/tkstang/open-agent-toolkit/pull/1
-**Commits:** 40 commits, 5,626 lines added
+**Last Updated:** 2026-01-29
 
 ---
 
@@ -33,17 +32,20 @@ The Open Agent Toolkit (OAT) is a structured workflow system for AI-assisted sof
 - **Knowledge-first enforcement** - Requires codebase analysis before starting work
 - **Phased workflow** - Discovery → Spec → Design → Plan → Implement
 - **Human-in-the-loop gates** - Configurable checkpoints for review and approval
+- **Review loop (code + artifact)** - Request-review writes a review artifact, receive-review converts findings into plan tasks, implement closes the loop
 - **TDD discipline** - Red-green-refactor pattern in implementation
 - **Full traceability** - Requirements linked to tasks linked to commits
+- **Active project selection** - `.oat/active-project` (local-only) reduces project-name prompts across phases
 
 ### Implementation Scope
 
 This implementation delivered:
-- **7 skills** - oat-index, oat-progress, oat-discovery, oat-spec, oat-design, oat-plan, oat-implement
-- **8 templates** - state.md, discovery.md, spec.md, design.md, plan.md, implementation.md, plus knowledge templates
+- **9 workflow skills** - oat-index, oat-progress, oat-discovery, oat-spec, oat-design, oat-plan, oat-implement, oat-request-review, oat-receive-review
+- **Templates** - state.md, discovery.md, spec.md, design.md, plan.md, implementation.md, project-index.md
 - **State management** - YAML frontmatter-based workflow state tracking
 - **Two HiL systems** - Workflow gates and plan phase checkpoints
 - **Traceability infrastructure** - Stable task IDs linking requirements to implementation
+- **Reviewer prompt** - `.agent/agents/oat-reviewer.md` (unified reviewer; writes review artifacts to disk)
 
 ---
 
@@ -88,7 +90,18 @@ Skills are registered in `AGENTS.md` so tools can load them. They can be invoked
 |-------|------|---------|
 | `oat_status` | string | Document status: in_progress \| complete |
 | `oat_ready_for` | string\|null | Next skill (e.g., `oat-implement`) |
-| `oat_plan_hil_phases` | array | Which plan phases require HiL (empty = all) |
+| `oat_plan_hil_phases` | array | Which plan phase boundaries should stop for HiL (empty = stop at every phase boundary) |
+
+### plan.md Reviews Table Contract (Body, Not Frontmatter)
+
+`plan.md` also contains a `## Reviews` section with a table. This is the canonical review state for v1 and is used by `oat-implement` to gate the final PR prompt.
+
+**Columns:**
+- `Scope` (e.g., `p01`, `p02`, `final`, `spec`, `design`, `plan`)
+- `Type` (`code` or `artifact`)
+- `Status` (`pending`, `received`, `fixes_added`, `passed`)
+- `Date` (YYYY-MM-DD or `-`)
+- `Artifact` (e.g., `reviews/final-review-YYYY-MM-DD.md` or `-`)
 
 ### implementation.md Required Fields
 
@@ -304,14 +317,14 @@ ALLOWED: Requirement formalization, acceptance criteria, testable specifications
 - Overview
 - Functional Requirements (FR-01, FR-02, etc.)
 - Non-Functional Requirements (NFR-01, NFR-02, etc.)
-- Acceptance Criteria
-- **Requirement Index** (table linking requirements to planned tasks)
+- Acceptance Criteria (per requirement)
+- **Requirement Index** (table linking requirements to verification + planned tasks)
 
 **Requirement Index Format:**
 ```markdown
-| ID | Description | Acceptance Criteria | Planned Tasks |
-|----|-------------|---------------------|---------------|
-| FR-01 | User authentication | AC-01, AC-02 | p01-t03, p02-t01 |
+| ID | Description | Priority | Verification | Planned Tasks |
+|----|-------------|----------|--------------|--------------|
+| FR1 | User authentication | P0 | unit + integration: auth token validation | p01-t03, p02-t01 |
 ```
 
 ### Phase 4: Design (`/oat:design`)
@@ -440,6 +453,23 @@ ALLOWED: Task execution, minor adaptations, blocker logging
 - [x] p01-t02: Add configuration - bcd234
 - [ ] p02-t01: Implement core logic - in progress
 ```
+
+### Phase 7: Reviews + PR Prompt (Request/Receive Review)
+
+**Purpose:** Run fresh-context review(s), convert findings into plan tasks, and close the loop before opening a PR.
+
+**How it works:**
+- **Request review** (`/oat:request-review`) produces a review artifact on disk (code review or artifact review).
+- **Receive review** (`/oat:receive-review`) converts Critical/Important findings into new plan tasks, updates the plan Reviews table, and routes back to `/oat:implement`.
+- **Implementation** reruns to execute those fix tasks; re-review should scope to fix tasks after the first cycle.
+
+**Default trigger timing (v1):**
+- Final code review is required at the end of the final plan phase boundary (enforced by `oat-implement`).
+- Non-final reviews are manual by default (user can request task/phase reviews as desired).
+
+**PR prompt:**
+- After the final review `Status: passed`, `oat-implement` prompts the user to open a PR.
+- OAT-native PR automation skills (`oat-pr-progress`, `oat-pr-project`) are planned but not required for the review loop to function.
 
 ---
 
@@ -633,6 +663,48 @@ oat_blockers:
 
 ---
 
+### oat-request-review
+
+**Location:** `.agent/skills/oat-request-review/SKILL.md`
+
+**Purpose:** Produce a review artifact (code review or artifact review) for a requested scope (task/phase/final/SHA range).
+
+**Key Features:**
+- Resolves active project via `.oat/active-project` (fallback: prompt then write pointer)
+- Supports args where available (Claude Code), and interactive prompts when args aren’t supported
+- Scope discovery:
+  - Commit convention grep (`type(pNN-tNN): ...`) for task/phase scopes
+  - Explicit `base_sha=<sha>` or `<sha1>..<sha2>` range
+  - Defensive fallback: if conventions are missing, ask user to choose a range (or confirm merge-base..HEAD)
+- 3-tier execution model:
+  - Tier 1: subagent (fresh context) if available
+  - Tier 2: recommend running in a fresh session
+  - Tier 3: inline reset protocol (least reliable)
+- Writes review artifacts under `{PROJECT_PATH}/reviews/` and updates `plan.md` `## Reviews` row to `Status: received` (if plan exists)
+
+**Reviewer prompt used (Tier 1 / guidance source):** `.agent/agents/oat-reviewer.md`
+
+---
+
+### oat-receive-review
+
+**Location:** `.agent/skills/oat-receive-review/SKILL.md`
+
+**Purpose:** Convert a review artifact into plan tasks for systematic gap closure.
+
+**Key Features:**
+- Finds the newest review artifact (or prompts user to pick one)
+- Buckets findings into Critical/Important/Minor
+- Converts Critical/Important into new `(review)` tasks with sequential IDs in the target phase
+- Updates `plan.md` `## Reviews` row:
+  - `passed` if no Critical/Important findings
+  - `fixes_added` if new fix tasks were added
+- Updates `implementation.md` with a "Review Received" entry
+- Enforces bounded loops: 3-cycle cap per scope before requiring user intervention
+- Routes back to `/oat:implement` (execute now vs review plan first)
+
+---
+
 ## Templates Reference
 
 All templates live in `.oat/templates/` and are copied to project directories when phases begin.
@@ -686,9 +758,9 @@ oat_template_name: state
 
 **Requirement Index:**
 ```markdown
-| ID | Description | Acceptance Criteria | Planned Tasks |
-|----|-------------|---------------------|---------------|
-| FR-01 | ... | AC-01 | p01-t03, p02-t01 |
+| ID | Description | Priority | Verification | Planned Tasks |
+|----|-------------|----------|--------------|--------------|
+| FR1 | ... | P0 | unit: auth token validation | p01-t03, p02-t01 |
 ```
 
 ### design.md
@@ -703,7 +775,7 @@ oat_template_name: state
 - Implementation Phases
 - Security Considerations
 - Performance Considerations
-- Testing Strategy
+- Testing Strategy (includes requirement-to-test mapping from spec Verification -> concrete scenarios)
 
 ### plan.md
 
@@ -729,6 +801,10 @@ oat_template_name: plan
 - Goal and Architecture summary
 - Phases with tasks
 - Each task in TDD format
+- `## Reviews` table (tracks review artifacts + statuses)
+
+**Reviews table status progression (v1):**
+- `pending` → `received` → `fixes_added` | `passed`
 
 ### implementation.md
 
@@ -780,6 +856,20 @@ OAT uses two categories of state tracking:
 - `oat_ready_for` - Next skill to run
 - `oat_blockers` - Phase-specific blockers
 - `oat_last_updated` - Last modification date
+
+### Active Project Pointer (`.oat/active-project`)
+
+To avoid repeated project-name prompts across phases, OAT uses a local-only pointer file:
+
+- **Path:** `.oat/active-project` (single line: the active project directory path)
+- **Example contents:** `.agent/projects/workflow-research`
+- **Lifecycle:** created/updated by skills when a project is created or selected
+- **Git:** ignored via `.gitignore` (local-only state)
+
+All workflow skills resolve the project in the same order:
+1. Read `.oat/active-project`
+2. If missing/invalid: prompt user for `{project-name}`, set path to `.agent/projects/{project-name}`, then write `.oat/active-project`
+3. Use the resolved `PROJECT_PATH` for all artifact reads/writes
 
 ### State Transitions
 
@@ -933,10 +1023,10 @@ Implementation Status
 
 In spec.md:
 ```markdown
-| ID | Description | Acceptance Criteria | Planned Tasks |
-|----|-------------|---------------------|---------------|
-| FR-01 | User authentication | AC-01, AC-02 | p01-t03, p02-t01 |
-| FR-02 | Session management | AC-03 | p02-t05 |
+| ID | Description | Priority | Verification | Planned Tasks |
+|----|-------------|----------|--------------|--------------|
+| FR1 | User authentication | P0 | unit + integration: auth token validation | p01-t03, p02-t01 |
+| FR2 | Session management | P1 | integration: session refresh | p02-t05 |
 ```
 
 **Populated by:** oat-plan (Step 9)
@@ -1087,6 +1177,7 @@ In implementation.md:
 
 ```
 .oat/
+├── active-project            # Local-only pointer (single line path to active project; gitignored)
 ├── knowledge/repo/           # Generated codebase analysis
 │   ├── project-index.md      # Main knowledge index (thin → enriched)
 │   ├── stack.md              # Technology stack (after enrichment)
@@ -1097,6 +1188,12 @@ In implementation.md:
 │   ├── conventions.md        # Code patterns (after enrichment)
 │   ├── concerns.md           # Technical debt (after enrichment)
 │   └── entrypoints/          # Per-entrypoint analyses (after mappers)
+├── internal-project-reference/ # Canonical internal docs for this repo's OAT workflow
+│   ├── current-state.md
+│   ├── roadmap.md
+│   ├── deferred-phases.md
+│   ├── dogfood-workflow-implementation.md
+│   └── past-artifacts/       # Archived design/workflow docs
 ├── templates/                # Document templates
 │   ├── state.md
 │   ├── discovery.md
@@ -1108,6 +1205,8 @@ In implementation.md:
     └── generate-thin-index.sh
 
 .agent/
+├── agents/                   # Subagent prompts (syncable between providers)
+│   └── oat-reviewer.md
 ├── skills/                   # OAT skill definitions (registered in AGENTS.md)
 │   ├── oat-index/
 │   │   └── SKILL.md
@@ -1121,7 +1220,11 @@ In implementation.md:
 │   │   └── SKILL.md
 │   ├── oat-plan/
 │   │   └── SKILL.md
-│   └── oat-implement/
+│   ├── oat-implement/
+│   │   └── SKILL.md
+│   ├── oat-request-review/
+│   │   └── SKILL.md
+│   └── oat-receive-review/
 │       └── SKILL.md
 └── projects/                 # Project-specific documents
     └── <project-name>/
@@ -1130,7 +1233,8 @@ In implementation.md:
         ├── spec.md           # Formal specification
         ├── design.md         # Technical design
         ├── plan.md           # Implementation tasks
-        └── implementation.md # Progress tracking
+        ├── implementation.md # Progress tracking
+        └── reviews/          # Review artifacts (created by oat-request-review)
 ```
 
 ---
@@ -1149,7 +1253,10 @@ In implementation.md:
    /oat:discovery
    ```
    - Provide project name when prompted
+   - This creates/updates `.oat/active-project` to point at `.agent/projects/<project-name>/`
    - Answer questions about requirements
+
+**Note:** In this repo, `.agent/projects/**` is gitignored by default, so project artifacts (including `reviews/`) are local-only unless you change ignore rules.
 
 3. **Check progress anytime:**
    ```
@@ -1197,34 +1304,45 @@ Run `/oat:progress` to:
 - Get guidance on next steps
 - Resume interrupted work
 
+### Reviews + Gap Closure Loop
+
+At the end of implementation, a final code review is required before opening a PR:
+
+1. Request final code review:
+   ```
+   /oat:request-review code final
+   ```
+2. Process findings into plan tasks:
+   ```
+   /oat:receive-review
+   ```
+3. If fix tasks were added, rerun implementation:
+   ```
+   /oat:implement
+   ```
+4. Repeat until the final review status is `passed` (capped at 3 cycles per scope).
+
+Non-final reviews are manual. Examples:
+```
+/oat:request-review code p02
+/oat:request-review code p02-t03
+/oat:request-review code base_sha=<sha>
+
+/oat:request-review artifact spec
+/oat:request-review artifact design
+/oat:request-review artifact plan
+```
+
 ---
 
-## Appendix: Implementation Statistics
+## Appendix: References
 
-**PR #1:** https://github.com/tkstang/open-agent-toolkit/pull/1
-
-| Metric | Value |
-|--------|-------|
-| Total Commits | 40 |
-| Lines Added | 5,626 |
-| Skills Created | 7 |
-| Templates Created | 8 |
-| Design Documents | 2 |
-| Codex Review Rounds | 3 |
-
-**Files Changed:**
-- README.md (complete rewrite)
-- 7 skill SKILL.md files
-- 8 template files
-- Knowledge directory structure
-- Scripts directory
-
-**Key Iterations:**
-1. Initial implementation (Tasks 1-19)
-2. Codex Review 1: HiL semantics, plan phase checkpoints
-3. Codex Review 2: Contradictions, stable IDs in templates
-4. README accuracy and formatting
+- Current snapshot: `.oat/internal-project-reference/current-state.md`
+- Roadmap: `.oat/internal-project-reference/roadmap.md`
+- Deferred phases: `.oat/internal-project-reference/deferred-phases.md`
+- Review loop proposal: `.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`
+- Past workflow artifacts: `.oat/internal-project-reference/past-artifacts/`
 
 ---
 
-*Documentation generated for OAT Dogfood Workflow implementation review.*
+*Documentation maintained for OAT dogfood workflow implementation review.*

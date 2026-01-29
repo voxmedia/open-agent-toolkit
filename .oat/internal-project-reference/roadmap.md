@@ -1,9 +1,11 @@
 # OAT Roadmap (Dogfood-First)
 
 This file is the canonical OAT roadmap for this repo. It combines:
-- the dogfood workflow direction (`docs/plans/2026-01-27-oat-dogfood-workflow-design-v2.md`)
+- the dogfood workflow direction (`.oat/internal-project-reference/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`)
 - the early "product" vision (interop + CLI) (`.agent/projects/project-setup/reference/agentic_development_framework_v_1_plan.md`)
 - the review/subagent direction (`.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`)
+
+For a birdseye snapshot of what exists *right now*, see `.oat/internal-project-reference/current-state.md`.
 
 As of `git log -1` on branch `dogfood-workflow`, we have the baseline workflow skills and templates in place. The next work is largely about closing known gaps (reviews/PRs, active project resolution) and then deciding when to shift focus to provider interop.
 
@@ -11,23 +13,33 @@ As of `git log -1` on branch `dogfood-workflow`, we have the baseline workflow s
 
 Baseline dogfood workflow is implemented:
 - Knowledge: `oat-index` + `.oat/knowledge/**` (thin->full project index, mapper outputs under `.oat/knowledge/repo/`)
+- Active project selection: `.oat/active-project` (single-line path, local-only) and all `oat-*` skills resolve project from it (fallback: prompt)
 - Artifacts + skills:
   - `oat-discovery` -> `oat-spec` -> `oat-design` -> `oat-plan` -> `oat-implement`
   - Router: `oat-progress`
 - Templates under `.oat/templates/`: discovery/spec/design/plan/implementation/state/project-index
 - Project artifacts under `.agent/projects/<project>/` (current dogfood layout)
+- Testing traceability:
+  - spec Requirement Index uses `Verification` (`method: pointer`)
+  - design includes requirement-to-test mapping inside `## Testing Strategy`
 
 ## Known Gaps / Mismatches (What We Need To Resolve)
 
-1. Project selection / "active project"
-   - Current dogfood reality: projects live in `.agent/projects/<name>/` and each project has its own `state.md`.
-   - Early plan expectation: a repo-wide active project pointer and optional repo dashboard (`.oat/active-project`, `.oat/state.md`) with a richer `.oat/projects/**` model.
-   - Gap: skills need a consistent, non-ambiguous way to select the active project without prompting every time.
+1. Repo-level state dashboard (active project + summary)
+   - Implemented: `.oat/active-project` pointer (local-only) and skills resolve via it.
+   - Missing: a human/agent-friendly `.oat/state.md` dashboard to summarize active project status + knowledge freshness at a glance.
 
 2. Reviews + PR workflow is not yet first-class
-   - Missing v1 additions: `oat-request-review`, `oat-receive-review`, `oat-pr-progress`, `oat-pr-project`
-   - Missing templates: `.oat/templates/code-review.md`, `.oat/templates/artifact-review.md`
-   - Missing wiring: `oat-implement` should trigger a final review automatically at the final phase boundary, and then prompt to open a PR after findings are resolved.
+   - Implemented (review loop):
+     - `oat-request-review`, `oat-receive-review`
+     - Reviewer prompt: `.agent/agents/oat-reviewer.md`
+     - `plan.md` template includes a `## Reviews` table with a documented status progression
+     - `oat-implement` triggers a final-review gate and then prompts for PR
+   - Missing (PR automation):
+     - `oat-pr-progress` (phase/progress PRs)
+     - `oat-pr-project` (final PR into main)
+   - Optional (nice-to-have templates):
+     - `.oat/templates/code-review.md`, `.oat/templates/artifact-review.md` (currently the canonical format is in `.agent/agents/oat-reviewer.md`)
 
 3. Dogfood vs product scope needs explicit separation
    - Dogfood design (v2) prioritizes workflow skills first and keeps projects in `.agent/projects/`.
@@ -44,6 +56,10 @@ Baseline dogfood workflow is implemented:
 
 **Goal:** Make review and PR creation first-class and workflow-native (no dependency on superpowers being installed).
 
+**Status:** In progress
+- Done: review loop (request-review, receive-review, reviewer prompt, plan Reviews table, implement final gate)
+- Remaining: PR skills (progress + project) and any desired PR automation
+
 **When to do it:**
 - After we successfully dogfood at least one end-to-end feature using the baseline workflow (index -> implement), or
 - When we see repeated missed requirements / quality regressions that would be caught by a fresh-context review.
@@ -52,12 +68,12 @@ Baseline dogfood workflow is implemented:
 - Skills:
   - `oat-request-review` (supports both code review and artifact review)
   - `oat-receive-review` (plan-driven gap closure: findings -> new plan tasks -> rerun implement)
-  - `oat-pr-progress` (phase/progress PRs)
-  - `oat-pr-project` (final PR into main, using OAT artifacts as sources)
+  - `oat-pr-progress` (phase/progress PRs) (pending)
+  - `oat-pr-project` (final PR into main, using OAT artifacts as sources) (pending)
 - Subagent prompt(s) (syncable): `.agent/agents/oat-reviewer.md` (single general reviewer in v1)
 - Templates:
-  - `.oat/templates/code-review.md`
-  - `.oat/templates/artifact-review.md`
+  - `plan.md` includes `## Reviews` table (v1 canonical)
+  - Optional: `.oat/templates/code-review.md`, `.oat/templates/artifact-review.md` (future)
 - Scope discovery:
   - Commit convention grep (`type(pNN-tNN): ...`) for task/phase scoping
   - Explicit base SHA override (`base_sha=<sha>` means `<sha>..HEAD`)
@@ -73,13 +89,18 @@ Baseline dogfood workflow is implemented:
 
 **Exit criteria:**
 - A full "implement -> request-review -> receive-review -> implement (fixes) -> request-review (scoped) -> done" loop works.
-- Progress PR and project PR skills generate usable PR descriptions from OAT artifacts.
+- If PR skills are implemented: progress PR and project PR skills generate usable PR descriptions from OAT artifacts.
+- Otherwise: manual PR creation path is clearly documented and usable.
 
 ---
 
 ### Phase 4 (Dogfood v1.2): Active Project Pointer + Repo State Dashboard
 
 **Goal:** Make project selection deterministic without committing to the full `.oat/projects/**` product model yet.
+
+**Status:** In progress
+- Done: `.oat/active-project` pointer + skills resolve via it
+- Remaining: `.oat/state.md` dashboard and documented project switching workflow
 
 **When to do it:**
 - As soon as we have >1 `.agent/projects/<name>/` directory, or
@@ -94,6 +115,7 @@ Baseline dogfood workflow is implemented:
 
 **Exit criteria:**
 - All skills run against the intended project with no ambiguity and minimal prompting.
+- The active project can be switched explicitly (even if manual) without editing skill files.
 
 ---
 
