@@ -9,6 +9,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Roadmap: `.oat/internal-project-reference/roadmap.md`
 - Deferred phases: `.oat/internal-project-reference/deferred-phases.md`
 - Implementation deep-dive: `.oat/internal-project-reference/dogfood-workflow-implementation.md`
+- Workflow user feedback (dogfood log): `.oat/internal-project-reference/temp/workflow-user-feedback.md`
 - Review loop proposal: `.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`
 - Past artifacts (archival): `.oat/internal-project-reference/past-artifacts/`
 
@@ -54,7 +55,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Subagent prompts: `.agent/agents/*.md`
 - Templates: `.oat/templates/*.md`
 - Knowledge: `.oat/knowledge/repo/*.md`
-- Project artifacts (current dogfood layout): `.agent/projects/<project>/`
+- Project artifacts (current dogfood layout): `.oat/projects/shared/<project>/` (configurable via `.oat/projects-root`)
 
 ## Quickstart (Dogfood)
 
@@ -62,7 +63,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
    - `/oat:index`
 2. Start a project:
    - `/oat:discovery`
-   - This creates `.agent/projects/<project>/...` artifacts and writes `.oat/active-project`.
+   - This creates `{PROJECTS_ROOT}/<project>/...` artifacts (from `.oat/projects-root`) and writes `.oat/active-project`.
 3. Move through phases (or run router anytime):
    - `/oat:progress`
    - `/oat:spec`
@@ -85,11 +86,13 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Repo-level dashboard:
   - `.oat/state.md` summary view (active project + phase + blockers + knowledge freshness) (not yet implemented)
 - Multi-project model:
-  - `.oat/projects/**` and `oat project ...` switching (deferred; current dogfood uses `.agent/projects/`)
+  - `.oat/projects/**` and `oat project ...` switching (in progress; dogfood now uses `.oat/projects/shared` as the default projects root)
 - Parallel execution + reconciliation:
   - Worktrees/subagents executing tasks in parallel and reconciling back into canonical artifacts (deferred)
 
 ## Notes / Caveats
 
-- `.agent/projects/**` is gitignored in this repo by default. That means project artifacts (including review artifacts under `reviews/`) are local-only unless you change ignore rules or copy artifacts elsewhere.
+- `.oat/projects-root` sets the default projects root (tracked). Default: `.oat/projects/shared` (checked in).
+- `.oat/projects/local/**` and `.oat/projects/archived/**` are gitignored (local-only).
+- Legacy `.agent/projects/**` is still gitignored in this repo by default; older dogfood artifacts may exist there locally.
 - `.oat/active-project` is local-only (gitignored). It won’t exist until you run a skill that creates/selects a project.

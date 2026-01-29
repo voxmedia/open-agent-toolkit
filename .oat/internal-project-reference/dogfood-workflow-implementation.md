@@ -270,7 +270,7 @@ This separation enables:
 **Purpose:** Gather requirements through structured dialogue. Understand the problem, explore constraints, and capture decisions.
 
 **Process:**
-1. Create project directory: `.agent/projects/{project-name}/`
+1. Create project directory under the configured projects root (from `.oat/projects-root`, default `.oat/projects/shared`): `{PROJECTS_ROOT}/{project-name}/`
 2. Initialize state.md from template
 3. Conduct structured Q&A with user
 4. Capture requirements, constraints, and decisions
@@ -282,7 +282,7 @@ BLOCKED: Implementation, design decisions, architecture planning
 ALLOWED: Questions, clarification, requirement exploration, constraint discovery
 ```
 
-**Output:** `.agent/projects/{project-name}/discovery.md`
+**Output:** `{PROJECT_PATH}/discovery.md`
 
 **Key Sections:**
 - Problem Statement
@@ -311,7 +311,7 @@ BLOCKED: Implementation, code, architecture decisions
 ALLOWED: Requirement formalization, acceptance criteria, testable specifications
 ```
 
-**Output:** `.agent/projects/{project-name}/spec.md`
+**Output:** `{PROJECT_PATH}/spec.md`
 
 **Key Sections:**
 - Overview
@@ -379,7 +379,7 @@ BLOCKED: Implementation code, changing design decisions
 ALLOWED: Task breakdown, TDD planning, verification commands
 ```
 
-**Output:** `.agent/projects/{project-name}/plan.md`
+**Output:** `{PROJECT_PATH}/plan.md`
 
 **Task Format:**
 ```markdown
@@ -436,7 +436,7 @@ BLOCKED: Skipping tasks, changing plan structure, scope expansion
 ALLOWED: Task execution, minor adaptations, blocker logging
 ```
 
-**Output:** `.agent/projects/{project-name}/implementation.md`
+**Output:** `{PROJECT_PATH}/implementation.md`
 
 **Progress Tracking:**
 ```markdown
@@ -502,6 +502,7 @@ ALLOWED: Task execution, minor adaptations, blocker logging
 - Two-stage generation (thin index → enrichment)
 - Parallel entrypoint analysis via mapper agents
 - Staleness detection with age and git diff checks
+- Background agent compatibility: when background subagents cannot use `Write`/`Bash` tools, mappers should return markdown and the main agent writes knowledge files
 
 **Output:** `.oat/knowledge/repo/` directory
 
@@ -900,7 +901,7 @@ To avoid repeated project-name prompts across phases, OAT uses a local-only poin
 
 All workflow skills resolve the project in the same order:
 1. Read `.oat/active-project`
-2. If missing/invalid: prompt user for `{project-name}`, set path to `.agent/projects/{project-name}`, then write `.oat/active-project`
+2. If missing/invalid: prompt user for `{project-name}`, set path to `{PROJECTS_ROOT}/{project-name}` (from `.oat/projects-root`), then write `.oat/active-project`
 3. Use the resolved `PROJECT_PATH` for all artifact reads/writes
 
 ### State Transitions
@@ -1290,10 +1291,10 @@ In implementation.md:
    /oat:discovery
    ```
    - Provide project name when prompted
-   - This creates/updates `.oat/active-project` to point at `.agent/projects/<project-name>/`
+   - This creates/updates `.oat/active-project` to point at `{PROJECTS_ROOT}/<project-name>/`
    - Answer questions about requirements
 
-**Note:** In this repo, `.agent/projects/**` is gitignored by default, so project artifacts (including `reviews/`) are local-only unless you change ignore rules.
+**Note:** Default projects root is `.oat/projects/shared` (tracked). `.oat/projects/local/**` and `.oat/projects/archived/**` are gitignored for local-only work.
 
 3. **Check progress anytime:**
    ```
@@ -1387,6 +1388,7 @@ Non-final reviews are manual. Examples:
 - Current snapshot: `.oat/internal-project-reference/current-state.md`
 - Roadmap: `.oat/internal-project-reference/roadmap.md`
 - Deferred phases: `.oat/internal-project-reference/deferred-phases.md`
+- Workflow user feedback (dogfood log): `.oat/internal-project-reference/temp/workflow-user-feedback.md`
 - Review loop proposal: `.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`
 - Past workflow artifacts: `.oat/internal-project-reference/past-artifacts/`
 

@@ -144,6 +144,6 @@ Ready for code review and merge.
 
 ## References
 
-- Design: `.agent/projects/{project-name}/design.md`
-- Spec: `.agent/projects/{project-name}/spec.md`
-- Discovery: `.agent/projects/{project-name}/discovery.md`
+- Design: `design.md`
+- Spec: `spec.md`
+- Discovery: `discovery.md`

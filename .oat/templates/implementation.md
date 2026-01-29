@@ -114,6 +114,6 @@ Track test execution during implementation.
 
 ## References
 
-- Plan: `.agent/projects/{project-name}/plan.md`
-- Design: `.agent/projects/{project-name}/design.md`
-- Spec: `.agent/projects/{project-name}/spec.md`
+- Plan: `plan.md`
+- Design: `design.md`
+- Spec: `spec.md`

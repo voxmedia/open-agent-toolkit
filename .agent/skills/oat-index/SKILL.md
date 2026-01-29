@@ -65,6 +65,14 @@ This script:
 
 Use Task tool with `subagent_type="oat-codebase-mapper"` and `run_in_background=true`.
 
+**Important (tool permissions / background mode):**
+Some agent runtimes do not allow background subagents to use tool calls that require user permission prompts (commonly `Write` and sometimes `Bash`). When that happens, the thin `project-index.md` will be generated, but enrichment files will not.
+
+**Default approach (most compatible):**
+- Background mapper agents must be **read-only**: they should **NOT** write files or run shell commands.
+- Each mapper returns the full markdown contents for its documents in its response.
+- The main agent then writes those contents to `.oat/knowledge/repo/`.
+
 **Agent 1: Tech Focus**
 
 ```
@@ -80,7 +88,7 @@ Focus: tech
 
 Analyze this codebase for technology stack and external integrations.
 
-Write these documents to .oat/knowledge/repo/:
+Produce these documents:
 - stack.md - Languages, runtime, frameworks, dependencies, configuration
 - integrations.md - External APIs, databases, auth providers, webhooks
 
@@ -95,7 +103,12 @@ oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
-Explore thoroughly. Write documents directly. Return confirmation only.
+Constraints:
+- Do NOT use Write or Bash tools.
+- Return the complete markdown contents for `stack.md` and `integrations.md` in your final response.
+- Format as:
+  - `--- stack.md ---` then a fenced markdown block
+  - `--- integrations.md ---` then a fenced markdown block
 ```
 
 **Agent 2: Architecture Focus**
@@ -113,7 +126,7 @@ Focus: arch
 
 Analyze this codebase architecture and directory structure.
 
-Write these documents to .oat/knowledge/repo/:
+Produce these documents:
 - architecture.md - Pattern, layers, data flow, abstractions, entry points
 - structure.md - Directory layout, key locations, naming conventions
 
@@ -128,7 +141,12 @@ oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
-Explore thoroughly. Write documents directly. Return confirmation only.
+Constraints:
+- Do NOT use Write or Bash tools.
+- Return the complete markdown contents for `architecture.md` and `structure.md` in your final response.
+- Format as:
+  - `--- architecture.md ---` then a fenced markdown block
+  - `--- structure.md ---` then a fenced markdown block
 ```
 
 **Agent 3: Quality Focus**
@@ -146,7 +164,7 @@ Focus: quality
 
 Analyze this codebase for coding conventions and testing patterns.
 
-Write these documents to .oat/knowledge/repo/:
+Produce these documents:
 - conventions.md - Code style, naming, patterns, error handling
 - testing.md - Framework, structure, mocking, coverage
 
@@ -161,7 +179,12 @@ oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
-Explore thoroughly. Write documents directly. Return confirmation only.
+Constraints:
+- Do NOT use Write or Bash tools.
+- Return the complete markdown contents for `conventions.md` and `testing.md` in your final response.
+- Format as:
+  - `--- conventions.md ---` then a fenced markdown block
+  - `--- testing.md ---` then a fenced markdown block
 ```
 
 **Agent 4: Concerns Focus**
@@ -179,7 +202,7 @@ Focus: concerns
 
 Analyze this codebase for technical debt, known issues, and areas of concern.
 
-Write this document to .oat/knowledge/repo/:
+Produce this document:
 - concerns.md - Tech debt, bugs, security, performance, fragile areas
 
 Use template from .agent/skills/oat-index/references/templates/
@@ -193,22 +216,27 @@ oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
-Explore thoroughly. Write document directly. Return confirmation only.
+Constraints:
+- Do NOT use Write or Bash tools.
+- Return the complete markdown contents for `concerns.md` in your final response as:
+  - `--- concerns.md ---` then a fenced markdown block
 ```
 
 ### Step 6: Wait for Agent Completion
 
-Read each agent's output file to collect confirmations.
+Collect mapper responses.
 
-Expected format:
-```
-## Mapping Complete
+If your environment supports background agents writing files, you may instead instruct them to write directly and skip to Step 7.
 
-**Focus:** {focus}
-**Documents written:**
-- `.oat/knowledge/{DOC1}.md` ({N} lines)
-- `.oat/knowledge/{DOC2}.md` ({N} lines)
-```
+**If mappers returned markdown (recommended):**
+Write the returned markdown blocks to these files:
+- `.oat/knowledge/repo/stack.md`
+- `.oat/knowledge/repo/integrations.md`
+- `.oat/knowledge/repo/architecture.md`
+- `.oat/knowledge/repo/structure.md`
+- `.oat/knowledge/repo/conventions.md`
+- `.oat/knowledge/repo/testing.md`
+- `.oat/knowledge/repo/concerns.md`
 
 ### Step 7: Verify All Documents Created
 

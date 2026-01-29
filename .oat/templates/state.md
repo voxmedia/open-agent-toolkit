@@ -24,7 +24,7 @@ Discovery - Gathering requirements and understanding the problem space
 
 ## Artifacts
 
-- **Discovery:** `.agent/projects/{project-name}/discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (in_progress)
 - **Spec:** Not yet created
 - **Design:** Not yet created
 - **Plan:** Not yet created

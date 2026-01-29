@@ -122,6 +122,8 @@ OAT stores the active project path in `.oat/active-project` (single line, local-
 
 ```bash
 PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".agent/projects")}"
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 **If `PROJECT_PATH` is set and valid (directory exists):**
@@ -133,7 +135,7 @@ PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
 
 **If `PROJECT_PATH` is missing/invalid:**
 - Ask user for project name (slug format, e.g., "user-auth-refactor")
-- Set `PROJECT_PATH` to: `.agent/projects/{project-name}`
+- Set `PROJECT_PATH` to: `${PROJECTS_ROOT}/{project-name}`
 
 Now check whether the resolved `PROJECT_PATH` already exists:
 ```bash

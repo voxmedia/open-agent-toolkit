@@ -127,5 +127,5 @@ Specification is for requirements and acceptance criteria, not design/implementa
 
 ## References
 
-- Discovery: `.agent/projects/{project-name}/discovery.md`
+- Discovery: `discovery.md`
 - Knowledge Base: `.oat/knowledge/repo/project-index.md`

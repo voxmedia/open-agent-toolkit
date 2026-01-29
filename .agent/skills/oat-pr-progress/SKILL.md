@@ -62,11 +62,13 @@ OAT stores the active project path in `.oat/active-project` (single line, local-
 
 ```bash
 PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".agent/projects")}"
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 If missing/invalid:
 - Ask the user for `{project-name}`
-- Set `PROJECT_PATH` to `.agent/projects/{project-name}`
+- Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
 - Write it:
   ```bash
   mkdir -p .oat
@@ -201,4 +203,3 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 - Scope determined (phase or explicit range)
 - PR description artifact written to `{PROJECT_PATH}/pr/`
 - User has clear next step to open PR (manual or gh)
-

@@ -296,7 +296,7 @@ interface Response {
 
 ## References
 
-- Specification: `.agent/projects/{project-name}/spec.md`
+- Specification: `spec.md`
 - Knowledge Base: `.oat/knowledge/repo/project-index.md`
 - Architecture Docs: `.oat/knowledge/repo/architecture.md`
 - Conventions: `.oat/knowledge/repo/conventions.md`

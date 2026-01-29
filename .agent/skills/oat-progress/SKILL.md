@@ -85,6 +85,8 @@ OAT stores the active project path in `.oat/active-project` (single line, local-
 
 ```bash
 ACTIVE_PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".agent/projects")}"
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 **If `ACTIVE_PROJECT_PATH` is set and valid (directory exists):**
@@ -97,6 +99,11 @@ Active Project: {basename(ACTIVE_PROJECT_PATH)} ({ACTIVE_PROJECT_PATH})
 Active Project: (not set)
 ```
 
+```bash
+ls -d "$PROJECTS_ROOT"/*/ 2>/dev/null
+```
+
+**If you are migrating from the legacy location and it differs from `PROJECTS_ROOT`, you may also want to check:**
 ```bash
 ls -d .agent/projects/*/ 2>/dev/null
 ```
@@ -112,7 +119,7 @@ Start a new project:
 
 ### Step 4: For Each Project, Show Status
 
-Read `.agent/projects/{project-name}/state.md` frontmatter:
+Read `{project}/state.md` frontmatter:
 - `oat_phase` - Current phase
 - `oat_phase_status` - in_progress or complete
 - `oat_blockers` - Any blockers

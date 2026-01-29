@@ -24,11 +24,20 @@ Example: `/create-pr-description user-auth-refactor --sha=abc123 --jira=JIRA-123
 
 ### Step 1: Determine File Location
 
-If a project name/filename is provided in arguments, check if it matches an existing project directory in `.agent/projects/`. If so, use that project's `pr-description.md` file.
+If a project name/filename is provided in arguments, check if it matches an existing project directory under the configured projects root (or legacy `.agent/projects/`).
+
+Determine projects root:
+```bash
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".agent/projects")}"
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+```
+
+If `{project-name}` exists under `$PROJECTS_ROOT/`, use that project's `pr-description.md` file.
+If not found, fallback to checking `.agent/projects/{project-name}/`.
 
 If no location is provided, ask the user:
 - **Option A**: `.agent/projects/pr-descriptions/<filename>.md` (standalone PRs)
-- **Option B**: `.agent/projects/<project-name>/pr-description.md` (existing project directory)
+- **Option B**: `${PROJECTS_ROOT}/<project-name>/pr-description.md` (existing project directory)
 
 Suggest filename based on context:
 - `<project-name>.md` (e.g., `openapi-automation-workflow.md`)

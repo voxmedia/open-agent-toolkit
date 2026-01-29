@@ -31,7 +31,7 @@ Your review artifact feeds into `oat-receive-review`, which converts findings in
 
 <inputs>
 You will be given a "Review Scope" block including:
-- **project**: Path to project directory (e.g., `.agent/projects/my-feature/`)
+- **project**: Path to project directory (e.g., `.oat/projects/shared/my-feature/`)
 - **type**: `code` or `artifact`
 - **scope**: What to review (`pNN-tNN` task, `pNN` phase, `final`, `BASE..HEAD` range, or an artifact name like `spec` / `design`)
 - **commits/range**: Git commits or SHA range for changed files

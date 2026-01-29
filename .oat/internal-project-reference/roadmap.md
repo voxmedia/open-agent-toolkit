@@ -2,10 +2,12 @@
 
 This file is the canonical OAT roadmap for this repo. It combines:
 - the dogfood workflow direction (`.oat/internal-project-reference/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`)
-- the early "product" vision (interop + CLI) (`.agent/projects/project-setup/reference/agentic_development_framework_v_1_plan.md`)
+- the early "product" vision (interop + CLI) (`.oat/internal-project-reference/past-artifacts/agentic_development_framework_v_1_plan.md`)
 - the review/subagent direction (`.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`)
 
 For a birdseye snapshot of what exists *right now*, see `.oat/internal-project-reference/current-state.md`.
+
+For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/internal-project-reference/temp/workflow-user-feedback.md`.
 
 As of `git log -1` on branch `dogfood-workflow`, we have the baseline workflow skills and templates in place. The next work is largely about closing known gaps (reviews/PRs, active project resolution) and then deciding when to shift focus to provider interop.
 
@@ -18,7 +20,7 @@ Baseline dogfood workflow is implemented:
   - `oat-discovery` -> `oat-spec` -> `oat-design` -> `oat-plan` -> `oat-implement`
   - Router: `oat-progress`
 - Templates under `.oat/templates/`: discovery/spec/design/plan/implementation/state/project-index
-- Project artifacts under `.agent/projects/<project>/` (current dogfood layout)
+- Project artifacts under `.oat/projects/shared/<project>/` (current dogfood layout; configurable via `.oat/projects-root`)
 - Testing traceability:
   - spec Requirement Index uses `Verification` (`method: pointer`)
   - design includes requirement-to-test mapping inside `## Testing Strategy`
@@ -42,8 +44,8 @@ Baseline dogfood workflow is implemented:
      - `.oat/templates/code-review.md`, `.oat/templates/artifact-review.md` (currently the canonical format is in `.agent/agents/oat-reviewer.md`)
 
 3. Dogfood vs product scope needs explicit separation
-   - Dogfood design (v2) prioritizes workflow skills first and keeps projects in `.agent/projects/`.
-   - Early plan prioritizes provider interop (CLI, adapters, sync manifest, `.oat/projects/**`).
+   - Dogfood design (v2) prioritizes workflow skills first; we now default projects to `.oat/projects/shared/` (tracked) via `.oat/projects-root`.
+   - Early plan prioritizes provider interop (CLI, adapters, sync manifest, richer `.oat/projects/**` switching).
    - Gap: we need to keep both visions, but sequence them clearly to avoid half-implementing two incompatible directory models.
 
 4. Provider capability differences
@@ -103,11 +105,12 @@ Baseline dogfood workflow is implemented:
 - Remaining: `.oat/state.md` dashboard and documented project switching workflow
 
 **When to do it:**
-- As soon as we have >1 `.agent/projects/<name>/` directory, or
+- As soon as we have >1 project under `.oat/projects/shared/<name>/`, or
 - When we see the wrong project being used / repeated prompts for project name.
 
 **Deliverables:**
-- `.oat/active-project` pointer file containing a path to the active project directory (initially `.agent/projects/<name>/`)
+- `.oat/projects-root` containing the default projects root (e.g., `.oat/projects/shared`)
+- `.oat/active-project` pointer file containing the active project directory path (under the configured projects root)
 - Optional `.oat/state.md` dashboard derived from the active project's `state.md` + knowledge freshness summary
 - Update all workflow skills to resolve project via:
   1) `.oat/active-project` (preferred)

@@ -39,6 +39,13 @@ yarn-error.log*
 
 # OAT local-only workspace state
 .oat/active-project
+.oat/state.md
+
+# OAT projects
+.oat/projects/local/**
+.oat/projects/archived/**
+!.oat/projects/local/.gitkeep
+!.oat/projects/archived/.gitkeep
 
 # Ignore agent-specific project files (agent-agnostic)
 .agent/projects/**
