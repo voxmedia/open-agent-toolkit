@@ -10,6 +10,13 @@ oat_template_name: discovery
 
 # Discovery: {Project Name}
 
+## Phase Guardrails (Discovery)
+
+Discovery is for requirements and decisions, not implementation details.
+
+- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
+- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+
 ## Initial Request
 
 {Copy of user's initial request}
@@ -69,7 +76,7 @@ oat_template_name: discovery
 
 ## Open Questions
 
-{Questions that need resolution before or during specification}
+{Questions that need resolution before or during specification (and later design)}
 
 - **{Question Category}:** {Question that needs answering}
 - **{Question Category}:** {Question that needs answering}

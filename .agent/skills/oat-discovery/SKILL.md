@@ -22,6 +22,7 @@ Gather requirements and understand the problem space through natural collaborati
 - ❌ No design documents
 - ❌ No implementation plans
 - ❌ No technical specifications
+- ❌ No concrete deliverables list (specific scripts, file paths, function names)
 
 **ALLOWED Activities:**
 - ✅ Asking clarifying questions
@@ -38,7 +39,7 @@ If you catch yourself:
 **Recovery:**
 1. Acknowledge the deviation
 2. Return to asking questions about requirements
-3. Document the insight in discovery.md without implementation details
+3. Document the insight in discovery.md without implementation details (use "Open Questions" for design if needed)
 
 ## Process
 
@@ -256,6 +257,10 @@ Update discovery.md sections:
 - **Open Questions:** Unresolved questions (flag for spec phase)
 - **Assumptions:** What we're assuming is true (needs validation)
 - **Risks:** Potential problems identified (helps planning)
+
+**Keep it outcome-level:**
+- Avoid naming specific scripts/files/commands as deliverables in discovery.
+- If you need to preserve an implementation thought, record it as an Open Question for design.
 
 ### Step 11: Mark Discovery Complete
 
