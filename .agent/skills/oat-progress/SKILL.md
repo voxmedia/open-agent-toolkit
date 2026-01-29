@@ -79,7 +79,23 @@ Changes since: {FILES_CHANGED} files changed
 Consider running /oat:index to refresh.
 ```
 
-### Step 3: List Active Projects
+### Step 3: List Projects (Highlight Active Project)
+
+OAT stores the active project path in `.oat/active-project` (single line, local-only).
+
+```bash
+ACTIVE_PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
+```
+
+**If `ACTIVE_PROJECT_PATH` is set and valid (directory exists):**
+```
+Active Project: {basename(ACTIVE_PROJECT_PATH)} ({ACTIVE_PROJECT_PATH})
+```
+
+**If `ACTIVE_PROJECT_PATH` is missing/invalid:** show:
+```
+Active Project: (not set)
+```
 
 ```bash
 ls -d .agent/projects/*/ 2>/dev/null
@@ -106,6 +122,7 @@ Read `.agent/projects/{project-name}/state.md` frontmatter:
 **Display format:**
 ```
 📁 {project-name}
+   Active: {yes/no}
    Phase: {oat_phase} ({oat_phase_status})
    HiL Gates: {oat_hil_checkpoints}
    Completed: {oat_hil_completed as checkmarks}

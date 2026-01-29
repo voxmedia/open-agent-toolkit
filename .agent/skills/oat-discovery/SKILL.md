@@ -115,17 +115,32 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 - Warn that staleness could not be verified
 - Recommend refreshing knowledge base to ensure accuracy
 
-### Step 3: Create Project Directory
+### Step 3: Resolve Active Project (or Create a New One)
 
-Ask user for project name (slug format, e.g., "user-auth-refactor").
+OAT stores the active project path in `.oat/active-project` (single line, local-only).
 
-Check if project already exists:
 ```bash
-ls -la .agent/projects/{project-name} 2>/dev/null
+PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
+```
+
+**If `PROJECT_PATH` is set and valid (directory exists):**
+- Derive `project-name` from the directory name (basename of the path)
+- Read `{PROJECT_PATH}/state.md` (if it exists) and show current status
+- Ask user:
+  - **Continue** with active project, or
+  - **Create a new project** (prompts for a new name and updates `.oat/active-project`)
+
+**If `PROJECT_PATH` is missing/invalid:**
+- Ask user for project name (slug format, e.g., "user-auth-refactor")
+- Set `PROJECT_PATH` to: `.agent/projects/{project-name}`
+
+Now check whether the resolved `PROJECT_PATH` already exists:
+```bash
+ls -la "$PROJECT_PATH" 2>/dev/null
 ```
 
 **If project exists:**
-- Read `.agent/projects/{project-name}/state.md` to show current status
+- Read `"$PROJECT_PATH/state.md"` (if present) to show current status
 - Ask user: "Project exists. Resume, View, or Overwrite?"
   - **Resume:** Continue with existing discovery (if status is in_progress)
   - **View:** Show current discovery.md and exit
@@ -133,12 +148,20 @@ ls -la .agent/projects/{project-name} 2>/dev/null
 
 **If project doesn't exist:**
 ```bash
-mkdir -p .agent/projects/{project-name}
+mkdir -p "$PROJECT_PATH"
+```
+
+Regardless of whether the project existed already, set the active project pointer to `PROJECT_PATH`.
+
+**Write/refresh active project pointer (local-only):**
+```bash
+mkdir -p .oat
+echo "$PROJECT_PATH" > .oat/active-project
 ```
 
 ### Step 4: Initialize State
 
-Copy template: `.oat/templates/state.md` → `.agent/projects/{project-name}/state.md`
+Copy template: `.oat/templates/state.md` → `"$PROJECT_PATH/state.md"`
 
 Update frontmatter:
 ```yaml
@@ -155,7 +178,7 @@ Update content:
 
 ### Step 5: Initialize Discovery Document
 
-Copy template: `.oat/templates/discovery.md` → `.agent/projects/{project-name}/discovery.md`
+Copy template: `.oat/templates/discovery.md` → `"$PROJECT_PATH/discovery.md"`
 
 Update with user's initial request.
 
@@ -246,7 +269,7 @@ oat_ready_for: oat-spec
 
 ### Step 12: Update Project State
 
-Update `.agent/projects/{project-name}/state.md`:
+Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
 - `oat_phase: discovery`
@@ -266,7 +289,7 @@ Update `.agent/projects/{project-name}/state.md`:
 During implementation of OAT itself, use standard commit format.
 
 ```bash
-git add .agent/projects/{project-name}/
+git add "$PROJECT_PATH/"
 git commit -m "docs: complete discovery for {project-name}
 
 Key decisions:

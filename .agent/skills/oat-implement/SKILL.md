@@ -41,10 +41,29 @@ If you catch yourself:
 
 ## Process
 
+### Step 0: Resolve Active Project
+
+OAT stores the active project path in `.oat/active-project` (single line, local-only).
+
+```bash
+PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
+```
+
+**If `PROJECT_PATH` is missing/invalid:**
+- Ask the user for `{project-name}`
+- Set `PROJECT_PATH` to `.agent/projects/{project-name}`
+- Write it for future phases:
+  ```bash
+  mkdir -p .oat
+  echo "$PROJECT_PATH" > .oat/active-project
+  ```
+
+**If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+
 ### Step 1: Check Plan Complete
 
 ```bash
-cat .agent/projects/{project-name}/plan.md | head -10 | grep "oat_status:"
+cat "$PROJECT_PATH/plan.md" | head -10 | grep "oat_status:"
 ```
 
 **Required frontmatter:**
@@ -55,7 +74,7 @@ cat .agent/projects/{project-name}/plan.md | head -10 | grep "oat_status:"
 
 ### Step 2: Read Plan Document
 
-Read `.agent/projects/{project-name}/plan.md` completely to understand:
+Read `"$PROJECT_PATH/plan.md"` completely to understand:
 - All phases and tasks
 - File changes per task
 - Verification commands
@@ -66,7 +85,7 @@ Read `.agent/projects/{project-name}/plan.md` completely to understand:
 Check if implementation already started:
 
 ```bash
-cat .agent/projects/{project-name}/implementation.md 2>/dev/null | head -20
+cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 ```
 
 **If exists and has progress:**
@@ -79,7 +98,7 @@ cat .agent/projects/{project-name}/implementation.md 2>/dev/null | head -20
 
 ### Step 4: Initialize Implementation Document
 
-Copy template: `.oat/templates/implementation.md` → `.agent/projects/{project-name}/implementation.md`
+Copy template: `.oat/templates/implementation.md` → `"$PROJECT_PATH/implementation.md"`
 
 Update frontmatter:
 ```yaml
@@ -232,7 +251,7 @@ oat_last_updated: {today}
 
 ### Step 12: Update Project State
 
-Update `.agent/projects/{project-name}/state.md`:
+Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
 - `oat_current_task: null`

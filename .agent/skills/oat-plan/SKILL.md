@@ -42,10 +42,29 @@ If you catch yourself:
 
 ## Process
 
+### Step 0: Resolve Active Project
+
+OAT stores the active project path in `.oat/active-project` (single line, local-only).
+
+```bash
+PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
+```
+
+**If `PROJECT_PATH` is missing/invalid:**
+- Ask the user for `{project-name}`
+- Set `PROJECT_PATH` to `.agent/projects/{project-name}`
+- Write it for future phases:
+  ```bash
+  mkdir -p .oat
+  echo "$PROJECT_PATH" > .oat/active-project
+  ```
+
+**If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+
 ### Step 1: Check Design Complete
 
 ```bash
-cat .agent/projects/{project-name}/design.md | head -10 | grep "oat_status:"
+cat "$PROJECT_PATH/design.md" | head -10 | grep "oat_status:"
 ```
 
 **Required frontmatter:**
@@ -56,7 +75,7 @@ cat .agent/projects/{project-name}/design.md | head -10 | grep "oat_status:"
 
 ### Step 2: Read Design Document
 
-Read `.agent/projects/{project-name}/design.md` completely to understand:
+Read `"$PROJECT_PATH/design.md"` completely to understand:
 - Architecture overview and components
 - Data models and schemas
 - API designs and interfaces
@@ -73,7 +92,7 @@ Read for implementation context:
 
 ### Step 4: Initialize Plan Document
 
-Copy template: `.oat/templates/plan.md` → `.agent/projects/{project-name}/plan.md`
+Copy template: `.oat/templates/plan.md` → `"$PROJECT_PATH/plan.md"`
 
 Update frontmatter:
 ```yaml
@@ -218,7 +237,7 @@ oat_last_updated: {today}
 
 ### Step 13: Update Project State
 
-Update `.agent/projects/{project-name}/state.md`:
+Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
 - `oat_current_task: null`
@@ -248,7 +267,7 @@ Planning - Ready for implementation
 ### Step 14: Commit Plan
 
 ```bash
-git add .agent/projects/{project-name}/
+git add "$PROJECT_PATH/"
 git commit -m "docs: complete implementation plan for {project-name}
 
 Phases:

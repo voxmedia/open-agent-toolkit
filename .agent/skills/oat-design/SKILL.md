@@ -13,10 +13,29 @@ Transform specification requirements into a detailed technical design with archi
 
 ## Process
 
+### Step 0: Resolve Active Project
+
+OAT stores the active project path in `.oat/active-project` (single line, local-only).
+
+```bash
+PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
+```
+
+**If `PROJECT_PATH` is missing/invalid:**
+- Ask the user for `{project-name}`
+- Set `PROJECT_PATH` to `.agent/projects/{project-name}`
+- Write it for future phases:
+  ```bash
+  mkdir -p .oat
+  echo "$PROJECT_PATH" > .oat/active-project
+  ```
+
+**If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+
 ### Step 1: Check Specification Complete
 
 ```bash
-cat .agent/projects/{project-name}/spec.md | head -10 | grep "oat_status:"
+cat "$PROJECT_PATH/spec.md" | head -10 | grep "oat_status:"
 ```
 
 **Required frontmatter:**
@@ -27,7 +46,7 @@ cat .agent/projects/{project-name}/spec.md | head -10 | grep "oat_status:"
 
 ### Step 2: Read Specification Document
 
-Read `.agent/projects/{project-name}/spec.md` completely to understand:
+Read `"$PROJECT_PATH/spec.md"` completely to understand:
 - Problem statement and goals
 - All functional requirements (FR)
 - All non-functional requirements (NFR)
@@ -49,7 +68,7 @@ Read for architectural context and conventions:
 
 ### Step 4: Initialize Design Document
 
-Copy template: `.oat/templates/design.md` → `.agent/projects/{project-name}/design.md`
+Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
 
 Update frontmatter:
 ```yaml
@@ -287,7 +306,7 @@ oat_last_updated: {today}
 
 ### Step 20: Update Project State
 
-Update `.agent/projects/{project-name}/state.md`:
+Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
 - `oat_current_task: null`
@@ -319,7 +338,7 @@ Design - Ready for implementation planning
 During implementation of OAT itself, use standard commit format.
 
 ```bash
-git add .agent/projects/{project-name}/
+git add "$PROJECT_PATH/"
 git commit -m "docs: complete design for {project-name}
 
 Architecture:
