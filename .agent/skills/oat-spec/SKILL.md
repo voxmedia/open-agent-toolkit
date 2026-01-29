@@ -22,6 +22,7 @@ Transform discovery insights into a formal specification with detailed requireme
 - ❌ No detailed design (component internals, data structures)
 - ❌ No implementation plans or task breakdowns
 - ❌ No technology selections beyond what's in discovery
+- ❌ No concrete deliverables list (specific scripts, file paths, function names)
 
 **ALLOWED Activities:**
 - ✅ Formalizing requirements from discovery
@@ -40,7 +41,7 @@ If you catch yourself:
 **Recovery:**
 1. Acknowledge the deviation
 2. Return to requirements language ("the system must...")
-3. Move detailed design/implementation notes to "Open Questions" for next phase
+3. Move detailed design/implementation notes to "Open Questions" for `/oat:design`
 
 ## Process
 
@@ -231,6 +232,8 @@ Transform "Options Considered" into design proposal:
 ```
 
 Keep high-level - detailed design comes in next phase.
+
+**Guardrail:** Do not name specific scripts/files/functions here. Describe components and responsibilities only.
 
 ### Step 14: Define Success Metrics
 

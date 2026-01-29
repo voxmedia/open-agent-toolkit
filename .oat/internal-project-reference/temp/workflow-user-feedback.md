@@ -34,6 +34,20 @@ Add entries as you notice them. Prefer specific reproduction steps and concrete 
 - **Suggestion:** Migrate the “active project” canonical location sooner (even without full archive/local flows), and update skills to resolve projects from `.oat/projects/shared/<name>/` by default.
 - **Related:** `.gitignore` (`.agent/projects/**`), `.oat/active-project` pointer semantics, `oat-*` skill project resolution logic.
 
+### 2026-01-29: Discovery can drift into implementation detail when “designy” context is loaded
+
+- **Context:** Dogfooding discovery/spec on a project where the reference design doc was available in context.
+- **What happened:** Discovery included concrete deliverables (script/skill names and wiring), which is easy for downstream phases to prematurely lock in.
+- **Expected:** Discovery should stay outcome-level (decisions, constraints, success criteria) and route implementation details to design via Open Questions.
+- **Impact:** Phase boundary blur increases churn and makes later design changes feel like “scope change” rather than normal refinement.
+- **Suggestion / Mitigation implemented:**
+  - Added explicit “Phase Guardrails (Discovery)” to the discovery template: `.oat/templates/discovery.md`.
+  - Added discovery-skill guardrails (“no concrete deliverables list” + “keep it outcome-level”): `.agent/skills/oat-discovery/SKILL.md`.
+  - Commit: `fe51053`.
+- **Follow-up / Mitigation implemented:** Added lightweight “Spec guardrails” to keep requirements outcome-level and push design details to `/oat:design`:
+  - Template: `.oat/templates/spec.md`
+  - Skill: `.agent/skills/oat-spec/SKILL.md`
+
 ### YYYY-MM-DD: {Short Title}
 
 - **Context:** {what you were trying to do}

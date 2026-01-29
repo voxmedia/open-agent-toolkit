@@ -10,6 +10,14 @@ oat_template_name: spec
 
 # Specification: {Project Name}
 
+## Phase Guardrails (Specification)
+
+Specification is for requirements and acceptance criteria, not design/implementation details.
+
+- Avoid concrete deliverables (specific scripts, file paths, function names).
+- Keep the “High-Level Design” section to architecture shape and component boundaries only.
+- If a design detail comes up, record it under **Open Questions** for `/oat:design`.
+
 ## Problem Statement
 
 {Clear description of the problem being solved}
