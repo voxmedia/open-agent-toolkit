@@ -114,6 +114,27 @@ read_project_state() {
   OAT_BLOCKERS="${OAT_BLOCKERS:-[]}"
 }
 
+# Read knowledge index status
+# Sets: KNOWLEDGE_GENERATED_AT, KNOWLEDGE_MERGE_BASE_SHA, KNOWLEDGE_STATUS
+read_knowledge_status() {
+  local index_file=".oat/knowledge/repo/project-index.md"
+
+  KNOWLEDGE_GENERATED_AT=""
+  KNOWLEDGE_MERGE_BASE_SHA=""
+  KNOWLEDGE_STATUS="not generated"
+
+  if [[ ! -f "$index_file" ]]; then
+    return
+  fi
+
+  KNOWLEDGE_GENERATED_AT=$(parse_frontmatter "$index_file" "oat_generated_at")
+  KNOWLEDGE_MERGE_BASE_SHA=$(parse_frontmatter "$index_file" "oat_source_main_merge_base_sha")
+
+  if [[ -n "$KNOWLEDGE_GENERATED_AT" ]]; then
+    KNOWLEDGE_STATUS="generated"
+  fi
+}
+
 # --- Main ---
 main() {
   local projects_root
@@ -124,6 +145,8 @@ main() {
   if [[ "$PROJECT_STATUS" == "active" ]]; then
     read_project_state
   fi
+
+  read_knowledge_status
 
   echo "# OAT Repo State" > "$DASHBOARD_PATH"
   echo "" >> "$DASHBOARD_PATH"
