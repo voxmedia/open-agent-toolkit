@@ -7,6 +7,17 @@ description: Check project progress and get routed to the appropriate next skill
 
 Check knowledge base status, project progress, and get recommendations for next steps.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ PROGRESS
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Before multi-step work (staleness check, project scan, recommendation), print 2–4 short step indicators.
+
 ## Usage
 
 Run `/oat:progress` at any time to:

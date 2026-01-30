@@ -7,6 +7,22 @@ description: Generate or regenerate comprehensive knowledge base of the codebase
 
 Generate a comprehensive analysis of the codebase using parallel mapper agents.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ INDEX
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Before multi-step work (thin index generation, spawning mappers, writing outputs), print 2–5 short step indicators, e.g.:
+  - `[1/4] Checking existing knowledge…`
+  - `[2/4] Generating thin index…`
+  - `[3/4] Spawning mappers…`
+  - `[4/4] Writing knowledge files…`
+- Keep it concise; don’t print a line for every shell command.
+
 ## Process
 
 ### Step 1: Check Existing Knowledge
