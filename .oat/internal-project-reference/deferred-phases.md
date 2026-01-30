@@ -72,6 +72,17 @@ Dogfood v1 baseline is:
   1) `.oat/active-project` (preferred)
   2) fallback prompts (if missing)
 
+**Deferred within this phase: Active project pointer format migration**
+
+We discussed migrating `.oat/active-project` from storing a full path → storing a project name (resolved via `{PROJECTS_ROOT}/{name}`), but this is a coordination problem because many existing skills assume the pointer contains a path.
+
+For dogfood v1, the safest approach is:
+- **Write:** Keep writing a full path to `.oat/active-project` (backward compatible with existing skills).
+- **Read:** New tooling (e.g., repo state dashboard generation) may accept either format:
+  - Legacy full path (current canonical)
+  - Name-only (future), resolved via `.oat/projects-root` / `OAT_PROJECTS_ROOT`
+- **Migration:** Treat name-only as a separate coordinated update (update every skill’s “resolve active project” logic first, then flip writes).
+
 **Exit criteria:**
 - All skills operate on the correct project with no ambiguity.
 - Switching projects is a single, explicit action (even if manual at first).
