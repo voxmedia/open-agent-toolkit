@@ -323,6 +323,12 @@ EOF
 
 # --- Main ---
 main() {
+  # Validate we're in a git repo
+  if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo "Error: Must be run from a git repository" >&2
+    exit 1
+  fi
+
   local projects_root
   projects_root=$(resolve_projects_root)
 
