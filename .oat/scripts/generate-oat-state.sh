@@ -175,6 +175,42 @@ calculate_staleness() {
   fi
 }
 
+# Compute recommended next step based on state
+# Sets: RECOMMENDED_STEP, RECOMMENDED_REASON
+compute_next_step() {
+  RECOMMENDED_STEP=""
+  RECOMMENDED_REASON=""
+
+  # No active project
+  if [[ "$PROJECT_STATUS" == "not set" ]]; then
+    RECOMMENDED_STEP="/oat:open-project"
+    RECOMMENDED_REASON="Set an active project to continue work"
+    return
+  fi
+
+  # Project has issues
+  if [[ "$PROJECT_STATUS" != "active" ]]; then
+    RECOMMENDED_STEP="/oat:open-project"
+    RECOMMENDED_REASON="Current project has issues: $PROJECT_STATUS"
+    return
+  fi
+
+  # Map phase + status to next skill
+  case "${OAT_PHASE}:${OAT_PHASE_STATUS}" in
+    "discovery:in_progress") RECOMMENDED_STEP="/oat:discovery"; RECOMMENDED_REASON="Continue discovery phase" ;;
+    "discovery:complete") RECOMMENDED_STEP="/oat:spec"; RECOMMENDED_REASON="Create specification from discovery" ;;
+    "spec:in_progress") RECOMMENDED_STEP="/oat:spec"; RECOMMENDED_REASON="Continue specification phase" ;;
+    "spec:complete") RECOMMENDED_STEP="/oat:design"; RECOMMENDED_REASON="Create design from specification" ;;
+    "design:in_progress") RECOMMENDED_STEP="/oat:design"; RECOMMENDED_REASON="Continue design phase" ;;
+    "design:complete") RECOMMENDED_STEP="/oat:plan"; RECOMMENDED_REASON="Create implementation plan from design" ;;
+    "plan:in_progress") RECOMMENDED_STEP="/oat:plan"; RECOMMENDED_REASON="Continue planning phase" ;;
+    "plan:complete") RECOMMENDED_STEP="/oat:implement"; RECOMMENDED_REASON="Start implementation" ;;
+    "implement:in_progress") RECOMMENDED_STEP="/oat:implement"; RECOMMENDED_REASON="Continue implementation" ;;
+    "implement:complete") RECOMMENDED_STEP="/oat:request-review"; RECOMMENDED_REASON="Request final review" ;;
+    *) RECOMMENDED_STEP="/oat:progress"; RECOMMENDED_REASON="Check current progress" ;;
+  esac
+}
+
 # --- Main ---
 main() {
   local projects_root
@@ -188,6 +224,7 @@ main() {
 
   read_knowledge_status
   calculate_staleness
+  compute_next_step
 
   echo "# OAT Repo State" > "$DASHBOARD_PATH"
   echo "" >> "$DASHBOARD_PATH"
