@@ -72,12 +72,58 @@ read_active_project() {
   PROJECT_STATUS="active"
 }
 
+# Parse YAML frontmatter field from file (best-effort, never fails)
+# Usage: parse_frontmatter "file.md" "field_name"
+# Returns: Field value or empty string (never exits on missing data)
+parse_frontmatter() {
+  local file="$1"
+  local field="$2"
+  local content value
+
+  if [[ ! -f "$file" ]]; then
+    echo ""
+    return 0
+  fi
+
+  # Extract frontmatter block, then find field - use || true to prevent exit
+  content=$(sed -n '/^---$/,/^---$/p' "$file" 2>/dev/null) || true
+  if [[ -z "$content" ]]; then
+    echo ""
+    return 0
+  fi
+
+  # Find field value - grep returns 1 if no match, so use || true
+  value=$(echo "$content" | grep "^${field}:" | head -1 | sed "s/^${field}:[[:space:]]*//") || true
+  echo "$value"
+}
+
+# Read project state from state.md frontmatter
+# Sets: OAT_PHASE, OAT_PHASE_STATUS, OAT_LIFECYCLE, OAT_BLOCKERS
+read_project_state() {
+  local state_file="${PROJECT_PATH}/state.md"
+
+  OAT_PHASE=$(parse_frontmatter "$state_file" "oat_phase")
+  OAT_PHASE_STATUS=$(parse_frontmatter "$state_file" "oat_phase_status")
+  OAT_LIFECYCLE=$(parse_frontmatter "$state_file" "oat_lifecycle")
+  OAT_BLOCKERS=$(parse_frontmatter "$state_file" "oat_blockers")
+
+  # Defaults
+  OAT_PHASE="${OAT_PHASE:-unknown}"
+  OAT_PHASE_STATUS="${OAT_PHASE_STATUS:-unknown}"
+  OAT_LIFECYCLE="${OAT_LIFECYCLE:-active}"
+  OAT_BLOCKERS="${OAT_BLOCKERS:-[]}"
+}
+
 # --- Main ---
 main() {
   local projects_root
   projects_root=$(resolve_projects_root)
 
   read_active_project "$projects_root"
+
+  if [[ "$PROJECT_STATUS" == "active" ]]; then
+    read_project_state
+  fi
 
   echo "# OAT Repo State" > "$DASHBOARD_PATH"
   echo "" >> "$DASHBOARD_PATH"
