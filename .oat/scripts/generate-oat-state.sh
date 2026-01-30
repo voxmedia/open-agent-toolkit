@@ -151,7 +151,7 @@ calculate_staleness() {
   local diff_output
   diff_output=$(git diff --name-only "$KNOWLEDGE_MERGE_BASE_SHA" HEAD 2>/dev/null) || true
   if [[ -n "$diff_output" ]]; then
-    FILES_CHANGED=$(echo "$diff_output" | wc -l | tr -d ' ')
+    FILES_CHANGED=$(echo "$diff_output" | wc -l | awk '{print $1}')
   fi
 
   # Calculate age in days - handle both macOS and Linux date formats
