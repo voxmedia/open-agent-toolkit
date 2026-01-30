@@ -207,6 +207,16 @@ Active Projects:
 Next Step: {recommendation}
 ```
 
+### Step 8: Regenerate Dashboard
+
+After all progress checks, regenerate the repo state dashboard:
+
+```bash
+if [[ -f ".oat/scripts/generate-oat-state.sh" ]]; then
+  .oat/scripts/generate-oat-state.sh
+fi
+```
+
 ## Success Criteria
 
 - Knowledge base status clearly shown
