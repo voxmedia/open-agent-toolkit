@@ -11,6 +11,18 @@ Transform specification requirements into a detailed technical design with archi
 
 **Required:** Complete specification document. If missing, run `/oat:spec` first.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ DESIGN
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Before multi-step work (reading context, drafting architecture, finalizing + committing), print 2–5 short step indicators.
+- Keep it concise; don’t print a line for every shell command.
+
 ## Process
 
 ### Step 0: Resolve Active Project

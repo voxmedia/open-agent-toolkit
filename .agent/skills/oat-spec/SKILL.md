@@ -17,6 +17,18 @@ Transform discovery insights into a formal specification with detailed requireme
 
 **Purpose:** Transform discovery insights into formal, structured requirements with clear acceptance criteria.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ SPEC
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Before multi-step work (validating discovery, drafting requirements, finalizing + committing), print 2–5 short step indicators.
+- Keep it concise; don’t print a line for every shell command.
+
 **BLOCKED Activities:**
 - ❌ No implementation code
 - ❌ No detailed design (component internals, data structures)

@@ -17,6 +17,18 @@ Gather requirements and understand the problem space through natural collaborati
 
 **Purpose:** Gather requirements and understand the problem space through structured dialogue.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ DISCOVERY
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Before multi-step work (knowledge checks, project setup, writing artifacts), print 2–5 short step indicators.
+- Keep it concise; don’t print a line for every shell command.
+
 **BLOCKED Activities:**
 - ❌ No code writing
 - ❌ No design documents
