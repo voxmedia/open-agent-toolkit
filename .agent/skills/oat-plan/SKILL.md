@@ -96,7 +96,18 @@ Read for implementation context:
 
 ### Step 4: Initialize Plan Document
 
-Copy template: `.oat/templates/plan.md` → `"$PROJECT_PATH/plan.md"`
+Check whether a plan already exists at `"$PROJECT_PATH/plan.md"`.
+
+**If `"$PROJECT_PATH/plan.md"` exists:**
+- Read it first (treat it as a draft).
+- Ask the user:
+  - **Resume** (default): continue editing the existing plan in place
+  - **View**: show the existing plan and stop
+  - **Overwrite**: replace with a fresh copy of the template (warn about losing draft edits)
+- If resuming: ensure the document contains the required sections from the template (at minimum: `## Reviews`, `## Implementation Complete`, `## References`). If any are missing, add them using the template headings (do not delete existing content).
+
+**If `"$PROJECT_PATH/plan.md"` does not exist:**
+- Copy template: `.oat/templates/plan.md` → `"$PROJECT_PATH/plan.md"`
 
 Update frontmatter:
 ```yaml
