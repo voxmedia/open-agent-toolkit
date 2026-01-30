@@ -135,6 +135,46 @@ read_knowledge_status() {
   fi
 }
 
+# Calculate knowledge staleness via git diff (best-effort, never fails)
+# Sets: FILES_CHANGED, KNOWLEDGE_AGE_DAYS, STALENESS_STATUS
+calculate_staleness() {
+  FILES_CHANGED=0
+  KNOWLEDGE_AGE_DAYS=0
+  STALENESS_STATUS="fresh"
+
+  if [[ -z "$KNOWLEDGE_MERGE_BASE_SHA" ]]; then
+    STALENESS_STATUS="unknown"
+    return 0
+  fi
+
+  # Count files changed since merge base - git diff may fail if SHA is invalid
+  local diff_output
+  diff_output=$(git diff --name-only "$KNOWLEDGE_MERGE_BASE_SHA" HEAD 2>/dev/null) || true
+  if [[ -n "$diff_output" ]]; then
+    FILES_CHANGED=$(echo "$diff_output" | wc -l | tr -d ' ')
+  fi
+
+  # Calculate age in days - handle both macOS and Linux date formats
+  if [[ -n "$KNOWLEDGE_GENERATED_AT" ]]; then
+    local gen_epoch today_epoch
+    # Try macOS format first, then Linux, fallback to 0
+    gen_epoch=$(date -j -f "%Y-%m-%d" "$KNOWLEDGE_GENERATED_AT" "+%s" 2>/dev/null) || \
+               gen_epoch=$(date -d "$KNOWLEDGE_GENERATED_AT" "+%s" 2>/dev/null) || \
+               gen_epoch=0
+    today_epoch=$(date "+%s")
+    if [[ "$gen_epoch" -gt 0 ]]; then
+      KNOWLEDGE_AGE_DAYS=$(( (today_epoch - gen_epoch) / 86400 ))
+    fi
+  fi
+
+  # Determine staleness
+  if [[ "$FILES_CHANGED" -gt 20 ]] || [[ "$KNOWLEDGE_AGE_DAYS" -gt 7 ]]; then
+    STALENESS_STATUS="stale"
+  elif [[ "$FILES_CHANGED" -gt 5 ]] || [[ "$KNOWLEDGE_AGE_DAYS" -gt 3 ]]; then
+    STALENESS_STATUS="aging"
+  fi
+}
+
 # --- Main ---
 main() {
   local projects_root
@@ -147,6 +187,7 @@ main() {
   fi
 
   read_knowledge_status
+  calculate_staleness
 
   echo "# OAT Repo State" > "$DASHBOARD_PATH"
   echo "" >> "$DASHBOARD_PATH"
