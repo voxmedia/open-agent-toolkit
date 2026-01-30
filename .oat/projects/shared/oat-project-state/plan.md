@@ -1261,6 +1261,226 @@ git commit --allow-empty -m "test(p03-t03): integration verification complete"
 
 ---
 
+### Task p03-t04: (review) Fix sed portability in oat-complete-project
+
+**Files:**
+- Modify: `.agent/skills/oat-complete-project/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: The skill uses macOS-specific `sed -i ''` syntax which will fail on Linux/BSD systems.
+Location: `.agent/skills/oat-complete-project/SKILL.md` lines 62-67
+
+Current code:
+```bash
+sed -i '' 's/^oat_lifecycle:.*/oat_lifecycle: complete/' "$STATE_FILE"
+sed -i '' '/^oat_phase_status:/a\
+oat_lifecycle: complete
+' "$STATE_FILE"
+```
+
+**Step 2: Implement portable fix**
+
+Replace with portable sed approach using temp file:
+
+```bash
+# Check if oat_lifecycle already exists
+if grep -q "^oat_lifecycle:" "$STATE_FILE"; then
+  # Update existing
+  sed 's/^oat_lifecycle:.*/oat_lifecycle: complete/' "$STATE_FILE" > "$STATE_FILE.tmp"
+  mv "$STATE_FILE.tmp" "$STATE_FILE"
+else
+  # Add after oat_phase_status line using awk (more portable for multi-line inserts)
+  awk '/^oat_phase_status:/ {print; print "oat_lifecycle: complete"; next} 1' "$STATE_FILE" > "$STATE_FILE.tmp"
+  mv "$STATE_FILE.tmp" "$STATE_FILE"
+fi
+```
+
+**Step 3: Verify**
+
+Run: `grep "sed -i ''" .agent/skills/oat-complete-project/SKILL.md`
+Expected: No matches (macOS-specific syntax removed)
+
+**Step 4: Commit**
+
+```bash
+git add .agent/skills/oat-complete-project/SKILL.md
+git commit -m "fix(p03-t04): use portable sed syntax in oat-complete-project"
+```
+
+---
+
+### Task p03-t05: (review) Add repo root validation to dashboard script
+
+**Files:**
+- Modify: `.oat/scripts/generate-oat-state.sh`
+
+**Step 1: Understand the issue**
+
+Review finding: The script assumes it's run from repo root. Running from a subdirectory would write to wrong location or fail silently.
+Location: `.oat/scripts/generate-oat-state.sh` main() function
+
+**Step 2: Implement fix**
+
+Add validation at start of main():
+
+```bash
+main() {
+  # Validate we're in a git repo and at root
+  if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo "Error: Must be run from a git repository" >&2
+    exit 1
+  fi
+
+  local projects_root
+  # ... rest of main
+}
+```
+
+**Step 3: Verify**
+
+Run from subdirectory: `cd packages && ../.oat/scripts/generate-oat-state.sh`
+Expected: Error message, not silent failure
+
+**Step 4: Commit**
+
+```bash
+git add .oat/scripts/generate-oat-state.sh
+git commit -m "fix(p03-t05): add repo root validation to dashboard script"
+```
+
+---
+
+### Task p03-t06: (review) Improve date parsing readability
+
+**Files:**
+- Modify: `.oat/scripts/generate-oat-state.sh`
+
+**Step 1: Understand the issue**
+
+Review finding: Triple-or pattern for date parsing is hard to read and debug.
+Location: `.oat/scripts/generate-oat-state.sh` lines 161-163
+
+Current:
+```bash
+gen_epoch=$(date -j -f "%Y-%m-%d" "$KNOWLEDGE_GENERATED_AT" "+%s" 2>/dev/null) || \
+           gen_epoch=$(date -d "$KNOWLEDGE_GENERATED_AT" "+%s" 2>/dev/null) || \
+           gen_epoch=0
+```
+
+**Step 2: Implement fix**
+
+Refactor to if/elif/else:
+
+```bash
+if [[ -n "$KNOWLEDGE_GENERATED_AT" ]]; then
+  local gen_epoch today_epoch
+  # Try macOS format first
+  if gen_epoch=$(date -j -f "%Y-%m-%d" "$KNOWLEDGE_GENERATED_AT" "+%s" 2>/dev/null); then
+    : # Success on macOS
+  # Then try Linux format
+  elif gen_epoch=$(date -d "$KNOWLEDGE_GENERATED_AT" "+%s" 2>/dev/null); then
+    : # Success on Linux
+  else
+    # Fallback: cannot parse date
+    gen_epoch=0
+  fi
+  today_epoch=$(date "+%s")
+  if [[ "$gen_epoch" -gt 0 ]]; then
+    KNOWLEDGE_AGE_DAYS=$(( (today_epoch - gen_epoch) / 86400 ))
+  fi
+fi
+```
+
+**Step 3: Verify**
+
+Run: `.oat/scripts/generate-oat-state.sh && cat .oat/state.md | grep "Age"`
+Expected: Age calculation still works correctly
+
+**Step 4: Commit**
+
+```bash
+git add .oat/scripts/generate-oat-state.sh
+git commit -m "fix(p03-t06): improve date parsing readability"
+```
+
+---
+
+### Task p03-t07: (review) Add stderr guidance to lifecycle skills
+
+**Files:**
+- Modify: `.agent/skills/oat-open-project/SKILL.md`
+- Modify: `.agent/skills/oat-clear-active-project/SKILL.md`
+- Modify: `.agent/skills/oat-complete-project/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: Skills show error echo statements but don't specify stderr redirection.
+Location: All three lifecycle skills, error handling sections
+
+**Step 2: Implement fix**
+
+Update all error echo statements to use `>&2`:
+
+```bash
+# Before
+echo "Error: Invalid project name."
+exit 1
+
+# After
+echo "Error: Invalid project name." >&2
+exit 1
+```
+
+**Step 3: Verify**
+
+Run: `grep -n "echo \"Error" .agent/skills/oat-*-project/SKILL.md`
+Expected: All error lines include `>&2`
+
+**Step 4: Commit**
+
+```bash
+git add .agent/skills/oat-open-project/SKILL.md .agent/skills/oat-clear-active-project/SKILL.md .agent/skills/oat-complete-project/SKILL.md
+git commit -m "fix(p03-t07): add stderr guidance to lifecycle skills"
+```
+
+---
+
+### Task p03-t08: (review) Use awk for wc -l trimming
+
+**Files:**
+- Modify: `.oat/scripts/generate-oat-state.sh`
+
+**Step 1: Understand the issue**
+
+Review finding: Uses `tr -d ' '` to strip spaces from wc output, awk is cleaner.
+Location: `.oat/scripts/generate-oat-state.sh` line 154
+
+Current:
+```bash
+FILES_CHANGED=$(echo "$diff_output" | wc -l | tr -d ' ')
+```
+
+**Step 2: Implement fix**
+
+```bash
+FILES_CHANGED=$(echo "$diff_output" | wc -l | awk '{print $1}')
+```
+
+**Step 3: Verify**
+
+Run: `.oat/scripts/generate-oat-state.sh && cat .oat/state.md | grep "Files Changed"`
+Expected: Files changed count displays correctly
+
+**Step 4: Commit**
+
+```bash
+git add .oat/scripts/generate-oat-state.sh
+git commit -m "fix(p03-t08): use awk for wc -l trimming"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running /oat:request-review and /oat:receive-review.}
@@ -1270,7 +1490,7 @@ git commit --allow-empty -m "test(p03-t03): integration verification complete"
 | p01 | code | pending | - | - |
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
-| final | code | received | 2026-01-30 | reviews/final-review-2026-01-30.md |
+| final | code | passed | 2026-01-30 | reviews/final-review-2026-01-30.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 

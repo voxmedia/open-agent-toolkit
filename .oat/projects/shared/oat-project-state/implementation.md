@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-01-30
-oat_current_task_id: p03-t02
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -19,9 +19,9 @@ oat_template: false
 |-------|--------|-------|-----------|
 | Phase 1: Dashboard Script | complete | 10 | 10/10 |
 | Phase 2: Project Lifecycle Skills | complete | 5 | 5/5 |
-| Phase 3: Integration Hooks | complete | 3 | 3/3 |
+| Phase 3: Integration Hooks + Review Fixes | complete | 8 | 8/8 |
 
-**Total:** 18/18 tasks completed
+**Total:** 23/23 tasks completed
 
 ---
 
@@ -86,7 +86,7 @@ oat_template: false
 
 ## Phase 3: Integration Hooks
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-01-30
 
 ### Task p03-t01: Add Hook to oat-progress
@@ -97,6 +97,37 @@ oat_template: false
 
 ### Task p03-t03: Final Integration Test
 **Status:** completed | **Commit:** 0b1175b
+
+### Task p03-t04: (review) Fix sed portability in oat-complete-project
+**Status:** completed | **Commit:** 3beb4a8
+
+### Task p03-t05: (review) Add repo root validation to dashboard script
+**Status:** completed | **Commit:** 53e0a00
+
+### Task p03-t06: (review) Improve date parsing readability
+**Status:** completed | **Commit:** 10969a7
+
+### Task p03-t07: (review) Add stderr guidance to lifecycle skills
+**Status:** completed | **Commit:** 8a0248a
+
+### Task p03-t08: (review) Use awk for wc -l trimming
+**Status:** completed | **Commit:** 9e390f8
+
+---
+
+## Review Received: final
+
+**Date:** 2026-01-30
+**Review artifact:** reviews/final-review-2026-01-30.md
+
+**Findings:**
+- Critical: 0
+- Important: 1 (sed portability in oat-complete-project)
+- Minor: 4 (deferred)
+
+**New tasks added:** p03-t04, p03-t05, p03-t06, p03-t07, p03-t08
+
+**Next:** Execute fix tasks via /oat:implement
 
 ---
 
@@ -109,10 +140,19 @@ oat_template: false
 - [x] Phase 1: All 10 tasks completed
 - [x] Phase 2: All 5 tasks completed
 - [x] p03-t01: Add Hook to oat-progress - completed
-- [ ] p03-t02: Add Hook to oat-index - in progress
+- [x] p03-t02: Add Hook to oat-index - completed
+- [x] p03-t03: Final Integration Test - completed
+- [x] Final review requested - completed (Grade: A)
+- [x] p03-t04: (review) Fix sed portability - completed (3beb4a8)
+- [x] p03-t05: (review) Add repo root validation - completed (53e0a00)
+- [x] p03-t06: (review) Improve date parsing readability - completed (10969a7)
+- [x] p03-t07: (review) Add stderr guidance to skills - completed (8a0248a)
+- [x] p03-t08: (review) Use awk for wc -l trimming - completed (9e390f8)
+- [x] All review fix tasks completed
 
 **Decisions:**
-- None yet
+- User agreed with all review findings
+- All findings converted to tasks (Important + Minor)
 
 **Blockers:**
 - None
