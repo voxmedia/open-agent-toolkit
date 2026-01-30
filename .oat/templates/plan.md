@@ -128,7 +128,7 @@ git commit -m "feat(p01-t02): {description}"
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
-**Status values:** `pending` → `received` → `fixes_added` | `passed`
+**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 ---
 

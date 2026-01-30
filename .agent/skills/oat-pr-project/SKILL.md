@@ -96,6 +96,7 @@ echo "$FINAL_ROW"
 If `FINAL_ROW` is missing or does not contain `passed`:
 - Tell user: "Final review is not marked passed. Run `/oat:request-review code final` then `/oat:receive-review`."
 - Ask whether to proceed anyway (allowed, but discouraged).
+  - If the status is `fixes_completed`: fixes were implemented but the re-review hasn’t been run/recorded yet; re-run `/oat:request-review code final` then `/oat:receive-review` to reach `passed`.
 
 ### Step 3: Collect Project Summary
 

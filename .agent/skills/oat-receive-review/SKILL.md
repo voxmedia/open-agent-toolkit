@@ -103,6 +103,7 @@ Minor: {N}
 - Route user to the next action:
   - If scope is `final`: prompt for PR (or run `/oat:pr-project` when available)
   - Otherwise: continue normal implementation
+  - Note: `passed` means “review passed” (not merely “fixes completed”). If fixes exist, use `fixes_completed` until a re-review passes.
 
 ### Step 3: Determine Task Scope
 
@@ -210,7 +211,11 @@ Add a note to implementation.md:
 
 **New tasks added:** {task_ids}
 
-**Next:** Execute fix tasks via /oat:implement
+**Next:** Execute fix tasks via /oat:implement.
+
+After the fix tasks are complete:
+- Update the review row status to `fixes_completed`
+- Re-run `/oat:request-review {type} {scope}` then `/oat:receive-review` to reach `passed`
 ```
 
 ### Step 8: Check Review Cycle Count

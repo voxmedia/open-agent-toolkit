@@ -327,7 +327,7 @@ After review artifact is written, update `plan.md` `## Reviews` table *if plan.m
 Update or add a row matching `{scope}`:
 - `Scope`: `{scope}` (examples: `p02`, `final`, `spec`, `design`)
 - `Type`: `code` or `artifact`
-- `Status`: `received` (receive-review will decide `fixes_added` vs `passed`)
+- `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; after fixes are implemented, implement should move the row to `fixes_completed` until a re-review marks `passed`)
 - `Date`: `{today}`
 - `Artifact`: `reviews/{filename}.md`
 

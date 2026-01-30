@@ -109,7 +109,7 @@ Read (as available):
 
 If scope is `pNN`, check `plan.md` `## Reviews` table row:
 - If `| pNN | code | passed | ...` exists: good
-- Otherwise: warn that review has not been marked `passed` for this phase
+- Otherwise: warn that review has not been marked `passed` for this phase (e.g., it may be `received`, `fixes_added`, or `fixes_completed` pending re-review)
 
 Do not block PR generation; this is a progress PR.
 

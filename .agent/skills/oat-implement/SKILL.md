@@ -208,6 +208,10 @@ Keep project state in sync after each task (recommended source of truth for “w
   - The “Next” line is updated once review fix tasks are complete (don’t leave “Next: execute fix tasks” after they’re done)
 - Keep `plan.md` internally consistent:
   - If `## Implementation Complete` contains phase/task totals, update totals when review fix tasks are added (via `/oat:receive-review`) or removed.
+- Review status lifecycle:
+  - When review-generated fix tasks are added, the Reviews table should be `fixes_added`.
+  - After all fix tasks are implemented, update the Reviews table to `fixes_completed` (not `passed`).
+  - Only set `passed` after a re-review is run and processed via `/oat:receive-review` with no Critical/Important findings.
 
 ### Step 8: Check Plan Phase Completion
 
