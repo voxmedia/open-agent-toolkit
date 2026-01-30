@@ -180,6 +180,10 @@ Add new tasks to plan.md in the target phase.
   - `oat_status: complete`
   - `oat_ready_for: oat-implement`
 
+**Keep plan internally consistent:**
+- If the plan contains an `## Implementation Complete` summary (phase counts, total task count), update it to reflect any newly added review fix tasks.
+- If the plan has phase headings that include task counts (or other rollups), update those rollups as well.
+
 **Update Reviews section:**
 ```markdown
 ## Reviews
