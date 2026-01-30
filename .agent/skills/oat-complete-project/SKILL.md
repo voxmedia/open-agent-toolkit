@@ -15,7 +15,7 @@ Mark the active OAT project lifecycle as complete.
 PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
 
 if [[ -z "$PROJECT_PATH" ]]; then
-  echo "Error: No active project set. Use /oat:open-project first."
+  echo "Error: No active project set. Use /oat:open-project first." >&2
   exit 1
 fi
 

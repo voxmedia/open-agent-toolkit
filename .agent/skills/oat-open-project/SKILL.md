@@ -46,19 +46,19 @@ PROJECT_PATH="${PROJECTS_ROOT}/${PROJECT_NAME}"
 
 # Validate name (alphanumeric, dash, underscore only)
 if [[ ! "$PROJECT_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
-  echo "Error: Invalid project name. Use only alphanumeric, dash, underscore."
+  echo "Error: Invalid project name. Use only alphanumeric, dash, underscore." >&2
   exit 1
 fi
 
 # Validate directory exists
 if [[ ! -d "$PROJECT_PATH" ]]; then
-  echo "Error: Project directory not found: $PROJECT_PATH"
+  echo "Error: Project directory not found: $PROJECT_PATH" >&2
   exit 1
 fi
 
 # Validate state.md exists
 if [[ ! -f "${PROJECT_PATH}/state.md" ]]; then
-  echo "Error: Project missing state.md: ${PROJECT_PATH}/state.md"
+  echo "Error: Project missing state.md: ${PROJECT_PATH}/state.md" >&2
   exit 1
 fi
 ```
