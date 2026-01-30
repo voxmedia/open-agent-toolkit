@@ -137,6 +137,24 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-open-project</name>
+<description>Set the active OAT project with validation and dashboard refresh.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-clear-active-project</name>
+<description>Clear the active OAT project pointer and refresh dashboard.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-complete-project</name>
+<description>Mark the active project lifecycle as complete with optional review/PR checks.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>read-relevant-docs</name>
 <description>Discover and read relevant documentation from the Honeycomb Docs app based on the current conversation context.</description>
 <location>project</location>
