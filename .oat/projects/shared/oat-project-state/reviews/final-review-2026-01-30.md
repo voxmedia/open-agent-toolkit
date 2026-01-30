@@ -3,7 +3,7 @@ oat_generated: true
 oat_generated_at: 2026-01-30
 oat_review_scope: final
 oat_review_type: code
-oat_project: .agent/projects/oat-project-state
+oat_project: .oat/projects/shared/oat-project-state
 ---
 
 # Code Review: final

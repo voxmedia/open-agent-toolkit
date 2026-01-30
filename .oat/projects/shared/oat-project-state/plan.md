@@ -1503,11 +1503,11 @@ git commit -m "fix(p03-t08): use awk for wc -l trimming"
 **Summary:**
 - Phase 1: 10 tasks - Dashboard script with all sections
 - Phase 2: 5 tasks - Three lifecycle skills + registration + testing
-- Phase 3: 3 tasks - Integration hooks for oat-progress and oat-index
+- Phase 3: 8 tasks - Integration hooks + review fixes
 
-**Total: 18 tasks**
+**Total: 23 tasks**
 
-Ready for implementation.
+Implementation complete. Ready for PR.
 
 ---
 

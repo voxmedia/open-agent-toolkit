@@ -3,7 +3,7 @@ oat_current_task: null
 oat_last_commit: 9e390f8
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
-oat_hil_completed: ["discovery", "spec", "design", "plan", "implement"]
+oat_hil_completed: ["discovery", "spec", "design", "plan"]
 oat_parallel_execution: false
 oat_phase: implement
 oat_phase_status: complete

@@ -192,6 +192,13 @@ Keep project state in sync after each task (recommended source of truth for “w
   - `oat_current_task: {next_task_id}`
   - `oat_last_commit: {sha}`
 
+**If executing review-generated tasks** (task title prefixed with `(review)`):
+- Ensure `implementation.md` stays accurate:
+  - The “Review Received” section reflects whether findings were deferred vs converted to tasks
+  - The “Next” line is updated once review fix tasks are complete (don’t leave “Next: execute fix tasks” after they’re done)
+- Keep `plan.md` internally consistent:
+  - If `## Implementation Complete` contains phase/task totals, update totals when review fix tasks are added (via `/oat:receive-review`) or removed.
+
 ### Step 8: Check Plan Phase Completion
 
 When all tasks in current plan phase complete (e.g., all p01-* tasks done):
@@ -376,6 +383,12 @@ Choose, or run: /oat:request-review code final
   - `oat_phase_status: complete`
   - Append `"implement"` to `oat_hil_completed` (only if configured as a HiL gate)
 - Update state content to “Implementation complete”.
+- Update `"$PROJECT_PATH/plan.md"`:
+  - Set the `final` review row status to `passed` (if not already)
+  - Ensure `## Implementation Complete` totals reflect any review fix tasks that were added
+- Update `"$PROJECT_PATH/implementation.md"`:
+  - Ensure `oat_current_task_id: null`
+  - Ensure the “Review Received” section reflects completed fixes and points to the next action (PR) rather than “execute fix tasks”
 
 ### Step 15: Prompt for PR
 

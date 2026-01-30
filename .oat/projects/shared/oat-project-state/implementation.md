@@ -123,11 +123,13 @@ oat_template: false
 **Findings:**
 - Critical: 0
 - Important: 1 (sed portability in oat-complete-project)
-- Minor: 4 (deferred)
+- Minor: 4 (converted to tasks and fixed)
 
 **New tasks added:** p03-t04, p03-t05, p03-t06, p03-t07, p03-t08
 
-**Next:** Execute fix tasks via /oat:implement
+**Status:** All review fix tasks completed, and final review is marked `passed` in plan.md.
+
+**Next:** Create PR with `/oat:pr-project`
 
 ---
 
