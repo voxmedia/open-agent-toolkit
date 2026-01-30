@@ -118,6 +118,8 @@ git commit -m "feat(p01-t02): {description}"
 
 {Track reviews here after running /oat:request-review and /oat:receive-review.}
 
+{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
+
 | Scope | Type | Status | Date | Artifact |
 |-------|------|--------|------|----------|
 | p01 | code | pending | - | - |

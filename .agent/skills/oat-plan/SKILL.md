@@ -39,6 +39,7 @@ If you catch yourself:
 1. Acknowledge the deviation
 2. Return to planning language ("Task N will...")
 3. Keep implementation details at pseudocode/interface level
+4. Keep code blocks short (signatures/outlines only)
 
 ## Process
 
@@ -130,6 +131,11 @@ For each phase, create bite-sized tasks.
 - Clear verification
 - Atomic commit
 
+**No implementation code (important):**
+- Prefer **pseudocode**, **interfaces**, and **bullet steps** over full implementations.
+- If the task is a shell script, include **function names + responsibilities** and only minimal “shape” snippets (aim for <10 lines per code block).
+- If a longer snippet would be useful, replace internals with `{...}` placeholders and document behavior/edge cases in prose.
+
 **Task IDs:** Use stable IDs in format `p{phase}-t{task}` (e.g., `p01-t03`).
 
 **Task template:**
@@ -200,6 +206,12 @@ For each requirement (FR/NFR):
 - Example: "p01-t03, p02-t01, p02-t05"
 
 This creates traceability: Requirement → Tasks → Implementation
+
+### Step 9.1: Keep Reviews Table Rows
+
+When updating `plan.md`, keep the full `## Reviews` table from the template:
+- Include both **code** rows (p01/p02/…/final) and **artifact** rows (`spec`, `design`)
+- Add additional rows as needed (e.g., p03), but do not delete the artifact rows
 
 **Why stable IDs:** Using `p01-t03` instead of "Task 3" prevents broken references when tasks are inserted or reordered.
 
