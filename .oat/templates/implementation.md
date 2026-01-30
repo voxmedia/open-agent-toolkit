@@ -38,14 +38,38 @@ oat_template_name: implementation
 **Status:** in_progress
 **Started:** YYYY-MM-DD
 
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+
+**Key files touched:**
+- `{path}` - {why}
+
+**Verification:**
+- Run: `{command(s)}`
+- Result: {pass/fail + notes}
+
+**Notes / Decisions:**
+- {trade-offs or deviations discovered during implementation}
+
 ### Task p01-t01: {Task Name}
 
 **Status:** completed / in_progress / pending / blocked
 **Commit:** {sha} (if completed)
 
-**Notes:**
-- {Implementation note}
-- {Decision made during implementation}
+**Outcome (required when completed):**
+- {what materially changed (not “did task”, but “system now does X”)}
+
+**Files changed:**
+- `{path}` - {why}
+
+**Verification:**
+- Run: `{command(s)}`
+- Result: {pass/fail + notes}
+
+**Notes / Decisions:**
+- {gotchas, trade-offs, design deltas, important context for future sessions}
 
 **Issues Encountered:**
 - {Issue and resolution}
@@ -85,8 +109,14 @@ Chronological log of implementation progress.
 - [x] p01-t01: {Task name} - {commit sha}
 - [ ] p01-t02: {Task name} - in progress
 
+**What changed (high level):**
+- {short bullets suitable for PR/docs}
+
 **Decisions:**
 - {Decision made and rationale}
+
+**Follow-ups / TODO:**
+- {anything discovered during implementation that should be captured for later}
 
 **Blockers:**
 - {Blocker description} - {status: resolved/pending}
@@ -119,6 +149,24 @@ Track test execution during implementation.
 |-------|-----------|--------|--------|----------|
 | 1 | - | - | - | - |
 | 2 | - | - | - | - |
+
+## Final Summary (for PR/docs)
+
+**What shipped:**
+- {capability 1}
+- {capability 2}
+
+**Behavioral changes (user-facing):**
+- {bullet}
+
+**Key files / modules:**
+- `{path}` - {purpose}
+
+**Verification performed:**
+- {tests/lint/typecheck/build/manual steps}
+
+**Design deltas (if any):**
+- {what changed vs design.md and why}
 
 ## References
 

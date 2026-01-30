@@ -179,8 +179,18 @@ oat_last_updated: {today}
 **Status:** completed
 **Commit:** {sha}
 
-**Notes:**
-- {Any implementation notes}
+**Outcome (required):**
+- {2-5 bullets describing what materially changed}
+
+**Files changed:**
+- `{path}` - {why}
+
+**Verification:**
+- Run: `{command(s)}`
+- Result: {pass/fail + notes}
+
+**Notes / Decisions:**
+- {gotchas, trade-offs, design deltas}
 ```
 
 **Update progress overview table.**
@@ -225,6 +235,13 @@ When stopping:
   - `oat_current_task_id` points at the next task to do (or `null` when complete)
   - Phase status sections match the progress overview table
   - The implementation log reflects what was actually completed
+
+**Phase summaries (required):**
+- When a plan phase completes (p01, p02, etc.), update the “Phase Summary” section in `implementation.md` for that phase:
+  - Outcome (behavior-level)
+  - Key files touched (paths)
+  - Verification run
+  - Notable decisions/deviations
 
 **Note on HiL types:**
 - **Workflow HiL** (`oat_hil_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-progress router.
