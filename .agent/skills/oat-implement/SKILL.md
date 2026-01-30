@@ -188,6 +188,7 @@ At the end of each plan phase (p01, p02, etc.), check `oat_plan_hil_phases` in p
 
 - **If `oat_plan_hil_phases` is empty or missing:** Stop at every phase boundary (default behavior)
 - **If `oat_plan_hil_phases` has values:** Only stop at listed phases (e.g., `["p01", "p04"]`)
+  - To stop only at the end of implementation, set it to the **last plan phase ID** (e.g., `["p03"]`).
 
 When stopping:
 - Output phase summary (tasks completed, commits made)

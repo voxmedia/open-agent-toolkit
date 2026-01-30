@@ -95,7 +95,7 @@ oat_hil_completed: ["discovery"]
 ```
 
 - **Workflow HiL** - Gates between workflow phases (discovery → spec → design → plan → implement)
-- **Plan phase checkpoints** - Gates at plan phase boundaries during implementation. Configure via `oat_plan_hil_phases` in plan.md (empty = stop at every phase, or list specific phases like `["p01", "p04"]`)
+- **Plan phase checkpoints** - Gates at plan phase boundaries during implementation. Configure via `oat_plan_hil_phases` in plan.md (empty = stop at every phase; set to the last phase like `["p03"]` to stop only at the end; or list specific phases like `["p01", "p04"]`)
 
 ## Directory Structure
 

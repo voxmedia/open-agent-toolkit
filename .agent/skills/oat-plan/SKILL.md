@@ -209,6 +209,7 @@ Ask user: "During implementation, should I stop for review at every phase bounda
 
 **Options:**
 - **Every phase** (default): Leave `oat_plan_hil_phases: []` - stop at end of every plan phase
+- **Only the end**: Set `oat_plan_hil_phases` to the **last plan phase ID** (e.g., `["p03"]`) - stop only at the end of implementation
 - **Specific phases**: Set `oat_plan_hil_phases: ["p01", "p04"]` - only stop at listed phases
 
 Update plan.md frontmatter with user's choice.
