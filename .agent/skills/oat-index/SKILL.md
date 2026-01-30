@@ -343,6 +343,18 @@ Files created:
 Next: Start a project with /new-agent-project or explore knowledge files
 ```
 
+### Step 12: Regenerate Dashboard
+
+After knowledge base generation, regenerate the repo state dashboard:
+
+```bash
+if [[ -f ".oat/scripts/generate-oat-state.sh" ]]; then
+  .oat/scripts/generate-oat-state.sh
+fi
+```
+
+This ensures the dashboard reflects fresh knowledge status immediately.
+
 ## Success Criteria
 
 - .oat/knowledge/repo/ directory with 8 files (7 analysis + 1 index)
