@@ -14,6 +14,8 @@ oat_template_name: implementation
 **Started:** YYYY-MM-DD
 **Last Updated:** YYYY-MM-DD
 
+> This document is used to resume interrupted implementation sessions. Keep `oat_current_task_id` pointing at the **next task to do** (not the last completed task), and keep phase statuses consistent with the progress overview.
+
 ## Progress Overview
 
 | Phase | Status | Tasks | Completed |

@@ -92,11 +92,16 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 
 **If exists and has progress:**
 - Read `oat_current_task_id` from frontmatter (e.g., "p01-t03")
-- Resume from that task
-- Ask user: "Resume from {task_id} or start fresh?"
+- Validate the task pointer:
+  - If `oat_current_task_id` points at a task already marked `completed` in the body, advance to the **next incomplete** task (first `pending` / `in_progress` / `blocked` entry).
+  - If all tasks are completed, skip ahead to finalization (Step 11+).
+- Resume from the resolved task
+- Ask user: "Resume from {task_id}, or start fresh (overwrite implementation.md)?"
 
 **If doesn't exist:**
 - Initialize from template (Step 4)
+
+**Important:** Never overwrite an existing `implementation.md` without explicit user confirmation (and warn that draft logs will be lost).
 
 ### Step 4: Initialize Implementation Document
 
@@ -112,6 +117,12 @@ oat_last_updated: {today}
 oat_current_task_id: p01-t01  # Stable task ID from plan
 ---
 ```
+
+Initialize project state so other skills (e.g., `/oat:progress`) reflect that implementation has started:
+- In `"$PROJECT_PATH/state.md"` frontmatter:
+  - `oat_phase: implement`
+  - `oat_phase_status: in_progress`
+  - `oat_current_task: p01-t01`
 
 ### Step 5: Execute Current Task
 
@@ -174,6 +185,13 @@ oat_last_updated: {today}
 
 **Update progress overview table.**
 
+Keep project state in sync after each task (recommended source of truth for “where are we?” across sessions):
+- Update `"$PROJECT_PATH/state.md"` frontmatter:
+  - `oat_phase: implement`
+  - `oat_phase_status: in_progress`
+  - `oat_current_task: {next_task_id}`
+  - `oat_last_commit: {sha}`
+
 ### Step 8: Check Plan Phase Completion
 
 When all tasks in current plan phase complete (e.g., all p01-* tasks done):
@@ -194,6 +212,12 @@ When stopping:
 - Output phase summary (tasks completed, commits made)
 - Ask user: "Phase {N} ({phase_name}) complete. Continue to next phase?"
 - Wait for user approval before proceeding to next plan phase
+
+**Restart safety (required):**
+- At the end of each task and at each phase boundary, ensure `implementation.md` is persisted and internally consistent:
+  - `oat_current_task_id` points at the next task to do (or `null` when complete)
+  - Phase status sections match the progress overview table
+  - The implementation log reflects what was actually completed
 
 **Note on HiL types:**
 - **Workflow HiL** (`oat_hil_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-progress router.
