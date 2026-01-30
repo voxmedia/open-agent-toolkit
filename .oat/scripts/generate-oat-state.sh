@@ -211,6 +211,35 @@ compute_next_step() {
   esac
 }
 
+# List available projects with their phases
+# Output: Markdown formatted list
+list_available_projects() {
+  local projects_root="$1"
+  local project_dir project_name phase
+
+  if [[ ! -d "$projects_root" ]]; then
+    echo "*(No projects directory found)*"
+    return
+  fi
+
+  local found=false
+  for project_dir in "$projects_root"/*/; do
+    [[ -d "$project_dir" ]] || continue
+    project_name=$(basename "$project_dir")
+
+    if [[ -f "${project_dir}state.md" ]]; then
+      phase=$(parse_frontmatter "${project_dir}state.md" "oat_phase")
+      phase="${phase:-unknown}"
+      echo "- **${project_name}** - ${phase}"
+      found=true
+    fi
+  done
+
+  if [[ "$found" == "false" ]]; then
+    echo "*(No projects found)*"
+  fi
+}
+
 # --- Main ---
 main() {
   local projects_root
