@@ -1,0 +1,87 @@
+---
+name: oat-open-project
+description: Set the active project with validation
+---
+
+# Open Project
+
+Set the active OAT project with validation.
+
+## Process
+
+### Step 1: Resolve Projects Root
+
+```bash
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".agent/projects")}"
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+```
+
+### Step 2: List Available Projects
+
+Show user available projects:
+
+```bash
+echo "Available projects in ${PROJECTS_ROOT}/:"
+for dir in "${PROJECTS_ROOT}"/*/; do
+  [[ -d "$dir" ]] || continue
+  name=$(basename "$dir")
+  if [[ -f "${dir}state.md" ]]; then
+    phase=$(grep "^oat_phase:" "${dir}state.md" | head -1 | sed 's/oat_phase:[[:space:]]*//')
+    echo "  - ${name} (${phase:-unknown})"
+  fi
+done
+```
+
+### Step 3: Accept Project Selection
+
+Ask user: "Which project would you like to open?"
+
+Accept project name from user input.
+
+### Step 4: Validate Project
+
+```bash
+PROJECT_NAME="{user_input}"
+PROJECT_PATH="${PROJECTS_ROOT}/${PROJECT_NAME}"
+
+# Validate name (alphanumeric, dash, underscore only)
+if [[ ! "$PROJECT_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  echo "Error: Invalid project name. Use only alphanumeric, dash, underscore."
+  exit 1
+fi
+
+# Validate directory exists
+if [[ ! -d "$PROJECT_PATH" ]]; then
+  echo "Error: Project directory not found: $PROJECT_PATH"
+  exit 1
+fi
+
+# Validate state.md exists
+if [[ ! -f "${PROJECT_PATH}/state.md" ]]; then
+  echo "Error: Project missing state.md: ${PROJECT_PATH}/state.md"
+  exit 1
+fi
+```
+
+### Step 5: Write Active Project Pointer
+
+Write full path for v1 compatibility:
+
+```bash
+mkdir -p .oat
+echo "$PROJECT_PATH" > .oat/active-project
+echo "Active project set to: $PROJECT_NAME"
+```
+
+### Step 6: Regenerate Dashboard
+
+```bash
+.oat/scripts/generate-oat-state.sh
+```
+
+### Step 7: Confirm to User
+
+Show user:
+- Active project: {PROJECT_NAME}
+- Phase: {oat_phase from state.md}
+- Next step: {from dashboard}
