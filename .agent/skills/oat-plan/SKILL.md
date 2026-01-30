@@ -34,6 +34,7 @@ If you catch yourself:
 - Writing actual implementation → STOP
 - Changing architecture decisions → STOP (send back to design)
 - Adding new features → STOP (flag for next cycle)
+- Needing implementation details that aren't covered by the design → STOP (ask the user whether to update the design, then re-run `/oat:plan`)
 
 **Recovery:**
 1. Acknowledge the deviation
