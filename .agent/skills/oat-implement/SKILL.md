@@ -264,7 +264,7 @@ Options:
 
 ### Step 11: Mark Implementation Complete
 
-When all plan phases complete:
+When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` task):
 
 Update frontmatter:
 ```yaml
@@ -273,19 +273,22 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: {today}
+oat_current_task_id: null
 ---
 ```
 
+**Important:** `oat_current_task_id` should never point at an already-completed task. If all tasks are done, set it to `null` and proceed to the final review gate.
+
 ### Step 12: Update Project State
 
-Update `"$PROJECT_PATH/state.md"`:
+Update `"$PROJECT_PATH/state.md"` so other skills reflect task completion and review gating:
 
 **Frontmatter updates:**
 - `oat_current_task: null`
 - `oat_last_commit: {final_commit_sha}`
 - `oat_blockers: []`
 - `oat_phase: implement`
-- `oat_phase_status: complete`
+- `oat_phase_status: in_progress` (until final review passes)
 - **If** `"implement"` is in `oat_hil_checkpoints`: append `"implement"` to `oat_hil_completed` array
 
 **Note:** Only append to `oat_hil_completed` when the phase is configured as a HiL gate.
@@ -294,7 +297,7 @@ Update content:
 ```markdown
 ## Current Phase
 
-Implementation - Complete
+Implementation - Tasks complete; awaiting final review.
 
 ## Progress
 
@@ -302,7 +305,8 @@ Implementation - Complete
 - ✓ Specification complete
 - ✓ Design complete
 - ✓ Plan complete
-- ✓ Implementation complete
+- ✓ Implementation tasks complete
+- ⧗ Awaiting final review
 ```
 
 ### Step 13: Final Verification
@@ -365,6 +369,13 @@ Choose, or run: /oat:request-review code final
 - After review: User runs `/oat:receive-review` to process findings
 - If Critical/Important findings: Fix tasks added, re-run `/oat:implement`
 - Loop until final review passes (max 3 cycles per oat-receive-review)
+
+**After final review is marked `passed`:**
+- Update `"$PROJECT_PATH/state.md"` frontmatter:
+  - `oat_phase: implement`
+  - `oat_phase_status: complete`
+  - Append `"implement"` to `oat_hil_completed` (only if configured as a HiL gate)
+- Update state content to “Implementation complete”.
 
 ### Step 15: Prompt for PR
 
