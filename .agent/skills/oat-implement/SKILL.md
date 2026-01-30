@@ -290,6 +290,14 @@ Options:
 
 When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` task):
 
+**Update “Final Summary” (required):**
+- Before requesting final review / running `/oat:pr-project`, update the `## Final Summary (for PR/docs)` section in `"$PROJECT_PATH/implementation.md"`:
+  - What shipped (capabilities, behavior-level)
+  - Key files/modules touched
+  - Verification performed (tests/lint/typecheck/build/manual)
+  - Design deltas (if any)
+- This should reflect **what was actually implemented**, including any deviations from design and any review-fix work.
+
 Update frontmatter:
 ```yaml
 ---

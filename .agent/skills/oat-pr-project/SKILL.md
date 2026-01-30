@@ -105,6 +105,11 @@ Read:
 - `{PROJECT_PATH}/plan.md` (phases/tasks + reviews table)
 - `{PROJECT_PATH}/implementation.md` (if exists; preferred for “what actually happened”)
 
+If `implementation.md` exists, check for a filled `## Final Summary (for PR/docs)` section:
+- If missing or obviously empty, warn the user that PR/docs quality will suffer and recommend:
+  - Run `/oat:implement` to finalize the summary (if implementation just completed), or
+  - Manually fill in the Final Summary section before proceeding.
+
 Collect git context:
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
