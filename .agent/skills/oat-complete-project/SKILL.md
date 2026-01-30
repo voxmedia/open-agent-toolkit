@@ -58,13 +58,13 @@ STATE_FILE="${PROJECT_PATH}/state.md"
 
 # Check if oat_lifecycle already exists
 if grep -q "^oat_lifecycle:" "$STATE_FILE"; then
-  # Update existing
-  sed -i '' 's/^oat_lifecycle:.*/oat_lifecycle: complete/' "$STATE_FILE"
+  # Update existing (portable approach using temp file)
+  sed 's/^oat_lifecycle:.*/oat_lifecycle: complete/' "$STATE_FILE" > "$STATE_FILE.tmp"
+  mv "$STATE_FILE.tmp" "$STATE_FILE"
 else
-  # Add after oat_phase_status line
-  sed -i '' '/^oat_phase_status:/a\
-oat_lifecycle: complete
-' "$STATE_FILE"
+  # Add after oat_phase_status line using awk (more portable for multi-line inserts)
+  awk '/^oat_phase_status:/ {print; print "oat_lifecycle: complete"; next} 1' "$STATE_FILE" > "$STATE_FILE.tmp"
+  mv "$STATE_FILE.tmp" "$STATE_FILE"
 fi
 ```
 
