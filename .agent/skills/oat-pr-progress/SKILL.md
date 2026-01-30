@@ -29,6 +29,18 @@ Generate a PR-ready summary that is:
 
 **Purpose:** Create PR description and (optionally) open a PR.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start: `OAT ▸ PR (PROGRESS)`
+- Before multi-step work (scoping, reading artifacts, writing output), print 2–5 short step indicators, e.g.:
+  - `[1/4] Resolving scope…`
+  - `[2/4] Reading OAT artifacts…`
+  - `[3/4] Collecting git context…`
+  - `[4/4] Writing PR description…`
+- Keep it concise; don’t print a line for every shell command.
+
 **BLOCKED Activities:**
 - No implementation work
 - No changing requirements/design/plan

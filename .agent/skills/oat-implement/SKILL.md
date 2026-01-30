@@ -17,6 +17,20 @@ Execute the implementation plan task-by-task with full state tracking.
 
 **Purpose:** Execute plan tasks with TDD discipline, track progress, handle blockers.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start: `OAT ▸ IMPLEMENT`
+- For each task, announce a compact header before doing work:
+  - `OAT ▸ IMPLEMENT {task_id}: {task_name}`
+- Before multi-step “bookkeeping” work (updating artifacts/state, verification, committing, dashboard refresh), print 2–5 short step indicators, e.g.:
+  - `[1/4] Updating implementation.md + state.md…`
+  - `[2/4] Running verification…`
+  - `[3/4] Committing…`
+  - `[4/4] Refreshing dashboard…`
+- Keep it concise; don’t print a line for every shell command.
+
 **BLOCKED Activities:**
 - No skipping tasks
 - No changing plan structure

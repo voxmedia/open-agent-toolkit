@@ -17,6 +17,18 @@ Transform detailed design into an executable implementation plan with bite-sized
 
 **Purpose:** Break design into executable tasks with exact files, signatures/test cases, and commands.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start: `OAT ▸ PLAN`
+- Before multi-step work (drafting/finalizing/committing), print 2–5 short step indicators, e.g.:
+  - `[1/4] Reading design + context…`
+  - `[2/4] Drafting phases + tasks…`
+  - `[3/4] Finalizing plan + rollups…`
+  - `[4/4] Updating state + committing…`
+- Keep it concise; don’t print a line for every shell command.
+
 **BLOCKED Activities:**
 - No implementation code
 - No changing design decisions

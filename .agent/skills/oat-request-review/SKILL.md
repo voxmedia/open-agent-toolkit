@@ -21,6 +21,18 @@ Produce an independent review artifact that verifies spec/design alignment and c
 
 **Purpose:** Determine review scope and execute a fresh-context review.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start: `OAT ▸ REQUEST REVIEW`
+- Before multi-step work (scope resolution, file gathering, writing artifact), print 2–5 short step indicators, e.g.:
+  - `[1/4] Resolving scope + range…`
+  - `[2/4] Collecting files + context…`
+  - `[3/4] Running review (fresh context)…`
+  - `[4/4] Writing review artifact…`
+- Keep it concise; don’t print a line for every shell command.
+
 **BLOCKED Activities:**
 - No code changes during review
 - No fixing issues found (that comes in receive-review)

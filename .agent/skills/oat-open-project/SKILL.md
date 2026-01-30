@@ -7,6 +7,13 @@ description: Set the active project with validation
 
 Set the active OAT project with validation.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start: `OAT ▸ OPEN PROJECT`
+- Before multi-step work (listing, validating, writing pointer, dashboard refresh), print 2–5 short step indicators.
+
 ## Process
 
 ### Step 1: Resolve Projects Root

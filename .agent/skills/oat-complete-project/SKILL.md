@@ -7,6 +7,13 @@ description: Mark a project lifecycle as complete
 
 Mark the active OAT project lifecycle as complete.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start: `OAT ▸ COMPLETE PROJECT`
+- Before multi-step work (updating state, optional cleanup, dashboard refresh), print 2–5 short step indicators.
+
 ## Process
 
 ### Step 1: Resolve Active Project

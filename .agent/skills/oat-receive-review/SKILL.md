@@ -21,6 +21,18 @@ Turn review output into plan changes and a clear next action. This closes the fe
 
 **Purpose:** Convert review findings into plan tasks for systematic gap closure.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start: `OAT ▸ RECEIVE REVIEW`
+- Before multi-step work (parsing findings, updating artifacts, committing), print 2–5 short step indicators, e.g.:
+  - `[1/4] Reading review artifact…`
+  - `[2/4] Converting findings → plan tasks…`
+  - `[3/4] Updating plan.md + implementation.md…`
+  - `[4/4] Committing + next-step summary…`
+- Keep it concise; don’t print a line for every shell command.
+
 **BLOCKED Activities:**
 - No fixing issues directly (convert to tasks first)
 - No skipping findings

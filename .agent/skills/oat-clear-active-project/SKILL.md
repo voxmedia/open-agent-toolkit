@@ -7,6 +7,13 @@ description: Clear the active project pointer
 
 Clear the active OAT project pointer.
 
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+
+- Print a phase banner once at start: `OAT ▸ CLEAR ACTIVE PROJECT`
+- Before multi-step work (clearing pointer, dashboard refresh), print 2–3 short step indicators.
+
 ## Process
 
 ### Step 1: Check Current State
