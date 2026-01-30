@@ -194,6 +194,11 @@ Add new tasks to plan.md in the target phase.
   - Artifact: `reviews/{filename}.md`
 ```
 
+**Status semantics (v1):**
+- `fixes_added`: fix tasks were created and added to the plan
+- `fixes_completed`: fix tasks implemented, awaiting re-review
+- `passed`: re-review completed and recorded as passing
+
 ### Step 7: Update Implementation.md
 
 Add a note to implementation.md:

@@ -1494,7 +1494,7 @@ git commit -m "fix(p03-t08): use awk for wc -l trimming"
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
-**Status values:** `pending` → `received` → `fixes_added` | `passed`
+**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 ---
 

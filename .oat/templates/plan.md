@@ -130,6 +130,12 @@ git commit -m "feat(p01-t02): {description}"
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
+**Meaning:**
+- `received`: review artifact exists (not yet converted into fix tasks)
+- `fixes_added`: fix tasks were added to the plan (work queued)
+- `fixes_completed`: fix tasks implemented, awaiting re-review
+- `passed`: re-review run and recorded as passing (no Critical/Important)
+
 ---
 
 ## Implementation Complete

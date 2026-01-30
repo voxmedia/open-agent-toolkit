@@ -49,7 +49,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - Agent commit convention uses Conventional Commit scope: `feat(p01-t03): ...`
 - Plan review tracking:
   - `plan.md` has a `## Reviews` table with status progression documented:
-    - `pending` → `received` → `fixes_added` | `passed`
+    - `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 ## Canonical Paths (Where Things Live)
 

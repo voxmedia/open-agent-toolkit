@@ -99,7 +99,7 @@ Skills are registered in `AGENTS.md` so tools can load them. They can be invoked
 **Columns:**
 - `Scope` (e.g., `p01`, `p02`, `final`, `spec`, `design`, `plan`)
 - `Type` (`code` or `artifact`)
-- `Status` (`pending`, `received`, `fixes_added`, `passed`)
+- `Status` (`pending`, `received`, `fixes_added`, `fixes_completed`, `passed`)
 - `Date` (YYYY-MM-DD or `-`)
 - `Artifact` (e.g., `reviews/final-review-YYYY-MM-DD.md` or `-`)
 
@@ -702,6 +702,7 @@ oat_blockers:
 - Updates `plan.md` `## Reviews` row:
   - `passed` if no Critical/Important findings
   - `fixes_added` if new fix tasks were added
+  - After fix tasks are implemented, the row should move to `fixes_completed` until a re-review is run and marked `passed`
 - Updates `implementation.md` with a "Review Received" entry
 - Enforces bounded loops: 3-cycle cap per scope before requiring user intervention
 - Routes back to `/oat:implement` (execute now vs review plan first)
@@ -837,7 +838,7 @@ oat_template_name: plan
 - `## Reviews` table (tracks review artifacts + statuses)
 
 **Reviews table status progression (v1):**
-- `pending` → `received` → `fixes_added` | `passed`
+- `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 ### implementation.md
 
