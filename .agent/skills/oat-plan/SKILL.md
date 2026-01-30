@@ -21,7 +21,6 @@ Transform detailed design into an executable implementation plan with bite-sized
 
 When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
 
-- Print a phase banner once at start: `OAT ▸ PLAN`
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -37,7 +37,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ PR (PROJECT)
+   OAT ▸ PR PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (validating review status, reading artifacts, writing output), print 2–5 short step indicators, e.g.:
   - `[1/4] Validating artifacts + review status…`
