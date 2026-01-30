@@ -240,6 +240,87 @@ list_available_projects() {
   fi
 }
 
+# Generate the complete dashboard markdown
+generate_dashboard() {
+  local projects_root="$1"
+  local timestamp
+  timestamp=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+  cat > "$DASHBOARD_PATH" << EOF
+---
+oat_generated: true
+oat_generated_at: $(date -u +"%Y-%m-%d")
+---
+
+# OAT Repo State
+
+**Generated:** ${timestamp}
+
+## Active Project
+
+EOF
+
+  # Active project section
+  if [[ "$PROJECT_STATUS" == "not set" ]]; then
+    echo "*(not set)*" >> "$DASHBOARD_PATH"
+  else
+    echo "**${PROJECT_NAME}** (\`${PROJECT_PATH}\`)" >> "$DASHBOARD_PATH"
+  fi
+
+  echo "" >> "$DASHBOARD_PATH"
+
+  # Project status section (only if active)
+  if [[ "$PROJECT_STATUS" == "active" ]]; then
+    cat >> "$DASHBOARD_PATH" << EOF
+## Project Status
+
+| Field | Value |
+|-------|-------|
+| Phase | ${OAT_PHASE} |
+| Status | ${OAT_PHASE_STATUS} |
+| Lifecycle | ${OAT_LIFECYCLE} |
+| Blockers | ${OAT_BLOCKERS} |
+
+EOF
+  elif [[ "$PROJECT_STATUS" != "not set" ]]; then
+    echo "**Warning:** ${PROJECT_STATUS}" >> "$DASHBOARD_PATH"
+    echo "" >> "$DASHBOARD_PATH"
+  fi
+
+  # Knowledge status section
+  cat >> "$DASHBOARD_PATH" << EOF
+## Knowledge Status
+
+| Field | Value |
+|-------|-------|
+| Generated | ${KNOWLEDGE_GENERATED_AT:-N/A} |
+| Age | ${KNOWLEDGE_AGE_DAYS} days |
+| Files Changed | ${FILES_CHANGED} |
+| Status | ${STALENESS_STATUS} |
+
+EOF
+
+  # Recommended next step
+  cat >> "$DASHBOARD_PATH" << EOF
+## Recommended Next Step
+
+**${RECOMMENDED_STEP}** - ${RECOMMENDED_REASON}
+
+## Quick Commands
+
+- \`/oat:progress\` - Check current status
+- \`/oat:index\` - Refresh knowledge base
+- \`/oat:open-project\` - Switch active project
+- \`/oat:clear-active-project\` - Clear active project
+- \`/oat:complete-project\` - Mark project complete
+
+## Available Projects
+
+EOF
+
+  list_available_projects "$projects_root" >> "$DASHBOARD_PATH"
+}
+
 # --- Main ---
 main() {
   local projects_root
@@ -255,9 +336,9 @@ main() {
   calculate_staleness
   compute_next_step
 
-  echo "# OAT Repo State" > "$DASHBOARD_PATH"
-  echo "" >> "$DASHBOARD_PATH"
-  echo "**Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> "$DASHBOARD_PATH"
+  generate_dashboard "$projects_root"
+
+  echo "Dashboard generated: $DASHBOARD_PATH"
 }
 
 main "$@"
