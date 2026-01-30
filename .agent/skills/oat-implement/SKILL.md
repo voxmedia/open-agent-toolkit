@@ -21,7 +21,11 @@ Execute the implementation plan task-by-task with full state tracking.
 
 When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
 
-- Print a phase banner once at start: `OAT ▸ IMPLEMENT`
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ IMPLEMENT
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - For each task, announce a compact header before doing work:
   - `OAT ▸ IMPLEMENT {task_id}: {task_name}`
 - Before multi-step “bookkeeping” work (updating artifacts/state, verification, committing, dashboard refresh), print 2–5 short step indicators, e.g.:

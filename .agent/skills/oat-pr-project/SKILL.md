@@ -34,7 +34,11 @@ Generate a PR-ready summary grounded in canonical OAT artifacts, including:
 
 When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
 
-- Print a phase banner once at start: `OAT ▸ PR (PROJECT)`
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ PR (PROJECT)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (validating review status, reading artifacts, writing output), print 2–5 short step indicators, e.g.:
   - `[1/4] Validating artifacts + review status…`
   - `[2/4] Reading OAT artifacts…`

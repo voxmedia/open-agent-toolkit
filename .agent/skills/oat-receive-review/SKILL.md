@@ -25,7 +25,11 @@ Turn review output into plan changes and a clear next action. This closes the fe
 
 When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
 
-- Print a phase banner once at start: `OAT ▸ RECEIVE REVIEW`
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ RECEIVE REVIEW
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (parsing findings, updating artifacts, committing), print 2–5 short step indicators, e.g.:
   - `[1/4] Reading review artifact…`
   - `[2/4] Converting findings → plan tasks…`

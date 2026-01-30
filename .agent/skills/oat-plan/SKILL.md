@@ -22,6 +22,11 @@ Transform detailed design into an executable implementation plan with bite-sized
 When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
 
 - Print a phase banner once at start: `OAT ▸ PLAN`
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ PLAN
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (drafting/finalizing/committing), print 2–5 short step indicators, e.g.:
   - `[1/4] Reading design + context…`
   - `[2/4] Drafting phases + tasks…`

@@ -25,7 +25,11 @@ Produce an independent review artifact that verifies spec/design alignment and c
 
 When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
 
-- Print a phase banner once at start: `OAT ▸ REQUEST REVIEW`
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ REQUEST REVIEW
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (scope resolution, file gathering, writing artifact), print 2–5 short step indicators, e.g.:
   - `[1/4] Resolving scope + range…`
   - `[2/4] Collecting files + context…`

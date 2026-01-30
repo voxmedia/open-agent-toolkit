@@ -11,7 +11,11 @@ Clear the active OAT project pointer.
 
 When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
 
-- Print a phase banner once at start: `OAT ▸ CLEAR ACTIVE PROJECT`
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ CLEAR ACTIVE PROJECT
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (clearing pointer, dashboard refresh), print 2–3 short step indicators.
 
 ## Process

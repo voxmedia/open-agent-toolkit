@@ -45,7 +45,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - All `oat-*` skills attempt to resolve the project from this file first (fallback: prompt + write).
   - Gitignored via `.gitignore`.
 - User-facing progress indicators:
-  - Key `oat-*` skills include guidance to print a phase banner plus a few short step indicators (GSD-style reassurance) during multi-step “finalize/commit” work.
+  - Key `oat-*` skills include guidance to print a prominent phase banner with horizontal separators (GSD-style reassurance), plus a few short step indicators during multi-step “finalize/commit” work.
 - Stable task IDs:
   - Plan tasks use `pNN-tNN` (e.g., `p01-t03`)
   - Agent commit convention uses Conventional Commit scope: `feat(p01-t03): ...`

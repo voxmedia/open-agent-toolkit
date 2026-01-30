@@ -33,7 +33,11 @@ Generate a PR-ready summary that is:
 
 When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
 
-- Print a phase banner once at start: `OAT ▸ PR (PROGRESS)`
+- Print a phase banner once at start using horizontal separators, e.g.:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ PR (PROGRESS)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (scoping, reading artifacts, writing output), print 2–5 short step indicators, e.g.:
   - `[1/4] Resolving scope…`
   - `[2/4] Reading OAT artifacts…`
