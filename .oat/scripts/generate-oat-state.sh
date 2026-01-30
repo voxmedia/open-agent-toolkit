@@ -157,10 +157,16 @@ calculate_staleness() {
   # Calculate age in days - handle both macOS and Linux date formats
   if [[ -n "$KNOWLEDGE_GENERATED_AT" ]]; then
     local gen_epoch today_epoch
-    # Try macOS format first, then Linux, fallback to 0
-    gen_epoch=$(date -j -f "%Y-%m-%d" "$KNOWLEDGE_GENERATED_AT" "+%s" 2>/dev/null) || \
-               gen_epoch=$(date -d "$KNOWLEDGE_GENERATED_AT" "+%s" 2>/dev/null) || \
-               gen_epoch=0
+    # Try macOS format first
+    if gen_epoch=$(date -j -f "%Y-%m-%d" "$KNOWLEDGE_GENERATED_AT" "+%s" 2>/dev/null); then
+      : # Success on macOS
+    # Then try Linux format
+    elif gen_epoch=$(date -d "$KNOWLEDGE_GENERATED_AT" "+%s" 2>/dev/null); then
+      : # Success on Linux
+    else
+      # Fallback: cannot parse date
+      gen_epoch=0
+    fi
     today_epoch=$(date "+%s")
     if [[ "$gen_epoch" -gt 0 ]]; then
       KNOWLEDGE_AGE_DAYS=$(( (today_epoch - gen_epoch) / 86400 ))
