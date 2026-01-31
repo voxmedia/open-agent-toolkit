@@ -3,6 +3,7 @@ name: oat-design
 description: Create detailed technical design from specification with architecture and implementation details
 disable-model-invocation: true
 user-invocable: true
+allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 ---
 
 # Design Phase

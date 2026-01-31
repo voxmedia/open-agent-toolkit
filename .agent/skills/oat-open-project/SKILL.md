@@ -3,6 +3,7 @@ name: oat-open-project
 description: Set the active project with validation
 disable-model-invocation: true
 user-invocable: true
+allowed-tools: Read, Write, Bash, AskUserQuestion
 ---
 
 # Open Project

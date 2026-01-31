@@ -3,6 +3,7 @@ name: oat-pr-progress
 description: Create a progress PR description for a specific plan phase (pNN) using OAT artifacts and commit conventions; optionally open a PR
 disable-model-invocation: true
 user-invocable: true
+allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 ---
 
 # Progress PR

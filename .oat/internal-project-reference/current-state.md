@@ -36,6 +36,12 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 - `create-oat-skill` (scaffold new OAT skills using the standard OAT sections + banner conventions; references baseline guidance from `create-skill`)
 
+### Tool Metadata
+
+- Most skills define `allowed-tools` in frontmatter as an advisory tool scope (provider-dependent).
+  - Read-only skills (e.g., `oat-progress`, `oat-request-review`) omit `Write`/`Edit`.
+  - Write skills (e.g., `oat-discovery` → `oat-implement`, `oat-receive-review`, PR skills) include `Write` and `Bash(git:*)`.
+
 ### Templates / Scripts
 
 - Templates: `.oat/templates/`

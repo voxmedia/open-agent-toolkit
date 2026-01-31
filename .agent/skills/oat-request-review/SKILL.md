@@ -3,6 +3,7 @@ name: oat-request-review
 description: Use when ready to review completed work before merging - after implementing a task, phase, or full project; when quality gate needed before PR
 disable-model-invocation: true
 user-invocable: true
+allowed-tools: Read, Glob, Grep, Bash(git:*), AskUserQuestion
 ---
 
 # Request Review

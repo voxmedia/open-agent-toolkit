@@ -3,6 +3,7 @@ name: oat-pr-project
 description: Create the final project PR description (into main) using OAT artifacts and final review status; optionally open a PR
 disable-model-invocation: true
 user-invocable: true
+allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 ---
 
 # Project PR (Final)

@@ -3,6 +3,7 @@ name: oat-discovery
 description: Start discovery phase - gather requirements and understand the problem through structured dialogue
 disable-model-invocation: true
 user-invocable: true
+allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 ---
 
 # Discovery Phase

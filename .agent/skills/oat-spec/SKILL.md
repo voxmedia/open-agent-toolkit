@@ -3,6 +3,7 @@ name: oat-spec
 description: Create formal specification from discovery insights with structured requirements
 disable-model-invocation: true
 user-invocable: true
+allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 ---
 
 # Specification Phase
