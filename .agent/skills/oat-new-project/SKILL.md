@@ -55,7 +55,7 @@ Optional flags:
 Confirm to the user:
 - Project path created: `{PROJECTS_ROOT}/{project-name}`
 - Active project pointer set: `.oat/active-project`
-- Repo dashboard refreshed: `.oat/state.md` (if enabled)
+- Repo State Dashboard refreshed: `.oat/state.md` (if enabled)
 
 Then explicitly instruct the user to run discovery next:
 - Next command: `/oat:discovery`

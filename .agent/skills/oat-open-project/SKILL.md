@@ -99,4 +99,4 @@ echo "Active project set to: $PROJECT_NAME"
 Show user:
 - Active project: {PROJECT_NAME}
 - Phase: {oat_phase from state.md}
-- Next step: {from dashboard}
+- Next step: {from Repo State Dashboard}
