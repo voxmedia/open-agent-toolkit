@@ -11,6 +11,13 @@ user-invocable: true
 
 Create a new OAT workflow skill under `.agent/skills/` that follows OAT conventions (mode assertion, progress banners, project resolution, and safe bash patterns).
 
+## Baseline Guidance (Required)
+
+This skill is a specialization of the general skill-creation workflow.
+
+- Follow the baseline principles and structure from `.agent/skills/create-skill/SKILL.md` (progressive disclosure, section layout, examples, troubleshooting, success criteria).
+- This skill adds/overrides only the OAT-specific requirements (progress banners, `{PROJECTS_ROOT}` + `.oat/active-project` resolution, and OAT-safe bash patterns).
+
 ## When to Use
 
 Use when:
