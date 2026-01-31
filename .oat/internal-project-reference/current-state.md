@@ -6,6 +6,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 ## Canonical References
 
+- Workflow guide (how to use OAT): `.oat/internal-project-reference/workflow-guide.md`
 - Roadmap: `.oat/internal-project-reference/roadmap.md`
 - Deferred phases: `.oat/internal-project-reference/deferred-phases.md`
 - Implementation deep-dive: `.oat/internal-project-reference/dogfood-workflow-implementation.md`
@@ -74,6 +75,8 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 ## Quickstart (Dogfood)
 
+For a fuller guide (resume/review/PR loops), see `.oat/internal-project-reference/workflow-guide.md`.
+
 1. Generate repo knowledge:
    - `/oat:index`
 2. Start a project:
@@ -99,7 +102,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - PR automation enhancements:
   - PR opening automation beyond best-effort `gh pr create` guidance (optional; not required for v1 dogfood)
 - Repo-level dashboard:
-  - `.oat/state.md` summary view (active project + phase + blockers + knowledge freshness) (not yet implemented)
+  - `.oat/state.md` exists, but needs to be made first-class (clear generation/refresh workflow + keep docs in sync with current semantics)
 - Multi-project model:
   - `.oat/projects/**` and `oat project ...` switching (in progress; dogfood now uses `.oat/projects/shared` as the default projects root)
 - Parallel execution + reconciliation:

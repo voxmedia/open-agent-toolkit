@@ -58,6 +58,7 @@ This implementation delivered:
 | Skills | `.agent/skills/*/SKILL.md` | Skill definitions with mode assertions and process steps |
 | Templates | `.oat/templates/*.md` | Document templates copied to projects |
 | Scripts | `.oat/scripts/*` | Utility scripts (e.g., thin index generation) |
+| Workflow Guide | `.oat/internal-project-reference/workflow-guide.md` | End-to-end “how to run OAT” (happy path + resume/review/PR loops) |
 | Skill Registry | `AGENTS.md` | Skills registered for tool discovery |
 | Router Contract | `state.md` frontmatter | Fields used by oat-progress for routing |
 | Knowledge Contract | `project-index.md` frontmatter | Fields for staleness detection |
