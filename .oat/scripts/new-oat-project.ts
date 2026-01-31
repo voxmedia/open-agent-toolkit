@@ -1,9 +1,29 @@
 #!/usr/bin/env tsx
 
-import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { cwd, env, stderr } from 'node:process';
-import { spawnSync } from 'node:child_process';
+
+/**
+ * NOTE (dogfood → CLI):
+ *
+ * This script lives in `.oat/scripts/` as a dogfooding-first, deterministic
+ * project scaffolder. It is intentionally written with minimal assumptions so
+ * we can iterate quickly inside this repo.
+ *
+ * When we build the proper `oat` CLI:
+ * - Extract the core logic into a reusable module under `packages/cli/` (e.g.
+ *   `packages/cli/src/project/scaffold.ts`).
+ * - Implement a CLI command like `oat project new <name>` that calls that module.
+ * - Either:
+ *   - keep this file as a thin wrapper that prefers invoking the CLI (if present)
+ *     and falls back to local template-copy behavior, or
+ *   - delete this script once the CLI is stable and templates are bundled with it.
+ *
+ * Keeping this here for now avoids prematurely locking in CLI packaging/template
+ * bundling decisions while still giving deterministic behavior during dogfood.
+ */
 
 type Args = {
   projectName: string;
@@ -91,18 +111,32 @@ function validateProjectName(name: string): void {
   }
 }
 
-function applyTemplateReplacements(template: string, projectName: string, today: string): string {
-  return template
-    .replaceAll('{Project Name}', projectName)
-    .replaceAll('YYYY-MM-DD', today)
-    // Templates are stored with oat_template markers; project artifacts should not carry them.
-    .replaceAll(/\n?oat_template:\s*true\s*\n/gi, '\n')
-    .replaceAll(/\n?oat_template_name:\s*[^\n]*\n/gi, '\n');
+function applyTemplateReplacements(
+  template: string,
+  projectName: string,
+  today: string,
+): string {
+  return (
+    template
+      .replaceAll('{Project Name}', projectName)
+      .replaceAll('YYYY-MM-DD', today)
+      // Templates are stored with oat_template markers; project artifacts should not carry them.
+      .replaceAll(/\n?oat_template:\s*true\s*\n/gi, '\n')
+      .replaceAll(/\n?oat_template_name:\s*[^\n]*\n/gi, '\n')
+  );
 }
 
-async function scaffoldFromTemplates(repoRoot: string, projectPath: string, projectName: string, today: string, force: boolean): Promise<void> {
+async function scaffoldFromTemplates(
+  repoRoot: string,
+  projectPath: string,
+  projectName: string,
+  today: string,
+  force: boolean,
+): Promise<void> {
   const templatesDir = join(repoRoot, '.oat', 'templates');
-  const templateFiles = (await readdir(templatesDir)).filter((f) => f.endsWith('.md'));
+  const templateFiles = (await readdir(templatesDir)).filter((f) =>
+    f.endsWith('.md'),
+  );
 
   await mkdir(projectPath, { recursive: true });
   await mkdir(join(projectPath, 'reviews'), { recursive: true });
@@ -125,16 +159,25 @@ async function scaffoldFromTemplates(repoRoot: string, projectPath: string, proj
   }
 }
 
-async function writeActiveProjectPointer(repoRoot: string, projectPath: string): Promise<void> {
+async function writeActiveProjectPointer(
+  repoRoot: string,
+  projectPath: string,
+): Promise<void> {
   await mkdir(join(repoRoot, '.oat'), { recursive: true });
-  await writeFile(join(repoRoot, '.oat', 'active-project'), `${projectPath}\n`, 'utf8');
+  await writeFile(
+    join(repoRoot, '.oat', 'active-project'),
+    `${projectPath}\n`,
+    'utf8',
+  );
 }
 
 function refreshRepoDashboard(repoRoot: string): void {
   const script = join(repoRoot, '.oat', 'scripts', 'generate-oat-state.sh');
   const res = spawnSync('bash', [script], { cwd: repoRoot, stdio: 'inherit' });
   if (res.status !== 0) {
-    stderr.write('Warning: failed to refresh .oat/state.md (generate-oat-state.sh).\n');
+    stderr.write(
+      'Warning: failed to refresh .oat/state.md (generate-oat-state.sh).\n',
+    );
   }
 }
 
@@ -155,7 +198,13 @@ async function main(): Promise<void> {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  await scaffoldFromTemplates(repoRoot, projectPath, args.projectName, today, args.force);
+  await scaffoldFromTemplates(
+    repoRoot,
+    projectPath,
+    args.projectName,
+    today,
+    args.force,
+  );
 
   if (args.setActive) {
     await writeActiveProjectPointer(repoRoot, projectPath);
