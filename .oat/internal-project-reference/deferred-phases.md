@@ -62,11 +62,11 @@ Dogfood v1 baseline is:
 - Remaining: `.oat/state.md` dashboard and a documented project switching workflow
 
 **When to start:**
-- As soon as we have >1 `.agent/projects/<name>/` in a repo, or
+- As soon as we have >1 `{PROJECTS_ROOT}/<name>/` projects in a repo, or
 - We notice skills repeatedly prompting for project name / operating on the wrong project.
 
 **Deliverables:**
-- `.oat/active-project` pointer (path to the active `.agent/projects/<name>/` directory)
+- `.oat/active-project` pointer (path to the active `{PROJECTS_ROOT}/<name>/` directory)
 - `.oat/state.md` human/agent-friendly dashboard (active project, phase/status, blockers, last commit, knowledge freshness)
 - Update all workflow skills to resolve project via:
   1) `.oat/active-project` (preferred)

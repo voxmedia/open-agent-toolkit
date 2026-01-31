@@ -24,20 +24,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
   - Created: YYYY-MM-DD
 
-- [ ] **(P2) [workflow] Visual progress indicators during workflow execution**
-  - Context: During dogfooding, it’s hard to tell what the agent is doing after a user “yes/confirm” (e.g., finalizing plan, updating state/frontmatter, verifying clean working tree, committing). GSD-style “phase banners” and short progress indicators provide reassurance and reduce perceived “silent work”.
-  - Proposed change:
-    - Add a lightweight, consistent “progress indicator” pattern across OAT skills (especially on multi-step finalize/commit paths), e.g. a phase banner plus 2-5 short step indicators.
-    - Focus on user-relevant milestones (e.g., “Finalizing plan”, “Updating state”, “Committing”), not every internal check.
-  - Success criteria:
-    - When a skill performs follow-up actions, the user sees a clear “what’s happening now” indicator before/while the actions run.
-    - Output remains concise (no wall-of-text), consistent across skills, and doesn’t leak unnecessary internal details.
-    - Dogfooding feedback indicates reduced confusion about “did it do the thing?”.
-  - Links:
-    - Workflow feedback: `.oat/internal-project-reference/temp/workflow-user-feedback.md`
-    - Inspiration: GSD “phase banners” / progress indicators (see workflow research notes)
-  - Created: 2026-01-30
-
 - [ ] **(P2) [workflow] Backlog Refinement Flow (Jira ticket generation)**
   - Context: Need a structured, conversational way to break large initiatives into epics/stories/tasks during planning, then create them in Jira with minimal manual effort.
   - Proposed change:
@@ -76,3 +62,15 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 - [x] **(P?) [area] {Title}**
   - Outcome:
   - Links:
+
+- [x] **(P2) [workflow] Visual progress indicators during workflow execution**
+  - Outcome:
+    - Standardized user-facing progress indicator guidance across `oat-*` skills:
+      - prominent separator banners (`OAT ▸ …`)
+      - short step indicators (2–5 lines)
+      - “starting/done” updates for long-running work
+  - Links:
+    - Workflow feedback: `.oat/internal-project-reference/temp/workflow-user-feedback.md`
+    - Commits: `d39876d`, `57de516`, `a22c107`, `bca8167`, `13de18f`, `bdc9a76`
+  - Created: 2026-01-30
+  - Completed: 2026-01-31

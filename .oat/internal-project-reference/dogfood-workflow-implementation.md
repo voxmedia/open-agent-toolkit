@@ -3,7 +3,7 @@
 > Comprehensive documentation of the Open Agent Toolkit (OAT) workflow system implementation for deep understanding review.
 
 **Implementation Date:** January 2026
-**Last Updated:** 2026-01-29
+**Last Updated:** 2026-01-31
 
 ---
 
@@ -36,11 +36,13 @@ The Open Agent Toolkit (OAT) is a structured workflow system for AI-assisted sof
 - **TDD discipline** - Red-green-refactor pattern in implementation
 - **Full traceability** - Requirements linked to tasks linked to commits
 - **Active project selection** - `.oat/active-project` (local-only) reduces project-name prompts across phases
+- **User-facing progress indicators** - Skills include separator banners + step indicators, with “starting/done” updates for long-running work
 
 ### Implementation Scope
 
 This implementation delivered:
 - **11 workflow skills** - oat-index, oat-progress, oat-discovery, oat-spec, oat-design, oat-plan, oat-implement, oat-request-review, oat-receive-review, oat-pr-progress, oat-pr-project
+- **Skill scaffolding** - create-oat-skill (specialized create-skill workflow for consistent OAT conventions)
 - **Templates** - state.md, discovery.md, spec.md, design.md, plan.md, implementation.md, project-index.md
 - **State management** - YAML frontmatter-based workflow state tracking
 - **Two HiL systems** - Workflow gates and plan phase checkpoints
@@ -346,7 +348,7 @@ BLOCKED: Implementation code, changing requirements
 ALLOWED: Architecture decisions, interface design, technical planning
 ```
 
-**Output:** `.agent/projects/{project-name}/design.md`
+**Output:** `{PROJECT_PATH}/design.md`
 
 **Key Sections:**
 - Architecture Overview

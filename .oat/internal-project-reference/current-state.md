@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is *right now* in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-01-29
+**Last Updated:** 2026-01-31
 
 ## Canonical References
 
@@ -31,6 +31,10 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - PR skills:
   - `oat-pr-progress`
   - `oat-pr-project`
+
+### Skill Authoring (Meta)
+
+- `create-oat-skill` (scaffold new OAT skills using the standard OAT sections + banner conventions; references baseline guidance from `create-skill`)
 
 ### Templates / Scripts
 

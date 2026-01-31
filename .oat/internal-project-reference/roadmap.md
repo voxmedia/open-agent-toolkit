@@ -19,6 +19,10 @@ Baseline dogfood workflow is implemented:
 - Artifacts + skills:
   - `oat-discovery` -> `oat-spec` -> `oat-design` -> `oat-plan` -> `oat-implement`
   - Router: `oat-progress`
+- Workflow UX:
+  - User-facing progress indicators in skills (separator banners + step indicators + “starting/done” updates for long-running work)
+- Skill authoring:
+  - `create-oat-skill` (scaffold new OAT skills with standard sections + banner conventions)
 - Templates under `.oat/templates/`: discovery/spec/design/plan/implementation/state/project-index
 - Project artifacts under `.oat/projects/shared/<project>/` (current dogfood layout; configurable via `.oat/projects-root`)
 - Testing traceability:
