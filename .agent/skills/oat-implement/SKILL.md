@@ -235,6 +235,19 @@ Keep project state in sync after each task (recommended source of truth for “w
   - After all fix tasks are implemented, update the Reviews table to `fixes_completed` (not `passed`).
   - Only set `passed` after a re-review is run and processed via `/oat:receive-review` with no Critical/Important findings.
 
+**Review-fix completion bookkeeping (required):**
+- When you complete the last outstanding review-fix task:
+  1. Update the relevant `plan.md` `## Reviews` row from `fixes_added` → `fixes_completed` and set Date to `{today}`.
+     - If multiple rows are `fixes_added`, ask the user which scope you just addressed (or choose the matching phase if obvious).
+  2. Update `plan.md` `## Implementation Complete` totals (phase counts + total tasks) so summaries reflect the additional fix work.
+  3. Update `implementation.md` so it’s unambiguous that tasks are complete and the project is awaiting re-review:
+     - `oat_current_task_id: null` (reviews are not tasks)
+     - “Next” guidance should say “request re-review” (not “execute fix tasks”).
+  4. Update `{PROJECT_PATH}/state.md` to reflect the correct “awaiting re-review” posture:
+     - `oat_phase: implement`
+     - `oat_phase_status: in_progress` (until the re-review passes)
+     - `oat_current_task: null`
+
 ### Step 8: Check Plan Phase Completion
 
 When all tasks in current plan phase complete (e.g., all p01-* tasks done):

@@ -71,7 +71,9 @@ The review loop is plan-driven. The canonical state is the `plan.md` `## Reviews
    - It updates the Reviews row to `fixes_added` when tasks are created
 3. Implement fixes:
    - `/oat:implement` executes the new tasks and updates `implementation.md`
-   - When all fix tasks are done, update the Reviews row to `fixes_completed`
+   - When all fix tasks are done:
+     - update the Reviews row to `fixes_completed`
+     - ensure `plan.md` rollups (`## Implementation Complete`) and `implementation.md` “Next” guidance are updated so summaries don’t go stale
 4. Re-review:
    - Run `/oat:request-review …` again
    - Then `/oat:receive-review` to reach `passed`

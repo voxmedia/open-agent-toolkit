@@ -195,6 +195,12 @@ git commit -m "fix({task_id}): {description}"
 
 Add new tasks to plan.md in the target phase.
 
+**Review-fix bookkeeping (required):**
+- When you add review-generated fix tasks:
+  - Update the relevant Reviews table row status to `fixes_added` (work queued) and set the Date + Artifact.
+  - Update `## Implementation Complete` totals (phase counts + total task count) so downstream PR/review summaries don’t go stale.
+  - If the plan includes any phase rollups that reference task counts, update those too.
+
 **Keep plan runnable:**
 - Do NOT leave plan.md in a state that blocks `/oat:implement`.
 - Ensure plan.md frontmatter remains:
@@ -242,6 +248,15 @@ After the fix tasks are complete:
 - Update the review row status to `fixes_completed`
 - Re-run `/oat:request-review {type} {scope}` then `/oat:receive-review` to reach `passed`
 ```
+
+**Restart safety (required):**
+- If `{PROJECT_PATH}/implementation.md` exists, ensure it will resume correctly after this skill:
+  - If `oat_current_task_id` is `null` (or points at already-completed work), set it to the **first newly-added review-fix task ID** (or the next incomplete task in plan order).
+  - Update the Progress Overview table totals (tasks + completed) if they are present and depend on task counts.
+  - Update `{PROJECT_PATH}/state.md` frontmatter so routing/UI is accurate:
+    - `oat_phase: implement`
+    - `oat_phase_status: in_progress`
+    - `oat_current_task: {first_fix_task_id}` (or next incomplete)
 
 ### Step 8: Check Review Cycle Count
 
