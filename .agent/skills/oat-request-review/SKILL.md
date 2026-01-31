@@ -35,6 +35,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[2/4] Collecting files + context…`
   - `[3/4] Running review (fresh context)…`
   - `[4/4] Writing review artifact…`
+- For long-running operations (reviewing large diffs, running verification commands), print a start line and a completion line (duration optional).
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**

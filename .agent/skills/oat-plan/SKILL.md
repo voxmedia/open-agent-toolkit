@@ -31,6 +31,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[2/4] Drafting phases + tasks…`
   - `[3/4] Finalizing plan + rollups…`
   - `[4/4] Updating state + committing…`
+- For any operation that may take noticeable time (e.g., reading large artifacts), print a start line and a completion line (duration optional).
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**

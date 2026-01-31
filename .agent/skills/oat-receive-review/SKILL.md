@@ -35,6 +35,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[2/4] Converting findings → plan tasks…`
   - `[3/4] Updating plan.md + implementation.md…`
   - `[4/4] Committing + next-step summary…`
+- For long-running operations (large review artifacts, many findings), print a start line and a completion line (duration optional).
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**

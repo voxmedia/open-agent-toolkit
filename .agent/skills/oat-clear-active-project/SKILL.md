@@ -17,6 +17,7 @@ When executing this skill, provide lightweight progress feedback so the user can
    OAT ▸ CLEAR ACTIVE PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (clearing pointer, dashboard refresh), print 2–3 short step indicators.
+- For any operation that may take noticeable time, print a start line and a completion line (duration optional).
 
 ## Process
 

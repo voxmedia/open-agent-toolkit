@@ -46,6 +46,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - Gitignored via `.gitignore`.
 - User-facing progress indicators:
   - Key `oat-*` skills include guidance to print a prominent phase banner with horizontal separators (GSD-style reassurance), plus a few short step indicators during multi-step “finalize/commit” work.
+  - For long-running operations, skills should print a brief “starting…” line and a matching “done” line so it’s obvious the agent is making progress.
 - Stable task IDs:
   - Plan tasks use `pNN-tNN` (e.g., `p01-t03`)
   - Agent commit convention uses Conventional Commit scope: `feat(p01-t03): ...`

@@ -17,6 +17,7 @@ When executing this skill, provide lightweight progress feedback so the user can
    OAT ▸ COMPLETE PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (updating state, optional cleanup, dashboard refresh), print 2–5 short step indicators.
+- For any operation that may take noticeable time, print a start line and a completion line (duration optional).
 
 ## Process
 

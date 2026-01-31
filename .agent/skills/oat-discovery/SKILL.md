@@ -27,6 +27,7 @@ When executing this skill, provide lightweight progress feedback so the user can
    OAT ▸ DISCOVERY
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (knowledge checks, project setup, writing artifacts), print 2–5 short step indicators.
+- For any operation that may take noticeable time, print a start line and a completion line (duration optional).
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**

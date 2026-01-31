@@ -43,6 +43,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[2/4] Reading OAT artifacts…`
   - `[3/4] Collecting git context…`
   - `[4/4] Writing PR description…`
+- For long-running operations (git logs/diffs on large ranges), print a start line and a completion line (duration optional).
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**
