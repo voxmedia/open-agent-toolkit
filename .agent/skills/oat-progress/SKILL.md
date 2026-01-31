@@ -1,6 +1,8 @@
 ---
 name: oat-progress
 description: Check project progress and get routed to the appropriate next skill
+disable-model-invocation: true
+user-invocable: true
 ---
 
 # Progress Router

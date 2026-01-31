@@ -4,6 +4,7 @@ description: Create a comprehensive PR description document based on git changes
 argument-hint: "[project-name] [--sha=<commit>] [--jira=<ticket>] [--detail=min|mod|max]"
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Glob, Grep, AskUserQuestion
+user-invocable: true
 ---
 
 # Create PR Description

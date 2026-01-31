@@ -1,6 +1,8 @@
 ---
 name: oat-plan
 description: Create implementation plan from design with bite-sized TDD tasks
+disable-model-invocation: true
+user-invocable: true
 ---
 
 # Planning Phase

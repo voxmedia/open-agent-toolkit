@@ -3,6 +3,7 @@ name: create-ticket
 description: Create a Jira ticket in the DWP project via Atlassian MCP integration.
 argument-hint: "[title \"...\"] [type \"...\"] [priority \"...\"]"
 disable-model-invocation: true
+user-invocable: true
 ---
 
 # Create Jira Ticket

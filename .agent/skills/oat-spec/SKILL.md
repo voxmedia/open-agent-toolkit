@@ -1,6 +1,8 @@
 ---
 name: oat-spec
 description: Create formal specification from discovery insights with structured requirements
+disable-model-invocation: true
+user-invocable: true
 ---
 
 # Specification Phase

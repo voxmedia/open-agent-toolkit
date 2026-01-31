@@ -1,6 +1,8 @@
 ---
 name: oat-implement
 description: Execute implementation plan task-by-task with state tracking and TDD discipline
+disable-model-invocation: true
+user-invocable: true
 ---
 
 # Implementation Phase

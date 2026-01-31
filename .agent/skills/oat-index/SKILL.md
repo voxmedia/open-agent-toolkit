@@ -1,6 +1,8 @@
 ---
 name: oat-index
 description: Generate or regenerate comprehensive knowledge base of the codebase using parallel mapper agents.
+disable-model-invocation: true
+user-invocable: true
 ---
 
 # Knowledge Base Generation

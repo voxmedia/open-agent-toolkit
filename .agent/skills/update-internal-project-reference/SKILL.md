@@ -1,6 +1,8 @@
 ---
 name: update-internal-project-reference
 description: Use when OAT implementation changes and you need to update .oat/internal-project-reference docs to match (temporary while dogfooding)
+disable-model-invocation: true
+user-invocable: true
 ---
 
 # Update Internal Project Reference (Dogfood)

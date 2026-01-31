@@ -1,6 +1,8 @@
 ---
 name: oat-receive-review
 description: Use after running oat-request-review - when a review artifact exists and findings need to be converted into actionable plan tasks for gap closure
+disable-model-invocation: true
+user-invocable: true
 ---
 
 # Receive Review

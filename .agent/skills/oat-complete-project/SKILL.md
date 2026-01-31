@@ -1,6 +1,8 @@
 ---
 name: oat-complete-project
 description: Mark a project lifecycle as complete
+disable-model-invocation: true
+user-invocable: true
 ---
 
 # Complete Project
