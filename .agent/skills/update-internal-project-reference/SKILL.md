@@ -16,6 +16,7 @@ When OAT implementation changes (new skills/templates/scripts, changed behavior,
 ## When To Use
 
 - After adding/modifying an OAT skill under `.agent/skills/`
+- After changing skill frontmatter metadata (e.g., `user-invocable`, `disable-model-invocation`, `allowed-tools`)
 - After changing templates under `.oat/templates/`
 - After changing scripts under `.oat/scripts/`
 - After changing internal doc locations under `.oat/internal-project-reference/`

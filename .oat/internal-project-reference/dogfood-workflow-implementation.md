@@ -69,6 +69,18 @@ Skills are registered in `AGENTS.md` so tools can load them. They can be invoked
 - **Via slash command:** `/oat:discovery`, `/oat:plan`, etc. (Claude Code, Cursor)
 - **Via CLI:** `npx openskills read oat-discovery`, `npx openskills read oat-plan`
 
+#### Skill Frontmatter (Provider-Dependent)
+
+Many skills use optional frontmatter fields to make behavior more consistent across providers:
+
+- `user-invocable: true` — should show up in the slash menu
+- `disable-model-invocation: true` — prevents “automatic” triggering without explicit user intent
+- `allowed-tools: ...` — advisory tool scope (some providers enforce it strictly; others treat it as documentation)
+
+For OAT workflow skills, `allowed-tools` is generally split into:
+- **Read-only** skills (e.g., `oat-progress`, `oat-request-review`) — no `Write`/`Edit`
+- **Write** skills (e.g., `oat-discovery` → `oat-implement`, `oat-receive-review`, PR skills) — include `Write` and `Bash(git:*)`
+
 ---
 
 ## Contracts
