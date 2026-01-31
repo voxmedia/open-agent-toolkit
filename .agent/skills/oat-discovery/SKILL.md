@@ -59,7 +59,36 @@ If you catch yourself:
 
 ## Process
 
-### Step 1: Check Knowledge Base Exists
+### Step 1: Resolve Active Project (or Create a New One)
+
+OAT stores the active project path in `.oat/active-project` (single line, local-only).
+
+**Recommendation:** Prefer creating projects via `/oat:new-project` (scaffolds all artifacts up front). `oat-new-project` is the canonical “create project” step; this discovery skill should not be responsible for directory/template scaffolding.
+
+```bash
+PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".agent/projects")}"
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+```
+
+**If `PROJECT_PATH` is set and valid (directory exists):**
+- Derive `project-name` from the directory name (basename of the path)
+- Read `{PROJECT_PATH}/state.md` (if it exists) and show current status
+- Ask user:
+  - **Continue** with active project, or
+  - **Switch projects**:
+    - Existing project: run `/oat:open-project`
+    - New project: run `/oat:new-project`
+  - Stop here until the user has selected/created the intended project.
+
+**If `PROJECT_PATH` is missing/invalid:**
+- Tell the user an active project is required for discovery.
+- Offer:
+  - New project: run `/oat:new-project {project-name}`
+  - Existing project: run `/oat:open-project`
+- Stop here until `.oat/active-project` is set to a valid project directory.
+
+### Step 2: Check Knowledge Base Exists
 
 ```bash
 ls .oat/knowledge/repo/project-index.md 2>/dev/null
@@ -67,7 +96,7 @@ ls .oat/knowledge/repo/project-index.md 2>/dev/null
 
 **If missing:** Block and require `/oat:index` first.
 
-### Step 2: Check Knowledge Staleness
+### Step 3: Check Knowledge Staleness
 
 Extract frontmatter values from `.oat/knowledge/repo/project-index.md`:
 
@@ -131,35 +160,6 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 **If unable to determine staleness (missing SHAs/dates):**
 - Warn that staleness could not be verified
 - Recommend refreshing knowledge base to ensure accuracy
-
-### Step 3: Resolve Active Project (or Create a New One)
-
-OAT stores the active project path in `.oat/active-project` (single line, local-only).
-
-**Recommendation:** Prefer creating projects via `/oat:new-project` (scaffolds all artifacts up front). `oat-new-project` is the canonical “create project” step; this discovery skill should not be responsible for directory/template scaffolding.
-
-```bash
-PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".agent/projects")}"
-PROJECTS_ROOT="${PROJECTS_ROOT%/}"
-```
-
-**If `PROJECT_PATH` is set and valid (directory exists):**
-- Derive `project-name` from the directory name (basename of the path)
-- Read `{PROJECT_PATH}/state.md` (if it exists) and show current status
-- Ask user:
-  - **Continue** with active project, or
-  - **Switch projects**:
-    - Existing project: run `/oat:open-project`
-    - New project: run `/oat:new-project`
-  - Stop here until the user has selected/created the intended project.
-
-**If `PROJECT_PATH` is missing/invalid:**
-- Tell the user an active project is required for discovery.
-- Offer:
-  - New project: run `/oat:new-project {project-name}`
-  - Existing project: run `/oat:open-project`
-- Stop here until `.oat/active-project` is set to a valid project directory.
 
 ### Step 4: Initialize State
 
