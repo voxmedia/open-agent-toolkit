@@ -35,6 +35,12 @@ Usage notes:
 </skill>
 
 <skill>
+<name>create-oat-skill</name>
+<description>Create a new OAT workflow skill with standard sections, project-root resolution, and progress banner conventions.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>create-ticket</name>
 <description>Create a Jira ticket in the DWP project via Atlassian MCP integration.</description>
 <location>project</location>
