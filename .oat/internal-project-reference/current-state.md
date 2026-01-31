@@ -24,6 +24,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - `oat-index` (thin-first index + enrichment)
   - `oat-progress` (router / status)
 - Artifact generation:
+  - `oat-new-project` (scaffold a project dir from templates)
   - `oat-discovery` -> `oat-spec` -> `oat-design` -> `oat-plan` -> `oat-implement`
 - Review loop:
   - `oat-request-review`
@@ -80,7 +81,7 @@ For a fuller guide (resume/review/PR loops), see `.oat/internal-project-referenc
 1. Generate repo knowledge:
    - `/oat:index`
 2. Start a project:
-   - `/oat:discovery`
+   - `/oat:new-project` (recommended) then `/oat:discovery`
    - This creates `{PROJECTS_ROOT}/<project>/...` artifacts (from `.oat/projects-root`) and writes `.oat/active-project`.
 3. Move through phases (or run router anytime):
    - `/oat:progress`

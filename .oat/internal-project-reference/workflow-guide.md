@@ -20,7 +20,7 @@ For a deep technical explanation of how the system works, see `.oat/internal-pro
 1. Generate repo knowledge:
    - `/oat:index`
 2. Start a project (or set the active project when prompted):
-   - `/oat:discovery`
+   - `/oat:new-project` (recommended) then `/oat:discovery`
 3. Continue the workflow:
    - `/oat:spec` → `/oat:design` → `/oat:plan` → `/oat:implement`
 4. Final review loop:

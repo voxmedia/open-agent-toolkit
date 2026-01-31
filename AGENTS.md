@@ -119,6 +119,12 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-new-project</name>
+<description>Create a new OAT project directory from templates under the configured projects root.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>oat-request-review</name>
 <description>Use when ready to review completed work before merging - after implementing a task, phase, or full project; when quality gate needed before PR.</description>
 <location>project</location>

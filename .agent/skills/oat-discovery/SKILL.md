@@ -136,6 +136,8 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 
 OAT stores the active project path in `.oat/active-project` (single line, local-only).
 
+**Recommendation:** Prefer creating projects via `/oat:new-project` (scaffolds all artifacts up front). Discovery can still create a project directory if needed, but `oat-new-project` is the canonical “create” step.
+
 ```bash
 PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
 PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".agent/projects")}"

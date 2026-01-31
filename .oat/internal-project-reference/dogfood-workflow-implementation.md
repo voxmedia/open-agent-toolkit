@@ -41,7 +41,7 @@ The Open Agent Toolkit (OAT) is a structured workflow system for AI-assisted sof
 ### Implementation Scope
 
 This implementation delivered:
-- **11 workflow skills** - oat-index, oat-progress, oat-discovery, oat-spec, oat-design, oat-plan, oat-implement, oat-request-review, oat-receive-review, oat-pr-progress, oat-pr-project
+- **12 workflow skills** - oat-index, oat-progress, oat-new-project, oat-discovery, oat-spec, oat-design, oat-plan, oat-implement, oat-request-review, oat-receive-review, oat-pr-progress, oat-pr-project
 - **Skill scaffolding** - create-oat-skill (specialized create-skill workflow for consistent OAT conventions)
 - **Templates** - state.md, discovery.md, spec.md, design.md, plan.md, implementation.md, project-index.md
 - **State management** - YAML frontmatter-based workflow state tracking
