@@ -9,6 +9,7 @@ Track notable decisions made while evolving OAT in this repo, so future sessions
 | ADR-001 | 2026-01-30 | accepted | Keep `.oat/active-project` path-based for dogfood v1; defer name-only migration |
 | ADR-002 | 2026-01-31 | accepted | Standardize user-facing progress indicators in OAT skills |
 | ADR-003 | 2026-01-31 | accepted | Add `create-oat-skill` to keep OAT skill conventions consistent |
+| ADR-004 | 2026-01-31 | accepted | Defer active-project name-only migration until CLI owns project commands |
 
 ## Decisions
 
@@ -107,6 +108,37 @@ Add a `create-oat-skill` skill as a specialization of `create-skill`:
   - Less copy/paste of conventions into every new skill.
 - Trade-offs:
   - Two “skill creation” skills exist; users need simple routing guidance (e.g., “if it’s an `oat-*` skill, use `create-oat-skill`”).
+
+---
+
+### ADR-004: Defer active-project name-only migration until CLI owns project commands
+
+- **Date:** 2026-01-31
+- **Status:** accepted
+- **Drivers:** Avoid cross-skill coordination risk while we start the CLI; keep dogfood stable; let the CLI become the canonical interface for project creation/selection.
+- **Related:**
+  - `.oat/internal-project-reference/deferred-phases.md`
+  - `.oat/internal-project-reference/current-state.md`
+  - `.oat/scripts/generate-oat-state.sh` (already reads both formats)
+
+#### Decision
+
+For dogfood v1 (until CLI project commands exist):
+- **Write format remains path-based:** `.oat/active-project` stores a full path.
+- **Read behavior stays flexible for new tooling:** where safe, tooling may accept either:
+  - full path (current canonical)
+  - name-only (future), resolved via `{PROJECTS_ROOT}/{name}`
+- **Migration is deferred:** we will not flip `.oat/active-project` to name-only writes until the CLI provides:
+  - `oat project new/open` (or equivalent)
+  - a coordinated rollout that updates all skills’ “resolve active project” logic first.
+
+#### Consequences
+
+- Positive:
+  - Reduces risk of “wrong project” behavior while we iterate quickly.
+  - Keeps the pointer migration aligned with the CLI architecture.
+- Trade-offs:
+  - Path pointers can break if `{PROJECTS_ROOT}` moves; users may need to re-open the project.
 
 ## ADR Template
 

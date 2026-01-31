@@ -59,7 +59,7 @@ Dogfood v1 baseline is:
 
 **Status:** In progress
 - Done: `.oat/active-project` pointer + all `oat-*` skills resolve project from it
-- Remaining: `.oat/state.md` dashboard and a documented project switching workflow
+- Remaining: Repo State Dashboard (clear “first-class” generation/refresh workflow) and a documented project switching workflow
 
 **When to start:**
 - As soon as we have >1 `{PROJECTS_ROOT}/<name>/` projects in a repo, or
@@ -82,6 +82,8 @@ For dogfood v1, the safest approach is:
   - Legacy full path (current canonical)
   - Name-only (future), resolved via `.oat/projects-root` / `OAT_PROJECTS_ROOT`
 - **Migration:** Treat name-only as a separate coordinated update (update every skill’s “resolve active project” logic first, then flip writes).
+
+**Decision:** Name-only migration is explicitly deferred until the CLI owns project commands (see `.oat/internal-project-reference/decision-record.md` ADR-004).
 
 **Exit criteria:**
 - All skills operate on the correct project with no ambiguity.

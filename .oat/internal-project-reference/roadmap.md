@@ -106,7 +106,7 @@ Baseline dogfood workflow is implemented:
 
 **Status:** In progress
 - Done: `.oat/active-project` pointer + skills resolve via it
-- Remaining: `.oat/state.md` dashboard and documented project switching workflow
+- Remaining: Repo State Dashboard (clear “first-class” generation/refresh workflow) and documented project switching workflow
 
 **When to do it:**
 - As soon as we have >1 project under `.oat/projects/shared/<name>/`, or
@@ -115,7 +115,7 @@ Baseline dogfood workflow is implemented:
 **Deliverables:**
 - `.oat/projects-root` containing the default projects root (e.g., `.oat/projects/shared`)
 - `.oat/active-project` pointer file containing the active project directory path (under the configured projects root)
-- Optional `.oat/state.md` dashboard derived from the active project's `state.md` + knowledge freshness summary
+- Optional Repo State Dashboard (`.oat/state.md`) derived from the active project's `state.md` + knowledge freshness summary
 - Update all workflow skills to resolve project via:
   1) `.oat/active-project` (preferred)
   2) fallback prompts (if missing)

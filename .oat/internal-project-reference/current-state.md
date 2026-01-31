@@ -60,6 +60,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - `.oat/active-project` (single line; path to the active project directory)
   - All `oat-*` skills attempt to resolve the project from this file first (fallback: prompt + write).
   - Gitignored via `.gitignore`.
+  - **Migration note:** name-only `.oat/active-project` is intentionally deferred until the CLI owns project commands; new tooling may read both formats where safe.
 - User-facing progress indicators:
   - Key `oat-*` skills include guidance to print a prominent phase banner with horizontal separators (GSD-style reassurance), plus a few short step indicators during multi-step “finalize/commit” work.
   - For long-running operations, skills should print a brief “starting…” line and a matching “done” line so it’s obvious the agent is making progress.
