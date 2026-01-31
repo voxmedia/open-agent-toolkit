@@ -136,7 +136,7 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 
 OAT stores the active project path in `.oat/active-project` (single line, local-only).
 
-**Recommendation:** Prefer creating projects via `/oat:new-project` (scaffolds all artifacts up front). Discovery can still create a project directory if needed, but `oat-new-project` is the canonical “create” step.
+**Recommendation:** Prefer creating projects via `/oat:new-project` (scaffolds all artifacts up front). `oat-new-project` is the canonical “create project” step; this discovery skill should not be responsible for directory/template scaffolding.
 
 ```bash
 PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
@@ -149,36 +149,17 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 - Read `{PROJECT_PATH}/state.md` (if it exists) and show current status
 - Ask user:
   - **Continue** with active project, or
-  - **Create a new project** (prompts for a new name and updates `.oat/active-project`)
+  - **Switch projects**:
+    - Existing project: run `/oat:open-project`
+    - New project: run `/oat:new-project`
+  - Stop here until the user has selected/created the intended project.
 
 **If `PROJECT_PATH` is missing/invalid:**
-- Ask user for project name (slug format, e.g., "user-auth-refactor")
-- Set `PROJECT_PATH` to: `${PROJECTS_ROOT}/{project-name}`
-
-Now check whether the resolved `PROJECT_PATH` already exists:
-```bash
-ls -la "$PROJECT_PATH" 2>/dev/null
-```
-
-**If project exists:**
-- Read `"$PROJECT_PATH/state.md"` (if present) to show current status
-- Ask user: "Project exists. Resume, View, or Overwrite?"
-  - **Resume:** Continue with existing discovery (if status is in_progress)
-  - **View:** Show current discovery.md and exit
-  - **Overwrite:** Delete and start fresh (warn about data loss)
-
-**If project doesn't exist:**
-```bash
-mkdir -p "$PROJECT_PATH"
-```
-
-Regardless of whether the project existed already, set the active project pointer to `PROJECT_PATH`.
-
-**Write/refresh active project pointer (local-only):**
-```bash
-mkdir -p .oat
-echo "$PROJECT_PATH" > .oat/active-project
-```
+- Tell the user an active project is required for discovery.
+- Offer:
+  - New project: run `/oat:new-project {project-name}`
+  - Existing project: run `/oat:open-project`
+- Stop here until `.oat/active-project` is set to a valid project directory.
 
 ### Step 4: Initialize State
 

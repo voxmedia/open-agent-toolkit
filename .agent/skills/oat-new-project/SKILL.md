@@ -57,8 +57,8 @@ Confirm to the user:
 - Active project pointer set: `.oat/active-project`
 - Repo dashboard refreshed: `.oat/state.md` (if enabled)
 
-Then route to discovery:
-- Next: `/oat:discovery`
+Then explicitly instruct the user to run discovery next:
+- Next command: `/oat:discovery`
 
 ## Success Criteria
 
