@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is *right now* in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-01-31
+**Last Updated:** 2026-02-01
 
 ## Canonical References
 
@@ -109,6 +109,8 @@ For a fuller guide (resume/review/PR loops), see `.oat/internal-project-referenc
   - PR opening automation beyond best-effort `gh pr create` guidance (optional; not required for v1 dogfood)
 - Repo-level dashboard:
   - Repo State Dashboard (`.oat/state.md`) exists, but needs to be made first-class (clear generation/refresh workflow + keep docs in sync with current semantics)
+- Provider interop (CLI):
+  - Build the safe interop CLI (`oat init/status/sync/doctor`) with adapters + sync manifest (see `.oat/internal-project-reference/roadmap.md` Phase 8)
 - Multi-project model:
   - `.oat/projects/**` and `oat project ...` switching (in progress; dogfood now uses `.oat/projects/shared` as the default projects root)
 - Parallel execution + reconciliation:

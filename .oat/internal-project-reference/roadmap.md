@@ -9,52 +9,51 @@ For a birdseye snapshot of what exists *right now*, see `.oat/internal-project-r
 
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/internal-project-reference/temp/workflow-user-feedback.md`.
 
-As of `git log -1` on branch `dogfood-workflow`, we have the baseline workflow skills and templates in place. The next work is largely about closing known gaps (reviews/PRs, active project resolution) and then deciding when to shift focus to provider interop.
+As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline has been exercised end-to-end. The next focus is shifting toward the original product direction: provider interop via a safe, diff-first CLI (`oat init/status/sync/doctor`), while keeping the Repo State Dashboard and workflow contracts in sync.
 
 ## Current State (Implemented)
 
-Baseline dogfood workflow is implemented:
+Dogfood workflow baseline is implemented and has been exercised end-to-end:
 - Knowledge: `oat-index` + `.oat/knowledge/**` (thin->full project index, mapper outputs under `.oat/knowledge/repo/`)
-- Active project selection: `.oat/active-project` (single-line path, local-only) and all `oat-*` skills resolve project from it (fallback: prompt)
-- Artifacts + skills:
+- Projects:
+  - `oat-new-project` scaffolds `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`
+  - `.oat/projects-root` sets `{PROJECTS_ROOT}` (default: `.oat/projects/shared`)
+  - `.oat/active-project` stores the active project path (local-only); all `oat-*` skills resolve project from it (fallback: prompt)
+- Workflow phases + routing:
   - `oat-discovery` -> `oat-spec` -> `oat-design` -> `oat-plan` -> `oat-implement`
   - Router: `oat-progress`
+- Review + PR loop:
+  - Review: `oat-request-review`, `oat-receive-review` + `.agent/agents/oat-reviewer.md`
+  - PR: `oat-pr-progress`, `oat-pr-project`
+- Repo state dashboard:
+  - `.oat/scripts/generate-oat-state.sh` generates `.oat/state.md` (gitignored) as a "single glance" dashboard
 - Workflow UX:
-  - User-facing progress indicators in skills (separator banners + step indicators + “starting/done” updates for long-running work)
+  - User-facing progress indicators across skills (separator banners + step indicators + “starting/done” updates for long-running work)
 - Skill authoring:
   - `create-oat-skill` (scaffold new OAT skills with standard sections + banner conventions)
+- Internal validation:
+  - `pnpm oat:validate-skills` (internal; validates `oat-*` skill frontmatter + banner conventions)
 - Templates under `.oat/templates/`: discovery/spec/design/plan/implementation/state/project-index
-- Project artifacts under `.oat/projects/shared/<project>/` (current dogfood layout; configurable via `.oat/projects-root`)
-- Testing traceability:
-  - spec Requirement Index uses `Verification` (`method: pointer`)
-  - design includes requirement-to-test mapping inside `## Testing Strategy`
 
 ## Known Gaps / Mismatches (What We Need To Resolve)
 
-1. Repo-level state dashboard (active project + summary)
-   - Implemented: `.oat/active-project` pointer (local-only) and skills resolve via it.
-   - Missing: a human/agent-friendly `.oat/state.md` dashboard to summarize active project status + knowledge freshness at a glance.
+The workflow baseline is now stable enough to shift focus to interop. Remaining gaps are mostly "product direction" work:
 
-2. Reviews + PR workflow is not yet first-class
-   - Implemented (review loop):
-     - `oat-request-review`, `oat-receive-review`
-     - Reviewer prompt: `.agent/agents/oat-reviewer.md`
-     - `plan.md` template includes a `## Reviews` table with a documented status progression
-     - `oat-implement` triggers a final-review gate and then prompts for PR
-   - Implemented (PR automation):
-     - `oat-pr-progress` (phase/progress PR descriptions)
-     - `oat-pr-project` (final PR description into main)
-   - Optional (nice-to-have templates):
-     - `.oat/templates/code-review.md`, `.oat/templates/artifact-review.md` (currently the canonical format is in `.agent/agents/oat-reviewer.md`)
+1. Make the Repo State Dashboard first-class
+   - Exists today as a generated `.oat/state.md` (gitignored), but we need a clearer contract:
+     - when it must be regenerated (and by which skills/scripts)
+     - what fields are authoritative at repo-level vs project-level
 
-3. Dogfood vs product scope needs explicit separation
-   - Dogfood design (v2) prioritizes workflow skills first; we now default projects to `.oat/projects/shared/` (tracked) via `.oat/projects-root`.
-   - Early plan prioritizes provider interop (CLI, adapters, sync manifest, richer `.oat/projects/**` switching).
-   - Gap: we need to keep both visions, but sequence them clearly to avoid half-implementing two incompatible directory models.
+2. Provider interoperability is not implemented (CLI + adapters + sync)
+   - The core product value requires `oat init/status/sync/doctor`, provider adapters, and a safe sync manifest.
 
-4. Provider capability differences
-   - Some desired behaviors are provider-specific (skill args, subagents/Task tool, hooks).
-   - Gap: document a minimal capability matrix and specify fallbacks (especially for args + subagent availability).
+3. Provider capability differences need explicit documentation + fallbacks
+   - Some behaviors are provider-specific (skill args, subagents/Task tool, hooks).
+   - Before we ship CLI sync: validate the P0 assumptions (paths + precedence) and publish a minimal capability matrix.
+
+4. Directory model coordination
+   - Dogfood uses `{PROJECTS_ROOT}` + `.oat/active-project` (path format).
+   - Name-only `.oat/active-project` is intentionally deferred until CLI project commands own the contract (ADR-004).
 
 ## Roadmap Phases
 
@@ -62,7 +61,7 @@ Baseline dogfood workflow is implemented:
 
 **Goal:** Make review and PR creation first-class and workflow-native (no dependency on superpowers being installed).
 
-**Status:** In progress
+**Status:** Implemented (dogfooded)
 - Done: review loop (request-review, receive-review, reviewer prompt, plan Reviews table, implement final gate)
 - Done: PR skills (progress + project) (PR description generation; optional `gh pr create`)
 
@@ -104,9 +103,10 @@ Baseline dogfood workflow is implemented:
 
 **Goal:** Make project selection deterministic without committing to the full `.oat/projects/**` product model yet.
 
-**Status:** In progress
-- Done: `.oat/active-project` pointer + skills resolve via it
-- Remaining: Repo State Dashboard (clear “first-class” generation/refresh workflow) and documented project switching workflow
+**Status:** Implemented (needs polish)
+- Done: `.oat/projects-root` + `.oat/active-project` pointer + skills resolve via it
+- Done: generated Repo State Dashboard (`.oat/state.md`) via `.oat/scripts/generate-oat-state.sh`
+- Remaining: tighten the "first-class" contract (who regenerates it, what fields it includes, and how it stays in sync with skills)
 
 **When to do it:**
 - As soon as we have >1 project under `.oat/projects/shared/<name>/`, or
@@ -175,14 +175,29 @@ Baseline dogfood workflow is implemented:
 **Goal:** Deliver the original interop value: provider adapters, sync, drift detection, and safe apply.
 
 **When to do it:**
-- After dogfood v1 is stable enough to open-source "as a workflow", and
-- We're ready to prioritize interoperability (the primary value in the early plan doc).
+- Now that dogfood v1 has been exercised end-to-end, we can start building the CLI in parallel with smaller workflow polish.
 
 **Deliverables:**
-- `oat init`, `oat status`, `oat sync`, `oat doctor`
-- Provider adapters + capability matrix
-- `.oat/sync/manifest.json` managed operations (diff-first, reversible)
-- Optional git hooks to enforce sync invariants (opt-in)
+- P0: Validate provider assumptions (paths + precedence) in fixture repos
+  - Claude Code: `.claude/{skills,agents,commands,hooks}` load/precedence
+  - Codex CLI: `.codex/agents` (confirm)
+  - Cursor: third-party agent loading + precedence (confirm)
+- P0: CLI command surface (interop foundation)
+  - `oat init` (bootstrap `.agent/`, `.oat/`, `AGENTS.md`)
+  - `oat status` (provider detection + drift/stray summary + capability matrix)
+  - `oat sync` (diff-first, dry-run by default; apply only with explicit flag)
+  - `oat doctor` (environment diagnostics + actionable fix steps)
+- P0: Provider adapters (config-driven)
+  - Canonical source is `.agent/**`; provider dirs are generated views (symlink/copy)
+  - Strategies: `auto|symlink|copy` with persisted per-provider decisions
+- P0: Sync manifest (drift safety)
+  - `.oat/sync/manifest.json` records managed mappings + hashes (copy mode)
+  - Destructive operations (deletes/prune) apply only to manifest-managed files
+- P1: Template sourcing + generated views contract
+  - Explicit “canonical vs generated” markers (avoid editing generated views)
+  - Stray detection + optional adoption flow (provider-local -> `.agent/**`)
+- P1: Optional git hooks (opt-in)
+  - pre-commit checks / post-checkout assist (never surprising destructive behavior)
 
 ---
 
