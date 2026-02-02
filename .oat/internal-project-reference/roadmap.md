@@ -11,6 +11,20 @@ For day-to-day friction and pain points discovered while running the workflow, l
 
 As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline has been exercised end-to-end. The next focus is shifting toward the original product direction: provider interop via a safe, diff-first CLI (`oat init/status/sync/doctor`), while keeping the Repo State Dashboard and workflow contracts in sync.
 
+## Status Summary
+
+| Area / Phase | Status | Notes |
+|---|---|---|
+| Dogfood workflow baseline | Completed | `oat-index`, `oat-new-project`, phases (`discovery → implement`), router, review loop, PR skills |
+| Phase 3: Reviews + PR loop | Completed | Implemented + dogfooded |
+| Phase 4: Active project pointer + Repo State Dashboard | Completed (polish remaining) | Pointer + generated `.oat/state.md` exist; clarify “first-class” regeneration contract |
+| Phase 5: Staleness + knowledge drift | Planned | Improve/enforce freshness beyond warn-only |
+| Phase 6: Parallel execution + reconcile | Deferred | Worktrees/subagents + reconciliation tooling |
+| Phase 7: Quick mode + template rendering helper | Planned | Faster path for small changes (guardrails) |
+| Phase 8: Provider interop CLI + sync manifest | Next | `oat init/status/sync/doctor`, adapters, manifest, safe sync |
+| Phase 9: Multi-project switching + branch awareness | Later | Full `.oat/projects/(shared|local)/...` + hooks |
+| Phase 10: Memory system + provider enhancements | Later | Longer-term durability features |
+
 ## Current State (Implemented)
 
 Dogfood workflow baseline is implemented and has been exercised end-to-end:
@@ -61,7 +75,7 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 
 **Goal:** Make review and PR creation first-class and workflow-native (no dependency on superpowers being installed).
 
-**Status:** Implemented (dogfooded)
+**Status:** Completed
 - Done: review loop (request-review, receive-review, reviewer prompt, plan Reviews table, implement final gate)
 - Done: PR skills (progress + project) (PR description generation; optional `gh pr create`)
 
@@ -103,7 +117,7 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 
 **Goal:** Make project selection deterministic without committing to the full `.oat/projects/**` product model yet.
 
-**Status:** Implemented (needs polish)
+**Status:** Completed (polish remaining)
 - Done: `.oat/projects-root` + `.oat/active-project` pointer + skills resolve via it
 - Done: generated Repo State Dashboard (`.oat/state.md`) via `.oat/scripts/generate-oat-state.sh`
 - Remaining: tighten the "first-class" contract (who regenerates it, what fields it includes, and how it stays in sync with skills)
