@@ -1,113 +1,151 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-01-28
-oat_source_head_sha: d3e8f0286044a5da390c8c0a6a870eb0d1e3b391
-oat_source_main_merge_base_sha: c8226d8b03ab10dd8a45097fab58277fba418693
+oat_generated_at: 2026-02-02
+oat_source_head_sha: d25643fb7a57fd977d1a9590690d26986d2d0ce8
+oat_source_main_merge_base_sha: 6c147615ba8cf567d29814f1fe1d5667fc6e6fdf
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
 # Architecture
 
-**Analysis Date:** 2026-01-28
+**Analysis Date:** 2026-02-02
 
 ## Pattern Overview
 
-**Overall:** Agent Skill Framework + Workflow Orchestration
+**Overall:** Modular monorepo with structured agent workflow system for AI-assisted development
 
 **Key Characteristics:**
-- Agent-agnostic skills system compatible with Claude Code, Cursor, and other AI assistants
-- Monorepo with pnpm workspaces
-- OAT workflow methodology (Discovery → Spec → Design → Plan → Implement)
-- Knowledge-first enforcement (codebase analysis before development)
-- Templated, traceability-driven design with human-in-the-loop checkpoints
+- Monorepo structure using pnpm workspaces with Turborepo orchestration
+- Layered architecture separating agent skills, CLI tooling, and workflow templates
+- Knowledge-first development with generated codebase indexes
+- Human-in-the-loop gates for multi-phase development workflows
+- Agent-agnostic skill system supporting Claude Code, Cursor, and CLI
 
 ## Layers
 
-**Skill Definition Layer:**
+**Agent Skills Layer:**
+- Purpose: Reusable workflow skills for different development phases (discovery, spec, design, plan, implement)
 - Location: `.agent/skills/`
-- Contains: SKILL.md manifests, reference templates, embedded scripts
-- Purpose: Define executable agent workflows
+- Contains: OAT workflow skills, project scaffold skills, documentation skills
+- Depends on: Templates, reference documentation, project context
+- Used by: Claude Code, Cursor, CLI tools via openskills framework
 
-**Project Orchestration Layer:**
-- Location: `.agent/projects/`
-- Contains: discovery.md, spec.md, design.md, plan.md, implementation.md
-- Purpose: Manage multi-phase projects with state tracking
+**OAT Knowledge Generation Layer:**
+- Purpose: Generates comprehensive codebase analysis used by subsequent workflow phases
+- Location: `.oat/knowledge/repo/`, `.oat/templates/`, `.oat/scripts/`
+- Contains: Project index templates, analysis scripts, knowledge base generation logic
+- Depends on: Project codebase analysis, git information, file system access
+- Used by: Discovery, spec, design, plan, and implement phases
 
-**Knowledge Base Layer:**
-- Location: `.oat/knowledge/repo/`
-- Contains: project-index.md, architecture.md, stack.md, etc.
-- Purpose: Store analyzed codebase metadata
+**Project Workflow Layer:**
+- Purpose: Tracks project state and artifacts across development phases
+- Location: `.agent/projects/`, `.oat/projects/`
+- Contains: Discovery docs, specifications, designs, implementation plans, reviews, handoffs
+- Depends on: OAT knowledge, skill templates, git state
+- Used by: Agents executing workflow phases, review processes
 
-**Configuration & Templates Layer:**
-- Location: `.oat/templates/`, root config files
-- Contains: OAT document templates, build configs
-- Purpose: Provide reusable templates and configuration
+**CLI Layer:**
+- Purpose: Command-line interface for OAT operations and skill management
+- Location: `packages/cli/`
+- Contains: TypeScript CLI implementation, command handlers
+- Depends on: Node.js 22.17.0+, TypeScript
+- Used by: Manual OAT operations, CI/CD workflows, development automation
 
-**CLI & Runtime Layer:**
-- Location: `packages/cli/src/`
-- Contains: CLI implementation (currently placeholder)
-- Purpose: Programmatic access to OAT tools
+**Configuration Layer:**
+- Purpose: Centralized configuration and workflow state management
+- Location: Root-level config files, project-specific state.md files
+- Contains: Biome linting, Turborepo task graph, commitlint rules, git hooks
+- Depends on: Package managers, build tools, git
+- Used by: Build system, linting, commit validation, git hooks
 
 ## Data Flow
 
-**Workflow Initialization:**
-1. Developer invokes `/oat:progress` or skill shortcut
-2. Skill loads project-index.md for orientation
-3. If stale/missing, `/oat:index` is recommended
-4. `/oat:index` spawns parallel mapper agents
-5. Mappers write enriched documents to `.oat/knowledge/repo/`
+**Knowledge Generation Flow:**
 
-**Project Execution:**
-1. Discovery → discovery.md
-2. Specification → spec.md
-3. Design → design.md
-4. Planning → plan.md (with task IDs: p01-t01, etc.)
-5. Implementation → per-task commits
-6. Review → reviews/ directory
-7. PR → pr-description.md
+1. User invokes `/oat:index` skill
+2. oat-index analyzes project structure, dependencies, entry points
+3. Mapper agents generate specialized analyses (stack.md, architecture.md, structure.md, etc.)
+4. Knowledge base stored in `.oat/knowledge/repo/` with project-index.md as entry point
+5. Subsequent phases reference generated knowledge for context
+
+**Project Workflow Flow:**
+
+1. `/oat:discovery` phase gathers requirements, creates discovery.md
+2. `/oat:spec` phase creates formal specification from discovery insights
+3. `/oat:design` phase creates technical design from specification
+4. `/oat:plan` phase breaks design into TDD tasks with stable IDs (pNN-tNN format)
+5. `/oat:implement` phase executes plan tasks with state tracking
+6. Optional `/oat:request-review` gates phases before completion
+7. `/oat:pr-project` creates final PR description with full context
+
+**State Management:**
+- Project state tracked in `.agent/projects/{name}/state.md`
+- Workflow progress tracked via HiL (Human-in-the-Loop) checkpoints
+- Git commits linked to task IDs for full traceability
+- Knowledge staleness detected via timestamp and git diff checks (>7 days or >20 files changed)
 
 ## Key Abstractions
 
-**Skill:**
-- Reusable workflow definition in SKILL.md
-- Markdown-based with embedded prompts and process steps
+**Agent Skill:**
+- Purpose: Reusable workflow unit that can be invoked from Claude Code, Cursor, or CLI
+- Examples: `.agent/skills/oat-discovery/`, `.agent/skills/oat-implement/`, `.agent/skills/create-skill/`
+- Pattern: YAML manifest + Markdown instructions, referenced via openskills framework
 
-**Workflow Phase:**
-- Distinct stage (Discovery, Spec, Design, Plan, Implement)
-- Phase-specific document with defined structure
+**OAT Project:**
+- Purpose: Container for all artifacts related to a development task or feature
+- Examples: `.agent/projects/{name}/discovery.md`, `.oat/projects/shared/{name}/`
+- Pattern: Structured directory with discovery, spec, design, plan, implementation, and optional reviews/handoffs
 
-**Project:**
-- Collection of artifacts for a development initiative
-- Directory with discovery.md, planning.md, implementation.md
+**Knowledge Base:**
+- Purpose: Generated codebase analysis that informs all subsequent development phases
+- Examples: `.oat/knowledge/repo/project-index.md`, `stack.md`, `architecture.md`
+- Pattern: Templates filled in by analysis agents, referenced in discovery and planning phases
 
-**Knowledge Document:**
-- Analysis of codebase aspect
-- Markdown with frontmatter metadata
+**TDD Task:**
+- Purpose: Atomic unit of implementation work with test-driven structure
+- Pattern: Stable ID (pNN-tNN), RED/GREEN/REFACTOR phases, verification commands, commit message
+- References: Linked to specification acceptance criteria, tracked in implementation.md
 
 ## Entry Points
 
-**Skill Shortcuts:**
-- `/oat:progress` - Check project status
-- `/oat:index` - Generate/refresh knowledge base
-- `/oat:discovery` - Start discovery phase
-- `/oat:spec`, `/oat:design`, `/oat:plan`, `/oat:implement`
-- `/oat:request-review`, `/oat:receive-review`
-- `/oat:pr-progress`, `/oat:pr-project`
+**CLI Entry Point:**
+- Location: `packages/cli/src/index.ts`
+- Triggers: `oat` command or `pnpm cli`
+- Responsibilities: Command-line interface for OAT operations (currently placeholder)
 
-**CLI:**
-- `npx openskills read <skill-name>`
-- `pnpm build`, `pnpm dev`, `pnpm test`
+**Skill Entry Points (Claude Code/Cursor):**
+- Locations: `.agent/skills/*/SKILL.md`
+- Triggers: `/oat:progress`, `/oat:discovery`, `/oat:spec`, `/oat:design`, `/oat:plan`, `/oat:implement`
+- Responsibilities: Invoke workflow phases, provide interactive guidance, generate artifacts
+
+**Knowledge Generation Entry Point:**
+- Location: `.agent/skills/oat-index/SKILL.md`
+- Triggers: `/oat:index` command
+- Responsibilities: Analyze codebase structure, generate knowledge base in `.oat/knowledge/repo/`
+
+**Project Initialization Entry Point:**
+- Location: `.agent/skills/oat-new-project/SKILL.md`
+- Triggers: `/oat:new-project` command
+- Responsibilities: Create new project directory structure under `.oat/projects/`
 
 ## Error Handling
 
-**Strategy:** Fail loudly with actionable guidance
+**Strategy:** Graceful degradation with context preservation
 
 **Patterns:**
-- Missing knowledge base → recommend `/oat:index`
-- Git context lost → frontmatter tracks HEAD_SHA
-- Phase dependency violations → check prerequisites
-- Graceful degradation → thin index for quick feedback
+- Knowledge staleness warnings when index >7 days old or >20 files changed
+- Mode assertions at phase boundaries (BLOCKED vs ALLOWED activities)
+- Self-correction protocols when deviating from workflow
+- Human-in-the-loop gates for quality checkpoints before phase transitions
+
+## Cross-Cutting Concerns
+
+**Logging:** Structured logging via `@honeycomb/logger` package (when applicable), console output for CLI
+
+**Validation:** Biome linting for code quality, commitlint for commit messages, TypeScript for type safety
+
+**Traceability:** Stable task IDs linking tasks → commits → PR descriptions, git history as source of truth
 
 ---
 
-*Architecture analysis: 2026-01-28*
+*Architecture analysis: 2026-02-02*

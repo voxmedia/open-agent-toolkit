@@ -1,81 +1,147 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-01-28
-oat_source_head_sha: d3e8f0286044a5da390c8c0a6a870eb0d1e3b391
-oat_source_main_merge_base_sha: c8226d8b03ab10dd8a45097fab58277fba418693
+oat_generated_at: 2026-02-02
+oat_source_head_sha: d25643fb7a57fd977d1a9590690d26986d2d0ce8
+oat_source_main_merge_base_sha: 6c147615ba8cf567d29814f1fe1d5667fc6e6fdf
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
 # External Integrations
 
-**Analysis Date:** 2026-01-28
+**Analysis Date:** 2026-02-02
 
-## AI Assistants
+## APIs & External Services
 
-### Claude Code
-- **Integration:** CLAUDE.md imports AGENTS.md for skill discovery
-- **Configuration:** `.claude/settings.local.json`
-- **Skills:** Available via `/skill-name` shortcuts
+**Atlassian Services:**
+- Jira (DWP project) - Ticket creation
+  - SDK/Client: Atlassian MCP (Model Context Protocol)
+  - Purpose: Create tickets via create-ticket skill
+  - Auth: Configured via MCP integration (credentials managed separately)
 
-### Cursor
-- **Integration:** `.cursor/rules` for AI rules
-- **Configuration:** `.cursorignore`
-- **Skills:** Available via `npx openskills read`
+**Model Context Protocol (MCP):**
+- Atlassian MCP integration for Jira access
+- Used by Claude Code and Cursor for ticket creation
+- Enables programmatic interaction with Jira DWP project
 
-### openskills CLI
-- **Integration:** Agent Skills Open Standard compatibility
-- **Usage:** `npx openskills read <skill-name>`
+**Code Editor Providers:**
+- Claude Code (Anthropic) - Primary IDE with skill system
+- Cursor - Supported IDE with skill system
+- Codex CLI - Command-line interface support planned
 
-## Version Control
+## Data Storage
 
-### Git
-- **Hooks:** Custom management via `tools/git-hooks/`
-- **Pre-commit:** lint-staged for staged files
-- **Commit linting:** commitlint with conventional commits
+**Databases:**
+- None - This is a lightweight toolkit without persistent data storage
 
-### GitHub
-- **CI/CD:** `.github/workflows/ci.yml`
-- **PR Template:** `.github/PULL_REQUEST_TEMPLATE.md`
-- **Actions:** Build, lint, type-check on push/PR
+**File Storage:**
+- Local filesystem only - Project files, skills, documentation, and knowledge base
+- Git repository for version control and history
 
-## Development Tools
+**Caching:**
+- Turbo cache - Build artifact caching in `.turbo/cache/`
+- No external caching services
 
-### VS Code
-- **Settings:** `.vscode/settings.json`
-- **Extensions:** `.vscode/extensions.json`
+## Authentication & Identity
 
-### MCP (Model Context Protocol)
-- **Configuration:** `.mcp.json` (gitignored)
-- **Purpose:** Model context configuration
+**Auth Provider:**
+- Custom integrations per IDE
+  - Claude Code: Native authentication via Anthropic
+  - Cursor: Built-in authentication
+  - Atlassian MCP: Configured separately for Jira access
 
-## Package Ecosystem
+**Implementation:**
+- Environment-based secrets for local development
+- `.env.local` files in app directories (gitignored)
+- Secure credential handling for sensitive values
 
-### pnpm
-- **Workspace:** `pnpm-workspace.yaml`
-- **Registry:** npmjs.com (default)
+## Monitoring & Observability
 
-### Turborepo
-- **Remote caching:** Not configured (local only)
+**Error Tracking:**
+- None configured - Development-focused project
 
-## External Services
+**Logs:**
+- Console output from CLI and scripts
+- Git commit history for audit trail
+- OAT project state tracking in `.oat/projects/` and `.agent/projects/`
 
-### None Currently
+## CI/CD & Deployment
 
-The project does not currently integrate with:
-- Databases
-- Authentication providers
-- External APIs
-- Webhooks
-- Cloud services
+**Hosting:**
+- GitHub - Source code repository
+- GitHub Actions - CI/CD pipeline
+
+**CI Pipeline:**
+- GitHub Actions workflow (ci.yml)
+- Triggers: push to main, pull requests to main
+- Steps:
+  1. Checkout code
+  2. Setup pnpm and Node.js
+  3. Install dependencies with frozen lockfile
+  4. Lint code with Biome
+  5. Type check with TypeScript
+  6. Build with Turbo
+
+**No Production Deployment:**
+- Toolkit is distributed via npm as CLI tool
+- Distributed as @oat/cli package
+- Can be invoked via npx openskills
 
 ## Environment Configuration
 
-**Local overrides:** Environment variables can be set in:
-- `.env` (gitignored)
-- `.env.local` (gitignored)
+**Required env vars:**
+- GIT_HOOKS - Set to "0" to disable git hook setup (optional)
+- NODE_ENV - Implicit (Node.js standard)
+- CI - Set by GitHub Actions for conditional behavior
 
-**Sensitive values:** No secrets management configured yet
+**Secrets location:**
+- `.env.local` in individual app directories (gitignored)
+- Sensitive values: API keys, credentials, tokens
+- GitHub Secrets for CI/CD sensitive values
+
+## Git Hooks
+
+**Incoming (Local Git Hooks):**
+- commit-msg - Validates commit message format
+- pre-commit - Runs linting and formatting on staged files
+- pre-push - Pre-push validation
+- post-checkout - Refreshes metadata after checkout
+
+**Outgoing (Git Interactions):**
+- Commits to local and remote repositories
+- Pull requests via GitHub (gh CLI)
+- Branch operations
+
+## Webhooks & Callbacks
+
+**Incoming:**
+- None - Toolkit is stateless and event-driven by user actions
+
+**Outgoing:**
+- None - No automatic webhooks or callbacks
+
+## Development Integrations
+
+**IDE Skills System:**
+- Agent Skills Open Standard compliance
+- Skills located in `.agent/skills/` directory
+- Skills provide specialized capabilities for Claude Code and Cursor
+- Available skills:
+  - oat-* skills for workflow management (discovery, spec, design, plan, implement)
+  - docs-* skills for documentation management
+  - create-* skills for bootstrapping new projects/skills
+  - Validated via npm script
+
+**openskills CLI:**
+- Tool to invoke skills from command line
+- Usage: `npx openskills read <skill-name>`
+- Supports multiple skills: `npx openskills read skill-one,skill-two`
+- Returns skill content with base directory for resources
+
+**Git Integration:**
+- Pre-commit hooks via tools/git-hooks/
+- Commit message validation via commitlint
+- Conventional Commits format enforcement
 
 ---
 
-*Integrations analysis: 2026-01-28*
+*Integration audit: 2026-02-02*
