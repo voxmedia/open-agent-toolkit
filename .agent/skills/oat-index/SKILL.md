@@ -81,7 +81,60 @@ This script:
 - Mappers can run in parallel without blocking on index generation
 - Index gets enriched with full details after mappers complete
 
+### Step 4b: Pre-flight Check - Test Background Write Permission
+
+Test if the runtime allows Write tool in background agents.
+
+```bash
+# Create test directory
+mkdir -p .oat/knowledge/.preflight
+```
+
+Spawn a test agent to check Write permission:
+
+```
+subagent_type: "Explore"
+model: "haiku"
+run_in_background: true
+description: "Test write permissions"
+prompt: |
+  Test if Write tool works in background mode.
+
+  Try to write a test file:
+  - File: .oat/knowledge/.preflight/test.txt
+  - Content: "test"
+
+  If Write succeeds, return: "WRITE_OK"
+  If Write fails or is blocked, return: "WRITE_BLOCKED"
+```
+
+**Check result:**
+```bash
+if [ -f .oat/knowledge/.preflight/test.txt ]; then
+  echo "✓ Write works in background agents - using direct-write approach"
+  WRITE_MODE="direct"
+  rm -rf .oat/knowledge/.preflight
+else
+  echo "⚠ Write blocked in background agents - using read-only fallback"
+  WRITE_MODE="readonly"
+fi
+```
+
+Store `$WRITE_MODE` for use in Step 5.
+
 ### Step 5: Spawn Parallel Mapper Agents
+
+Use the approach determined by Step 4b pre-flight check.
+
+**If `$WRITE_MODE="direct"` (Write works in background):**
+- Use Step 5a - Direct Write Approach (recommended)
+
+**If `$WRITE_MODE="readonly"` (Write blocked in background):**
+- Use Step 5b - Read-Only Fallback Approach
+
+---
+
+### Step 5a: Direct Write Approach
 
 Use Task tool with `subagent_type="oat-codebase-mapper"` and `run_in_background=true`.
 
@@ -89,9 +142,6 @@ Use Task tool with `subagent_type="oat-codebase-mapper"` and `run_in_background=
 - Mapper agents write documents directly to `.oat/knowledge/repo/` using the Write tool
 - Each agent returns only a brief confirmation (not document contents)
 - This reduces context transfer and improves performance
-
-**Note on permissions:**
-If your runtime blocks Write in background agents, agents will fail. In that case, you'll need to run mappers sequentially without `run_in_background=true`, or fall back to a read-only approach where agents return markdown for the orchestrator to write.
 
 **Agent 1: Tech Focus**
 
@@ -244,17 +294,254 @@ Instructions:
 - Return only a brief confirmation when done (do NOT return document contents)
 ```
 
+---
+
+### Step 5b: Read-Only Fallback Approach
+
+Use Task tool with `subagent_type="Explore"` and `run_in_background=true`.
+
+**Approach:**
+- Agents do NOT use Write or Bash tools
+- Agents return complete markdown contents in their response
+- Orchestrator extracts markdown and writes files
+- More compatible but larger context transfer
+
+**Agent 1: Tech Focus**
+
+```
+subagent_type: "Explore"
+model: "haiku"
+run_in_background: true
+description: "Map codebase tech stack"
+
+Prompt:
+Focus: tech
+
+Analyze this codebase for technology stack and external integrations.
+
+Produce these documents:
+- stack.md - Languages, runtime, frameworks, dependencies, configuration
+- integrations.md - External APIs, databases, auth providers, webhooks
+
+Use templates from .agent/skills/oat-index/references/templates/
+
+Include frontmatter:
+---
+oat_generated: true
+oat_generated_at: {today}
+oat_source_head_sha: {HEAD_SHA}
+oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+---
+
+Constraints:
+- Do NOT use Write or Bash tools.
+- Return the complete markdown contents in your final response.
+- Format as:
+
+--- stack.md ---
+```markdown
+<content here>
+```
+
+--- integrations.md ---
+```markdown
+<content here>
+```
+```
+
+**Agent 2: Architecture Focus**
+
+```
+subagent_type: "Explore"
+model: "haiku"
+run_in_background: true
+description: "Map codebase architecture"
+
+Prompt:
+Focus: arch
+
+Analyze this codebase architecture and directory structure.
+
+Produce these documents:
+- architecture.md - Pattern, layers, data flow, abstractions, entry points
+- structure.md - Directory layout, key locations, naming conventions
+
+Use templates from .agent/skills/oat-index/references/templates/
+
+Include frontmatter:
+---
+oat_generated: true
+oat_generated_at: {today}
+oat_source_head_sha: {HEAD_SHA}
+oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+---
+
+Constraints:
+- Do NOT use Write or Bash tools.
+- Return the complete markdown contents in your final response.
+- Format as:
+
+--- architecture.md ---
+```markdown
+<content here>
+```
+
+--- structure.md ---
+```markdown
+<content here>
+```
+```
+
+**Agent 3: Quality Focus**
+
+```
+subagent_type: "Explore"
+model: "haiku"
+run_in_background: true
+description: "Map codebase conventions"
+
+Prompt:
+Focus: quality
+
+Analyze this codebase for coding conventions and testing patterns.
+
+Produce these documents:
+- conventions.md - Code style, naming, patterns, error handling
+- testing.md - Framework, structure, mocking, coverage
+
+Use templates from .agent/skills/oat-index/references/templates/
+
+Include frontmatter:
+---
+oat_generated: true
+oat_generated_at: {today}
+oat_source_head_sha: {HEAD_SHA}
+oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+---
+
+Constraints:
+- Do NOT use Write or Bash tools.
+- Return the complete markdown contents in your final response.
+- Format as:
+
+--- conventions.md ---
+```markdown
+<content here>
+```
+
+--- testing.md ---
+```markdown
+<content here>
+```
+```
+
+**Agent 4: Concerns Focus**
+
+```
+subagent_type: "Explore"
+model: "haiku"
+run_in_background: true
+description: "Map codebase concerns"
+
+Prompt:
+Focus: concerns
+
+Analyze this codebase for technical debt, known issues, and areas of concern.
+
+Produce this document:
+- concerns.md - Tech debt, bugs, security, performance, fragile areas
+
+Use template from .agent/skills/oat-index/references/templates/
+
+Include frontmatter:
+---
+oat_generated: true
+oat_generated_at: {today}
+oat_source_head_sha: {HEAD_SHA}
+oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+---
+
+Constraints:
+- Do NOT use Write or Bash tools.
+- Return the complete markdown contents in your final response.
+- Format as:
+
+--- concerns.md ---
+```markdown
+<content here>
+```
+```
+
+---
+
 ### Step 6: Wait for Agent Completion
 
-Wait for all 4 mapper agents to complete. Each agent writes documents directly to `.oat/knowledge/repo/` and returns a brief confirmation.
+**If using Step 5a (direct write):**
+- Wait for all 4 mapper agents to complete
+- Each agent writes documents directly to `.oat/knowledge/repo/` and returns a brief confirmation
+- Expected confirmations should indicate which documents were written
+- Proceed to Step 7
 
-Expected confirmations should indicate which documents were written:
-- **Tech agent**: stack.md, integrations.md
-- **Architecture agent**: architecture.md, structure.md
-- **Quality agent**: conventions.md, testing.md
-- **Concerns agent**: concerns.md
+**If using Step 5b (read-only):**
+- Wait for all 4 mapper agents to complete
+- Each agent returns markdown content in their response
+- Proceed to Step 6b to extract and write files
 
-Once all agents complete, proceed to Step 7 to verify the files were created correctly.
+### Step 6b: Extract and Write Files (Read-Only Mode Only)
+
+If using read-only mode, extract markdown from agent outputs and write to files.
+
+Use Python to extract markdown blocks:
+
+```python
+import json
+import re
+
+agents = [
+    {'id': 'AGENT_ID_1', 'files': ['stack.md', 'integrations.md']},
+    {'id': 'AGENT_ID_2', 'files': ['architecture.md', 'structure.md']},
+    {'id': 'AGENT_ID_3', 'files': ['conventions.md', 'testing.md']},
+    {'id': 'AGENT_ID_4', 'files': ['concerns.md']}
+]
+
+for agent in agents:
+    output_path = f"/private/tmp/claude-502/-Users-thomas-stang-Code-open-agent-toolkit/tasks/{agent['id']}.output"
+
+    with open(output_path, 'r') as f:
+        lines = f.readlines()
+
+    # Find the last JSON message with agent response
+    for line in reversed(lines):
+        if line.strip().startswith('{') and '"message"' in line:
+            data = json.loads(line)
+            if 'message' in data and 'content' in data['message']:
+                content = data['message']['content']
+                if isinstance(content, list) and len(content) > 0:
+                    text = content[0].get('text', '')
+
+                    # Extract markdown blocks - handle both formats
+                    # Standard: --- filename.md ---
+                    pattern = r'---\s+(\w+\.md)\s+---\s*\n\s*```markdown\n(.*?)\n```'
+                    matches = re.findall(pattern, text, re.DOTALL)
+
+                    # Alternative: ## filename.md (fallback)
+                    if not matches:
+                        alt_pattern = r'##\s+(\w+\.md)\s*\n\s*```markdown\n(.*?)\n```'
+                        matches = re.findall(alt_pattern, text, re.DOTALL)
+
+                    for filename, markdown in matches:
+                        with open(f'.oat/knowledge/repo/{filename}', 'w') as out:
+                            out.write(markdown)
+                        print(f"✓ Wrote {filename}")
+
+                    break
+```
+
+This extracts markdown and writes all 7 knowledge files.
 
 ### Step 7: Verify All Documents Created
 
