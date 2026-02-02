@@ -91,7 +91,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ### Step 2: Check Knowledge Base Exists
 
 ```bash
-ls .oat/knowledge/repo/project-index.md 2>/dev/null
+test -f .oat/knowledge/repo/project-index.md
 ```
 
 **If missing:** Block and require `/oat:index` first.
@@ -134,13 +134,13 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
    fi
    ```
 
-2. **Git diff check:** Compare recorded merge base to current HEAD
+2. **Git diff check:** Compare recorded index HEAD to current HEAD
    ```bash
    # Use --numstat for reliable file count (one line per file)
-   if [ -n "$SOURCE_MERGE_BASE_SHA" ]; then
-     FILES_CHANGED=$(git diff --numstat "$SOURCE_MERGE_BASE_SHA..HEAD" 2>/dev/null | wc -l | tr -d ' ')
+   if [ -n "$SOURCE_HEAD_SHA" ]; then
+     FILES_CHANGED=$(git diff --numstat "$SOURCE_HEAD_SHA..HEAD" 2>/dev/null | wc -l | tr -d ' ')
      # Also get summary for display
-     CHANGES_SUMMARY=$(git diff --shortstat "$SOURCE_MERGE_BASE_SHA..HEAD" 2>/dev/null)
+     CHANGES_SUMMARY=$(git diff --shortstat "$SOURCE_HEAD_SHA..HEAD" 2>/dev/null)
    else
      FILES_CHANGED="unknown"
      CHANGES_SUMMARY=""
