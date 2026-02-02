@@ -16,7 +16,7 @@ If you want a skill to work across **Claude Code**, **Cursor**, **Codex CLI**, a
 1. Follow the Agent Skills spec folder layout and constraints (name/description, optional directories).
 2. Keep the **frontmatter minimal** and conservative:
    - `name`: lowercase letters + numbers + hyphens, max 64, must match folder name, no leading/trailing hyphen
-   - `description`: **single line**, ≤ 500 chars, describes *what* + *when to use*
+   - `description`: **single line**, ≤ 500 chars, describes *when to use* + *what*
 3. Put detailed instructions in the Markdown body (and/or `references/`), not in `description`.
 4. Treat most extra keys as **best-effort extensions**:
    - Claude Code supports many optional frontmatter keys.
@@ -111,6 +111,7 @@ Primary references:
 - https://code.claude.com/docs/en/skills#run-skills-in-a-subagent
 - https://code.claude.com/docs/en/skills#inject-dynamic-context
 - https://code.claude.com/docs/en/skills#pass-arguments-to-skills
+- https://code.claude.com/docs/en/plugins
 
 Key behavior (Claude docs):
 - **Skills subsume “custom slash commands”**:
@@ -122,6 +123,28 @@ Key behavior (Claude docs):
 Where skills live (examples shown in docs):
 - User-level (global): `~/.claude/skills/<skill-name>/SKILL.md`
 - Project-level: `.claude/skills/<skill-name>/SKILL.md`
+
+#### Plugin-provided skills, namespacing, and collisions
+
+Claude Code distinguishes between:
+- **Standalone skills** (in `.claude/skills/**` and `~/.claude/skills/**`)
+- **Plugin-provided skills** (installed as part of a Claude Code plugin)
+
+**Namespacing**
+- Plugin-provided skills are namespaced (e.g., `plugin-name:skill-name`) to prevent conflicts with non-plugin skills.
+- Plugin-provided slash commands are also namespaced (e.g., `/plugin-name:command-name`); standalone skills/commands use unprefixed names like `/hello`.
+
+**Collision precedence**
+- When skills share the same name across levels, Claude Code prioritizes: **enterprise > personal > project**.
+- If a **skill** and a **legacy slash command** (from `.claude/commands/`) share the same name, the **skill takes precedence**.
+
+#### Nested discovery vs “flat-only” reports
+
+Claude’s skills docs include a section titled “Automatic discovery from nested directories”, which implies nested layouts are supported.
+
+If you observe “flat-only” behavior in practice (skills not discovered when placed in subdirectories), the safest workarounds are:
+- Flatten (temporary): keep skills directly under `~/.claude/skills/<skill>/SKILL.md`
+- Symlink (preferred): keep a structured skills repo elsewhere and symlink individual skills into Claude’s discovery directory
 
 Claude frontmatter fields (from Claude’s “Frontmatter reference” table):
 
@@ -165,7 +188,11 @@ Frontmatter rules (Codex docs, “Create skills”):
 - Required:
   - `name`: non-empty, **≤ 100 chars**, **single line**
   - `description`: non-empty, **≤ 500 chars**, **single line**
-- Codex **ignores extra keys**.
+  - Note: the Agent Skills spec is more conservative (`name` max 64 chars); if you want maximum portability, stay within spec limits.
+- **⚠️ Critical for cross-provider compatibility:** Codex **ignores extra keys**.
+  - ✅ You can include Claude/Cursor-specific keys without breaking Codex
+  - ❌ You cannot depend on those keys affecting Codex behavior
+  - ✅ Treat `name` + `description` as your portable interface
 - The Markdown body stays on disk and **is not injected into runtime context unless explicitly invoked**.
 
 Codex also shows an optional `short-description` key in examples (treat as Codex-specific).
@@ -222,6 +249,19 @@ Legend:
 Notes:
 - Cursor explicitly documents “Claude compatibility” and “Codex compatibility” directories. That does **not** necessarily imply Cursor supports all Claude/Codex-only frontmatter fields.
 - Codex’s “ignores extra keys” clause means you can keep Claude/Cursor-only keys in a shared repo without breaking Codex, but you cannot *depend* on them in Codex behavior.
+
+---
+
+## Skill name collision behavior
+
+When multiple skills share the same name, providers differ in which one “wins”:
+
+| Provider | Collision behavior |
+|---|---|
+| Claude Code | **enterprise > personal > project**; plugin-provided skills are namespaced (e.g. `plugin-name:skill-name`) and won’t collide with non-plugin skills. |
+| Cursor | Not clearly documented; empirically validate whether workspace overrides user (and how extension/bundled skills interact). |
+| Codex CLI | Does **not** deduplicate: multiple same-named skills can appear in selectors. |
+| Gemini CLI | **Workspace > User > Extension**. |
 
 ---
 
@@ -324,6 +364,19 @@ Cross-provider guidance:
 
 In this repo, we’ve found the following patterns materially improve skill reliability across providers:
 
+### Description field best practices
+
+The `description` is your **primary discovery interface** (and for some tools, your primary routing/trigger signal). Guidelines:
+
+1. **Lead with triggering conditions**: start with “Use when…” / “Triggers when…” / “Run this to…”
+2. **Keep it single-line**: Codex enforces single-line and length limits (≤ 500 chars)
+3. **Include disambiguating keywords**: nouns + verbs that separate the skill from similar ones
+4. **Avoid step-by-step summaries**: providers may route based on description without reading the full body
+
+Examples:
+- ❌ Bad: “Reviews code by checking spec compliance, then code quality, then creates PR”
+- ✅ Good: “Use when reviewing code or checking PRs. Systematic quality and security analysis.”
+
 ### 1) Write for progressive disclosure
 
 - Keep `description` short and keyword-rich.
@@ -392,6 +445,24 @@ Provider-specific additions (Claude/Cursor) can be layered on top, but treat the
 
 ---
 
+## Sharing skills across teams (version control)
+
+When sharing skills via Git (or distributing them internally), a few practices reduce surprises across providers:
+
+1. **Keep the canonical format in-repo** (Agent Skills layout):
+   - `skill-name/SKILL.md`
+   - optional `scripts/`, `references/`, `assets/`
+2. **Provide install/symlink instructions** for each provider you care about:
+   - Cursor: `.cursor/skills/` (workspace) or `~/.cursor/skills/` (user)
+   - Codex: `$REPO_ROOT/.codex/skills/` (repo) or `$CODEX_HOME/skills` (user)
+   - Claude: `.claude/skills/` (project) or `~/.claude/skills/` (user); plugins support namespaced skills (`/plugin-name:skill-name`)
+   - Gemini: `.gemini/skills/` (workspace) or `~/.gemini/skills/` (user)
+3. **Document tested providers + expected behavior** (auto vs manual invocation, tool access assumptions, etc.).
+
+If you want one repo to serve multiple tools cleanly, an `install.sh` (or Make target) that copies/symlinks your canonical skill folders into the right provider directories tends to be the most reliable approach.
+
+---
+
 ## Validation and testing
 
 ### Spec-level validation (Agent Skills)
@@ -413,6 +484,13 @@ For any non-trivial skill, test at least:
 - auto invocation (if applicable; does it trigger too often?)
 - “resume safety” (interrupt + rerun; does it continue correctly?)
 
+### Common test failures
+
+- **Skill doesn’t appear**: check discovery location(s), collision behavior, and any provider-specific directory rules (and in Claude, the skill description character budget)
+- **Wrong skill triggers**: description too broad; keyword overlap with a similar skill; missing “Use when …” trigger language
+- **Scripts/refs not found**: path resolution issue; supporting files not bundled under the skill directory
+- **Permission errors**: check provider tool permissions (Claude `allowed-tools`; Gemini activation scope; Codex sandbox/tool approvals)
+
 ---
 
 ## Reference links
@@ -433,6 +511,7 @@ Claude Code:
 - https://code.claude.com/docs/en/skills#run-skills-in-a-subagent
 - https://code.claude.com/docs/en/skills#inject-dynamic-context
 - https://code.claude.com/docs/en/skills#pass-arguments-to-skills
+- https://code.claude.com/docs/en/plugins
 
 Codex CLI:
 - https://developers.openai.com/codex/skills/
