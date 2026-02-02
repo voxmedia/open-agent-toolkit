@@ -126,9 +126,19 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 Constraints:
 - Do NOT use Write or Bash tools.
 - Return the complete markdown contents for `stack.md` and `integrations.md` in your final response.
-- Format as:
-  - `--- stack.md ---` then a fenced markdown block
-  - `--- integrations.md ---` then a fenced markdown block
+- IMPORTANT: Use this EXACT format (three dashes, space, filename, space, three dashes on its own line):
+
+--- stack.md ---
+```markdown
+<content here>
+```
+
+--- integrations.md ---
+```markdown
+<content here>
+```
+
+DO NOT use headers like `## stack.md` - only use the `--- filename.md ---` format.
 ```
 
 **Agent 2: Architecture Focus**
@@ -164,9 +174,19 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 Constraints:
 - Do NOT use Write or Bash tools.
 - Return the complete markdown contents for `architecture.md` and `structure.md` in your final response.
-- Format as:
-  - `--- architecture.md ---` then a fenced markdown block
-  - `--- structure.md ---` then a fenced markdown block
+- IMPORTANT: Use this EXACT format (three dashes, space, filename, space, three dashes on its own line):
+
+--- architecture.md ---
+```markdown
+<content here>
+```
+
+--- structure.md ---
+```markdown
+<content here>
+```
+
+DO NOT use headers like `## architecture.md` - only use the `--- filename.md ---` format.
 ```
 
 **Agent 3: Quality Focus**
@@ -202,9 +222,19 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 Constraints:
 - Do NOT use Write or Bash tools.
 - Return the complete markdown contents for `conventions.md` and `testing.md` in your final response.
-- Format as:
-  - `--- conventions.md ---` then a fenced markdown block
-  - `--- testing.md ---` then a fenced markdown block
+- IMPORTANT: Use this EXACT format (three dashes, space, filename, space, three dashes on its own line):
+
+--- conventions.md ---
+```markdown
+<content here>
+```
+
+--- testing.md ---
+```markdown
+<content here>
+```
+
+DO NOT use headers like `## conventions.md` - only use the `--- filename.md ---` format.
 ```
 
 **Agent 4: Concerns Focus**
@@ -238,8 +268,15 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 
 Constraints:
 - Do NOT use Write or Bash tools.
-- Return the complete markdown contents for `concerns.md` in your final response as:
-  - `--- concerns.md ---` then a fenced markdown block
+- Return the complete markdown contents for `concerns.md` in your final response.
+- IMPORTANT: Use this EXACT format (three dashes, space, filename, space, three dashes on its own line):
+
+--- concerns.md ---
+```markdown
+<content here>
+```
+
+DO NOT use headers like `## concerns.md` - only use the `--- filename.md ---` format.
 ```
 
 ### Step 6: Wait for Agent Completion
@@ -249,7 +286,20 @@ Collect mapper responses.
 If your environment supports background agents writing files, you may instead instruct them to write directly and skip to Step 7.
 
 **If mappers returned markdown (recommended):**
-Write the returned markdown blocks to these files:
+
+Extract markdown blocks from agent outputs. Agents should use the format `--- filename.md ---` followed by a markdown code block, but handle both formats if needed:
+- Standard format: `--- filename.md ---` then markdown block
+- Alternative format: `## filename.md` then markdown block (some agents may use this despite instructions)
+
+Use Python or similar to extract with regex that handles both:
+```python
+# Try standard format first
+pattern = r'---\s+(\w+\.md)\s+---\s*\n\s*```markdown\n(.*?)\n```'
+# Fallback to alternative format
+alt_pattern = r'##\s+(\w+\.md)\s*\n\s*```markdown\n(.*?)\n```'
+```
+
+Write the extracted markdown to these files:
 - `.oat/knowledge/repo/stack.md`
 - `.oat/knowledge/repo/integrations.md`
 - `.oat/knowledge/repo/architecture.md`
