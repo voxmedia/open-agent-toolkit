@@ -85,13 +85,13 @@ This script:
 
 Use Task tool with `subagent_type="oat-codebase-mapper"` and `run_in_background=true`.
 
-**Important (tool permissions / background mode):**
-Some agent runtimes do not allow background subagents to use tool calls that require user permission prompts (commonly `Write` and sometimes `Bash`). When that happens, the thin `project-index.md` will be generated, but enrichment files will not.
+**Approach:**
+- Mapper agents write documents directly to `.oat/knowledge/repo/` using the Write tool
+- Each agent returns only a brief confirmation (not document contents)
+- This reduces context transfer and improves performance
 
-**Default approach (most compatible):**
-- Background mapper agents must be **read-only**: they should **NOT** write files or run shell commands.
-- Each mapper returns the full markdown contents for its documents in its response.
-- The main agent then writes those contents to `.oat/knowledge/repo/`.
+**Note on permissions:**
+If your runtime blocks Write in background agents, agents will fail. In that case, you'll need to run mappers sequentially without `run_in_background=true`, or fall back to a read-only approach where agents return markdown for the orchestrator to write.
 
 **Agent 1: Tech Focus**
 
@@ -123,22 +123,12 @@ oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
-Constraints:
-- Do NOT use Write or Bash tools.
-- Return the complete markdown contents for `stack.md` and `integrations.md` in your final response.
-- IMPORTANT: Use this EXACT format (three dashes, space, filename, space, three dashes on its own line):
-
---- stack.md ---
-```markdown
-<content here>
-```
-
---- integrations.md ---
-```markdown
-<content here>
-```
-
-DO NOT use headers like `## stack.md` - only use the `--- filename.md ---` format.
+Instructions:
+- Write documents directly to `.oat/knowledge/repo/` using the Write tool
+- Follow the oat-codebase-mapper agent instructions for exploration and writing
+- Use templates from .agent/skills/oat-index/references/templates/
+- Include frontmatter with both SHA fields in every document
+- Return only a brief confirmation when done (do NOT return document contents)
 ```
 
 **Agent 2: Architecture Focus**
@@ -171,22 +161,12 @@ oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
-Constraints:
-- Do NOT use Write or Bash tools.
-- Return the complete markdown contents for `architecture.md` and `structure.md` in your final response.
-- IMPORTANT: Use this EXACT format (three dashes, space, filename, space, three dashes on its own line):
-
---- architecture.md ---
-```markdown
-<content here>
-```
-
---- structure.md ---
-```markdown
-<content here>
-```
-
-DO NOT use headers like `## architecture.md` - only use the `--- filename.md ---` format.
+Instructions:
+- Write documents directly to `.oat/knowledge/repo/` using the Write tool
+- Follow the oat-codebase-mapper agent instructions for exploration and writing
+- Use templates from .agent/skills/oat-index/references/templates/
+- Include frontmatter with both SHA fields in every document
+- Return only a brief confirmation when done (do NOT return document contents)
 ```
 
 **Agent 3: Quality Focus**
@@ -219,22 +199,12 @@ oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
-Constraints:
-- Do NOT use Write or Bash tools.
-- Return the complete markdown contents for `conventions.md` and `testing.md` in your final response.
-- IMPORTANT: Use this EXACT format (three dashes, space, filename, space, three dashes on its own line):
-
---- conventions.md ---
-```markdown
-<content here>
-```
-
---- testing.md ---
-```markdown
-<content here>
-```
-
-DO NOT use headers like `## conventions.md` - only use the `--- filename.md ---` format.
+Instructions:
+- Write documents directly to `.oat/knowledge/repo/` using the Write tool
+- Follow the oat-codebase-mapper agent instructions for exploration and writing
+- Use templates from .agent/skills/oat-index/references/templates/
+- Include frontmatter with both SHA fields in every document
+- Return only a brief confirmation when done (do NOT return document contents)
 ```
 
 **Agent 4: Concerns Focus**
@@ -266,47 +236,25 @@ oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 ---
 
-Constraints:
-- Do NOT use Write or Bash tools.
-- Return the complete markdown contents for `concerns.md` in your final response.
-- IMPORTANT: Use this EXACT format (three dashes, space, filename, space, three dashes on its own line):
-
---- concerns.md ---
-```markdown
-<content here>
-```
-
-DO NOT use headers like `## concerns.md` - only use the `--- filename.md ---` format.
+Instructions:
+- Write documents directly to `.oat/knowledge/repo/` using the Write tool
+- Follow the oat-codebase-mapper agent instructions for exploration and writing
+- Use templates from .agent/skills/oat-index/references/templates/
+- Include frontmatter with both SHA fields in every document
+- Return only a brief confirmation when done (do NOT return document contents)
 ```
 
 ### Step 6: Wait for Agent Completion
 
-Collect mapper responses.
+Wait for all 4 mapper agents to complete. Each agent writes documents directly to `.oat/knowledge/repo/` and returns a brief confirmation.
 
-If your environment supports background agents writing files, you may instead instruct them to write directly and skip to Step 7.
+Expected confirmations should indicate which documents were written:
+- **Tech agent**: stack.md, integrations.md
+- **Architecture agent**: architecture.md, structure.md
+- **Quality agent**: conventions.md, testing.md
+- **Concerns agent**: concerns.md
 
-**If mappers returned markdown (recommended):**
-
-Extract markdown blocks from agent outputs. Agents should use the format `--- filename.md ---` followed by a markdown code block, but handle both formats if needed:
-- Standard format: `--- filename.md ---` then markdown block
-- Alternative format: `## filename.md` then markdown block (some agents may use this despite instructions)
-
-Use Python or similar to extract with regex that handles both:
-```python
-# Try standard format first
-pattern = r'---\s+(\w+\.md)\s+---\s*\n\s*```markdown\n(.*?)\n```'
-# Fallback to alternative format
-alt_pattern = r'##\s+(\w+\.md)\s*\n\s*```markdown\n(.*?)\n```'
-```
-
-Write the extracted markdown to these files:
-- `.oat/knowledge/repo/stack.md`
-- `.oat/knowledge/repo/integrations.md`
-- `.oat/knowledge/repo/architecture.md`
-- `.oat/knowledge/repo/structure.md`
-- `.oat/knowledge/repo/conventions.md`
-- `.oat/knowledge/repo/testing.md`
-- `.oat/knowledge/repo/concerns.md`
+Once all agents complete, proceed to Step 7 to verify the files were created correctly.
 
 ### Step 7: Verify All Documents Created
 
