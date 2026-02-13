@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: p01-t11
+oat_current_task_id: p01-t15
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ oat_generated: false
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1 | in_progress | 20 | 10/20 |
+| Phase 1 | in_progress | 20 | 14/20 |
 | Phase 2 | pending | 5 | 0/5 |
 | Phase 3 | pending | 4 | 0/4 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 10/43 tasks completed
+**Total:** 14/43 tasks completed
 
 ---
 
@@ -275,6 +275,105 @@ oat_generated: false
 **Notes / Decisions:**
 - Added `getAdapterMappings` alias to keep compatibility with plan naming while standardizing on `getSyncMappings`.
 
+### Task p01-t11: Implement Claude adapter
+
+**Status:** completed
+**Commit:** 420e71c
+
+**Outcome (required when completed):**
+- Added Claude provider adapter with explicit project/user mapping tables.
+- Added `.claude` directory detection helper used to determine adapter activation.
+- Added unit tests for mapping correctness and detection behavior.
+
+**Files changed:**
+- `packages/cli/src/providers/claude/paths.ts` - defined project and user mappings for Claude.
+- `packages/cli/src/providers/claude/adapter.ts` - added `claudeAdapter` and filesystem-based detection.
+- `packages/cli/src/providers/claude/adapter.test.ts` - added mapping and detect tests.
+- `packages/cli/src/providers/claude/index.ts` - exported adapter and mapping constants.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/providers/claude/`
+- Result: pass (6 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Scoped detection to `.claude` directory presence to match design’s filesystem-based provider detection rule.
+
+### Task p01-t12: Implement Cursor adapter
+
+**Status:** completed
+**Commit:** aed5577
+
+**Outcome (required when completed):**
+- Added Cursor provider adapter with project/user mappings targeting `.cursor/*` directories.
+- Enforced explicit `.cursor/skills` mapping rather than `.claude` fallback.
+- Added detection and mapping tests covering the Cursor path policy.
+
+**Files changed:**
+- `packages/cli/src/providers/cursor/paths.ts` - defined Cursor mapping tables.
+- `packages/cli/src/providers/cursor/adapter.ts` - added `cursorAdapter` and detection logic.
+- `packages/cli/src/providers/cursor/adapter.test.ts` - added behavior tests for mappings and detect flow.
+- `packages/cli/src/providers/cursor/index.ts` - exported adapter and mapping constants.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/providers/cursor/`
+- Result: pass (6 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Preserved the design decision that Cursor sync never depends on Claude directory presence.
+
+### Task p01-t13: Implement Codex adapter
+
+**Status:** completed
+**Commit:** f19ed65
+
+**Outcome (required when completed):**
+- Added Codex provider adapter with `nativeRead: true` for skill mappings and sync mapping for agents.
+- Set Codex default strategy to `auto` to support native skill reads with explicit agent sync.
+- Added tests for native-read mappings and `.codex` directory detection.
+
+**Files changed:**
+- `packages/cli/src/providers/codex/paths.ts` - defined Codex project/user mappings.
+- `packages/cli/src/providers/codex/adapter.ts` - added `codexAdapter` and detection helper.
+- `packages/cli/src/providers/codex/adapter.test.ts` - added mapping/detection tests.
+- `packages/cli/src/providers/codex/index.ts` - exported adapter and path constants.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/providers/codex/`
+- Result: pass (5 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Encoded Codex skill mappings as `nativeRead` so sync planning can skip redundant operations for those paths.
+
+### Task p01-t14: Implement manifest types and zod schema
+
+**Status:** completed
+**Commit:** a51e1a0
+
+**Outcome (required when completed):**
+- Added manifest schema validation for version, timestamp fields, and entry structure.
+- Added strategy/hash contract enforcement (`copy` requires hash, `symlink` requires null hash).
+- Added duplicate-key refinement for `(canonicalPath, provider)` pairs.
+
+**Files changed:**
+- `packages/cli/src/manifest/manifest.types.ts` - added `ManifestEntrySchema`, `ManifestSchema`, and inferred types.
+- `packages/cli/src/manifest/manifest.types.test.ts` - added schema behavior tests for required constraints.
+- `packages/cli/src/manifest/index.ts` - exported manifest schemas and types.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/manifest/`
+- Result: pass (6 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Enforced relative path constraints for manifest paths to prevent absolute/tilde path leakage into persisted state.
+
 ---
 
 ## Implementation Log
@@ -293,6 +392,10 @@ oat_generated: false
 - [x] p01-t08: Wire commander program with global flags - 00fb323
 - [x] p01-t09: Define shared types and zod schemas - a7f6957
 - [x] p01-t10: Define provider adapter types and shared utilities - aa16d5d
+- [x] p01-t11: Implement Claude adapter - 420e71c
+- [x] p01-t12: Implement Cursor adapter - aed5577
+- [x] p01-t13: Implement Codex adapter - f19ed65
+- [x] p01-t14: Implement manifest types and zod schema - a51e1a0
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -306,6 +409,8 @@ oat_generated: false
 - Wired commander program, global flags, and stub command registration into CLI entrypoint.
 - Added shared zod schemas and scope-content boundary constants for downstream engine/provider logic.
 - Added provider adapter contracts and shared mapping/detection utilities for provider-specific adapters.
+- Implemented provider adapters for Claude, Cursor, and Codex with mapping tables and detection coverage.
+- Added manifest schema validation and duplicate/refinement guards for persisted sync state.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -326,7 +431,7 @@ oat_generated: false
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 |-------|-----------|--------|--------|----------|
-| 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (seven times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/` | 10 | 0 | n/a (bootstrap) |
+| 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (eleven times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/` | 14 | 0 | n/a (bootstrap) |
 | 2 | - | - | - | - |
 | 3 | - | - | - | - |
 | 4 | - | - | - | - |
