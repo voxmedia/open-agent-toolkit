@@ -301,4 +301,36 @@ describe('computeSyncPlan', () => {
       strategy: 'copy',
     });
   });
+
+  it('plans auto strategy as symlink-first with runtime fallback in execution', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+
+    const canonical = [createCanonicalEntry(root, 'skill', 'skill-one')];
+
+    const plan = await computeSyncPlan({
+      canonical,
+      adapters: [
+        createAdapter({
+          defaultStrategy: 'auto',
+        }),
+      ],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: {
+        ...DEFAULT_SYNC_CONFIG,
+        defaultStrategy: 'auto',
+      },
+      scopeRoot: root,
+    });
+
+    expect(plan.entries).toHaveLength(1);
+    expect(plan.entries[0]).toMatchObject({
+      operation: 'create_symlink',
+      strategy: 'symlink',
+    });
+  });
 });

@@ -77,6 +77,8 @@ function resolveStrategy(
     return 'symlink';
   }
 
+  // Auto resolves to symlink at planning time; executeSyncPlan handles
+  // platform fallback to copy when symlink creation is unsupported.
   if (adapter.defaultStrategy === 'copy') {
     return 'copy';
   }
