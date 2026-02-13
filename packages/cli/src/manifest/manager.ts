@@ -9,6 +9,13 @@ import {
 
 const OAT_VERSION = '0.0.1';
 
+function formatIssuePath(path: (string | number)[]): string {
+  if (path.length === 0) {
+    return '(root)';
+  }
+  return path.map(String).join('.');
+}
+
 function nowIso(): string {
   return new Date().toISOString();
 }
@@ -37,8 +44,11 @@ export async function loadManifest(manifestPath: string): Promise<Manifest> {
 
     const result = ManifestSchema.safeParse(parsed);
     if (!result.success) {
+      const issueDetails = result.error.issues
+        .map((issue) => `${formatIssuePath(issue.path)}: ${issue.message}`)
+        .join('; ');
       throw new CliError(
-        `Manifest at ${manifestPath} failed validation. Delete or repair the file and retry.`,
+        `Manifest at ${manifestPath} failed validation: ${issueDetails}. Delete or repair the file and retry.`,
       );
     }
 

@@ -74,7 +74,9 @@ describe('manifest manager', () => {
         'utf8',
       );
 
-      await expect(loadManifest(manifestPath)).rejects.toBeInstanceOf(CliError);
+      await expect(loadManifest(manifestPath)).rejects.toMatchObject({
+        message: expect.stringContaining('version'),
+      });
     });
   });
 
