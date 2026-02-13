@@ -2,13 +2,8 @@ import { rm } from 'node:fs/promises';
 import { relative, resolve, sep } from 'node:path';
 import { copyDirectory, createSymlink } from '../fs/io';
 import { computeDirectoryHash } from '../manifest/hash';
-import {
-  addEntry,
-  type Manifest,
-  removeEntry,
-  saveManifest,
-} from '../manifest/manager';
-import type { ManifestEntry } from '../manifest/manifest.types';
+import { addEntry, removeEntry, saveManifest } from '../manifest/manager';
+import type { Manifest, ManifestEntry } from '../manifest/manifest.types';
 import type { SyncPlan, SyncPlanEntry, SyncResult } from './engine.types';
 
 function inferScopeRoot(canonicalPath: string): string {
