@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
 import { CliError } from '../errors';
-import { type SyncStrategy, SyncStrategySchema } from '../shared/types';
+import { SyncStrategySchema } from '../shared/types';
 
 const ProviderConfigSchema = z.object({
   strategy: SyncStrategySchema.optional(),
@@ -47,8 +47,7 @@ function normalizeConfig(
 ): SyncConfig {
   return {
     version: 1,
-    defaultStrategy: (config.defaultStrategy ??
-      defaults.defaultStrategy) as SyncStrategy,
+    defaultStrategy: config.defaultStrategy ?? defaults.defaultStrategy,
     providers: mergeProviderConfigs(defaults.providers, config.providers ?? {}),
   };
 }
