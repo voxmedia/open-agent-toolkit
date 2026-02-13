@@ -120,6 +120,18 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 - Resume from the resolved task
 - Ask user: "Resume from {task_id}, or start fresh (overwrite implementation.md)?"
 
+**Stale-state reconciliation (approval required):**
+- Before executing tasks, cross-check `plan.md` Reviews status with `implementation.md` + `state.md`.
+- If `plan.md` shows a scope as `passed` but `implementation.md` / `state.md` still says "awaiting re-review" (or leaves `oat_current_task_id` / `oat_current_task` as `null` while future plan tasks are still incomplete), treat this as bookkeeping drift.
+- Resolve the next task from plan order (first incomplete non-review task after the passed scope), then ask:
+  - "Detected bookkeeping drift: review is passed in plan.md, but state artifacts still show awaiting re-review. Update artifacts and continue from {next_task_id}?"
+- Only if the user approves:
+  - Update `implementation.md` frontmatter `oat_current_task_id: {next_task_id}`
+  - Update `state.md` frontmatter `oat_current_task: {next_task_id}` and refresh stale "awaiting re-review" wording
+  - Update implementation review notes "Next" guidance to continue implementation (not re-review)
+- If the user declines:
+  - Do not auto-edit bookkeeping; pause and ask whether to proceed manually or stop.
+
 **If doesn't exist:**
 - Initialize from template (Step 4)
 
