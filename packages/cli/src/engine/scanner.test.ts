@@ -103,4 +103,11 @@ describe('scanCanonical', () => {
       join(root, '.agents', 'skills', 'skill-one'),
     );
   });
+
+  it('requires concrete scope values at compile time', () => {
+    const root = '/tmp/oat-scan';
+    // @ts-expect-error scanner intentionally rejects all-scope orchestration.
+    scanCanonical(root, 'all');
+    expect(true).toBe(true);
+  });
 });

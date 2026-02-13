@@ -2,6 +2,8 @@ import { readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { SCOPE_CONTENT_TYPES, type Scope } from '../shared/types';
 
+type ConcreteScope = Exclude<Scope, 'all'>;
+
 export interface CanonicalEntry {
   name: string;
   type: 'skill' | 'agent';
@@ -30,7 +32,7 @@ async function readDirectories(dirPath: string): Promise<string[]> {
 
 export async function scanCanonical(
   basePath: string,
-  scope: Scope,
+  scope: ConcreteScope,
 ): Promise<CanonicalEntry[]> {
   const scopeRoot = resolve(basePath);
   const entries: CanonicalEntry[] = [];
