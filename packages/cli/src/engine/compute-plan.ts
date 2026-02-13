@@ -1,5 +1,5 @@
 import { access, lstat, readlink } from 'node:fs/promises';
-import { dirname, join, normalize, relative, resolve, sep } from 'node:path';
+import { dirname, join, normalize, resolve, sep } from 'node:path';
 import type { SyncConfig } from '../config/sync-config';
 import { computeDirectoryHash } from '../manifest/hash';
 import { findEntry } from '../manifest/manager';
@@ -98,14 +98,11 @@ function createRemovalEntry(
   scopeRoot: string,
 ): SyncPlanEntry {
   const canonicalRelative = manifestEntry.canonicalPath;
-  const normalizedCanonicalRelative = normalize(
-    relative('.', canonicalRelative),
-  );
   return {
     canonical: {
       name:
-        normalizedCanonicalRelative.split('/').filter(Boolean).at(-1) ??
-        normalizedCanonicalRelative,
+        canonicalRelative.split('/').filter(Boolean).at(-1) ??
+        canonicalRelative,
       type: manifestEntry.contentType,
       canonicalPath: resolve(scopeRoot, canonicalRelative),
     },
