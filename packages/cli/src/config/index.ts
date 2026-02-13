@@ -1,2 +1,1 @@
-// placeholder
-export {};
+export { isInteractive } from './runtime';
