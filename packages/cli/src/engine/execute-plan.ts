@@ -1,10 +1,11 @@
 import { rm } from 'node:fs/promises';
-import { relative, resolve, sep } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
 import { copyDirectory, createSymlink } from '../fs/io';
 import { computeDirectoryHash } from '../manifest/hash';
 import { addEntry, removeEntry, saveManifest } from '../manifest/manager';
 import type { Manifest, ManifestEntry } from '../manifest/manifest.types';
 import type { SyncPlan, SyncPlanEntry, SyncResult } from './engine.types';
+import { hasMarker, insertMarker } from './markers';
 
 function inferScopeRoot(canonicalPath: string): string {
   const marker = `${sep}.agents${sep}`;
@@ -44,6 +45,32 @@ async function toManifestEntry(
   };
 }
 
+function markerFileNameForEntry(entry: SyncPlanEntry): string {
+  return entry.canonical.type === 'agent' ? 'AGENT.md' : 'SKILL.md';
+}
+
+async function applyCopyMarker(entry: SyncPlanEntry): Promise<void> {
+  const markerPath = join(entry.providerPath, markerFileNameForEntry(entry));
+
+  try {
+    if (await hasMarker(markerPath)) {
+      return;
+    }
+    await insertMarker(markerPath, entry.canonical.canonicalPath);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      // Marker insertion is best-effort for non-standard directory layouts.
+      return;
+    }
+    throw error;
+  }
+}
+
 async function applyEntry(
   planEntry: SyncPlanEntry,
   manifest: Manifest,
@@ -70,6 +97,7 @@ async function applyEntry(
         planEntry.canonical.canonicalPath,
         planEntry.providerPath,
       );
+      await applyCopyMarker(planEntry);
       const manifestEntry = await toManifestEntry(planEntry, 'copy');
       return addEntry(manifest, manifestEntry);
     }

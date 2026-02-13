@@ -14,6 +14,7 @@ import { createEmptyManifest, loadManifest } from '../manifest/manager';
 import type { ProviderAdapter } from '../providers/shared/adapter.types';
 import { computeSyncPlan } from './compute-plan';
 import { executeSyncPlan } from './execute-plan';
+import { OAT_MARKER_PREFIX } from './markers';
 import { scanCanonical } from './scanner';
 
 function createAdapter(
@@ -229,7 +230,8 @@ describe('sync engine integration', () => {
       (entry) => entry.canonicalPath === '.agents/skills/skill-one',
     );
 
-    expect(copiedContent).toBe('# skill\n');
+    expect(copiedContent.startsWith(OAT_MARKER_PREFIX)).toBe(true);
+    expect(copiedContent).toContain('# skill');
     expect(skillEntry?.strategy).toBe('copy');
     expect(skillEntry?.contentHash).toMatch(/^[a-f0-9]{64}$/);
   });

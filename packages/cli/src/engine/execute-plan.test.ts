@@ -14,6 +14,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEmptyManifest, loadManifest } from '../manifest/manager';
 import type { SyncPlan, SyncPlanEntry } from './engine.types';
 import { executeSyncPlan } from './execute-plan';
+import { OAT_MARKER_PREFIX } from './markers';
 
 function createCanonicalEntry(
   root: string,
@@ -118,7 +119,8 @@ describe('executeSyncPlan', () => {
       join(root, '.claude', 'skills', 'skill-one', 'SKILL.md'),
       'utf8',
     );
-    expect(copied).toBe('copy me');
+    expect(copied.startsWith(OAT_MARKER_PREFIX)).toBe(true);
+    expect(copied).toContain('copy me');
   });
 
   it('re-creates symlink for update_symlink entries', async () => {
@@ -171,7 +173,8 @@ describe('executeSyncPlan', () => {
       join(root, '.claude', 'skills', 'skill-one', 'SKILL.md'),
       'utf8',
     );
-    expect(content).toBe('fresh');
+    expect(content.startsWith(OAT_MARKER_PREFIX)).toBe(true);
+    expect(content).toContain('fresh');
   });
 
   it('removes provider path for remove entries', async () => {
