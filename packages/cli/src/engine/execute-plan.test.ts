@@ -195,6 +195,47 @@ describe('executeSyncPlan', () => {
     ).rejects.toThrow();
   });
 
+  it('removes copy-mode manifest entries without hashing deleted canonical paths', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+
+    await mkdir(join(root, '.claude', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.claude', 'skills', 'skill-one', 'SKILL.md'),
+      'copied',
+      'utf8',
+    );
+
+    const removal = createEntry(root, 'skill-one', 'remove', 'copy');
+    const plan = createPlan([], [removal]);
+    const manifest = {
+      ...createEmptyManifest(),
+      entries: [
+        {
+          canonicalPath: '.agents/skills/skill-one',
+          providerPath: '.claude/skills/skill-one',
+          provider: 'claude',
+          contentType: 'skill' as const,
+          strategy: 'copy' as const,
+          contentHash: 'deadbeef',
+          lastSynced: new Date().toISOString(),
+        },
+      ],
+    };
+
+    const result = await executeSyncPlan(plan, manifest, manifestPath);
+    const updated = await loadManifest(manifestPath);
+
+    expect(result).toMatchObject({ applied: 1, failed: 0 });
+    expect(updated.entries).toHaveLength(0);
+    await expect(
+      lstat(join(root, '.claude', 'skills', 'skill-one')),
+    ).rejects.toThrow();
+  });
+
   it('skips skip entries (no filesystem changes)', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
     tempDirs.push(root);

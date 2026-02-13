@@ -20,16 +20,23 @@ export function inferScopeRoot(canonicalPath: string): string {
   return resolve(normalizedPath.slice(0, markerIndex));
 }
 
+function resolveManifestPaths(entry: SyncPlanEntry): {
+  canonicalPath: string;
+  providerPath: string;
+} {
+  const scopeRoot = inferScopeRoot(resolve(entry.canonical.canonicalPath));
+
+  return {
+    canonicalPath: relative(scopeRoot, resolve(entry.canonical.canonicalPath)),
+    providerPath: relative(scopeRoot, resolve(entry.providerPath)),
+  };
+}
+
 async function toManifestEntry(
   entry: SyncPlanEntry,
   strategy: 'symlink' | 'copy',
 ): Promise<ManifestEntry> {
-  const scopeRoot = inferScopeRoot(resolve(entry.canonical.canonicalPath));
-  const canonicalPath = relative(
-    scopeRoot,
-    resolve(entry.canonical.canonicalPath),
-  );
-  const providerPath = relative(scopeRoot, resolve(entry.providerPath));
+  const { canonicalPath, providerPath } = resolveManifestPaths(entry);
   const contentHash =
     strategy === 'copy'
       ? await computeDirectoryHash(resolve(entry.canonical.canonicalPath))
@@ -104,15 +111,8 @@ async function applyEntry(
     }
     case 'remove': {
       await rm(planEntry.providerPath, { recursive: true, force: true });
-      const manifestEntry = await toManifestEntry(
-        planEntry,
-        planEntry.strategy,
-      );
-      return removeEntry(
-        manifest,
-        manifestEntry.canonicalPath,
-        manifestEntry.provider,
-      );
+      const { canonicalPath } = resolveManifestPaths(planEntry);
+      return removeEntry(manifest, canonicalPath, planEntry.provider);
     }
     case 'skip': {
       return manifest;

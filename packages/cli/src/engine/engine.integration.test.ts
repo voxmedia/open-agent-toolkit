@@ -203,6 +203,53 @@ describe('sync engine integration', () => {
     ).rejects.toThrow();
   });
 
+  it('copy mode removal clears provider view and manifest entry', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createAdapter({ defaultStrategy: 'copy' });
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root);
+
+    const firstCanonical = await scanCanonical(root, 'project');
+    const firstPlan = await computeSyncPlan({
+      canonical: firstCanonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(firstPlan, createEmptyManifest(), manifestPath);
+
+    await rm(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+      force: true,
+    });
+
+    const canonical = await scanCanonical(root, 'project');
+    const manifest = await loadManifest(manifestPath);
+    const plan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest,
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    const result = await executeSyncPlan(plan, manifest, manifestPath);
+    const updated = await loadManifest(manifestPath);
+
+    expect(result.failed).toBe(0);
+    expect(
+      updated.entries.some(
+        (entry) => entry.canonicalPath === '.agents/skills/skill-one',
+      ),
+    ).toBe(false);
+    await expect(
+      lstat(join(root, '.claude', 'skills', 'skill-one')),
+    ).rejects.toThrow();
+  });
+
   it('copy mode: creates copies with correct hashes in manifest', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);
