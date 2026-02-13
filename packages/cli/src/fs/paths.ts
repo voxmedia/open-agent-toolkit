@@ -3,6 +3,8 @@ import { dirname, resolve, sep } from 'node:path';
 import { CliError } from '../errors';
 import type { Scope } from '../shared/types';
 
+type ConcreteScope = Exclude<Scope, 'all'>;
+
 export async function resolveProjectRoot(cwd: string): Promise<string> {
   let current = resolve(cwd);
 
@@ -23,7 +25,7 @@ export async function resolveProjectRoot(cwd: string): Promise<string> {
 }
 
 export function resolveScopeRoot(
-  scope: Scope,
+  scope: ConcreteScope,
   cwd: string,
   home: string,
 ): string {

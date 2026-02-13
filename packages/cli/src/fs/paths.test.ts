@@ -49,4 +49,13 @@ describe('fs/paths', () => {
       CliError,
     );
   });
+
+  it('validatePathWithinScope returns resolved path for in-scope values', () => {
+    const scopeRoot = '/tmp/scope-root';
+    const insidePath = '/tmp/scope-root/child/file';
+
+    const resolved = validatePathWithinScope(insidePath, scopeRoot);
+
+    expect(resolved).toBe(insidePath);
+  });
 });
