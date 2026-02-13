@@ -9,6 +9,8 @@ import {
 } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
+export type LinkStrategy = 'symlink' | 'copy';
+
 export async function ensureDir(dirPath: string): Promise<void> {
   await mkdir(dirPath, { recursive: true });
 }
@@ -36,14 +38,18 @@ export async function copyDirectory(src: string, dest: string): Promise<void> {
 export async function createSymlink(
   target: string,
   linkPath: string,
-): Promise<void> {
+  onFallback?: (error: unknown) => void,
+): Promise<LinkStrategy> {
   await ensureDir(dirname(linkPath));
 
   try {
     await symlink(target, linkPath, 'dir');
-  } catch {
+    return 'symlink';
+  } catch (error) {
+    onFallback?.(error);
     await rm(linkPath, { recursive: true, force: true });
     await copyDirectory(target, linkPath);
+    return 'copy';
   }
 }
 

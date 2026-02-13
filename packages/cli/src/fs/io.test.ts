@@ -9,7 +9,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { atomicWriteJson, copyDirectory, createSymlink, ensureDir } from './io';
 
 describe('fs/io', () => {
@@ -31,10 +31,11 @@ describe('fs/io', () => {
     const linkDir = join(root, 'target', 'link');
     await mkdir(srcDir, { recursive: true });
 
-    await createSymlink(srcDir, linkDir);
+    const strategy = await createSymlink(srcDir, linkDir);
 
     const stat = await lstat(linkDir);
     expect(stat.isSymbolicLink()).toBe(true);
+    expect(strategy).toBe('symlink');
   });
 
   it('createSymlink with copy fallback copies directory when symlink fails', async () => {
@@ -47,11 +48,14 @@ describe('fs/io', () => {
     await writeFile(join(srcDir, 'a.txt'), 'copied', 'utf8');
     await writeFile(linkDir, 'existing-file', 'utf8');
 
-    await createSymlink(srcDir, linkDir);
+    const onFallback = vi.fn();
+    const strategy = await createSymlink(srcDir, linkDir, onFallback);
 
     const entries = await readdir(linkDir);
     expect(entries).toContain('a.txt');
     expect(await readFile(join(linkDir, 'a.txt'), 'utf8')).toBe('copied');
+    expect(strategy).toBe('copy');
+    expect(onFallback).toHaveBeenCalledTimes(1);
   });
 
   it('copyDirectory recursively copies all files', async () => {
