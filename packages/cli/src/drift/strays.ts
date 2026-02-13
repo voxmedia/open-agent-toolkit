@@ -1,3 +1,4 @@
+import type { Dirent } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { basename, join, normalize, resolve } from 'node:path';
 import type { CanonicalEntry } from '../engine/scanner';
@@ -68,9 +69,12 @@ export async function detectStrays(
   const reports: DriftReport[] = [];
   const resolvedProviderDir = resolve(providerDir);
 
-  let entries: Awaited<ReturnType<typeof readdir>>;
+  let entries: Dirent[];
   try {
-    entries = await readdir(resolvedProviderDir, { withFileTypes: true });
+    entries = await readdir(resolvedProviderDir, {
+      withFileTypes: true,
+      encoding: 'utf8',
+    });
   } catch (error) {
     if (
       typeof error === 'object' &&
