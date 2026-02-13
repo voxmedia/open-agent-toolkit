@@ -59,14 +59,12 @@ function isCanonicalEntry(
   contentType: CanonicalEntry['type'] | null,
   canonicalEntries: CanonicalEntry[],
 ): boolean {
+  if (!contentType) {
+    return false;
+  }
+
   return canonicalEntries.some((entry) => {
-    if (entry.name !== name) {
-      return false;
-    }
-    if (!contentType) {
-      return true;
-    }
-    return entry.type === contentType;
+    return entry.name === name && entry.type === contentType;
   });
 }
 

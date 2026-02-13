@@ -160,4 +160,33 @@ describe('detectStrays', () => {
 
     expect(reports).toEqual([]);
   });
+
+  it('treats unknown content directories as unmanaged and does not suppress by canonical name', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    const providerDir = join(root, '.claude', 'snippets');
+    await seedProviderEntry(providerDir, 'canonical-skill');
+
+    const canonicalEntries: CanonicalEntry[] = [
+      {
+        name: 'canonical-skill',
+        type: 'skill',
+        canonicalPath: join(root, '.agents', 'skills', 'canonical-skill'),
+      },
+    ];
+
+    const reports = await detectStrays(
+      'claude',
+      providerDir,
+      createEmptyManifest(),
+      canonicalEntries,
+    );
+
+    expect(reports).toHaveLength(1);
+    expect(reports[0]).toMatchObject({
+      canonical: null,
+      provider: 'claude',
+      state: { status: 'stray' },
+    });
+  });
 });
