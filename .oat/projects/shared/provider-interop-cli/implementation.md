@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: p01-t15
+oat_current_task_id: p01-t16
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ oat_generated: false
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1 | in_progress | 20 | 14/20 |
+| Phase 1 | in_progress | 20 | 15/20 |
 | Phase 2 | pending | 5 | 0/5 |
 | Phase 3 | pending | 4 | 0/4 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 14/43 tasks completed
+**Total:** 15/43 tasks completed
 
 ---
 
@@ -374,6 +374,30 @@ oat_generated: false
 **Notes / Decisions:**
 - Enforced relative path constraints for manifest paths to prevent absolute/tilde path leakage into persisted state.
 
+### Task p01-t15: Implement manifest manager (load, save, CRUD)
+
+**Status:** completed
+**Commit:** a19d432
+
+**Outcome (required when completed):**
+- Added manifest manager APIs for load/save plus entry CRUD operations.
+- Implemented atomic manifest writes using temp-file then rename.
+- Added robust load-time error handling that distinguishes missing file, corrupt JSON, and schema-invalid payloads.
+
+**Files changed:**
+- `packages/cli/src/manifest/manager.ts` - added `loadManifest`, `saveManifest`, `findEntry`, `addEntry`, `removeEntry`, and `createEmptyManifest`.
+- `packages/cli/src/manifest/manager.test.ts` - added comprehensive manager behavior tests.
+- `packages/cli/src/manifest/index.ts` - exported manager APIs from manifest module barrel.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/manifest/`
+- Result: pass (18 tests across manifest types + manager)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- `addEntry` replaces by `(canonicalPath, provider)` key to preserve uniqueness invariant already enforced by schema refinement.
+
 ---
 
 ## Implementation Log
@@ -396,6 +420,7 @@ oat_generated: false
 - [x] p01-t12: Implement Cursor adapter - aed5577
 - [x] p01-t13: Implement Codex adapter - f19ed65
 - [x] p01-t14: Implement manifest types and zod schema - a51e1a0
+- [x] p01-t15: Implement manifest manager (load, save, CRUD) - a19d432
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -411,6 +436,7 @@ oat_generated: false
 - Added provider adapter contracts and shared mapping/detection utilities for provider-specific adapters.
 - Implemented provider adapters for Claude, Cursor, and Codex with mapping tables and detection coverage.
 - Added manifest schema validation and duplicate/refinement guards for persisted sync state.
+- Added manifest persistence/CRUD manager with atomic writes and user-facing load error handling.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -431,7 +457,7 @@ oat_generated: false
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 |-------|-----------|--------|--------|----------|
-| 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (eleven times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/` | 14 | 0 | n/a (bootstrap) |
+| 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (twelve times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/` | 15 | 0 | n/a (bootstrap) |
 | 2 | - | - | - | - |
 | 3 | - | - | - | - |
 | 4 | - | - | - | - |
