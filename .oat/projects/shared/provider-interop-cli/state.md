@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t06
-oat_last_commit: bfc39b8
+oat_current_task: null
+oat_last_commit: f2f4fd8
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. p02 code review processed; review-fix tasks queued for Phase 2.
+Implementation - In Progress. p02 review-fix tasks are complete; awaiting p02 re-review.
 
 ## Artifacts
 
@@ -45,7 +45,8 @@ Implementation - In Progress. p02 code review processed; review-fix tasks queued
 - ✓ Additional p01 minor review fixes complete (`p01-t27`–`p01-t31`)
 - ✓ p01 re-review passed (`reviews/p01-re-review-2026-02-13.md`)
 - ✓ Phase 2 complete (`p02-t01`–`p02-t05`)
-- ⧗ p02 review fixes queued (`p02-t06`–`p02-t11`)
+- ✓ p02 review fixes complete (`p02-t06`–`p02-t11`)
+- ⧗ Awaiting p02 re-review (`reviews/p02-code-review.md`)
 
 ## Plan Summary
 
@@ -65,4 +66,4 @@ None
 
 ## Next Milestone
 
-Execute p02 review-fix tasks via `/oat:implement` starting at `p02-t06`.
+Request p02 re-review via `/oat:request-review code p02`.

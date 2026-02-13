@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: p02-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -17,12 +17,12 @@ oat_generated: false
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
 | Phase 1 | complete | 31 | 31/31 |
-| Phase 2 | in_progress | 11 | 5/11 |
+| Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | pending | 4 | 0/4 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 36/60 tasks completed
+**Total:** 42/60 tasks completed
 
 ---
 
@@ -781,7 +781,7 @@ oat_generated: false
 
 ## Phase 2: Sync Engine — Diff, Plan, Execute
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-02-13
 
 ### Phase Summary (fill when phase is complete)
@@ -792,6 +792,7 @@ oat_generated: false
 - Implemented `executeSyncPlan` with partial-failure handling, manifest updates, and support for symlink/copy operation paths.
 - Added generated-view marker helpers for copy-mode SKILL files.
 - Added integration coverage for full round-trip sync behavior, idempotency, dry-run semantics, removal, copy-mode hashes, and user-scope content filtering.
+- Completed p02 review-fix tasks to harden marker integration, symlink drift classification ordering, scope-root path normalization, and copy-mode removal manifest behavior.
 
 **Key files touched:**
 - `packages/cli/src/engine/engine.types.ts`
@@ -808,7 +809,7 @@ oat_generated: false
 **Notes / Decisions:**
 - `computeSyncPlan` accepts an optional `scopeRoot` override to keep removal planning deterministic when canonical lists are empty.
 - `executeSyncPlan` intentionally continues after per-entry failures and persists partial successful manifest updates.
-- Phase reopened for p02 review-fix tasks (`p02-t06` to `p02-t11`).
+- Completed p02 review-fix tasks (`p02-t06` to `p02-t11`) and moved phase to re-review checkpoint.
 
 ### Task p02-t01: Implement sync plan types
 
@@ -917,6 +918,133 @@ oat_generated: false
 **Notes / Decisions:**
 - Kept integration coverage filesystem-real to validate symlink/copy semantics directly.
 
+### Task p02-t06: (review) Integrate markers into copy-mode sync path
+
+**Status:** completed
+**Commit:** 57cc481
+
+**Outcome (required when completed):**
+- Integrated marker insertion into copy-mode sync execution for create/update operations.
+- Resolved marker filename by canonical content type (`SKILL.md` for skills, `AGENT.md` for agents).
+- Preserved idempotent marker behavior by checking existing markers before insertion.
+
+**Files changed:**
+- `packages/cli/src/engine/execute-plan.ts` - added marker insertion flow for `create_copy` and `update_copy`.
+- `packages/cli/src/engine/execute-plan.test.ts` - added unit coverage for copy-mode marker behavior.
+- `packages/cli/src/engine/engine.integration.test.ts` - added integration assertions for marker behavior in sync flows.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+- Marker insertion is best-effort when the target marker file is absent (`ENOENT` is tolerated).
+
+### Task p02-t07: (review) Reorder symlink drift checks
+
+**Status:** completed
+**Commit:** 79794b8
+
+**Outcome (required when completed):**
+- Reordered symlink planning checks so dangling symlinks classify as broken drift instead of missing paths.
+- Ensured provider-path absence is the only branch that emits `create_symlink`.
+- Added regression coverage for missing symlink target classification.
+
+**Files changed:**
+- `packages/cli/src/engine/compute-plan.ts` - reordered symlink classification logic with `lstat`-first flow.
+- `packages/cli/src/engine/compute-plan.test.ts` - added broken-symlink regression test.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`
+- Result: pass
+- Run: `pnpm --filter=@oat/cli lint`
+- Result: pass
+
+**Notes / Decisions:**
+- Drift classification now aligns with the design's missing-first contract without losing dangling-link diagnostics.
+
+### Task p02-t08: (review) Remove unused imports from compute plan
+
+**Status:** completed
+**Commit:** 7e447c6
+
+**Outcome (required when completed):**
+- Removed unused import and cleanup residue in sync planning module.
+- Kept behavior unchanged while reducing lint noise.
+
+**Files changed:**
+- `packages/cli/src/engine/compute-plan.ts` - removed unused `relative` import and stale normalization lines.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli lint`
+- Result: pass
+
+**Notes / Decisions:**
+- Treated as a no-behavior-change hygiene commit.
+
+### Task p02-t09: (review) Harden inferScopeRoot path normalization
+
+**Status:** completed
+**Commit:** 3dc6499
+
+**Outcome (required when completed):**
+- Hardened scope-root inference to normalize mixed path separators before extraction.
+- Returned resolved absolute scope roots to avoid relative-path ambiguity in manifest key calculations.
+- Added regression coverage for mixed-separator canonical paths.
+
+**Files changed:**
+- `packages/cli/src/engine/execute-plan.ts` - exported and hardened `inferScopeRoot`.
+- `packages/cli/src/engine/execute-plan.test.ts` - added mixed-separator test case.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept normalization localized to root inference so existing planner/manifest contracts remain unchanged.
+
+### Task p02-t10: (review) Clarify auto strategy planning semantics
+
+**Status:** completed
+**Commit:** 0c12a23
+
+**Outcome (required when completed):**
+- Added explicit planner documentation for `auto` strategy behavior.
+- Added test coverage proving planning resolves to symlink strategy and runtime handles fallback behavior.
+
+**Files changed:**
+- `packages/cli/src/engine/compute-plan.ts` - added explanatory comment near `resolveStrategy`.
+- `packages/cli/src/engine/compute-plan.test.ts` - added assertion for auto-planning strategy contract.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Documentation + test change only; execution fallback behavior remains in runtime sync engine.
+
+### Task p02-t11: (review) Fix copy-mode removal manifest update bug
+
+**Status:** completed
+**Commit:** f2f4fd8
+
+**Outcome (required when completed):**
+- Removed hash dependency from copy-mode removal path so removals do not fail on deleted canonical files.
+- Added manifest-key resolution helper for removal operations.
+- Added unit + integration regression coverage for copy-mode manifest cleanup on removal.
+
+**Files changed:**
+- `packages/cli/src/engine/execute-plan.ts` - refactored removal path to avoid `toManifestEntry` hashing.
+- `packages/cli/src/engine/execute-plan.test.ts` - added copy-mode removal manifest regression test.
+- `packages/cli/src/engine/engine.integration.test.ts` - added integration test for provider cleanup + manifest deletion.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+- Removal operations now compute only manifest key fields and skip content-hash derivation entirely.
+
 ---
 
 ## Implementation Log
@@ -961,6 +1089,12 @@ oat_generated: false
 - [x] p02-t03: Implement executeSyncPlan - 76585c0, be5bad5
 - [x] p02-t04: Implement generated view markers for copy mode - e0540fd
 - [x] p02-t05: Integration test — sync round-trip - bfc39b8
+- [x] p02-t06: (review) Integrate markers into copy-mode sync path - 57cc481
+- [x] p02-t07: (review) Reorder symlink drift checks - 79794b8
+- [x] p02-t08: (review) Remove unused imports from compute plan - 7e447c6
+- [x] p02-t09: (review) Harden inferScopeRoot path normalization - 3dc6499
+- [x] p02-t10: (review) Clarify auto strategy planning semantics - 0c12a23
+- [x] p02-t11: (review) Fix copy-mode removal manifest update bug - f2f4fd8
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -993,6 +1127,12 @@ oat_generated: false
 - Applied eleventh p01 review fix: manifest validation errors now include field-level issue details.
 - Implemented Phase 2 sync engine primitives: planning, execution, and copy-marker utilities.
 - Added phase-2 integration coverage for round-trip sync behavior and scope/strategy invariants.
+- Applied first p02 review fix: copy-mode execution now injects generated markers in create/update flows.
+- Applied second p02 review fix: symlink classification now handles dangling links before target mismatch checks.
+- Applied third p02 review fix: removed stale imports and cleanup residue in compute-plan module.
+- Applied fourth p02 review fix: infer-scope root handling now normalizes mixed separators and resolves absolute roots.
+- Applied fifth p02 review fix: documented and tested auto-strategy planning contract.
+- Applied sixth p02 review fix: copy-mode removal no longer depends on hashing deleted canonical paths.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1033,7 +1173,7 @@ oat_generated: false
 - Medium: 4
 - Minor: 5
 
-**New tasks added:** `p02-t06`, `p02-t07`, `p02-t08`, `p02-t09`, `p02-t10`, `p02-t11`
+**New tasks added:** `p02-t06`, `p02-t07`, `p02-t08`, `p02-t09`, `p02-t10`, `p02-t11` (all completed)
 
 **Deferred Findings (Minor):**
 - `MIN-1` Simplify `createRemovalEntry` name extraction helper
@@ -1042,7 +1182,7 @@ oat_generated: false
 - `MIN-4` Consider directory-level `.oat-generated` sentinel in addition to inline markers
 - `MIN-5` Narrow `SyncPlan.removals` typing to removal-only entry variant
 
-**Next:** Execute p02 review-fix tasks via `/oat:implement` starting at `p02-t06`.
+**Next:** Request p02 re-review via `/oat:request-review code p02`.
 
 ---
 
@@ -1057,7 +1197,7 @@ oat_generated: false
 | Phase | Tests Run | Passed | Failed | Coverage |
 |-------|-----------|--------|--------|----------|
 | 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (twenty-two times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/`; `pnpm --filter=@oat/cli test src/manifest/hash`; `pnpm --filter=@oat/cli test src/engine/scanner`; `pnpm --filter=@oat/cli test src/config/`; `pnpm --filter=@oat/cli test src/fs/`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test 2>&1 | rg "dist/" -n || true`; `pnpm --filter=@oat/cli test src/fs/io.test.ts`; `pnpm --filter=@oat/cli test src/app/command-context.test.ts`; `pnpm --filter=@oat/cli test src/shared/types.test.ts`; `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts`; `pnpm --filter=@oat/cli test src/fs/paths.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check` | 26 | 0 | n/a (bootstrap) |
-| 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check` | 5 | 0 | n/a (phase boundary) |
+| 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 11 | 0 | n/a (phase boundary + review fixes) |
 | 3 | - | - | - | - |
 | 4 | - | - | - | - |
 | 5 | - | - | - | - |
