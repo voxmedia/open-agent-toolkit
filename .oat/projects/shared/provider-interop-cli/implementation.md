@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -18,11 +18,11 @@ oat_generated: false
 |-------|--------|-------|-----------|
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
-| Phase 3 | pending | 4 | 0/4 |
+| Phase 3 | complete | 4 | 4/4 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 42/60 tasks completed
+**Total:** 46/60 tasks completed
 
 ---
 
@@ -1047,6 +1047,125 @@ oat_generated: false
 
 ---
 
+## Phase 3: Drift Detection and Output
+
+**Status:** complete
+**Started:** 2026-02-13
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+- Implemented drift classification primitives for managed mappings (`in_sync`, `missing`, `drifted:*`).
+- Implemented stray detection for provider directories with manifest and canonical filtering.
+- Added human-readable output formatters for status/sync/doctor/provider detail views.
+- Added shared prompt wrappers with explicit non-interactive behavior contracts.
+
+**Key files touched:**
+- `packages/cli/src/drift/detector.ts`
+- `packages/cli/src/drift/strays.ts`
+- `packages/cli/src/drift/drift.types.ts`
+- `packages/cli/src/ui/output.ts`
+- `packages/cli/src/shared/prompts.ts`
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint`
+- Result: pass (22 tests)
+
+**Notes / Decisions:**
+- Drift detector uses `lstat` for the first existence gate so broken symlinks classify as `drifted:broken` instead of `missing`.
+- Stray detection now uses UTF-8 dirent handling (`Dirent[]`) to satisfy Node type-checking across platforms.
+
+### Task p03-t01: Implement drift detector
+
+**Status:** completed
+**Commit:** 753e1a3
+
+**Outcome (required when completed):**
+- Added `DriftState` / `DriftReport` contracts for drift reporting.
+- Implemented drift classification for symlink and copy modes with missing-first logic.
+- Added unit coverage for missing, symlink in-sync/broken/replaced, and copy hash states.
+
+**Files changed:**
+- `packages/cli/src/drift/detector.ts` - implemented `detectDrift`.
+- `packages/cli/src/drift/drift.types.ts` - added drift report state contracts.
+- `packages/cli/src/drift/detector.test.ts` - added detector unit tests.
+- `packages/cli/src/drift/index.ts` - exported drift APIs.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/drift/detector`
+- Result: pass (7 tests)
+
+**Notes / Decisions:**
+- Used `fs.readlink` + `fs.stat` flow for symlink checks per design drift table.
+
+### Task p03-t02: Implement stray detector
+
+**Status:** completed
+**Commit:** a0d721d, 7035738
+
+**Outcome (required when completed):**
+- Implemented `detectStrays` with manifest-tracked and canonical-entry filtering.
+- Added provider/content-type inference for stray reports from provider directory paths.
+- Added follow-up typing fix for Node dirent inference under strict type-checking.
+
+**Files changed:**
+- `packages/cli/src/drift/strays.ts` - implemented stray scanning logic and dirent typing fix.
+- `packages/cli/src/drift/strays.test.ts` - added stray detector unit coverage.
+- `packages/cli/src/drift/index.ts` - exported stray detector.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/drift/strays`
+- Result: pass (5 tests)
+
+**Notes / Decisions:**
+- Missing provider directories return an empty list (ENOENT-safe behavior).
+
+### Task p03-t03: Implement output formatters
+
+**Status:** completed
+**Commit:** 22c0837
+
+**Outcome (required when completed):**
+- Added table/list formatters for status reports, sync plans, doctor checks, and provider details.
+- Added semantic status markers and aligned table rendering for human-readable output.
+- Added unit coverage for formatter contracts and mode indicators (dry-run vs applied).
+
+**Files changed:**
+- `packages/cli/src/ui/output.ts` - implemented formatter functions and doctor types.
+- `packages/cli/src/ui/output.test.ts` - added formatter tests.
+- `packages/cli/src/ui/index.ts` - exported output APIs.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/ui/output`
+- Result: pass (5 tests)
+
+**Notes / Decisions:**
+- Kept output formatting in a dedicated module to avoid command-level string construction.
+
+### Task p03-t04: Implement shared prompt primitives
+
+**Status:** completed
+**Commit:** cb1bee3
+
+**Outcome (required when completed):**
+- Added shared prompt wrappers for confirmation and selection flows.
+- Enforced non-interactive behavior: `confirmAction` defaults false, `selectWithAbort` throws `CliError`.
+- Added abort handling for prompt cancellation (`ExitPromptError`).
+
+**Files changed:**
+- `packages/cli/src/shared/prompts.ts` - implemented prompt wrappers.
+- `packages/cli/src/shared/prompts.test.ts` - added prompt behavior tests.
+- `packages/cli/src/shared/index.ts` - exported prompt APIs.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/shared/prompts`
+- Result: pass (5 tests)
+
+**Notes / Decisions:**
+- Prompt wrappers use narrow context (`interactive`) so commands can adopt them without coupling to full command context objects.
+
+---
+
 ## Implementation Log
 
 ### 2026-02-13
@@ -1095,6 +1214,10 @@ oat_generated: false
 - [x] p02-t09: (review) Harden inferScopeRoot path normalization - 3dc6499
 - [x] p02-t10: (review) Clarify auto strategy planning semantics - 0c12a23
 - [x] p02-t11: (review) Fix copy-mode removal manifest update bug - f2f4fd8
+- [x] p03-t01: Implement drift detector - 753e1a3
+- [x] p03-t02: Implement stray detector - a0d721d, 7035738
+- [x] p03-t03: Implement output formatters - 22c0837
+- [x] p03-t04: Implement shared prompt primitives - cb1bee3
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1133,6 +1256,9 @@ oat_generated: false
 - Applied fourth p02 review fix: infer-scope root handling now normalizes mixed separators and resolves absolute roots.
 - Applied fifth p02 review fix: documented and tested auto-strategy planning contract.
 - Applied sixth p02 review fix: copy-mode removal no longer depends on hashing deleted canonical paths.
+- Implemented phase 3 drift primitives: managed-entry drift classification and provider stray detection.
+- Added output formatters for status/sync/doctor/provider-detail command rendering.
+- Added shared prompt primitives with non-interactive safeguards for upcoming command flows.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1182,7 +1308,7 @@ oat_generated: false
 - `MIN-4` Consider directory-level `.oat-generated` sentinel in addition to inline markers
 - `MIN-5` Narrow `SyncPlan.removals` typing to removal-only entry variant
 
-**Next:** Request p02 re-review via `/oat:request-review code p02`.
+**Next:** Phase 3 complete. Awaiting approval to continue with `p04-t01`.
 
 ---
 
@@ -1198,7 +1324,7 @@ oat_generated: false
 |-------|-----------|--------|--------|----------|
 | 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (twenty-two times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/`; `pnpm --filter=@oat/cli test src/manifest/hash`; `pnpm --filter=@oat/cli test src/engine/scanner`; `pnpm --filter=@oat/cli test src/config/`; `pnpm --filter=@oat/cli test src/fs/`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test 2>&1 | rg "dist/" -n || true`; `pnpm --filter=@oat/cli test src/fs/io.test.ts`; `pnpm --filter=@oat/cli test src/app/command-context.test.ts`; `pnpm --filter=@oat/cli test src/shared/types.test.ts`; `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts`; `pnpm --filter=@oat/cli test src/fs/paths.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check` | 26 | 0 | n/a (bootstrap) |
 | 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 11 | 0 | n/a (phase boundary + review fixes) |
-| 3 | - | - | - | - |
+| 3 | `pnpm --filter=@oat/cli test src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/ui/output`; `pnpm --filter=@oat/cli test src/shared/prompts`; `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 4 | 0 | n/a (phase boundary) |
 | 4 | - | - | - | - |
 | 5 | - | - | - | - |
 
