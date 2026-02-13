@@ -32,4 +32,11 @@ describe('shared types', () => {
     expect(SCOPE_CONTENT_TYPES.user).toEqual(['skill']);
     expect(SCOPE_CONTENT_TYPES.all).toEqual(['skill', 'agent']);
   });
+
+  it('SCOPE_CONTENT_TYPES.all matches union of project and user scopes', () => {
+    const expected = [
+      ...new Set([...SCOPE_CONTENT_TYPES.project, ...SCOPE_CONTENT_TYPES.user]),
+    ];
+    expect(SCOPE_CONTENT_TYPES.all).toEqual(expected);
+  });
 });
