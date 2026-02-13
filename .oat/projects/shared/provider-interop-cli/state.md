@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t21
-oat_last_commit: 5e3a3bb
+oat_current_task: null
+oat_last_commit: 2e1467c
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. Phase 1 review findings were converted into fix tasks; currently at `p01-t21`.
+Implementation - In Progress. Phase 1 review-fix tasks complete; awaiting p01 re-review.
 
 ## Artifacts
 
@@ -29,7 +29,7 @@ Implementation - In Progress. Phase 1 review findings were converted into fix ta
 - **Design:** `design.md` (complete, reviewed)
 - **Review:** `reviews/design-review.md` (findings addressed)
 - **Review:** `reviews/cli-structure-proposal.md` (accepted)
-- **Plan:** `plan.md` (complete, 43 tasks, 5 phases)
+- **Plan:** `plan.md` (complete, 49 tasks, 5 phases)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -41,7 +41,8 @@ Implementation - In Progress. Phase 1 review findings were converted into fix ta
 - ✓ Design complete (1046 lines, full architecture)
 - ✓ Design reviewed twice, all 10 findings addressed
 - ✓ Plan complete (49 tasks, 5 phases, includes p01 review-fix tasks)
-- ⧗ Phase 1 review fixes in progress (`p01-t21`–`p01-t26`)
+- ✓ Phase 1 review fixes complete (`p01-t21`–`p01-t26`)
+- ⧗ Awaiting p01 re-review (`/oat:request-review code p01`)
 
 ## Plan Summary
 
@@ -61,4 +62,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 review-fix tasks and run re-review for `p01` scope.
+Run p01 re-review and process results via `/oat:receive-review`.

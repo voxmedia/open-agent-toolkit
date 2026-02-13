@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: p01-t21
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,19 +16,19 @@ oat_generated: false
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1 | in_progress | 26 | 20/26 |
+| Phase 1 | complete | 26 | 26/26 |
 | Phase 2 | pending | 5 | 0/5 |
 | Phase 3 | pending | 4 | 0/4 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 20/49 tasks completed
+**Total:** 26/49 tasks completed
 
 ---
 
 ## Phase 1: Foundation — Scaffold, Types, Config
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-02-13
 
 ### Phase Summary (fill when phase is complete)
@@ -59,6 +59,7 @@ oat_generated: false
 - Implementation started from `p01-t01`.
 - Kept command output centralized through `CliLogger` and non-interactive behavior explicit in core utilities.
 - Phase reopened for review-generated fix tasks (`p01-t21` to `p01-t26`) after code review processing.
+- Review-generated fix tasks for `p01` are now complete; awaiting re-review.
 
 ### Task p01-t01: Add vitest and test scripts
 
@@ -536,6 +537,145 @@ oat_generated: false
 **Notes / Decisions:**
 - Kept the phase verification as the quality gate boundary before moving into p02 sync-engine work.
 
+### Task p01-t21: (review) Prevent duplicate test execution from dist artifacts
+
+**Status:** completed
+**Commit:** 81c1572
+
+**Outcome (required when completed):**
+- Updated Vitest discovery config to run source test files only.
+- Updated TypeScript compile excludes to omit `src/**/*.test.ts` from dist output.
+- Eliminated duplicate `dist/` suite executions from the test run.
+
+**Files changed:**
+- `packages/cli/vitest.config.ts` - added `test.include` for `src/**/*.test.ts`.
+- `packages/cli/tsconfig.json` - excluded test files from compile output.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test`
+- Result: pass (17 files, 90 tests; source suites only)
+- Run: `pnpm --filter=@oat/cli test 2>&1 | rg "dist/" -n || true`
+- Result: pass (no `dist/` suite matches)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Applied both review options (Vitest include + tsconfig exclude) to prevent recurrence from stale dist output.
+
+### Task p01-t22: (review) Log and surface symlink fallback behavior
+
+**Status:** completed
+**Commit:** 833fea6
+
+**Outcome (required when completed):**
+- Updated `createSymlink` to return which strategy was used (`symlink` or `copy`).
+- Added optional fallback callback so callers can emit diagnostics when symlink creation fails.
+- Updated fs io tests to verify both strategy return values and fallback callback invocation.
+
+**Files changed:**
+- `packages/cli/src/fs/io.ts` - added `LinkStrategy`, fallback callback hook, and explicit strategy return values.
+- `packages/cli/src/fs/io.test.ts` - asserted returned strategy and fallback callback behavior.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/fs/io.test.ts`
+- Result: pass (5 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept logger-agnostic callback shape so calling layers can attach command-scoped logging without coupling fs helpers to UI modules.
+
+### Task p01-t23: (review) Consolidate Scope type to shared source
+
+**Status:** completed
+**Commit:** a447e9e
+
+**Outcome (required when completed):**
+- Removed local `Scope` duplicate definition from `command-context.ts`.
+- Adopted `Scope` directly from shared schema-derived types for single source of truth.
+- Verified command context behavior and typing remain unchanged.
+
+**Files changed:**
+- `packages/cli/src/app/command-context.ts` - replaced local `Scope` type with import from shared types.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/app/command-context.test.ts`
+- Result: pass (5 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept the scope type anchored to zod-derived shared contracts to avoid future drift between runtime validation and compile-time literals.
+
+### Task p01-t24: (review) Clarify all-scope content semantics in shared types
+
+**Status:** completed
+**Commit:** 617f692
+
+**Outcome (required when completed):**
+- Refactored scope-content mapping constants so `all` is derived from project/user scope unions.
+- Preserved existing behavior while making all-scope intent explicit in code.
+- Added test coverage proving `all` equals union(project, user).
+
+**Files changed:**
+- `packages/cli/src/shared/types.ts` - introduced derived `ALL_SCOPE_CONTENT_TYPES`.
+- `packages/cli/src/shared/types.test.ts` - added union-intent assertion test.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/shared/types.test.ts`
+- Result: pass (5 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept current runtime values (`['skill', 'agent']`) while eliminating duplicate hardcoded literals.
+
+### Task p01-t25: (review) Define all-scope behavior for adapter mappings
+
+**Status:** completed
+**Commit:** 2132851
+
+**Outcome (required when completed):**
+- Added explicit deduplication for sync mappings by `(contentType, canonicalDir, providerDir)` identity.
+- Preserved native-read filtering while preventing duplicate operations for `scope='all'`.
+- Added targeted test coverage for all-scope duplicate mapping elimination.
+
+**Files changed:**
+- `packages/cli/src/providers/shared/adapter.utils.ts` - added deduplication pass in `getSyncMappings`.
+- `packages/cli/src/providers/shared/adapter.types.test.ts` - added all-scope dedupe behavior test.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts`
+- Result: pass (5 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Chose deduplication over throwing for `'all'` to keep helper ergonomics while avoiding duplicate sync operations.
+
+### Task p01-t26: (review) Correct scope-root resolution contract for all scope
+
+**Status:** completed
+**Commit:** 2e1467c
+
+**Outcome (required when completed):**
+- Narrowed `resolveScopeRoot` to concrete scopes (`project` and `user`) so `'all'` is handled explicitly by higher-level scope iteration.
+- Added positive-path validation coverage for `validatePathWithinScope`.
+- Confirmed fs path helper behavior and type contracts remain stable.
+
+**Files changed:**
+- `packages/cli/src/fs/paths.ts` - narrowed scope parameter type to `Exclude<Scope, 'all'>`.
+- `packages/cli/src/fs/paths.test.ts` - added positive in-scope assertion test.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/fs/paths.test.ts`
+- Result: pass (4 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Standardized on explicit per-scope iteration for `'all'` handling instead of implicit project fallback.
+
 ---
 
 ## Implementation Log
@@ -564,6 +704,12 @@ oat_generated: false
 - [x] p01-t18: Implement sync config loader - afd5cd2
 - [x] p01-t19: Implement filesystem helpers (io.ts, paths.ts) - caaabb0
 - [x] p01-t20: Phase 1 verification - 5e3a3bb
+- [x] p01-t21: (review) Prevent duplicate test execution from dist artifacts - 81c1572
+- [x] p01-t22: (review) Log and surface symlink fallback behavior - 833fea6
+- [x] p01-t23: (review) Consolidate Scope type to shared source - a447e9e
+- [x] p01-t24: (review) Clarify all-scope content semantics in shared types - 617f692
+- [x] p01-t25: (review) Define all-scope behavior for adapter mappings - 2132851
+- [x] p01-t26: (review) Correct scope-root resolution contract for all scope - 2e1467c
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -583,6 +729,12 @@ oat_generated: false
 - Added deterministic directory hashing for copy-mode drift support.
 - Added canonical scanner, sync config loader, and filesystem/path helper primitives for upcoming sync engine tasks.
 - Completed Phase 1 verification gate with all checks passing.
+- Applied first p01 review fix: test discovery/build outputs no longer trigger duplicate test execution.
+- Applied second p01 review fix: symlink fallback behavior is now explicit and observable.
+- Applied third p01 review fix: scope type now has a single shared definition.
+- Applied fourth p01 review fix: all-scope content semantics are now expressed as an explicit scope union.
+- Applied fifth p01 review fix: all-scope mapping utilities now deduplicate duplicate provider operations.
+- Applied sixth p01 review fix: scope-root resolution no longer silently treats `'all'` as project scope.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -603,7 +755,7 @@ oat_generated: false
 - Important: 6
 - Minor: 8
 
-**New tasks added:** `p01-t21`, `p01-t22`, `p01-t23`, `p01-t24`, `p01-t25`, `p01-t26`
+**New tasks added:** `p01-t21`, `p01-t22`, `p01-t23`, `p01-t24`, `p01-t25`, `p01-t26` (all completed)
 
 **Deferred Findings (Minor):**
 - `m1` `scanCanonical` called with `scope === 'all'` can blur scope-intent boundaries
@@ -615,11 +767,11 @@ oat_generated: false
 - `m7` Unnecessary `SyncStrategy` cast in `normalizeConfig`
 - `m8` Manifest validation error messages should include field-level details
 
-**Next:** Execute review fix tasks via `/oat:implement`, starting at `p01-t21`.
+**Next:** Run `/oat:request-review code p01` for re-review.
 
-After fix tasks complete:
-- Update review row status to `fixes_completed`
-- Run `/oat:request-review code p01`, then `/oat:receive-review` to reach `passed`
+After re-review:
+- If no Critical/Important findings: mark review row `passed`
+- If findings remain: process via `/oat:receive-review` and continue fix loop
 
 ---
 
@@ -633,7 +785,7 @@ After fix tasks complete:
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 |-------|-----------|--------|--------|----------|
-| 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (sixteen times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/`; `pnpm --filter=@oat/cli test src/manifest/hash`; `pnpm --filter=@oat/cli test src/engine/scanner`; `pnpm --filter=@oat/cli test src/config/`; `pnpm --filter=@oat/cli test src/fs/`; `pnpm --filter=@oat/cli lint` | 20 | 0 | n/a (bootstrap) |
+| 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (twenty-two times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/`; `pnpm --filter=@oat/cli test src/manifest/hash`; `pnpm --filter=@oat/cli test src/engine/scanner`; `pnpm --filter=@oat/cli test src/config/`; `pnpm --filter=@oat/cli test src/fs/`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test 2>&1 | rg "dist/" -n || true`; `pnpm --filter=@oat/cli test src/fs/io.test.ts`; `pnpm --filter=@oat/cli test src/app/command-context.test.ts`; `pnpm --filter=@oat/cli test src/shared/types.test.ts`; `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts`; `pnpm --filter=@oat/cli test src/fs/paths.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check` | 26 | 0 | n/a (bootstrap) |
 | 2 | - | - | - | - |
 | 3 | - | - | - | - |
 | 4 | - | - | - | - |

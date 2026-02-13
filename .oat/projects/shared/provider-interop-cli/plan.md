@@ -1960,7 +1960,7 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 
 | Scope | Type | Status | Date | Artifact |
 |-------|------|--------|------|----------|
-| p01 | code | fixes_added | 2026-02-13 | reviews/p01-code-review.md |
+| p01 | code | fixes_completed | 2026-02-13 | reviews/p01-code-review.md |
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
