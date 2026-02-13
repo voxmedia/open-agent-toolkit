@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t21
 oat_generated: false
 ---
 
@@ -16,19 +16,19 @@ oat_generated: false
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1 | complete | 20 | 20/20 |
+| Phase 1 | in_progress | 26 | 20/26 |
 | Phase 2 | pending | 5 | 0/5 |
 | Phase 3 | pending | 4 | 0/4 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 20/43 tasks completed
+**Total:** 20/49 tasks completed
 
 ---
 
 ## Phase 1: Foundation — Scaffold, Types, Config
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-02-13
 
 ### Phase Summary (fill when phase is complete)
@@ -58,6 +58,7 @@ oat_generated: false
 **Notes / Decisions:**
 - Implementation started from `p01-t01`.
 - Kept command output centralized through `CliLogger` and non-interactive behavior explicit in core utilities.
+- Phase reopened for review-generated fix tasks (`p01-t21` to `p01-t26`) after code review processing.
 
 ### Task p01-t01: Add vitest and test scripts
 
@@ -589,6 +590,36 @@ oat_generated: false
 
 **Blockers:**
 - None
+
+---
+
+### Review Received: p01
+
+**Date:** 2026-02-13  
+**Review artifact:** `reviews/p01-code-review.md`
+
+**Findings:**
+- Critical: 0
+- Important: 6
+- Minor: 8
+
+**New tasks added:** `p01-t21`, `p01-t22`, `p01-t23`, `p01-t24`, `p01-t25`, `p01-t26`
+
+**Deferred Findings (Minor):**
+- `m1` `scanCanonical` called with `scope === 'all'` can blur scope-intent boundaries
+- `m2` Missing explicit `scope === 'all'` scanner test case
+- `m3` `resolveProjectRoot` exit code classification nuance (1 vs 2)
+- `m4` Missing positive-case test for `validatePathWithinScope`
+- `m5` Missing `resolveScopeRoot` test coverage for `scope === 'all'`
+- `m6` `getAdapterMappings` alias naming ambiguity
+- `m7` Unnecessary `SyncStrategy` cast in `normalizeConfig`
+- `m8` Manifest validation error messages should include field-level details
+
+**Next:** Execute review fix tasks via `/oat:implement`, starting at `p01-t21`.
+
+After fix tasks complete:
+- Update review row status to `fixes_completed`
+- Run `/oat:request-review code p01`, then `/oat:receive-review` to reach `passed`
 
 ---
 

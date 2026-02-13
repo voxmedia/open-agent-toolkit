@@ -1,5 +1,5 @@
 ---
-oat_current_task: p02-t01
+oat_current_task: p01-t21
 oat_last_commit: 5e3a3bb
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. Phase 1 complete (`p01-t20`); awaiting HiL approval to continue at `p02-t01`.
+Implementation - In Progress. Phase 1 review findings were converted into fix tasks; currently at `p01-t21`.
 
 ## Artifacts
 
@@ -40,15 +40,14 @@ Implementation - In Progress. Phase 1 complete (`p01-t20`); awaiting HiL approva
 - ✓ Specification reviewed by Codex, findings addressed
 - ✓ Design complete (1046 lines, full architecture)
 - ✓ Design reviewed twice, all 10 findings addressed
-- ✓ Plan complete (43 tasks, 5 phases, TDD discipline)
-- ✓ Phase 1 complete (`p01-t20`)
-- ⧗ Awaiting approval to continue to Phase 2 (`p02-t01`)
+- ✓ Plan complete (49 tasks, 5 phases, includes p01 review-fix tasks)
+- ⧗ Phase 1 review fixes in progress (`p01-t21`–`p01-t26`)
 
 ## Plan Summary
 
 | Phase | Tasks | Focus |
 |-------|-------|-------|
-| p01 | 20 | Foundation — scaffold, types, logger, commander, adapters, manifest, scanner, config |
+| p01 | 26 | Foundation — scaffold, types, logger, commander, adapters, manifest, scanner, config, review fixes |
 | p02 | 5 | Sync Engine — plan types, compute plan, execute plan, markers, integration tests |
 | p03 | 4 | Drift Detection and Output — drift detector, stray detector, output formatters |
 | p04 | 8 | Commands — status, sync, init, providers, doctor, registration, integration tests |
@@ -62,4 +61,4 @@ None
 
 ## Next Milestone
 
-HiL checkpoint: approve continuation to Phase 2 (`p02-t01`).
+Complete Phase 1 review-fix tasks and run re-review for `p01` scope.

@@ -836,6 +836,195 @@ git commit -m "chore(p01-t20): phase 1 verification — all foundation tests pas
 
 ---
 
+### Task p01-t21: (review) Prevent duplicate test execution from dist artifacts
+
+**Files:**
+- Modify: `packages/cli/vitest.config.ts`
+- Modify: `packages/cli/tsconfig.json`
+
+**Step 1: Understand the issue**
+
+Review finding: test suites currently run from both `src/` and `dist/`, causing duplicate execution and noisy verification.
+Location: `packages/cli/vitest.config.ts`, `packages/cli/tsconfig.json`
+
+**Step 2: Implement fix**
+
+- Add explicit Vitest include patterns (`src/**/*.test.ts`) so test discovery ignores compiled `dist/` tests
+- Optionally exclude test files from TypeScript build output if needed for cleaner `dist/` (`src/**/*.test.ts`)
+- Keep bootstrap behavior with `passWithNoTests: true`
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test`
+Expected: tests execute once per source suite (no duplicate `dist/` runs)
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/vitest.config.ts packages/cli/tsconfig.json
+git commit -m "fix(p01-t21): prevent duplicate vitest execution from dist artifacts"
+```
+
+---
+
+### Task p01-t22: (review) Log and surface symlink fallback behavior
+
+**Files:**
+- Modify: `packages/cli/src/fs/io.ts`
+- Modify: `packages/cli/src/fs/io.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `createSymlink` silently falls back to copy mode, violating the design expectation for explicit fallback diagnostics.
+Location: `packages/cli/src/fs/io.ts`
+
+**Step 2: Implement fix**
+
+- Update `createSymlink` to expose fallback behavior (e.g., return strategy and/or callback hook on fallback error)
+- Ensure callers can log when copy fallback is used
+- Extend tests to validate fallback signaling behavior
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/fs/io.test.ts`
+Expected: fallback path remains functional and now emits fallback signal/metadata
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/fs/io.ts packages/cli/src/fs/io.test.ts
+git commit -m "fix(p01-t22): surface symlink fallback diagnostics"
+```
+
+---
+
+### Task p01-t23: (review) Consolidate Scope type to shared source
+
+**Files:**
+- Modify: `packages/cli/src/app/command-context.ts`
+- Modify: `packages/cli/src/app/command-context.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `Scope` is defined in multiple modules, creating drift risk.
+Location: `packages/cli/src/app/command-context.ts`, `packages/cli/src/shared/types.ts`
+
+**Step 2: Implement fix**
+
+- Remove local `Scope` literal type from command context module
+- Import and use shared `Scope` type from `src/shared/types.ts`
+- Confirm command-context tests still pass with shared type wiring
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/app/command-context.test.ts && pnpm --filter=@oat/cli type-check`
+Expected: tests pass and `Scope` has single source of truth
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/app/command-context.ts packages/cli/src/app/command-context.test.ts
+git commit -m "fix(p01-t23): unify Scope type usage with shared schema types"
+```
+
+---
+
+### Task p01-t24: (review) Clarify all-scope content semantics in shared types
+
+**Files:**
+- Modify: `packages/cli/src/shared/types.ts`
+- Modify: `packages/cli/src/shared/types.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `SCOPE_CONTENT_TYPES.all` duplicates project values and obscures intent for future scope unions.
+Location: `packages/cli/src/shared/types.ts`
+
+**Step 2: Implement fix**
+
+- Derive `all` semantics explicitly from scope unions (or document invariant clearly in code)
+- Keep current runtime behavior unchanged for v1 while removing ambiguity
+- Add test assertions that capture intended `all` semantics
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/shared/types.test.ts`
+Expected: tests pass and `all` semantics are explicit/documented
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/shared/types.ts packages/cli/src/shared/types.test.ts
+git commit -m "fix(p01-t24): clarify all-scope content semantics"
+```
+
+---
+
+### Task p01-t25: (review) Define all-scope behavior for adapter mappings
+
+**Files:**
+- Modify: `packages/cli/src/providers/shared/adapter.utils.ts`
+- Modify: `packages/cli/src/providers/shared/adapter.types.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `getSyncMappings(scope='all')` concatenates mappings and can produce duplicates.
+Location: `packages/cli/src/providers/shared/adapter.utils.ts`
+
+**Step 2: Implement fix**
+
+- Choose and enforce one behavior for `'all'` scope in mapping utilities:
+  - deduplicate by mapping identity, or
+  - disallow `'all'` and force per-scope iteration
+- Document the chosen contract inline
+- Add tests for `'all'` behavior and duplicate safety
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts`
+Expected: tests validate deterministic non-duplicated `'all'` behavior
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/providers/shared/adapter.utils.ts packages/cli/src/providers/shared/adapter.types.test.ts
+git commit -m "fix(p01-t25): harden all-scope adapter mapping behavior"
+```
+
+---
+
+### Task p01-t26: (review) Correct scope-root resolution contract for all scope
+
+**Files:**
+- Modify: `packages/cli/src/fs/paths.ts`
+- Modify: `packages/cli/src/fs/paths.test.ts`
+- Modify: scope callers as needed (engine/config command flow)
+
+**Step 1: Understand the issue**
+
+Review finding: `resolveScopeRoot('all')` currently returns project cwd, which is ambiguous/incorrect for user-scope operations.
+Location: `packages/cli/src/fs/paths.ts`
+
+**Step 2: Implement fix**
+
+- Narrow `resolveScopeRoot` contract to concrete scopes (`project` | `user`) or return explicit multi-root structure for `'all'`
+- Update affected call sites to iterate scopes intentionally when `'all'` is requested
+- Expand tests for positive and `'all'`-related path/scope behavior
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/fs/paths.test.ts && pnpm --filter=@oat/cli type-check`
+Expected: scope root behavior is explicit, deterministic, and tested
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/fs/paths.ts packages/cli/src/fs/paths.test.ts packages/cli/src/engine/ packages/cli/src/config/
+git commit -m "fix(p01-t26): make all-scope root resolution explicit"
+```
+
+---
+
 ## Phase 2: Sync Engine — Diff, Plan, Execute
 
 **Goal:** Core sync logic — compute what needs to change, create symlinks/copies, update manifest. After this phase `computeSyncPlan` and `executeSyncPlan` are fully functional and integration-tested.
@@ -1771,7 +1960,7 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 
 | Scope | Type | Status | Date | Artifact |
 |-------|------|--------|------|----------|
-| p01 | code | pending | - | - |
+| p01 | code | fixes_added | 2026-02-13 | reviews/p01-code-review.md |
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
@@ -1792,13 +1981,13 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 
 ## Planned Scope Summary
 
-- Phase 1: 20 tasks — Foundation (scaffold, types, logger, commander, adapters, manifest, scanner, config, fs helpers)
+- Phase 1: 26 tasks — Foundation (scaffold, types, logger, commander, adapters, manifest, scanner, config, fs helpers, review fixes)
 - Phase 2: 5 tasks — Sync Engine (plan types, compute plan, execute plan, markers, integration tests)
 - Phase 3: 4 tasks — Drift Detection and Output (drift detector, stray detector, output formatters, shared prompts)
 - Phase 4: 8 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests)
 - Phase 5: 6 tasks — Git Hook, Polish, and E2E (hook, edge cases, contract tests, snapshot tests, e2e tests, final verification)
 
-**Total: 43 tasks**
+**Total: 49 tasks**
 
 ---
 
