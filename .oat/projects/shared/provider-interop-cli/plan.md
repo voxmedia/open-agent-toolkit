@@ -48,14 +48,16 @@ No test file yet — this task sets up the test runner itself.
   ```typescript
   import { defineConfig } from 'vitest/config';
   export default defineConfig({
-    test: { /* root: 'src', globals if desired */ },
+    test: { passWithNoTests: true },
   });
   ```
 
 **Step 3: Verify**
 
 Run: `cd packages/cli && pnpm test`
-Expected: vitest runs, 0 tests found, exits cleanly
+Expected: vitest runs with `--passWithNoTests`, exits cleanly (0 tests, exit code 0)
+
+> **Note:** Vitest exits non-zero when no test files are found by default. Add `passWithNoTests: true` to vitest.config.ts or use the `--passWithNoTests` flag for bootstrap validation.
 
 **Step 4: Commit**
 
@@ -214,6 +216,8 @@ describe('CliLogger', () => {
   it('json() outputs single JSON document to stdout');
   it('suppresses colors when json mode is true');
   it('debug() only outputs when verbose is true');
+  it('info/warn/success/debug are no-ops in json mode');
+  it('error() emits structured JSON to stderr in json mode');
 });
 ```
 
@@ -222,7 +226,7 @@ describe('CliLogger', () => {
 - `createLogger(options: { json: boolean; verbose: boolean }): CliLogger`
 - Uses `chalk` for coloring in human mode
 - `json()` method writes `JSON.stringify(payload, null, 2)` to stdout
-- In `--json` mode: `info`/`warn`/`error`/`success` are no-ops (only `json()` writes)
+- In `--json` mode: `info`/`warn`/`success`/`debug` are no-ops; `error()` still emits structured JSON to **stderr** (per design error contract); only `json()` writes to stdout
 - `debug()` gated by `verbose` flag
 
 **Step 3: Verify**
@@ -1296,14 +1300,20 @@ describe('createInitCommand', () => {
   it('adoption moves file to .agents/ and creates symlink back');
   it('is idempotent — re-run on initialized repo is no-op');
   it('supports --scope flag');
+  it('prompts for git hook consent in interactive mode');
+  it('installs hook when user consents');
+  it('skips hook in non-interactive mode with guidance text');
+  it('does not re-prompt for hook if already installed');
 });
 ```
 
 **Step 2: Implement (GREEN)**
 
 - `createInitCommand(): Command`
-- Action: ensure canonical dirs → scan providers for strays → interactive adoption flow → create/update manifest → report summary
-- Non-interactive: skip prompts, report strays with guidance
+- Action: ensure canonical dirs → scan providers for strays → interactive adoption flow → create/update manifest → prompt for hook consent → install hook if consented → report summary
+- Hook consent: in interactive mode, ask "Install optional pre-commit hook for drift warnings?" (default: no). If hook already installed, skip prompt.
+- Non-interactive: skip prompts (adoption + hook), report strays and hook status with guidance
+- Supports `--hook` / `--no-hook` flags to skip the interactive prompt
 
 **Step 3: Verify**
 
@@ -1534,7 +1544,10 @@ git commit -m "test(p04-t08): add CLI command integration tests"
 describe('git hook', () => {
   it('installHook creates hook file in .git/hooks/');
   it('installHook preserves existing hook content');
+  it('installHook is idempotent — does not duplicate OAT section');
   it('uninstallHook removes OAT section only');
+  it('uninstallHook is no-op when hook not installed');
+  it('isHookInstalled detects existing OAT hook section');
   it('runHookCheck returns drift warnings');
   it('runHookCheck does not block (warning only)');
 });
@@ -1542,9 +1555,12 @@ describe('git hook', () => {
 
 **Step 2: Implement (GREEN)**
 
-- `installHook(gitDir)` — appends OAT section to `.git/hooks/pre-commit`
-- `uninstallHook(gitDir)` — removes only the OAT-marked section
+- `installHook(gitDir)` — appends OAT section to `.git/hooks/pre-commit` (idempotent)
+- `uninstallHook(gitDir)` — removes only the OAT-marked section (no-op if absent)
+- `isHookInstalled(gitDir)` — returns boolean for consent-flow gating in `oat init`
 - `runHookCheck(cwd)` — runs quick drift detection, prints warning to stderr
+
+> **Integration with `oat init`:** p04-t03 calls `installHook`/`isHookInstalled` from this module. Uninstall is exposed via `oat init --no-hook` (removes existing hook if present).
 
 **Step 3: Verify**
 
@@ -1774,9 +1790,8 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 
 ---
 
-## Implementation Complete
+## Planned Scope Summary
 
-**Summary:**
 - Phase 1: 20 tasks — Foundation (scaffold, types, logger, commander, adapters, manifest, scanner, config, fs helpers)
 - Phase 2: 5 tasks — Sync Engine (plan types, compute plan, execute plan, markers, integration tests)
 - Phase 3: 4 tasks — Drift Detection and Output (drift detector, stray detector, output formatters, shared prompts)
@@ -1784,8 +1799,6 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 - Phase 5: 6 tasks — Git Hook, Polish, and E2E (hook, edge cases, contract tests, snapshot tests, e2e tests, final verification)
 
 **Total: 43 tasks**
-
-Ready for code review and merge.
 
 ---
 

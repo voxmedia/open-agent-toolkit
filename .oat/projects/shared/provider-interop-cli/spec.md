@@ -281,7 +281,7 @@ The **sync engine** is the core: it compares the canonical `.agents/` state agai
 | FR8 | Stray adoption with interactive prompts | P1 | integration: adoption flow with mock prompts | p03-t04, p04-t01, p04-t03 |
 | FR9 | Per-provider sync strategy configuration | P1 | unit: strategy resolution and persistence | p01-t18, p02-t02 |
 | FR10 | Generated views contract (markers for copy mode) | P1 | unit: marker insertion and drift warning | p02-t04 |
-| FR11 | Optional git pre-commit hook | P1 | integration: hook install + drift warning on commit | p05-t01 |
+| FR11 | Optional git pre-commit hook | P1 | integration: hook install + drift warning on commit; consent via `oat init` | p04-t03, p05-t01 |
 | FR12 | Provider introspection (list + inspect) | P1 | integration: providers list/inspect output + --json mode | p04-t04, p04-t05 |
 | NFR1 | Safety by default (dry-run, manifest-scoped deletes) | P0 | integration: verify no changes without --apply | p02-t05, p04-t02, p04-t08 |
 | NFR2 | Platform compatibility (macOS + Linux) | P0 | e2e: test suite on both platforms | p01-t19, p05-t05 |
