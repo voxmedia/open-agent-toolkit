@@ -5,7 +5,21 @@
     "rootDir": "src",
     "declaration": true,
     "declarationMap": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@commands/*": ["src/commands/*"],
+      "@providers/*": ["src/providers/*"],
+      "@engine/*": ["src/engine/*"],
+      "@manifest/*": ["src/manifest/*"],
+      "@drift/*": ["src/drift/*"],
+      "@ui/*": ["src/ui/*"],
+      "@config/*": ["src/config/*"],
+      "@shared/*": ["src/shared/*"],
+      "@fs/*": ["src/fs/*"],
+      "@errors/*": ["src/errors/*"],
+      "@app/*": ["src/app/*"],
+      "@validation/*": ["src/validation/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
