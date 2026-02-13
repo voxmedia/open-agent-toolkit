@@ -1,2 +1,1 @@
-// placeholder
-export {};
+export { CliError } from './cli-error';
