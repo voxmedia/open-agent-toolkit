@@ -1,15 +1,15 @@
 import { rm } from 'node:fs/promises';
-import { join, relative, resolve, sep } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { copyDirectory, createSymlink } from '../fs/io';
 import { computeDirectoryHash } from '../manifest/hash';
 import { addEntry, removeEntry, saveManifest } from '../manifest/manager';
 import type { Manifest, ManifestEntry } from '../manifest/manifest.types';
 import type { SyncPlan, SyncPlanEntry, SyncResult } from './engine.types';
-import { hasMarker, insertMarker } from './markers';
+import { insertMarker } from './markers';
 
 export function inferScopeRoot(canonicalPath: string): string {
   const normalizedPath = canonicalPath.replaceAll('\\', '/');
-  const marker = `${sep}.agents${sep}`;
+  const marker = '/.agents/';
   const markerIndex = normalizedPath.indexOf(marker);
   if (markerIndex === -1) {
     throw new Error(
@@ -61,9 +61,6 @@ async function applyCopyMarker(entry: SyncPlanEntry): Promise<void> {
   const markerPath = join(entry.providerPath, markerFileNameForEntry(entry));
 
   try {
-    if (await hasMarker(markerPath)) {
-      return;
-    }
     await insertMarker(markerPath, entry.canonical.canonicalPath);
   } catch (error) {
     if (
