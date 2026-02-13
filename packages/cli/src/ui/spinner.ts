@@ -1,4 +1,4 @@
-import ora, { type Ora } from 'ora';
+import ora from 'ora';
 
 export interface Spinner {
   text: string;
