@@ -99,4 +99,4 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Next Steps
 
-Ready for `/oat:spec` to create formal specification.
+Ready for `/oat:spec` to create formal specification (after HiL approval if configured).

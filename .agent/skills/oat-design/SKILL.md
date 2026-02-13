@@ -310,7 +310,32 @@ For each significant risk:
 
 **Iterate:** Make refinements based on feedback, update `oat_last_updated`.
 
-### Step 19: Mark Design Complete
+### Step 19: Human-in-the-Loop Gate (If Configured)
+
+Read `"$PROJECT_PATH/state.md"` frontmatter:
+- `oat_hil_checkpoints`
+- `oat_hil_completed`
+
+If `"design"` is in `oat_hil_checkpoints`, require explicit user approval before advancing.
+
+**Approval prompt (required):**
+- "Design artifact is ready. Approve design and unlock `/oat:plan`?"
+
+**Optional independent review path:**
+- If user wants fresh-context artifact review first, run:
+  - `/oat:request-review artifact design`
+
+**If user does not approve yet:**
+- Keep design frontmatter as:
+  - `oat_status: in_progress`
+  - `oat_ready_for: null`
+- Keep project state as in-progress for design.
+- Do **not** append `"design"` to `oat_hil_completed`.
+- Stop and report: "Design draft saved; awaiting HiL approval."
+
+If design is not configured as a HiL checkpoint, or user explicitly approves, continue to Step 20.
+
+### Step 20: Mark Design Complete
 
 Update frontmatter:
 ```yaml
@@ -322,13 +347,13 @@ oat_last_updated: {today}
 ---
 ```
 
-### Step 20: Update Project State
+### Step 21: Update Project State
 
 Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
 - `oat_current_task: null`
-- `oat_last_commit: {commit_sha_from_step_21}`
+- `oat_last_commit: {commit_sha_from_step_22}`
 - `oat_blockers: []`
 - `oat_phase: design`
 - `oat_phase_status: complete`
@@ -350,7 +375,7 @@ Design - Ready for implementation planning
 - ⧗ Awaiting implementation plan
 ```
 
-### Step 21: Commit Design
+### Step 22: Commit Design
 
 **Note:** This shows what users will do when USING oat-design.
 During implementation of OAT itself, use standard commit format.
@@ -370,7 +395,7 @@ Implementation:
 Ready for implementation planning"
 ```
 
-### Step 22: Output Summary
+### Step 23: Output Summary
 
 ```
 Design phase complete for {project-name}.

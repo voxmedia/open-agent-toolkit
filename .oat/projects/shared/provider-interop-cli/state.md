@@ -2,27 +2,28 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
-oat_hil_checkpoints: ["discovery", "spec", "design"]  # Configured: which phases require human-in-loop approval
-oat_hil_completed: []  # Progress: which HIL checkpoints have been completed
+oat_hil_checkpoints: ["discovery", "spec", "design"]
+oat_hil_completed: []
 oat_parallel_execution: false
-oat_phase: discovery  # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress  # Status: in_progress | complete
+oat_phase: discovery
+oat_phase_status: complete
 oat_generated: false
 ---
 
 # Project State: provider-interop-cli
 
-**Status:** Discovery
+**Status:** Discovery Complete — Ready for Spec
 **Started:** 2026-02-02
-**Last Updated:** 2026-02-02
+**Last Updated:** 2026-02-13
 
 ## Current Phase
 
-Discovery - Gathering requirements and understanding the problem space
+Discovery - Complete. All questions resolved, reviewed by Codex, findings addressed.
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
+- **Review:** `reviews/discovery-review.md` (findings addressed)
 - **Spec:** Not yet created
 - **Design:** Not yet created
 - **Plan:** Not yet created
@@ -31,7 +32,12 @@ Discovery - Gathering requirements and understanding the problem space
 ## Progress
 
 - ✓ Discovery started
-- ⧗ Awaiting user input
+- ✓ 9 clarifying questions resolved
+- ✓ 12 key decisions documented
+- ✓ All open questions resolved
+- ✓ Codex review received and findings addressed
+- ✓ Codex path assumptions validated (`.agents/skills/` confirmed native)
+- ✓ User-level canonical updated to `~/.agents/` (Codex reads natively)
 
 ## Blockers
 
@@ -39,4 +45,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and move to specification phase
+HiL checkpoint: discovery approval, then `/oat:spec` to create formal specification

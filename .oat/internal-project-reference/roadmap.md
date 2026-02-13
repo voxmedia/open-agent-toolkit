@@ -197,19 +197,19 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
   - Codex CLI: `.codex/agents` (confirm)
   - Cursor: third-party agent loading + precedence (confirm)
 - P0: CLI command surface (interop foundation)
-  - `oat init` (bootstrap `.agent/`, `.oat/`, `AGENTS.md`)
+  - `oat init` (bootstrap `.agents/`, `.oat/`, `AGENTS.md`)
   - `oat status` (provider detection + drift/stray summary + capability matrix)
   - `oat sync` (diff-first, dry-run by default; apply only with explicit flag)
   - `oat doctor` (environment diagnostics + actionable fix steps)
 - P0: Provider adapters (config-driven)
-  - Canonical source is `.agent/**`; provider dirs are generated views (symlink/copy)
+  - Canonical source is `.agents/**`; provider dirs are generated views (symlink/copy)
   - Strategies: `auto|symlink|copy` with persisted per-provider decisions
 - P0: Sync manifest (drift safety)
   - `.oat/sync/manifest.json` records managed mappings + hashes (copy mode)
   - Destructive operations (deletes/prune) apply only to manifest-managed files
 - P1: Template sourcing + generated views contract
   - Explicit “canonical vs generated” markers (avoid editing generated views)
-  - Stray detection + optional adoption flow (provider-local -> `.agent/**`)
+  - Stray detection + optional adoption flow (provider-local -> `.agents/**`)
 - P1: Optional git hooks (opt-in)
   - pre-commit checks / post-checkout assist (never surprising destructive behavior)
 

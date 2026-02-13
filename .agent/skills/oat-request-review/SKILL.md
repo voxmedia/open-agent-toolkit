@@ -59,6 +59,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 /oat:request-review code p02-t03      # Code review for task
 /oat:request-review code final        # Final code review
 /oat:request-review code base_sha=abc # Review since specific SHA
+/oat:request-review artifact discovery # Artifact review of discovery.md
 /oat:request-review artifact spec     # Artifact review of spec.md
 /oat:request-review artifact design   # Artifact review of design.md
 ```
@@ -103,7 +104,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 - Ask: "What type of review? (code / artifact)"
 - Ask: "What scope?"
   - For code: `pNN-tNN` task / `pNN` phase / `final` / `base_sha=SHA` / `SHA..HEAD` range
-  - For artifact: `spec` / `design` (and optionally `plan`)
+  - For artifact: `discovery` / `spec` / `design` (and optionally `plan`)
 
 ### Step 2: Validate Artifacts Exist
 
@@ -117,7 +118,7 @@ ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/plan.md" "$P
 - plan.md (tasks being reviewed)
 
 **Required for artifact review:**
-- The artifact being reviewed (spec.md / design.md / plan.md)
+- The artifact being reviewed (discovery.md / spec.md / design.md / plan.md)
 - discovery.md (required when reviewing spec.md)
 - spec.md (required when reviewing design.md or plan.md)
 - design.md (required when reviewing plan.md)
@@ -127,7 +128,7 @@ ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/plan.md" "$P
 ### Step 3: Determine Scope and Commits
 
 If review type is `artifact`:
-- Interpret the scope token as the artifact name (`spec`, `design`, or `plan`)
+- Interpret the scope token as the artifact name (`discovery`, `spec`, `design`, or `plan`)
 - Set `SCOPE_RANGE=""` (no git range required)
 - Proceed to Step 5 (metadata); Step 4 uses artifact files, not git diff
 
@@ -178,6 +179,7 @@ If review type is `artifact`, the "files in scope" are the artifact(s):
 
 ```bash
 case "$SCOPE_TOKEN" in
+  discovery) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/discovery.md") ;;
   spec) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/discovery.md") ;;
   design) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/design.md" "$PROJECT_PATH/spec.md") ;;
   plan) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md") ;;

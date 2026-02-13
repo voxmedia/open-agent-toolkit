@@ -148,13 +148,22 @@ Read `{project}/state.md` frontmatter:
    Phase: {oat_phase} ({oat_phase_status})
    HiL Gates: {oat_hil_checkpoints}
    Completed: {oat_hil_completed as checkmarks}
+   HiL Pending: {yes/no for current phase}
    Blockers: {oat_blockers or "None"}
    Next: {recommended_skill}
 ```
 
 ### Step 5: Determine Next Skill
 
-Based on project state, recommend next action:
+Based on project state, recommend next action.
+
+**HiL override (apply before phase routing):**
+- If current `oat_phase` is listed in `oat_hil_checkpoints` **and** not listed in `oat_hil_completed`, the phase's HiL gate is still pending.
+- In that case, do **not** advance to the next phase even if `oat_phase_status: complete`.
+- Recommend continuing the current phase skill to capture explicit approval:
+  - discovery gate pending -> `/oat:discovery`
+  - spec gate pending -> `/oat:spec`
+  - design gate pending -> `/oat:design`
 
 | oat_phase | oat_phase_status | Next Skill |
 |-----------|------------------|------------|

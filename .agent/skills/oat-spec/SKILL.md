@@ -321,7 +321,32 @@ Before marking complete, run through this quality checklist:
 **If all checks pass:**
 - Proceed to Step 17
 
-### Step 17: Mark Specification Complete
+### Step 17: Human-in-the-Loop Gate (If Configured)
+
+Read `"$PROJECT_PATH/state.md"` frontmatter:
+- `oat_hil_checkpoints`
+- `oat_hil_completed`
+
+If `"spec"` is in `oat_hil_checkpoints`, require explicit user approval before advancing.
+
+**Approval prompt (required):**
+- "Specification artifact is ready. Approve spec and unlock `/oat:design`?"
+
+**Optional independent review path:**
+- If user wants fresh-context artifact review first, run:
+  - `/oat:request-review artifact spec`
+
+**If user does not approve yet:**
+- Keep spec frontmatter as:
+  - `oat_status: in_progress`
+  - `oat_ready_for: null`
+- Keep project state as in-progress for spec.
+- Do **not** append `"spec"` to `oat_hil_completed`.
+- Stop and report: "Specification draft saved; awaiting HiL approval."
+
+If spec is not configured as a HiL checkpoint, or user explicitly approves, continue to Step 18.
+
+### Step 18: Mark Specification Complete
 
 Update frontmatter:
 ```yaml
@@ -333,13 +358,13 @@ oat_last_updated: {today}
 ---
 ```
 
-### Step 18: Update Project State
+### Step 19: Update Project State
 
 Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
 - `oat_current_task: null`
-- `oat_last_commit: {commit_sha_from_step_19}`
+- `oat_last_commit: {commit_sha_from_step_20}`
 - `oat_blockers: []`
 - `oat_phase: spec`
 - `oat_phase_status: complete`
@@ -360,7 +385,7 @@ Specification - Ready for design phase
 - ⧗ Awaiting design phase
 ```
 
-### Step 19: Commit Specification
+### Step 20: Commit Specification
 
 **Note:** This shows what users will do when USING oat-spec.
 During implementation of OAT itself, use standard commit format.
@@ -376,7 +401,7 @@ Requirements:
 Ready for design phase"
 ```
 
-### Step 20: Output Summary
+### Step 21: Output Summary
 
 ```
 Specification phase complete for {project-name}.
