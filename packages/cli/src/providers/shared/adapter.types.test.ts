@@ -91,4 +91,38 @@ describe('ProviderAdapter types', () => {
     expect(mappings).toHaveLength(1);
     expect(mappings[0]?.contentType).toBe('agent');
   });
+
+  it('getSyncMappings deduplicates mappings for all scope', () => {
+    const adapter: ProviderAdapter = {
+      name: 'claude',
+      displayName: 'Claude Code',
+      defaultStrategy: 'symlink',
+      projectMappings: [
+        {
+          contentType: 'skill',
+          canonicalDir: '.agents/skills',
+          providerDir: '.claude/skills',
+          nativeRead: false,
+        },
+      ],
+      userMappings: [
+        {
+          contentType: 'skill',
+          canonicalDir: '.agents/skills',
+          providerDir: '.claude/skills',
+          nativeRead: false,
+        },
+      ],
+      detect: async () => true,
+    };
+
+    const mappings = getSyncMappings(adapter, 'all');
+
+    expect(mappings).toHaveLength(1);
+    expect(mappings[0]).toMatchObject({
+      contentType: 'skill',
+      canonicalDir: '.agents/skills',
+      providerDir: '.claude/skills',
+    });
+  });
 });

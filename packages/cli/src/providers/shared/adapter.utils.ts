@@ -28,7 +28,17 @@ export function getSyncMappings(
         ? adapter.userMappings
         : [...adapter.projectMappings, ...adapter.userMappings];
 
-  return scopeMappings.filter((mapping) => !mapping.nativeRead);
+  const syncMappings = scopeMappings.filter((mapping) => !mapping.nativeRead);
+  const seen = new Set<string>();
+
+  return syncMappings.filter((mapping) => {
+    const key = `${mapping.contentType}::${mapping.canonicalDir}::${mapping.providerDir}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 }
 
 export const getAdapterMappings = getSyncMappings;
