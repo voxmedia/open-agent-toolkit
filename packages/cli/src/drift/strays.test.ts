@@ -43,7 +43,7 @@ describe('detectStrays', () => {
     expect(reports[0]).toMatchObject({
       canonical: null,
       provider: 'claude',
-      providerPath: join(providerDir, 'stray-skill'),
+      providerPath: '.claude/skills/stray-skill',
       state: { status: 'stray' },
     });
   });
@@ -186,6 +186,7 @@ describe('detectStrays', () => {
     expect(reports[0]).toMatchObject({
       canonical: null,
       provider: 'claude',
+      providerPath: '.claude/snippets/canonical-skill',
       state: { status: 'stray' },
     });
   });

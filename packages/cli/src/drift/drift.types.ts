@@ -7,6 +7,6 @@ export type DriftState =
 export interface DriftReport {
   canonical: string | null;
   provider: string;
-  providerPath: string;
+  providerPath: string; // scope-relative path
   state: DriftState;
 }

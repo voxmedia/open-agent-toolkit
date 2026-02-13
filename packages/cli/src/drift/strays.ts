@@ -115,7 +115,7 @@ export async function detectStrays(
     reports.push({
       canonical: null,
       provider,
-      providerPath,
+      providerPath: providerPathRelative,
       state: { status: 'stray' },
     });
   }
