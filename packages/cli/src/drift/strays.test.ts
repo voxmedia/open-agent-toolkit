@@ -32,7 +32,12 @@ describe('detectStrays', () => {
     const providerDir = join(root, '.claude', 'skills');
     await seedProviderEntry(providerDir, 'stray-skill');
 
-    const reports = await detectStrays(providerDir, createEmptyManifest(), []);
+    const reports = await detectStrays(
+      'claude',
+      providerDir,
+      createEmptyManifest(),
+      [],
+    );
 
     expect(reports).toHaveLength(1);
     expect(reports[0]).toMatchObject({
@@ -64,7 +69,7 @@ describe('detectStrays', () => {
       ],
     };
 
-    const reports = await detectStrays(providerDir, manifest, []);
+    const reports = await detectStrays('claude', providerDir, manifest, []);
 
     expect(reports).toEqual([]);
   });
@@ -91,7 +96,12 @@ describe('detectStrays', () => {
       ],
     };
 
-    const reports = await detectStrays(providerDirRelative, manifest, []);
+    const reports = await detectStrays(
+      'claude',
+      providerDirRelative,
+      manifest,
+      [],
+    );
 
     expect(reports).toEqual([]);
   });
@@ -111,6 +121,7 @@ describe('detectStrays', () => {
     ];
 
     const reports = await detectStrays(
+      'claude',
       providerDir,
       createEmptyManifest(),
       canonicalEntries,
@@ -125,7 +136,12 @@ describe('detectStrays', () => {
     const providerDir = join(root, '.claude', 'skills');
     await mkdir(providerDir, { recursive: true });
 
-    const reports = await detectStrays(providerDir, createEmptyManifest(), []);
+    const reports = await detectStrays(
+      'claude',
+      providerDir,
+      createEmptyManifest(),
+      [],
+    );
 
     expect(reports).toEqual([]);
   });
@@ -136,6 +152,7 @@ describe('detectStrays', () => {
     const missingProviderDir = join(root, '.claude', 'skills');
 
     const reports = await detectStrays(
+      'claude',
       missingProviderDir,
       createEmptyManifest(),
       [],

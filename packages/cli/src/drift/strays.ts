@@ -9,18 +9,6 @@ function normalizePath(path: string): string {
   return normalize(path).replaceAll('\\', '/');
 }
 
-function inferProvider(providerDir: string): string {
-  const normalized = normalizePath(providerDir);
-  const marker = normalized
-    .split('/')
-    .reverse()
-    .find((segment) => segment.startsWith('.'));
-  if (!marker) {
-    return 'unknown';
-  }
-  return marker.replace(/^\./, '');
-}
-
 function inferContentType(providerDir: string): CanonicalEntry['type'] | null {
   const dirName = basename(normalizePath(providerDir));
   if (dirName === 'skills') {
@@ -83,11 +71,11 @@ function isCanonicalEntry(
 }
 
 export async function detectStrays(
+  provider: string,
   providerDir: string,
   manifest: Manifest,
   canonicalEntries: CanonicalEntry[],
 ): Promise<DriftReport[]> {
-  const provider = inferProvider(providerDir);
   const contentType = inferContentType(providerDir);
   const scopeRoot = inferScopeRoot(providerDir);
   const reports: DriftReport[] = [];
