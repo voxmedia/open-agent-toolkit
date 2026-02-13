@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: p03-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -18,17 +18,17 @@ oat_generated: false
 |-------|--------|-------|-----------|
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
-| Phase 3 | in_progress | 9 | 4/9 |
+| Phase 3 | complete | 9 | 9/9 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 46/65 tasks completed
+**Total:** 51/65 tasks completed
 
 ---
 
 ## Phase 1: Foundation — Scaffold, Types, Config
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-02-13
 
 ### Phase Summary (fill when phase is complete)
@@ -1074,7 +1074,7 @@ oat_generated: false
 **Notes / Decisions:**
 - Drift detector uses `lstat` for the first existence gate so broken symlinks classify as `drifted:broken` instead of `missing`.
 - Stray detection now uses UTF-8 dirent handling (`Dirent[]`) to satisfy Node type-checking across platforms.
-- Phase reopened after p03 code review; follow-up review-fix tasks (`p03-t05` to `p03-t09`) are queued.
+- Phase reopened after p03 code review; follow-up review-fix tasks (`p03-t05` to `p03-t09`) are complete and awaiting re-review.
 
 ### Task p03-t01: Implement drift detector
 
@@ -1165,6 +1165,112 @@ oat_generated: false
 **Notes / Decisions:**
 - Prompt wrappers use narrow context (`interactive`) so commands can adopt them without coupling to full command context objects.
 
+### Task p03-t05: (review) Fix ANSI-aware status table alignment
+
+**Status:** completed
+**Commit:** 9ffc8f5
+
+**Outcome (required when completed):**
+- Fixed status table alignment logic to account for ANSI escape sequences in colorized output.
+- Added visual-width-aware padding helpers to preserve column alignment in TTY mode.
+- Added regression coverage that forces chalk color output and validates aligned state columns.
+
+**Files changed:**
+- `packages/cli/src/ui/output.ts` - added ANSI stripping + visual padding helpers and updated state-column width calculation.
+- `packages/cli/src/ui/output.test.ts` - added color-enabled alignment regression test.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/ui/output && pnpm --filter=@oat/cli lint`
+- Result: pass (6 tests)
+
+**Notes / Decisions:**
+- Implemented ANSI stripping without control-character regex literals to stay compatible with Biome lint rules.
+
+### Task p03-t06: (review) Normalize manifest path comparison in stray detection
+
+**Status:** completed
+**Commit:** 89e914b
+
+**Outcome (required when completed):**
+- Removed suffix-based manifest path matching from stray detection.
+- Normalized comparisons to scope-relative paths for deterministic matching behavior.
+- Added regression coverage for manifest matching when provider directories are passed as relative paths.
+
+**Files changed:**
+- `packages/cli/src/drift/strays.ts` - added scope-root inference and relative-path normalization helpers.
+- `packages/cli/src/drift/strays.test.ts` - added relative provider-dir manifest tracking test.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/drift/strays && pnpm --filter=@oat/cli type-check`
+- Result: pass (6 tests)
+
+**Notes / Decisions:**
+- Kept API shape unchanged in this task; provider-identity API cleanup was deferred to p03-t07.
+
+### Task p03-t07: (review) Replace provider-name path heuristics in stray reports
+
+**Status:** completed
+**Commit:** 97ccc1e
+
+**Outcome (required when completed):**
+- Removed brittle provider-name inference from path segments in `detectStrays`.
+- Updated stray detector contract to accept provider identity explicitly from caller context.
+- Updated tests to pass provider identity directly.
+
+**Files changed:**
+- `packages/cli/src/drift/strays.ts` - removed `inferProvider` and updated `detectStrays` signature.
+- `packages/cli/src/drift/strays.test.ts` - updated all call sites to pass explicit provider name.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/drift/strays src/drift/detector`
+- Result: pass (13 tests)
+
+**Notes / Decisions:**
+- This reduces environment/path-layout coupling and prepares stray detection for adapter-driven command wiring.
+
+### Task p03-t08: (review) Make stray content-type filtering explicit
+
+**Status:** completed
+**Commit:** f16f72b
+
+**Outcome (required when completed):**
+- Removed name-only canonical matching fallback when content type cannot be inferred.
+- Ensured unknown mapping directories are treated as unmanaged/stray rather than silently suppressed.
+- Added test coverage for unknown content-directory behavior.
+
+**Files changed:**
+- `packages/cli/src/drift/strays.ts` - tightened `isCanonicalEntry` semantics for unknown content types.
+- `packages/cli/src/drift/strays.test.ts` - added unknown-directory stray regression test.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/drift/strays`
+- Result: pass (7 tests)
+
+**Notes / Decisions:**
+- Explicit unknown-type behavior avoids false negatives as mapping sets evolve.
+
+### Task p03-t09: (review) Standardize stray report path representation
+
+**Status:** completed
+**Commit:** a803cdc
+
+**Outcome (required when completed):**
+- Standardized `DriftReport.providerPath` semantics so stray reports now emit scope-relative paths.
+- Aligned stray path representation with managed drift reports and manifest conventions.
+- Updated tests to assert scope-relative stray paths.
+
+**Files changed:**
+- `packages/cli/src/drift/strays.ts` - stray reports now emit `providerPathRelative`.
+- `packages/cli/src/drift/drift.types.ts` - documented `providerPath` as scope-relative.
+- `packages/cli/src/drift/strays.test.ts` - updated expected path assertions.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/drift src/ui/output && pnpm --filter=@oat/cli type-check`
+- Result: pass (20 tests)
+
+**Notes / Decisions:**
+- Chose scope-relative representation to match manifest and keep output consistent across drift states.
+
 ---
 
 ## Implementation Log
@@ -1219,6 +1325,11 @@ oat_generated: false
 - [x] p03-t02: Implement stray detector - a0d721d, 7035738
 - [x] p03-t03: Implement output formatters - 22c0837
 - [x] p03-t04: Implement shared prompt primitives - cb1bee3
+- [x] p03-t05: (review) Fix ANSI-aware status table alignment - 9ffc8f5
+- [x] p03-t06: (review) Normalize manifest path comparison in stray detection - 89e914b
+- [x] p03-t07: (review) Replace provider-name path heuristics in stray reports - 97ccc1e
+- [x] p03-t08: (review) Make stray content-type filtering explicit - f16f72b
+- [x] p03-t09: (review) Standardize stray report path representation - a803cdc
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1260,6 +1371,11 @@ oat_generated: false
 - Implemented phase 3 drift primitives: managed-entry drift classification and provider stray detection.
 - Added output formatters for status/sync/doctor/provider-detail command rendering.
 - Added shared prompt primitives with non-interactive safeguards for upcoming command flows.
+- Applied first p03 review fix: status table alignment now uses ANSI-aware visual padding in TTY mode.
+- Applied second p03 review fix: stray detection now compares normalized scope-relative manifest paths.
+- Applied third p03 review fix: stray detector now receives provider identity explicitly from caller context.
+- Applied fourth p03 review fix: canonical filtering no longer falls back to name-only matching for unknown content types.
+- Applied fifth p03 review fix: stray drift reports now use scope-relative `providerPath` semantics.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1324,7 +1440,7 @@ oat_generated: false
 - Medium: 3
 - Minor: 5
 
-**New tasks added:** `p03-t05`, `p03-t06`, `p03-t07`, `p03-t08`, `p03-t09`
+**New tasks added:** `p03-t05`, `p03-t06`, `p03-t07`, `p03-t08`, `p03-t09` (all completed)
 
 **Deferred Findings (Minor):**
 - `m1` Missing test for `confirmAction` non-interactive behavior
@@ -1333,7 +1449,7 @@ oat_generated: false
 - `m4` Remove optional explicit `Dirent[]` annotation if inference remains stable
 - `m5` Add operation-level color semantics in `formatSyncPlan`
 
-**Next:** Execute p03 review-fix tasks via `/oat:implement` starting at `p03-t05`.
+**Next:** Request p03 re-review via `/oat:request-review code p03`.
 
 ---
 
@@ -1349,7 +1465,7 @@ oat_generated: false
 |-------|-----------|--------|--------|----------|
 | 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (twenty-two times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/`; `pnpm --filter=@oat/cli test src/manifest/hash`; `pnpm --filter=@oat/cli test src/engine/scanner`; `pnpm --filter=@oat/cli test src/config/`; `pnpm --filter=@oat/cli test src/fs/`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test 2>&1 | rg "dist/" -n || true`; `pnpm --filter=@oat/cli test src/fs/io.test.ts`; `pnpm --filter=@oat/cli test src/app/command-context.test.ts`; `pnpm --filter=@oat/cli test src/shared/types.test.ts`; `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts`; `pnpm --filter=@oat/cli test src/fs/paths.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check` | 26 | 0 | n/a (bootstrap) |
 | 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 11 | 0 | n/a (phase boundary + review fixes) |
-| 3 | `pnpm --filter=@oat/cli test src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/ui/output`; `pnpm --filter=@oat/cli test src/shared/prompts`; `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 4 | 0 | n/a (phase boundary) |
+| 3 | `pnpm --filter=@oat/cli test src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/ui/output`; `pnpm --filter=@oat/cli test src/shared/prompts`; `pnpm --filter=@oat/cli test src/ui/output && pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/drift/strays && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift/strays src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/drift src/ui/output && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint` | 9 | 0 | n/a (phase boundary + review fixes) |
 | 4 | - | - | - | - |
 | 5 | - | - | - | - |
 
