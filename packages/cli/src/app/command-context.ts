@@ -1,9 +1,8 @@
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import { isInteractive } from '../config/runtime';
+import type { Scope } from '../shared/types';
 import { type CliLogger, createLogger } from '../ui/logger';
-
-export type Scope = 'project' | 'user' | 'all';
 
 export interface GlobalOptions {
   scope?: Scope;
