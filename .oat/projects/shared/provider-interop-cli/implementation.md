@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: null
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -17,12 +17,12 @@ oat_generated: false
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
 | Phase 1 | complete | 31 | 31/31 |
-| Phase 2 | pending | 5 | 0/5 |
+| Phase 2 | complete | 5 | 5/5 |
 | Phase 3 | pending | 4 | 0/4 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 31/54 tasks completed
+**Total:** 36/54 tasks completed
 
 ---
 
@@ -779,6 +779,145 @@ oat_generated: false
 
 ---
 
+## Phase 2: Sync Engine — Diff, Plan, Execute
+
+**Status:** complete
+**Started:** 2026-02-13
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+- Added core sync-engine contracts (`SyncPlan`, `SyncPlanEntry`, `SyncResult`) and operation taxonomy.
+- Implemented `computeSyncPlan` with native-read filtering, strategy resolution, drift-aware operation classification, and manifest-driven removals.
+- Implemented `executeSyncPlan` with partial-failure handling, manifest updates, and support for symlink/copy operation paths.
+- Added generated-view marker helpers for copy-mode SKILL files.
+- Added integration coverage for full round-trip sync behavior, idempotency, dry-run semantics, removal, copy-mode hashes, and user-scope content filtering.
+
+**Key files touched:**
+- `packages/cli/src/engine/engine.types.ts`
+- `packages/cli/src/engine/compute-plan.ts`
+- `packages/cli/src/engine/execute-plan.ts`
+- `packages/cli/src/engine/markers.ts`
+- `packages/cli/src/engine/engine.integration.test.ts`
+- `packages/cli/src/engine/index.ts`
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts && pnpm --filter=@oat/cli type-check`
+- Result: pass (29 engine tests)
+
+**Notes / Decisions:**
+- `computeSyncPlan` accepts an optional `scopeRoot` override to keep removal planning deterministic when canonical lists are empty.
+- `executeSyncPlan` intentionally continues after per-entry failures and persists partial successful manifest updates.
+
+### Task p02-t01: Implement sync plan types
+
+**Status:** completed
+**Commit:** 5a7fccc
+
+**Outcome (required when completed):**
+- Added sync engine shared types for scope, operations, plan entries, and execution results.
+- Added runtime operation constant (`SYNC_OPERATION_TYPES`) and type-level coverage tests.
+
+**Files changed:**
+- `packages/cli/src/engine/engine.types.ts` - introduced phase-2 sync contracts.
+- `packages/cli/src/engine/engine.types.test.ts` - added contract tests.
+- `packages/cli/src/engine/index.ts` - exported new engine types/constants.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`
+- Result: pass (4 tests)
+
+**Notes / Decisions:**
+- Kept operation taxonomy aligned with design (`create_*`, `update_*`, `remove`, `skip`) to simplify command output in later phases.
+
+### Task p02-t02: Implement computeSyncPlan
+
+**Status:** completed
+**Commit:** c67ca9f
+
+**Outcome (required when completed):**
+- Implemented drift-aware planning for create/update/skip operations across adapters and scope mappings.
+- Implemented manifest-driven removal planning for canonical content deletions.
+- Implemented strategy resolution with provider/global defaults and native-read mapping exclusion.
+
+**Files changed:**
+- `packages/cli/src/engine/compute-plan.ts` - implemented sync planning logic.
+- `packages/cli/src/engine/compute-plan.test.ts` - added behavior tests for create/skip/update/remove/strategy/scope.
+- `packages/cli/src/engine/index.ts` - exported `computeSyncPlan`.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`
+- Result: pass (7 tests)
+
+**Notes / Decisions:**
+- Preserved pure-plan behavior (no filesystem writes) in `computeSyncPlan`; side effects remain in `executeSyncPlan`.
+
+### Task p02-t03: Implement executeSyncPlan
+
+**Status:** completed
+**Commit:** 76585c0, be5bad5
+
+**Outcome (required when completed):**
+- Implemented sync plan execution for symlink/copy/update/remove/skip operations.
+- Implemented per-entry error isolation to continue execution and report partial failures.
+- Implemented manifest reconciliation and atomic save at the end of execution.
+
+**Files changed:**
+- `packages/cli/src/engine/execute-plan.ts` - implemented execution engine and manifest updates.
+- `packages/cli/src/engine/execute-plan.test.ts` - added operation-path and failure-handling tests.
+- `packages/cli/src/engine/index.ts` - exported `executeSyncPlan`.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`
+- Result: pass (9 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass (after manifest-type import fix)
+
+**Notes / Decisions:**
+- Added a follow-up type-only import fix (`be5bad5`) discovered during phase verification.
+
+### Task p02-t04: Implement generated view markers for copy mode
+
+**Status:** completed
+**Commit:** e0540fd
+
+**Outcome (required when completed):**
+- Added marker insertion utility for generated copy views.
+- Added marker detection utility to avoid duplicating marker lines.
+
+**Files changed:**
+- `packages/cli/src/engine/markers.ts` - implemented marker primitives.
+- `packages/cli/src/engine/markers.test.ts` - added coverage for marker insertion and detection.
+- `packages/cli/src/engine/index.ts` - exported marker APIs.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/markers.test.ts`
+- Result: pass (3 tests)
+
+**Notes / Decisions:**
+- Marker prefix is stable and intentionally plain-text for easy manual inspection.
+
+### Task p02-t05: Integration test — sync round-trip
+
+**Status:** completed
+**Commit:** bfc39b8
+
+**Outcome (required when completed):**
+- Added sync engine integration tests covering round-trip behavior and key safety invariants.
+- Validated idempotency, dry-run non-mutation, removal cleanup, copy-mode hash persistence, and user-scope filtering.
+
+**Files changed:**
+- `packages/cli/src/engine/engine.integration.test.ts` - added end-to-end phase-2 test coverage.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`
+- Result: pass (6 tests)
+
+**Notes / Decisions:**
+- Kept integration coverage filesystem-real to validate symlink/copy semantics directly.
+
+---
+
 ## Implementation Log
 
 ### 2026-02-13
@@ -816,6 +955,11 @@ oat_generated: false
 - [x] p01-t29: (review) Remove ambiguous adapter mapping alias - af21b85
 - [x] p01-t30: (review) Remove unnecessary sync strategy cast - 2734670
 - [x] p01-t31: (review) Improve manifest validation diagnostics - cfee3e3
+- [x] p02-t01: Implement sync plan types - 5a7fccc
+- [x] p02-t02: Implement computeSyncPlan - c67ca9f
+- [x] p02-t03: Implement executeSyncPlan - 76585c0, be5bad5
+- [x] p02-t04: Implement generated view markers for copy mode - e0540fd
+- [x] p02-t05: Integration test — sync round-trip - bfc39b8
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -846,6 +990,8 @@ oat_generated: false
 - Applied ninth p01 review fix: adapter mapping API naming is now canonicalized to `getSyncMappings`.
 - Applied tenth p01 review fix: sync config normalization no longer uses unnecessary casting.
 - Applied eleventh p01 review fix: manifest validation errors now include field-level issue details.
+- Implemented Phase 2 sync engine primitives: planning, execution, and copy-marker utilities.
+- Added phase-2 integration coverage for round-trip sync behavior and scope/strategy invariants.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -871,11 +1017,7 @@ oat_generated: false
 **Deferred Findings (Minor):**
 - None (all eight minor findings addressed across `p01-t26` to `p01-t31`)
 
-**Next:** Run `/oat:request-review code p01` for re-review.
-
-After re-review:
-- If no Critical/Important findings: mark review row `passed`
-- If findings remain: process via `/oat:receive-review` and continue fix loop
+**Next:** p01 re-review passed (`reviews/p01-re-review-2026-02-13.md`). Continue implementation with `p03-t01` after HiL approval for Phase 2 boundary.
 
 ---
 
@@ -890,7 +1032,7 @@ After re-review:
 | Phase | Tests Run | Passed | Failed | Coverage |
 |-------|-----------|--------|--------|----------|
 | 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (twenty-two times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/`; `pnpm --filter=@oat/cli test src/manifest/hash`; `pnpm --filter=@oat/cli test src/engine/scanner`; `pnpm --filter=@oat/cli test src/config/`; `pnpm --filter=@oat/cli test src/fs/`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test 2>&1 | rg "dist/" -n || true`; `pnpm --filter=@oat/cli test src/fs/io.test.ts`; `pnpm --filter=@oat/cli test src/app/command-context.test.ts`; `pnpm --filter=@oat/cli test src/shared/types.test.ts`; `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts`; `pnpm --filter=@oat/cli test src/fs/paths.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check` | 26 | 0 | n/a (bootstrap) |
-| 2 | - | - | - | - |
+| 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check` | 5 | 0 | n/a (phase boundary) |
 | 3 | - | - | - | - |
 | 4 | - | - | - | - |
 | 5 | - | - | - | - |
