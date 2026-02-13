@@ -21,7 +21,7 @@ export async function resolveProjectRoot(cwd: string): Promise<string> {
     }
   }
 
-  throw new CliError(`Unable to resolve project root from ${cwd}`);
+  throw new CliError(`Unable to resolve project root from ${cwd}`, 2);
 }
 
 export function resolveScopeRoot(

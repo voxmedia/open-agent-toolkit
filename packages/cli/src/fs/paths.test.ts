@@ -33,6 +33,15 @@ describe('fs/paths', () => {
     expect(projectRoot).toBe(root);
   });
 
+  it('resolveProjectRoot throws system-error exit code when no .git is found', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-paths-'));
+    tempDirs.push(root);
+
+    await expect(resolveProjectRoot(root)).rejects.toMatchObject({
+      exitCode: 2,
+    });
+  });
+
   it('resolveScopeRoot returns cwd for project, homedir for user', () => {
     const cwd = '/tmp/project-root';
     const home = '/tmp/home-root';
