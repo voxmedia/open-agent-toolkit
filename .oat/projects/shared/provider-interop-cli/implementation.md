@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -18,17 +18,17 @@ oat_generated: false
 |-------|--------|-------|-----------|
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
-| Phase 3 | complete | 4 | 4/4 |
+| Phase 3 | in_progress | 9 | 4/9 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 46/60 tasks completed
+**Total:** 46/65 tasks completed
 
 ---
 
 ## Phase 1: Foundation — Scaffold, Types, Config
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-02-13
 
 ### Phase Summary (fill when phase is complete)
@@ -1074,6 +1074,7 @@ oat_generated: false
 **Notes / Decisions:**
 - Drift detector uses `lstat` for the first existence gate so broken symlinks classify as `drifted:broken` instead of `missing`.
 - Stray detection now uses UTF-8 dirent handling (`Dirent[]`) to satisfy Node type-checking across platforms.
+- Phase reopened after p03 code review; follow-up review-fix tasks (`p03-t05` to `p03-t09`) are queued.
 
 ### Task p03-t01: Implement drift detector
 
@@ -1308,7 +1309,31 @@ oat_generated: false
 - `MIN-4` Consider directory-level `.oat-generated` sentinel in addition to inline markers
 - `MIN-5` Narrow `SyncPlan.removals` typing to removal-only entry variant
 
-**Next:** Phase 3 complete. Awaiting approval to continue with `p04-t01`.
+**Next:** Phase 3 complete; re-review received and queued as p03 follow-up tasks.
+
+---
+
+### Review Received: p03
+
+**Date:** 2026-02-13  
+**Review artifact:** `reviews/p03-code-review.md`
+
+**Findings:**
+- Critical: 0
+- Important: 2
+- Medium: 3
+- Minor: 5
+
+**New tasks added:** `p03-t05`, `p03-t06`, `p03-t07`, `p03-t08`, `p03-t09`
+
+**Deferred Findings (Minor):**
+- `m1` Missing test for `confirmAction` non-interactive behavior
+- `m2` Add optional `inputRequired` prompt primitive when needed by consumers
+- `m3` Simplify POSIX-only normalization path in `strays.ts` (style only)
+- `m4` Remove optional explicit `Dirent[]` annotation if inference remains stable
+- `m5` Add operation-level color semantics in `formatSyncPlan`
+
+**Next:** Execute p03 review-fix tasks via `/oat:implement` starting at `p03-t05`.
 
 ---
 

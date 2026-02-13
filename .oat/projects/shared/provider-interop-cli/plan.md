@@ -1717,6 +1717,166 @@ git commit -m "feat(p03-t04): implement shared prompt primitives with non-intera
 
 ---
 
+### Task p03-t05: (review) Fix ANSI-aware status table alignment
+
+**Files:**
+- Modify: `packages/cli/src/ui/output.ts`
+- Modify: `packages/cli/src/ui/output.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `formatStatusTable` width/padding logic uses colorized strings and can misalign columns in TTY mode when ANSI escapes inflate `.length`.
+Location: `packages/cli/src/ui/output.ts`
+
+**Step 2: Implement fix**
+
+- Compute state column width from plain text (or ANSI-stripped text), not colorized strings
+- Use visual-width-aware padding for table rows so marker + label alignment is stable in colorized output
+- Add regression tests asserting aligned table output in both color-enabled and non-color contexts
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/ui/output && pnpm --filter=@oat/cli lint`
+Expected: formatter tests pass and lint stays clean
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/ui/output.ts packages/cli/src/ui/output.test.ts
+git commit -m "fix(p03-t05): correct ANSI-aware status table alignment"
+```
+
+---
+
+### Task p03-t06: (review) Normalize manifest path comparison in stray detection
+
+**Files:**
+- Modify: `packages/cli/src/drift/strays.ts`
+- Modify: `packages/cli/src/drift/strays.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `isManifestTracked` mixes absolute/relative matching with an `endsWith` fallback, which is fragile and can create false positives.
+Location: `packages/cli/src/drift/strays.ts`
+
+**Step 2: Implement fix**
+
+- Remove suffix-based path matching
+- Normalize compared paths into the same representation (scope-relative, normalized separators)
+- If needed, pass `scopeRoot` explicitly through stray detection helpers to produce deterministic relative comparisons
+- Add tests that cover relative vs absolute input handling and prevent suffix false positives
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/drift/strays && pnpm --filter=@oat/cli type-check`
+Expected: stray detection tests and type-check pass
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/drift/strays.ts packages/cli/src/drift/strays.test.ts
+git commit -m "fix(p03-t06): normalize manifest path matching in stray detection"
+```
+
+---
+
+### Task p03-t07: (review) Replace provider-name path heuristics in stray reports
+
+**Files:**
+- Modify: `packages/cli/src/drift/strays.ts`
+- Modify: `packages/cli/src/drift/strays.test.ts`
+- Modify: `packages/cli/src/drift/drift.types.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: stray detection infers provider name from dot-prefixed path segments (`inferProvider`), which is brittle and environment-dependent.
+Location: `packages/cli/src/drift/strays.ts`
+
+**Step 2: Implement fix**
+
+- Refactor `detectStrays` API to accept provider identity from adapter/caller context
+- Remove or deprecate heuristic provider inference logic
+- Update tests to pass provider name explicitly and assert stable provider attribution
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/drift/strays src/drift/detector`
+Expected: drift/stray tests pass with explicit provider context
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/drift/strays.ts packages/cli/src/drift/strays.test.ts packages/cli/src/drift/drift.types.ts
+git commit -m "fix(p03-t07): remove provider inference heuristics from stray detection"
+```
+
+---
+
+### Task p03-t08: (review) Make stray content-type filtering explicit
+
+**Files:**
+- Modify: `packages/cli/src/drift/strays.ts`
+- Modify: `packages/cli/src/drift/strays.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `inferContentType` fallback to `null` can over-broaden canonical matching by name alone, causing false negatives for future content types.
+Location: `packages/cli/src/drift/strays.ts`
+
+**Step 2: Implement fix**
+
+- Avoid name-only fallback matching when content type is unknown
+- Use explicit mapping metadata (or an explicit content type parameter) for canonical filtering
+- Add defensive behavior for unsupported directory mappings (e.g., skip + annotate reason or debug path)
+- Add tests for unknown mapping/content-type behavior
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/drift/strays`
+Expected: all stray detector tests pass including unknown-content-type cases
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/drift/strays.ts packages/cli/src/drift/strays.test.ts
+git commit -m "fix(p03-t08): harden stray content-type filtering semantics"
+```
+
+---
+
+### Task p03-t09: (review) Standardize stray report path representation
+
+**Files:**
+- Modify: `packages/cli/src/drift/strays.ts`
+- Modify: `packages/cli/src/drift/drift.types.ts`
+- Modify: `packages/cli/src/drift/strays.test.ts`
+- Modify: `packages/cli/src/ui/output.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `DriftReport.providerPath` is relative for managed drift reports but absolute for stray reports, creating inconsistent downstream formatting behavior.
+Location: `packages/cli/src/drift/strays.ts`
+
+**Step 2: Implement fix**
+
+- Choose one canonical representation for `DriftReport.providerPath` (scope-relative preferred per manifest conventions)
+- Update stray reports and any dependent formatting/tests to use the unified representation
+- Add tests to assert consistent path shape across drift + stray report generation
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/drift src/ui/output && pnpm --filter=@oat/cli type-check`
+Expected: drift/output tests pass and path consistency assertions hold
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/drift/strays.ts packages/cli/src/drift/drift.types.ts packages/cli/src/drift/strays.test.ts packages/cli/src/ui/output.ts
+git commit -m "fix(p03-t09): standardize drift report provider path semantics"
+```
+
+---
+
 ## Phase 4: Commands — init, status, sync, providers, doctor
 
 **Goal:** Wire up all 5 CLI commands. After this phase the full CLI is functional end-to-end.
@@ -2296,7 +2456,7 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 |-------|------|--------|------|----------|
 | p01 | code | passed | 2026-02-13 | reviews/p01-re-review-2026-02-13.md |
 | p02 | code | passed | 2026-02-13 | reviews/p02-re-review-2026-02-13.md |
-| p03 | code | pending | - | - |
+| p03 | code | fixes_added | 2026-02-13 | reviews/p03-code-review.md |
 | p04 | code | pending | - | - |
 | p05 | code | pending | - | - |
 | final | code | pending | - | - |
@@ -2317,11 +2477,11 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 
 - Phase 1: 31 tasks — Foundation (scaffold, types, logger, commander, adapters, manifest, scanner, config, fs helpers, review fixes)
 - Phase 2: 11 tasks — Sync Engine (plan types, compute plan, execute plan, markers, integration tests, review fixes)
-- Phase 3: 4 tasks — Drift Detection and Output (drift detector, stray detector, output formatters, shared prompts)
+- Phase 3: 9 tasks — Drift Detection and Output (drift detector, stray detector, output formatters, shared prompts, review fixes)
 - Phase 4: 8 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests)
 - Phase 5: 6 tasks — Git Hook, Polish, and E2E (hook, edge cases, contract tests, snapshot tests, e2e tests, final verification)
 
-**Total: 60 tasks**
+**Total: 65 tasks**
 
 ---
 

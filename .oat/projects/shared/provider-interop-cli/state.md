@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t01
+oat_current_task: p03-t05
 oat_last_commit: 7035738
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. Phase 3 is complete; awaiting approval to continue to Phase 4.
+Implementation - In Progress. p03 code review processed; review-fix tasks are queued for Phase 3.
 
 ## Artifacts
 
@@ -29,7 +29,7 @@ Implementation - In Progress. Phase 3 is complete; awaiting approval to continue
 - **Design:** `design.md` (complete, reviewed)
 - **Review:** `reviews/design-review.md` (findings addressed)
 - **Review:** `reviews/cli-structure-proposal.md` (accepted)
-- **Plan:** `plan.md` (complete, 60 tasks, 5 phases)
+- **Plan:** `plan.md` (complete, 65 tasks, 5 phases)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -48,7 +48,7 @@ Implementation - In Progress. Phase 3 is complete; awaiting approval to continue
 - ✓ p02 review fixes complete (`p02-t06`–`p02-t11`)
 - ✓ p02 re-review passed (`reviews/p02-re-review-2026-02-13.md`)
 - ✓ Phase 3 complete (`p03-t01`–`p03-t04`)
-- ⧗ Awaiting Phase 3 checkpoint approval to start Phase 4 (`p04-t01`)
+- ⧗ p03 review fixes queued (`p03-t05`–`p03-t09`)
 
 ## Plan Summary
 
@@ -56,7 +56,7 @@ Implementation - In Progress. Phase 3 is complete; awaiting approval to continue
 |-------|-------|-------|
 | p01 | 31 | Foundation — scaffold, types, logger, commander, adapters, manifest, scanner, config, review fixes |
 | p02 | 11 | Sync Engine — plan types, compute plan, execute plan, markers, integration tests, review fixes |
-| p03 | 4 | Drift Detection and Output — drift detector, stray detector, output formatters |
+| p03 | 9 | Drift Detection and Output — drift detector, stray detector, output formatters, review fixes |
 | p04 | 8 | Commands — status, sync, init, providers, doctor, registration, integration tests |
 | p05 | 6 | Git Hook, Polish, E2E — hook, edge cases, contract tests, snapshot tests, e2e |
 
@@ -68,4 +68,4 @@ None
 
 ## Next Milestone
 
-Approve continuation, then resume `/oat:implement` at `p04-t01`.
+Execute p03 review-fix tasks via `/oat:implement` starting at `p03-t05`.
