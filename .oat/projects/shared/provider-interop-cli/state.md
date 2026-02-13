@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t16
-oat_last_commit: a19d432
+oat_current_task: p02-t01
+oat_last_commit: 5e3a3bb
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. Executing plan tasks in order, currently at `p01-t16`.
+Implementation - In Progress. Phase 1 complete (`p01-t20`); awaiting HiL approval to continue at `p02-t01`.
 
 ## Artifacts
 
@@ -41,7 +41,8 @@ Implementation - In Progress. Executing plan tasks in order, currently at `p01-t
 - ✓ Design complete (1046 lines, full architecture)
 - ✓ Design reviewed twice, all 10 findings addressed
 - ✓ Plan complete (43 tasks, 5 phases, TDD discipline)
-- ⧗ Implementation in progress (`p01-t16`)
+- ✓ Phase 1 complete (`p01-t20`)
+- ⧗ Awaiting approval to continue to Phase 2 (`p02-t01`)
 
 ## Plan Summary
 
@@ -61,4 +62,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 (p01) and pause at HiL checkpoint for approval to continue to p02.
+HiL checkpoint: approve continuation to Phase 2 (`p02-t01`).

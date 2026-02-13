@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: p01-t16
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -16,35 +16,48 @@ oat_generated: false
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1 | in_progress | 20 | 15/20 |
+| Phase 1 | complete | 20 | 20/20 |
 | Phase 2 | pending | 5 | 0/5 |
 | Phase 3 | pending | 4 | 0/4 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 15/43 tasks completed
+**Total:** 20/43 tasks completed
 
 ---
 
 ## Phase 1: Foundation — Scaffold, Types, Config
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-02-13
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
-- Pending
+- Established the foundational CLI architecture for provider-interop workflows.
+- Implemented core runtime contracts: command context, logger/spinner behavior, shared schemas, provider adapters, manifest schemas/manager, scanner, config loader, and fs primitives.
+- Wired commander program with global flags and command stubs so `oat --help` is fully operational.
 
 **Key files touched:**
-- Pending
+- `packages/cli/src/index.ts`
+- `packages/cli/src/app/create-program.ts`
+- `packages/cli/src/app/command-context.ts`
+- `packages/cli/src/ui/logger.ts`
+- `packages/cli/src/ui/spinner.ts`
+- `packages/cli/src/shared/types.ts`
+- `packages/cli/src/providers/**/*`
+- `packages/cli/src/manifest/**/*`
+- `packages/cli/src/engine/scanner.ts`
+- `packages/cli/src/config/sync-config.ts`
+- `packages/cli/src/fs/{io.ts,paths.ts}`
 
 **Verification:**
-- Run: Pending
-- Result: Pending
+- Run: `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`
+- Result: pass
 
 **Notes / Decisions:**
 - Implementation started from `p01-t01`.
+- Kept command output centralized through `CliLogger` and non-interactive behavior explicit in core utilities.
 
 ### Task p01-t01: Add vitest and test scripts
 
@@ -398,6 +411,130 @@ oat_generated: false
 **Notes / Decisions:**
 - `addEntry` replaces by `(canonicalPath, provider)` key to preserve uniqueness invariant already enforced by schema refinement.
 
+### Task p01-t16: Implement directory hash computation
+
+**Status:** completed
+**Commit:** 3cea581
+
+**Outcome (required when completed):**
+- Added deterministic SHA-256 directory hashing based on sorted relative paths plus file content.
+- Added explicit missing-directory error behavior via `CliError`.
+- Added hash tests for determinism, content-change sensitivity, and creation-order stability.
+
+**Files changed:**
+- `packages/cli/src/manifest/hash.ts` - added recursive file collection and sorted hashing implementation.
+- `packages/cli/src/manifest/hash.test.ts` - added directory hash behavior tests.
+- `packages/cli/src/manifest/index.ts` - exported hash function from manifest module barrel.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/manifest/hash`
+- Result: pass (4 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Hash payload includes both relative path and file bytes to detect renames and content changes.
+
+### Task p01-t17: Implement canonical directory scanner
+
+**Status:** completed
+**Commit:** 30d9d13
+
+**Outcome (required when completed):**
+- Implemented canonical scanner that discovers skill/agent directories under `.agents/*`.
+- Added scope-aware filtering using `SCOPE_CONTENT_TYPES` (user scope excludes agents).
+- Added scanner tests covering missing dirs, non-directory filtering, and absolute canonical paths.
+
+**Files changed:**
+- `packages/cli/src/engine/scanner.ts` - added canonical scanning logic and entry model.
+- `packages/cli/src/engine/scanner.test.ts` - added scanner behavior tests.
+- `packages/cli/src/engine/index.ts` - exported scanner API.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/scanner`
+- Result: pass (6 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Scanner ignores missing content directories instead of failing, returning empty results for absent canonical roots.
+
+### Task p01-t18: Implement sync config loader
+
+**Status:** completed
+**Commit:** afd5cd2
+
+**Outcome (required when completed):**
+- Added zod schema for sync config and provider-level overrides.
+- Implemented optional config loading with default fallback when file is absent.
+- Implemented merge behavior for provider overrides atop defaults.
+
+**Files changed:**
+- `packages/cli/src/config/sync-config.ts` - added config schema, defaults, merge helpers, and loader.
+- `packages/cli/src/config/sync-config.test.ts` - added config loader tests.
+- `packages/cli/src/config/index.ts` - exported sync config API.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/config/`
+- Result: pass (4 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Invalid JSON/schema payloads fail with actionable `CliError` messages to keep CLI behavior explicit.
+
+### Task p01-t19: Implement filesystem helpers (io.ts, paths.ts)
+
+**Status:** completed
+**Commit:** caaabb0
+
+**Outcome (required when completed):**
+- Added filesystem helper primitives for symlink/copy, atomic JSON writes, and directory creation.
+- Added path helper primitives for project root resolution, scope root resolution, and scope-boundary validation.
+- Added tests covering symlink fallback behavior, recursive copying, and scope-path safety checks.
+
+**Files changed:**
+- `packages/cli/src/fs/io.ts` - added `createSymlink`, `copyDirectory`, `atomicWriteJson`, and `ensureDir`.
+- `packages/cli/src/fs/paths.ts` - added `resolveProjectRoot`, `resolveScopeRoot`, and `validatePathWithinScope`.
+- `packages/cli/src/fs/io.test.ts` - added fs io tests.
+- `packages/cli/src/fs/paths.test.ts` - added path helper tests.
+- `packages/cli/src/fs/index.ts` - exported fs helper APIs.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/fs/`
+- Result: pass (8 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- `createSymlink` falls back to directory copy when symlink creation fails, aligning with cross-platform resilience requirement.
+
+### Task p01-t20: Phase 1 verification
+
+**Status:** completed
+**Commit:** 5e3a3bb
+
+**Outcome (required when completed):**
+- Ran full Phase 1 verification gate across tests, type-check, lint, and build/help output.
+- Resolved lint warning in spinner import cleanup and reran full verification suite.
+- Confirmed CLI help output contains expected commands and global flags.
+
+**Files changed:**
+- `packages/cli/src/ui/spinner.ts` - removed unused type import found during lint gate.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test`
+- Result: pass (22 files, 115 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+- Run: `pnpm --filter=@oat/cli lint`
+- Result: pass (no warnings)
+- Run: `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept the phase verification as the quality gate boundary before moving into p02 sync-engine work.
+
 ---
 
 ## Implementation Log
@@ -421,6 +558,11 @@ oat_generated: false
 - [x] p01-t13: Implement Codex adapter - f19ed65
 - [x] p01-t14: Implement manifest types and zod schema - a51e1a0
 - [x] p01-t15: Implement manifest manager (load, save, CRUD) - a19d432
+- [x] p01-t16: Implement directory hash computation - 3cea581
+- [x] p01-t17: Implement canonical directory scanner - 30d9d13
+- [x] p01-t18: Implement sync config loader - afd5cd2
+- [x] p01-t19: Implement filesystem helpers (io.ts, paths.ts) - caaabb0
+- [x] p01-t20: Phase 1 verification - 5e3a3bb
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -437,6 +579,9 @@ oat_generated: false
 - Implemented provider adapters for Claude, Cursor, and Codex with mapping tables and detection coverage.
 - Added manifest schema validation and duplicate/refinement guards for persisted sync state.
 - Added manifest persistence/CRUD manager with atomic writes and user-facing load error handling.
+- Added deterministic directory hashing for copy-mode drift support.
+- Added canonical scanner, sync config loader, and filesystem/path helper primitives for upcoming sync engine tasks.
+- Completed Phase 1 verification gate with all checks passing.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -457,7 +602,7 @@ oat_generated: false
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 |-------|-----------|--------|--------|----------|
-| 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (twelve times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/` | 15 | 0 | n/a (bootstrap) |
+| 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (sixteen times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/`; `pnpm --filter=@oat/cli test src/manifest/hash`; `pnpm --filter=@oat/cli test src/engine/scanner`; `pnpm --filter=@oat/cli test src/config/`; `pnpm --filter=@oat/cli test src/fs/`; `pnpm --filter=@oat/cli lint` | 20 | 0 | n/a (bootstrap) |
 | 2 | - | - | - | - |
 | 3 | - | - | - | - |
 | 4 | - | - | - | - |
