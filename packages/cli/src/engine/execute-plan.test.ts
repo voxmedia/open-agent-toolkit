@@ -13,7 +13,7 @@ import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEmptyManifest, loadManifest } from '../manifest/manager';
 import type { SyncPlan, SyncPlanEntry } from './engine.types';
-import { executeSyncPlan } from './execute-plan';
+import { executeSyncPlan, inferScopeRoot } from './execute-plan';
 import { OAT_MARKER_PREFIX } from './markers';
 
 function createCanonicalEntry(
@@ -288,5 +288,12 @@ describe('executeSyncPlan', () => {
       failed: 0,
       skipped: 0,
     });
+  });
+
+  it('inferScopeRoot handles mixed path separators', () => {
+    const scopeRoot = inferScopeRoot(
+      '/tmp/project\\.agents\\skills\\skill-one',
+    );
+    expect(scopeRoot).toBe('/tmp/project');
   });
 });

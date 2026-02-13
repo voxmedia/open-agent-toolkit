@@ -7,16 +7,17 @@ import type { Manifest, ManifestEntry } from '../manifest/manifest.types';
 import type { SyncPlan, SyncPlanEntry, SyncResult } from './engine.types';
 import { hasMarker, insertMarker } from './markers';
 
-function inferScopeRoot(canonicalPath: string): string {
+export function inferScopeRoot(canonicalPath: string): string {
+  const normalizedPath = canonicalPath.replaceAll('\\', '/');
   const marker = `${sep}.agents${sep}`;
-  const markerIndex = canonicalPath.indexOf(marker);
+  const markerIndex = normalizedPath.indexOf(marker);
   if (markerIndex === -1) {
     throw new Error(
       `Cannot infer scope root from canonical path: ${canonicalPath}`,
     );
   }
 
-  return canonicalPath.slice(0, markerIndex);
+  return resolve(normalizedPath.slice(0, markerIndex));
 }
 
 async function toManifestEntry(
