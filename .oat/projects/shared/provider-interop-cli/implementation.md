@@ -16,13 +16,13 @@ oat_generated: false
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1 | complete | 26 | 26/26 |
+| Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | pending | 5 | 0/5 |
 | Phase 3 | pending | 4 | 0/4 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 26/49 tasks completed
+**Total:** 31/54 tasks completed
 
 ---
 
@@ -59,7 +59,7 @@ oat_generated: false
 - Implementation started from `p01-t01`.
 - Kept command output centralized through `CliLogger` and non-interactive behavior explicit in core utilities.
 - Phase reopened for review-generated fix tasks (`p01-t21` to `p01-t26`) after code review processing.
-- Review-generated fix tasks for `p01` are now complete; awaiting re-review.
+- Review-generated fix tasks for `p01` are complete (second pass for outstanding minor findings).
 
 ### Task p01-t01: Add vitest and test scripts
 
@@ -676,6 +676,107 @@ oat_generated: false
 **Notes / Decisions:**
 - Standardized on explicit per-scope iteration for `'all'` handling instead of implicit project fallback.
 
+### Task p01-t27: (review) Enforce concrete scope contract in scanner
+
+**Status:** completed
+**Commit:** 3cdd19d
+
+**Outcome (required when completed):**
+- Narrowed scanner scope input to concrete scopes (`project`/`user`) so `'all'` is handled by higher-level orchestration.
+- Added a compile-time contract test to prevent accidental `'all'` usage.
+- Preserved existing runtime scanner behavior for project and user roots.
+
+**Files changed:**
+- `packages/cli/src/engine/scanner.ts` - narrowed `scanCanonical` scope parameter type.
+- `packages/cli/src/engine/scanner.test.ts` - added compile-time scope contract assertion.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/scanner.test.ts && pnpm --filter=@oat/cli type-check`
+- Result: pass (`7` tests in scanner suite)
+
+**Notes / Decisions:**
+- Kept `'all'` orchestration explicit to avoid mixed-scope scanning at a single root.
+
+### Task p01-t28: (review) Reclassify project root resolution failure as system error
+
+**Status:** completed
+**Commit:** 013e501
+
+**Outcome (required when completed):**
+- Updated project-root lookup failure to emit `CliError` exit code `2`.
+- Added failure-path test coverage asserting system-error classification.
+
+**Files changed:**
+- `packages/cli/src/fs/paths.ts` - changed unresolved project-root error to `CliError(..., 2)`.
+- `packages/cli/src/fs/paths.test.ts` - added test for no-`.git` failure exit code.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/fs/paths.test.ts`
+- Result: pass (`5` tests)
+
+**Notes / Decisions:**
+- Treated missing `.git` as an environment precondition failure to align with the user/system exit-code contract.
+
+### Task p01-t29: (review) Remove ambiguous adapter mapping alias
+
+**Status:** completed
+**Commit:** af21b85
+
+**Outcome (required when completed):**
+- Removed `getAdapterMappings` alias and standardized on `getSyncMappings` as the canonical API.
+- Updated provider shared exports and test naming to remove ambiguity.
+
+**Files changed:**
+- `packages/cli/src/providers/shared/adapter.utils.ts` - removed alias export.
+- `packages/cli/src/providers/shared/index.ts` - removed alias from barrel exports.
+- `packages/cli/src/providers/shared/adapter.types.test.ts` - renamed test to canonical function name.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts && pnpm --filter=@oat/cli type-check`
+- Result: pass (`5` tests)
+
+**Notes / Decisions:**
+- Consolidated public naming to reduce onboarding friction and avoid duplicate API surface.
+
+### Task p01-t30: (review) Remove unnecessary sync strategy cast
+
+**Status:** completed
+**Commit:** 2734670
+
+**Outcome (required when completed):**
+- Removed redundant `SyncStrategy` cast in sync config normalization.
+- Kept config runtime behavior unchanged while simplifying type usage.
+
+**Files changed:**
+- `packages/cli/src/config/sync-config.ts` - removed unnecessary cast and unused type import.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli test src/config/`
+- Result: pass (`4` config tests)
+
+**Notes / Decisions:**
+- Relied on schema-derived type inference instead of explicit casting.
+
+### Task p01-t31: (review) Improve manifest validation diagnostics
+
+**Status:** completed
+**Commit:** cfee3e3
+
+**Outcome (required when completed):**
+- Added field-level zod issue details to manifest validation errors.
+- Added schema-failure test assertion that validation messages include actionable field context.
+
+**Files changed:**
+- `packages/cli/src/manifest/manager.ts` - added validation issue formatting and detailed error text.
+- `packages/cli/src/manifest/manager.test.ts` - added assertion for field-specific message content.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/manifest/manager.test.ts`
+- Result: pass (`12` tests)
+
+**Notes / Decisions:**
+- Kept diagnostics concise (`path: message`) while preserving existing recovery guidance.
+
 ---
 
 ## Implementation Log
@@ -710,6 +811,11 @@ oat_generated: false
 - [x] p01-t24: (review) Clarify all-scope content semantics in shared types - 617f692
 - [x] p01-t25: (review) Define all-scope behavior for adapter mappings - 2132851
 - [x] p01-t26: (review) Correct scope-root resolution contract for all scope - 2e1467c
+- [x] p01-t27: (review) Enforce concrete scope contract in scanner - 3cdd19d
+- [x] p01-t28: (review) Reclassify project root resolution failure as system error - 013e501
+- [x] p01-t29: (review) Remove ambiguous adapter mapping alias - af21b85
+- [x] p01-t30: (review) Remove unnecessary sync strategy cast - 2734670
+- [x] p01-t31: (review) Improve manifest validation diagnostics - cfee3e3
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -735,6 +841,11 @@ oat_generated: false
 - Applied fourth p01 review fix: all-scope content semantics are now expressed as an explicit scope union.
 - Applied fifth p01 review fix: all-scope mapping utilities now deduplicate duplicate provider operations.
 - Applied sixth p01 review fix: scope-root resolution no longer silently treats `'all'` as project scope.
+- Applied seventh p01 review fix: scanner now accepts concrete scopes only.
+- Applied eighth p01 review fix: project root resolution failures now classify as system errors (exit code 2).
+- Applied ninth p01 review fix: adapter mapping API naming is now canonicalized to `getSyncMappings`.
+- Applied tenth p01 review fix: sync config normalization no longer uses unnecessary casting.
+- Applied eleventh p01 review fix: manifest validation errors now include field-level issue details.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -755,17 +866,10 @@ oat_generated: false
 - Important: 6
 - Minor: 8
 
-**New tasks added:** `p01-t21`, `p01-t22`, `p01-t23`, `p01-t24`, `p01-t25`, `p01-t26` (all completed)
+**New tasks added:** `p01-t21`, `p01-t22`, `p01-t23`, `p01-t24`, `p01-t25`, `p01-t26`, `p01-t27`, `p01-t28`, `p01-t29`, `p01-t30`, `p01-t31` (all completed)
 
 **Deferred Findings (Minor):**
-- `m1` `scanCanonical` called with `scope === 'all'` can blur scope-intent boundaries
-- `m2` Missing explicit `scope === 'all'` scanner test case
-- `m3` `resolveProjectRoot` exit code classification nuance (1 vs 2)
-- `m4` Missing positive-case test for `validatePathWithinScope`
-- `m5` Missing `resolveScopeRoot` test coverage for `scope === 'all'`
-- `m6` `getAdapterMappings` alias naming ambiguity
-- `m7` Unnecessary `SyncStrategy` cast in `normalizeConfig`
-- `m8` Manifest validation error messages should include field-level details
+- None (all eight minor findings addressed across `p01-t26` to `p01-t31`)
 
 **Next:** Run `/oat:request-review code p01` for re-review.
 

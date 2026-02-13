@@ -1025,6 +1025,157 @@ git commit -m "fix(p01-t26): make all-scope root resolution explicit"
 
 ---
 
+### Task p01-t27: (review) Enforce concrete scope contract in scanner
+
+**Files:**
+- Modify: `packages/cli/src/engine/scanner.ts`
+- Modify: `packages/cli/src/engine/scanner.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: scanner accepts `scope === 'all'`, which blurs project/user scope boundaries and can include incorrect content types for a given root.
+Location: `packages/cli/src/engine/scanner.ts`
+
+**Step 2: Implement fix**
+
+- Narrow `scanCanonical` scope parameter to concrete scopes (`project` | `user`)
+- Ensure scanner call sites iterate scopes explicitly when `all` is requested upstream
+- Add or update tests to validate concrete-scope behavior and maintain existing project/user coverage
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/engine/scanner.test.ts && pnpm --filter=@oat/cli type-check`
+Expected: scanner behavior is unchanged for project/user and scope contract is explicit
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/engine/scanner.ts packages/cli/src/engine/scanner.test.ts
+git commit -m "fix(p01-t27): enforce concrete scope contract in scanner"
+```
+
+---
+
+### Task p01-t28: (review) Reclassify project root resolution failure as system error
+
+**Files:**
+- Modify: `packages/cli/src/fs/paths.ts`
+- Modify: `packages/cli/src/fs/paths.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: inability to resolve a git project root is currently surfaced with exit code `1`; classify as environment/system failure (`2`) for consistency with error contract.
+Location: `packages/cli/src/fs/paths.ts`
+
+**Step 2: Implement fix**
+
+- Update `resolveProjectRoot` to throw `CliError(..., 2)` when `.git` cannot be resolved
+- Add a test that asserts exit code classification for the failure path
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/fs/paths.test.ts`
+Expected: tests pass and failure path asserts `exitCode === 2`
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/fs/paths.ts packages/cli/src/fs/paths.test.ts
+git commit -m "fix(p01-t28): classify project-root lookup failure as system error"
+```
+
+---
+
+### Task p01-t29: (review) Remove ambiguous adapter mapping alias
+
+**Files:**
+- Modify: `packages/cli/src/providers/shared/adapter.utils.ts`
+- Modify: `packages/cli/src/providers/shared/adapter.types.test.ts`
+- Modify: `packages/cli/src/providers/shared/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `getAdapterMappings` is an unexplained alias of `getSyncMappings` and creates naming confusion.
+Location: `packages/cli/src/providers/shared/adapter.utils.ts`
+
+**Step 2: Implement fix**
+
+- Remove alias export and keep `getSyncMappings` as the canonical API
+- Update tests and exports/imports to use one consistent name
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts && pnpm --filter=@oat/cli type-check`
+Expected: provider shared tests pass and no alias references remain
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/providers/shared/adapter.utils.ts packages/cli/src/providers/shared/adapter.types.test.ts packages/cli/src/providers/shared/index.ts
+git commit -m "fix(p01-t29): remove ambiguous adapter mapping alias"
+```
+
+---
+
+### Task p01-t30: (review) Remove unnecessary sync strategy cast
+
+**Files:**
+- Modify: `packages/cli/src/config/sync-config.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `normalizeConfig` uses an unnecessary `as SyncStrategy` cast for `defaultStrategy`.
+Location: `packages/cli/src/config/sync-config.ts`
+
+**Step 2: Implement fix**
+
+- Remove redundant cast and keep inferred type-safe assignment
+- Keep runtime behavior unchanged
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli test src/config/`
+Expected: type-check and config tests pass without cast
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/config/sync-config.ts
+git commit -m "refactor(p01-t30): remove unnecessary sync strategy cast"
+```
+
+---
+
+### Task p01-t31: (review) Improve manifest validation diagnostics
+
+**Files:**
+- Modify: `packages/cli/src/manifest/manager.ts`
+- Modify: `packages/cli/src/manifest/manager.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: manifest validation failures do not include field-level issue details, limiting actionable diagnostics.
+Location: `packages/cli/src/manifest/manager.ts`
+
+**Step 2: Implement fix**
+
+- Include concise zod issue details in manifest validation error messages
+- Add or update tests that assert detailed validation guidance appears
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/manifest/manager.test.ts`
+Expected: validation-error tests pass with richer diagnostics
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/manifest/manager.ts packages/cli/src/manifest/manager.test.ts
+git commit -m "fix(p01-t31): include manifest validation issue details"
+```
+
+---
+
 ## Phase 2: Sync Engine — Diff, Plan, Execute
 
 **Goal:** Core sync logic — compute what needs to change, create symlinks/copies, update manifest. After this phase `computeSyncPlan` and `executeSyncPlan` are fully functional and integration-tested.
@@ -1981,13 +2132,13 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 
 ## Planned Scope Summary
 
-- Phase 1: 26 tasks — Foundation (scaffold, types, logger, commander, adapters, manifest, scanner, config, fs helpers, review fixes)
+- Phase 1: 31 tasks — Foundation (scaffold, types, logger, commander, adapters, manifest, scanner, config, fs helpers, review fixes)
 - Phase 2: 5 tasks — Sync Engine (plan types, compute plan, execute plan, markers, integration tests)
 - Phase 3: 4 tasks — Drift Detection and Output (drift detector, stray detector, output formatters, shared prompts)
 - Phase 4: 8 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests)
 - Phase 5: 6 tasks — Git Hook, Polish, and E2E (hook, edge cases, contract tests, snapshot tests, e2e tests, final verification)
 
-**Total: 49 tasks**
+**Total: 54 tasks**
 
 ---
 

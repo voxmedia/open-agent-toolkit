@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 2e1467c
+oat_last_commit: cfee3e3
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. Phase 1 review-fix tasks complete; awaiting p01 re-review.
+Implementation - In Progress. Additional p01 minor review-fix tasks complete; awaiting p01 re-review.
 
 ## Artifacts
 
@@ -29,7 +29,7 @@ Implementation - In Progress. Phase 1 review-fix tasks complete; awaiting p01 re
 - **Design:** `design.md` (complete, reviewed)
 - **Review:** `reviews/design-review.md` (findings addressed)
 - **Review:** `reviews/cli-structure-proposal.md` (accepted)
-- **Plan:** `plan.md` (complete, 49 tasks, 5 phases)
+- **Plan:** `plan.md` (complete, 54 tasks, 5 phases)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -40,15 +40,16 @@ Implementation - In Progress. Phase 1 review-fix tasks complete; awaiting p01 re
 - ✓ Specification reviewed by Codex, findings addressed
 - ✓ Design complete (1046 lines, full architecture)
 - ✓ Design reviewed twice, all 10 findings addressed
-- ✓ Plan complete (49 tasks, 5 phases, includes p01 review-fix tasks)
+- ✓ Plan complete (54 tasks, 5 phases, includes p01 review-fix tasks)
 - ✓ Phase 1 review fixes complete (`p01-t21`–`p01-t26`)
+- ✓ Additional p01 minor review fixes complete (`p01-t27`–`p01-t31`)
 - ⧗ Awaiting p01 re-review (`/oat:request-review code p01`)
 
 ## Plan Summary
 
 | Phase | Tasks | Focus |
 |-------|-------|-------|
-| p01 | 26 | Foundation — scaffold, types, logger, commander, adapters, manifest, scanner, config, review fixes |
+| p01 | 31 | Foundation — scaffold, types, logger, commander, adapters, manifest, scanner, config, review fixes |
 | p02 | 5 | Sync Engine — plan types, compute plan, execute plan, markers, integration tests |
 | p03 | 4 | Drift Detection and Output — drift detector, stray detector, output formatters |
 | p04 | 8 | Commands — status, sync, init, providers, doctor, registration, integration tests |
