@@ -14,6 +14,37 @@ export interface DoctorCheck {
   fix?: string;
 }
 
+function stripAnsi(value: string): string {
+  let result = '';
+  let index = 0;
+
+  while (index < value.length) {
+    if (value.charCodeAt(index) === 27 && value[index + 1] === '[') {
+      index += 2;
+      while (index < value.length && value[index] !== 'm') {
+        index += 1;
+      }
+      if (index < value.length && value[index] === 'm') {
+        index += 1;
+      }
+      continue;
+    }
+
+    result += value[index];
+    index += 1;
+  }
+
+  return result;
+}
+
+function visualPadEnd(value: string, width: number): string {
+  const visibleLength = stripAnsi(value).length;
+  if (visibleLength >= width) {
+    return value;
+  }
+  return `${value}${' '.repeat(width - visibleLength)}`;
+}
+
 function stateLabel(state: DriftState): string {
   if (state.status === 'drifted') {
     return `drifted:${state.reason}`;
@@ -68,10 +99,7 @@ export function formatStatusTable(reports: DriftReport[]): string {
   );
   const stateWidth = Math.max(
     'State'.length,
-    ...reports.map(
-      (report) =>
-        `${stateMarker(report.state)} ${stateLabel(report.state)}`.length,
-    ),
+    ...reports.map((report) => `${stateLabel(report.state)}`.length + 2),
   );
 
   const header = [
@@ -91,7 +119,7 @@ export function formatStatusTable(reports: DriftReport[]): string {
     [
       row.provider.padEnd(providerWidth),
       row.name.padEnd(nameWidth),
-      row.state.padEnd(stateWidth),
+      visualPadEnd(row.state, stateWidth),
       row.detail,
     ].join('  '),
   );

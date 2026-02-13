@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import chalk from 'chalk';
 import { describe, expect, it } from 'vitest';
 import type { DriftReport } from '../drift/drift.types';
 import type { SyncPlan } from '../engine/engine.types';
@@ -9,6 +10,29 @@ import {
   formatStatusTable,
   formatSyncPlan,
 } from './output';
+
+function stripAnsi(value: string): string {
+  let result = '';
+  let index = 0;
+
+  while (index < value.length) {
+    if (value.charCodeAt(index) === 27 && value[index + 1] === '[') {
+      index += 2;
+      while (index < value.length && value[index] !== 'm') {
+        index += 1;
+      }
+      if (index < value.length && value[index] === 'm') {
+        index += 1;
+      }
+      continue;
+    }
+
+    result += value[index];
+    index += 1;
+  }
+
+  return result;
+}
 
 describe('output formatters', () => {
   it('formatStatusTable renders aligned table with status markers', () => {
@@ -131,5 +155,39 @@ describe('output formatters', () => {
     expect(output).toContain('Detected: yes');
     expect(output).toContain('Default strategy: symlink');
     expect(output).toContain('Version: 1.2.3');
+  });
+
+  it('formatStatusTable keeps columns aligned when chalk colors are enabled', () => {
+    const previousLevel = chalk.level;
+    chalk.level = 1;
+    try {
+      const reports: DriftReport[] = [
+        {
+          canonical: '.agents/skills/alpha',
+          provider: 'claude',
+          providerPath: '.claude/skills/alpha',
+          state: { status: 'in_sync' },
+        },
+        {
+          canonical: '.agents/skills/bravo',
+          provider: 'cursor',
+          providerPath: '.cursor/skills/bravo',
+          state: { status: 'drifted', reason: 'modified' },
+        },
+      ];
+
+      const lines = formatStatusTable(reports)
+        .split('\n')
+        .slice(2)
+        .map((line) => stripAnsi(line));
+
+      const stateIndexRow1 = lines[0]?.indexOf('in_sync') ?? -1;
+      const stateIndexRow2 = lines[1]?.indexOf('drifted:modified') ?? -1;
+
+      expect(stateIndexRow1).toBeGreaterThan(0);
+      expect(stateIndexRow1).toBe(stateIndexRow2);
+    } finally {
+      chalk.level = previousLevel;
+    }
   });
 });
