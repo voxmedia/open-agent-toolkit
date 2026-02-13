@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { CanonicalEntry } from '../engine/scanner';
 import { createEmptyManifest } from '../manifest/manager';
@@ -65,6 +65,33 @@ describe('detectStrays', () => {
     };
 
     const reports = await detectStrays(providerDir, manifest, []);
+
+    expect(reports).toEqual([]);
+  });
+
+  it('does not flag manifest-tracked entries when providerDir is passed as relative path', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    const providerDirAbsolute = join(root, '.claude', 'skills');
+    await seedProviderEntry(providerDirAbsolute, 'tracked-skill');
+    const providerDirRelative = relative(process.cwd(), providerDirAbsolute);
+
+    const manifest = {
+      ...createEmptyManifest(),
+      entries: [
+        {
+          canonicalPath: '.agents/skills/tracked-skill',
+          providerPath: '.claude/skills/tracked-skill',
+          provider: 'claude',
+          contentType: 'skill' as const,
+          strategy: 'symlink' as const,
+          contentHash: null,
+          lastSynced: new Date().toISOString(),
+        },
+      ],
+    };
+
+    const reports = await detectStrays(providerDirRelative, manifest, []);
 
     expect(reports).toEqual([]);
   });

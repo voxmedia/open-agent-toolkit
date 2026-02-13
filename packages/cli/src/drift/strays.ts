@@ -1,6 +1,6 @@
 import type { Dirent } from 'node:fs';
 import { readdir } from 'node:fs/promises';
-import { basename, join, normalize, resolve } from 'node:path';
+import { basename, join, normalize, relative, resolve } from 'node:path';
 import type { CanonicalEntry } from '../engine/scanner';
 import type { Manifest } from '../manifest/manifest.types';
 import type { DriftReport } from './drift.types';
@@ -32,14 +32,37 @@ function inferContentType(providerDir: string): CanonicalEntry['type'] | null {
   return null;
 }
 
-function isManifestTracked(providerPath: string, manifest: Manifest): boolean {
-  const normalizedProviderPath = normalizePath(providerPath);
+function inferScopeRoot(providerDir: string): string {
+  const normalized = normalizePath(resolve(providerDir));
+  const segments = normalized.split('/').filter(Boolean);
+
+  for (let index = segments.length - 2; index >= 0; index -= 1) {
+    const segment = segments[index];
+    const nextSegment = segments[index + 1];
+    if (
+      segment?.startsWith('.') &&
+      (nextSegment === 'skills' || nextSegment === 'agents')
+    ) {
+      const rootPath = `/${segments.slice(0, index).join('/')}`;
+      return rootPath === '' ? '/' : rootPath;
+    }
+  }
+
+  return resolve(providerDir, '..', '..');
+}
+
+function toScopeRelative(path: string, scopeRoot: string): string {
+  return normalizePath(relative(scopeRoot, resolve(path)));
+}
+
+function isManifestTracked(
+  providerPathRelative: string,
+  manifest: Manifest,
+): boolean {
+  const normalizedProviderPath = normalizePath(providerPathRelative);
   return manifest.entries.some((entry) => {
     const manifestPath = normalizePath(entry.providerPath);
-    return (
-      manifestPath === normalizedProviderPath ||
-      normalizedProviderPath.endsWith(`/${manifestPath}`)
-    );
+    return manifestPath === normalizedProviderPath;
   });
 }
 
@@ -66,6 +89,7 @@ export async function detectStrays(
 ): Promise<DriftReport[]> {
   const provider = inferProvider(providerDir);
   const contentType = inferContentType(providerDir);
+  const scopeRoot = inferScopeRoot(providerDir);
   const reports: DriftReport[] = [];
   const resolvedProviderDir = resolve(providerDir);
 
@@ -93,8 +117,8 @@ export async function detectStrays(
     }
 
     const providerPath = join(resolvedProviderDir, entry.name);
-    const providerPathFromRoot = join(providerDir, entry.name);
-    if (isManifestTracked(providerPathFromRoot, manifest)) {
+    const providerPathRelative = toScopeRelative(providerPath, scopeRoot);
+    if (isManifestTracked(providerPathRelative, manifest)) {
       continue;
     }
 
