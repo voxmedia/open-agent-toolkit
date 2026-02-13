@@ -1375,6 +1375,189 @@ git commit -m "test(p02-t05): add sync engine integration tests"
 
 ---
 
+### Task p02-t06: (review) Integrate copy-mode markers into sync execution
+
+**Files:**
+- Modify: `packages/cli/src/engine/execute-plan.ts`
+- Modify: `packages/cli/src/engine/engine.integration.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: marker primitives exist (`insertMarker`, `hasMarker`) but copy-mode execution does not invoke marker insertion.
+Location: `packages/cli/src/engine/execute-plan.ts`
+
+**Step 2: Implement fix**
+
+- Call `insertMarker` during `create_copy` and `update_copy` execution after directory copy completes
+- Ensure marker target is deterministic for skill/agent directories (inline marker strategy used in current engine)
+- Extend integration coverage to assert marker presence for copy-mode sync results
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`
+Expected: copy-mode execution creates managed markers and tests pass
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/engine/execute-plan.ts packages/cli/src/engine/engine.integration.test.ts
+git commit -m "fix(p02-t06): integrate copy-mode markers into sync execution"
+```
+
+---
+
+### Task p02-t07: (review) Reorder symlink drift checks in classifyOperation
+
+**Files:**
+- Modify: `packages/cli/src/engine/compute-plan.ts`
+- Modify: `packages/cli/src/engine/compute-plan.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: symlink classification checks target mismatch before broken-target detection, leaving a branch effectively unreachable and out of order with design intent.
+Location: `packages/cli/src/engine/compute-plan.ts`
+
+**Step 2: Implement fix**
+
+- Reorder symlink checks to test target existence before mismatch classification
+- Keep behavior aligned with design table (`broken` before `replaced`)
+- Update/add tests for symlink branch ordering and expected operation outcomes
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`
+Expected: tests pass with explicit broken/mismatch branch coverage
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/engine/compute-plan.ts packages/cli/src/engine/compute-plan.test.ts
+git commit -m "fix(p02-t07): reorder symlink drift checks in classifyOperation"
+```
+
+---
+
+### Task p02-t08: (review) Remove unused path import in compute plan
+
+**Files:**
+- Modify: `packages/cli/src/engine/compute-plan.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `relative` import is unused and triggers lint noise.
+Location: `packages/cli/src/engine/compute-plan.ts`
+
+**Step 2: Implement fix**
+
+- Remove unused import(s) and keep module imports lint-clean
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli lint`
+Expected: no lint errors from engine module imports
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/engine/compute-plan.ts
+git commit -m "chore(p02-t08): clean unused imports in compute plan"
+```
+
+---
+
+### Task p02-t09: (review) Harden inferScopeRoot path normalization
+
+**Files:**
+- Modify: `packages/cli/src/engine/execute-plan.ts`
+- Modify: `packages/cli/src/engine/execute-plan.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `inferScopeRoot` depends on separator-specific string matching and is fragile across path formats.
+Location: `packages/cli/src/engine/execute-plan.ts`
+
+**Step 2: Implement fix**
+
+- Normalize canonical paths before scope-root extraction
+- Make marker/prefix detection robust across separator variants
+- Add/adjust tests that assert stable scope-root inference with normalized paths
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`
+Expected: scope-root inference remains deterministic across normalized inputs
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/engine/execute-plan.ts packages/cli/src/engine/execute-plan.test.ts
+git commit -m "fix(p02-t09): harden inferScopeRoot path normalization"
+```
+
+---
+
+### Task p02-t10: (review) Clarify auto strategy planning behavior
+
+**Files:**
+- Modify: `packages/cli/src/engine/compute-plan.ts`
+- Modify: `packages/cli/src/engine/compute-plan.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `auto` resolution behavior is correct but implicit; planning uses symlink-first while runtime may fall back to copy.
+Location: `packages/cli/src/engine/compute-plan.ts`
+
+**Step 2: Implement fix**
+
+- Add explicit code comment/documentation in planning logic clarifying `auto` semantics
+- Add/update test assertions where useful to lock expected planning behavior
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`
+Expected: tests and types pass; auto strategy behavior is explicit in code
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/engine/compute-plan.ts packages/cli/src/engine/compute-plan.test.ts
+git commit -m "docs(p02-t10): clarify auto strategy planning behavior"
+```
+
+---
+
+### Task p02-t11: (review) Fix copy-mode removal manifest update bug
+
+**Files:**
+- Modify: `packages/cli/src/engine/execute-plan.ts`
+- Modify: `packages/cli/src/engine/execute-plan.test.ts`
+- Modify: `packages/cli/src/engine/engine.integration.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: remove-path manifest updates for copy strategy can trigger hash computation on deleted canonical paths, causing partial failure and stale manifest entries.
+Location: `packages/cli/src/engine/execute-plan.ts`
+
+**Step 2: Implement fix**
+
+- Avoid content-hash computation for `remove` operations
+- Derive only the relative manifest key material needed for `removeEntry`
+- Add regression tests for copy-mode removal ensuring provider cleanup + manifest removal both succeed
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`
+Expected: copy-mode removal path succeeds without stale manifest entries
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/engine/execute-plan.ts packages/cli/src/engine/execute-plan.test.ts packages/cli/src/engine/engine.integration.test.ts
+git commit -m "fix(p02-t11): remove hash dependency from copy-mode removals"
+```
+
+---
+
 ## Phase 3: Drift Detection and Output
 
 **Goal:** Drift detector classifies sync state for each mapping. Output formatters render status tables, sync plans, and doctor results. After this phase, `detectDrift` and `detectStrays` are functional and output is formatted for both human and JSON modes.
@@ -2112,7 +2295,7 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 | Scope | Type | Status | Date | Artifact |
 |-------|------|--------|------|----------|
 | p01 | code | passed | 2026-02-13 | reviews/p01-re-review-2026-02-13.md |
-| p02 | code | pending | - | - |
+| p02 | code | fixes_added | 2026-02-13 | reviews/p02-code-review.md |
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
 | p05 | code | pending | - | - |
@@ -2133,12 +2316,12 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 ## Planned Scope Summary
 
 - Phase 1: 31 tasks — Foundation (scaffold, types, logger, commander, adapters, manifest, scanner, config, fs helpers, review fixes)
-- Phase 2: 5 tasks — Sync Engine (plan types, compute plan, execute plan, markers, integration tests)
+- Phase 2: 11 tasks — Sync Engine (plan types, compute plan, execute plan, markers, integration tests, review fixes)
 - Phase 3: 4 tasks — Drift Detection and Output (drift detector, stray detector, output formatters, shared prompts)
 - Phase 4: 8 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests)
 - Phase 5: 6 tasks — Git Hook, Polish, and E2E (hook, edge cases, contract tests, snapshot tests, e2e tests, final verification)
 
-**Total: 54 tasks**
+**Total: 60 tasks**
 
 ---
 

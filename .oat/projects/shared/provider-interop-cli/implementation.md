@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-13
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t06
 oat_generated: false
 ---
 
@@ -17,12 +17,12 @@ oat_generated: false
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
 | Phase 1 | complete | 31 | 31/31 |
-| Phase 2 | complete | 5 | 5/5 |
+| Phase 2 | in_progress | 11 | 5/11 |
 | Phase 3 | pending | 4 | 0/4 |
 | Phase 4 | pending | 8 | 0/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 36/54 tasks completed
+**Total:** 36/60 tasks completed
 
 ---
 
@@ -781,7 +781,7 @@ oat_generated: false
 
 ## Phase 2: Sync Engine — Diff, Plan, Execute
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-02-13
 
 ### Phase Summary (fill when phase is complete)
@@ -808,6 +808,7 @@ oat_generated: false
 **Notes / Decisions:**
 - `computeSyncPlan` accepts an optional `scopeRoot` override to keep removal planning deterministic when canonical lists are empty.
 - `executeSyncPlan` intentionally continues after per-entry failures and persists partial successful manifest updates.
+- Phase reopened for p02 review-fix tasks (`p02-t06` to `p02-t11`).
 
 ### Task p02-t01: Implement sync plan types
 
@@ -1017,7 +1018,31 @@ oat_generated: false
 **Deferred Findings (Minor):**
 - None (all eight minor findings addressed across `p01-t26` to `p01-t31`)
 
-**Next:** p01 re-review passed (`reviews/p01-re-review-2026-02-13.md`). Continue implementation with `p03-t01` after HiL approval for Phase 2 boundary.
+**Next:** p01 re-review passed (`reviews/p01-re-review-2026-02-13.md`).
+
+---
+
+### Review Received: p02
+
+**Date:** 2026-02-13  
+**Review artifact:** `reviews/p02-code-review.md`
+
+**Findings:**
+- Critical: 0
+- Important: 2
+- Medium: 4
+- Minor: 5
+
+**New tasks added:** `p02-t06`, `p02-t07`, `p02-t08`, `p02-t09`, `p02-t10`, `p02-t11`
+
+**Deferred Findings (Minor):**
+- `MIN-1` Simplify `createRemovalEntry` name extraction helper
+- `MIN-2` Normalize `entryInsideMapping` separator handling for non-primary platforms
+- `MIN-3` Consolidate duplicated test helper fixtures across engine test files
+- `MIN-4` Consider directory-level `.oat-generated` sentinel in addition to inline markers
+- `MIN-5` Narrow `SyncPlan.removals` typing to removal-only entry variant
+
+**Next:** Execute p02 review-fix tasks via `/oat:implement` starting at `p02-t06`.
 
 ---
 
