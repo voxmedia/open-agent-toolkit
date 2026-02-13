@@ -40,5 +40,3 @@ export function getSyncMappings(
     return true;
   });
 }
-
-export const getAdapterMappings = getSyncMappings;

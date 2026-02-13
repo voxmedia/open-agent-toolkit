@@ -63,7 +63,7 @@ describe('ProviderAdapter types', () => {
     expect(missing).toHaveBeenCalledWith('/tmp/project');
   });
 
-  it('getAdapterMappings filters nativeRead entries', () => {
+  it('getSyncMappings filters nativeRead entries', () => {
     const adapter: ProviderAdapter = {
       name: 'codex',
       displayName: 'Codex CLI',

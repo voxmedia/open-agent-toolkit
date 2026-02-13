@@ -5,6 +5,5 @@ export type {
 } from './adapter.types';
 export {
   getActiveAdapters,
-  getAdapterMappings,
   getSyncMappings,
 } from './adapter.utils';
