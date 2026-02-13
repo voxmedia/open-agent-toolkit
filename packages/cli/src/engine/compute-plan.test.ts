@@ -159,6 +159,35 @@ describe('computeSyncPlan', () => {
     expect(plan.entries[0]?.operation).toBe('update_symlink');
   });
 
+  it('creates update_symlink with missing-target reason for broken symlinks', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+    const missingTarget = join(root, '.agents', 'skills', 'missing-skill');
+    const providerPath = join(root, '.claude', 'skills', 'skill-one');
+
+    await mkdir(canonicalPath, { recursive: true });
+    await mkdir(join(root, '.claude', 'skills'), { recursive: true });
+    await symlink(missingTarget, providerPath, 'dir');
+
+    const canonical = [createCanonicalEntry(root, 'skill', 'skill-one')];
+
+    const plan = await computeSyncPlan({
+      canonical,
+      adapters: [createAdapter()],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries).toHaveLength(1);
+    expect(plan.entries[0]).toMatchObject({
+      operation: 'update_symlink',
+      reason: 'symlink target is missing',
+    });
+  });
+
   it('creates remove entry for manifest item whose canonical was deleted', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
     tempDirs.push(root);

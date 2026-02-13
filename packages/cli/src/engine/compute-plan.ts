@@ -98,11 +98,14 @@ function createRemovalEntry(
   scopeRoot: string,
 ): SyncPlanEntry {
   const canonicalRelative = manifestEntry.canonicalPath;
+  const normalizedCanonicalRelative = normalize(
+    relative('.', canonicalRelative),
+  );
   return {
     canonical: {
       name:
-        canonicalRelative.split('/').filter(Boolean).at(-1) ??
-        canonicalRelative,
+        normalizedCanonicalRelative.split('/').filter(Boolean).at(-1) ??
+        normalizedCanonicalRelative,
       type: manifestEntry.contentType,
       canonicalPath: resolve(scopeRoot, canonicalRelative),
     },
@@ -119,16 +122,25 @@ async function classifyOperation(
   providerPath: string,
   strategy: 'symlink' | 'copy',
 ): Promise<Pick<SyncPlanEntry, 'operation' | 'reason'>> {
-  const exists = await pathExists(providerPath);
-  if (!exists) {
-    return {
-      operation: strategy === 'copy' ? 'create_copy' : 'create_symlink',
-      reason: 'provider path does not exist',
-    };
-  }
-
   if (strategy === 'symlink') {
-    const stat = await lstat(providerPath);
+    let stat: Awaited<ReturnType<typeof lstat>>;
+    try {
+      stat = await lstat(providerPath);
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        return {
+          operation: 'create_symlink',
+          reason: 'provider path does not exist',
+        };
+      }
+      throw error;
+    }
+
     if (!stat.isSymbolicLink()) {
       return {
         operation: 'update_symlink',
@@ -139,6 +151,14 @@ async function classifyOperation(
     const linkTarget = await readlink(providerPath);
     const resolvedTarget = resolve(dirname(providerPath), linkTarget);
     const canonicalPath = resolve(canonicalEntry.canonicalPath);
+    const targetExists = await pathExists(resolvedTarget);
+
+    if (!targetExists) {
+      return {
+        operation: 'update_symlink',
+        reason: 'symlink target is missing',
+      };
+    }
 
     if (resolvedTarget !== canonicalPath) {
       return {
@@ -147,17 +167,17 @@ async function classifyOperation(
       };
     }
 
-    const targetExists = await pathExists(resolvedTarget);
-    if (!targetExists) {
-      return {
-        operation: 'update_symlink',
-        reason: 'symlink target is missing',
-      };
-    }
-
     return {
       operation: 'skip',
       reason: 'already in sync',
+    };
+  }
+
+  const exists = await pathExists(providerPath);
+  if (!exists) {
+    return {
+      operation: 'create_copy',
+      reason: 'provider path does not exist',
     };
   }
 
