@@ -8,5 +8,6 @@ export {
   type SyncResult,
 } from './engine.types';
 export { executeSyncPlan } from './execute-plan';
+export { hasMarker, insertMarker, OAT_MARKER_PREFIX } from './markers';
 export type { CanonicalEntry } from './scanner';
 export { scanCanonical } from './scanner';
