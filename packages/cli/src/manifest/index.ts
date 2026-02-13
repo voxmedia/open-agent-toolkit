@@ -1,3 +1,4 @@
+export { computeDirectoryHash } from './hash';
 export {
   addEntry,
   createEmptyManifest,
