@@ -1,3 +1,4 @@
+export { computeSyncPlan } from './compute-plan';
 export {
   type EngineScope,
   SYNC_OPERATION_TYPES,
