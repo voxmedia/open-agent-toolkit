@@ -72,6 +72,7 @@ function createHarness(options: HarnessOptions = {}): {
   selectWithAbort: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
   installHook: ReturnType<typeof vi.fn>;
+  uninstallHook: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const scopeRoots = {
@@ -94,6 +95,7 @@ function createHarness(options: HarnessOptions = {}): {
     },
   );
   const installHook = vi.fn(async () => undefined);
+  const uninstallHook = vi.fn(async () => undefined);
   const dependencyOverrides = {
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
@@ -115,6 +117,7 @@ function createHarness(options: HarnessOptions = {}): {
     selectWithAbort,
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
     installHook,
+    uninstallHook,
   };
 
   if (!options.useDefaultAdopt) {
@@ -133,6 +136,7 @@ function createHarness(options: HarnessOptions = {}): {
     selectWithAbort,
     adoptStray,
     installHook,
+    uninstallHook,
   };
 }
 
@@ -505,7 +509,7 @@ describe('createInitCommand', () => {
 
     const noHook = createHarness({
       interactive: true,
-      hookInstalled: false,
+      hookInstalled: true,
       confirmResponses: [true],
     });
     await runInitCommand(noHook.command, {
@@ -514,5 +518,6 @@ describe('createInitCommand', () => {
     });
     expect(noHook.confirmAction).not.toHaveBeenCalled();
     expect(noHook.installHook).not.toHaveBeenCalled();
+    expect(noHook.uninstallHook).toHaveBeenCalledWith('/tmp/workspace');
   });
 });
