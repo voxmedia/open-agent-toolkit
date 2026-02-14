@@ -1,6 +1,6 @@
 ---
 name: oat-idea-new
-description: Create a new idea directory for lightweight brainstorming and capture, then start brainstorming immediately.
+description: Create a new idea directory for lightweight brainstorming and capture, then hand off to oat-idea-ideate.
 argument-hint: "<idea-name>"
 disable-model-invocation: true
 user-invocable: true
@@ -9,39 +9,7 @@ allowed-tools: Read, Write, Bash, Glob, AskUserQuestion
 
 # New Idea
 
-Create a new idea directory under `.oat/ideas/`, scaffold a discovery document, and transition into brainstorming mode.
-
-## Mode Assertion
-
-**OAT MODE: Ideation**
-
-**Purpose:** Lightweight brainstorming through natural, exploratory conversation. Capture the essence of an idea without formal structure or implementation detail.
-
-**BLOCKED Activities:**
-- No code writing or implementation details
-- No formal requirements or specifications
-- No technical designs or architecture
-- No task breakdowns or plans
-- No forced structure — let the idea breathe
-
-**ALLOWED Activities:**
-- Free-form discussion and exploration
-- Asking open-ended questions
-- Capturing thoughts and observations
-- Exploring "what if" scenarios
-- Noting related ideas and references
-- Identifying open questions organically
-
-**Self-Correction Protocol:**
-If you catch yourself:
-- Writing implementation details → STOP (capture as an Open Question instead)
-- Formalizing requirements → STOP (keep it conversational)
-- Creating structured deliverables → STOP (save for project workflow)
-
-**Recovery:**
-1. Acknowledge the deviation
-2. Return to exploratory questioning
-3. Capture the insight as a note or open question
+Create a new idea directory under `.oat/ideas/`, scaffold a discovery document, verify setup, and hand off to `oat-idea-ideate` for brainstorming.
 
 ## Progress Indicators (User-Facing)
 
@@ -122,22 +90,21 @@ Write the idea path to `.oat/active-idea`:
 .oat/ideas/{idea-name}
 ```
 
-### Step 8: Transition to Brainstorming
+### Step 8: Verify and Hand Off
 
-Now enter the same conversational flow as `oat-idea-ideate`:
+Verify all success criteria are met, then tell the user:
 
-1. Read the discovery document
-2. If the user provided context about the idea (in their original message or arguments), capture it in the "What's the Idea?" section
-3. Add a session header: `### Session: {today's date}`
-4. Ask open-ended exploratory questions to help the user flesh out the idea:
-   - "What sparked this idea?"
-   - "Who would benefit from this?"
-   - "What's the simplest version of this?"
-   - "What existing things is this similar to or different from?"
-5. Capture responses naturally in the discovery document — update the appropriate sections as themes emerge
-6. When the user signals they're done or the conversation reaches a natural pause, update `oat_idea_last_updated` and offer:
-   - Continue later with `oat-idea-ideate`
-   - Summarize now with `oat-idea-summarize`
+```
+Idea "{Idea Name}" created successfully.
+
+Directory: .oat/ideas/{idea-name}/
+Backlog:   .oat/ideas/backlog.md (entry added)
+Active:    .oat/active-idea (set)
+
+Starting brainstorming...
+```
+
+Then load and execute `oat-idea-ideate` to begin the first brainstorming session. The ideate skill owns all conversational brainstorming behavior.
 
 ## Success Criteria
 
@@ -146,4 +113,4 @@ Now enter the same conversational flow as `oat-idea-ideate`:
 - ✅ `.oat/ideas/backlog.md` exists and includes the new idea
 - ✅ `.oat/ideas/scratchpad.md` exists (initialized if first idea)
 - ✅ `.oat/active-idea` points to the new idea
-- ✅ Brainstorming session started with exploratory questions
+- ✅ Handed off to `oat-idea-ideate` for brainstorming
