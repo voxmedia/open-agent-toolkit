@@ -29,7 +29,7 @@ Use phase-scoped review artifacts during implementation (`p01`, `p02`, etc), the
 
 ## Reference artifacts
 
-- `.oat/projects/shared/provider-interop-cli/plan.md` (`## Reviews`)
-- `.oat/projects/shared/provider-interop-cli/reviews/`
+- `.oat/projects/<scope>/<project>/plan.md` (`## Reviews`)
+- `.oat/projects/<scope>/<project>/reviews/`
 - `.agents/skills/oat-request-review/SKILL.md`
 - `.agents/skills/oat-receive-review/SKILL.md`

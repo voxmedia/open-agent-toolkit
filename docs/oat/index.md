@@ -25,7 +25,7 @@ This directory is the temporary documentation structure for OAT, organized so it
 
 ## Reference artifacts
 
-- `.oat/projects/shared/provider-interop-cli/spec.md`
-- `.oat/projects/shared/provider-interop-cli/design.md`
-- `.oat/projects/shared/provider-interop-cli/plan.md`
-- `.oat/projects/shared/provider-interop-cli/implementation.md`
+- `.oat/projects/<scope>/<project>/spec.md`
+- `.oat/projects/<scope>/<project>/design.md`
+- `.oat/projects/<scope>/<project>/plan.md`
+- `.oat/projects/<scope>/<project>/implementation.md`

@@ -28,4 +28,4 @@ GitHub PR body policy:
 
 - `.agents/skills/oat-pr-progress/SKILL.md`
 - `.agents/skills/oat-pr-project/SKILL.md`
-- `.oat/projects/shared/provider-interop-cli/pr/`
+- `.oat/projects/<scope>/<project>/pr/`

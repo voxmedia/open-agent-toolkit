@@ -27,6 +27,6 @@ Do not move to the next lifecycle state if review/state artifacts indicate unres
 
 ## Reference artifacts
 
-- `.oat/projects/shared/provider-interop-cli/state.md`
-- `.oat/projects/shared/provider-interop-cli/plan.md` (`## Reviews`)
-- `.oat/projects/shared/provider-interop-cli/implementation.md`
+- `.oat/projects/<scope>/<project>/state.md`
+- `.oat/projects/<scope>/<project>/plan.md` (`## Reviews`)
+- `.oat/projects/<scope>/<project>/implementation.md`

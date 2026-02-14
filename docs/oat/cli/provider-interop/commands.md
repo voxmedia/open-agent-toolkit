@@ -50,6 +50,6 @@ Purpose:
 
 ## Reference artifacts
 
-- `.oat/projects/shared/provider-interop-cli/spec.md` (FR1-FR6)
-- `.oat/projects/shared/provider-interop-cli/implementation.md` (`Phase 4`, `Phase 5`, final summary)
+- `.oat/projects/<scope>/<project>/spec.md` (FR1-FR6)
+- `.oat/projects/<scope>/<project>/implementation.md` (`Phase 4`, `Phase 5`, final summary)
 - `packages/cli/src/commands/**`

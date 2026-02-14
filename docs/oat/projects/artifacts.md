@@ -23,7 +23,7 @@ Artifacts are the project system of record; automation and routing should derive
 ## Reference artifacts
 
 - `.oat/templates/*.md`
-- `.oat/projects/shared/provider-interop-cli/spec.md`
-- `.oat/projects/shared/provider-interop-cli/design.md`
-- `.oat/projects/shared/provider-interop-cli/plan.md`
-- `.oat/projects/shared/provider-interop-cli/implementation.md`
+- `.oat/projects/<scope>/<project>/spec.md`
+- `.oat/projects/<scope>/<project>/design.md`
+- `.oat/projects/<scope>/<project>/plan.md`
+- `.oat/projects/<scope>/<project>/implementation.md`

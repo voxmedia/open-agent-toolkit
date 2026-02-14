@@ -23,6 +23,6 @@
 
 ## Reference artifacts
 
-- `.oat/projects/shared/provider-interop-cli/spec.md` (FR5)
+- `.oat/projects/<scope>/<project>/spec.md` (FR5)
 - `packages/cli/src/providers/**`
 - `packages/cli/src/providers/shared/adapter.utils.ts`

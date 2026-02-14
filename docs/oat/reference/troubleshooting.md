@@ -27,6 +27,6 @@ Expected for native-read skill mappings. Codex can read canonical skills without
 
 ## Reference artifacts
 
-- `.oat/projects/shared/provider-interop-cli/implementation.md`
-- `.oat/projects/shared/provider-interop-cli/reviews/`
+- `.oat/projects/<scope>/<project>/implementation.md`
+- `.oat/projects/<scope>/<project>/reviews/`
 - `packages/cli/src/commands/doctor/index.ts`

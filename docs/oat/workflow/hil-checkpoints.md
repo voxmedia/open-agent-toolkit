@@ -32,5 +32,5 @@ Semantics:
 ## Reference artifacts
 
 - `.oat/templates/plan.md`
-- `.oat/projects/shared/provider-interop-cli/plan.md`
-- `.oat/projects/shared/provider-interop-cli/state.md`
+- `.oat/projects/<scope>/<project>/plan.md`
+- `.oat/projects/<scope>/<project>/state.md`

@@ -27,6 +27,6 @@ Keep explicit trace links among:
 
 ## Reference artifacts
 
-- `.oat/projects/shared/provider-interop-cli/plan.md`
-- `.oat/projects/shared/provider-interop-cli/implementation.md`
-- `.oat/projects/shared/provider-interop-cli/reviews/`
+- `.oat/projects/<scope>/<project>/plan.md`
+- `.oat/projects/<scope>/<project>/implementation.md`
+- `.oat/projects/<scope>/<project>/reviews/`

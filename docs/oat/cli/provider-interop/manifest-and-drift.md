@@ -30,7 +30,7 @@ Tracks managed mappings so the CLI can:
 
 ## Reference artifacts
 
-- `.oat/projects/shared/provider-interop-cli/spec.md` (FR2, FR3, FR6)
-- `.oat/projects/shared/provider-interop-cli/design.md`
+- `.oat/projects/<scope>/<project>/spec.md` (FR2, FR3, FR6)
+- `.oat/projects/<scope>/<project>/design.md`
 - `packages/cli/src/manifest/**`
 - `packages/cli/src/drift/**`

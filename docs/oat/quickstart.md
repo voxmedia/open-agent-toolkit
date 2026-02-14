@@ -46,5 +46,5 @@ Notes:
 
 ## Reference artifacts
 
-- `.oat/projects/shared/provider-interop-cli/implementation.md` (final summary + verification)
-- `.oat/projects/shared/provider-interop-cli/plan.md` (phases and review table)
+- `.oat/projects/<scope>/<project>/implementation.md` (final summary + verification)
+- `.oat/projects/<scope>/<project>/plan.md` (phases and review table)

@@ -19,6 +19,6 @@
 
 ## Reference artifacts
 
-- `.oat/projects/shared/provider-interop-cli/implementation.md` (hook + safety hardening)
+- `.oat/projects/<scope>/<project>/implementation.md` (hook + safety hardening)
 - `packages/cli/src/engine/hook.ts`
 - `packages/cli/src/commands/init/index.ts`
