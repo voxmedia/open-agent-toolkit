@@ -23,6 +23,11 @@ oat_template_name: plan
 
 **Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
 
+## Planning Checklist
+
+- [ ] Confirmed HiL checkpoints with user
+- [ ] Set `oat_plan_hil_phases` in frontmatter
+
 ---
 
 ## Phase 1: {Phase Name}
