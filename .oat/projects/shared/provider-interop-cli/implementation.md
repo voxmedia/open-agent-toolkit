@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t20
+oat_current_task_id: p04-t21
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 19/24 |
+| Phase 4 | in_progress | 24 | 20/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 70/81 tasks completed
+**Total:** 71/81 tasks completed
 
 ---
 
@@ -1349,6 +1349,7 @@ oat_generated: false
 - [x] p04-t17: (review) Centralize ConcreteScope type alias - d80915c
 - [x] p04-t18: (review) Correct providers inspect mapping section formatting - 350ffb9
 - [x] p04-t19: (review) Add skip-all remaining option to init stray adoption - 59c9968
+- [x] p04-t20: (review) Surface unsynced canonical entries in status output - 002746a
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1412,6 +1413,7 @@ oat_generated: false
 - Continued p04 review-fix execution by centralizing `ConcreteScope` typing in shared types and reusing it across command domains.
 - Continued p04 review-fix execution by aligning `providers inspect` header mapping summaries with actual adapter mappings.
 - Continued p04 review-fix execution by adding skip-all behavior to interactive stray adoption in `oat init`.
+- Continued p04 review-fix execution by reporting canonical entries that have not yet been synced as `missing` in `oat status`.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1999,7 +2001,25 @@ oat_generated: false
 
 ### Task p04-t20: (review) Surface unsynced canonical entries in status output
 
-**Status:** pending
+**Status:** completed
+**Commit:** 002746a
+
+**Outcome (required when completed):**
+- Added status detection for canonical entries that lack corresponding manifest/provider mappings.
+- Reported first-sync gaps as `missing` drift reports per active adapter mappings.
+- Updated command integration expectations so pre-sync status reflects pending missing mappings.
+
+**Files changed:**
+- `packages/cli/src/commands/status/index.ts` - added canonical gap detection logic for unsynced entries.
+- `packages/cli/src/commands/status/index.test.ts` - added canonical-unsynced status regression coverage.
+- `packages/cli/src/commands/commands.integration.test.ts` - updated pre-sync status expectations.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/status/ src/commands/commands.integration.test.ts && pnpm --filter=@oat/cli type-check`
+- Result: pass (17 tests, type-check clean)
+
+**Notes / Decisions:**
+- Missing detection is scoped by adapter mappings and canonical path membership to avoid over-reporting unrelated canonical content.
 
 ### Task p04-t21: (review) Add `providers inspect --scope` coverage
 

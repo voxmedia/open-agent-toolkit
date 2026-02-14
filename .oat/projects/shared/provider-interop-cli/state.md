@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t20
-oat_last_commit: 59c9968
+oat_current_task: p04-t21
+oat_last_commit: 002746a
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. p04 review-fix execution is active; `p04-t09` through `p04-t19` are complete and work has advanced to `p04-t20`.
+Implementation - In Progress. p04 review-fix execution is active; `p04-t09` through `p04-t20` are complete and work has advanced to `p04-t21`.
 
 ## Artifacts
 
@@ -52,7 +52,7 @@ Implementation - In Progress. p04 review-fix execution is active; `p04-t09` thro
 - ✓ p03 re-review passed (`reviews/p03-re-review-2026-02-13.md`)
 - ✓ Phase 4 complete (`p04-t01` through `p04-t08`)
 - ✓ p04 review received (`reviews/p04-code-review.md`)
-- ⧗ p04 review-fix tasks in progress (`p04-t09`–`p04-t19` complete; `p04-t20`–`p04-t24` pending)
+- ⧗ p04 review-fix tasks in progress (`p04-t09`–`p04-t20` complete; `p04-t21`–`p04-t24` pending)
 
 ## Plan Summary
 
@@ -72,4 +72,4 @@ None
 
 ## Next Milestone
 
-Continue `/oat:implement` with `p04-t20`, then request p04 re-review after all review-fix tasks complete.
+Continue `/oat:implement` with `p04-t21`, then request p04 re-review after all review-fix tasks complete.
