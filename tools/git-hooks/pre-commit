@@ -1,2 +1,10 @@
 # Run lint-staged to only lint changed files
 pnpm exec lint-staged
+
+# >>> oat pre-commit hook >>>
+if command -v oat >/dev/null 2>&1; then
+  if ! oat status --scope project >/dev/null 2>&1; then
+    echo "oat: project provider views are out of sync - run 'oat status --scope project' or 'oat sync --apply --scope project'" >&2
+  fi
+fi
+# <<< oat pre-commit hook <<<
