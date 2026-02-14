@@ -59,6 +59,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 /oat:request-review code p02-t03      # Code review for task
 /oat:request-review code final        # Final code review
 /oat:request-review code base_sha=abc # Review since specific SHA
+/oat:request-review artifact discovery # Artifact review of discovery.md
 /oat:request-review artifact spec     # Artifact review of spec.md
 /oat:request-review artifact design   # Artifact review of design.md
 ```
@@ -103,7 +104,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 - Ask: "What type of review? (code / artifact)"
 - Ask: "What scope?"
   - For code: `pNN-tNN` task / `pNN` phase / `final` / `base_sha=SHA` / `SHA..HEAD` range
-  - For artifact: `spec` / `design` (and optionally `plan`)
+  - For artifact: `discovery` / `spec` / `design` (and optionally `plan`)
 
 ### Step 2: Validate Artifacts Exist
 
@@ -117,7 +118,7 @@ ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/plan.md" "$P
 - plan.md (tasks being reviewed)
 
 **Required for artifact review:**
-- The artifact being reviewed (spec.md / design.md / plan.md)
+- The artifact being reviewed (discovery.md / spec.md / design.md / plan.md)
 - discovery.md (required when reviewing spec.md)
 - spec.md (required when reviewing design.md or plan.md)
 - design.md (required when reviewing plan.md)
@@ -127,7 +128,7 @@ ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/plan.md" "$P
 ### Step 3: Determine Scope and Commits
 
 If review type is `artifact`:
-- Interpret the scope token as the artifact name (`spec`, `design`, or `plan`)
+- Interpret the scope token as the artifact name (`discovery`, `spec`, `design`, or `plan`)
 - Set `SCOPE_RANGE=""` (no git range required)
 - Proceed to Step 5 (metadata); Step 4 uses artifact files, not git diff
 
@@ -178,6 +179,7 @@ If review type is `artifact`, the "files in scope" are the artifact(s):
 
 ```bash
 case "$SCOPE_TOKEN" in
+  discovery) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/discovery.md") ;;
   spec) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/discovery.md") ;;
   design) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/design.md" "$PROJECT_PATH/spec.md") ;;
   plan) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md") ;;
@@ -195,6 +197,23 @@ Files changed: {FILE_COUNT}
 
 Proceed with review?
 ```
+
+### Step 4.5: Gather Deferred Findings Ledger (Final Scope Only)
+
+If `review type == code` and `scope == final`, gather unresolved deferred findings from prior review cycles.
+
+Preferred sources:
+- `implementation.md` sections titled `Deferred Findings (...)`
+- prior review artifacts under `reviews/` when implementation notes are incomplete
+
+Build:
+- `DEFERRED_MEDIUM_COUNT`
+- `DEFERRED_MINOR_COUNT`
+- `DEFERRED_LEDGER` (one-line summary per finding with source artifact)
+
+Rules:
+- Include this ledger in review metadata so final review explicitly re-evaluates carry-forward debt.
+- Final review should call out whether each deferred Medium remains acceptable or should now be fixed.
 
 ### Step 5: Prepare Review Metadata Block
 
@@ -222,6 +241,11 @@ Build the "Review Scope" metadata for the reviewer:
 
 **Commits (code review only):**
 {git log --oneline for SCOPE_RANGE}
+
+**Deferred Findings Ledger (final scope only):**
+- Deferred Medium count: {DEFERRED_MEDIUM_COUNT}
+- Deferred Minor count: {DEFERRED_MINOR_COUNT}
+{DEFERRED_LEDGER}
 ```
 
 ### Step 6: Execute Review (3-Tier Capability Model)
@@ -285,8 +309,9 @@ If running inline (Tier 3), execute the review and write artifact.
 2. If code review: verify spec/design alignment (missing/extra requirements)
 3. If code review: verify code quality (correctness, tests, security, maintainability)
 4. If artifact review: verify completeness/clarity/readiness of the artifact and its alignment with upstream artifacts
-4. Categorize findings (Critical/Important/Minor)
-5. Write artifact with file:line references and fix guidance
+5. Categorize findings (Critical/Important/Medium/Minor)
+6. For final scope: explicitly disposition deferred Medium ledger items (fix now vs accept defer)
+7. Write artifact with file:line references and fix guidance
 
 **Review artifact template:** (see `.agent/agents/oat-reviewer.md` for full format)
 
@@ -318,6 +343,9 @@ oat_project: {PROJECT_PATH}
 ### Important
 {findings or "None"}
 
+### Medium
+{findings or "None"}
+
 ### Minor
 {findings or "None"}
 
@@ -347,11 +375,28 @@ After review artifact is written, update `plan.md` `## Reviews` table *if plan.m
 Update or add a row matching `{scope}`:
 - `Scope`: `{scope}` (examples: `p02`, `final`, `spec`, `design`)
 - `Type`: `code` or `artifact`
-- `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; after fixes are implemented, implement should move the row to `fixes_completed` until a re-review marks `passed`)
+- `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; `passed` now requires no unresolved Critical/Important/Medium and final deferred-medium disposition when applicable)
 - `Date`: `{today}`
 - `Artifact`: `reviews/{filename}.md`
 
 If plan.md is missing (e.g., spec/design review before planning), skip this update and rely on the review artifact + next-step routing.
+
+### Step 9.5: Commit Review Bookkeeping Atomically (Required)
+
+After writing the review artifact and applying the Step 9 Reviews-table update, create an atomic bookkeeping commit.
+
+**Commit scope:**
+- Always include the review artifact file: `reviews/{filename}.md`
+- Include `plan.md` when Step 9 updated the Reviews table
+- Do not include unrelated implementation/code files in this commit
+
+**Commit message:**
+- `chore(oat): record {scope} review artifact`
+
+**If the user asks to defer commit:**
+- Require explicit user confirmation to proceed without commit
+- Warn that uncommitted review bookkeeping can desync workflow routing/restart behavior
+- In the summary, clearly state: "bookkeeping not committed (user-approved defer)"
 
 ### Step 10: Output Summary
 
@@ -379,9 +424,10 @@ Review complete for {project-name}.
 
 Scope: {scope}
 Files reviewed: {N}
-Findings: {N} critical, {N} important, {N} minor
+Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 Review artifact: {path}
+Bookkeeping commit: {sha or "deferred with user approval"}
 
 Next: Run /oat:receive-review to convert findings into plan tasks.
 ```
@@ -395,4 +441,6 @@ Next: Run /oat:receive-review to convert findings into plan tasks.
 - Review executed (subagent, fresh session guidance, or inline)
 - Review artifact written to correct path
 - Plan.md Reviews section updated
+- Review artifact + plan bookkeeping committed atomically (or explicitly deferred with user approval)
+- For final scope, deferred findings ledger included in reviewer context
 - User guided to next step (/oat:receive-review)

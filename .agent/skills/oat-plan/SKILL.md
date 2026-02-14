@@ -258,6 +258,13 @@ Ask user: "During implementation, should I stop for review at every phase bounda
 
 Update plan.md frontmatter with user's choice.
 
+**Required plan body update (do not skip):**
+- In `## Planning Checklist`, mark:
+  - `[x] Confirmed HiL checkpoints with user`
+  - `[x] Set oat_plan_hil_phases in frontmatter`
+
+If `## Planning Checklist` is missing (older plans), add it before finalizing and then check both items.
+
 ### Step 11: Review Plan with User
 
 Present plan summary:
@@ -271,6 +278,11 @@ Ask: "Does this breakdown make sense? Any tasks missing?"
 Iterate until user confirms.
 
 ### Step 12: Mark Plan Complete
+
+Before setting `oat_status: complete`, verify:
+- `oat_plan_hil_phases` is explicitly set in frontmatter (empty array is valid for "every phase")
+- `## Planning Checklist` exists
+- both HiL checklist items are checked (`[x]`)
 
 Update frontmatter:
 ```yaml

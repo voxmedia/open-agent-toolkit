@@ -1,0 +1,124 @@
+import { chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import { detectStrays } from '../drift';
+import { CliError } from '../errors';
+import {
+  addEntry,
+  createEmptyManifest,
+  loadManifest,
+  ManifestSchema,
+  saveManifest,
+} from '../manifest';
+import { scanCanonical } from './scanner';
+
+describe('edge cases', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => {
+        await rm(dir, { recursive: true, force: true });
+      }),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('handles empty .agents/ directory gracefully', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-edge-empty-'));
+    tempDirs.push(root);
+
+    const entries = await scanCanonical(root, 'project');
+
+    expect(entries).toEqual([]);
+  });
+
+  it('handles permission denied on provider dir', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-edge-perm-'));
+    tempDirs.push(root);
+    const providerDir = join(root, '.claude', 'skills');
+    await mkdir(providerDir, { recursive: true });
+
+    await chmod(providerDir, 0o000);
+    try {
+      await expect(
+        detectStrays('claude', providerDir, createEmptyManifest(), []),
+      ).rejects.toMatchObject({
+        name: 'CliError',
+        exitCode: 1,
+      });
+    } finally {
+      await chmod(providerDir, 0o755);
+    }
+  });
+
+  it('recovers from corrupt manifest with clear error message', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-edge-manifest-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await mkdir(join(root, '.oat', 'sync'), { recursive: true });
+    await writeFile(manifestPath, '{"bad":', 'utf8');
+
+    await expect(loadManifest(manifestPath)).rejects.toThrow(CliError);
+    await expect(loadManifest(manifestPath)).rejects.toThrow(
+      /Delete or repair the file and re-run oat sync\./,
+    );
+  });
+
+  it('handles concurrent manifest read/write safely', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-edge-concurrency-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+
+    const manifests = Array.from({ length: 8 }, (_, index) => {
+      const entryName = `skill-${index + 1}`;
+      return addEntry(createEmptyManifest(), {
+        canonicalPath: `.agents/skills/${entryName}`,
+        providerPath: `.claude/skills/${entryName}`,
+        provider: 'claude',
+        contentType: 'skill',
+        strategy: 'symlink',
+        contentHash: null,
+        lastSynced: '2026-02-14T00:00:00.000Z',
+      });
+    });
+
+    await Promise.all(
+      manifests.map(async (manifest) => saveManifest(manifestPath, manifest)),
+    );
+
+    const loaded = await loadManifest(manifestPath);
+    expect(() => ManifestSchema.parse(loaded)).not.toThrow();
+    expect(loaded.entries).toHaveLength(1);
+    expect(loaded.entries[0]?.canonicalPath).toMatch(
+      /^\.agents\/skills\/skill-/,
+    );
+  });
+
+  it('handles .agents/skills/ with nested non-directory entries', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-edge-nondir-'));
+    tempDirs.push(root);
+    const skillsDir = join(root, '.agents', 'skills');
+    await mkdir(skillsDir, { recursive: true });
+    await writeFile(
+      join(skillsDir, 'README.md'),
+      '# not a skill dir\n',
+      'utf8',
+    );
+    await mkdir(join(skillsDir, 'actual-skill'), { recursive: true });
+    await writeFile(
+      join(skillsDir, 'actual-skill', 'SKILL.md'),
+      '# skill\n',
+      'utf8',
+    );
+
+    const entries = await scanCanonical(root, 'project');
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      name: 'actual-skill',
+      type: 'skill',
+    });
+  });
+});

@@ -105,11 +105,14 @@ parse_frontmatter() {
 
   # Find field value - grep returns 1 if no match, so use || true
   value=$(echo "$content" | grep "^${field}:" | head -1 | sed "s/^${field}:[[:space:]]*//") || true
+  # Strip inline comments used by templates and trim trailing whitespace
+  value=$(echo "$value" | sed 's/[[:space:]]#.*$//' | sed 's/[[:space:]]*$//')
   echo "$value"
 }
 
 # Read project state from state.md frontmatter
-# Sets: OAT_PHASE, OAT_PHASE_STATUS, OAT_CURRENT_TASK, OAT_LIFECYCLE, OAT_BLOCKERS
+# Sets: OAT_PHASE, OAT_PHASE_STATUS, OAT_CURRENT_TASK, OAT_LIFECYCLE, OAT_BLOCKERS,
+#       OAT_HIL_CHECKPOINTS, OAT_HIL_COMPLETED, OAT_HIL_STATUS
 read_project_state() {
   local state_file="${PROJECT_PATH}/state.md"
 
@@ -118,6 +121,8 @@ read_project_state() {
   OAT_CURRENT_TASK=$(parse_frontmatter "$state_file" "oat_current_task")
   OAT_LIFECYCLE=$(parse_frontmatter "$state_file" "oat_lifecycle")
   OAT_BLOCKERS=$(parse_frontmatter "$state_file" "oat_blockers")
+  OAT_HIL_CHECKPOINTS=$(parse_frontmatter "$state_file" "oat_hil_checkpoints")
+  OAT_HIL_COMPLETED=$(parse_frontmatter "$state_file" "oat_hil_completed")
 
   # Defaults
   OAT_PHASE="${OAT_PHASE:-unknown}"
@@ -127,6 +132,26 @@ read_project_state() {
   fi
   OAT_LIFECYCLE="${OAT_LIFECYCLE:-active}"
   OAT_BLOCKERS="${OAT_BLOCKERS:-[]}"
+  OAT_HIL_CHECKPOINTS="${OAT_HIL_CHECKPOINTS:-[]}"
+  OAT_HIL_COMPLETED="${OAT_HIL_COMPLETED:-[]}"
+
+  # Human-in-loop status for current phase
+  if phase_in_hil_list "$OAT_PHASE" "$OAT_HIL_CHECKPOINTS"; then
+    if phase_in_hil_list "$OAT_PHASE" "$OAT_HIL_COMPLETED"; then
+      OAT_HIL_STATUS="passed"
+    else
+      OAT_HIL_STATUS="pending"
+    fi
+  else
+    OAT_HIL_STATUS="n/a"
+  fi
+}
+
+# Check whether a phase token appears in a serialized YAML array string
+phase_in_hil_list() {
+  local phase="$1"
+  local list="$2"
+  [[ "$list" == *"\"${phase}\""* ]]
 }
 
 # Read knowledge index status
@@ -221,6 +246,15 @@ compute_next_step() {
     return
   fi
 
+  # Respect configured human-in-the-loop checkpoints before advancing phase
+  if [[ "$OAT_PHASE_STATUS" == "complete" ]] &&
+    phase_in_hil_list "$OAT_PHASE" "$OAT_HIL_CHECKPOINTS" &&
+    ! phase_in_hil_list "$OAT_PHASE" "$OAT_HIL_COMPLETED"; then
+    RECOMMENDED_STEP="/oat:${OAT_PHASE}"
+    RECOMMENDED_REASON="Complete ${OAT_PHASE} HiL approval before advancing"
+    return
+  fi
+
   # Map phase + status to next skill
   case "${OAT_PHASE}:${OAT_PHASE_STATUS}" in
     "discovery:in_progress") RECOMMENDED_STEP="/oat:discovery"; RECOMMENDED_REASON="Continue discovery phase" ;;
@@ -304,6 +338,7 @@ EOF
 |-------|-------|
 | Phase | ${OAT_PHASE} |
 | Status | ${OAT_PHASE_STATUS} |
+| HiL Gate | ${OAT_HIL_STATUS} |
 | Current Task | ${OAT_CURRENT_TASK} |
 
 EOF

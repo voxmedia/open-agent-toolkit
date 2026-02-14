@@ -91,7 +91,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ### Step 2: Check Knowledge Base Exists
 
 ```bash
-ls .oat/knowledge/repo/project-index.md 2>/dev/null
+test -f .oat/knowledge/repo/project-index.md
 ```
 
 **If missing:** Block and require `/oat:index` first.
@@ -134,13 +134,13 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
    fi
    ```
 
-2. **Git diff check:** Compare recorded merge base to current HEAD
+2. **Git diff check:** Compare recorded index HEAD to current HEAD
    ```bash
    # Use --numstat for reliable file count (one line per file)
-   if [ -n "$SOURCE_MERGE_BASE_SHA" ]; then
-     FILES_CHANGED=$(git diff --numstat "$SOURCE_MERGE_BASE_SHA..HEAD" 2>/dev/null | wc -l | tr -d ' ')
+   if [ -n "$SOURCE_HEAD_SHA" ]; then
+     FILES_CHANGED=$(git diff --numstat "$SOURCE_HEAD_SHA..HEAD" 2>/dev/null | wc -l | tr -d ' ')
      # Also get summary for display
-     CHANGES_SUMMARY=$(git diff --shortstat "$SOURCE_MERGE_BASE_SHA..HEAD" 2>/dev/null)
+     CHANGES_SUMMARY=$(git diff --shortstat "$SOURCE_HEAD_SHA..HEAD" 2>/dev/null)
    else
      FILES_CHANGED="unknown"
      CHANGES_SUMMARY=""
@@ -263,7 +263,32 @@ Update discovery.md sections:
 - Avoid naming specific scripts/files/commands as deliverables in discovery.
 - If you need to preserve an implementation thought, record it as an Open Question for design.
 
-### Step 11: Mark Discovery Complete
+### Step 11: Human-in-the-Loop Gate (If Configured)
+
+Read `"$PROJECT_PATH/state.md"` frontmatter:
+- `oat_hil_checkpoints`
+- `oat_hil_completed`
+
+If `"discovery"` is in `oat_hil_checkpoints`, require explicit user approval before advancing.
+
+**Approval prompt (required):**
+- "Discovery artifact is ready. Approve discovery and unlock `/oat:spec`?"
+
+**Optional independent review path:**
+- If user wants fresh-context artifact review first, run:
+  - `/oat:request-review artifact discovery`
+
+**If user does not approve yet:**
+- Keep discovery frontmatter as:
+  - `oat_status: in_progress`
+  - `oat_ready_for: null`
+- Keep project state as in-progress for discovery.
+- Do **not** append `"discovery"` to `oat_hil_completed`.
+- Stop and report: "Discovery draft saved; awaiting HiL approval."
+
+If discovery is not configured as a HiL checkpoint, or user explicitly approves, continue to Step 12.
+
+### Step 12: Mark Discovery Complete
 
 Update frontmatter:
 ```yaml
@@ -273,7 +298,7 @@ oat_ready_for: oat-spec
 ---
 ```
 
-### Step 12: Update Project State
+### Step 13: Update Project State
 
 Update `"$PROJECT_PATH/state.md"`:
 
@@ -289,7 +314,7 @@ Update `"$PROJECT_PATH/state.md"`:
 - Update **Artifacts** section: Discovery status to "complete"
 - Update **Progress** section
 
-### Step 13: Commit Discovery
+### Step 14: Commit Discovery
 
 **Note:** This shows what users will do when USING oat-discovery.
 During implementation of OAT itself, use standard commit format.
@@ -305,7 +330,7 @@ Key decisions:
 Ready for specification phase"
 ```
 
-### Step 14: Output Summary
+### Step 15: Output Summary
 
 ```
 Discovery phase complete for {project-name}.

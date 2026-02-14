@@ -13,7 +13,7 @@ oat_template_name: plan
 
 # Implementation Plan: {Project Name}
 
-> **Optional:** If using Claude Code with superpowers plugin, you can use `superpowers:executing-plans` to execute this plan. Otherwise, execute tasks step-by-step.
+> Execute this plan using the `oat-implement` skill (`/oat:implement` where slash prompts are supported), task-by-task with phase checkpoints and review gates.
 
 **Goal:** {Brief goal statement from spec}
 
@@ -22,6 +22,11 @@ oat_template_name: plan
 **Tech Stack:** {Key technologies from design}
 
 **Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+
+## Planning Checklist
+
+- [ ] Confirmed HiL checkpoints with user
+- [ ] Set `oat_plan_hil_phases` in frontmatter
 
 ---
 

@@ -159,6 +159,29 @@ Write to:
 mkdir -p "$PROJECT_PATH/pr"
 ```
 
+Frontmatter policy:
+- Keep YAML frontmatter in the local artifact file for OAT metadata and traceability.
+- Do **not** include YAML frontmatter in the PR body submitted to GitHub.
+
+Reference links policy:
+- Prefer clickable blob links to the current branch for References.
+- Build links from `origin` + current branch when possible.
+- If remote URL cannot be resolved into a web URL, fall back to plain relative paths.
+
+Example link context:
+```bash
+ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+PROJECT_REL="${PROJECT_PATH#./}"
+
+REPO_WEB=""
+case "$ORIGIN_URL" in
+  git@github.com:*) REPO_WEB="https://github.com/${ORIGIN_URL#git@github.com:}" ;;
+  https://github.com/*) REPO_WEB="$ORIGIN_URL" ;;
+esac
+REPO_WEB="${REPO_WEB%.git}"
+```
+
 Recommended template:
 ```markdown
 ---
@@ -193,10 +216,10 @@ oat_project: {PROJECT_PATH}
 
 ## References
 
-- Spec: `{PROJECT_PATH}/spec.md`
-- Design: `{PROJECT_PATH}/design.md`
-- Plan: `{PROJECT_PATH}/plan.md`
-- Implementation: `{PROJECT_PATH}/implementation.md`
+- Spec: `[spec.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/spec.md)` (fallback: `{PROJECT_PATH}/spec.md`)
+- Design: `[design.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/design.md)` (fallback: `{PROJECT_PATH}/design.md`)
+- Plan: `[plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/plan.md)` (fallback: `{PROJECT_PATH}/plan.md`)
+- Implementation: `[implementation.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/implementation.md)` (fallback: `{PROJECT_PATH}/implementation.md`)
 ```
 
 ### Step 6: Optional - Open PR
@@ -211,10 +234,21 @@ Do you want to open a PR now?
 ```
 
 If user chooses (1), provide best-effort guidance:
+- Strip YAML frontmatter from the local artifact into a temporary body file:
+  ```bash
+  BODY_FILE="{path}"
+  TMP_BODY="$(mktemp -t oat-pr-body.XXXXXX.md)"
+  awk 'NR==1 && $0=="---" {infm=1; next} infm && $0=="---" {infm=0; next} !infm {print}' "$BODY_FILE" > "$TMP_BODY"
+  ```
+- Use the stripped body file with `gh`:
 ```bash
 git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
-gh pr create --base main --title "{title}" --body-file "{path}"
+gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 ```
+- Optionally clean up temp file:
+  ```bash
+  rm -f "$TMP_BODY"
+  ```
 
 Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
 

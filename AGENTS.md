@@ -221,55 +221,17 @@ Usage notes:
 - **TypeScript ESM** - All packages use `"type": "module"` with ES modules
 - **Shared configurations** - TypeScript, Biome, and build configs in packages/
 
-### Standalone Applications (`apps/`)
-- **cyclone-invalidation**: Cache invalidation app (EventBridge → SQS → BullMQ → Fastly)
-  - Single Docker image with `--poller` / `--worker` runtime flags
-  - Uses framework packages for infrastructure concerns
-- **honeycomb-docs**: MkDocs Material documentation site
-
-### Framework Packages (`packages/`)
-- **@honeycomb/poller**: SQS polling framework with dynamic scaling (1-25 pollers per pod)
-- **@honeycomb/worker**: BullMQ worker framework with metrics and health checks
-- **@honeycomb/core**: Shared infrastructure (HealthServer, RateLimiter, BaseDatadogExporter)
-- **@honeycomb/fastly**: Fastly CDN integration (FastlyClient, BatchService)
-- **@honeycomb/env**: Runtime environment configuration from `.honeycombenv.mjs`
-
-### Shared Packages (`packages/`)
-- **@honeycomb/config**: Environment configuration with Zod validation
-- **@honeycomb/logger**: Structured logging with configurable levels
-- **@honeycomb/schemas**: Zod schemas for AWS, BullMQ, Redis, and application types
-- **@honeycomb/cli**: Generic CLI commands for BullMQ and SQS operations
-- **@honeycomb/tsconfig**: Shared TypeScript configurations (base, node)
-- **biome-config**: Shared Biome linting/formatting configuration
-
 ### Technology Stack
 - **Runtime**: Node.js 22.17.0 with TypeScript 5.8.3
 - **Development**: tsx for direct TypeScript execution with hot reloading
 - **Build**: Turborepo 2.5.4 with TypeScript compilation to `dist/`
 - **Linting**: Biome 2.3.11  (extends from packages/biome-config)
-- **Queue Processing**: BullMQ + Redis
-- **AWS Integration**: SQS, EventBridge
-
-### Development Patterns
-- **Standalone App Pattern**: Apps implement `IMessageHandler` and `IProcessor` interfaces from framework packages
-- **Framework Packages**: Use `@honeycomb/poller` and `@honeycomb/worker` for infrastructure
-- **Configuration**: Runtime env loading via `@honeycomb/env`, validation via `@honeycomb/config`
-- **Logging**: Structured logging via @honeycomb/logger with configurable levels
-- **Type Safety**: Strong typing with shared Zod schemas across packages
 
 ### Build System
 - Turborepo handles dependency ordering and parallel builds
 - TypeScript compilation to `dist/` directories
 - Watch mode available for both packages (`pnpm dev`) and applications (`tsx watch`)
 - Clean builds with `pnpm clean` to remove all `dist/` directories
-
-### Environment Setup
-- Non-sensitive config: `.honeycombenv.mjs` at repo root (committed)
-- Local overrides: `.overwrite.honeycombenv.mjs` at repo root (gitignored)
-- Sensitive values (API keys): `.env.local` in each app directory (gitignored)
-  - Copy `apps/cyclone-invalidation/.env.example` to `.env.local` for local development
-- Use `LOG_LEVEL=debug` for verbose development logging
-- Node.js 22.17.0+ required (managed via nvm with .nvmrc)
 
 ## Agent Workflow
 
@@ -280,13 +242,3 @@ Projects live in `.agent/projects/<project-name>/` with:
 - Core files: `discovery.md`, `planning.md`, `implementation.md`
 - Optional: `pr-description.md`, `reviews/`, `handoffs/`
 
-### Workflow Phases
-1. **Discovery** - Gather requirements, ask clarifying questions, confirm alignment
-2. **Planning** - Outline approach, architecture decisions, implementation phases
-3. **Implementation** - Track progress, code changes, decisions
-4. **PR Creation** - Use `/create-pr-description` to generate comprehensive PR descriptions
-
-### Handoffs
-Create handoff documents in `handoffs/` when transitioning between sessions or phases. Include: current state, work completed, work remaining, key decisions, relevant file paths.
-
-See `.agent/README.md` for complete documentation.
