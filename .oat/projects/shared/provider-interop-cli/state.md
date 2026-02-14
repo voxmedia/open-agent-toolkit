@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t05
-oat_last_commit: 99d458f
+oat_current_task: p05-t06
+oat_last_commit: 5791842
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. Phase 5 is active; `p05-t01` through `p05-t04` are complete and work has moved to `p05-t05`.
+Implementation - In Progress. Phase 5 is active; `p05-t01` through `p05-t05` are complete and work has moved to `p05-t06`.
 
 ## Artifacts
 
@@ -58,7 +58,8 @@ Implementation - In Progress. Phase 5 is active; `p05-t01` through `p05-t04` are
 - ✓ p05-t02 complete (`fix(p05-t02): handle edge cases in engine, manifest, and drift`)
 - ✓ p05-t03 complete (`test(p05-t03): add adapter contract conformance tests`)
 - ✓ p05-t04 complete (`test(p05-t04): add help output snapshot tests`)
-- ⧗ Phase 5 in progress (`p05-t05`)
+- ✓ p05-t05 complete (`test(p05-t05): add end-to-end workflow tests`)
+- ⧗ Phase 5 in progress (`p05-t06`)
 
 ## Plan Summary
 
@@ -78,4 +79,4 @@ None
 
 ## Next Milestone
 
-Continue `/oat:implement` from `p05-t05` (end-to-end workflow tests).
+Continue `/oat:implement` from `p05-t06` (final verification and build polish).
