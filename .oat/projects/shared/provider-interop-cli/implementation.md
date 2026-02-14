@@ -2604,7 +2604,7 @@ oat_generated: false
 ### Task p07-t04: (follow-up) Batch stray adoption prompts and clarify scope labels
 
 **Status:** completed
-**Commit:** pending
+**Commit:** d71ca71
 
 **Outcome (required when completed):**
 - Replaced per-stray confirm loops with a single multi-select checklist for interactive stray adoption in both `oat init` and `oat status`.
