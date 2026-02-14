@@ -71,6 +71,7 @@ function createEntry(provider: string, name: string): ManifestEntry {
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
+  resolveScopeRoot: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const adapters = options.adapters ?? [
@@ -81,6 +82,9 @@ function createHarness(options: HarnessOptions = {}): {
     '.claude/skills/skill-one': 'in_sync',
     '.claude/skills/skill-two': 'drifted',
   };
+  const resolveScopeRoot = vi.fn(async (scope: 'project' | 'user') => {
+    return scope === 'project' ? '/tmp/workspace' : '/tmp/home';
+  });
   const command = createProvidersInspectCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
@@ -92,9 +96,7 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
-    resolveScopeRoot: vi.fn(async (scope: 'project' | 'user') => {
-      return scope === 'project' ? '/tmp/workspace' : '/tmp/home';
-    }),
+    resolveScopeRoot,
     getAdapters: () => adapters,
     getSyncMappings: vi.fn((adapter: ProviderAdapter, scope: Scope) => {
       return scope === 'project'
@@ -129,7 +131,7 @@ function createHarness(options: HarnessOptions = {}): {
     }),
   });
 
-  return { capture, command };
+  return { capture, command, resolveScopeRoot };
 }
 
 async function runInspectCommand(
@@ -228,5 +230,20 @@ describe('oat providers inspect', () => {
       name: 'claude',
       version: '1.2.3',
     });
+  });
+
+  it('supports --scope flag', async () => {
+    const { command, resolveScopeRoot } = createHarness();
+
+    await runInspectCommand(command, {
+      provider: 'claude',
+      globalArgs: ['--scope', 'user'],
+    });
+
+    expect(resolveScopeRoot).toHaveBeenCalledTimes(1);
+    expect(resolveScopeRoot).toHaveBeenCalledWith(
+      'user',
+      expect.objectContaining({ scope: 'user' }),
+    );
   });
 });
