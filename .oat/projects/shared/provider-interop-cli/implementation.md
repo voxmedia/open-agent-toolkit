@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t18
+oat_current_task_id: p04-t19
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 17/24 |
+| Phase 4 | in_progress | 24 | 18/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 68/81 tasks completed
+**Total:** 69/81 tasks completed
 
 ---
 
@@ -1347,6 +1347,7 @@ oat_generated: false
 - [x] p04-t15: (review) Extract shared logger capture test helper - 67a2b67
 - [x] p04-t16: (review) Extract shared command scope/global option helpers - b6a0955
 - [x] p04-t17: (review) Centralize ConcreteScope type alias - d80915c
+- [x] p04-t18: (review) Correct providers inspect mapping section formatting - 350ffb9
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1408,6 +1409,7 @@ oat_generated: false
 - Continued p04 review-fix execution by extracting a shared logger capture helper for command test suites.
 - Continued p04 review-fix execution by centralizing shared command scope/global option parsing helpers across command modules.
 - Continued p04 review-fix execution by centralizing `ConcreteScope` typing in shared types and reusing it across command domains.
+- Continued p04 review-fix execution by aligning `providers inspect` header mapping summaries with actual adapter mappings.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1952,7 +1954,25 @@ oat_generated: false
 
 ### Task p04-t18: (review) Correct `providers inspect` mapping section formatting
 
-**Status:** pending
+**Status:** completed
+**Commit:** 350ffb9
+
+**Outcome (required when completed):**
+- Updated inspect result contracts to carry adapter strategy and mapping metadata.
+- Wired inspect formatter to use real adapter mappings instead of placeholder empty arrays.
+- Added regression assertion ensuring inspect output no longer claims mappings are “none” when mappings exist.
+
+**Files changed:**
+- `packages/cli/src/commands/providers/providers.types.ts` - expanded inspect result contract with adapter mapping metadata.
+- `packages/cli/src/commands/providers/inspect.ts` - passed real strategy/mapping data to provider detail formatter.
+- `packages/cli/src/commands/providers/inspect.test.ts` - added assertions preventing contradictory “none” mapping output.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/providers/ && pnpm --filter=@oat/cli type-check`
+- Result: pass (11 provider tests, type-check clean)
+
+**Notes / Decisions:**
+- Kept JSON output backward-compatible while adding additional metadata fields.
 
 ### Task p04-t19: (review) Add "skip all remaining" option to init stray adoption
 
