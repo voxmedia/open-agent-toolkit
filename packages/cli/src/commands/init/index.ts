@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { Command } from 'commander';
 import {
@@ -102,14 +102,20 @@ async function ensureCanonicalDirectories(
   }
 }
 
-function createHookSnippet(): string {
-  return [
+function createHookSnippet(options: { includeShebang?: boolean } = {}): string {
+  const lines = [
     HOOK_MARKER_START,
     'if command -v oat >/dev/null 2>&1; then',
     '  oat status >/dev/null 2>&1 || true',
     'fi',
     HOOK_MARKER_END,
-  ].join('\n');
+  ];
+
+  if (!options.includeShebang) {
+    return lines.join('\n');
+  }
+
+  return ['#!/bin/sh', '', ...lines].join('\n');
 }
 
 async function isHookInstalledDefault(projectRoot: string): Promise<boolean> {
@@ -132,7 +138,6 @@ async function isHookInstalledDefault(projectRoot: string): Promise<boolean> {
 
 async function installHookDefault(projectRoot: string): Promise<void> {
   const hookPath = join(projectRoot, '.git', 'hooks', 'pre-commit');
-  const snippet = createHookSnippet();
 
   let current = '';
   try {
@@ -149,15 +154,19 @@ async function installHookDefault(projectRoot: string): Promise<void> {
   }
 
   if (current.includes(HOOK_MARKER_START)) {
+    await chmod(hookPath, 0o755);
     return;
   }
 
+  const includeShebang = current.trim().length === 0;
+  const snippet = createHookSnippet({ includeShebang });
   await ensureDir(dirname(hookPath));
   const next =
     current.trim().length > 0
       ? `${current.trimEnd()}\n\n${snippet}\n`
       : `${snippet}\n`;
   await writeFile(hookPath, next, 'utf8');
+  await chmod(hookPath, 0o755);
 }
 
 async function collectStraysDefault(

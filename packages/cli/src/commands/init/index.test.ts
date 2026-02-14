@@ -1,4 +1,11 @@
-import { lstat, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import {
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Command } from 'commander';
@@ -331,6 +338,46 @@ describe('createInitCommand', () => {
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
 
     expect(installHook).toHaveBeenCalledWith('/tmp/workspace');
+  });
+
+  it('installs executable hook script with shebang when creating a new hook file', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-init-hook-'));
+    tempDirs.push(root);
+
+    const capture = createLoggerCapture();
+    const command = createInitCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: (globalOptions.scope ?? 'project') as Scope,
+        apply: false,
+        verbose: false,
+        json: false,
+        cwd: root,
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveScopeRoot: vi.fn(async () => root),
+      ensureCanonicalDirs: vi.fn(async () => undefined),
+      loadManifest: vi.fn(async () => createEmptyManifest()),
+      saveManifest: vi.fn(async () => undefined),
+      scanCanonical: vi.fn(async () => []),
+      collectStrays: vi.fn(async () => []),
+      confirmAction: vi.fn(async () => false),
+      adoptStray: vi.fn(async (_scopeRoot, _stray, manifest) => manifest),
+    });
+
+    await runInitCommand(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: ['--hook'],
+    });
+
+    const hookPath = join(root, '.git', 'hooks', 'pre-commit');
+    const hookContents = await readFile(hookPath, 'utf8');
+    const hookStat = await lstat(hookPath);
+
+    expect(hookContents.startsWith('#!/bin/sh\n')).toBe(true);
+    expect(hookContents).toContain('oat pre-commit hook');
+    expect(hookStat.mode & 0o111).not.toBe(0);
   });
 
   it('skips hook in non-interactive mode with guidance', async () => {
