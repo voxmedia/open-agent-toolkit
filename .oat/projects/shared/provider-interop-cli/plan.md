@@ -2364,6 +2364,342 @@ git commit -m "fix(p04-t13): add json summary output for oat init"
 
 ---
 
+### Task p04-t14: (review) Strengthen symlink assertions in command integration tests
+
+**Files:**
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: current symlink assertions only assert that `Stats` has an `isSymbolicLink` function, which does not validate symlink state.
+Location: `packages/cli/src/commands/commands.integration.test.ts`
+
+**Step 2: Implement fix**
+
+- Replace structural `Stats` assertions with behavioral checks (`expect(stat.isSymbolicLink()).toBe(true)`).
+- Keep assertions for all relevant provider mapping paths.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts`
+Expected: integration suite passes with strict symlink assertions.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/commands.integration.test.ts
+git commit -m "fix(p04-t14): enforce real symlink assertions in integration tests"
+```
+
+---
+
+### Task p04-t15: (review) Extract shared logger capture test helper
+
+**Files:**
+- Create: `packages/cli/src/commands/__tests__/helpers.ts`
+- Modify: command test files under `packages/cli/src/commands/**/**.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `LoggerCapture` and logger capture factory are duplicated across command test files.
+Location: command test files in `packages/cli/src/commands/`
+
+**Step 2: Implement fix**
+
+- Add shared test helpers for logger capture (and any minimal common command-test helpers).
+- Update existing command tests to import shared helpers instead of local duplicates.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/`
+Expected: command tests pass with deduplicated helper usage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/
+git commit -m "refactor(p04-t15): deduplicate command test logger helpers"
+```
+
+---
+
+### Task p04-t16: (review) Extract shared command scope/global option helpers
+
+**Files:**
+- Create: `packages/cli/src/commands/shared.ts`
+- Modify: `packages/cli/src/commands/status/index.ts`
+- Modify: `packages/cli/src/commands/sync/index.ts`
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/providers/list.ts`
+- Modify: `packages/cli/src/commands/providers/inspect.ts`
+- Modify: `packages/cli/src/commands/doctor/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `resolveScopes()` and `readGlobalOptions()` are duplicated across command modules.
+Location: command modules listed above
+
+**Step 2: Implement fix**
+
+- Extract shared command utility helpers for reading global options and resolving concrete scopes.
+- Replace duplicated local helper implementations with shared imports.
+- Preserve command behavior and option semantics.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/ && pnpm --filter=@oat/cli type-check`
+Expected: all command tests and type-check pass with shared helper usage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/
+git commit -m "refactor(p04-t16): centralize command scope option helpers"
+```
+
+---
+
+### Task p04-t17: (review) Centralize `ConcreteScope` type alias
+
+**Files:**
+- Modify: `packages/cli/src/shared/types.ts`
+- Modify: command type files using local `ConcreteScope` aliases
+
+**Step 1: Understand the issue**
+
+Review finding: `ConcreteScope = Exclude<Scope, 'all'>` is redefined across multiple command files.
+Location: command modules and command types
+
+**Step 2: Implement fix**
+
+- Export `ConcreteScope` from shared types.
+- Remove duplicated local aliases and import shared type everywhere needed.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli test src/commands/`
+Expected: type-check and command tests pass with shared type usage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/shared/types.ts packages/cli/src/commands/
+git commit -m "refactor(p04-t17): share ConcreteScope type across commands"
+```
+
+---
+
+### Task p04-t18: (review) Correct `providers inspect` mapping section formatting
+
+**Files:**
+- Modify: `packages/cli/src/commands/providers/inspect.ts`
+- Modify: `packages/cli/src/commands/providers/inspect.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: inspect output currently shows "no mappings" in header formatting before rendering mapping details, which is misleading.
+Location: `packages/cli/src/commands/providers/inspect.ts`
+
+**Step 2: Implement fix**
+
+- Update inspect formatting to pass real mappings to shared formatter or otherwise avoid contradictory “none” messaging.
+- Keep JSON output schema stable unless explicit schema change is required.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/providers/inspect`
+Expected: inspect tests pass and output no longer reports false “none” mappings.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/providers/
+git commit -m "fix(p04-t18): align providers inspect mapping formatting"
+```
+
+---
+
+### Task p04-t19: (review) Add "skip all remaining" option to init stray adoption
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/init/index.test.ts`
+- Modify: `packages/cli/src/shared/prompts.ts` (if prompt primitive extension is needed)
+
+**Step 1: Understand the issue**
+
+Review finding: init stray adoption supports per-item skip but not a single "skip all remaining" action required by FR8.
+Location: `packages/cli/src/commands/init/index.ts`
+
+**Step 2: Implement fix**
+
+- Extend adoption prompt flow to support adopt / skip / skip-all options.
+- Preserve non-interactive behavior (no prompts).
+- Add tests for skip-all behavior and loop short-circuiting.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/init/ src/shared/prompts`
+Expected: init and prompt tests pass with skip-all coverage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/ packages/cli/src/shared/prompts.ts packages/cli/src/shared/prompts.test.ts
+git commit -m "fix(p04-t19): support skip-all in init stray adoption flow"
+```
+
+---
+
+### Task p04-t20: (review) Surface unsynced canonical entries in status output
+
+**Files:**
+- Modify: `packages/cli/src/commands/status/index.ts`
+- Modify: `packages/cli/src/commands/status/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: status currently reports only manifest-tracked entries and can omit canonical content that has never been synced.
+Location: `packages/cli/src/commands/status/index.ts`
+
+**Step 2: Implement fix**
+
+- Detect canonical entries with no corresponding provider view/manifest entry and surface them as sync-needed status items.
+- Ensure behavior is scope-aware and does not regress existing manifest-based drift reporting.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/status/`
+Expected: status tests pass with added canonical-unsynced coverage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/status/
+git commit -m "fix(p04-t20): report canonical entries pending first sync"
+```
+
+---
+
+### Task p04-t21: (review) Add `providers inspect --scope` coverage
+
+**Files:**
+- Modify: `packages/cli/src/commands/providers/inspect.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: inspect scope behavior exists but has no dedicated `--scope` test coverage.
+Location: `packages/cli/src/commands/providers/inspect.test.ts`
+
+**Step 2: Implement fix**
+
+- Add explicit test coverage for `providers inspect --scope {project|user}` behavior.
+- Verify scope resolution interacts correctly with mapping summaries.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/providers/inspect`
+Expected: inspect test suite passes with scope-flag assertions.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/providers/inspect.test.ts
+git commit -m "test(p04-t21): cover scope flag behavior in providers inspect"
+```
+
+---
+
+### Task p04-t22: (review) Harden hook install path handling for symlinked hooks dir
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/init/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: hook installation edge case for symlinked `.git/hooks` directory is not explicitly handled.
+Location: `packages/cli/src/commands/init/index.ts`
+
+**Step 2: Implement fix**
+
+- Handle symlinked hooks directory safely when resolving/creating hook paths.
+- Add tests covering symlinked hook directory behavior.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/init/`
+Expected: init tests pass with symlinked hooks-dir coverage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/
+git commit -m "fix(p04-t22): support symlinked git hooks directory"
+```
+
+---
+
+### Task p04-t23: (review) Clarify doctor symlink check intent
+
+**Files:**
+- Modify: `packages/cli/src/commands/doctor/index.ts`
+- Modify: `packages/cli/src/commands/doctor/index.test.ts` (if assertion update needed)
+
+**Step 1: Understand the issue**
+
+Review finding: symlink capability probe intentionally uses a dangling target but lacks explicit explanation.
+Location: `packages/cli/src/commands/doctor/index.ts`
+
+**Step 2: Implement fix**
+
+- Add concise inline documentation clarifying the capability check intent (syscall support vs target existence).
+- Adjust test expectations if message text/output is improved.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/doctor/`
+Expected: doctor tests pass with clarified probe behavior.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/doctor/
+git commit -m "chore(p04-t23): document doctor symlink capability probe intent"
+```
+
+---
+
+### Task p04-t24: (review) Add Codex agent-path check in doctor diagnostics
+
+**Files:**
+- Modify: `packages/cli/src/commands/doctor/index.ts`
+- Modify: `packages/cli/src/commands/doctor/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: doctor lacks explicit Codex agent path functionality check called for by FR4.
+Location: `packages/cli/src/commands/doctor/index.ts`
+
+**Step 2: Implement fix**
+
+- Add best-effort Codex agent-path check to doctor diagnostics output.
+- Report actionable remediation guidance when unavailable or inaccessible.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/doctor/`
+Expected: doctor tests pass and include Codex-specific diagnostics.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/doctor/
+git commit -m "fix(p04-t24): add codex agent path diagnostic to doctor"
+```
+
+---
+
 ## Phase 5: Git Hook, Polish, and E2E
 
 **Goal:** Optional git hook, edge case handling, contract tests, and full e2e workflow tests. After this phase the CLI is ready for initial release.
@@ -2633,10 +2969,10 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 - Phase 1: 31 tasks — Foundation (scaffold, types, logger, commander, adapters, manifest, scanner, config, fs helpers, review fixes)
 - Phase 2: 11 tasks — Sync Engine (plan types, compute plan, execute plan, markers, integration tests, review fixes)
 - Phase 3: 9 tasks — Drift Detection and Output (drift detector, stray detector, output formatters, shared prompts, review fixes)
-- Phase 4: 13 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests, review fixes)
+- Phase 4: 24 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests, review fixes)
 - Phase 5: 6 tasks — Git Hook, Polish, and E2E (hook, edge cases, contract tests, snapshot tests, e2e tests, final verification)
 
-**Total: 70 tasks**
+**Total: 81 tasks**
 
 ---
 

@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 13 | 8/13 |
+| Phase 4 | in_progress | 24 | 8/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 59/70 tasks completed
+**Total:** 59/81 tasks completed
 
 ---
 
@@ -1501,20 +1501,10 @@ oat_generated: false
 - Medium: 6
 - Minor: 5
 
-**New tasks added:** `p04-t09`, `p04-t10`, `p04-t11`, `p04-t12`, `p04-t13`
+**New tasks added:** `p04-t09` through `p04-t24` (Important + Medium + Minor findings converted to tasks by request)
 
 **Deferred Findings (Medium/Minor):**
-- `M1` Integration test symlink assertions should assert `isSymbolicLink()` result
-- `M2` Duplicated `LoggerCapture` helper across command test files
-- `M3` Duplicated `resolveScopes()` / `readGlobalOptions()` helpers across commands
-- `M4` Duplicated `ConcreteScope` type aliases across command modules
-- `M5` `providers inspect` formatting shows empty mapping sections before detailed mapping states
-- `M6` `oat init` adoption loop lacks "skip all remaining" option
-- `m1` Status does not report canonical-only unsynced entries without manifest entries
-- `m2` Missing explicit `--scope` behavior test in `providers inspect`
-- `m3` Edge case: `.git/hooks` symlink handling during hook installation
-- `m4` Doctor symlink capability check uses dangling target without inline intent comment
-- `m5` Doctor lacks dedicated Codex agent-path specific check
+- None (all accepted findings were converted into review-fix tasks)
 
 **Next:** Execute fix tasks via `/oat:implement`, then request p04 re-review.
 
@@ -1768,6 +1758,50 @@ oat_generated: false
 **Status:** pending
 
 ### Task p04-t13: (review) Add JSON summary output to `oat init`
+
+**Status:** pending
+
+### Task p04-t14: (review) Strengthen symlink assertions in command integration tests
+
+**Status:** pending
+
+### Task p04-t15: (review) Extract shared logger capture test helper
+
+**Status:** pending
+
+### Task p04-t16: (review) Extract shared command scope/global option helpers
+
+**Status:** pending
+
+### Task p04-t17: (review) Centralize `ConcreteScope` type alias
+
+**Status:** pending
+
+### Task p04-t18: (review) Correct `providers inspect` mapping section formatting
+
+**Status:** pending
+
+### Task p04-t19: (review) Add "skip all remaining" option to init stray adoption
+
+**Status:** pending
+
+### Task p04-t20: (review) Surface unsynced canonical entries in status output
+
+**Status:** pending
+
+### Task p04-t21: (review) Add `providers inspect --scope` coverage
+
+**Status:** pending
+
+### Task p04-t22: (review) Harden hook install path handling for symlinked hooks dir
+
+**Status:** pending
+
+### Task p04-t23: (review) Clarify doctor symlink check intent
+
+**Status:** pending
+
+### Task p04-t24: (review) Add Codex agent-path check in doctor diagnostics
 
 **Status:** pending
 
