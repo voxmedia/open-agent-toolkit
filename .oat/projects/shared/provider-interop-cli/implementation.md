@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t16
+oat_current_task_id: p04-t17
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 15/24 |
+| Phase 4 | in_progress | 24 | 16/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 66/81 tasks completed
+**Total:** 67/81 tasks completed
 
 ---
 
@@ -1345,6 +1345,7 @@ oat_generated: false
 - [x] p04-t13: (review) Add JSON summary output to oat init - 1d6a7ba
 - [x] p04-t14: (review) Strengthen symlink assertions in command integration tests - 8783dfd
 - [x] p04-t15: (review) Extract shared logger capture test helper - 67a2b67
+- [x] p04-t16: (review) Extract shared command scope/global option helpers - b6a0955
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1404,6 +1405,7 @@ oat_generated: false
 - Continued p04 review-fix execution by emitting structured JSON summaries from `oat init` in non-interactive JSON mode.
 - Continued p04 review-fix execution by replacing weak integration test symlink checks with concrete `isSymbolicLink()` assertions.
 - Continued p04 review-fix execution by extracting a shared logger capture helper for command test suites.
+- Continued p04 review-fix execution by centralizing shared command scope/global option parsing helpers across command modules.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1904,7 +1906,24 @@ oat_generated: false
 
 ### Task p04-t16: (review) Extract shared command scope/global option helpers
 
-**Status:** pending
+**Status:** completed
+**Commit:** b6a0955
+
+**Outcome (required when completed):**
+- Added a shared command utility module for global option parsing and concrete scope resolution.
+- Replaced duplicated `readGlobalOptions`/scope-resolution helpers across status, sync, init, providers, and doctor commands.
+- Preserved command behavior while reducing repeated command-level plumbing logic.
+
+**Files changed:**
+- `packages/cli/src/commands/shared.ts` - added shared command option/scope helpers.
+- `packages/cli/src/commands/{status,sync,init,providers/list,providers/inspect,doctor}/index.ts` - switched to shared helper imports.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/ && pnpm --filter=@oat/cli type-check`
+- Result: pass (8 command test files, type-check clean)
+
+**Notes / Decisions:**
+- Kept helper scope narrow to shared option/scope behavior; other command-specific logic remains localized.
 
 ### Task p04-t17: (review) Centralize `ConcreteScope` type alias
 
