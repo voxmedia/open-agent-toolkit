@@ -47,15 +47,7 @@ yarn-error.log*
 !.oat/projects/local/.gitkeep
 !.oat/projects/archived/.gitkeep
 
-# Legacy local project folders (patterned to avoid hard-coded legacy path strings)
-.a?ent/projects/**
-!.a?ent/projects/keep.md
-!.a?ent/projects/pr-descriptions/
-.a?ent/projects/pr-descriptions/**
-!.a?ent/projects/pr-descriptions/keep.md
-
 # Ignore claude instructions
-CLAUDE.md
 .claude/*
 !.claude/commands/
 !.claude/skills/
