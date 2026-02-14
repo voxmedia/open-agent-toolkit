@@ -66,6 +66,7 @@ Implementation - In Progress. All planned tasks are complete (`p01`-`p06`) and d
 - ✓ p06-t03 complete (`fix(p06-t03): close deferred hook robustness findings`)
 - ✓ p06-t04 complete (`test(p06-t04): close deferred contract and e2e findings`)
 - ✓ p06-t04 follow-up complete (`test(p06-t04): align init hook warning expectations`)
+- ✓ p06 code review passed (`reviews/p06-code-review.md`)
 
 ## Plan Summary
 

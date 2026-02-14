@@ -3145,7 +3145,7 @@ git commit -m "test(p06-t04): close deferred contract and e2e findings"
 | p03 | code | passed | 2026-02-13 | reviews/p03-re-review-2026-02-13.md |
 | p04 | code | passed | 2026-02-14 | reviews/p04-re-review-2026-02-14.md |
 | p05 | code | passed | 2026-02-14 | reviews/p05-code-review.md |
-| p06 | code | pending | - | - |
+| p06 | code | passed | 2026-02-14 | reviews/p06-code-review.md |
 | final | code | pending | - | - |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
