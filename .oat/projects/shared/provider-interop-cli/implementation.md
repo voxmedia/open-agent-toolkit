@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t22
+oat_current_task_id: p04-t23
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 21/24 |
+| Phase 4 | in_progress | 24 | 22/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 72/81 tasks completed
+**Total:** 73/81 tasks completed
 
 ---
 
@@ -1351,6 +1351,7 @@ oat_generated: false
 - [x] p04-t19: (review) Add skip-all remaining option to init stray adoption - 59c9968
 - [x] p04-t20: (review) Surface unsynced canonical entries in status output - 002746a
 - [x] p04-t21: (review) Add providers inspect --scope coverage - def8166
+- [x] p04-t22: (review) Harden hook install path handling for symlinked hooks dir - 3c539b5
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1416,6 +1417,7 @@ oat_generated: false
 - Continued p04 review-fix execution by adding skip-all behavior to interactive stray adoption in `oat init`.
 - Continued p04 review-fix execution by reporting canonical entries that have not yet been synced as `missing` in `oat status`.
 - Continued p04 review-fix execution by adding explicit `--scope` coverage for `providers inspect`.
+- Continued p04 review-fix execution by hardening hook installation for symlinked `.git/hooks` directories.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -2045,7 +2047,24 @@ oat_generated: false
 
 ### Task p04-t22: (review) Harden hook install path handling for symlinked hooks dir
 
-**Status:** pending
+**Status:** completed
+**Commit:** 3c539b5
+
+**Outcome (required when completed):**
+- Added hook-directory resolution that handles `.git/hooks` as either a normal directory or symlink target.
+- Ensured install/check paths resolve correctly and support symlinked hook directory layouts.
+- Added regression coverage for installing hooks when `.git/hooks` is a symlink.
+
+**Files changed:**
+- `packages/cli/src/commands/init/index.ts` - added symlink-aware hooks directory resolution and integrated it into hook install/check.
+- `packages/cli/src/commands/init/index.test.ts` - added symlinked hooks directory installation test.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/init/ && pnpm --filter=@oat/cli type-check`
+- Result: pass (16 init tests, type-check clean)
+
+**Notes / Decisions:**
+- Symlinked hooks directories now resolve to their target path before hook file operations.
 
 ### Task p04-t23: (review) Clarify doctor symlink check intent
 
