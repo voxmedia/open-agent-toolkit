@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: e635276
+oat_last_commit: ea338e1
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. All planned tasks are complete (`p01`-`p05`) and p05 review has passed; awaiting final review/PR routing.
+Implementation - In Progress. All planned tasks are complete (`p01`-`p06`) and deferred Medium/Minor findings are closed; awaiting final review/PR routing.
 
 ## Artifacts
 
@@ -29,7 +29,7 @@ Implementation - In Progress. All planned tasks are complete (`p01`-`p05`) and p
 - **Design:** `design.md` (complete, reviewed)
 - **Review:** `reviews/design-review.md` (findings addressed)
 - **Review:** `reviews/cli-structure-proposal.md` (accepted)
-- **Plan:** `plan.md` (complete, 82 tasks, 5 phases)
+- **Plan:** `plan.md` (complete, 86 tasks, 6 phases)
 - **Implementation:** `implementation.md` (complete; awaiting review gate)
 
 ## Progress
@@ -40,7 +40,7 @@ Implementation - In Progress. All planned tasks are complete (`p01`-`p05`) and p
 - ✓ Specification reviewed by Codex, findings addressed
 - ✓ Design complete (1046 lines, full architecture)
 - ✓ Design reviewed twice, all 10 findings addressed
-- ✓ Plan complete (82 tasks, 5 phases, includes p01/p02/p03/p04 review-fix tasks)
+- ✓ Plan complete (86 tasks, 6 phases, includes p01-p06 review-fix tasks)
 - ✓ Phase 1 review fixes complete (`p01-t21`–`p01-t26`)
 - ✓ Additional p01 minor review fixes complete (`p01-t27`–`p01-t31`)
 - ✓ p01 re-review passed (`reviews/p01-re-review-2026-02-13.md`)
@@ -61,6 +61,11 @@ Implementation - In Progress. All planned tasks are complete (`p01`-`p05`) and p
 - ✓ p05-t05 complete (`test(p05-t05): add end-to-end workflow tests`)
 - ✓ p05-t06 complete (`chore(p05-t06): final verification — CLI ready for initial release`)
 - ✓ p05 code review passed (`reviews/p05-code-review.md`)
+- ✓ p06-t01 complete (`fix(p06-t01): close deferred engine medium/minor findings`)
+- ✓ p06-t02 complete (`fix(p06-t02): close deferred drift and prompt findings`)
+- ✓ p06-t03 complete (`fix(p06-t03): close deferred hook robustness findings`)
+- ✓ p06-t04 complete (`test(p06-t04): close deferred contract and e2e findings`)
+- ✓ p06-t04 follow-up complete (`test(p06-t04): align init hook warning expectations`)
 
 ## Plan Summary
 
@@ -71,6 +76,7 @@ Implementation - In Progress. All planned tasks are complete (`p01`-`p05`) and p
 | p03 | 9 | Drift Detection and Output — drift detector, stray detector, output formatters, review fixes |
 | p04 | 25 | Commands — status, sync, init, providers, doctor, registration, integration tests, review fixes |
 | p05 | 6 | Git Hook, Polish, E2E — hook, edge cases, contract tests, snapshot tests, e2e |
+| p06 | 4 | Deferred Medium/Minor Closure — cross-phase cleanup, hardening, and test-contract tightening |
 
 **HiL review checkpoints:** Every phase boundary (p01–p05)
 

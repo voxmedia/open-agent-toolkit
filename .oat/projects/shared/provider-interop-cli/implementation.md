@@ -21,8 +21,9 @@ oat_generated: false
 | Phase 3 | complete | 9 | 9/9 |
 | Phase 4 | complete | 25 | 25/25 |
 | Phase 5 | complete | 6 | 6/6 |
+| Phase 6 | complete | 4 | 4/4 |
 
-**Total:** 82/82 tasks completed
+**Total:** 86/86 tasks completed
 
 ---
 
@@ -1556,7 +1557,7 @@ oat_generated: false
 **New tasks added:** `p04-t25` (completed)
 
 **Deferred Findings (Minor):**
-- `n2` Hook drift warning remains intentionally generic (exit-code check + high-level message); no spec violation and no action required.
+- `n2` Hook drift warning wording improved in `p06-t03` to include project-scoped remediation commands.
 
 **Review cycle:** 3 of 3
 
@@ -1575,20 +1576,12 @@ oat_generated: false
 - Medium: 5
 - Minor: 4
 
-**Review status:** passed (no Critical/Important findings; no new fix tasks added)
+**Review status:** passed (no Critical/Important findings)
 
-**New tasks added:** None
+**New tasks added:** `p06-t01`, `p06-t02`, `p06-t03`, `p06-t04` (all completed)
 
 **Deferred Findings (Medium/Minor):**
-- `M1` `uninstallHook` leaves an empty pre-commit file when OAT was sole content
-- `M2` `runHookCheck` has defensive double-catch semantics
-- `M3` Concurrent manifest write edge-case assertion could validate schema explicitly
-- `M4` E2E stream-capture helper uses type assertions when patching process streams
-- `M5` Help snapshots do not include `providers inspect --help`
-- `m1` `resolveHooksDirectory` does not explicitly special-case symlinked `.git` root
-- `m2` Hook snippet uses `oat status` instead of `oat status --scope project`
-- `m3` Adapter mapping validation does not enforce a stricter `providerDir` invariant
-- `m4` Adapter `detect` contract test checks return type but not positive-detect behavior
+- None (all deferred Medium/Minor items from p02-p05 were addressed in Phase 6)
 
 **Review cycle:** 1 of 3
 
@@ -2324,6 +2317,85 @@ oat_generated: false
 
 ---
 
+## Phase 6: Deferred Medium/Minor Closure
+
+**Status:** complete
+**Started:** 2026-02-14
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+- Closed all remaining deferred Medium/Minor findings from p02-p05.
+- Hardened engine type contracts and copy markers with a directory sentinel (`.oat-generated`) plus shared test fixtures.
+- Added prompt/output/drift polish (including `inputRequired`, sync-operation semantic coloring, and shared ANSI stripping utility).
+- Hardened git hook behavior and tests (project-scoped status check, improved warning copy, remove-empty uninstall, symlinked `.git` handling).
+- Tightened contract/e2e/help/edge-case tests (adapter detect-positive path, providers inspect help snapshot, manifest schema assertion, safer stream capture typing).
+
+**Key files touched:**
+- `packages/cli/src/engine/{compute-plan.ts,engine.types.ts,execute-plan.ts,hook.ts,markers.ts}`
+- `packages/cli/src/engine/{compute-plan.test.ts,execute-plan.test.ts,engine.integration.test.ts,hook.test.ts,edge-cases.test.ts,test-helpers.ts}`
+- `packages/cli/src/shared/{prompts.ts,prompts.test.ts,index.ts}`
+- `packages/cli/src/drift/{strays.ts,strays.test.ts}`
+- `packages/cli/src/ui/{ansi.ts,output.ts,output.test.ts}`
+- `packages/cli/src/providers/shared/adapter-contract.test.ts`
+- `packages/cli/src/e2e/workflow.test.ts`
+- `packages/cli/src/commands/{help-snapshots.test.ts,init/index.test.ts}`
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build`
+- Result: pass (39 test files, 277 tests; type-check/lint/build clean)
+
+**Notes / Decisions:**
+- Grouped deferred findings into four focused tasks for traceable closure and lower regression risk.
+- Preserved warning-only hook behavior while improving guidance precision.
+
+### Task p06-t01: Engine cleanup and marker/type hardening
+
+**Status:** completed
+**Commit:** 65f3476
+
+**Outcome (required when completed):**
+- Normalized engine mapping path comparisons and simplified removal-entry naming.
+- Narrowed `SyncPlan.removals` to removal-only entry type.
+- Added directory sentinel marker support in copy mode and corresponding tests.
+- Extracted shared engine adapter fixture helper.
+
+### Task p06-t02: Drift/prompt/output polish and utility cleanup
+
+**Status:** completed
+**Commit:** 215b7e6
+
+**Outcome (required when completed):**
+- Added `inputRequired` prompt primitive and missing non-interactive prompt tests.
+- Simplified stray-path normalization and added `inferScopeRoot` coverage.
+- Added semantic sync-operation coloring and centralized ANSI stripping helper.
+
+### Task p06-t03: Hook robustness and warning-signal improvements
+
+**Status:** completed
+**Commit:** 5d5b9e4
+
+**Outcome (required when completed):**
+- Made hook drift check project-scoped (`oat status --scope project`).
+- Improved warning text and documented defensive error-handling contract.
+- Removed empty pre-commit hook files on uninstall when OAT was the sole content.
+- Hardened `.git` path handling for symlink/file git-dir layouts.
+
+### Task p06-t04: Contract/e2e/help snapshot and edge-case test tightening
+
+**Status:** completed
+**Commit:** 3a424c6
+
+**Outcome (required when completed):**
+- Added stronger manifest schema assertion in concurrency edge-case test.
+- Tightened adapter contract assertions (`nativeRead` invariants + positive detect path).
+- Added help snapshot coverage for `providers inspect --help`.
+- Reworked e2e stream capture typing and aligned updated hook warnings in init tests.
+
+**Follow-up commit:** `ea338e1` (updated init hook warning expectations after hook message/scope refinement).
+
+---
+
 ## Deviations from Plan
 
 | Task | Planned | Actual | Reason |
@@ -2339,11 +2411,13 @@ oat_generated: false
 | 3 | `pnpm --filter=@oat/cli test src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/ui/output`; `pnpm --filter=@oat/cli test src/shared/prompts`; `pnpm --filter=@oat/cli test src/ui/output && pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/drift/strays && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift/strays src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/drift src/ui/output && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint` | 9 | 0 | n/a (phase boundary + review fixes) |
 | 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli test src/commands/sync/`; `pnpm --filter=@oat/cli test src/commands/init/`; `pnpm --filter=@oat/cli test src/commands/providers/list`; `pnpm --filter=@oat/cli test src/commands/providers/inspect`; `pnpm --filter=@oat/cli test src/commands/doctor/`; `pnpm --filter=@oat/cli test src/commands/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 8 | 0 | n/a (task-level verification) |
 | 5 | `pnpm --filter=@oat/cli test src/engine/hook src/commands/init`; `pnpm --filter=@oat/cli test src/engine/edge-cases`; `pnpm --filter=@oat/cli test src/providers/shared/adapter-contract`; `pnpm --filter=@oat/cli test src/commands/help-snapshots -- --update`; `pnpm --filter=@oat/cli test src/e2e/`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build`; `node packages/cli/dist/index.js --help`; `node packages/cli/dist/index.js doctor` | 6 | 0 | n/a (phase verification complete) |
+| 6 | `pnpm --filter=@oat/cli test src/engine/`; `pnpm --filter=@oat/cli test src/shared/ src/drift/ src/ui/output.test.ts`; `pnpm --filter=@oat/cli test src/engine/hook.test.ts`; `pnpm --filter=@oat/cli test src/engine/edge-cases.test.ts src/e2e/workflow.test.ts src/providers/shared/adapter-contract.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build` | 4 | 0 | n/a (deferred Medium/Minor closure) |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 - Full provider-interop CLI surface (`init`, `status`, `sync`, `providers`, `doctor`) with review-driven hardening and completion of Phase 5 polish tasks.
+- Cross-phase deferred findings closure in Phase 6, eliminating all remaining Medium/Minor review debt from p02-p05.
 - Dedicated hook engine module with install/uninstall/detection behavior and non-blocking drift warnings.
 - Expanded quality coverage: edge-case tests, adapter contract tests, help snapshots, and end-to-end workflow tests.
 
@@ -2360,7 +2434,7 @@ oat_generated: false
 - `packages/cli/src/e2e/workflow.test.ts`
 
 **Verification performed:**
-- Full test suite: 39 files / 262 tests passing.
+- Full test suite: 39 files / 277 tests passing.
 - Type-check: clean.
 - Lint: clean.
 - Build: success.

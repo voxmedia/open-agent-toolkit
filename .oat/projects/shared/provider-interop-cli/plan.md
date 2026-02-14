@@ -2969,6 +2969,169 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 
 ---
 
+## Phase 6: Deferred Medium/Minor Closure
+
+**Goal:** Address all remaining deferred Medium/Minor findings from p02-p05 before final review.
+
+---
+
+### Task p06-t01: Engine cleanup and marker/type hardening
+
+**Files:**
+- Modify: `packages/cli/src/engine/compute-plan.ts`
+- Modify: `packages/cli/src/engine/engine.types.ts`
+- Modify: `packages/cli/src/engine/execute-plan.ts`
+- Modify: `packages/cli/src/engine/markers.ts`
+- Modify: `packages/cli/src/engine/compute-plan.test.ts`
+- Modify: `packages/cli/src/engine/engine.integration.test.ts`
+- Modify: `packages/cli/src/engine/execute-plan.test.ts`
+- Modify: `packages/cli/src/engine/engine.types.test.ts`
+- Modify: `packages/cli/src/engine/markers.test.ts`
+- Create: `packages/cli/src/engine/test-helpers.ts`
+
+**Step 1: Implement**
+
+- Resolve deferred p02 findings:
+  - simplify removal-entry name handling
+  - normalize mapping path comparisons independent of platform separators
+  - extract shared engine test fixture helpers
+  - add directory-level `.oat-generated` sentinel alongside inline markers in copy mode
+  - narrow `SyncPlan.removals` typing to removal-only entries
+
+**Step 2: Verify**
+
+Run:
+```bash
+pnpm --filter=@oat/cli test src/engine/
+pnpm --filter=@oat/cli type-check
+pnpm --filter=@oat/cli lint
+```
+
+Expected: all pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/engine/
+git commit -m "fix(p06-t01): close deferred engine medium/minor findings"
+```
+
+---
+
+### Task p06-t02: Drift/prompt/output polish and utility cleanup
+
+**Files:**
+- Modify: `packages/cli/src/shared/prompts.ts`
+- Modify: `packages/cli/src/shared/prompts.test.ts`
+- Modify: `packages/cli/src/shared/index.ts`
+- Modify: `packages/cli/src/drift/strays.ts`
+- Modify: `packages/cli/src/drift/strays.test.ts`
+- Create: `packages/cli/src/ui/ansi.ts`
+- Modify: `packages/cli/src/ui/output.ts`
+- Modify: `packages/cli/src/ui/output.test.ts`
+
+**Step 1: Implement**
+
+- Resolve deferred p03 findings:
+  - add missing non-interactive `confirmAction` test
+  - add `inputRequired` prompt primitive for future command growth
+  - simplify path normalization in stray detection and remove unnecessary explicit `Dirent[]` annotation
+  - add operation-level color semantics in sync plan output
+  - remove duplicated `stripAnsi` implementation by centralizing in a shared UI helper
+  - add focused `inferScopeRoot` behavior tests
+
+**Step 2: Verify**
+
+Run:
+```bash
+pnpm --filter=@oat/cli test src/shared/ src/drift/ src/ui/output.test.ts
+pnpm --filter=@oat/cli type-check
+pnpm --filter=@oat/cli lint
+```
+
+Expected: all pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/shared/ packages/cli/src/drift/ packages/cli/src/ui/
+git commit -m "fix(p06-t02): close deferred drift and prompt findings"
+```
+
+---
+
+### Task p06-t03: Hook robustness and warning-signal improvements
+
+**Files:**
+- Modify: `packages/cli/src/engine/hook.ts`
+- Modify: `packages/cli/src/engine/hook.test.ts`
+
+**Step 1: Implement**
+
+- Resolve deferred p04/p05 hook-related findings:
+  - make hook snippet project-scoped (`oat status --scope project`)
+  - improve warning specificity while staying warning-only
+  - handle uninstall of OAT-only hook by removing empty hook file
+  - document defensive `runHookCheck` catch behavior
+  - harden hook path resolution for symlinked `.git` and related git-dir layouts
+
+**Step 2: Verify**
+
+Run:
+```bash
+pnpm --filter=@oat/cli test src/engine/hook.test.ts
+pnpm --filter=@oat/cli type-check
+pnpm --filter=@oat/cli lint
+```
+
+Expected: all pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/engine/hook.ts packages/cli/src/engine/hook.test.ts
+git commit -m "fix(p06-t03): close deferred hook robustness findings"
+```
+
+---
+
+### Task p06-t04: Contract/e2e/help snapshot and edge-case test tightening
+
+**Files:**
+- Modify: `packages/cli/src/engine/edge-cases.test.ts`
+- Modify: `packages/cli/src/e2e/workflow.test.ts`
+- Modify: `packages/cli/src/providers/shared/adapter-contract.test.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts`
+
+**Step 1: Implement**
+
+- Resolve remaining deferred p05 findings:
+  - strengthen concurrent-manifest test assertion with explicit schema parse
+  - improve e2e stream interception typing/signature safety
+  - add providers inspect help snapshot
+  - tighten adapter contract assertions for `nativeRead` mappings
+  - add positive detect-path assertions in adapter contract tests
+
+**Step 2: Verify**
+
+Run:
+```bash
+pnpm --filter=@oat/cli test src/engine/edge-cases.test.ts src/e2e/workflow.test.ts src/providers/shared/adapter-contract.test.ts src/commands/help-snapshots.test.ts
+pnpm --filter=@oat/cli type-check
+pnpm --filter=@oat/cli lint
+```
+
+Expected: all pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/engine/edge-cases.test.ts packages/cli/src/e2e/workflow.test.ts packages/cli/src/providers/shared/adapter-contract.test.ts packages/cli/src/commands/help-snapshots.test.ts
+git commit -m "test(p06-t04): close deferred contract and e2e findings"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running /oat:request-review and /oat:receive-review.}
@@ -2982,6 +3145,7 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 | p03 | code | passed | 2026-02-13 | reviews/p03-re-review-2026-02-13.md |
 | p04 | code | passed | 2026-02-14 | reviews/p04-re-review-2026-02-14.md |
 | p05 | code | passed | 2026-02-14 | reviews/p05-code-review.md |
+| p06 | code | pending | - | - |
 | final | code | pending | - | - |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
@@ -3003,8 +3167,9 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 - Phase 3: 9 tasks — Drift Detection and Output (drift detector, stray detector, output formatters, shared prompts, review fixes)
 - Phase 4: 25 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests, review fixes)
 - Phase 5: 6 tasks — Git Hook, Polish, and E2E (hook, edge cases, contract tests, snapshot tests, e2e tests, final verification)
+- Phase 6: 4 tasks — Deferred Medium/Minor Closure (engine cleanup, drift/prompt polish, hook hardening, contract/e2e tightening)
 
-**Total: 82 tasks**
+**Total: 86 tasks**
 
 ---
 
