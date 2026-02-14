@@ -81,6 +81,21 @@ interface InitDependencies {
   installHook: (projectRoot: string) => Promise<void>;
 }
 
+interface InitScopeSummary {
+  scope: ConcreteScope;
+  straysFound: number;
+  straysAdopted: number;
+}
+
+interface InitJsonPayload {
+  scope: Scope;
+  directoriesCreated: number;
+  straysFound: number;
+  straysAdopted: number;
+  hookInstalled: boolean | null;
+  scopes: InitScopeSummary[];
+}
+
 function normalizePath(pathValue: string): string {
   return pathValue.replaceAll('\\', '/');
 }
@@ -273,15 +288,15 @@ async function maybeHandleHook(
   dependencies: InitDependencies,
   projectRoot: string | null,
   hookFlag: boolean | undefined,
-): Promise<void> {
+): Promise<boolean | null> {
   if (!projectRoot) {
-    return;
+    return null;
   }
 
   const installed = await dependencies.isHookInstalled(projectRoot);
 
   if (installed && hookFlag === undefined) {
-    return;
+    return true;
   }
 
   let shouldInstall = false;
@@ -295,13 +310,16 @@ async function maybeHandleHook(
     });
   } else {
     context.logger.info(HOOK_GUIDANCE);
-    return;
+    return installed;
   }
 
   if (shouldInstall && !installed) {
     await dependencies.installHook(projectRoot);
     context.logger.success('Installed optional pre-commit hook.');
+    return true;
   }
+
+  return installed || shouldInstall;
 }
 
 async function runInitCommand(
@@ -311,6 +329,7 @@ async function runInitCommand(
 ): Promise<void> {
   const scopes = resolveScopes(context.scope);
   let projectRoot: string | null = null;
+  const scopeSummaries: InitScopeSummary[] = [];
 
   for (const scope of scopes) {
     const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
@@ -333,6 +352,7 @@ async function runInitCommand(
       manifest,
       canonicalEntries,
     );
+    let straysAdopted = 0;
 
     if (!context.interactive && strays.length > 0) {
       context.logger.warn(ADOPT_REMEDIATION);
@@ -350,13 +370,42 @@ async function runInitCommand(
         }
 
         manifest = await dependencies.adoptStray(scopeRoot, stray, manifest);
+        straysAdopted += 1;
       }
     }
 
     await dependencies.saveManifest(manifestPath, manifest);
+    scopeSummaries.push({
+      scope,
+      straysFound: strays.length,
+      straysAdopted,
+    });
   }
 
-  await maybeHandleHook(context, dependencies, projectRoot, hookFlag);
+  const hookInstalled = await maybeHandleHook(
+    context,
+    dependencies,
+    projectRoot,
+    hookFlag,
+  );
+  if (context.json) {
+    const payload: InitJsonPayload = {
+      scope: context.scope,
+      directoriesCreated: scopeSummaries.length,
+      straysFound: scopeSummaries.reduce(
+        (total, summary) => total + summary.straysFound,
+        0,
+      ),
+      straysAdopted: scopeSummaries.reduce(
+        (total, summary) => total + summary.straysAdopted,
+        0,
+      ),
+      hookInstalled,
+      scopes: scopeSummaries,
+    };
+    context.logger.json(payload);
+  }
+
   process.exitCode = 0;
 }
 

@@ -258,6 +258,34 @@ describe('createInitCommand', () => {
     expect(capture.warn).toContain(ADOPT_REMEDIATION);
   });
 
+  it('outputs json summary when --json is set', async () => {
+    const { command, capture } = createHarness({
+      interactive: false,
+      strays: [createStray()],
+      hookInstalled: true,
+    });
+
+    await runInitCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(capture.jsonPayloads).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      scope: 'project',
+      directoriesCreated: 1,
+      straysFound: 1,
+      straysAdopted: 0,
+      hookInstalled: true,
+      scopes: [
+        {
+          scope: 'project',
+          straysFound: 1,
+          straysAdopted: 0,
+        },
+      ],
+    });
+  });
+
   it('adoption moves provider content into .agents and links provider path back', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-init-command-'));
     tempDirs.push(root);
