@@ -23,10 +23,12 @@ export interface SyncPlanEntry {
   reason: string;
 }
 
+export type RemovalSyncPlanEntry = SyncPlanEntry & { operation: 'remove' };
+
 export interface SyncPlan {
   scope: EngineScope;
   entries: SyncPlanEntry[];
-  removals: SyncPlanEntry[];
+  removals: RemovalSyncPlanEntry[];
 }
 
 export interface SyncResult {

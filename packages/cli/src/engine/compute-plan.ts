@@ -1,5 +1,5 @@
 import { access, lstat, readlink } from 'node:fs/promises';
-import { dirname, join, normalize, resolve, sep } from 'node:path';
+import { basename, dirname, join, normalize, resolve } from 'node:path';
 import type { SyncConfig } from '../config/sync-config';
 import { computeDirectoryHash } from '../manifest/hash';
 import { findEntry } from '../manifest/manager';
@@ -7,7 +7,12 @@ import type { Manifest, ManifestEntry } from '../manifest/manifest.types';
 import type { ProviderAdapter } from '../providers/shared/adapter.types';
 import { getSyncMappings } from '../providers/shared/adapter.utils';
 import type { ContentType } from '../shared/types';
-import type { EngineScope, SyncPlan, SyncPlanEntry } from './engine.types';
+import type {
+  EngineScope,
+  RemovalSyncPlanEntry,
+  SyncPlan,
+  SyncPlanEntry,
+} from './engine.types';
 import type { CanonicalEntry } from './scanner';
 
 interface ComputeSyncPlanArgs {
@@ -48,10 +53,17 @@ function entryInsideMapping(
   entry: CanonicalEntry,
   mappingCanonicalDir: string,
 ): boolean {
-  const relativeCanonicalPath = canonicalRelativePath(entry);
+  const relativeCanonicalPath = canonicalRelativePath(entry).replaceAll(
+    '\\',
+    '/',
+  );
+  const normalizedMappingCanonicalDir = mappingCanonicalDir.replaceAll(
+    '\\',
+    '/',
+  );
   return (
-    relativeCanonicalPath === mappingCanonicalDir ||
-    relativeCanonicalPath.startsWith(`${mappingCanonicalDir}${sep}`)
+    relativeCanonicalPath === normalizedMappingCanonicalDir ||
+    relativeCanonicalPath.startsWith(`${normalizedMappingCanonicalDir}/`)
   );
 }
 
@@ -98,13 +110,11 @@ async function pathExists(path: string): Promise<boolean> {
 function createRemovalEntry(
   manifestEntry: ManifestEntry,
   scopeRoot: string,
-): SyncPlanEntry {
+): RemovalSyncPlanEntry {
   const canonicalRelative = manifestEntry.canonicalPath;
   return {
     canonical: {
-      name:
-        canonicalRelative.split('/').filter(Boolean).at(-1) ??
-        canonicalRelative,
+      name: basename(canonicalRelative),
       type: manifestEntry.contentType,
       canonicalPath: resolve(scopeRoot, canonicalRelative),
     },
@@ -233,7 +243,7 @@ export async function computeSyncPlan({
   scopeRoot: explicitScopeRoot,
 }: ComputeSyncPlanArgs): Promise<SyncPlan> {
   const entries: SyncPlanEntry[] = [];
-  const removals: SyncPlanEntry[] = [];
+  const removals: RemovalSyncPlanEntry[] = [];
   const scopeRoot = resolveScopeRoot(canonical, explicitScopeRoot);
   const seenCanonicalKeys = new Set<string>();
   const activeProviderNames = new Set<string>();

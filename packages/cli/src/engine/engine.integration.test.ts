@@ -11,45 +11,11 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { DEFAULT_SYNC_CONFIG } from '../config/sync-config';
 import { createEmptyManifest, loadManifest } from '../manifest/manager';
-import type { ProviderAdapter } from '../providers/shared/adapter.types';
 import { computeSyncPlan } from './compute-plan';
 import { executeSyncPlan } from './execute-plan';
-import { OAT_MARKER_PREFIX } from './markers';
+import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
 import { scanCanonical } from './scanner';
-
-function createAdapter(
-  overrides: Partial<ProviderAdapter> = {},
-): ProviderAdapter {
-  return {
-    name: 'claude',
-    displayName: 'Claude Code',
-    defaultStrategy: 'symlink',
-    projectMappings: [
-      {
-        contentType: 'skill',
-        canonicalDir: '.agents/skills',
-        providerDir: '.claude/skills',
-        nativeRead: false,
-      },
-      {
-        contentType: 'agent',
-        canonicalDir: '.agents/agents',
-        providerDir: '.claude/agents',
-        nativeRead: false,
-      },
-    ],
-    userMappings: [
-      {
-        contentType: 'skill',
-        canonicalDir: '.agents/skills',
-        providerDir: '.claude/skills',
-        nativeRead: false,
-      },
-    ],
-    detect: async () => true,
-    ...overrides,
-  };
-}
+import { createTestAdapter } from './test-helpers';
 
 async function seedCanonical(root: string): Promise<void> {
   await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
@@ -85,7 +51,7 @@ describe('sync engine integration', () => {
   it('full sync: scan → plan → execute creates correct symlinks', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);
-    const adapter = createAdapter();
+    const adapter = createTestAdapter();
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
     await seedCanonical(root);
 
@@ -109,7 +75,7 @@ describe('sync engine integration', () => {
   it('idempotent: second run produces all skip entries', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);
-    const adapter = createAdapter();
+    const adapter = createTestAdapter();
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
     await seedCanonical(root);
 
@@ -148,7 +114,7 @@ describe('sync engine integration', () => {
     const canonical = await scanCanonical(root, 'project');
     await computeSyncPlan({
       canonical,
-      adapters: [createAdapter()],
+      adapters: [createTestAdapter()],
       manifest: createEmptyManifest(),
       scope: 'project',
       config: DEFAULT_SYNC_CONFIG,
@@ -163,7 +129,7 @@ describe('sync engine integration', () => {
   it('removal: delete canonical → plan shows remove → execute cleans provider', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);
-    const adapter = createAdapter();
+    const adapter = createTestAdapter();
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
     await seedCanonical(root);
 
@@ -206,7 +172,7 @@ describe('sync engine integration', () => {
   it('copy mode removal clears provider view and manifest entry', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);
-    const adapter = createAdapter({ defaultStrategy: 'copy' });
+    const adapter = createTestAdapter({ defaultStrategy: 'copy' });
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
     await seedCanonical(root);
 
@@ -253,7 +219,7 @@ describe('sync engine integration', () => {
   it('copy mode: creates copies with correct hashes in manifest', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);
-    const adapter = createAdapter({ defaultStrategy: 'copy' });
+    const adapter = createTestAdapter({ defaultStrategy: 'copy' });
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
     await seedCanonical(root);
 
@@ -272,6 +238,10 @@ describe('sync engine integration', () => {
       join(root, '.claude', 'skills', 'skill-one', 'SKILL.md'),
       'utf8',
     );
+    const sentinelContent = await readFile(
+      join(root, '.claude', 'skills', 'skill-one', OAT_DIRECTORY_SENTINEL),
+      'utf8',
+    );
     const manifest = await loadManifest(manifestPath);
     const skillEntry = manifest.entries.find(
       (entry) => entry.canonicalPath === '.agents/skills/skill-one',
@@ -279,6 +249,7 @@ describe('sync engine integration', () => {
 
     expect(copiedContent.startsWith(OAT_MARKER_PREFIX)).toBe(true);
     expect(copiedContent).toContain('# skill');
+    expect(sentinelContent).toContain('Source:');
     expect(skillEntry?.strategy).toBe('copy');
     expect(skillEntry?.contentHash).toMatch(/^[a-f0-9]{64}$/);
   });
@@ -286,7 +257,7 @@ describe('sync engine integration', () => {
   it('scope filtering: user scope skips agents', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);
-    const adapter = createAdapter();
+    const adapter = createTestAdapter();
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
     await seedCanonical(root);
 

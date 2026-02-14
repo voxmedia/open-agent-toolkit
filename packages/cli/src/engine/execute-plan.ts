@@ -5,7 +5,7 @@ import { computeDirectoryHash } from '../manifest/hash';
 import { addEntry, removeEntry, saveManifest } from '../manifest/manager';
 import type { Manifest, ManifestEntry } from '../manifest/manifest.types';
 import type { SyncPlan, SyncPlanEntry, SyncResult } from './engine.types';
-import { insertMarker } from './markers';
+import { insertMarker, writeDirectorySentinel } from './markers';
 
 export function inferScopeRoot(canonicalPath: string): string {
   const normalizedPath = canonicalPath.replaceAll('\\', '/');
@@ -61,6 +61,10 @@ async function applyCopyMarker(entry: SyncPlanEntry): Promise<void> {
   const markerPath = join(entry.providerPath, markerFileNameForEntry(entry));
 
   try {
+    await writeDirectorySentinel(
+      entry.providerPath,
+      entry.canonical.canonicalPath,
+    );
     await insertMarker(markerPath, entry.canonical.canonicalPath);
   } catch (error) {
     if (

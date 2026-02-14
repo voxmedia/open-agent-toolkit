@@ -5,43 +5,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { DEFAULT_SYNC_CONFIG } from '../config/sync-config';
 import { createEmptyManifest } from '../manifest/manager';
 import type { Manifest, ManifestEntry } from '../manifest/manifest.types';
-import type { ProviderAdapter } from '../providers/shared/adapter.types';
 import { computeSyncPlan } from './compute-plan';
 import type { CanonicalEntry } from './scanner';
-
-function createAdapter(
-  overrides: Partial<ProviderAdapter> = {},
-): ProviderAdapter {
-  return {
-    name: 'claude',
-    displayName: 'Claude Code',
-    defaultStrategy: 'symlink',
-    projectMappings: [
-      {
-        contentType: 'skill',
-        canonicalDir: '.agents/skills',
-        providerDir: '.claude/skills',
-        nativeRead: false,
-      },
-      {
-        contentType: 'agent',
-        canonicalDir: '.agents/agents',
-        providerDir: '.claude/agents',
-        nativeRead: false,
-      },
-    ],
-    userMappings: [
-      {
-        contentType: 'skill',
-        canonicalDir: '.agents/skills',
-        providerDir: '.claude/skills',
-        nativeRead: false,
-      },
-    ],
-    detect: async () => true,
-    ...overrides,
-  };
-}
+import { createTestAdapter } from './test-helpers';
 
 function createCanonicalEntry(
   root: string,
@@ -91,7 +57,7 @@ describe('computeSyncPlan', () => {
 
     const plan = await computeSyncPlan({
       canonical,
-      adapters: [createAdapter()],
+      adapters: [createTestAdapter()],
       manifest: createEmptyManifest(),
       scope: 'project',
       config: DEFAULT_SYNC_CONFIG,
@@ -121,7 +87,7 @@ describe('computeSyncPlan', () => {
 
     const plan = await computeSyncPlan({
       canonical,
-      adapters: [createAdapter()],
+      adapters: [createTestAdapter()],
       manifest: createEmptyManifest(),
       scope: 'project',
       config: DEFAULT_SYNC_CONFIG,
@@ -148,7 +114,7 @@ describe('computeSyncPlan', () => {
 
     const plan = await computeSyncPlan({
       canonical,
-      adapters: [createAdapter()],
+      adapters: [createTestAdapter()],
       manifest: createEmptyManifest(),
       scope: 'project',
       config: DEFAULT_SYNC_CONFIG,
@@ -174,7 +140,7 @@ describe('computeSyncPlan', () => {
 
     const plan = await computeSyncPlan({
       canonical,
-      adapters: [createAdapter()],
+      adapters: [createTestAdapter()],
       manifest: createEmptyManifest(),
       scope: 'project',
       config: DEFAULT_SYNC_CONFIG,
@@ -194,7 +160,7 @@ describe('computeSyncPlan', () => {
 
     const plan = await computeSyncPlan({
       canonical: [],
-      adapters: [createAdapter()],
+      adapters: [createTestAdapter()],
       manifest: manifestWithEntry({
         canonicalPath: '.agents/skills/skill-one',
         providerPath: '.claude/skills/skill-one',
@@ -224,7 +190,7 @@ describe('computeSyncPlan', () => {
     });
 
     const canonical = [createCanonicalEntry(root, 'skill', 'skill-one')];
-    const codexAdapter = createAdapter({
+    const codexAdapter = createTestAdapter({
       name: 'codex',
       projectMappings: [
         {
@@ -266,7 +232,7 @@ describe('computeSyncPlan', () => {
 
     const plan = await computeSyncPlan({
       canonical,
-      adapters: [createAdapter()],
+      adapters: [createTestAdapter()],
       manifest: createEmptyManifest(),
       scope: 'user',
       config: DEFAULT_SYNC_CONFIG,
@@ -288,7 +254,7 @@ describe('computeSyncPlan', () => {
 
     const plan = await computeSyncPlan({
       canonical,
-      adapters: [createAdapter({ defaultStrategy: 'copy' })],
+      adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
       manifest: createEmptyManifest(),
       scope: 'project',
       config: DEFAULT_SYNC_CONFIG,
@@ -314,7 +280,7 @@ describe('computeSyncPlan', () => {
     const plan = await computeSyncPlan({
       canonical,
       adapters: [
-        createAdapter({
+        createTestAdapter({
           defaultStrategy: 'auto',
         }),
       ],

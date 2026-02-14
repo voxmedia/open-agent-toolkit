@@ -1,6 +1,7 @@
 export { computeSyncPlan } from './compute-plan';
 export {
   type EngineScope,
+  type RemovalSyncPlanEntry,
   SYNC_OPERATION_TYPES,
   type SyncOperationType,
   type SyncPlan,
@@ -17,6 +18,12 @@ export {
   runHookCheck,
   uninstallHook,
 } from './hook';
-export { hasMarker, insertMarker, OAT_MARKER_PREFIX } from './markers';
+export {
+  hasMarker,
+  insertMarker,
+  OAT_DIRECTORY_SENTINEL,
+  OAT_MARKER_PREFIX,
+  writeDirectorySentinel,
+} from './markers';
 export type { CanonicalEntry } from './scanner';
 export { scanCanonical } from './scanner';

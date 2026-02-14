@@ -2,7 +2,13 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { hasMarker, insertMarker, OAT_MARKER_PREFIX } from './markers';
+import {
+  hasMarker,
+  insertMarker,
+  OAT_DIRECTORY_SENTINEL,
+  OAT_MARKER_PREFIX,
+  writeDirectorySentinel,
+} from './markers';
 
 describe('generated view markers', () => {
   const tempDirs: string[] = [];
@@ -56,5 +62,21 @@ describe('generated view markers', () => {
 
     const updated = await readFile(skillPath, 'utf8');
     expect(updated).toContain(canonicalPath);
+  });
+
+  it('writeDirectorySentinel writes .oat-generated marker file', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-marker-'));
+    tempDirs.push(root);
+    const targetDir = join(root, 'skill');
+    const canonicalPath = '/tmp/.agents/skills/example';
+    await mkdir(targetDir, { recursive: true });
+
+    await writeDirectorySentinel(targetDir, canonicalPath);
+
+    const sentinel = await readFile(
+      join(targetDir, OAT_DIRECTORY_SENTINEL),
+      'utf8',
+    );
+    expect(sentinel).toContain(canonicalPath);
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  type RemovalSyncPlanEntry,
   SYNC_OPERATION_TYPES,
   type SyncOperationType,
   type SyncPlan,
@@ -55,15 +56,21 @@ describe('engine types', () => {
       reason: 'already in sync',
     };
 
+    const removal: RemovalSyncPlanEntry = {
+      ...entry,
+      operation: 'remove',
+      reason: 'canonical entry no longer exists',
+    };
+
     const plan: SyncPlan = {
       scope: 'project',
       entries: [entry],
-      removals: [],
+      removals: [removal],
     };
 
     expect(plan.scope).toBe('project');
     expect(plan.entries).toHaveLength(1);
-    expect(plan.removals).toEqual([]);
+    expect(plan.removals[0]?.operation).toBe('remove');
   });
 
   it('SyncResult tracks applied + failed counts', () => {

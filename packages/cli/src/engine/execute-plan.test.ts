@@ -12,9 +12,13 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEmptyManifest, loadManifest } from '../manifest/manager';
-import type { SyncPlan, SyncPlanEntry } from './engine.types';
+import type {
+  RemovalSyncPlanEntry,
+  SyncPlan,
+  SyncPlanEntry,
+} from './engine.types';
 import { executeSyncPlan, inferScopeRoot } from './execute-plan';
-import { OAT_MARKER_PREFIX } from './markers';
+import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
 
 function createCanonicalEntry(
   root: string,
@@ -51,9 +55,16 @@ function createEntry(
   };
 }
 
+function createRemovalEntry(root: string, name: string): RemovalSyncPlanEntry {
+  return {
+    ...createEntry(root, name, 'remove', 'symlink'),
+    operation: 'remove',
+  };
+}
+
 function createPlan(
   entries: SyncPlanEntry[],
-  removals: SyncPlanEntry[] = [],
+  removals: RemovalSyncPlanEntry[] = [],
 ): SyncPlan {
   return {
     scope: 'project',
@@ -119,8 +130,13 @@ describe('executeSyncPlan', () => {
       join(root, '.claude', 'skills', 'skill-one', 'SKILL.md'),
       'utf8',
     );
+    const sentinel = await readFile(
+      join(root, '.claude', 'skills', 'skill-one', OAT_DIRECTORY_SENTINEL),
+      'utf8',
+    );
     expect(copied.startsWith(OAT_MARKER_PREFIX)).toBe(true);
     expect(copied).toContain('copy me');
+    expect(sentinel).toContain('Source:');
   });
 
   it('re-creates symlink for update_symlink entries', async () => {
@@ -173,8 +189,13 @@ describe('executeSyncPlan', () => {
       join(root, '.claude', 'skills', 'skill-one', 'SKILL.md'),
       'utf8',
     );
+    const sentinel = await readFile(
+      join(root, '.claude', 'skills', 'skill-one', OAT_DIRECTORY_SENTINEL),
+      'utf8',
+    );
     expect(content.startsWith(OAT_MARKER_PREFIX)).toBe(true);
     expect(content).toContain('fresh');
+    expect(sentinel).toContain('Source:');
   });
 
   it('removes provider path for remove entries', async () => {
@@ -186,7 +207,7 @@ describe('executeSyncPlan', () => {
       recursive: true,
     });
 
-    const removal = createEntry(root, 'skill-one', 'remove', 'symlink');
+    const removal = createRemovalEntry(root, 'skill-one');
     const plan = createPlan([], [removal]);
     await executeSyncPlan(plan, createEmptyManifest(), manifestPath);
 
@@ -209,7 +230,10 @@ describe('executeSyncPlan', () => {
       'utf8',
     );
 
-    const removal = createEntry(root, 'skill-one', 'remove', 'copy');
+    const removal: RemovalSyncPlanEntry = {
+      ...createEntry(root, 'skill-one', 'remove', 'copy'),
+      operation: 'remove',
+    };
     const plan = createPlan([], [removal]);
     const manifest = {
       ...createEmptyManifest(),
