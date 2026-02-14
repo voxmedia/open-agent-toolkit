@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t14
+oat_current_task_id: p04-t15
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 13/24 |
+| Phase 4 | in_progress | 24 | 14/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 64/81 tasks completed
+**Total:** 65/81 tasks completed
 
 ---
 
@@ -1343,6 +1343,7 @@ oat_generated: false
 - [x] p04-t11: (review) Implement per-stray adoption flow in oat status - 5a4d5ba
 - [x] p04-t12: (review) Add provider strategy/content metadata to providers list - 2d0b193
 - [x] p04-t13: (review) Add JSON summary output to oat init - 1d6a7ba
+- [x] p04-t14: (review) Strengthen symlink assertions in command integration tests - 8783dfd
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1400,6 +1401,7 @@ oat_generated: false
 - Continued p04 review-fix execution by adding per-stray interactive adoption handling directly in `oat status`.
 - Continued p04 review-fix execution by surfacing provider `defaultStrategy` and supported `contentTypes` in providers list outputs.
 - Continued p04 review-fix execution by emitting structured JSON summaries from `oat init` in non-interactive JSON mode.
+- Continued p04 review-fix execution by replacing weak integration test symlink checks with concrete `isSymbolicLink()` assertions.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1859,7 +1861,23 @@ oat_generated: false
 
 ### Task p04-t14: (review) Strengthen symlink assertions in command integration tests
 
-**Status:** pending
+**Status:** completed
+**Commit:** 8783dfd
+
+**Outcome (required when completed):**
+- Replaced structural stats-object assertions with direct `isSymbolicLink()` checks in command integration coverage.
+- Strengthened validation for all expected provider-mapping symlink outputs from `sync --apply`.
+- Preserved existing end-to-end integration coverage while eliminating false-positive symlink assertions.
+
+**Files changed:**
+- `packages/cli/src/commands/commands.integration.test.ts` - updated symlink assertions to verify true symlink state.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts`
+- Result: pass (7 tests)
+
+**Notes / Decisions:**
+- Used explicit local `lstat` results per path to keep failure diagnostics clear for each mapping.
 
 ### Task p04-t15: (review) Extract shared logger capture test helper
 
