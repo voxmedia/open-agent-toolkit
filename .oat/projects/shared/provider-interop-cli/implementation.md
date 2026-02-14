@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t10
+oat_current_task_id: p04-t11
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 9/24 |
+| Phase 4 | in_progress | 24 | 10/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 60/81 tasks completed
+**Total:** 61/81 tasks completed
 
 ---
 
@@ -1339,6 +1339,7 @@ oat_generated: false
 - [x] p04-t07: Register all commands in CLI entrypoint - 8c45e6e
 - [x] p04-t08: Add CLI command integration tests - ea20ecd
 - [x] p04-t09: (review) Fix hook install to produce executable script - 60ffaf1
+- [x] p04-t10: (review) Preserve drift warning output in installed hook - 1bbb1ed
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1392,6 +1393,7 @@ oat_generated: false
 - Continued Phase 4 by implementing `oat providers inspect` with case-insensitive lookup, mapping summaries, and JSON support.
 - Completed Phase 4 by implementing `oat doctor`, wiring all command factories into the CLI bootstrap, and adding command integration coverage for end-to-end command workflows.
 - Began p04 review-fix execution by hardening hook install behavior to generate executable scripts with shebang bootstrapping.
+- Continued p04 review-fix execution by making hook behavior non-blocking while surfacing drift remediation warnings.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1766,7 +1768,24 @@ oat_generated: false
 
 ### Task p04-t10: (review) Preserve drift warning output in installed hook
 
-**Status:** pending
+**Status:** completed
+**Commit:** 1bbb1ed
+
+**Outcome (required when completed):**
+- Updated generated pre-commit hook logic to keep execution non-blocking while emitting an explicit remediation warning when drift is detected.
+- Replaced fully-silent hook invocation with conditional warning output that guides users to `oat sync --apply`.
+- Added regression coverage asserting warning-path snippet content in installed hook scripts.
+
+**Files changed:**
+- `packages/cli/src/commands/init/index.ts` - changed hook snippet drift-handling behavior and remediation message.
+- `packages/cli/src/commands/init/index.test.ts` - added hook content test for warning/remediation behavior.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/init/`
+- Result: pass (13 tests)
+
+**Notes / Decisions:**
+- Kept `oat status` output suppressed in hook mode and surfaced a stable warning line to avoid noisy pre-commit output while preserving operator guidance.
 
 ### Task p04-t11: (review) Implement per-stray adoption flow in `oat status`
 
