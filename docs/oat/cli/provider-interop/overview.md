@@ -2,6 +2,8 @@
 
 The provider interop CLI in `packages/cli` manages canonical agent assets under `.agents/` and reconciles provider-specific views.
 
+This capability is intentionally independent from OAT workflow artifacts. Teams can adopt interop-only usage (`init/status/sync/providers/doctor`) without using discovery/spec/design/plan/implement project workflows.
+
 ## Scope
 
 - Canonical directories: `.agents/skills`, `.agents/agents`

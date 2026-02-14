@@ -1,5 +1,7 @@
 # Lifecycle
 
+This lifecycle is an optional OAT layer. Interop-only users can skip it.
+
 OAT lifecycle order:
 
 1. Discovery (`oat-discovery`)
