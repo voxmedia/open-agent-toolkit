@@ -40,6 +40,21 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## Planned
 
+- [ ] **(P1) [tooling] Add CLI command to refresh AGENTS skills table from `.agents/skills`**
+  - Target milestone/phase: OAT CLI usability polish
+  - Notes:
+    - Add a command that regenerates the `AGENTS.md` block between `SKILLS_TABLE_START` and `SKILLS_TABLE_END` from skill frontmatter in `.agents/skills/*/SKILL.md`.
+    - Keep output deterministic (stable ordering, idempotent rewrite).
+    - Fail fast with actionable errors when required frontmatter fields are missing.
+    - Include a dry-run mode for preview and a write mode for apply.
+  - Success criteria:
+    - Running the command updates `AGENTS.md` with no manual editing.
+    - Removed skills disappear automatically; new skills appear automatically.
+    - Re-running without skill changes produces no diff.
+  - Links:
+    - Source issue: manual drift between `AGENTS.md` and `.agents/skills`
+  - Created: 2026-02-14
+
 - [ ] **(P1) [skills] Standardize OAT invocation language to skill-first across templates/docs**
   - Target milestone/phase: Dogfood v1.2 polish (before additional workflow expansion)
   - Notes:

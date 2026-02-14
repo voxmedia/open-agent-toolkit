@@ -48,15 +48,6 @@
       "lastSynced": "2026-02-14T21:10:44.553Z"
     },
     {
-      "canonicalPath": ".agents/skills/new-agent-project",
-      "providerPath": ".claude/skills/new-agent-project",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.554Z"
-    },
-    {
       "canonicalPath": ".agents/skills/oat-clear-active-project",
       "providerPath": ".claude/skills/oat-clear-active-project",
       "provider": "claude",
@@ -246,15 +237,6 @@
       "lastSynced": "2026-02-14T21:10:44.557Z"
     },
     {
-      "canonicalPath": ".agents/skills/new-agent-project",
-      "providerPath": ".cursor/skills/new-agent-project",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.557Z"
-    },
-    {
       "canonicalPath": ".agents/skills/oat-clear-active-project",
       "providerPath": ".cursor/skills/oat-clear-active-project",
       "provider": "cursor",
@@ -399,5 +381,5 @@
       "lastSynced": "2026-02-14T21:10:44.562Z"
     }
   ],
-  "lastUpdated": "2026-02-14T21:10:44.562Z"
+  "lastUpdated": "2026-02-14T22:04:07.785Z"
 }
