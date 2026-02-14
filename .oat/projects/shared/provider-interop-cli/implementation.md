@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t19
+oat_current_task_id: p04-t20
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 18/24 |
+| Phase 4 | in_progress | 24 | 19/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 69/81 tasks completed
+**Total:** 70/81 tasks completed
 
 ---
 
@@ -1348,6 +1348,7 @@ oat_generated: false
 - [x] p04-t16: (review) Extract shared command scope/global option helpers - b6a0955
 - [x] p04-t17: (review) Centralize ConcreteScope type alias - d80915c
 - [x] p04-t18: (review) Correct providers inspect mapping section formatting - 350ffb9
+- [x] p04-t19: (review) Add skip-all remaining option to init stray adoption - 59c9968
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1410,6 +1411,7 @@ oat_generated: false
 - Continued p04 review-fix execution by centralizing shared command scope/global option parsing helpers across command modules.
 - Continued p04 review-fix execution by centralizing `ConcreteScope` typing in shared types and reusing it across command domains.
 - Continued p04 review-fix execution by aligning `providers inspect` header mapping summaries with actual adapter mappings.
+- Continued p04 review-fix execution by adding skip-all behavior to interactive stray adoption in `oat init`.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1976,7 +1978,24 @@ oat_generated: false
 
 ### Task p04-t19: (review) Add "skip all remaining" option to init stray adoption
 
-**Status:** pending
+**Status:** completed
+**Commit:** 59c9968
+
+**Outcome (required when completed):**
+- Replaced binary adoption confirmation with explicit interactive choices: adopt, skip, skip all remaining.
+- Added short-circuit support so a single `skip_all` selection exits remaining stray prompts.
+- Updated init command tests to cover per-stray selection behavior and skip-all path.
+
+**Files changed:**
+- `packages/cli/src/commands/init/index.ts` - added select-based adoption flow and `skip_all` handling.
+- `packages/cli/src/commands/init/index.test.ts` - updated harness and tests for select-driven stray adoption behavior.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/init/ && pnpm --filter=@oat/cli type-check`
+- Result: pass (15 init tests, type-check clean)
+
+**Notes / Decisions:**
+- Hook consent flow remains on `confirmAction`; only stray adoption prompts moved to `selectWithAbort`.
 
 ### Task p04-t20: (review) Surface unsynced canonical entries in status output
 
