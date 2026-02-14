@@ -394,7 +394,7 @@ If correctness matters, don’t rely on freeform agent reasoning for transformat
 When a skill is multi-step or long-running, print progress banners (GSD-style) and a few “step indicators” so users know something is happening.
 
 In OAT, see examples in:
-- `.agent/skills/oat-*/SKILL.md`
+- `.agents/skills/oat-*/SKILL.md`
 
 ### 4) Idempotence and “resume safety”
 
@@ -523,8 +523,8 @@ Gemini CLI:
 
 OAT examples (this repo):
 - `AGENTS.md` (skill registry + discovery)
-- `.agent/skills/create-skill/SKILL.md`
-- `.agent/skills/create-oat-skill/SKILL.md`
-- `.agent/skills/oat-index/SKILL.md`
-- `.agent/skills/oat-*/SKILL.md`
+- `.agents/skills/create-skill/SKILL.md`
+- `.agents/skills/create-oat-skill/SKILL.md`
+- `.agents/skills/oat-index/SKILL.md`
+- `.agents/skills/oat-*/SKILL.md`
 - `.oat/scripts/validate-oat-skills.ts`
