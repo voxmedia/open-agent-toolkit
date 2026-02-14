@@ -144,6 +144,9 @@ function createHarness(options: HarnessOptions = {}): {
     }),
     resolveScopeRoot,
     getAdapters: () => adapters,
+    getSyncMappings: vi.fn((adapter: ProviderAdapter, scope: Scope) =>
+      scope === 'user' ? adapter.userMappings : adapter.projectMappings,
+    ),
     loadManifest: vi.fn(async (manifestPath: string) => {
       if (manifestPath.startsWith('/tmp/home')) {
         return createManifest([]);
@@ -231,6 +234,15 @@ describe('oat providers list', () => {
     expect(capture.info[0]).toContain('missing=1');
   });
 
+  it('shows default strategy and content types per provider', async () => {
+    const { command, capture } = createHarness();
+
+    await runProvidersList(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(capture.info[0]).toContain('strategy=symlink');
+    expect(capture.info[0]).toContain('content_types=skill');
+  });
+
   it('outputs JSON array when --json flag set', async () => {
     const { command, capture } = createHarness();
 
@@ -244,10 +256,14 @@ describe('oat providers list', () => {
       {
         name: 'claude',
         detected: true,
+        defaultStrategy: 'symlink',
+        contentTypes: ['skill'],
       },
       {
         name: 'cursor',
         detected: false,
+        defaultStrategy: 'symlink',
+        contentTypes: ['skill'],
       },
     ]);
   });

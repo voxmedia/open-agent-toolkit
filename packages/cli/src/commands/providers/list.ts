@@ -11,7 +11,8 @@ import { loadManifest } from '../../manifest';
 import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
 import { cursorAdapter } from '../../providers/cursor';
-import type { Scope } from '../../shared/types';
+import { getSyncMappings } from '../../providers/shared';
+import type { ContentType, Scope } from '../../shared/types';
 import type {
   ConcreteScope,
   ProviderListItem,
@@ -31,8 +32,12 @@ function resolveScopes(scope: Scope): ConcreteScope[] {
 }
 
 function formatSummary(item: ProviderListItem): string {
+  const contentTypes =
+    item.contentTypes.length > 0 ? item.contentTypes.join('|') : 'none';
   return [
     item.detected ? 'detected' : 'not detected',
+    `strategy=${item.defaultStrategy}`,
+    `content_types=${contentTypes}`,
     `managed=${item.summary.managed}`,
     `in_sync=${item.summary.inSync}`,
     `drifted=${item.summary.drifted}`,
@@ -91,6 +96,7 @@ function createDependencies(): ProvidersListDependencies {
     getAdapters() {
       return [claudeAdapter, cursorAdapter, codexAdapter];
     },
+    getSyncMappings,
     loadManifest,
     detectDrift,
   };
@@ -132,6 +138,12 @@ async function collectProviderList(
   const items: ProviderListItem[] = [];
   for (const adapter of dependencies.getAdapters()) {
     const summary = createEmptySummary();
+    const contentTypes = new Set<ContentType>();
+    for (const scope of scopes) {
+      for (const mapping of dependencies.getSyncMappings(adapter, scope)) {
+        contentTypes.add(mapping.contentType);
+      }
+    }
     let detected = false;
 
     for (const scopeRoot of scopeRoots) {
@@ -169,6 +181,8 @@ async function collectProviderList(
       name: adapter.name,
       displayName: adapter.displayName,
       detected,
+      defaultStrategy: adapter.defaultStrategy,
+      contentTypes: [...contentTypes].sort(),
       summary,
     });
   }
