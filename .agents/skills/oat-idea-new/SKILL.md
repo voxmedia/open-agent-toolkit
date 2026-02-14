@@ -104,7 +104,7 @@ Active:    .oat/active-idea (set)
 Starting brainstorming...
 ```
 
-Then load and execute `oat-idea-ideate` to begin the first brainstorming session. The ideate skill owns all conversational brainstorming behavior.
+Then immediately invoke the **`oat-idea-ideate`** skill (located at `.agents/skills/oat-idea-ideate/SKILL.md`) to begin the first brainstorming session. Read that skill file and follow its process from Step 1. The ideate skill owns all conversational brainstorming behavior — do not duplicate it here.
 
 ## Success Criteria
 
@@ -113,4 +113,4 @@ Then load and execute `oat-idea-ideate` to begin the first brainstorming session
 - ✅ `.oat/ideas/backlog.md` exists and includes the new idea
 - ✅ `.oat/ideas/scratchpad.md` exists (initialized if first idea)
 - ✅ `.oat/active-idea` points to the new idea
-- ✅ Handed off to `oat-idea-ideate` for brainstorming
+- ✅ `oat-idea-ideate` skill invoked and brainstorming started
