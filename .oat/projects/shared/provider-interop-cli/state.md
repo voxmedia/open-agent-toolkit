@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: c1c385e
+oat_current_task: p05-t02
+oat_last_commit: c38ea08
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. p04 re-review passed; Phase 5 has started with `p05-t01`.
+Implementation - In Progress. Phase 5 is active; `p05-t01` is complete and `p05-t02` is in progress.
 
 ## Artifacts
 
@@ -54,7 +54,8 @@ Implementation - In Progress. p04 re-review passed; Phase 5 has started with `p0
 - ✓ p04 review received (`reviews/p04-code-review.md`)
 - ✓ p04 review-fix tasks complete (`p04-t09`–`p04-t24`)
 - ✓ p04 re-review passed (`reviews/p04-re-review-2026-02-14.md`)
-- ⧗ Phase 5 in progress (`p05-t01`)
+- ✓ p05-t01 complete (`feat(p05-t01): implement optional git pre-commit hook`)
+- ⧗ Phase 5 in progress (`p05-t02`)
 
 ## Plan Summary
 
@@ -74,4 +75,4 @@ None
 
 ## Next Milestone
 
-Continue `/oat:implement` from `p05-t01` (git hook module extraction + tests).
+Continue `/oat:implement` from `p05-t02` (edge cases).

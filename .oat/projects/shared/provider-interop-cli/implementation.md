@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t02
 oat_generated: false
 ---
 
@@ -20,9 +20,9 @@ oat_generated: false
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
 | Phase 4 | complete | 25 | 25/25 |
-| Phase 5 | in_progress | 6 | 0/6 |
+| Phase 5 | in_progress | 6 | 1/6 |
 
-**Total:** 76/82 tasks completed
+**Total:** 77/82 tasks completed
 
 ---
 
@@ -2158,6 +2158,37 @@ oat_generated: false
 
 ---
 
+## Phase 5: Git Hook, Polish, and E2E
+
+**Status:** in_progress
+**Started:** 2026-02-14
+
+### Task p05-t01: Implement git pre-commit hook
+
+**Status:** completed
+**Commit:** c38ea08
+
+**Outcome (required when completed):**
+- Extracted hook management into a dedicated engine module with explicit APIs for install, uninstall, detection, and non-blocking drift checks.
+- Added dedicated hook unit coverage for creation, idempotency, uninstall behavior, and warning-only drift check semantics.
+- Updated `oat init` to consume the engine hook module and support `--no-hook` uninstall flow.
+
+**Files changed:**
+- `packages/cli/src/engine/hook.ts` - implemented `installHook`, `uninstallHook`, `isHookInstalled`, and `runHookCheck`.
+- `packages/cli/src/engine/hook.test.ts` - added hook module unit tests covering expected behaviors.
+- `packages/cli/src/engine/index.ts` - exported hook APIs/constants from engine barrel.
+- `packages/cli/src/commands/init/index.ts` - switched hook handling to engine APIs and added uninstall behavior for `--no-hook`.
+- `packages/cli/src/commands/init/index.test.ts` - updated command tests for no-hook uninstall behavior.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/hook src/commands/init && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept hook snippet semantics unchanged (warning-only, non-blocking) while moving implementation ownership to `engine/hook.ts`.
+
+---
+
 ## Deviations from Plan
 
 | Task | Planned | Actual | Reason |
@@ -2172,7 +2203,7 @@ oat_generated: false
 | 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 11 | 0 | n/a (phase boundary + review fixes) |
 | 3 | `pnpm --filter=@oat/cli test src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/ui/output`; `pnpm --filter=@oat/cli test src/shared/prompts`; `pnpm --filter=@oat/cli test src/ui/output && pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/drift/strays && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift/strays src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/drift src/ui/output && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint` | 9 | 0 | n/a (phase boundary + review fixes) |
 | 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli test src/commands/sync/`; `pnpm --filter=@oat/cli test src/commands/init/`; `pnpm --filter=@oat/cli test src/commands/providers/list`; `pnpm --filter=@oat/cli test src/commands/providers/inspect`; `pnpm --filter=@oat/cli test src/commands/doctor/`; `pnpm --filter=@oat/cli test src/commands/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 8 | 0 | n/a (task-level verification) |
-| 5 | - | - | - | - |
+| 5 | `pnpm --filter=@oat/cli test src/engine/hook src/commands/init`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 1 | 0 | n/a (task-level verification) |
 
 ## Final Summary (for PR/docs)
 
