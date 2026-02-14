@@ -14,18 +14,8 @@ import type { CommandContext, GlobalOptions } from '../../app/command-context';
 import type { CanonicalEntry } from '../../engine';
 import { createEmptyManifest, type Manifest } from '../../manifest';
 import type { Scope } from '../../shared/types';
-import type { CliLogger } from '../../ui/logger';
+import { createLoggerCapture, type LoggerCapture } from '../__tests__/helpers';
 import { createInitCommand, type InitStrayCandidate } from './index';
-
-interface LoggerCapture {
-  info: string[];
-  warn: string[];
-  error: string[];
-  success: string[];
-  debug: string[];
-  jsonPayloads: unknown[];
-  logger: CliLogger;
-}
 
 interface HarnessOptions {
   interactive?: boolean;
@@ -45,44 +35,6 @@ const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
 const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';
-
-function createLoggerCapture(): LoggerCapture {
-  const info: string[] = [];
-  const warn: string[] = [];
-  const error: string[] = [];
-  const success: string[] = [];
-  const debug: string[] = [];
-  const jsonPayloads: unknown[] = [];
-
-  return {
-    info,
-    warn,
-    error,
-    success,
-    debug,
-    jsonPayloads,
-    logger: {
-      debug(message) {
-        debug.push(message);
-      },
-      info(message) {
-        info.push(message);
-      },
-      warn(message) {
-        warn.push(message);
-      },
-      error(message) {
-        error.push(message);
-      },
-      success(message) {
-        success.push(message);
-      },
-      json(payload) {
-        jsonPayloads.push(payload);
-      },
-    },
-  };
-}
 
 function createStray(
   providerPath = '.claude/skills/stray-skill',
