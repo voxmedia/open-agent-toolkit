@@ -7,10 +7,10 @@ import { registerCommands } from './commands';
 import { CliError } from './errors';
 import { createLogger } from './ui';
 
-export function main(argv: string[] = process.argv): void {
+export async function main(argv: string[] = process.argv): Promise<void> {
   const program = createProgram();
   registerCommands(program);
-  program.parse(argv);
+  await program.parseAsync(argv);
 }
 
 function isEntrypoint(): boolean {
@@ -22,9 +22,7 @@ function isEntrypoint(): boolean {
 }
 
 if (isEntrypoint()) {
-  try {
-    main();
-  } catch (error) {
+  void main().catch((error) => {
     const logger = createLogger({ json: false, verbose: false });
     if (error instanceof CliError) {
       logger.error(error.message);
@@ -36,5 +34,5 @@ if (isEntrypoint()) {
       logger.error('Unexpected error');
       process.exitCode = 2;
     }
-  }
+  });
 }
