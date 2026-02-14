@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t06
-oat_last_commit: 5791842
+oat_current_task: null
+oat_last_commit: e635276
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. Phase 5 is active; `p05-t01` through `p05-t05` are complete and work has moved to `p05-t06`.
+Implementation - In Progress. All planned tasks are complete (`p01`-`p05`); awaiting p05 phase review gate before final review/PR routing.
 
 ## Artifacts
 
@@ -30,7 +30,7 @@ Implementation - In Progress. Phase 5 is active; `p05-t01` through `p05-t05` are
 - **Review:** `reviews/design-review.md` (findings addressed)
 - **Review:** `reviews/cli-structure-proposal.md` (accepted)
 - **Plan:** `plan.md` (complete, 82 tasks, 5 phases)
-- **Implementation:** `implementation.md` (in progress)
+- **Implementation:** `implementation.md` (complete; awaiting review gate)
 
 ## Progress
 
@@ -59,7 +59,8 @@ Implementation - In Progress. Phase 5 is active; `p05-t01` through `p05-t05` are
 - ✓ p05-t03 complete (`test(p05-t03): add adapter contract conformance tests`)
 - ✓ p05-t04 complete (`test(p05-t04): add help output snapshot tests`)
 - ✓ p05-t05 complete (`test(p05-t05): add end-to-end workflow tests`)
-- ⧗ Phase 5 in progress (`p05-t06`)
+- ✓ p05-t06 complete (`chore(p05-t06): final verification — CLI ready for initial release`)
+- ⧗ awaiting p05 code review (`/oat:request-review code p05`)
 
 ## Plan Summary
 
@@ -79,4 +80,4 @@ None
 
 ## Next Milestone
 
-Continue `/oat:implement` from `p05-t06` (final verification and build polish).
+Run `/oat:request-review code p05`, then process via `/oat:receive-review` before final review/PR steps.

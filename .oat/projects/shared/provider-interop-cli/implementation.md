@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p05-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -20,9 +20,9 @@ oat_generated: false
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
 | Phase 4 | complete | 25 | 25/25 |
-| Phase 5 | in_progress | 6 | 5/6 |
+| Phase 5 | complete | 6 | 6/6 |
 
-**Total:** 81/82 tasks completed
+**Total:** 82/82 tasks completed
 
 ---
 
@@ -2160,7 +2160,7 @@ oat_generated: false
 
 ## Phase 5: Git Hook, Polish, and E2E
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-02-14
 
 ### Task p05-t01: Implement git pre-commit hook
@@ -2270,6 +2270,26 @@ oat_generated: false
 **Notes / Decisions:**
 - Kept e2e fixture setup lightweight by reusing registered CLI command execution per test workspace.
 
+### Task p05-t06: Final verification and build polish
+
+**Status:** completed
+**Commit:** e635276
+
+**Outcome (required when completed):**
+- Ran the full package verification suite (all tests, type-check, lint, build) and validated built CLI command surfaces.
+- Confirmed dist help output includes the full command set and global options.
+- Confirmed `doctor` diagnostics execute end-to-end against the built artifact.
+
+**Files changed:**
+- None (verification-only task).
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build`; `node packages/cli/dist/index.js --help`; `node packages/cli/dist/index.js doctor`
+- Result: pass (39 test files, 262 tests; type-check/lint/build clean; doctor diagnostics ran and returned warning exit code in current repo state)
+
+**Notes / Decisions:**
+- Recorded verification completion as an empty commit (`--allow-empty`) because this task had no code delta by design.
+
 ---
 
 ## Deviations from Plan
@@ -2286,24 +2306,36 @@ oat_generated: false
 | 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 11 | 0 | n/a (phase boundary + review fixes) |
 | 3 | `pnpm --filter=@oat/cli test src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/ui/output`; `pnpm --filter=@oat/cli test src/shared/prompts`; `pnpm --filter=@oat/cli test src/ui/output && pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/drift/strays && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift/strays src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/drift src/ui/output && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint` | 9 | 0 | n/a (phase boundary + review fixes) |
 | 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli test src/commands/sync/`; `pnpm --filter=@oat/cli test src/commands/init/`; `pnpm --filter=@oat/cli test src/commands/providers/list`; `pnpm --filter=@oat/cli test src/commands/providers/inspect`; `pnpm --filter=@oat/cli test src/commands/doctor/`; `pnpm --filter=@oat/cli test src/commands/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 8 | 0 | n/a (task-level verification) |
-| 5 | `pnpm --filter=@oat/cli test src/engine/hook src/commands/init`; `pnpm --filter=@oat/cli test src/engine/edge-cases`; `pnpm --filter=@oat/cli test src/providers/shared/adapter-contract`; `pnpm --filter=@oat/cli test src/commands/help-snapshots -- --update`; `pnpm --filter=@oat/cli test src/e2e/`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 5 | 0 | n/a (task-level verification) |
+| 5 | `pnpm --filter=@oat/cli test src/engine/hook src/commands/init`; `pnpm --filter=@oat/cli test src/engine/edge-cases`; `pnpm --filter=@oat/cli test src/providers/shared/adapter-contract`; `pnpm --filter=@oat/cli test src/commands/help-snapshots -- --update`; `pnpm --filter=@oat/cli test src/e2e/`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build`; `node packages/cli/dist/index.js --help`; `node packages/cli/dist/index.js doctor` | 6 | 0 | n/a (phase verification complete) |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
-- Pending
+- Full provider-interop CLI surface (`init`, `status`, `sync`, `providers`, `doctor`) with review-driven hardening and completion of Phase 5 polish tasks.
+- Dedicated hook engine module with install/uninstall/detection behavior and non-blocking drift warnings.
+- Expanded quality coverage: edge-case tests, adapter contract tests, help snapshots, and end-to-end workflow tests.
 
 **Behavioral changes (user-facing):**
-- Pending
+- `oat init` hook handling now routes through the engine module and supports uninstall via `--no-hook`.
+- CLI help output is now snapshot-protected, reducing accidental UX contract drift.
+- End-to-end flows for drift remediation, adoption, copy strategy, and canonical removal are validated by tests.
 
 **Key files / modules:**
-- Pending
+- `packages/cli/src/engine/hook.ts`
+- `packages/cli/src/engine/edge-cases.test.ts`
+- `packages/cli/src/providers/shared/adapter-contract.test.ts`
+- `packages/cli/src/commands/help-snapshots.test.ts`
+- `packages/cli/src/e2e/workflow.test.ts`
 
 **Verification performed:**
-- Pending
+- Full test suite: 39 files / 262 tests passing.
+- Type-check: clean.
+- Lint: clean.
+- Build: success.
+- Dist runtime checks: `--help` output validated; `doctor` diagnostics executed.
 
 **Design deltas (if any):**
-- Pending
+- None.
 
 ## References
 
