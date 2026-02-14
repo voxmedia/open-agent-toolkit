@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t15
+oat_current_task_id: p04-t16
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 14/24 |
+| Phase 4 | in_progress | 24 | 15/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 65/81 tasks completed
+**Total:** 66/81 tasks completed
 
 ---
 
@@ -1344,6 +1344,7 @@ oat_generated: false
 - [x] p04-t12: (review) Add provider strategy/content metadata to providers list - 2d0b193
 - [x] p04-t13: (review) Add JSON summary output to oat init - 1d6a7ba
 - [x] p04-t14: (review) Strengthen symlink assertions in command integration tests - 8783dfd
+- [x] p04-t15: (review) Extract shared logger capture test helper - 67a2b67
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1402,6 +1403,7 @@ oat_generated: false
 - Continued p04 review-fix execution by surfacing provider `defaultStrategy` and supported `contentTypes` in providers list outputs.
 - Continued p04 review-fix execution by emitting structured JSON summaries from `oat init` in non-interactive JSON mode.
 - Continued p04 review-fix execution by replacing weak integration test symlink checks with concrete `isSymbolicLink()` assertions.
+- Continued p04 review-fix execution by extracting a shared logger capture helper for command test suites.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1881,7 +1883,24 @@ oat_generated: false
 
 ### Task p04-t15: (review) Extract shared logger capture test helper
 
-**Status:** pending
+**Status:** completed
+**Commit:** 67a2b67
+
+**Outcome (required when completed):**
+- Added a shared command test helper module for logger capture scaffolding.
+- Replaced duplicated logger helper implementations across command test files with shared imports.
+- Reduced repetitive test setup boilerplate while preserving existing command-test behavior.
+
+**Files changed:**
+- `packages/cli/src/commands/__tests__/helpers.ts` - added shared `LoggerCapture` and `createLoggerCapture`.
+- `packages/cli/src/commands/{sync,status,doctor,init,providers/list,providers/inspect}/index.test.ts` - switched tests to shared logger helper.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/`
+- Result: pass (8 files, 60 tests)
+
+**Notes / Decisions:**
+- Kept helper surface intentionally small for this task (logger capture only) to avoid coupling unrelated test harness behavior.
 
 ### Task p04-t16: (review) Extract shared command scope/global option helpers
 
