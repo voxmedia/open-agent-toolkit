@@ -76,6 +76,97 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related to invocation compatibility standardization item above
   - Created: 2026-02-14
 
+- [ ] **(P1) [tooling] Add context management commands for `AGENTS.md` ↔ `CLAUDE.md` integrity**
+  - Target milestone/phase: OAT CLI workflow quality
+  - Notes:
+    - Add `oat context sync` to recursively scan for `AGENTS.md` and ensure sibling `CLAUDE.md` contains `@AGENTS.md`.
+    - Add interactive conflict handling when existing `CLAUDE.md` has additional content (overwrite/skip/show diff).
+    - Add optional flags: `--force`, `--dry-run`, `--interactive`, `--report`.
+    - Add `oat context validate` to report missing/invalid context files without mutation.
+  - Success criteria:
+    - Running context sync repairs missing/invalid context pointers deterministically.
+    - Running context validate reports actionable results and exit status suitable for CI checks.
+    - No unexpected overwrites in interactive/default mode.
+  - Links:
+    - Source discussion: OAT feature ideas (agent context management)
+  - Created: 2026-02-14
+
+- [ ] **(P1) [skills] Add review provide/receive workflow skill family**
+  - Target milestone/phase: Workflow expansion after current docs stabilization
+  - Notes:
+    - Add `oat-review-provide` for structured code/diff reviews (non-mutating).
+    - Add `oat-review-receive` for converting review feedback into actionable plan/fix tasks (non-mutating).
+    - Add `oat-review-pr-receive` to ingest GitHub PR review comments and produce task lists.
+    - Preserve explicit separation: review ingestion does not apply fixes; implementation skill performs fixes.
+  - Success criteria:
+    - Review artifacts generated consistently across local and PR contexts.
+    - Receive flows output structured fix tasks with clear severity/disposition.
+    - No fix application side effects from review skills.
+  - Links:
+    - Source discussion: OAT feature ideas (review workflow)
+  - Created: 2026-02-14
+
+- [ ] **(P2) [skills] Add PR review follow-on skill set (`provide/respond/summarize`)**
+  - Target milestone/phase: Post `oat-review-pr-receive`
+  - Notes:
+    - Evaluate and add `oat-review-pr-provide`, `oat-review-pr-respond`, and `oat-review-pr-summarize`.
+    - Scope these as optional extensions once base review receive workflow is stable.
+  - Success criteria:
+    - Clear contracts and non-overlapping responsibilities for each PR review skill.
+    - Optional set can be adopted incrementally without changing core review flow.
+  - Links:
+    - Source discussion: OAT feature ideas (potential future review extensions)
+  - Created: 2026-02-14
+
+- [ ] **(P1) [skills] Normalize skill naming to namespace model (`oat-<domain>-<action>`)**
+  - Target milestone/phase: Naming consistency initiative
+  - Notes:
+    - Adopt naming pattern: `<domain>-<context?>-<action>`.
+    - Apply `oat-` prefix only to external-facing skills. Keep internal-only maintenance skills unprefixed.
+    - Proposed mappings for current skills:
+      - `oat-discovery` -> `oat-project-discover`
+      - `oat-spec` -> `oat-project-spec`
+      - `oat-design` -> `oat-project-design`
+      - `oat-plan` -> `oat-project-plan`
+      - `oat-implement` -> `oat-project-implement`
+      - `oat-new-project` -> `oat-project-new`
+      - `oat-open-project` -> `oat-project-open`
+      - `oat-clear-active-project` -> `oat-project-clear-active`
+      - `oat-complete-project` -> `oat-project-close`
+      - `oat-request-review` -> `oat-review-provide`
+      - `oat-receive-review` -> `oat-review-receive`
+      - `oat-pr-progress` -> `oat-pr-progress` (unchanged)
+      - `oat-pr-project` -> `oat-pr-project` (unchanged)
+      - `oat-progress` -> `oat-project-progress` (or retain as top-level router alias)
+      - `oat-index` -> `oat-project-index` (or retain as top-level alias)
+      - `update-internal-project-reference` -> `update-internal-project-reference` (internal, unchanged)
+      - `create-oat-skill` -> `create-oat-skill` (internal, unchanged)
+      - `create-pr-description` -> `create-pr-description` (internal, unchanged)
+      - `create-ticket` -> `oat-ticket-create`
+      - `create-skill` -> `create-skill` (internal, unchanged)
+      - `codex` -> evaluate as provider-specific helper (likely out-of-scope for namespace migration)
+    - Implement transition with compatibility aliases to avoid breaking existing prompts/workflows.
+  - Success criteria:
+    - Canonical names follow one naming model across project/review/pr/context/dependency domains.
+    - Legacy names continue to resolve during migration window.
+    - AGENTS skills table and docs are auto-updated to canonical names.
+  - Links:
+    - Source discussion: OAT feature ideas (naming philosophy + domain model)
+  - Created: 2026-02-14
+
+- [ ] **(P2) [skills] Add dependency intelligence skill family**
+  - Target milestone/phase: Post naming normalization
+  - Notes:
+    - Evaluate canonical name (`oat-dep-audit`, `oat-dep-evaluate`, `oat-dep-plan-upgrade`, or `oat-dep-impact-report`).
+    - Behavior: analyze `package.json`, compare available versions, summarize changelog impact, classify breaking vs non-breaking, suggest upgrade path.
+    - Optional enhancement: code usage scan for potentially breaking API changes.
+  - Success criteria:
+    - Skill outputs prioritized, actionable upgrade plan (not just version lists).
+    - Breaking-change risk is explicitly identified and linked to candidate code touch points.
+  - Links:
+    - Source discussion: OAT feature ideas (dependency intelligence)
+  - Created: 2026-02-14
+
 - [ ] **(P?) [area] {Title}**
   - Target milestone/phase:
   - Notes:
