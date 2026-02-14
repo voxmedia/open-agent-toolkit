@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t11
+oat_current_task_id: p04-t12
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 10/24 |
+| Phase 4 | in_progress | 24 | 11/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 61/81 tasks completed
+**Total:** 62/81 tasks completed
 
 ---
 
@@ -1340,6 +1340,7 @@ oat_generated: false
 - [x] p04-t08: Add CLI command integration tests - ea20ecd
 - [x] p04-t09: (review) Fix hook install to produce executable script - 60ffaf1
 - [x] p04-t10: (review) Preserve drift warning output in installed hook - 1bbb1ed
+- [x] p04-t11: (review) Implement per-stray adoption flow in oat status - 5a4d5ba
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1394,6 +1395,7 @@ oat_generated: false
 - Completed Phase 4 by implementing `oat doctor`, wiring all command factories into the CLI bootstrap, and adding command integration coverage for end-to-end command workflows.
 - Began p04 review-fix execution by hardening hook install behavior to generate executable scripts with shebang bootstrapping.
 - Continued p04 review-fix execution by making hook behavior non-blocking while surfacing drift remediation warnings.
+- Continued p04 review-fix execution by adding per-stray interactive adoption handling directly in `oat status`.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1789,7 +1791,24 @@ oat_generated: false
 
 ### Task p04-t11: (review) Implement per-stray adoption flow in `oat status`
 
-**Status:** pending
+**Status:** completed
+**Commit:** 5a4d5ba
+
+**Outcome (required when completed):**
+- Added per-stray interactive adoption prompts in `oat status` using path-specific confirmation prompts.
+- Implemented manifest-persisted stray adoption flow in status command via injected adoption/save dependencies.
+- Added command coverage proving per-stray prompt behavior, selective adoption, and manifest-save behavior.
+
+**Files changed:**
+- `packages/cli/src/commands/status/index.ts` - added stray candidate collection, adoption flow, and manifest persistence hooks.
+- `packages/cli/src/commands/status/index.test.ts` - added prompt/adopt coverage and updated test harness dependencies.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/status/`
+- Result: pass (9 tests)
+
+**Notes / Decisions:**
+- Kept non-interactive and JSON behavior unchanged; interactive adoption now operates per stray without redirecting users to `oat init`.
 
 ### Task p04-t12: (review) Add provider strategy/content metadata to `providers list`
 
