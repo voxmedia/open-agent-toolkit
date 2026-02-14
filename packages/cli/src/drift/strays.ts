@@ -2,15 +2,12 @@ import { readdir } from 'node:fs/promises';
 import { basename, join, relative, resolve } from 'node:path';
 import type { CanonicalEntry } from '../engine/scanner';
 import { CliError } from '../errors';
+import { toPosixPath } from '../fs/paths';
 import type { Manifest } from '../manifest/manifest.types';
 import type { DriftReport } from './drift.types';
 
-function normalizePath(path: string): string {
-  return path.replaceAll('\\', '/');
-}
-
 function inferContentType(providerDir: string): CanonicalEntry['type'] | null {
-  const dirName = basename(normalizePath(providerDir));
+  const dirName = basename(toPosixPath(providerDir));
   if (dirName === 'skills') {
     return 'skill';
   }
@@ -21,7 +18,7 @@ function inferContentType(providerDir: string): CanonicalEntry['type'] | null {
 }
 
 export function inferScopeRoot(providerDir: string): string {
-  const normalized = normalizePath(resolve(providerDir));
+  const normalized = toPosixPath(resolve(providerDir));
   const segments = normalized.split('/').filter(Boolean);
 
   for (let index = segments.length - 2; index >= 0; index -= 1) {
@@ -40,16 +37,16 @@ export function inferScopeRoot(providerDir: string): string {
 }
 
 function toScopeRelative(path: string, scopeRoot: string): string {
-  return normalizePath(relative(scopeRoot, resolve(path)));
+  return toPosixPath(relative(scopeRoot, resolve(path)));
 }
 
 function isManifestTracked(
   providerPathRelative: string,
   manifest: Manifest,
 ): boolean {
-  const normalizedProviderPath = normalizePath(providerPathRelative);
+  const normalizedProviderPath = toPosixPath(providerPathRelative);
   return manifest.entries.some((entry) => {
-    const manifestPath = normalizePath(entry.providerPath);
+    const manifestPath = toPosixPath(entry.providerPath);
     return manifestPath === normalizedProviderPath;
   });
 }

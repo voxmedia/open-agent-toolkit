@@ -1,11 +1,15 @@
-import { join, normalize } from 'node:path';
+import { join } from 'node:path';
 import { Command } from 'commander';
 import {
   buildCommandContext,
   type CommandContext,
 } from '../../app/command-context';
 import { detectDrift } from '../../drift';
-import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
+import {
+  normalizeToPosixPath,
+  resolveProjectRoot,
+  resolveScopeRoot,
+} from '../../fs/paths';
 import { loadManifest } from '../../manifest';
 import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
@@ -19,13 +23,9 @@ import type {
   ProvidersInspectDependencies,
 } from './providers.types';
 
-function normalizePath(pathValue: string): string {
-  return normalize(pathValue).replaceAll('\\', '/');
-}
-
 function entryInMapping(providerPath: string, providerDir: string): boolean {
-  const normalizedPath = normalizePath(providerPath);
-  const normalizedDir = normalizePath(providerDir);
+  const normalizedPath = normalizeToPosixPath(providerPath);
+  const normalizedDir = normalizeToPosixPath(providerDir);
   return (
     normalizedPath === normalizedDir ||
     normalizedPath.startsWith(`${normalizedDir}/`)

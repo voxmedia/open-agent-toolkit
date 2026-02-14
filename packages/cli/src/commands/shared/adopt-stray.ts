@@ -1,6 +1,7 @@
 import { rename } from 'node:fs/promises';
 import { basename, dirname, relative, resolve } from 'node:path';
 import { createSymlink, ensureDir } from '../../fs/io';
+import { toPosixPath } from '../../fs/paths';
 import { computeDirectoryHash } from '../../manifest/hash';
 import { addEntry } from '../../manifest/manager';
 import type { Manifest, ManifestEntry } from '../../manifest/manifest.types';
@@ -14,10 +15,6 @@ interface StrayAdoptionCandidate {
     canonicalDir: string;
     contentType: ManifestEntry['contentType'];
   };
-}
-
-function normalizePath(pathValue: string): string {
-  return pathValue.replaceAll('\\', '/');
 }
 
 export async function adoptStrayToCanonical<
@@ -38,10 +35,8 @@ export async function adoptStrayToCanonical<
     providerAbsolutePath,
   );
 
-  const canonicalPath = normalizePath(
-    relative(scopeRoot, canonicalAbsolutePath),
-  );
-  const providerPath = normalizePath(relative(scopeRoot, providerAbsolutePath));
+  const canonicalPath = toPosixPath(relative(scopeRoot, canonicalAbsolutePath));
+  const providerPath = toPosixPath(relative(scopeRoot, providerAbsolutePath));
   const manifestEntry: ManifestEntry = {
     canonicalPath,
     providerPath,

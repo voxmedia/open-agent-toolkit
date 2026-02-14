@@ -1,4 +1,4 @@
-import { join, normalize, relative } from 'node:path';
+import { join, relative } from 'node:path';
 import { Command } from 'commander';
 import {
   buildCommandContext,
@@ -7,7 +7,11 @@ import {
 } from '../../app/command-context';
 import { type DriftReport, detectDrift, detectStrays } from '../../drift';
 import { type CanonicalEntry, scanCanonical } from '../../engine';
-import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
+import {
+  normalizeToPosixPath,
+  resolveProjectRoot,
+  resolveScopeRoot,
+} from '../../fs/paths';
 import type { Manifest } from '../../manifest';
 import { loadManifest, saveManifest } from '../../manifest/manager';
 import { claudeAdapter } from '../../providers/claude';
@@ -123,16 +127,12 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   formatStatusTable,
 };
 
-function normalizePath(inputPath: string): string {
-  return normalize(inputPath).replaceAll('\\', '/');
-}
-
 function entryInsideMapping(
   entryProviderPath: string,
   mappingProviderDir: string,
 ): boolean {
-  const normalizedEntryPath = normalizePath(entryProviderPath);
-  const normalizedProviderDir = normalizePath(mappingProviderDir);
+  const normalizedEntryPath = normalizeToPosixPath(entryProviderPath);
+  const normalizedProviderDir = normalizeToPosixPath(mappingProviderDir);
   return (
     normalizedEntryPath === normalizedProviderDir ||
     normalizedEntryPath.startsWith(`${normalizedProviderDir}/`)
@@ -143,8 +143,8 @@ function canonicalInsideMapping(
   canonicalPath: string,
   mappingCanonicalDir: string,
 ): boolean {
-  const normalizedCanonicalPath = normalizePath(canonicalPath);
-  const normalizedCanonicalDir = normalizePath(mappingCanonicalDir);
+  const normalizedCanonicalPath = normalizeToPosixPath(canonicalPath);
+  const normalizedCanonicalDir = normalizeToPosixPath(mappingCanonicalDir);
   return (
     normalizedCanonicalPath === normalizedCanonicalDir ||
     normalizedCanonicalPath.startsWith(`${normalizedCanonicalDir}/`)
@@ -215,7 +215,8 @@ async function collectScopeReports(
   const strayCandidates: StatusStrayCandidate[] = [];
   const trackedCanonicalByProvider = new Set(
     manifest.entries.map(
-      (entry) => `${entry.provider}|${normalizePath(entry.canonicalPath)}`,
+      (entry) =>
+        `${entry.provider}|${normalizeToPosixPath(entry.canonicalPath)}`,
     ),
   );
 
@@ -252,7 +253,7 @@ async function collectScopeReports(
           continue;
         }
 
-        const canonicalPath = normalizePath(
+        const canonicalPath = normalizeToPosixPath(
           relative(scopeRoot, canonicalEntry.canonicalPath),
         );
         if (!canonicalInsideMapping(canonicalPath, mapping.canonicalDir)) {
@@ -267,7 +268,7 @@ async function collectScopeReports(
         reports.push({
           canonical: canonicalPath,
           provider: adapter.name,
-          providerPath: normalizePath(
+          providerPath: normalizeToPosixPath(
             join(mapping.providerDir, canonicalEntry.name),
           ),
           state: { status: 'missing' },

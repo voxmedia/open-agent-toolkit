@@ -1,5 +1,5 @@
 import { access } from 'node:fs/promises';
-import { dirname, resolve, sep } from 'node:path';
+import { dirname, posix, resolve, sep } from 'node:path';
 import { CliError } from '../errors';
 import type { Scope } from '../shared/types';
 
@@ -34,6 +34,14 @@ export function resolveScopeRoot(
   }
 
   return resolve(cwd);
+}
+
+export function toPosixPath(pathValue: string): string {
+  return pathValue.replaceAll('\\', '/');
+}
+
+export function normalizeToPosixPath(pathValue: string): string {
+  return posix.normalize(toPosixPath(pathValue));
 }
 
 export function validatePathWithinScope(

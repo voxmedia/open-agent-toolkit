@@ -4,8 +4,10 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { CliError } from '../errors';
 import {
+  normalizeToPosixPath,
   resolveProjectRoot,
   resolveScopeRoot,
+  toPosixPath,
   validatePathWithinScope,
 } from './paths';
 
@@ -66,5 +68,15 @@ describe('fs/paths', () => {
     const resolved = validatePathWithinScope(insidePath, scopeRoot);
 
     expect(resolved).toBe(insidePath);
+  });
+
+  it('toPosixPath converts windows separators to posix separators', () => {
+    expect(toPosixPath('folder\\child\\file')).toBe('folder/child/file');
+  });
+
+  it('normalizeToPosixPath normalizes segments and separators', () => {
+    expect(normalizeToPosixPath('folder\\..\\child\\.\\file')).toBe(
+      'child/file',
+    );
   });
 });

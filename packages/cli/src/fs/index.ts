@@ -5,7 +5,9 @@ export {
   ensureDir,
 } from './io';
 export {
+  normalizeToPosixPath,
   resolveProjectRoot,
   resolveScopeRoot,
+  toPosixPath,
   validatePathWithinScope,
 } from './paths';
