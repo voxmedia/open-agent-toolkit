@@ -12,24 +12,14 @@ import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
 import { cursorAdapter } from '../../providers/cursor';
 import { getSyncMappings } from '../../providers/shared';
-import type { ContentType, Scope } from '../../shared/types';
+import type { ContentType } from '../../shared/types';
+import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 import type {
   ConcreteScope,
   ProviderListItem,
   ProviderListSummary,
   ProvidersListDependencies,
 } from './providers.types';
-
-function readGlobalOptions(command: Command): GlobalOptions {
-  return command.optsWithGlobals() as GlobalOptions;
-}
-
-function resolveScopes(scope: Scope): ConcreteScope[] {
-  if (scope === 'all') {
-    return ['project', 'user'];
-  }
-  return [scope];
-}
 
 function formatSummary(item: ProviderListItem): string {
   const contentTypes =
@@ -115,7 +105,7 @@ async function collectProviderList(
   context: CommandContext,
   dependencies: ProvidersListDependencies,
 ): Promise<ProviderListItem[]> {
-  const scopes = resolveScopes(context.scope);
+  const scopes = resolveConcreteScopes(context.scope);
   const scopeRoots = await Promise.all(
     scopes.map(async (scope) => ({
       scope,

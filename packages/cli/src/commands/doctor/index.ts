@@ -14,6 +14,7 @@ import { codexAdapter } from '../../providers/codex';
 import { cursorAdapter } from '../../providers/cursor';
 import type { Scope } from '../../shared/types';
 import { type DoctorCheck, formatDoctorResults } from '../../ui/output';
+import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 
 type ConcreteScope = Exclude<Scope, 'all'>;
 
@@ -31,17 +32,6 @@ interface DoctorDependencies {
   ) => Promise<
     Array<{ name: string; detected: boolean; version: string | null }>
   >;
-}
-
-function readGlobalOptions(command: Command): GlobalOptions {
-  return command.optsWithGlobals() as GlobalOptions;
-}
-
-function resolveScopes(scope: Scope): ConcreteScope[] {
-  if (scope === 'all') {
-    return ['project', 'user'];
-  }
-  return [scope];
 }
 
 async function pathExistsDefault(path: string): Promise<boolean> {
@@ -200,7 +190,7 @@ async function runDoctorCommand(
 ): Promise<void> {
   const checks: DoctorCheck[] = [];
 
-  for (const scope of resolveScopes(context.scope)) {
+  for (const scope of resolveConcreteScopes(context.scope)) {
     const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
     const scopeChecks = await runChecksForScope(scope, scopeRoot, dependencies);
     checks.push(...scopeChecks);

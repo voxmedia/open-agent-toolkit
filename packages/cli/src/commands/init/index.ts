@@ -28,6 +28,7 @@ import {
 } from '../../providers/shared';
 import { confirmAction, type PromptContext } from '../../shared/prompts';
 import type { Scope } from '../../shared/types';
+import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
@@ -98,13 +99,6 @@ interface InitJsonPayload {
 
 function normalizePath(pathValue: string): string {
   return pathValue.replaceAll('\\', '/');
-}
-
-function resolveScopes(scope: Scope): ConcreteScope[] {
-  if (scope === 'all') {
-    return ['project', 'user'];
-  }
-  return [scope];
 }
 
 async function ensureCanonicalDirectories(
@@ -327,7 +321,7 @@ async function runInitCommand(
   dependencies: InitDependencies,
   hookFlag: boolean | undefined,
 ): Promise<void> {
-  const scopes = resolveScopes(context.scope);
+  const scopes = resolveConcreteScopes(context.scope);
   let projectRoot: string | null = null;
   const scopeSummaries: InitScopeSummary[] = [];
 
@@ -409,10 +403,6 @@ async function runInitCommand(
   process.exitCode = 0;
 }
 
-function readOptions(command: Command): InitOptions {
-  return command.optsWithGlobals() as InitOptions;
-}
-
 export function createInitCommand(
   overrides: Partial<InitDependencies> = {},
 ): Command {
@@ -426,7 +416,7 @@ export function createInitCommand(
     .option('--hook', 'Install optional pre-commit hook')
     .option('--no-hook', 'Skip optional pre-commit hook install')
     .action(async (_options, command: Command) => {
-      const options = readOptions(command);
+      const options = readGlobalOptions(command) as InitOptions;
       const context = dependencies.buildCommandContext(options);
       await runInitCommand(context, dependencies, options.hook);
     });

@@ -17,13 +17,9 @@ import { type DriftReport, detectDrift, detectStrays } from '../../drift';
 import { type CanonicalEntry, scanCanonical } from '../../engine';
 import { createSymlink, ensureDir } from '../../fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
+import type { Manifest } from '../../manifest';
 import { computeDirectoryHash } from '../../manifest/hash';
-import {
-  addEntry,
-  loadManifest,
-  type Manifest,
-  saveManifest,
-} from '../../manifest/manager';
+import { addEntry, loadManifest, saveManifest } from '../../manifest/manager';
 import type { ManifestEntry } from '../../manifest/manifest.types';
 import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
@@ -41,6 +37,7 @@ import {
   type Scope,
 } from '../../shared/types';
 import { formatStatusTable } from '../../ui/output';
+import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 
 type ConcreteScope = Exclude<Scope, 'all'>;
 
@@ -137,10 +134,6 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   formatStatusTable,
 };
 
-function readGlobalOptions(command: Command): GlobalOptions {
-  return command.optsWithGlobals() as GlobalOptions;
-}
-
 function normalizePath(inputPath: string): string {
   return normalize(inputPath).replaceAll('\\', '/');
 }
@@ -162,13 +155,6 @@ function contentTypeAllowed(
   scope: ConcreteScope,
 ): boolean {
   return SCOPE_CONTENT_TYPES[scope].includes(contentType);
-}
-
-function resolveScopes(scope: Scope): ConcreteScope[] {
-  if (scope === 'all') {
-    return ['project', 'user'];
-  }
-  return [scope];
 }
 
 function summarizeReports(reports: DriftReport[]): StatusSummary {
@@ -324,7 +310,7 @@ async function runStatusCommand(
   const reports: DriftReport[] = [];
   const scopeCollections: ScopeReportCollection[] = [];
 
-  for (const scope of resolveScopes(context.scope)) {
+  for (const scope of resolveConcreteScopes(context.scope)) {
     const scopeReportCollection = await collectScopeReports(
       scope,
       context,

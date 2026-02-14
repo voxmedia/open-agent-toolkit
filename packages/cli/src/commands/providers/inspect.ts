@@ -12,8 +12,8 @@ import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
 import { cursorAdapter } from '../../providers/cursor';
 import { getSyncMappings } from '../../providers/shared';
-import type { Scope } from '../../shared/types';
 import { formatProviderDetails } from '../../ui/output';
+import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 import type {
   ConcreteScope,
   ProviderInspectMappingState,
@@ -21,19 +21,8 @@ import type {
   ProvidersInspectDependencies,
 } from './providers.types';
 
-function readGlobalOptions(command: Command): GlobalOptions {
-  return command.optsWithGlobals() as GlobalOptions;
-}
-
 function normalizePath(pathValue: string): string {
   return normalize(pathValue).replaceAll('\\', '/');
-}
-
-function resolveScopes(scope: Scope): ConcreteScope[] {
-  if (scope === 'all') {
-    return ['project', 'user'];
-  }
-  return [scope];
 }
 
 function entryInMapping(providerPath: string, providerDir: string): boolean {
@@ -78,7 +67,7 @@ async function collectInspectResult(
     return null;
   }
 
-  const scopes = resolveScopes(context.scope);
+  const scopes = resolveConcreteScopes(context.scope);
   const scopeRoots = await Promise.all(
     scopes.map(async (scope) => ({
       scope,

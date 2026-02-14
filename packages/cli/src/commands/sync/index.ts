@@ -13,8 +13,8 @@ import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
 import { cursorAdapter } from '../../providers/cursor';
 import { getActiveAdapters } from '../../providers/shared';
-import type { Scope } from '../../shared/types';
 import { formatSyncPlan } from '../../ui/output';
+import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 import { runSyncApply } from './apply';
 import { runSyncDryRun } from './dry-run';
 import type {
@@ -22,17 +22,6 @@ import type {
   ScopeSyncPlan,
   SyncCommandDependencies,
 } from './sync.types';
-
-function readGlobalOptions(command: Command): GlobalOptions {
-  return command.optsWithGlobals() as GlobalOptions;
-}
-
-function resolveScopes(scope: Scope): ConcreteScope[] {
-  if (scope === 'all') {
-    return ['project', 'user'];
-  }
-  return [scope];
-}
 
 function defaultDependencies(): SyncCommandDependencies {
   return {
@@ -65,7 +54,7 @@ async function computePlans(
 ): Promise<ScopeSyncPlan[]> {
   const scopePlans: ScopeSyncPlan[] = [];
 
-  for (const scope of resolveScopes(context.scope)) {
+  for (const scope of resolveConcreteScopes(context.scope)) {
     const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
     const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
     const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');
