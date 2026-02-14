@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t17
+oat_current_task_id: p04-t18
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 16/24 |
+| Phase 4 | in_progress | 24 | 17/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 67/81 tasks completed
+**Total:** 68/81 tasks completed
 
 ---
 
@@ -1346,6 +1346,7 @@ oat_generated: false
 - [x] p04-t14: (review) Strengthen symlink assertions in command integration tests - 8783dfd
 - [x] p04-t15: (review) Extract shared logger capture test helper - 67a2b67
 - [x] p04-t16: (review) Extract shared command scope/global option helpers - b6a0955
+- [x] p04-t17: (review) Centralize ConcreteScope type alias - d80915c
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1406,6 +1407,7 @@ oat_generated: false
 - Continued p04 review-fix execution by replacing weak integration test symlink checks with concrete `isSymbolicLink()` assertions.
 - Continued p04 review-fix execution by extracting a shared logger capture helper for command test suites.
 - Continued p04 review-fix execution by centralizing shared command scope/global option parsing helpers across command modules.
+- Continued p04 review-fix execution by centralizing `ConcreteScope` typing in shared types and reusing it across command domains.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1927,7 +1929,26 @@ oat_generated: false
 
 ### Task p04-t17: (review) Centralize `ConcreteScope` type alias
 
-**Status:** pending
+**Status:** completed
+**Commit:** d80915c
+
+**Outcome (required when completed):**
+- Added shared `ConcreteScope` export in `shared/types` as the canonical source for non-`all` scope typing.
+- Replaced command-local `ConcreteScope` aliases with imports/re-exports from shared types.
+- Kept command behavior unchanged while reducing cross-module type duplication.
+
+**Files changed:**
+- `packages/cli/src/shared/types.ts` - exported canonical `ConcreteScope`.
+- `packages/cli/src/commands/shared.ts` - switched shared command helper typing to shared `ConcreteScope`.
+- `packages/cli/src/commands/{init,status,doctor}/index.ts` - removed local scope aliases in favor of shared type.
+- `packages/cli/src/commands/{sync/sync.types.ts,providers/providers.types.ts}` - re-exported shared `ConcreteScope`.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/ && pnpm --filter=@oat/cli type-check`
+- Result: pass (8 command test files, type-check clean)
+
+**Notes / Decisions:**
+- Re-exported `ConcreteScope` from command-domain type modules to preserve existing import ergonomics.
 
 ### Task p04-t18: (review) Correct `providers inspect` mapping section formatting
 
