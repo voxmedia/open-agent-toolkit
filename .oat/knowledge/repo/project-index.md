@@ -56,7 +56,7 @@ Facilitates AI-assisted software engineering through:
 ## Project Structure
 
 ```
-.agent/              Agent-related files and projects
+.agents/              Agent-related files and projects
   skills/            OAT workflow skills
   projects/          Multi-session development projects
 .oat/                OAT-specific tooling and state

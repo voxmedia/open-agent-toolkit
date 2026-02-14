@@ -62,7 +62,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 **Logs:**
 - Console output from CLI and scripts
 - Git commit history for audit trail
-- OAT project state tracking in `.oat/projects/` and `.agent/projects/`
+- OAT project state tracking in `.oat/projects/` and `.oat/projects/shared/`
 
 ## CI/CD & Deployment
 
@@ -123,7 +123,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 
 **IDE Skills System:**
 - Agent Skills Open Standard compliance
-- Skills located in `.agent/skills/` directory
+- Skills located in `.agents/skills/` directory
 - Skills provide specialized capabilities for Claude Code and Cursor
 - Available skills:
   - oat-* skills for workflow management (discovery, spec, design, plan, implement)

@@ -45,7 +45,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Notes:
     - Replace slash-only guidance (for example, `/oat:implement`) with skill-first wording (for example, `oat-implement` skill).
     - Keep slash command text only as a host-specific alias: "where slash prompts are supported."
-    - Apply consistently across `.oat/templates/`, `.agent/skills/oat-*/`, and `.oat/internal-project-reference/`.
+    - Apply consistently across `.oat/templates/`, `.agents/skills/oat-*/`, and `.oat/internal-project-reference/`.
     - Add a lightweight validation check so new docs do not regress to slash-only wording.
   - Links:
     - Source discussion: invocation compatibility for Codex vs slash-enabled hosts

@@ -5,7 +5,7 @@ This document lists the next phases of work that are explicitly deferred beyond 
 Primary references:
 - `.oat/internal-project-reference/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`
 - `.oat/internal-project-reference/past-artifacts/agentic_development_framework_v_1_plan.md`
-- `.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`
+- `.oat/projects/shared/workflow-research/analysis/subagents/refined-subagent-proposal.md`
 - Current snapshot: `.oat/internal-project-reference/current-state.md`
 
 ## Baseline (Already In Scope)
@@ -102,7 +102,7 @@ For dogfood v1, the safest approach is:
 - When branch-based project switching becomes important for daily use.
 
 **Deliverables:**
-- `.oat/projects/(shared|local)/<name>/state.md` (or a migration plan from `.agent/projects/`)
+- `.oat/projects/(shared|local)/<name>/state.md` (or a migration plan from `.oat/projects/shared/`)
 - `.oat/projects/state.json` + optional `.oat/state.md` derivation
 - `oat project new/open/auto/close` with optional git hook integration (post-checkout/post-merge)
 

@@ -41,7 +41,7 @@ function usage(): string {
     'Resolution order for {PROJECTS_ROOT}:',
     '  1) $OAT_PROJECTS_ROOT',
     '  2) .oat/projects-root',
-    '  3) .agent/projects (fallback)',
+    '  3) .oat/projects/shared (fallback)',
   ].join('\n');
 }
 
@@ -100,7 +100,7 @@ async function resolveProjectsRoot(repoRoot: string): Promise<string> {
     if (fromFile) return fromFile.replace(/\/+$/, '');
   }
 
-  return '.agent/projects';
+  return '.oat/projects/shared';
 }
 
 function validateProjectName(name: string): void {

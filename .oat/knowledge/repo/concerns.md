@@ -80,7 +80,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 
 **Process Exit Codes and Error Handling Vary:**
 - Risk: Scripts use different exit codes (0, 1, 2) without clear documentation. Callers may not distinguish between recoverable errors (1) and environment errors (2).
-- Files: `.oat/scripts/validate-oat-skills.ts` (exit 0, 1, 2), `.oat/scripts/new-oat-project.ts` (exit 0, 1), `.agent/scripts/new-agent-project.ts` (exit 0, 1)
+- Files: `.oat/scripts/validate-oat-skills.ts` (exit 0, 1, 2), `.oat/scripts/new-oat-project.ts` (exit 0, 1), `.agents/scripts/new-agent-project.ts` (exit 0, 1)
 - Current mitigation: Scripts provide error messages to stderr; callers can check exit code.
 - Recommendations:
   - Standardize exit codes across scripts: define 0=success, 1=user error (bad args, validation failure), 2=system error (file I/O, missing deps)
@@ -128,7 +128,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 - Test coverage: No cross-platform testing documented.
 
 **Project Name Validation Regex May Be Too Strict:**
-- Files: `.oat/scripts/new-oat-project.ts` (line 107: `/^[a-zA-Z0-9_-]+$/`), `.agent/scripts/new-agent-project.ts` (line 131: `/^[a-z0-9-_]+$/i`)
+- Files: `.oat/scripts/new-oat-project.ts` (line 107: `/^[a-zA-Z0-9_-]+$/`), `.agents/scripts/new-agent-project.ts` (line 131: `/^[a-z0-9-_]+$/i`)
 - Why fragile: Two different validation patterns (one case-sensitive, one case-insensitive). If a project is created with a name that passes one validator but fails the other, it could cause confusion or failures in downstream tools.
 - Safe modification:
   - Centralize project name validation in a shared utility module (e.g., `packages/cli/src/project/validate-name.ts`).
@@ -228,7 +228,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 
 **No Tests for Script Validators:**
 - What's not tested: `.oat/scripts/validate-oat-skills.ts` frontmatter validation logic; `.oat/scripts/new-oat-project.ts` template rendering; project name validation
-- Files: `.oat/scripts/validate-oat-skills.ts`, `.oat/scripts/new-oat-project.ts`, `.agent/scripts/new-agent-project.ts`
+- Files: `.oat/scripts/validate-oat-skills.ts`, `.oat/scripts/new-oat-project.ts`, `.agents/scripts/new-agent-project.ts`
 - Risk: Accidentally breaking validation rules or template logic without catching it; adding a new skill could silently fail validation
 - Priority: **High** - Core infrastructure that affects all projects
 

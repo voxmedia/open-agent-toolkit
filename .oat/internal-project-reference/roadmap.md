@@ -3,7 +3,7 @@
 This file is the canonical OAT roadmap for this repo. It combines:
 - the dogfood workflow direction (`.oat/internal-project-reference/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`)
 - the early "product" vision (interop + CLI) (`.oat/internal-project-reference/past-artifacts/agentic_development_framework_v_1_plan.md`)
-- the review/subagent direction (`.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`)
+- the review/subagent direction (`.oat/projects/shared/workflow-research/analysis/subagents/refined-subagent-proposal.md`)
 
 For a birdseye snapshot of what exists *right now*, see `.oat/internal-project-reference/current-state.md`.
 
@@ -38,7 +38,7 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - `oat-discovery` -> `oat-spec` -> `oat-design` -> `oat-plan` -> `oat-implement`
   - Router: `oat-progress`
 - Review + PR loop:
-  - Review: `oat-request-review`, `oat-receive-review` + `.agent/agents/oat-reviewer.md`
+  - Review: `oat-request-review`, `oat-receive-review` + `.agents/agents/oat-reviewer.md`
   - PR: `oat-pr-progress`, `oat-pr-project`
 - Repo state dashboard:
   - `.oat/scripts/generate-oat-state.sh` generates `.oat/state.md` (gitignored) as a "single glance" dashboard
@@ -95,7 +95,7 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
   - `oat-receive-review` (plan-driven gap closure: findings -> new plan tasks -> rerun implement)
   - `oat-pr-progress` (phase/progress PR descriptions) (implemented)
   - `oat-pr-project` (final PR description into main, using OAT artifacts as sources) (implemented)
-- Subagent prompt(s) (syncable): `.agent/agents/oat-reviewer.md` (single general reviewer in v1)
+- Subagent prompt(s) (syncable): `.agents/agents/oat-reviewer.md` (single general reviewer in v1)
 - Templates:
   - `plan.md` includes `## Reviews` table (v1 canonical)
   - Optional: `.oat/templates/code-review.md`, `.oat/templates/artifact-review.md` (future)
@@ -235,7 +235,7 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 - When branch-based project switching becomes important for daily use.
 
 **Deliverables:**
-- `.oat/projects/(shared|local)/<name>/state.md` (or a migration plan from `.agent/projects/`)
+- `.oat/projects/(shared|local)/<name>/state.md` (or a migration plan from `.oat/projects/shared/`)
 - `.oat/projects/state.json` + optional `.oat/state.md` derivation
 - `oat project new/open/auto/close` with optional git hook integration (post-checkout/post-merge)
 

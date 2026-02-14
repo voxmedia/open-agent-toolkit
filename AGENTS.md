@@ -9,8 +9,8 @@
 When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively. Skills provide specialized capabilities and domain knowledge.
 
 How to use skills:
-- Invoke: `npx openskills read <skill-name>` (run in your shell)
-  - For multiple: `npx openskills read skill-one,skill-two`
+- Skills are loaded from the repository at `.agents/skills`
+- Sync provider views with: `pnpm run cli sync --scope all --apply`
 - The skill content will load with detailed instructions on how to complete the task
 - Base directory provided in output for resolving bundled resources (references/, scripts/, assets/)
 
@@ -238,7 +238,6 @@ Usage notes:
 For multi-session or complex development tasks, use the structured agent project workflow:
 
 ### Project Structure
-Projects live in `.agent/projects/<project-name>/` with:
+Projects live in `.oat/projects/<project-name>/` with:
 - Core files: `discovery.md`, `planning.md`, `implementation.md`
 - Optional: `pr-description.md`, `reviews/`, `handoffs/`
-

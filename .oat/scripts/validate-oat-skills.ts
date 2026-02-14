@@ -45,7 +45,7 @@ function fileHasBannerSnippet(content: string): boolean {
 
 async function main(): Promise<void> {
   const repoRoot = cwd();
-  const skillsRoot = join(repoRoot, '.agent', 'skills');
+  const skillsRoot = join(repoRoot, '.agents', 'skills');
 
   const findings: Finding[] = [];
 
@@ -61,7 +61,7 @@ async function main(): Promise<void> {
     .sort();
 
   if (oatSkillDirs.length === 0) {
-    console.error('Error: no oat-* skills found under .agent/skills/');
+    console.error('Error: no oat-* skills found under .agents/skills/');
     exit(2);
   }
 
@@ -77,25 +77,37 @@ async function main(): Promise<void> {
 
     const fm = getFrontmatterBlock(content);
     if (!fm) {
-      findings.push({ file: skillPath, message: 'Missing frontmatter block (--- ... ---)' });
+      findings.push({
+        file: skillPath,
+        message: 'Missing frontmatter block (--- ... ---)',
+      });
       continue;
     }
 
-    for (const key of ['disable-model-invocation', 'user-invocable', 'allowed-tools']) {
+    for (const key of [
+      'disable-model-invocation',
+      'user-invocable',
+      'allowed-tools',
+    ]) {
       if (!frontmatterHasKey(fm, key)) {
-        findings.push({ file: skillPath, message: `Missing frontmatter key: ${key}` });
+        findings.push({
+          file: skillPath,
+          message: `Missing frontmatter key: ${key}`,
+        });
       }
     }
 
     if (!fileHasProgressIndicatorsSection(content)) {
       findings.push({
         file: skillPath,
-        message: 'Missing section heading: ## Progress Indicators (User-Facing)',
+        message:
+          'Missing section heading: ## Progress Indicators (User-Facing)',
       });
     } else if (!fileHasBannerSnippet(content)) {
       findings.push({
         file: skillPath,
-        message: 'Progress Indicators section missing banner snippet (separator lines + "OAT ▸ ...")',
+        message:
+          'Progress Indicators section missing banner snippet (separator lines + "OAT ▸ ...")',
       });
     }
   }
@@ -105,7 +117,9 @@ async function main(): Promise<void> {
     for (const f of findings) {
       console.error(`- ${f.file}: ${f.message}`);
     }
-    console.error('\nFix the issues above, then re-run: pnpm oat:validate-skills');
+    console.error(
+      '\nFix the issues above, then re-run: pnpm oat:validate-skills',
+    );
     exit(1);
   }
 
@@ -116,4 +130,3 @@ main().catch((err) => {
   console.error(String(err instanceof Error ? err.message : err));
   exit(2);
 });
-

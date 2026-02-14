@@ -1,6 +1,6 @@
 ---
 description: Guidelines for creating comprehensive PR descriptions for large projects
-globs: .agent/projects/pr-descriptions/*.md,.agent/projects/**/pr-description*.md
+globs: .oat/projects/shared/pr-descriptions/*.md,.oat/projects/shared/**/pr-description*.md
 alwaysApply: false
 ---
 
@@ -23,13 +23,13 @@ Use this rule when creating **all PR descriptions**. The key distinction is:
 
    **Option A - Standalone PR Description:**
    ```
-   .agent/projects/pr-descriptions/<filename>.md
+   .oat/projects/shared/pr-descriptions/<filename>.md
    ```
    Use for quick fixes, small changes, or PRs that don't warrant a full project directory.
 
    **Option B - Project-Specific PR Description:**
    ```
-   .agent/projects/<project-name>/pr-description.md
+   .oat/projects/shared/<project-name>/pr-description.md
    ```
    Use when you have an existing project directory with planning/implementation docs.
 
@@ -54,7 +54,7 @@ Ask the user to specify the desired detail level:
 3. **Additional References**: Ask if there are any additional markdown docs to reference
 4. **Starting Commit**: Ask if there's a starting commit SHA for reference
 
-**IMPORTANT**: Do not reference files in the `.agent/projects` directory in the PR description content, as this directory is not version controlled and reviewers won't have access to these files. Only reference files that are committed to the repository (e.g., source code, documentation, README files, etc.).
+**IMPORTANT**: Do not reference local-only artifacts that are not version controlled in the PR description content. Only reference files that are committed to the repository (e.g., source code, documentation, README files, etc.).
 
 ### Step 3: Code Analysis (if commit SHA provided)
 If a starting commit SHA is provided:

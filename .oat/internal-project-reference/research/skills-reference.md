@@ -302,7 +302,7 @@ Installs skills from GitHub repos, local paths, or GitLab URLs to any supported 
 - Global (`-g`): `~/<agent>/skills/`
 
 **Discovery paths searched** (when discovering skills in a repo):
-`.agents/skills/`, `.agent/skills/`, `.claude/skills/`, `.codex/skills/`, `.cursor/skills/`, `.gemini/skills/`, `.github/skills/`, and 20+ more tool-specific paths. Falls back to recursive search if nothing found.
+`.agents/skills/`, `.agents/skills/`, `.claude/skills/`, `.codex/skills/`, `.cursor/skills/`, `.gemini/skills/`, `.github/skills/`, and 20+ more tool-specific paths. Falls back to recursive search if nothing found.
 
 ### Symlink Approach (Our Recommendation)
 

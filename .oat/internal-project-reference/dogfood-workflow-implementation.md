@@ -47,7 +47,7 @@ This implementation delivered:
 - **State management** - YAML frontmatter-based workflow state tracking
 - **Two HiL systems** - Workflow gates and plan phase checkpoints
 - **Traceability infrastructure** - Stable task IDs linking requirements to implementation
-- **Reviewer prompt** - `.agent/agents/oat-reviewer.md` (unified reviewer; writes review artifacts to disk)
+- **Reviewer prompt** - `.agents/agents/oat-reviewer.md` (unified reviewer; writes review artifacts to disk)
 
 ---
 
@@ -55,7 +55,7 @@ This implementation delivered:
 
 | Artifact | Location | Purpose |
 |----------|----------|---------|
-| Skills | `.agent/skills/*/SKILL.md` | Skill definitions with mode assertions and process steps |
+| Skills | `.agents/skills/*/SKILL.md` | Skill definitions with mode assertions and process steps |
 | Templates | `.oat/templates/*.md` | Document templates copied to projects |
 | Scripts | `.oat/scripts/*` | Utility scripts (e.g., thin index generation) |
 | Workflow Guide | `.oat/internal-project-reference/workflow-guide.md` | End-to-end “how to run OAT” (happy path + resume/review/PR loops) |
@@ -507,7 +507,7 @@ ALLOWED: Task execution, minor adaptations, blocker logging
 
 ### oat-index
 
-**Location:** `.agent/skills/oat-index/SKILL.md`
+**Location:** `.agents/skills/oat-index/SKILL.md`
 
 **Purpose:** Generate comprehensive codebase analysis.
 
@@ -525,7 +525,7 @@ ALLOWED: Task execution, minor adaptations, blocker logging
 
 ### oat-progress
 
-**Location:** `.agent/skills/oat-progress/SKILL.md`
+**Location:** `.agents/skills/oat-progress/SKILL.md`
 
 **Purpose:** Router skill that checks status and routes to the appropriate next phase.
 
@@ -542,7 +542,7 @@ ALLOWED: Task execution, minor adaptations, blocker logging
 
 ### oat-discovery
 
-**Location:** `.agent/skills/oat-discovery/SKILL.md`
+**Location:** `.agents/skills/oat-discovery/SKILL.md`
 
 **Purpose:** Gather requirements through structured dialogue.
 
@@ -573,7 +573,7 @@ oat_ready_for: oat-spec
 
 ### oat-spec
 
-**Location:** `.agent/skills/oat-spec/SKILL.md`
+**Location:** `.agents/skills/oat-spec/SKILL.md`
 
 **Purpose:** Create formal requirements with acceptance criteria.
 
@@ -594,7 +594,7 @@ oat_ready_for: oat-spec
 
 ### oat-design
 
-**Location:** `.agent/skills/oat-design/SKILL.md`
+**Location:** `.agents/skills/oat-design/SKILL.md`
 
 **Purpose:** Create detailed technical design from specification.
 
@@ -616,7 +616,7 @@ oat_ready_for: oat-spec
 
 ### oat-plan
 
-**Location:** `.agent/skills/oat-plan/SKILL.md`
+**Location:** `.agents/skills/oat-plan/SKILL.md`
 
 **Purpose:** Create implementation plan with bite-sized TDD tasks.
 
@@ -647,7 +647,7 @@ oat_plan_hil_phases: ["p01", "p04"]
 
 ### oat-implement
 
-**Location:** `.agent/skills/oat-implement/SKILL.md`
+**Location:** `.agents/skills/oat-implement/SKILL.md`
 
 **Purpose:** Execute plan tasks with state tracking and TDD discipline.
 
@@ -683,7 +683,7 @@ oat_blockers:
 
 ### oat-request-review
 
-**Location:** `.agent/skills/oat-request-review/SKILL.md`
+**Location:** `.agents/skills/oat-request-review/SKILL.md`
 
 **Purpose:** Produce a review artifact (code review or artifact review) for a requested scope (task/phase/final/SHA range).
 
@@ -700,13 +700,13 @@ oat_blockers:
   - Tier 3: inline reset protocol (least reliable)
 - Writes review artifacts under `{PROJECT_PATH}/reviews/` and updates `plan.md` `## Reviews` row to `Status: received` (if plan exists)
 
-**Reviewer prompt used (Tier 1 / guidance source):** `.agent/agents/oat-reviewer.md`
+**Reviewer prompt used (Tier 1 / guidance source):** `.agents/agents/oat-reviewer.md`
 
 ---
 
 ### oat-receive-review
 
-**Location:** `.agent/skills/oat-receive-review/SKILL.md`
+**Location:** `.agents/skills/oat-receive-review/SKILL.md`
 
 **Purpose:** Convert a review artifact into plan tasks for systematic gap closure.
 
@@ -726,7 +726,7 @@ oat_blockers:
 
 ### oat-pr-progress
 
-**Location:** `.agent/skills/oat-pr-progress/SKILL.md`
+**Location:** `.agents/skills/oat-pr-progress/SKILL.md`
 
 **Purpose:** Generate a progress PR description scoped to a plan phase (`pNN`) or an explicit git range.
 
@@ -741,7 +741,7 @@ oat_blockers:
 
 ### oat-pr-project
 
-**Location:** `.agent/skills/oat-pr-project/SKILL.md`
+**Location:** `.agents/skills/oat-pr-project/SKILL.md`
 
 **Purpose:** Generate the final project PR description (into `main`) grounded in spec/design/plan/implementation and final review status.
 
@@ -911,7 +911,7 @@ OAT uses two categories of state tracking:
 To avoid repeated project-name prompts across phases, OAT uses a local-only pointer file:
 
 - **Path:** `.oat/active-project` (single line: the active project directory path)
-- **Example contents:** `.agent/projects/workflow-research`
+- **Example contents:** `.oat/projects/shared/workflow-research`
 - **Lifecycle:** created/updated by skills when a project is created or selected
 - **Git:** ignored via `.gitignore` (local-only state)
 
@@ -1253,7 +1253,7 @@ In implementation.md:
 └── scripts/                  # Utility scripts
     └── generate-thin-index.sh
 
-.agent/
+.agents/
 ├── agents/                   # Subagent prompts (syncable between providers)
 │   └── oat-reviewer.md
 ├── skills/                   # OAT skill definitions (registered in AGENTS.md)
@@ -1405,7 +1405,7 @@ Non-final reviews are manual. Examples:
 - Roadmap: `.oat/internal-project-reference/roadmap.md`
 - Deferred phases: `.oat/internal-project-reference/deferred-phases.md`
 - Workflow user feedback (dogfood log): `.oat/internal-project-reference/temp/workflow-user-feedback.md`
-- Review loop proposal: `.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`
+- Review loop proposal: `.oat/projects/shared/workflow-research/analysis/subagents/refined-subagent-proposal.md`
 - Past workflow artifacts: `.oat/internal-project-reference/past-artifacts/`
 
 ---

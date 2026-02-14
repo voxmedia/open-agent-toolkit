@@ -25,7 +25,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 
 **Agent Skills Layer:**
 - Purpose: Reusable workflow skills for different development phases (discovery, spec, design, plan, implement)
-- Location: `.agent/skills/`
+- Location: `.agents/skills/`
 - Contains: OAT workflow skills, project scaffold skills, documentation skills
 - Depends on: Templates, reference documentation, project context
 - Used by: Claude Code, Cursor, CLI tools via openskills framework
@@ -39,7 +39,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 
 **Project Workflow Layer:**
 - Purpose: Tracks project state and artifacts across development phases
-- Location: `.agent/projects/`, `.oat/projects/`
+- Location: `.oat/projects/shared/`, `.oat/projects/`
 - Contains: Discovery docs, specifications, designs, implementation plans, reviews, handoffs
 - Depends on: OAT knowledge, skill templates, git state
 - Used by: Agents executing workflow phases, review processes
@@ -79,7 +79,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 7. `/oat:pr-project` creates final PR description with full context
 
 **State Management:**
-- Project state tracked in `.agent/projects/{name}/state.md`
+- Project state tracked in `.oat/projects/shared/{name}/state.md`
 - Workflow progress tracked via HiL (Human-in-the-Loop) checkpoints
 - Git commits linked to task IDs for full traceability
 - Knowledge staleness detected via timestamp and git diff checks (>7 days or >20 files changed)
@@ -88,12 +88,12 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 
 **Agent Skill:**
 - Purpose: Reusable workflow unit that can be invoked from Claude Code, Cursor, or CLI
-- Examples: `.agent/skills/oat-discovery/`, `.agent/skills/oat-implement/`, `.agent/skills/create-skill/`
+- Examples: `.agents/skills/oat-discovery/`, `.agents/skills/oat-implement/`, `.agents/skills/create-skill/`
 - Pattern: YAML manifest + Markdown instructions, referenced via openskills framework
 
 **OAT Project:**
 - Purpose: Container for all artifacts related to a development task or feature
-- Examples: `.agent/projects/{name}/discovery.md`, `.oat/projects/shared/{name}/`
+- Examples: `.oat/projects/shared/{name}/discovery.md`, `.oat/projects/shared/{name}/`
 - Pattern: Structured directory with discovery, spec, design, plan, implementation, and optional reviews/handoffs
 
 **Knowledge Base:**
@@ -114,17 +114,17 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 - Responsibilities: Command-line interface for OAT operations (currently placeholder)
 
 **Skill Entry Points (Claude Code/Cursor):**
-- Locations: `.agent/skills/*/SKILL.md`
+- Locations: `.agents/skills/*/SKILL.md`
 - Triggers: `/oat:progress`, `/oat:discovery`, `/oat:spec`, `/oat:design`, `/oat:plan`, `/oat:implement`
 - Responsibilities: Invoke workflow phases, provide interactive guidance, generate artifacts
 
 **Knowledge Generation Entry Point:**
-- Location: `.agent/skills/oat-index/SKILL.md`
+- Location: `.agents/skills/oat-index/SKILL.md`
 - Triggers: `/oat:index` command
 - Responsibilities: Analyze codebase structure, generate knowledge base in `.oat/knowledge/repo/`
 
 **Project Initialization Entry Point:**
-- Location: `.agent/skills/oat-new-project/SKILL.md`
+- Location: `.agents/skills/oat-new-project/SKILL.md`
 - Triggers: `/oat:new-project` command
 - Responsibilities: Create new project directory structure under `.oat/projects/`
 
