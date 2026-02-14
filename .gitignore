@@ -47,9 +47,10 @@ yarn-error.log*
 !.oat/projects/local/.gitkeep
 !.oat/projects/archived/.gitkeep
 
-# Ignore claude instructions
-.claude/*
-!.claude/commands/
-!.claude/skills/
+# Ignore provider-managed local symlink views
+.claude/skills/**
+.claude/commands/**
+.cursor/skills/**
+.cursor/commands/**
 
 .conductor
