@@ -1,4 +1,12 @@
-import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  lstat,
+  mkdir,
+  readFile,
+  readlink,
+  rename,
+  writeFile,
+} from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { Command } from 'commander';
 import {
@@ -139,8 +147,44 @@ function createHookSnippet(options: { includeShebang?: boolean } = {}): string {
   return ['#!/bin/sh', '', ...lines].join('\n');
 }
 
+async function resolveHooksDirectory(
+  projectRoot: string,
+  options: { createIfMissing?: boolean } = {},
+): Promise<string> {
+  const hooksDir = join(projectRoot, '.git', 'hooks');
+  const shouldCreate = options.createIfMissing ?? false;
+
+  try {
+    const hooksStat = await lstat(hooksDir);
+    if (!hooksStat.isSymbolicLink()) {
+      return hooksDir;
+    }
+
+    const symlinkTarget = await readlink(hooksDir);
+    const resolvedTarget = resolve(dirname(hooksDir), symlinkTarget);
+    if (shouldCreate) {
+      await ensureDir(resolvedTarget);
+    }
+    return resolvedTarget;
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      if (shouldCreate) {
+        await ensureDir(hooksDir);
+      }
+      return hooksDir;
+    }
+    throw error;
+  }
+}
+
 async function isHookInstalledDefault(projectRoot: string): Promise<boolean> {
-  const hookPath = join(projectRoot, '.git', 'hooks', 'pre-commit');
+  const hooksDir = await resolveHooksDirectory(projectRoot);
+  const hookPath = join(hooksDir, 'pre-commit');
   try {
     const content = await readFile(hookPath, 'utf8');
     return content.includes(HOOK_MARKER_START);
@@ -158,7 +202,10 @@ async function isHookInstalledDefault(projectRoot: string): Promise<boolean> {
 }
 
 async function installHookDefault(projectRoot: string): Promise<void> {
-  const hookPath = join(projectRoot, '.git', 'hooks', 'pre-commit');
+  const hooksDir = await resolveHooksDirectory(projectRoot, {
+    createIfMissing: true,
+  });
+  const hookPath = join(hooksDir, 'pre-commit');
 
   let current = '';
   try {

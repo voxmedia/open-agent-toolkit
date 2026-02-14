@@ -4,6 +4,7 @@ import {
   mkdtemp,
   readFile,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -423,6 +424,48 @@ describe('createInitCommand', () => {
     expect(hookContents).toContain(
       "oat: provider views are out of sync - run 'oat sync --apply' to fix",
     );
+  });
+
+  it('installs hook when .git/hooks is a symlinked directory', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-init-hook-symlink-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.git'), { recursive: true });
+    const hooksTarget = join(root, 'hooks-target');
+    await mkdir(hooksTarget, { recursive: true });
+    await symlink(hooksTarget, join(root, '.git', 'hooks'));
+
+    const capture = createLoggerCapture();
+    const command = createInitCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: (globalOptions.scope ?? 'project') as Scope,
+        apply: false,
+        verbose: false,
+        json: false,
+        cwd: root,
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveScopeRoot: vi.fn(async () => root),
+      ensureCanonicalDirs: vi.fn(async () => undefined),
+      loadManifest: vi.fn(async () => createEmptyManifest()),
+      saveManifest: vi.fn(async () => undefined),
+      scanCanonical: vi.fn(async () => []),
+      collectStrays: vi.fn(async () => []),
+      confirmAction: vi.fn(async () => false),
+      adoptStray: vi.fn(async (_scopeRoot, _stray, manifest) => manifest),
+    });
+
+    await runInitCommand(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: ['--hook'],
+    });
+
+    const hookContents = await readFile(
+      join(hooksTarget, 'pre-commit'),
+      'utf8',
+    );
+    expect(hookContents).toContain('oat pre-commit hook');
   });
 
   it('skips hook in non-interactive mode with guidance', async () => {
