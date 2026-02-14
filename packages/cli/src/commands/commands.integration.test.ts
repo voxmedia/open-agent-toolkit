@@ -156,21 +156,27 @@ describe('CLI command integration', () => {
     const result = await runCli(root, ['sync', '--apply']);
     expect(result.exitCode).toBe(0);
 
-    await expect(
-      lstat(join(root, '.claude', 'skills', 'skill-one')),
-    ).resolves.toMatchObject({ isSymbolicLink: expect.any(Function) });
-    await expect(
-      lstat(join(root, '.cursor', 'skills', 'skill-one')),
-    ).resolves.toMatchObject({ isSymbolicLink: expect.any(Function) });
-    await expect(
-      lstat(join(root, '.claude', 'agents', 'agent-one')),
-    ).resolves.toMatchObject({ isSymbolicLink: expect.any(Function) });
-    await expect(
-      lstat(join(root, '.cursor', 'agents', 'agent-one')),
-    ).resolves.toMatchObject({ isSymbolicLink: expect.any(Function) });
-    await expect(
-      lstat(join(root, '.codex', 'agents', 'agent-one')),
-    ).resolves.toMatchObject({ isSymbolicLink: expect.any(Function) });
+    const claudeSkillStat = await lstat(
+      join(root, '.claude', 'skills', 'skill-one'),
+    );
+    const cursorSkillStat = await lstat(
+      join(root, '.cursor', 'skills', 'skill-one'),
+    );
+    const claudeAgentStat = await lstat(
+      join(root, '.claude', 'agents', 'agent-one'),
+    );
+    const cursorAgentStat = await lstat(
+      join(root, '.cursor', 'agents', 'agent-one'),
+    );
+    const codexAgentStat = await lstat(
+      join(root, '.codex', 'agents', 'agent-one'),
+    );
+
+    expect(claudeSkillStat.isSymbolicLink()).toBe(true);
+    expect(cursorSkillStat.isSymbolicLink()).toBe(true);
+    expect(claudeAgentStat.isSymbolicLink()).toBe(true);
+    expect(cursorAgentStat.isSymbolicLink()).toBe(true);
+    expect(codexAgentStat.isSymbolicLink()).toBe(true);
   });
 
   it('status --json outputs valid JSON with no prompts', async () => {
