@@ -93,8 +93,8 @@ OAT skills should provide lightweight, consistent progress feedback:
 - **Status:** accepted
 - **Drivers:** Avoid convention drift across new `/oat:*` skills; keep skill authoring consistent without duplicating the entire `create-skill` guidance.
 - **Related:**
-  - `.agent/skills/create-skill/SKILL.md`
-  - `.agent/skills/create-oat-skill/SKILL.md`
+  - `.agents/skills/create-skill/SKILL.md`
+  - `.agents/skills/create-oat-skill/SKILL.md`
 
 #### Decision
 

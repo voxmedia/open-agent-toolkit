@@ -23,7 +23,7 @@ resolve_projects_root() {
   if [[ -z "$root" ]] && [[ -f ".oat/projects-root" ]]; then
     root=$(cat ".oat/projects-root" 2>/dev/null || true)
   fi
-  root="${root:-.agent/projects}"
+  root="${root:-.oat/projects/shared}"
   echo "${root%/}"  # Strip trailing slash
 }
 

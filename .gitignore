@@ -47,17 +47,10 @@ yarn-error.log*
 !.oat/projects/local/.gitkeep
 !.oat/projects/archived/.gitkeep
 
-# Ignore agent-specific project files (agent-agnostic)
-.agent/projects/**
-!.agent/projects/keep.md
-!.agent/projects/pr-descriptions/
-.agent/projects/pr-descriptions/**
-!.agent/projects/pr-descriptions/keep.md
-
-# Ignore claude instructions
-CLAUDE.md
-.claude/*
-!.claude/commands/
-!.claude/skills/
+# Ignore provider-managed local symlink views
+.claude/skills/**
+.claude/commands/**
+.cursor/skills/**
+.cursor/commands/**
 
 .conductor

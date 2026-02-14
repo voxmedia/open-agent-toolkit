@@ -21,11 +21,9 @@ OAT provides a disciplined approach to AI-assisted development through:
 /oat:discovery   # Start a new project
 ```
 
-**Via CLI:**
+**Sync skills/providers locally:**
 ```bash
-npx openskills read oat-progress
-npx openskills read oat-index
-npx openskills read oat-discovery
+pnpm run cli sync --scope all --apply
 ```
 
 ## Workflow Phases
@@ -44,31 +42,31 @@ Generate comprehensive codebase analysis using parallel mapper agents. Creates a
 
 Gather requirements through structured dialogue. Understand the problem, explore constraints, and capture decisions.
 
-**Output:** `.agent/projects/{name}/discovery.md`
+**Output:** `.oat/projects/{name}/discovery.md`
 
 ### 3. Specification (`/oat:spec`)
 
 Create formal requirements with acceptance criteria from discovery insights. Produces a testable specification.
 
-**Output:** `.agent/projects/{name}/spec.md`
+**Output:** `.oat/projects/{name}/spec.md`
 
 ### 4. Design (`/oat:design`)
 
 Create detailed technical design from specification. Documents architecture, interfaces, and implementation approach.
 
-**Output:** `.agent/projects/{name}/design.md`
+**Output:** `.oat/projects/{name}/design.md`
 
 ### 5. Planning (`/oat:plan`)
 
 Break design into bite-sized TDD tasks with stable IDs, verification commands, and commit messages.
 
-**Output:** `.agent/projects/{name}/plan.md`
+**Output:** `.oat/projects/{name}/plan.md`
 
 ### 6. Implementation (`/oat:implement`)
 
 Execute plan tasks with state tracking. Follows TDD discipline, commits per task, and stops at phase boundaries for review.
 
-**Output:** `.agent/projects/{name}/implementation.md`
+**Output:** `.oat/projects/{name}/implementation.md`
 
 ## Running Skills
 
@@ -79,10 +77,10 @@ Execute plan tasks with state tracking. Follows TDD discipline, commits per task
 /oat:spec
 ```
 
-**Via CLI:**
+**Canonical-first workflow:**
 ```bash
-npx openskills read oat-progress
-npx openskills read oat-discovery
+pnpm run cli status --scope all
+pnpm run cli sync --scope all --apply
 ```
 
 ## Human-in-the-Loop (HiL) Gates
@@ -113,7 +111,7 @@ oat_hil_completed: ["discovery"]
 └── scripts/              # Utility scripts
     └── generate-thin-index.sh
 
-.agent/
+.agents/
 ├── skills/               # OAT skill definitions
 │   ├── oat-index/
 │   ├── oat-discovery/
@@ -122,7 +120,7 @@ oat_hil_completed: ["discovery"]
 │   ├── oat-plan/
 │   ├── oat-implement/
 │   └── oat-progress/
-└── projects/             # Project-specific documents
+.oat/projects/            # Project-specific documents
     └── <project-name>/
         ├── state.md          # Workflow state
         ├── discovery.md      # Requirements gathering

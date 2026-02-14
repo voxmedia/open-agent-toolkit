@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 4 | complete | 25 | 25/25 |
 | Phase 5 | complete | 6 | 6/6 |
 | Phase 6 | complete | 4 | 4/4 |
-| Phase 7 | complete | 4 | 4/4 |
+| Phase 7 | complete | 5 | 5/5 |
 
-**Total:** 90/90 tasks completed
+**Total:** 91/91 tasks completed
 
 ---
 
@@ -2567,7 +2567,7 @@ oat_generated: false
 | 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli test src/commands/sync/`; `pnpm --filter=@oat/cli test src/commands/init/`; `pnpm --filter=@oat/cli test src/commands/providers/list`; `pnpm --filter=@oat/cli test src/commands/providers/inspect`; `pnpm --filter=@oat/cli test src/commands/doctor/`; `pnpm --filter=@oat/cli test src/commands/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 8 | 0 | n/a (task-level verification) |
 | 5 | `pnpm --filter=@oat/cli test src/engine/hook src/commands/init`; `pnpm --filter=@oat/cli test src/engine/edge-cases`; `pnpm --filter=@oat/cli test src/providers/shared/adapter-contract`; `pnpm --filter=@oat/cli test src/commands/help-snapshots -- --update`; `pnpm --filter=@oat/cli test src/e2e/`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build`; `node packages/cli/dist/index.js --help`; `node packages/cli/dist/index.js doctor` | 6 | 0 | n/a (phase verification complete) |
 | 6 | `pnpm --filter=@oat/cli test src/engine/`; `pnpm --filter=@oat/cli test src/shared/ src/drift/ src/ui/output.test.ts`; `pnpm --filter=@oat/cli test src/engine/hook.test.ts`; `pnpm --filter=@oat/cli test src/engine/edge-cases.test.ts src/e2e/workflow.test.ts src/providers/shared/adapter-contract.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build` | 4 | 0 | n/a (deferred Medium/Minor closure) |
-| 7 | `pnpm --filter=@oat/cli test src/shared/prompts.test.ts`; `pnpm --filter=@oat/cli test src/commands/init/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/status/index.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 4 | 0 | n/a (post-completion UX follow-up) |
+| 7 | `pnpm --filter=@oat/cli test src/shared/prompts.test.ts`; `pnpm --filter=@oat/cli test src/commands/init/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/status/index.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm oat:validate-skills`; `pnpm lint` | 5 | 0 | n/a (post-completion follow-ups) |
 
 ## Final Summary (for PR/docs)
 
@@ -2621,6 +2621,28 @@ oat_generated: false
 
 **Verification:**
 - Run: `pnpm --filter=@oat/cli test src/shared/prompts.test.ts`; `pnpm --filter=@oat/cli test src/commands/init/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/status/index.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`
+- Result: pass
+
+### Task p07-t05: (follow-up) Migrate repository skills/agents from `.agent` to `.agents`
+
+**Status:** completed
+**Commit:** pending
+
+**Outcome (required when completed):**
+- Moved all tracked repository skill and subagent artifacts from `.agent/{skills,agents}` to `.agents/{skills,agents}`.
+- Rewrote in-repo skill references from legacy `.agent/skills` / `.agent/agents` paths to `.agents/...` so template and reviewer links remain valid after migration.
+- Updated top-level workflow docs to remove `openskills` invocation guidance and point to canonical `.agents` + `oat sync` flow.
+- Updated the OAT skill validator script to validate `.agents/skills` directly.
+
+**Files changed:**
+- `.agents/skills/**/*`, `.agents/agents/**/*` - moved canonical skill/subagent artifacts and updated internal references.
+- `.oat/scripts/validate-oat-skills.ts` - switched validator root from `.agent/skills` to `.agents/skills`.
+- `AGENTS.md` - removed `npx openskills read` guidance and updated project path references.
+- `README.md` - replaced openskills invocation snippets and `.agent` skill tree references with `.agents`/CLI sync guidance.
+- `.agent/README.md` - updated documentation to reflect `.agents/skills` canonical location.
+
+**Verification:**
+- Run: `pnpm oat:validate-skills`; `pnpm lint`
 - Result: pass
 
 ## References

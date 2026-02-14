@@ -13,7 +13,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Backlog: `.oat/internal-project-reference/backlog.md`
 - Decision record: `.oat/internal-project-reference/decision-record.md`
 - Workflow user feedback (dogfood log): `.oat/internal-project-reference/temp/workflow-user-feedback.md`
-- Review loop proposal: `.agent/projects/workflow-research/analysis/subagents/refined-subagent-proposal.md`
+- Review loop proposal: `.oat/projects/shared/workflow-research/analysis/subagents/refined-subagent-proposal.md`
 - Past artifacts (archival): `.oat/internal-project-reference/past-artifacts/`
 
 ## What’s Implemented
@@ -29,7 +29,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Review loop:
   - `oat-request-review`
   - `oat-receive-review`
-  - Reviewer prompt: `.agent/agents/oat-reviewer.md`
+  - Reviewer prompt: `.agents/agents/oat-reviewer.md`
 - PR skills:
   - `oat-pr-progress`
   - `oat-pr-project`
@@ -73,8 +73,8 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 ## Canonical Paths (Where Things Live)
 
-- Skills: `.agent/skills/<skill-name>/SKILL.md`
-- Subagent prompts: `.agent/agents/*.md`
+- Skills: `.agents/skills/<skill-name>/SKILL.md`
+- Subagent prompts: `.agents/agents/*.md`
 - Templates: `.oat/templates/*.md`
 - Knowledge: `.oat/knowledge/repo/*.md`
 - Project artifacts (current dogfood layout): `.oat/projects/shared/<project>/` (configurable via `.oat/projects-root`)
@@ -120,5 +120,5 @@ For a fuller guide (resume/review/PR loops), see `.oat/internal-project-referenc
 
 - `.oat/projects-root` sets the default projects root (tracked). Default: `.oat/projects/shared` (checked in).
 - `.oat/projects/local/**` and `.oat/projects/archived/**` are gitignored (local-only).
-- Legacy `.agent/projects/**` is still gitignored in this repo by default; older dogfood artifacts may exist there locally.
+- Legacy `.oat/projects/shared/**` is still gitignored in this repo by default; older dogfood artifacts may exist there locally.
 - `.oat/active-project` is local-only (gitignored). It won’t exist until you run a skill that creates/selects a project.
