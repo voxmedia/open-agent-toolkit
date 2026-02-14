@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t24
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 23/24 |
+| Phase 4 | complete | 24 | 24/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 74/81 tasks completed
+**Total:** 75/81 tasks completed
 
 ---
 
@@ -1536,13 +1536,13 @@ oat_generated: false
 **Deferred Findings (Medium/Minor):**
 - None (all accepted findings were converted into review-fix tasks)
 
-**Next:** Execute fix tasks via `/oat:implement`, then request p04 re-review.
+**Next:** Review-fix tasks complete. Request p04 re-review.
 
 ---
 
 ## Phase 4: Commands — init, status, sync, providers, doctor
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-02-14
 
 ### Phase Summary (fill when phase is complete)
@@ -1551,6 +1551,7 @@ oat_generated: false
 - Implemented all planned user-facing commands (`status`, `sync`, `init`, `providers list`, `providers inspect`, `doctor`) with scope-aware behavior and JSON/non-interactive contracts.
 - Registered all command factories in the CLI entrypoint so `oat --help` and subcommands are fully wired end-to-end.
 - Added command integration coverage that exercises full workflow sequences and idempotency.
+- Completed all p04 review-fix tasks (`p04-t09` through `p04-t24`), including init hook hardening, providers/status UX refinements, and expanded doctor diagnostics.
 
 **Key files touched:**
 - `packages/cli/src/commands/status/index.ts`
@@ -2090,7 +2091,24 @@ oat_generated: false
 
 ### Task p04-t24: (review) Add Codex agent-path check in doctor diagnostics
 
-**Status:** pending
+**Status:** completed
+**Commit:** 38cbd1f
+
+**Outcome (required when completed):**
+- Added an explicit `project:codex_agents_path` diagnostic check in `oat doctor`.
+- Reported actionable diagnostics when Codex-specific agent paths are missing or inaccessible.
+- Added tests to validate the new check behavior and preserve command contract stability.
+
+**Files changed:**
+- `packages/cli/src/commands/doctor/index.ts` - added Codex agent path diagnostic and reporting behavior.
+- `packages/cli/src/commands/doctor/index.test.ts` - added coverage for Codex path check outcomes.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/doctor/ && pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept the new diagnostic in doctor only; no behavior changes were introduced in sync/apply flows.
 
 ---
 
