@@ -22,6 +22,7 @@ interface HarnessOptions {
   scopeRootByScope?: Partial<Record<'project' | 'user', string>>;
   strays?: InitStrayCandidate[];
   confirmResponses?: boolean[];
+  selectResponses?: Array<'adopt' | 'skip' | 'skip_all' | null>;
   hookInstalled?: boolean;
   useDefaultAdopt?: boolean;
 }
@@ -67,6 +68,7 @@ function createHarness(options: HarnessOptions = {}): {
   ensureCanonicalDirs: ReturnType<typeof vi.fn>;
   saveManifest: ReturnType<typeof vi.fn>;
   confirmAction: ReturnType<typeof vi.fn>;
+  selectWithAbort: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
   installHook: ReturnType<typeof vi.fn>;
 } {
@@ -77,7 +79,9 @@ function createHarness(options: HarnessOptions = {}): {
     ...(options.scopeRootByScope ?? {}),
   };
   const confirmResponses = [...(options.confirmResponses ?? [])];
+  const selectResponses = [...(options.selectResponses ?? [])];
   const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
+  const selectWithAbort = vi.fn(async () => selectResponses.shift() ?? 'skip');
   const resolveScopeRoot = vi.fn(
     async (scope: 'project' | 'user') => scopeRoots[scope],
   );
@@ -107,6 +111,7 @@ function createHarness(options: HarnessOptions = {}): {
     scanCanonical: vi.fn(async () => createCanonicalEntries()),
     collectStrays: vi.fn(async () => options.strays ?? []),
     confirmAction,
+    selectWithAbort,
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
     installHook,
   };
@@ -124,6 +129,7 @@ function createHarness(options: HarnessOptions = {}): {
     ensureCanonicalDirs,
     saveManifest,
     confirmAction,
+    selectWithAbort,
     adoptStray,
     installHook,
   };
@@ -184,21 +190,40 @@ describe('createInitCommand', () => {
   });
 
   it('detects strays and prompts for adoption in interactive mode', async () => {
-    const { command, confirmAction } = createHarness({
+    const { command, selectWithAbort, confirmAction } = createHarness({
       interactive: true,
       strays: [createStray()],
       hookInstalled: true,
-      confirmResponses: [false],
+      selectResponses: ['skip'],
     });
 
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
 
-    expect(confirmAction).toHaveBeenCalledTimes(1);
-    expect(confirmAction.mock.calls[0]?.[0]).toContain('Adopt stray');
+    expect(confirmAction).not.toHaveBeenCalled();
+    expect(selectWithAbort).toHaveBeenCalledTimes(1);
+    expect(selectWithAbort.mock.calls[0]?.[0]).toContain('Handle stray');
+  });
+
+  it('supports skip-all remaining strays in interactive adoption', async () => {
+    const { command, selectWithAbort, adoptStray } = createHarness({
+      interactive: true,
+      strays: [
+        createStray('.claude/skills/one'),
+        createStray('.claude/skills/two'),
+        createStray('.claude/skills/three'),
+      ],
+      hookInstalled: true,
+      selectResponses: ['skip_all'],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(selectWithAbort).toHaveBeenCalledTimes(1);
+    expect(adoptStray).not.toHaveBeenCalled();
   });
 
   it('skips adoption in non-interactive mode with guidance text', async () => {
-    const { command, capture, confirmAction } = createHarness({
+    const { command, capture, selectWithAbort } = createHarness({
       interactive: false,
       strays: [createStray()],
       hookInstalled: true,
@@ -206,7 +231,7 @@ describe('createInitCommand', () => {
 
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
 
-    expect(confirmAction).not.toHaveBeenCalled();
+    expect(selectWithAbort).not.toHaveBeenCalled();
     expect(capture.warn).toContain(ADOPT_REMEDIATION);
   });
 
@@ -252,7 +277,7 @@ describe('createInitCommand', () => {
       scopeRootByScope: { project: root },
       strays: [createStray('.claude/skills/stray-skill')],
       hookInstalled: true,
-      confirmResponses: [true],
+      selectResponses: ['adopt'],
     });
 
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });

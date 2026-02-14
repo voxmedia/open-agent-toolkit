@@ -26,7 +26,12 @@ import {
   getSyncMappings,
   type PathMapping,
 } from '../../providers/shared';
-import { confirmAction, type PromptContext } from '../../shared/prompts';
+import {
+  confirmAction,
+  type PromptContext,
+  type SelectChoice,
+  selectWithAbort,
+} from '../../shared/prompts';
 import type { ConcreteScope, Scope } from '../../shared/types';
 import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 
@@ -71,6 +76,11 @@ interface InitDependencies {
     canonicalEntries: CanonicalEntry[],
   ) => Promise<InitStrayCandidate[]>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
+  selectWithAbort: <T extends string>(
+    message: string,
+    choices: SelectChoice<T>[],
+    ctx: PromptContext,
+  ) => Promise<T | null>;
   adoptStray: (
     scopeRoot: string,
     stray: InitStrayCandidate,
@@ -94,6 +104,8 @@ interface InitJsonPayload {
   hookInstalled: boolean | null;
   scopes: InitScopeSummary[];
 }
+
+type AdoptionSelection = 'adopt' | 'skip' | 'skip_all';
 
 function normalizePath(pathValue: string): string {
   return pathValue.replaceAll('\\', '/');
@@ -269,6 +281,7 @@ function createDependencies(): InitDependencies {
     scanCanonical,
     collectStrays: collectStraysDefault,
     confirmAction,
+    selectWithAbort,
     adoptStray: adoptStrayDefault,
     isHookInstalled: isHookInstalledDefault,
     installHook: installHookDefault,
@@ -351,13 +364,27 @@ async function runInitCommand(
     }
 
     if (context.interactive) {
+      let skipRemaining = false;
       for (const stray of strays) {
-        const shouldAdopt = await dependencies.confirmAction(
-          `Adopt stray ${stray.report.providerPath} from ${stray.provider}?`,
+        if (skipRemaining) {
+          break;
+        }
+
+        const selection = await dependencies.selectWithAbort<AdoptionSelection>(
+          `Handle stray ${stray.report.providerPath} from ${stray.provider}`,
+          [
+            { label: 'Adopt', value: 'adopt' },
+            { label: 'Skip', value: 'skip' },
+            { label: 'Skip all remaining', value: 'skip_all' },
+          ],
           { interactive: context.interactive },
         );
 
-        if (!shouldAdopt) {
+        if (selection === 'skip_all') {
+          skipRemaining = true;
+          continue;
+        }
+        if (selection !== 'adopt') {
           continue;
         }
 
