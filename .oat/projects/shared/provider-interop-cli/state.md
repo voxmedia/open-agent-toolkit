@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t25
-oat_last_commit: 38cbd1f
+oat_current_task: null
+oat_last_commit: e67e38b
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. p04 re-review received and one follow-up fix task (`p04-t25`) is queued before p05.
+Implementation - In Progress. p04 re-review follow-up fix (`p04-t25`) is complete; awaiting p04 re-review before starting p05.
 
 ## Artifacts
 
@@ -29,7 +29,7 @@ Implementation - In Progress. p04 re-review received and one follow-up fix task 
 - **Design:** `design.md` (complete, reviewed)
 - **Review:** `reviews/design-review.md` (findings addressed)
 - **Review:** `reviews/cli-structure-proposal.md` (accepted)
-- **Plan:** `plan.md` (complete, 65 tasks, 5 phases)
+- **Plan:** `plan.md` (complete, 82 tasks, 5 phases)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -40,7 +40,7 @@ Implementation - In Progress. p04 re-review received and one follow-up fix task 
 - ✓ Specification reviewed by Codex, findings addressed
 - ✓ Design complete (1046 lines, full architecture)
 - ✓ Design reviewed twice, all 10 findings addressed
-- ✓ Plan complete (81 tasks, 5 phases, includes p01/p02/p03/p04 review-fix tasks)
+- ✓ Plan complete (82 tasks, 5 phases, includes p01/p02/p03/p04 review-fix tasks)
 - ✓ Phase 1 review fixes complete (`p01-t21`–`p01-t26`)
 - ✓ Additional p01 minor review fixes complete (`p01-t27`–`p01-t31`)
 - ✓ p01 re-review passed (`reviews/p01-re-review-2026-02-13.md`)
@@ -53,7 +53,8 @@ Implementation - In Progress. p04 re-review received and one follow-up fix task 
 - ✓ Phase 4 complete (`p04-t01` through `p04-t08`)
 - ✓ p04 review received (`reviews/p04-code-review.md`)
 - ✓ p04 review-fix tasks complete (`p04-t09`–`p04-t24`)
-- ⧗ p04 re-review follow-up queued (`p04-t25`)
+- ✓ p04 re-review follow-up fix complete (`p04-t25`)
+- ⧗ awaiting p04 re-review
 
 ## Plan Summary
 
@@ -73,4 +74,4 @@ None
 
 ## Next Milestone
 
-Run `/oat:implement` for `p04-t25`, then re-run `/oat:request-review code p04` and process via `/oat:receive-review`.
+Run `/oat:request-review code p04` and process via `/oat:receive-review` before starting Phase 5.

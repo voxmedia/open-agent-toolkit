@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t25
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 25 | 24/25 |
+| Phase 4 | complete | 25 | 25/25 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 75/82 tasks completed
+**Total:** 76/82 tasks completed
 
 ---
 
@@ -1551,7 +1551,7 @@ oat_generated: false
 - Medium: 0
 - Minor: 2
 
-**Review status:** follow-up fixes queued (minor task added)
+**Review status:** follow-up fixes completed; awaiting re-review
 
 **New tasks added:** `p04-t25`
 
@@ -1560,13 +1560,13 @@ oat_generated: false
 
 **Review cycle:** 2 of 3
 
-**Next:** Execute `p04-t25` via `/oat:implement`, then request p04 re-review.
+**Next:** Run `/oat:request-review code p04` and process results via `/oat:receive-review`.
 
 ---
 
 ## Phase 4: Commands — init, status, sync, providers, doctor
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-02-14
 
 ### Phase Summary (fill when phase is complete)
@@ -1575,7 +1575,7 @@ oat_generated: false
 - Implemented all planned user-facing commands (`status`, `sync`, `init`, `providers list`, `providers inspect`, `doctor`) with scope-aware behavior and JSON/non-interactive contracts.
 - Registered all command factories in the CLI entrypoint so `oat --help` and subcommands are fully wired end-to-end.
 - Added command integration coverage that exercises full workflow sequences and idempotency.
-- Completed p04 review-fix tasks (`p04-t09` through `p04-t24`) and queued follow-up lint cleanup task `p04-t25` from p04 re-review.
+- Completed p04 review-fix tasks (`p04-t09` through `p04-t25`), including follow-up lint cleanup from p04 re-review.
 
 **Key files touched:**
 - `packages/cli/src/commands/status/index.ts`
@@ -2136,7 +2136,25 @@ oat_generated: false
 
 ### Task p04-t25: (review) Remove unused imports from command refactors
 
-**Status:** pending
+**Status:** completed
+**Commit:** e67e38b
+
+**Outcome (required when completed):**
+- Removed unused imports introduced during command helper/type refactors.
+- Eliminated warning-only lint noise in affected command modules without changing runtime behavior.
+
+**Files changed:**
+- `packages/cli/src/commands/doctor/index.ts` - removed unused `Scope` type import.
+- `packages/cli/src/commands/providers/inspect.ts` - removed unused `GlobalOptions` and `ConcreteScope` imports.
+- `packages/cli/src/commands/providers/list.ts` - removed unused `GlobalOptions` and `ConcreteScope` imports.
+- `packages/cli/src/commands/sync/index.ts` - removed unused `GlobalOptions` and `ConcreteScope` imports.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli lint && pnpm --filter=@oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Limited scope to import cleanup only; no command logic updates were required.
 
 ---
 
