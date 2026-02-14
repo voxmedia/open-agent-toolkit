@@ -3,7 +3,6 @@ import { Command } from 'commander';
 import {
   buildCommandContext,
   type CommandContext,
-  type GlobalOptions,
 } from '../../app/command-context';
 import { detectDrift } from '../../drift';
 import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
@@ -15,7 +14,6 @@ import { getSyncMappings } from '../../providers/shared';
 import type { ContentType } from '../../shared/types';
 import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 import type {
-  ConcreteScope,
   ProviderListItem,
   ProviderListSummary,
   ProvidersListDependencies,

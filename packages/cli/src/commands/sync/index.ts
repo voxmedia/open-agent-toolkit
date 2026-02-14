@@ -3,7 +3,6 @@ import { Command } from 'commander';
 import {
   buildCommandContext,
   type CommandContext,
-  type GlobalOptions,
 } from '../../app/command-context';
 import { DEFAULT_SYNC_CONFIG, loadSyncConfig } from '../../config';
 import { computeSyncPlan, executeSyncPlan, scanCanonical } from '../../engine';
@@ -17,11 +16,7 @@ import { formatSyncPlan } from '../../ui/output';
 import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 import { runSyncApply } from './apply';
 import { runSyncDryRun } from './dry-run';
-import type {
-  ConcreteScope,
-  ScopeSyncPlan,
-  SyncCommandDependencies,
-} from './sync.types';
+import type { ScopeSyncPlan, SyncCommandDependencies } from './sync.types';
 
 function defaultDependencies(): SyncCommandDependencies {
   return {

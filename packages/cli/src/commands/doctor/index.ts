@@ -12,7 +12,7 @@ import { loadManifest, type Manifest } from '../../manifest';
 import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
 import { cursorAdapter } from '../../providers/cursor';
-import type { ConcreteScope, Scope } from '../../shared/types';
+import type { ConcreteScope } from '../../shared/types';
 import { type DoctorCheck, formatDoctorResults } from '../../ui/output';
 import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 
