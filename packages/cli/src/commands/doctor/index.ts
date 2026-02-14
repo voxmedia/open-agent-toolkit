@@ -49,6 +49,8 @@ async function checkSymlinkSupportDefault(
   const linkDir = join(tempDir, 'link');
 
   try {
+    // Intentionally use a non-existent target to validate symlink syscall
+    // capability only; we are not validating target resolution here.
     await symlink(targetDir, linkDir, 'dir');
     return true;
   } catch {
