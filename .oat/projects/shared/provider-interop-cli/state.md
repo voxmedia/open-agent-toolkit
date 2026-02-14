@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: e67e38b
+oat_current_task: p05-t01
+oat_last_commit: c1c385e
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. p04 re-review follow-up fix (`p04-t25`) is complete; awaiting p04 re-review before starting p05.
+Implementation - In Progress. p04 re-review passed; Phase 5 has started with `p05-t01`.
 
 ## Artifacts
 
@@ -53,8 +53,8 @@ Implementation - In Progress. p04 re-review follow-up fix (`p04-t25`) is complet
 - ✓ Phase 4 complete (`p04-t01` through `p04-t08`)
 - ✓ p04 review received (`reviews/p04-code-review.md`)
 - ✓ p04 review-fix tasks complete (`p04-t09`–`p04-t24`)
-- ✓ p04 re-review follow-up fix complete (`p04-t25`)
-- ⧗ awaiting p04 re-review
+- ✓ p04 re-review passed (`reviews/p04-re-review-2026-02-14.md`)
+- ⧗ Phase 5 in progress (`p05-t01`)
 
 ## Plan Summary
 
@@ -74,4 +74,4 @@ None
 
 ## Next Milestone
 
-Run `/oat:request-review code p04` and process via `/oat:receive-review` before starting Phase 5.
+Continue `/oat:implement` from `p05-t01` (git hook module extraction + tests).

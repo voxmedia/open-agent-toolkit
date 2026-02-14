@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -20,7 +20,7 @@ oat_generated: false
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
 | Phase 4 | complete | 25 | 25/25 |
-| Phase 5 | pending | 6 | 0/6 |
+| Phase 5 | in_progress | 6 | 0/6 |
 
 **Total:** 76/82 tasks completed
 
@@ -1551,16 +1551,16 @@ oat_generated: false
 - Medium: 0
 - Minor: 2
 
-**Review status:** follow-up fixes completed; awaiting re-review
+**Review status:** passed
 
-**New tasks added:** `p04-t25`
+**New tasks added:** `p04-t25` (completed)
 
 **Deferred Findings (Minor):**
 - `n2` Hook drift warning remains intentionally generic (exit-code check + high-level message); no spec violation and no action required.
 
-**Review cycle:** 2 of 3
+**Review cycle:** 3 of 3
 
-**Next:** Run `/oat:request-review code p04` and process results via `/oat:receive-review`.
+**Next:** Proceed to Phase 5 with `p05-t01`.
 
 ---
 
