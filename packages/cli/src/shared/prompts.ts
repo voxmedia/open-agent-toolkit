@@ -1,4 +1,4 @@
-import { confirm, input, select } from '@inquirer/prompts';
+import { checkbox, confirm, input, select } from '@inquirer/prompts';
 import { CliError } from '../errors';
 
 export interface PromptContext {
@@ -9,6 +9,13 @@ export interface SelectChoice<T extends string = string> {
   label: string;
   value: T;
   description?: string;
+}
+
+export interface MultiSelectChoice<T extends string = string> {
+  label: string;
+  value: T;
+  description?: string;
+  checked?: boolean;
 }
 
 function isAbortError(error: unknown): boolean {
@@ -78,6 +85,35 @@ export async function selectWithAbort<T extends string>(
       })),
     });
     return selected as T;
+  } catch (error) {
+    if (isAbortError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export async function selectManyWithAbort<T extends string>(
+  message: string,
+  choices: MultiSelectChoice<T>[],
+  ctx: PromptContext,
+): Promise<T[] | null> {
+  if (!ctx.interactive) {
+    throw new CliError('Selection prompt requires interactive mode.', 1);
+  }
+
+  try {
+    const selected = await checkbox({
+      message,
+      choices: choices.map((choice) => ({
+        name: choice.label,
+        value: choice.value,
+        description: choice.description,
+        checked: choice.checked,
+      })),
+      required: false,
+    });
+    return selected as T[];
   } catch (error) {
     if (isAbortError(error)) {
       return null;

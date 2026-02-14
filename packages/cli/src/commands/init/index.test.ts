@@ -23,7 +23,7 @@ interface HarnessOptions {
   scopeRootByScope?: Partial<Record<'project' | 'user', string>>;
   strays?: InitStrayCandidate[];
   confirmResponses?: boolean[];
-  selectResponses?: Array<'adopt' | 'skip' | 'skip_all' | null>;
+  selectResponses?: Array<string[] | null>;
   hookInstalled?: boolean;
   useDefaultAdopt?: boolean;
 }
@@ -69,7 +69,7 @@ function createHarness(options: HarnessOptions = {}): {
   ensureCanonicalDirs: ReturnType<typeof vi.fn>;
   saveManifest: ReturnType<typeof vi.fn>;
   confirmAction: ReturnType<typeof vi.fn>;
-  selectWithAbort: ReturnType<typeof vi.fn>;
+  selectManyWithAbort: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
   installHook: ReturnType<typeof vi.fn>;
   uninstallHook: ReturnType<typeof vi.fn>;
@@ -83,7 +83,7 @@ function createHarness(options: HarnessOptions = {}): {
   const confirmResponses = [...(options.confirmResponses ?? [])];
   const selectResponses = [...(options.selectResponses ?? [])];
   const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
-  const selectWithAbort = vi.fn(async () => selectResponses.shift() ?? 'skip');
+  const selectManyWithAbort = vi.fn(async () => selectResponses.shift() ?? []);
   const resolveScopeRoot = vi.fn(
     async (scope: 'project' | 'user') => scopeRoots[scope],
   );
@@ -114,7 +114,7 @@ function createHarness(options: HarnessOptions = {}): {
     scanCanonical: vi.fn(async () => createCanonicalEntries()),
     collectStrays: vi.fn(async () => options.strays ?? []),
     confirmAction,
-    selectWithAbort,
+    selectManyWithAbort,
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
     installHook,
     uninstallHook,
@@ -133,7 +133,7 @@ function createHarness(options: HarnessOptions = {}): {
     ensureCanonicalDirs,
     saveManifest,
     confirmAction,
-    selectWithAbort,
+    selectManyWithAbort,
     adoptStray,
     installHook,
     uninstallHook,
@@ -195,22 +195,24 @@ describe('createInitCommand', () => {
   });
 
   it('detects strays and prompts for adoption in interactive mode', async () => {
-    const { command, selectWithAbort, confirmAction } = createHarness({
+    const { command, selectManyWithAbort, confirmAction } = createHarness({
       interactive: true,
       strays: [createStray()],
       hookInstalled: true,
-      selectResponses: ['skip'],
+      selectResponses: [[]],
     });
 
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
 
     expect(confirmAction).not.toHaveBeenCalled();
-    expect(selectWithAbort).toHaveBeenCalledTimes(1);
-    expect(selectWithAbort.mock.calls[0]?.[0]).toContain('Handle stray');
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
+    expect(selectManyWithAbort.mock.calls[0]?.[0]).toContain(
+      'Select stray entries to adopt',
+    );
   });
 
-  it('supports skip-all remaining strays in interactive adoption', async () => {
-    const { command, selectWithAbort, adoptStray } = createHarness({
+  it('supports skip-all by leaving checklist empty', async () => {
+    const { command, selectManyWithAbort, adoptStray } = createHarness({
       interactive: true,
       strays: [
         createStray('.claude/skills/one'),
@@ -218,17 +220,17 @@ describe('createInitCommand', () => {
         createStray('.claude/skills/three'),
       ],
       hookInstalled: true,
-      selectResponses: ['skip_all'],
+      selectResponses: [[]],
     });
 
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
 
-    expect(selectWithAbort).toHaveBeenCalledTimes(1);
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
     expect(adoptStray).not.toHaveBeenCalled();
   });
 
   it('skips adoption in non-interactive mode with guidance text', async () => {
-    const { command, capture, selectWithAbort } = createHarness({
+    const { command, capture, selectManyWithAbort } = createHarness({
       interactive: false,
       strays: [createStray()],
       hookInstalled: true,
@@ -236,7 +238,7 @@ describe('createInitCommand', () => {
 
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
 
-    expect(selectWithAbort).not.toHaveBeenCalled();
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
     expect(capture.warn).toContain(ADOPT_REMEDIATION);
   });
 
@@ -282,7 +284,7 @@ describe('createInitCommand', () => {
       scopeRootByScope: { project: root },
       strays: [createStray('.claude/skills/stray-skill')],
       hookInstalled: true,
-      selectResponses: ['adopt'],
+      selectResponses: [['0']],
     });
 
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
@@ -321,6 +323,23 @@ describe('createInitCommand', () => {
       'user',
       expect.objectContaining({ scope: 'user' }),
     );
+  });
+
+  it('shows [user] and ~/.claude path for user-scope strays', async () => {
+    const { command, selectManyWithAbort } = createHarness({
+      interactive: true,
+      strays: [createStray('.claude/skills/user-stray')],
+      hookInstalled: true,
+      selectResponses: [[]],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'user'] });
+
+    const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
+      label: string;
+      value: string;
+    }>;
+    expect(choices[0]?.label).toContain('[user] ~/.claude/skills/user-stray');
   });
 
   it('prompts for git hook consent in interactive mode', async () => {

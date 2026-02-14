@@ -15,7 +15,7 @@ interface TestHarnessOptions {
   strayReports?: DriftReport[];
   canonicalEntries?: CanonicalEntry[];
   interactive?: boolean;
-  confirmResponses?: boolean[];
+  selectManyResponses?: Array<string[] | null>;
 }
 
 const REMEDIATION_TEXT = 'Run "oat init" to adopt stray entries.';
@@ -96,7 +96,7 @@ function formatReports(reports: DriftReport[]): string {
 function createHarness(options: TestHarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
-  confirmAction: ReturnType<typeof vi.fn>;
+  selectManyWithAbort: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
   saveManifest: ReturnType<typeof vi.fn>;
 } {
@@ -124,8 +124,10 @@ function createHarness(options: TestHarnessOptions = {}): {
   const strayReports = options.strayReports ?? [];
   const canonicalEntries = options.canonicalEntries ?? [];
   const interactive = options.interactive ?? true;
-  const confirmResponses = [...(options.confirmResponses ?? [])];
-  const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
+  const selectManyResponses = [...(options.selectManyResponses ?? [])];
+  const selectManyWithAbort = vi.fn(
+    async () => selectManyResponses.shift() ?? [],
+  );
   const adoptStray = vi.fn(async (_scopeRoot, _stray, manifest: Manifest) => {
     return manifest;
   });
@@ -156,12 +158,12 @@ function createHarness(options: TestHarnessOptions = {}): {
       return report ?? driftReports[0]!;
     }),
     detectStrays: vi.fn(async () => strayReports),
-    confirmAction,
+    selectManyWithAbort,
     adoptStray,
     formatStatusTable: formatReports,
   });
 
-  return { capture, command, confirmAction, adoptStray, saveManifest };
+  return { capture, command, selectManyWithAbort, adoptStray, saveManifest };
 }
 
 async function runStatusCommand(
@@ -278,36 +280,40 @@ describe('createStatusCommand', () => {
     expect(capture.warn).toContain(REMEDIATION_TEXT);
   });
 
-  it('prompts per stray and adopts only confirmed entries in interactive mode', async () => {
-    const { command, confirmAction, adoptStray, saveManifest } = createHarness({
-      interactive: true,
-      driftReports: [],
-      strayReports: [
-        {
-          canonical: null,
-          provider: 'claude',
-          providerPath: '.claude/skills/stray-one',
-          state: { status: 'stray' },
-        },
-        {
-          canonical: null,
-          provider: 'claude',
-          providerPath: '.claude/skills/stray-two',
-          state: { status: 'stray' },
-        },
-      ],
-      confirmResponses: [true, false],
-    });
+  it('prompts with one checklist and adopts only selected entries', async () => {
+    const { command, selectManyWithAbort, adoptStray, saveManifest } =
+      createHarness({
+        interactive: true,
+        driftReports: [],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/stray-one',
+            state: { status: 'stray' },
+          },
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/stray-two',
+            state: { status: 'stray' },
+          },
+        ],
+        selectManyResponses: [['0']],
+      });
 
     await runStatusCommand(command, ['--scope', 'project']);
 
-    expect(confirmAction).toHaveBeenCalledTimes(2);
-    expect(confirmAction.mock.calls[0]?.[0]).toContain(
-      '.claude/skills/stray-one',
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
+    expect(selectManyWithAbort.mock.calls[0]?.[0]).toContain(
+      'Select stray entries to adopt [project]',
     );
-    expect(confirmAction.mock.calls[1]?.[0]).toContain(
-      '.claude/skills/stray-two',
-    );
+    const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
+      label: string;
+      value: string;
+    }>;
+    expect(choices[0]?.label).toContain('[project] .claude/skills/stray-one');
+    expect(choices[1]?.label).toContain('[project] .claude/skills/stray-two');
     expect(adoptStray).toHaveBeenCalledTimes(1);
     expect(saveManifest).toHaveBeenCalledTimes(1);
   });
@@ -341,7 +347,7 @@ describe('createStatusCommand', () => {
   });
 
   it('does not prompt in non-interactive mode', async () => {
-    const { command, confirmAction } = createHarness({
+    const { command, selectManyWithAbort } = createHarness({
       interactive: false,
       driftReports: [],
       strayReports: [
@@ -356,7 +362,31 @@ describe('createStatusCommand', () => {
 
     await runStatusCommand(command, ['--scope', 'project']);
 
-    expect(confirmAction).not.toHaveBeenCalled();
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+  });
+
+  it('renders user-scope stray labels as [user] ~/.<provider path>', async () => {
+    const { command, selectManyWithAbort } = createHarness({
+      interactive: true,
+      driftReports: [],
+      strayReports: [
+        {
+          canonical: null,
+          provider: 'claude',
+          providerPath: '.claude/skills/user-stray',
+          state: { status: 'stray' },
+        },
+      ],
+      selectManyResponses: [[]],
+    });
+
+    await runStatusCommand(command, ['--scope', 'user']);
+
+    const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
+      label: string;
+      value: string;
+    }>;
+    expect(choices[0]?.label).toContain('[user] ~/.claude/skills/user-stray');
   });
 
   it('exits 0 when all in sync', async () => {

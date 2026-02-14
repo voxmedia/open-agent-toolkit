@@ -31,9 +31,9 @@ import {
 } from '../../providers/shared';
 import {
   confirmAction,
+  type MultiSelectChoice,
   type PromptContext,
-  type SelectChoice,
-  selectWithAbort,
+  selectManyWithAbort,
 } from '../../shared/prompts';
 import type { ConcreteScope, Scope } from '../../shared/types';
 import { readGlobalOptions, resolveConcreteScopes } from '../shared';
@@ -78,11 +78,11 @@ interface InitDependencies {
     canonicalEntries: CanonicalEntry[],
   ) => Promise<InitStrayCandidate[]>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
-  selectWithAbort: <T extends string>(
+  selectManyWithAbort: <T extends string>(
     message: string,
-    choices: SelectChoice<T>[],
+    choices: MultiSelectChoice<T>[],
     ctx: PromptContext,
-  ) => Promise<T | null>;
+  ) => Promise<T[] | null>;
   adoptStray: (
     scopeRoot: string,
     stray: InitStrayCandidate,
@@ -107,8 +107,6 @@ interface InitJsonPayload {
   hookInstalled: boolean | null;
   scopes: InitScopeSummary[];
 }
-
-type AdoptionSelection = 'adopt' | 'skip' | 'skip_all';
 
 async function ensureCanonicalDirectories(
   scopeRoot: string,
@@ -179,12 +177,28 @@ function createDependencies(): InitDependencies {
     scanCanonical,
     collectStrays: collectStraysDefault,
     confirmAction,
-    selectWithAbort,
+    selectManyWithAbort,
     adoptStray: adoptStrayDefault,
     isHookInstalled,
     installHook,
     uninstallHook,
   };
+}
+
+function formatPathForScope(
+  scope: ConcreteScope,
+  providerPath: string,
+): string {
+  if (scope === 'project') {
+    return providerPath;
+  }
+  if (providerPath.startsWith('./')) {
+    return `~/${providerPath.slice(2)}`;
+  }
+  if (providerPath.startsWith('.')) {
+    return `~/${providerPath}`;
+  }
+  return `~/${providerPath}`;
 }
 
 async function maybeHandleHook(
@@ -268,28 +282,22 @@ async function runInitCommand(
       context.logger.warn(ADOPT_REMEDIATION);
     }
 
-    if (context.interactive) {
-      let skipRemaining = false;
-      for (const stray of strays) {
-        if (skipRemaining) {
-          break;
-        }
+    if (context.interactive && strays.length > 0) {
+      const choices = strays.map((stray, index) => ({
+        label: `[${scope}] ${formatPathForScope(scope, stray.report.providerPath)} (${stray.provider})`,
+        value: String(index),
+      }));
+      const selectedValues = await dependencies.selectManyWithAbort(
+        `Select stray entries to adopt [${scope}]`,
+        choices,
+        { interactive: context.interactive },
+      );
 
-        const selection = await dependencies.selectWithAbort<AdoptionSelection>(
-          `Handle stray ${stray.report.providerPath} from ${stray.provider}`,
-          [
-            { label: 'Adopt', value: 'adopt' },
-            { label: 'Skip', value: 'skip' },
-            { label: 'Skip all remaining', value: 'skip_all' },
-          ],
-          { interactive: context.interactive },
-        );
-
-        if (selection === 'skip_all') {
-          skipRemaining = true;
-          continue;
-        }
-        if (selection !== 'adopt') {
+      const selectedIndices = new Set(
+        (selectedValues ?? []).map((value) => Number.parseInt(value, 10)),
+      );
+      for (const [index, stray] of strays.entries()) {
+        if (!selectedIndices.has(index)) {
           continue;
         }
 

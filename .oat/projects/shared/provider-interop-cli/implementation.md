@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 4 | complete | 25 | 25/25 |
 | Phase 5 | complete | 6 | 6/6 |
 | Phase 6 | complete | 4 | 4/4 |
-| Phase 7 | complete | 3 | 3/3 |
+| Phase 7 | complete | 4 | 4/4 |
 
-**Total:** 89/89 tasks completed
+**Total:** 90/90 tasks completed
 
 ---
 
@@ -2567,6 +2567,7 @@ oat_generated: false
 | 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli test src/commands/sync/`; `pnpm --filter=@oat/cli test src/commands/init/`; `pnpm --filter=@oat/cli test src/commands/providers/list`; `pnpm --filter=@oat/cli test src/commands/providers/inspect`; `pnpm --filter=@oat/cli test src/commands/doctor/`; `pnpm --filter=@oat/cli test src/commands/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 8 | 0 | n/a (task-level verification) |
 | 5 | `pnpm --filter=@oat/cli test src/engine/hook src/commands/init`; `pnpm --filter=@oat/cli test src/engine/edge-cases`; `pnpm --filter=@oat/cli test src/providers/shared/adapter-contract`; `pnpm --filter=@oat/cli test src/commands/help-snapshots -- --update`; `pnpm --filter=@oat/cli test src/e2e/`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build`; `node packages/cli/dist/index.js --help`; `node packages/cli/dist/index.js doctor` | 6 | 0 | n/a (phase verification complete) |
 | 6 | `pnpm --filter=@oat/cli test src/engine/`; `pnpm --filter=@oat/cli test src/shared/ src/drift/ src/ui/output.test.ts`; `pnpm --filter=@oat/cli test src/engine/hook.test.ts`; `pnpm --filter=@oat/cli test src/engine/edge-cases.test.ts src/e2e/workflow.test.ts src/providers/shared/adapter-contract.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build` | 4 | 0 | n/a (deferred Medium/Minor closure) |
+| 7 | `pnpm --filter=@oat/cli test src/shared/prompts.test.ts`; `pnpm --filter=@oat/cli test src/commands/init/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/status/index.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 4 | 0 | n/a (post-completion UX follow-up) |
 
 ## Final Summary (for PR/docs)
 
@@ -2597,6 +2598,30 @@ oat_generated: false
 
 **Design deltas (if any):**
 - None.
+
+## Post-Completion Follow-Up (2026-02-14)
+
+### Task p07-t04: (follow-up) Batch stray adoption prompts and clarify scope labels
+
+**Status:** completed
+**Commit:** pending
+
+**Outcome (required when completed):**
+- Replaced per-stray confirm loops with a single multi-select checklist for interactive stray adoption in both `oat init` and `oat status`.
+- Added explicit scope context to stray adoption labels (`[project]` / `[user]`).
+- Rendered user-scope provider paths as home-relative (`~/.claude/...`) in interactive adoption lists for clarity.
+
+**Files changed:**
+- `packages/cli/src/shared/prompts.ts` - added `selectManyWithAbort` using inquirer checkbox prompts.
+- `packages/cli/src/commands/init/index.ts` - switched to batched stray adoption + scope-aware labels.
+- `packages/cli/src/commands/status/index.ts` - switched to batched stray adoption + scope-aware labels.
+- `packages/cli/src/shared/prompts.test.ts` - added multi-select prompt coverage.
+- `packages/cli/src/commands/init/index.test.ts` - updated adoption flow tests and added user-scope label assertion.
+- `packages/cli/src/commands/status/index.test.ts` - updated adoption flow tests and added user-scope label assertion.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/shared/prompts.test.ts`; `pnpm --filter=@oat/cli test src/commands/init/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/status/index.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`
+- Result: pass
 
 ## References
 

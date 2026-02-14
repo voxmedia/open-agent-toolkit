@@ -23,7 +23,11 @@ import {
   type PathMapping,
   type ProviderAdapter,
 } from '../../providers/shared';
-import { confirmAction, type PromptContext } from '../../shared/prompts';
+import {
+  type MultiSelectChoice,
+  type PromptContext,
+  selectManyWithAbort,
+} from '../../shared/prompts';
 import {
   type ConcreteScope,
   type ContentType,
@@ -35,7 +39,6 @@ import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 import { adoptStrayToCanonical } from '../shared/adopt-stray';
 
 const DEFAULT_REMEDIATION = 'Run "oat init" to adopt stray entries.';
-const ADOPT_PROMPT_PREFIX = 'Adopt stray';
 
 interface StatusSummary {
   total: number;
@@ -80,7 +83,11 @@ interface StatusDependencies {
     manifest: Manifest,
     canonicalEntries: CanonicalEntry[],
   ) => Promise<DriftReport[]>;
-  confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
+  selectManyWithAbort: <T extends string>(
+    message: string,
+    choices: MultiSelectChoice<T>[],
+    ctx: PromptContext,
+  ) => Promise<T[] | null>;
   adoptStray: (
     scopeRoot: string,
     stray: StatusStrayCandidate,
@@ -96,6 +103,7 @@ interface StatusStrayCandidate {
 }
 
 interface ScopeReportCollection {
+  scope: ConcreteScope;
   scopeRoot: string;
   manifestPath: string;
   manifest: Manifest;
@@ -122,7 +130,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   getSyncMappings,
   detectDrift,
   detectStrays,
-  confirmAction,
+  selectManyWithAbort,
   adoptStray: adoptStrayDefault,
   formatStatusTable,
 };
@@ -195,6 +203,22 @@ async function adoptStrayDefault(
   manifest: Manifest,
 ): Promise<Manifest> {
   return adoptStrayToCanonical(scopeRoot, stray, manifest);
+}
+
+function formatPathForScope(
+  scope: ConcreteScope,
+  providerPath: string,
+): string {
+  if (scope === 'project') {
+    return providerPath;
+  }
+  if (providerPath.startsWith('./')) {
+    return `~/${providerPath.slice(2)}`;
+  }
+  if (providerPath.startsWith('.')) {
+    return `~/${providerPath}`;
+  }
+  return `~/${providerPath}`;
 }
 
 async function collectScopeReports(
@@ -299,6 +323,7 @@ async function collectScopeReports(
   }
 
   return {
+    scope,
     scopeRoot,
     manifestPath,
     manifest,
@@ -344,14 +369,32 @@ async function runStatusCommand(
   if (summary.stray > 0) {
     if (context.interactive) {
       for (const scopeCollection of scopeCollections) {
+        if (scopeCollection.strayCandidates.length === 0) {
+          continue;
+        }
+
         let manifestChanged = false;
 
-        for (const strayCandidate of scopeCollection.strayCandidates) {
-          const shouldAdopt = await dependencies.confirmAction(
-            `${ADOPT_PROMPT_PREFIX} ${strayCandidate.report.providerPath} from ${strayCandidate.provider}?`,
-            { interactive: context.interactive },
-          );
-          if (!shouldAdopt) {
+        const selectedValues = await dependencies.selectManyWithAbort(
+          `Select stray entries to adopt [${scopeCollection.scope}]`,
+          scopeCollection.strayCandidates.map((strayCandidate, index) => ({
+            label: `[${scopeCollection.scope}] ${formatPathForScope(
+              scopeCollection.scope,
+              strayCandidate.report.providerPath,
+            )} (${strayCandidate.provider})`,
+            value: String(index),
+          })),
+          { interactive: context.interactive },
+        );
+        const selectedIndices = new Set(
+          (selectedValues ?? []).map((value) => Number.parseInt(value, 10)),
+        );
+
+        for (const [
+          index,
+          strayCandidate,
+        ] of scopeCollection.strayCandidates.entries()) {
+          if (!selectedIndices.has(index)) {
             continue;
           }
 

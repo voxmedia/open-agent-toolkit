@@ -1,9 +1,15 @@
-import { confirm, input, select } from '@inquirer/prompts';
+import { checkbox, confirm, input, select } from '@inquirer/prompts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CliError } from '../errors';
-import { confirmAction, inputRequired, selectWithAbort } from './prompts';
+import {
+  confirmAction,
+  inputRequired,
+  selectManyWithAbort,
+  selectWithAbort,
+} from './prompts';
 
 vi.mock('@inquirer/prompts', () => ({
+  checkbox: vi.fn(),
   confirm: vi.fn(),
   input: vi.fn(),
   select: vi.fn(),
@@ -101,6 +107,43 @@ describe('shared prompts', () => {
   it('selectWithAbort throws CliError in non-interactive mode', async () => {
     await expect(
       selectWithAbort('Choose', [{ label: 'Apply', value: 'apply' }], {
+        interactive: false,
+      }),
+    ).rejects.toBeInstanceOf(CliError);
+  });
+
+  it('selectManyWithAbort returns selected options', async () => {
+    vi.mocked(checkbox).mockResolvedValueOnce(['one', 'two']);
+
+    const result = await selectManyWithAbort(
+      'Choose many',
+      [
+        { label: 'One', value: 'one' },
+        { label: 'Two', value: 'two' },
+      ],
+      { interactive: true },
+    );
+
+    expect(result).toEqual(['one', 'two']);
+  });
+
+  it('selectManyWithAbort returns null on abort', async () => {
+    const abortError = new Error('User force closed the prompt');
+    abortError.name = 'ExitPromptError';
+    vi.mocked(checkbox).mockRejectedValueOnce(abortError);
+
+    const result = await selectManyWithAbort(
+      'Choose many',
+      [{ label: 'One', value: 'one' }],
+      { interactive: true },
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it('selectManyWithAbort throws CliError in non-interactive mode', async () => {
+    await expect(
+      selectManyWithAbort('Choose many', [{ label: 'One', value: 'one' }], {
         interactive: false,
       }),
     ).rejects.toBeInstanceOf(CliError);
