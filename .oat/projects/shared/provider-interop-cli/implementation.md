@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-02-13
-oat_current_task_id: null
+oat_last_updated: 2026-02-14
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
 # Implementation: provider-interop-cli
 
 **Started:** 2026-02-13
-**Last Updated:** 2026-02-13
+**Last Updated:** 2026-02-14
 
 ## Progress Overview
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | pending | 8 | 0/8 |
+| Phase 4 | in_progress | 8 | 1/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 51/65 tasks completed
+**Total:** 52/65 tasks completed
 
 ---
 
@@ -1330,6 +1330,7 @@ oat_generated: false
 - [x] p03-t07: (review) Replace provider-name path heuristics in stray reports - 97ccc1e
 - [x] p03-t08: (review) Make stray content-type filtering explicit - f16f72b
 - [x] p03-t09: (review) Standardize stray report path representation - a803cdc
+- [x] p04-t01: Implement oat status command - de3e1d1
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1376,6 +1377,7 @@ oat_generated: false
 - Applied third p03 review fix: stray detector now receives provider identity explicitly from caller context.
 - Applied fourth p03 review fix: canonical filtering no longer falls back to name-only matching for unknown content types.
 - Applied fifth p03 review fix: stray drift reports now use scope-relative `providerPath` semantics.
+- Started Phase 4 by implementing `oat status` with scope-aware drift/stray reporting, non-interactive remediation behavior, and command-level tests.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1449,7 +1451,63 @@ oat_generated: false
 - `m4` Remove optional explicit `Dirent[]` annotation if inference remains stable
 - `m5` Add operation-level color semantics in `formatSyncPlan`
 
-**Next:** Request p03 re-review via `/oat:request-review code p03`.
+**Next:** Re-review requested and received.
+
+---
+
+### Re-Review Received: p03
+
+**Date:** 2026-02-13  
+**Review artifact:** `reviews/p03-re-review-2026-02-13.md`
+
+**Findings:**
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**Review status:** passed (no new fix tasks added)
+
+**Deferred Findings (Minor):**
+- `m-new-1` Duplicate `stripAnsi` helper in `output.ts` and `output.test.ts`
+- `m-new-2` No isolated unit tests for `inferScopeRoot` (covered indirectly by integration tests)
+
+**Review cycle:** 2 of 3
+
+**Next:** Continue implementation with `p04-t02` via `/oat:implement`.
+
+---
+
+## Phase 4: Commands — init, status, sync, providers, doctor
+
+**Status:** in_progress
+**Started:** 2026-02-14
+
+### Task p04-t01: Implement `oat status` command
+
+**Status:** completed
+**Commit:** de3e1d1
+
+**Outcome (required when completed):**
+- Implemented `createStatusCommand()` with scope-aware loading of manifest entries, provider mappings, drift reports, and stray reports.
+- Implemented non-interactive contract behavior for strays: no prompt and remediation guidance for human mode, plus `remediation` in JSON output.
+- Added command tests for in-sync, drifted, missing, stray remediation, JSON output, non-interactive prompt suppression, and exit-code behavior.
+
+**Files changed:**
+- `packages/cli/src/commands/status/index.ts` - implemented the status command factory and action flow.
+- `packages/cli/src/commands/status/index.test.ts` - added command behavior tests with dependency-injected command wiring.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/status/`
+- Result: pass (8 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+- Run: `pnpm --filter=@oat/cli lint`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept registration wiring out of this task scope; command registration remains in `p04-t07`.
+- Used dependency injection in the command module to keep command behavior testable without filesystem-heavy integration fixtures.
 
 ---
 
@@ -1466,7 +1524,7 @@ oat_generated: false
 | 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (twenty-two times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/`; `pnpm --filter=@oat/cli test src/manifest/hash`; `pnpm --filter=@oat/cli test src/engine/scanner`; `pnpm --filter=@oat/cli test src/config/`; `pnpm --filter=@oat/cli test src/fs/`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test 2>&1 | rg "dist/" -n || true`; `pnpm --filter=@oat/cli test src/fs/io.test.ts`; `pnpm --filter=@oat/cli test src/app/command-context.test.ts`; `pnpm --filter=@oat/cli test src/shared/types.test.ts`; `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts`; `pnpm --filter=@oat/cli test src/fs/paths.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check` | 26 | 0 | n/a (bootstrap) |
 | 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 11 | 0 | n/a (phase boundary + review fixes) |
 | 3 | `pnpm --filter=@oat/cli test src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/ui/output`; `pnpm --filter=@oat/cli test src/shared/prompts`; `pnpm --filter=@oat/cli test src/ui/output && pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/drift/strays && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift/strays src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/drift src/ui/output && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint` | 9 | 0 | n/a (phase boundary + review fixes) |
-| 4 | - | - | - | - |
+| 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 1 | 0 | n/a (task-level verification) |
 | 5 | - | - | - | - |
 
 ## Final Summary (for PR/docs)
