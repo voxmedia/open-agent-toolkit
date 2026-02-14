@@ -380,6 +380,46 @@ describe('createInitCommand', () => {
     expect(hookStat.mode & 0o111).not.toBe(0);
   });
 
+  it('installs hook snippet with non-blocking drift remediation warning', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-init-hook-warning-'));
+    tempDirs.push(root);
+
+    const capture = createLoggerCapture();
+    const command = createInitCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: (globalOptions.scope ?? 'project') as Scope,
+        apply: false,
+        verbose: false,
+        json: false,
+        cwd: root,
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveScopeRoot: vi.fn(async () => root),
+      ensureCanonicalDirs: vi.fn(async () => undefined),
+      loadManifest: vi.fn(async () => createEmptyManifest()),
+      saveManifest: vi.fn(async () => undefined),
+      scanCanonical: vi.fn(async () => []),
+      collectStrays: vi.fn(async () => []),
+      confirmAction: vi.fn(async () => false),
+      adoptStray: vi.fn(async (_scopeRoot, _stray, manifest) => manifest),
+    });
+
+    await runInitCommand(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: ['--hook'],
+    });
+
+    const hookPath = join(root, '.git', 'hooks', 'pre-commit');
+    const hookContents = await readFile(hookPath, 'utf8');
+
+    expect(hookContents).toContain('if ! oat status >/dev/null 2>&1; then');
+    expect(hookContents).toContain(
+      "oat: provider views are out of sync - run 'oat sync --apply' to fix",
+    );
+  });
+
   it('skips hook in non-interactive mode with guidance', async () => {
     const { command, capture, installHook } = createHarness({
       interactive: false,

@@ -106,7 +106,9 @@ function createHookSnippet(options: { includeShebang?: boolean } = {}): string {
   const lines = [
     HOOK_MARKER_START,
     'if command -v oat >/dev/null 2>&1; then',
-    '  oat status >/dev/null 2>&1 || true',
+    '  if ! oat status >/dev/null 2>&1; then',
+    `    echo "oat: provider views are out of sync - run 'oat sync --apply' to fix" >&2`,
+    '  fi',
     'fi',
     HOOK_MARKER_END,
   ];
