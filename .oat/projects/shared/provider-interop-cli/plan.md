@@ -12,7 +12,7 @@ oat_template: false
 
 # Implementation Plan: provider-interop-cli
 
-> **Optional:** If using Claude Code with superpowers plugin, you can use `superpowers:executing-plans` to execute this plan. Otherwise, execute tasks step-by-step.
+> Execute this plan using the `oat-implement` skill (`/oat:implement` where slash prompts are supported), task-by-task with phase checkpoints and review gates.
 
 **Goal:** Build the `oat` CLI that manages provider interoperability — establishing `.agents/` as the canonical source of truth and syncing skills/agents to Claude Code, Cursor, and Codex directories via symlinks (with copy fallback).
 
@@ -2948,7 +2948,7 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 | p01 | code | passed | 2026-02-13 | reviews/p01-re-review-2026-02-13.md |
 | p02 | code | passed | 2026-02-13 | reviews/p02-re-review-2026-02-13.md |
 | p03 | code | passed | 2026-02-13 | reviews/p03-re-review-2026-02-13.md |
-| p04 | code | fixes_completed | 2026-02-14 | reviews/p04-code-review.md |
+| p04 | code | passed | 2026-02-14 | reviews/p04-re-review-2026-02-14.md |
 | p05 | code | pending | - | - |
 | final | code | pending | - | - |
 | spec | artifact | pending | - | - |

@@ -24,6 +24,7 @@ As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline h
 | Phase 8: Provider interop CLI + sync manifest | Next | `oat init/status/sync/doctor`, adapters, manifest, safe sync |
 | Phase 9: Multi-project switching + branch awareness | Later | Full `.oat/projects/(shared|local)/...` + hooks |
 | Phase 10: Memory system + provider enhancements | Later | Longer-term durability features |
+| Cross-cutting: skill invocation normalization | High priority | Use skill-first wording across OAT docs/skills; treat `/oat:*` as host-specific alias |
 
 ## Current State (Implemented)
 
@@ -68,6 +69,11 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 4. Directory model coordination
    - Dogfood uses `{PROJECTS_ROOT}` + `.oat/active-project` (path format).
    - Name-only `.oat/active-project` is intentionally deferred until CLI project commands own the contract (ADR-004).
+
+5. Invocation semantics are inconsistent across host clients
+   - Current docs frequently assume `/oat:*` slash command availability.
+   - This is not universal (for example, Codex depends on prompt wrappers/host wiring).
+   - We need a single contract: skill names are canonical; slash commands are optional aliases when supported.
 
 ## Roadmap Phases
 
@@ -121,6 +127,7 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 - Done: `.oat/projects-root` + `.oat/active-project` pointer + skills resolve via it
 - Done: generated Repo State Dashboard (`.oat/state.md`) via `.oat/scripts/generate-oat-state.sh`
 - Remaining: tighten the "first-class" contract (who regenerates it, what fields it includes, and how it stays in sync with skills)
+- Remaining (high priority): normalize OAT invocation wording to skill-first across templates/skills/internal docs (`oat-*` canonical; `/oat:*` alias-only text)
 
 **When to do it:**
 - As soon as we have >1 project under `.oat/projects/shared/<name>/`, or
@@ -133,6 +140,10 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 - Update all workflow skills to resolve project via:
   1) `.oat/active-project` (preferred)
   2) fallback prompts (if missing)
+- Update OAT docs/templates/skills to use skill-first invocation guidance:
+  - Canonical: `oat-implement` (skill name)
+  - Alias: `/oat:implement` only "where slash prompts are supported"
+- Optional follow-on enhancement: add opt-in generation of thin `.codex/prompts/oat-*.md` wrappers during Codex skill sync
 
 **Exit criteria:**
 - All skills run against the intended project with no ambiguity and minimal prompting.

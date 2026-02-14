@@ -40,6 +40,27 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## Planned
 
+- [ ] **(P1) [skills] Standardize OAT invocation language to skill-first across templates/docs**
+  - Target milestone/phase: Dogfood v1.2 polish (before additional workflow expansion)
+  - Notes:
+    - Replace slash-only guidance (for example, `/oat:implement`) with skill-first wording (for example, `oat-implement` skill).
+    - Keep slash command text only as a host-specific alias: "where slash prompts are supported."
+    - Apply consistently across `.oat/templates/`, `.agent/skills/oat-*/`, and `.oat/internal-project-reference/`.
+    - Add a lightweight validation check so new docs do not regress to slash-only wording.
+  - Links:
+    - Source discussion: invocation compatibility for Codex vs slash-enabled hosts
+  - Created: 2026-02-14
+
+- [ ] **(P2) [tooling] Optional Codex prompt-wrapper generation for synced OAT skills**
+  - Target milestone/phase: Post-standardization enhancement
+  - Notes:
+    - Add opt-in generation of thin `.codex/prompts` wrappers for `oat-*` skills when users sync skills to Codex.
+    - Wrappers should be minimal aliases only (no duplicated workflow logic), so skill files remain the source of truth.
+    - Keep feature optional to avoid imposing Codex-specific files on repos that do not want them.
+  - Links:
+    - Related to invocation compatibility standardization item above
+  - Created: 2026-02-14
+
 - [ ] **(P?) [area] {Title}**
   - Target milestone/phase:
   - Notes:
