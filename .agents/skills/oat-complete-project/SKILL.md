@@ -19,7 +19,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    OAT ▸ COMPLETE PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Before multi-step work (updating state, optional cleanup, dashboard refresh), print 2–5 short step indicators.
+- Before multi-step work (updating state, optional archive/cleanup, dashboard refresh), print 2–5 short step indicators.
 - For any operation that may take noticeable time, print a start line and a completion line (duration optional).
 
 ## Process
@@ -105,7 +105,41 @@ else
 fi
 ```
 
-### Step 6: Offer to Clear Active Project
+### Step 6: Offer Archive for Shared Projects
+
+Detect whether the active project is under shared projects root:
+
+```bash
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".oat/projects/shared")}"
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+ARCHIVED_ROOT=".oat/projects/archived"
+IS_SHARED_PROJECT="false"
+
+case "$PROJECT_PATH" in
+  "${PROJECTS_ROOT}/"*) IS_SHARED_PROJECT="true" ;;
+esac
+```
+
+If `IS_SHARED_PROJECT` is `true`, ask user:
+
+"This is a shared project. Move it to `.oat/projects/archived/` now?"
+
+If user approves:
+
+```bash
+mkdir -p "$ARCHIVED_ROOT"
+ARCHIVE_PATH="${ARCHIVED_ROOT}/${PROJECT_NAME}"
+
+if [[ -e "$ARCHIVE_PATH" ]]; then
+  ARCHIVE_PATH="${ARCHIVED_ROOT}/${PROJECT_NAME}-$(date +%Y%m%d-%H%M%S)"
+fi
+
+mv "$PROJECT_PATH" "$ARCHIVE_PATH"
+PROJECT_PATH="$ARCHIVE_PATH"
+echo "Project archived to $ARCHIVE_PATH"
+```
+
+### Step 7: Offer to Clear Active Project
 
 Ask user: "Would you like to clear the active project pointer?"
 
@@ -115,12 +149,14 @@ rm -f .oat/active-project
 echo "Active project cleared."
 ```
 
-### Step 7: Regenerate Dashboard
+### Step 8: Regenerate Dashboard
 
 ```bash
 .oat/scripts/generate-oat-state.sh
 ```
 
-### Step 8: Confirm to User
+### Step 9: Confirm to User
 
-Show user: "Project **{PROJECT_NAME}** marked as complete."
+Show user:
+- "Project **{PROJECT_NAME}** marked as complete."
+- If archived: "Archived location: **{PROJECT_PATH}**"

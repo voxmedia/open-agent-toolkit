@@ -23,14 +23,8 @@ Usage notes:
 <available_skills>
 
 <skill>
-<name>create-pr-description</name>
-<description>Create a comprehensive PR description document based on git changes, planning documents, and project context. Use when ready to create or finalize a pull request description.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>create-skill</name>
-<description>Create a new skill for both Claude Code and Cursor following the Agent Skills Open Standard and Honeycomb patterns.</description>
+<name>codex</name>
+<description>Use when the user asks to run Codex CLI (codex exec, codex resume) or references OpenAI Codex for code analysis, refactoring, or automated editing</description>
 <location>project</location>
 </skill>
 
@@ -41,38 +35,50 @@ Usage notes:
 </skill>
 
 <skill>
+<name>create-pr-description</name>
+<description>Create a comprehensive PR description document based on git changes, planning documents, and project context. Use when ready to create or finalize a pull request description.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>create-skill</name>
+<description>Create a new skill in .agents/skills/ following the openskills standard. Use when adding reusable workflows or capabilities for AI coding agents.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>create-ticket</name>
 <description>Create a Jira ticket in the DWP project via Atlassian MCP integration.</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>docs-new</name>
-<description>Create new documentation in the Honeycomb Docs app from implementation files and context.</description>
+<name>oat-clear-active-project</name>
+<description>Clear the active project pointer</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>docs-refactor-to-docs-app</name>
-<description>Refactor README files and other markdown documentation into the Honeycomb Docs app.</description>
+<name>oat-complete-project</name>
+<description>Mark a project lifecycle as complete</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>docs-review</name>
-<description>Perform a deep analysis and review of existing documentation, identifying issues, inconsistencies, and improvement opportunities.</description>
+<name>oat-design</name>
+<description>Create detailed technical design from specification with architecture and implementation details</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>docs-update</name>
-<description>Update existing documentation in the Honeycomb Docs app based on implementation changes.</description>
+<name>oat-discovery</name>
+<description>Start discovery phase - gather requirements and understand the problem through structured dialogue</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>new-agent-project</name>
-<description>Initialize a new agent project with structured workflow for discovery, planning, and implementation. Use when starting a new feature, refactor, or multi-session development task.</description>
+<name>oat-implement</name>
+<description>Execute implementation plan task-by-task with state tracking and TDD discipline</description>
 <location>project</location>
 </skill>
 
@@ -83,113 +89,64 @@ Usage notes:
 </skill>
 
 <skill>
-<name>oat-discovery</name>
-<description>Start discovery phase - gather requirements and understand the problem through structured dialogue.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-spec</name>
-<description>Create formal specification from discovery insights with structured requirements and acceptance criteria.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-design</name>
-<description>Create detailed technical design from specification with architecture and implementation details.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-plan</name>
-<description>Create implementation plan from design with bite-sized TDD tasks.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-implement</name>
-<description>Execute implementation plan task-by-task with state tracking and TDD discipline.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-progress</name>
-<description>Check project progress and get routed to the appropriate next skill.</description>
-<location>project</location>
-</skill>
-
-<skill>
 <name>oat-new-project</name>
-<description>Create a new OAT project directory from templates under the configured projects root.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-request-review</name>
-<description>Use when ready to review completed work before merging - after implementing a task, phase, or full project; when quality gate needed before PR.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-receive-review</name>
-<description>Use after running oat-request-review - when a review artifact exists and findings need to be converted into actionable plan tasks for gap closure.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-pr-progress</name>
-<description>Create a progress PR description for a specific plan phase (pNN) using OAT artifacts and commit conventions; optionally open a PR.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-pr-project</name>
-<description>Create the final project PR description (into main) using OAT artifacts and final review status; optionally open a PR.</description>
+<description>Create a new OAT project directory under {PROJECTS_ROOT}, scaffold artifacts from templates, and set it as the active project.</description>
 <location>project</location>
 </skill>
 
 <skill>
 <name>oat-open-project</name>
-<description>Set the active OAT project with validation and dashboard refresh.</description>
+<description>Set the active project with validation</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-clear-active-project</name>
-<description>Clear the active OAT project pointer and refresh dashboard.</description>
+<name>oat-plan</name>
+<description>Create implementation plan from design with bite-sized TDD tasks</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-complete-project</name>
-<description>Mark the active project lifecycle as complete with optional review/PR checks.</description>
+<name>oat-pr-progress</name>
+<description>Create a progress PR description for a specific plan phase (pNN) using OAT artifacts and commit conventions; optionally open a PR</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>read-relevant-docs</name>
-<description>Discover and read relevant documentation from the Honeycomb Docs app based on the current conversation context.</description>
+<name>oat-pr-project</name>
+<description>Create the final project PR description (into main) using OAT artifacts and final review status; optionally open a PR</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>repo-documentation</name>
-<description>Repository documentation guidelines and patterns. Use when creating, updating, or migrating documentation in the Honeycomb repository.</description>
+<name>oat-progress</name>
+<description>Check project progress and get routed to the appropriate next skill</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>update-doc-refs</name>
-<description>Check and apply @docs reference comments to source files.</description>
+<name>oat-receive-review</name>
+<description>Use after running oat-request-review - when a review artifact exists and findings need to be converted into actionable plan tasks for gap closure</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-request-review</name>
+<description>Use when ready to review completed work before merging - after implementing a task, phase, or full project; when quality gate needed before PR</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-spec</name>
+<description>Create formal specification from discovery insights with structured requirements</description>
 <location>project</location>
 </skill>
 
 <skill>
 <name>update-internal-project-reference</name>
-<description>Use when OAT implementation changes and you need to update .oat/internal-project-reference docs to match (temporary while dogfooding).</description>
+<description>Use when OAT implementation changes and you need to update .oat/internal-project-reference docs to match (temporary while dogfooding)</description>
 <location>project</location>
 </skill>
-
 </available_skills>
 <!-- SKILLS_TABLE_END -->
 
@@ -205,9 +162,9 @@ Usage notes:
 - `pnpm test` - Run tests (when implemented)
 
 ### Development Workflow
-- `pnpm dev:start` - Build packages + start cyclone-invalidation (full development environment)
-- `pnpm dev` - Build all packages in watch mode (no applications running)
-- For individual app development, use the app's dev commands (e.g., `pnpm --filter=@honeycomb/cyclone-invalidation dev:poller`)
+- `pnpm dev` - Run workspace development tasks
+- `pnpm run cli -- --help` - Run the OAT CLI from repo root
+- `pnpm run cli -- <command> [options]` - Execute specific OAT CLI commands during local testing
 
 ### Package Management
 - Uses pnpm workspaces with Turborepo for efficient monorepo management

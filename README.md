@@ -1,176 +1,185 @@
 # Open Agent Toolkit (OAT)
 
-A structured workflow system for AI-assisted software development with human-in-the-loop checkpoints, knowledge-first enforcement, and full traceability from requirements to implementation.
+Open Agent Toolkit (OAT) is an open-source toolkit built on open standards for defining and managing agent skills, subagents, and hooks across multiple AI coding providers (Claude Code, Cursor, Codex CLI). It provides a provider-agnostic interoperability layer first, with optional, human-in-the-loop workflow scaffolding layered on top.
 
-## Overview
+OAT has three distinct capabilities:
 
-OAT provides a disciplined approach to AI-assisted development through:
+1. Provider interoperability CLI for syncing/managing canonical skills and sub-agents across tools.
+2. Reusable skills, CLI commands, and tooling that support provider-agnostic development workflows.
+3. Optional workflow system for structured discovery/spec/design/plan/implement execution.
 
-- **Knowledge-first enforcement** - Requires codebase analysis before starting work
-- **Phased workflow** - Discovery → Spec → Design → Plan → Implement
-- **Human-in-the-loop gates** - Configurable checkpoints for review and approval
-- **TDD discipline** - Red-green-refactor pattern in implementation
-- **Full traceability** - Requirements linked to tasks linked to commits
+You can use any capability independently.
 
-## Quick Start
+## What This Repo Contains
 
-**In Claude Code or Cursor:**
-```
-/oat:progress    # Check status and get guidance
-/oat:index       # Generate codebase knowledge base (required first)
-/oat:discovery   # Start a new project
-```
+This repository currently includes three core pieces:
 
-**Sync skills/providers locally:**
+- Workflow skills in `.agents/skills`
+  - Skills drive OAT lifecycle behavior and quality gates.
+- Project artifacts under `.oat/projects/...`
+  - Discovery/spec/design/plan/implementation/review/PR records.
+- Provider interop CLI in `packages/cli`
+  - Commands for canonical asset management, provider sync, drift detection, and diagnostics.
+
+## Three Ways To Use OAT
+
+### A) Interop-only mode (CLI only)
+
+Use OAT only for cross-provider asset management:
+
+- Initialize canonical directories
+- Detect drift and strays
+- Sync provider views safely
+- Run diagnostics
+
+Primary commands:
+- `oat init`
+- `oat status`
+- `oat sync`
+- `oat providers ...`
+- `oat doctor`
+
+This mode is useful even if you do not use OAT workflow skills at all.
+
+### B) Provider-agnostic tooling mode (skills + utilities)
+
+Use reusable skills and tooling without adopting the full project lifecycle:
+
+- Draft ideas and plans with your preferred provider
+- Keep plan-first docs outside OAT, then sync/import into an OAT project when ready
+- Reuse provider-agnostic helper skills and commands
+- Adopt only the pieces you need for your team’s workflow
+
+Start points:
+- `docs/oat/skills/index.md`
+- `docs/oat/reference/index.md`
+
+### C) Workflow mode (skills + project artifacts)
+
+Use OAT lifecycle skills to run full project execution with checkpoints:
+
+- Discovery -> Spec -> Design -> Plan -> Implement
+- Review receive/fix loops
+- PR artifact generation
+- Lifecycle completion and archival
+
+This layer is optional and can build on top of interop + provider-agnostic tooling.
+
+## Core Model
+
+OAT centers on canonical agent assets and explicit workflow artifacts.
+
+- Canonical assets:
+  - `.agents/skills/`
+  - `.agents/agents/`
+- Workflow artifacts:
+  - `.oat/projects/<scope>/<project>/state.md`
+  - `.oat/projects/<scope>/<project>/{discovery,spec,design,plan,implementation}.md`
+  - `.oat/projects/<scope>/<project>/reviews/*.md`
+  - `.oat/projects/<scope>/<project>/pr/*.md`
+
+If you are interop-only, you can ignore most project artifact files.
+
+## Quickstart (Repo Development)
+
+### 1) Install and verify
+
 ```bash
-pnpm run cli sync --scope all --apply
+pnpm install
+pnpm run cli -- --help
 ```
 
-## Workflow Phases
+### 2) Initialize and inspect
 
-```
-/oat:index → /oat:discovery → /oat:spec → /oat:design → /oat:plan → /oat:implement
-```
-
-### 1. Knowledge Generation (`/oat:index`)
-
-Generate comprehensive codebase analysis using parallel mapper agents. Creates a knowledge base in `.oat/knowledge/repo/` that subsequent phases reference.
-
-**Output:** `project-index.md`, entrypoint analyses, architecture documentation
-
-### 2. Discovery (`/oat:discovery`)
-
-Gather requirements through structured dialogue. Understand the problem, explore constraints, and capture decisions.
-
-**Output:** `.oat/projects/{name}/discovery.md`
-
-### 3. Specification (`/oat:spec`)
-
-Create formal requirements with acceptance criteria from discovery insights. Produces a testable specification.
-
-**Output:** `.oat/projects/{name}/spec.md`
-
-### 4. Design (`/oat:design`)
-
-Create detailed technical design from specification. Documents architecture, interfaces, and implementation approach.
-
-**Output:** `.oat/projects/{name}/design.md`
-
-### 5. Planning (`/oat:plan`)
-
-Break design into bite-sized TDD tasks with stable IDs, verification commands, and commit messages.
-
-**Output:** `.oat/projects/{name}/plan.md`
-
-### 6. Implementation (`/oat:implement`)
-
-Execute plan tasks with state tracking. Follows TDD discipline, commits per task, and stops at phase boundaries for review.
-
-**Output:** `.oat/projects/{name}/implementation.md`
-
-## Running Skills
-
-**In Claude Code or Cursor:**
-```
-/oat:progress
-/oat:discovery
-/oat:spec
-```
-
-**Canonical-first workflow:**
 ```bash
-pnpm run cli status --scope all
-pnpm run cli sync --scope all --apply
+pnpm run cli -- init --scope project
+pnpm run cli -- status --scope all
 ```
 
-## Human-in-the-Loop (HiL) Gates
+### 3) Sync provider views (when needed)
 
-Configure checkpoints in `state.md`:
-
-```yaml
-oat_hil_checkpoints: ["discovery", "spec", "design"]
-oat_hil_completed: ["discovery"]
+```bash
+pnpm run cli -- sync --scope all
+pnpm run cli -- sync --scope all --apply
 ```
 
-- **Workflow HiL** - Gates between workflow phases (discovery → spec → design → plan → implement)
-- **Plan phase checkpoints** - Gates at plan phase boundaries during implementation. Configure via `oat_plan_hil_phases` in plan.md (empty = stop at every phase; set to the last phase like `["p03"]` to stop only at the end; or list specific phases like `["p01", "p04"]`)
+Notes:
+- `sync` is dry-run by default.
+- `--apply` performs filesystem updates.
 
-## Directory Structure
+## Consumer CLI Usage (Without pnpm)
 
-```
-.oat/
-├── knowledge/repo/       # Generated codebase analysis
-│   ├── project-index.md  # Main knowledge index
-│   └── entrypoints/      # Per-entrypoint analyses
-├── templates/            # Document templates
-│   ├── discovery.md
-│   ├── spec.md
-│   ├── design.md
-│   ├── plan.md
-│   └── implementation.md
-└── scripts/              # Utility scripts
-    └── generate-thin-index.sh
+If you are using OAT CLI as a consumer, prefer the `oat` executable interface rather than repo scripts.
 
-.agents/
-├── skills/               # OAT skill definitions
-│   ├── oat-index/
-│   ├── oat-discovery/
-│   ├── oat-spec/
-│   ├── oat-design/
-│   ├── oat-plan/
-│   ├── oat-implement/
-│   └── oat-progress/
-.oat/projects/            # Project-specific documents
-    └── <project-name>/
-        ├── state.md          # Workflow state
-        ├── discovery.md      # Requirements gathering
-        ├── spec.md           # Formal specification
-        ├── design.md         # Technical design
-        ├── plan.md           # Implementation tasks
-        └── implementation.md # Progress tracking
+Current state:
+- `@oat/cli` is currently private in this repository (`packages/cli/package.json` has `"private": true`), so registry `npx` usage is not available yet.
+
+Run from source with npm:
+
+```bash
+cd packages/cli
+npm install
+npm run build
+node dist/index.js --help
+node dist/index.js status --scope project
 ```
 
-## Key Features
+Optional local linking for `oat` command:
 
-### Staleness Detection
+```bash
+cd packages/cli
+npm link
+oat --help
+oat sync --scope all --apply
+```
 
-OAT tracks when knowledge was generated and warns when it may be outdated:
-- Age check (>7 days)
-- Git diff check (>20 files changed since generation)
+## Interop-Only Quickstart (Consumer Intent)
 
-### Stable Task IDs
+Once you have an `oat` executable available in your environment:
 
-Tasks use stable IDs (`p01-t03` = Phase 1, Task 3) for traceability across plan, implementation, and commits.
+```bash
+oat init --scope project
+oat status --scope all
+oat sync --scope all
+oat sync --scope all --apply
+oat doctor --scope all
+```
 
-### Mode Assertions
+This gives you the core value of OAT without adopting workflow artifacts.
 
-Each phase declares what activities are BLOCKED vs ALLOWED, with self-correction protocols when deviating.
+## Workflow At A Glance
 
-### TDD Format
+1. Create/open project (`oat-new-project` / `oat-open-project`)
+2. Discovery (`oat-discovery`)
+3. Spec (`oat-spec`)
+4. Design (`oat-design`)
+5. Plan (`oat-plan`)
+6. Implement (`oat-implement`)
+7. Review loop (`oat-request-review` + `oat-receive-review`)
+8. PR generation (`oat-pr-progress` / `oat-pr-project`)
+9. Complete lifecycle (`oat-complete-project`)
 
-Plan tasks follow red-green-refactor:
-1. Write test (RED)
-2. Run test → expect failure
-3. Write implementation (GREEN)
-4. Run test → expect pass
-5. Refactor if needed
+## Documentation
+
+Start here:
+
+- OAT overview: `docs/oat/index.md`
+- Quickstart: `docs/oat/quickstart.md`
+
+Section indexes:
+
+- Workflow: `docs/oat/workflow/index.md`
+- Skills: `docs/oat/skills/index.md`
+- Projects: `docs/oat/projects/index.md`
+- CLI: `docs/oat/cli/index.md`
+- Provider interop: `docs/oat/cli/provider-interop/index.md`
+- Reference: `docs/oat/reference/index.md`
 
 ## Development Commands
 
 ```bash
-pnpm build        # Build all packages
-pnpm lint         # Lint code using Biome
-pnpm type-check   # TypeScript type checking
-pnpm test         # Run tests
+pnpm build
+pnpm lint
+pnpm type-check
+pnpm test
 ```
-
-## Technology Stack
-
-- **Runtime:** Node.js 22.17.0, TypeScript 5.8.3
-- **Build:** Turborepo with pnpm workspaces
-- **Linting:** Biome 2.3.11
-- **AI Integration:** Claude Code, Cursor
-
-## License
-
-MIT
