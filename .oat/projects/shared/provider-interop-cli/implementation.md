@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t09
+oat_current_task_id: p04-t10
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 8/24 |
+| Phase 4 | in_progress | 24 | 9/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 59/81 tasks completed
+**Total:** 60/81 tasks completed
 
 ---
 
@@ -1338,6 +1338,7 @@ oat_generated: false
 - [x] p04-t06: Implement oat doctor command with diagnostic checks - ffb9bf2
 - [x] p04-t07: Register all commands in CLI entrypoint - 8c45e6e
 - [x] p04-t08: Add CLI command integration tests - ea20ecd
+- [x] p04-t09: (review) Fix hook install to produce executable script - 60ffaf1
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1390,6 +1391,7 @@ oat_generated: false
 - Continued Phase 4 by implementing `oat providers list` with adapter detection and per-provider sync summaries.
 - Continued Phase 4 by implementing `oat providers inspect` with case-insensitive lookup, mapping summaries, and JSON support.
 - Completed Phase 4 by implementing `oat doctor`, wiring all command factories into the CLI bootstrap, and adding command integration coverage for end-to-end command workflows.
+- Began p04 review-fix execution by hardening hook install behavior to generate executable scripts with shebang bootstrapping.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1743,7 +1745,24 @@ oat_generated: false
 
 ### Task p04-t09: (review) Fix hook install to produce executable script
 
-**Status:** pending
+**Status:** completed
+**Commit:** 60ffaf1
+
+**Outcome (required when completed):**
+- Updated hook installation to emit a shebang when creating a brand-new pre-commit hook file.
+- Ensured installed hook files are executable by applying `chmod 0o755` after install/update.
+- Added regression coverage that validates shebang presence and executable mode in filesystem output.
+
+**Files changed:**
+- `packages/cli/src/commands/init/index.ts` - added shebang-aware snippet generation and executable permission handling.
+- `packages/cli/src/commands/init/index.test.ts` - added hook installation regression test for shebang + execute bits.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/init/`
+- Result: pass (12 tests)
+
+**Notes / Decisions:**
+- Preserved append behavior for pre-existing hook scripts and only inject shebang when bootstrapping an empty file.
 
 ### Task p04-t10: (review) Preserve drift warning output in installed hook
 
