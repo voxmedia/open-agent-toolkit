@@ -115,6 +115,22 @@ async function runChecksForScope(
       : 'Run `oat init` to create canonical directories.',
   });
 
+  if (scope === 'project') {
+    const codexAgentsPath = join(scopeRoot, '.codex', 'agents');
+    const codexAgentsPathOk = await dependencies.pathExists(codexAgentsPath);
+    checks.push({
+      name: `${scope}:codex_agents_path`,
+      description: 'Codex agent path availability',
+      status: codexAgentsPathOk ? 'pass' : 'warn',
+      message: codexAgentsPathOk
+        ? 'Codex agents path is available.'
+        : 'Codex agents path is not available.',
+      fix: codexAgentsPathOk
+        ? undefined
+        : 'Ensure `.codex/agents` exists and run `oat sync --apply` to refresh provider views.',
+    });
+  }
+
   const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
   const manifestExists = await dependencies.pathExists(manifestPath);
   try {
