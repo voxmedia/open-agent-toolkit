@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p05-t02
+oat_current_task_id: p05-t03
 oat_generated: false
 ---
 
@@ -20,9 +20,9 @@ oat_generated: false
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
 | Phase 4 | complete | 25 | 25/25 |
-| Phase 5 | in_progress | 6 | 1/6 |
+| Phase 5 | in_progress | 6 | 2/6 |
 
-**Total:** 77/82 tasks completed
+**Total:** 78/82 tasks completed
 
 ---
 
@@ -2187,6 +2187,29 @@ oat_generated: false
 **Notes / Decisions:**
 - Kept hook snippet semantics unchanged (warning-only, non-blocking) while moving implementation ownership to `engine/hook.ts`.
 
+### Task p05-t02: Handle edge cases
+
+**Status:** completed
+**Commit:** 766e87b
+
+**Outcome (required when completed):**
+- Added dedicated edge-case coverage for empty canonical directories, permission-denied provider paths, corrupt manifests, concurrent manifest writes, and non-directory canonical entries.
+- Improved permission-error handling in canonical and stray scanners with actionable `CliError` messaging.
+- Hardened manifest writes for concurrent saves by switching temp files to unique per-write names.
+
+**Files changed:**
+- `packages/cli/src/engine/edge-cases.test.ts` - added focused edge-case regression tests.
+- `packages/cli/src/engine/scanner.ts` - added permission-denied handling with clear remediation guidance.
+- `packages/cli/src/drift/strays.ts` - added permission-denied handling with clear remediation guidance.
+- `packages/cli/src/manifest/manager.ts` - improved corrupt-manifest guidance and made temp manifest writes concurrency-safe.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/engine/edge-cases && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept scope limited to defensive behavior and error clarity without altering sync-plan semantics.
+
 ---
 
 ## Deviations from Plan
@@ -2203,7 +2226,7 @@ oat_generated: false
 | 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 11 | 0 | n/a (phase boundary + review fixes) |
 | 3 | `pnpm --filter=@oat/cli test src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/ui/output`; `pnpm --filter=@oat/cli test src/shared/prompts`; `pnpm --filter=@oat/cli test src/ui/output && pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/drift/strays && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift/strays src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/drift src/ui/output && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint` | 9 | 0 | n/a (phase boundary + review fixes) |
 | 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli test src/commands/sync/`; `pnpm --filter=@oat/cli test src/commands/init/`; `pnpm --filter=@oat/cli test src/commands/providers/list`; `pnpm --filter=@oat/cli test src/commands/providers/inspect`; `pnpm --filter=@oat/cli test src/commands/doctor/`; `pnpm --filter=@oat/cli test src/commands/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 8 | 0 | n/a (task-level verification) |
-| 5 | `pnpm --filter=@oat/cli test src/engine/hook src/commands/init`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 1 | 0 | n/a (task-level verification) |
+| 5 | `pnpm --filter=@oat/cli test src/engine/hook src/commands/init`; `pnpm --filter=@oat/cli test src/engine/edge-cases`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 2 | 0 | n/a (task-level verification) |
 
 ## Final Summary (for PR/docs)
 
