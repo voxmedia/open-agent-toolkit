@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: ea20ecd
+oat_current_task: p04-t09
+oat_last_commit: 48643ab
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. Phase 4 command implementation is complete; awaiting p04 code review before starting Phase 5.
+Implementation - In Progress. p04 code review findings were received and converted into review-fix tasks (`p04-t09`–`p04-t13`).
 
 ## Artifacts
 
@@ -40,7 +40,7 @@ Implementation - In Progress. Phase 4 command implementation is complete; awaiti
 - ✓ Specification reviewed by Codex, findings addressed
 - ✓ Design complete (1046 lines, full architecture)
 - ✓ Design reviewed twice, all 10 findings addressed
-- ✓ Plan complete (65 tasks, 5 phases, includes p01/p02/p03 review-fix tasks)
+- ✓ Plan complete (70 tasks, 5 phases, includes p01/p02/p03/p04 review-fix tasks)
 - ✓ Phase 1 review fixes complete (`p01-t21`–`p01-t26`)
 - ✓ Additional p01 minor review fixes complete (`p01-t27`–`p01-t31`)
 - ✓ p01 re-review passed (`reviews/p01-re-review-2026-02-13.md`)
@@ -51,7 +51,8 @@ Implementation - In Progress. Phase 4 command implementation is complete; awaiti
 - ✓ p03 review fixes complete (`p03-t05`–`p03-t09`)
 - ✓ p03 re-review passed (`reviews/p03-re-review-2026-02-13.md`)
 - ✓ Phase 4 complete (`p04-t01` through `p04-t08`)
-- ⧗ Awaiting p04 review before Phase 5 (`p05-t01`)
+- ✓ p04 review received (`reviews/p04-code-review.md`)
+- ⧗ p04 review-fix tasks queued (`p04-t09`–`p04-t13`)
 
 ## Plan Summary
 
@@ -60,7 +61,7 @@ Implementation - In Progress. Phase 4 command implementation is complete; awaiti
 | p01 | 31 | Foundation — scaffold, types, logger, commander, adapters, manifest, scanner, config, review fixes |
 | p02 | 11 | Sync Engine — plan types, compute plan, execute plan, markers, integration tests, review fixes |
 | p03 | 9 | Drift Detection and Output — drift detector, stray detector, output formatters, review fixes |
-| p04 | 8 | Commands — status, sync, init, providers, doctor, registration, integration tests |
+| p04 | 13 | Commands — status, sync, init, providers, doctor, registration, integration tests, review fixes |
 | p05 | 6 | Git Hook, Polish, E2E — hook, edge cases, contract tests, snapshot tests, e2e |
 
 **HiL review checkpoints:** Every phase boundary (p01–p05)
@@ -71,4 +72,4 @@ None
 
 ## Next Milestone
 
-Run `/oat:request-review code p04`, then process findings via `/oat:receive-review` before continuing to `p05-t01`.
+Run `/oat:implement` to execute review-fix tasks starting at `p04-t09`, then request p04 re-review.

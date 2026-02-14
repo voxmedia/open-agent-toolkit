@@ -2209,6 +2209,161 @@ git commit -m "test(p04-t08): add CLI command integration tests"
 
 ---
 
+### Task p04-t09: (review) Fix hook install to produce executable script
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/init/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Hook file created by `oat init --hook` is non-functional because a new hook may be written without a shebang and without executable permissions.
+Location: `packages/cli/src/commands/init/index.ts`
+
+**Step 2: Implement fix**
+
+- Ensure new pre-commit hook content starts with `#!/bin/sh` when bootstrapping an empty hook file.
+- After writing the hook file, set executable permissions (`chmod 0o755`) so Git executes it.
+- Keep append behavior idempotent for existing hooks.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/init/`
+Expected: init tests pass and hook install tests assert shebang + executable mode behavior.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/
+git commit -m "fix(p04-t09): make installed pre-commit hook executable"
+```
+
+---
+
+### Task p04-t10: (review) Preserve drift warning output in installed hook
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/init/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Installed hook suppresses all `oat status` output (`>/dev/null 2>&1`), violating warning visibility requirements.
+Location: `packages/cli/src/commands/init/index.ts`
+
+**Step 2: Implement fix**
+
+- Update generated hook snippet to keep warning output visible while remaining non-blocking (`|| true`).
+- Ensure the hook message clearly guides remediation (`oat sync --apply`) when drift is detected.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/init/`
+Expected: tests pass and hook snippet assertions confirm drift warnings are not fully suppressed.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/
+git commit -m "fix(p04-t10): surface drift warnings from pre-commit hook"
+```
+
+---
+
+### Task p04-t11: (review) Implement per-stray adoption flow in `oat status`
+
+**Files:**
+- Modify: `packages/cli/src/commands/status/index.ts`
+- Modify: `packages/cli/src/commands/status/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `oat status` does not perform per-stray interactive adoption and only redirects to `oat init`, which deviates from FR8.
+Location: `packages/cli/src/commands/status/index.ts`
+
+**Step 2: Implement fix**
+
+- Add per-stray interactive adoption handling in `status` for interactive mode.
+- Reuse existing adoption mechanics used by `init` (move to canonical + recreate provider view) or extract shared logic if needed.
+- Keep non-interactive behavior unchanged (no prompts, include remediation guidance).
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/status/`
+Expected: tests pass, including coverage for per-stray prompt/adopt/skip behavior.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/status/
+git commit -m "fix(p04-t11): add per-stray adoption support to oat status"
+```
+
+---
+
+### Task p04-t12: (review) Add provider strategy/content metadata to `providers list`
+
+**Files:**
+- Modify: `packages/cli/src/commands/providers/list.ts`
+- Modify: `packages/cli/src/commands/providers/providers.types.ts`
+- Modify: `packages/cli/src/commands/providers/list.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `providers list` output is missing `defaultStrategy` and `contentTypes`, which are required by FR12.
+Location: `packages/cli/src/commands/providers/providers.types.ts`, `packages/cli/src/commands/providers/list.ts`
+
+**Step 2: Implement fix**
+
+- Extend provider list item contracts to include `defaultStrategy` and supported `contentTypes`.
+- Populate new fields from adapter metadata.
+- Surface fields in both human and JSON output paths.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/providers/list`
+Expected: tests pass and assert strategy/content-type presence in outputs.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/providers/
+git commit -m "fix(p04-t12): include strategy and content types in providers list"
+```
+
+---
+
+### Task p04-t13: (review) Add JSON summary output to `oat init`
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/init/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `oat init --json` currently emits no structured output.
+Location: `packages/cli/src/commands/init/index.ts`
+
+**Step 2: Implement fix**
+
+- Add JSON-mode summary emission at the end of init execution.
+- Include key fields: scope, directory initialization result, stray counts/adoptions, and hook status.
+- Ensure human output behavior is unchanged.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli test src/commands/init/`
+Expected: tests pass with explicit assertions for `--json` output payload.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/
+git commit -m "fix(p04-t13): add json summary output for oat init"
+```
+
+---
+
 ## Phase 5: Git Hook, Polish, and E2E
 
 **Goal:** Optional git hook, edge case handling, contract tests, and full e2e workflow tests. After this phase the CLI is ready for initial release.
@@ -2457,7 +2612,7 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 | p01 | code | passed | 2026-02-13 | reviews/p01-re-review-2026-02-13.md |
 | p02 | code | passed | 2026-02-13 | reviews/p02-re-review-2026-02-13.md |
 | p03 | code | passed | 2026-02-13 | reviews/p03-re-review-2026-02-13.md |
-| p04 | code | pending | - | - |
+| p04 | code | fixes_added | 2026-02-14 | reviews/p04-code-review.md |
 | p05 | code | pending | - | - |
 | final | code | pending | - | - |
 | spec | artifact | pending | - | - |
@@ -2478,10 +2633,10 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 - Phase 1: 31 tasks — Foundation (scaffold, types, logger, commander, adapters, manifest, scanner, config, fs helpers, review fixes)
 - Phase 2: 11 tasks — Sync Engine (plan types, compute plan, execute plan, markers, integration tests, review fixes)
 - Phase 3: 9 tasks — Drift Detection and Output (drift detector, stray detector, output formatters, shared prompts, review fixes)
-- Phase 4: 8 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests)
+- Phase 4: 13 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests, review fixes)
 - Phase 5: 6 tasks — Git Hook, Polish, and E2E (hook, edge cases, contract tests, snapshot tests, e2e tests, final verification)
 
-**Total: 65 tasks**
+**Total: 70 tasks**
 
 ---
 

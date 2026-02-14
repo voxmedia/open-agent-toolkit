@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: null
+oat_current_task_id: p04-t09
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | complete | 8 | 8/8 |
+| Phase 4 | in_progress | 13 | 8/13 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 59/65 tasks completed
+**Total:** 59/70 tasks completed
 
 ---
 
@@ -1486,13 +1486,43 @@ oat_generated: false
 
 **Review cycle:** 2 of 3
 
-**Next:** Stop at the p04 gate and run p04 code review before starting `p05-t01`.
+**Next:** Execute p04 review-fix tasks starting with `p04-t09` via `/oat:implement`.
+
+---
+
+### Review Received: p04
+
+**Date:** 2026-02-14  
+**Review artifact:** `reviews/p04-code-review.md`
+
+**Findings:**
+- Critical: 0
+- Important: 5
+- Medium: 6
+- Minor: 5
+
+**New tasks added:** `p04-t09`, `p04-t10`, `p04-t11`, `p04-t12`, `p04-t13`
+
+**Deferred Findings (Medium/Minor):**
+- `M1` Integration test symlink assertions should assert `isSymbolicLink()` result
+- `M2` Duplicated `LoggerCapture` helper across command test files
+- `M3` Duplicated `resolveScopes()` / `readGlobalOptions()` helpers across commands
+- `M4` Duplicated `ConcreteScope` type aliases across command modules
+- `M5` `providers inspect` formatting shows empty mapping sections before detailed mapping states
+- `M6` `oat init` adoption loop lacks "skip all remaining" option
+- `m1` Status does not report canonical-only unsynced entries without manifest entries
+- `m2` Missing explicit `--scope` behavior test in `providers inspect`
+- `m3` Edge case: `.git/hooks` symlink handling during hook installation
+- `m4` Doctor symlink capability check uses dangling target without inline intent comment
+- `m5` Doctor lacks dedicated Codex agent-path specific check
+
+**Next:** Execute fix tasks via `/oat:implement`, then request p04 re-review.
 
 ---
 
 ## Phase 4: Commands — init, status, sync, providers, doctor
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-02-14
 
 ### Phase Summary (fill when phase is complete)
@@ -1720,6 +1750,26 @@ oat_generated: false
 
 **Notes / Decisions:**
 - Integration coverage focuses on command contract behavior; deeper engine/e2e resilience remains in Phase 5 tasks.
+
+### Task p04-t09: (review) Fix hook install to produce executable script
+
+**Status:** pending
+
+### Task p04-t10: (review) Preserve drift warning output in installed hook
+
+**Status:** pending
+
+### Task p04-t11: (review) Implement per-stray adoption flow in `oat status`
+
+**Status:** pending
+
+### Task p04-t12: (review) Add provider strategy/content metadata to `providers list`
+
+**Status:** pending
+
+### Task p04-t13: (review) Add JSON summary output to `oat init`
+
+**Status:** pending
 
 ---
 
