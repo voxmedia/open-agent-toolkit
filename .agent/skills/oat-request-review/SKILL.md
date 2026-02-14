@@ -355,6 +355,23 @@ Update or add a row matching `{scope}`:
 
 If plan.md is missing (e.g., spec/design review before planning), skip this update and rely on the review artifact + next-step routing.
 
+### Step 9.5: Commit Review Bookkeeping Atomically (Required)
+
+After writing the review artifact and applying the Step 9 Reviews-table update, create an atomic bookkeeping commit.
+
+**Commit scope:**
+- Always include the review artifact file: `reviews/{filename}.md`
+- Include `plan.md` when Step 9 updated the Reviews table
+- Do not include unrelated implementation/code files in this commit
+
+**Commit message:**
+- `chore(oat): record {scope} review artifact`
+
+**If the user asks to defer commit:**
+- Require explicit user confirmation to proceed without commit
+- Warn that uncommitted review bookkeeping can desync workflow routing/restart behavior
+- In the summary, clearly state: "bookkeeping not committed (user-approved defer)"
+
 ### Step 10: Output Summary
 
 **If subagent used (Tier 1):**
@@ -384,6 +401,7 @@ Files reviewed: {N}
 Findings: {N} critical, {N} important, {N} minor
 
 Review artifact: {path}
+Bookkeeping commit: {sha or "deferred with user approval"}
 
 Next: Run /oat:receive-review to convert findings into plan tasks.
 ```
@@ -397,4 +415,5 @@ Next: Run /oat:receive-review to convert findings into plan tasks.
 - Review executed (subagent, fresh session guidance, or inline)
 - Review artifact written to correct path
 - Plan.md Reviews section updated
+- Review artifact + plan bookkeeping committed atomically (or explicitly deferred with user approval)
 - User guided to next step (/oat:receive-review)
