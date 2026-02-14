@@ -2,29 +2,54 @@
 
 ## `oat init`
 
-- Initializes canonical directories
-- Offers stray adoption
-- Optional hook installation
+Purpose:
+- Bootstrap canonical directories
+- Detect and optionally adopt strays
+- Optionally install drift warning hook
+
+Key behavior:
+- Idempotent initialization
+- Interactive adoption in TTY mode
+- JSON/non-TTY contract support
 
 ## `oat status`
 
-- Reports drift/in-sync/missing/stray states
-- Supports interactive stray adoption in TTY mode
+Purpose:
+- Report `in_sync`, `drifted`, `missing`, and `stray` states
+
+Key behavior:
+- Scope support (`project`, `user`, `all`)
+- Optional interactive stray adoption
+- JSON output for automation
 
 ## `oat sync`
 
+Purpose:
+- Reconcile provider views from canonical sources
+
+Key behavior:
 - Dry-run default
-- `--apply` performs sync actions
-- Honors strategy and provider config
+- `--apply` for mutation
+- Strategy-aware operations (`symlink`, `copy`, `auto`)
+- Provider enable/disable honored via sync config
 
 ## `oat providers list`
 
-- Lists adapters and summary status
+Purpose:
+- Summarize adapters, detection, and mapping-level health summary
 
 ## `oat providers inspect <provider>`
 
-- Shows adapter mapping details and mapping-level state
+Purpose:
+- Show adapter mappings and per-scope mapping state details
 
 ## `oat doctor`
 
-- Environment diagnostics with fix guidance
+Purpose:
+- Run environment diagnostics with pass/warn/fail outcomes and fix guidance
+
+## Reference artifacts
+
+- `.oat/projects/shared/provider-interop-cli/spec.md` (FR1-FR6)
+- `.oat/projects/shared/provider-interop-cli/implementation.md` (`Phase 4`, `Phase 5`, final summary)
+- `packages/cli/src/commands/**`

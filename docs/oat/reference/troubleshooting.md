@@ -1,24 +1,32 @@
 # Troubleshooting
 
-## Skills not showing up in host UI
+## Skills not visible in host UI
 
-- Re-run sync: `pnpm run cli -- sync --scope all --apply`
-- Restart/reload host app session
-- Confirm `AGENTS.md` table matches `.agents/skills`
+- Run: `pnpm run cli -- sync --scope all --apply`
+- Reload/restart host app session
+- Verify `AGENTS.md` skills table matches `.agents/skills/*/SKILL.md`
 
-## Codex detected but no skill sync operations shown
+## Codex appears detected but no skill sync actions are listed
 
-- Codex skill mappings are native-read; no mirrored sync action is expected for those mappings.
+Expected for native-read skill mappings. Codex can read canonical skills without mirrored provider writes.
 
-## `doctor` warns about missing canonical directories
+## `doctor` warns about canonical directories
 
-- Run: `pnpm run cli -- init --scope <project|user>`
+- Run `oat init` for the relevant scope.
+- Re-run `oat doctor` after initialization.
 
-## Manifest warnings
+## Manifest not found or invalid
 
-- If missing: run `sync --apply` or `init`
-- If invalid/corrupt: repair or remove manifest and rerun
+- Missing manifest: run `sync --apply` or `init`
+- Invalid manifest: repair/remove file and rerun
 
-## State/artifact mismatch
+## Status/output mismatches with lifecycle expectations
 
-- Align `state.md`, `plan.md` Reviews table, and `implementation.md` phase/task status before progressing.
+- Reconcile `state.md`, `plan.md` review table, and `implementation.md`.
+- Ensure phase/review status has been updated after reviews and fix cycles.
+
+## Reference artifacts
+
+- `.oat/projects/shared/provider-interop-cli/implementation.md`
+- `.oat/projects/shared/provider-interop-cli/reviews/`
+- `packages/cli/src/commands/doctor/index.ts`

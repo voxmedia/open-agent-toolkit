@@ -3,17 +3,33 @@
 Review loop:
 
 1. Request review (`oat-request-review`)
-2. Receive and process findings (`oat-receive-review`)
-3. Convert accepted findings into fix tasks
-4. Implement fixes
-5. Re-review until passing state
+2. Receive review and convert findings into tasks (`oat-receive-review`)
+3. Implement fixes (`oat-implement`)
+4. Re-review until passing status
 
 ## Status model
 
-Review status progression (in `plan.md` Reviews table):
-- `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
+Status progression in `plan.md` Reviews table:
 
-Policy in current workflow:
-- Critical/Important: required to address
-- Medium: required unless explicitly approved for deferral
-- Minor: default to address unless intentionally deferred
+- `pending`
+- `received`
+- `fixes_added`
+- `fixes_completed`
+- `passed`
+
+## Current policy
+
+- Critical/Important: address before pass.
+- Medium: address by default; defer only with explicit approval and disposition.
+- Minor: normally addressed, can be deferred with rationale.
+
+## Phase and final review
+
+Use phase-scoped review artifacts during implementation (`p01`, `p02`, etc), then run final review before project closeout.
+
+## Reference artifacts
+
+- `.oat/projects/shared/provider-interop-cli/plan.md` (`## Reviews`)
+- `.oat/projects/shared/provider-interop-cli/reviews/`
+- `.agents/skills/oat-request-review/SKILL.md`
+- `.agents/skills/oat-receive-review/SKILL.md`

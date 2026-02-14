@@ -1,22 +1,32 @@
 # Commit Conventions
 
-## Task-oriented commits
+## Phase/task commits
 
-OAT implementation commonly uses phase/task IDs in commit messages:
-- `pNN-tNN` task commits
-- review-fix commits tied to review artifacts
+Implementation work commonly uses phase/task ids:
+- `pNN-tNN`
+- review-fix and review bookkeeping commits
 
-## Suggested patterns
+Examples:
+- `feat(p04-t03): implement oat init command`
+- `fix(p03-t08): harden stray filtering semantics`
+- `test(p05-t04): add help snapshot tests`
 
-- `feat(p04-t03): ...`
-- `fix(p03-t08): ...`
-- `test(p05-t04): ...`
+## Project-level docs/chore commits
+
+Examples:
 - `docs(oat): ...`
 - `chore(oat): ...`
 
-## Traceability
+## Traceability rules
 
-Keep linkage among:
-- `plan.md` tasks
-- `implementation.md` logs
-- review artifacts under `reviews/`
+Keep explicit trace links among:
+- `plan.md` task ids
+- `implementation.md` execution entries
+- `reviews/*.md` artifacts
+- PR artifacts under `pr/*.md`
+
+## Reference artifacts
+
+- `.oat/projects/shared/provider-interop-cli/plan.md`
+- `.oat/projects/shared/provider-interop-cli/implementation.md`
+- `.oat/projects/shared/provider-interop-cli/reviews/`

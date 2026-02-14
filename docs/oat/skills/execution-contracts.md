@@ -1,25 +1,32 @@
 # Execution Contracts
 
-Skill contracts are defined in each `SKILL.md` frontmatter and process sections.
+Skill contracts are defined by frontmatter + process sections in each `SKILL.md`.
 
-## Common contract points
+## Contract components
 
-- Mode assertion and purpose
-- Allowed vs blocked activities
-- Progress indicator expectations
-- Required artifacts and guardrails
-- Output requirements
+- Mode assertion (purpose, blocked/allowed activities)
+- Preconditions and required artifacts
+- User-facing progress indicator expectations
+- Output obligations
+- Escalation/guardrail behavior
 
-## Frontmatter fields in use
+## Frontmatter fields in active use
 
 - `name`
 - `description`
 - `disable-model-invocation`
 - `user-invocable`
-- `allowed-tools` (for hosts that enforce this)
+- `allowed-tools`
 
-## Governance notes
+## Governance rules
 
-- Use skill-first invocation language in docs and templates
-- Keep `AGENTS.md` skills table synchronized with `.agents/skills`
-- Prefer explicit user approval for potentially destructive transitions
+- Prefer skill-first invocation language.
+- Keep `AGENTS.md` skills table synchronized with `.agents/skills`.
+- Require explicit user approval for destructive or state-advancing transitions.
+
+## Reference artifacts
+
+- `.agents/skills/oat-implement/SKILL.md`
+- `.agents/skills/oat-complete-project/SKILL.md`
+- `.agents/skills/oat-receive-review/SKILL.md`
+- `.oat/internal-project-reference/decision-record.md`

@@ -1,19 +1,31 @@
 # PR Flow
 
-Two PR paths exist:
+Two PR paths:
 
-- `oat-pr-progress`: phase or partial progress PR
-- `oat-pr-project`: final project PR to `main`
+- `oat-pr-progress`: progress PR for one phase or partial scope
+- `oat-pr-project`: final project PR into `main`
 
 ## Inputs
 
-- `spec.md`, `design.md`, `plan.md` (required)
-- `implementation.md` (strongly recommended)
-- Review status from `plan.md` Reviews table
+Expected artifacts:
+
+- Required: `spec.md`, `design.md`, `plan.md`
+- Recommended: `implementation.md` final summary
+- Required gate for final PR: review table final row should be `passed`
 
 ## Output
 
-Local PR artifact under:
-- `.oat/projects/<scope>/<project>/pr/`
+Local artifact path:
 
-GitHub PR body should omit local YAML frontmatter.
+- `.oat/projects/<scope>/<project>/pr/*.md`
+
+GitHub PR body policy:
+
+- Keep YAML frontmatter in local artifact
+- Strip frontmatter from submitted PR body
+
+## Reference artifacts
+
+- `.agents/skills/oat-pr-progress/SKILL.md`
+- `.agents/skills/oat-pr-project/SKILL.md`
+- `.oat/projects/shared/provider-interop-cli/pr/`

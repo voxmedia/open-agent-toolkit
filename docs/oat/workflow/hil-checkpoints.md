@@ -1,21 +1,36 @@
 # HiL Checkpoints
 
-OAT supports two checkpoint styles:
+OAT supports two checkpoint classes:
 
-- Workflow checkpoints between lifecycle stages
-- Plan phase checkpoints during implementation
+- Workflow phase checkpoints
+- Plan phase checkpoints
 
-## Workflow checkpoints
+## Workflow checkpoints (`state.md`)
 
-Tracked in project `state.md` frontmatter:
+Frontmatter keys:
+
 - `oat_hil_checkpoints`
 - `oat_hil_completed`
 
-## Plan phase checkpoints
+Example:
 
-Tracked in `plan.md` frontmatter:
+```yaml
+oat_hil_checkpoints: ["discovery", "spec", "design"]
+oat_hil_completed: ["discovery"]
+```
+
+## Plan phase checkpoints (`plan.md`)
+
+Frontmatter key:
+
 - `oat_plan_hil_phases`
 
-Behavior:
-- Empty list means stop at every phase boundary
-- A list means stop only at specified phase ids
+Semantics:
+- Empty list: checkpoint every phase boundary.
+- Explicit list: checkpoint only named phases (`p01`, `p04`, etc).
+
+## Reference artifacts
+
+- `.oat/templates/plan.md`
+- `.oat/projects/shared/provider-interop-cli/plan.md`
+- `.oat/projects/shared/provider-interop-cli/state.md`

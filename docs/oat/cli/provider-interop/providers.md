@@ -2,20 +2,27 @@
 
 ## Claude
 
-- Sync-managed skills and agents
-- Uses provider directories under `.claude/...`
+- Project: `.agents/skills` -> `.claude/skills`, `.agents/agents` -> `.claude/agents`
+- User: `~/.agents/skills` -> `~/.claude/skills`
 
 ## Cursor
 
-- Sync-managed skills and agents
-- Uses provider directories under `.cursor/...`
+- Project: `.agents/skills` -> `.cursor/skills`, `.agents/agents` -> `.cursor/agents`
+- User: `~/.agents/skills` -> `~/.cursor/skills`
 
 ## Codex
 
-- Skills are native-read from `.agents/skills` (no mirrored sync for skill mappings)
-- Project agents can sync to `.codex/agents` where configured/supported
+- Skills are native-read from `.agents/skills` (no mirrored sync action for skill mappings)
+- Project agents can sync to `.codex/agents`
+- User-scope agents remain deferred
 
 ## Scope rules
 
 - Project scope: skills + agents
-- User scope: skills only (agents deferred)
+- User scope: skills only
+
+## Reference artifacts
+
+- `.oat/projects/shared/provider-interop-cli/spec.md` (FR5)
+- `packages/cli/src/providers/**`
+- `packages/cli/src/providers/shared/adapter.utils.ts`

@@ -1,21 +1,29 @@
 # Project Artifacts
 
-Project artifacts live in `.oat/projects/<scope>/<project>/`.
+Project artifacts live under `.oat/projects/<scope>/<project>/`.
 
-## Core files
+## Core artifacts
 
-- `state.md`: lifecycle + checkpoint state
-- `discovery.md`: problem discovery output
-- `spec.md`: requirements and acceptance criteria
-- `design.md`: technical design
-- `plan.md`: phased implementation tasks and reviews table
-- `implementation.md`: execution log and final summary
+- `state.md`: lifecycle state and checkpoint metadata
+- `discovery.md`: problem framing, constraints, and discovery outcomes
+- `spec.md`: requirements + acceptance criteria
+- `design.md`: architecture and implementation approach
+- `plan.md`: phase/task breakdown and review tracking
+- `implementation.md`: execution log, verification, final summary
 
-## Supporting files
+## Supporting artifacts
 
-- `reviews/*.md`: external or internal review artifacts
+- `reviews/*.md`: phase/final review files
 - `pr/*.md`: generated PR descriptions
 
-## Contract intent
+## Contract
 
-Artifacts are the system of record for status, traceability, and handoff.
+Artifacts are the project system of record; automation and routing should derive from these files, not memory.
+
+## Reference artifacts
+
+- `.oat/templates/*.md`
+- `.oat/projects/shared/provider-interop-cli/spec.md`
+- `.oat/projects/shared/provider-interop-cli/design.md`
+- `.oat/projects/shared/provider-interop-cli/plan.md`
+- `.oat/projects/shared/provider-interop-cli/implementation.md`

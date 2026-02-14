@@ -1,20 +1,32 @@
 # File Locations
 
-## Canonical assets
+## Canonical agent assets
 
 - Skills: `.agents/skills/`
-- Subagents/agents: `.agents/agents/`
+- Agents/subagents: `.agents/agents/`
 
-## OAT system
+## OAT runtime/state
 
 - Active project pointer: `.oat/active-project`
-- Optional projects root override: `.oat/projects-root`
+- Optional root override: `.oat/projects-root`
+- Project manifests/config: `.oat/sync/`
+
+## OAT workflow
+
 - Templates: `.oat/templates/`
-- Scripts: `.oat/scripts/`
+- Utility scripts: `.oat/scripts/`
 - Internal reference docs: `.oat/internal-project-reference/`
 
-## Project artifacts
+## Project artifact trees
 
-- Shared projects: `.oat/projects/shared/<project>/`
-- Local projects: `.oat/projects/local/<project>/`
-- Archived projects: `.oat/projects/archived/<project>/`
+- Shared: `.oat/projects/shared/<project>/`
+- Local: `.oat/projects/local/<project>/`
+- Archived: `.oat/projects/archived/<project>/`
+
+## CLI code
+
+- `packages/cli/src/commands/`
+- `packages/cli/src/engine/`
+- `packages/cli/src/providers/`
+- `packages/cli/src/manifest/`
+- `packages/cli/src/drift/`

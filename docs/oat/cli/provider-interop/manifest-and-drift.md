@@ -5,15 +5,32 @@
 - Project: `.oat/sync/manifest.json`
 - User: `~/.oat/sync/manifest.json`
 
-Manifest tracks managed mappings for safe updates/removals.
+## Manifest purpose
+
+Tracks managed mappings so the CLI can:
+- detect drift safely
+- avoid deleting unmanaged provider content
+- execute scoped removals only for managed entries
 
 ## Drift states
 
 - `in_sync`
-- `drifted` (`modified`, `broken`, `replaced`)
+- `drifted`
 - `missing`
 - `stray`
 
+`drifted` reasons currently include:
+- `modified`
+- `broken`
+- `replaced`
+
 ## Stray adoption
 
-`init`/`status` can offer adoption of unmanaged provider entries into canonical `.agents`.
+`oat init` and `oat status` can offer adoption of unmanaged provider entries into canonical `.agents`.
+
+## Reference artifacts
+
+- `.oat/projects/shared/provider-interop-cli/spec.md` (FR2, FR3, FR6)
+- `.oat/projects/shared/provider-interop-cli/design.md`
+- `packages/cli/src/manifest/**`
+- `packages/cli/src/drift/**`

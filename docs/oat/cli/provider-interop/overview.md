@@ -1,15 +1,21 @@
 # Provider Interop CLI Overview
 
-The provider interop CLI lives in `packages/cli` and manages canonical agent assets under `.agents/`.
+The provider interop CLI in `packages/cli` manages canonical agent assets under `.agents/` and reconciles provider-specific views.
 
-## v1 intent
+## Scope
 
-- Canonical source: `.agents/skills` and `.agents/agents`
-- Sync managed provider views where required
-- Detect drift and strays
-- Keep operations safe and explicit (dry-run by default)
+- Canonical directories: `.agents/skills`, `.agents/agents`
+- Managed provider views: `.claude/*`, `.cursor/*`, `.codex/*` (where applicable)
+- Manifest tracking: `.oat/sync/manifest.json` (project) and `~/.oat/sync/manifest.json` (user)
 
-## Command surface
+## Design principles
+
+- Dry-run first
+- Explicit apply for mutation
+- Scoped destructive actions only for manifest-tracked entries
+- Cross-provider compatibility via adapters
+
+## Implemented command surface
 
 - `oat init`
 - `oat status`
@@ -17,3 +23,10 @@ The provider interop CLI lives in `packages/cli` and manages canonical agent ass
 - `oat providers list`
 - `oat providers inspect`
 - `oat doctor`
+
+## Reference artifacts
+
+- `.oat/projects/shared/provider-interop-cli/spec.md`
+- `.oat/projects/shared/provider-interop-cli/design.md`
+- `.oat/projects/shared/provider-interop-cli/plan.md`
+- `.oat/projects/shared/provider-interop-cli/implementation.md`

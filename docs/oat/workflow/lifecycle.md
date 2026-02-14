@@ -13,9 +13,22 @@ OAT lifecycle order:
 
 ## Artifact progression
 
-- `discovery.md` -> `spec.md` -> `design.md` -> `plan.md` -> `implementation.md`
+`discovery.md` -> `spec.md` -> `design.md` -> `plan.md` -> `implementation.md`
 
-## Active project pointers
+## Operational rules
 
-- `.oat/active-project`
-- `.oat/projects-root` (optional override)
+- Keep `state.md`, `plan.md`, and `implementation.md` synchronized.
+- Stop at configured HiL checkpoints.
+- Do not move lifecycle forward when required review gates are unresolved.
+
+## Active project resolution
+
+- `.oat/active-project` stores the active project path.
+- `.oat/projects-root` may override default shared project root.
+
+## Reference artifacts
+
+- `.oat/projects/shared/provider-interop-cli/spec.md`
+- `.oat/projects/shared/provider-interop-cli/design.md`
+- `.oat/projects/shared/provider-interop-cli/plan.md`
+- `.oat/projects/shared/provider-interop-cli/implementation.md`
