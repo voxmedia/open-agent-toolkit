@@ -424,9 +424,11 @@ describe('createInitCommand', () => {
     const hookPath = join(root, '.git', 'hooks', 'pre-commit');
     const hookContents = await readFile(hookPath, 'utf8');
 
-    expect(hookContents).toContain('if ! oat status >/dev/null 2>&1; then');
     expect(hookContents).toContain(
-      "oat: provider views are out of sync - run 'oat sync --apply' to fix",
+      'if ! oat status --scope project >/dev/null 2>&1; then',
+    );
+    expect(hookContents).toContain(
+      "oat: project provider views are out of sync - run 'oat status --scope project' or 'oat sync --apply --scope project'",
     );
   });
 
