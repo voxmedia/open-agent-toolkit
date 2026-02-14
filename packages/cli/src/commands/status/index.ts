@@ -149,6 +149,18 @@ function entryInsideMapping(
   );
 }
 
+function canonicalInsideMapping(
+  canonicalPath: string,
+  mappingCanonicalDir: string,
+): boolean {
+  const normalizedCanonicalPath = normalizePath(canonicalPath);
+  const normalizedCanonicalDir = normalizePath(mappingCanonicalDir);
+  return (
+    normalizedCanonicalPath === normalizedCanonicalDir ||
+    normalizedCanonicalPath.startsWith(`${normalizedCanonicalDir}/`)
+  );
+}
+
 function contentTypeAllowed(
   contentType: ContentType,
   scope: ConcreteScope,
@@ -243,6 +255,11 @@ async function collectScopeReports(
   );
   const reports: DriftReport[] = [];
   const strayCandidates: StatusStrayCandidate[] = [];
+  const trackedCanonicalByProvider = new Set(
+    manifest.entries.map(
+      (entry) => `${entry.provider}|${normalizePath(entry.canonicalPath)}`,
+    ),
+  );
 
   for (const adapter of activeAdapters) {
     const mappings = dependencies.getSyncMappings(adapter, scope);
@@ -269,6 +286,35 @@ async function collectScopeReports(
       }
 
       reports.push(await dependencies.detectDrift(entry, scopeRoot));
+    }
+
+    for (const mapping of mappings) {
+      for (const canonicalEntry of canonicalEntries) {
+        if (canonicalEntry.type !== mapping.contentType) {
+          continue;
+        }
+
+        const canonicalPath = normalizePath(
+          relative(scopeRoot, canonicalEntry.canonicalPath),
+        );
+        if (!canonicalInsideMapping(canonicalPath, mapping.canonicalDir)) {
+          continue;
+        }
+
+        const trackedKey = `${adapter.name}|${canonicalPath}`;
+        if (trackedCanonicalByProvider.has(trackedKey)) {
+          continue;
+        }
+
+        reports.push({
+          canonical: canonicalPath,
+          provider: adapter.name,
+          providerPath: normalizePath(
+            join(mapping.providerDir, canonicalEntry.name),
+          ),
+          state: { status: 'missing' },
+        });
+      }
     }
 
     for (const mapping of mappings) {

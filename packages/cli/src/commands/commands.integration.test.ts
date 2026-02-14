@@ -114,9 +114,9 @@ describe('CLI command integration', () => {
     await seedCanonical(root);
 
     const before = await runCli(root, ['status', '--json'], ['--json']);
-    expect(before.exitCode).toBe(0);
+    expect(before.exitCode).toBe(1);
     const beforePayload = JSON.parse(before.stdout);
-    expect(beforePayload.summary.total).toBe(0);
+    expect(beforePayload.summary.missing).toBeGreaterThan(0);
 
     const sync = await runCli(root, ['sync', '--apply']);
     expect(sync.exitCode).toBe(0);

@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CommandContext, GlobalOptions } from '../../app/command-context';
 import type { DriftReport } from '../../drift';
+import type { CanonicalEntry } from '../../engine';
 import type { Manifest, ManifestEntry } from '../../manifest';
 import type { ProviderAdapter } from '../../providers/shared';
 import type { Scope } from '../../shared/types';
@@ -12,6 +13,7 @@ interface TestHarnessOptions {
   manifestEntries?: ManifestEntry[];
   driftReports?: DriftReport[];
   strayReports?: DriftReport[];
+  canonicalEntries?: CanonicalEntry[];
   interactive?: boolean;
   confirmResponses?: boolean[];
 }
@@ -30,6 +32,14 @@ function createManifestEntry(
     contentHash: null,
     lastSynced: '2026-02-14T00:00:00.000Z',
     ...overrides,
+  };
+}
+
+function createCanonicalEntry(name = 'skill-one'): CanonicalEntry {
+  return {
+    name,
+    type: 'skill',
+    canonicalPath: `/tmp/workspace/.agents/skills/${name}`,
   };
 }
 
@@ -112,6 +122,7 @@ function createHarness(options: TestHarnessOptions = {}): {
         ]
       : []);
   const strayReports = options.strayReports ?? [];
+  const canonicalEntries = options.canonicalEntries ?? [];
   const interactive = options.interactive ?? true;
   const confirmResponses = [...(options.confirmResponses ?? [])];
   const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
@@ -135,7 +146,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
     loadManifest: vi.fn(async () => createManifest(manifestEntries)),
     saveManifest,
-    scanCanonical: vi.fn(async () => []),
+    scanCanonical: vi.fn(async () => canonicalEntries),
     getAdapters: () => [adapter],
     getActiveAdapters: vi.fn(async (adapters: ProviderAdapter[]) => adapters),
     getSyncMappings: vi.fn(() => adapter.projectMappings),
@@ -233,6 +244,19 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'project']);
 
     expect(capture.info[0]).toContain('missing');
+  });
+
+  it('reports missing entries for canonical content not yet synced', async () => {
+    const { capture, command } = createHarness({
+      manifestEntries: [],
+      driftReports: [],
+      canonicalEntries: [createCanonicalEntry('unsynced-skill')],
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(capture.info[0]).toContain('missing');
+    expect(process.exitCode).toBe(1);
   });
 
   it('reports strays with remediation text', async () => {
