@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t12
+oat_current_task_id: p04-t13
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 11/24 |
+| Phase 4 | in_progress | 24 | 12/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 62/81 tasks completed
+**Total:** 63/81 tasks completed
 
 ---
 
@@ -1341,6 +1341,7 @@ oat_generated: false
 - [x] p04-t09: (review) Fix hook install to produce executable script - 60ffaf1
 - [x] p04-t10: (review) Preserve drift warning output in installed hook - 1bbb1ed
 - [x] p04-t11: (review) Implement per-stray adoption flow in oat status - 5a4d5ba
+- [x] p04-t12: (review) Add provider strategy/content metadata to providers list - 2d0b193
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1396,6 +1397,7 @@ oat_generated: false
 - Began p04 review-fix execution by hardening hook install behavior to generate executable scripts with shebang bootstrapping.
 - Continued p04 review-fix execution by making hook behavior non-blocking while surfacing drift remediation warnings.
 - Continued p04 review-fix execution by adding per-stray interactive adoption handling directly in `oat status`.
+- Continued p04 review-fix execution by surfacing provider `defaultStrategy` and supported `contentTypes` in providers list outputs.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1812,7 +1814,25 @@ oat_generated: false
 
 ### Task p04-t12: (review) Add provider strategy/content metadata to `providers list`
 
-**Status:** pending
+**Status:** completed
+**Commit:** 2d0b193
+
+**Outcome (required when completed):**
+- Extended provider list item payloads to include `defaultStrategy` and `contentTypes`.
+- Populated strategy/content metadata from adapter mappings for selected scope(s).
+- Updated human summary rows and JSON output coverage to include the new FR12-required fields.
+
+**Files changed:**
+- `packages/cli/src/commands/providers/providers.types.ts` - added strategy/content metadata fields to list item contract.
+- `packages/cli/src/commands/providers/list.ts` - added content type aggregation and strategy/content formatting.
+- `packages/cli/src/commands/providers/list.test.ts` - added assertions for strategy/content metadata in table and JSON output.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/providers/list`; `pnpm --filter=@oat/cli test src/commands/providers/`
+- Result: pass (5 list tests, 11 provider tests total)
+
+**Notes / Decisions:**
+- Content types are derived from adapter mappings for active scope resolution and emitted in deterministic sorted order.
 
 ### Task p04-t13: (review) Add JSON summary output to `oat init`
 
