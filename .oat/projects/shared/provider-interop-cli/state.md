@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t25
 oat_last_commit: 38cbd1f
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. p04 review-fix execution is complete (`p04-t09` through `p04-t24`); awaiting p04 re-review before starting p05.
+Implementation - In Progress. p04 re-review received and one follow-up fix task (`p04-t25`) is queued before p05.
 
 ## Artifacts
 
@@ -52,7 +52,8 @@ Implementation - In Progress. p04 review-fix execution is complete (`p04-t09` th
 - ✓ p03 re-review passed (`reviews/p03-re-review-2026-02-13.md`)
 - ✓ Phase 4 complete (`p04-t01` through `p04-t08`)
 - ✓ p04 review received (`reviews/p04-code-review.md`)
-- ⧗ p04 review-fix tasks complete (`p04-t09`–`p04-t24`); awaiting p04 re-review
+- ✓ p04 review-fix tasks complete (`p04-t09`–`p04-t24`)
+- ⧗ p04 re-review follow-up queued (`p04-t25`)
 
 ## Plan Summary
 
@@ -61,7 +62,7 @@ Implementation - In Progress. p04 review-fix execution is complete (`p04-t09` th
 | p01 | 31 | Foundation — scaffold, types, logger, commander, adapters, manifest, scanner, config, review fixes |
 | p02 | 11 | Sync Engine — plan types, compute plan, execute plan, markers, integration tests, review fixes |
 | p03 | 9 | Drift Detection and Output — drift detector, stray detector, output formatters, review fixes |
-| p04 | 24 | Commands — status, sync, init, providers, doctor, registration, integration tests, review fixes |
+| p04 | 25 | Commands — status, sync, init, providers, doctor, registration, integration tests, review fixes |
 | p05 | 6 | Git Hook, Polish, E2E — hook, edge cases, contract tests, snapshot tests, e2e |
 
 **HiL review checkpoints:** Every phase boundary (p01–p05)
@@ -72,4 +73,4 @@ None
 
 ## Next Milestone
 
-Run `/oat:request-review code p04` and process feedback via `/oat:receive-review` before starting Phase 5.
+Run `/oat:implement` for `p04-t25`, then re-run `/oat:request-review code p04` and process via `/oat:receive-review`.

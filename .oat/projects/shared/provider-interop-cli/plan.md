@@ -2700,6 +2700,38 @@ git commit -m "fix(p04-t24): add codex agent path diagnostic to doctor"
 
 ---
 
+### Task p04-t25: (review) Remove unused imports from command refactors
+
+**Files:**
+- Modify: `packages/cli/src/commands/doctor/index.ts`
+- Modify: `packages/cli/src/commands/providers/inspect.ts`
+- Modify: `packages/cli/src/commands/providers/list.ts`
+- Modify: `packages/cli/src/commands/sync/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: lint reports unused imports introduced during shared helper/type refactors.
+Location: command modules listed above.
+
+**Step 2: Implement fix**
+
+- Remove unused `Scope`, `GlobalOptions`, and `ConcreteScope` imports where no longer referenced.
+- Keep import lists aligned with actual symbol usage after the shared helper/type extraction.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter=@oat/cli lint && pnpm --filter=@oat/cli type-check`
+Expected: no new lint warnings from the touched command files; type-check remains clean.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/doctor/index.ts packages/cli/src/commands/providers/inspect.ts packages/cli/src/commands/providers/list.ts packages/cli/src/commands/sync/index.ts
+git commit -m "fix(p04-t25): remove unused command imports after refactors"
+```
+
+---
+
 ## Phase 5: Git Hook, Polish, and E2E
 
 **Goal:** Optional git hook, edge case handling, contract tests, and full e2e workflow tests. After this phase the CLI is ready for initial release.
@@ -2948,7 +2980,7 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 | p01 | code | passed | 2026-02-13 | reviews/p01-re-review-2026-02-13.md |
 | p02 | code | passed | 2026-02-13 | reviews/p02-re-review-2026-02-13.md |
 | p03 | code | passed | 2026-02-13 | reviews/p03-re-review-2026-02-13.md |
-| p04 | code | passed | 2026-02-14 | reviews/p04-re-review-2026-02-14.md |
+| p04 | code | fixes_added | 2026-02-14 | reviews/p04-re-review-2026-02-14.md |
 | p05 | code | pending | - | - |
 | final | code | pending | - | - |
 | spec | artifact | pending | - | - |
@@ -2969,10 +3001,10 @@ git commit -m "chore(p05-t06): final verification — CLI ready for initial rele
 - Phase 1: 31 tasks — Foundation (scaffold, types, logger, commander, adapters, manifest, scanner, config, fs helpers, review fixes)
 - Phase 2: 11 tasks — Sync Engine (plan types, compute plan, execute plan, markers, integration tests, review fixes)
 - Phase 3: 9 tasks — Drift Detection and Output (drift detector, stray detector, output formatters, shared prompts, review fixes)
-- Phase 4: 24 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests, review fixes)
+- Phase 4: 25 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests, review fixes)
 - Phase 5: 6 tasks — Git Hook, Polish, and E2E (hook, edge cases, contract tests, snapshot tests, e2e tests, final verification)
 
-**Total: 81 tasks**
+**Total: 82 tasks**
 
 ---
 

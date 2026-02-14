@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: null
+oat_current_task_id: p04-t25
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | complete | 24 | 24/24 |
+| Phase 4 | in_progress | 25 | 24/25 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 75/81 tasks completed
+**Total:** 75/82 tasks completed
 
 ---
 
@@ -1536,13 +1536,37 @@ oat_generated: false
 **Deferred Findings (Medium/Minor):**
 - None (all accepted findings were converted into review-fix tasks)
 
-**Next:** Review-fix tasks complete. Request p04 re-review.
+**Next:** p04 review-fix tasks complete; re-review requested.
+
+---
+
+### Re-Review Received: p04
+
+**Date:** 2026-02-14  
+**Review artifact:** `reviews/p04-re-review-2026-02-14.md`
+
+**Findings:**
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**Review status:** follow-up fixes queued (minor task added)
+
+**New tasks added:** `p04-t25`
+
+**Deferred Findings (Minor):**
+- `n2` Hook drift warning remains intentionally generic (exit-code check + high-level message); no spec violation and no action required.
+
+**Review cycle:** 2 of 3
+
+**Next:** Execute `p04-t25` via `/oat:implement`, then request p04 re-review.
 
 ---
 
 ## Phase 4: Commands — init, status, sync, providers, doctor
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-02-14
 
 ### Phase Summary (fill when phase is complete)
@@ -1551,7 +1575,7 @@ oat_generated: false
 - Implemented all planned user-facing commands (`status`, `sync`, `init`, `providers list`, `providers inspect`, `doctor`) with scope-aware behavior and JSON/non-interactive contracts.
 - Registered all command factories in the CLI entrypoint so `oat --help` and subcommands are fully wired end-to-end.
 - Added command integration coverage that exercises full workflow sequences and idempotency.
-- Completed all p04 review-fix tasks (`p04-t09` through `p04-t24`), including init hook hardening, providers/status UX refinements, and expanded doctor diagnostics.
+- Completed p04 review-fix tasks (`p04-t09` through `p04-t24`) and queued follow-up lint cleanup task `p04-t25` from p04 re-review.
 
 **Key files touched:**
 - `packages/cli/src/commands/status/index.ts`
@@ -2109,6 +2133,10 @@ oat_generated: false
 
 **Notes / Decisions:**
 - Kept the new diagnostic in doctor only; no behavior changes were introduced in sync/apply flows.
+
+### Task p04-t25: (review) Remove unused imports from command refactors
+
+**Status:** pending
 
 ---
 
