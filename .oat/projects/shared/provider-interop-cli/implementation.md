@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t21
+oat_current_task_id: p04-t22
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 20/24 |
+| Phase 4 | in_progress | 24 | 21/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 71/81 tasks completed
+**Total:** 72/81 tasks completed
 
 ---
 
@@ -1350,6 +1350,7 @@ oat_generated: false
 - [x] p04-t18: (review) Correct providers inspect mapping section formatting - 350ffb9
 - [x] p04-t19: (review) Add skip-all remaining option to init stray adoption - 59c9968
 - [x] p04-t20: (review) Surface unsynced canonical entries in status output - 002746a
+- [x] p04-t21: (review) Add providers inspect --scope coverage - def8166
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1414,6 +1415,7 @@ oat_generated: false
 - Continued p04 review-fix execution by aligning `providers inspect` header mapping summaries with actual adapter mappings.
 - Continued p04 review-fix execution by adding skip-all behavior to interactive stray adoption in `oat init`.
 - Continued p04 review-fix execution by reporting canonical entries that have not yet been synced as `missing` in `oat status`.
+- Continued p04 review-fix execution by adding explicit `--scope` coverage for `providers inspect`.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -2023,7 +2025,23 @@ oat_generated: false
 
 ### Task p04-t21: (review) Add `providers inspect --scope` coverage
 
-**Status:** pending
+**Status:** completed
+**Commit:** def8166
+
+**Outcome (required when completed):**
+- Added explicit test coverage verifying `providers inspect --scope` behavior.
+- Exposed scope-root resolver spy through the inspect test harness for direct scope assertion.
+- Ensured inspect command test suite validates user-scope resolution path.
+
+**Files changed:**
+- `packages/cli/src/commands/providers/inspect.test.ts` - added scope-flag test and resolver spy harness plumbing.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/providers/inspect && pnpm --filter=@oat/cli type-check`
+- Result: pass (7 inspect tests, type-check clean)
+
+**Notes / Decisions:**
+- Kept scope verification focused on root-resolution contract rather than output formatting differences.
 
 ### Task p04-t22: (review) Harden hook install path handling for symlinked hooks dir
 
