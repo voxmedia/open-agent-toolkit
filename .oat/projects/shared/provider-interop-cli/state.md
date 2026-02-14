@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t06
-oat_last_commit: 6cd277d
+oat_current_task: null
+oat_last_commit: ea20ecd
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. Phase 4 command implementation is active; `p04-t01` through `p04-t05` are complete.
+Implementation - In Progress. Phase 4 command implementation is complete; awaiting p04 code review before starting Phase 5.
 
 ## Artifacts
 
@@ -50,7 +50,8 @@ Implementation - In Progress. Phase 4 command implementation is active; `p04-t01
 - ✓ Phase 3 complete (`p03-t01`–`p03-t04`)
 - ✓ p03 review fixes complete (`p03-t05`–`p03-t09`)
 - ✓ p03 re-review passed (`reviews/p03-re-review-2026-02-13.md`)
-- ⧗ Phase 4 in progress (`p04-t01` through `p04-t05` complete)
+- ✓ Phase 4 complete (`p04-t01` through `p04-t08`)
+- ⧗ Awaiting p04 review before Phase 5 (`p05-t01`)
 
 ## Plan Summary
 
@@ -70,4 +71,4 @@ None
 
 ## Next Milestone
 
-Continue Phase 4 with `p04-t06` via `/oat:implement`.
+Run `/oat:request-review code p04`, then process findings via `/oat:receive-review` before continuing to `p05-t01`.

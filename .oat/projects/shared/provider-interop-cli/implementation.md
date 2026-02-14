@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 8 | 5/8 |
+| Phase 4 | complete | 8 | 8/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 56/65 tasks completed
+**Total:** 59/65 tasks completed
 
 ---
 
@@ -1335,6 +1335,9 @@ oat_generated: false
 - [x] p04-t03: Implement oat init command with adoption flow - d9c649c
 - [x] p04-t04: Implement oat providers list command - 191b843
 - [x] p04-t05: Implement oat providers inspect command - 6cd277d
+- [x] p04-t06: Implement oat doctor command with diagnostic checks - ffb9bf2
+- [x] p04-t07: Register all commands in CLI entrypoint - 8c45e6e
+- [x] p04-t08: Add CLI command integration tests - ea20ecd
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1386,6 +1389,7 @@ oat_generated: false
 - Continued Phase 4 by implementing `oat init` with stray adoption, optional hook consent/install behavior, and command-level coverage.
 - Continued Phase 4 by implementing `oat providers list` with adapter detection and per-provider sync summaries.
 - Continued Phase 4 by implementing `oat providers inspect` with case-insensitive lookup, mapping summaries, and JSON support.
+- Completed Phase 4 by implementing `oat doctor`, wiring all command factories into the CLI bootstrap, and adding command integration coverage for end-to-end command workflows.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1482,14 +1486,38 @@ oat_generated: false
 
 **Review cycle:** 2 of 3
 
-**Next:** Continue implementation with `p04-t06` via `/oat:implement`.
+**Next:** Stop at the p04 gate and run p04 code review before starting `p05-t01`.
 
 ---
 
 ## Phase 4: Commands — init, status, sync, providers, doctor
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-02-14
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+- Implemented all planned user-facing commands (`status`, `sync`, `init`, `providers list`, `providers inspect`, `doctor`) with scope-aware behavior and JSON/non-interactive contracts.
+- Registered all command factories in the CLI entrypoint so `oat --help` and subcommands are fully wired end-to-end.
+- Added command integration coverage that exercises full workflow sequences and idempotency.
+
+**Key files touched:**
+- `packages/cli/src/commands/status/index.ts`
+- `packages/cli/src/commands/sync/{index.ts,apply.ts,dry-run.ts,sync.types.ts}`
+- `packages/cli/src/commands/init/index.ts`
+- `packages/cli/src/commands/providers/{index.ts,list.ts,inspect.ts,providers.types.ts}`
+- `packages/cli/src/commands/doctor/index.ts`
+- `packages/cli/src/commands/index.ts`
+- `packages/cli/src/index.ts`
+- `packages/cli/src/commands/commands.integration.test.ts`
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/doctor/ src/commands/index.test.ts src/commands/commands.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`
+- Result: pass
+
+**Notes / Decisions:**
+- Paused at the p04 checkpoint before beginning p05 so p04 review can run first.
 
 ### Task p04-t01: Implement `oat status` command
 
@@ -1630,6 +1658,69 @@ oat_generated: false
 - Reused provider mapping contracts from `providers.types.ts` so inspect/list share consistent summary structures.
 - Kept inspect output formatting command-local while reusing shared provider header formatting from `ui/output.ts`.
 
+### Task p04-t06: Implement `oat doctor` command
+
+**Status:** completed
+**Commit:** ffb9bf2
+
+**Outcome (required when completed):**
+- Implemented `createDoctorCommand()` with a composed diagnostic suite for canonical setup, manifest health, provider detection, and writable/provider-path checks.
+- Added command output for pass/warn/fail checks with human-readable guidance and JSON serialization support.
+- Added exit-code behavior to distinguish fully healthy (0), warning-only (1), and failure states (2).
+
+**Files changed:**
+- `packages/cli/src/commands/doctor/index.ts` - implemented doctor command checks, output formatting, and exit-code handling.
+- `packages/cli/src/commands/doctor/index.test.ts` - added command behavior tests for pass/warn/fail and JSON output paths.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/doctor/`
+- Result: pass (7 tests)
+
+**Notes / Decisions:**
+- Kept checks lightweight and deterministic so `doctor` remains fast enough for routine local use.
+
+### Task p04-t07: Register all commands and update entrypoint
+
+**Status:** completed
+**Commit:** 8c45e6e
+
+**Outcome (required when completed):**
+- Replaced placeholder command registration with concrete factory wiring for all Phase 4 commands.
+- Updated CLI bootstrap entrypoint to use async command parsing and consistent exit-code propagation.
+- Added registration coverage to assert root command surface and subcommand availability.
+
+**Files changed:**
+- `packages/cli/src/commands/index.ts` - registered all command factories.
+- `packages/cli/src/index.ts` - updated bootstrap parse flow and error handling behavior.
+- `packages/cli/src/commands/index.test.ts` - added/updated registration tests.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/index.test.ts`
+- Result: pass (6 tests)
+
+**Notes / Decisions:**
+- Kept `create-program` wiring stable and centralized command registration in `commands/index.ts`.
+
+### Task p04-t08: Integration test — full command flows
+
+**Status:** completed
+**Commit:** ea20ecd
+
+**Outcome (required when completed):**
+- Added command integration tests that execute realistic multi-command sequences against temporary repositories.
+- Covered workflow paths for initialization, sync/apply, status JSON behavior, doctor checks, providers listing, and idempotency expectations.
+- Validated that command orchestration works end-to-end with the current adapter/engine contracts.
+
+**Files changed:**
+- `packages/cli/src/commands/commands.integration.test.ts` - added integration test suite for command workflows.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts`
+- Result: pass (7 tests)
+
+**Notes / Decisions:**
+- Integration coverage focuses on command contract behavior; deeper engine/e2e resilience remains in Phase 5 tasks.
+
 ---
 
 ## Deviations from Plan
@@ -1645,7 +1736,7 @@ oat_generated: false
 | 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (twenty-two times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/`; `pnpm --filter=@oat/cli test src/manifest/hash`; `pnpm --filter=@oat/cli test src/engine/scanner`; `pnpm --filter=@oat/cli test src/config/`; `pnpm --filter=@oat/cli test src/fs/`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test 2>&1 | rg "dist/" -n || true`; `pnpm --filter=@oat/cli test src/fs/io.test.ts`; `pnpm --filter=@oat/cli test src/app/command-context.test.ts`; `pnpm --filter=@oat/cli test src/shared/types.test.ts`; `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts`; `pnpm --filter=@oat/cli test src/fs/paths.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check` | 26 | 0 | n/a (bootstrap) |
 | 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 11 | 0 | n/a (phase boundary + review fixes) |
 | 3 | `pnpm --filter=@oat/cli test src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/ui/output`; `pnpm --filter=@oat/cli test src/shared/prompts`; `pnpm --filter=@oat/cli test src/ui/output && pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/drift/strays && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift/strays src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/drift src/ui/output && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint` | 9 | 0 | n/a (phase boundary + review fixes) |
-| 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli test src/commands/sync/`; `pnpm --filter=@oat/cli test src/commands/init/`; `pnpm --filter=@oat/cli test src/commands/providers/list`; `pnpm --filter=@oat/cli test src/commands/providers/inspect`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 5 | 0 | n/a (task-level verification) |
+| 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli test src/commands/sync/`; `pnpm --filter=@oat/cli test src/commands/init/`; `pnpm --filter=@oat/cli test src/commands/providers/list`; `pnpm --filter=@oat/cli test src/commands/providers/inspect`; `pnpm --filter=@oat/cli test src/commands/doctor/`; `pnpm --filter=@oat/cli test src/commands/index.test.ts`; `pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 8 | 0 | n/a (task-level verification) |
 | 5 | - | - | - | - |
 
 ## Final Summary (for PR/docs)
