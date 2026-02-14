@@ -131,6 +131,9 @@ async function collectInspectResult(
     name: adapter.name,
     displayName: adapter.displayName,
     detected,
+    defaultStrategy: adapter.defaultStrategy,
+    projectMappings: adapter.projectMappings,
+    userMappings: adapter.userMappings,
     version,
     mappings,
   };
@@ -142,9 +145,9 @@ function formatInspect(result: ProviderInspectResult): string {
       {
         name: result.name,
         displayName: result.displayName,
-        defaultStrategy: 'symlink',
-        projectMappings: [],
-        userMappings: [],
+        defaultStrategy: result.defaultStrategy,
+        projectMappings: result.projectMappings,
+        userMappings: result.userMappings,
         detect: async () => result.detected,
       },
       result.detected,

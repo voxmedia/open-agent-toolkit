@@ -56,6 +56,9 @@ export interface ProviderInspectResult {
   name: string;
   displayName: string;
   detected: boolean;
+  defaultStrategy: SyncStrategy;
+  projectMappings: PathMapping[];
+  userMappings: PathMapping[];
   version: string | null;
   mappings: ProviderInspectMappingState[];
 }

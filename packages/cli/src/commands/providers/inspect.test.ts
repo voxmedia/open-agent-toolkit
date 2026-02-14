@@ -169,6 +169,8 @@ describe('oat providers inspect', () => {
 
     expect(capture.info[0]).toContain('Claude Code');
     expect(capture.info[0]).toContain('.claude/skills');
+    expect(capture.info[0]).not.toContain('Project mappings: none');
+    expect(capture.info[0]).not.toContain('User mappings: none');
   });
 
   it('shows per-mapping sync state', async () => {
