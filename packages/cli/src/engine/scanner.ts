@@ -1,5 +1,6 @@
 import { readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { CliError } from '../errors';
 import { SCOPE_CONTENT_TYPES, type Scope } from '../shared/types';
 
 type ConcreteScope = Exclude<Scope, 'all'>;
@@ -25,6 +26,17 @@ async function readDirectories(dirPath: string): Promise<string[]> {
       error.code === 'ENOENT'
     ) {
       return [];
+    }
+
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error.code === 'EACCES' || error.code === 'EPERM')
+    ) {
+      throw new CliError(
+        `Permission denied reading canonical directory ${dirPath}. Adjust permissions and retry.`,
+      );
     }
     throw error;
   }

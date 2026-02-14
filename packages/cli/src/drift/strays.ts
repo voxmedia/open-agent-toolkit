@@ -2,6 +2,7 @@ import type { Dirent } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { basename, join, normalize, relative, resolve } from 'node:path';
 import type { CanonicalEntry } from '../engine/scanner';
+import { CliError } from '../errors';
 import type { Manifest } from '../manifest/manifest.types';
 import type { DriftReport } from './drift.types';
 
@@ -93,6 +94,17 @@ export async function detectStrays(
       error.code === 'ENOENT'
     ) {
       return [];
+    }
+
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error.code === 'EACCES' || error.code === 'EPERM')
+    ) {
+      throw new CliError(
+        `Permission denied reading provider directory ${resolvedProviderDir}. Adjust permissions and retry.`,
+      );
     }
     throw error;
   }

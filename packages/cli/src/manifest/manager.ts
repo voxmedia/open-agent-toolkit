@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { CliError } from '../errors';
@@ -38,7 +39,7 @@ export async function loadManifest(manifestPath: string): Promise<Manifest> {
       parsed = JSON.parse(raw);
     } catch {
       throw new CliError(
-        `Manifest at ${manifestPath} is not valid JSON. Delete or repair the file and retry.`,
+        `Manifest at ${manifestPath} is not valid JSON. Delete or repair the file and re-run oat sync.`,
       );
     }
 
@@ -48,7 +49,7 @@ export async function loadManifest(manifestPath: string): Promise<Manifest> {
         .map((issue) => `${formatIssuePath(issue.path)}: ${issue.message}`)
         .join('; ');
       throw new CliError(
-        `Manifest at ${manifestPath} failed validation: ${issueDetails}. Delete or repair the file and retry.`,
+        `Manifest at ${manifestPath} failed validation: ${issueDetails}. Delete or repair the file and re-run oat sync.`,
       );
     }
 
@@ -82,7 +83,7 @@ export async function saveManifest(
 ): Promise<void> {
   const validated = ManifestSchema.parse(manifest);
   const dir = dirname(manifestPath);
-  const tempPath = `${manifestPath}.tmp`;
+  const tempPath = `${manifestPath}.${randomUUID()}.tmp`;
 
   await mkdir(dir, { recursive: true });
   await writeFile(tempPath, `${JSON.stringify(validated, null, 2)}\n`, 'utf8');
