@@ -68,6 +68,14 @@ export function runSyncDryRun(
     });
   } else {
     context.logger.info(formatDryRunOutput(scopePlans, dependencies));
+    context.logger.info('Dry-run only: no filesystem changes were made.');
+    if (summary.plannedOperations > 0) {
+      context.logger.info(
+        `Apply changes with: oat sync --scope ${context.scope} --apply`,
+      );
+    } else {
+      context.logger.info('No changes to apply.');
+    }
   }
 
   process.exitCode = 0;

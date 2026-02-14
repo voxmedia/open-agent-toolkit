@@ -174,6 +174,26 @@ describe('createSyncCommand', () => {
 
     expect(executeSyncPlan).not.toHaveBeenCalled();
     expect(capture.info[0]).toContain('sync-dry-project');
+    expect(capture.info).toContain(
+      'Dry-run only: no filesystem changes were made.',
+    );
+    expect(capture.info).toContain(
+      'Apply changes with: oat sync --scope project --apply',
+    );
+  });
+
+  it('dry-run no-op: shows no changes to apply guidance', async () => {
+    const { capture, command, executeSyncPlan } = createHarness({
+      plans: [createEmptyPlan('project')],
+    });
+
+    await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(executeSyncPlan).not.toHaveBeenCalled();
+    expect(capture.info).toContain(
+      'Dry-run only: no filesystem changes were made.',
+    );
+    expect(capture.info).toContain('No changes to apply.');
   });
 
   it('--apply: executes sync plan', async () => {
