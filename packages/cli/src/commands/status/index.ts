@@ -1,12 +1,4 @@
-import { rename } from 'node:fs/promises';
-import {
-  basename,
-  dirname,
-  join,
-  normalize,
-  relative,
-  resolve,
-} from 'node:path';
+import { join, normalize, relative } from 'node:path';
 import { Command } from 'commander';
 import {
   buildCommandContext,
@@ -15,12 +7,9 @@ import {
 } from '../../app/command-context';
 import { type DriftReport, detectDrift, detectStrays } from '../../drift';
 import { type CanonicalEntry, scanCanonical } from '../../engine';
-import { createSymlink, ensureDir } from '../../fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
 import type { Manifest } from '../../manifest';
-import { computeDirectoryHash } from '../../manifest/hash';
-import { addEntry, loadManifest, saveManifest } from '../../manifest/manager';
-import type { ManifestEntry } from '../../manifest/manifest.types';
+import { loadManifest, saveManifest } from '../../manifest/manager';
 import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
 import { cursorAdapter } from '../../providers/cursor';
@@ -39,6 +28,7 @@ import {
 } from '../../shared/types';
 import { formatStatusTable } from '../../ui/output';
 import { readGlobalOptions, resolveConcreteScopes } from '../shared';
+import { adoptStrayToCanonical } from '../shared/adopt-stray';
 
 const DEFAULT_REMEDIATION = 'Run "oat init" to adopt stray entries.';
 const ADOPT_PROMPT_PREFIX = 'Adopt stray';
@@ -204,39 +194,7 @@ async function adoptStrayDefault(
   stray: StatusStrayCandidate,
   manifest: Manifest,
 ): Promise<Manifest> {
-  const providerAbsolutePath = resolve(scopeRoot, stray.report.providerPath);
-  const entryName = basename(stray.report.providerPath);
-  const canonicalAbsolutePath = resolve(
-    scopeRoot,
-    stray.mapping.canonicalDir,
-    entryName,
-  );
-
-  await ensureDir(dirname(canonicalAbsolutePath));
-  await rename(providerAbsolutePath, canonicalAbsolutePath);
-  const strategy = await createSymlink(
-    canonicalAbsolutePath,
-    providerAbsolutePath,
-  );
-
-  const canonicalPath = normalizePath(
-    relative(scopeRoot, canonicalAbsolutePath),
-  );
-  const providerPath = normalizePath(relative(scopeRoot, providerAbsolutePath));
-  const manifestEntry: ManifestEntry = {
-    canonicalPath,
-    providerPath,
-    provider: stray.provider,
-    contentType: stray.mapping.contentType,
-    strategy,
-    contentHash:
-      strategy === 'copy'
-        ? await computeDirectoryHash(canonicalAbsolutePath)
-        : null,
-    lastSynced: new Date().toISOString(),
-  };
-
-  return addEntry(manifest, manifestEntry);
+  return adoptStrayToCanonical(scopeRoot, stray, manifest);
 }
 
 async function collectScopeReports(

@@ -1,5 +1,5 @@
-import { mkdir, rename } from 'node:fs/promises';
-import { basename, dirname, join, relative, resolve } from 'node:path';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { Command } from 'commander';
 import {
   buildCommandContext,
@@ -14,16 +14,13 @@ import {
   scanCanonical,
   uninstallHook,
 } from '../../engine';
-import { createSymlink, ensureDir } from '../../fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
-import { computeDirectoryHash } from '../../manifest/hash';
 import {
-  addEntry,
   createEmptyManifest,
   loadManifest,
   saveManifest,
 } from '../../manifest/manager';
-import type { Manifest, ManifestEntry } from '../../manifest/manifest.types';
+import type { Manifest } from '../../manifest/manifest.types';
 import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
 import { cursorAdapter } from '../../providers/cursor';
@@ -40,6 +37,7 @@ import {
 } from '../../shared/prompts';
 import type { ConcreteScope, Scope } from '../../shared/types';
 import { readGlobalOptions, resolveConcreteScopes } from '../shared';
+import { adoptStrayToCanonical } from '../shared/adopt-stray';
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
@@ -112,10 +110,6 @@ interface InitJsonPayload {
 
 type AdoptionSelection = 'adopt' | 'skip' | 'skip_all';
 
-function normalizePath(pathValue: string): string {
-  return pathValue.replaceAll('\\', '/');
-}
-
 async function ensureCanonicalDirectories(
   scopeRoot: string,
   scope: ConcreteScope,
@@ -167,39 +161,7 @@ async function adoptStrayDefault(
   stray: InitStrayCandidate,
   manifest: Manifest,
 ): Promise<Manifest> {
-  const providerAbsolutePath = resolve(scopeRoot, stray.report.providerPath);
-  const entryName = basename(stray.report.providerPath);
-  const canonicalAbsolutePath = resolve(
-    scopeRoot,
-    stray.mapping.canonicalDir,
-    entryName,
-  );
-
-  await ensureDir(dirname(canonicalAbsolutePath));
-  await rename(providerAbsolutePath, canonicalAbsolutePath);
-  const strategy = await createSymlink(
-    canonicalAbsolutePath,
-    providerAbsolutePath,
-  );
-
-  const canonicalPath = normalizePath(
-    relative(scopeRoot, canonicalAbsolutePath),
-  );
-  const providerPath = normalizePath(relative(scopeRoot, providerAbsolutePath));
-  const manifestEntry: ManifestEntry = {
-    canonicalPath,
-    providerPath,
-    provider: stray.provider,
-    contentType: stray.mapping.contentType,
-    strategy,
-    contentHash:
-      strategy === 'copy'
-        ? await computeDirectoryHash(canonicalAbsolutePath)
-        : null,
-    lastSynced: new Date().toISOString(),
-  };
-
-  return addEntry(manifest, manifestEntry);
+  return adoptStrayToCanonical(scopeRoot, stray, manifest);
 }
 
 function createDependencies(): InitDependencies {
