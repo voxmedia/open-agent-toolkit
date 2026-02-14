@@ -198,6 +198,23 @@ Files changed: {FILE_COUNT}
 Proceed with review?
 ```
 
+### Step 4.5: Gather Deferred Findings Ledger (Final Scope Only)
+
+If `review type == code` and `scope == final`, gather unresolved deferred findings from prior review cycles.
+
+Preferred sources:
+- `implementation.md` sections titled `Deferred Findings (...)`
+- prior review artifacts under `reviews/` when implementation notes are incomplete
+
+Build:
+- `DEFERRED_MEDIUM_COUNT`
+- `DEFERRED_MINOR_COUNT`
+- `DEFERRED_LEDGER` (one-line summary per finding with source artifact)
+
+Rules:
+- Include this ledger in review metadata so final review explicitly re-evaluates carry-forward debt.
+- Final review should call out whether each deferred Medium remains acceptable or should now be fixed.
+
 ### Step 5: Prepare Review Metadata Block
 
 Build the "Review Scope" metadata for the reviewer:
@@ -224,6 +241,11 @@ Build the "Review Scope" metadata for the reviewer:
 
 **Commits (code review only):**
 {git log --oneline for SCOPE_RANGE}
+
+**Deferred Findings Ledger (final scope only):**
+- Deferred Medium count: {DEFERRED_MEDIUM_COUNT}
+- Deferred Minor count: {DEFERRED_MINOR_COUNT}
+{DEFERRED_LEDGER}
 ```
 
 ### Step 6: Execute Review (3-Tier Capability Model)
@@ -287,8 +309,9 @@ If running inline (Tier 3), execute the review and write artifact.
 2. If code review: verify spec/design alignment (missing/extra requirements)
 3. If code review: verify code quality (correctness, tests, security, maintainability)
 4. If artifact review: verify completeness/clarity/readiness of the artifact and its alignment with upstream artifacts
-4. Categorize findings (Critical/Important/Minor)
-5. Write artifact with file:line references and fix guidance
+5. Categorize findings (Critical/Important/Medium/Minor)
+6. For final scope: explicitly disposition deferred Medium ledger items (fix now vs accept defer)
+7. Write artifact with file:line references and fix guidance
 
 **Review artifact template:** (see `.agent/agents/oat-reviewer.md` for full format)
 
@@ -320,6 +343,9 @@ oat_project: {PROJECT_PATH}
 ### Important
 {findings or "None"}
 
+### Medium
+{findings or "None"}
+
 ### Minor
 {findings or "None"}
 
@@ -349,7 +375,7 @@ After review artifact is written, update `plan.md` `## Reviews` table *if plan.m
 Update or add a row matching `{scope}`:
 - `Scope`: `{scope}` (examples: `p02`, `final`, `spec`, `design`)
 - `Type`: `code` or `artifact`
-- `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; after fixes are implemented, implement should move the row to `fixes_completed` until a re-review marks `passed`)
+- `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; `passed` now requires no unresolved Critical/Important/Medium and final deferred-medium disposition when applicable)
 - `Date`: `{today}`
 - `Artifact`: `reviews/{filename}.md`
 
@@ -398,7 +424,7 @@ Review complete for {project-name}.
 
 Scope: {scope}
 Files reviewed: {N}
-Findings: {N} critical, {N} important, {N} minor
+Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 Review artifact: {path}
 Bookkeeping commit: {sha or "deferred with user approval"}
@@ -416,4 +442,5 @@ Next: Run /oat:receive-review to convert findings into plan tasks.
 - Review artifact written to correct path
 - Plan.md Reviews section updated
 - Review artifact + plan bookkeeping committed atomically (or explicitly deferred with user approval)
+- For final scope, deferred findings ledger included in reviewer context
 - User guided to next step (/oat:receive-review)

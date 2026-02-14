@@ -43,18 +43,40 @@ Ask user: "Are you sure you want to mark **{PROJECT_NAME}** as complete?"
 
 If user declines, exit gracefully.
 
-### Step 3: Check for Final Review (Warning Only)
+### Step 3: Check for Final Review (Warning + Confirmation)
 
 ```bash
-if [[ -d "${PROJECT_PATH}/reviews" ]]; then
-  review_count=$(ls -1 "${PROJECT_PATH}/reviews"/*.md 2>/dev/null | wc -l)
-  if [[ "$review_count" -eq 0 ]]; then
-    echo "Warning: No review artifacts found. Consider running /oat:request-review first."
+PLAN_FILE="${PROJECT_PATH}/plan.md"
+
+if [[ -f "$PLAN_FILE" ]]; then
+  final_row=$(grep -E "^\|\s*final\s*\|" "$PLAN_FILE" | head -1 || true)
+  if [[ -z "$final_row" ]]; then
+    echo "Warning: No final review row found in plan.md."
+  elif ! echo "$final_row" | grep -qE "\|\s*passed\s*\|"; then
+    echo "Warning: Final code review is not marked passed."
+    echo "Recommendation: run /oat:request-review code final and /oat:receive-review before completing."
   fi
 else
-  echo "Warning: No reviews directory found. Consider running /oat:request-review first."
+  echo "Warning: plan.md not found, unable to verify final review status."
 fi
 ```
+
+### Step 3.5: Check Deferred Medium Findings (Warning + Confirmation)
+
+```bash
+IMPL_FILE="${PROJECT_PATH}/implementation.md"
+
+if [[ -f "$IMPL_FILE" ]]; then
+  if rg -n "Deferred Findings \(Medium|Deferred Findings \(Medium/Minor" "$IMPL_FILE" >/dev/null 2>&1; then
+    echo "Warning: Deferred Medium findings are recorded in implementation.md."
+    echo "Recommendation: resurface via final review and explicitly disposition before completion."
+  fi
+fi
+```
+
+After Step 3 and 3.5 warnings:
+- Ask user for explicit confirmation to continue if final review is not `passed` OR deferred Medium findings are present.
+- Suggested prompt: "Completion gates are not fully satisfied. Continue marking lifecycle complete anyway?"
 
 ### Step 4: Check for PR Description (Warning Only)
 

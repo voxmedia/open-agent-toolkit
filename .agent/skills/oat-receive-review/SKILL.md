@@ -105,8 +105,13 @@ Extract findings from the review artifact and categorize:
 - Missing error handling
 - Significant maintainability issues
 
+**Medium (default fix before pass):**
+- P2 requirements with meaningful behavior/quality impact
+- Moderate maintainability/testability issues
+- Contract gaps that can cause future regressions
+
 **Minor (fix if time permits):**
-- P2 requirements
+- Cosmetic/non-behavioral polish
 - Style issues
 - Documentation gaps
 
@@ -114,16 +119,18 @@ Extract findings from the review artifact and categorize:
 ```
 Critical: {N}
 Important: {N}
+Medium: {N}
 Minor: {N}
 ```
 
-**If Critical + Important == 0:**
+**If Critical + Important + Medium == 0:**
 - Mark the review as `passed` in the plan.md Reviews table (if plan.md exists)
 - No fix tasks are added
 - Route user to the next action:
   - If scope is `final`: prompt for PR (or run `/oat:pr-project` when available)
   - Otherwise: continue normal implementation
   - Note: `passed` means “review passed” (not merely “fixes completed”). If fixes exist, use `fixes_completed` until a re-review passes.
+  - For `final` scope, only mark `passed` after deferred-medium resurfacing/disposition (Step 8.5) is complete.
 
 ### Step 3: Determine Task Scope
 
@@ -155,7 +162,7 @@ grep -E "^### Task ${TARGET_PHASE}-t[0-9]+:" "$PROJECT_PATH/plan.md" | tail -5
 
 ### Step 5: Convert Findings to Tasks
 
-**For each Critical and Important finding:**
+**For each Critical, Important, and Medium finding (default):**
 
 Create a plan task entry:
 
@@ -215,7 +222,7 @@ Add new tasks to plan.md in the target phase.
 ```markdown
 ## Reviews
 - Update or add a row for `{scope}` in the Reviews table:
-  - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important)
+  - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important/Medium and no unresolved deferred-medium gate for final)
   - Date: `{today}`
   - Artifact: `reviews/{filename}.md`
 ```
@@ -223,7 +230,7 @@ Add new tasks to plan.md in the target phase.
 **Status semantics (v1):**
 - `fixes_added`: fix tasks were created and added to the plan
 - `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review completed and recorded as passing
+- `passed`: re-review completed and recorded as passing (no unresolved Critical/Important/Medium, and final-scope deferred-medium gate satisfied)
 
 ### Step 7: Update Implementation.md
 
@@ -238,6 +245,7 @@ Add a note to implementation.md:
 **Findings:**
 - Critical: {N}
 - Important: {N}
+- Medium: {N}
 - Minor: {N}
 
 **New tasks added:** {task_ids}
@@ -284,7 +292,32 @@ Choose an option:
 
 **If under limit:** Proceed normally.
 
-### Step 9: Handle Minor Findings
+### Step 8.5: Final Scope Deferred-Medium Resurfacing (Required)
+
+If `scope == final`, resurface previously deferred Medium findings from prior review cycles before marking final as `passed`.
+
+- Source of truth: `implementation.md` review notes ("Deferred Findings"), plus prior review artifacts in `reviews/`.
+- Build a "Deferred Medium Ledger" with each item and current disposition state.
+
+Ask user to decide each deferred Medium:
+1. Convert to fix task now
+2. Explicitly accept defer to post-release with rationale
+
+Rules:
+- Do not silently keep deferred Mediums in final scope.
+- If any deferred Medium remains undecided, final review cannot be marked `passed`.
+- Record user decisions + rationale in `implementation.md` under the final review notes.
+
+### Step 9: Handle Medium Deferral Requests and Minor Findings
+
+Medium findings are converted to tasks by default.
+
+Only propose Medium deferral when there is a concrete reason (duplicate, blocked dependency, explicit out-of-scope follow-up, or high-risk churn now).
+
+If any Medium is proposed for deferral:
+- Ask user explicitly for approval per finding.
+- If user declines deferral, convert that Medium to a fix task now.
+- If user approves deferral, record rationale in `implementation.md` under "Deferred Findings (Medium)".
 
 Minor findings are NOT converted to tasks by default.
 
@@ -342,11 +375,12 @@ Review received for {project-name}.
 
 Review: {review_filename}
 Scope: {scope}
-Findings: {N} critical, {N} important, {N} minor
+Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 Actions taken:
 - Added {N} fix tasks to plan.md ({task_ids})
 - Updated implementation.md with review notes
+- Deferred/accepted Medium findings: {N}
 - Deferred {N} minor findings
 
 Review cycle: {N} of 3
@@ -373,9 +407,11 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 - Active project resolved
 - Review artifact located and read
 - Findings parsed and categorized
-- Fix tasks created for Critical/Important findings
+- Fix tasks created for Critical/Important/Medium findings by default
 - Plan.md updated with new tasks
 - Implementation.md updated with review notes
 - Review cycle count checked (cap at 3)
+- Final-scope deferred Medium findings resurfaced and explicitly dispositioned
 - User routed to next action
+- Medium deferrals handled via explicit user approval
 - Minor findings handled (converted or deferred)
