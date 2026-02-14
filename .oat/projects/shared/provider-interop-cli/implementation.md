@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t04
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 8 | 3/8 |
+| Phase 4 | in_progress | 8 | 4/8 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 54/65 tasks completed
+**Total:** 55/65 tasks completed
 
 ---
 
@@ -1333,6 +1333,7 @@ oat_generated: false
 - [x] p04-t01: Implement oat status command - de3e1d1
 - [x] p04-t02: Implement oat sync command - 4da6bf6
 - [x] p04-t03: Implement oat init command with adoption flow - d9c649c
+- [x] p04-t04: Implement oat providers list command - 191b843
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1382,6 +1383,7 @@ oat_generated: false
 - Started Phase 4 by implementing `oat status` with scope-aware drift/stray reporting, non-interactive remediation behavior, and command-level tests.
 - Continued Phase 4 by implementing `oat sync` with dry-run/apply paths, JSON summaries, idempotent no-op handling, and command-level tests.
 - Continued Phase 4 by implementing `oat init` with stray adoption, optional hook consent/install behavior, and command-level coverage.
+- Continued Phase 4 by implementing `oat providers list` with adapter detection and per-provider sync summaries.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1478,7 +1480,7 @@ oat_generated: false
 
 **Review cycle:** 2 of 3
 
-**Next:** Continue implementation with `p04-t04` via `/oat:implement`.
+**Next:** Continue implementation with `p04-t05` via `/oat:implement`.
 
 ---
 
@@ -1568,6 +1570,34 @@ oat_generated: false
 - Implemented hook handling inside the init command for this phase; the dedicated hook engine module remains planned in Phase 5 (`p05-t01`).
 - Kept unit coverage command-focused; full workflow integration remains planned for `p04-t08`.
 
+### Task p04-t04: Implement `oat providers list` command
+
+**Status:** completed
+**Commit:** 191b843
+
+**Outcome (required when completed):**
+- Implemented `createProvidersCommand()` parent command with a `list` subcommand and wiring for upcoming `inspect` implementation.
+- Implemented `providers list` adapter discovery and per-provider drift summary reporting.
+- Added list command tests for detection status display, summary fields, JSON output, and scope handling.
+
+**Files changed:**
+- `packages/cli/src/commands/providers/index.ts` - implemented providers parent command and registered subcommands.
+- `packages/cli/src/commands/providers/list.ts` - implemented provider list command behavior and output formatting.
+- `packages/cli/src/commands/providers/providers.types.ts` - added provider list command dependency and payload types.
+- `packages/cli/src/commands/providers/list.test.ts` - added list command behavior tests.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/providers/list`
+- Result: pass (4 tests)
+- Run: `pnpm --filter=@oat/cli type-check`
+- Result: pass
+- Run: `pnpm --filter=@oat/cli lint`
+- Result: pass
+
+**Notes / Decisions:**
+- Added `providers inspect` as a temporary placeholder command in this task; detailed behavior remains planned for `p04-t05`.
+- Kept list output command-local for now, with richer provider detail formatting deferred to inspect work.
+
 ---
 
 ## Deviations from Plan
@@ -1583,7 +1613,7 @@ oat_generated: false
 | 1 | `cd packages/cli && pnpm test`; `pnpm --filter=@oat/cli type-check` (twenty-two times); `pnpm --filter=@oat/cli test src/errors/cli-error.test.ts`; `pnpm --filter=@oat/cli test src/ui/logger.test.ts`; `pnpm --filter=@oat/cli test src/ui/spinner.test.ts`; `pnpm --filter=@oat/cli test src/app/`; `pnpm --filter=@oat/cli test src/app/create-program.test.ts`; `pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help`; `pnpm --filter=@oat/cli test src/shared/`; `pnpm --filter=@oat/cli test src/providers/shared/`; `pnpm --filter=@oat/cli test src/providers/claude/`; `pnpm --filter=@oat/cli test src/providers/cursor/`; `pnpm --filter=@oat/cli test src/providers/codex/`; `pnpm --filter=@oat/cli test src/manifest/`; `pnpm --filter=@oat/cli test src/manifest/hash`; `pnpm --filter=@oat/cli test src/engine/scanner`; `pnpm --filter=@oat/cli test src/config/`; `pnpm --filter=@oat/cli test src/fs/`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test 2>&1 | rg "dist/" -n || true`; `pnpm --filter=@oat/cli test src/fs/io.test.ts`; `pnpm --filter=@oat/cli test src/app/command-context.test.ts`; `pnpm --filter=@oat/cli test src/shared/types.test.ts`; `pnpm --filter=@oat/cli test src/providers/shared/adapter.types.test.ts`; `pnpm --filter=@oat/cli test src/fs/paths.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check` | 26 | 0 | n/a (bootstrap) |
 | 2 | `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/markers.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/engine.types.test.ts src/engine/compute-plan.test.ts src/engine/execute-plan.test.ts src/engine/markers.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts`; `pnpm --filter=@oat/cli test src/engine/compute-plan.test.ts && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/engine/execute-plan.test.ts src/engine/engine.integration.test.ts`; `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 11 | 0 | n/a (phase boundary + review fixes) |
 | 3 | `pnpm --filter=@oat/cli test src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/ui/output`; `pnpm --filter=@oat/cli test src/shared/prompts`; `pnpm --filter=@oat/cli test src/ui/output && pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli test src/drift/strays && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift/strays src/drift/detector`; `pnpm --filter=@oat/cli test src/drift/strays`; `pnpm --filter=@oat/cli test src/drift src/ui/output && pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli test src/drift src/ui/output src/shared/prompts && pnpm --filter=@oat/cli type-check && pnpm --filter=@oat/cli lint` | 9 | 0 | n/a (phase boundary + review fixes) |
-| 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli test src/commands/sync/`; `pnpm --filter=@oat/cli test src/commands/init/`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 3 | 0 | n/a (task-level verification) |
+| 4 | `pnpm --filter=@oat/cli test src/commands/status/`; `pnpm --filter=@oat/cli test src/commands/sync/`; `pnpm --filter=@oat/cli test src/commands/init/`; `pnpm --filter=@oat/cli test src/commands/providers/list`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint` | 4 | 0 | n/a (task-level verification) |
 | 5 | - | - | - | - |
 
 ## Final Summary (for PR/docs)
