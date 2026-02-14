@@ -35,6 +35,12 @@ Usage notes:
 </skill>
 
 <skill>
+<name>create-oat-skill</name>
+<description>Create a new OAT workflow skill with standard sections, project-root resolution, and progress banner conventions.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>create-ticket</name>
 <description>Create a Jira ticket in the DWP project via Atlassian MCP integration.</description>
 <location>project</location>
@@ -71,6 +77,96 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-index</name>
+<description>Generate or regenerate comprehensive knowledge base of the codebase using parallel mapper agents.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-discovery</name>
+<description>Start discovery phase - gather requirements and understand the problem through structured dialogue.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-spec</name>
+<description>Create formal specification from discovery insights with structured requirements and acceptance criteria.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-design</name>
+<description>Create detailed technical design from specification with architecture and implementation details.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-plan</name>
+<description>Create implementation plan from design with bite-sized TDD tasks.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-implement</name>
+<description>Execute implementation plan task-by-task with state tracking and TDD discipline.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-progress</name>
+<description>Check project progress and get routed to the appropriate next skill.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-new-project</name>
+<description>Create a new OAT project directory from templates under the configured projects root.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-request-review</name>
+<description>Use when ready to review completed work before merging - after implementing a task, phase, or full project; when quality gate needed before PR.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-receive-review</name>
+<description>Use after running oat-request-review - when a review artifact exists and findings need to be converted into actionable plan tasks for gap closure.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-pr-progress</name>
+<description>Create a progress PR description for a specific plan phase (pNN) using OAT artifacts and commit conventions; optionally open a PR.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-pr-project</name>
+<description>Create the final project PR description (into main) using OAT artifacts and final review status; optionally open a PR.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-open-project</name>
+<description>Set the active OAT project with validation and dashboard refresh.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-clear-active-project</name>
+<description>Clear the active OAT project pointer and refresh dashboard.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-complete-project</name>
+<description>Mark the active project lifecycle as complete with optional review/PR checks.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>read-relevant-docs</name>
 <description>Discover and read relevant documentation from the Honeycomb Docs app based on the current conversation context.</description>
 <location>project</location>
@@ -85,6 +181,12 @@ Usage notes:
 <skill>
 <name>update-doc-refs</name>
 <description>Check and apply @docs reference comments to source files.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>update-internal-project-reference</name>
+<description>Use when OAT implementation changes and you need to update .oat/internal-project-reference docs to match (temporary while dogfooding).</description>
 <location>project</location>
 </skill>
 

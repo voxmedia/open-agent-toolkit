@@ -5,6 +5,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "oat:validate-skills": "tsx .oat/scripts/validate-oat-skills.ts",
     "build": "turbo run build",
     "clean": "turbo run clean",
     "cli": "tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts",

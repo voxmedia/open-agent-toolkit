@@ -4,6 +4,7 @@ description: Initialize a new agent project with structured workflow for discove
 argument-hint: "[project-name]"
 disable-model-invocation: true
 allowed-tools: Bash(npx tsx:*), Read, AskUserQuestion, Task(explore-gather)
+user-invocable: true
 ---
 
 # New Agent Project

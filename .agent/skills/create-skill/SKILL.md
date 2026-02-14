@@ -20,6 +20,9 @@ Use when:
 - Adding a new command that both Claude Code and Cursor should support
 - Extending AI assistant capabilities for the repository
 
+**If you are creating a new `oat-*` skill:**
+- Prefer `/create-oat-skill` (it references this baseline guidance and adds OAT-specific conventions like `{PROJECTS_ROOT}` resolution and separator progress banners).
+
 ## When NOT to Use
 
 Don't create a skill when:

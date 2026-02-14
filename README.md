@@ -1,494 +1,177 @@
-# Project Scaffold
+# Open Agent Toolkit (OAT)
 
-A modern TypeScript project scaffold with pre-configured tooling for linting, formatting, git hooks, CI/CD, and AI assistant integration.
+A structured workflow system for AI-assisted software development with human-in-the-loop checkpoints, knowledge-first enforcement, and full traceability from requirements to implementation.
 
-## Table of Contents
+## Overview
 
-- [Quick Start](#quick-start)
-- [What's Included](#whats-included)
-- [Customizing for Your Project](#customizing-for-your-project)
-- [Development Commands](#development-commands)
-- [Configuration Files](#configuration-files)
-- [Git Hooks System](#git-hooks-system)
-- [AI Assistant Integration](#ai-assistant-integration)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [Project Structure](#project-structure)
+OAT provides a disciplined approach to AI-assisted development through:
 
----
+- **Knowledge-first enforcement** - Requires codebase analysis before starting work
+- **Phased workflow** - Discovery → Spec → Design → Plan → Implement
+- **Human-in-the-loop gates** - Configurable checkpoints for review and approval
+- **TDD discipline** - Red-green-refactor pattern in implementation
+- **Full traceability** - Requirements linked to tasks linked to commits
 
 ## Quick Start
 
+**In Claude Code or Cursor:**
+```
+/oat:progress    # Check status and get guidance
+/oat:index       # Generate codebase knowledge base (required first)
+/oat:discovery   # Start a new project
+```
+
+**Via CLI:**
 ```bash
-# Clone the scaffold
-git clone <this-repo-url> my-new-project
-cd my-new-project
-
-# Remove existing git history and start fresh
-rm -rf .git
-git init
-
-# Install dependencies (hooks are auto-installed)
-pnpm install
-
-# Verify everything works
-pnpm lint
-pnpm type-check
-pnpm build
+npx openskills read oat-progress
+npx openskills read oat-index
+npx openskills read oat-discovery
 ```
 
----
+## Workflow Phases
 
-## What's Included
-
-### Core Tooling
-
-| Tool | Version | Purpose |
-|------|---------|---------|
-| **TypeScript** | 5.8.3 | Type-safe JavaScript with modern ES2022 target |
-| **Biome** | 2.3.11 | Fast linting and formatting (replaces ESLint + Prettier) |
-| **tsx** | 4.21.0 | Direct TypeScript execution without compilation |
-| **tsc-alias** | 1.8.10 | Path alias resolution in compiled output |
-| **CommitLint** | 19.8.1 | Conventional commit message enforcement |
-| **lint-staged** | 15.2.11 | Run linters on staged files only |
-
-### Pre-configured Features
-
-- **Git Hooks**: Pre-commit linting, commit message validation, pre-push checks
-- **CI Workflow**: GitHub Actions for lint, type-check, and build on PRs
-- **Editor Config**: VSCode settings with Biome as default formatter
-- **AI Assistants**: Claude Code and Cursor configurations with custom commands
-- **Project Tracking**: `.agents/` system for multi-session development documentation
-
-### Requirements
-
-- **Node.js**: >= 22.17.0
-- **pnpm**: >= 10.13.1
-
----
-
-## Customizing for Your Project
-
-### 1. Update package.json
-
-```json
-{
-  "name": "your-project-name",
-  "description": "Your project description",
-  "version": "0.1.0"
-}
+```
+/oat:index → /oat:discovery → /oat:spec → /oat:design → /oat:plan → /oat:implement
 ```
 
-### 2. Update CLAUDE.md
+### 1. Knowledge Generation (`/oat:index`)
 
-This file provides context to Claude Code. Update it to describe your project:
+Generate comprehensive codebase analysis using parallel mapper agents. Creates a knowledge base in `.oat/knowledge/repo/` that subsequent phases reference.
 
-```markdown
-# CLAUDE.md
+**Output:** `project-index.md`, entrypoint analyses, architecture documentation
 
-This file provides guidance to Claude Code when working with this repository.
+### 2. Discovery (`/oat:discovery`)
 
-## Project Overview
-<!-- Describe what your project does -->
+Gather requirements through structured dialogue. Understand the problem, explore constraints, and capture decisions.
 
-## Development Commands
-<!-- List your main commands -->
+**Output:** `.agent/projects/{name}/discovery.md`
 
-## Architecture
-<!-- Describe your project structure and key decisions -->
+### 3. Specification (`/oat:spec`)
+
+Create formal requirements with acceptance criteria from discovery insights. Produces a testable specification.
+
+**Output:** `.agent/projects/{name}/spec.md`
+
+### 4. Design (`/oat:design`)
+
+Create detailed technical design from specification. Documents architecture, interfaces, and implementation approach.
+
+**Output:** `.agent/projects/{name}/design.md`
+
+### 5. Planning (`/oat:plan`)
+
+Break design into bite-sized TDD tasks with stable IDs, verification commands, and commit messages.
+
+**Output:** `.agent/projects/{name}/plan.md`
+
+### 6. Implementation (`/oat:implement`)
+
+Execute plan tasks with state tracking. Follows TDD discipline, commits per task, and stops at phase boundaries for review.
+
+**Output:** `.agent/projects/{name}/implementation.md`
+
+## Running Skills
+
+**In Claude Code or Cursor:**
+```
+/oat:progress
+/oat:discovery
+/oat:spec
 ```
 
-### 3. Configure GitHub Repository
-
-1. Push to your new GitHub repository
-2. The CI workflow will automatically run on PRs to `main`
-3. Optionally update `.github/PULL_REQUEST_TEMPLATE.md` for your team
-
-### 4. Optional: Update Jira/GitHub URLs
-
-If you use Jira or want specific GitHub URLs in PR description templates, update:
-- `.cursor/rules/pr-description-rules.mdc` - Replace `your-org.atlassian.net`
-- `.claude/commands/create-pr.md` - Replace example URLs
-
-### 5. Optional: Customize TypeScript Config
-
-The `tsconfig.json` includes strict settings. Adjust if needed:
-
-```json
-{
-  "compilerOptions": {
-    // Disable if too strict for your use case
-    "noUncheckedIndexedAccess": false,
-    "noPropertyAccessFromIndexSignature": false
-  }
-}
-```
-
-### 6. Optional: Add Path Aliases
-
-To use path aliases like `@/utils`:
-
-```json
-// tsconfig.json
-{
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
-  }
-}
-```
-
-The `tsc-alias` tool will resolve these in the compiled output.
-
----
-
-## Development Commands
-
-### Building & Running
-
+**Via CLI:**
 ```bash
-pnpm build        # Compile TypeScript to dist/ with alias resolution
-pnpm clean        # Remove dist directory
-pnpm type-check   # Run TypeScript type checking (no emit)
+npx openskills read oat-progress
+npx openskills read oat-discovery
 ```
 
-### Linting & Formatting
+## Human-in-the-Loop (HiL) Gates
 
-```bash
-pnpm lint         # Check for lint errors
-pnpm lint:fix     # Fix lint errors automatically
-pnpm format       # Check code formatting
-pnpm format:fix   # Format code automatically
-```
-
-### Git Hooks Management
-
-```bash
-pnpm hooks:status       # Show which hooks are enabled
-pnpm hooks:enable-all   # Enable all hooks
-pnpm hooks:disable-all  # Disable all hooks
-pnpm hooks enable <hook>   # Enable specific hook
-pnpm hooks disable <hook>  # Disable specific hook
-```
-
-### Running TypeScript Directly
-
-```bash
-npx tsx src/index.ts           # Run without compilation
-npx tsx watch src/index.ts     # Run with hot reload
-```
-
----
-
-## Configuration Files
-
-### biome.json - Linting & Formatting
-
-Biome handles both linting and formatting in a single tool.
-
-**Key Settings:**
-- 2-space indentation, single quotes, trailing commas
-- 80 character line width
-- Strict linting rules with test file exceptions
-- Auto-fix on save (via VSCode settings)
-
-**Test File Exceptions:**
-Files matching `*.test.ts` or `*.spec.ts` have relaxed rules (e.g., `noExplicitAny` allowed).
-
-### tsconfig.json - TypeScript
-
-**Compiler Options:**
-- ES2022 target with ESNext modules
-- Bundler module resolution
-- Strict mode with additional checks:
-  - `noUncheckedIndexedAccess` - Safer array/object access
-  - `noImplicitOverride` - Explicit override keyword required
-  - `noImplicitReturns` - All code paths must return
-  - `verbatimModuleSyntax` - Explicit import/export types
-
-**Output:**
-- Compiles to `dist/`
-- Generates `.d.ts` declaration files
-- Incremental compilation enabled
-
-**tsc-alias Integration:**
-```json
-{
-  "tsc-alias": {
-    "verbose": false,
-    "resolveFullPaths": true,
-    "resolveFullExtension": ".js"
-  }
-}
-```
-
-### commitlint.config.js - Commit Messages
-
-Enforces [Conventional Commits](https://www.conventionalcommits.org/) format:
-
-```
-type(scope): subject
-
-feat(api): add user authentication
-fix(ui): resolve button alignment issue
-docs: update README with examples
-```
-
-**Allowed Types:** feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
-
-### .lintstagedrc.mjs - Pre-commit Checks
-
-Runs on staged files before each commit:
-
-```javascript
-export default {
-  "*.{ts,tsx,js,jsx}": ["biome check --write --no-errors-on-unmatched"],
-  "*.json": ["biome format --write --no-errors-on-unmatched"],
-  "*.md": ["biome format --write --no-errors-on-unmatched"],
-};
-```
-
-### .nvmrc - Node Version
-
-Specifies Node.js 22.17.0. Use with nvm:
-
-```bash
-nvm use  # Automatically uses version from .nvmrc
-```
-
----
-
-## Git Hooks System
-
-Located in `tools/git-hooks/`, this system provides automated code quality checks.
-
-### Available Hooks
-
-| Hook | Trigger | Action |
-|------|---------|--------|
-| **pre-commit** | Before commit | Runs lint-staged on staged files |
-| **commit-msg** | After writing commit message | Validates conventional commit format |
-| **pre-push** | Before push | Runs full lint suite |
-| **post-checkout** | After branch switch | Auto-installs dependencies if lockfile changed |
-
-### Automatic Installation
-
-Hooks are automatically installed when you run `pnpm install` via the `prepare` script.
-
-### Disabling Hooks
-
-**Temporarily (single command):**
-```bash
-git commit --no-verify -m "skip hooks"
-```
-
-**For CI/Docker environments:**
-```bash
-GIT_HOOKS=0 pnpm install
-```
-
-**Disable specific hook:**
-```bash
-pnpm hooks disable pre-push
-```
-
-### How It Works
-
-The `manage-hooks.js` script creates symlinks from `.git/hooks/` to `tools/git-hooks/`. This approach:
-- Keeps hooks in version control
-- Allows easy enable/disable without deleting files
-- Tracks intentionally disabled hooks in `.git/hooks/.disabled-hooks`
-
----
-
-## AI Assistant Integration
-
-This scaffold includes configurations for both Claude Code and Cursor AI assistants.
-
-### Claude Code (`.claude/`)
-
-**Settings** (`.claude/settings.json`):
-```json
-{
-  "respectGitignore": false
-}
-```
-Allows Claude to access the `.agents/` directory for project context.
-
-**Custom Commands:**
-- `/start-agent-project` - Initialize a new project with discovery/planning/implementation workflow
-- `/create-pr` - Generate comprehensive PR descriptions
-
-### Cursor (`.cursor/`)
-
-**Rules** (`.cursor/rules/`):
-- `pr-description-rules.mdc` - Guidelines for creating detailed PR descriptions
-
-**Commands:**
-Same as Claude Code commands in `.cursor/commands/`.
-
-### Agent Project Workflow (`.agents/`)
-
-A system for tracking multi-session development work:
-
-```
-.agents/
-├── scripts/
-│   └── new-agent-project.ts    # Scaffolding tool
-└── projects/
-    └── <project-name>/
-        ├── discovery.md        # Requirements gathering
-        ├── planning.md         # Implementation planning
-        └── implementation.md   # Progress tracking
-```
-
-**Creating a New Agent Project:**
-```bash
-npx tsx .agents/scripts/new-agent-project.ts my-feature
-```
-
-Or use the Claude/Cursor command: `/start-agent-project`
-
-**Workflow Phases:**
-
-1. **Discovery** - Gather requirements, identify constraints, ask clarifying questions
-2. **Planning** - Design implementation approach, document architecture decisions
-3. **Implementation** - Track progress, log decisions, note deviations from plan
-
-**Benefits:**
-- Maintains context across coding sessions
-- Rich context for PR descriptions
-- Agent-agnostic (works with any AI assistant)
-- Kept local (gitignored by default)
-
----
-
-## CI/CD Pipeline
-
-### GitHub Actions Workflow
-
-Located at `.github/workflows/ci.yml`:
+Configure checkpoints in `state.md`:
 
 ```yaml
-name: CI
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  ci:
-    runs-on: ubuntu-latest
-    steps:
-      - Checkout
-      - Setup pnpm
-      - Setup Node.js (from .nvmrc)
-      - Install dependencies
-      - Run: pnpm lint
-      - Run: pnpm type-check
-      - Run: pnpm build
+oat_hil_checkpoints: ["discovery", "spec", "design"]
+oat_hil_completed: ["discovery"]
 ```
 
-**Triggers:**
-- Push to `main` branch
-- Pull requests targeting `main`
+- **Workflow HiL** - Gates between workflow phases (discovery → spec → design → plan → implement)
+- **Plan phase checkpoints** - Gates at plan phase boundaries during implementation. Configure via `oat_plan_hil_phases` in plan.md (empty = stop at every phase; set to the last phase like `["p03"]` to stop only at the end; or list specific phases like `["p01", "p04"]`)
 
-### PR Template
-
-`.github/PULL_REQUEST_TEMPLATE.md` provides a standard structure:
-
-```markdown
-## Purpose
-<!-- Brief description -->
-
-## Changes
-- [ ] Change 1
-- [ ] Change 2
-
-## Testing
-- [ ] Unit tests
-- [ ] Manual testing
-
-## Notes
-<!-- Additional context -->
-```
-
----
-
-## Project Structure
+## Directory Structure
 
 ```
-.
-├── src/                          # Source code
-│   └── index.ts                  # Entry point
-├── dist/                         # Compiled output (gitignored)
-├── tools/
-│   └── git-hooks/                # Git hook scripts
-│       ├── manage-hooks.js       # Hook management CLI
-│       ├── pre-commit            # Lint staged files
-│       ├── commit-msg            # Validate commit message
-│       ├── pre-push              # Full lint before push
-│       └── post-checkout         # Auto-install deps
-├── .agents/                      # AI project documentation
-│   ├── scripts/                  # Tooling
-│   └── projects/                 # Project-specific docs
-├── .claude/                      # Claude Code config
-│   ├── settings.json
-│   └── commands/
-├── .cursor/                      # Cursor AI config
-│   ├── rules/
-│   └── commands/
-├── .github/
-│   ├── workflows/ci.yml          # CI pipeline
-│   └── PULL_REQUEST_TEMPLATE.md
-├── .vscode/
-│   └── settings.json             # Editor config
-├── biome.json                    # Linting & formatting
-├── tsconfig.json                 # TypeScript config
-├── commitlint.config.js          # Commit message rules
-├── .lintstagedrc.mjs             # Pre-commit checks
-├── .nvmrc                        # Node version
-├── package.json
-├── pnpm-lock.yaml
-├── CLAUDE.md                     # AI assistant context
-└── README.md                     # This file
+.oat/
+├── knowledge/repo/       # Generated codebase analysis
+│   ├── project-index.md  # Main knowledge index
+│   └── entrypoints/      # Per-entrypoint analyses
+├── templates/            # Document templates
+│   ├── discovery.md
+│   ├── spec.md
+│   ├── design.md
+│   ├── plan.md
+│   └── implementation.md
+└── scripts/              # Utility scripts
+    └── generate-thin-index.sh
+
+.agent/
+├── skills/               # OAT skill definitions
+│   ├── oat-index/
+│   ├── oat-discovery/
+│   ├── oat-spec/
+│   ├── oat-design/
+│   ├── oat-plan/
+│   ├── oat-implement/
+│   └── oat-progress/
+└── projects/             # Project-specific documents
+    └── <project-name>/
+        ├── state.md          # Workflow state
+        ├── discovery.md      # Requirements gathering
+        ├── spec.md           # Formal specification
+        ├── design.md         # Technical design
+        ├── plan.md           # Implementation tasks
+        └── implementation.md # Progress tracking
 ```
 
----
+## Key Features
 
-## Troubleshooting
+### Staleness Detection
 
-### Hooks not running
+OAT tracks when knowledge was generated and warns when it may be outdated:
+- Age check (>7 days)
+- Git diff check (>20 files changed since generation)
+
+### Stable Task IDs
+
+Tasks use stable IDs (`p01-t03` = Phase 1, Task 3) for traceability across plan, implementation, and commits.
+
+### Mode Assertions
+
+Each phase declares what activities are BLOCKED vs ALLOWED, with self-correction protocols when deviating.
+
+### TDD Format
+
+Plan tasks follow red-green-refactor:
+1. Write test (RED)
+2. Run test → expect failure
+3. Write implementation (GREEN)
+4. Run test → expect pass
+5. Refactor if needed
+
+## Development Commands
 
 ```bash
-# Check hook status
-pnpm hooks:status
-
-# Re-enable all hooks
-pnpm hooks:enable-all
+pnpm build        # Build all packages
+pnpm lint         # Lint code using Biome
+pnpm type-check   # TypeScript type checking
+pnpm test         # Run tests
 ```
 
-### Biome not formatting on save
+## Technology Stack
 
-Ensure you have the Biome VSCode extension installed:
-```bash
-code --install-extension biomejs.biome
-```
-
-### TypeScript path aliases not resolving
-
-Make sure you're running `pnpm build` (not just `tsc`) to include the `tsc-alias` step.
-
-### Dependencies out of sync after branch switch
-
-The `post-checkout` hook should auto-install, but if not:
-```bash
-pnpm install --frozen-lockfile
-```
-
----
+- **Runtime:** Node.js 22.17.0, TypeScript 5.8.3
+- **Build:** Turborepo with pnpm workspaces
+- **Linting:** Biome 2.3.11
+- **AI Integration:** Claude Code, Cursor
 
 ## License
 
