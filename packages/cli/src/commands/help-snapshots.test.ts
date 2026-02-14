@@ -130,6 +130,26 @@ describe('help output snapshots', () => {
     `);
   });
 
+  it('providers inspect --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'providers',
+      'inspect',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat providers inspect [options] <provider>
+
+      Inspect provider details and mapping state
+
+      Arguments:
+        provider    Provider name
+
+      Options:
+        -h, --help  display help for command
+      "
+    `);
+  });
+
   it('doctor --help matches snapshot', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, ['doctor']).helpInformation();

@@ -8,6 +8,7 @@ import {
   addEntry,
   createEmptyManifest,
   loadManifest,
+  ManifestSchema,
   saveManifest,
 } from '../manifest';
 import { scanCanonical } from './scanner';
@@ -88,6 +89,7 @@ describe('edge cases', () => {
     );
 
     const loaded = await loadManifest(manifestPath);
+    expect(() => ManifestSchema.parse(loaded)).not.toThrow();
     expect(loaded.entries).toHaveLength(1);
     expect(loaded.entries[0]?.canonicalPath).toMatch(
       /^\.agents\/skills\/skill-/,

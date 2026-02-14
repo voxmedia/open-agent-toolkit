@@ -53,18 +53,8 @@ async function runCli(
   const previousExitCode = process.exitCode;
   process.exitCode = undefined;
 
-  (process.stdout.write as unknown as (chunk: unknown) => boolean) = (
-    chunk: unknown,
-  ) => {
-    stdoutChunks.push(String(chunk));
-    return true;
-  };
-  (process.stderr.write as unknown as (chunk: unknown) => boolean) = (
-    chunk: unknown,
-  ) => {
-    stderrChunks.push(String(chunk));
-    return true;
-  };
+  process.stdout.write = createWriteCapture(stdoutChunks);
+  process.stderr.write = createWriteCapture(stderrChunks);
 
   try {
     await program.parseAsync(
@@ -83,6 +73,30 @@ async function runCli(
     stdout: stdoutChunks.join(''),
     stderr: stderrChunks.join(''),
     exitCode,
+  };
+}
+
+function createWriteCapture(chunks: string[]): typeof process.stdout.write {
+  return (
+    chunk: string | Uint8Array,
+    encoding?: BufferEncoding | ((error?: Error | null) => void),
+    callback?: (error?: Error | null) => void,
+  ): boolean => {
+    const text =
+      typeof chunk === 'string'
+        ? chunk
+        : Buffer.from(chunk).toString(
+            typeof encoding === 'string' ? encoding : 'utf8',
+          );
+    chunks.push(text);
+
+    if (typeof encoding === 'function') {
+      encoding();
+      return true;
+    }
+
+    callback?.();
+    return true;
   };
 }
 

@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -25,6 +25,9 @@ function assertMappingsValid(
     expect(mapping.canonicalDir).not.toContain('..');
     expect(mapping.providerDir).not.toContain('..');
     expect(mapping.canonicalDir).toMatch(/^\.agents\/(skills|agents)$/);
+    if (mapping.nativeRead) {
+      expect(mapping.providerDir).toBe(mapping.canonicalDir);
+    }
   }
 }
 
@@ -68,6 +71,17 @@ describe('adapter contract', () => {
 
         const detected = await adapter.detect(root);
         expect(typeof detected).toBe('boolean');
+      });
+
+      it('detect returns true when provider root exists', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'oat-adapter-contract-'));
+        tempDirs.push(root);
+
+        const providerRoot = `.${adapter.name}`;
+        await mkdir(join(root, providerRoot), { recursive: true });
+
+        const detected = await adapter.detect(root);
+        expect(detected).toBe(true);
       });
     });
   }
