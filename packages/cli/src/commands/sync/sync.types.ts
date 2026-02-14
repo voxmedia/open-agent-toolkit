@@ -3,9 +3,9 @@ import type { SyncConfig } from '../../config';
 import type { CanonicalEntry, SyncPlan, SyncResult } from '../../engine';
 import type { Manifest } from '../../manifest';
 import type { ProviderAdapter } from '../../providers/shared';
-import type { Scope } from '../../shared/types';
+import type { ConcreteScope, Scope } from '../../shared/types';
 
-export type ConcreteScope = Exclude<Scope, 'all'>;
+export type { ConcreteScope } from '../../shared/types';
 
 export interface ScopeSyncPlan {
   scope: ConcreteScope;

@@ -12,11 +12,9 @@ import { loadManifest, type Manifest } from '../../manifest';
 import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
 import { cursorAdapter } from '../../providers/cursor';
-import type { Scope } from '../../shared/types';
+import type { ConcreteScope, Scope } from '../../shared/types';
 import { type DoctorCheck, formatDoctorResults } from '../../ui/output';
 import { readGlobalOptions, resolveConcreteScopes } from '../shared';
-
-type ConcreteScope = Exclude<Scope, 'all'>;
 
 interface DoctorDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;

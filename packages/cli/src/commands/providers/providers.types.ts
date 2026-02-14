@@ -2,9 +2,14 @@ import type { CommandContext, GlobalOptions } from '../../app/command-context';
 import type { DriftReport } from '../../drift';
 import type { Manifest } from '../../manifest';
 import type { PathMapping, ProviderAdapter } from '../../providers/shared';
-import type { ContentType, Scope, SyncStrategy } from '../../shared/types';
+import type {
+  ConcreteScope,
+  ContentType,
+  Scope,
+  SyncStrategy,
+} from '../../shared/types';
 
-export type ConcreteScope = Exclude<Scope, 'all'>;
+export type { ConcreteScope } from '../../shared/types';
 
 export interface ProviderListSummary {
   managed: number;

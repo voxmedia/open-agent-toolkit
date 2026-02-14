@@ -32,14 +32,13 @@ import {
 } from '../../providers/shared';
 import { confirmAction, type PromptContext } from '../../shared/prompts';
 import {
+  type ConcreteScope,
   type ContentType,
   SCOPE_CONTENT_TYPES,
   type Scope,
 } from '../../shared/types';
 import { formatStatusTable } from '../../ui/output';
 import { readGlobalOptions, resolveConcreteScopes } from '../shared';
-
-type ConcreteScope = Exclude<Scope, 'all'>;
 
 const DEFAULT_REMEDIATION = 'Run "oat init" to adopt stray entries.';
 const ADOPT_PROMPT_PREFIX = 'Adopt stray';

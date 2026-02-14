@@ -27,7 +27,7 @@ import {
   type PathMapping,
 } from '../../providers/shared';
 import { confirmAction, type PromptContext } from '../../shared/prompts';
-import type { Scope } from '../../shared/types';
+import type { ConcreteScope, Scope } from '../../shared/types';
 import { readGlobalOptions, resolveConcreteScopes } from '../shared';
 
 const ADOPT_REMEDIATION =
@@ -37,8 +37,6 @@ const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';
 const HOOK_MARKER_START = '# >>> oat pre-commit hook >>>';
 const HOOK_MARKER_END = '# <<< oat pre-commit hook <<<';
-
-type ConcreteScope = Exclude<Scope, 'all'>;
 
 interface InitOptions extends GlobalOptions {
   hook?: boolean;

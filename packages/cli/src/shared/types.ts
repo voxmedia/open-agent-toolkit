@@ -8,6 +8,7 @@ export type SyncStrategy = z.infer<typeof SyncStrategySchema>;
 
 export const ScopeSchema = z.enum(['project', 'user', 'all']);
 export type Scope = z.infer<typeof ScopeSchema>;
+export type ConcreteScope = Exclude<Scope, 'all'>;
 
 const PROJECT_SCOPE_CONTENT_TYPES: ContentType[] = ['skill', 'agent'];
 const USER_SCOPE_CONTENT_TYPES: ContentType[] = ['skill'];

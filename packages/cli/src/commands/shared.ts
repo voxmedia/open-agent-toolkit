@@ -1,8 +1,6 @@
 import type { Command } from 'commander';
 import type { GlobalOptions } from '../app/command-context';
-import type { Scope } from '../shared/types';
-
-export type ConcreteScope = Exclude<Scope, 'all'>;
+import type { ConcreteScope, Scope } from '../shared/types';
 
 export function readGlobalOptions(command: Command): GlobalOptions {
   return command.optsWithGlobals() as GlobalOptions;
