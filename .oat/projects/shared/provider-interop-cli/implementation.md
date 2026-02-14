@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
-oat_current_task_id: p04-t13
+oat_current_task_id: p04-t14
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ oat_generated: false
 | Phase 1 | complete | 31 | 31/31 |
 | Phase 2 | complete | 11 | 11/11 |
 | Phase 3 | complete | 9 | 9/9 |
-| Phase 4 | in_progress | 24 | 12/24 |
+| Phase 4 | in_progress | 24 | 13/24 |
 | Phase 5 | pending | 6 | 0/6 |
 
-**Total:** 63/81 tasks completed
+**Total:** 64/81 tasks completed
 
 ---
 
@@ -1342,6 +1342,7 @@ oat_generated: false
 - [x] p04-t10: (review) Preserve drift warning output in installed hook - 1bbb1ed
 - [x] p04-t11: (review) Implement per-stray adoption flow in oat status - 5a4d5ba
 - [x] p04-t12: (review) Add provider strategy/content metadata to providers list - 2d0b193
+- [x] p04-t13: (review) Add JSON summary output to oat init - 1d6a7ba
 
 **What changed (high level):**
 - Initialized implementation tracking.
@@ -1398,6 +1399,7 @@ oat_generated: false
 - Continued p04 review-fix execution by making hook behavior non-blocking while surfacing drift remediation warnings.
 - Continued p04 review-fix execution by adding per-stray interactive adoption handling directly in `oat status`.
 - Continued p04 review-fix execution by surfacing provider `defaultStrategy` and supported `contentTypes` in providers list outputs.
+- Continued p04 review-fix execution by emitting structured JSON summaries from `oat init` in non-interactive JSON mode.
 
 **Decisions:**
 - Execute tasks strictly in plan order.
@@ -1836,7 +1838,24 @@ oat_generated: false
 
 ### Task p04-t13: (review) Add JSON summary output to `oat init`
 
-**Status:** pending
+**Status:** completed
+**Commit:** 1d6a7ba
+
+**Outcome (required when completed):**
+- Added JSON-mode summary payload emission in `oat init` with scope-level and aggregate counters.
+- Included required fields for scope, directories initialized, stray counts/adoptions, and hook installation status.
+- Added explicit test coverage for `oat init --json` payload shape.
+
+**Files changed:**
+- `packages/cli/src/commands/init/index.ts` - added JSON summary payload types and emission flow.
+- `packages/cli/src/commands/init/index.test.ts` - added `--json` summary assertion coverage.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/init/`
+- Result: pass (14 tests)
+
+**Notes / Decisions:**
+- Hook status is reported as `boolean | null` to distinguish non-project scopes where hook checks are not applicable.
 
 ### Task p04-t14: (review) Strengthen symlink assertions in command integration tests
 
