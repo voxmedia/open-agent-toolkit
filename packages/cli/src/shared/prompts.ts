@@ -1,4 +1,4 @@
-import { confirm, select } from '@inquirer/prompts';
+import { confirm, input, select } from '@inquirer/prompts';
 import { CliError } from '../errors';
 
 export interface PromptContext {
@@ -32,6 +32,28 @@ export async function confirmAction(
   } catch (error) {
     if (isAbortError(error)) {
       return false;
+    }
+    throw error;
+  }
+}
+
+export async function inputRequired(
+  message: string,
+  ctx: PromptContext,
+): Promise<string | null> {
+  if (!ctx.interactive) {
+    throw new CliError('Input prompt requires interactive mode.', 1);
+  }
+
+  try {
+    const value = (await input({ message })).trim();
+    if (value.length === 0) {
+      throw new CliError('Input is required.', 1);
+    }
+    return value;
+  } catch (error) {
+    if (isAbortError(error)) {
+      return null;
     }
     throw error;
   }

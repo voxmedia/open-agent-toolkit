@@ -4,7 +4,7 @@ import { join, relative } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { CanonicalEntry } from '../engine/scanner';
 import { createEmptyManifest } from '../manifest/manager';
-import { detectStrays } from './strays';
+import { detectStrays, inferScopeRoot } from './strays';
 
 async function seedProviderEntry(
   providerDir: string,
@@ -189,5 +189,15 @@ describe('detectStrays', () => {
       providerPath: '.claude/snippets/canonical-skill',
       state: { status: 'stray' },
     });
+  });
+
+  it('inferScopeRoot resolves innermost provider root for nested dot directories', () => {
+    const providerDir = '/tmp/work/.nested/.claude/skills';
+    expect(inferScopeRoot(providerDir)).toBe('/tmp/work/.nested');
+  });
+
+  it('inferScopeRoot falls back to two-level parent when no provider root marker exists', () => {
+    const providerDir = '/tmp/work/providers/skills';
+    expect(inferScopeRoot(providerDir)).toBe('/tmp/work');
   });
 });

@@ -4,35 +4,13 @@ import { describe, expect, it } from 'vitest';
 import type { DriftReport } from '../drift/drift.types';
 import type { SyncPlan } from '../engine/engine.types';
 import type { ProviderAdapter } from '../providers/shared/adapter.types';
+import { stripAnsi } from './ansi';
 import {
   formatDoctorResults,
   formatProviderDetails,
   formatStatusTable,
   formatSyncPlan,
 } from './output';
-
-function stripAnsi(value: string): string {
-  let result = '';
-  let index = 0;
-
-  while (index < value.length) {
-    if (value.charCodeAt(index) === 27 && value[index + 1] === '[') {
-      index += 2;
-      while (index < value.length && value[index] !== 'm') {
-        index += 1;
-      }
-      if (index < value.length && value[index] === 'm') {
-        index += 1;
-      }
-      continue;
-    }
-
-    result += value[index];
-    index += 1;
-  }
-
-  return result;
-}
 
 describe('output formatters', () => {
   it('formatStatusTable renders aligned table with status markers', () => {
@@ -83,6 +61,65 @@ describe('output formatters', () => {
 
     expect(output).toContain('create_symlink');
     expect(output).toContain('provider path does not exist');
+  });
+
+  it('formatSyncPlan applies semantic colors by operation type', () => {
+    const previousLevel = chalk.level;
+    chalk.level = 1;
+    try {
+      const plan: SyncPlan = {
+        scope: 'project',
+        entries: [
+          {
+            canonical: {
+              name: 'alpha',
+              type: 'skill',
+              canonicalPath: '.agents/skills/alpha',
+            },
+            provider: 'claude',
+            providerPath: '.claude/skills/alpha',
+            operation: 'create_symlink',
+            strategy: 'symlink',
+            reason: 'provider path does not exist',
+          },
+          {
+            canonical: {
+              name: 'beta',
+              type: 'skill',
+              canonicalPath: '.agents/skills/beta',
+            },
+            provider: 'claude',
+            providerPath: '.claude/skills/beta',
+            operation: 'update_symlink',
+            strategy: 'symlink',
+            reason: 'provider path is not a symlink',
+          },
+        ],
+        removals: [
+          {
+            canonical: {
+              name: 'gamma',
+              type: 'skill',
+              canonicalPath: '.agents/skills/gamma',
+            },
+            provider: 'claude',
+            providerPath: '.claude/skills/gamma',
+            operation: 'remove',
+            strategy: 'symlink',
+            reason: 'canonical entry no longer exists',
+          },
+        ],
+      };
+
+      const output = formatSyncPlan(plan, false);
+      expect(output).toContain('\u001B[');
+      const plain = stripAnsi(output);
+      expect(plain).toContain('create_symlink');
+      expect(plain).toContain('update_symlink');
+      expect(plain).toContain('remove');
+    } finally {
+      chalk.level = previousLevel;
+    }
   });
 
   it('formatSyncPlan indicates dry-run vs applied', () => {

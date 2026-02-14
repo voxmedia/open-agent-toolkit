@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import type { DriftReport, DriftState } from '../drift/drift.types';
 import type { SyncPlan } from '../engine/engine.types';
 import type { ProviderAdapter } from '../providers/shared/adapter.types';
+import { stripAnsi } from './ansi';
 
 export type CheckStatus = 'pass' | 'warn' | 'fail';
 
@@ -12,29 +13,6 @@ export interface DoctorCheck {
   status: CheckStatus;
   message: string;
   fix?: string;
-}
-
-function stripAnsi(value: string): string {
-  let result = '';
-  let index = 0;
-
-  while (index < value.length) {
-    if (value.charCodeAt(index) === 27 && value[index + 1] === '[') {
-      index += 2;
-      while (index < value.length && value[index] !== 'm') {
-        index += 1;
-      }
-      if (index < value.length && value[index] === 'm') {
-        index += 1;
-      }
-      continue;
-    }
-
-    result += value[index];
-    index += 1;
-  }
-
-  return result;
 }
 
 function visualPadEnd(value: string, width: number): string {
@@ -135,11 +113,28 @@ export function formatSyncPlan(plan: SyncPlan, applied: boolean): string {
   }
 
   const lines = entries.map((entry) => {
-    const detail = `${entry.operation} ${entry.provider}/${entry.canonical.name}`;
+    const operation = colorSyncOperation(entry.operation);
+    const detail = `${operation} ${entry.provider}/${entry.canonical.name}`;
     return `- ${detail} (${entry.reason})`;
   });
 
   return `${heading}\n${lines.join('\n')}`;
+}
+
+function colorSyncOperation(operation: string): string {
+  if (operation === 'create_symlink' || operation === 'create_copy') {
+    return chalk.green(operation);
+  }
+
+  if (operation === 'update_symlink' || operation === 'update_copy') {
+    return chalk.yellow(operation);
+  }
+
+  if (operation === 'remove') {
+    return chalk.red(operation);
+  }
+
+  return chalk.gray(operation);
 }
 
 function checkMarker(status: CheckStatus): string {

@@ -1,13 +1,12 @@
-import type { Dirent } from 'node:fs';
 import { readdir } from 'node:fs/promises';
-import { basename, join, normalize, relative, resolve } from 'node:path';
+import { basename, join, relative, resolve } from 'node:path';
 import type { CanonicalEntry } from '../engine/scanner';
 import { CliError } from '../errors';
 import type { Manifest } from '../manifest/manifest.types';
 import type { DriftReport } from './drift.types';
 
 function normalizePath(path: string): string {
-  return normalize(path).replaceAll('\\', '/');
+  return path.replaceAll('\\', '/');
 }
 
 function inferContentType(providerDir: string): CanonicalEntry['type'] | null {
@@ -21,7 +20,7 @@ function inferContentType(providerDir: string): CanonicalEntry['type'] | null {
   return null;
 }
 
-function inferScopeRoot(providerDir: string): string {
+export function inferScopeRoot(providerDir: string): string {
   const normalized = normalizePath(resolve(providerDir));
   const segments = normalized.split('/').filter(Boolean);
 
@@ -69,20 +68,9 @@ function isCanonicalEntry(
   });
 }
 
-export async function detectStrays(
-  provider: string,
-  providerDir: string,
-  manifest: Manifest,
-  canonicalEntries: CanonicalEntry[],
-): Promise<DriftReport[]> {
-  const contentType = inferContentType(providerDir);
-  const scopeRoot = inferScopeRoot(providerDir);
-  const reports: DriftReport[] = [];
-  const resolvedProviderDir = resolve(providerDir);
-
-  let entries: Dirent[];
+async function readProviderEntries(resolvedProviderDir: string) {
   try {
-    entries = await readdir(resolvedProviderDir, {
+    return await readdir(resolvedProviderDir, {
       withFileTypes: true,
       encoding: 'utf8',
     });
@@ -108,6 +96,19 @@ export async function detectStrays(
     }
     throw error;
   }
+}
+
+export async function detectStrays(
+  provider: string,
+  providerDir: string,
+  manifest: Manifest,
+  canonicalEntries: CanonicalEntry[],
+): Promise<DriftReport[]> {
+  const contentType = inferContentType(providerDir);
+  const scopeRoot = inferScopeRoot(providerDir);
+  const reports: DriftReport[] = [];
+  const resolvedProviderDir = resolve(providerDir);
+  const entries = await readProviderEntries(resolvedProviderDir);
 
   for (const entry of entries) {
     if (!entry.isDirectory() && !entry.isSymbolicLink()) {
