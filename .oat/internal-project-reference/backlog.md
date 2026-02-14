@@ -167,6 +167,37 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Source discussion: OAT feature ideas (dependency intelligence)
   - Created: 2026-02-14
 
+- [ ] **(P1) [tooling] Add `oat init ideas` subcommand to scaffold ideas workflow**
+  - Target milestone/phase: OAT CLI init subcommands
+  - Notes:
+    - `oat init ideas` scaffolds `.oat/ideas/` directory with `backlog.md` and `scratchpad.md` from templates.
+    - Copies `oat-idea-*` skill files (`oat-idea-new`, `oat-idea-ideate`, `oat-idea-summarize`) into the project's `.agents/skills/` directory.
+    - Same distribution pattern as `oat init workflows` for project workflow skills — init subcommands are how skills reach user projects.
+    - Templates source: `.oat/templates/ideas/`
+    - Skills source: `.agents/skills/oat-idea-*/`
+  - Success criteria:
+    - Running `oat init ideas` creates `.oat/ideas/` with backlog and scratchpad ready to use.
+    - `oat-idea-*` skills are copied into `.agents/skills/` and registered in `AGENTS.md`.
+    - Idempotent — re-running doesn't overwrite existing ideas or customized skills.
+  - Links:
+    - Source: ideas workflow implementation (branch `provider-interop`)
+    - Plan: `.claude/plans/cheeky-questing-barto.md`
+  - Created: 2026-02-14
+
+- [ ] **(P1) [tooling] Add `oat init workflows` subcommand to scaffold project workflow**
+  - Target milestone/phase: OAT CLI init subcommands
+  - Notes:
+    - `oat init workflows` scaffolds `.oat/` directory structure (templates, projects root, scripts) and copies `oat-project-*` / `oat-review-*` / `oat-pr-*` workflow skills into the project's `.agents/skills/` directory.
+    - Same distribution pattern as `oat init ideas` — init subcommands are how skills reach user projects.
+    - Registers skills in `AGENTS.md`.
+  - Success criteria:
+    - Running `oat init workflows` sets up the full project workflow in a new repo.
+    - Skills are copied into `.agents/skills/` and registered in `AGENTS.md`.
+    - Idempotent — re-running doesn't overwrite existing projects or customized skills.
+  - Links:
+    - Related: `oat init ideas` backlog entry
+  - Created: 2026-02-14
+
 - [ ] **(P?) [area] {Title}**
   - Target milestone/phase:
   - Notes:
