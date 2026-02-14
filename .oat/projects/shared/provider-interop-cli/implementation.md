@@ -1564,6 +1564,38 @@ oat_generated: false
 
 ---
 
+### Review Received: p05
+
+**Date:** 2026-02-14  
+**Review artifact:** `reviews/p05-code-review.md`
+
+**Findings:**
+- Critical: 0
+- Important: 0
+- Medium: 5
+- Minor: 4
+
+**Review status:** passed (no Critical/Important findings; no new fix tasks added)
+
+**New tasks added:** None
+
+**Deferred Findings (Medium/Minor):**
+- `M1` `uninstallHook` leaves an empty pre-commit file when OAT was sole content
+- `M2` `runHookCheck` has defensive double-catch semantics
+- `M3` Concurrent manifest write edge-case assertion could validate schema explicitly
+- `M4` E2E stream-capture helper uses type assertions when patching process streams
+- `M5` Help snapshots do not include `providers inspect --help`
+- `m1` `resolveHooksDirectory` does not explicitly special-case symlinked `.git` root
+- `m2` Hook snippet uses `oat status` instead of `oat status --scope project`
+- `m3` Adapter mapping validation does not enforce a stricter `providerDir` invariant
+- `m4` Adapter `detect` contract test checks return type but not positive-detect behavior
+
+**Review cycle:** 1 of 3
+
+**Next:** Run final code review (`/oat:request-review code final`), then process it via `/oat:receive-review`.
+
+---
+
 ## Phase 4: Commands — init, status, sync, providers, doctor
 
 **Status:** complete

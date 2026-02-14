@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. All planned tasks are complete (`p01`-`p05`); awaiting p05 phase review gate before final review/PR routing.
+Implementation - In Progress. All planned tasks are complete (`p01`-`p05`) and p05 review has passed; awaiting final review/PR routing.
 
 ## Artifacts
 
@@ -60,7 +60,7 @@ Implementation - In Progress. All planned tasks are complete (`p01`-`p05`); awai
 - ✓ p05-t04 complete (`test(p05-t04): add help output snapshot tests`)
 - ✓ p05-t05 complete (`test(p05-t05): add end-to-end workflow tests`)
 - ✓ p05-t06 complete (`chore(p05-t06): final verification — CLI ready for initial release`)
-- ⧗ awaiting p05 code review (`/oat:request-review code p05`)
+- ✓ p05 code review passed (`reviews/p05-code-review.md`)
 
 ## Plan Summary
 
@@ -80,4 +80,4 @@ None
 
 ## Next Milestone
 
-Run `/oat:request-review code p05`, then process via `/oat:receive-review` before final review/PR steps.
+Run `/oat:request-review code final`, then process via `/oat:receive-review` before final PR steps.
