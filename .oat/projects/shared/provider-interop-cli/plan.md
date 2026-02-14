@@ -3132,6 +3132,129 @@ git commit -m "test(p06-t04): close deferred contract and e2e findings"
 
 ---
 
+## Phase 7: Final Review Fixes
+
+**Goal:** Address final review Medium findings before final PR generation.
+
+---
+
+### Task p07-t01: (review) Extract shared stray adoption workflow helper
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/status/index.ts`
+- Create: `packages/cli/src/commands/shared/adopt-stray.ts`
+- Create/Modify tests under: `packages/cli/src/commands/{init,status}/`
+
+**Step 1: Understand the issue**
+
+Review finding: duplicated `adoptStrayDefault` logic exists in both `init` and `status`.
+Location: `packages/cli/src/commands/init/index.ts`, `packages/cli/src/commands/status/index.ts`
+
+**Step 2: Implement fix**
+
+- Extract shared adoption flow into a command-shared helper module.
+- Reuse the helper from both commands while preserving existing prompt, manifest, and symlink/copy behavior.
+- Keep command handlers thin and ensure no behavior regressions for interactive/non-interactive modes.
+
+**Step 3: Verify**
+
+Run:
+```bash
+pnpm --filter=@oat/cli test src/commands/init src/commands/status
+pnpm --filter=@oat/cli type-check
+pnpm --filter=@oat/cli lint
+```
+
+Expected: all pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/index.ts packages/cli/src/commands/status/index.ts packages/cli/src/commands/shared/adopt-stray.ts packages/cli/src/commands/init packages/cli/src/commands/status
+git commit -m "refactor(p07-t01): extract shared stray adoption workflow helper"
+```
+
+---
+
+### Task p07-t02: (review) Remove unused runtime dependencies
+
+**Files:**
+- Modify: `packages/cli/package.json`
+- Modify: `pnpm-lock.yaml`
+
+**Step 1: Understand the issue**
+
+Review finding: `dotenv`, `gray-matter`, and `yaml` are listed as runtime deps but unused.
+Location: `packages/cli/package.json`
+
+**Step 2: Implement fix**
+
+- Remove unused runtime dependencies from `packages/cli/package.json`.
+- Refresh lockfile to keep dependency graph consistent.
+
+**Step 3: Verify**
+
+Run:
+```bash
+pnpm --filter=@oat/cli test
+pnpm --filter=@oat/cli type-check
+pnpm --filter=@oat/cli lint
+pnpm --filter=@oat/cli build
+```
+
+Expected: all pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/package.json pnpm-lock.yaml
+git commit -m "chore(p07-t02): remove unused @oat/cli runtime dependencies"
+```
+
+---
+
+### Task p07-t03: (review) Centralize path normalization utility
+
+**Files:**
+- Modify: `packages/cli/src/drift/strays.ts`
+- Modify: `packages/cli/src/commands/status/index.ts`
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/providers/inspect.ts`
+- Modify: `packages/cli/src/fs/paths.ts`
+- Modify tests for affected modules
+
+**Step 1: Understand the issue**
+
+Review finding: `normalizePath` logic is duplicated across drift and command modules.
+Location: `drift/strays.ts`, `commands/status/index.ts`, `commands/init/index.ts`, `commands/providers/inspect.ts`
+
+**Step 2: Implement fix**
+
+- Add a shared path-normalization helper in `fs/paths.ts` (or adjacent shared path utility module).
+- Replace local duplicate helpers with imports from the shared implementation.
+- Keep behavior stable across all call sites (POSIX-style comparison output).
+
+**Step 3: Verify**
+
+Run:
+```bash
+pnpm --filter=@oat/cli test src/drift src/commands/status src/commands/init src/commands/providers/inspect src/fs/paths.test.ts
+pnpm --filter=@oat/cli type-check
+pnpm --filter=@oat/cli lint
+```
+
+Expected: all pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/drift/strays.ts packages/cli/src/commands/status/index.ts packages/cli/src/commands/init/index.ts packages/cli/src/commands/providers/inspect.ts packages/cli/src/fs/paths.ts packages/cli/src/drift packages/cli/src/commands packages/cli/src/fs/paths.test.ts
+git commit -m "refactor(p07-t03): centralize path normalization utility"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running /oat:request-review and /oat:receive-review.}
@@ -3146,7 +3269,7 @@ git commit -m "test(p06-t04): close deferred contract and e2e findings"
 | p04 | code | passed | 2026-02-14 | reviews/p04-re-review-2026-02-14.md |
 | p05 | code | passed | 2026-02-14 | reviews/p05-code-review.md |
 | p06 | code | passed | 2026-02-14 | reviews/p06-code-review.md |
-| final | code | pending | - | - |
+| final | code | fixes_completed | 2026-02-14 | reviews/final-code-review.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
@@ -3156,7 +3279,7 @@ git commit -m "test(p06-t04): close deferred contract and e2e findings"
 - `received`: review artifact exists (not yet converted into fix tasks)
 - `fixes_added`: fix tasks were added to the plan (work queued)
 - `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
+- `passed`: re-review run and recorded as passing (no Critical/Important/Medium)
 
 ---
 
@@ -3168,8 +3291,9 @@ git commit -m "test(p06-t04): close deferred contract and e2e findings"
 - Phase 4: 25 tasks — Commands (status, sync, init, providers list, providers inspect, doctor, registration, integration tests, review fixes)
 - Phase 5: 6 tasks — Git Hook, Polish, and E2E (hook, edge cases, contract tests, snapshot tests, e2e tests, final verification)
 - Phase 6: 4 tasks — Deferred Medium/Minor Closure (engine cleanup, drift/prompt polish, hook hardening, contract/e2e tightening)
+- Phase 7: 3 tasks — Final Review Fixes (shared adoption helper, dependency cleanup, path-normalization dedupe)
 
-**Total: 86 tasks**
+**Total: 89 tasks**
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-14
@@ -22,8 +22,9 @@ oat_generated: false
 | Phase 4 | complete | 25 | 25/25 |
 | Phase 5 | complete | 6 | 6/6 |
 | Phase 6 | complete | 4 | 4/4 |
+| Phase 7 | complete | 3 | 3/3 |
 
-**Total:** 86/86 tasks completed
+**Total:** 89/89 tasks completed
 
 ---
 
@@ -1613,6 +1614,114 @@ oat_generated: false
 **Next:** Run final code review (`/oat:request-review code final`), then process it via `/oat:receive-review`.
 
 ---
+
+### Review Received: final
+
+**Date:** 2026-02-14  
+**Review artifact:** `reviews/final-code-review.md`
+
+**Findings:**
+- Critical: 0
+- Important: 0
+- Medium: 3
+- Minor: 5
+
+**Review status:** fixes_completed
+
+**New tasks added:** `p07-t01`, `p07-t02`, `p07-t03`
+
+**Deferred Medium Ledger (prior review cycles):**
+- None unresolved. No previously deferred Medium findings remained at final-review intake.
+
+**Deferred Findings (Minor):**
+- `m1` Use `CliError` instead of raw `Error` in `engine/execute-plan.ts` assertion path.
+- `m2` Exclude test helper files from production build output.
+- `m3` Remove or implement placeholder `validation/index.ts` module.
+- `m4` Deduplicate path-containment helper functions across command and engine modules.
+- `m5` Remove or operationalize unused `validatePathWithinScope` helper.
+
+**Minor disposition:** Deferred by default during receive-review processing; can be promoted to fix tasks on request.
+
+**Review cycle:** 1 of 3
+
+**Next:** Request final re-review via `/oat:request-review code final`, then process it with `/oat:receive-review`.
+
+---
+
+## Phase 7: Final Review Fixes
+
+**Status:** complete
+**Started:** 2026-02-14
+
+### Task p07-t01: (review) Extract shared stray adoption workflow helper
+
+**Status:** completed
+**Commit:** 72711fb
+
+**Outcome (required when completed):**
+- Extracted shared stray-adoption logic into `commands/shared/adopt-stray.ts`.
+- Rewired both `oat init` and `oat status` to use the shared helper for canonical move/link + manifest-entry creation.
+- Removed duplicated adoption implementation blocks from command modules without changing behavior.
+
+**Files changed:**
+- `packages/cli/src/commands/shared/adopt-stray.ts` - new shared adoption helper.
+- `packages/cli/src/commands/init/index.ts` - replaced local adoption implementation with shared helper usage.
+- `packages/cli/src/commands/status/index.ts` - replaced local adoption implementation with shared helper usage.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/commands/init src/commands/status`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`
+- Result: pass (26 tests, type-check clean, lint clean)
+
+**Notes / Decisions:**
+- Kept shared helper local to command layer because adoption remains command-owned behavior.
+
+### Task p07-t02: (review) Remove unused runtime dependencies
+
+**Status:** completed
+**Commit:** e141eca
+
+**Outcome (required when completed):**
+- Removed unused runtime dependencies (`dotenv`, `gray-matter`, `yaml`) from `@oat/cli`.
+- Refreshed lockfile to reflect the reduced runtime dependency graph.
+- Verified no regressions with full package validation.
+
+**Files changed:**
+- `packages/cli/package.json` - removed unused runtime dependencies.
+- `pnpm-lock.yaml` - updated dependency graph after removal.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`; `pnpm --filter=@oat/cli build`
+- Result: pass (39 test files / 277 tests, type-check clean, lint clean, build successful)
+
+**Notes / Decisions:**
+- Confirmed via source grep that removed packages were not imported before dependency removal.
+
+### Task p07-t03: (review) Centralize path normalization utility
+
+**Status:** completed
+**Commit:** 8272861
+
+**Outcome (required when completed):**
+- Added shared path normalization helpers in `fs/paths.ts` and exported them via the fs barrel.
+- Replaced duplicated normalization logic in drift detection, status mapping checks, provider inspect checks, and shared adopt-stray helper.
+- Added focused tests for path normalization behavior, including Windows-style separator conversion and segment normalization.
+
+**Files changed:**
+- `packages/cli/src/fs/paths.ts` - added `toPosixPath` and `normalizeToPosixPath`.
+- `packages/cli/src/fs/index.ts` - exported path normalization helpers.
+- `packages/cli/src/fs/paths.test.ts` - added normalization helper tests.
+- `packages/cli/src/drift/strays.ts` - replaced local normalization helper with shared path helper.
+- `packages/cli/src/commands/status/index.ts` - replaced local normalization helper with shared path helper.
+- `packages/cli/src/commands/providers/inspect.ts` - replaced local normalization helper with shared path helper.
+- `packages/cli/src/commands/shared/adopt-stray.ts` - reused shared path helper for manifest path serialization.
+
+**Verification:**
+- Run: `pnpm --filter=@oat/cli test src/drift src/commands/status src/commands/init src/commands/providers/inspect src/fs/paths.test.ts`; `pnpm --filter=@oat/cli type-check`; `pnpm --filter=@oat/cli lint`
+- Result: pass (56 tests, type-check clean, lint clean)
+
+**Notes / Decisions:**
+- Implemented `normalizeToPosixPath` using `path.posix.normalize(toPosixPath(...))` so Windows-style separators normalize consistently on non-Windows hosts.
+
 
 ## Phase 4: Commands — init, status, sync, providers, doctor
 

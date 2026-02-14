@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: ea338e1
+oat_last_commit: 8272861
 oat_blockers: []
 oat_hil_checkpoints: ["discovery", "spec", "design", "plan"]
 oat_hil_completed: ["discovery", "spec", "design", "plan"]
@@ -18,7 +18,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - In Progress. All planned tasks are complete (`p01`-`p06`) and deferred Medium/Minor findings are closed; awaiting final review/PR routing.
+Implementation - In Progress. All planned tasks (`p01`-`p07`) are complete and final review fixes are applied; awaiting final re-review pass.
 
 ## Artifacts
 
@@ -29,8 +29,8 @@ Implementation - In Progress. All planned tasks are complete (`p01`-`p06`) and d
 - **Design:** `design.md` (complete, reviewed)
 - **Review:** `reviews/design-review.md` (findings addressed)
 - **Review:** `reviews/cli-structure-proposal.md` (accepted)
-- **Plan:** `plan.md` (complete, 86 tasks, 6 phases)
-- **Implementation:** `implementation.md` (complete; awaiting review gate)
+- **Plan:** `plan.md` (complete and implementation-ready, 89 tasks across 7 phases)
+- **Implementation:** `implementation.md` (task execution complete; awaiting final re-review)
 
 ## Progress
 
@@ -40,7 +40,7 @@ Implementation - In Progress. All planned tasks are complete (`p01`-`p06`) and d
 - ✓ Specification reviewed by Codex, findings addressed
 - ✓ Design complete (1046 lines, full architecture)
 - ✓ Design reviewed twice, all 10 findings addressed
-- ✓ Plan complete (86 tasks, 6 phases, includes p01-p06 review-fix tasks)
+- ✓ Plan complete (89 tasks, 7 phases, including final review-fix tasks in p07)
 - ✓ Phase 1 review fixes complete (`p01-t21`–`p01-t26`)
 - ✓ Additional p01 minor review fixes complete (`p01-t27`–`p01-t31`)
 - ✓ p01 re-review passed (`reviews/p01-re-review-2026-02-13.md`)
@@ -67,6 +67,13 @@ Implementation - In Progress. All planned tasks are complete (`p01`-`p06`) and d
 - ✓ p06-t04 complete (`test(p06-t04): close deferred contract and e2e findings`)
 - ✓ p06-t04 follow-up complete (`test(p06-t04): align init hook warning expectations`)
 - ✓ p06 code review passed (`reviews/p06-code-review.md`)
+- ✓ final code review received (`reviews/final-code-review.md`)
+- ✓ final review findings converted to fix tasks (`p07-t01`–`p07-t03`)
+- ✓ final Medium findings queued for implementation; final Minor findings deferred by default with explicit ledger in `implementation.md`
+- ✓ p07-t01 complete (`refactor(p07-t01): extract shared stray adoption workflow helper`)
+- ✓ p07-t02 complete (`chore(p07-t02): remove unused @oat/cli runtime dependencies`)
+- ✓ p07-t03 complete (`refactor(p07-t03): centralize path normalization utility`)
+- ⧗ Awaiting final re-review pass (`/oat:request-review code final` -> `/oat:receive-review`)
 
 ## Plan Summary
 
@@ -78,6 +85,7 @@ Implementation - In Progress. All planned tasks are complete (`p01`-`p06`) and d
 | p04 | 25 | Commands — status, sync, init, providers, doctor, registration, integration tests, review fixes |
 | p05 | 6 | Git Hook, Polish, E2E — hook, edge cases, contract tests, snapshot tests, e2e |
 | p06 | 4 | Deferred Medium/Minor Closure — cross-phase cleanup, hardening, and test-contract tightening |
+| p07 | 3 | Final Review Fixes — adoption dedupe, dependency cleanup, path-normalization dedupe |
 
 **HiL review checkpoints:** Every phase boundary (p01–p05)
 
@@ -87,4 +95,4 @@ None
 
 ## Next Milestone
 
-Run `/oat:request-review code final`, then process via `/oat:receive-review` before final PR steps.
+Run final re-review (`/oat:request-review code final` + `/oat:receive-review`). If passed, proceed to PR generation.
