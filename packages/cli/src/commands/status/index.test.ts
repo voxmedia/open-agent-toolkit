@@ -23,6 +23,7 @@ interface TestHarnessOptions {
   driftReports?: DriftReport[];
   strayReports?: DriftReport[];
   interactive?: boolean;
+  confirmResponses?: boolean[];
 }
 
 const REMEDIATION_TEXT = 'Run "oat init" to adopt stray entries.';
@@ -134,6 +135,8 @@ function createHarness(options: TestHarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
   confirmAction: ReturnType<typeof vi.fn>;
+  adoptStray: ReturnType<typeof vi.fn>;
+  saveManifest: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const adapter = createAdapter();
@@ -158,7 +161,12 @@ function createHarness(options: TestHarnessOptions = {}): {
       : []);
   const strayReports = options.strayReports ?? [];
   const interactive = options.interactive ?? true;
-  const confirmAction = vi.fn(async () => false);
+  const confirmResponses = [...(options.confirmResponses ?? [])];
+  const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
+  const adoptStray = vi.fn(async (_scopeRoot, _stray, manifest: Manifest) => {
+    return manifest;
+  });
+  const saveManifest = vi.fn(async () => undefined);
   let driftIndex = 0;
 
   const command = createStatusCommand({
@@ -174,6 +182,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     }),
     resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
     loadManifest: vi.fn(async () => createManifest(manifestEntries)),
+    saveManifest,
     scanCanonical: vi.fn(async () => []),
     getAdapters: () => [adapter],
     getActiveAdapters: vi.fn(async (adapters: ProviderAdapter[]) => adapters),
@@ -185,10 +194,11 @@ function createHarness(options: TestHarnessOptions = {}): {
     }),
     detectStrays: vi.fn(async () => strayReports),
     confirmAction,
+    adoptStray,
     formatStatusTable: formatReports,
   });
 
-  return { capture, command, confirmAction };
+  return { capture, command, confirmAction, adoptStray, saveManifest };
 }
 
 async function runStatusCommand(
@@ -290,6 +300,40 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'project']);
 
     expect(capture.warn).toContain(REMEDIATION_TEXT);
+  });
+
+  it('prompts per stray and adopts only confirmed entries in interactive mode', async () => {
+    const { command, confirmAction, adoptStray, saveManifest } = createHarness({
+      interactive: true,
+      driftReports: [],
+      strayReports: [
+        {
+          canonical: null,
+          provider: 'claude',
+          providerPath: '.claude/skills/stray-one',
+          state: { status: 'stray' },
+        },
+        {
+          canonical: null,
+          provider: 'claude',
+          providerPath: '.claude/skills/stray-two',
+          state: { status: 'stray' },
+        },
+      ],
+      confirmResponses: [true, false],
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(confirmAction).toHaveBeenCalledTimes(2);
+    expect(confirmAction.mock.calls[0]?.[0]).toContain(
+      '.claude/skills/stray-one',
+    );
+    expect(confirmAction.mock.calls[1]?.[0]).toContain(
+      '.claude/skills/stray-two',
+    );
+    expect(adoptStray).toHaveBeenCalledTimes(1);
+    expect(saveManifest).toHaveBeenCalledTimes(1);
   });
 
   it('outputs JSON when --json flag set', async () => {

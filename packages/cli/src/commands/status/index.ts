@@ -1,4 +1,12 @@
-import { join, normalize } from 'node:path';
+import { rename } from 'node:fs/promises';
+import {
+  basename,
+  dirname,
+  join,
+  normalize,
+  relative,
+  resolve,
+} from 'node:path';
 import { Command } from 'commander';
 import {
   buildCommandContext,
@@ -7,8 +15,16 @@ import {
 } from '../../app/command-context';
 import { type DriftReport, detectDrift, detectStrays } from '../../drift';
 import { type CanonicalEntry, scanCanonical } from '../../engine';
+import { createSymlink, ensureDir } from '../../fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
-import { loadManifest, type Manifest } from '../../manifest';
+import { computeDirectoryHash } from '../../manifest/hash';
+import {
+  addEntry,
+  loadManifest,
+  type Manifest,
+  saveManifest,
+} from '../../manifest/manager';
+import type { ManifestEntry } from '../../manifest/manifest.types';
 import { claudeAdapter } from '../../providers/claude';
 import { codexAdapter } from '../../providers/codex';
 import { cursorAdapter } from '../../providers/cursor';
@@ -29,6 +45,7 @@ import { formatStatusTable } from '../../ui/output';
 type ConcreteScope = Exclude<Scope, 'all'>;
 
 const DEFAULT_REMEDIATION = 'Run "oat init" to adopt stray entries.';
+const ADOPT_PROMPT_PREFIX = 'Adopt stray';
 
 interface StatusSummary {
   total: number;
@@ -52,6 +69,7 @@ interface StatusDependencies {
     context: CommandContext,
   ) => Promise<string>;
   loadManifest: (manifestPath: string) => Promise<Manifest>;
+  saveManifest: (manifestPath: string, manifest: Manifest) => Promise<void>;
   scanCanonical: (
     scopeRoot: string,
     scope: ConcreteScope,
@@ -73,7 +91,26 @@ interface StatusDependencies {
     canonicalEntries: CanonicalEntry[],
   ) => Promise<DriftReport[]>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
+  adoptStray: (
+    scopeRoot: string,
+    stray: StatusStrayCandidate,
+    manifest: Manifest,
+  ) => Promise<Manifest>;
   formatStatusTable: (reports: DriftReport[]) => string;
+}
+
+interface StatusStrayCandidate {
+  provider: string;
+  report: DriftReport;
+  mapping: PathMapping;
+}
+
+interface ScopeReportCollection {
+  scopeRoot: string;
+  manifestPath: string;
+  manifest: Manifest;
+  reports: DriftReport[];
+  strayCandidates: StatusStrayCandidate[];
 }
 
 const DEFAULT_DEPENDENCIES: StatusDependencies = {
@@ -86,6 +123,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
     return resolveScopeRoot(scope, context.cwd, context.home);
   },
   loadManifest,
+  saveManifest,
   scanCanonical,
   getAdapters() {
     return [claudeAdapter, cursorAdapter, codexAdapter];
@@ -95,6 +133,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   detectDrift,
   detectStrays,
   confirmAction,
+  adoptStray: adoptStrayDefault,
   formatStatusTable,
 };
 
@@ -163,11 +202,51 @@ function summarizeReports(reports: DriftReport[]): StatusSummary {
   return summary;
 }
 
+async function adoptStrayDefault(
+  scopeRoot: string,
+  stray: StatusStrayCandidate,
+  manifest: Manifest,
+): Promise<Manifest> {
+  const providerAbsolutePath = resolve(scopeRoot, stray.report.providerPath);
+  const entryName = basename(stray.report.providerPath);
+  const canonicalAbsolutePath = resolve(
+    scopeRoot,
+    stray.mapping.canonicalDir,
+    entryName,
+  );
+
+  await ensureDir(dirname(canonicalAbsolutePath));
+  await rename(providerAbsolutePath, canonicalAbsolutePath);
+  const strategy = await createSymlink(
+    canonicalAbsolutePath,
+    providerAbsolutePath,
+  );
+
+  const canonicalPath = normalizePath(
+    relative(scopeRoot, canonicalAbsolutePath),
+  );
+  const providerPath = normalizePath(relative(scopeRoot, providerAbsolutePath));
+  const manifestEntry: ManifestEntry = {
+    canonicalPath,
+    providerPath,
+    provider: stray.provider,
+    contentType: stray.mapping.contentType,
+    strategy,
+    contentHash:
+      strategy === 'copy'
+        ? await computeDirectoryHash(canonicalAbsolutePath)
+        : null,
+    lastSynced: new Date().toISOString(),
+  };
+
+  return addEntry(manifest, manifestEntry);
+}
+
 async function collectScopeReports(
   scope: ConcreteScope,
   context: CommandContext,
   dependencies: StatusDependencies,
-): Promise<DriftReport[]> {
+): Promise<ScopeReportCollection> {
   const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
   const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
   const manifest = await dependencies.loadManifest(manifestPath);
@@ -178,6 +257,7 @@ async function collectScopeReports(
     scopeRoot,
   );
   const reports: DriftReport[] = [];
+  const strayCandidates: StatusStrayCandidate[] = [];
 
   for (const adapter of activeAdapters) {
     const mappings = dependencies.getSyncMappings(adapter, scope);
@@ -215,10 +295,26 @@ async function collectScopeReports(
         canonicalEntries,
       );
       reports.push(...strays);
+      for (const stray of strays) {
+        if (stray.state.status !== 'stray') {
+          continue;
+        }
+        strayCandidates.push({
+          provider: adapter.name,
+          report: stray,
+          mapping,
+        });
+      }
     }
   }
 
-  return reports;
+  return {
+    scopeRoot,
+    manifestPath,
+    manifest,
+    reports,
+    strayCandidates,
+  };
 }
 
 async function runStatusCommand(
@@ -226,14 +322,16 @@ async function runStatusCommand(
   dependencies: StatusDependencies,
 ): Promise<void> {
   const reports: DriftReport[] = [];
+  const scopeCollections: ScopeReportCollection[] = [];
 
   for (const scope of resolveScopes(context.scope)) {
-    const scopeReports = await collectScopeReports(
+    const scopeReportCollection = await collectScopeReports(
       scope,
       context,
       dependencies,
     );
-    reports.push(...scopeReports);
+    reports.push(...scopeReportCollection.reports);
+    scopeCollections.push(scopeReportCollection);
   }
 
   const summary = summarizeReports(reports);
@@ -255,12 +353,32 @@ async function runStatusCommand(
 
   if (summary.stray > 0) {
     if (context.interactive) {
-      const shouldAdopt = await dependencies.confirmAction(
-        'Stray entries detected. Adopt them now with `oat init`?',
-        { interactive: context.interactive },
-      );
-      if (shouldAdopt && !context.json) {
-        context.logger.info(DEFAULT_REMEDIATION);
+      for (const scopeCollection of scopeCollections) {
+        let manifestChanged = false;
+
+        for (const strayCandidate of scopeCollection.strayCandidates) {
+          const shouldAdopt = await dependencies.confirmAction(
+            `${ADOPT_PROMPT_PREFIX} ${strayCandidate.report.providerPath} from ${strayCandidate.provider}?`,
+            { interactive: context.interactive },
+          );
+          if (!shouldAdopt) {
+            continue;
+          }
+
+          scopeCollection.manifest = await dependencies.adoptStray(
+            scopeCollection.scopeRoot,
+            strayCandidate,
+            scopeCollection.manifest,
+          );
+          manifestChanged = true;
+        }
+
+        if (manifestChanged) {
+          await dependencies.saveManifest(
+            scopeCollection.manifestPath,
+            scopeCollection.manifest,
+          );
+        }
       }
     } else if (!context.json) {
       context.logger.warn(DEFAULT_REMEDIATION);
