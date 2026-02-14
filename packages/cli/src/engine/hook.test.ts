@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -93,6 +100,18 @@ describe('git hook', () => {
     expect(content).not.toContain(HOOK_MARKER_START);
   });
 
+  it('uninstallHook removes hook file when OAT section is the only content', async () => {
+    const root = await createProjectRoot('oat-hook-uninstall-empty-');
+    const hookPath = join(root, '.git', 'hooks', 'pre-commit');
+    await installHook(root);
+
+    await uninstallHook(root);
+
+    await expect(readFile(hookPath, 'utf8')).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+  });
+
   it('isHookInstalled detects existing OAT hook section', async () => {
     const root = await createProjectRoot('oat-hook-detect-');
     expect(await isHookInstalled(root)).toBe(false);
@@ -124,5 +143,20 @@ describe('git hook', () => {
 
     expect(result.inSync).toBe(false);
     expect(warn).toHaveBeenCalledWith(HOOK_DRIFT_WARNING);
+  });
+
+  it('installHook resolves symlinked .git directory', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-hook-git-symlink-'));
+    tempDirs.push(root);
+    const gitStore = join(root, 'git-store');
+    await mkdir(join(gitStore, 'hooks'), { recursive: true });
+    await symlink(gitStore, join(root, '.git'), 'dir');
+
+    await installHook(root);
+
+    const hookPath = join(gitStore, 'hooks', 'pre-commit');
+    const content = await readFile(hookPath, 'utf8');
+    expect(content).toContain(HOOK_MARKER_START);
+    expect(content).toContain('--scope project');
   });
 });
