@@ -89,6 +89,12 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-idea-scratchpad</name>
+<description>Review scratchpad entries or quick-capture a new idea seed with optional notes.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>oat-idea-summarize</name>
 <description>Finalize an idea by generating a summary document and adding it to the ideas backlog.</description>
 <location>project</location>

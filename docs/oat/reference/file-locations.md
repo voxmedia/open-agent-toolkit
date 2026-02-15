@@ -24,13 +24,22 @@
 - Local: `.oat/projects/local/<project>/`
 - Archived: `.oat/projects/archived/<project>/`
 
-## Ideas (gitignored)
+## Ideas — project level (gitignored)
 
 - Ideas root: `.oat/ideas/`
 - Backlog: `.oat/ideas/backlog.md`
 - Scratchpad: `.oat/ideas/scratchpad.md`
 - Per-idea: `.oat/ideas/<idea-name>/`
+- Active idea pointer: `.oat/active-idea`
 - Idea templates: `.oat/templates/ideas/`
+
+## Ideas — user level (global)
+
+- Ideas root: `~/.oat/ideas/`
+- Backlog: `~/.oat/ideas/backlog.md`
+- Scratchpad: `~/.oat/ideas/scratchpad.md`
+- Per-idea: `~/.oat/ideas/<idea-name>/`
+- Active idea pointer: `~/.oat/active-idea`
 
 ## CLI code
 

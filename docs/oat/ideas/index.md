@@ -13,7 +13,8 @@ Ideas are gitignored and entirely personal — no pressure to finish, no formal 
 
 | Aspect | Projects | Ideas |
 |--------|----------|-------|
-| Location | `.oat/projects/shared/` (tracked) | `.oat/ideas/` (gitignored) |
+| Location | `.oat/projects/shared/` (tracked) | `.oat/ideas/` or `~/.oat/ideas/` (gitignored) |
+| Levels | Project only | Project-level or user-level (global) |
 | Phases | discovery/spec/design/plan/implement | brainstorm/summarize |
 | State | Multi-phase with `state.md` and HiL gates | Two states in frontmatter (`brainstorming`/`summarized`) |
 | Knowledge base | Required | Not required |
@@ -23,5 +24,6 @@ Ideas are gitignored and entirely personal — no pressure to finish, no formal 
 
 - `.agents/skills/oat-idea-new/SKILL.md`
 - `.agents/skills/oat-idea-ideate/SKILL.md`
+- `.agents/skills/oat-idea-scratchpad/SKILL.md`
 - `.agents/skills/oat-idea-summarize/SKILL.md`
 - `.oat/templates/ideas/`

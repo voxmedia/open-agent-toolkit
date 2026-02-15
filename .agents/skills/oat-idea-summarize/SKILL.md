@@ -1,6 +1,7 @@
 ---
 name: oat-idea-summarize
 description: Finalize an idea by generating a summary document and adding it to the ideas backlog.
+argument-hint: "[--global]"
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Grep, AskUserQuestion
@@ -12,34 +13,56 @@ Read the brainstorming discovery document, synthesize a clean summary, and updat
 
 ## Prerequisites
 
-- An active idea must exist (`.oat/active-idea` set, with a `discovery.md` that has meaningful content)
+- An active idea must exist (`{ACTIVE_IDEA_FILE}` set, with a `discovery.md` that has meaningful content)
 
 ## Progress Indicators (User-Facing)
 
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ SUMMARIZE IDEA
+   OAT ▸ SUMMARIZE IDEA [project]
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Replace `[project]` with `[global]` when operating at user level.
 
 - Print step indicators: "Reading discovery...", "Generating summary...", "Updating backlog..."
 
 ## Process
 
+### Step 0: Resolve Ideas Level
+
+Determine whether to operate at project level or user (global) level.
+
+**Resolution order:**
+
+1. If `$ARGUMENTS` contains `--global` → use **user level**
+2. If `.oat/active-idea` exists and points to a valid directory → use **project level**
+3. If `~/.oat/active-idea` exists and points to a valid directory → use **user level**
+4. If `.oat/ideas/` exists → use **project level**
+5. If `~/.oat/ideas/` exists → use **user level**
+6. Otherwise → ask: "Project-level or global (user-level) ideas?"
+
+**Set variables:**
+
+| Variable | Project Level | User Level |
+|----------|--------------|------------|
+| `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| `ACTIVE_IDEA_FILE` | `.oat/active-idea` | `~/.oat/active-idea` |
+
 ### Step 1: Resolve Active Idea
 
-Read the file `.oat/active-idea` using the Read tool to get `IDEA_PATH`.
+Read the file `{ACTIVE_IDEA_FILE}` using the Read tool to get `IDEA_PATH`.
 
 **If missing or invalid:**
-- Use the Glob tool to list idea directories: `.oat/ideas/*/discovery.md`
+- Use the Glob tool to list idea directories: `{IDEAS_ROOT}/*/discovery.md`
 - Ask the user to pick one
-- Write `.oat/active-idea` with the chosen idea path
+- Write `{ACTIVE_IDEA_FILE}` with the chosen idea path
 
 Derive `IDEA_NAME` from the directory basename.
 
 ### Step 2: Read Discovery Document
 
-Read `.oat/ideas/$IDEA_NAME/discovery.md`.
+Read `{IDEAS_ROOT}/$IDEA_NAME/discovery.md`.
 
 **Validate content:** Check that the document has meaningful content beyond the template placeholders. Look for:
 - "What's the Idea?" section has real content (not just `{Brief description...}`)
@@ -53,7 +76,7 @@ Read `.oat/ideas/$IDEA_NAME/discovery.md`.
 
 Copy the summary template and synthesize content from the discovery document:
 - Source: `.oat/templates/ideas/idea-summary.md`
-- Target: `.oat/ideas/$IDEA_NAME/summary.md`
+- Target: `{IDEAS_ROOT}/$IDEA_NAME/summary.md`
 
 **Synthesis guidelines:**
 - **Overview:** 2-4 sentence synthesis drawn from "What's the Idea?" and "Why Is It Interesting?"
@@ -80,7 +103,7 @@ If user chooses to continue brainstorming, do not update state or backlog. Read 
 
 ### Step 5: Update Discovery State
 
-Update `.oat/ideas/$IDEA_NAME/discovery.md` frontmatter:
+Update `{IDEAS_ROOT}/$IDEA_NAME/discovery.md` frontmatter:
 
 ```yaml
 oat_idea_state: summarized
@@ -89,7 +112,7 @@ oat_idea_last_updated: YYYY-MM-DD
 
 ### Step 6: Update Backlog
 
-In `.oat/ideas/backlog.md`:
+In `{IDEAS_ROOT}/backlog.md`:
 
 1. **Remove** the idea's entry from the **Active Brainstorming** section
 2. **Add** an entry to the **Captured Ideas** section with the overview from the summary:
@@ -105,12 +128,14 @@ Print a confirmation:
 ```
 Idea "{Idea Name}" has been summarized.
 
-Summary: .oat/ideas/{idea-name}/summary.md
-Backlog: .oat/ideas/backlog.md (updated)
+Level:   {project | global}
+Summary: {IDEAS_ROOT}/{idea-name}/summary.md
+Backlog: {IDEAS_ROOT}/backlog.md (updated)
 
 Next steps (suggest to the user — do not auto-invoke):
 - Start a new idea: run the `oat-idea-new` skill
-- Browse ideas: check .oat/ideas/backlog.md
+- Browse ideas: check {IDEAS_ROOT}/backlog.md
+- Quick capture: run the `oat-idea-scratchpad` skill to jot down a new idea seed
 - Promote to project: run the `oat-new-project` skill, then seed its
   discovery phase with this idea's summary as the initial request
 ```
@@ -118,7 +143,7 @@ Next steps (suggest to the user — do not auto-invoke):
 **Promotion contract (v1):** To promote an idea to a full OAT project:
 1. Run `oat-new-project {idea-name}` to scaffold the project
 2. Run `oat-discovery` — use the idea's `summary.md` as the initial request input
-3. The idea's discovery and summary documents remain in `.oat/ideas/` as reference
+3. The idea's discovery and summary documents remain in `{IDEAS_ROOT}/` as reference
 4. Update the ideas backlog entry to `Archived` with reason: `promoted to project`
 
 Future: a dedicated `oat-idea-promote` skill can automate steps 1-4.

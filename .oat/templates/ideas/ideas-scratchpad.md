@@ -2,8 +2,9 @@
 
 Quick-capture pad for idea seeds. Jot down thoughts here before committing to a full brainstorming session.
 
-When you're ready to explore an idea, run `oat-idea-new` to create a dedicated directory and start brainstorming. The scratchpad entry will be checked off automatically.
+Each entry has a name, one-liner summary, and optional nested bullets for quick notes. Use `oat-idea-scratchpad` to review or capture entries, or `oat-idea-new` to start brainstorming on one.
 
 ## Ideas
 
-- [ ] **{idea name}** - {brief note} *(YYYY-MM-DD)*
+- [ ] **{idea name}** - {brief summary} *(YYYY-MM-DD)*
+  - {quick note}

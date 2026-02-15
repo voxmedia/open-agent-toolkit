@@ -1,6 +1,7 @@
 ---
 name: oat-idea-ideate
 description: Resume brainstorming on an existing idea through conversational discussion, or start from a scratchpad entry.
+argument-hint: "[--global]"
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, AskUserQuestion
@@ -47,19 +48,41 @@ If you catch yourself:
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ IDEATE
+   OAT ▸ IDEATE [project]
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Replace `[project]` with `[global]` when operating at user level.
 
 - When resolving or listing ideas, print a brief status line.
 
 ## Process
 
+### Step 0: Resolve Ideas Level
+
+Determine whether to operate at project level or user (global) level.
+
+**Resolution order:**
+
+1. If `$ARGUMENTS` contains `--global` → use **user level**
+2. If `.oat/active-idea` exists and points to a valid directory → use **project level**
+3. If `~/.oat/active-idea` exists and points to a valid directory → use **user level**
+4. If `.oat/ideas/` exists → use **project level**
+5. If `~/.oat/ideas/` exists → use **user level**
+6. Otherwise → ask: "Project-level or global (user-level) ideas?"
+
+**Set variables:**
+
+| Variable | Project Level | User Level |
+|----------|--------------|------------|
+| `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| `ACTIVE_IDEA_FILE` | `.oat/active-idea` | `~/.oat/active-idea` |
+
 ### Step 1: Resolve Active Idea
 
-Read `.oat/active-idea`:
+Read `{ACTIVE_IDEA_FILE}`:
 
 ```bash
-IDEA_PATH=$(cat .oat/active-idea 2>/dev/null || true)
+IDEA_PATH=$(cat {ACTIVE_IDEA_FILE} 2>/dev/null || true)
 ```
 
 **If valid (directory exists with discovery.md):**
@@ -70,19 +93,19 @@ IDEA_PATH=$(cat .oat/active-idea 2>/dev/null || true)
 **If missing or invalid:**
 - List existing idea directories:
   ```bash
-  ls -d .oat/ideas/*/  2>/dev/null
+  ls -d {IDEAS_ROOT}/*/  2>/dev/null
   ```
-- Read `.oat/ideas/scratchpad.md` and extract unchecked entries (`- [ ]`)
+- Read `{IDEAS_ROOT}/scratchpad.md` and extract unchecked entries (`- [ ]`), including any nested notes for context
 - Present combined list to the user:
   - Existing ideas (with state: brainstorming/summarized)
   - Scratchpad entries marked as "not yet started"
-- If user picks an existing idea → write `.oat/active-idea` and proceed to Step 2
+- If user picks an existing idea → write `{ACTIVE_IDEA_FILE}` and proceed to Step 2
 - If user picks a scratchpad entry → scaffold the idea inline by reading the **`oat-idea-new`** skill (`.agents/skills/oat-idea-new/SKILL.md`) and executing its Steps 3-7 (Initialize Ideas Directory, Scaffold Discovery Document, Update Backlog, Check Scratchpad, Set Active Idea Pointer). Then proceed to Step 2 with the new idea.
-- If no ideas and no scratchpad entries exist → tell the user: "No ideas found. Run the `oat-idea-new` skill to create one." Then stop.
+- If no ideas and no scratchpad entries exist → tell the user: "No ideas found. Run the `oat-idea-new` skill to create one, or run the `oat-idea-scratchpad` skill to capture a quick idea seed." Then stop.
 
 ### Step 2: Load Discovery Document
 
-Read `.oat/ideas/{idea-name}/discovery.md`.
+Read `{IDEAS_ROOT}/{idea-name}/discovery.md`.
 
 Show the user a brief summary of the current state:
 - Idea name
@@ -139,6 +162,7 @@ When the user signals they're done (or the conversation reaches a natural pause)
    - **Continue later** — "Run the `oat-idea-ideate` skill to pick up where you left off"
    - **Summarize** — "Run the `oat-idea-summarize` skill to finalize this idea"
    - **Switch ideas** — "Run the `oat-idea-ideate` skill and pick a different idea"
+   - **Quick capture** — "Run the `oat-idea-scratchpad` skill to jot down a new idea seed"
 
 ## Success Criteria
 
