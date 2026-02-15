@@ -46,8 +46,8 @@ Read `.oat/ideas/$IDEA_NAME/discovery.md`.
 - At least one session in "Notes & Discussion"
 
 **If mostly empty:**
-- Warn: "This idea hasn't been explored much yet. Consider running `oat-idea-ideate` first."
-- Ask: continue with summarization anyway, or brainstorm more?
+- Warn: "This idea hasn't been explored much yet. Consider running the `oat-idea-ideate` skill first to flesh it out."
+- Ask: continue with summarization anyway, or brainstorm more? If user chooses to brainstorm, read the **`oat-idea-ideate`** skill (`.agents/skills/oat-idea-ideate/SKILL.md`) and follow its process from Step 4.
 
 ### Step 3: Generate Summary
 
@@ -74,9 +74,9 @@ Apply replacements:
 Display the generated summary to the user. Ask:
 - **Accept** — finalize and update backlog
 - **Refine** — edit the summary (make changes, then re-confirm)
-- **Continue brainstorming** — discard summary, go back to `oat-idea-ideate`
+- **Continue brainstorming** — discard summary and resume brainstorming
 
-If user chooses to continue brainstorming, do not update state or backlog. Stop here.
+If user chooses to continue brainstorming, do not update state or backlog. Read the **`oat-idea-ideate`** skill (`.agents/skills/oat-idea-ideate/SKILL.md`) and follow its process from Step 4 (Start New Session) to resume the conversation.
 
 ### Step 5: Update Discovery State
 
@@ -108,10 +108,10 @@ Idea "{Idea Name}" has been summarized.
 Summary: .oat/ideas/{idea-name}/summary.md
 Backlog: .oat/ideas/backlog.md (updated)
 
-Next steps:
-- Start a new idea: oat-idea-new
+Next steps (suggest to the user — do not auto-invoke):
+- Start a new idea: run the `oat-idea-new` skill
 - Browse ideas: check .oat/ideas/backlog.md
-- Promote to project: run oat-new-project {idea-name}, then seed its
+- Promote to project: run the `oat-new-project` skill, then seed its
   discovery phase with this idea's summary as the initial request
 ```
 

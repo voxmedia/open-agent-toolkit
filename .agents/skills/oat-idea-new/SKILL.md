@@ -36,7 +36,7 @@ If not provided in `$ARGUMENTS`, ask the user for an idea name.
 test -d ".oat/ideas/$IDEA_NAME"
 ```
 
-**If exists:** Tell the user and offer to resume brainstorming via `oat-idea-ideate` instead. Stop here unless they want a different name.
+**If exists:** Tell the user this idea already exists and suggest: "Run the `oat-idea-ideate` skill to resume brainstorming on it." Stop here unless they want a different name.
 
 ### Step 3: Initialize Ideas Directory
 

@@ -77,14 +77,8 @@ IDEA_PATH=$(cat .oat/active-idea 2>/dev/null || true)
   - Existing ideas (with state: brainstorming/summarized)
   - Scratchpad entries marked as "not yet started"
 - If user picks an existing idea → write `.oat/active-idea` and proceed to Step 2
-- If user picks a scratchpad entry → run the `oat-idea-new` creation flow inline:
-  1. Create `.oat/ideas/{idea-name}/` directory
-  2. Scaffold `discovery.md` from template
-  3. Add entry to backlog
-  4. Check off the scratchpad entry
-  5. Set `.oat/active-idea`
-  6. Proceed to Step 2 with the new idea
-- If no ideas and no scratchpad entries exist → tell the user to run `oat-idea-new` to create one, then stop
+- If user picks a scratchpad entry → scaffold the idea inline by reading the **`oat-idea-new`** skill (`.agents/skills/oat-idea-new/SKILL.md`) and executing its Steps 3-7 (Initialize Ideas Directory, Scaffold Discovery Document, Update Backlog, Check Scratchpad, Set Active Idea Pointer). Then proceed to Step 2 with the new idea.
+- If no ideas and no scratchpad entries exist → tell the user: "No ideas found. Run the `oat-idea-new` skill to create one." Then stop.
 
 ### Step 2: Load Discovery Document
 
@@ -141,10 +135,10 @@ When the user signals they're done (or the conversation reaches a natural pause)
 
 1. Update `oat_idea_last_updated` in frontmatter
 2. Save all changes to `discovery.md`
-3. Offer next steps:
-   - **Continue later** — "Run `oat-idea-ideate` to pick up where you left off"
-   - **Summarize** — "Run `oat-idea-summarize` to finalize this idea"
-   - **Switch ideas** — "Run `oat-idea-ideate` and pick a different idea"
+3. Tell the user their progress is saved, then suggest these next steps (these are prompts for the user to run later — do **not** auto-invoke them):
+   - **Continue later** — "Run the `oat-idea-ideate` skill to pick up where you left off"
+   - **Summarize** — "Run the `oat-idea-summarize` skill to finalize this idea"
+   - **Switch ideas** — "Run the `oat-idea-ideate` skill and pick a different idea"
 
 ## Success Criteria
 
