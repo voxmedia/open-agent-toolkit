@@ -8,6 +8,7 @@
 ## OAT runtime/state
 
 - Active project pointer: `.oat/active-project`
+- Active idea pointer: `.oat/active-idea`
 - Optional root override: `.oat/projects-root`
 - Project manifests/config: `.oat/sync/`
 
@@ -22,6 +23,14 @@
 - Shared: `.oat/projects/shared/<project>/`
 - Local: `.oat/projects/local/<project>/`
 - Archived: `.oat/projects/archived/<project>/`
+
+## Ideas (gitignored)
+
+- Ideas root: `.oat/ideas/`
+- Backlog: `.oat/ideas/backlog.md`
+- Scratchpad: `.oat/ideas/scratchpad.md`
+- Per-idea: `.oat/ideas/<idea-name>/`
+- Idea templates: `.oat/templates/ideas/`
 
 ## CLI code
 

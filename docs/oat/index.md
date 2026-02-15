@@ -19,6 +19,8 @@ OAT is organized as three distinct capabilities that can be used together or ind
 - Workflow users:
   - Start with `docs/oat/quickstart.md`
   - Then `docs/oat/workflow/index.md`, `docs/oat/projects/index.md`, and `docs/oat/skills/index.md`
+- Ideas/brainstorming users:
+  - Start with `docs/oat/ideas/index.md`
 
 ## Navigation
 
@@ -29,6 +31,7 @@ OAT is organized as three distinct capabilities that can be used together or ind
 - Skills map: `docs/oat/skills/index.md`
 - Skills contracts: `docs/oat/skills/execution-contracts.md`
 - Project docs index: `docs/oat/projects/index.md`
+- Ideas docs index: `docs/oat/ideas/index.md`
 - Reference docs index: `docs/oat/reference/index.md`
 
 ## Source-of-truth hierarchy
