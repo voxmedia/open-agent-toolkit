@@ -99,11 +99,11 @@ export async function runSyncApply(
   } else {
     context.logger.info(formatAppliedOutput(scopePlans, dependencies));
     if (summary.plannedOperations === 0) {
-      context.logger.info('No changes required.');
+      context.logger.info('\nNo changes required.');
     } else if (failed > 0) {
-      context.logger.warn('Sync completed with partial failures.');
+      context.logger.warn('\nSync completed with partial failures.');
     } else {
-      context.logger.success('Sync applied successfully.');
+      context.logger.success('\nSync applied successfully.');
     }
   }
 
