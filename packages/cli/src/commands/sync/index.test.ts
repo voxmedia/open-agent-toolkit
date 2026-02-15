@@ -174,8 +174,8 @@ describe('createSyncCommand', () => {
 
     expect(executeSyncPlan).not.toHaveBeenCalled();
     expect(capture.info[0]).toContain('sync-dry-project');
-    expect(capture.info).toContain(
-      'Dry-run only: no filesystem changes were made.',
+    expect(capture.warn).toContain(
+      '\nDry-run only: no filesystem changes were made.',
     );
     expect(capture.info).toContain(
       'Apply changes with: oat sync --scope project --apply',
@@ -190,8 +190,8 @@ describe('createSyncCommand', () => {
     await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
 
     expect(executeSyncPlan).not.toHaveBeenCalled();
-    expect(capture.info).toContain(
-      'Dry-run only: no filesystem changes were made.',
+    expect(capture.warn).toContain(
+      '\nDry-run only: no filesystem changes were made.',
     );
     expect(capture.info).toContain('No changes to apply.');
   });
@@ -208,7 +208,7 @@ describe('createSyncCommand', () => {
     });
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
-    expect(capture.success).toContain('Sync applied successfully.');
+    expect(capture.success).toContain('\nSync applied successfully.');
   });
 
   it('--apply idempotent: second run reports nothing to do', async () => {
@@ -227,7 +227,7 @@ describe('createSyncCommand', () => {
     });
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
-    expect(capture.info).toContain('No changes required.');
+    expect(capture.info).toContain('\nNo changes required.');
   });
 
   it('handles partial failure gracefully', async () => {
@@ -241,7 +241,7 @@ describe('createSyncCommand', () => {
       commandArgs: ['--apply'],
     });
 
-    expect(capture.warn).toContain('Sync completed with partial failures.');
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
     expect(process.exitCode).toBe(1);
   });
 

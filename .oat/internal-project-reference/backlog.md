@@ -167,9 +167,141 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Source discussion: OAT feature ideas (dependency intelligence)
   - Created: 2026-02-14
 
-- [ ] **(P?) [area] {Title}**
-  - Target milestone/phase:
+- [ ] **(P1) [tooling] Add `oat init ideas` subcommand to scaffold ideas workflow**
+  - Target milestone/phase: OAT CLI init subcommands
   - Notes:
+    - `oat init ideas` scaffolds `.oat/ideas/` directory with `backlog.md` and `scratchpad.md` from templates.
+    - Copies `oat-idea-*` skill files (`oat-idea-new`, `oat-idea-ideate`, `oat-idea-summarize`) into the project's `.agents/skills/` directory.
+    - Same distribution pattern as `oat init workflows` for project workflow skills — init subcommands are how skills reach user projects.
+    - Templates source: `.oat/templates/ideas/`
+    - Skills source: `.agents/skills/oat-idea-*/`
+  - Success criteria:
+    - Running `oat init ideas` creates `.oat/ideas/` with backlog and scratchpad ready to use.
+    - `oat-idea-*` skills are copied into `.agents/skills/` and registered in `AGENTS.md`.
+    - Idempotent — re-running doesn't overwrite existing ideas or customized skills.
+  - Links:
+    - Source: ideas workflow implementation (branch `provider-interop`)
+    - Plan: `.claude/plans/cheeky-questing-barto.md`
+  - Created: 2026-02-14
+
+- [ ] **(P1) [tooling] Add `oat init workflows` subcommand to scaffold project workflow**
+  - Target milestone/phase: OAT CLI init subcommands
+  - Notes:
+    - `oat init workflows` scaffolds `.oat/` directory structure (templates, projects root, scripts) and copies `oat-project-*` / `oat-review-*` / `oat-pr-*` workflow skills into the project's `.agents/skills/` directory.
+    - Same distribution pattern as `oat init ideas` — init subcommands are how skills reach user projects.
+    - Registers skills in `AGENTS.md`.
+  - Success criteria:
+    - Running `oat init workflows` sets up the full project workflow in a new repo.
+    - Skills are copied into `.agents/skills/` and registered in `AGENTS.md`.
+    - Idempotent — re-running doesn't overwrite existing projects or customized skills.
+  - Links:
+    - Related: `oat init ideas` backlog entry
+  - Created: 2026-02-14
+
+- [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-new-project`**
+  - Target milestone/phase: Ideas → Projects integration
+  - Notes:
+    - Enhance `oat-new-project` Step 1 to check for existing summarized ideas (scan `{IDEAS_ROOT}/*/discovery.md` for `oat_idea_state: summarized`) and ask the user:
+      - "Is this a brand new project, or would you like to promote an existing idea?"
+      - If promoting: let user pick from summarized ideas, use the idea name as the project name (or let them rename), and stash the idea's `summary.md` path for later.
+    - Enhance `oat-new-project` Step 3 to offer auto-triggering discovery:
+      - Currently just says "Next command: `/oat:discovery`" — change to ask: "Would you like to start discovery now, or do it later?"
+      - If yes: agent reads `oat-discovery` skill and invokes it (same pattern as `oat-idea-new` → `oat-idea-ideate` handoff).
+      - If promoting an idea: pass the idea's `summary.md` content as the initial request context to `oat-discovery`, so the user doesn't have to re-explain the idea.
+    - On promotion, update the ideas backlog entry to Archived with reason: `promoted to project`.
+    - This keeps all promotion logic in `oat-new-project` (single entry point) rather than needing a separate `oat-idea-promote` skill.
+    - Should support both project-level and user-level ideas (respect `{IDEAS_ROOT}` resolution).
+  - Success criteria:
+    - `oat-new-project` detects summarized ideas and offers to promote one.
+    - Promoted idea's summary is passed as seed context into discovery.
+    - Ideas backlog updated on promotion (moved to Archived).
+    - User can still create a brand new project with no idea connection.
+    - Discovery auto-trigger is optional (user chooses).
+  - Links:
+    - Current skill: `.agents/skills/oat-new-project/SKILL.md`
+    - Promotion contract: `.agents/skills/oat-idea-summarize/SKILL.md` (Step 7)
+    - Discovery skill: `.agents/skills/oat-discovery/SKILL.md`
+  - Created: 2026-02-14
+
+- [ ] **(P1) [tooling] Migrate `new-oat-project.ts` from `.oat/scripts/` to CLI**
+  - Target milestone/phase: OAT CLI consolidation
+  - Notes:
+    - Move project scaffolding logic from `.oat/scripts/new-oat-project.ts` into `packages/cli/` (e.g., `oat project new <name>`).
+    - Currently called by `oat-new-project` skill via `pnpm tsx .oat/scripts/new-oat-project.ts`.
+    - Supports `--force`, `--no-set-active`, `--no-dashboard` flags — preserve these.
+    - Handles template copying, placeholder replacement, active-project pointer, and dashboard refresh.
+    - Update `oat-new-project` skill to call CLI command instead of tsx script.
+  - Success criteria:
+    - `oat project new <name>` works as a CLI command.
+    - `oat-new-project` skill updated to use CLI instead of tsx script.
+    - `.oat/scripts/new-oat-project.ts` removed.
+  - Links:
+    - Current script: `.oat/scripts/new-oat-project.ts`
+    - Calling skill: `.agents/skills/oat-new-project/SKILL.md`
+  - Created: 2026-02-14
+
+- [ ] **(P1) [tooling] Migrate `validate-oat-skills.ts` from `.oat/scripts/` to CLI**
+  - Target milestone/phase: OAT CLI consolidation
+  - Notes:
+    - Move skill validation logic from `.oat/scripts/validate-oat-skills.ts` into `packages/cli/` (e.g., `oat validate skills` or integrate into `oat doctor`).
+    - Currently called via `pnpm oat:validate-skills`.
+    - Validates frontmatter fields (`disable-model-invocation`, `user-invocable`, `allowed-tools`), progress indicator sections, and banner snippets.
+    - Update package.json script to call CLI command.
+  - Success criteria:
+    - Validation runs as a proper CLI command with structured output.
+    - `pnpm oat:validate-skills` package.json script updated or removed.
+    - `.oat/scripts/validate-oat-skills.ts` removed.
+  - Links:
+    - Current script: `.oat/scripts/validate-oat-skills.ts`
+    - package.json: `oat:validate-skills` script
+  - Created: 2026-02-14
+
+- [ ] **(P1) [tooling] Migrate `generate-oat-state.sh` from `.oat/scripts/` to CLI**
+  - Target milestone/phase: OAT CLI consolidation
+  - Notes:
+    - Move state dashboard generation from `.oat/scripts/generate-oat-state.sh` into `packages/cli/` (e.g., `oat state` or `oat project status`).
+    - Currently called by `oat-new-project` skill (Step 2), `oat-index` skill (Step 12), and `new-oat-project.ts`.
+    - Generates `.oat/state.md` with active project, phase, knowledge base freshness, and recommended next action.
+    - Shell script parses frontmatter and git state — rewrite in TypeScript for consistency and testability.
+    - Update calling skills to use CLI command.
+  - Success criteria:
+    - `oat state` (or equivalent) generates the dashboard as a CLI command.
+    - All skills updated to call CLI instead of shell script.
+    - `.oat/scripts/generate-oat-state.sh` removed.
+  - Links:
+    - Current script: `.oat/scripts/generate-oat-state.sh`
+    - Calling skills: `oat-new-project`, `oat-index`
+  - Created: 2026-02-14
+
+- [ ] **(P1) [tooling] Migrate `generate-thin-index.sh` from `.oat/scripts/` to CLI**
+  - Target milestone/phase: OAT CLI consolidation
+  - Notes:
+    - Move thin index generation from `.oat/scripts/generate-thin-index.sh` into `packages/cli/` (e.g., `oat index --thin` or `oat index init`).
+    - Currently called by `oat-index` skill (Step 4) with HEAD_SHA and MERGE_BASE_SHA args.
+    - Generates `.oat/knowledge/repo/project-index.md` with repo structure, entry points, config files, and test commands.
+    - Shell script uses find/grep/awk — rewrite in TypeScript for consistency, testability, and cross-platform support.
+    - Update `oat-index` skill to call CLI command.
+  - Success criteria:
+    - Thin index generation works as a CLI command.
+    - `oat-index` skill updated to call CLI instead of shell script.
+    - `.oat/scripts/generate-thin-index.sh` removed.
+  - Links:
+    - Current script: `.oat/scripts/generate-thin-index.sh`
+    - Calling skill: `.agents/skills/oat-index/SKILL.md`
+  - Created: 2026-02-14
+
+- [ ] **(P2) [tooling] Remove `.oat/scripts/` directory after all migrations complete**
+  - Target milestone/phase: Post OAT CLI consolidation
+  - Notes:
+    - Once all four scripts are migrated to the CLI, remove the `.oat/scripts/` directory entirely.
+    - Update any remaining references in docs, templates, or internal-project-reference files.
+    - Update `.oat/internal-project-reference/current-state.md` to reference CLI commands instead of scripts.
+  - Success criteria:
+    - `.oat/scripts/` directory deleted.
+    - No remaining references to `.oat/scripts/` in the codebase.
+  - Links:
+    - Depends on: all four migration items above
+  - Created: 2026-02-14
 
 ## In Progress
 

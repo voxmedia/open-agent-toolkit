@@ -77,6 +77,30 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-idea-ideate</name>
+<description>Resume brainstorming on an existing idea through conversational discussion, or start from a scratchpad entry.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-idea-new</name>
+<description>Create a new idea directory for lightweight brainstorming and capture, then start brainstorming immediately.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-idea-scratchpad</name>
+<description>Review scratchpad entries or quick-capture a new idea seed with optional notes.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-idea-summarize</name>
+<description>Finalize an idea by generating a summary document and adding it to the ideas backlog.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>oat-implement</name>
 <description>Execute implementation plan task-by-task with state tracking and TDD discipline</description>
 <location>project</location>

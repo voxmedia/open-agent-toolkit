@@ -15,6 +15,13 @@ Project skills are stored in `.agents/skills`.
 - `oat-progress`
 - `oat-complete-project`
 
+## Ideas skills
+
+- `oat-idea-new`
+- `oat-idea-ideate`
+- `oat-idea-scratchpad`
+- `oat-idea-summarize`
+
 ## Review and PR skills
 
 - `oat-request-review`

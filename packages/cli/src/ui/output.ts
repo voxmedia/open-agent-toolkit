@@ -118,7 +118,7 @@ export function formatSyncPlan(plan: SyncPlan, applied: boolean): string {
     return `- ${detail} (${entry.reason})`;
   });
 
-  return `${heading}\n${lines.join('\n')}`;
+  return `${heading}\n\n${lines.join('\n')}`;
 }
 
 function colorSyncOperation(operation: string): string {
