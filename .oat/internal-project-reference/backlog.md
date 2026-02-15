@@ -198,6 +198,31 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related: `oat init ideas` backlog entry
   - Created: 2026-02-14
 
+- [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-new-project`**
+  - Target milestone/phase: Ideas → Projects integration
+  - Notes:
+    - Enhance `oat-new-project` Step 1 to check for existing summarized ideas (scan `{IDEAS_ROOT}/*/discovery.md` for `oat_idea_state: summarized`) and ask the user:
+      - "Is this a brand new project, or would you like to promote an existing idea?"
+      - If promoting: let user pick from summarized ideas, use the idea name as the project name (or let them rename), and stash the idea's `summary.md` path for later.
+    - Enhance `oat-new-project` Step 3 to offer auto-triggering discovery:
+      - Currently just says "Next command: `/oat:discovery`" — change to ask: "Would you like to start discovery now, or do it later?"
+      - If yes: agent reads `oat-discovery` skill and invokes it (same pattern as `oat-idea-new` → `oat-idea-ideate` handoff).
+      - If promoting an idea: pass the idea's `summary.md` content as the initial request context to `oat-discovery`, so the user doesn't have to re-explain the idea.
+    - On promotion, update the ideas backlog entry to Archived with reason: `promoted to project`.
+    - This keeps all promotion logic in `oat-new-project` (single entry point) rather than needing a separate `oat-idea-promote` skill.
+    - Should support both project-level and user-level ideas (respect `{IDEAS_ROOT}` resolution).
+  - Success criteria:
+    - `oat-new-project` detects summarized ideas and offers to promote one.
+    - Promoted idea's summary is passed as seed context into discovery.
+    - Ideas backlog updated on promotion (moved to Archived).
+    - User can still create a brand new project with no idea connection.
+    - Discovery auto-trigger is optional (user chooses).
+  - Links:
+    - Current skill: `.agents/skills/oat-new-project/SKILL.md`
+    - Promotion contract: `.agents/skills/oat-idea-summarize/SKILL.md` (Step 7)
+    - Discovery skill: `.agents/skills/oat-discovery/SKILL.md`
+  - Created: 2026-02-14
+
 - [ ] **(P1) [tooling] Migrate `new-oat-project.ts` from `.oat/scripts/` to CLI**
   - Target milestone/phase: OAT CLI consolidation
   - Notes:
