@@ -51,8 +51,8 @@ Use reusable skills and tooling without adopting the full project lifecycle:
 - Adopt only the pieces you need for your team’s workflow
 
 Start points:
-- `docs/oat/skills/index.md`
-- `docs/oat/reference/index.md`
+- [Skills overview](docs/oat/skills/index.md)
+- [Reference](docs/oat/reference/index.md)
 
 ### C) Workflow mode (skills + project artifacts)
 
@@ -163,17 +163,17 @@ This gives you the core value of OAT without adopting workflow artifacts.
 
 Start here:
 
-- OAT overview: `docs/oat/index.md`
-- Quickstart: `docs/oat/quickstart.md`
+- [OAT overview](docs/oat/index.md)
+- [Quickstart](docs/oat/quickstart.md)
 
 Section indexes:
 
-- Workflow: `docs/oat/workflow/index.md`
-- Skills: `docs/oat/skills/index.md`
-- Projects: `docs/oat/projects/index.md`
-- CLI: `docs/oat/cli/index.md`
-- Provider interop: `docs/oat/cli/provider-interop/index.md`
-- Reference: `docs/oat/reference/index.md`
+- [Workflow](docs/oat/workflow/index.md)
+- [Skills](docs/oat/skills/index.md)
+- [Projects](docs/oat/projects/index.md)
+- [CLI](docs/oat/cli/index.md)
+- [Provider interop](docs/oat/cli/provider-interop/index.md)
+- [Reference](docs/oat/reference/index.md)
 
 ## Development Commands
 

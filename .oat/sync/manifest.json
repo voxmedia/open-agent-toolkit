@@ -433,7 +433,43 @@
       "strategy": "symlink",
       "contentHash": null,
       "lastSynced": "2026-02-15T00:40:41.413Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-idea-scratchpad",
+      "providerPath": ".claude/skills/oat-idea-scratchpad",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T02:30:57.655Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/review-backlog",
+      "providerPath": ".claude/skills/review-backlog",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T02:30:57.656Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-idea-scratchpad",
+      "providerPath": ".cursor/skills/oat-idea-scratchpad",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T02:30:57.656Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/review-backlog",
+      "providerPath": ".cursor/skills/review-backlog",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T02:30:57.656Z"
     }
   ],
-  "lastUpdated": "2026-02-15T00:40:41.413Z"
+  "lastUpdated": "2026-02-16T02:30:57.656Z"
 }
