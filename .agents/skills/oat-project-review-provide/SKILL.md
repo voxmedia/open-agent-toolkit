@@ -73,7 +73,7 @@ Run the `oat-project-review-provide` skill and it will:
 
 ## Process
 
-### Step 0: Resolve Active Project
+### Step 0: Resolve Active Project (Hard Requirement)
 
 OAT stores the active project path in `.oat/active-project` (single line, local-only).
 
@@ -83,16 +83,21 @@ PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
-**If `PROJECT_PATH` is missing/invalid:**
-- Ask the user for `{project-name}`
-- Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
-- Write it for future use:
-  ```bash
-  mkdir -p .oat
-  echo "$PROJECT_PATH" > .oat/active-project
-  ```
+Validation rules:
+- `PROJECT_PATH` must be set and point to an existing directory.
+- `"$PROJECT_PATH/state.md"` must exist for mode-aware review validation.
 
-**If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+If either check fails, **stop and route**. Do not create/guess project pointers in this skill.
+
+Tell user:
+- This is a project-scoped skill and needs an initialized OAT project (`.oat/active-project` + project `state.md`).
+- Without project state, review can still proceed via non-project skill: `oat-review-provide`.
+- To continue with project workflow instead, run one of:
+  - `oat-project-open` (existing project)
+  - `oat-project-quick-start` (new quick project)
+  - `oat-project-import-plan` (external plan import)
+
+If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`.
 
 ### Step 1: Parse Arguments or Ask
 
@@ -187,7 +192,15 @@ case "$SCOPE_TOKEN" in
   discovery) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/discovery.md") ;;
   spec) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/discovery.md") ;;
   design) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/design.md" "$PROJECT_PATH/spec.md") ;;
-  plan) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md") ;;
+  plan)
+    if [[ "$WORKFLOW_MODE" == "full" ]]; then
+      FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md")
+    elif [[ "$WORKFLOW_MODE" == "quick" ]]; then
+      FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/discovery.md")
+    else
+      FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/references/imported-plan.md")
+    fi
+    ;;
 esac
 FILE_COUNT=$(echo "$FILES_CHANGED" | wc -l | tr -d ' ')
 ```
@@ -320,6 +333,9 @@ If running inline (Tier 3), execute the review and write artifact.
 7. Write artifact with file:line references and fix guidance
 
 **Review artifact template:** (see `.agents/agents/oat-reviewer.md` for full format)
+
+Shared ad-hoc companion reference (non-project mode):
+- `.agents/skills/oat-review-provide/references/review-artifact-template.md`
 
 ```markdown
 ---
