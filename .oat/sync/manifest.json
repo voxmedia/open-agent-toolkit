@@ -469,7 +469,79 @@
       "strategy": "symlink",
       "contentHash": null,
       "lastSynced": "2026-02-16T04:13:20.000Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-import-plan",
+      "providerPath": ".claude/skills/oat-project-import-plan",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T16:36:34.832Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-promote-full",
+      "providerPath": ".claude/skills/oat-project-promote-full",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T16:36:34.835Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-quick-start",
+      "providerPath": ".claude/skills/oat-project-quick-start",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T16:36:34.835Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-review-provide",
+      "providerPath": ".claude/skills/oat-review-provide",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T16:36:34.836Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-import-plan",
+      "providerPath": ".cursor/skills/oat-project-import-plan",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T16:36:34.836Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-promote-full",
+      "providerPath": ".cursor/skills/oat-project-promote-full",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T16:36:34.836Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-quick-start",
+      "providerPath": ".cursor/skills/oat-project-quick-start",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T16:36:34.836Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-review-provide",
+      "providerPath": ".cursor/skills/oat-review-provide",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T16:36:34.836Z"
     }
   ],
-  "lastUpdated": "2026-02-16T04:13:20.003Z"
+  "lastUpdated": "2026-02-16T16:36:34.836Z"
 }
