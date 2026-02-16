@@ -22,7 +22,7 @@ Track notable decisions made while evolving OAT in this repo, so future sessions
 - **Status:** accepted
 - **Drivers:** Avoid breaking existing skills that assume `.oat/active-project` contains a full path; keep dogfood v1 stable while we iterate on projects-root and multi-project workflows.
 - **Related:**
-  - `.oat/internal-project-reference/deferred-phases.md`
+  - `.oat/repo/reference/deferred-phases.md`
   - `.oat/projects-root`
 
 #### Context
@@ -69,8 +69,8 @@ For dogfood v1:
 - **Status:** accepted
 - **Drivers:** Reduce “silent work” confusion during dogfooding; make long-running skills feel alive; align with GSD-style UX without adding noise.
 - **Related:**
-  - `.oat/internal-project-reference/temp/workflow-user-feedback.md`
-  - `.oat/internal-project-reference/current-state.md`
+  - `.oat/repo/archive/workflow-user-feedback.md`
+  - `.oat/repo/reference/current-state.md`
 
 #### Decision
 
@@ -120,8 +120,8 @@ Add a `create-oat-skill` skill as a specialization of `create-skill`:
 - **Status:** accepted
 - **Drivers:** Avoid cross-skill coordination risk while we start the CLI; keep dogfood stable; let the CLI become the canonical interface for project creation/selection.
 - **Related:**
-  - `.oat/internal-project-reference/deferred-phases.md`
-  - `.oat/internal-project-reference/current-state.md`
+  - `.oat/repo/reference/deferred-phases.md`
+  - `.oat/repo/reference/current-state.md`
   - `.oat/scripts/generate-oat-state.sh` (already reads both formats)
 
 #### Decision
@@ -152,8 +152,8 @@ For dogfood v1 (until CLI project commands exist):
 - **Drivers:** Reduce cross-client confusion and workflow drift. Slash-style invocations (`/oat:*`) are not guaranteed across hosts, while skill names (`oat-*`) are the canonical workflow contract.
 - **Related:**
   - `.oat/templates/plan.md`
-  - `.oat/internal-project-reference/roadmap.md`
-  - `.oat/internal-project-reference/backlog.md`
+  - `.oat/repo/reference/roadmap.md`
+  - `.oat/repo/reference/backlog.md`
 
 #### Context
 
@@ -269,7 +269,7 @@ Adopt option 2:
 - Keep `oat-project-review-provide` project-scoped and require valid project state.
 - Add `oat-review-provide` for ad-hoc/non-project review scopes.
 - For ad-hoc artifacts, default storage to local-only `.oat/projects/local/orphan-reviews/`.
-- If `.oat/reviews/` already exists and is not gitignored, treat that as explicit tracked-storage intent.
+- If `.oat/repo/reviews/` already exists and is not gitignored, treat that as explicit tracked-storage intent.
 - Allow explicit override to tracked/custom destination or inline-only output.
 
 #### Consequences

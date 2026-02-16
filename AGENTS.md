@@ -198,7 +198,7 @@ Usage notes:
 
 <skill>
 <name>update-internal-project-reference</name>
-<description>Use when OAT implementation changes and you need to update .oat/internal-project-reference docs to match (temporary while dogfooding)</description>
+<description>Use when OAT implementation changes and you need to update .oat/repo/reference docs to match current behavior</description>
 <location>project</location>
 </skill>
 </available_skills>

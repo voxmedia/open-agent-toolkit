@@ -18,7 +18,7 @@ Policy:
 - If --output is provided, use it directly.
 - If mode=inline, no artifact file is written.
 - In auto mode:
-  - If .oat/reviews exists and is NOT gitignored, use it (tracked convention).
+  - If .oat/repo/reviews exists and is NOT gitignored, use it (tracked convention).
   - Otherwise, use .oat/projects/local/orphan-reviews (local-only default).
 USAGE
 }
@@ -86,7 +86,7 @@ if [[ "$MODE" == "inline" ]]; then
   exit 0
 fi
 
-TRACKED_DIR=".oat/reviews"
+TRACKED_DIR=".oat/repo/reviews"
 LOCAL_DIR=".oat/projects/local/orphan-reviews"
 
 if [[ "$MODE" == "tracked" ]]; then

@@ -29,4 +29,4 @@ Skill contracts are defined by frontmatter + process sections in each `SKILL.md`
 - `.agents/skills/oat-project-implement/SKILL.md`
 - `.agents/skills/oat-project-complete/SKILL.md`
 - `.agents/skills/oat-project-review-receive/SKILL.md`
-- `.oat/internal-project-reference/decision-record.md`
+- `.oat/repo/reference/decision-record.md`

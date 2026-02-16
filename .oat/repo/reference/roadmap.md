@@ -1,13 +1,13 @@
 # OAT Roadmap (Dogfood-First)
 
 This file is the canonical OAT roadmap for this repo. It combines:
-- the dogfood workflow direction (`.oat/internal-project-reference/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`)
-- the early "product" vision (interop + CLI) (`.oat/internal-project-reference/past-artifacts/agentic_development_framework_v_1_plan.md`)
+- the dogfood workflow direction (`.oat/repo/archive/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`)
+- the early "product" vision (interop + CLI) (`.oat/repo/archive/past-artifacts/agentic_development_framework_v_1_plan.md`)
 - the review/subagent direction (`.oat/projects/shared/workflow-research/analysis/subagents/refined-subagent-proposal.md`)
 
-For a birdseye snapshot of what exists *right now*, see `.oat/internal-project-reference/current-state.md`.
+For a birdseye snapshot of what exists *right now*, see `.oat/repo/reference/current-state.md`.
 
-For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/internal-project-reference/temp/workflow-user-feedback.md`.
+For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
 As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline has been exercised end-to-end. The next focus is shifting toward the original product direction: provider interop via a safe, diff-first CLI (`oat init/status/sync/doctor`), while keeping the Repo State Dashboard and workflow contracts in sync.
 

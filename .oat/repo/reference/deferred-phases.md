@@ -3,10 +3,10 @@
 This document lists the next phases of work that are explicitly deferred beyond the current dogfood workflow baseline, plus concrete "when to do it" triggers.
 
 Primary references:
-- `.oat/internal-project-reference/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`
-- `.oat/internal-project-reference/past-artifacts/agentic_development_framework_v_1_plan.md`
+- `.oat/repo/archive/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`
+- `.oat/repo/archive/past-artifacts/agentic_development_framework_v_1_plan.md`
 - `.oat/projects/shared/workflow-research/analysis/subagents/refined-subagent-proposal.md`
-- Current snapshot: `.oat/internal-project-reference/current-state.md`
+- Current snapshot: `.oat/repo/reference/current-state.md`
 
 ## Baseline (Already In Scope)
 
@@ -34,7 +34,7 @@ For dogfood v1, the safest approach is:
   - Name-only (future), resolved via `.oat/projects-root` / `OAT_PROJECTS_ROOT`
 - **Migration:** Treat name-only as a separate coordinated update (update every skill’s “resolve active project” logic first, then flip writes).
 
-**Decision:** Name-only migration is explicitly deferred until the CLI owns project commands (see `.oat/internal-project-reference/decision-record.md` ADR-004).
+**Decision:** Name-only migration is explicitly deferred until the CLI owns project commands (see `.oat/repo/reference/decision-record.md` ADR-004).
 
 ### Phase 5 (Dogfood v1.3): Staleness + Knowledge Drift Upgrades
 

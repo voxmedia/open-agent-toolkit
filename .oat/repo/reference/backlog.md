@@ -262,8 +262,8 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Target milestone/phase: Post OAT CLI consolidation
   - Notes:
     - Once all four scripts are migrated to the CLI, remove the `.oat/scripts/` directory entirely.
-    - Update any remaining references in docs, templates, or internal-project-reference files.
-    - Update `.oat/internal-project-reference/current-state.md` to reference CLI commands instead of scripts.
+    - Update any remaining references in docs, templates, or repo reference files.
+    - Update `.oat/repo/reference/current-state.md` to reference CLI commands instead of scripts.
   - Success criteria:
     - `.oat/scripts/` directory deleted.
     - No remaining references to `.oat/scripts/` in the codebase.
@@ -286,5 +286,5 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## Completed Archive
 
-- Completed backlog items live in `.oat/internal-project-reference/backlog-completed.md`.
+- Completed backlog items live in `.oat/repo/reference/backlog-completed.md`.
 - Keep this file focused on actionable work only: **Inbox**, **Planned**, **In Progress**, and **Deferred**.

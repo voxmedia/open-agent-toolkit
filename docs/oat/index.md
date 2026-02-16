@@ -40,4 +40,4 @@ OAT is organized as three distinct capabilities that can be used together or ind
 1. Runtime behavior: `packages/cli/src/**`
 2. Skill behavior contracts: `.agents/skills/*/SKILL.md`
 3. OAT templates and scripts: `.oat/templates/**`, `.oat/scripts/**`
-4. Internal product records: `.oat/internal-project-reference/**`
+4. Repo reference records: `.oat/repo/**`

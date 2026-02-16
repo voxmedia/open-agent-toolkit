@@ -6,16 +6,16 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 ## Canonical References
 
-- Workflow guide (how to use OAT): `.oat/internal-project-reference/workflow-guide.md`
-- Roadmap: `.oat/internal-project-reference/roadmap.md`
-- Deferred phases: `.oat/internal-project-reference/deferred-phases.md`
-- Implementation deep-dive: `.oat/internal-project-reference/dogfood-workflow-implementation.md`
-- Backlog: `.oat/internal-project-reference/backlog.md`
-- Backlog completed archive: `.oat/internal-project-reference/backlog-completed.md`
-- Decision record: `.oat/internal-project-reference/decision-record.md`
-- Workflow user feedback (dogfood log): `.oat/internal-project-reference/temp/workflow-user-feedback.md`
-- Review loop proposal: `.oat/projects/shared/workflow-research/analysis/subagents/refined-subagent-proposal.md`
-- Past artifacts (archival): `.oat/internal-project-reference/past-artifacts/`
+- Workflow lifecycle: `docs/oat/workflow/lifecycle.md`
+- Workflow reviews: `docs/oat/workflow/reviews.md`
+- Workflow PR flow: `docs/oat/workflow/pr-flow.md`
+- Roadmap: `.oat/repo/reference/roadmap.md`
+- Deferred phases: `.oat/repo/reference/deferred-phases.md`
+- Backlog: `.oat/repo/reference/backlog.md`
+- Backlog completed archive: `.oat/repo/reference/backlog-completed.md`
+- Decision record: `.oat/repo/reference/decision-record.md`
+- Repo reviews: `.oat/repo/reviews/`
+- Repo archive: `.oat/repo/archive/`
 
 ## What’s Implemented
 
@@ -82,11 +82,9 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Subagent prompts: `.agents/agents/*.md`
 - Templates: `.oat/templates/*.md`
 - Knowledge: `.oat/knowledge/repo/*.md`
-- Project artifacts (current dogfood layout): `.oat/projects/shared/<project>/` (configurable via `.oat/projects-root`)
+- Project artifacts (default checked-in layout): `.oat/projects/shared/<project>/` (configurable via `.oat/projects-root`)
 
-## Quickstart (Dogfood)
-
-For a fuller guide (resume/review/PR loops), see `.oat/internal-project-reference/workflow-guide.md`.
+## Quickstart (Current)
 
 1. Generate repo knowledge:
    - `oat-project-index`
@@ -118,7 +116,7 @@ Non-project review path:
 - Repo-level dashboard:
   - Repo State Dashboard (`.oat/state.md`) exists, but needs to be made first-class (clear generation/refresh workflow + keep docs in sync with current semantics)
 - Provider interop (CLI):
-  - Build the safe interop CLI (`oat init/status/sync/doctor`) with adapters + sync manifest (see `.oat/internal-project-reference/roadmap.md` Phase 8)
+  - Build the safe interop CLI (`oat init/status/sync/doctor`) with adapters + sync manifest (see `.oat/repo/reference/roadmap.md` Phase 8)
 - Multi-project model:
   - `.oat/projects/**` and `oat project ...` switching (in progress; dogfood now uses `.oat/projects/shared` as the default projects root)
 - Parallel execution + reconciliation:
@@ -128,5 +126,5 @@ Non-project review path:
 
 - `.oat/projects-root` sets the default projects root (tracked). Default: `.oat/projects/shared` (checked in).
 - `.oat/projects/local/**` and `.oat/projects/archived/**` are gitignored (local-only).
-- Legacy `.oat/projects/shared/**` is still gitignored in this repo by default; older dogfood artifacts may exist there locally.
+- `.oat/projects/shared/**` is tracked by default in this repo unless a local override is added.
 - `.oat/active-project` is local-only (gitignored). It won’t exist until you run a skill that creates/selects a project.

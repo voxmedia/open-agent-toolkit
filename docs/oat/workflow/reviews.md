@@ -37,7 +37,7 @@ Use phase-scoped review artifacts during implementation (`p01`, `p02`, etc), the
 - `.oat/projects/<scope>/<project>/plan.md` (`## Reviews`)
 - `.oat/projects/<scope>/<project>/reviews/`
 - `.oat/projects/local/orphan-reviews/` (default local-only storage for ad-hoc review artifacts)
-- `.oat/reviews/` (tracked storage convention when explicitly desired)
+- `.oat/repo/reviews/` (tracked storage convention when explicitly desired)
 - `.agents/skills/oat-review-provide/SKILL.md`
 - `.agents/skills/oat-project-review-provide/SKILL.md`
 - `.agents/skills/oat-project-review-receive/SKILL.md`

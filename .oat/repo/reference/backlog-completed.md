@@ -4,7 +4,7 @@ Historical record of completed backlog items moved out of the active backlog for
 
 ## How to Use
 
-- Move completed entries here from `.oat/internal-project-reference/backlog.md`.
+- Move completed entries here from `.oat/repo/reference/backlog.md`.
 - Keep the newest completed items at the top.
 - Use this file as append-only historical context; do not add future work here.
 
@@ -23,7 +23,7 @@ Historical record of completed backlog items moved out of the active backlog for
       - explicit pre-existing files (`--files`)
     - Added destination policy helper:
       - defaults to local-only `.oat/projects/local/orphan-reviews/`
-      - auto-uses tracked `.oat/reviews/` when it already exists and is not gitignored
+      - auto-uses tracked `.oat/repo/reviews/` when it already exists and is not gitignored
       - supports inline-only output
     - Updated `oat-project-review-provide` to hard-stop when active project/state is missing and route to `oat-review-provide`.
   - Links:
@@ -79,18 +79,18 @@ Historical record of completed backlog items moved out of the active backlog for
     - All `/oat:` slash-command references in internal-project-reference and project artifacts replaced with skill-first names.
   - Links:
     - Source discussion: OAT feature ideas (naming philosophy + domain model)
-    - Plan: `.oat/internal-project-reference/external-plans/skill-rename-slash-cleanup.md`
+    - Plan: `.oat/repo/archive/external-plans/skill-rename-slash-cleanup.md`
   - Created: 2026-02-14
   - Completed: 2026-02-15
 
 - [x] **(P1) [skills] Standardize OAT invocation language to skill-first across templates/docs**
   - Outcome:
-    - All `/oat:` slash-command references in `.oat/internal-project-reference/` and `.oat/projects/shared/` replaced with skill-first names (no slash prefix).
+    - All `/oat:` slash-command references in repo reference and project artifacts replaced with skill-first names (no slash prefix).
     - Templates, skill SKILL.md files, and project artifacts now use canonical skill names as primary references.
     - Completed as part of the naming normalization rename pass.
   - Links:
     - Source discussion: invocation compatibility for Codex vs slash-enabled hosts
-    - Plan: `.oat/internal-project-reference/external-plans/skill-rename-slash-cleanup.md`
+    - Plan: `.oat/repo/archive/external-plans/skill-rename-slash-cleanup.md`
   - Created: 2026-02-14
   - Completed: 2026-02-15
 
@@ -101,7 +101,7 @@ Historical record of completed backlog items moved out of the active backlog for
       - short step indicators (2–5 lines)
       - “starting/done” updates for long-running work
   - Links:
-    - Workflow feedback: `.oat/internal-project-reference/temp/workflow-user-feedback.md`
+    - Workflow feedback: `.oat/repo/archive/workflow-user-feedback.md`
     - Commits: `d39876d`, `57de516`, `a22c107`, `bca8167`, `13de18f`, `bdc9a76`
   - Created: 2026-01-30
   - Completed: 2026-01-31
