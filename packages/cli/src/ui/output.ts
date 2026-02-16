@@ -1,8 +1,8 @@
 import { basename } from 'node:path';
+import type { DriftReport, DriftState } from '@drift/drift.types';
+import type { SyncPlan } from '@engine/engine.types';
+import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import chalk from 'chalk';
-import type { DriftReport, DriftState } from '../drift/drift.types';
-import type { SyncPlan } from '../engine/engine.types';
-import type { ProviderAdapter } from '../providers/shared/adapter.types';
 import { stripAnsi } from './ansi';
 
 export type CheckStatus = 'pass' | 'warn' | 'fail';

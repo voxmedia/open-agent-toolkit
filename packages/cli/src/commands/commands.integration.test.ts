@@ -8,8 +8,8 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createProgram } from '@app/create-program';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createProgram } from '../app/create-program';
 import { registerCommands } from './index';
 
 interface CliResult {

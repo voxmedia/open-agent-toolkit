@@ -1,12 +1,15 @@
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import {
+  createLoggerCapture,
+  type LoggerCapture,
+} from '@commands/__tests__/helpers';
+import type { DriftReport } from '@drift/index';
+import type { CanonicalEntry } from '@engine/index';
+import type { Manifest, ManifestEntry } from '@manifest/index';
+import type { ProviderAdapter } from '@providers/shared';
+import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CommandContext, GlobalOptions } from '../../app/command-context';
-import type { DriftReport } from '../../drift';
-import type { CanonicalEntry } from '../../engine';
-import type { Manifest, ManifestEntry } from '../../manifest';
-import type { ProviderAdapter } from '../../providers/shared';
-import type { Scope } from '../../shared/types';
-import { createLoggerCapture, type LoggerCapture } from '../__tests__/helpers';
 import { createStatusCommand } from './index';
 
 interface TestHarnessOptions {

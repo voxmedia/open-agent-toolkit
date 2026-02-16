@@ -1,43 +1,46 @@
 import { mkdir } from 'node:fs/promises';
 import { basename, join } from 'node:path';
-import { Command } from 'commander';
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
-} from '../../app/command-context';
-import { type DriftReport, detectStrays } from '../../drift';
+} from '@app/command-context';
+import { adoptStrayToCanonical } from '@commands/shared/adopt-stray';
+import {
+  confirmAction,
+  type MultiSelectChoice,
+  type PromptContext,
+  selectManyWithAbort,
+} from '@commands/shared/shared.prompts';
+import {
+  readGlobalOptions,
+  resolveConcreteScopes,
+} from '@commands/shared/shared.utils';
+import { type DriftReport, detectStrays } from '@drift/index';
 import {
   type CanonicalEntry,
   installHook,
   isHookInstalled,
   scanCanonical,
   uninstallHook,
-} from '../../engine';
-import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
+} from '@engine/index';
+import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import {
   createEmptyManifest,
   loadManifest,
   saveManifest,
-} from '../../manifest/manager';
-import type { Manifest } from '../../manifest/manifest.types';
-import { claudeAdapter } from '../../providers/claude';
-import { codexAdapter } from '../../providers/codex';
-import { cursorAdapter } from '../../providers/cursor';
+} from '@manifest/manager';
+import type { Manifest } from '@manifest/manifest.types';
+import { claudeAdapter } from '@providers/claude';
+import { codexAdapter } from '@providers/codex';
+import { cursorAdapter } from '@providers/cursor';
 import {
   getActiveAdapters,
   getSyncMappings,
   type PathMapping,
-} from '../../providers/shared';
-import {
-  confirmAction,
-  type MultiSelectChoice,
-  type PromptContext,
-  selectManyWithAbort,
-} from '../../shared/prompts';
-import type { ConcreteScope, Scope } from '../../shared/types';
-import { readGlobalOptions, resolveConcreteScopes } from '../shared';
-import { adoptStrayToCanonical } from '../shared/adopt-stray';
+} from '@providers/shared';
+import type { ConcreteScope, Scope } from '@shared/types';
+import { Command } from 'commander';
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';

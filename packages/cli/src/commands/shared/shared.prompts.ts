@@ -1,5 +1,5 @@
+import { CliError } from '@errors/index';
 import { checkbox, confirm, input, select } from '@inquirer/prompts';
-import { CliError } from '../errors';
 
 export interface PromptContext {
   interactive: boolean;

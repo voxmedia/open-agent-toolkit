@@ -1,9 +1,9 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
+import type { CanonicalEntry } from '@engine/scanner';
+import { createEmptyManifest } from '@manifest/manager';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { CanonicalEntry } from '../engine/scanner';
-import { createEmptyManifest } from '../manifest/manager';
 import { detectStrays, inferScopeRoot } from './strays';
 
 async function seedProviderEntry(

@@ -8,9 +8,9 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
+import { createEmptyManifest, loadManifest } from '@manifest/manager';
 import { afterEach, describe, expect, it } from 'vitest';
-import { DEFAULT_SYNC_CONFIG } from '../config/sync-config';
-import { createEmptyManifest, loadManifest } from '../manifest/manager';
 import { computeSyncPlan } from './compute-plan';
 import { executeSyncPlan } from './execute-plan';
 import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';

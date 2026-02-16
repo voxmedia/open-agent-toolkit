@@ -1,11 +1,11 @@
 import { access, rename, rm } from 'node:fs/promises';
 import { basename, dirname, relative, resolve } from 'node:path';
-import { CliError } from '../../errors';
-import { createSymlink, ensureDir } from '../../fs/io';
-import { toPosixPath } from '../../fs/paths';
-import { computeDirectoryHash } from '../../manifest/hash';
-import { addEntry } from '../../manifest/manager';
-import type { Manifest, ManifestEntry } from '../../manifest/manifest.types';
+import { CliError } from '@errors/index';
+import { createSymlink, ensureDir } from '@fs/io';
+import { toPosixPath } from '@fs/paths';
+import { computeDirectoryHash } from '@manifest/hash';
+import { addEntry } from '@manifest/manager';
+import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 
 interface StrayAdoptionCandidate {
   provider: string;

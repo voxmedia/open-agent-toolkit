@@ -1,4 +1,4 @@
-import type { PathMapping } from '../shared/adapter.types';
+import type { PathMapping } from '@providers/shared/adapter.types';
 
 export const CODEX_PROJECT_MAPPINGS: PathMapping[] = [
   {

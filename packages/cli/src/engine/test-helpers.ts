@@ -1,4 +1,4 @@
-import type { ProviderAdapter } from '../providers/shared/adapter.types';
+import type { ProviderAdapter } from '@providers/shared/adapter.types';
 
 export function createTestAdapter(
   overrides: Partial<ProviderAdapter> = {},

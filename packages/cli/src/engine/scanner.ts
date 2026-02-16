@@ -1,7 +1,7 @@
 import { readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { CliError } from '../errors';
-import { SCOPE_CONTENT_TYPES, type Scope } from '../shared/types';
+import { CliError } from '@errors/index';
+import { SCOPE_CONTENT_TYPES, type Scope } from '@shared/types';
 
 type ConcreteScope = Exclude<Scope, 'all'>;
 

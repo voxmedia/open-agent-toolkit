@@ -1,27 +1,27 @@
 import { join } from 'node:path';
-import { Command } from 'commander';
-import {
-  buildCommandContext,
-  type CommandContext,
-} from '../../app/command-context';
-import { detectDrift } from '../../drift';
-import {
-  normalizeToPosixPath,
-  resolveProjectRoot,
-  resolveScopeRoot,
-} from '../../fs/paths';
-import { loadManifest } from '../../manifest';
-import { claudeAdapter } from '../../providers/claude';
-import { codexAdapter } from '../../providers/codex';
-import { cursorAdapter } from '../../providers/cursor';
-import { getSyncMappings } from '../../providers/shared';
-import { formatProviderDetails } from '../../ui/output';
-import { readGlobalOptions, resolveConcreteScopes } from '../shared';
+import { buildCommandContext, type CommandContext } from '@app/command-context';
 import type {
   ProviderInspectMappingState,
   ProviderInspectResult,
   ProvidersInspectDependencies,
-} from './providers.types';
+} from '@commands/providers/providers.types';
+import {
+  readGlobalOptions,
+  resolveConcreteScopes,
+} from '@commands/shared/shared.utils';
+import { detectDrift } from '@drift/index';
+import {
+  normalizeToPosixPath,
+  resolveProjectRoot,
+  resolveScopeRoot,
+} from '@fs/paths';
+import { loadManifest } from '@manifest/index';
+import { claudeAdapter } from '@providers/claude';
+import { codexAdapter } from '@providers/codex';
+import { cursorAdapter } from '@providers/cursor';
+import { getSyncMappings } from '@providers/shared';
+import { formatProviderDetails } from '@ui/output';
+import { Command } from 'commander';
 
 function entryInMapping(providerPath: string, providerDir: string): boolean {
   const normalizedPath = normalizeToPosixPath(providerPath);

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
+import type { DriftReport } from '@drift/drift.types';
+import type { SyncPlan } from '@engine/engine.types';
+import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import chalk from 'chalk';
 import { describe, expect, it } from 'vitest';
-import type { DriftReport } from '../drift/drift.types';
-import type { SyncPlan } from '../engine/engine.types';
-import type { ProviderAdapter } from '../providers/shared/adapter.types';
 import { stripAnsi } from './ansi';
 import {
   formatDoctorResults,

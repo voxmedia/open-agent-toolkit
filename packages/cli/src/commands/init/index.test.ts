@@ -9,13 +9,16 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import {
+  createLoggerCapture,
+  type LoggerCapture,
+} from '@commands/__tests__/helpers';
+import type { CanonicalEntry } from '@engine/index';
+import { createEmptyManifest, type Manifest } from '@manifest/index';
+import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CommandContext, GlobalOptions } from '../../app/command-context';
-import type { CanonicalEntry } from '../../engine';
-import { createEmptyManifest, type Manifest } from '../../manifest';
-import type { Scope } from '../../shared/types';
-import { createLoggerCapture, type LoggerCapture } from '../__tests__/helpers';
 import { createInitCommand, type InitStrayCandidate } from './index';
 
 interface HarnessOptions {

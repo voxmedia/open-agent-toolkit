@@ -1,9 +1,12 @@
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import {
+  createLoggerCapture,
+  type LoggerCapture,
+} from '@commands/__tests__/helpers';
+import type { Manifest } from '@manifest/index';
+import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CommandContext, GlobalOptions } from '../../app/command-context';
-import type { Manifest } from '../../manifest';
-import type { Scope } from '../../shared/types';
-import { createLoggerCapture, type LoggerCapture } from '../__tests__/helpers';
 import { createDoctorCommand } from './index';
 
 interface HarnessOptions {

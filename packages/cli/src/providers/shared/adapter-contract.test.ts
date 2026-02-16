@@ -1,10 +1,10 @@
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { claudeAdapter } from '@providers/claude';
+import { codexAdapter } from '@providers/codex';
+import { cursorAdapter } from '@providers/cursor';
 import { afterEach, describe, expect, it } from 'vitest';
-import { claudeAdapter } from '../claude';
-import { codexAdapter } from '../codex';
-import { cursorAdapter } from '../cursor';
 import type { PathMapping, ProviderAdapter } from './adapter.types';
 
 const ADAPTERS: ProviderAdapter[] = [

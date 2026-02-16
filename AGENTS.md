@@ -220,6 +220,11 @@ Usage notes:
 - `pnpm run cli -- help` - Run the OAT CLI help from repo root
 - `pnpm run cli -- <command> [options]` - Execute specific OAT CLI commands during local testing
 
+### Import Path Convention
+- Prefer same-directory imports (`./...`) for local modules.
+- For anything outside the current directory, use explicit TypeScript aliases configured by the package.
+- Avoid parent-relative imports (`../...`), `src/...` imports, and catch-all aliases like `@/*`.
+
 ### Package Management
 - Uses pnpm workspaces with Turborepo for efficient monorepo management
 - All packages use `workspace:*` for internal dependencies

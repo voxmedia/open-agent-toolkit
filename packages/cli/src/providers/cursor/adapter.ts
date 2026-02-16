@@ -1,6 +1,6 @@
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { ProviderAdapter } from '../shared/adapter.types';
+import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import { CURSOR_PROJECT_MAPPINGS, CURSOR_USER_MAPPINGS } from './paths';
 
 async function detectCursor(scopeRoot: string): Promise<boolean> {

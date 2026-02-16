@@ -1,12 +1,15 @@
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import {
+  createLoggerCapture,
+  type LoggerCapture,
+} from '@commands/__tests__/helpers';
+import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
+import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
+import type { Manifest } from '@manifest/index';
+import type { ProviderAdapter } from '@providers/shared';
+import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CommandContext, GlobalOptions } from '../../app/command-context';
-import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '../../config';
-import type { CanonicalEntry, SyncPlan, SyncResult } from '../../engine';
-import type { Manifest } from '../../manifest';
-import type { ProviderAdapter } from '../../providers/shared';
-import type { Scope } from '../../shared/types';
-import { createLoggerCapture, type LoggerCapture } from '../__tests__/helpers';
 import { createSyncCommand } from './index';
 
 interface HarnessOptions {

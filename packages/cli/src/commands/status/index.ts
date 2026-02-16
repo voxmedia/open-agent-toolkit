@@ -1,42 +1,45 @@
 import { basename, join, relative } from 'node:path';
-import { Command } from 'commander';
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
-} from '../../app/command-context';
-import { type DriftReport, detectDrift, detectStrays } from '../../drift';
-import { type CanonicalEntry, scanCanonical } from '../../engine';
+} from '@app/command-context';
+import { adoptStrayToCanonical } from '@commands/shared/adopt-stray';
+import {
+  type MultiSelectChoice,
+  type PromptContext,
+  selectManyWithAbort,
+} from '@commands/shared/shared.prompts';
+import {
+  readGlobalOptions,
+  resolveConcreteScopes,
+} from '@commands/shared/shared.utils';
+import { type DriftReport, detectDrift, detectStrays } from '@drift/index';
+import { type CanonicalEntry, scanCanonical } from '@engine/index';
 import {
   normalizeToPosixPath,
   resolveProjectRoot,
   resolveScopeRoot,
-} from '../../fs/paths';
-import type { Manifest } from '../../manifest';
-import { loadManifest, saveManifest } from '../../manifest/manager';
-import { claudeAdapter } from '../../providers/claude';
-import { codexAdapter } from '../../providers/codex';
-import { cursorAdapter } from '../../providers/cursor';
+} from '@fs/paths';
+import type { Manifest } from '@manifest/index';
+import { loadManifest, saveManifest } from '@manifest/manager';
+import { claudeAdapter } from '@providers/claude';
+import { codexAdapter } from '@providers/codex';
+import { cursorAdapter } from '@providers/cursor';
 import {
   getActiveAdapters,
   getSyncMappings,
   type PathMapping,
   type ProviderAdapter,
-} from '../../providers/shared';
-import {
-  type MultiSelectChoice,
-  type PromptContext,
-  selectManyWithAbort,
-} from '../../shared/prompts';
+} from '@providers/shared';
 import {
   type ConcreteScope,
   type ContentType,
   SCOPE_CONTENT_TYPES,
   type Scope,
-} from '../../shared/types';
-import { formatStatusTable } from '../../ui/output';
-import { readGlobalOptions, resolveConcreteScopes } from '../shared';
-import { adoptStrayToCanonical } from '../shared/adopt-stray';
+} from '@shared/types';
+import { formatStatusTable } from '@ui/output';
+import { Command } from 'commander';
 
 const DEFAULT_REMEDIATION = 'Run "oat init" to adopt stray entries.';
 

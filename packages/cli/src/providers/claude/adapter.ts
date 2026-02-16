@@ -1,6 +1,6 @@
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { ProviderAdapter } from '../shared/adapter.types';
+import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import { CLAUDE_PROJECT_MAPPINGS, CLAUDE_USER_MAPPINGS } from './paths';
 
 async function detectClaude(scopeRoot: string): Promise<boolean> {

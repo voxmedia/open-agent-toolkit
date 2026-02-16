@@ -1,2 +1,4 @@
-# Run full lint across all workspaces before pushing
-pnpm run lint
+# Run workspace quality gates before pushing
+pnpm run check
+pnpm run type-check
+pnpm run test
