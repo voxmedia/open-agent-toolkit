@@ -43,6 +43,7 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - `oat-project-promote-full` (in-place promotion to full lifecycle)
 - Review + PR loop:
   - Review: `oat-project-review-provide`, `oat-project-review-receive` + `.agents/agents/oat-reviewer.md`
+  - Ad-hoc review (no project state required): `oat-review-provide`
   - PR: `oat-project-pr-progress`, `oat-project-pr-final`
 - Repo state dashboard:
   - `.oat/scripts/generate-oat-state.sh` generates `.oat/state.md` (gitignored) as a "single glance" dashboard

@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is *right now* in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-02-01
+**Last Updated:** 2026-02-16
 
 ## Canonical References
 
@@ -25,8 +25,12 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - `oat-project-progress` (router / status)
 - Artifact generation:
   - `oat-project-new` (scaffold a project dir from templates)
+  - `oat-project-quick-start` (quick lane: discovery -> plan -> implement)
+  - `oat-project-import-plan` (import lane: provider plan -> canonical `plan.md`)
+  - `oat-project-promote-full` (in-place promotion from quick/import to full lifecycle)
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
 - Review loop:
+  - `oat-review-provide` (ad-hoc/non-project review)
   - `oat-project-review-provide`
   - `oat-project-review-receive`
   - Reviewer prompt: `.agents/agents/oat-reviewer.md`
@@ -102,6 +106,9 @@ For a fuller guide (resume/review/PR loops), see `.oat/internal-project-referenc
 5. PR description generation:
    - `oat-project-pr-progress pNN` (optional progress PR)
    - `oat-project-pr-final` (final PR)
+
+Non-project review path:
+- If no active project/state exists, use `oat-review-provide` (commit range, branch range, staged/unstaged, or explicit file list).
 
 ## Known Gaps / Next Steps
 

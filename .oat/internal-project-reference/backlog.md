@@ -80,10 +80,9 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Source discussion: OAT feature ideas (agent context management)
   - Created: 2026-02-14
 
-- [ ] **(P1) [skills] Add review provide/receive workflow skill family**
+- [ ] **(P1) [skills] Complete review receive + PR-review intake skill family**
   - Target milestone/phase: Workflow expansion after current docs stabilization
   - Notes:
-    - Add `oat-review-provide` for structured code/diff reviews (non-mutating).
     - Add `oat-review-receive` for converting review feedback into actionable plan/fix tasks (non-mutating).
     - Add `oat-review-pr-receive` to ingest GitHub PR review comments and produce task lists.
     - Preserve explicit separation: review ingestion does not apply fixes; implementation skill performs fixes.
@@ -290,6 +289,27 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 - [x] **(P?) [area] {Title}**
   - Outcome:
   - Links:
+
+- [x] **(P1) [skills] Add ad-hoc review provide flow when no project state exists**
+  - Outcome:
+    - Added `oat-review-provide` for non-project review scopes:
+      - commit range (`base_sha`, explicit `sha..sha`)
+      - branch-based range (`base_branch=<branch>`)
+      - staged / unstaged working tree
+      - explicit pre-existing files (`--files`)
+    - Added destination policy helper:
+      - defaults to local-only `.oat/projects/local/orphan-reviews/`
+      - auto-uses tracked `.oat/reviews/` when it already exists and is not gitignored
+      - supports inline-only output
+    - Updated `oat-project-review-provide` to hard-stop when active project/state is missing and route to `oat-review-provide`.
+  - Links:
+    - Skills:
+      - `.agents/skills/oat-review-provide/SKILL.md`
+      - `.agents/skills/oat-review-provide/scripts/resolve-review-output.sh`
+      - `.agents/skills/oat-project-review-provide/SKILL.md`
+    - PR: `https://github.com/tkstang/open-agent-toolkit/pull/8`
+  - Created: 2026-02-16
+  - Completed: 2026-02-16
 
 - [x] **(P1) [workflow] Add quick/import project lanes with canonical plan normalization**
   - Outcome:

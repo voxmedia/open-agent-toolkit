@@ -16,7 +16,9 @@ Dogfood v1 baseline is:
 - `oat-project-progress` router
 - Active project selection: `.oat/active-project` (single-line path, local-only; gitignored)
 - Project scaffolding: `oat-project-new` (creates `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`)
+- Quick/import lanes: `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-promote-full`
 - Review + PR loop: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-pr-progress`, `oat-project-pr-final`
+- Ad-hoc review: `oat-review-provide` (non-project scopes)
 - Repo State Dashboard: `.oat/state.md` generated via `.oat/scripts/generate-oat-state.sh` (gitignored)
 
 ## Deferred Phases
@@ -73,8 +75,8 @@ For dogfood v1, the safest approach is:
 - We find ourselves repeatedly doing small changes where full discovery/spec/design overhead isn't worth it.
 
 **Deliverables:**
-- Quick mode: reduced questioning, design optional when triggers aren't present
-- Template rendering helper (`oat template render ...`) to avoid copy/paste and ensure consistent frontmatter
+- Done: quick/import mode lanes with canonical `plan.md` execution contract
+- Remaining: template rendering helper (`oat template render ...`) to avoid copy/paste and ensure consistent frontmatter
 
 ---
 
