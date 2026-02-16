@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-design
+oat_ready_for: oat-project-design
 oat_blockers: []
 oat_last_updated: 2026-02-13
 oat_generated: false
@@ -14,7 +14,7 @@ Specification is for requirements and acceptance criteria, not design/implementa
 
 - Avoid concrete deliverables (specific scripts, file paths, function names).
 - Keep the "High-Level Design" section to architecture shape and component boundaries only.
-- If a design detail comes up, record it under **Open Questions** for `/oat:design`.
+- If a design detail comes up, record it under **Open Questions** for `oat-project-design`.
 
 ## Problem Statement
 

@@ -211,4 +211,4 @@ pnpm --filter=@oat/cli build && node packages/cli/dist/index.js --help
 
 ## Recommended Next Step
 
-Run `/oat:receive-review` to convert findings into plan tasks.
+Run `oat-project-review-receive` to convert findings into plan tasks.

@@ -11,12 +11,12 @@ Primary references:
 ## Baseline (Already In Scope)
 
 Dogfood v1 baseline is:
-- `oat-index` + `.oat/knowledge/**`
-- `oat-discovery` -> `oat-spec` -> `oat-design` -> `oat-plan` -> `oat-implement`
-- `oat-progress` router
+- `oat-project-index` + `.oat/knowledge/**`
+- `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
+- `oat-project-progress` router
 - Active project selection: `.oat/active-project` (single-line path, local-only; gitignored)
-- Project scaffolding: `oat-new-project` (creates `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`)
-- Review + PR loop: `oat-request-review`, `oat-receive-review`, `oat-pr-progress`, `oat-pr-project`
+- Project scaffolding: `oat-project-new` (creates `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`)
+- Review + PR loop: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-pr-progress`, `oat-project-pr-final`
 - Repo State Dashboard: `.oat/state.md` generated via `.oat/scripts/generate-oat-state.sh` (gitignored)
 
 ## Deferred Phases

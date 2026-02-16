@@ -525,6 +525,6 @@ OAT examples (this repo):
 - `AGENTS.md` (skill registry + discovery)
 - `.agents/skills/create-skill/SKILL.md`
 - `.agents/skills/create-oat-skill/SKILL.md`
-- `.agents/skills/oat-index/SKILL.md`
+- `.agents/skills/oat-project-index/SKILL.md`
 - `.agents/skills/oat-*/SKILL.md`
 - `.oat/scripts/validate-oat-skills.ts`

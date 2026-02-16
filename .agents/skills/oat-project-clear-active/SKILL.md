@@ -1,5 +1,5 @@
 ---
-name: oat-clear-active-project
+name: oat-project-clear-active
 description: Clear the active project pointer
 disable-model-invocation: true
 user-invocable: true

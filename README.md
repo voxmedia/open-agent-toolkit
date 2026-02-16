@@ -149,15 +149,15 @@ This gives you the core value of OAT without adopting workflow artifacts.
 
 ## Workflow At A Glance
 
-1. Create/open project (`oat-new-project` / `oat-open-project`)
-2. Discovery (`oat-discovery`)
-3. Spec (`oat-spec`)
-4. Design (`oat-design`)
-5. Plan (`oat-plan`)
-6. Implement (`oat-implement`)
-7. Review loop (`oat-request-review` + `oat-receive-review`)
-8. PR generation (`oat-pr-progress` / `oat-pr-project`)
-9. Complete lifecycle (`oat-complete-project`)
+1. Create/open project (`oat-project-new` / `oat-project-open`)
+2. Discovery (`oat-project-discover`)
+3. Spec (`oat-project-spec`)
+4. Design (`oat-project-design`)
+5. Plan (`oat-project-plan`)
+6. Implement (`oat-project-implement`)
+7. Review loop (`oat-project-review-provide` + `oat-project-review-receive`)
+8. PR generation (`oat-project-pr-progress` / `oat-project-pr-final`)
+9. Complete lifecycle (`oat-project-complete`)
 
 ## Documentation
 

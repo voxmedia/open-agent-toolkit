@@ -26,7 +26,7 @@ Reviews catch issues before they ship:
 - Security and error handling gaps
 - Maintainability issues that slow future changes
 
-Your review artifact feeds into `oat-receive-review`, which converts findings into plan tasks for systematic gap closure.
+Your review artifact feeds into `oat-project-review-receive`, which converts findings into plan tasks for systematic gap closure.
 </why_this_matters>
 
 <inputs>
@@ -266,7 +266,7 @@ Run these to verify the implementation:
 
 ## Recommended Next Step
 
-Run `/oat:receive-review` to convert findings into plan tasks.
+Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 ```
 </step>
 
@@ -281,7 +281,7 @@ Format:
 **Findings:** {N} critical, {N} important, {N} minor
 **Review artifact:** {path}
 
-Return to your main session and run `/oat:receive-review`.
+Return to your main session and run the `oat-project-review-receive` skill.
 ```
 </step>
 

@@ -44,4 +44,4 @@ None
 
 ## Next Milestone
 
-Create PR with `/oat:pr-project`
+Create PR with `oat-project-pr-final`

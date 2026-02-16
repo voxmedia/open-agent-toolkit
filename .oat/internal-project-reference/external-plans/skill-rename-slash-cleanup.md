@@ -10,6 +10,12 @@ Two backlog items addressed in one pass:
 
 ## Rename Mapping (15 skills)
 
+The backlog originally proposed slightly different names for a few skills. These were refined during planning based on reviewing actual skill behavior:
+
+- `oat-complete-project` → `oat-project-complete` (not `close` — the skill does quality gates, archival, and dashboard refresh, not just closing)
+- `oat-request-review` / `oat-receive-review` → `oat-project-review-provide` / `oat-project-review-receive` (not `oat-review-*` — these operate on project artifacts exclusively, leaving `oat-review-*` namespace open for future general-purpose review tools)
+- `oat-pr-progress` / `oat-pr-project` → `oat-project-pr-progress` / `oat-project-pr-final` (not `oat-pr-*` — these are project workflow skills that produce PRs, not general PR utilities)
+
 | # | Current | New |
 |---|---------|-----|
 | 1 | `oat-new-project` | `oat-project-new` |
@@ -78,11 +84,7 @@ Key files with heavy cross-references:
 
 Update the `<available_skills>` block: rename all 15 `<name>` entries and update `<description>` text if it references old names.
 
-### Step 7: Update sync manifest
-
-`.oat/sync/manifest.json` — update `canonicalPath` and `providerPath` for all 15 skills x 2 providers (claude + cursor) = 30 entries.
-
-### Step 8: Update docs
+### Step 7: Update docs
 
 Files to update (skill name references + any slash syntax):
 - `docs/oat/skills/index.md` — skills list
@@ -93,24 +95,50 @@ Files to update (skill name references + any slash syntax):
 - `docs/oat/skills/execution-contracts.md` — skill references
 - `README.md` — overview
 
-### Step 9: Update internal project reference + backlog
+### Step 8: Update internal project reference + backlog
 
-- `.oat/internal-project-reference/backlog.md` — rename references in backlog items, mark both naming and slash-command backlog items as done
+- `.oat/internal-project-reference/backlog.md` — update rename mapping in the naming backlog item to match final decisions, rename references in other backlog items, mark both naming and slash-command backlog items as done
 - `.oat/internal-project-reference/current-state.md`
 - `.oat/internal-project-reference/roadmap.md`
 - `.oat/internal-project-reference/dogfood-workflow-implementation.md`
 - `.oat/internal-project-reference/deferred-phases.md`
 - Other files under `.oat/internal-project-reference/` and `.oat/projects/shared/`
 
-### Step 10: Run sync to update provider symlinks
+### Step 9: Run sync to reconcile manifest + provider symlinks
+
+Let the CLI sync command handle manifest reconciliation — do NOT manually edit `manifest.json`. After `git mv` renames the directories, sync detects stale entries and creates new ones.
 
 ```bash
-pnpm run cli sync --scope all --apply
+pnpm run cli sync --scope project --apply
 ```
+
+Use `--scope project` (not `--scope all`) to avoid mutating user-level state outside the repo.
 
 ## Verification
 
-1. `grep -r 'oat-discovery\|oat-spec\b\|oat-design\b\|oat-plan\b\|oat-implement\b\|oat-new-project\|oat-open-project\|oat-clear-active-project\|oat-complete-project\|oat-progress\b\|oat-index\b\|oat-pr-progress\|oat-pr-project\|oat-request-review\|oat-receive-review' .agents/ docs/ .oat/templates/ AGENTS.md README.md` — should return zero hits (excluding git/node_modules)
-2. `grep -r '/oat:' .agents/ docs/ .oat/templates/ AGENTS.md README.md` — should return zero hits
-3. Verify manifest.json has no old paths
-4. Run `pnpm run cli sync --scope all` (dry-run) to confirm sync sees no drift
+1. Grep for old skill names across active scope — should return zero hits:
+   ```
+   grep -r 'oat-discovery\|oat-spec\b\|oat-design\b\|oat-plan\b\|oat-implement\b\|oat-new-project\|oat-open-project\|oat-clear-active-project\|oat-complete-project\|oat-progress\b\|oat-index\b\|oat-pr-progress\|oat-pr-project\|oat-request-review\|oat-receive-review' \
+     .agents/ docs/ .oat/templates/ AGENTS.md README.md
+   ```
+   Note: `.oat/internal-project-reference/` and `.oat/projects/` contain intentional old→new mapping tables (backlog.md Done section) and the plan file itself. Exclude those from zero-hit checks:
+   ```
+   grep -r 'oat-discovery\|oat-spec\b\|oat-design\b\|oat-plan\b\|oat-implement\b\|oat-new-project\|oat-open-project\|oat-clear-active-project\|oat-complete-project\|oat-progress\b\|oat-index\b\|oat-pr-progress\|oat-pr-project\|oat-request-review\|oat-receive-review' \
+     .oat/internal-project-reference/ .oat/projects/shared/ \
+     --exclude='skill-rename-slash-cleanup.md' --exclude-dir='archived'
+   ```
+   Expected: only hits in backlog.md Done section (old→new mapping table).
+2. Grep for slash-command syntax across active scope — should return zero hits:
+   ```
+   grep -r '/oat:' \
+     .agents/ docs/ .oat/templates/ AGENTS.md README.md
+   ```
+   Note: `.oat/internal-project-reference/` may contain generic `/oat:*` pattern descriptions (e.g., ADR-005, roadmap convention notes). These are intentional. Check for specific `/oat:discovery`, `/oat:spec`, etc. instead:
+   ```
+   grep -rE '/oat:(discovery|spec|design|plan|implement|index|progress|new-project|open-project|clear-active-project|complete-project|pr-progress|pr-project|request-review|receive-review)\b' \
+     .oat/internal-project-reference/ .oat/projects/shared/ \
+     --exclude='skill-rename-slash-cleanup.md' --exclude-dir='archived'
+   ```
+   Expected: zero hits.
+3. Verify `manifest.json` has no old paths (covered by sync dry-run below)
+4. Run `pnpm run cli sync --scope project` (dry-run) to confirm sync sees no drift

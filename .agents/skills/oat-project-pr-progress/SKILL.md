@@ -1,37 +1,36 @@
 ---
-name: oat-pr-project
-description: Create the final project PR description (into main) using OAT artifacts and final review status; optionally open a PR
+name: oat-project-pr-progress
+description: Create a progress PR description for a specific plan phase (pNN) using OAT artifacts and commit conventions; optionally open a PR
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 ---
 
-# Project PR (Final)
+# Progress PR
 
-Create a final PR description for the entire project (typically merging the feature branch into `main`).
+Create a progress PR description (typically at a plan phase boundary) and write it to disk.
 
 ## Purpose
 
-Generate a PR-ready summary grounded in canonical OAT artifacts, including:
-- what shipped (from plan + implementation)
-- why (from spec)
-- how (from design)
-- what was reviewed (from plan Reviews table + review artifacts)
+Generate a PR-ready summary that is:
+- grounded in OAT artifacts (spec/design/plan/implementation)
+- scoped to a specific phase (pNN) or an explicit git range
+- easy to paste into GitHub (or used with `gh pr create` if desired)
 
 ## Prerequisites
 
 **Required:**
 - `.oat/active-project` points at an active project directory (or you can provide project name when prompted)
-- `{PROJECT_PATH}/spec.md`, `{PROJECT_PATH}/design.md`, `{PROJECT_PATH}/plan.md` exist
+- `{PROJECT_PATH}/plan.md` exists
 
-**Required (recommended to proceed):**
-- Final code review status is `passed` in `{PROJECT_PATH}/plan.md` `## Reviews` table.
+**Recommended:**
+- Phase code review is `passed` in `plan.md` `## Reviews` before opening a progress PR.
 
 ## Mode Assertion
 
-**OAT MODE: PR (Project)**
+**OAT MODE: PR (Progress)**
 
-**Purpose:** Create final PR description and (optionally) open a PR.
+**Purpose:** Create PR description and (optionally) open a PR.
 
 ## Progress Indicators (User-Facing)
 
@@ -40,10 +39,10 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ PR PROJECT
+   OAT ▸ PR PROGRESS
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Before multi-step work (validating review status, reading artifacts, writing output), print 2–5 short step indicators, e.g.:
-  - `[1/4] Validating artifacts + review status…`
+- Before multi-step work (scoping, reading artifacts, writing output), print 2–5 short step indicators, e.g.:
+  - `[1/4] Resolving scope…`
   - `[2/4] Reading OAT artifacts…`
   - `[3/4] Collecting git context…`
   - `[4/4] Writing PR description…`
@@ -64,16 +63,16 @@ When executing this skill, provide lightweight progress feedback so the user can
 ### With arguments (if supported)
 
 ```
-/oat:pr-project
-/oat:pr-project base=main
-/oat:pr-project title="feat: add review loop"
+oat-project-pr-progress p02                 # progress PR for phase p02
+oat-project-pr-progress range=abc..def      # progress PR for explicit range
+oat-project-pr-progress base_sha=abc123     # progress PR for abc123..HEAD
 ```
 
 ### Without arguments
 
-Run `/oat:pr-project` and the skill will ask for:
-- PR title (default: `{project-name}: final PR`)
-- base branch (default: `main`)
+Run the `oat-project-pr-progress` skill and it will ask:
+- which phase (pNN) or range to scope to
+- PR title + base branch (defaults to main)
 
 ## Process
 
@@ -96,57 +95,65 @@ If missing/invalid:
   echo "$PROJECT_PATH" > .oat/active-project
   ```
 
-### Step 1: Validate Required Artifacts
+### Step 1: Determine Scope (Phase or Range)
 
+Parse args if provided (otherwise prompt):
+- `pNN` (preferred for progress PRs)
+- `range=<sha1>..<sha2>`
+- `base_sha=<sha>` (meaning `<sha>..HEAD`)
+
+If scope is `pNN`, gather commits via commit convention grep:
 ```bash
-ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/plan.md" 2>/dev/null
+PHASE="p02" # example
+git log --oneline --grep="\\(${PHASE}-" HEAD~500..HEAD
 ```
 
-If missing: block and tell user which artifact(s) are required.
+If the grep returns no commits:
+- Tell user commit conventions are missing/inconsistent for this phase
+- Ask user to provide:
+  - `base_sha=<sha>` or `range=<sha1>..<sha2>`
+  - or confirm a broad range (merge-base..HEAD)
 
-### Step 2: Check Final Review Status
+If scope is `range`/`base_sha`, set:
+- `SCOPE_RANGE` to the range string (e.g., `abc..HEAD`)
 
-Preferred source of truth (v1): `plan.md` `## Reviews` table.
+### Step 2: Load Artifacts
 
+Read (as available):
+- `{PROJECT_PATH}/spec.md`
+- `{PROJECT_PATH}/design.md`
+- `{PROJECT_PATH}/plan.md`
+- `{PROJECT_PATH}/implementation.md` (if exists)
+
+### Step 3: Check Review Status (Recommended)
+
+If scope is `pNN`, check `plan.md` `## Reviews` table row:
+- If `| pNN | code | passed | ...` exists: good
+- Otherwise: warn that review has not been marked `passed` for this phase (e.g., it may be `received`, `fixes_added`, or `fixes_completed` pending re-review)
+
+Do not block PR generation; this is a progress PR.
+
+### Step 4: Collect Scope Data
+
+Produce:
+- commit list (for `pNN` grep or `SCOPE_RANGE`)
+- changed files (best-effort)
+
+For `SCOPE_RANGE`:
 ```bash
-FINAL_ROW=$(grep -E "^\\|\\s*final\\s*\\|" "$PROJECT_PATH/plan.md" 2>/dev/null | head -1)
-echo "$FINAL_ROW"
+git log --oneline "$SCOPE_RANGE"
+git diff --name-only "$SCOPE_RANGE"
+git diff --shortstat "$SCOPE_RANGE"
 ```
 
-If `FINAL_ROW` is missing or does not contain `passed`:
-- Tell user: "Final review is not marked passed. Run `/oat:request-review code final` then `/oat:receive-review`."
-- Ask whether to proceed anyway (allowed, but discouraged).
-  - If the status is `fixes_completed`: fixes were implemented but the re-review hasn’t been run/recorded yet; re-run `/oat:request-review code final` then `/oat:receive-review` to reach `passed`.
+For `pNN` (no reliable contiguous range):
+- include the commit list from grep
+- optionally include file lists per commit (only if needed; can be large)
 
-### Step 3: Collect Project Summary
-
-Read:
-- `{PROJECT_PATH}/spec.md` (goals, priorities, verification)
-- `{PROJECT_PATH}/design.md` (architecture + testing strategy)
-- `{PROJECT_PATH}/plan.md` (phases/tasks + reviews table)
-- `{PROJECT_PATH}/implementation.md` (if exists; preferred for “what actually happened”)
-
-If `implementation.md` exists, check for a filled `## Final Summary (for PR/docs)` section:
-- If missing or obviously empty, warn the user that PR/docs quality will suffer and recommend:
-  - Run `/oat:implement` to finalize the summary (if implementation just completed), or
-  - Manually fill in the Final Summary section before proceeding.
-
-Collect git context:
-```bash
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
-MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || echo "")
-```
-
-If merge-base is available, collect:
-```bash
-git log --oneline "${MERGE_BASE}..HEAD"
-git diff --shortstat "${MERGE_BASE}..HEAD"
-```
-
-### Step 4: Write PR Description Artifact
+### Step 5: Write PR Description Artifact
 
 Write to:
-- `{PROJECT_PATH}/pr/project-pr-YYYY-MM-DD.md`
+- `{PROJECT_PATH}/pr/progress-{scope}-YYYY-MM-DD.md`
 
 ```bash
 mkdir -p "$PROJECT_PATH/pr"
@@ -180,32 +187,32 @@ Recommended template:
 ---
 oat_generated: true
 oat_generated_at: YYYY-MM-DD
-oat_pr_type: project
-oat_pr_scope: final
+oat_pr_type: progress
+oat_pr_scope: {pNN|range}
 oat_project: {PROJECT_PATH}
 ---
 
-# PR: {project-name}
+# PR: Progress - {project-name} ({scope})
 
-## Summary
+## What
 
-{2-5 sentence summary grounded in spec + implementation}
+{1-3 sentence summary of what this phase delivered}
 
-## Goals / Non-Goals
+## Why
 
-{brief bullets from spec}
+{How this supports goals from spec}
 
-## What Changed
+## Scope
 
-{phase-by-phase or capability-by-capability bullets from plan/implementation}
+- Project: `{PROJECT_PATH}`
+- Scope: `{scope}`
+- Commits:
+{bulleted list}
 
-## Verification
+## Validation
 
-{what was run / expected (tests, lint, types, build)}
-
-## Reviews
-
-{copy the relevant rows from plan.md Reviews table, especially final}
+- Tests: {what was run / expected}
+- Lint/Types/Build: {what was run / expected}
 
 ## References
 
@@ -213,10 +220,9 @@ oat_project: {PROJECT_PATH}
 - Design: `[design.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/design.md)` (fallback: `{PROJECT_PATH}/design.md`)
 - Plan: `[plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/plan.md)` (fallback: `{PROJECT_PATH}/plan.md`)
 - Implementation: `[implementation.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/implementation.md)` (fallback: `{PROJECT_PATH}/implementation.md`)
-- Reviews: `[reviews/]({REPO_WEB}/tree/{BRANCH}/{PROJECT_REL}/reviews)` (fallback: `{PROJECT_PATH}/reviews/`)
 ```
 
-### Step 5: Optional - Open PR
+### Step 6: Optional - Open PR
 
 Ask the user:
 ```
@@ -248,6 +254,6 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 
 ## Success Criteria
 
-- Final PR description artifact written to `{PROJECT_PATH}/pr/`
-- Final review status checked and referenced
+- Scope determined (phase or explicit range)
+- PR description artifact written to `{PROJECT_PATH}/pr/`
 - User has clear next step to open PR (manual or gh)

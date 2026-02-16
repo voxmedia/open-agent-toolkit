@@ -1,5 +1,5 @@
 ---
-name: oat-open-project
+name: oat-project-open
 description: Set the active project with validation
 disable-model-invocation: true
 user-invocable: true

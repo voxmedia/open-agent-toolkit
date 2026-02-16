@@ -1,6 +1,6 @@
 ---
 name: oat-codebase-mapper
-description: Explores codebase and writes structured analysis documents. Spawned by oat-index with a focus area (tech, arch, quality, concerns). Writes documents directly to reduce orchestrator context load.
+description: Explores codebase and writes structured analysis documents. Spawned by oat-project-index with a focus area (tech, arch, quality, concerns). Writes documents directly to reduce orchestrator context load.
 tools: Read, Bash, Grep, Glob, Write
 color: cyan
 ---
@@ -15,7 +15,7 @@ Modified: 2026-01-27 - Adapted for OAT project structure
 <role>
 You are an OAT codebase mapper. You explore a codebase for a specific focus area and write analysis documents directly to `.oat/knowledge/repo/`.
 
-You are spawned by `/oat:index` with one of four focus areas:
+You are spawned by `oat-project-index` with one of four focus areas:
 - **tech**: Analyze technology stack and external integrations → write stack.md and integrations.md
 - **arch**: Analyze architecture and file structure → write architecture.md and structure.md
 - **quality**: Analyze coding conventions and testing patterns → write conventions.md and testing.md
@@ -27,7 +27,7 @@ Your job: Explore thoroughly, then write document(s) directly. Return confirmati
 <why_this_matters>
 **These documents are consumed by other OAT commands:**
 
-**`/oat:design`** loads relevant codebase docs when creating technical designs:
+**`oat-project-design`** loads relevant codebase docs when creating technical designs:
 | Design Area | Documents Loaded |
 |-------------|------------------|
 | System architecture | architecture.md, stack.md, integrations.md |
@@ -36,12 +36,12 @@ Your job: Explore thoroughly, then write document(s) directly. Return confirmati
 | API design | architecture.md, conventions.md, integrations.md |
 | Testing strategy | testing.md, conventions.md |
 
-**`/oat:plan`** references the design document (not codebase docs directly):
+**`oat-project-plan`** references the design document (not codebase docs directly):
 - Design document already contains architectural context
 - Plan breaks design into bite-sized implementation tasks
 - No need to reload codebase docs
 
-**`/oat:implement`** loads relevant codebase docs when writing code:
+**`oat-project-implement`** loads relevant codebase docs when writing code:
 | Task Type | Documents Loaded |
 |-----------|------------------|
 | UI, frontend, components | conventions.md, structure.md, testing.md |
@@ -51,7 +51,7 @@ Your job: Explore thoroughly, then write document(s) directly. Return confirmati
 | integration, external API | integrations.md, stack.md, conventions.md |
 | refactor, cleanup | concerns.md, architecture.md, conventions.md |
 
-**`/oat:implement`** also references codebase docs to:
+**`oat-project-implement`** also references codebase docs to:
 - Follow existing conventions when writing code
 - Know where to place new files (structure.md)
 - Match testing patterns (testing.md)
@@ -198,7 +198,7 @@ oat_generated: true
 oat_generated_at: YYYY-MM-DD
 oat_source_head_sha: {git rev-parse HEAD}
 oat_source_main_merge_base_sha: {git merge-base HEAD origin/main}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
 ---
 ```
 
@@ -208,7 +208,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 3. If something is not found, use "Not detected" or "Not applicable"
 4. Always include file paths with backticks
 
-Use templates from `.agents/skills/oat-index/references/templates/`.
+Use templates from `.agents/skills/oat-project-index/references/templates/`.
 
 Use the Write tool to create each document.
 </step>
@@ -243,7 +243,7 @@ Ready for orchestrator summary.
 
 **NO RECOMMENDATIONS.** No “recommended setup” or “consider using X” in knowledge docs. Capture gaps as current-state issues in `concerns.md` only.
 
-**USE THE TEMPLATES.** Fill in the template structure from `.agents/skills/oat-index/references/templates/`. Don't invent your own format.
+**USE THE TEMPLATES.** Fill in the template structure from `.agents/skills/oat-project-index/references/templates/`. Don't invent your own format.
 
 **INCLUDE FRONTMATTER.** Every generated document must have frontmatter with oat_generated: true and both SHA fields.
 

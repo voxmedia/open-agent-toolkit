@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-implement
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-01-30
 oat_phase: plan
@@ -14,7 +14,7 @@ oat_template: false
 
 **Goal:** Provide skills to set, clear, and complete the active project, and generate a repo state dashboard showing current state at a glance.
 
-**Architecture:** Shell script (`generate-oat-state.sh`) derives dashboard from existing sources; three thin skills (`oat-open-project`, `oat-clear-active-project`, `oat-complete-project`) manipulate the active project pointer and invoke the dashboard script.
+**Architecture:** Shell script (`generate-oat-state.sh`) derives dashboard from existing sources; three thin skills (`oat-project-open`, `oat-project-clear-active`, `oat-project-complete`) manipulate the active project pointer and invoke the dashboard script.
 
 **Tech Stack:** Bash (POSIX-compatible), git, standard utilities (grep, sed, awk, date, wc)
 
@@ -445,31 +445,31 @@ compute_next_step() {
 
   # No active project
   if [[ "$PROJECT_STATUS" == "not set" ]]; then
-    RECOMMENDED_STEP="/oat:open-project"
+    RECOMMENDED_STEP="oat-project-open"
     RECOMMENDED_REASON="Set an active project to continue work"
     return
   fi
 
   # Project has issues
   if [[ "$PROJECT_STATUS" != "active" ]]; then
-    RECOMMENDED_STEP="/oat:open-project"
+    RECOMMENDED_STEP="oat-project-open"
     RECOMMENDED_REASON="Current project has issues: $PROJECT_STATUS"
     return
   fi
 
   # Map phase + status to next skill
   case "${OAT_PHASE}:${OAT_PHASE_STATUS}" in
-    "discovery:in_progress") RECOMMENDED_STEP="/oat:discovery"; RECOMMENDED_REASON="Continue discovery phase" ;;
-    "discovery:complete") RECOMMENDED_STEP="/oat:spec"; RECOMMENDED_REASON="Create specification from discovery" ;;
-    "spec:in_progress") RECOMMENDED_STEP="/oat:spec"; RECOMMENDED_REASON="Continue specification phase" ;;
-    "spec:complete") RECOMMENDED_STEP="/oat:design"; RECOMMENDED_REASON="Create design from specification" ;;
-    "design:in_progress") RECOMMENDED_STEP="/oat:design"; RECOMMENDED_REASON="Continue design phase" ;;
-    "design:complete") RECOMMENDED_STEP="/oat:plan"; RECOMMENDED_REASON="Create implementation plan from design" ;;
-    "plan:in_progress") RECOMMENDED_STEP="/oat:plan"; RECOMMENDED_REASON="Continue planning phase" ;;
-    "plan:complete") RECOMMENDED_STEP="/oat:implement"; RECOMMENDED_REASON="Start implementation" ;;
-    "implement:in_progress") RECOMMENDED_STEP="/oat:implement"; RECOMMENDED_REASON="Continue implementation" ;;
-    "implement:complete") RECOMMENDED_STEP="/oat:request-review"; RECOMMENDED_REASON="Request final review" ;;
-    *) RECOMMENDED_STEP="/oat:progress"; RECOMMENDED_REASON="Check current progress" ;;
+    "discovery:in_progress") RECOMMENDED_STEP="oat-project-discover"; RECOMMENDED_REASON="Continue discovery phase" ;;
+    "discovery:complete") RECOMMENDED_STEP="oat-project-spec"; RECOMMENDED_REASON="Create specification from discovery" ;;
+    "spec:in_progress") RECOMMENDED_STEP="oat-project-spec"; RECOMMENDED_REASON="Continue specification phase" ;;
+    "spec:complete") RECOMMENDED_STEP="oat-project-design"; RECOMMENDED_REASON="Create design from specification" ;;
+    "design:in_progress") RECOMMENDED_STEP="oat-project-design"; RECOMMENDED_REASON="Continue design phase" ;;
+    "design:complete") RECOMMENDED_STEP="oat-project-plan"; RECOMMENDED_REASON="Create implementation plan from design" ;;
+    "plan:in_progress") RECOMMENDED_STEP="oat-project-plan"; RECOMMENDED_REASON="Continue planning phase" ;;
+    "plan:complete") RECOMMENDED_STEP="oat-project-implement"; RECOMMENDED_REASON="Start implementation" ;;
+    "implement:in_progress") RECOMMENDED_STEP="oat-project-implement"; RECOMMENDED_REASON="Continue implementation" ;;
+    "implement:complete") RECOMMENDED_STEP="oat-project-review-provide"; RECOMMENDED_REASON="Request final review" ;;
+    *) RECOMMENDED_STEP="oat-project-progress"; RECOMMENDED_REASON="Check current progress" ;;
   esac
 }
 ```
@@ -628,11 +628,11 @@ EOF
 
 ## Quick Commands
 
-- \`/oat:progress\` - Check current status
-- \`/oat:index\` - Refresh knowledge base
-- \`/oat:open-project\` - Switch active project
-- \`/oat:clear-active-project\` - Clear active project
-- \`/oat:complete-project\` - Mark project complete
+- \`oat-project-progress\` - Check current status
+- \`oat-project-index\` - Refresh knowledge base
+- \`oat-project-open\` - Switch active project
+- \`oat-project-clear-active\` - Clear active project
+- \`oat-project-complete\` - Mark project complete
 
 ## Available Projects
 
@@ -759,22 +759,22 @@ git commit --allow-empty -m "test(p01-t10): verify robustness, idempotency, and 
 
 ---
 
-### Task p02-t01: Create oat-open-project Skill
+### Task p02-t01: Create oat-project-open Skill
 
 **Files:**
-- Create: `.agent/skills/oat-open-project/SKILL.md`
+- Create: `.agent/skills/oat-project-open/SKILL.md`
 
 **Step 1: Create skill directory**
 
 ```bash
-mkdir -p .agent/skills/oat-open-project
+mkdir -p .agent/skills/oat-project-open
 ```
 
 **Step 2: Write SKILL.md**
 
 ```markdown
 ---
-name: oat-open-project
+name: oat-project-open
 description: Set the active project with validation
 ---
 
@@ -865,34 +865,34 @@ Show user:
 
 **Step 3: Verify**
 
-Run: `cat .agent/skills/oat-open-project/SKILL.md`
+Run: `cat .agent/skills/oat-project-open/SKILL.md`
 Expected: Skill file exists with correct structure
 
 **Step 4: Commit**
 
 ```bash
-git add .agent/skills/oat-open-project/
-git commit -m "feat(p02-t01): create oat-open-project skill"
+git add .agent/skills/oat-project-open/
+git commit -m "feat(p02-t01): create oat-project-open skill"
 ```
 
 ---
 
-### Task p02-t02: Create oat-clear-active-project Skill
+### Task p02-t02: Create oat-project-clear-active Skill
 
 **Files:**
-- Create: `.agent/skills/oat-clear-active-project/SKILL.md`
+- Create: `.agent/skills/oat-project-clear-active/SKILL.md`
 
 **Step 1: Create skill directory**
 
 ```bash
-mkdir -p .agent/skills/oat-clear-active-project
+mkdir -p .agent/skills/oat-project-clear-active
 ```
 
 **Step 2: Write SKILL.md**
 
 ```markdown
 ---
-name: oat-clear-active-project
+name: oat-project-clear-active
 description: Clear the active project pointer
 ---
 
@@ -935,34 +935,34 @@ Show user: "Active project cleared. Dashboard updated."
 
 **Step 3: Verify**
 
-Run: `cat .agent/skills/oat-clear-active-project/SKILL.md`
+Run: `cat .agent/skills/oat-project-clear-active/SKILL.md`
 Expected: Skill file exists with correct structure
 
 **Step 4: Commit**
 
 ```bash
-git add .agent/skills/oat-clear-active-project/
-git commit -m "feat(p02-t02): create oat-clear-active-project skill"
+git add .agent/skills/oat-project-clear-active/
+git commit -m "feat(p02-t02): create oat-project-clear-active skill"
 ```
 
 ---
 
-### Task p02-t03: Create oat-complete-project Skill
+### Task p02-t03: Create oat-project-complete Skill
 
 **Files:**
-- Create: `.agent/skills/oat-complete-project/SKILL.md`
+- Create: `.agent/skills/oat-project-complete/SKILL.md`
 
 **Step 1: Create skill directory**
 
 ```bash
-mkdir -p .agent/skills/oat-complete-project
+mkdir -p .agent/skills/oat-project-complete
 ```
 
 **Step 2: Write SKILL.md**
 
 ```markdown
 ---
-name: oat-complete-project
+name: oat-project-complete
 description: Mark a project lifecycle as complete
 ---
 
@@ -978,7 +978,7 @@ Mark the active OAT project lifecycle as complete.
 PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
 
 if [[ -z "$PROJECT_PATH" ]]; then
-  echo "Error: No active project set. Use /oat:open-project first."
+  echo "Error: No active project set. Use oat-project-open first."
   exit 1
 fi
 
@@ -997,10 +997,10 @@ If user declines, exit gracefully.
 if [[ -d "${PROJECT_PATH}/reviews" ]]; then
   review_count=$(ls -1 "${PROJECT_PATH}/reviews"/*.md 2>/dev/null | wc -l)
   if [[ "$review_count" -eq 0 ]]; then
-    echo "Warning: No review artifacts found. Consider running /oat:request-review first."
+    echo "Warning: No review artifacts found. Consider running oat-project-review-provide first."
   fi
 else
-  echo "Warning: No reviews directory found. Consider running /oat:request-review first."
+  echo "Warning: No reviews directory found. Consider running oat-project-review-provide first."
 fi
 ```
 
@@ -1008,7 +1008,7 @@ fi
 
 ```bash
 if [[ ! -f "${PROJECT_PATH}/pr-description.md" ]]; then
-  echo "Warning: No PR description found. Consider running /oat:pr-project first."
+  echo "Warning: No PR description found. Consider running oat-project-pr-final first."
 fi
 ```
 
@@ -1055,14 +1055,14 @@ Show user: "Project **{PROJECT_NAME}** marked as complete."
 
 **Step 3: Verify**
 
-Run: `cat .agent/skills/oat-complete-project/SKILL.md`
+Run: `cat .agent/skills/oat-project-complete/SKILL.md`
 Expected: Skill file exists with correct structure
 
 **Step 4: Commit**
 
 ```bash
-git add .agent/skills/oat-complete-project/
-git commit -m "feat(p02-t03): create oat-complete-project skill"
+git add .agent/skills/oat-project-complete/
+git commit -m "feat(p02-t03): create oat-project-complete skill"
 ```
 
 ---
@@ -1078,19 +1078,19 @@ Add to the `<available_skills>` section in AGENTS.md:
 
 ```xml
 <skill>
-<name>oat-open-project</name>
+<name>oat-project-open</name>
 <description>Set the active OAT project with validation and dashboard refresh.</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-clear-active-project</name>
+<name>oat-project-clear-active</name>
 <description>Clear the active OAT project pointer and refresh dashboard.</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-complete-project</name>
+<name>oat-project-complete</name>
 <description>Mark the active project lifecycle as complete with optional review/PR checks.</description>
 <location>project</location>
 </skill>
@@ -1098,7 +1098,7 @@ Add to the `<available_skills>` section in AGENTS.md:
 
 **Step 2: Verify**
 
-Run: `grep -A2 "oat-open-project\|oat-clear-active-project\|oat-complete-project" AGENTS.md`
+Run: `grep -A2 "oat-project-open\|oat-project-clear-active\|oat-project-complete" AGENTS.md`
 Expected: All three skills registered
 
 **Step 3: Commit**
@@ -1115,25 +1115,25 @@ git commit -m "feat(p02-t04): register lifecycle skills in AGENTS.md"
 **Files:**
 - No changes (verification only)
 
-**Step 1: Test oat-open-project**
+**Step 1: Test oat-project-open**
 
-Invoke `/oat:open-project` skill manually:
+Invoke `oat-project-open` skill manually:
 - Verify it lists available projects
 - Select a project
 - Verify .oat/active-project is written
 - Verify dashboard is regenerated
 
-**Step 2: Test oat-clear-active-project**
+**Step 2: Test oat-project-clear-active**
 
-Invoke `/oat:clear-active-project` skill manually:
+Invoke `oat-project-clear-active` skill manually:
 - Verify it shows current project
 - Verify .oat/active-project is removed
 - Verify dashboard shows "not set"
 
-**Step 3: Test oat-complete-project**
+**Step 3: Test oat-project-complete**
 
-Invoke `/oat:complete-project` skill manually:
-- First run oat-open-project to set a project
+Invoke `oat-project-complete` skill manually:
+- First run oat-project-open to set a project
 - Verify confirmation prompt
 - Verify warnings for missing review/PR
 - Verify oat_lifecycle is set in state.md
@@ -1151,18 +1151,18 @@ git commit --allow-empty -m "test(p02-t05): manual verification of lifecycle ski
 
 **Goal:** Wire dashboard generation into existing skills for auto-refresh.
 
-**Verification:** Dashboard auto-updates when running oat-progress or oat-index.
+**Verification:** Dashboard auto-updates when running oat-project-progress or oat-project-index.
 
 ---
 
-### Task p03-t01: Add Hook to oat-progress
+### Task p03-t01: Add Hook to oat-project-progress
 
 **Files:**
-- Modify: `.agent/skills/oat-progress/SKILL.md`
+- Modify: `.agent/skills/oat-project-progress/SKILL.md`
 
 **Step 1: Add dashboard generation step**
 
-Add at the end of the oat-progress skill process, before the final output:
+Add at the end of the oat-project-progress skill process, before the final output:
 
 ```markdown
 ### Step N: Regenerate Dashboard
@@ -1178,26 +1178,26 @@ fi
 
 **Step 2: Verify**
 
-Run: `grep -A3 "generate-oat-state" .agent/skills/oat-progress/SKILL.md`
+Run: `grep -A3 "generate-oat-state" .agent/skills/oat-project-progress/SKILL.md`
 Expected: Dashboard generation step present
 
 **Step 3: Commit**
 
 ```bash
-git add .agent/skills/oat-progress/
-git commit -m "feat(p03-t01): add dashboard hook to oat-progress skill"
+git add .agent/skills/oat-project-progress/
+git commit -m "feat(p03-t01): add dashboard hook to oat-project-progress skill"
 ```
 
 ---
 
-### Task p03-t02: Add Hook to oat-index
+### Task p03-t02: Add Hook to oat-project-index
 
 **Files:**
-- Modify: `.agent/skills/oat-index/SKILL.md`
+- Modify: `.agent/skills/oat-project-index/SKILL.md`
 
 **Step 1: Add dashboard generation step**
 
-Add at the end of the oat-index skill process, after knowledge generation completes:
+Add at the end of the oat-project-index skill process, after knowledge generation completes:
 
 ```markdown
 ### Step N: Regenerate Dashboard
@@ -1215,14 +1215,14 @@ This ensures the dashboard reflects fresh knowledge status immediately.
 
 **Step 2: Verify**
 
-Run: `grep -A3 "generate-oat-state" .agent/skills/oat-index/SKILL.md`
+Run: `grep -A3 "generate-oat-state" .agent/skills/oat-project-index/SKILL.md`
 Expected: Dashboard generation step present
 
 **Step 3: Commit**
 
 ```bash
-git add .agent/skills/oat-index/
-git commit -m "feat(p03-t02): add dashboard hook to oat-index skill"
+git add .agent/skills/oat-project-index/
+git commit -m "feat(p03-t02): add dashboard hook to oat-project-index skill"
 ```
 
 ---
@@ -1232,17 +1232,17 @@ git commit -m "feat(p03-t02): add dashboard hook to oat-index skill"
 **Files:**
 - No changes (verification only)
 
-**Step 1: Test oat-progress integration**
+**Step 1: Test oat-project-progress integration**
 
 - Set an active project
 - Note current .oat/state.md timestamp
-- Run `/oat:progress`
+- Run `oat-project-progress`
 - Verify .oat/state.md has newer timestamp
 
-**Step 2: Test oat-index integration**
+**Step 2: Test oat-project-index integration**
 
 - Note current .oat/state.md timestamp
-- Run `/oat:index`
+- Run `oat-project-index`
 - Verify .oat/state.md has newer timestamp
 - Verify knowledge status reflects fresh generation
 
@@ -1261,15 +1261,15 @@ git commit --allow-empty -m "test(p03-t03): integration verification complete"
 
 ---
 
-### Task p03-t04: (review) Fix sed portability in oat-complete-project
+### Task p03-t04: (review) Fix sed portability in oat-project-complete
 
 **Files:**
-- Modify: `.agent/skills/oat-complete-project/SKILL.md`
+- Modify: `.agent/skills/oat-project-complete/SKILL.md`
 
 **Step 1: Understand the issue**
 
 Review finding: The skill uses macOS-specific `sed -i ''` syntax which will fail on Linux/BSD systems.
-Location: `.agent/skills/oat-complete-project/SKILL.md` lines 62-67
+Location: `.agent/skills/oat-project-complete/SKILL.md` lines 62-67
 
 Current code:
 ```bash
@@ -1298,14 +1298,14 @@ fi
 
 **Step 3: Verify**
 
-Run: `grep "sed -i ''" .agent/skills/oat-complete-project/SKILL.md`
+Run: `grep "sed -i ''" .agent/skills/oat-project-complete/SKILL.md`
 Expected: No matches (macOS-specific syntax removed)
 
 **Step 4: Commit**
 
 ```bash
-git add .agent/skills/oat-complete-project/SKILL.md
-git commit -m "fix(p03-t04): use portable sed syntax in oat-complete-project"
+git add .agent/skills/oat-project-complete/SKILL.md
+git commit -m "fix(p03-t04): use portable sed syntax in oat-project-complete"
 ```
 
 ---
@@ -1409,9 +1409,9 @@ git commit -m "fix(p03-t06): improve date parsing readability"
 ### Task p03-t07: (review) Add stderr guidance to lifecycle skills
 
 **Files:**
-- Modify: `.agent/skills/oat-open-project/SKILL.md`
-- Modify: `.agent/skills/oat-clear-active-project/SKILL.md`
-- Modify: `.agent/skills/oat-complete-project/SKILL.md`
+- Modify: `.agent/skills/oat-project-open/SKILL.md`
+- Modify: `.agent/skills/oat-project-clear-active/SKILL.md`
+- Modify: `.agent/skills/oat-project-complete/SKILL.md`
 
 **Step 1: Understand the issue**
 
@@ -1440,7 +1440,7 @@ Expected: All error lines include `>&2`
 **Step 4: Commit**
 
 ```bash
-git add .agent/skills/oat-open-project/SKILL.md .agent/skills/oat-clear-active-project/SKILL.md .agent/skills/oat-complete-project/SKILL.md
+git add .agent/skills/oat-project-open/SKILL.md .agent/skills/oat-project-clear-active/SKILL.md .agent/skills/oat-project-complete/SKILL.md
 git commit -m "fix(p03-t07): add stderr guidance to lifecycle skills"
 ```
 
@@ -1483,7 +1483,7 @@ git commit -m "fix(p03-t08): use awk for wc -l trimming"
 
 ## Reviews
 
-{Track reviews here after running /oat:request-review and /oat:receive-review.}
+{Track reviews here after running oat-project-review-provide and oat-project-review-receive.}
 
 | Scope | Type | Status | Date | Artifact |
 |-------|------|--------|------|----------|

@@ -21,18 +21,18 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 ### Workflow Skills (Dogfood)
 
 - Knowledge + routing:
-  - `oat-index` (thin-first index + enrichment)
-  - `oat-progress` (router / status)
+  - `oat-project-index` (thin-first index + enrichment)
+  - `oat-project-progress` (router / status)
 - Artifact generation:
-  - `oat-new-project` (scaffold a project dir from templates)
-  - `oat-discovery` -> `oat-spec` -> `oat-design` -> `oat-plan` -> `oat-implement`
+  - `oat-project-new` (scaffold a project dir from templates)
+  - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
 - Review loop:
-  - `oat-request-review`
-  - `oat-receive-review`
+  - `oat-project-review-provide`
+  - `oat-project-review-receive`
   - Reviewer prompt: `.agents/agents/oat-reviewer.md`
 - PR skills:
-  - `oat-pr-progress`
-  - `oat-pr-project`
+  - `oat-project-pr-progress`
+  - `oat-project-pr-final`
 
 ### Skill Authoring (Meta)
 
@@ -41,8 +41,8 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 ### Tool Metadata
 
 - Most skills define `allowed-tools` in frontmatter as an advisory tool scope (provider-dependent).
-  - Read-only skills (e.g., `oat-progress`, `oat-request-review`) omit `Write`/`Edit`.
-  - Write skills (e.g., `oat-discovery` → `oat-implement`, `oat-receive-review`, PR skills) include `Write` and `Bash(git:*)`.
+  - Read-only skills (e.g., `oat-project-progress`, `oat-project-review-provide`) omit `Write`/`Edit`.
+  - Write skills (e.g., `oat-project-discover` → `oat-project-implement`, `oat-project-review-receive`, PR skills) include `Write` and `Bash(git:*)`.
 - Internal validation:
   - `pnpm oat:validate-skills` checks that all `oat-*` skills include required frontmatter keys and the standard progress banner section.
 
@@ -84,24 +84,24 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 For a fuller guide (resume/review/PR loops), see `.oat/internal-project-reference/workflow-guide.md`.
 
 1. Generate repo knowledge:
-   - `/oat:index`
+   - `oat-project-index`
 2. Start a project:
-   - `/oat:new-project` (recommended) then `/oat:discovery`
+   - `oat-project-new` (recommended) then `oat-project-discover`
    - This creates `{PROJECTS_ROOT}/<project>/...` artifacts (from `.oat/projects-root`) and writes `.oat/active-project`.
 3. Move through phases (or run router anytime):
-   - `/oat:progress`
-   - `/oat:spec`
-   - `/oat:design`
-   - `/oat:plan`
-   - `/oat:implement`
+   - `oat-project-progress`
+   - `oat-project-spec`
+   - `oat-project-design`
+   - `oat-project-plan`
+   - `oat-project-implement`
 4. Final review loop (required before PR):
-   - `/oat:request-review code final`
-   - `/oat:receive-review`
-   - `/oat:implement` (executes new fix tasks, if any)
+   - `oat-project-review-provide code final`
+   - `oat-project-review-receive`
+   - `oat-project-implement` (executes new fix tasks, if any)
    - Repeat until `final` review is `passed` (3-cycle cap per scope)
 5. PR description generation:
-   - `/oat:pr-progress pNN` (optional progress PR)
-   - `/oat:pr-project` (final PR)
+   - `oat-project-pr-progress pNN` (optional progress PR)
+   - `oat-project-pr-final` (final PR)
 
 ## Known Gaps / Next Steps
 

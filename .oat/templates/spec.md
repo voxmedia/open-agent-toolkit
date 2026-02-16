@@ -16,7 +16,7 @@ Specification is for requirements and acceptance criteria, not design/implementa
 
 - Avoid concrete deliverables (specific scripts, file paths, function names).
 - Keep the “High-Level Design” section to architecture shape and component boundaries only.
-- If a design detail comes up, record it under **Open Questions** for `/oat:design`.
+- If a design detail comes up, record it under **Open Questions** for `oat-project-design`.
 
 ## Problem Statement
 
@@ -88,9 +88,9 @@ Specification is for requirements and acceptance criteria, not design/implementa
 
 | ID | Description | Priority | Verification | Planned Tasks |
 |----|-------------|----------|--------------|---------------|
-| FR1 | {Brief description} | P0 | {method: pointer} | {To be filled by oat-plan} |
-| FR2 | {Brief description} | P1 | {method: pointer} | {To be filled by oat-plan} |
-| NFR1 | {Brief description} | P0 | {method: pointer} | {To be filled by oat-plan} |
+| FR1 | {Brief description} | P0 | {method: pointer} | {To be filled by oat-project-plan} |
+| FR2 | {Brief description} | P1 | {method: pointer} | {To be filled by oat-project-plan} |
+| NFR1 | {Brief description} | P0 | {method: pointer} | {To be filled by oat-project-plan} |
 
 **Notes:**
 - ID: Unique requirement identifier (FR# for functional, NFR# for non-functional)

@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-implement
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-02-14
 oat_phase: plan
@@ -12,7 +12,7 @@ oat_template: false
 
 # Implementation Plan: provider-interop-cli
 
-> Execute this plan using the `oat-implement` skill (`/oat:implement` where slash prompts are supported), task-by-task with phase checkpoints and review gates.
+> Execute this plan using the `oat-project-implement` skill (`oat-project-implement` where slash prompts are supported), task-by-task with phase checkpoints and review gates.
 
 **Goal:** Build the `oat` CLI that manages provider interoperability — establishing `.agents/` as the canonical source of truth and syncing skills/agents to Claude Code, Cursor, and Codex directories via symlinks (with copy fallback).
 
@@ -3257,7 +3257,7 @@ git commit -m "refactor(p07-t03): centralize path normalization utility"
 
 ## Reviews
 
-{Track reviews here after running /oat:request-review and /oat:receive-review.}
+{Track reviews here after running oat-project-review-provide and oat-project-review-receive.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 

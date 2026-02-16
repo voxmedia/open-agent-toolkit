@@ -10,7 +10,7 @@ oat_last_updated: 2026-02-13
 
 ## Status
 
-Discovery is ready to proceed to `/oat:spec` with one medium follow-up in project state metadata.
+Discovery is ready to proceed to `oat-project-spec` with one medium follow-up in project state metadata.
 
 ## Resolved Since Prior Review
 
@@ -25,7 +25,7 @@ Discovery is ready to proceed to `/oat:spec` with one medium follow-up in projec
 1. **Project state metadata is stale versus discovery readiness**
    - `discovery.md` is marked `oat_ready_for: spec`.
    - `state.md` still shows discovery `in_progress` and "Awaiting user input".
-   - **Impact:** `/oat:progress` and HIL status can route inconsistently.
+   - **Impact:** `oat-project-progress` and HIL status can route inconsistently.
    - **Recommendation:** Update project state to reflect discovery completion and spec readiness.
 
 ### Low

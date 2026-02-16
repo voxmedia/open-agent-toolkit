@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-spec
+oat_ready_for: oat-project-spec
 oat_blockers: []
 oat_last_updated: 2026-01-28
 oat_generated: false
@@ -24,7 +24,7 @@ Implement a minimal design for setting and modifying the active project during t
 
 **Q:** Should this be a skill or CLI tool?
 **A:** Skills with shell scripts for now, will become CLI later
-**Decision:** Create skills that can be invoked via `/oat:*` and wrap shell scripts where appropriate
+**Decision:** Create skills (e.g., `oat-project-*`) and wrap shell scripts where appropriate
 
 ### Question 3: Validation
 
@@ -34,8 +34,8 @@ Implement a minimal design for setting and modifying the active project during t
 
 ### Question 4: Dashboard Integration
 
-**Q:** Should dashboard generation be wired into oat-progress automatically?
-**A:** Both oat-progress and oat-index
+**Q:** Should dashboard generation be wired into oat-project-progress automatically?
+**A:** Both oat-project-progress and oat-project-index
 **Decision:** Generate dashboard on both status check and knowledge refresh for always-fresh state
 
 ## Options Considered
@@ -75,7 +75,7 @@ Implement a minimal design for setting and modifying the active project during t
 2. **Dashboard is derived:** `.oat/state.md` is always regenerated, never hand-edited
 3. **Strict validation:** Only allow setting active project to directories with valid state.md
 4. **Skills first, CLI later:** Implement as skills for dogfooding, migrate to CLI in future phase
-5. **Auto-refresh:** Dashboard regenerates on oat-progress and oat-index runs
+5. **Auto-refresh:** Dashboard regenerates on oat-project-progress and oat-project-index runs
 
 ## Constraints
 
@@ -87,11 +87,11 @@ Implement a minimal design for setting and modifying the active project during t
 
 ## Success Criteria
 
-- [ ] Can switch active project via `/oat:open-project`
-- [ ] Can clear active project via `/oat:clear-active-project`
-- [ ] Can mark project complete via `/oat:complete-project`
+- [ ] Can switch active project via `oat-project-open`
+- [ ] Can clear active project via `oat-project-clear-active`
+- [ ] Can mark project complete via `oat-project-complete`
 - [ ] Dashboard (`.oat/state.md`) shows active project, phase, blockers, knowledge staleness
-- [ ] Dashboard regenerates automatically on oat-progress and oat-index
+- [ ] Dashboard regenerates automatically on oat-project-progress and oat-project-index
 - [ ] Validation prevents setting invalid project paths
 
 ## Out of Scope
@@ -133,12 +133,12 @@ Full design specification in: `.oat/internal-project-reference/temp/oat-project-
 ## Deliverables
 
 1. **Script:** `.oat/scripts/generate-oat-state.sh`
-2. **Skill:** `oat-open-project` (set active project)
-3. **Skill:** `oat-clear-active-project` (clear active project)
-4. **Skill:** `oat-complete-project` (mark project complete)
-5. **Integration:** Wire dashboard generation into oat-progress
-6. **Integration:** Wire dashboard generation into oat-index
+2. **Skill:** `oat-project-open` (set active project)
+3. **Skill:** `oat-project-clear-active` (clear active project)
+4. **Skill:** `oat-project-complete` (mark project complete)
+5. **Integration:** Wire dashboard generation into oat-project-progress
+6. **Integration:** Wire dashboard generation into oat-project-index
 
 ## Next Steps
 
-Ready for `/oat:spec` to create formal specification.
+Ready for `oat-project-spec` to create formal specification.

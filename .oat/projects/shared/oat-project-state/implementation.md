@@ -67,13 +67,13 @@ oat_template: false
 **Status:** complete
 **Started:** 2026-01-30
 
-### Task p02-t01: Create oat-open-project Skill
+### Task p02-t01: Create oat-project-open Skill
 **Status:** completed | **Commit:** 713a351
 
-### Task p02-t02: Create oat-clear-active-project Skill
+### Task p02-t02: Create oat-project-clear-active Skill
 **Status:** completed | **Commit:** ab44975
 
-### Task p02-t03: Create oat-complete-project Skill
+### Task p02-t03: Create oat-project-complete Skill
 **Status:** completed | **Commit:** a7533f5
 
 ### Task p02-t04: Register Skills in AGENTS.md
@@ -89,16 +89,16 @@ oat_template: false
 **Status:** complete
 **Started:** 2026-01-30
 
-### Task p03-t01: Add Hook to oat-progress
+### Task p03-t01: Add Hook to oat-project-progress
 **Status:** completed | **Commit:** a11d316
 
-### Task p03-t02: Add Hook to oat-index
+### Task p03-t02: Add Hook to oat-project-index
 **Status:** completed | **Commit:** d402599
 
 ### Task p03-t03: Final Integration Test
 **Status:** completed | **Commit:** 0b1175b
 
-### Task p03-t04: (review) Fix sed portability in oat-complete-project
+### Task p03-t04: (review) Fix sed portability in oat-project-complete
 **Status:** completed | **Commit:** 3beb4a8
 
 ### Task p03-t05: (review) Add repo root validation to dashboard script
@@ -122,14 +122,14 @@ oat_template: false
 
 **Findings:**
 - Critical: 0
-- Important: 1 (sed portability in oat-complete-project)
+- Important: 1 (sed portability in oat-project-complete)
 - Minor: 4 (converted to tasks and fixed)
 
 **New tasks added:** p03-t04, p03-t05, p03-t06, p03-t07, p03-t08
 
 **Status:** All review fix tasks completed, and final review is marked `passed` in plan.md.
 
-**Next:** Create PR with `/oat:pr-project`
+**Next:** Create PR with `oat-project-pr-final`
 
 ---
 
@@ -141,8 +141,8 @@ oat_template: false
 
 - [x] Phase 1: All 10 tasks completed
 - [x] Phase 2: All 5 tasks completed
-- [x] p03-t01: Add Hook to oat-progress - completed
-- [x] p03-t02: Add Hook to oat-index - completed
+- [x] p03-t01: Add Hook to oat-project-progress - completed
+- [x] p03-t02: Add Hook to oat-project-index - completed
 - [x] p03-t03: Final Integration Test - completed
 - [x] Final review requested - completed (Grade: A)
 - [x] p03-t04: (review) Fix sed portability - completed (3beb4a8)

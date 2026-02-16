@@ -2,8 +2,8 @@
 
 Two PR paths:
 
-- `oat-pr-progress`: progress PR for one phase or partial scope
-- `oat-pr-project`: final project PR into `main`
+- `oat-project-pr-progress`: progress PR for one phase or partial scope
+- `oat-project-pr-final`: final project PR into `main`
 
 ## Inputs
 
@@ -26,6 +26,6 @@ GitHub PR body policy:
 
 ## Reference artifacts
 
-- `.agents/skills/oat-pr-progress/SKILL.md`
-- `.agents/skills/oat-pr-project/SKILL.md`
+- `.agents/skills/oat-project-pr-progress/SKILL.md`
+- `.agents/skills/oat-project-pr-final/SKILL.md`
 - `.oat/projects/<scope>/<project>/pr/`

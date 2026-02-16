@@ -4,14 +4,14 @@ This lifecycle is an optional OAT layer. Interop-only users can skip it.
 
 OAT lifecycle order:
 
-1. Discovery (`oat-discovery`)
-2. Spec (`oat-spec`)
-3. Design (`oat-design`)
-4. Plan (`oat-plan`)
-5. Implement (`oat-implement`)
-6. Review loop (`oat-request-review` / `oat-receive-review`)
-7. PR (`oat-pr-progress` / `oat-pr-project`)
-8. Complete (`oat-complete-project`)
+1. Discovery (`oat-project-discover`)
+2. Spec (`oat-project-spec`)
+3. Design (`oat-project-design`)
+4. Plan (`oat-project-plan`)
+5. Implement (`oat-project-implement`)
+6. Review loop (`oat-project-review-provide` / `oat-project-review-receive`)
+7. PR (`oat-project-pr-progress` / `oat-project-pr-final`)
+8. Complete (`oat-project-complete`)
 
 ## Artifact progression
 

@@ -53,19 +53,19 @@ git commit -m "chore: create .oat/ directory structure
 
 **Files:**
 - Create: `.agent/agents/oat-codebase-mapper/AGENT.md`
-- Create: `.agent/skills/oat-index/references/templates/stack.md`
-- Create: `.agent/skills/oat-index/references/templates/architecture.md`
-- Create: `.agent/skills/oat-index/references/templates/structure.md`
-- Create: `.agent/skills/oat-index/references/templates/integrations.md`
-- Create: `.agent/skills/oat-index/references/templates/testing.md`
-- Create: `.agent/skills/oat-index/references/templates/conventions.md`
-- Create: `.agent/skills/oat-index/references/templates/concerns.md`
+- Create: `.agent/skills/oat-project-index/references/templates/stack.md`
+- Create: `.agent/skills/oat-project-index/references/templates/architecture.md`
+- Create: `.agent/skills/oat-project-index/references/templates/structure.md`
+- Create: `.agent/skills/oat-project-index/references/templates/integrations.md`
+- Create: `.agent/skills/oat-project-index/references/templates/testing.md`
+- Create: `.agent/skills/oat-project-index/references/templates/conventions.md`
+- Create: `.agent/skills/oat-project-index/references/templates/concerns.md`
 
 **Step 1: Create agent directory**
 
 ```bash
 mkdir -p .agent/agents/oat-codebase-mapper
-mkdir -p .agent/skills/oat-index/references/templates
+mkdir -p .agent/skills/oat-project-index/references/templates
 ```
 
 **Step 2: Copy GSD codebase-mapper agent with attribution header**
@@ -104,7 +104,7 @@ oat_generated: true
 oat_generated_at: YYYY-MM-DD
 oat_source_head_sha: {git rev-parse HEAD}
 oat_source_main_merge_base_sha: {git merge-base HEAD origin/main}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
 ---
 
 <!--
@@ -117,13 +117,13 @@ License: MIT
 
 **Step 5: Verify all templates exist**
 
-Run: `ls -la .agent/skills/oat-index/references/templates/`
+Run: `ls -la .agent/skills/oat-project-index/references/templates/`
 Expected: 7 template files (stack.md, architecture.md, structure.md, integrations.md, testing.md, conventions.md, concerns.md)
 
 **Step 6: Commit**
 
 ```bash
-git add .agent/agents/oat-codebase-mapper/ .agent/skills/oat-index/references/
+git add .agent/agents/oat-codebase-mapper/ .agent/skills/oat-project-index/references/
 git commit -m "feat(p01-t02): vendor GSD codebase-mapper agent
 
 - Copied from workflow-research/get-shit-done/
@@ -148,7 +148,7 @@ oat_generated: true
 oat_generated_at: YYYY-MM-DD
 oat_source_head_sha: {sha}
 oat_source_main_merge_base_sha: {merge_base_sha}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
 ---
 
 # {Project Name}
@@ -215,24 +215,24 @@ git commit -m "feat(p01-t03): add project-index template
 
 ---
 
-### Task 4: Create oat-index Skill
+### Task 4: Create oat-project-index Skill
 
 **Files:**
-- Create: `.agent/skills/oat-index/SKILL.md`
+- Create: `.agent/skills/oat-project-index/SKILL.md`
 
 **Step 1: Create skill directory**
 
 ```bash
-mkdir -p .agent/skills/oat-index
+mkdir -p .agent/skills/oat-project-index
 ```
 
 **Step 2: Write complete skill with orchestration logic**
 
-Create `.agent/skills/oat-index/SKILL.md`:
+Create `.agent/skills/oat-project-index/SKILL.md`:
 
 ```markdown
 ---
-name: oat-index
+name: oat-project-index
 description: Generate or regenerate comprehensive knowledge base of the codebase
 ---
 
@@ -298,7 +298,7 @@ Write these documents to .oat/knowledge/:
 - stack.md - Languages, runtime, frameworks, dependencies, configuration
 - integrations.md - External APIs, databases, auth providers, webhooks
 
-Use templates from .agent/skills/oat-index/references/templates/
+Use templates from .agent/skills/oat-project-index/references/templates/
 
 Include frontmatter:
 ---
@@ -306,7 +306,7 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
 ---
 
 Explore thoroughly. Write documents directly. Return confirmation only.
@@ -331,7 +331,7 @@ Write these documents to .oat/knowledge/:
 - architecture.md - Pattern, layers, data flow, abstractions, entry points
 - structure.md - Directory layout, key locations, naming conventions
 
-Use templates from .agent/skills/oat-index/references/templates/
+Use templates from .agent/skills/oat-project-index/references/templates/
 
 Include frontmatter:
 ---
@@ -339,7 +339,7 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
 ---
 
 Explore thoroughly. Write documents directly. Return confirmation only.
@@ -364,7 +364,7 @@ Write these documents to .oat/knowledge/:
 - conventions.md - Code style, naming, patterns, error handling
 - testing.md - Framework, structure, mocking, coverage
 
-Use templates from .agent/skills/oat-index/references/templates/
+Use templates from .agent/skills/oat-project-index/references/templates/
 
 Include frontmatter:
 ---
@@ -372,7 +372,7 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
 ---
 
 Explore thoroughly. Write documents directly. Return confirmation only.
@@ -396,7 +396,7 @@ Analyze this codebase for technical debt, known issues, and areas of concern.
 Write this document to .oat/knowledge/:
 - concerns.md - Tech debt, bugs, security, performance, fragile areas
 
-Use template from .agent/skills/oat-index/references/templates/
+Use template from .agent/skills/oat-project-index/references/templates/
 
 Include frontmatter:
 ---
@@ -404,7 +404,7 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
 ---
 
 Explore thoroughly. Write document directly. Return confirmation only.
@@ -503,14 +503,14 @@ Next: Start a project with /new-agent-project or explore knowledge files
 
 **Step 3: Verify skill content**
 
-Run: `wc -l .agent/skills/oat-index/SKILL.md`
+Run: `wc -l .agent/skills/oat-project-index/SKILL.md`
 Expected: ~200-250 lines with complete orchestration logic
 
 **Step 4: Commit**
 
 ```bash
-git add .agent/skills/oat-index/SKILL.md
-git commit -m "feat(p01-t04): implement oat-index skill
+git add .agent/skills/oat-project-index/SKILL.md
+git commit -m "feat(p01-t04): implement oat-project-index skill
 
 - Parallel mapper orchestration (4 agents)
 - Frontmatter with head_sha + merge_base_sha
@@ -521,18 +521,18 @@ git commit -m "feat(p01-t04): implement oat-index skill
 
 ---
 
-### Task 5: Register oat-index Skill
+### Task 5: Register oat-project-index Skill
 
 **Files:**
 - Modify: `AGENTS.md`
 
-**Step 1: Add oat-index to skills table**
+**Step 1: Add oat-project-index to skills table**
 
 Edit `AGENTS.md`, add after existing skills:
 
 ```markdown
 <skill>
-<name>oat-index</name>
+<name>oat-project-index</name>
 <description>Generate or regenerate comprehensive knowledge base of the codebase using parallel mapper agents.</description>
 <location>project</location>
 </skill>
@@ -540,17 +540,17 @@ Edit `AGENTS.md`, add after existing skills:
 
 **Step 2: Verify skill appears**
 
-Run: `cat AGENTS.md | grep -A 2 "oat-index"`
+Run: `cat AGENTS.md | grep -A 2 "oat-project-index"`
 Expected: Skill entry visible
 
 **Step 3: Commit**
 
 ```bash
 git add AGENTS.md
-git commit -m "feat(p01-t05): register oat-index skill
+git commit -m "feat(p01-t05): register oat-project-index skill
 
 - Added to AGENTS.md skills table
-- Now available via npx openskills read oat-index"
+- Now available via npx openskills read oat-project-index"
 ```
 
 ---
@@ -627,7 +627,7 @@ oat_last_updated: YYYY-MM-DD
 
 ## Next Steps
 
-Ready for `/oat:spec` to create formal specification.
+Ready for `oat-project-spec` to create formal specification.
 ```
 
 **Step 2: Write state template**
@@ -688,24 +688,24 @@ git commit -m "feat(p02-t06): add discovery phase templates
 
 ---
 
-### Task 7: Create oat-discovery Skill
+### Task 7: Create oat-project-discover Skill
 
 **Files:**
-- Create: `.agent/skills/oat-discovery/SKILL.md`
+- Create: `.agent/skills/oat-project-discover/SKILL.md`
 
 **Step 1: Create skill directory**
 
 ```bash
-mkdir -p .agent/skills/oat-discovery
+mkdir -p .agent/skills/oat-project-discover
 ```
 
 **Step 2: Write skill with discovery process**
 
-Create `.agent/skills/oat-discovery/SKILL.md`:
+Create `.agent/skills/oat-project-discover/SKILL.md`:
 
 ```markdown
 ---
-name: oat-discovery
+name: oat-project-discover
 description: Start discovery phase - gather requirements and understand the problem through structured dialogue
 ---
 
@@ -715,7 +715,7 @@ Gather requirements and understand the problem space through natural collaborati
 
 ## Prerequisites
 
-**Required:** Knowledge base must exist. If missing, run `/oat:index` first.
+**Required:** Knowledge base must exist. If missing, run `oat-project-index` first.
 
 ## Process
 
@@ -725,7 +725,7 @@ Gather requirements and understand the problem space through natural collaborati
 ls .oat/knowledge/project-index.md 2>/dev/null
 ```
 
-**If missing:** Block and require `/oat:index` first.
+**If missing:** Block and require `oat-project-index` first.
 
 ### Step 2: Check Knowledge Staleness
 
@@ -746,7 +746,7 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 2. Git diff: `git diff --stat {merge_base_sha}..HEAD` (warn if >20 files changed)
 3. Line changes: `git diff --shortstat {merge_base_sha}..HEAD` (warn if significant)
 
-**If stale:** Display prominent warning, recommend `/oat:index` to refresh
+**If stale:** Display prominent warning, recommend `oat-project-index` to refresh
 
 ### Step 3: Create Project Directory
 
@@ -796,13 +796,13 @@ Update frontmatter:
 ```yaml
 ---
 oat_status: complete
-oat_ready_for: oat-spec
+oat_ready_for: oat-project-spec
 ---
 ```
 
 ### Step 11: Commit Discovery
 
-**Note:** This shows what users will do when USING oat-discovery.
+**Note:** This shows what users will do when USING oat-project-discover.
 During implementation of OAT itself, use standard commit format.
 
 ```bash
@@ -821,15 +821,15 @@ Ready for specification phase"
 ```
 Discovery phase complete for {project-name}.
 
-Next: Create specification with /oat:spec
+Next: Create specification with oat-project-spec
 ```
 ```
 
 **Step 3: Commit**
 
 ```bash
-git add .agent/skills/oat-discovery/SKILL.md
-git commit -m "feat(p02-t07): implement oat-discovery skill
+git add .agent/skills/oat-project-discover/SKILL.md
+git commit -m "feat(p02-t07): implement oat-project-discover skill
 
 - Knowledge staleness checking (age + git diff)
 - Iterative Q&A with discovery.md updates
@@ -943,24 +943,24 @@ git commit -m "feat(p02-t08): add specification template
 
 ---
 
-### Task 9: Create oat-spec Skill
+### Task 9: Create oat-project-spec Skill
 
 **Files:**
-- Create: `.agent/skills/oat-spec/SKILL.md`
+- Create: `.agent/skills/oat-project-spec/SKILL.md`
 
 **Step 1: Create skill directory**
 
 ```bash
-mkdir -p .agent/skills/oat-spec
+mkdir -p .agent/skills/oat-project-spec
 ```
 
 **Step 2: Write skill with spec process**
 
-Create `.agent/skills/oat-spec/SKILL.md`:
+Create `.agent/skills/oat-project-spec/SKILL.md`:
 
 ```markdown
 ---
-name: oat-spec
+name: oat-project-spec
 description: Create formal specification from discovery - define requirements, constraints, and success criteria
 ---
 
@@ -970,7 +970,7 @@ Transform discovery insights into a formal, detailed specification.
 
 ## Prerequisites
 
-**Required:** Discovery must be complete with `oat_ready_for: oat-spec`.
+**Required:** Discovery must be complete with `oat_ready_for: oat-project-spec`.
 
 ## Process
 
@@ -1019,7 +1019,7 @@ Update frontmatter:
 ```yaml
 ---
 oat_status: approved
-oat_ready_for: oat-design
+oat_ready_for: oat-project-design
 ---
 ```
 
@@ -1041,15 +1041,15 @@ Ready for design phase"
 ```
 Specification complete.
 
-Next: Create detailed design with /oat:design
+Next: Create detailed design with oat-project-design
 ```
 ```
 
 **Step 3: Commit**
 
 ```bash
-git add .agent/skills/oat-spec/SKILL.md
-git commit -m "feat(p02-t09): implement oat-spec skill
+git add .agent/skills/oat-project-spec/SKILL.md
+git commit -m "feat(p02-t09): implement oat-project-spec skill
 
 - Transform discovery to formal requirements
 - Priority levels for all requirements
@@ -1082,10 +1082,10 @@ git commit -m "feat(p02-t10): add design template
 
 ---
 
-### Task 11: Create oat-design Skill
+### Task 11: Create oat-project-design Skill
 
 **Files:**
-- Create: `.agent/skills/oat-design/SKILL.md`
+- Create: `.agent/skills/oat-project-design/SKILL.md`
 
 **Step 1-2: Implement design skill**
 
@@ -1094,8 +1094,8 @@ Full design process with incremental user review.
 **Step 3: Commit**
 
 ```bash
-git add .agent/skills/oat-design/SKILL.md
-git commit -m "feat(p02-t11): implement oat-design skill
+git add .agent/skills/oat-project-design/SKILL.md
+git commit -m "feat(p02-t11): implement oat-project-design skill
 
 - Comprehensive technical design
 - Architecture approval gate before planning
@@ -1126,10 +1126,10 @@ git commit -m "feat(p02-t12): add plan template
 
 ---
 
-### Task 13: Create oat-plan Skill
+### Task 13: Create oat-project-plan Skill
 
 **Files:**
-- Create: `.agent/skills/oat-plan/SKILL.md`
+- Create: `.agent/skills/oat-project-plan/SKILL.md`
 
 **Step 1-2: Implement planning skill**
 
@@ -1138,8 +1138,8 @@ Break design into phases and bite-sized tasks.
 **Step 3: Commit**
 
 ```bash
-git add .agent/skills/oat-plan/SKILL.md
-git commit -m "feat(p02-t13): implement oat-plan skill
+git add .agent/skills/oat-project-plan/SKILL.md
+git commit -m "feat(p02-t13): implement oat-project-plan skill
 
 - Phase and task breakdown
 - TDD discipline enforced
@@ -1170,10 +1170,10 @@ git commit -m "feat(p02-t14): add implementation template
 
 ---
 
-### Task 15: Create oat-implement Skill
+### Task 15: Create oat-project-implement Skill
 
 **Files:**
-- Create: `.agent/skills/oat-implement/SKILL.md`
+- Create: `.agent/skills/oat-project-implement/SKILL.md`
 
 **Step 1-2: Implement execution skill**
 
@@ -1182,8 +1182,8 @@ Execute plan task-by-task with state tracking and HiL gates.
 **Step 3: Commit**
 
 ```bash
-git add .agent/skills/oat-implement/SKILL.md
-git commit -m "feat(p02-t15): implement oat-implement skill
+git add .agent/skills/oat-project-implement/SKILL.md
+git commit -m "feat(p02-t15): implement oat-project-implement skill
 
 - Task-by-task execution with TDD
 - Phase-based HiL gates
@@ -1193,10 +1193,10 @@ git commit -m "feat(p02-t15): implement oat-implement skill
 
 ---
 
-### Task 16: Create oat-progress Router Skill
+### Task 16: Create oat-project-progress Router Skill
 
 **Files:**
-- Create: `.agent/skills/oat-progress/SKILL.md`
+- Create: `.agent/skills/oat-project-progress/SKILL.md`
 
 **Step 1-2: Implement router skill**
 
@@ -1205,8 +1205,8 @@ Knowledge-first enforcement, staleness detection, next skill recommendation.
 **Step 3: Commit**
 
 ```bash
-git add .agent/skills/oat-progress/SKILL.md
-git commit -m "feat(p02-t16): implement oat-progress router
+git add .agent/skills/oat-project-progress/SKILL.md
+git commit -m "feat(p02-t16): implement oat-project-progress router
 
 - Knowledge-first enforcement
 - Enhanced staleness detection
@@ -1223,7 +1223,7 @@ git commit -m "feat(p02-t16): implement oat-progress router
 
 **Step 1: Add all skills to table**
 
-Add: oat-discovery, oat-spec, oat-design, oat-plan, oat-implement, oat-progress
+Add: oat-project-discover, oat-project-spec, oat-project-design, oat-project-plan, oat-project-implement, oat-project-progress
 
 **Step 2: Commit**
 
@@ -1231,12 +1231,12 @@ Add: oat-discovery, oat-spec, oat-design, oat-plan, oat-implement, oat-progress
 git add AGENTS.md
 git commit -m "feat(p02-t17): register all OAT workflow skills
 
-- oat-discovery: requirements gathering
-- oat-spec: formal specification
-- oat-design: technical architecture
-- oat-plan: implementation planning
-- oat-implement: execution with state tracking
-- oat-progress: workflow router"
+- oat-project-discover: requirements gathering
+- oat-project-spec: formal specification
+- oat-project-design: technical architecture
+- oat-project-plan: implementation planning
+- oat-project-implement: execution with state tracking
+- oat-project-progress: workflow router"
 ```
 
 ---
@@ -1260,7 +1260,7 @@ git commit -m "docs(p03-t18): document OAT workflow in README
 
 - Knowledge base generation
 - Workflow phases (discovery → spec → design → plan → implement)
-- Progress checking with /oat:progress"
+- Progress checking with oat-project-progress"
 ```
 
 ---
@@ -1295,7 +1295,7 @@ tree -L 3 .agent/ .oat/
 **Step 4: Verify all skills load**
 
 ```bash
-npx openskills read oat-index,oat-discovery,oat-spec,oat-design,oat-plan,oat-implement,oat-progress
+npx openskills read oat-project-index,oat-project-discover,oat-project-spec,oat-project-design,oat-project-plan,oat-project-implement,oat-project-progress
 ```
 
 Expected: All skills load without errors

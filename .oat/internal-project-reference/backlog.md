@@ -55,17 +55,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Source issue: manual drift between `AGENTS.md` and `.agents/skills`
   - Created: 2026-02-14
 
-- [ ] **(P1) [skills] Standardize OAT invocation language to skill-first across templates/docs**
-  - Target milestone/phase: Dogfood v1.2 polish (before additional workflow expansion)
-  - Notes:
-    - Replace slash-only guidance (for example, `/oat:implement`) with skill-first wording (for example, `oat-implement` skill).
-    - Keep slash command text only as a host-specific alias: "where slash prompts are supported."
-    - Apply consistently across `.oat/templates/`, `.agents/skills/oat-*/`, and `.oat/internal-project-reference/`.
-    - Add a lightweight validation check so new docs do not regress to slash-only wording.
-  - Links:
-    - Source discussion: invocation compatibility for Codex vs slash-enabled hosts
-  - Created: 2026-02-14
-
 - [ ] **(P2) [tooling] Optional Codex prompt-wrapper generation for synced OAT skills**
   - Target milestone/phase: Post-standardization enhancement
   - Notes:
@@ -118,42 +107,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Source discussion: OAT feature ideas (potential future review extensions)
   - Created: 2026-02-14
 
-- [ ] **(P1) [skills] Normalize skill naming to namespace model (`oat-<domain>-<action>`)**
-  - Target milestone/phase: Naming consistency initiative
-  - Notes:
-    - Adopt naming pattern: `<domain>-<context?>-<action>`.
-    - Apply `oat-` prefix only to external-facing skills. Keep internal-only maintenance skills unprefixed.
-    - Proposed mappings for current skills:
-      - `oat-discovery` -> `oat-project-discover`
-      - `oat-spec` -> `oat-project-spec`
-      - `oat-design` -> `oat-project-design`
-      - `oat-plan` -> `oat-project-plan`
-      - `oat-implement` -> `oat-project-implement`
-      - `oat-new-project` -> `oat-project-new`
-      - `oat-open-project` -> `oat-project-open`
-      - `oat-clear-active-project` -> `oat-project-clear-active`
-      - `oat-complete-project` -> `oat-project-close`
-      - `oat-request-review` -> `oat-review-provide`
-      - `oat-receive-review` -> `oat-review-receive`
-      - `oat-pr-progress` -> `oat-pr-progress` (unchanged)
-      - `oat-pr-project` -> `oat-pr-project` (unchanged)
-      - `oat-progress` -> `oat-project-progress` (or retain as top-level router alias)
-      - `oat-index` -> `oat-project-index` (or retain as top-level alias)
-      - `update-internal-project-reference` -> `update-internal-project-reference` (internal, unchanged)
-      - `create-oat-skill` -> `create-oat-skill` (internal, unchanged)
-      - `create-pr-description` -> `create-pr-description` (internal, unchanged)
-      - `create-ticket` -> `oat-ticket-create`
-      - `create-skill` -> `create-skill` (internal, unchanged)
-      - `codex` -> evaluate as provider-specific helper (likely out-of-scope for namespace migration)
-    - Implement transition with compatibility aliases to avoid breaking existing prompts/workflows.
-  - Success criteria:
-    - Canonical names follow one naming model across project/review/pr/context/dependency domains.
-    - Legacy names continue to resolve during migration window.
-    - AGENTS skills table and docs are auto-updated to canonical names.
-  - Links:
-    - Source discussion: OAT feature ideas (naming philosophy + domain model)
-  - Created: 2026-02-14
-
 - [ ] **(P2) [skills] Add dependency intelligence skill family**
   - Target milestone/phase: Post naming normalization
   - Notes:
@@ -198,46 +151,62 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related: `oat init ideas` backlog entry
   - Created: 2026-02-14
 
-- [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-new-project`**
+- [ ] **(P2) [tooling] Add skill uninstall command (`oat remove skill` / `oat uninstall skill`)**
+  - Target milestone/phase: OAT CLI lifecycle completeness
+  - Notes:
+    - Add a first-class CLI command to remove skills from canonical storage and propagate deletion to provider views.
+    - Support both project and user scopes via existing `--scope` behavior.
+    - Handle both managed (manifest-tracked) and unmanaged/stray provider entries with safe prompts.
+    - Keep dry-run support and explicit apply semantics consistent with `oat sync`.
+  - Success criteria:
+    - User can remove one or more skills without manual filesystem cleanup.
+    - Provider views are cleaned up deterministically after removal.
+    - Manifest state remains consistent (no orphaned managed entries).
+    - Command output clearly reports what was removed vs skipped.
+  - Links:
+    - Related gap: skill removal currently requires manual deletion + sync
+  - Created: 2026-02-16
+
+- [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-project-new`**
   - Target milestone/phase: Ideas → Projects integration
   - Notes:
-    - Enhance `oat-new-project` Step 1 to check for existing summarized ideas (scan `{IDEAS_ROOT}/*/discovery.md` for `oat_idea_state: summarized`) and ask the user:
+    - Enhance `oat-project-new` Step 1 to check for existing summarized ideas (scan `{IDEAS_ROOT}/*/discovery.md` for `oat_idea_state: summarized`) and ask the user:
       - "Is this a brand new project, or would you like to promote an existing idea?"
       - If promoting: let user pick from summarized ideas, use the idea name as the project name (or let them rename), and stash the idea's `summary.md` path for later.
-    - Enhance `oat-new-project` Step 3 to offer auto-triggering discovery:
-      - Currently just says "Next command: `/oat:discovery`" — change to ask: "Would you like to start discovery now, or do it later?"
-      - If yes: agent reads `oat-discovery` skill and invokes it (same pattern as `oat-idea-new` → `oat-idea-ideate` handoff).
-      - If promoting an idea: pass the idea's `summary.md` content as the initial request context to `oat-discovery`, so the user doesn't have to re-explain the idea.
+    - Enhance `oat-project-new` Step 3 to offer auto-triggering discovery:
+      - Currently just says "Next command: `oat-project-discover`" — change to ask: "Would you like to start discovery now, or do it later?"
+      - If yes: agent reads `oat-project-discover` skill and invokes it (same pattern as `oat-idea-new` → `oat-idea-ideate` handoff).
+      - If promoting an idea: pass the idea's `summary.md` content as the initial request context to `oat-project-discover`, so the user doesn't have to re-explain the idea.
     - On promotion, update the ideas backlog entry to Archived with reason: `promoted to project`.
-    - This keeps all promotion logic in `oat-new-project` (single entry point) rather than needing a separate `oat-idea-promote` skill.
+    - This keeps all promotion logic in `oat-project-new` (single entry point) rather than needing a separate `oat-idea-promote` skill.
     - Should support both project-level and user-level ideas (respect `{IDEAS_ROOT}` resolution).
   - Success criteria:
-    - `oat-new-project` detects summarized ideas and offers to promote one.
+    - `oat-project-new` detects summarized ideas and offers to promote one.
     - Promoted idea's summary is passed as seed context into discovery.
     - Ideas backlog updated on promotion (moved to Archived).
     - User can still create a brand new project with no idea connection.
     - Discovery auto-trigger is optional (user chooses).
   - Links:
-    - Current skill: `.agents/skills/oat-new-project/SKILL.md`
+    - Current skill: `.agents/skills/oat-project-new/SKILL.md`
     - Promotion contract: `.agents/skills/oat-idea-summarize/SKILL.md` (Step 7)
-    - Discovery skill: `.agents/skills/oat-discovery/SKILL.md`
+    - Discovery skill: `.agents/skills/oat-project-discover/SKILL.md`
   - Created: 2026-02-14
 
 - [ ] **(P1) [tooling] Migrate `new-oat-project.ts` from `.oat/scripts/` to CLI**
   - Target milestone/phase: OAT CLI consolidation
   - Notes:
     - Move project scaffolding logic from `.oat/scripts/new-oat-project.ts` into `packages/cli/` (e.g., `oat project new <name>`).
-    - Currently called by `oat-new-project` skill via `pnpm tsx .oat/scripts/new-oat-project.ts`.
+    - Currently called by `oat-project-new` skill via `pnpm tsx .oat/scripts/new-oat-project.ts`.
     - Supports `--force`, `--no-set-active`, `--no-dashboard` flags — preserve these.
     - Handles template copying, placeholder replacement, active-project pointer, and dashboard refresh.
-    - Update `oat-new-project` skill to call CLI command instead of tsx script.
+    - Update `oat-project-new` skill to call CLI command instead of tsx script.
   - Success criteria:
     - `oat project new <name>` works as a CLI command.
-    - `oat-new-project` skill updated to use CLI instead of tsx script.
+    - `oat-project-new` skill updated to use CLI instead of tsx script.
     - `.oat/scripts/new-oat-project.ts` removed.
   - Links:
     - Current script: `.oat/scripts/new-oat-project.ts`
-    - Calling skill: `.agents/skills/oat-new-project/SKILL.md`
+    - Calling skill: `.agents/skills/oat-project-new/SKILL.md`
   - Created: 2026-02-14
 
 - [ ] **(P1) [tooling] Migrate `validate-oat-skills.ts` from `.oat/scripts/` to CLI**
@@ -260,7 +229,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Target milestone/phase: OAT CLI consolidation
   - Notes:
     - Move state dashboard generation from `.oat/scripts/generate-oat-state.sh` into `packages/cli/` (e.g., `oat state` or `oat project status`).
-    - Currently called by `oat-new-project` skill (Step 2), `oat-index` skill (Step 12), and `new-oat-project.ts`.
+    - Currently called by `oat-project-new` skill (Step 2), `oat-project-index` skill (Step 12), and `new-oat-project.ts`.
     - Generates `.oat/state.md` with active project, phase, knowledge base freshness, and recommended next action.
     - Shell script parses frontmatter and git state — rewrite in TypeScript for consistency and testability.
     - Update calling skills to use CLI command.
@@ -270,24 +239,24 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - `.oat/scripts/generate-oat-state.sh` removed.
   - Links:
     - Current script: `.oat/scripts/generate-oat-state.sh`
-    - Calling skills: `oat-new-project`, `oat-index`
+    - Calling skills: `oat-project-new`, `oat-project-index`
   - Created: 2026-02-14
 
 - [ ] **(P1) [tooling] Migrate `generate-thin-index.sh` from `.oat/scripts/` to CLI**
   - Target milestone/phase: OAT CLI consolidation
   - Notes:
     - Move thin index generation from `.oat/scripts/generate-thin-index.sh` into `packages/cli/` (e.g., `oat index --thin` or `oat index init`).
-    - Currently called by `oat-index` skill (Step 4) with HEAD_SHA and MERGE_BASE_SHA args.
+    - Currently called by `oat-project-index` skill (Step 4) with HEAD_SHA and MERGE_BASE_SHA args.
     - Generates `.oat/knowledge/repo/project-index.md` with repo structure, entry points, config files, and test commands.
     - Shell script uses find/grep/awk — rewrite in TypeScript for consistency, testability, and cross-platform support.
-    - Update `oat-index` skill to call CLI command.
+    - Update `oat-project-index` skill to call CLI command.
   - Success criteria:
     - Thin index generation works as a CLI command.
-    - `oat-index` skill updated to call CLI instead of shell script.
+    - `oat-project-index` skill updated to call CLI instead of shell script.
     - `.oat/scripts/generate-thin-index.sh` removed.
   - Links:
     - Current script: `.oat/scripts/generate-thin-index.sh`
-    - Calling skill: `.agents/skills/oat-index/SKILL.md`
+    - Calling skill: `.agents/skills/oat-project-index/SKILL.md`
   - Created: 2026-02-14
 
 - [ ] **(P2) [tooling] Remove `.oat/scripts/` directory after all migrations complete**
@@ -321,6 +290,44 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 - [x] **(P?) [area] {Title}**
   - Outcome:
   - Links:
+
+- [x] **(P1) [skills] Normalize skill naming to namespace model (`oat-<domain>-<action>`)**
+  - Outcome:
+    - Adopted naming pattern: `oat-<domain>-<action>` for external-facing skills; internal-only skills kept unprefixed.
+    - Final mappings applied:
+      - `oat-new-project` -> `oat-project-new`
+      - `oat-open-project` -> `oat-project-open`
+      - `oat-clear-active-project` -> `oat-project-clear-active`
+      - `oat-complete-project` -> `oat-project-complete`
+      - `oat-discovery` -> `oat-project-discover`
+      - `oat-spec` -> `oat-project-spec`
+      - `oat-design` -> `oat-project-design`
+      - `oat-plan` -> `oat-project-plan`
+      - `oat-implement` -> `oat-project-implement`
+      - `oat-progress` -> `oat-project-progress`
+      - `oat-index` -> `oat-project-index`
+      - `oat-pr-progress` -> `oat-project-pr-progress`
+      - `oat-pr-project` -> `oat-project-pr-final`
+      - `oat-request-review` -> `oat-project-review-provide`
+      - `oat-receive-review` -> `oat-project-review-receive`
+    - All skill directories, SKILL.md frontmatter, AGENTS.md registrations, and cross-references in templates updated.
+    - All `/oat:` slash-command references in internal-project-reference and project artifacts replaced with skill-first names.
+  - Links:
+    - Source discussion: OAT feature ideas (naming philosophy + domain model)
+    - Plan: `.oat/internal-project-reference/external-plans/skill-rename-slash-cleanup.md`
+  - Created: 2026-02-14
+  - Completed: 2026-02-15
+
+- [x] **(P1) [skills] Standardize OAT invocation language to skill-first across templates/docs**
+  - Outcome:
+    - All `/oat:` slash-command references in `.oat/internal-project-reference/` and `.oat/projects/shared/` replaced with skill-first names (no slash prefix).
+    - Templates, skill SKILL.md files, and project artifacts now use canonical skill names as primary references.
+    - Completed as part of the naming normalization rename pass.
+  - Links:
+    - Source discussion: invocation compatibility for Codex vs slash-enabled hosts
+    - Plan: `.oat/internal-project-reference/external-plans/skill-rename-slash-cleanup.md`
+  - Created: 2026-02-14
+  - Completed: 2026-02-15
 
 - [x] **(P2) [workflow] Visual progress indicators during workflow execution**
   - Outcome:

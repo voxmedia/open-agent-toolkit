@@ -12,7 +12,7 @@ Add entries as you notice them. Prefer specific reproduction steps and concrete 
 
 ### 2026-01-29: Mapper outputs can be misleading without evidence
 
-- **Context:** Codex artifact quality review after running `/oat:index` to generate `.oat/knowledge/repo/*.md`.
+- **Context:** Codex artifact quality review after running `oat-project-index` to generate `.oat/knowledge/repo/*.md`.
 - **What happened:**
   - `integrations.md` treated `.claude/settings.local.json` as a repo config despite it being gitignored (local-only).
   - `conventions.md` described “pre-push (optional)” checks that didn’t match the actual `tools/git-hooks/pre-push`.
@@ -20,7 +20,7 @@ Add entries as you notice them. Prefer specific reproduction steps and concrete 
 - **Expected:** Knowledge docs should be strictly “what exists”, and all prescriptive claims should be evidence-backed with concrete file paths (or explicitly marked unknown/not detected).
 - **Impact:** Downstream phases (design/plan/implement) can internalize incorrect conventions and waste time chasing nonexistent/optional behaviors.
 - **Suggestion:** Tighten the mapper contract to (1) require file-path evidence for claims, (2) treat gitignored configs as local-only, (3) forbid recommendations in knowledge docs (keep “gaps + suggested fixes” in `concerns.md` or roadmap instead).
-- **Related:** `.agent/agents/oat-codebase-mapper.md`, `.agent/skills/oat-index/SKILL.md`, `.oat/knowledge/repo/{integrations,conventions,testing}.md`.
+- **Related:** `.agent/agents/oat-codebase-mapper.md`, `.agent/skills/oat-project-index/SKILL.md`, `.oat/knowledge/repo/{integrations,conventions,testing}.md`.
 
 ### 2026-01-29: Dogfood project artifacts should move to `.oat/projects/shared` early
 
@@ -42,12 +42,12 @@ Add entries as you notice them. Prefer specific reproduction steps and concrete 
 - **Impact:** Phase boundary blur increases churn and makes later design changes feel like “scope change” rather than normal refinement.
 - **Suggestion / Mitigation implemented:**
   - Added explicit “Phase Guardrails (Discovery)” to the discovery template: `.oat/templates/discovery.md`.
-  - Added discovery-skill guardrails (“no concrete deliverables list” + “keep it outcome-level”): `.agent/skills/oat-discovery/SKILL.md`.
+  - Added discovery-skill guardrails (“no concrete deliverables list” + “keep it outcome-level”): `.agent/skills/oat-project-discover/SKILL.md`.
   - Commit: `fe51053`.
-- **Follow-up / Mitigation implemented:** Added lightweight “Spec guardrails” to keep requirements outcome-level and push design details to `/oat:design`:
+- **Follow-up / Mitigation implemented:** Added lightweight "Spec guardrails" to keep requirements outcome-level and push design details to `oat-project-design`:
   - Template: `.oat/templates/spec.md`
-  - Skill: `.agent/skills/oat-spec/SKILL.md`
-- **Open Question:** How should “quick mode” work if it intentionally skips `/oat:design` and expects spec to carry enough implementation detail? Options: separate `quick-plan.md`, or an explicitly-allowed “Quick Mode” section in `spec.md`.
+  - Skill: `.agent/skills/oat-project-spec/SKILL.md`
+- **Open Question:** How should "quick mode" work if it intentionally skips `oat-project-design` and expects spec to carry enough implementation detail? Options: separate `quick-plan.md`, or an explicitly-allowed "Quick Mode" section in `spec.md`.
 
 ### YYYY-MM-DD: {Short Title}
 

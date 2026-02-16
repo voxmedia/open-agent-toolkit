@@ -91,7 +91,7 @@ OAT skills should provide lightweight, consistent progress feedback:
 
 - **Date:** 2026-01-31
 - **Status:** accepted
-- **Drivers:** Avoid convention drift across new `/oat:*` skills; keep skill authoring consistent without duplicating the entire `create-skill` guidance.
+- **Drivers:** Avoid convention drift across new `oat-*` skills; keep skill authoring consistent without duplicating the entire `create-skill` guidance.
 - **Related:**
   - `.agents/skills/create-skill/SKILL.md`
   - `.agents/skills/create-oat-skill/SKILL.md`
@@ -166,7 +166,7 @@ OAT documentation and skill guidance frequently used slash command text as if un
 #### Decision
 
 Adopt option 2:
-- **Canonical invocation contract:** skill names (for example, `oat-implement`).
+- **Canonical invocation contract:** skill names (for example, `oat-project-implement`).
 - **Slash commands:** treated as optional host-specific aliases, documented only as "where slash prompts are supported."
 - **Optional enhancement (not required):** support generation of thin Codex prompt wrappers (`.codex/prompts`) for users who explicitly opt in during skill sync.
 

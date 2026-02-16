@@ -18,21 +18,21 @@ For a deep technical explanation of how the system works, see `.oat/internal-pro
 ## Quickstart (Happy Path)
 
 1. Generate repo knowledge:
-   - `/oat:index`
+   - `oat-project-index`
 2. Start a project (or set the active project when prompted):
-   - `/oat:new-project` (recommended) then `/oat:discovery`
+   - `oat-project-new` (recommended) then `oat-project-discover`
 3. Continue the workflow:
-   - `/oat:spec` → `/oat:design` → `/oat:plan` → `/oat:implement`
+   - `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
 4. Final review loop:
-   - `/oat:request-review code final`
-   - `/oat:receive-review`
-   - `/oat:implement` (executes any new “(review)” fix tasks)
+   - `oat-project-review-provide code final`
+   - `oat-project-review-receive`
+   - `oat-project-implement` (executes any new "(review)" fix tasks)
    - Repeat until the `final` review row is `passed`
 5. PR description:
-   - `/oat:pr-project`
-   - Optional: `/oat:pr-progress pNN` for phase milestones
+   - `oat-project-pr-final`
+   - Optional: `oat-project-pr-progress pNN` for phase milestones
 6. Mark lifecycle complete (optional):
-   - `/oat:complete-project`
+   - `oat-project-complete`
 
 ## Resume / Restart (How OAT Continues Work)
 
@@ -48,9 +48,9 @@ If `.oat/active-project` is missing or invalid, most skills will prompt for `{pr
 ### Common restart pitfalls
 
 - **Projects-root mismatch:** if `.oat/projects-root` points somewhere different than where the project actually lives, the pointer may become invalid. Fix by:
-  - running `/oat:open-project` and selecting the correct project, or
+  - running the `oat-project-open` skill and selecting the correct project, or
   - updating `.oat/projects-root` and then re-opening the project.
-- **Stale knowledge:** if the knowledge base is stale (age/diff), refresh with `/oat:index`.
+- **Stale knowledge:** if the knowledge base is stale (age/diff), refresh with the `oat-project-index` skill.
 
 ## Review Loop (Request → Receive → Fix → Re-Review)
 
@@ -65,30 +65,30 @@ The review loop is plan-driven. The canonical state is the `plan.md` `## Reviews
 ### Workflow
 
 1. Run the review:
-   - `/oat:request-review code pNN` (phase), `/oat:request-review code final` (final), or artifact reviews like `/oat:request-review artifact spec`
+   - `oat-project-review-provide code pNN` (phase), `oat-project-review-provide code final` (final), or artifact reviews like `oat-project-review-provide artifact spec`
 2. Convert findings into tasks:
-   - `/oat:receive-review` adds new tasks to `plan.md` (usually prefixed `(review) …`)
+   - `oat-project-review-receive` adds new tasks to `plan.md` (usually prefixed `(review) …`)
    - It updates the Reviews row to `fixes_added` when tasks are created
 3. Implement fixes:
-   - `/oat:implement` executes the new tasks and updates `implementation.md`
+   - `oat-project-implement` executes the new tasks and updates `implementation.md`
    - When all fix tasks are done:
      - update the Reviews row to `fixes_completed`
      - ensure `plan.md` rollups (`## Implementation Complete`) and `implementation.md` “Next” guidance are updated so summaries don’t go stale
 4. Re-review:
-   - Run `/oat:request-review …` again
-   - Then `/oat:receive-review` to reach `passed`
+   - Run `oat-project-review-provide …` again
+   - Then `oat-project-review-receive` to reach `passed`
 
 ## PR Flow
 
 ### Progress PR (phase boundary)
 
 Use when you want a PR description for a specific plan phase:
-- `/oat:pr-progress pNN`
+- `oat-project-pr-progress pNN`
 
 ### Project PR (final)
 
 Use when the project is complete and the final review is `passed`:
-- `/oat:pr-project`
+- `oat-project-pr-final`
 
 **Tip:** PR quality is best when `{PROJECT_PATH}/implementation.md` has a filled “Final Summary (for PR/docs)” section that reflects what was actually done (including any review fixes and design deltas).
 

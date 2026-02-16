@@ -17,7 +17,7 @@ oat_project: .oat/projects/shared/oat-project-state
 
 The oat-project-state implementation successfully delivers all requirements with high-quality shell scripting and well-structured skills. The dashboard script demonstrates excellent error handling with graceful degradation for missing data, proper platform compatibility (macOS/Linux), and clean separation of concerns. The three lifecycle skills follow established OAT patterns and integrate cleanly with existing infrastructure. All 18 planned tasks were completed with proper TDD-style verification at each step.
 
-Minor portability issue identified in oat-complete-project skill due to macOS-specific sed syntax that will fail on Linux systems.
+Minor portability issue identified in oat-project-complete skill due to macOS-specific sed syntax that will fail on Linux systems.
 
 ## Findings
 
@@ -27,9 +27,9 @@ Minor portability issue identified in oat-complete-project skill due to macOS-sp
 
 ### Important
 
-**1. Portability Issue: macOS-specific sed syntax in oat-complete-project**
+**1. Portability Issue: macOS-specific sed syntax in oat-project-complete**
 
-**File:** `.agent/skills/oat-complete-project/SKILL.md` (lines 62, 65)
+**File:** `.agent/skills/oat-project-complete/SKILL.md` (lines 62, 65)
 
 **Issue:** The skill uses macOS-specific `sed -i ''` syntax which will fail on Linux/BSD systems where the syntax differs.
 
@@ -113,7 +113,7 @@ fi
 
 **3. Skills lack error output guidance**
 
-**File:** `.agent/skills/oat-open-project/SKILL.md`, `.agent/skills/oat-clear-active-project/SKILL.md`, `.agent/skills/oat-complete-project/SKILL.md`
+**File:** `.agent/skills/oat-project-open/SKILL.md`, `.agent/skills/oat-project-clear-active/SKILL.md`, `.agent/skills/oat-project-complete/SKILL.md`
 
 **Issue:** Skills show bash commands with `exit 1` but don't specify whether errors should go to stderr or stdout. This could lead to inconsistent error reporting when agents implement these skills.
 
@@ -151,12 +151,12 @@ FILES_CHANGED=$(echo "$diff_output" | wc -l | awk '{print $1}')
 
 | Requirement | Status | Notes |
 |-------------|--------|-------|
-| FR1: Set Active Project | ✅ implemented | oat-open-project skill with full validation |
-| FR2: Clear Active Project | ✅ implemented | oat-clear-active-project skill |
-| FR3: Complete Project | ✅ implemented | oat-complete-project skill with warnings (portability issue noted) |
+| FR1: Set Active Project | ✅ implemented | oat-project-open skill with full validation |
+| FR2: Clear Active Project | ✅ implemented | oat-project-clear-active skill |
+| FR3: Complete Project | ✅ implemented | oat-project-complete skill with warnings (portability issue noted) |
 | FR4: Generate Repo State Dashboard | ✅ implemented | generate-oat-state.sh with all required sections |
-| FR5: Dashboard Integration - oat-progress | ✅ implemented | Hook added, tested |
-| FR6: Dashboard Integration - oat-index | ✅ implemented | Hook added, tested |
+| FR5: Dashboard Integration - oat-project-progress | ✅ implemented | Hook added, tested |
+| FR6: Dashboard Integration - oat-project-index | ✅ implemented | Hook added, tested |
 | FR7: Project Validation | ✅ implemented | Validates directory, state.md, project name format |
 | NFR1: Script Performance <2s | ✅ implemented | Verified in p01-t10 |
 | NFR2: Idempotency | ✅ implemented | Verified in p01-t10 |
@@ -204,7 +204,7 @@ FILES_CHANGED=$(echo "$diff_output" | wc -l | awk '{print $1}')
 
 ### Areas for Improvement
 
-1. **Portability**: The sed -i syntax issue in oat-complete-project (Important finding).
+1. **Portability**: The sed -i syntax issue in oat-project-complete (Important finding).
 
 2. **Robustness**: Minor improvements possible in date parsing clarity and repo root validation.
 
@@ -240,14 +240,14 @@ FILES_CHANGED=$(echo "$diff_output" | wc -l | awk '{print $1}')
 
 **Phase 2 (Lifecycle Skills):**
 - ✅ p02-t05: Manual verification of all three skills
-  - oat-open-project: List, select, validate, pointer write
-  - oat-clear-active-project: Show current, clear, dashboard update
-  - oat-complete-project: Confirm, warnings, lifecycle set, dashboard update
+  - oat-project-open: List, select, validate, pointer write
+  - oat-project-clear-active: Show current, clear, dashboard update
+  - oat-project-complete: Confirm, warnings, lifecycle set, dashboard update
 
 **Phase 3 (Integration):**
 - ✅ p03-t03: End-to-end integration testing
-  - Dashboard auto-refresh via oat-progress
-  - Dashboard auto-refresh via oat-index
+  - Dashboard auto-refresh via oat-project-progress
+  - Dashboard auto-refresh via oat-project-index
   - Full workflow: clear → open → progress
 
 **Missing Tests:**
@@ -314,8 +314,8 @@ Based on implementation and p01-t10 verification:
 To verify the identified findings have been addressed:
 
 ```bash
-# 1. Verify sed syntax fix in oat-complete-project (if applied)
-grep "sed -i ''" .agent/skills/oat-complete-project/SKILL.md
+# 1. Verify sed syntax fix in oat-project-complete (if applied)
+grep "sed -i ''" .agent/skills/oat-project-complete/SKILL.md
 # Expected: No matches (or documented as macOS-only)
 
 # 2. Test on Linux environment (if available)
@@ -354,13 +354,13 @@ Option A (Recommended): Fix the portability issue before merge
 - Estimated effort: 15 minutes
 
 Option B: Document limitation
-- Add note to oat-complete-project that it requires macOS
+- Add note to oat-project-complete that it requires macOS
 - Create follow-up task for cross-platform support
 - Acceptable for dogfooding phase if team uses macOS
 
 **For project completion:**
 
-Run `/oat:receive-review` to convert findings into plan tasks if fixes are desired, or accept as-is for dogfooding given the minor nature of findings.
+Run `oat-project-review-receive` to convert findings into plan tasks if fixes are desired, or accept as-is for dogfooding given the minor nature of findings.
 
 ## Final Assessment
 

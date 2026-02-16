@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-plan
+oat_ready_for: oat-project-plan
 oat_blockers: []
 oat_last_updated: 2026-01-29
 oat_generated: false
@@ -12,9 +12,9 @@ oat_generated: false
 
 This design implements minimal project lifecycle management and a derived repo state dashboard for the OAT dogfooding phase. The architecture follows OAT's file-based, derived-state philosophy—no new persistent state is introduced. All dashboard information is computed from existing sources of truth: the active project pointer, project state files, and the knowledge base index.
 
-The implementation consists of a single shell script (`generate-oat-state.sh`) that derives the dashboard from multiple sources, and three thin skills (`oat-open-project`, `oat-clear-active-project`, `oat-complete-project`) that manipulate the active project pointer and invoke the dashboard script. This design prioritizes simplicity and idempotency over features, aligning with the dogfooding constraints.
+The implementation consists of a single shell script (`generate-oat-state.sh`) that derives the dashboard from multiple sources, and three thin skills (`oat-project-open`, `oat-project-clear-active`, `oat-project-complete`) that manipulate the active project pointer and invoke the dashboard script. This design prioritizes simplicity and idempotency over features, aligning with the dogfooding constraints.
 
-The solution integrates with existing OAT infrastructure through minimal hooks in `oat-progress` and `oat-index`, ensuring the dashboard stays fresh during normal workflow without requiring background automation.
+The solution integrates with existing OAT infrastructure through minimal hooks in `oat-project-progress` and `oat-project-index`, ensuring the dashboard stays fresh during normal workflow without requiring background automation.
 
 ## Architecture
 
@@ -24,9 +24,9 @@ This feature extends the OAT skill layer with project lifecycle management while
 
 **Key Components:**
 - **generate-oat-state.sh:** Shell script that computes and writes the repo dashboard
-- **oat-open-project skill:** Sets the active project pointer with validation
-- **oat-clear-active-project skill:** Clears the active project pointer
-- **oat-complete-project skill:** Marks a project lifecycle as complete
+- **oat-project-open skill:** Sets the active project pointer with validation
+- **oat-project-clear-active skill:** Clears the active project pointer
+- **oat-project-complete skill:** Marks a project lifecycle as complete
 - **.oat/state.md:** Derived dashboard file (output, not source of truth)
 
 ### Component Diagram
@@ -39,14 +39,14 @@ This feature extends the OAT skill layer with project lifecycle management while
                     ┌───────────┴───────────┐
                     │    Skill Layer        │
                     │  ┌─────────────────┐  │
-                    │  │ oat-open-project│  │
+                    │  │ oat-project-open│  │
                     │  │ oat-clear-*     │  │
                     │  │ oat-complete-*  │  │
                     │  └────────┬────────┘  │
                     │           │           │
                     │  ┌────────▼────────┐  │
-                    │  │ oat-progress    │──┼─── Existing (modified to call script)
-                    │  │ oat-index       │  │
+                    │  │ oat-project-progress    │──┼─── Existing (modified to call script)
+                    │  │ oat-project-index       │  │
                     │  └─────────────────┘  │
                     └───────────┬───────────┘
                                 │
@@ -99,7 +99,7 @@ This feature extends the OAT skill layer with project lifecycle management while
 **Project Lifecycle Flow:**
 
 ```
-oat-open-project:
+oat-project-open:
   1. Resolve PROJECTS_ROOT
   2. List projects in {PROJECTS_ROOT}/*/
   3. User selects or provides project name
@@ -107,11 +107,11 @@ oat-open-project:
   5. Write full path to .oat/active-project (v1 compatibility)
   6. Run generate-oat-state.sh
 
-oat-clear-active-project:
+oat-project-clear-active:
   1. Remove/empty .oat/active-project
   2. Run generate-oat-state.sh
 
-oat-complete-project:
+oat-project-complete:
   1. Confirm with user
   2. Warn if no final review (optional)
   3. Warn if no PR description (optional)
@@ -153,7 +153,7 @@ oat-complete-project:
 - **Grep/sed for YAML:** Simple patterns sufficient for frontmatter extraction; avoids yq dependency.
 - **Idempotent writes:** Script can be run repeatedly with same output for same inputs.
 
-### oat-open-project Skill
+### oat-project-open Skill
 
 **Purpose:** Set the active project pointer with validation.
 
@@ -168,7 +168,7 @@ oat-complete-project:
 ```markdown
 # SKILL.md structure
 ---
-name: oat-open-project
+name: oat-project-open
 description: Set the active project with validation
 ---
 
@@ -189,7 +189,7 @@ description: Set the active project with validation
 - **Strict validation:** Only valid projects can be set to prevent broken state.
 - **Immediate dashboard refresh:** User sees updated state right away.
 
-### oat-clear-active-project Skill
+### oat-project-clear-active Skill
 
 **Purpose:** Clear the active project pointer.
 
@@ -202,7 +202,7 @@ description: Set the active project with validation
 ```markdown
 # SKILL.md structure
 ---
-name: oat-clear-active-project
+name: oat-project-clear-active
 description: Clear the active project pointer
 ---
 
@@ -219,7 +219,7 @@ description: Clear the active project pointer
 - **Remove vs empty:** Either approach works; remove is cleaner.
 - **No confirmation required:** Low-risk operation, easily reversible.
 
-### oat-complete-project Skill
+### oat-project-complete Skill
 
 **Purpose:** Mark a project lifecycle as semantically complete.
 
@@ -235,7 +235,7 @@ description: Clear the active project pointer
 ```markdown
 # SKILL.md structure
 ---
-name: oat-complete-project
+name: oat-project-complete
 description: Mark a project lifecycle as complete
 ---
 
@@ -306,7 +306,7 @@ workflow-research
 
 **Format Strategy (v1):**
 
-For backward compatibility with existing skills (oat-progress, oat-discovery, etc.), v1 writes full paths. Reading logic accepts both formats to future-proof for name-only migration.
+For backward compatibility with existing skills (oat-project-progress, oat-project-discover, etc.), v1 writes full paths. Reading logic accepts both formats to future-proof for name-only migration.
 
 ```bash
 RAW_VALUE=$(cat .oat/active-project 2>/dev/null || true)
@@ -359,7 +359,7 @@ oat_lifecycle: active | complete
 **Design Rationale:**
 - Separates "what workflow phase am I in?" (`oat_phase`) from "is this project done?" (`oat_lifecycle`)
 - A project can be in `implement` phase with `oat_phase_status: complete` but still `oat_lifecycle: active` (e.g., awaiting PR merge)
-- Only `oat-complete-project` sets `oat_lifecycle: complete`
+- Only `oat-project-complete` sets `oat_lifecycle: complete`
 
 ### Repo Dashboard
 
@@ -400,8 +400,8 @@ oat_generated_at: {timestamp}
 
 ## Quick Commands
 
-- `/oat:progress` - Check status
-- `/oat:index` - Refresh knowledge
+- `oat-project-progress` - Check status
+- `oat-project-index` - Refresh knowledge
 - {Phase-specific commands}
 
 ## Available Projects
@@ -434,14 +434,14 @@ Not applicable - operates within user's file system permissions.
 
 ### Input Validation
 
-- **Project path validation:** oat-open-project validates directory exists and has state.md.
+- **Project path validation:** oat-project-open validates directory exists and has state.md.
 - **Graceful handling:** Script handles missing/malformed files without crashing.
 
 ### Threat Mitigation
 
 - **Path traversal:** Project names validated to contain no path separators (`/`, `..`); full paths constrained to `{PROJECTS_ROOT}/`
 - **Shell injection:** All paths quoted in shell commands; project names validated before interpolation
-- **Input validation:** oat-open-project rejects names with special characters; only alphanumeric, dash, underscore allowed
+- **Input validation:** oat-project-open rejects names with special characters; only alphanumeric, dash, underscore allowed
 
 ## Performance Considerations
 
@@ -489,8 +489,8 @@ Not needed - operations are local and deterministic.
 | FR2 | manual | Clear with active project set, clear with no active project |
 | FR3 | manual | Complete with review, complete without review, clear after complete |
 | FR4 | manual | Generate with all data, generate with missing active project, generate with missing knowledge |
-| FR5 | manual | Run oat-progress, verify dashboard updated |
-| FR6 | manual | Run oat-index, verify dashboard updated |
+| FR5 | manual | Run oat-project-progress, verify dashboard updated |
+| FR6 | manual | Run oat-project-index, verify dashboard updated |
 | FR7 | manual | Try invalid project path, try missing state.md |
 | NFR1 | perf | Time script execution with `time` command |
 | NFR2 | manual | Run script twice, diff outputs |
@@ -511,7 +511,7 @@ Manual integration testing:
 ### End-to-End Tests
 
 Manual E2E scenarios during dogfooding:
-- Start fresh repo, run oat-index, check dashboard
+- Start fresh repo, run oat-project-index, check dashboard
 - Create project, open it, verify pointer
 - Complete workflow, verify dashboard updates at each step
 
@@ -528,8 +528,8 @@ No build required - shell script and SKILL.md files are source.
 3. Create skill directories under .agent/skills/
 4. Add SKILL.md files
 5. Register skills in AGENTS.md
-6. Add dashboard hook to oat-progress
-7. Add dashboard hook to oat-index
+6. Add dashboard hook to oat-project-progress
+7. Add dashboard hook to oat-project-index
 
 ### Rollback Plan
 
@@ -547,12 +547,12 @@ Not applicable - local development tooling.
 
 ### Pointer Format (v1: Path-Compatible)
 
-**Current State:** Existing skills (oat-progress, oat-discovery, etc.) read `.oat/active-project` as a full path.
+**Current State:** Existing skills (oat-project-progress, oat-project-discover, etc.) read `.oat/active-project` as a full path.
 
 **v1 Strategy:** Write full paths for compatibility; read both formats for future-proofing.
 
 **v1 Behavior:**
-- `oat-open-project` writes: `{PROJECTS_ROOT}/{project-name}` (full path)
+- `oat-project-open` writes: `{PROJECTS_ROOT}/{project-name}` (full path)
 - Reading logic accepts: path (`a/b/project`) or name (`project`)
 - Existing skills continue to work unchanged
 
@@ -563,7 +563,7 @@ Not applicable - local development tooling.
 **Prerequisites:**
 1. Create shared "resolve active project" snippet
 2. Update all existing skills to use shared snippet
-3. Switch `oat-open-project` to write name-only
+3. Switch `oat-project-open` to write name-only
 
 **Deferred to:** Coordinated update after dogfooding validates the overall design.
 
@@ -573,7 +573,7 @@ If moving from `.agent/projects/` to `.oat/projects/shared/`:
 
 1. Create `.oat/projects-root` with new path
 2. Move project directories to new location
-3. Re-run `oat-open-project` to update pointer
+3. Re-run `oat-project-open` to update pointer
 
 **v1 Caveat (path-as-canonical):** Changing `PROJECTS_ROOT` can strand an old pointer until the user re-selects or clears it. The old path won't resolve to a valid directory. This is a tolerable footgun for dogfooding if documented—dashboard will show "state unknown" and prompt re-selection.
 
@@ -585,7 +585,7 @@ If moving from `.agent/projects/` to `.oat/projects/shared/`:
 
 ## Resolved Questions
 
-- **Completion semantics:** ~~Should oat-complete-project update state.md phase to "complete"?~~ **Resolved:** No. Introduced separate `oat_lifecycle` field to track project completion. Phase fields (`oat_phase`, `oat_phase_status`) track workflow progression only.
+- **Completion semantics:** ~~Should oat-project-complete update state.md phase to "complete"?~~ **Resolved:** No. Introduced separate `oat_lifecycle` field to track project completion. Phase fields (`oat_phase`, `oat_phase_status`) track workflow progression only.
 
 ## Implementation Phases
 
@@ -607,9 +607,9 @@ If moving from `.agent/projects/` to `.oat/projects/shared/`:
 **Goal:** Implement three skills for project lifecycle management.
 
 **Tasks:**
-- Create oat-open-project skill with validation
-- Create oat-clear-active-project skill
-- Create oat-complete-project skill with warnings
+- Create oat-project-open skill with validation
+- Create oat-project-clear-active skill
+- Create oat-project-complete skill with warnings
 - Register all skills in AGENTS.md
 - Test each skill manually
 
@@ -620,11 +620,11 @@ If moving from `.agent/projects/` to `.oat/projects/shared/`:
 **Goal:** Wire dashboard generation into existing skills.
 
 **Tasks:**
-- Modify oat-progress to call generate-oat-state.sh at end
-- Modify oat-index to call generate-oat-state.sh after completion
+- Modify oat-project-progress to call generate-oat-state.sh at end
+- Modify oat-project-index to call generate-oat-state.sh after completion
 - Test integration flows
 
-**Verification:** Dashboard auto-updates when running oat-progress or oat-index.
+**Verification:** Dashboard auto-updates when running oat-project-progress or oat-project-index.
 
 ## Dependencies
 
@@ -638,8 +638,8 @@ If moving from `.agent/projects/` to `.oat/projects/shared/`:
 - **.oat/active-project:** Existing mechanism (used as-is)
 - **{PROJECT_PATH}/state.md:** Existing project state (read-only)
 - **.oat/knowledge/repo/project-index.md:** Knowledge index (read-only)
-- **oat-progress skill:** Modified for integration
-- **oat-index skill:** Modified for integration
+- **oat-project-progress skill:** Modified for integration
+- **oat-project-index skill:** Modified for integration
 
 ### Development Dependencies
 

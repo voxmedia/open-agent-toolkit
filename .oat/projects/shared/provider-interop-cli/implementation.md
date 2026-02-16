@@ -1518,7 +1518,7 @@ oat_generated: false
 
 **Review cycle:** 2 of 3
 
-**Next:** Execute p04 review-fix tasks starting with `p04-t09` via `/oat:implement`.
+**Next:** Execute p04 review-fix tasks starting with `p04-t09` via `oat-project-implement`.
 
 ---
 
@@ -1586,7 +1586,7 @@ oat_generated: false
 
 **Review cycle:** 1 of 3
 
-**Next:** Run final code review (`/oat:request-review code final`), then process it via `/oat:receive-review`.
+**Next:** Run final code review (`oat-project-review-provide code final`), then process it via `oat-project-review-receive`.
 
 ---
 
@@ -1611,7 +1611,7 @@ oat_generated: false
 
 **Review cycle:** 1 of 3
 
-**Next:** Run final code review (`/oat:request-review code final`), then process it via `/oat:receive-review`.
+**Next:** Run final code review (`oat-project-review-provide code final`), then process it via `oat-project-review-receive`.
 
 ---
 
@@ -1644,7 +1644,7 @@ oat_generated: false
 
 **Review cycle:** 2 of 3
 
-**Next:** Final review passed. Proceed to PR creation via `/oat:pr-project`.
+**Next:** Final review passed. Proceed to PR creation via `oat-project-pr-final`.
 
 **Re-review artifact:** `reviews/final-re-review-2026-02-14.md`
 
@@ -1665,7 +1665,7 @@ oat_generated: false
 
 **New tasks added:** None
 
-**Next:** Final review gate is complete. Generate the project PR with `/oat:pr-project`.
+**Next:** Final review gate is complete. Generate the project PR with `oat-project-pr-final`.
 
 ---
 

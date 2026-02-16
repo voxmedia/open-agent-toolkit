@@ -21,7 +21,7 @@ This skill is a specialization of the general skill-creation workflow.
 ## When to Use
 
 Use when:
-- Adding a new `/oat:*` command
+- Adding a new `oat-*` workflow skill
 - Adding a new workflow phase or lifecycle action
 - Standardizing a “one-off” workflow into a reusable OAT skill
 
@@ -105,7 +105,7 @@ If `npx openskills sync -y` is available, it can be used. Otherwise, update `AGE
 ### Conversational
 
 ```
-We should add a new /oat command to archive completed projects. Create the skill with the standard OAT sections and progress banners.
+We should add a new OAT skill to archive completed projects. Create the skill with the standard OAT sections and progress banners.
 ```
 
 ## Success Criteria

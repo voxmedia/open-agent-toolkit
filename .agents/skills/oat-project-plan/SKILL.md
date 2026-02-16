@@ -1,5 +1,5 @@
 ---
-name: oat-plan
+name: oat-project-plan
 description: Create implementation plan from design with bite-sized TDD tasks
 disable-model-invocation: true
 user-invocable: true
@@ -12,7 +12,7 @@ Transform detailed design into an executable implementation plan with bite-sized
 
 ## Prerequisites
 
-**Required:** Complete design document. If missing, run `/oat:design` first.
+**Required:** Complete design document. If missing, run the `oat-project-design` skill first.
 
 ## Mode Assertion
 
@@ -54,7 +54,7 @@ If you catch yourself:
 - Writing actual implementation → STOP
 - Changing architecture decisions → STOP (send back to design)
 - Adding new features → STOP (flag for next cycle)
-- Needing implementation details that aren't covered by the design → STOP (ask the user whether to update the design, then re-run `/oat:plan`)
+- Needing implementation details that aren't covered by the design → STOP (ask the user whether to update the design, then re-run the `oat-project-plan` skill)
 
 **Recovery:**
 1. Acknowledge the deviation
@@ -93,7 +93,7 @@ cat "$PROJECT_PATH/design.md" | head -10 | grep "oat_status:"
 
 **Required frontmatter:**
 - `oat_status: complete`
-- `oat_ready_for: oat-plan`
+- `oat_ready_for: oat-project-plan`
 
 **If not complete:** Block and ask user to finish design first.
 
@@ -227,7 +227,7 @@ For each task, include:
 - Vague instructions ("update the file")
 - Missing verification steps
 - Bundled unrelated changes
-- Full implementation code (leave that for oat-implement)
+- Full implementation code (leave that for oat-project-implement)
 
 ### Step 9: Update Requirement Index
 
@@ -288,7 +288,7 @@ Update frontmatter:
 ```yaml
 ---
 oat_status: complete
-oat_ready_for: oat-implement
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: {today}
 ---
@@ -349,7 +349,7 @@ Phases:
 
 Total: {N} tasks
 
-Next: Start implementation with /oat:implement
+Next: Start implementation with the oat-project-implement skill
 ```
 
 ## Success Criteria

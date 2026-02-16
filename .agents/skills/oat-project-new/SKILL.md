@@ -1,5 +1,5 @@
 ---
-name: oat-new-project
+name: oat-project-new
 description: Create a new OAT project directory under {PROJECTS_ROOT}, scaffold artifacts from templates, and set it as the active project.
 argument-hint: "<project-name> [--force]"
 disable-model-invocation: true
@@ -58,7 +58,7 @@ Confirm to the user:
 - Repo State Dashboard refreshed: `.oat/state.md` (if enabled)
 
 Then explicitly instruct the user to run discovery next:
-- Next command: `/oat:discovery`
+- Next command: `oat-project-discover`
 
 ## Success Criteria
 
