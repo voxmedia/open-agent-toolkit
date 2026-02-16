@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-16
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 oat_template: false
 ---
@@ -61,11 +61,11 @@ Implement a lightweight OAT quick/import workflow that:
 |-------|--------|-------|-----------|
 | Phase 1 | complete | 3 | 3/3 |
 | Phase 2 | complete | 3 | 3/3 |
-| Phase 3 | pending | 3 | 0/3 |
+| Phase 3 | complete | 3 | 3/3 |
 | Phase 4 | pending | 2 | 0/2 |
 | Phase 5 | pending | 2 | 0/2 |
 
-**Total:** 6/13 tasks completed
+**Total:** 9/13 tasks completed
 
 ## Implementation Log
 
@@ -81,7 +81,10 @@ Implement a lightweight OAT quick/import workflow that:
 - [x] Completed `p02-t01`: added `oat-project-quick-start` skill contract.
 - [x] Completed `p02-t02`: added `oat-project-import-plan` skill contract.
 - [x] Completed `p02-t03`: added `oat-project-promote-full` skill contract.
-- [ ] Begin `p03-t01` implementation.
+- [x] Completed `p03-t01`: made `oat-project-progress` routing mode-aware (`full|quick|import`).
+- [x] Completed `p03-t02`: updated `.oat/scripts/generate-oat-state.sh` to use `oat-project-*` commands and mode-aware next-step routing.
+- [x] Completed `p03-t03`: updated review and PR skill contracts so quick/import projects can proceed without mandatory spec/design.
+- [ ] Begin `p04-t01` implementation.
 
 **Notes:**
 - User requested atomic commits and detailed implementation journaling.
@@ -94,6 +97,7 @@ Implement a lightweight OAT quick/import workflow that:
   - Import traceability fields (`oat_import_reference`, `oat_import_source_path`, `oat_import_provider`)
 - Added and registered 3 lifecycle extension skills in `AGENTS.md` and `docs/oat/skills/index.md`.
 - Verified skill contracts pass repository validation (`pnpm oat:validate-skills`).
+- Verified dashboard script syntax after mode-aware changes (`bash -n .oat/scripts/generate-oat-state.sh`).
 
 ## Final Summary (for PR/docs)
 
