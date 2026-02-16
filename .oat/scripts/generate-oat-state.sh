@@ -395,9 +395,9 @@ EOF
 - \`oat-project-new\` - Create a full-lifecycle project
 - \`oat-project-quick-start\` - Create a quick workflow project
 - \`oat-project-import-plan\` - Import an external provider plan
-- \`oat-project-open\` - Switch active project
-- \`oat-project-clear-active\` - Clear active project
-- \`oat-project-complete\` - Mark project complete
+- \`/oat-project-open\` - Switch active project
+- \`/oat-project-clear-active\` - Clear active project
+- \`/oat-project-complete\` - Mark project complete
 
 ## Available Projects
 
