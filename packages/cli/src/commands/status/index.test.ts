@@ -43,6 +43,7 @@ function createCanonicalEntry(name = 'skill-one'): CanonicalEntry {
     name,
     type: 'skill',
     canonicalPath: `/tmp/workspace/.agents/skills/${name}`,
+    isFile: false,
   };
 }
 

@@ -35,20 +35,31 @@ export async function copyDirectory(src: string, dest: string): Promise<void> {
   }
 }
 
+export async function copySingleFile(src: string, dest: string): Promise<void> {
+  await ensureDir(dirname(dest));
+  const content = await readFile(src);
+  await writeFile(dest, content);
+}
+
 export async function createSymlink(
   target: string,
   linkPath: string,
   onFallback?: (error: unknown) => void,
+  isFile?: boolean,
 ): Promise<LinkStrategy> {
   await ensureDir(dirname(linkPath));
 
   try {
-    await symlink(target, linkPath, 'dir');
+    await symlink(target, linkPath, isFile ? 'file' : 'dir');
     return 'symlink';
   } catch (error) {
     onFallback?.(error);
     await rm(linkPath, { recursive: true, force: true });
-    await copyDirectory(target, linkPath);
+    if (isFile) {
+      await copySingleFile(target, linkPath);
+    } else {
+      await copyDirectory(target, linkPath);
+    }
     return 'copy';
   }
 }

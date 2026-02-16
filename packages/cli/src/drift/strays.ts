@@ -108,7 +108,10 @@ export async function detectStrays(
   const entries = await readProviderEntries(resolvedProviderDir);
 
   for (const entry of entries) {
-    if (!entry.isDirectory() && !entry.isSymbolicLink()) {
+    if (!entry.isDirectory() && !entry.isSymbolicLink() && !entry.isFile()) {
+      continue;
+    }
+    if (entry.isFile() && !entry.name.endsWith('.md')) {
       continue;
     }
 

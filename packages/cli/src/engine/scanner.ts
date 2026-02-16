@@ -9,15 +9,29 @@ export interface CanonicalEntry {
   name: string;
   type: 'skill' | 'agent';
   canonicalPath: string;
+  isFile: boolean;
 }
 
-async function readDirectories(dirPath: string): Promise<string[]> {
+interface ScannedEntry {
+  name: string;
+  isFile: boolean;
+}
+
+async function readEntries(dirPath: string): Promise<ScannedEntry[]> {
   try {
     const entries = await readdir(dirPath, { withFileTypes: true });
-    return entries
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name)
-      .sort((left, right) => left.localeCompare(right));
+    const results: ScannedEntry[] = [];
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        results.push({ name: entry.name, isFile: false });
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        results.push({ name: entry.name, isFile: true });
+      }
+    }
+
+    results.sort((left, right) => left.name.localeCompare(right.name));
+    return results;
   } catch (error) {
     if (
       typeof error === 'object' &&
@@ -55,13 +69,14 @@ export async function scanCanonical(
       '.agents',
       contentType === 'skill' ? 'skills' : 'agents',
     );
-    const names = await readDirectories(contentDir);
+    const scanned = await readEntries(contentDir);
 
-    for (const name of names) {
+    for (const scannedEntry of scanned) {
       entries.push({
-        name,
+        name: scannedEntry.name,
         type: contentType,
-        canonicalPath: join(contentDir, name),
+        canonicalPath: join(contentDir, scannedEntry.name),
+        isFile: scannedEntry.isFile,
       });
     }
   }

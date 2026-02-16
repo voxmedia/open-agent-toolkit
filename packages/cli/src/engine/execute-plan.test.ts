@@ -34,6 +34,7 @@ function createCanonicalEntry(
       type === 'skill' ? 'skills' : 'agents',
       name,
     ),
+    isFile: false,
   };
 }
 

@@ -1,7 +1,7 @@
 import { rm } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
-import { copyDirectory, createSymlink } from '@fs/io';
-import { computeDirectoryHash } from '@manifest/hash';
+import { copyDirectory, copySingleFile, createSymlink } from '@fs/io';
+import { computeContentHash } from '@manifest/hash';
 import {
   addEntry,
   findEntry,
@@ -44,7 +44,10 @@ async function toManifestEntry(
   const { canonicalPath, providerPath } = resolveManifestPaths(entry);
   const contentHash =
     strategy === 'copy'
-      ? await computeDirectoryHash(resolve(entry.canonical.canonicalPath))
+      ? await computeContentHash(
+          resolve(entry.canonical.canonicalPath),
+          entry.canonical.isFile,
+        )
       : null;
 
   return {
@@ -98,6 +101,8 @@ async function applyEntry(
       const strategyUsed = await createSymlink(
         planEntry.canonical.canonicalPath,
         planEntry.providerPath,
+        undefined,
+        planEntry.canonical.isFile,
       );
       const manifestEntry = await toManifestEntry(planEntry, strategyUsed);
       return addEntry(manifest, manifestEntry);
@@ -107,11 +112,18 @@ async function applyEntry(
       if (planEntry.operation === 'update_copy') {
         await rm(planEntry.providerPath, { recursive: true, force: true });
       }
-      await copyDirectory(
-        planEntry.canonical.canonicalPath,
-        planEntry.providerPath,
-      );
-      await applyCopyMarker(planEntry);
+      if (planEntry.canonical.isFile) {
+        await copySingleFile(
+          planEntry.canonical.canonicalPath,
+          planEntry.providerPath,
+        );
+      } else {
+        await copyDirectory(
+          planEntry.canonical.canonicalPath,
+          planEntry.providerPath,
+        );
+        await applyCopyMarker(planEntry);
+      }
       const manifestEntry = await toManifestEntry(planEntry, 'copy');
       return addEntry(manifest, manifestEntry);
     }
