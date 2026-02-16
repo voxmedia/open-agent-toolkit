@@ -60,7 +60,7 @@ Facilitates AI-assisted software engineering through:
   skills/            OAT workflow skills
   projects/          Multi-session development projects
 .oat/                OAT-specific tooling and state
-  knowledge/repo/    Generated codebase analysis
+  repo/knowledge/    Generated codebase analysis
   projects/          Active OAT workflow projects
   scripts/           Automation scripts
   templates/         Artifact templates

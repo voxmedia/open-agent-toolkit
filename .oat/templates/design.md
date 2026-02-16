@@ -297,6 +297,6 @@ interface Response {
 ## References
 
 - Specification: `spec.md`
-- Knowledge Base: `.oat/knowledge/repo/project-index.md`
-- Architecture Docs: `.oat/knowledge/repo/architecture.md`
-- Conventions: `.oat/knowledge/repo/conventions.md`
+- Knowledge Base: `.oat/repo/knowledge/project-index.md`
+- Architecture Docs: `.oat/repo/knowledge/architecture.md`
+- Conventions: `.oat/repo/knowledge/conventions.md`

@@ -128,7 +128,7 @@ Implement a minimal design for setting and modifying the active project during t
 
 ## Reference Design
 
-Full design specification in: `.oat/internal-project-reference/temp/oat-project-state.md`
+Full design specification in: `.oat/repo/archive/temp/oat-project-state.md`
 
 ## Deliverables
 

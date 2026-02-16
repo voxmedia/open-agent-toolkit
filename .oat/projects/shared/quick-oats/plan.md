@@ -410,13 +410,13 @@ git commit -m "docs(p04-t01): document quick and import workflow paths"
 ### Task p04-t02: Update internal project reference artifacts for dogfood consistency
 
 **Files:**
-- Modify: `.oat/internal-project-reference/decision-record.md`
-- Modify: `.oat/internal-project-reference/roadmap.md`
-- Modify: `.oat/internal-project-reference/backlog.md`
+- Modify: `.oat/repo/reference/decision-record.md`
+- Modify: `.oat/repo/reference/roadmap.md`
+- Modify: `.oat/repo/reference/backlog.md`
 
 **Step 1: Write test (RED)**
 
-Run: `rg -n "quick mode|import plan|workflow mode|plan source" .oat/internal-project-reference`
+Run: `rg -n "quick mode|import plan|workflow mode|plan source" .oat/repo/reference`
 Expected: stale/partial references (RED)
 
 **Step 2: Implement (GREEN)**
@@ -429,13 +429,13 @@ Ensure ADR language uses final naming (`full|quick|import`, `full|quick|imported
 
 **Step 4: Verify**
 
-Run: `rg -n "oat_workflow_mode|oat_plan_source|imported" .oat/internal-project-reference`
+Run: `rg -n "oat_workflow_mode|oat_plan_source|imported" .oat/repo/reference`
 Expected: consistent decision records
 
 **Step 5: Commit**
 
 ```bash
-git add .oat/internal-project-reference/decision-record.md .oat/internal-project-reference/roadmap.md .oat/internal-project-reference/backlog.md
+git add .oat/repo/reference/decision-record.md .oat/repo/reference/roadmap.md .oat/repo/reference/backlog.md
 git commit -m "docs(p04-t02): record quick/import workflow decisions internally"
 ```
 

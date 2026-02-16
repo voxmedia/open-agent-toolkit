@@ -16,7 +16,10 @@
 
 - Templates: `.oat/templates/`
 - Utility scripts: `.oat/scripts/`
-- Internal reference docs: `.oat/internal-project-reference/`
+- Repo knowledge: `.oat/repo/knowledge/`
+- Repo reference docs: `.oat/repo/reference/`
+- Repo reviews: `.oat/repo/reviews/`
+- Repo archive: `.oat/repo/archive/`
 
 ## Project artifact trees
 

@@ -1,13 +1,13 @@
 # OAT Roadmap (Dogfood-First)
 
 This file is the canonical OAT roadmap for this repo. It combines:
-- the dogfood workflow direction (`.oat/internal-project-reference/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`)
-- the early "product" vision (interop + CLI) (`.oat/internal-project-reference/past-artifacts/agentic_development_framework_v_1_plan.md`)
+- the dogfood workflow direction (`.oat/repo/archive/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`)
+- the early "product" vision (interop + CLI) (`.oat/repo/archive/past-artifacts/agentic_development_framework_v_1_plan.md`)
 - the review/subagent direction (`.oat/projects/shared/workflow-research/analysis/subagents/refined-subagent-proposal.md`)
 
-For a birdseye snapshot of what exists *right now*, see `.oat/internal-project-reference/current-state.md`.
+For a birdseye snapshot of what exists *right now*, see `.oat/repo/reference/current-state.md`.
 
-For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/internal-project-reference/temp/workflow-user-feedback.md`.
+For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
 As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline has been exercised end-to-end. The next focus is shifting toward the original product direction: provider interop via a safe, diff-first CLI (`oat init/status/sync/doctor`), while keeping the Repo State Dashboard and workflow contracts in sync.
 
@@ -29,7 +29,7 @@ As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline h
 ## Current State (Implemented)
 
 Dogfood workflow baseline is implemented and has been exercised end-to-end:
-- Knowledge: `oat-project-index` + `.oat/knowledge/**` (thin->full project index, mapper outputs under `.oat/knowledge/repo/`)
+- Knowledge: `oat-project-index` + `.oat/repo/knowledge/**` (thin->full project index, mapper outputs under `.oat/repo/knowledge/`)
 - Projects:
   - `oat-project-new` scaffolds `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`
   - `.oat/projects-root` sets `{PROJECTS_ROOT}` (default: `.oat/projects/shared`)
@@ -43,6 +43,7 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - `oat-project-promote-full` (in-place promotion to full lifecycle)
 - Review + PR loop:
   - Review: `oat-project-review-provide`, `oat-project-review-receive` + `.agents/agents/oat-reviewer.md`
+  - Ad-hoc review (no project state required): `oat-review-provide`
   - PR: `oat-project-pr-progress`, `oat-project-pr-final`
 - Repo state dashboard:
   - `.oat/scripts/generate-oat-state.sh` generates `.oat/state.md` (gitignored) as a "single glance" dashboard

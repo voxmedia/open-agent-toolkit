@@ -91,20 +91,20 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ### Step 2: Check Knowledge Base Exists
 
 ```bash
-test -f .oat/knowledge/repo/project-index.md
+test -f .oat/repo/knowledge/project-index.md
 ```
 
 **If missing:** Block and require the `oat-project-index` skill first.
 
 ### Step 3: Check Knowledge Staleness
 
-Extract frontmatter values from `.oat/knowledge/repo/project-index.md`:
+Extract frontmatter values from `.oat/repo/knowledge/project-index.md`:
 
 ```bash
 # Extract SHAs and generation date from frontmatter
-SOURCE_HEAD_SHA=$(grep "^oat_source_head_sha:" .oat/knowledge/repo/project-index.md | awk '{print $2}')
-SOURCE_MERGE_BASE_SHA=$(grep "^oat_source_main_merge_base_sha:" .oat/knowledge/repo/project-index.md | awk '{print $2}')
-GENERATED_AT=$(grep "^oat_generated_at:" .oat/knowledge/repo/project-index.md | awk '{print $2}')
+SOURCE_HEAD_SHA=$(grep "^oat_source_head_sha:" .oat/repo/knowledge/project-index.md | awk '{print $2}')
+SOURCE_MERGE_BASE_SHA=$(grep "^oat_source_main_merge_base_sha:" .oat/repo/knowledge/project-index.md | awk '{print $2}')
+GENERATED_AT=$(grep "^oat_generated_at:" .oat/repo/knowledge/project-index.md | awk '{print $2}')
 
 # Get current state
 CURRENT_HEAD=$(git rev-parse HEAD)
@@ -187,10 +187,10 @@ Update with user's initial request.
 ### Step 6: Read Relevant Knowledge
 
 Read for context:
-- `.oat/knowledge/repo/project-index.md`
-- `.oat/knowledge/repo/architecture.md`
-- `.oat/knowledge/repo/conventions.md`
-- `.oat/knowledge/repo/concerns.md`
+- `.oat/repo/knowledge/project-index.md`
+- `.oat/repo/knowledge/architecture.md`
+- `.oat/repo/knowledge/conventions.md`
+- `.oat/repo/knowledge/concerns.md`
 
 ### Step 7: Infer Gray Areas
 

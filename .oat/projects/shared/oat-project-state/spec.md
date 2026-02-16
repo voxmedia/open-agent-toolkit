@@ -145,7 +145,7 @@ This project implements minimal project lifecycle management and a derived repo 
   - **Reading:** New code accepts both path and name formats (future-proof)
   - **Writing:** New skills write full path for backward compatibility
 - Existing `{PROJECT_PATH}/state.md` frontmatter structure (FR3 adds new `oat_lifecycle` field)
-- Existing `.oat/knowledge/repo/project-index.md` frontmatter structure
+- Existing `.oat/repo/knowledge/project-index.md` frontmatter structure
 - `.oat/projects-root` file (optional, for configurable projects location)
 - Git for diff stats calculation
 - `oat-project-progress` skill (for integration)
@@ -226,5 +226,5 @@ The three skills (`oat-project-open`, `oat-project-clear-active`, `oat-project-c
 ## References
 
 - Discovery: `discovery.md`
-- Reference Design: `.oat/internal-project-reference/temp/oat-project-state.md`
-- Knowledge Base: `.oat/knowledge/repo/project-index.md`
+- Reference Design: `.oat/repo/archive/temp/oat-project-state.md`
+- Knowledge Base: `.oat/repo/knowledge/project-index.md`

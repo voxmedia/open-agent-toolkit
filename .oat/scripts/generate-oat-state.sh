@@ -159,7 +159,7 @@ phase_in_hil_list() {
 # Read knowledge index status
 # Sets: KNOWLEDGE_GENERATED_AT, KNOWLEDGE_MERGE_BASE_SHA, KNOWLEDGE_STATUS
 read_knowledge_status() {
-  local index_file=".oat/knowledge/repo/project-index.md"
+  local index_file=".oat/repo/knowledge/project-index.md"
 
   KNOWLEDGE_GENERATED_AT=""
   KNOWLEDGE_MERGE_BASE_SHA=""

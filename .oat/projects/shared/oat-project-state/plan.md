@@ -309,7 +309,7 @@ git commit -m "feat(p01-t04): implement project state.md frontmatter parsing"
 # Read knowledge index status
 # Sets: KNOWLEDGE_GENERATED_AT, KNOWLEDGE_MERGE_BASE_SHA, KNOWLEDGE_STATUS
 read_knowledge_status() {
-  local index_file=".oat/knowledge/repo/project-index.md"
+  local index_file=".oat/repo/knowledge/project-index.md"
 
   KNOWLEDGE_GENERATED_AT=""
   KNOWLEDGE_MERGE_BASE_SHA=""
@@ -706,8 +706,8 @@ rm -rf /tmp/test-project
 # Missing knowledge index (with trap to ensure restore on failure/Ctrl-C)
 (
   bak="/tmp/project-index.md.bak"
-  trap 'test -f "$bak" && mv "$bak" .oat/knowledge/repo/project-index.md || true' EXIT
-  mv .oat/knowledge/repo/project-index.md "$bak" 2>/dev/null || true
+  trap 'test -f "$bak" && mv "$bak" .oat/repo/knowledge/project-index.md || true' EXIT
+  mv .oat/repo/knowledge/project-index.md "$bak" 2>/dev/null || true
   echo ".oat/projects/shared/oat-project-state" > .oat/active-project
   .oat/scripts/generate-oat-state.sh && echo "PASS: missing knowledge handled"
 )

@@ -40,7 +40,7 @@ Project skills are stored in `.agents/skills`.
 - `create-skill`
 - `create-pr-description`
 - `create-ticket`
-- `update-internal-project-reference`
+- `update-repo-reference`
 - `codex`
 
 ## Discovery source
@@ -51,4 +51,4 @@ Project skills are stored in `.agents/skills`.
 
 - `AGENTS.md`
 - `.agents/skills/*/SKILL.md`
-- `.oat/internal-project-reference/backlog.md` (naming and skill-family roadmap)
+- `.oat/repo/reference/backlog.md` (naming and skill-family roadmap)

@@ -4,7 +4,7 @@
 # Usage: ./generate-thin-index.sh [HEAD_SHA] [MERGE_BASE_SHA]
 #
 # If SHAs not provided, computes them from current git state.
-# Output: Writes .oat/knowledge/repo/project-index.md
+# Output: Writes .oat/repo/knowledge/project-index.md
 
 set -euo pipefail
 
@@ -137,10 +137,10 @@ else
 fi
 
 # Ensure output directory exists
-mkdir -p .oat/knowledge/repo
+mkdir -p .oat/repo/knowledge
 
 # Write the thin index
-cat > .oat/knowledge/repo/project-index.md <<EOF
+cat > .oat/repo/knowledge/project-index.md <<EOF
 ---
 oat_generated: true
 oat_generated_at: ${DATE}
@@ -194,7 +194,7 @@ EOF
 # Count non-empty lines for accurate entrypoint count
 ENTRYPOINT_COUNT=$(printf "%s\n" "$ENTRYPOINTS" | sed '/^$/d' | wc -l | tr -d ' ')
 
-echo "Generated .oat/knowledge/repo/project-index.md (thin index)"
+echo "Generated .oat/repo/knowledge/project-index.md (thin index)"
 echo "  Repo: ${REPO_NAME}"
 echo "  Package Manager: ${PKG_MANAGER}"
 echo "  Entry Points: ${ENTRYPOINT_COUNT} detected"

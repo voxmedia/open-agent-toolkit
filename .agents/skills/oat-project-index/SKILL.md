@@ -33,13 +33,13 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ```bash
 # Check for actual knowledge files (not just .gitkeep)
-EXISTING_MD=$(find .oat/knowledge/repo -name "*.md" -type f 2>/dev/null | head -1)
+EXISTING_MD=$(find .oat/repo/knowledge -name "*.md" -type f 2>/dev/null | head -1)
 ```
 
 **If `$EXISTING_MD` is non-empty (actual content exists):**
-- List current files: `ls -la .oat/knowledge/repo/*.md 2>/dev/null`
+- List current files: `ls -la .oat/repo/knowledge/*.md 2>/dev/null`
 - Ask: "Refresh (delete + regenerate) or Skip?"
-- If Refresh: `rm -rf .oat/knowledge/repo/*.md && mkdir -p .oat/knowledge/repo`
+- If Refresh: `rm -rf .oat/repo/knowledge/*.md && mkdir -p .oat/repo/knowledge`
 - If Skip: Exit
 
 **If `$EXISTING_MD` is empty (no content or only .gitkeep):**
@@ -48,7 +48,7 @@ EXISTING_MD=$(find .oat/knowledge/repo -name "*.md" -type f 2>/dev/null | head -
 ### Step 2: Create Knowledge Directory
 
 ```bash
-mkdir -p .oat/knowledge/repo
+mkdir -p .oat/repo/knowledge
 ```
 
 ### Step 3: Get Git SHAs for Frontmatter
@@ -74,7 +74,7 @@ bash .oat/scripts/generate-thin-index.sh "$HEAD_SHA" "$MERGE_BASE_SHA"
 This script:
 - Detects repo name from package.json or directory
 - Extracts package manager, scripts, entry points, and config files
-- Generates `.oat/knowledge/repo/project-index.md` with thin metadata
+- Generates `.oat/repo/knowledge/project-index.md` with thin metadata
 
 **Why thin first:**
 - Other skills can immediately load project-index.md for orientation
@@ -87,7 +87,7 @@ Test if the runtime allows Write tool in background agents.
 
 ```bash
 # Create test directory
-mkdir -p .oat/knowledge/.preflight
+mkdir -p .oat/repo/knowledge/.preflight
 ```
 
 Spawn a test agent to check Write permission:
@@ -101,7 +101,7 @@ prompt: |
   Test if Write tool works in background mode.
 
   Try to write a test file:
-  - File: .oat/knowledge/.preflight/test.txt
+  - File: .oat/repo/knowledge/.preflight/test.txt
   - Content: "test"
 
   If Write succeeds, return: "WRITE_OK"
@@ -110,10 +110,10 @@ prompt: |
 
 **Check result:**
 ```bash
-if [ -f .oat/knowledge/.preflight/test.txt ]; then
+if [ -f .oat/repo/knowledge/.preflight/test.txt ]; then
   echo "✓ Write works in background agents - using direct-write approach"
   WRITE_MODE="direct"
-  rm -rf .oat/knowledge/.preflight
+  rm -rf .oat/repo/knowledge/.preflight
 else
   echo "⚠ Write blocked in background agents - using read-only fallback"
   WRITE_MODE="readonly"
@@ -139,7 +139,7 @@ Use the approach determined by Step 4b pre-flight check.
 Use Task tool with `subagent_type="oat-codebase-mapper"` and `run_in_background=true`.
 
 **Approach:**
-- Mapper agents write documents directly to `.oat/knowledge/repo/` using the Write tool
+- Mapper agents write documents directly to `.oat/repo/knowledge/` using the Write tool
 - Each agent returns only a brief confirmation (not document contents)
 - This reduces context transfer and improves performance
 
@@ -174,7 +174,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project
 ---
 
 Instructions:
-- Write documents directly to `.oat/knowledge/repo/` using the Write tool
+- Write documents directly to `.oat/repo/knowledge/` using the Write tool
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
 - Use templates from .agents/skills/oat-project-index/references/templates/
 - Include frontmatter with both SHA fields in every document
@@ -212,7 +212,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project
 ---
 
 Instructions:
-- Write documents directly to `.oat/knowledge/repo/` using the Write tool
+- Write documents directly to `.oat/repo/knowledge/` using the Write tool
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
 - Use templates from .agents/skills/oat-project-index/references/templates/
 - Include frontmatter with both SHA fields in every document
@@ -250,7 +250,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project
 ---
 
 Instructions:
-- Write documents directly to `.oat/knowledge/repo/` using the Write tool
+- Write documents directly to `.oat/repo/knowledge/` using the Write tool
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
 - Use templates from .agents/skills/oat-project-index/references/templates/
 - Include frontmatter with both SHA fields in every document
@@ -287,7 +287,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project
 ---
 
 Instructions:
-- Write documents directly to `.oat/knowledge/repo/` using the Write tool
+- Write documents directly to `.oat/repo/knowledge/` using the Write tool
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
 - Use templates from .agents/skills/oat-project-index/references/templates/
 - Include frontmatter with both SHA fields in every document
@@ -482,7 +482,7 @@ Constraints:
 
 **If using Step 5a (direct write):**
 - Wait for all 4 mapper agents to complete
-- Each agent writes documents directly to `.oat/knowledge/repo/` and returns a brief confirmation
+- Each agent writes documents directly to `.oat/repo/knowledge/` and returns a brief confirmation
 - Expected confirmations should indicate which documents were written
 - Proceed to Step 7
 
@@ -534,7 +534,7 @@ for agent in agents:
                         matches = re.findall(alt_pattern, text, re.DOTALL)
 
                     for filename, markdown in matches:
-                        with open(f'.oat/knowledge/repo/{filename}', 'w') as out:
+                        with open(f'.oat/repo/knowledge/{filename}', 'w') as out:
                             out.write(markdown)
                         print(f"✓ Wrote {filename}")
 
@@ -546,8 +546,8 @@ This extracts markdown and writes all 7 knowledge files.
 ### Step 7: Verify All Documents Created
 
 ```bash
-ls -la .oat/knowledge/repo/
-wc -l .oat/knowledge/repo/*.md
+ls -la .oat/repo/knowledge/
+wc -l .oat/repo/knowledge/*.md
 ```
 
 **Checklist:**
@@ -570,7 +570,7 @@ Read all 7 knowledge files to extract key information:
 
 **Enrichment approach:**
 
-Read existing `.oat/knowledge/repo/project-index.md` (thin version from Step 4).
+Read existing `.oat/repo/knowledge/project-index.md` (thin version from Step 4).
 
 Replace placeholder sections with full details:
 
@@ -605,7 +605,7 @@ Update links at bottom to show files are available (not "pending"):
 ### Step 9: Verify Project Index
 
 ```bash
-cat .oat/knowledge/repo/project-index.md | head -50
+cat .oat/repo/knowledge/project-index.md | head -50
 ```
 
 Expected: Complete overview with frontmatter and links
@@ -613,7 +613,7 @@ Expected: Complete overview with frontmatter and links
 ### Step 10: Commit Knowledge Base
 
 ```bash
-git add .oat/knowledge/repo/
+git add .oat/repo/knowledge/
 git commit -m "docs: generate knowledge base
 
 - project-index.md - High-level codebase overview
@@ -631,7 +631,7 @@ Generated from commit: {MERGE_BASE_SHA}"
 ### Step 11: Output Summary
 
 ```
-Knowledge base generated in .oat/knowledge/repo/
+Knowledge base generated in .oat/repo/knowledge/
 
 Files created:
 - project-index.md ({N} lines) - High-level overview
@@ -662,7 +662,7 @@ This ensures the dashboard reflects fresh knowledge status immediately.
 
 ## Success Criteria
 
-- .oat/knowledge/repo/ directory with 8 files (7 analysis + 1 index)
+- .oat/repo/knowledge/ directory with 8 files (7 analysis + 1 index)
 - All files have frontmatter with both head_sha and merge_base_sha
 - Commit created with conventional format
 - User presented with clear summary and next steps

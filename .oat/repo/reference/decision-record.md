@@ -12,6 +12,7 @@ Track notable decisions made while evolving OAT in this repo, so future sessions
 | ADR-004 | 2026-01-31 | accepted | Defer active-project name-only migration until CLI owns project commands |
 | ADR-005 | 2026-02-14 | accepted | Use skill-first invocation language; treat `/oat:*` as optional host alias |
 | ADR-006 | 2026-02-16 | accepted | Add quick/import workflow lanes with canonical plan normalization and mode-aware routing |
+| ADR-007 | 2026-02-16 | accepted | Split project-scoped review from ad-hoc review and default non-project artifacts to local-only storage |
 
 ## Decisions
 
@@ -21,7 +22,7 @@ Track notable decisions made while evolving OAT in this repo, so future sessions
 - **Status:** accepted
 - **Drivers:** Avoid breaking existing skills that assume `.oat/active-project` contains a full path; keep dogfood v1 stable while we iterate on projects-root and multi-project workflows.
 - **Related:**
-  - `.oat/internal-project-reference/deferred-phases.md`
+  - `.oat/repo/reference/deferred-phases.md`
   - `.oat/projects-root`
 
 #### Context
@@ -68,8 +69,8 @@ For dogfood v1:
 - **Status:** accepted
 - **Drivers:** Reduce “silent work” confusion during dogfooding; make long-running skills feel alive; align with GSD-style UX without adding noise.
 - **Related:**
-  - `.oat/internal-project-reference/temp/workflow-user-feedback.md`
-  - `.oat/internal-project-reference/current-state.md`
+  - `.oat/repo/archive/workflow-user-feedback.md`
+  - `.oat/repo/reference/current-state.md`
 
 #### Decision
 
@@ -119,8 +120,8 @@ Add a `create-oat-skill` skill as a specialization of `create-skill`:
 - **Status:** accepted
 - **Drivers:** Avoid cross-skill coordination risk while we start the CLI; keep dogfood stable; let the CLI become the canonical interface for project creation/selection.
 - **Related:**
-  - `.oat/internal-project-reference/deferred-phases.md`
-  - `.oat/internal-project-reference/current-state.md`
+  - `.oat/repo/reference/deferred-phases.md`
+  - `.oat/repo/reference/current-state.md`
   - `.oat/scripts/generate-oat-state.sh` (already reads both formats)
 
 #### Decision
@@ -151,8 +152,8 @@ For dogfood v1 (until CLI project commands exist):
 - **Drivers:** Reduce cross-client confusion and workflow drift. Slash-style invocations (`/oat:*`) are not guaranteed across hosts, while skill names (`oat-*`) are the canonical workflow contract.
 - **Related:**
   - `.oat/templates/plan.md`
-  - `.oat/internal-project-reference/roadmap.md`
-  - `.oat/internal-project-reference/backlog.md`
+  - `.oat/repo/reference/roadmap.md`
+  - `.oat/repo/reference/backlog.md`
 
 #### Context
 
@@ -238,6 +239,53 @@ Adopt option 2:
 - Validate mode-aware behavior with dogfood projects.
 - Consider thin CLI wrappers for quick/import project bootstrap after contracts stabilize.
 - Keep optional provider-specific parsing enhancements deferred until demand warrants deeper normalization.
+
+---
+
+### ADR-007: Split project-scoped review from ad-hoc review and default non-project artifacts to local-only storage
+
+- **Date:** 2026-02-16
+- **Status:** accepted
+- **Drivers:** Avoid forcing project lifecycle assumptions on ad-hoc review requests; reduce accidental source-control churn for local-only review artifacts.
+- **Related:**
+  - `.agents/skills/oat-project-review-provide/SKILL.md`
+  - `.agents/skills/oat-review-provide/SKILL.md`
+  - `.agents/skills/oat-review-provide/scripts/resolve-review-output.sh`
+  - `docs/oat/workflow/reviews.md`
+
+#### Context
+
+`oat-project-review-provide` assumes active project state (`.oat/active-project` + project `state.md`) and writes artifacts into project-local `reviews/`. This is correct for lifecycle-managed work, but fails for users who want review of arbitrary commit ranges, staged/unstaged diffs, or pre-existing files outside a project flow.
+
+#### Options Considered
+
+1. Keep a single project-scoped review skill and attempt to infer fallback behavior when state is missing
+2. Split into project-scoped and ad-hoc review skills, with explicit routing and storage policy
+3. Force users to initialize/open a project before any review can run
+
+#### Decision
+
+Adopt option 2:
+- Keep `oat-project-review-provide` project-scoped and require valid project state.
+- Add `oat-review-provide` for ad-hoc/non-project review scopes.
+- For ad-hoc artifacts, default storage to local-only `.oat/projects/local/orphan-reviews/`.
+- If `.oat/repo/reviews/` already exists and is not gitignored, treat that as explicit tracked-storage intent.
+- Allow explicit override to tracked/custom destination or inline-only output.
+
+#### Consequences
+
+- Positive:
+  - Clearer contracts: project lifecycle review vs ad-hoc review are no longer conflated.
+  - Lower risk of unintentionally committing transient review artifacts.
+  - Better support for real-world review requests (branch range, staged/unstaged, explicit files).
+- Trade-offs:
+  - Additional skill to document and maintain.
+  - Review guidance must explicitly route users when project state is missing.
+
+#### Follow-ups
+
+- Add ad-hoc receive/intake flows (`oat-review-receive`, PR-comment ingestion) when ready.
+- Keep project review and ad-hoc review templates aligned on severity model and output shape.
 
 ## ADR Template
 

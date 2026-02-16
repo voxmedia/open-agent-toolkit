@@ -32,7 +32,7 @@ Parse from `$ARGUMENTS`:
 **Backlog document:**
 1. If `backlog-path` is provided, use it directly.
 2. Otherwise, search for common locations:
-   - `.oat/internal-project-reference/backlog.md`
+   - `.oat/repo/reference/backlog.md`
    - `backlog.md` in the repo root
    - `docs/backlog.md`
 3. If multiple candidates found, ask the user to pick.
@@ -41,7 +41,7 @@ Parse from `$ARGUMENTS`:
 **Roadmap document (optional):**
 1. If `--roadmap` is provided, use it directly.
 2. Otherwise, check for common locations:
-   - `.oat/internal-project-reference/roadmap.md`
+   - `.oat/repo/reference/roadmap.md`
    - `roadmap.md` in the repo root
    - `docs/roadmap.md`
 3. Ask the user if they want to include the roadmap in the review. If not found or declined, skip roadmap alignment analysis.
@@ -49,7 +49,7 @@ Parse from `$ARGUMENTS`:
 **Output path:**
 1. If `--output` is provided, use it directly.
 2. Otherwise, default to a `reviews/` directory alongside the backlog:
-   - If backlog is at `.oat/internal-project-reference/backlog.md`, output to `.oat/internal-project-reference/reviews/backlog-and-roadmap-review.md`
+   - If backlog is at `.oat/repo/reference/backlog.md`, output to `.oat/repo/reviews/backlog-and-roadmap-review.md`
    - Create the `reviews/` directory if it doesn't exist.
 
 ### Step 2: Read and Catalog Backlog Items

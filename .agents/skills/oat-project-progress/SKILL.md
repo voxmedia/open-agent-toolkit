@@ -34,7 +34,7 @@ Run `oat-project-progress` at any time to:
 ### Step 1: Check Knowledge Base Exists
 
 ```bash
-EXISTING_MD=$(find .oat/knowledge/repo -name "*.md" -type f 2>/dev/null | head -1)
+EXISTING_MD=$(find .oat/repo/knowledge -name "*.md" -type f 2>/dev/null | head -1)
 ```
 
 **If `$EXISTING_MD` is empty:**
@@ -47,11 +47,11 @@ Run the oat-project-index skill first to generate codebase analysis.
 
 ### Step 2: Check Knowledge Staleness
 
-Extract frontmatter from `.oat/knowledge/repo/project-index.md`:
+Extract frontmatter from `.oat/repo/knowledge/project-index.md`:
 
 ```bash
-SOURCE_MERGE_BASE_SHA=$(grep "^oat_source_main_merge_base_sha:" .oat/knowledge/repo/project-index.md | awk '{print $2}')
-GENERATED_AT=$(grep "^oat_generated_at:" .oat/knowledge/repo/project-index.md | awk '{print $2}')
+SOURCE_MERGE_BASE_SHA=$(grep "^oat_source_main_merge_base_sha:" .oat/repo/knowledge/project-index.md | awk '{print $2}')
+GENERATED_AT=$(grep "^oat_generated_at:" .oat/repo/knowledge/project-index.md | awk '{print $2}')
 ```
 
 **Calculate staleness:**

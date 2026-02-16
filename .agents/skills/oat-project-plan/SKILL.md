@@ -110,9 +110,9 @@ Read `"$PROJECT_PATH/design.md"` completely to understand:
 ### Step 3: Read Knowledge Base for Context
 
 Read for implementation context:
-- `.oat/knowledge/repo/conventions.md` - Code patterns to follow
-- `.oat/knowledge/repo/testing.md` - Testing patterns
-- `.oat/knowledge/repo/stack.md` - Available tools and dependencies
+- `.oat/repo/knowledge/conventions.md` - Code patterns to follow
+- `.oat/repo/knowledge/testing.md` - Testing patterns
+- `.oat/repo/knowledge/stack.md` - Available tools and dependencies
 
 ### Step 4: Initialize Plan Document
 

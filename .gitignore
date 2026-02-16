@@ -51,6 +51,9 @@ yarn-error.log*
 !.oat/projects/local/.gitkeep
 !.oat/projects/archived/.gitkeep
 
+# OAT repo archive (local historical scratch only)
+.oat/repo/archive/**
+
 # Ignore provider-managed local symlink views
 .claude/skills/**
 .claude/commands/**

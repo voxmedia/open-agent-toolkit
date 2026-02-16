@@ -7,7 +7,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 - Add new items to **Inbox** as you notice them.
 - Promote items from **Inbox** → **Planned** once there’s clear scope/acceptance criteria.
 - When an item is ready to implement, create (or link) an OAT project and move it to **In Progress**.
-- Close items by moving to **Done** (or **Deferred**) with a short rationale.
+- Close items by moving to **Completed Archive** (or **Deferred**) with a short rationale.
 
 ## Conventions
 
@@ -80,10 +80,9 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Source discussion: OAT feature ideas (agent context management)
   - Created: 2026-02-14
 
-- [ ] **(P1) [skills] Add review provide/receive workflow skill family**
+- [ ] **(P1) [skills] Complete review receive + PR-review intake skill family**
   - Target milestone/phase: Workflow expansion after current docs stabilization
   - Notes:
-    - Add `oat-review-provide` for structured code/diff reviews (non-mutating).
     - Add `oat-review-receive` for converting review feedback into actionable plan/fix tasks (non-mutating).
     - Add `oat-review-pr-receive` to ingest GitHub PR review comments and produce task lists.
     - Preserve explicit separation: review ingestion does not apply fixes; implementation skill performs fixes.
@@ -247,7 +246,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Notes:
     - Move thin index generation from `.oat/scripts/generate-thin-index.sh` into `packages/cli/` (e.g., `oat index --thin` or `oat index init`).
     - Currently called by `oat-project-index` skill (Step 4) with HEAD_SHA and MERGE_BASE_SHA args.
-    - Generates `.oat/knowledge/repo/project-index.md` with repo structure, entry points, config files, and test commands.
+    - Generates `.oat/repo/knowledge/project-index.md` with repo structure, entry points, config files, and test commands.
     - Shell script uses find/grep/awk — rewrite in TypeScript for consistency, testability, and cross-platform support.
     - Update `oat-project-index` skill to call CLI command.
   - Success criteria:
@@ -263,8 +262,8 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Target milestone/phase: Post OAT CLI consolidation
   - Notes:
     - Once all four scripts are migrated to the CLI, remove the `.oat/scripts/` directory entirely.
-    - Update any remaining references in docs, templates, or internal-project-reference files.
-    - Update `.oat/internal-project-reference/current-state.md` to reference CLI commands instead of scripts.
+    - Update any remaining references in docs, templates, or repo reference files.
+    - Update `.oat/repo/reference/current-state.md` to reference CLI commands instead of scripts.
   - Success criteria:
     - `.oat/scripts/` directory deleted.
     - No remaining references to `.oat/scripts/` in the codebase.
@@ -285,79 +284,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Why deferred:
   - Revisit trigger:
 
-## Done
+## Completed Archive
 
-- [x] **(P?) [area] {Title}**
-  - Outcome:
-  - Links:
-
-- [x] **(P1) [workflow] Add quick/import project lanes with canonical plan normalization**
-  - Outcome:
-    - Added lifecycle entry skills:
-      - `oat-project-quick-start`
-      - `oat-project-import-plan`
-      - `oat-project-promote-full`
-    - Added mode/provenance metadata contracts:
-      - `.oat/templates/state.md`: `oat_workflow_mode`, `oat_workflow_origin`
-      - `.oat/templates/plan.md`: `oat_plan_source`, import traceability fields
-    - Made routing and downstream workflows mode-aware:
-      - `oat-project-progress`
-      - `oat-project-review-provide`
-      - `oat-project-pr-progress`
-      - `oat-project-pr-final`
-      - `.oat/scripts/generate-oat-state.sh`
-  - Links:
-    - Project: `.oat/projects/shared/quick-oats/`
-    - Plan: `.oat/projects/shared/quick-oats/plan.md`
-  - Created: 2026-02-16
-  - Completed: 2026-02-16
-
-- [x] **(P1) [skills] Normalize skill naming to namespace model (`oat-<domain>-<action>`)**
-  - Outcome:
-    - Adopted naming pattern: `oat-<domain>-<action>` for external-facing skills; internal-only skills kept unprefixed.
-    - Final mappings applied:
-      - `oat-new-project` -> `oat-project-new`
-      - `oat-open-project` -> `oat-project-open`
-      - `oat-clear-active-project` -> `oat-project-clear-active`
-      - `oat-complete-project` -> `oat-project-complete`
-      - `oat-discovery` -> `oat-project-discover`
-      - `oat-spec` -> `oat-project-spec`
-      - `oat-design` -> `oat-project-design`
-      - `oat-plan` -> `oat-project-plan`
-      - `oat-implement` -> `oat-project-implement`
-      - `oat-progress` -> `oat-project-progress`
-      - `oat-index` -> `oat-project-index`
-      - `oat-pr-progress` -> `oat-project-pr-progress`
-      - `oat-pr-project` -> `oat-project-pr-final`
-      - `oat-request-review` -> `oat-project-review-provide`
-      - `oat-receive-review` -> `oat-project-review-receive`
-    - All skill directories, SKILL.md frontmatter, AGENTS.md registrations, and cross-references in templates updated.
-    - All `/oat:` slash-command references in internal-project-reference and project artifacts replaced with skill-first names.
-  - Links:
-    - Source discussion: OAT feature ideas (naming philosophy + domain model)
-    - Plan: `.oat/internal-project-reference/external-plans/skill-rename-slash-cleanup.md`
-  - Created: 2026-02-14
-  - Completed: 2026-02-15
-
-- [x] **(P1) [skills] Standardize OAT invocation language to skill-first across templates/docs**
-  - Outcome:
-    - All `/oat:` slash-command references in `.oat/internal-project-reference/` and `.oat/projects/shared/` replaced with skill-first names (no slash prefix).
-    - Templates, skill SKILL.md files, and project artifacts now use canonical skill names as primary references.
-    - Completed as part of the naming normalization rename pass.
-  - Links:
-    - Source discussion: invocation compatibility for Codex vs slash-enabled hosts
-    - Plan: `.oat/internal-project-reference/external-plans/skill-rename-slash-cleanup.md`
-  - Created: 2026-02-14
-  - Completed: 2026-02-15
-
-- [x] **(P2) [workflow] Visual progress indicators during workflow execution**
-  - Outcome:
-    - Standardized user-facing progress indicator guidance across `oat-*` skills:
-      - prominent separator banners (`OAT ▸ …`)
-      - short step indicators (2–5 lines)
-      - “starting/done” updates for long-running work
-  - Links:
-    - Workflow feedback: `.oat/internal-project-reference/temp/workflow-user-feedback.md`
-    - Commits: `d39876d`, `57de516`, `a22c107`, `bca8167`, `13de18f`, `bdc9a76`
-  - Created: 2026-01-30
-  - Completed: 2026-01-31
+- Completed backlog items live in `.oat/repo/reference/backlog-completed.md`.
+- Keep this file focused on actionable work only: **Inbox**, **Planned**, **In Progress**, and **Deferred**.

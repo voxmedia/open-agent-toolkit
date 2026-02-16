@@ -128,4 +128,4 @@ Specification is for requirements and acceptance criteria, not design/implementa
 ## References
 
 - Discovery: `discovery.md`
-- Knowledge Base: `.oat/knowledge/repo/project-index.md`
+- Knowledge Base: `.oat/repo/knowledge/project-index.md`

@@ -127,11 +127,11 @@ bash .agents/skills/oat-review-provide/scripts/resolve-review-output.sh --mode a
 ```
 
 Policy:
-- If `.oat/reviews` exists and is not gitignored, assume user wants tracked artifacts there.
+- If `.oat/repo/reviews` exists and is not gitignored, assume user wants tracked artifacts there.
 - Otherwise default to local-only `.oat/projects/local/orphan-reviews`.
 - If user preference is unclear, ask and recommend local-only.
 
-If user asks for tracked `.oat/reviews` and it is gitignored, warn and ask whether to:
+If user asks for tracked `.oat/repo/reviews` and it is gitignored, warn and ask whether to:
 - choose a different tracked destination, or
 - use local-only/inline.
 
@@ -165,7 +165,7 @@ Template source of truth:
 
 ### Step 6: Commit Bookkeeping (Tracked Destinations Only)
 
-If artifact is in tracked storage (e.g., `.oat/reviews`), ask whether to commit bookkeeping.
+If artifact is in tracked storage (e.g., `.oat/repo/reviews`), ask whether to commit bookkeeping.
 
 Suggested commit (when approved):
 
