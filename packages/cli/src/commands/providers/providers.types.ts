@@ -9,8 +9,6 @@ import type {
   SyncStrategy,
 } from '@shared/types';
 
-export type { ConcreteScope } from '@shared/types';
-
 export interface ProviderListSummary {
   managed: number;
   inSync: number;

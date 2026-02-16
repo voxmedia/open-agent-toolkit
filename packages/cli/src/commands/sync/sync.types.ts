@@ -5,8 +5,6 @@ import type { Manifest } from '@manifest/index';
 import type { ProviderAdapter } from '@providers/shared';
 import type { ConcreteScope, Scope } from '@shared/types';
 
-export type { ConcreteScope } from '@shared/types';
-
 export interface ScopeSyncPlan {
   scope: ConcreteScope;
   scopeRoot: string;
