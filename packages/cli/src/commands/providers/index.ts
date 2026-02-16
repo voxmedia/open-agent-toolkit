@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { createProvidersInspectCommand } from './inspect';
-import { createProvidersListCommand } from './list';
+import { createProvidersInspectCommand } from './inspect/inspect';
+import { createProvidersListCommand } from './list/list';
 import type {
   ProvidersInspectDependencies,
   ProvidersListDependencies,

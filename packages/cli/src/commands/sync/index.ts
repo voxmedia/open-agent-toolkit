@@ -1,19 +1,19 @@
 import { join } from 'node:path';
-import { Command } from 'commander';
+import { buildCommandContext, type CommandContext } from '@app/command-context';
 import {
-  buildCommandContext,
-  type CommandContext,
-} from '../../app/command-context';
-import { DEFAULT_SYNC_CONFIG, loadSyncConfig } from '../../config';
-import { computeSyncPlan, executeSyncPlan, scanCanonical } from '../../engine';
-import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
-import { loadManifest } from '../../manifest';
-import { claudeAdapter } from '../../providers/claude';
-import { codexAdapter } from '../../providers/codex';
-import { cursorAdapter } from '../../providers/cursor';
-import { getActiveAdapters } from '../../providers/shared';
-import { formatSyncPlan } from '../../ui/output';
-import { readGlobalOptions, resolveConcreteScopes } from '../shared';
+  readGlobalOptions,
+  resolveConcreteScopes,
+} from '@commands/shared/shared.utils';
+import { DEFAULT_SYNC_CONFIG, loadSyncConfig } from '@config/index';
+import { computeSyncPlan, executeSyncPlan, scanCanonical } from '@engine/index';
+import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import { loadManifest } from '@manifest/index';
+import { claudeAdapter } from '@providers/claude';
+import { codexAdapter } from '@providers/codex';
+import { cursorAdapter } from '@providers/cursor';
+import { getActiveAdapters } from '@providers/shared';
+import { formatSyncPlan } from '@ui/output';
+import { Command } from 'commander';
 import { runSyncApply } from './apply';
 import { runSyncDryRun } from './dry-run';
 import type { ScopeSyncPlan, SyncCommandDependencies } from './sync.types';

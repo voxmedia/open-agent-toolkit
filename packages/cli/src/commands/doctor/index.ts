@@ -1,20 +1,23 @@
 import { access, mkdtemp, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Command } from 'commander';
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
-} from '../../app/command-context';
-import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
-import { loadManifest, type Manifest } from '../../manifest';
-import { claudeAdapter } from '../../providers/claude';
-import { codexAdapter } from '../../providers/codex';
-import { cursorAdapter } from '../../providers/cursor';
-import type { ConcreteScope } from '../../shared/types';
-import { type DoctorCheck, formatDoctorResults } from '../../ui/output';
-import { readGlobalOptions, resolveConcreteScopes } from '../shared';
+} from '@app/command-context';
+import {
+  readGlobalOptions,
+  resolveConcreteScopes,
+} from '@commands/shared/shared.utils';
+import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import { loadManifest, type Manifest } from '@manifest/index';
+import { claudeAdapter } from '@providers/claude';
+import { codexAdapter } from '@providers/codex';
+import { cursorAdapter } from '@providers/cursor';
+import type { ConcreteScope } from '@shared/types';
+import { type DoctorCheck, formatDoctorResults } from '@ui/output';
+import { Command } from 'commander';
 
 interface DoctorDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;

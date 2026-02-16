@@ -1,4 +1,4 @@
-import type { Scope } from '../shared/types';
+import type { Scope } from '@shared/types';
 import type { CanonicalEntry } from './scanner';
 
 export type EngineScope = Exclude<Scope, 'all'>;

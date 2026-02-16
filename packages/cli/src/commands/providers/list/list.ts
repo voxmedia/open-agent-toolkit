@@ -1,23 +1,23 @@
 import { join } from 'node:path';
-import { Command } from 'commander';
-import {
-  buildCommandContext,
-  type CommandContext,
-} from '../../app/command-context';
-import { detectDrift } from '../../drift';
-import { resolveProjectRoot, resolveScopeRoot } from '../../fs/paths';
-import { loadManifest } from '../../manifest';
-import { claudeAdapter } from '../../providers/claude';
-import { codexAdapter } from '../../providers/codex';
-import { cursorAdapter } from '../../providers/cursor';
-import { getSyncMappings } from '../../providers/shared';
-import type { ContentType } from '../../shared/types';
-import { readGlobalOptions, resolveConcreteScopes } from '../shared';
+import { buildCommandContext, type CommandContext } from '@app/command-context';
 import type {
   ProviderListItem,
   ProviderListSummary,
   ProvidersListDependencies,
-} from './providers.types';
+} from '@commands/providers/providers.types';
+import {
+  readGlobalOptions,
+  resolveConcreteScopes,
+} from '@commands/shared/shared.utils';
+import { detectDrift } from '@drift/index';
+import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import { loadManifest } from '@manifest/index';
+import { claudeAdapter } from '@providers/claude';
+import { codexAdapter } from '@providers/codex';
+import { cursorAdapter } from '@providers/cursor';
+import { getSyncMappings } from '@providers/shared';
+import type { ContentType } from '@shared/types';
+import { Command } from 'commander';
 
 function formatSummary(item: ProviderListItem): string {
   const contentTypes =

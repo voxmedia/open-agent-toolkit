@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
+import { CliError } from '@errors/index';
+import { SyncStrategySchema } from '@shared/types';
 import { z } from 'zod';
-import { CliError } from '../errors';
-import { SyncStrategySchema } from '../shared/types';
 
 const ProviderConfigSchema = z.object({
   strategy: SyncStrategySchema.optional(),

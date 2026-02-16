@@ -1,12 +1,12 @@
+import { CliError } from '@errors/index';
 import { checkbox, confirm, input, select } from '@inquirer/prompts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CliError } from '../errors';
 import {
   confirmAction,
   inputRequired,
   selectManyWithAbort,
   selectWithAbort,
-} from './prompts';
+} from './shared.prompts';
 
 vi.mock('@inquirer/prompts', () => ({
   checkbox: vi.fn(),

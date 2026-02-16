@@ -1,30 +1,32 @@
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import {
+  createLoggerCapture,
+  type LoggerCapture,
+} from '@commands/__tests__/helpers';
+import { createProvidersCommand } from '@commands/providers/index';
+import type { Manifest, ManifestEntry } from '@manifest/index';
+import type { ProviderAdapter } from '@providers/shared';
+import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CommandContext, GlobalOptions } from '../../app/command-context';
-import type { Manifest, ManifestEntry } from '../../manifest';
-import type { ProviderAdapter } from '../../providers/shared';
-import type { Scope } from '../../shared/types';
-import { createLoggerCapture, type LoggerCapture } from '../__tests__/helpers';
-import { createProvidersInspectCommand } from './inspect';
 
 interface HarnessOptions {
   adapters?: ProviderAdapter[];
-  driftStateByProviderPath?: Record<string, 'in_sync' | 'drifted' | 'missing'>;
+  driftStateByProvider?: Record<string, 'in_sync' | 'drifted' | 'missing'>;
 }
 
-interface RunInspectArgs {
-  provider: string;
+interface RunProvidersArgs {
   globalArgs?: string[];
 }
 
 function createAdapter(
   name: string,
+  displayName: string,
   detected: boolean,
-  version: string | null,
 ): ProviderAdapter {
   return {
     name,
-    displayName: name === 'claude' ? 'Claude Code' : name,
+    displayName,
     defaultStrategy: 'symlink',
     projectMappings: [
       {
@@ -43,7 +45,6 @@ function createAdapter(
       },
     ],
     detect: async () => detected,
-    detectVersion: async () => version,
   };
 }
 
@@ -75,17 +76,17 @@ function createHarness(options: HarnessOptions = {}): {
 } {
   const capture = createLoggerCapture();
   const adapters = options.adapters ?? [
-    createAdapter('claude', true, '1.2.3'),
-    createAdapter('cursor', false, null),
+    createAdapter('claude', 'Claude Code', true),
+    createAdapter('cursor', 'Cursor', false),
   ];
-  const driftStateByProviderPath = options.driftStateByProviderPath ?? {
-    '.claude/skills/skill-one': 'in_sync',
-    '.claude/skills/skill-two': 'drifted',
+  const driftStateByProvider = options.driftStateByProvider ?? {
+    claude: 'in_sync',
+    cursor: 'missing',
   };
   const resolveScopeRoot = vi.fn(async (scope: 'project' | 'user') => {
     return scope === 'project' ? '/tmp/workspace' : '/tmp/home';
   });
-  const command = createProvidersInspectCommand({
+  const command = createProvidersCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
       apply: false,
@@ -98,23 +99,21 @@ function createHarness(options: HarnessOptions = {}): {
     }),
     resolveScopeRoot,
     getAdapters: () => adapters,
-    getSyncMappings: vi.fn((adapter: ProviderAdapter, scope: Scope) => {
-      return scope === 'project'
-        ? adapter.projectMappings
-        : adapter.userMappings;
-    }),
+    getSyncMappings: vi.fn((adapter: ProviderAdapter, scope: Scope) =>
+      scope === 'user' ? adapter.userMappings : adapter.projectMappings,
+    ),
     loadManifest: vi.fn(async (manifestPath: string) => {
       if (manifestPath.startsWith('/tmp/home')) {
         return createManifest([]);
       }
       return createManifest([
         createEntry('claude', 'skill-one'),
-        createEntry('claude', 'skill-two'),
+        createEntry('cursor', 'skill-two'),
       ]);
     }),
     detectDrift: vi.fn(async (entry: ManifestEntry) => {
-      const state = driftStateByProviderPath[entry.providerPath] ?? 'in_sync';
-      if (state === 'drifted') {
+      const status = driftStateByProvider[entry.provider] ?? 'in_sync';
+      if (status === 'drifted') {
         return {
           canonical: entry.canonicalPath,
           provider: entry.provider,
@@ -126,7 +125,7 @@ function createHarness(options: HarnessOptions = {}): {
         canonical: entry.canonicalPath,
         provider: entry.provider,
         providerPath: entry.providerPath,
-        state: { status: state },
+        state: { status },
       };
     }),
   });
@@ -134,9 +133,9 @@ function createHarness(options: HarnessOptions = {}): {
   return { capture, command, resolveScopeRoot };
 }
 
-async function runInspectCommand(
+async function runProvidersList(
   command: Command,
-  { provider, globalArgs = [] }: RunInspectArgs,
+  { globalArgs = [] }: RunProvidersArgs = {},
 ): Promise<void> {
   const program = new Command()
     .name('oat')
@@ -147,12 +146,12 @@ async function runInspectCommand(
     .exitOverride();
 
   program.addCommand(command);
-  await program.parseAsync([...globalArgs, 'inspect', provider], {
+  await program.parseAsync([...globalArgs, 'providers', 'list'], {
     from: 'user',
   });
 }
 
-describe('oat providers inspect', () => {
+describe('oat providers list', () => {
   let originalExitCode: number | undefined;
 
   beforeEach(() => {
@@ -164,81 +163,70 @@ describe('oat providers inspect', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('shows detailed provider info with path mappings', async () => {
+  it('lists all registered adapters with detection status', async () => {
     const { command, capture } = createHarness();
 
-    await runInspectCommand(command, { provider: 'claude' });
+    await runProvidersList(command, { globalArgs: ['--scope', 'project'] });
 
-    expect(capture.info[0]).toContain('Claude Code');
-    expect(capture.info[0]).toContain('.claude/skills');
-    expect(capture.info[0]).not.toContain('Project mappings: none');
-    expect(capture.info[0]).not.toContain('User mappings: none');
+    expect(capture.info[0]).toContain('claude');
+    expect(capture.info[0]).toContain('cursor');
+    expect(capture.info[0]).toContain('detected');
+    expect(capture.info[0]).toContain('not detected');
   });
 
-  it('shows per-mapping sync state', async () => {
+  it('shows sync status summary per provider', async () => {
     const { command, capture } = createHarness({
-      driftStateByProviderPath: {
-        '.claude/skills/skill-one': 'missing',
-        '.claude/skills/skill-two': 'drifted',
+      driftStateByProvider: {
+        claude: 'drifted',
+        cursor: 'missing',
       },
     });
 
-    await runInspectCommand(command, { provider: 'claude' });
+    await runProvidersList(command, { globalArgs: ['--scope', 'project'] });
 
-    expect(capture.info[0]).toContain('managed=2');
+    expect(capture.info[0]).toContain('managed=1');
     expect(capture.info[0]).toContain('drifted=1');
     expect(capture.info[0]).toContain('missing=1');
   });
 
-  it('shows CLI version when available', async () => {
+  it('shows default strategy and content types per provider', async () => {
     const { command, capture } = createHarness();
 
-    await runInspectCommand(command, { provider: 'claude' });
+    await runProvidersList(command, { globalArgs: ['--scope', 'project'] });
 
-    expect(capture.info[0]).toContain('Version: 1.2.3');
+    expect(capture.info[0]).toContain('strategy=symlink');
+    expect(capture.info[0]).toContain('content_types=skill');
   });
 
-  it('exits 1 when provider name not found', async () => {
+  it('outputs JSON array when --json flag set', async () => {
     const { command, capture } = createHarness();
 
-    await runInspectCommand(command, { provider: 'unknown-provider' });
-
-    expect(process.exitCode).toBe(1);
-    expect(capture.error[0]).toContain('not found');
-  });
-
-  it('resolves provider name case-insensitively', async () => {
-    const { command, capture } = createHarness();
-
-    await runInspectCommand(command, { provider: 'ClAuDe' });
-
-    expect(process.exitCode).toBe(0);
-    expect(capture.info[0]).toContain('Claude Code');
-  });
-
-  it('outputs JSON when --json set', async () => {
-    const { command, capture } = createHarness();
-
-    await runInspectCommand(command, {
-      provider: 'claude',
-      globalArgs: ['--json'],
+    await runProvidersList(command, {
+      globalArgs: ['--scope', 'project', '--json'],
     });
 
-    expect(capture.info).toHaveLength(0);
     expect(capture.jsonPayloads).toHaveLength(1);
-    expect(capture.jsonPayloads[0]).toMatchObject({
-      name: 'claude',
-      version: '1.2.3',
-    });
+    expect(capture.info).toHaveLength(0);
+    expect(capture.jsonPayloads[0]).toMatchObject([
+      {
+        name: 'claude',
+        detected: true,
+        defaultStrategy: 'symlink',
+        contentTypes: ['skill'],
+      },
+      {
+        name: 'cursor',
+        detected: false,
+        defaultStrategy: 'symlink',
+        contentTypes: ['skill'],
+      },
+    ]);
   });
 
   it('supports --scope flag', async () => {
     const { command, resolveScopeRoot } = createHarness();
 
-    await runInspectCommand(command, {
-      provider: 'claude',
-      globalArgs: ['--scope', 'user'],
-    });
+    await runProvidersList(command, { globalArgs: ['--scope', 'user'] });
 
     expect(resolveScopeRoot).toHaveBeenCalledTimes(1);
     expect(resolveScopeRoot).toHaveBeenCalledWith(

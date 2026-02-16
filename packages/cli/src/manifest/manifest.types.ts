@@ -1,5 +1,5 @@
+import { ContentTypeSchema } from '@shared/types';
 import { z } from 'zod';
-import { ContentTypeSchema } from '../shared/types';
 
 const RelativePathSchema = z
   .string()

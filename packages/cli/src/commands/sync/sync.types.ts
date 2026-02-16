@@ -1,11 +1,11 @@
-import type { CommandContext, GlobalOptions } from '../../app/command-context';
-import type { SyncConfig } from '../../config';
-import type { CanonicalEntry, SyncPlan, SyncResult } from '../../engine';
-import type { Manifest } from '../../manifest';
-import type { ProviderAdapter } from '../../providers/shared';
-import type { ConcreteScope, Scope } from '../../shared/types';
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import type { SyncConfig } from '@config/index';
+import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
+import type { Manifest } from '@manifest/index';
+import type { ProviderAdapter } from '@providers/shared';
+import type { ConcreteScope, Scope } from '@shared/types';
 
-export type { ConcreteScope } from '../../shared/types';
+export type { ConcreteScope } from '@shared/types';
 
 export interface ScopeSyncPlan {
   scope: ConcreteScope;

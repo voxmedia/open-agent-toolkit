@@ -8,12 +8,12 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createProgram } from '@app/create-program';
+import { registerCommands } from '@commands/index';
+import type { SyncConfig } from '@config/index';
 import { checkbox, confirm } from '@inquirer/prompts';
+import type { Manifest } from '@manifest/index';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createProgram } from '../app/create-program';
-import { registerCommands } from '../commands';
-import type { SyncConfig } from '../config';
-import type { Manifest } from '../manifest';
 
 vi.mock('@inquirer/prompts', () => ({
   checkbox: vi.fn(async () => []),

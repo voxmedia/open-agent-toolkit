@@ -26,9 +26,42 @@ These principles apply to `packages/cli/src/**`:
 
 - If a command needs dedicated prompts/types/utils, use a command directory (`commands/<name>/`).
 - Keep single-file commands only for trivial read-only behavior.
-- Keep command-specific prompts in the command module; reserve `shared/prompts.ts` for reusable primitives.
+- Prefer named command files for findability (`sync.ts`, `sync.test.ts`, `list.ts`, `list.test.ts`) over generic `index.ts`/`index.test.ts`.
+- Reserve `index.ts` for command registration boundaries and optional re-export wrappers.
+- Keep command-specific prompts in the command module; reserve `commands/shared/shared.prompts.ts` for reusable command-level prompt primitives.
 - Keep domain validation close to the owning domain (`*.types.ts` near command/provider modules).
-- Keep shared utilities generic; move domain-specific utilities into the owning command/provider area.
+- Keep shared utilities generic; move domain-specific utilities into the owning command/provider area (for top-level command helpers, use `commands/shared/shared.utils.ts`).
+
+Example command structure pattern (for findability):
+
+```text
+packages/cli/src/
+  commands/
+    <top-level-command>/
+      index.ts
+      <top-level-command>.types.ts
+      <top-level-command>.utils.ts
+      <subcommand>/
+        <subcommand>.ts
+        <subcommand>.test.ts
+        <subcommand>.types.ts
+        <subcommand>.utils.ts
+        <nested-subcommand>/
+          <nested-subcommand>.ts
+          <nested-subcommand>.test.ts
+    shared/
+      shared.prompts.ts
+      shared.utils.ts
+```
+
+## Import Path Rules
+
+- Allow only same-directory relative imports: `./...`
+- Disallow parent-directory relative imports: `../...`
+- For anything outside the current directory, use explicit TypeScript aliases.
+- Do not use `src/...` imports.
+- Do not use a catch-all alias like `@/*`.
+- CLI alias set: `@app/*`, `@commands/*`, `@config/*`, `@drift/*`, `@engine/*`, `@errors/*`, `@fs/*`, `@manifest/*`, `@providers/*`, `@shared/*`, `@ui/*`, `@validation/*`.
 
 ## Runtime Bootstrap and Flags
 

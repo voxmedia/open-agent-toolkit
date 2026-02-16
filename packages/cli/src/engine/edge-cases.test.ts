@@ -1,16 +1,16 @@
 import { chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
-import { detectStrays } from '../drift';
-import { CliError } from '../errors';
+import { detectStrays } from '@drift/index';
+import { CliError } from '@errors/index';
 import {
   addEntry,
   createEmptyManifest,
   loadManifest,
   ManifestSchema,
   saveManifest,
-} from '../manifest';
+} from '@manifest/index';
+import { afterEach, describe, expect, it } from 'vitest';
 import { scanCanonical } from './scanner';
 
 describe('edge cases', () => {

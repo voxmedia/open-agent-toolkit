@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { CliError } from '../errors';
+import { CliError } from '@errors/index';
 import {
   type Manifest,
   type ManifestEntry,

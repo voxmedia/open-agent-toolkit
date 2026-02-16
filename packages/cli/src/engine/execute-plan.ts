@@ -1,14 +1,14 @@
 import { rm } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
-import { copyDirectory, createSymlink } from '../fs/io';
-import { computeDirectoryHash } from '../manifest/hash';
+import { copyDirectory, createSymlink } from '@fs/io';
+import { computeDirectoryHash } from '@manifest/hash';
 import {
   addEntry,
   findEntry,
   removeEntry,
   saveManifest,
-} from '../manifest/manager';
-import type { Manifest, ManifestEntry } from '../manifest/manifest.types';
+} from '@manifest/manager';
+import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 import type { SyncPlan, SyncPlanEntry, SyncResult } from './engine.types';
 import { insertMarker, writeDirectorySentinel } from './markers';
 

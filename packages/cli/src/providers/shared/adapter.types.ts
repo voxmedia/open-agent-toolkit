@@ -1,4 +1,4 @@
-import type { ContentType, Scope, SyncStrategy } from '../../shared/types';
+import type { ContentType, Scope, SyncStrategy } from '@shared/types';
 
 export interface PathMapping {
   contentType: ContentType;

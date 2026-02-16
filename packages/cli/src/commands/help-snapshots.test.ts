@@ -1,6 +1,6 @@
+import { createProgram } from '@app/create-program';
 import type { Command } from 'commander';
 import { describe, expect, it } from 'vitest';
-import { createProgram } from '../app/create-program';
 import { registerCommands } from './index';
 
 function createRegisteredProgram(): Command {

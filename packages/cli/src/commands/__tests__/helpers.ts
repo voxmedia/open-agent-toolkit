@@ -1,4 +1,4 @@
-import type { CliLogger } from '../../ui/logger';
+import type { CliLogger } from '@ui/logger';
 
 export interface LoggerCapture {
   info: string[];
