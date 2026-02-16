@@ -8,7 +8,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { confirm, select } from '@inquirer/prompts';
+import { checkbox, confirm } from '@inquirer/prompts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createProgram } from '../app/create-program';
 import { registerCommands } from '../commands';
@@ -16,8 +16,8 @@ import type { SyncConfig } from '../config';
 import type { Manifest } from '../manifest';
 
 vi.mock('@inquirer/prompts', () => ({
+  checkbox: vi.fn(async () => []),
   confirm: vi.fn(async () => false),
-  select: vi.fn(async () => 'skip'),
 }));
 
 interface CliResult {
@@ -27,7 +27,7 @@ interface CliResult {
 }
 
 const mockedConfirm = vi.mocked(confirm);
-const mockedSelect = vi.mocked(select);
+const mockedCheckbox = vi.mocked(checkbox);
 
 async function createWorkspace(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'oat-cli-e2e-'));
@@ -149,7 +149,7 @@ describe('e2e workflow', () => {
 
   beforeEach(() => {
     mockedConfirm.mockResolvedValue(false);
-    mockedSelect.mockResolvedValue('skip');
+    mockedCheckbox.mockResolvedValue([]);
   });
 
   afterEach(async () => {
@@ -239,7 +239,7 @@ describe('e2e workflow', () => {
       value: true,
     });
     mockedConfirm.mockResolvedValue(false);
-    mockedSelect.mockResolvedValue('adopt');
+    mockedCheckbox.mockResolvedValue(['0']);
 
     const init = await runCli(root, ['init']);
     expect(init.exitCode).toBe(0);

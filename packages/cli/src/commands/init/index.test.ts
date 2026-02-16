@@ -40,19 +40,21 @@ const HOOK_GUIDANCE =
 
 function createStray(
   providerPath = '.claude/skills/stray-skill',
+  provider = 'claude',
+  providerDir = '.claude/skills',
 ): InitStrayCandidate {
   return {
-    provider: 'claude',
+    provider,
     report: {
       canonical: null,
-      provider: 'claude',
+      provider,
       providerPath,
       state: { status: 'stray' },
     },
     mapping: {
       contentType: 'skill',
       canonicalDir: '.agents/skills',
-      providerDir: '.claude/skills',
+      providerDir,
       nativeRead: false,
     },
   };
@@ -297,6 +299,50 @@ describe('createInitCommand', () => {
     expect(canonicalStat.isDirectory()).toBe(true);
   });
 
+  it('adopts same-name strays from multiple providers without ENOTEMPTY collisions', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-init-command-'));
+    tempDirs.push(root);
+
+    const skillName = 'work-chronicler-detect-projects';
+    const claudeProviderPath = join(root, '.claude', 'skills', skillName);
+    const cursorProviderPath = join(root, '.cursor', 'skills', skillName);
+    await mkdir(claudeProviderPath, { recursive: true });
+    await mkdir(cursorProviderPath, { recursive: true });
+    await writeFile(
+      join(claudeProviderPath, 'SKILL.md'),
+      'shared stray content',
+      'utf8',
+    );
+    await writeFile(
+      join(cursorProviderPath, 'SKILL.md'),
+      'shared stray content',
+      'utf8',
+    );
+
+    const { command } = createHarness({
+      interactive: true,
+      useDefaultAdopt: true,
+      scopeRootByScope: { project: root },
+      strays: [
+        createStray(`.claude/skills/${skillName}`, 'claude', '.claude/skills'),
+        createStray(`.cursor/skills/${skillName}`, 'cursor', '.cursor/skills'),
+      ],
+      hookInstalled: true,
+      selectResponses: [['0', '1']],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    const canonicalPath = join(root, '.agents', 'skills', skillName);
+    const claudeStat = await lstat(claudeProviderPath);
+    const cursorStat = await lstat(cursorProviderPath);
+    const canonicalStat = await lstat(canonicalPath);
+
+    expect(canonicalStat.isDirectory()).toBe(true);
+    expect(claudeStat.isSymbolicLink()).toBe(true);
+    expect(cursorStat.isSymbolicLink()).toBe(true);
+  });
+
   it('is idempotent when re-run on an initialized scope', async () => {
     const { command, adoptStray } = createHarness({
       interactive: false,
@@ -338,8 +384,10 @@ describe('createInitCommand', () => {
     const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
       label: string;
       value: string;
+      description?: string;
     }>;
-    expect(choices[0]?.label).toContain('[user] ~/.claude/skills/user-stray');
+    expect(choices[0]?.label).toContain('[user] user-stray (claude)');
+    expect(choices[0]?.description).toContain('~/.claude/skills/user-stray');
   });
 
   it('prompts for git hook consent in interactive mode', async () => {

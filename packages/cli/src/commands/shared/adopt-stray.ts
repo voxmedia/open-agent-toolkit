@@ -1,5 +1,6 @@
-import { rename } from 'node:fs/promises';
+import { access, rename, rm } from 'node:fs/promises';
 import { basename, dirname, relative, resolve } from 'node:path';
+import { CliError } from '../../errors';
 import { createSymlink, ensureDir } from '../../fs/io';
 import { toPosixPath } from '../../fs/paths';
 import { computeDirectoryHash } from '../../manifest/hash';
@@ -17,6 +18,15 @@ interface StrayAdoptionCandidate {
   };
 }
 
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function adoptStrayToCanonical<
   TCandidate extends StrayAdoptionCandidate,
 >(scopeRoot: string, stray: TCandidate, manifest: Manifest): Promise<Manifest> {
@@ -29,7 +39,27 @@ export async function adoptStrayToCanonical<
   );
 
   await ensureDir(dirname(canonicalAbsolutePath));
-  await rename(providerAbsolutePath, canonicalAbsolutePath);
+  const canonicalAlreadyExists = await pathExists(canonicalAbsolutePath);
+
+  if (canonicalAlreadyExists) {
+    const canonicalHash = await computeDirectoryHash(canonicalAbsolutePath);
+    const providerHash = await computeDirectoryHash(providerAbsolutePath);
+
+    if (canonicalHash !== providerHash) {
+      throw new CliError(
+        `Cannot adopt ${toPosixPath(
+          relative(scopeRoot, providerAbsolutePath),
+        )}: canonical path ${toPosixPath(
+          relative(scopeRoot, canonicalAbsolutePath),
+        )} already exists with different content.`,
+      );
+    }
+
+    await rm(providerAbsolutePath, { recursive: true, force: true });
+  } else {
+    await rename(providerAbsolutePath, canonicalAbsolutePath);
+  }
+
   const strategy = await createSymlink(
     canonicalAbsolutePath,
     providerAbsolutePath,

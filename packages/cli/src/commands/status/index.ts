@@ -1,4 +1,4 @@
-import { join, relative } from 'node:path';
+import { basename, join, relative } from 'node:path';
 import { Command } from 'commander';
 import {
   buildCommandContext,
@@ -221,6 +221,14 @@ function formatPathForScope(
   return `~/${providerPath}`;
 }
 
+function formatStrayChoiceLabel(
+  scope: ConcreteScope,
+  providerPath: string,
+  provider: string,
+): string {
+  return `[${scope}] ${basename(providerPath)} (${provider})`;
+}
+
 async function collectScopeReports(
   scope: ConcreteScope,
   context: CommandContext,
@@ -378,17 +386,23 @@ async function runStatusCommand(
         const selectedValues = await dependencies.selectManyWithAbort(
           `Select stray entries to adopt [${scopeCollection.scope}]`,
           scopeCollection.strayCandidates.map((strayCandidate, index) => ({
-            label: `[${scopeCollection.scope}] ${formatPathForScope(
+            label: formatStrayChoiceLabel(
               scopeCollection.scope,
               strayCandidate.report.providerPath,
-            )} (${strayCandidate.provider})`,
+              strayCandidate.provider,
+            ),
             value: String(index),
+            description: formatPathForScope(
+              scopeCollection.scope,
+              strayCandidate.report.providerPath,
+            ),
           })),
           { interactive: context.interactive },
         );
         const selectedIndices = new Set(
           (selectedValues ?? []).map((value) => Number.parseInt(value, 10)),
         );
+        let adoptedCount = 0;
 
         for (const [
           index,
@@ -403,6 +417,7 @@ async function runStatusCommand(
             strayCandidate,
             scopeCollection.manifest,
           );
+          adoptedCount += 1;
           manifestChanged = true;
         }
 
@@ -410,6 +425,15 @@ async function runStatusCommand(
           await dependencies.saveManifest(
             scopeCollection.manifestPath,
             scopeCollection.manifest,
+          );
+          context.logger.success(
+            `Adopted ${adoptedCount} stray entr${
+              adoptedCount === 1 ? 'y' : 'ies'
+            } [${scopeCollection.scope}].`,
+          );
+        } else {
+          context.logger.info(
+            `No stray entries adopted [${scopeCollection.scope}].`,
           );
         }
       }

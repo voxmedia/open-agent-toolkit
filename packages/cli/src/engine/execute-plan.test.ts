@@ -260,7 +260,7 @@ describe('executeSyncPlan', () => {
     ).rejects.toThrow();
   });
 
-  it('skips skip entries (no filesystem changes)', async () => {
+  it('skips skip entries (no filesystem changes) and records unmanaged in-sync entries', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
     tempDirs.push(root);
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
@@ -279,6 +279,15 @@ describe('executeSyncPlan', () => {
       lstat(join(root, '.claude', 'skills', 'skill-one')),
     ).rejects.toThrow();
     expect(result.skipped).toBe(1);
+    const manifest = await loadManifest(manifestPath);
+    expect(manifest.entries).toHaveLength(1);
+    expect(manifest.entries[0]).toMatchObject({
+      canonicalPath: '.agents/skills/skill-one',
+      providerPath: '.claude/skills/skill-one',
+      provider: 'claude',
+      strategy: 'symlink',
+      contentHash: null,
+    });
   });
 
   it('updates manifest after successful operations', async () => {

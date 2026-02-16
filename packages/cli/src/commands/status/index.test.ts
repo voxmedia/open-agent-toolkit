@@ -311,9 +311,12 @@ describe('createStatusCommand', () => {
     const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
       label: string;
       value: string;
+      description?: string;
     }>;
-    expect(choices[0]?.label).toContain('[project] .claude/skills/stray-one');
-    expect(choices[1]?.label).toContain('[project] .claude/skills/stray-two');
+    expect(choices[0]?.label).toContain('[project] stray-one (claude)');
+    expect(choices[0]?.description).toContain('.claude/skills/stray-one');
+    expect(choices[1]?.label).toContain('[project] stray-two (claude)');
+    expect(choices[1]?.description).toContain('.claude/skills/stray-two');
     expect(adoptStray).toHaveBeenCalledTimes(1);
     expect(saveManifest).toHaveBeenCalledTimes(1);
   });
@@ -385,8 +388,10 @@ describe('createStatusCommand', () => {
     const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
       label: string;
       value: string;
+      description?: string;
     }>;
-    expect(choices[0]?.label).toContain('[user] ~/.claude/skills/user-stray');
+    expect(choices[0]?.label).toContain('[user] user-stray (claude)');
+    expect(choices[0]?.description).toContain('~/.claude/skills/user-stray');
   });
 
   it('exits 0 when all in sync', async () => {

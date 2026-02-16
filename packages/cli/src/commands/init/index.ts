@@ -1,5 +1,5 @@
 import { mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { Command } from 'commander';
 import {
   buildCommandContext,
@@ -201,6 +201,14 @@ function formatPathForScope(
   return `~/${providerPath}`;
 }
 
+function formatStrayChoiceLabel(
+  scope: ConcreteScope,
+  providerPath: string,
+  provider: string,
+): string {
+  return `[${scope}] ${basename(providerPath)} (${provider})`;
+}
+
 async function maybeHandleHook(
   context: CommandContext,
   dependencies: InitDependencies,
@@ -284,8 +292,13 @@ async function runInitCommand(
 
     if (context.interactive && strays.length > 0) {
       const choices = strays.map((stray, index) => ({
-        label: `[${scope}] ${formatPathForScope(scope, stray.report.providerPath)} (${stray.provider})`,
+        label: formatStrayChoiceLabel(
+          scope,
+          stray.report.providerPath,
+          stray.provider,
+        ),
         value: String(index),
+        description: formatPathForScope(scope, stray.report.providerPath),
       }));
       const selectedValues = await dependencies.selectManyWithAbort(
         `Select stray entries to adopt [${scope}]`,
@@ -303,6 +316,16 @@ async function runInitCommand(
 
         manifest = await dependencies.adoptStray(scopeRoot, stray, manifest);
         straysAdopted += 1;
+      }
+
+      if (straysAdopted > 0) {
+        context.logger.success(
+          `Adopted ${straysAdopted} stray entr${
+            straysAdopted === 1 ? 'y' : 'ies'
+          } [${scope}].`,
+        );
+      } else {
+        context.logger.info(`No stray entries adopted [${scope}].`);
       }
     }
 

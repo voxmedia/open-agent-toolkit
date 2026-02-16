@@ -2,7 +2,12 @@ import { rm } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { copyDirectory, createSymlink } from '../fs/io';
 import { computeDirectoryHash } from '../manifest/hash';
-import { addEntry, removeEntry, saveManifest } from '../manifest/manager';
+import {
+  addEntry,
+  findEntry,
+  removeEntry,
+  saveManifest,
+} from '../manifest/manager';
 import type { Manifest, ManifestEntry } from '../manifest/manifest.types';
 import type { SyncPlan, SyncPlanEntry, SyncResult } from './engine.types';
 import { insertMarker, writeDirectorySentinel } from './markers';
@@ -123,6 +128,20 @@ async function applyEntry(
   }
 }
 
+async function ensureSkipEntryManaged(
+  planEntry: SyncPlanEntry,
+  manifest: Manifest,
+): Promise<Manifest> {
+  const { canonicalPath } = resolveManifestPaths(planEntry);
+  const existing = findEntry(manifest, canonicalPath, planEntry.provider);
+  if (existing) {
+    return manifest;
+  }
+
+  const manifestEntry = await toManifestEntry(planEntry, planEntry.strategy);
+  return addEntry(manifest, manifestEntry);
+}
+
 export async function executeSyncPlan(
   plan: SyncPlan,
   manifest: Manifest,
@@ -138,6 +157,7 @@ export async function executeSyncPlan(
 
   for (const operation of operations) {
     if (operation.operation === 'skip') {
+      nextManifest = await ensureSkipEntryManaged(operation, nextManifest);
       result.skipped += 1;
       continue;
     }
