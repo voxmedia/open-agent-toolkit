@@ -4,7 +4,7 @@ description: Import an external provider markdown plan into an OAT project by pr
 argument-hint: "<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]"
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(pnpm:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 ---
 
 # Import External Plan
@@ -72,6 +72,16 @@ If no valid active project exists:
 Inputs:
 - source path from `$ARGUMENTS`
 - optional provider hint from `--provider`
+
+If source path is not provided, discover likely recent plans first:
+
+```bash
+bash .agents/skills/oat-project-import-plan/scripts/find-recent-provider-plans.sh --hours 24
+```
+
+Then ask user to either:
+- choose one of the listed files (by number), or
+- provide a manual file path.
 
 Validation rules:
 - File must exist.

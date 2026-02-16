@@ -49,6 +49,10 @@ Implement a lightweight OAT quick/import workflow that:
    - Decision: require `oat-project-quick-start` to run `.oat/scripts/generate-oat-state.sh` after quick-plan updates, even when reusing an existing active project.
    - Rationale: ensures `.oat/state.md` recommendations and summary reflect quick-mode metadata changes without depending on the new-project scaffolder path.
 
+7. **Provider-plan file discovery UX**
+   - Decision: add a helper script under `oat-project-import-plan/scripts/` to enumerate likely provider plan files modified within a recent window (default 24h), newest first.
+   - Rationale: reduces manual path lookup friction and supports fast import from common provider plan directories.
+
 ## Planned Commit Map
 
 - `p01-t01` Add workflow metadata to state template
@@ -91,6 +95,7 @@ Implement a lightweight OAT quick/import workflow that:
 - [x] Completed `p04-t01`: documented full/quick/import workflow lanes in README and OAT docs.
 - [x] Completed `p04-t02`: added ADR + roadmap + backlog records for quick/import rollout decisions.
 - [x] Completed `p05-t01`: tightened `oat-project-quick-start` so dashboard refresh is explicit on resume paths.
+- [x] Added provider-plan discovery helper script and integrated it into `oat-project-import-plan` path resolution guidance.
 
 **Notes:**
 - User requested atomic commits and detailed implementation journaling.
@@ -106,6 +111,7 @@ Implement a lightweight OAT quick/import workflow that:
 - Verified dashboard script syntax after mode-aware changes (`bash -n .oat/scripts/generate-oat-state.sh`).
 - Clarified `oat-project-quick-start` contract: it reuses `oat-project-new` scaffolding behavior (active project pointer + `.oat/state.md` generation), then applies quick-mode flow.
 - Added explicit post-update dashboard refresh in `oat-project-quick-start` so resumed projects also regenerate `.oat/state.md`.
+- Added `find-recent-provider-plans.sh` helper for `oat-project-import-plan` to list recent plan candidates from common provider directories before manual path fallback.
 
 ## Final Summary (for PR/docs)
 
