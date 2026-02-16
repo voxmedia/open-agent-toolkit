@@ -39,10 +39,10 @@ If not provided in `$ARGUMENTS`, ask the user for `{project-name}` (slug format:
 
 ### Step 2: Scaffold Project (Deterministic)
 
-Use the TS scaffolder (dogfood-first; intended to become CLI logic later):
+Use the CLI scaffolder:
 
 ```bash
-pnpm tsx .oat/scripts/new-oat-project.ts "{project-name}"
+pnpm run cli -- project new "{project-name}" --mode full
 ```
 
 Optional flags:
