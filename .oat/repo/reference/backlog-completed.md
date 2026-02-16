@@ -76,7 +76,7 @@ Historical record of completed backlog items moved out of the active backlog for
       - `oat-request-review` -> `oat-project-review-provide`
       - `oat-receive-review` -> `oat-project-review-receive`
     - All skill directories, SKILL.md frontmatter, AGENTS.md registrations, and cross-references in templates updated.
-    - All `/oat:` slash-command references in internal-project-reference and project artifacts replaced with skill-first names.
+    - All `/oat:` slash-command references in repo reference docs and project artifacts replaced with skill-first names.
   - Links:
     - Source discussion: OAT feature ideas (naming philosophy + domain model)
     - Plan: `.oat/repo/archive/external-plans/skill-rename-slash-cleanup.md`

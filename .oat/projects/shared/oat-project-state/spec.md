@@ -226,5 +226,5 @@ The three skills (`oat-project-open`, `oat-project-clear-active`, `oat-project-c
 ## References
 
 - Discovery: `discovery.md`
-- Reference Design: `.oat/internal-project-reference/temp/oat-project-state.md`
+- Reference Design: `.oat/repo/archive/temp/oat-project-state.md`
 - Knowledge Base: `.oat/repo/knowledge/project-index.md`

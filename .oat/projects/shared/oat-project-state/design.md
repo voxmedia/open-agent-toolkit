@@ -662,7 +662,7 @@ None beyond existing OAT development setup.
 ## References
 
  - Specification: `spec.md`
-- Reference Design: `.oat/internal-project-reference/temp/oat-project-state.md`
+- Reference Design: `.oat/repo/archive/temp/oat-project-state.md`
 - Knowledge Base: `.oat/repo/knowledge/project-index.md`
 - Architecture Docs: `.oat/repo/knowledge/architecture.md`
 - Conventions: `.oat/repo/knowledge/conventions.md`
