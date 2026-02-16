@@ -1,6 +1,6 @@
 ---
-name: oat-receive-review
-description: Use after running oat-request-review - when a review artifact exists and findings need to be converted into actionable plan tasks for gap closure
+name: oat-project-review-receive
+description: Use after running oat-project-review-provide - when a review artifact exists and findings need to be converted into actionable plan tasks for gap closure
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
@@ -50,7 +50,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Reading review artifacts
 - Updating plan.md with new tasks
 - Updating implementation.md
-- Routing to oat-implement
+- Routing to oat-project-implement
 
 ## Process
 
@@ -81,7 +81,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ls -t "$PROJECT_PATH/reviews/"*.md 2>/dev/null | head -10
 ```
 
-**If no review files:** Block and ask user to run `/oat:request-review` first.
+**If no review files:** Block and ask user to run the `oat-project-review-provide` skill first.
 
 **If multiple candidates:**
 - Show list sorted by date (newest first)
@@ -127,7 +127,7 @@ Minor: {N}
 - Mark the review as `passed` in the plan.md Reviews table (if plan.md exists)
 - No fix tasks are added
 - Route user to the next action:
-  - If scope is `final`: prompt for PR (or run `/oat:pr-project` when available)
+  - If scope is `final`: prompt for PR (or run the `oat-project-pr-final` skill when available)
   - Otherwise: continue normal implementation
   - Note: `passed` means “review passed” (not merely “fixes completed”). If fixes exist, use `fixes_completed` until a re-review passes.
   - For `final` scope, only mark `passed` after deferred-medium resurfacing/disposition (Step 8.5) is complete.
@@ -209,10 +209,10 @@ Add new tasks to plan.md in the target phase.
   - If the plan includes any phase rollups that reference task counts, update those too.
 
 **Keep plan runnable:**
-- Do NOT leave plan.md in a state that blocks `/oat:implement`.
+- Do NOT leave plan.md in a state that blocks `oat-project-implement`.
 - Ensure plan.md frontmatter remains:
   - `oat_status: complete`
-  - `oat_ready_for: oat-implement`
+  - `oat_ready_for: oat-project-implement`
 
 **Keep plan internally consistent:**
 - If the plan contains an `## Implementation Complete` summary (phase counts, total task count), update it to reflect any newly added review fix tasks.
@@ -250,11 +250,11 @@ Add a note to implementation.md:
 
 **New tasks added:** {task_ids}
 
-**Next:** Execute fix tasks via /oat:implement.
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
 
 After the fix tasks are complete:
 - Update the review row status to `fixes_completed`
-- Re-run `/oat:request-review {type} {scope}` then `/oat:receive-review` to reach `passed`
+- Re-run `oat-project-review-provide {type} {scope}` then `oat-project-review-receive` to reach `passed`
 ```
 
 **Restart safety (required):**
@@ -350,8 +350,8 @@ Added {N} fix tasks:
 ...
 
 Options:
-1. Execute fix tasks now (/oat:implement)
-2. Review the plan first (then manually run /oat:implement)
+1. Execute fix tasks now (oat-project-implement)
+2. Review the plan first (then manually run oat-project-implement)
 3. Exit (tasks added, execute later)
 
 Choose:
@@ -359,14 +359,14 @@ Choose:
 
 **If execute now:**
 - Update state.md: `oat_phase_status: in_progress`
-- Tell user: "Run `/oat:implement` to execute fix tasks starting from {first_fix_task_id}"
-- Or directly invoke `/oat:implement` if environment supports skill chaining
+- Tell user: "Run the `oat-project-implement` skill to execute fix tasks starting from {first_fix_task_id}"
+- Or directly invoke `oat-project-implement` if environment supports skill chaining
 
 **If review first:**
-- Tell user: "Review `plan.md`, then run `/oat:implement` when ready"
+- Tell user: "Review `plan.md`, then run the `oat-project-implement` skill when ready"
 
 **If exit:**
-- Tell user: "Fix tasks added to plan. Run `/oat:implement` when ready."
+- Tell user: "Fix tasks added to plan. Run the `oat-project-implement` skill when ready."
 
 ### Step 11: Output Summary
 
@@ -397,7 +397,7 @@ After fix tasks are executed, if another review is requested:
 This prevents reviewing already-approved code and focuses the reviewer on just the fixes.
 
 **How it works:**
-1. When `/oat:request-review` is called after fix tasks exist
+1. When `oat-project-review-provide` is called after fix tasks exist
 2. It detects `(review)` tasks in plan.md for the scope
 3. It offers: "Scope to fix tasks only? (Y/n)"
 4. If yes: scope is just the fix task commits

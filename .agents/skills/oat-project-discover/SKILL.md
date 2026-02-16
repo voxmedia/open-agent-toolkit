@@ -1,5 +1,5 @@
 ---
-name: oat-discovery
+name: oat-project-discover
 description: Start discovery phase - gather requirements and understand the problem through structured dialogue
 disable-model-invocation: true
 user-invocable: true
@@ -12,7 +12,7 @@ Gather requirements and understand the problem space through natural collaborati
 
 ## Prerequisites
 
-**Required:** Knowledge base must exist. If missing, run `/oat:index` first.
+**Required:** Knowledge base must exist. If missing, run the `oat-project-index` skill first.
 
 ## Mode Assertion
 
@@ -63,7 +63,7 @@ If you catch yourself:
 
 OAT stores the active project path in `.oat/active-project` (single line, local-only).
 
-**Recommendation:** Prefer creating projects via `/oat:new-project` (scaffolds all artifacts up front). `oat-new-project` is the canonical “create project” step; this discovery skill should not be responsible for directory/template scaffolding.
+**Recommendation:** Prefer creating projects via the `oat-project-new` skill (scaffolds all artifacts up front). `oat-project-new` is the canonical "create project" step; this discovery skill should not be responsible for directory/template scaffolding.
 
 ```bash
 PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
@@ -77,15 +77,15 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 - Ask user:
   - **Continue** with active project, or
   - **Switch projects**:
-    - Existing project: run `/oat:open-project`
-    - New project: run `/oat:new-project`
+    - Existing project: run the `oat-project-open` skill
+    - New project: run the `oat-project-new` skill
   - Stop here until the user has selected/created the intended project.
 
 **If `PROJECT_PATH` is missing/invalid:**
 - Tell the user an active project is required for discovery.
 - Offer:
-  - New project: run `/oat:new-project {project-name}`
-  - Existing project: run `/oat:open-project`
+  - New project: run the `oat-project-new` skill with `{project-name}`
+  - Existing project: run the `oat-project-open` skill
 - Stop here until `.oat/active-project` is set to a valid project directory.
 
 ### Step 2: Check Knowledge Base Exists
@@ -94,7 +94,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 test -f .oat/knowledge/repo/project-index.md
 ```
 
-**If missing:** Block and require `/oat:index` first.
+**If missing:** Block and require the `oat-project-index` skill first.
 
 ### Step 3: Check Knowledge Staleness
 
@@ -154,7 +154,7 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 **If stale (age or changes exceed thresholds):**
 - Display prominent warning with specifics (days old, files changed)
 - Show `$CHANGES_SUMMARY` if available
-- Recommend `/oat:index` to refresh
+- Recommend the `oat-project-index` skill to refresh
 - Ask user: "Continue with stale knowledge or refresh first?"
 
 **If unable to determine staleness (missing SHAs/dates):**
@@ -272,11 +272,11 @@ Read `"$PROJECT_PATH/state.md"` frontmatter:
 If `"discovery"` is in `oat_hil_checkpoints`, require explicit user approval before advancing.
 
 **Approval prompt (required):**
-- "Discovery artifact is ready. Approve discovery and unlock `/oat:spec`?"
+- "Discovery artifact is ready. Approve discovery and unlock `oat-project-spec`?"
 
 **Optional independent review path:**
 - If user wants fresh-context artifact review first, run:
-  - `/oat:request-review artifact discovery`
+  - `oat-project-review-provide artifact discovery`
 
 **If user does not approve yet:**
 - Keep discovery frontmatter as:
@@ -294,7 +294,7 @@ Update frontmatter:
 ```yaml
 ---
 oat_status: complete
-oat_ready_for: oat-spec
+oat_ready_for: oat-project-spec
 ---
 ```
 
@@ -316,7 +316,7 @@ Update `"$PROJECT_PATH/state.md"`:
 
 ### Step 14: Commit Discovery
 
-**Note:** This shows what users will do when USING oat-discovery.
+**Note:** This shows what users will do when USING oat-project-discover.
 During implementation of OAT itself, use standard commit format.
 
 ```bash
@@ -335,5 +335,5 @@ Ready for specification phase"
 ```
 Discovery phase complete for {project-name}.
 
-Next: Create specification with /oat:spec
+Next: Create specification with the oat-project-spec skill
 ```

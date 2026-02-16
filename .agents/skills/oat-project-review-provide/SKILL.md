@@ -1,5 +1,5 @@
 ---
-name: oat-request-review
+name: oat-project-review-provide
 description: Use when ready to review completed work before merging - after implementing a task, phase, or full project; when quality gate needed before PR
 disable-model-invocation: true
 user-invocable: true
@@ -55,18 +55,18 @@ When executing this skill, provide lightweight progress feedback so the user can
 ### With arguments (if supported)
 
 ```
-/oat:request-review code p02          # Code review for phase
-/oat:request-review code p02-t03      # Code review for task
-/oat:request-review code final        # Final code review
-/oat:request-review code base_sha=abc # Review since specific SHA
-/oat:request-review artifact discovery # Artifact review of discovery.md
-/oat:request-review artifact spec     # Artifact review of spec.md
-/oat:request-review artifact design   # Artifact review of design.md
+oat-project-review-provide code p02          # Code review for phase
+oat-project-review-provide code p02-t03      # Code review for task
+oat-project-review-provide code final        # Final code review
+oat-project-review-provide code base_sha=abc # Review since specific SHA
+oat-project-review-provide artifact discovery # Artifact review of discovery.md
+oat-project-review-provide artifact spec     # Artifact review of spec.md
+oat-project-review-provide artifact design   # Artifact review of design.md
 ```
 
 ### Without arguments
 
-Run `/oat:request-review` and the skill will:
+Run the `oat-project-review-provide` skill and it will:
 1. Ask review type (code or artifact)
 2. Ask scope (task/phase/final/range)
 3. Confirm before running
@@ -255,7 +255,7 @@ Build the "Review Scope" metadata for the reviewer:
 If the host supports spawning subagents (e.g., Claude Code Task tool):
 - Spawn `oat-reviewer` agent with the Review Scope metadata
 - Instruct it to write the review artifact
-- Subagent ends with: "Review complete. Return to main session and run /oat:receive-review"
+- Subagent ends with: "Review complete. Return to main session and run the `oat-project-review-receive` skill"
 
 Tell user: "Running review via subagent (fresh context)..."
 
@@ -270,9 +270,9 @@ Instructions for fresh session:
 ```
 To run review in a fresh session:
 1. Open a new terminal/session
-2. Run: /oat:request-review code {scope}
+2. Run the oat-project-review-provide skill with: code {scope}
 3. When complete, return to this session
-4. Run: /oat:receive-review
+4. Run the oat-project-review-receive skill
 ```
 
 **Tier 3: Inline Reset (fallback)**
@@ -365,7 +365,7 @@ oat_project: {PROJECT_PATH}
 
 ## Recommended Next Step
 
-Run `/oat:receive-review` to convert findings into plan tasks.
+Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 ```
 
 ### Step 9: Update Plan Reviews Section
@@ -404,7 +404,7 @@ After writing the review artifact and applying the Step 9 Reviews-table update, 
 ```
 Review requested via subagent.
 
-When the reviewer finishes, run /oat:receive-review to process findings.
+When the reviewer finishes, run the oat-project-review-receive skill to process findings.
 ```
 
 **If fresh session recommended (Tier 2):**
@@ -412,8 +412,8 @@ When the reviewer finishes, run /oat:receive-review to process findings.
 For best review quality, run in a fresh session:
 
 1. Open new terminal/session
-2. Run: /oat:request-review code {scope}
-3. Return here and run: /oat:receive-review
+2. Run the oat-project-review-provide skill with: code {scope}
+3. Return here and run the oat-project-review-receive skill
 
 Or say "inline" to run review in current session (less reliable).
 ```
@@ -429,7 +429,7 @@ Findings: {N} critical, {N} important, {N} medium, {N} minor
 Review artifact: {path}
 Bookkeeping commit: {sha or "deferred with user approval"}
 
-Next: Run /oat:receive-review to convert findings into plan tasks.
+Next: Run the oat-project-review-receive skill to convert findings into plan tasks.
 ```
 
 ## Success Criteria
@@ -443,4 +443,4 @@ Next: Run /oat:receive-review to convert findings into plan tasks.
 - Plan.md Reviews section updated
 - Review artifact + plan bookkeeping committed atomically (or explicitly deferred with user approval)
 - For final scope, deferred findings ledger included in reviewer context
-- User guided to next step (/oat:receive-review)
+- User guided to next step (`oat-project-review-receive`)

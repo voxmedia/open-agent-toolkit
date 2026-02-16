@@ -1,5 +1,5 @@
 ---
-name: oat-spec
+name: oat-project-spec
 description: Create formal specification from discovery insights with structured requirements
 disable-model-invocation: true
 user-invocable: true
@@ -12,7 +12,7 @@ Transform discovery insights into a formal specification with detailed requireme
 
 ## Prerequisites
 
-**Required:** Complete discovery document. If missing, run `/oat:discovery` first.
+**Required:** Complete discovery document. If missing, run the `oat-project-discover` skill first.
 
 ## Mode Assertion
 
@@ -57,7 +57,7 @@ If you catch yourself:
 **Recovery:**
 1. Acknowledge the deviation
 2. Return to requirements language ("the system must...")
-3. Move detailed design/implementation notes to "Open Questions" for `/oat:design`
+3. Move detailed design/implementation notes to "Open Questions" for `oat-project-design`
 
 ## Process
 
@@ -90,7 +90,7 @@ cat "$PROJECT_PATH/discovery.md" | head -10 | grep "oat_status:"
 
 **Required frontmatter:**
 - `oat_status: complete`
-- `oat_ready_for: oat-spec`
+- `oat_ready_for: oat-project-spec`
 
 **If not complete:** Block and ask user to finish discovery first.
 
@@ -118,7 +118,7 @@ Verify discovery includes:
 **If any missing:**
 - Do NOT proceed with spec
 - Report what's missing to user
-- Send user back to `/oat:discovery` to complete
+- Send user back to `oat-project-discover` to complete
 
 **Why:** Prevents "formalized vagueness" - a spec is only as good as the discovery it's based on.
 
@@ -288,7 +288,7 @@ Create traceability matrix in spec.md "Requirement Index" section:
 **Why this matters:**
 - Enables tracing from requirements → tests → tasks → implementation
 - Prevents "lost requirements" during execution
-- Supports `oat-plan` in breaking down work systematically
+- Supports `oat-project-plan` in breaking down work systematically
 - Gives design phase clear guidance on test strategy per requirement
 
 ### Step 16: Spec Quality Gate
@@ -330,11 +330,11 @@ Read `"$PROJECT_PATH/state.md"` frontmatter:
 If `"spec"` is in `oat_hil_checkpoints`, require explicit user approval before advancing.
 
 **Approval prompt (required):**
-- "Specification artifact is ready. Approve spec and unlock `/oat:design`?"
+- "Specification artifact is ready. Approve spec and unlock `oat-project-design`?"
 
 **Optional independent review path:**
 - If user wants fresh-context artifact review first, run:
-  - `/oat:request-review artifact spec`
+  - `oat-project-review-provide artifact spec`
 
 **If user does not approve yet:**
 - Keep spec frontmatter as:
@@ -352,7 +352,7 @@ Update frontmatter:
 ```yaml
 ---
 oat_status: complete
-oat_ready_for: oat-design
+oat_ready_for: oat-project-design
 oat_blockers: []
 oat_last_updated: {today}
 ---
@@ -387,7 +387,7 @@ Specification - Ready for design phase
 
 ### Step 20: Commit Specification
 
-**Note:** This shows what users will do when USING oat-spec.
+**Note:** This shows what users will do when USING oat-project-spec.
 During implementation of OAT itself, use standard commit format.
 
 ```bash
@@ -412,7 +412,7 @@ Created:
 - High-level design approach
 - Success metrics
 
-Next: Create detailed design with /oat:design
+Next: Create detailed design with the oat-project-design skill
 ```
 
 ## Success Criteria

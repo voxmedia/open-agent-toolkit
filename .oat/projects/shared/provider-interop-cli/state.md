@@ -95,4 +95,4 @@ None
 
 ## Next Milestone
 
-Generate project PR via `/oat:pr-project`.
+Generate project PR via `oat-project-pr-final`.

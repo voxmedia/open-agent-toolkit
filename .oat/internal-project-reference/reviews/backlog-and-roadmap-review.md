@@ -72,7 +72,7 @@ The backlog contains **17 items** (1 Inbox, 16 Planned) spanning four themes:
 
 ### B02 - Skills: Standardize invocation language to skill-first
 
-> Replace `/oat:*` slash-only guidance with skill-first wording (`oat-implement` skill); keep slash text as host-specific alias only.
+> Replace `/oat:*` slash-only guidance with skill-first wording (`oat-project-implement` skill); keep slash text as host-specific alias only.
 
 | Dimension | Rating | Rationale |
 |---|---|---|
@@ -216,12 +216,12 @@ The backlog contains **17 items** (1 Inbox, 16 Planned) spanning four themes:
 
 ### B11 - Skills: Idea-to-project promotion flow
 
-> `oat-new-project` offers to promote summarized ideas; seeds project discovery from idea artifacts.
+> `oat-project-new` offers to promote summarized ideas; seeds project discovery from idea artifacts.
 
 | Dimension | Rating | Rationale |
 |---|---|---|
 | **Value** | **Medium** | Completes the ideas-to-projects pipeline. Nice workflow continuity. Not blocking other work. |
-| **Effort** | **Medium** | Modifies two skills (`oat-new-project`, `oat-idea-summarize`). Needs idea scanning, seeding logic, backlog updates. |
+| **Effort** | **Medium** | Modifies two skills (`oat-project-new`, `oat-idea-summarize`). Needs idea scanning, seeding logic, backlog updates. |
 | **Quadrant** | **Strategic** (lower priority) | |
 
 - **Dependencies:** Ideas workflow must be stable (it is)

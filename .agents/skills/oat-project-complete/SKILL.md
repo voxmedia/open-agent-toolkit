@@ -1,5 +1,5 @@
 ---
-name: oat-complete-project
+name: oat-project-complete
 description: Mark a project lifecycle as complete
 disable-model-invocation: true
 user-invocable: true
@@ -30,7 +30,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
 
 if [[ -z "$PROJECT_PATH" ]]; then
-  echo "Error: No active project set. Use /oat:open-project first." >&2
+  echo "Error: No active project set. Use the oat-project-open skill first." >&2
   exit 1
 fi
 
@@ -54,7 +54,7 @@ if [[ -f "$PLAN_FILE" ]]; then
     echo "Warning: No final review row found in plan.md."
   elif ! echo "$final_row" | grep -qE "\|\s*passed\s*\|"; then
     echo "Warning: Final code review is not marked passed."
-    echo "Recommendation: run /oat:request-review code final and /oat:receive-review before completing."
+    echo "Recommendation: run the oat-project-review-provide skill with code final and oat-project-review-receive before completing."
   fi
 else
   echo "Warning: plan.md not found, unable to verify final review status."
@@ -82,7 +82,7 @@ After Step 3 and 3.5 warnings:
 
 ```bash
 if [[ ! -f "${PROJECT_PATH}/pr-description.md" ]]; then
-  echo "Warning: No PR description found. Consider running /oat:pr-project first."
+  echo "Warning: No PR description found. Consider running the oat-project-pr-final skill first."
 fi
 ```
 

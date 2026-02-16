@@ -60,15 +60,15 @@ The workflow layer can be adopted when you want structured project execution and
 
 ### Typical OAT workflow (skills)
 
-1. `oat-new-project` / `oat-open-project`
-2. `oat-discovery`
-3. `oat-spec`
-4. `oat-design`
-5. `oat-plan`
-6. `oat-implement`
-7. `oat-request-review` + `oat-receive-review`
-8. `oat-pr-project`
-9. `oat-complete-project`
+1. `oat-project-new` / `oat-project-open`
+2. `oat-project-discover`
+3. `oat-project-spec`
+4. `oat-project-design`
+5. `oat-project-plan`
+6. `oat-project-implement`
+7. `oat-project-review-provide` + `oat-project-review-receive`
+8. `oat-project-pr-final`
+9. `oat-project-complete`
 
 ### Workflow artifacts (if using workflow mode)
 

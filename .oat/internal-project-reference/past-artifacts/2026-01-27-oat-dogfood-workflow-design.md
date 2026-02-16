@@ -16,13 +16,13 @@ We're implementing a two-phase system to dogfood the OAT workflow:
 - Generate `knowledge/PROJECT_INDEX.md` (SuperClaude-style overview)
 - Generate `knowledge/codebase/` with 7 files: ARCHITECTURE.md, STACK.md, STRUCTURE.md, INTEGRATIONS.md, TESTING.md, CONVENTIONS.md, CONCERNS.md
 - Basic age-based staleness detection (warn if > 7 days old)
-- Skill: `oat-index` orchestrates 5 agents:
+- Skill: `oat-project-index` orchestrates 5 agents:
   - 1 for PROJECT_INDEX (sequential, SuperClaude pattern)
   - 4 parallel GSD mappers for codebase files
 
 ### Phase 2: Workflow Skills
 
-- Four core skills: `oat-discovery`, `oat-spec`, `oat-plan`, `oat-implement`
+- Four core skills: `oat-project-discover`, `oat-project-spec`, `oat-project-plan`, `oat-project-implement`
 - Each skill updates `state.md` inline (no separate state-update skill)
 - Full mode only (thorough questioning, detailed artifacts)
 - No phase directory separation yet (single plan.md, single implementation.md)
@@ -46,28 +46,28 @@ We're implementing a two-phase system to dogfood the OAT workflow:
 ```
 .agent/
 ├── skills/
-│   ├── oat-index/
+│   ├── oat-project-index/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── templates/
 │   │           └── (skill-specific if any)
-│   ├── oat-discovery/
+│   ├── oat-project-discover/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── templates/
 │   │           └── discovery.md
-│   ├── oat-spec/
+│   ├── oat-project-spec/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── templates/
 │   │           ├── spec.md
 │   │           └── quick-spec.md
-│   ├── oat-plan/
+│   ├── oat-project-plan/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── templates/
 │   │           └── plan.md
-│   └── oat-implement/
+│   └── oat-project-implement/
 │       ├── SKILL.md
 │       └── references/
 │           └── templates/
@@ -128,11 +128,11 @@ We're implementing a two-phase system to dogfood the OAT workflow:
 Skills pass data via **explicit file reads with conventional paths:**
 
 ```
-oat-index      → writes .oat/knowledge/PROJECT_INDEX.md + codebase/*
-oat-discovery  → reads .oat/knowledge/*, writes discovery.md + state.md
-oat-spec       → reads discovery.md, writes spec.md + quick-spec.md + state.md
-oat-plan       → reads spec.md + quick-spec.md, writes plan.md + state.md
-oat-implement  → reads state.md → plan.md → quick-spec.md, updates all three
+oat-project-index      → writes .oat/knowledge/PROJECT_INDEX.md + codebase/*
+oat-project-discover  → reads .oat/knowledge/*, writes discovery.md + state.md
+oat-project-spec       → reads discovery.md, writes spec.md + quick-spec.md + state.md
+oat-project-plan       → reads spec.md + quick-spec.md, writes plan.md + state.md
+oat-project-implement  → reads state.md → plan.md → quick-spec.md, updates all three
 ```
 
 No indirection through state for file locations (that comes later if structure changes).
@@ -172,7 +172,7 @@ oat_source_paths:
 **Staleness check (basic age-based for v1):**
 ```
 if (now - oat_generated_at) > 7 days:
-  warn("Knowledge may be stale. Consider regenerating with /oat:index")
+  warn("Knowledge may be stale. Consider regenerating with oat-project-index")
 ```
 
 ### Workflow Artifacts (Working Docs)
@@ -181,7 +181,7 @@ if (now - oat_generated_at) > 7 days:
 ```yaml
 ---
 oat_status: draft # draft|in_review|approved|superseded
-oat_ready_for: oat-spec # oat-spec|oat-plan|oat-implement|null
+oat_ready_for: oat-project-spec # oat-project-spec|oat-project-plan|oat-project-implement|null
 oat_blockers: [] # reference IDs; empty means unblocked
 oat_last_updated: 2026-01-27
 ---
@@ -210,7 +210,7 @@ oat_blockers: [B1, B2]  # empty array = unblocked
 ```yaml
 ---
 oat_status: approved
-oat_ready_for: oat-implement
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-01-27
 oat_checkpoint_tasks: [p01-t03, p02-t05, p02-t08] # tasks requiring HiL gates
@@ -252,7 +252,7 @@ oat_last_updated: 2026-01-27
 
 ## Skill Specifications
 
-### Skill: `oat-index`
+### Skill: `oat-project-index`
 
 **Purpose:** Generate repo-wide knowledge base (PROJECT_INDEX + 7 codebase files)
 
@@ -285,11 +285,11 @@ oat_last_updated: 2026-01-27
 **Exit criteria:**
 - All 8 files exist and non-empty (>20 lines each)
 - Frontmatter includes generation metadata
-- User informed of next step: `/oat:discovery`
+- User informed of next step: `oat-project-discover`
 
 ---
 
-### Skill: `oat-discovery`
+### Skill: `oat-project-discover`
 
 **Purpose:** Gather requirements, constraints, open questions through interactive interview
 
@@ -325,12 +325,12 @@ oat_last_updated: 2026-01-27
 
 **Exit criteria:**
 - `oat_status: approved` in discovery.md frontmatter
-- `oat_ready_for: oat-spec`
+- `oat_ready_for: oat-project-spec`
 - `oat_blockers: []` (or explicit blockers listed with IDs)
 
 ---
 
-### Skill: `oat-spec`
+### Skill: `oat-project-spec`
 
 **Purpose:** Transform discovery into stable requirements specification with explicit scope boundaries
 
@@ -369,7 +369,7 @@ oat_last_updated: 2026-01-27
 **Usage pattern:**
 - **spec.md**: Complete requirements, read when need specific requirement details, writing acceptance tests, resolving ambiguity
 - **quick-spec.md**: MVP scope summary, read when starting work, context refresh, agent needs quick orientation
-- **oat-implement**: ALWAYS loads quick-spec.md first (cheap context), only loads spec.md if task references specific REQ-ID
+- **oat-project-implement**: ALWAYS loads quick-spec.md first (cheap context), only loads spec.md if task references specific REQ-ID
 
 **Outputs:**
 - `.oat/projects/<name>/spec.md`
@@ -378,13 +378,13 @@ oat_last_updated: 2026-01-27
 
 **Exit criteria:**
 - `oat_status: approved` in both spec.md and quick-spec.md
-- `oat_ready_for: oat-plan`
+- `oat_ready_for: oat-project-plan`
 - Must/Should/Could and non-goals explicit
 - Acceptance checks defined
 
 ---
 
-### Skill: `oat-plan`
+### Skill: `oat-project-plan`
 
 **Purpose:** Turn spec into executable implementation plan with tasks, checkpoints, and verification steps
 
@@ -457,13 +457,13 @@ oat_checkpoint_tasks: [p01-t03, p02-t05]
 
 **Exit criteria:**
 - `oat_status: approved` in plan.md
-- `oat_ready_for: oat-implement`
+- `oat_ready_for: oat-project-implement`
 - Each task has file paths + verification
 - Checkpoints marked in frontmatter and inline (based on user input)
 
 ---
 
-### Skill: `oat-implement`
+### Skill: `oat-project-implement`
 
 **Purpose:** Execute plan tasks in batch mode until hitting a checkpoint, with atomic commits and state recovery
 
@@ -536,7 +536,7 @@ feat(p02-t03): implement user authentication
 ```
 # Scenario: Process crashed after completing p02-t03 but before updating state
 
-1. oat-implement starts → reads state.md (says p02-t02)
+1. oat-project-implement starts → reads state.md (says p02-t02)
 2. Reads git log -1 → sees feat(p02-t03): ...
 3. Detects mismatch → "State shows p02-t02 but last commit is p02-t03"
 4. Updates state.md to p02-t03, last_commit: abc123
@@ -547,7 +547,7 @@ feat(p02-t03): implement user authentication
 ```
 # Scenario: Human made commits without OAT pattern
 
-1. oat-implement starts → reads state.md (says p02-t03)
+1. oat-project-implement starts → reads state.md (says p02-t03)
 2. Reads git log -1 → "fix: typo in readme" (no pXX-tYY pattern)
 3. Warns: "Last commit doesn't match OAT pattern. State may be out of sync."
 4. Prompts: "Confirm current position: [p02-t03] or specify:"
@@ -691,22 +691,22 @@ oat_last_commit: abc123def456
 
 ## Implementation Approach
 
-### Phase 1: Knowledge Generation (oat-index)
+### Phase 1: Knowledge Generation (oat-project-index)
 
 1. Create `.oat/knowledge/` directory structure
 2. Adapt SuperClaude's index-repo pattern for PROJECT_INDEX.md generation
 3. Integrate GSD's gsd-codebase-mapper agents (reuse existing)
 4. Implement basic age-based staleness check
-5. Create `oat-index` skill orchestrator
+5. Create `oat-project-index` skill orchestrator
 6. Test on OAT codebase itself
 
 ### Phase 2: Workflow Skills
 
 **Order of implementation:**
-1. `oat-discovery` - Foundation for all other skills
-2. `oat-spec` - Depends on discovery
-3. `oat-plan` - Depends on spec
-4. `oat-implement` - Most complex, depends on all above
+1. `oat-project-discover` - Foundation for all other skills
+2. `oat-project-spec` - Depends on discovery
+3. `oat-project-plan` - Depends on spec
+4. `oat-project-implement` - Most complex, depends on all above
 
 **For each skill:**
 1. Create skill directory + SKILL.md
@@ -719,7 +719,7 @@ oat_last_commit: abc123def456
 ### Dogfooding Strategy
 
 Use the OAT workflow to build the OAT workflow:
-1. Start with `oat-index` to map current codebase
+1. Start with `oat-project-index` to map current codebase
 2. Use manual discovery/spec/plan for first skill implementation
 3. Once first skill works, use it to build the next
 4. Iterate: each new skill helps build the next

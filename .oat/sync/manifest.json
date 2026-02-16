@@ -48,141 +48,6 @@
       "lastSynced": "2026-02-14T21:10:44.553Z"
     },
     {
-      "canonicalPath": ".agents/skills/oat-clear-active-project",
-      "providerPath": ".claude/skills/oat-clear-active-project",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.554Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-complete-project",
-      "providerPath": ".claude/skills/oat-complete-project",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.554Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-design",
-      "providerPath": ".claude/skills/oat-design",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.554Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-discovery",
-      "providerPath": ".claude/skills/oat-discovery",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.555Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-implement",
-      "providerPath": ".claude/skills/oat-implement",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.555Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-index",
-      "providerPath": ".claude/skills/oat-index",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.555Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-new-project",
-      "providerPath": ".claude/skills/oat-new-project",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.555Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-open-project",
-      "providerPath": ".claude/skills/oat-open-project",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.555Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-plan",
-      "providerPath": ".claude/skills/oat-plan",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.556Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-pr-progress",
-      "providerPath": ".claude/skills/oat-pr-progress",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.556Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-pr-project",
-      "providerPath": ".claude/skills/oat-pr-project",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.556Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-progress",
-      "providerPath": ".claude/skills/oat-progress",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.556Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-receive-review",
-      "providerPath": ".claude/skills/oat-receive-review",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.556Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-request-review",
-      "providerPath": ".claude/skills/oat-request-review",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.556Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-spec",
-      "providerPath": ".claude/skills/oat-spec",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.556Z"
-    },
-    {
       "canonicalPath": ".agents/skills/update-internal-project-reference",
       "providerPath": ".claude/skills/update-internal-project-reference",
       "provider": "claude",
@@ -235,141 +100,6 @@
       "strategy": "symlink",
       "contentHash": null,
       "lastSynced": "2026-02-14T21:10:44.557Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-clear-active-project",
-      "providerPath": ".cursor/skills/oat-clear-active-project",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.558Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-complete-project",
-      "providerPath": ".cursor/skills/oat-complete-project",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.558Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-design",
-      "providerPath": ".cursor/skills/oat-design",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.558Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-discovery",
-      "providerPath": ".cursor/skills/oat-discovery",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.558Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-implement",
-      "providerPath": ".cursor/skills/oat-implement",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.558Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-index",
-      "providerPath": ".cursor/skills/oat-index",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.559Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-new-project",
-      "providerPath": ".cursor/skills/oat-new-project",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.559Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-open-project",
-      "providerPath": ".cursor/skills/oat-open-project",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.559Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-plan",
-      "providerPath": ".cursor/skills/oat-plan",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.559Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-pr-progress",
-      "providerPath": ".cursor/skills/oat-pr-progress",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.560Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-pr-project",
-      "providerPath": ".cursor/skills/oat-pr-project",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.560Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-progress",
-      "providerPath": ".cursor/skills/oat-progress",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.560Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-receive-review",
-      "providerPath": ".cursor/skills/oat-receive-review",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.561Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-request-review",
-      "providerPath": ".cursor/skills/oat-request-review",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.561Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-spec",
-      "providerPath": ".cursor/skills/oat-spec",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.562Z"
     },
     {
       "canonicalPath": ".agents/skills/update-internal-project-reference",
@@ -469,7 +199,277 @@
       "strategy": "symlink",
       "contentHash": null,
       "lastSynced": "2026-02-16T02:30:57.656Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-clear-active",
+      "providerPath": ".claude/skills/oat-project-clear-active",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.995Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-complete",
+      "providerPath": ".claude/skills/oat-project-complete",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.997Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-design",
+      "providerPath": ".claude/skills/oat-project-design",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.997Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-discover",
+      "providerPath": ".claude/skills/oat-project-discover",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.997Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-implement",
+      "providerPath": ".claude/skills/oat-project-implement",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.997Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-index",
+      "providerPath": ".claude/skills/oat-project-index",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.997Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-new",
+      "providerPath": ".claude/skills/oat-project-new",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.997Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-open",
+      "providerPath": ".claude/skills/oat-project-open",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.997Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-plan",
+      "providerPath": ".claude/skills/oat-project-plan",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.998Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-pr-final",
+      "providerPath": ".claude/skills/oat-project-pr-final",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.998Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-pr-progress",
+      "providerPath": ".claude/skills/oat-project-pr-progress",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.998Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-progress",
+      "providerPath": ".claude/skills/oat-project-progress",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.998Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-review-provide",
+      "providerPath": ".claude/skills/oat-project-review-provide",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.998Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-review-receive",
+      "providerPath": ".claude/skills/oat-project-review-receive",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.998Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-spec",
+      "providerPath": ".claude/skills/oat-project-spec",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.998Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-clear-active",
+      "providerPath": ".cursor/skills/oat-project-clear-active",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.998Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-complete",
+      "providerPath": ".cursor/skills/oat-project-complete",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-design",
+      "providerPath": ".cursor/skills/oat-project-design",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-discover",
+      "providerPath": ".cursor/skills/oat-project-discover",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-implement",
+      "providerPath": ".cursor/skills/oat-project-implement",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-index",
+      "providerPath": ".cursor/skills/oat-project-index",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-new",
+      "providerPath": ".cursor/skills/oat-project-new",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-open",
+      "providerPath": ".cursor/skills/oat-project-open",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-plan",
+      "providerPath": ".cursor/skills/oat-project-plan",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-pr-final",
+      "providerPath": ".cursor/skills/oat-project-pr-final",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-pr-progress",
+      "providerPath": ".cursor/skills/oat-project-pr-progress",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-progress",
+      "providerPath": ".cursor/skills/oat-project-progress",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-review-provide",
+      "providerPath": ".cursor/skills/oat-project-review-provide",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:19.999Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-review-receive",
+      "providerPath": ".cursor/skills/oat-project-review-receive",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:20.000Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-spec",
+      "providerPath": ".cursor/skills/oat-project-spec",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T04:13:20.000Z"
     }
   ],
-  "lastUpdated": "2026-02-16T02:30:57.656Z"
+  "lastUpdated": "2026-02-16T04:13:20.003Z"
 }

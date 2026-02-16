@@ -26,7 +26,7 @@ Skill contracts are defined by frontmatter + process sections in each `SKILL.md`
 
 ## Reference artifacts
 
-- `.agents/skills/oat-implement/SKILL.md`
-- `.agents/skills/oat-complete-project/SKILL.md`
-- `.agents/skills/oat-receive-review/SKILL.md`
+- `.agents/skills/oat-project-implement/SKILL.md`
+- `.agents/skills/oat-project-complete/SKILL.md`
+- `.agents/skills/oat-project-review-receive/SKILL.md`
 - `.oat/internal-project-reference/decision-record.md`

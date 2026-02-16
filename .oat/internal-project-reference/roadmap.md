@@ -15,7 +15,7 @@ As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline h
 
 | Area / Phase | Status | Notes |
 |---|---|---|
-| Dogfood workflow baseline | Completed | `oat-index`, `oat-new-project`, phases (`discovery → implement`), router, review loop, PR skills |
+| Dogfood workflow baseline | Completed | `oat-project-index`, `oat-project-new`, phases (`discover → implement`), router, review loop, PR skills |
 | Phase 3: Reviews + PR loop | Completed | Implemented + dogfooded |
 | Phase 4: Active project pointer + Repo State Dashboard | Completed (polish remaining) | Pointer + generated `.oat/state.md` exist; clarify “first-class” regeneration contract |
 | Phase 5: Staleness + knowledge drift | Planned | Improve/enforce freshness beyond warn-only |
@@ -29,17 +29,17 @@ As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline h
 ## Current State (Implemented)
 
 Dogfood workflow baseline is implemented and has been exercised end-to-end:
-- Knowledge: `oat-index` + `.oat/knowledge/**` (thin->full project index, mapper outputs under `.oat/knowledge/repo/`)
+- Knowledge: `oat-project-index` + `.oat/knowledge/**` (thin->full project index, mapper outputs under `.oat/knowledge/repo/`)
 - Projects:
-  - `oat-new-project` scaffolds `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`
+  - `oat-project-new` scaffolds `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`
   - `.oat/projects-root` sets `{PROJECTS_ROOT}` (default: `.oat/projects/shared`)
   - `.oat/active-project` stores the active project path (local-only); all `oat-*` skills resolve project from it (fallback: prompt)
 - Workflow phases + routing:
-  - `oat-discovery` -> `oat-spec` -> `oat-design` -> `oat-plan` -> `oat-implement`
-  - Router: `oat-progress`
+  - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
+  - Router: `oat-project-progress`
 - Review + PR loop:
-  - Review: `oat-request-review`, `oat-receive-review` + `.agents/agents/oat-reviewer.md`
-  - PR: `oat-pr-progress`, `oat-pr-project`
+  - Review: `oat-project-review-provide`, `oat-project-review-receive` + `.agents/agents/oat-reviewer.md`
+  - PR: `oat-project-pr-progress`, `oat-project-pr-final`
 - Repo state dashboard:
   - `.oat/scripts/generate-oat-state.sh` generates `.oat/state.md` (gitignored) as a "single glance" dashboard
 - Workflow UX:
@@ -82,8 +82,8 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 **Goal:** Make review and PR creation first-class and workflow-native (no dependency on superpowers being installed).
 
 **Status:** Completed
-- Done: review loop (request-review, receive-review, reviewer prompt, plan Reviews table, implement final gate)
-- Done: PR skills (progress + project) (PR description generation; optional `gh pr create`)
+- Done: review loop (review-provide, review-receive, reviewer prompt, plan Reviews table, implement final gate)
+- Done: PR skills (pr-progress + pr-final) (PR description generation; optional `gh pr create`)
 
 **When to do it:**
 - After we successfully dogfood at least one end-to-end feature using the baseline workflow (index -> implement), or
@@ -91,10 +91,10 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 
 **Deliverables:**
 - Skills:
-  - `oat-request-review` (supports both code review and artifact review)
-  - `oat-receive-review` (plan-driven gap closure: findings -> new plan tasks -> rerun implement)
-  - `oat-pr-progress` (phase/progress PR descriptions) (implemented)
-  - `oat-pr-project` (final PR description into main, using OAT artifacts as sources) (implemented)
+  - `oat-project-review-provide` (supports both code review and artifact review)
+  - `oat-project-review-receive` (plan-driven gap closure: findings -> new plan tasks -> rerun implement)
+  - `oat-project-pr-progress` (phase/progress PR descriptions) (implemented)
+  - `oat-project-pr-final` (final PR description into main, using OAT artifacts as sources) (implemented)
 - Subagent prompt(s) (syncable): `.agents/agents/oat-reviewer.md` (single general reviewer in v1)
 - Templates:
   - `plan.md` includes `## Reviews` table (v1 canonical)
@@ -141,8 +141,8 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
   1) `.oat/active-project` (preferred)
   2) fallback prompts (if missing)
 - Update OAT docs/templates/skills to use skill-first invocation guidance:
-  - Canonical: `oat-implement` (skill name)
-  - Alias: `/oat:implement` only "where slash prompts are supported"
+  - Canonical: `oat-project-implement` (skill name)
+  - Alias: slash prompts only "where slash prompts are supported"
 - Optional follow-on enhancement: add opt-in generation of thin `.codex/prompts/oat-*.md` wrappers during Codex skill sync
 
 **Exit criteria:**

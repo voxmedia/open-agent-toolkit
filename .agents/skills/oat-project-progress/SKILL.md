@@ -1,5 +1,5 @@
 ---
-name: oat-progress
+name: oat-project-progress
 description: Check project progress and get routed to the appropriate next skill
 disable-model-invocation: true
 user-invocable: true
@@ -24,7 +24,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ## Usage
 
-Run `/oat:progress` at any time to:
+Run `oat-project-progress` at any time to:
 - Check if knowledge base exists and is fresh
 - See current project status
 - Get recommended next skill
@@ -41,7 +41,7 @@ EXISTING_MD=$(find .oat/knowledge/repo -name "*.md" -type f 2>/dev/null | head -
 ```
 ⚠️  No knowledge base found.
 
-Run /oat:index first to generate codebase analysis.
+Run the oat-project-index skill first to generate codebase analysis.
 ```
 **Exit here.**
 
@@ -91,7 +91,7 @@ Generated: {GENERATED_AT} ({DAYS_OLD} days ago)
 Changes since: {FILES_CHANGED} files changed
 {CHANGES_SUMMARY}
 
-Consider running /oat:index to refresh.
+Consider running the oat-project-index skill to refresh.
 ```
 
 ### Step 3: List Projects (Highlight Active Project)
@@ -128,7 +128,7 @@ ls -d .oat/projects/shared/*/ 2>/dev/null
 No active projects.
 
 Start a new project:
-  /oat:discovery - Start requirements gathering for a new feature
+  oat-project-discover - Start requirements gathering for a new feature
 ```
 **Continue to Step 6 (show available skills).**
 
@@ -161,21 +161,21 @@ Based on project state, recommend next action.
 - If current `oat_phase` is listed in `oat_hil_checkpoints` **and** not listed in `oat_hil_completed`, the phase's HiL gate is still pending.
 - In that case, do **not** advance to the next phase even if `oat_phase_status: complete`.
 - Recommend continuing the current phase skill to capture explicit approval:
-  - discovery gate pending -> `/oat:discovery`
-  - spec gate pending -> `/oat:spec`
-  - design gate pending -> `/oat:design`
+  - discovery gate pending -> `oat-project-discover`
+  - spec gate pending -> `oat-project-spec`
+  - design gate pending -> `oat-project-design`
 
 | oat_phase | oat_phase_status | Next Skill |
 |-----------|------------------|------------|
-| discovery | in_progress | Continue `/oat:discovery` |
-| discovery | complete | `/oat:spec` |
-| spec | in_progress | Continue `/oat:spec` |
-| spec | complete | `/oat:design` |
-| design | in_progress | Continue `/oat:design` |
-| design | complete | `/oat:plan` |
-| plan | in_progress | Continue `/oat:plan` |
-| plan | complete | `/oat:implement` |
-| implement | in_progress | Continue `/oat:implement` |
+| discovery | in_progress | Continue `oat-project-discover` |
+| discovery | complete | `oat-project-spec` |
+| spec | in_progress | Continue `oat-project-spec` |
+| spec | complete | `oat-project-design` |
+| design | in_progress | Continue `oat-project-design` |
+| design | complete | `oat-project-plan` |
+| plan | in_progress | Continue `oat-project-plan` |
+| plan | complete | `oat-project-implement` |
+| implement | in_progress | Continue `oat-project-implement` |
 | implement | complete | Ready for final review / PR |
 
 **If blockers exist:**
@@ -191,25 +191,25 @@ Address blocker before continuing.
 OAT Workflow Skills:
 
 Knowledge:
-  /oat:index     - Generate/refresh codebase knowledge base
+  oat-project-index             - Generate/refresh codebase knowledge base
 
 Workflow:
-  /oat:discovery - Start discovery phase (requirements gathering)
-  /oat:spec      - Create specification from discovery
-  /oat:design    - Create technical design from spec
-  /oat:plan      - Create implementation plan from design
-  /oat:implement - Execute implementation plan
+  oat-project-discover          - Start discovery phase (requirements gathering)
+  oat-project-spec              - Create specification from discovery
+  oat-project-design            - Create technical design from spec
+  oat-project-plan              - Create implementation plan from design
+  oat-project-implement         - Execute implementation plan
 
 Status:
-  /oat:progress  - Check project progress (this skill)
+  oat-project-progress          - Check project progress (this skill)
 
 Reviews:
-  /oat:request-review - Request a fresh-context code/artifact review (writes review artifact)
-  /oat:receive-review - Convert review findings into plan tasks (gap closure)
+  oat-project-review-provide    - Request a fresh-context code/artifact review (writes review artifact)
+  oat-project-review-receive    - Convert review findings into plan tasks (gap closure)
 
 PRs:
-  /oat:pr-progress - Create a progress PR description (phase-scoped)
-  /oat:pr-project  - Create the final project PR description (after final review)
+  oat-project-pr-progress       - Create a progress PR description (phase-scoped)
+  oat-project-pr-final          - Create the final project PR description (after final review)
 ```
 
 ### Step 7: Output Summary

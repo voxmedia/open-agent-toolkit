@@ -59,30 +59,6 @@ Usage notes:
 </skill>
 
 <skill>
-<name>oat-clear-active-project</name>
-<description>Clear the active project pointer</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-complete-project</name>
-<description>Mark a project lifecycle as complete</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-design</name>
-<description>Create detailed technical design from specification with architecture and implementation details</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-discovery</name>
-<description>Start discovery phase - gather requirements and understand the problem through structured dialogue</description>
-<location>project</location>
-</skill>
-
-<skill>
 <name>oat-idea-ideate</name>
 <description>Resume brainstorming on an existing idea through conversational discussion, or start from a scratchpad entry.</description>
 <location>project</location>
@@ -107,67 +83,91 @@ Usage notes:
 </skill>
 
 <skill>
-<name>oat-implement</name>
+<name>oat-project-clear-active</name>
+<description>Clear the active project pointer</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-project-complete</name>
+<description>Mark a project lifecycle as complete</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-project-design</name>
+<description>Create detailed technical design from specification with architecture and implementation details</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-project-discover</name>
+<description>Start discovery phase - gather requirements and understand the problem through structured dialogue</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-project-implement</name>
 <description>Execute implementation plan task-by-task with state tracking and TDD discipline</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-index</name>
+<name>oat-project-index</name>
 <description>Generate or regenerate comprehensive knowledge base of the codebase using parallel mapper agents.</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-new-project</name>
+<name>oat-project-new</name>
 <description>Create a new OAT project directory under {PROJECTS_ROOT}, scaffold artifacts from templates, and set it as the active project.</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-open-project</name>
+<name>oat-project-open</name>
 <description>Set the active project with validation</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-plan</name>
+<name>oat-project-plan</name>
 <description>Create implementation plan from design with bite-sized TDD tasks</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-pr-progress</name>
-<description>Create a progress PR description for a specific plan phase (pNN) using OAT artifacts and commit conventions; optionally open a PR</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-pr-project</name>
+<name>oat-project-pr-final</name>
 <description>Create the final project PR description (into main) using OAT artifacts and final review status; optionally open a PR</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-progress</name>
+<name>oat-project-pr-progress</name>
+<description>Create a progress PR description for a specific plan phase (pNN) using OAT artifacts and commit conventions; optionally open a PR</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-project-progress</name>
 <description>Check project progress and get routed to the appropriate next skill</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-receive-review</name>
-<description>Use after running oat-request-review - when a review artifact exists and findings need to be converted into actionable plan tasks for gap closure</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>oat-request-review</name>
+<name>oat-project-review-provide</name>
 <description>Use when ready to review completed work before merging - after implementing a task, phase, or full project; when quality gate needed before PR</description>
 <location>project</location>
 </skill>
 
 <skill>
-<name>oat-spec</name>
+<name>oat-project-review-receive</name>
+<description>Use after running oat-project-review-provide - when a review artifact exists and findings need to be converted into actionable plan tasks for gap closure</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-project-spec</name>
 <description>Create formal specification from discovery insights with structured requirements</description>
 <location>project</location>
 </skill>
@@ -189,11 +189,11 @@ Usage notes:
 - `pnpm lint` - Lint code using Biome
 - `pnpm format` - Format code using Biome
 - `pnpm type-check` - TypeScript type checking across all packages
-- `pnpm test` - Run tests (when implemented)
+- `pnpm test` - Run tests across the workspace
 
 ### Development Workflow
 - `pnpm dev` - Run workspace development tasks
-- `pnpm run cli -- --help` - Run the OAT CLI from repo root
+- `pnpm run cli -- help` - Run the OAT CLI help from repo root
 - `pnpm run cli -- <command> [options]` - Execute specific OAT CLI commands during local testing
 
 ### Package Management
@@ -211,7 +211,7 @@ Usage notes:
 ### Technology Stack
 - **Runtime**: Node.js 22.17.0 with TypeScript 5.8.3
 - **Development**: tsx for direct TypeScript execution with hot reloading
-- **Build**: Turborepo 2.5.4 with TypeScript compilation to `dist/`
+- **Build**: Turborepo 2.7.6 with TypeScript compilation to `dist/`
 - **Linting**: Biome 2.3.11  (extends from packages/biome-config)
 
 ### Build System
@@ -225,6 +225,6 @@ Usage notes:
 For multi-session or complex development tasks, use the structured agent project workflow:
 
 ### Project Structure
-Projects live in `.oat/projects/<project-name>/` with:
-- Core files: `discovery.md`, `planning.md`, `implementation.md`
-- Optional: `pr-description.md`, `reviews/`, `handoffs/`
+Projects live in `.oat/projects/<scope>/<project>/` with:
+- Core files: `state.md`, `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`
+- Optional: `reviews/`, `pr/`

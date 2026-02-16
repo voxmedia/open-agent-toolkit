@@ -26,6 +26,7 @@ OAT is organized as three distinct capabilities that can be used together or ind
 
 - Quickstart: `docs/oat/quickstart.md`
 - CLI docs index: `docs/oat/cli/index.md`
+- CLI design principles: `docs/oat/cli/design-principles.md`
 - Provider interop docs index: `docs/oat/cli/provider-interop/index.md`
 - Workflow docs index: `docs/oat/workflow/index.md`
 - Skills map: `docs/oat/skills/index.md`

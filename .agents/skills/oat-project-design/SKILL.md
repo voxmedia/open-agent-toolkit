@@ -1,5 +1,5 @@
 ---
-name: oat-design
+name: oat-project-design
 description: Create detailed technical design from specification with architecture and implementation details
 disable-model-invocation: true
 user-invocable: true
@@ -12,7 +12,7 @@ Transform specification requirements into a detailed technical design with archi
 
 ## Prerequisites
 
-**Required:** Complete specification document. If missing, run `/oat:spec` first.
+**Required:** Complete specification document. If missing, run the `oat-project-spec` skill first.
 
 ## Progress Indicators (User-Facing)
 
@@ -58,7 +58,7 @@ cat "$PROJECT_PATH/spec.md" | head -10 | grep "oat_status:"
 
 **Required frontmatter:**
 - `oat_status: complete`
-- `oat_ready_for: oat-design`
+- `oat_ready_for: oat-project-design`
 
 **If not complete:** Block and ask user to finish specification first.
 
@@ -237,7 +237,7 @@ Follow testing patterns from testing.md.
 
 **Why mapping matters:**
 - Ensures every requirement has a verification plan
-- Feeds directly into `oat-plan` task breakdown
+- Feeds directly into `oat-project-plan` task breakdown
 - Prevents "untested requirements" gaps
 
 ### Step 13: Plan Deployment
@@ -319,11 +319,11 @@ Read `"$PROJECT_PATH/state.md"` frontmatter:
 If `"design"` is in `oat_hil_checkpoints`, require explicit user approval before advancing.
 
 **Approval prompt (required):**
-- "Design artifact is ready. Approve design and unlock `/oat:plan`?"
+- "Design artifact is ready. Approve design and unlock `oat-project-plan`?"
 
 **Optional independent review path:**
 - If user wants fresh-context artifact review first, run:
-  - `/oat:request-review artifact design`
+  - `oat-project-review-provide artifact design`
 
 **If user does not approve yet:**
 - Keep design frontmatter as:
@@ -341,7 +341,7 @@ Update frontmatter:
 ```yaml
 ---
 oat_status: complete
-oat_ready_for: oat-plan
+oat_ready_for: oat-project-plan
 oat_blockers: []
 oat_last_updated: {today}
 ---
@@ -377,7 +377,7 @@ Design - Ready for implementation planning
 
 ### Step 22: Commit Design
 
-**Note:** This shows what users will do when USING oat-design.
+**Note:** This shows what users will do when USING oat-project-design.
 During implementation of OAT itself, use standard commit format.
 
 ```bash
@@ -405,7 +405,7 @@ Architecture:
 - {N} data models specified
 - {N} API endpoints designed
 
-Next: Create implementation plan with /oat:plan
+Next: Create implementation plan with the oat-project-plan skill
 ```
 
 ## Success Criteria

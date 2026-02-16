@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-design
+oat_ready_for: oat-project-design
 oat_blockers: []
 oat_last_updated: 2026-01-29
 oat_generated: false
@@ -22,7 +22,7 @@ This project implements minimal project lifecycle management and a derived repo 
 - Provide skills to set, clear, and complete the active project
 - Generate a repo state dashboard (`.oat/state.md`) showing current state at a glance
 - Keep implementation file-based and derived from existing sources of truth
-- Integrate dashboard generation into `oat-progress` and `oat-index` for auto-refresh
+- Integrate dashboard generation into `oat-project-progress` and `oat-project-index` for auto-refresh
 
 ### Secondary Goals
 - Validate project paths before setting active (strict validation)
@@ -42,7 +42,7 @@ This project implements minimal project lifecycle management and a derived repo 
 ### Functional Requirements
 
 **FR1: Set Active Project**
-- **Description:** User can set the active project to an existing project directory via `/oat:open-project`
+- **Description:** User can set the active project to an existing project directory via `oat-project-open`
 - **Acceptance Criteria:**
   - Skill resolves `{PROJECTS_ROOT}` (via env var, `.oat/projects-root`, or default)
   - Skill lists available projects in `{PROJECTS_ROOT}/*/` with their current phase
@@ -53,7 +53,7 @@ This project implements minimal project lifecycle management and a derived repo 
 - **Priority:** P0
 
 **FR2: Clear Active Project**
-- **Description:** User can clear the active project pointer via `/oat:clear-active-project`
+- **Description:** User can clear the active project pointer via `oat-project-clear-active`
 - **Acceptance Criteria:**
   - `.oat/active-project` file is removed or emptied
   - Confirmation message shown to user
@@ -61,7 +61,7 @@ This project implements minimal project lifecycle management and a derived repo 
 - **Priority:** P0
 
 **FR3: Complete Project**
-- **Description:** User can mark a project as semantically complete via `/oat:complete-project`
+- **Description:** User can mark a project as semantically complete via `oat-project-complete`
 - **Acceptance Criteria:**
   - Prompts user for confirmation
   - Optionally checks if final review is passed (warning, not blocking)
@@ -83,15 +83,15 @@ This project implements minimal project lifecycle management and a derived repo 
   - Dashboard handles missing active project gracefully (lists available projects)
 - **Priority:** P0
 
-**FR5: Dashboard Integration - oat-progress**
-- **Description:** `oat-progress` skill runs dashboard generation at the end
+**FR5: Dashboard Integration - oat-project-progress**
+- **Description:** `oat-project-progress` skill runs dashboard generation at the end
 - **Acceptance Criteria:**
-  - Dashboard is regenerated on every `oat-progress` invocation
+  - Dashboard is regenerated on every `oat-project-progress` invocation
   - No user action required to refresh
 - **Priority:** P0
 
-**FR6: Dashboard Integration - oat-index**
-- **Description:** `oat-index` skill runs dashboard generation after completion
+**FR6: Dashboard Integration - oat-project-index**
+- **Description:** `oat-project-index` skill runs dashboard generation after completion
 - **Acceptance Criteria:**
   - Dashboard is regenerated after knowledge base generation completes
   - Knowledge staleness section reflects fresh data immediately
@@ -112,7 +112,7 @@ This project implements minimal project lifecycle management and a derived repo 
 - **Description:** Dashboard generation must be fast enough for frequent invocation
 - **Acceptance Criteria:**
   - Script completes in <2 seconds on typical repo
-  - Acceptable to run on every `oat-progress` call
+  - Acceptable to run on every `oat-project-progress` call
 - **Priority:** P1
 
 **NFR2: Idempotency**
@@ -148,8 +148,8 @@ This project implements minimal project lifecycle management and a derived repo 
 - Existing `.oat/knowledge/repo/project-index.md` frontmatter structure
 - `.oat/projects-root` file (optional, for configurable projects location)
 - Git for diff stats calculation
-- `oat-progress` skill (for integration)
-- `oat-index` skill (for integration)
+- `oat-project-progress` skill (for integration)
+- `oat-project-index` skill (for integration)
 
 ## High-Level Design (Proposed)
 
@@ -157,13 +157,13 @@ The solution consists of a shell script for repo state generation and three skil
 
 The repo state script (`generate-oat-state.sh`) reads from four sources: the active project pointer, the project's state.md, the knowledge index, and git diff stats. It outputs a markdown file with sections for project status, knowledge status, and recommended next actions.
 
-The three skills (`oat-open-project`, `oat-clear-active-project`, `oat-complete-project`) are thin wrappers that manipulate the active project pointer and invoke the dashboard script. They follow the existing skill pattern with SKILL.md definitions.
+The three skills (`oat-project-open`, `oat-project-clear-active`, `oat-project-complete`) are thin wrappers that manipulate the active project pointer and invoke the dashboard script. They follow the existing skill pattern with SKILL.md definitions.
 
 **Key Components:**
 - `generate-oat-state.sh` - Shell script that generates the repo state dashboard (`.oat/state.md`)
-- `oat-open-project` - Skill to set active project with validation
-- `oat-clear-active-project` - Skill to clear active project pointer
-- `oat-complete-project` - Skill to mark project lifecycle complete
+- `oat-project-open` - Skill to set active project with validation
+- `oat-project-clear-active` - Skill to clear active project pointer
+- `oat-project-complete` - Skill to mark project lifecycle complete
 
 **Alternatives Considered:**
 - JSON state file - Rejected; markdown is human-readable and consistent with OAT patterns
@@ -177,7 +177,7 @@ The three skills (`oat-open-project`, `oat-clear-active-project`, `oat-complete-
 - Repo state dashboard correctly reflects active project state (manual verification)
 - All three skills complete without error on valid inputs
 - Repo state generation completes in <2 seconds
-- Integration with oat-progress and oat-index works automatically
+- Integration with oat-project-progress and oat-project-index works automatically
 - Zero data loss or corruption to existing project artifacts
 
 ## Requirement Index
@@ -188,8 +188,8 @@ The three skills (`oat-open-project`, `oat-clear-active-project`, `oat-complete-
 | FR2 | Clear active project via skill | P0 | manual: invoke skill, verify pointer removed | p02-t02, p02-t04, p02-t05 |
 | FR3 | Mark project complete via skill | P1 | manual: invoke skill, verify oat_lifecycle set | p02-t03, p02-t04, p02-t05 |
 | FR4 | Generate repo state dashboard | P0 | manual: run script, verify output sections | p01-t01 to p01-t09 |
-| FR5 | Dashboard integration - oat-progress | P0 | manual: run oat-progress, verify dashboard updated | p03-t01, p03-t03 |
-| FR6 | Dashboard integration - oat-index | P1 | manual: run oat-index, verify dashboard updated | p03-t02, p03-t03 |
+| FR5 | Dashboard integration - oat-project-progress | P0 | manual: run oat-project-progress, verify dashboard updated | p03-t01, p03-t03 |
+| FR6 | Dashboard integration - oat-project-index | P1 | manual: run oat-project-index, verify dashboard updated | p03-t02, p03-t03 |
 | FR7 | Project validation on set | P0 | manual: try invalid project, verify error | p02-t01 |
 | NFR1 | Script performance <2s | P1 | perf: time script execution | p01-t10 |
 | NFR2 | Script idempotency | P0 | manual: run twice, diff outputs | p01-t10 |
@@ -201,7 +201,7 @@ The three skills (`oat-open-project`, `oat-clear-active-project`, `oat-complete-
 
 ## Resolved Questions
 
-- **Completion semantics:** ~~Should `oat-complete-project` update `state.md` to mark phase as "complete"?~~ **Resolved:** No. Uses separate `oat_lifecycle: complete` field to distinguish project completion from workflow phase progression.
+- **Completion semantics:** ~~Should `oat-project-complete` update `state.md` to mark phase as "complete"?~~ **Resolved:** No. Uses separate `oat_lifecycle: complete` field to distinguish project completion from workflow phase progression.
 
 ## Assumptions
 
@@ -218,7 +218,7 @@ The three skills (`oat-open-project`, `oat-clear-active-project`, `oat-complete-
   - **Impact:** Low (dashboard is informational)
   - **Mitigation:** Use simple grep/sed patterns, handle missing data gracefully
 
-- **Integration breakage:** Changes to oat-progress/oat-index could break
+- **Integration breakage:** Changes to oat-project-progress/oat-project-index could break
   - **Likelihood:** Low
   - **Impact:** Medium
   - **Mitigation:** Keep integration minimal (single line addition)

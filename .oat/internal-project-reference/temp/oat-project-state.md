@@ -82,8 +82,8 @@ If `.oat/active-project` is missing/empty/invalid:
   - `Active Project: (not set)`
   - `Projects found:` list of `{PROJECTS_ROOT}/*/` (from `.oat/projects-root`) (and optionally legacy `.agent/projects/*/`)
   - `Next:` recommend:
-    - start new project (via `/oat:discovery`), or
-    - set an active project (via `oat-open-project` / write `.oat/active-project`)
+    - start new project (via `oat-project-discover`), or
+    - set an active project (via `oat-project-open` / write `.oat/active-project`)
 
 ### Minimal Output Structure (v1)
 
@@ -109,8 +109,8 @@ Suggested `.oat/state.md` shape:
 ### When To Run It
 
 Minimal dogfood wiring:
-- `oat-progress` runs the script at the end (so every “status check” refreshes the dashboard)
-- Optionally, `oat-index` runs it after regeneration (so the knowledge section updates immediately)
+- `oat-project-progress` runs the script at the end (so every “status check” refreshes the dashboard)
+- Optionally, `oat-project-index` runs it after regeneration (so the knowledge section updates immediately)
 
 No background automation needed for v1.
 
@@ -120,7 +120,7 @@ No background automation needed for v1.
 
 These should eventually be part of the OAT CLI (`oat project ...`), but for dogfooding we can implement them as scripts and/or skills.
 
-### `oat-open-project` (Set Active Project)
+### `oat-project-open` (Set Active Project)
 
 Purpose:
 - Set `.oat/active-project` to an existing project directory
@@ -132,7 +132,7 @@ Behavior:
 Writes:
 - `.oat/active-project`
 
-### `oat-clear-active-project` (Pause)
+### `oat-project-clear-active` (Pause)
 
 Purpose:
 - Stop “auto targeting” a project
@@ -140,7 +140,7 @@ Purpose:
 Behavior:
 - Remove or empty `.oat/active-project`
 
-### `oat-complete-project` (Complete)
+### `oat-project-complete` (Complete)
 
 Purpose:
 - Mark the project lifecycle as “complete” (semantic completion), without necessarily moving files
@@ -153,11 +153,11 @@ Minimal v1 behavior:
 - Optionally clear `.oat/active-project`
 
 Note:
-- “Archive” is a separate future command (`oat-archive-project`) so “complete” doesn’t silently move/delete content.
+- "Archive" is a separate future command (`oat-project-archive`) so "complete" doesn't silently move/delete content.
 
 ---
 
 ## Notes on Terminology
 
 - Use `complete` (project lifecycle) rather than `close`/`end` to avoid ambiguity.
-- Use `clear` for pointer semantics (`oat-clear-active-project`).
+- Use `clear` for pointer semantics (`oat-project-clear-active`).

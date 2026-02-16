@@ -136,13 +136,13 @@ Next steps (suggest to the user — do not auto-invoke):
 - Start a new idea: run the `oat-idea-new` skill
 - Browse ideas: check {IDEAS_ROOT}/backlog.md
 - Quick capture: run the `oat-idea-scratchpad` skill to jot down a new idea seed
-- Promote to project: run the `oat-new-project` skill, then seed its
+- Promote to project: run the `oat-project-new` skill, then seed its
   discovery phase with this idea's summary as the initial request
 ```
 
 **Promotion contract (v1):** To promote an idea to a full OAT project:
-1. Run `oat-new-project {idea-name}` to scaffold the project
-2. Run `oat-discovery` — use the idea's `summary.md` as the initial request input
+1. Run `oat-project-new {idea-name}` to scaffold the project
+2. Run `oat-project-discover` — use the idea's `summary.md` as the initial request input
 3. The idea's discovery and summary documents remain in `{IDEAS_ROOT}/` as reference
 4. Update the ideas backlog entry to `Archived` with reason: `promoted to project`
 

@@ -46,7 +46,7 @@ This will be implemented with new entry skills plus targeted updates to existing
 
 ### 2. Add New Entry Skills
 - Implement `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/oat-quick-start/SKILL.md`.
-- Flow: resolve/new project -> run discovery conversation using existing discovery template expectations -> generate OAT-compatible `plan.md` directly -> set state to `plan complete` and ready for `oat-implement`.
+- Flow: resolve/new project -> run discovery conversation using existing discovery template expectations -> generate OAT-compatible `plan.md` directly -> set state to `plan complete` and ready for `oat-project-implement`.
 - Ensure no spec/design hard dependency in this path.
 - Implement `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/oat-import-plan/SKILL.md`.
 - Flow: create/open project -> validate local `.md` source path -> copy raw file to `references/imported-plan.md` -> normalize to OAT `plan.md` (`pNN-tNN` task IDs, verification + commit scaffolding) -> set state to `plan complete`.
@@ -54,12 +54,12 @@ This will be implemented with new entry skills plus targeted updates to existing
 - Flow: detect quick/import project -> backfill missing `discovery/spec/design` in-place (without replacing `plan.md`) -> hand off to standard full lifecycle routing.
 
 ### 3. Make Existing Skills Mode-Aware (Minimal Changes)
-- Update `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/oat-request-review/SKILL.md`.
+- Update `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/oat-project-review-provide/SKILL.md`.
 - For `quick/import`, require `plan.md` (+ `implementation.md` when present), treat `spec/design` as optional inputs.
-- Update `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/oat-pr-progress/SKILL.md`.
-- Update `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/oat-pr-project/SKILL.md`.
+- Update `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/oat-project-pr-progress/SKILL.md`.
+- Update `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/oat-project-pr-final/SKILL.md`.
 - For `quick/import`, generate PR artifacts from available docs; include reduced-artifact note.
-- Update `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/oat-progress/SKILL.md` and `/Users/thomas.stang/Code/open-agent-toolkit/.oat/scripts/generate-oat-state.sh`.
+- Update `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/oat-project-progress/SKILL.md` and `/Users/thomas.stang/Code/open-agent-toolkit/.oat/scripts/generate-oat-state.sh`.
 - Respect `oat_workflow_mode` when recommending next skill and avoid suggesting skipped phases for quick/import projects.
 
 ### 4. Documentation Updates
@@ -82,7 +82,7 @@ This will be implemented with new entry skills plus targeted updates to existing
 1. Quick start happy path.
 - Start with no active project.
 - Run `oat-quick-start`.
-- Confirm `discovery.md`, `plan.md`, `implementation.md` are usable and project routes to `oat-implement`.
+- Confirm `discovery.md`, `plan.md`, `implementation.md` are usable and project routes to `oat-project-implement`.
 
 2. Import happy path.
 - Provide valid external markdown path.
@@ -94,18 +94,18 @@ This will be implemented with new entry skills plus targeted updates to existing
 - Nonexistent file should hard-fail with actionable message and no partial state corruption.
 
 4. Review/PR with missing spec/design.
-- In quick/import project, run `oat-request-review` and `oat-pr-progress`/`oat-pr-project`.
+- In quick/import project, run `oat-project-review-provide` and `oat-project-pr-progress`/`oat-project-pr-final`.
 - Confirm success with optional artifact handling and explicit reduced-assurance note.
 
 5. Full workflow non-regression.
-- Existing `oat-discovery -> oat-spec -> oat-design -> oat-plan -> oat-implement` behavior remains unchanged.
+- Existing `oat-project-discover -> oat-project-spec -> oat-project-design -> oat-project-plan -> oat-project-implement` behavior remains unchanged.
 
 6. Promote-in-place.
 - Start from import project, run `oat-promote-full`.
 - Confirm missing artifacts are backfilled without replacing existing `plan.md` history and project remains routable.
 
 ## Assumptions And Defaults
-- Default mode for `oat-new-project` remains `full`.
+- Default mode for `oat-project-new` remains `full`.
 - Imported source format in v1 is markdown only, local path only.
 - Provider-specific parsers are out of scope for v1.
 - Clipboard/paste import is deferred.

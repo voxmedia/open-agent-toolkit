@@ -26,4 +26,4 @@ Approved for handoff to design.
 
 ## Recommendation
 
-Proceed to `/oat:design`.
+Proceed to `oat-project-design`.

@@ -13,7 +13,7 @@ oat_template_name: plan
 
 # Implementation Plan: {Project Name}
 
-> Execute this plan using the `oat-implement` skill (`/oat:implement` where slash prompts are supported), task-by-task with phase checkpoints and review gates.
+> Execute this plan using the `oat-project-implement` skill, task-by-task with phase checkpoints and review gates.
 
 **Goal:** {Brief goal statement from spec}
 
@@ -121,7 +121,7 @@ git commit -m "feat(p01-t02): {description}"
 
 ## Reviews
 
-{Track reviews here after running /oat:request-review and /oat:receive-review.}
+{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 

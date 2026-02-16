@@ -4,16 +4,16 @@ Project skills are stored in `.agents/skills`.
 
 ## Lifecycle skills
 
-- `oat-new-project`
-- `oat-open-project`
-- `oat-clear-active-project`
-- `oat-discovery`
-- `oat-spec`
-- `oat-design`
-- `oat-plan`
-- `oat-implement`
-- `oat-progress`
-- `oat-complete-project`
+- `oat-project-new`
+- `oat-project-open`
+- `oat-project-clear-active`
+- `oat-project-discover`
+- `oat-project-spec`
+- `oat-project-design`
+- `oat-project-plan`
+- `oat-project-implement`
+- `oat-project-progress`
+- `oat-project-complete`
 
 ## Ideas skills
 
@@ -24,14 +24,14 @@ Project skills are stored in `.agents/skills`.
 
 ## Review and PR skills
 
-- `oat-request-review`
-- `oat-receive-review`
-- `oat-pr-progress`
-- `oat-pr-project`
+- `oat-project-review-provide`
+- `oat-project-review-receive`
+- `oat-project-pr-progress`
+- `oat-project-pr-final`
 
 ## Utility and maintenance skills
 
-- `oat-index`
+- `oat-project-index`
 - `create-oat-skill`
 - `create-skill`
 - `create-pr-description`

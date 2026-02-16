@@ -82,8 +82,8 @@ The backlog (`backlog.md`) aggregates all ideas in three sections:
 
 To promote a summarized idea to a full OAT project:
 
-1. Run `oat-new-project {idea-name}` to scaffold the project
-2. Run `oat-discovery` and use the idea's `summary.md` as the initial request
+1. Run the `oat-project-new` skill with the idea name to scaffold the project
+2. Run the `oat-project-discover` skill and use the idea's `summary.md` as the initial request
 3. Update the ideas backlog entry to Archived with reason: promoted to project
 
 ## Initialization

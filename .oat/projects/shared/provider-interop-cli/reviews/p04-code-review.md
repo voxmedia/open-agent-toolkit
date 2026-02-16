@@ -197,4 +197,4 @@ pnpm --filter=@oat/cli test src/commands/commands.integration.test.ts
 
 ## Recommended Next Step
 
-Run `/oat:receive-review` to convert findings into plan tasks.
+Run `oat-project-review-receive` to convert findings into plan tasks.

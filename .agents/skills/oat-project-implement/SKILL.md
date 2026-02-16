@@ -1,5 +1,5 @@
 ---
-name: oat-implement
+name: oat-project-implement
 description: Execute implementation plan task-by-task with state tracking and TDD discipline
 disable-model-invocation: true
 user-invocable: true
@@ -12,7 +12,7 @@ Execute the implementation plan task-by-task with full state tracking.
 
 ## Prerequisites
 
-**Required:** Complete implementation plan. If missing, run `/oat:plan` first.
+**Required:** Complete implementation plan. If missing, run the `oat-project-plan` skill first.
 
 ## Mode Assertion
 
@@ -92,7 +92,7 @@ cat "$PROJECT_PATH/plan.md" | head -10 | grep "oat_status:"
 
 **Required frontmatter:**
 - `oat_status: complete`
-- `oat_ready_for: oat-implement`
+- `oat_ready_for: oat-project-implement`
 
 **If not complete:** Block and ask user to finish plan first.
 
@@ -152,7 +152,7 @@ oat_current_task_id: p01-t01  # Stable task ID from plan
 ---
 ```
 
-Initialize project state so other skills (e.g., `/oat:progress`) reflect that implementation has started:
+Initialize project state so other skills (e.g., `oat-project-progress`) reflect that implementation has started:
 - In `"$PROJECT_PATH/state.md"` frontmatter:
   - `oat_phase: implement`
   - `oat_phase_status: in_progress`
@@ -241,11 +241,11 @@ Keep project state in sync after each task (recommended source of truth for “w
   - The “Review Received” section reflects whether findings were deferred vs converted to tasks
   - The “Next” line is updated once review fix tasks are complete (don’t leave “Next: execute fix tasks” after they’re done)
 - Keep `plan.md` internally consistent:
-  - If `## Implementation Complete` contains phase/task totals, update totals when review fix tasks are added (via `/oat:receive-review`) or removed.
+  - If `## Implementation Complete` contains phase/task totals, update totals when review fix tasks are added (via `oat-project-review-receive`) or removed.
 - Review status lifecycle:
   - When review-generated fix tasks are added, the Reviews table should be `fixes_added`.
   - After all fix tasks are implemented, update the Reviews table to `fixes_completed` (not `passed`).
-  - Only set `passed` after a re-review is run and processed via `/oat:receive-review` with no Critical/Important findings.
+  - Only set `passed` after a re-review is run and processed via `oat-project-review-receive` with no Critical/Important findings.
 
 **Review-fix completion bookkeeping (required):**
 - When you complete the last outstanding review-fix task:
@@ -295,7 +295,7 @@ When stopping:
   - Notable decisions/deviations
 
 **Note on HiL types:**
-- **Workflow HiL** (`oat_hil_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-progress router.
+- **Workflow HiL** (`oat_hil_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-project-progress router.
 - **Plan phase checkpoints** (`oat_plan_hil_phases` in plan.md): Gates at plan phase boundaries during implementation. Default: stop at every phase. Configure to stop only at specific phases.
 
 ### Step 9: Repeat Until Complete
@@ -342,7 +342,7 @@ Options:
 When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` task):
 
 **Update “Final Summary” (required):**
-- Before requesting final review / running `/oat:pr-project`, update the `## Final Summary (for PR/docs)` section in `"$PROJECT_PATH/implementation.md"`:
+- Before requesting final review / running `oat-project-pr-final`, update the `## Final Summary (for PR/docs)` section in `"$PROJECT_PATH/implementation.md"`:
   - What shipped (capabilities, behavior-level)
   - Key files/modules touched
   - Verification performed (tests/lint/typecheck/build/manual)
@@ -443,15 +443,15 @@ Review options:
 2. Run review in fresh session (recommended fallback)
 3. Run review inline (less reliable)
 
-Choose, or run: /oat:request-review code final
+Choose, or run: oat-project-review-provide code final
 ```
 
 **After user chooses:**
-- If subagent/fresh session: User runs `/oat:request-review code final` in appropriate context
-- If inline: Proceed with inline review per oat-request-review skill
-- After review: User runs `/oat:receive-review` to process findings
-- If Critical/Important findings: Fix tasks added, re-run `/oat:implement`
-- Loop until final review passes (max 3 cycles per oat-receive-review)
+- If subagent/fresh session: User runs `oat-project-review-provide code final` in appropriate context
+- If inline: Proceed with inline review per oat-project-review-provide skill
+- After review: User runs `oat-project-review-receive` to process findings
+- If Critical/Important findings: Fix tasks added, re-run the `oat-project-implement` skill
+- Loop until final review passes (max 3 cycles per oat-project-review-receive)
 
 **After final review is marked `passed`:**
 - Update `"$PROJECT_PATH/state.md"` frontmatter:
@@ -483,9 +483,9 @@ Choose:
 ```
 
 **If user chooses to open PR:**
-- Prefer using `/oat:pr-project` to generate a final PR description from OAT artifacts:
+- Prefer using the `oat-project-pr-final` skill to generate a final PR description from OAT artifacts:
   ```
-  /oat:pr-project
+  oat-project-pr-final
   ```
 - If the environment cannot run skills for any reason, fall back to manual PR creation:
   ```
@@ -515,7 +515,7 @@ Final review:
 - Status: ✓ passed
 - Artifact: reviews/final-review-{date}.md
 
-Next: Create PR or run /oat:pr-project (when available)
+Next: Create PR or run the oat-project-pr-final skill (when available)
 ```
 
 ## Success Criteria

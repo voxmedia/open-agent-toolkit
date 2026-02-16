@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-spec
+oat_ready_for: oat-project-spec
 oat_blockers: []
 oat_last_updated: 2026-02-13
 oat_generated: false
@@ -266,4 +266,4 @@ Codex caveat: Codex subagent support is experimental/release-pending, so `.codex
 
 ## Next Steps
 
-Ready for `/oat:spec` to create formal specification.
+Ready for `oat-project-spec` to create formal specification.

@@ -21,7 +21,7 @@ oat_template_name: implementation
 > - When all plan tasks are complete, set `oat_current_task_id: null`.
 > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running `/oat:pr-project`, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
 
 ## Progress Overview
 

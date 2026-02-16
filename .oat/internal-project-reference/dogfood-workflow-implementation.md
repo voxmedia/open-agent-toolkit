@@ -41,7 +41,7 @@ The Open Agent Toolkit (OAT) is a structured workflow system for AI-assisted sof
 ### Implementation Scope
 
 This implementation delivered:
-- **12 workflow skills** - oat-index, oat-progress, oat-new-project, oat-discovery, oat-spec, oat-design, oat-plan, oat-implement, oat-request-review, oat-receive-review, oat-pr-progress, oat-pr-project
+- **12 workflow skills** - oat-project-index, oat-project-progress, oat-project-new, oat-project-discover, oat-project-spec, oat-project-design, oat-project-plan, oat-project-implement, oat-project-review-provide, oat-project-review-receive, oat-project-pr-progress, oat-project-pr-final
 - **Skill scaffolding** - create-oat-skill (specialized create-skill workflow for consistent OAT conventions)
 - **Templates** - state.md, discovery.md, spec.md, design.md, plan.md, implementation.md, project-index.md
 - **State management** - YAML frontmatter-based workflow state tracking
@@ -60,15 +60,15 @@ This implementation delivered:
 | Scripts | `.oat/scripts/*` | Utility scripts (e.g., thin index generation) |
 | Workflow Guide | `.oat/internal-project-reference/workflow-guide.md` | End-to-end “how to run OAT” (happy path + resume/review/PR loops) |
 | Skill Registry | `AGENTS.md` | Skills registered for tool discovery |
-| Router Contract | `state.md` frontmatter | Fields used by oat-progress for routing |
+| Router Contract | `state.md` frontmatter | Fields used by oat-project-progress for routing |
 | Knowledge Contract | `project-index.md` frontmatter | Fields for staleness detection |
 
 ### Skill Registration and Discovery
 
 Skills are registered in `AGENTS.md` so tools can load them. They can be invoked:
 
-- **Via slash command:** `/oat:discovery`, `/oat:plan`, etc. (Claude Code, Cursor)
-- **Via CLI:** `npx openskills read oat-discovery`, `npx openskills read oat-plan`
+- **Via slash command:** `oat-project-discover`, `oat-project-plan`, etc. (Claude Code, Cursor)
+- **Via CLI:** `npx openskills read oat-project-discover`, `npx openskills read oat-project-plan`
 
 #### Skill Frontmatter (Provider-Dependent)
 
@@ -79,8 +79,8 @@ Many skills use optional frontmatter fields to make behavior more consistent acr
 - `allowed-tools: ...` — advisory tool scope (some providers enforce it strictly; others treat it as documentation)
 
 For OAT workflow skills, `allowed-tools` is generally split into:
-- **Read-only** skills (e.g., `oat-progress`, `oat-request-review`) — no `Write`/`Edit`
-- **Write** skills (e.g., `oat-discovery` → `oat-implement`, `oat-receive-review`, PR skills) — include `Write` and `Bash(git:*)`
+- **Read-only** skills (e.g., `oat-project-progress`, `oat-project-review-provide`) — no `Write`/`Edit`
+- **Write** skills (e.g., `oat-project-discover` → `oat-project-implement`, `oat-project-review-receive`, PR skills) — include `Write` and `Bash(git:*)`
 
 ---
 
@@ -104,12 +104,12 @@ For OAT workflow skills, `allowed-tools` is generally split into:
 | Field | Type | Purpose |
 |-------|------|---------|
 | `oat_status` | string | Document status: in_progress \| complete |
-| `oat_ready_for` | string\|null | Next skill (e.g., `oat-implement`) |
+| `oat_ready_for` | string\|null | Next skill (e.g., `oat-project-implement`) |
 | `oat_plan_hil_phases` | array | Which plan phase boundaries should stop for HiL (empty = stop at every phase boundary) |
 
 ### plan.md Reviews Table Contract (Body, Not Frontmatter)
 
-`plan.md` also contains a `## Reviews` section with a table. This is the canonical review state for v1 and is used by `oat-implement` to gate the final PR prompt.
+`plan.md` also contains a `## Reviews` section with a table. This is the canonical review state for v1 and is used by `oat-project-implement` to gate the final PR prompt.
 
 **Columns:**
 - `Scope` (e.g., `p01`, `p02`, `final`, `spec`, `design`, `plan`)
@@ -157,12 +157,12 @@ Used in:
 │                              OAT Workflow                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  /oat:index → /oat:discovery → /oat:spec → /oat:design → /oat:plan → /oat:implement
+│  oat-project-index → oat-project-discover → oat-project-spec → oat-project-design → oat-project-plan → oat-project-implement
 │       │              │             │            │            │            │
 │       ▼              ▼             ▼            ▼            ▼            ▼
 │  .oat/knowledge/  discovery.md  spec.md    design.md    plan.md    implementation.md
 │                                                                             │
-│  ◄──────────────────── /oat:progress (Router) ─────────────────────────►   │
+│  ◄──────────────────── oat-project-progress (Router) ─────────────────────────►   │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -171,7 +171,7 @@ Used in:
 
 #### 1. Knowledge-First Enforcement
 
-The system requires codebase knowledge generation before any project work begins. The `/oat:index` skill generates knowledge in two stages:
+The system requires codebase knowledge generation before any project work begins. The `oat-project-index` skill generates knowledge in two stages:
 
 **Stage 1: Thin Index (Deterministic)**
 - Generated via `generate-thin-index.sh`
@@ -245,14 +245,14 @@ oat_last_updated: YYYY-MM-DD
 This separation enables:
 - **Resumability** - Work can be resumed after session breaks
 - **Visibility** - Progress is human-readable
-- **Routing** - `/oat:progress` reads state.md for next steps
+- **Routing** - `oat-project-progress` reads state.md for next steps
 - **Phase Isolation** - Each phase document tracks its own completion
 
 ---
 
 ## Workflow Phases
 
-### Phase 1: Knowledge Generation (`/oat:index`)
+### Phase 1: Knowledge Generation (`oat-project-index`)
 
 **Purpose:** Generate comprehensive codebase analysis.
 
@@ -280,7 +280,7 @@ This separation enables:
 - Age check: Warns if knowledge >7 days old (from `oat_generated_at`)
 - Git diff check: Warns if >20 files changed since `oat_source_main_merge_base_sha` (merge base)
 
-### Phase 2: Discovery (`/oat:discovery`)
+### Phase 2: Discovery (`oat-project-discover`)
 
 **Purpose:** Gather requirements through structured dialogue. Understand the problem, explore constraints, and capture decisions.
 
@@ -308,7 +308,7 @@ ALLOWED: Questions, clarification, requirement exploration, constraint discovery
 - Open Questions
 - Key Decisions
 
-### Phase 3: Specification (`/oat:spec`)
+### Phase 3: Specification (`oat-project-spec`)
 
 **Purpose:** Create formal requirements with acceptance criteria from discovery insights.
 
@@ -342,7 +342,7 @@ ALLOWED: Requirement formalization, acceptance criteria, testable specifications
 | FR1 | User authentication | P0 | unit + integration: auth token validation | p01-t03, p02-t01 |
 ```
 
-### Phase 4: Design (`/oat:design`)
+### Phase 4: Design (`oat-project-design`)
 
 **Purpose:** Create detailed technical design from specification. Document architecture, interfaces, and implementation approach.
 
@@ -373,7 +373,7 @@ ALLOWED: Architecture decisions, interface design, technical planning
 - Performance Considerations
 - Testing Strategy
 
-### Phase 5: Planning (`/oat:plan`)
+### Phase 5: Planning (`oat-project-plan`)
 
 **Purpose:** Break design into bite-sized TDD tasks with stable IDs, verification commands, and commit messages.
 
@@ -431,7 +431,7 @@ git commit -m "feat(p01-t03): {description}"
 - Atomic commit
 - Stable ID for traceability
 
-### Phase 6: Implementation (`/oat:implement`)
+### Phase 6: Implementation (`oat-project-implement`)
 
 **Purpose:** Execute plan tasks with state tracking, TDD discipline, and configurable phase checkpoints.
 
@@ -474,19 +474,19 @@ ALLOWED: Task execution, minor adaptations, blocker logging
 **Purpose:** Run fresh-context review(s), convert findings into plan tasks, and close the loop before opening a PR.
 
 **How it works:**
-- **Request review** (`/oat:request-review`) produces a review artifact on disk (code review or artifact review).
-- **Receive review** (`/oat:receive-review`) converts Critical/Important findings into new plan tasks, updates the plan Reviews table, and routes back to `/oat:implement`.
+- **Request review** (`oat-project-review-provide`) produces a review artifact on disk (code review or artifact review).
+- **Receive review** (`oat-project-review-receive`) converts Critical/Important findings into new plan tasks, updates the plan Reviews table, and routes back to `oat-project-implement`.
 - **Implementation** reruns to execute those fix tasks; re-review should scope to fix tasks after the first cycle.
 
 **Default trigger timing (v1):**
-- Final code review is required at the end of the final plan phase boundary (enforced by `oat-implement`).
+- Final code review is required at the end of the final plan phase boundary (enforced by `oat-project-implement`).
 - Non-final reviews are manual by default (user can request task/phase reviews as desired).
 
 **PR prompt:**
-- After the final review `Status: passed`, `oat-implement` prompts the user to open a PR.
+- After the final review `Status: passed`, `oat-project-implement` prompts the user to open a PR.
 - OAT-native PR description skills exist:
-  - `oat-pr-progress` (phase/progress PR description)
-  - `oat-pr-project` (final project PR description into main)
+  - `oat-project-pr-progress` (phase/progress PR description)
+  - `oat-project-pr-final` (final project PR description into main)
 
 ---
 
@@ -496,18 +496,18 @@ ALLOWED: Task execution, minor adaptations, blocker logging
 
 | Skill | What It Checks | Threshold | Action |
 |-------|----------------|-----------|--------|
-| oat-progress | Knowledge age | >7 days | Warn, suggest reindex |
-| oat-progress | Knowledge git diff | >20 files changed | Warn, suggest reindex |
-| oat-discovery | Knowledge exists | Missing | Block, require oat-index |
-| oat-discovery | Knowledge age | >7 days | Warn, allow continue |
-| oat-spec | discovery.md complete | `oat_status != complete` | Block |
-| oat-design | spec.md complete | `oat_status != complete` | Block |
-| oat-plan | design.md complete | `oat_status != complete` | Block |
-| oat-implement | plan.md complete | `oat_status != complete` | Block |
+| oat-project-progress | Knowledge age | >7 days | Warn, suggest reindex |
+| oat-project-progress | Knowledge git diff | >20 files changed | Warn, suggest reindex |
+| oat-project-discover | Knowledge exists | Missing | Block, require oat-project-index |
+| oat-project-discover | Knowledge age | >7 days | Warn, allow continue |
+| oat-project-spec | discovery.md complete | `oat_status != complete` | Block |
+| oat-project-design | spec.md complete | `oat_status != complete` | Block |
+| oat-project-plan | design.md complete | `oat_status != complete` | Block |
+| oat-project-implement | plan.md complete | `oat_status != complete` | Block |
 
-### oat-index
+### oat-project-index
 
-**Location:** `.agents/skills/oat-index/SKILL.md`
+**Location:** `.agents/skills/oat-project-index/SKILL.md`
 
 **Purpose:** Generate comprehensive codebase analysis.
 
@@ -523,9 +523,9 @@ ALLOWED: Task execution, minor adaptations, blocker logging
 
 ---
 
-### oat-progress
+### oat-project-progress
 
-**Location:** `.agents/skills/oat-progress/SKILL.md`
+**Location:** `.agents/skills/oat-project-progress/SKILL.md`
 
 **Purpose:** Router skill that checks status and routes to the appropriate next phase.
 
@@ -540,13 +540,13 @@ ALLOWED: Task execution, minor adaptations, blocker logging
 
 ---
 
-### oat-discovery
+### oat-project-discover
 
-**Location:** `.agents/skills/oat-discovery/SKILL.md`
+**Location:** `.agents/skills/oat-project-discover/SKILL.md`
 
 **Purpose:** Gather requirements through structured dialogue.
 
-**Prerequisites:** Knowledge base generated (oat-index complete)
+**Prerequisites:** Knowledge base generated (oat-project-index complete)
 
 **Key Steps:**
 1. Check knowledge base exists and is fresh
@@ -566,18 +566,18 @@ oat_hil_completed: [..., "discovery"]
 
 # In discovery.md:
 oat_status: complete
-oat_ready_for: oat-spec
+oat_ready_for: oat-project-spec
 ```
 
 ---
 
-### oat-spec
+### oat-project-spec
 
-**Location:** `.agents/skills/oat-spec/SKILL.md`
+**Location:** `.agents/skills/oat-project-spec/SKILL.md`
 
 **Purpose:** Create formal requirements with acceptance criteria.
 
-**Prerequisites:** Discovery complete (`oat_ready_for: oat-spec` in discovery.md)
+**Prerequisites:** Discovery complete (`oat_ready_for: oat-project-spec` in discovery.md)
 
 **Key Steps:**
 1. Read discovery.md completely
@@ -588,17 +588,17 @@ oat_ready_for: oat-spec
 6. Review with user
 7. Mark complete and update state
 
-**Requirement Index:** Creates traceability table linking requirements to tasks (tasks column filled by oat-plan)
+**Requirement Index:** Creates traceability table linking requirements to tasks (tasks column filled by oat-project-plan)
 
 ---
 
-### oat-design
+### oat-project-design
 
-**Location:** `.agents/skills/oat-design/SKILL.md`
+**Location:** `.agents/skills/oat-project-design/SKILL.md`
 
 **Purpose:** Create detailed technical design from specification.
 
-**Prerequisites:** Specification complete (`oat_ready_for: oat-design` in spec.md)
+**Prerequisites:** Specification complete (`oat_ready_for: oat-project-design` in spec.md)
 
 **Key Steps:**
 1. Read spec.md and knowledge base
@@ -614,13 +614,13 @@ oat_ready_for: oat-spec
 
 ---
 
-### oat-plan
+### oat-project-plan
 
-**Location:** `.agents/skills/oat-plan/SKILL.md`
+**Location:** `.agents/skills/oat-project-plan/SKILL.md`
 
 **Purpose:** Create implementation plan with bite-sized TDD tasks.
 
-**Prerequisites:** Design complete (`oat_ready_for: oat-plan` in design.md)
+**Prerequisites:** Design complete (`oat_ready_for: oat-project-plan` in design.md)
 
 **Key Steps:**
 1. Read design.md completely
@@ -645,13 +645,13 @@ oat_plan_hil_phases: ["p01", "p04"]
 
 ---
 
-### oat-implement
+### oat-project-implement
 
-**Location:** `.agents/skills/oat-implement/SKILL.md`
+**Location:** `.agents/skills/oat-project-implement/SKILL.md`
 
 **Purpose:** Execute plan tasks with state tracking and TDD discipline.
 
-**Prerequisites:** Plan complete (`oat_ready_for: oat-implement` in plan.md)
+**Prerequisites:** Plan complete (`oat_ready_for: oat-project-implement` in plan.md)
 
 **Key Steps:**
 1. Read plan.md completely
@@ -681,9 +681,9 @@ oat_blockers:
 
 ---
 
-### oat-request-review
+### oat-project-review-provide
 
-**Location:** `.agents/skills/oat-request-review/SKILL.md`
+**Location:** `.agents/skills/oat-project-review-provide/SKILL.md`
 
 **Purpose:** Produce a review artifact (code review or artifact review) for a requested scope (task/phase/final/SHA range).
 
@@ -704,9 +704,9 @@ oat_blockers:
 
 ---
 
-### oat-receive-review
+### oat-project-review-receive
 
-**Location:** `.agents/skills/oat-receive-review/SKILL.md`
+**Location:** `.agents/skills/oat-project-review-receive/SKILL.md`
 
 **Purpose:** Convert a review artifact into plan tasks for systematic gap closure.
 
@@ -720,13 +720,13 @@ oat_blockers:
   - After fix tasks are implemented, the row should move to `fixes_completed` until a re-review is run and marked `passed`
 - Updates `implementation.md` with a "Review Received" entry
 - Enforces bounded loops: 3-cycle cap per scope before requiring user intervention
-- Routes back to `/oat:implement` (execute now vs review plan first)
+- Routes back to `oat-project-implement` (execute now vs review plan first)
 
 ---
 
-### oat-pr-progress
+### oat-project-pr-progress
 
-**Location:** `.agents/skills/oat-pr-progress/SKILL.md`
+**Location:** `.agents/skills/oat-project-pr-progress/SKILL.md`
 
 **Purpose:** Generate a progress PR description scoped to a plan phase (`pNN`) or an explicit git range.
 
@@ -739,9 +739,9 @@ oat_blockers:
 
 ---
 
-### oat-pr-project
+### oat-project-pr-final
 
-**Location:** `.agents/skills/oat-pr-project/SKILL.md`
+**Location:** `.agents/skills/oat-project-pr-final/SKILL.md`
 
 **Purpose:** Generate the final project PR description (into `main`) grounded in spec/design/plan/implementation and final review status.
 
@@ -925,19 +925,19 @@ All workflow skills resolve the project in the same order:
 ```
 discovery.md:
   oat_status: in_progress
-    → oat_status: complete, oat_ready_for: oat-spec
+    → oat_status: complete, oat_ready_for: oat-project-spec
 
 spec.md:
   oat_status: in_progress
-    → oat_status: complete, oat_ready_for: oat-design
+    → oat_status: complete, oat_ready_for: oat-project-design
 
 design.md:
   oat_status: in_progress
-    → oat_status: complete, oat_ready_for: oat-plan
+    → oat_status: complete, oat_ready_for: oat-project-plan
 
 plan.md:
   oat_status: in_progress
-    → oat_status: complete, oat_ready_for: oat-implement
+    → oat_status: complete, oat_ready_for: oat-project-implement
 
 implementation.md:
   oat_status: in_progress
@@ -1020,7 +1020,7 @@ oat_plan_hil_phases: ["p01", "p04"]
   - If has values: Only stop if current phase is listed
 - Stop means: Show summary, ask user to continue
 
-**Configuration Prompt (oat-plan Step 10):**
+**Configuration Prompt (oat-project-plan Step 10):**
 ```
 Ask user: "During implementation, should I stop for review at every
 phase boundary, or only at specific phases?"
@@ -1078,7 +1078,7 @@ In spec.md:
 | FR2 | Session management | P1 | integration: session refresh | p02-t05 |
 ```
 
-**Populated by:** oat-plan (Step 9)
+**Populated by:** oat-project-plan (Step 9)
 
 ### Commit Message Convention
 
@@ -1091,7 +1091,7 @@ git commit -m "feat(p01-t03): add user authentication endpoint"
 **Convention Details:**
 - Compatible with [Conventional Commits](https://www.conventionalcommits.org/)
 - Task ID goes in the scope position
-- **Required** for agent commits during oat-implement
+- **Required** for agent commits during oat-project-implement
 - **Optional** for human commits (but recommended for traceability)
 
 **Types:**
@@ -1186,7 +1186,7 @@ In implementation.md:
 
 ### Decision 6: Knowledge-First Enforcement
 
-**Choice:** Require `/oat:index` before any project work
+**Choice:** Require `oat-project-index` before any project work
 
 **Rationale:**
 - AI understands codebase before making decisions
@@ -1257,27 +1257,27 @@ In implementation.md:
 ├── agents/                   # Subagent prompts (syncable between providers)
 │   └── oat-reviewer.md
 ├── skills/                   # OAT skill definitions (registered in AGENTS.md)
-│   ├── oat-index/
+│   ├── oat-project-index/
 │   │   └── SKILL.md
-│   ├── oat-progress/
+│   ├── oat-project-progress/
 │   │   └── SKILL.md
-│   ├── oat-discovery/
+│   ├── oat-project-discover/
 │   │   └── SKILL.md
-│   ├── oat-spec/
+│   ├── oat-project-spec/
 │   │   └── SKILL.md
-│   ├── oat-design/
+│   ├── oat-project-design/
 │   │   └── SKILL.md
-│   ├── oat-plan/
+│   ├── oat-project-plan/
 │   │   └── SKILL.md
-│   ├── oat-implement/
+│   ├── oat-project-implement/
 │   │   └── SKILL.md
-│   ├── oat-request-review/
+│   ├── oat-project-review-provide/
 │   │   └── SKILL.md
-│   ├── oat-receive-review/
+│   ├── oat-project-review-receive/
 │   │   └── SKILL.md
-│   ├── oat-pr-progress/
+│   ├── oat-project-pr-progress/
 │   │   └── SKILL.md
-│   └── oat-pr-project/
+│   └── oat-project-pr-final/
 │       └── SKILL.md
 └── projects/                 # Project-specific documents
     └── <project-name>/
@@ -1287,7 +1287,7 @@ In implementation.md:
         ├── design.md         # Technical design
         ├── plan.md           # Implementation tasks
         ├── implementation.md # Progress tracking
-        ├── reviews/          # Review artifacts (created by oat-request-review)
+        ├── reviews/          # Review artifacts (created by oat-project-review-provide)
         └── pr/               # PR description artifacts (created by oat-pr-*)
 ```
 
@@ -1299,12 +1299,12 @@ In implementation.md:
 
 1. **Generate knowledge base:**
    ```
-   /oat:index
+   oat-project-index
    ```
 
 2. **Start discovery:**
    ```
-   /oat:discovery
+   oat-project-discover
    ```
    - Provide project name when prompted
    - This creates/updates `.oat/active-project` to point at `{PROJECTS_ROOT}/<project-name>/`
@@ -1314,7 +1314,7 @@ In implementation.md:
 
 3. **Check progress anytime:**
    ```
-   /oat:progress
+   oat-project-progress
    ```
 
 ### Progressing Through Phases
@@ -1337,7 +1337,7 @@ Modify to add/remove gates as needed.
 
 ### Configuring Plan Phase Checkpoints
 
-During `/oat:plan`, you'll be asked:
+During `oat-project-plan`, you'll be asked:
 - "Stop at every phase?" → `oat_plan_hil_phases: []`
 - "Stop at specific phases?" → `oat_plan_hil_phases: ["p01", "p04"]`
 
@@ -1353,7 +1353,7 @@ If blocked during implementation:
 
 ### Resuming Work
 
-Run `/oat:progress` to:
+Run `oat-project-progress` to:
 - See current state
 - Get guidance on next steps
 - Resume interrupted work
@@ -1364,37 +1364,37 @@ At the end of implementation, a final code review is required before opening a P
 
 1. Request final code review:
    ```
-   /oat:request-review code final
+   oat-project-review-provide code final
    ```
 2. Process findings into plan tasks:
    ```
-   /oat:receive-review
+   oat-project-review-receive
    ```
 3. If fix tasks were added, rerun implementation:
    ```
-   /oat:implement
+   oat-project-implement
    ```
 4. Repeat until the final review status is `passed` (capped at 3 cycles per scope).
 
 After final review passes, generate the final PR description:
 ```
-/oat:pr-project
+oat-project-pr-final
 ```
 
 Optionally, create a progress PR description for a phase boundary:
 ```
-/oat:pr-progress p02
+oat-project-pr-progress p02
 ```
 
 Non-final reviews are manual. Examples:
 ```
-/oat:request-review code p02
-/oat:request-review code p02-t03
-/oat:request-review code base_sha=<sha>
+oat-project-review-provide code p02
+oat-project-review-provide code p02-t03
+oat-project-review-provide code base_sha=<sha>
 
-/oat:request-review artifact spec
-/oat:request-review artifact design
-/oat:request-review artifact plan
+oat-project-review-provide artifact spec
+oat-project-review-provide artifact design
+oat-project-review-provide artifact plan
 ```
 
 ---
