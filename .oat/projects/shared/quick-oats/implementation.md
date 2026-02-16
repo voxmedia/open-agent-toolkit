@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-16
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -71,9 +71,9 @@ Implement a lightweight OAT quick/import workflow that:
 | Phase 2 | complete | 3 | 3/3 |
 | Phase 3 | complete | 3 | 3/3 |
 | Phase 4 | complete | 2 | 2/2 |
-| Phase 5 | in_progress | 2 | 1/2 |
+| Phase 5 | complete | 2 | 2/2 |
 
-**Total:** 12/13 tasks completed
+**Total:** 13/13 tasks completed
 
 ## Implementation Log
 
@@ -96,6 +96,7 @@ Implement a lightweight OAT quick/import workflow that:
 - [x] Completed `p04-t02`: added ADR + roadmap + backlog records for quick/import rollout decisions.
 - [x] Completed `p05-t01`: tightened `oat-project-quick-start` so dashboard refresh is explicit on resume paths.
 - [x] Added provider-plan discovery helper script and integrated it into `oat-project-import-plan` path resolution guidance.
+- [x] Completed `p05-t02`: finalized implementation summary and verification record for project closeout.
 
 **Notes:**
 - User requested atomic commits and detailed implementation journaling.
@@ -109,6 +110,7 @@ Implement a lightweight OAT quick/import workflow that:
 - Added and registered 3 lifecycle extension skills in `AGENTS.md` and `docs/oat/skills/index.md`.
 - Verified skill contracts pass repository validation (`pnpm oat:validate-skills`).
 - Verified dashboard script syntax after mode-aware changes (`bash -n .oat/scripts/generate-oat-state.sh`).
+- Verified repo lint and type-check pass (`pnpm lint`, `pnpm type-check`).
 - Clarified `oat-project-quick-start` contract: it reuses `oat-project-new` scaffolding behavior (active project pointer + `.oat/state.md` generation), then applies quick-mode flow.
 - Added explicit post-update dashboard refresh in `oat-project-quick-start` so resumed projects also regenerate `.oat/state.md`.
 - Added `find-recent-provider-plans.sh` helper for `oat-project-import-plan` to list recent plan candidates from common provider directories before manual path fallback.
@@ -116,16 +118,37 @@ Implement a lightweight OAT quick/import workflow that:
 ## Final Summary (for PR/docs)
 
 **What shipped:**
-- In progress
+- New quick/import lifecycle capabilities with canonical `plan.md` normalization and preserved imported-source traceability.
+- New lifecycle skills: `oat-project-quick-start`, `oat-project-import-plan`, and `oat-project-promote-full`.
+- Mode-aware downstream behavior in routing, review, PR generation, and state dashboard recommendation logic.
+- Documentation updates for full/quick/import lanes across public docs and internal dogfood references.
+- Provider-plan UX improvement: recent-plan discovery helper script for import path selection.
 
 **Behavioral changes (user-facing):**
-- In progress
+- Users can choose a lower-touch quick lane without mandatory `spec.md`/`design.md` artifacts.
+- Users can import external provider plans while preserving the original file and executing from normalized OAT `plan.md`.
+- `oat-project-quick-start` now refreshes `.oat/state.md` even when resuming an existing project.
+- `oat-project-import-plan` can list recent plan files (last 24h by default) before prompting for manual path input.
 
 **Key files / modules:**
-- In progress
+- `.oat/templates/state.md` - added workflow mode/origin metadata contract.
+- `.oat/templates/plan.md` - added plan source/import provenance metadata contract.
+- `.agents/skills/oat-project-quick-start/SKILL.md` - quick lane entry flow and resume-safe dashboard refresh.
+- `.agents/skills/oat-project-import-plan/SKILL.md` - import lane normalization flow with recent-plan discovery UX.
+- `.agents/skills/oat-project-import-plan/scripts/find-recent-provider-plans.sh` - provider plan discovery helper.
+- `.agents/skills/oat-project-promote-full/SKILL.md` - in-place promotion path to full lifecycle.
+- `.oat/scripts/generate-oat-state.sh` - mode-aware routing and updated skill recommendations.
+- `.agents/skills/oat-project-review-provide/SKILL.md` - mode-aware artifact requirements.
+- `.agents/skills/oat-project-pr-progress/SKILL.md` - mode-aware progress PR behavior.
+- `.agents/skills/oat-project-pr-final/SKILL.md` - mode-aware final PR behavior.
 
 **Verification performed:**
-- In progress
+- `pnpm oat:validate-skills` - pass (latest run after import-plan helper integration).
+- `bash -n .oat/scripts/generate-oat-state.sh` - pass.
+- `bash -n .agents/skills/oat-project-import-plan/scripts/find-recent-provider-plans.sh` - pass.
+- `.agents/skills/oat-project-import-plan/scripts/find-recent-provider-plans.sh --hours 24 --limit 5` - pass; returned recent provider plan candidates in reverse chronology.
+- `pnpm lint` - pass.
+- `pnpm type-check` - pass.
 
 **Design deltas (if any):**
-- In progress
+- Added provider-plan discovery helper script and skill flow integration as an incremental UX enhancement after core quick/import implementation landed.
