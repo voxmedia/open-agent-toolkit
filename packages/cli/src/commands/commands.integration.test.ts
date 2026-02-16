@@ -94,6 +94,62 @@ async function seedCanonical(root: string): Promise<void> {
   );
 }
 
+async function seedValidOatSkill(
+  root: string,
+  skillName: string,
+): Promise<void> {
+  await mkdir(join(root, '.agents', 'skills', skillName), { recursive: true });
+  await writeFile(
+    join(root, '.agents', 'skills', skillName, 'SKILL.md'),
+    [
+      '---',
+      `name: ${skillName}`,
+      'disable-model-invocation: true',
+      'user-invocable: true',
+      'allowed-tools: Read, Write',
+      '---',
+      '',
+      '# Skill',
+      '',
+      '## Progress Indicators (User-Facing)',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ' OAT ▸ TEST',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '',
+      'Body',
+    ].join('\n'),
+    'utf8',
+  );
+}
+
+async function seedProjectTemplates(root: string): Promise<void> {
+  await mkdir(join(root, '.oat', 'templates'), { recursive: true });
+  for (const template of [
+    'state.md',
+    'discovery.md',
+    'spec.md',
+    'design.md',
+    'plan.md',
+    'implementation.md',
+    'project-index.md',
+  ]) {
+    await writeFile(
+      join(root, '.oat', 'templates', template),
+      [
+        '---',
+        'oat_template: true',
+        `oat_template_name: ${template.replace('.md', '')}`,
+        '---',
+        '',
+        `# {Project Name} ${template}`,
+        'Date: YYYY-MM-DD',
+      ].join('\n'),
+      'utf8',
+    );
+  }
+}
+
 describe('CLI command integration', () => {
   const tempDirs: string[] = [];
 
@@ -238,5 +294,48 @@ describe('CLI command integration', () => {
 
     const after = await readFile(manifestPath, 'utf8');
     expect(after).toBe(before);
+  });
+
+  it('internal validate-oat-skills succeeds for valid oat-* skills', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await seedValidOatSkill(root, 'oat-sample');
+
+    const result = await runCli(root, ['internal', 'validate-oat-skills']);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('OK: validated 1 oat-* skills');
+  });
+
+  it('project new creates quick-mode scaffold artifacts', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await seedProjectTemplates(root);
+
+    const result = await runCli(root, [
+      'project',
+      'new',
+      'quick-smoke',
+      '--mode',
+      'quick',
+      '--no-dashboard',
+    ]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('Created/updated OAT project: quick-smoke');
+    expect(result.stdout).not.toContain('Dashboard generated: .oat/state.md');
+
+    await expect(
+      readFile(
+        join(root, '.oat', 'projects', 'shared', 'quick-smoke', 'discovery.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('quick-smoke');
+    await expect(
+      readFile(
+        join(root, '.oat', 'projects', 'shared', 'quick-smoke', 'spec.md'),
+        'utf8',
+      ),
+    ).rejects.toThrow();
   });
 });

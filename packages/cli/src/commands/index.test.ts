@@ -38,6 +38,32 @@ describe('command registration', () => {
     expect(commandNames()).toContain('doctor');
   });
 
+  it('program has project command with new', () => {
+    const program = createProgram();
+    registerCommands(program);
+    const project = program.commands.find(
+      (command) => command.name() === 'project',
+    );
+
+    expect(project).toBeDefined();
+    const subcommands =
+      project?.commands.map((command) => command.name()) ?? [];
+    expect(subcommands).toContain('new');
+  });
+
+  it('program has internal command with validate-oat-skills', () => {
+    const program = createProgram();
+    registerCommands(program);
+    const internal = program.commands.find(
+      (command) => command.name() === 'internal',
+    );
+
+    expect(internal).toBeDefined();
+    const subcommands =
+      internal?.commands.map((command) => command.name()) ?? [];
+    expect(subcommands).toContain('validate-oat-skills');
+  });
+
   it('--help shows all commands', () => {
     const program = createProgram();
     registerCommands(program);
@@ -48,5 +74,7 @@ describe('command registration', () => {
     expect(help).toContain('sync');
     expect(help).toContain('providers');
     expect(help).toContain('doctor');
+    expect(help).toContain('project');
+    expect(help).toContain('internal');
   });
 });

@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "oat:validate-skills": "tsx .oat/scripts/validate-oat-skills.ts",
+    "oat:validate-skills": "pnpm run cli -- internal validate-oat-skills",
     "build": "turbo run build",
     "check": "turbo run check",
     "check:fix": "turbo run check:fix",

@@ -32,6 +32,16 @@ Notes:
 - `sync` is dry-run by default.
 - `--apply` performs filesystem changes.
 
+### Additional CLI commands
+
+```bash
+# Mode-aware project scaffold
+pnpm run cli -- project new my-project --mode quick
+
+# Internal oat-* skill validation (primary path)
+pnpm oat:validate-skills
+```
+
 ### Consumer usage (without pnpm scripts)
 
 When `@oat/cli` is consumed as a built package or linked binary, use `oat` directly:
@@ -42,6 +52,7 @@ oat init --scope project
 oat status --scope all
 oat sync --scope all --apply
 oat doctor --scope all
+oat project new my-project --mode full
 ```
 
 ## Path B: Provider-agnostic tooling (skills + utilities)

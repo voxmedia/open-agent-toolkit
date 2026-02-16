@@ -68,7 +68,7 @@ If no valid active project exists:
 - Create project via the same scaffolding path used by `oat-project-new`:
 
 ```bash
-pnpm tsx .oat/scripts/new-oat-project.ts "{project-name}"
+pnpm run cli -- project new "{project-name}" --mode quick
 ```
 
 This guarantees:

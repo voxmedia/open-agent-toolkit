@@ -44,6 +44,8 @@ describe('help output snapshots', () => {
         sync [options]   Sync canonical content to provider views
         providers        Inspect provider capabilities and paths
         doctor           Run environment and setup diagnostics
+        project          Manage OAT project workflows
+        internal         Internal OAT maintenance commands
         help [command]   display help for command
       "
     `);
@@ -157,6 +159,66 @@ describe('help output snapshots', () => {
       "Usage: oat doctor [options]
 
       Run environment and setup diagnostics
+
+      Options:
+        -h, --help  display help for command
+      "
+    `);
+  });
+
+  it('project --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['project']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project [options] [command]
+
+      Manage OAT project workflows
+
+      Options:
+        -h, --help            display help for command
+
+      Commands:
+        new [options] <name>  Create or update an OAT project scaffold
+        help [command]        display help for command
+      "
+    `);
+  });
+
+  it('project new --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'new',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project new [options] <name>
+
+      Create or update an OAT project scaffold
+
+      Arguments:
+        name             Project name (letters, numbers, dash, underscore)
+
+      Options:
+        --mode <mode>    Scaffold mode (choices: "full", "quick", "import", default:
+                         "full")
+        --force          Non-destructive scaffold; create missing files only
+        --no-set-active  Do not update .oat/active-project
+        --no-dashboard   Do not refresh .oat/state.md after scaffold
+        -h, --help       display help for command
+      "
+    `);
+  });
+
+  it('internal validate-oat-skills --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'internal',
+      'validate-oat-skills',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat internal validate-oat-skills [options]
+
+      Validate required structure of oat-* workflow skills
 
       Options:
         -h, --help  display help for command

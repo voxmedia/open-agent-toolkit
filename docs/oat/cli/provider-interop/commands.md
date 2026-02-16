@@ -54,6 +54,26 @@ Purpose:
 Purpose:
 - Run environment diagnostics with pass/warn/fail outcomes and fix guidance
 
+## Other implemented namespaces
+
+## `oat project new <name>`
+
+Purpose:
+- Create/update OAT project scaffolds with mode support (`full`, `quick`, `import`)
+
+Key behavior:
+- Non-destructive scaffold generation (fills missing files, keeps existing files)
+- Supports `--mode`, `--force`, `--no-set-active`, and `--no-dashboard`
+
+## `oat internal validate-oat-skills`
+
+Purpose:
+- Validate required structure for `oat-*` skills
+
+Key behavior:
+- Exit code `0` for pass, `1` for validation findings, `2` for runtime error
+- Primary invocation path remains `pnpm oat:validate-skills`
+
 ## Reference artifacts
 
 - `.oat/projects/<scope>/<project>/spec.md` (FR1-FR6)

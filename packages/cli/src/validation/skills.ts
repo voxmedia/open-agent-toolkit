@@ -1,25 +1,23 @@
-#!/usr/bin/env tsx
-
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { cwd, exit } from 'node:process';
 
-type Finding = {
+export interface ValidationFinding {
   file: string;
   message: string;
-};
+}
 
-async function isDir(path: string): Promise<boolean> {
+export interface ValidateOatSkillsResult {
+  validatedSkillCount: number;
+  findings: ValidationFinding[];
+}
+
+async function isDirectory(path: string): Promise<boolean> {
   try {
     const s = await stat(path);
     return s.isDirectory();
   } catch {
     return false;
   }
-}
-
-async function readText(path: string): Promise<string> {
-  return readFile(path, 'utf8');
 }
 
 function getFrontmatterBlock(content: string): string | null {
@@ -32,44 +30,38 @@ function frontmatterHasKey(frontmatter: string, key: string): boolean {
   return re.test(frontmatter);
 }
 
-function fileHasProgressIndicatorsSection(content: string): boolean {
+function hasProgressIndicatorsSection(content: string): boolean {
   return /^## Progress Indicators \(User-Facing\)\s*$/m.test(content);
 }
 
-function fileHasBannerSnippet(content: string): boolean {
+function hasBannerSnippet(content: string): boolean {
   return (
     /OAT ▸/m.test(content) &&
     /━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━/m.test(content)
   );
 }
 
-async function main(): Promise<void> {
-  const repoRoot = cwd();
+export async function validateOatSkills(
+  repoRoot: string,
+): Promise<ValidateOatSkillsResult> {
   const skillsRoot = join(repoRoot, '.agents', 'skills');
+  const findings: ValidationFinding[] = [];
 
-  const findings: Finding[] = [];
-
-  if (!(await isDir(skillsRoot))) {
-    console.error(`Error: skills directory not found: ${skillsRoot}`);
-    exit(2);
+  if (!(await isDirectory(skillsRoot))) {
+    throw new Error(`skills directory not found: ${skillsRoot}`);
   }
 
   const entries = await readdir(skillsRoot, { withFileTypes: true });
   const oatSkillDirs = entries
-    .filter((e) => e.isDirectory() && e.name.startsWith('oat-'))
-    .map((e) => e.name)
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith('oat-'))
+    .map((entry) => entry.name)
     .sort();
-
-  if (oatSkillDirs.length === 0) {
-    console.error('Error: no oat-* skills found under .agents/skills/');
-    exit(2);
-  }
 
   for (const dir of oatSkillDirs) {
     const skillPath = join(skillsRoot, dir, 'SKILL.md');
     let content: string;
     try {
-      content = await readText(skillPath);
+      content = await readFile(skillPath, 'utf8');
     } catch {
       findings.push({ file: skillPath, message: 'Missing SKILL.md' });
       continue;
@@ -97,13 +89,13 @@ async function main(): Promise<void> {
       }
     }
 
-    if (!fileHasProgressIndicatorsSection(content)) {
+    if (!hasProgressIndicatorsSection(content)) {
       findings.push({
         file: skillPath,
         message:
           'Missing section heading: ## Progress Indicators (User-Facing)',
       });
-    } else if (!fileHasBannerSnippet(content)) {
+    } else if (!hasBannerSnippet(content)) {
       findings.push({
         file: skillPath,
         message:
@@ -112,21 +104,5 @@ async function main(): Promise<void> {
     }
   }
 
-  if (findings.length > 0) {
-    console.error('OAT skill validation failed:\n');
-    for (const f of findings) {
-      console.error(`- ${f.file}: ${f.message}`);
-    }
-    console.error(
-      '\nFix the issues above, then re-run: pnpm oat:validate-skills',
-    );
-    exit(1);
-  }
-
-  console.log(`OK: validated ${oatSkillDirs.length} oat-* skills`);
+  return { validatedSkillCount: oatSkillDirs.length, findings };
 }
-
-main().catch((err) => {
-  console.error(String(err instanceof Error ? err.message : err));
-  exit(2);
-});

@@ -38,6 +38,7 @@ Primary commands:
 - `oat sync`
 - `oat providers ...`
 - `oat doctor`
+- `oat project new <name>`
 
 This mode is useful even if you do not use OAT workflow skills at all.
 
@@ -106,6 +107,9 @@ pnpm run cli -- sync --scope all --apply
 Notes:
 - `sync` is dry-run by default.
 - `--apply` performs filesystem updates.
+
+Maintenance note:
+- `pnpm oat:validate-skills` routes to `oat internal validate-oat-skills` and validates required `oat-*` skill structure.
 
 ## Consumer CLI Usage (Without pnpm)
 
