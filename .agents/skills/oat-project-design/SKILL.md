@@ -75,12 +75,12 @@ Read `"$PROJECT_PATH/spec.md"` completely to understand:
 ### Step 3: Read Knowledge Base for Design Context
 
 Read for architectural context and conventions:
-- `.oat/knowledge/repo/project-index.md` - Overview
-- `.oat/knowledge/repo/architecture.md` - Existing patterns
-- `.oat/knowledge/repo/stack.md` - Technologies available
-- `.oat/knowledge/repo/conventions.md` - Code patterns to follow
-- `.oat/knowledge/repo/integrations.md` - External services
-- `.oat/knowledge/repo/concerns.md` - Issues to avoid
+- `.oat/repo/knowledge/project-index.md` - Overview
+- `.oat/repo/knowledge/architecture.md` - Existing patterns
+- `.oat/repo/knowledge/stack.md` - Technologies available
+- `.oat/repo/knowledge/conventions.md` - Code patterns to follow
+- `.oat/repo/knowledge/integrations.md` - External services
+- `.oat/repo/knowledge/concerns.md` - Issues to avoid
 
 **Purpose:** Ensure design aligns with existing architecture and follows established patterns.
 

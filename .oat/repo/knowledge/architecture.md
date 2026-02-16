@@ -32,7 +32,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 
 **OAT Knowledge Generation Layer:**
 - Purpose: Generates comprehensive codebase analysis used by subsequent workflow phases
-- Location: `.oat/knowledge/repo/`, `.oat/templates/`, `.oat/scripts/`
+- Location: `.oat/repo/knowledge/`, `.oat/templates/`, `.oat/scripts/`
 - Contains: Project index templates, analysis scripts, knowledge base generation logic
 - Depends on: Project codebase analysis, git information, file system access
 - Used by: Discovery, spec, design, plan, and implement phases
@@ -65,7 +65,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 1. User invokes `/oat:index` skill
 2. oat-index analyzes project structure, dependencies, entry points
 3. Mapper agents generate specialized analyses (stack.md, architecture.md, structure.md, etc.)
-4. Knowledge base stored in `.oat/knowledge/repo/` with project-index.md as entry point
+4. Knowledge base stored in `.oat/repo/knowledge/` with project-index.md as entry point
 5. Subsequent phases reference generated knowledge for context
 
 **Project Workflow Flow:**
@@ -98,7 +98,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 
 **Knowledge Base:**
 - Purpose: Generated codebase analysis that informs all subsequent development phases
-- Examples: `.oat/knowledge/repo/project-index.md`, `stack.md`, `architecture.md`
+- Examples: `.oat/repo/knowledge/project-index.md`, `stack.md`, `architecture.md`
 - Pattern: Templates filled in by analysis agents, referenced in discovery and planning phases
 
 **TDD Task:**
@@ -121,7 +121,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
 **Knowledge Generation Entry Point:**
 - Location: `.agents/skills/oat-index/SKILL.md`
 - Triggers: `/oat:index` command
-- Responsibilities: Analyze codebase structure, generate knowledge base in `.oat/knowledge/repo/`
+- Responsibilities: Analyze codebase structure, generate knowledge base in `.oat/repo/knowledge/`
 
 **Project Initialization Entry Point:**
 - Location: `.agents/skills/oat-new-project/SKILL.md`

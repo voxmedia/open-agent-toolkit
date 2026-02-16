@@ -125,10 +125,10 @@ Verify discovery includes:
 ### Step 4: Read Relevant Knowledge
 
 Read for context:
-- `.oat/knowledge/repo/project-index.md`
-- `.oat/knowledge/repo/architecture.md`
-- `.oat/knowledge/repo/integrations.md` (for dependencies)
-- `.oat/knowledge/repo/concerns.md` (for constraints)
+- `.oat/repo/knowledge/project-index.md`
+- `.oat/repo/knowledge/architecture.md`
+- `.oat/repo/knowledge/integrations.md` (for dependencies)
+- `.oat/repo/knowledge/concerns.md` (for constraints)
 
 ### Step 5: Initialize Specification Document
 

@@ -81,7 +81,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Skills: `.agents/skills/<skill-name>/SKILL.md`
 - Subagent prompts: `.agents/agents/*.md`
 - Templates: `.oat/templates/*.md`
-- Knowledge: `.oat/knowledge/repo/*.md`
+- Knowledge: `.oat/repo/knowledge/*.md`
 - Project artifacts (default checked-in layout): `.oat/projects/shared/<project>/` (configurable via `.oat/projects-root`)
 
 ## Quickstart (Current)

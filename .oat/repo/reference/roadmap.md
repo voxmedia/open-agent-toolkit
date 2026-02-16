@@ -29,7 +29,7 @@ As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline h
 ## Current State (Implemented)
 
 Dogfood workflow baseline is implemented and has been exercised end-to-end:
-- Knowledge: `oat-project-index` + `.oat/knowledge/**` (thin->full project index, mapper outputs under `.oat/knowledge/repo/`)
+- Knowledge: `oat-project-index` + `.oat/repo/knowledge/**` (thin->full project index, mapper outputs under `.oat/repo/knowledge/`)
 - Projects:
   - `oat-project-new` scaffolds `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`
   - `.oat/projects-root` sets `{PROJECTS_ROOT}` (default: `.oat/projects/shared`)

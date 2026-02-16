@@ -81,7 +81,7 @@ This feature extends the OAT skill layer with project lifecycle management while
    └─► Extract: oat_phase, oat_phase_status, oat_blockers
    └─► If missing → Set $PROJECT_STATUS = "state unknown"
 
-3. Script reads .oat/knowledge/repo/project-index.md frontmatter
+3. Script reads .oat/repo/knowledge/project-index.md frontmatter
    └─► Extract: oat_generated_at, oat_source_main_merge_base_sha
    └─► If missing → Set $KNOWLEDGE_STATUS = "not generated"
 
@@ -637,7 +637,7 @@ If moving from `.agent/projects/` to `.oat/projects/shared/`:
 
 - **.oat/active-project:** Existing mechanism (used as-is)
 - **{PROJECT_PATH}/state.md:** Existing project state (read-only)
-- **.oat/knowledge/repo/project-index.md:** Knowledge index (read-only)
+- **.oat/repo/knowledge/project-index.md:** Knowledge index (read-only)
 - **oat-project-progress skill:** Modified for integration
 - **oat-project-index skill:** Modified for integration
 
@@ -663,6 +663,6 @@ None beyond existing OAT development setup.
 
  - Specification: `spec.md`
 - Reference Design: `.oat/internal-project-reference/temp/oat-project-state.md`
-- Knowledge Base: `.oat/knowledge/repo/project-index.md`
-- Architecture Docs: `.oat/knowledge/repo/architecture.md`
-- Conventions: `.oat/knowledge/repo/conventions.md`
+- Knowledge Base: `.oat/repo/knowledge/project-index.md`
+- Architecture Docs: `.oat/repo/knowledge/architecture.md`
+- Conventions: `.oat/repo/knowledge/conventions.md`

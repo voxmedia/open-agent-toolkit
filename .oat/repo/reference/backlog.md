@@ -246,7 +246,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Notes:
     - Move thin index generation from `.oat/scripts/generate-thin-index.sh` into `packages/cli/` (e.g., `oat index --thin` or `oat index init`).
     - Currently called by `oat-project-index` skill (Step 4) with HEAD_SHA and MERGE_BASE_SHA args.
-    - Generates `.oat/knowledge/repo/project-index.md` with repo structure, entry points, config files, and test commands.
+    - Generates `.oat/repo/knowledge/project-index.md` with repo structure, entry points, config files, and test commands.
     - Shell script uses find/grep/awk — rewrite in TypeScript for consistency, testability, and cross-platform support.
     - Update `oat-project-index` skill to call CLI command.
   - Success criteria:

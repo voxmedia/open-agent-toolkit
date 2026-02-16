@@ -16,6 +16,7 @@
 
 - Templates: `.oat/templates/`
 - Utility scripts: `.oat/scripts/`
+- Repo knowledge: `.oat/repo/knowledge/`
 - Repo reference docs: `.oat/repo/reference/`
 - Repo reviews: `.oat/repo/reviews/`
 - Repo archive: `.oat/repo/archive/`
