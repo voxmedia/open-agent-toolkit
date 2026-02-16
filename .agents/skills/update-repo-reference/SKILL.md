@@ -1,5 +1,5 @@
 ---
-name: update-internal-project-reference
+name: update-repo-reference
 description: Use when OAT implementation changes and you need to update .oat/repo/reference docs to match current behavior
 disable-model-invocation: true
 user-invocable: true
@@ -87,7 +87,7 @@ rg -n "\\.oat/projects/shared/" .agents/skills/oat-*/SKILL.md .oat/templates .oa
 
 4. Ensure new skills are registered in `AGENTS.md` (if meant to be discoverable):
 ```bash
-rg -n "<name>update-internal-project-reference</name>" AGENTS.md || true
+rg -n "<name>update-repo-reference</name>" AGENTS.md || true
 ```
 
 ### Step 5: Output

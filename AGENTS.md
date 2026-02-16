@@ -197,7 +197,7 @@ Usage notes:
 </skill>
 
 <skill>
-<name>update-internal-project-reference</name>
+<name>update-repo-reference</name>
 <description>Use when OAT implementation changes and you need to update .oat/repo/reference docs to match current behavior</description>
 <location>project</location>
 </skill>

@@ -40,7 +40,7 @@ Project skills are stored in `.agents/skills`.
 - `create-skill`
 - `create-pr-description`
 - `create-ticket`
-- `update-internal-project-reference`
+- `update-repo-reference`
 - `codex`
 
 ## Discovery source

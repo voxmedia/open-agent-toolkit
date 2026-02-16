@@ -48,8 +48,8 @@
       "lastSynced": "2026-02-14T21:10:44.553Z"
     },
     {
-      "canonicalPath": ".agents/skills/update-internal-project-reference",
-      "providerPath": ".claude/skills/update-internal-project-reference",
+      "canonicalPath": ".agents/skills/update-repo-reference",
+      "providerPath": ".claude/skills/update-repo-reference",
       "provider": "claude",
       "contentType": "skill",
       "strategy": "symlink",
@@ -102,8 +102,8 @@
       "lastSynced": "2026-02-14T21:10:44.557Z"
     },
     {
-      "canonicalPath": ".agents/skills/update-internal-project-reference",
-      "providerPath": ".cursor/skills/update-internal-project-reference",
+      "canonicalPath": ".agents/skills/update-repo-reference",
+      "providerPath": ".cursor/skills/update-repo-reference",
       "provider": "cursor",
       "contentType": "skill",
       "strategy": "symlink",
