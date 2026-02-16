@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-16
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 oat_template: false
 ---
@@ -55,13 +55,13 @@ Implement a lightweight OAT quick/import workflow that:
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1 | in_progress | 3 | 0/3 |
+| Phase 1 | in_progress | 3 | 1/3 |
 | Phase 2 | pending | 3 | 0/3 |
 | Phase 3 | pending | 3 | 0/3 |
 | Phase 4 | pending | 2 | 0/2 |
 | Phase 5 | pending | 2 | 0/2 |
 
-**Total:** 0/13 tasks completed
+**Total:** 1/13 tasks completed
 
 ## Implementation Log
 
@@ -71,11 +71,15 @@ Implement a lightweight OAT quick/import workflow that:
 
 - [x] Authored execution plan at `.oat/projects/shared/quick-oats/plan.md`.
 - [x] Initialized implementation log with objectives, decision record, and commit map.
-- [ ] Begin `p01-t01` implementation.
+- [x] Completed `p01-t01`: added `oat_workflow_mode` + `oat_workflow_origin` to state template.
+- [ ] Begin `p01-t02` implementation.
 
 **Notes:**
 - User requested atomic commits and detailed implementation journaling.
 - Existing unrelated repo changes under `docs/oat/cli/**` are left untouched.
+- State metadata enums selected:
+  - `oat_workflow_mode`: `full|quick|import`
+  - `oat_workflow_origin`: `native|imported`
 
 ## Final Summary (for PR/docs)
 
