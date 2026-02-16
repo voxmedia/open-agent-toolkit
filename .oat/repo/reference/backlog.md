@@ -151,6 +151,25 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related gap: skill removal currently requires manual deletion + sync
   - Created: 2026-02-16
 
+- [ ] **(P1) [tooling] Add explicit supported-provider configuration for project sync**
+  - Target milestone/phase: OAT CLI provider ergonomics
+  - Notes:
+    - `oat init` should optionally prompt for supported project providers (e.g., `claude`, `cursor`, `codex`) instead of relying only on provider directory detection.
+    - Persist provider enable/disable intent in `.oat/sync/config.json` (`providers.<name>.enabled`) rather than in sync manifest entries.
+    - Add a command to manage this after init (e.g., `oat providers set ...` or `oat providers enable/disable ...`).
+    - Update `oat sync --apply` behavior so enabled providers can be materialized even when provider root directories do not already exist (worktree-safe bootstrap).
+    - Add a worktree bootstrap script pattern that succeeds even when provider roots are initially absent, e.g.:
+      - `\"init:worktree\": \"pnpm install && pnpm run build && pnpm run cli sync --scope project --apply\"`
+  - Success criteria:
+    - Fresh worktree with no `.claude`/`.cursor`/`.codex` directories can still sync configured providers successfully.
+    - Provider preference survives across runs via `.oat/sync/config.json`.
+    - Users can change supported providers without manually editing config files.
+    - Sync output clearly indicates which providers were selected from config vs detected from filesystem.
+  - Links:
+    - Related behavior: provider activation currently depends on directory detection in `getActiveAdapters`.
+    - Related files: `packages/cli/src/commands/init/index.ts`, `packages/cli/src/commands/sync/index.ts`, `packages/cli/src/config/sync-config.ts`
+  - Created: 2026-02-16
+
 - [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-project-new`**
   - Target milestone/phase: Ideas → Projects integration
   - Notes:
