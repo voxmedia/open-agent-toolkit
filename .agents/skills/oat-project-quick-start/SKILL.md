@@ -4,7 +4,7 @@ description: Create a lightweight OAT quick workflow project that captures disco
 argument-hint: "<project-name>"
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(pnpm:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 ---
 
 # Quick Start Project
@@ -121,7 +121,7 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_phase: plan`
 - `oat_phase_status: complete`
 - `oat_current_task: null`
-- ensure `oat_hil_checkpoints` does not block spec/design for quick mode
+- set `oat_hil_checkpoints: []` for quick mode to avoid spec/design gate confusion
 
 Recommended quick-mode gate defaults:
 - keep implementation phase checkpoints via `oat_plan_hil_phases`

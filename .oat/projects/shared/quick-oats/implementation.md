@@ -38,7 +38,7 @@ Implement a lightweight OAT quick/import workflow that:
    - Rationale: mode drives routing and required artifacts in `oat-project-progress` and dashboard recommendations.
 
 4. **Skill authoring convention**
-   - Decision: new skill docs follow `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/create-oat-skill/SKILL.md` conventions.
+   - Decision: new skill docs follow `.agents/skills/create-oat-skill/SKILL.md` conventions.
    - Rationale: aligns with repo-specific OAT banner/progress/project-resolution contracts.
 
 5. **HiL checkpoint scope**
