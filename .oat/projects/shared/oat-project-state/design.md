@@ -14,7 +14,7 @@ This design implements minimal project lifecycle management and a derived repo s
 
 The implementation consists of a single shell script (`generate-oat-state.sh`) that derives the dashboard from multiple sources, and three thin skills (`oat-project-open`, `oat-project-clear-active`, `oat-project-complete`) that manipulate the active project pointer and invoke the dashboard script. This design prioritizes simplicity and idempotency over features, aligning with the dogfooding constraints.
 
-The solution integrates with existing OAT infrastructure through minimal hooks in `oat-project-progress` and `oat-project-index`, ensuring the dashboard stays fresh during normal workflow without requiring background automation.
+The solution integrates with existing OAT infrastructure through minimal hooks in `oat-project-progress` and `oat-repo-knowledge-index`, ensuring the dashboard stays fresh during normal workflow without requiring background automation.
 
 ## Architecture
 
@@ -46,7 +46,7 @@ This feature extends the OAT skill layer with project lifecycle management while
                     │           │           │
                     │  ┌────────▼────────┐  │
                     │  │ oat-project-progress    │──┼─── Existing (modified to call script)
-                    │  │ oat-project-index       │  │
+                    │  │ oat-repo-knowledge-index       │  │
                     │  └─────────────────┘  │
                     └───────────┬───────────┘
                                 │
@@ -401,7 +401,7 @@ oat_generated_at: {timestamp}
 ## Quick Commands
 
 - `oat-project-progress` - Check status
-- `oat-project-index` - Refresh knowledge
+- `oat-repo-knowledge-index` - Refresh knowledge
 - {Phase-specific commands}
 
 ## Available Projects
@@ -490,7 +490,7 @@ Not needed - operations are local and deterministic.
 | FR3 | manual | Complete with review, complete without review, clear after complete |
 | FR4 | manual | Generate with all data, generate with missing active project, generate with missing knowledge |
 | FR5 | manual | Run oat-project-progress, verify dashboard updated |
-| FR6 | manual | Run oat-project-index, verify dashboard updated |
+| FR6 | manual | Run oat-repo-knowledge-index, verify dashboard updated |
 | FR7 | manual | Try invalid project path, try missing state.md |
 | NFR1 | perf | Time script execution with `time` command |
 | NFR2 | manual | Run script twice, diff outputs |
@@ -511,7 +511,7 @@ Manual integration testing:
 ### End-to-End Tests
 
 Manual E2E scenarios during dogfooding:
-- Start fresh repo, run oat-project-index, check dashboard
+- Start fresh repo, run oat-repo-knowledge-index, check dashboard
 - Create project, open it, verify pointer
 - Complete workflow, verify dashboard updates at each step
 
@@ -529,7 +529,7 @@ No build required - shell script and SKILL.md files are source.
 4. Add SKILL.md files
 5. Register skills in AGENTS.md
 6. Add dashboard hook to oat-project-progress
-7. Add dashboard hook to oat-project-index
+7. Add dashboard hook to oat-repo-knowledge-index
 
 ### Rollback Plan
 
@@ -621,10 +621,10 @@ If moving from `.agent/projects/` to `.oat/projects/shared/`:
 
 **Tasks:**
 - Modify oat-project-progress to call generate-oat-state.sh at end
-- Modify oat-project-index to call generate-oat-state.sh after completion
+- Modify oat-repo-knowledge-index to call generate-oat-state.sh after completion
 - Test integration flows
 
-**Verification:** Dashboard auto-updates when running oat-project-progress or oat-project-index.
+**Verification:** Dashboard auto-updates when running oat-project-progress or oat-repo-knowledge-index.
 
 ## Dependencies
 
@@ -639,7 +639,7 @@ If moving from `.agent/projects/` to `.oat/projects/shared/`:
 - **{PROJECT_PATH}/state.md:** Existing project state (read-only)
 - **.oat/repo/knowledge/project-index.md:** Knowledge index (read-only)
 - **oat-project-progress skill:** Modified for integration
-- **oat-project-index skill:** Modified for integration
+- **oat-repo-knowledge-index skill:** Modified for integration
 
 ### Development Dependencies
 

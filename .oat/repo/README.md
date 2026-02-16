@@ -15,7 +15,7 @@ Tracked, repo-wide OAT records live under `.oat/repo/`.
 - `reviews/`
   - Repo-scoped review artifacts that are intentionally tracked.
 - `knowledge/`
-  - Generated repo knowledge artifacts produced by `oat-project-index`.
+  - Generated repo knowledge artifacts produced by `oat-repo-knowledge-index`.
 - `archive/`
   - Historical dogfood-era docs and superseded artifacts kept for context.
   - Typical subdirectories:

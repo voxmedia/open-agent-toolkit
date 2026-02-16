@@ -629,7 +629,7 @@ EOF
 ## Quick Commands
 
 - \`oat-project-progress\` - Check current status
-- \`oat-project-index\` - Refresh knowledge base
+- \`oat-repo-knowledge-index\` - Refresh knowledge base
 - \`oat-project-open\` - Switch active project
 - \`oat-project-clear-active\` - Clear active project
 - \`oat-project-complete\` - Mark project complete
@@ -1151,7 +1151,7 @@ git commit --allow-empty -m "test(p02-t05): manual verification of lifecycle ski
 
 **Goal:** Wire dashboard generation into existing skills for auto-refresh.
 
-**Verification:** Dashboard auto-updates when running oat-project-progress or oat-project-index.
+**Verification:** Dashboard auto-updates when running oat-project-progress or oat-repo-knowledge-index.
 
 ---
 
@@ -1190,14 +1190,14 @@ git commit -m "feat(p03-t01): add dashboard hook to oat-project-progress skill"
 
 ---
 
-### Task p03-t02: Add Hook to oat-project-index
+### Task p03-t02: Add Hook to oat-repo-knowledge-index
 
 **Files:**
-- Modify: `.agent/skills/oat-project-index/SKILL.md`
+- Modify: `.agent/skills/oat-repo-knowledge-index/SKILL.md`
 
 **Step 1: Add dashboard generation step**
 
-Add at the end of the oat-project-index skill process, after knowledge generation completes:
+Add at the end of the oat-repo-knowledge-index skill process, after knowledge generation completes:
 
 ```markdown
 ### Step N: Regenerate Dashboard
@@ -1215,14 +1215,14 @@ This ensures the dashboard reflects fresh knowledge status immediately.
 
 **Step 2: Verify**
 
-Run: `grep -A3 "generate-oat-state" .agent/skills/oat-project-index/SKILL.md`
+Run: `grep -A3 "generate-oat-state" .agent/skills/oat-repo-knowledge-index/SKILL.md`
 Expected: Dashboard generation step present
 
 **Step 3: Commit**
 
 ```bash
-git add .agent/skills/oat-project-index/
-git commit -m "feat(p03-t02): add dashboard hook to oat-project-index skill"
+git add .agent/skills/oat-repo-knowledge-index/
+git commit -m "feat(p03-t02): add dashboard hook to oat-repo-knowledge-index skill"
 ```
 
 ---
@@ -1239,10 +1239,10 @@ git commit -m "feat(p03-t02): add dashboard hook to oat-project-index skill"
 - Run `oat-project-progress`
 - Verify .oat/state.md has newer timestamp
 
-**Step 2: Test oat-project-index integration**
+**Step 2: Test oat-repo-knowledge-index integration**
 
 - Note current .oat/state.md timestamp
-- Run `oat-project-index`
+- Run `oat-repo-knowledge-index`
 - Verify .oat/state.md has newer timestamp
 - Verify knowledge status reflects fresh generation
 

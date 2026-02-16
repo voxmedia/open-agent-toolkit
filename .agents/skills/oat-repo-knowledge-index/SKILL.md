@@ -1,5 +1,5 @@
 ---
-name: oat-project-index
+name: oat-repo-knowledge-index
 description: Generate or regenerate comprehensive knowledge base of the codebase using parallel mapper agents.
 disable-model-invocation: true
 user-invocable: true
@@ -162,7 +162,7 @@ Produce these documents:
 - stack.md - Languages, runtime, frameworks, dependencies, configuration
 - integrations.md - External APIs, databases, auth providers, webhooks
 
-Use templates from .agents/skills/oat-project-index/references/templates/
+Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 
 Include frontmatter:
 ---
@@ -170,13 +170,13 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 Instructions:
 - Write documents directly to `.oat/repo/knowledge/` using the Write tool
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
-- Use templates from .agents/skills/oat-project-index/references/templates/
+- Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 - Include frontmatter with both SHA fields in every document
 - Return only a brief confirmation when done (do NOT return document contents)
 ```
@@ -200,7 +200,7 @@ Produce these documents:
 - architecture.md - Pattern, layers, data flow, abstractions, entry points
 - structure.md - Directory layout, key locations, naming conventions
 
-Use templates from .agents/skills/oat-project-index/references/templates/
+Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 
 Include frontmatter:
 ---
@@ -208,13 +208,13 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 Instructions:
 - Write documents directly to `.oat/repo/knowledge/` using the Write tool
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
-- Use templates from .agents/skills/oat-project-index/references/templates/
+- Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 - Include frontmatter with both SHA fields in every document
 - Return only a brief confirmation when done (do NOT return document contents)
 ```
@@ -238,7 +238,7 @@ Produce these documents:
 - conventions.md - Code style, naming, patterns, error handling
 - testing.md - Framework, structure, mocking, coverage
 
-Use templates from .agents/skills/oat-project-index/references/templates/
+Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 
 Include frontmatter:
 ---
@@ -246,13 +246,13 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 Instructions:
 - Write documents directly to `.oat/repo/knowledge/` using the Write tool
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
-- Use templates from .agents/skills/oat-project-index/references/templates/
+- Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 - Include frontmatter with both SHA fields in every document
 - Return only a brief confirmation when done (do NOT return document contents)
 ```
@@ -275,7 +275,7 @@ Analyze this codebase for technical debt, known issues, and areas of concern.
 Produce this document:
 - concerns.md - Tech debt, bugs, security, performance, fragile areas
 
-Use template from .agents/skills/oat-project-index/references/templates/
+Use template from .agents/skills/oat-repo-knowledge-index/references/templates/
 
 Include frontmatter:
 ---
@@ -283,13 +283,13 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 Instructions:
 - Write documents directly to `.oat/repo/knowledge/` using the Write tool
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
-- Use templates from .agents/skills/oat-project-index/references/templates/
+- Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 - Include frontmatter with both SHA fields in every document
 - Return only a brief confirmation when done (do NOT return document contents)
 ```
@@ -323,7 +323,7 @@ Produce these documents:
 - stack.md - Languages, runtime, frameworks, dependencies, configuration
 - integrations.md - External APIs, databases, auth providers, webhooks
 
-Use templates from .agents/skills/oat-project-index/references/templates/
+Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 
 Include frontmatter:
 ---
@@ -331,7 +331,7 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 Constraints:
@@ -367,7 +367,7 @@ Produce these documents:
 - architecture.md - Pattern, layers, data flow, abstractions, entry points
 - structure.md - Directory layout, key locations, naming conventions
 
-Use templates from .agents/skills/oat-project-index/references/templates/
+Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 
 Include frontmatter:
 ---
@@ -375,7 +375,7 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 Constraints:
@@ -411,7 +411,7 @@ Produce these documents:
 - conventions.md - Code style, naming, patterns, error handling
 - testing.md - Framework, structure, mocking, coverage
 
-Use templates from .agents/skills/oat-project-index/references/templates/
+Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 
 Include frontmatter:
 ---
@@ -419,7 +419,7 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 Constraints:
@@ -454,7 +454,7 @@ Analyze this codebase for technical debt, known issues, and areas of concern.
 Produce this document:
 - concerns.md - Tech debt, bugs, security, performance, fragile areas
 
-Use template from .agents/skills/oat-project-index/references/templates/
+Use template from .agents/skills/oat-repo-knowledge-index/references/templates/
 
 Include frontmatter:
 ---
@@ -462,7 +462,7 @@ oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 Constraints:
@@ -588,7 +588,7 @@ Replace placeholder sections with full details:
 Update frontmatter:
 - Change `oat_index_type: thin` → `oat_index_type: full`
 - Keep same SHAs (already set in Step 4)
-- Update warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-project-index"
+- Update warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 
 Update links at bottom to show files are available (not "pending"):
 ```markdown

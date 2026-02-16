@@ -22,7 +22,7 @@ This project implements minimal project lifecycle management and a derived repo 
 - Provide skills to set, clear, and complete the active project
 - Generate a repo state dashboard (`.oat/state.md`) showing current state at a glance
 - Keep implementation file-based and derived from existing sources of truth
-- Integrate dashboard generation into `oat-project-progress` and `oat-project-index` for auto-refresh
+- Integrate dashboard generation into `oat-project-progress` and `oat-repo-knowledge-index` for auto-refresh
 
 ### Secondary Goals
 - Validate project paths before setting active (strict validation)
@@ -90,8 +90,8 @@ This project implements minimal project lifecycle management and a derived repo 
   - No user action required to refresh
 - **Priority:** P0
 
-**FR6: Dashboard Integration - oat-project-index**
-- **Description:** `oat-project-index` skill runs dashboard generation after completion
+**FR6: Dashboard Integration - oat-repo-knowledge-index**
+- **Description:** `oat-repo-knowledge-index` skill runs dashboard generation after completion
 - **Acceptance Criteria:**
   - Dashboard is regenerated after knowledge base generation completes
   - Knowledge staleness section reflects fresh data immediately
@@ -149,7 +149,7 @@ This project implements minimal project lifecycle management and a derived repo 
 - `.oat/projects-root` file (optional, for configurable projects location)
 - Git for diff stats calculation
 - `oat-project-progress` skill (for integration)
-- `oat-project-index` skill (for integration)
+- `oat-repo-knowledge-index` skill (for integration)
 
 ## High-Level Design (Proposed)
 
@@ -177,7 +177,7 @@ The three skills (`oat-project-open`, `oat-project-clear-active`, `oat-project-c
 - Repo state dashboard correctly reflects active project state (manual verification)
 - All three skills complete without error on valid inputs
 - Repo state generation completes in <2 seconds
-- Integration with oat-project-progress and oat-project-index works automatically
+- Integration with oat-project-progress and oat-repo-knowledge-index works automatically
 - Zero data loss or corruption to existing project artifacts
 
 ## Requirement Index
@@ -189,7 +189,7 @@ The three skills (`oat-project-open`, `oat-project-clear-active`, `oat-project-c
 | FR3 | Mark project complete via skill | P1 | manual: invoke skill, verify oat_lifecycle set | p02-t03, p02-t04, p02-t05 |
 | FR4 | Generate repo state dashboard | P0 | manual: run script, verify output sections | p01-t01 to p01-t09 |
 | FR5 | Dashboard integration - oat-project-progress | P0 | manual: run oat-project-progress, verify dashboard updated | p03-t01, p03-t03 |
-| FR6 | Dashboard integration - oat-project-index | P1 | manual: run oat-project-index, verify dashboard updated | p03-t02, p03-t03 |
+| FR6 | Dashboard integration - oat-repo-knowledge-index | P1 | manual: run oat-repo-knowledge-index, verify dashboard updated | p03-t02, p03-t03 |
 | FR7 | Project validation on set | P0 | manual: try invalid project, verify error | p02-t01 |
 | NFR1 | Script performance <2s | P1 | perf: time script execution | p01-t10 |
 | NFR2 | Script idempotency | P0 | manual: run twice, diff outputs | p01-t10 |
@@ -218,7 +218,7 @@ The three skills (`oat-project-open`, `oat-project-clear-active`, `oat-project-c
   - **Impact:** Low (dashboard is informational)
   - **Mitigation:** Use simple grep/sed patterns, handle missing data gracefully
 
-- **Integration breakage:** Changes to oat-project-progress/oat-project-index could break
+- **Integration breakage:** Changes to oat-project-progress/oat-repo-knowledge-index could break
   - **Likelihood:** Low
   - **Impact:** Medium
   - **Mitigation:** Keep integration minimal (single line addition)

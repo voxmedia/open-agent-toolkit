@@ -92,7 +92,7 @@ oat_template: false
 ### Task p03-t01: Add Hook to oat-project-progress
 **Status:** completed | **Commit:** a11d316
 
-### Task p03-t02: Add Hook to oat-project-index
+### Task p03-t02: Add Hook to oat-repo-knowledge-index
 **Status:** completed | **Commit:** d402599
 
 ### Task p03-t03: Final Integration Test
@@ -142,7 +142,7 @@ oat_template: false
 - [x] Phase 1: All 10 tasks completed
 - [x] Phase 2: All 5 tasks completed
 - [x] p03-t01: Add Hook to oat-project-progress - completed
-- [x] p03-t02: Add Hook to oat-project-index - completed
+- [x] p03-t02: Add Hook to oat-repo-knowledge-index - completed
 - [x] p03-t03: Final Integration Test - completed
 - [x] Final review requested - completed (Grade: A)
 - [x] p03-t04: (review) Fix sed portability - completed (3beb4a8)

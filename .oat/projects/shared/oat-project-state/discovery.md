@@ -35,7 +35,7 @@ Implement a minimal design for setting and modifying the active project during t
 ### Question 4: Dashboard Integration
 
 **Q:** Should dashboard generation be wired into oat-project-progress automatically?
-**A:** Both oat-project-progress and oat-project-index
+**A:** Both oat-project-progress and oat-repo-knowledge-index
 **Decision:** Generate dashboard on both status check and knowledge refresh for always-fresh state
 
 ## Options Considered
@@ -75,7 +75,7 @@ Implement a minimal design for setting and modifying the active project during t
 2. **Dashboard is derived:** `.oat/state.md` is always regenerated, never hand-edited
 3. **Strict validation:** Only allow setting active project to directories with valid state.md
 4. **Skills first, CLI later:** Implement as skills for dogfooding, migrate to CLI in future phase
-5. **Auto-refresh:** Dashboard regenerates on oat-project-progress and oat-project-index runs
+5. **Auto-refresh:** Dashboard regenerates on oat-project-progress and oat-repo-knowledge-index runs
 
 ## Constraints
 
@@ -91,7 +91,7 @@ Implement a minimal design for setting and modifying the active project during t
 - [ ] Can clear active project via `oat-project-clear-active`
 - [ ] Can mark project complete via `oat-project-complete`
 - [ ] Dashboard (`.oat/state.md`) shows active project, phase, blockers, knowledge staleness
-- [ ] Dashboard regenerates automatically on oat-project-progress and oat-project-index
+- [ ] Dashboard regenerates automatically on oat-project-progress and oat-repo-knowledge-index
 - [ ] Validation prevents setting invalid project paths
 
 ## Out of Scope
@@ -137,7 +137,7 @@ Full design specification in: `.oat/repo/archive/temp/oat-project-state.md`
 3. **Skill:** `oat-project-clear-active` (clear active project)
 4. **Skill:** `oat-project-complete` (mark project complete)
 5. **Integration:** Wire dashboard generation into oat-project-progress
-6. **Integration:** Wire dashboard generation into oat-project-index
+6. **Integration:** Wire dashboard generation into oat-repo-knowledge-index
 
 ## Next Steps
 

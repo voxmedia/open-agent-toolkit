@@ -391,7 +391,7 @@ EOF
 ## Quick Commands
 
 - \`oat-project-progress\` - Check current status
-- \`oat-project-index\` - Refresh knowledge base
+- \`oat-repo-knowledge-index\` - Refresh knowledge base
 - \`oat-project-new\` - Create a full-lifecycle project
 - \`oat-project-quick-start\` - Create a quick workflow project
 - \`oat-project-import-plan\` - Import an external provider plan

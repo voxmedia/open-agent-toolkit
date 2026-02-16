@@ -41,7 +41,7 @@ EXISTING_MD=$(find .oat/repo/knowledge -name "*.md" -type f 2>/dev/null | head -
 ```
 ⚠️  No knowledge base found.
 
-Run the oat-project-index skill first to generate codebase analysis.
+Run the oat-repo-knowledge-index skill first to generate codebase analysis.
 ```
 **Exit here.**
 
@@ -91,7 +91,7 @@ Generated: {GENERATED_AT} ({DAYS_OLD} days ago)
 Changes since: {FILES_CHANGED} files changed
 {CHANGES_SUMMARY}
 
-Consider running the oat-project-index skill to refresh.
+Consider running the oat-repo-knowledge-index skill to refresh.
 ```
 
 ### Step 3: List Projects (Highlight Active Project)
@@ -224,7 +224,7 @@ Address blocker before continuing.
 OAT Workflow Skills:
 
 Knowledge:
-  oat-project-index             - Generate/refresh codebase knowledge base
+  oat-repo-knowledge-index             - Generate/refresh codebase knowledge base
 
 Workflow:
   oat-project-quick-start       - Start a quick workflow (discover -> plan -> implement)

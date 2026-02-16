@@ -156,7 +156,7 @@ FILES_CHANGED=$(echo "$diff_output" | wc -l | awk '{print $1}')
 | FR3: Complete Project | ✅ implemented | oat-project-complete skill with warnings (portability issue noted) |
 | FR4: Generate Repo State Dashboard | ✅ implemented | generate-oat-state.sh with all required sections |
 | FR5: Dashboard Integration - oat-project-progress | ✅ implemented | Hook added, tested |
-| FR6: Dashboard Integration - oat-project-index | ✅ implemented | Hook added, tested |
+| FR6: Dashboard Integration - oat-repo-knowledge-index | ✅ implemented | Hook added, tested |
 | FR7: Project Validation | ✅ implemented | Validates directory, state.md, project name format |
 | NFR1: Script Performance <2s | ✅ implemented | Verified in p01-t10 |
 | NFR2: Idempotency | ✅ implemented | Verified in p01-t10 |
@@ -247,7 +247,7 @@ FILES_CHANGED=$(echo "$diff_output" | wc -l | awk '{print $1}')
 **Phase 3 (Integration):**
 - ✅ p03-t03: End-to-end integration testing
   - Dashboard auto-refresh via oat-project-progress
-  - Dashboard auto-refresh via oat-project-index
+  - Dashboard auto-refresh via oat-repo-knowledge-index
   - Full workflow: clear → open → progress
 
 **Missing Tests:**

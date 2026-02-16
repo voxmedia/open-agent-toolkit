@@ -228,8 +228,8 @@
       "lastSynced": "2026-02-16T04:13:19.997Z"
     },
     {
-      "canonicalPath": ".agents/skills/oat-project-index",
-      "providerPath": ".claude/skills/oat-project-index",
+      "canonicalPath": ".agents/skills/oat-repo-knowledge-index",
+      "providerPath": ".claude/skills/oat-repo-knowledge-index",
       "provider": "claude",
       "contentType": "skill",
       "strategy": "symlink",
@@ -363,8 +363,8 @@
       "lastSynced": "2026-02-16T04:13:19.999Z"
     },
     {
-      "canonicalPath": ".agents/skills/oat-project-index",
-      "providerPath": ".cursor/skills/oat-project-index",
+      "canonicalPath": ".agents/skills/oat-repo-knowledge-index",
+      "providerPath": ".cursor/skills/oat-repo-knowledge-index",
       "provider": "cursor",
       "contentType": "skill",
       "strategy": "symlink",

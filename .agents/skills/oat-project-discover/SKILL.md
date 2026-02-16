@@ -12,7 +12,7 @@ Gather requirements and understand the problem space through natural collaborati
 
 ## Prerequisites
 
-**Required:** Knowledge base must exist. If missing, run the `oat-project-index` skill first.
+**Required:** Knowledge base must exist. If missing, run the `oat-repo-knowledge-index` skill first.
 
 ## Mode Assertion
 
@@ -94,7 +94,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 test -f .oat/repo/knowledge/project-index.md
 ```
 
-**If missing:** Block and require the `oat-project-index` skill first.
+**If missing:** Block and require the `oat-repo-knowledge-index` skill first.
 
 ### Step 3: Check Knowledge Staleness
 
@@ -154,7 +154,7 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 **If stale (age or changes exceed thresholds):**
 - Display prominent warning with specifics (days old, files changed)
 - Show `$CHANGES_SUMMARY` if available
-- Recommend the `oat-project-index` skill to refresh
+- Recommend the `oat-repo-knowledge-index` skill to refresh
 - Ask user: "Continue with stale knowledge or refresh first?"
 
 **If unable to determine staleness (missing SHAs/dates):**

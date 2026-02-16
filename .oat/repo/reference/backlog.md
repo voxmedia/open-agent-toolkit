@@ -213,7 +213,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Target milestone/phase: OAT CLI consolidation
   - Notes:
     - Move state dashboard generation from `.oat/scripts/generate-oat-state.sh` into `packages/cli/` (e.g., `oat state` or `oat project status`).
-    - Currently called by `oat-project-new` skill (Step 2), `oat-project-index` skill (Step 12), and `new-oat-project.ts`.
+    - Currently called by `oat-project-new` skill (Step 2), `oat-repo-knowledge-index` skill (Step 12), and `new-oat-project.ts`.
     - Generates `.oat/state.md` with active project, phase, knowledge base freshness, and recommended next action.
     - Shell script parses frontmatter and git state — rewrite in TypeScript for consistency and testability.
     - Update calling skills to use CLI command.
@@ -223,24 +223,24 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - `.oat/scripts/generate-oat-state.sh` removed.
   - Links:
     - Current script: `.oat/scripts/generate-oat-state.sh`
-    - Calling skills: `oat-project-new`, `oat-project-index`
+    - Calling skills: `oat-project-new`, `oat-repo-knowledge-index`
   - Created: 2026-02-14
 
 - [ ] **(P1) [tooling] Migrate `generate-thin-index.sh` from `.oat/scripts/` to CLI**
   - Target milestone/phase: OAT CLI consolidation
   - Notes:
     - Move thin index generation from `.oat/scripts/generate-thin-index.sh` into `packages/cli/` (e.g., `oat index --thin` or `oat index init`).
-    - Currently called by `oat-project-index` skill (Step 4) with HEAD_SHA and MERGE_BASE_SHA args.
+    - Currently called by `oat-repo-knowledge-index` skill (Step 4) with HEAD_SHA and MERGE_BASE_SHA args.
     - Generates `.oat/repo/knowledge/project-index.md` with repo structure, entry points, config files, and test commands.
     - Shell script uses find/grep/awk — rewrite in TypeScript for consistency, testability, and cross-platform support.
-    - Update `oat-project-index` skill to call CLI command.
+    - Update `oat-repo-knowledge-index` skill to call CLI command.
   - Success criteria:
     - Thin index generation works as a CLI command.
-    - `oat-project-index` skill updated to call CLI instead of shell script.
+    - `oat-repo-knowledge-index` skill updated to call CLI instead of shell script.
     - `.oat/scripts/generate-thin-index.sh` removed.
   - Links:
     - Current script: `.oat/scripts/generate-thin-index.sh`
-    - Calling skill: `.agents/skills/oat-project-index/SKILL.md`
+    - Calling skill: `.agents/skills/oat-repo-knowledge-index/SKILL.md`
   - Created: 2026-02-14
 
 - [ ] **(P2) [tooling] Remove `.oat/scripts/` directory after all migrations complete**

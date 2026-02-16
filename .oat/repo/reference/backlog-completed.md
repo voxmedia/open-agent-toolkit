@@ -81,7 +81,7 @@ Historical record of completed backlog items moved out of the active backlog for
       - `oat-plan` -> `oat-project-plan`
       - `oat-implement` -> `oat-project-implement`
       - `oat-progress` -> `oat-project-progress`
-      - `oat-index` -> `oat-project-index`
+      - `oat-index` -> `oat-repo-knowledge-index`
       - `oat-pr-progress` -> `oat-project-pr-progress`
       - `oat-pr-project` -> `oat-project-pr-final`
       - `oat-request-review` -> `oat-project-review-provide`

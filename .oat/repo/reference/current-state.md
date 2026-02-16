@@ -22,7 +22,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 ### Workflow Skills (Dogfood)
 
 - Knowledge + routing:
-  - `oat-project-index` (thin-first index + enrichment)
+  - `oat-repo-knowledge-index` (thin-first index + enrichment)
   - `oat-project-progress` (router / status)
 - Artifact generation:
   - `oat-project-new` (scaffold a project dir from templates)
@@ -87,7 +87,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 ## Quickstart (Current)
 
 1. Generate repo knowledge:
-   - `oat-project-index`
+   - `oat-repo-knowledge-index`
 2. Start a project:
    - `oat-project-new` (recommended) then `oat-project-discover`
    - This creates `{PROJECTS_ROOT}/<project>/...` artifacts (from `.oat/projects-root`) and writes `.oat/active-project`.

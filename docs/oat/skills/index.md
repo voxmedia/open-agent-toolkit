@@ -35,7 +35,7 @@ Project skills are stored in `.agents/skills`.
 
 ## Utility and maintenance skills
 
-- `oat-project-index`
+- `oat-repo-knowledge-index`
 - `create-oat-skill`
 - `create-skill`
 - `create-pr-description`

@@ -11,7 +11,7 @@ Primary references:
 ## Baseline (Already In Scope)
 
 Dogfood v1 baseline is:
-- `oat-project-index` + `.oat/repo/knowledge/**`
+- `oat-repo-knowledge-index` + `.oat/repo/knowledge/**`
 - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
 - `oat-project-progress` router
 - Active project selection: `.oat/active-project` (single-line path, local-only; gitignored)

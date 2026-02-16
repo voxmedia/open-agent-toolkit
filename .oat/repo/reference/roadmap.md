@@ -15,7 +15,7 @@ As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline h
 
 | Area / Phase | Status | Notes |
 |---|---|---|
-| Dogfood workflow baseline | Completed | `oat-project-index`, `oat-project-new`, phases (`discover → implement`), router, review loop, PR skills |
+| Dogfood workflow baseline | Completed | `oat-repo-knowledge-index`, `oat-project-new`, phases (`discover → implement`), router, review loop, PR skills |
 | Phase 3: Reviews + PR loop | Completed | Implemented + dogfooded |
 | Phase 4: Active project pointer + Repo State Dashboard | Completed (polish remaining) | Pointer + generated `.oat/state.md` exist; clarify “first-class” regeneration contract |
 | Phase 5: Staleness + knowledge drift | Planned | Improve/enforce freshness beyond warn-only |
@@ -29,7 +29,7 @@ As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline h
 ## Current State (Implemented)
 
 Dogfood workflow baseline is implemented and has been exercised end-to-end:
-- Knowledge: `oat-project-index` + `.oat/repo/knowledge/**` (thin->full project index, mapper outputs under `.oat/repo/knowledge/`)
+- Knowledge: `oat-repo-knowledge-index` + `.oat/repo/knowledge/**` (thin->full project index, mapper outputs under `.oat/repo/knowledge/`)
 - Projects:
   - `oat-project-new` scaffolds `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`
   - `.oat/projects-root` sets `{PROJECTS_ROOT}` (default: `.oat/projects/shared`)
