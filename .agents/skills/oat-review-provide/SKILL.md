@@ -137,15 +137,35 @@ If user asks for tracked `.oat/repo/reviews` and it is gitignored, warn and ask 
 
 ### Step 3: Determine Output Path (File Mode)
 
-For file mode:
+Derive a **scope slug** from the resolved scope mode so that the filename indicates what was reviewed:
+
+| Scope mode | Slug derivation | Example filename |
+|---|---|---|
+| `base_branch=<branch>` | Current branch name | `ad-hoc-review-2026-02-16-oat-repo.md` |
+| `unstaged` | Literal `unstaged` | `ad-hoc-review-2026-02-16-unstaged.md` |
+| `staged` | Literal `staged` | `ad-hoc-review-2026-02-16-staged.md` |
+| `--files <paths>` | First 2–3 basenames, joined with `-` | `ad-hoc-review-2026-02-16-auth-login.md` |
+| `base_sha=<sha>` | Short SHA (7 chars) | `ad-hoc-review-2026-02-16-abc1234.md` |
+| `<sha1>..<sha2>` | Both short SHAs joined with `-` | `ad-hoc-review-2026-02-16-abc1234-def5678.md` |
 
 ```bash
 mkdir -p "$OUTPUT_DIR"
 TODAY=$(date +%Y-%m-%d)
-OUT_FILE="$OUTPUT_DIR/ad-hoc-review-$TODAY.md"
+
+# Derive SCOPE_SLUG based on scope mode (examples):
+# base_branch → SCOPE_SLUG=$(git branch --show-current | tr '/' '-')
+# unstaged    → SCOPE_SLUG="unstaged"
+# staged      → SCOPE_SLUG="staged"
+# --files     → SCOPE_SLUG from first 2-3 basenames, stripped of extensions, joined with '-'
+# sha range   → SCOPE_SLUG from short SHAs
+
+# Sanitize: lowercase, replace non-alphanumeric with '-', collapse runs, trim to 40 chars
+SCOPE_SLUG=$(echo "$SCOPE_SLUG" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g; s/--*/-/g; s/^-//; s/-$//' | cut -c1-40)
+
+OUT_FILE="$OUTPUT_DIR/ad-hoc-review-${TODAY}-${SCOPE_SLUG}.md"
 ```
 
-If the file already exists, suffix with `-v2`, `-v3`, etc.
+If the file already exists (same scope reviewed twice in one day), suffix with `-v2`, `-v3`, etc.
 
 ### Step 4: Run Review
 
