@@ -104,6 +104,26 @@ Read `"$PROJECT_PATH/plan.md"` completely to understand:
 - Verification commands
 - Commit messages
 
+### Step 2.5: Confirm Plan HiL Checkpoints
+
+Read `oat_plan_hil_phases` from `"$PROJECT_PATH/plan.md"` frontmatter and validate it.
+
+- **Valid format:** JSON-like array of phase IDs (e.g., `["p01","p03"]`)
+- **Invalid format examples:** scalar string, malformed array, unknown phase IDs
+
+Determine whether this is a first implementation run:
+- If `"$PROJECT_PATH/implementation.md"` does not exist, treat as first run.
+- If it exists but still has template placeholders and no completed task evidence, treat as first run.
+
+Prompt behavior:
+- **If `oat_plan_hil_phases` is missing/empty/invalid:** ask user to confirm checkpoint phases before any task execution.
+- **If first run and `oat_plan_hil_phases` is valid:** ask user to confirm keep/change.
+- **If resuming and `oat_plan_hil_phases` is valid:** do not re-ask; print active checkpoint config and continue.
+
+When user confirms/changes:
+- Update `"$PROJECT_PATH/plan.md"` frontmatter `oat_plan_hil_phases` to the confirmed value before executing tasks.
+- Keep the value stable for the rest of the run unless the user explicitly requests a change.
+
 ### Step 3: Check Implementation State
 
 Check if implementation already started:

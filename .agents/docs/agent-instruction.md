@@ -2,7 +2,6 @@
 
 ## Practical Playbook (Generalized Edition)
 
-**Edition:** v1.0 (Peer Review)
 **Generated:** 2026-02-16T16:20:50.389314 UTC
 
 This document is a generalized, cross-tool version of an internal AGENTS.md standard playbook.
