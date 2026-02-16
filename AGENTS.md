@@ -173,6 +173,12 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-review-provide</name>
+<description>Run an ad-hoc code review for a commit range when no OAT project/state exists.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>oat-project-review-provide</name>
 <description>Use when ready to review completed work before merging - after implementing a task, phase, or full project; when quality gate needed before PR</description>
 <location>project</location>
