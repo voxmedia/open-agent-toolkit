@@ -44,6 +44,7 @@ describe('help output snapshots', () => {
         sync [options]   Sync canonical content to provider views
         providers        Inspect provider capabilities and paths
         doctor           Run environment and setup diagnostics
+        internal         Internal OAT maintenance commands
         help [command]   display help for command
       "
     `);
@@ -157,6 +158,23 @@ describe('help output snapshots', () => {
       "Usage: oat doctor [options]
 
       Run environment and setup diagnostics
+
+      Options:
+        -h, --help  display help for command
+      "
+    `);
+  });
+
+  it('internal validate-oat-skills --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'internal',
+      'validate-oat-skills',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat internal validate-oat-skills [options]
+
+      Validate required structure of oat-* workflow skills
 
       Options:
         -h, --help  display help for command

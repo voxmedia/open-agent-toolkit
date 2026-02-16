@@ -94,6 +94,35 @@ async function seedCanonical(root: string): Promise<void> {
   );
 }
 
+async function seedValidOatSkill(
+  root: string,
+  skillName: string,
+): Promise<void> {
+  await mkdir(join(root, '.agents', 'skills', skillName), { recursive: true });
+  await writeFile(
+    join(root, '.agents', 'skills', skillName, 'SKILL.md'),
+    [
+      '---',
+      `name: ${skillName}`,
+      'disable-model-invocation: true',
+      'user-invocable: true',
+      'allowed-tools: Read, Write',
+      '---',
+      '',
+      '# Skill',
+      '',
+      '## Progress Indicators (User-Facing)',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ' OAT ▸ TEST',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '',
+      'Body',
+    ].join('\n'),
+    'utf8',
+  );
+}
+
 describe('CLI command integration', () => {
   const tempDirs: string[] = [];
 
@@ -238,5 +267,16 @@ describe('CLI command integration', () => {
 
     const after = await readFile(manifestPath, 'utf8');
     expect(after).toBe(before);
+  });
+
+  it('internal validate-oat-skills succeeds for valid oat-* skills', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await seedValidOatSkill(root, 'oat-sample');
+
+    const result = await runCli(root, ['internal', 'validate-oat-skills']);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('OK: validated 1 oat-* skills');
   });
 });
