@@ -65,11 +65,16 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 If no valid active project exists:
 - Read `{project-name}` from `$ARGUMENTS`, or ask user.
-- Create project via the `oat-project-new` skill flow or:
+- Create project via the same scaffolding path used by `oat-project-new`:
 
 ```bash
 pnpm tsx .oat/scripts/new-oat-project.ts "{project-name}"
 ```
+
+This guarantees:
+- standard artifact scaffolding from `.oat/templates/`
+- `.oat/active-project` pointer update
+- repo dashboard refresh (`.oat/state.md`) via existing scaffolder behavior
 
 ### Step 1: Set Quick Workflow Metadata
 
@@ -128,13 +133,22 @@ Ensure `"$PROJECT_PATH/implementation.md"` exists and frontmatter is resumable:
 - `oat_status: in_progress`
 - `oat_current_task_id: p01-t01` (or first task in plan)
 
-### Step 6: Output Next Action
+### Step 6: Refresh Repo Dashboard
+
+Always regenerate the repo dashboard after quick-start updates (including resume path):
+
+```bash
+bash .oat/scripts/generate-oat-state.sh
+```
+
+### Step 7: Output Next Action
 
 Report:
 - workflow mode (`quick`)
 - total phases/tasks generated
 - first task ID
 - next command: `oat-project-implement`
+- dashboard location: `.oat/state.md` (confirm it was regenerated)
 
 ## Success Criteria
 

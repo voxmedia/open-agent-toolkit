@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-16
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 oat_template: false
 ---
@@ -45,6 +45,10 @@ Implement a lightweight OAT quick/import workflow that:
    - Decision: keep only `p05` as plan HiL checkpoint for this project.
    - Rationale: phase-level guidance after p03 is not required; final validation/review gate remains explicit.
 
+6. **Quick-start dashboard refresh on resume**
+   - Decision: require `oat-project-quick-start` to run `.oat/scripts/generate-oat-state.sh` after quick-plan updates, even when reusing an existing active project.
+   - Rationale: ensures `.oat/state.md` recommendations and summary reflect quick-mode metadata changes without depending on the new-project scaffolder path.
+
 ## Planned Commit Map
 
 - `p01-t01` Add workflow metadata to state template
@@ -62,10 +66,10 @@ Implement a lightweight OAT quick/import workflow that:
 | Phase 1 | complete | 3 | 3/3 |
 | Phase 2 | complete | 3 | 3/3 |
 | Phase 3 | complete | 3 | 3/3 |
-| Phase 4 | pending | 2 | 0/2 |
-| Phase 5 | pending | 2 | 0/2 |
+| Phase 4 | complete | 2 | 2/2 |
+| Phase 5 | in_progress | 2 | 1/2 |
 
-**Total:** 9/13 tasks completed
+**Total:** 12/13 tasks completed
 
 ## Implementation Log
 
@@ -84,7 +88,9 @@ Implement a lightweight OAT quick/import workflow that:
 - [x] Completed `p03-t01`: made `oat-project-progress` routing mode-aware (`full|quick|import`).
 - [x] Completed `p03-t02`: updated `.oat/scripts/generate-oat-state.sh` to use `oat-project-*` commands and mode-aware next-step routing.
 - [x] Completed `p03-t03`: updated review and PR skill contracts so quick/import projects can proceed without mandatory spec/design.
-- [ ] Begin `p04-t01` implementation.
+- [x] Completed `p04-t01`: documented full/quick/import workflow lanes in README and OAT docs.
+- [x] Completed `p04-t02`: added ADR + roadmap + backlog records for quick/import rollout decisions.
+- [x] Completed `p05-t01`: tightened `oat-project-quick-start` so dashboard refresh is explicit on resume paths.
 
 **Notes:**
 - User requested atomic commits and detailed implementation journaling.
@@ -98,6 +104,8 @@ Implement a lightweight OAT quick/import workflow that:
 - Added and registered 3 lifecycle extension skills in `AGENTS.md` and `docs/oat/skills/index.md`.
 - Verified skill contracts pass repository validation (`pnpm oat:validate-skills`).
 - Verified dashboard script syntax after mode-aware changes (`bash -n .oat/scripts/generate-oat-state.sh`).
+- Clarified `oat-project-quick-start` contract: it reuses `oat-project-new` scaffolding behavior (active project pointer + `.oat/state.md` generation), then applies quick-mode flow.
+- Added explicit post-update dashboard refresh in `oat-project-quick-start` so resumed projects also regenerate `.oat/state.md`.
 
 ## Final Summary (for PR/docs)
 
