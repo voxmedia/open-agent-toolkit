@@ -9,7 +9,9 @@ user-invocable: true
 
 # Create Skill
 
-Create a new skill for AI coding agents using the openskills standard. Skills live in `.agents/skills/` and work across Claude Code, Cursor, and other compatible agents.
+Create a new skill for AI coding agents using the [Agent Skills open standard](https://agentskills.io). Skills live in `.agents/skills/` (canonical source) and work across Claude Code, Cursor, Codex CLI, Gemini CLI, GitHub Copilot, and 20+ other compatible agents.
+
+For deep-dive research on cross-provider compatibility, frontmatter behavior, and distribution patterns, see `.agents/docs/skills-guide.md`.
 
 ## When to Use
 
@@ -17,7 +19,7 @@ Use when:
 
 - Creating a new reusable workflow or capability
 - Automating a repeated task that would benefit from structured instructions
-- Adding a new command that both Claude Code and Cursor should support
+- Adding a new command that should work across Claude Code, Cursor, Codex, and other agents
 - Extending AI assistant capabilities for the repository
 
 **If you are creating a new `oat-*` skill:**
@@ -157,9 +159,23 @@ Natural language request that triggers this skill
 ```
 
 **Frontmatter notes:**
-- `argument-hint`, `allowed-tools`, `user-invocable` are Claude Code specific
-- Other agents ignore unknown frontmatter fields, so it's safe to include them
-- `description` should answer "when should I use this?" in one sentence
+- `argument-hint`, `allowed-tools`, `user-invocable`, `context`, `hooks` are Claude Code specific
+- Other agents ignore unknown frontmatter fields, so it's safe to include Claude-specific fields everywhere
+- `name`: max 64 chars for cross-provider portability (Codex allows 100, but 64 is the spec limit)
+- `description`: **single line, ≤ 500 chars** (Codex enforces single-line ≤ 500 chars; spec allows 1024)
+
+**Writing the `description` field:**
+
+The description is your **primary routing mechanism** — agents load only `name` + `description` at startup across all installed skills, then semantic-match against the user's prompt. The SKILL.md body handles "what it does" once loaded. The description's job is to win the routing decision.
+
+1. **Lead with triggering conditions**: "Use when…" / "Run this when…"
+2. **Include keywords for disambiguation**: nouns + verbs that differentiate from similar skills
+3. **Don't summarize the workflow**: providers route on description without reading the body
+4. **Front-load trigger keywords in the first 50 characters** (truncation may occur at scale)
+
+Examples:
+- Bad: "Reviews code by checking spec compliance, then code quality, then creates PR"
+- Good: "Use when reviewing code or checking PRs. Systematic quality and security analysis."
 
 Present the plan and wait for user approval before creating files.
 
@@ -222,35 +238,47 @@ Provide:
 ### Naming
 
 - Use kebab-case for skill names (e.g., `create-pr-description`, `docs-new`)
+- Max 64 chars for cross-provider portability (lowercase letters, numbers, hyphens; no leading/trailing hyphen)
 - Keep names short but descriptive
 - Prefix related skills (e.g., `docs-new`, `docs-update`, `docs-review`)
+- Skill directory name must match the `name` field in frontmatter
 
 ### Content
 
 - **Context window is a public good**—keep skills lean, challenge every paragraph
 - Description is the trigger—include "when to use" in frontmatter, not just body
+- Keep SKILL.md **under 500 lines / ~5,000 tokens** (spec constraint)
 - Use clear, task-based headings
 - Include working examples for both invocation styles
 - Document all arguments with defaults
 - Keep command-like skills concise; complex workflows can be detailed
 - Avoid duplication—info lives in SKILL.md or references, not both
 
+### Shared References
+
+- If multiple skills need the same reference document, place it in `.agents/docs/` (not duplicated per skill)
+- Skill-specific references go in the skill's own `references/` directory
+- Reference from SKILL.md via relative path: `[guide](../../docs/my-guide.md)`
+
 ### Frontmatter Reference
 
-| Field | Required | Claude Code | Cursor | Description |
-|-------|----------|-------------|--------|-------------|
-| `name` | ✅ | ✅ | ✅ | Skill identifier (becomes `/name` command) |
-| `description` | ✅ | ✅ | ✅ | When to use this skill (shown in autocomplete) |
-| `disable-model-invocation` | | ✅ | ✅ | If `true`, only user can invoke |
-| `argument-hint` | | ✅ | ❌ | Hint for expected arguments |
-| `allowed-tools` | | ✅ | ❌ | Tools agent can use without prompts |
-| `user-invocable` | | ✅ | ❌ | If `false`, hidden from `/` menu |
-| `context` | | ✅ | ❌ | Set to `fork` for isolated subagent |
-| `license` | | ❌ | ✅ | License name or reference |
-| `compatibility` | | ❌ | ✅ | Environment requirements |
-| `metadata` | | ❌ | ✅ | Arbitrary key-value mapping |
+Legend: ✅ supported | ⚠️ provider-specific | 💤 ignored | ❓ unknown
 
-Unknown fields are ignored, so Claude Code fields work in universal skills.
+| Field | Spec | Claude Code | Cursor | Codex CLI | Gemini CLI |
+|-------|------|-------------|--------|-----------|------------|
+| `name` | ✅ required | ✅ | ✅ | ✅ required | ✅ |
+| `description` | ✅ required | ✅ | ✅ | ✅ required | ✅ |
+| `license` | ✅ optional | ❓ | ✅ | 💤 | ❓ |
+| `compatibility` | ✅ optional | ❓ | ✅ | 💤 | ❓ |
+| `metadata` | ✅ optional | ❓ | ✅ | 💤 | ❓ |
+| `allowed-tools` | ⚠️ experimental | ✅ | ❓ | 💤 | ❓ |
+| `disable-model-invocation` | ❌ | ✅ | ✅ | 💤 | ❓ |
+| `user-invocable` | ❌ | ✅ | ❓ | 💤 | ❓ |
+| `argument-hint` | ❌ | ✅ | ❓ | 💤 | ❓ |
+| `context` / `agent` | ❌ | ✅ | ❌ | 💤 | ❓ |
+| `hooks` | ❌ | ✅ | ❌ | 💤 | ❓ |
+
+**Key takeaway:** `name` + `description` are the only truly portable interface. Codex ignores unknown keys (safe to include Claude fields), so layer tool-specific fields on top of a portable baseline. For the full matrix, see `.agents/docs/skills-guide.md`.
 
 ### Detail Level
 
@@ -285,11 +313,15 @@ I need a skill for running database migrations
 
 ## Reference
 
-- [openskills CLI](https://github.com/numman-ali/openskills)
-- [AI Skills Documentation](apps/honeycomb-docs/docs/ai/skills.md)
-- [Agent Skills Open Standard](https://agentskills.io)
-- [Claude Code Skills](https://code.claude.com/docs/en/skills)
-- [Cursor Skills](https://cursor.com/docs/context/skills)
+- [Agent Skills Open Standard](https://agentskills.io) — the spec
+- [Claude Code Skills](https://code.claude.com/docs/en/skills) — Claude-specific features
+- [Cursor Skills](https://cursor.com/docs/context/skills) — Cursor-specific features
+- [Codex CLI Skills](https://developers.openai.com/codex/skills) — Codex-specific features
+- [Gemini CLI Skills](https://geminicli.com/docs/cli/skills/) — Gemini-specific features
+- [npx skills CLI](https://github.com/vercel-labs/skills) — cross-tool distribution
+- [Skills best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) — authoring guidance
+- `.agents/docs/skills-guide.md` — local deep-dive: compatibility matrix, resolved questions, patterns
+- `.agents/docs/reference-architecture.md` — local: where skills/agents/docs live and why
 
 ## Troubleshooting
 
