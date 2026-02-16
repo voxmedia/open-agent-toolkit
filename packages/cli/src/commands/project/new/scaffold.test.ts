@@ -153,6 +153,90 @@ describe('scaffoldProject', () => {
     expect(discovery).toContain('Date: 2026-02-16');
   });
 
+  it('removes multiple template marker occurrences', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    await writeFile(
+      join(repoRoot, '.oat', 'templates', 'discovery.md'),
+      [
+        '---',
+        'oat_template: true',
+        'oat_template_name: discovery',
+        'oat_template: true',
+        'oat_template_name: duplicate',
+        '---',
+        '',
+        '# {Project Name} discovery.md',
+        'Date: YYYY-MM-DD',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await scaffoldProject({
+      repoRoot,
+      projectName: 'multi-marker',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-02-16',
+    });
+
+    const discovery = await readFile(
+      join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'shared',
+        'multi-marker',
+        'discovery.md',
+      ),
+      'utf8',
+    );
+    expect(discovery).not.toContain('oat_template: true');
+    expect(discovery).not.toContain('oat_template_name:');
+  });
+
+  it('does not strip malformed marker keys', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    await writeFile(
+      join(repoRoot, '.oat', 'templates', 'discovery.md'),
+      [
+        '---',
+        'oat_template : true',
+        'oat_template_name : discovery',
+        '---',
+        '',
+        '# {Project Name} discovery.md',
+        'Date: YYYY-MM-DD',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await scaffoldProject({
+      repoRoot,
+      projectName: 'malformed-marker',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-02-16',
+    });
+
+    const discovery = await readFile(
+      join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'shared',
+        'malformed-marker',
+        'discovery.md',
+      ),
+      'utf8',
+    );
+    expect(discovery).toContain('oat_template : true');
+    expect(discovery).toContain('oat_template_name : discovery');
+  });
+
   it('creates full mode artifacts and excludes project-index', async () => {
     const repoRoot = await createRepoRoot();
     tempDirs.push(repoRoot);

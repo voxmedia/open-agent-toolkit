@@ -162,6 +162,8 @@ export async function scaffoldProject(
   validateProjectName(options.projectName);
   const projectsRoot = await resolveProjectsRoot(options.repoRoot, env);
   const projectPath = join(projectsRoot, options.projectName);
+  // `--force` is currently accepted for compatibility with the legacy script.
+  // Scaffold behavior is always non-destructive (create missing files only).
   void options.force;
 
   await ensureStructure(options.repoRoot, projectPath, mode);
