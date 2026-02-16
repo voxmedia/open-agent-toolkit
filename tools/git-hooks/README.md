@@ -13,7 +13,7 @@ Automated git hooks for code quality and consistency.
 
 - `pre-commit`: Runs `lint-staged` (linting, formatting, tests on staged files)
 - `commit-msg`: Validates commit messages with `commitlint`
-- `pre-push`: Runs full test suite before pushing
+- `pre-push`: Runs `check`, `type-check`, and `test` before pushing
 - `post-checkout`: Runs `pnpm install` when switching branches with lockfile changes
 
 ## Usage
@@ -107,4 +107,3 @@ Ensure `GIT_HOOKS=0` is set in your CI environment or Dockerfile.
 - Disabled hooks are tracked in `.git/hooks/.disabled-hooks`
 - The `setup` action respects intentionally disabled hooks
 - Git's `core.hooksPath` is unset to ensure hooks run from `.git/hooks/`
-
