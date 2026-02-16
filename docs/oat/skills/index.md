@@ -5,6 +5,9 @@ Project skills are stored in `.agents/skills`.
 ## Lifecycle skills
 
 - `oat-project-new`
+- `oat-project-quick-start`
+- `oat-project-import-plan`
+- `oat-project-promote-full`
 - `oat-project-open`
 - `oat-project-clear-active`
 - `oat-project-discover`

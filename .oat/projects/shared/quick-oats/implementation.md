@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-16
-oat_current_task_id: p01-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 oat_template: false
 ---
@@ -41,6 +41,10 @@ Implement a lightweight OAT quick/import workflow that:
    - Decision: new skill docs follow `/Users/thomas.stang/Code/open-agent-toolkit/.agents/skills/create-oat-skill/SKILL.md` conventions.
    - Rationale: aligns with repo-specific OAT banner/progress/project-resolution contracts.
 
+5. **HiL checkpoint scope**
+   - Decision: keep only `p05` as plan HiL checkpoint for this project.
+   - Rationale: phase-level guidance after p03 is not required; final validation/review gate remains explicit.
+
 ## Planned Commit Map
 
 - `p01-t01` Add workflow metadata to state template
@@ -55,13 +59,13 @@ Implement a lightweight OAT quick/import workflow that:
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1 | in_progress | 3 | 2/3 |
-| Phase 2 | pending | 3 | 0/3 |
+| Phase 1 | complete | 3 | 3/3 |
+| Phase 2 | complete | 3 | 3/3 |
 | Phase 3 | pending | 3 | 0/3 |
 | Phase 4 | pending | 2 | 0/2 |
 | Phase 5 | pending | 2 | 0/2 |
 
-**Total:** 2/13 tasks completed
+**Total:** 6/13 tasks completed
 
 ## Implementation Log
 
@@ -73,7 +77,11 @@ Implement a lightweight OAT quick/import workflow that:
 - [x] Initialized implementation log with objectives, decision record, and commit map.
 - [x] Completed `p01-t01`: added `oat_workflow_mode` + `oat_workflow_origin` to state template.
 - [x] Completed `p01-t02`: added plan source/import metadata and optional artifact reference notes in plan template.
-- [ ] Begin `p01-t03` implementation.
+- [x] Completed `p01-t03`: initialized quick-oats project artifacts (`plan.md` + `implementation.md`).
+- [x] Completed `p02-t01`: added `oat-project-quick-start` skill contract.
+- [x] Completed `p02-t02`: added `oat-project-import-plan` skill contract.
+- [x] Completed `p02-t03`: added `oat-project-promote-full` skill contract.
+- [ ] Begin `p03-t01` implementation.
 
 **Notes:**
 - User requested atomic commits and detailed implementation journaling.
@@ -84,6 +92,8 @@ Implement a lightweight OAT quick/import workflow that:
 - Plan provenance metadata selected:
   - `oat_plan_source`: `full|quick|imported`
   - Import traceability fields (`oat_import_reference`, `oat_import_source_path`, `oat_import_provider`)
+- Added and registered 3 lifecycle extension skills in `AGENTS.md` and `docs/oat/skills/index.md`.
+- Verified skill contracts pass repository validation (`pnpm oat:validate-skills`).
 
 ## Final Summary (for PR/docs)
 

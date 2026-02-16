@@ -125,6 +125,24 @@ Usage notes:
 </skill>
 
 <skill>
+<name>oat-project-quick-start</name>
+<description>Create a lightweight OAT quick workflow project that captures discovery and generates a runnable implementation plan without requiring spec/design.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-project-import-plan</name>
+<description>Import an external provider markdown plan into an OAT project by preserving the source and normalizing it into canonical plan.md.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>oat-project-promote-full</name>
+<description>Promote a quick or imported OAT project to full lifecycle by backfilling missing discovery/spec/design artifacts in place.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>oat-project-open</name>
 <description>Set the active project with validation</description>
 <location>project</location>
