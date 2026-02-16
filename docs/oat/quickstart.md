@@ -60,6 +60,8 @@ The workflow layer can be adopted when you want structured project execution and
 
 ### Typical OAT workflow (skills)
 
+#### Full lifecycle lane
+
 1. `oat-project-new` / `oat-project-open`
 2. `oat-project-discover`
 3. `oat-project-spec`
@@ -70,7 +72,22 @@ The workflow layer can be adopted when you want structured project execution and
 8. `oat-project-pr-final`
 9. `oat-project-complete`
 
+#### Quick lane (discovery -> plan -> implement)
+
+1. `oat-project-quick-start`
+2. `oat-project-implement`
+3. `oat-project-review-provide` / `oat-project-pr-final`
+4. Optional: `oat-project-promote-full`
+
+#### Imported plan lane
+
+1. `oat-project-import-plan` (source markdown path required)
+2. `oat-project-implement`
+3. `oat-project-review-provide` / `oat-project-pr-final`
+4. Optional: `oat-project-promote-full`
+
 ### Workflow artifacts (if using workflow mode)
 
 - `.oat/projects/<scope>/<project>/implementation.md` (final summary + verification)
 - `.oat/projects/<scope>/<project>/plan.md` (phases and review table)
+- `.oat/projects/<scope>/<project>/references/imported-plan.md` (when using import lane)

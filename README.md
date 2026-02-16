@@ -149,6 +149,8 @@ This gives you the core value of OAT without adopting workflow artifacts.
 
 ## Workflow At A Glance
 
+### Full workflow lane
+
 1. Create/open project (`oat-project-new` / `oat-project-open`)
 2. Discovery (`oat-project-discover`)
 3. Spec (`oat-project-spec`)
@@ -158,6 +160,20 @@ This gives you the core value of OAT without adopting workflow artifacts.
 7. Review loop (`oat-project-review-provide` + `oat-project-review-receive`)
 8. PR generation (`oat-project-pr-progress` / `oat-project-pr-final`)
 9. Complete lifecycle (`oat-project-complete`)
+
+### Quick workflow lane
+
+1. Quick start (`oat-project-quick-start`)
+2. Implement (`oat-project-implement`)
+3. Review/PR (`oat-project-review-provide`, `oat-project-pr-final`)
+4. Optional promotion to full lifecycle (`oat-project-promote-full`)
+
+### Imported-plan workflow lane
+
+1. Import external plan (`oat-project-import-plan`)
+2. Implement (`oat-project-implement`)
+3. Review/PR (`oat-project-review-provide`, `oat-project-pr-final`)
+4. Optional promotion to full lifecycle (`oat-project-promote-full`)
 
 ## Documentation
 
