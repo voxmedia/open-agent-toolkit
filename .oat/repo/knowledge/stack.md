@@ -1,128 +1,128 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-02-02
-oat_source_head_sha: d25643fb7a57fd977d1a9590690d26986d2d0ce8
-oat_source_main_merge_base_sha: 6c147615ba8cf567d29814f1fe1d5667fc6e6fdf
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_generated_at: 2026-02-16
+oat_source_head_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
+oat_source_main_merge_base_sha: a80661894616fc9323542a4bcbcc22c08917e440
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 # Technology Stack
 
-**Analysis Date:** 2026-02-02
+**Analysis Date:** 2026-02-16
 
 ## Languages
 
 **Primary:**
-- TypeScript 5.8.3 - All source code, CLI, scripts, and type definitions
-- JavaScript (Node.js) - Git hooks and configuration scripts
+- TypeScript 5.8.3 - Core application code across all packages
+- JavaScript (ES modules) - Configuration and build tooling
+- Shell/Bash - Git hooks and utility scripts
 
 **Secondary:**
-- YAML - Configuration files (workflows, workspace config)
-- JSON - Package manifests and configuration
+- YAML - GitHub Actions workflows, configuration files
+- JSON - Configuration, package manifests, lockfiles
+- Markdown - Documentation
 
 ## Runtime
 
 **Environment:**
-- Node.js 22.17.0 (specified in .nvmrc)
+- Node.js 22.17.0 (minimum required, specified in `.nvmrc` and `package.json`)
+- Runtime type: ES modules (`"type": "module"` across all packages)
 
 **Package Manager:**
-- pnpm 10.13.1 - Monorepo package management with workspaces
+- pnpm 10.13.1 (workspace manager)
 - Lockfile: pnpm-lock.yaml (present)
 
 ## Frameworks
 
-**Core:**
-- Turborepo 2.7.6 - Monorepo build orchestration and caching
-- ESM (ES Modules) - Module system across all packages ("type": "module")
+**Core CLI:**
+- Commander 12.1.0 - CLI framework for command structure and option parsing
+- Zod 3.25.76 - Schema validation and runtime type-checking for configs and manifests
 
-**Development:**
-- tsx 4.21.0 - TypeScript execution with watch mode
-- tsc-alias 1.8.10 - Path alias resolution for compiled TypeScript
+**UI/Output:**
+- Chalk 5.6.2 - Terminal string styling and colors
+- Ora 9.0.0 - Elegant terminal spinner/loader
+- @inquirer/prompts 8.2.0 - Interactive command-line prompts
 
-**Linting & Formatting:**
-- Biome 2.3.11 - Unified linting and code formatting
-- commitlint 19.8.1 - Git commit message validation
-- lint-staged 15.2.11 - Pre-commit hooks for staged files
+**Build/Dev:**
+- Turbo 2.7.6 - Monorepo task orchestration and caching
+- tsx 4.21.0 - Direct TypeScript execution with hot reload support
+- tsc-alias 1.8.10 - TypeScript path alias resolution for compiled output
+
+**Testing:**
+- Vitest 4.0.18 - Unit test framework with TypeScript support
+
+**Linting/Formatting:**
+- Biome 2.3.11 - JavaScript/TypeScript linter and formatter
+  - Extends from `packages/biome-config`
+  - Configured via `biome.json` in repository root
+
+**Commit/Git:**
+- commitlint 19.8.1 - Git commit message linting
+- lint-staged 15.2.11 - Pre-commit hook file linting
 
 ## Key Dependencies
 
-**Development Tools:**
-- @types/node ^22.10.0 - TypeScript definitions for Node.js APIs
-- @biomejs/biome 2.3.11 - Fast JavaScript/TypeScript linter and formatter
-- @commitlint/cli ^19.8.1 - Commit message linting
-- @commitlint/config-conventional ^19.8.1 - Conventional commits config
-- turbo ^2.7.6 - Monorepo build system
-- tsx ^4.21.0 - TypeScript executor for Node.js
+**Critical:**
+- zod 3.25.76 - Runtime validation for manifest schemas, sync configs, and provider adapters
+- commander 12.1.0 - CLI command parsing and execution
+- @inquirer/prompts 8.2.0 - Interactive setup and configuration flows
+- chalk 5.6.2 - Colored console output for user feedback
+- ora 9.0.0 - Visual progress indication during sync and build operations
 
-**No Runtime Dependencies:**
-- Root package has no production dependencies
-- All utilities are development-time tools
+**Infrastructure:**
+- Turbo 2.7.6 - Enables parallel package builds, caching, and dependency graph computation
+- tsx 4.21.0 - TypeScript execution without manual compilation steps
+- tsc-alias 1.8.10 - Rewrites TypeScript path aliases in compiled JavaScript
+
+**Development:**
+- Biome 2.3.11 - Single tool for linting, formatting, and code analysis
+- @types/node 22.10.0 - Node.js type definitions
+- Vitest 4.0.18 - Fast unit testing with zero-config TypeScript support
 
 ## Configuration
 
 **Environment:**
-- Git hooks for pre-commit, commit-msg, pre-push, and post-checkout
-- Environment variables loaded via process.env (Node.js standard)
-- No external .env files required for base functionality
+- Configuration loaded from JSON files (sync config, manifests)
+- No .env files used; configuration is file-based
+- CLI supports `--json`, `--verbose`, `--scope <scope>`, and `--cwd <path>` flags
+- Interactive prompts via @inquirer/prompts for user input during `init` and `adopt` commands
 
 **Build:**
-- turbo.json - Task graph configuration with output caching
-- tsconfig.json - Root TypeScript configuration with strict mode enabled
-- biome.json - Linting and formatting rules
-- pnpm-workspace.yaml - Monorepo workspace definitions
+- `tsconfig.json` - Strict TypeScript compilation settings
+  - Target: ES2022
+  - Module resolution: bundler
+  - ESNext modules with strict null checks
+- `vitest.config.ts` - Test framework aliases
+- `turbo.json` - Task definitions and caching configuration
+- `biome.json` - Linting and formatting rules
+- `pnpm-workspace.yaml` - Workspace root configuration
 
-**Project Structure:**
-- pnpm workspaces with packages under `apps/` and `packages/` directories
-- Turborepo task dependencies for efficient parallel builds
-
-## TypeScript Configuration
-
-- **Target:** ES2022
-- **Module System:** ESNext with bundler resolution
-- **Strict Mode:** Enabled
-- **Features:**
-  - Strict null checks
-  - No unchecked indexed access
-  - No implicit overrides
-  - Implicit returns enforced
-  - Fallthrough case checks
-  - No unchecked side-effect imports
-  - Verbatim module syntax
-
-## Code Quality Standards
-
-**Linting (Biome):**
-- Recommended rule set enabled
-- All correctness rules set to "error"
-- Style rules: const enforcement, template literal usage
-- Complexity checks: no useless catch/type constraints
-- Suspicious patterns: double equals, missing null checks, etc.
-- Test files: relaxed any type checking
-
-**Formatting (Biome):**
-- Line width: 80 characters
-- Indentation: 2 spaces
-- Line endings: LF
-- Semicolons: Always
-- Quotes: Single (JavaScript/JSON)
-- Trailing commas: All
-- Arrow parentheses: Always
-
-**Commit Messages:**
-- Conventional Commits format enforced via commitlint
-- Angular preset with scope, type, and description
+**Key TypeScript Compilation Options:**
+- `strict: true` - Enable strict type checking
+- `noEmit: false` - Emit compiled `.js` and `.d.ts` files to `dist/`
+- `verbatimModuleSyntax: true` - Preserve import/export syntax exactly
+- `isolatedModules: true` - Each file is independently transpilable
+- Output directory: `dist/` (relative to each package)
 
 ## Platform Requirements
 
 **Development:**
-- Node.js >=22.17.0
-- pnpm >=10.13.1
-- macOS, Linux, or Windows with Git
+- Operating System: Linux, macOS, Windows (via Git Bash)
+- Node.js version: >=22.17.0
+- pnpm version: >=10.13.1
+- Workspace dependencies: Uses `workspace:*` for internal package linking
 
 **Production:**
-- CLI is distributed as standalone package (@oat/cli)
-- Can be invoked via `npx openskills` or direct Node.js execution
+- Deployment target: Node.js 22.17.0+
+- Output: Compiled JavaScript in `dist/` directories
+- CLI executable: `packages/cli/dist/index.js` (configured as `bin.oat` in package.json)
+- Architecture: Cross-platform (tested on Darwin/macOS, Linux for CI)
+
+**CI/CD:**
+- Platform: GitHub Actions (Ubuntu latest for CI workflow)
+- Build steps: check → type-check → test → build
+- Caching: pnpm cache leveraged in CI pipeline
 
 ---
 
-*Stack analysis: 2026-02-02*
+*Stack analysis: 2026-02-16*

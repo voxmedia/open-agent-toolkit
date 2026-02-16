@@ -1,90 +1,191 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-02-02
-oat_source_head_sha: d25643fb7a57fd977d1a9590690d26986d2d0ce8
-oat_source_main_merge_base_sha: 6c147615ba8cf567d29814f1fe1d5667fc6e6fdf
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_generated_at: 2026-02-16
+oat_source_head_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
+oat_source_main_merge_base_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 # Coding Conventions
 
-**Analysis Date:** 2026-02-02
+**Analysis Date:** 2026-02-16
 
 ## Naming Patterns
 
 **Files:**
-- TypeScript source files use `.ts` extension (e.g., `index.ts`, `validate-oat-skills.ts`)
-- Script files use `.ts` extension with `#!/usr/bin/env tsx` shebang for direct execution
-- Configuration files: `package.json`, `tsconfig.json`, `biome.json`, `turbo.json`
-- Kebab-case for multi-word filenames (e.g., `validate-oat-skills.ts`, `new-oat-project.ts`, `new-agent-project.ts`)
+- kebab-case for file names (e.g., `sync-config.ts`, `command-context.ts`)
+- Module files use descriptive names (e.g., `logger.ts`, `spinner.ts`)
+- Test files follow source file naming with `.test.ts` suffix (e.g., `logger.test.ts`)
+- Index files use `index.ts` as barrel exports for modules
 
 **Functions:**
-- camelCase for function names (e.g., `isDir()`, `readText()`, `validateProjectName()`)
-- Descriptive, verb-first names indicating action (e.g., `parseArgs()`, `scaffoldFromTemplates()`, `promptYesNo()`)
-- Async functions declared with `async` keyword, returning `Promise<T>`
-- Helper functions for specific concerns (e.g., `fileExists()`, `dirExists()`, `applyTemplateReplacements()`)
+- camelCase for function names (e.g., `createLogger`, `computeDirectoryHash`, `getActiveAdapters`)
+- Factory functions use `create*` prefix (e.g., `createProgram`, `createSpinner`, `createLogger`)
+- Detect functions use `detect*` prefix (e.g., `detectCursor`, `detectClaude`)
+- Async functions follow camelCase convention (e.g., `loadManifest`, `loadSyncConfig`)
 
 **Variables:**
-- camelCase for variable names (e.g., `projectName`, `force`, `withReviews`)
-- Type-safe declarations with explicit types where possible
-- Const-first approach for immutability (Biome rule: `useConst: "error"`)
-- Meaningful names reflecting purpose (e.g., `templatesDir`, `projectPath`, `repoRoot`)
+- camelCase for variables and constants (e.g., `workDir`, `manifestPath`, `scopeRoot`)
+- Constant values (configuration) use UPPER_SNAKE_CASE when exported (e.g., `PROGRAM_NAME`, `SCOPE_CHOICES`, `PROJECT_SCOPE_CONTENT_TYPES`)
+- Use descriptive names: `accumulated` arrays, `detected` results, `resolved` paths
 
 **Types:**
-- TypeScript interfaces for structured data (e.g., `CreateProjectOptions`, `ParsedArgs`)
-- Explicit type annotations on function parameters and returns
-- Type definitions use PascalCase (e.g., `Args`, `Finding`, `ParsedArgs`)
-- Comprehensive type coverage enforced by strict TypeScript config
+- PascalCase for type and interface names (e.g., `CliLogger`, `CommandContext`, `ProviderAdapter`)
+- Schemas and validators use `*Schema` suffix (e.g., `ManifestSchema`, `SyncConfigSchema`)
+- Union types use PascalCase (e.g., `Scope`, `ContentType`, `SyncStrategy`)
+- Optional types wrapped in `Partial<T>` or nullable fields explicitly typed
 
 ## Code Style
 
 **Formatting:**
-- Tool: Biome 2.3.11 (configured in `biome.json`)
-- Indent: 2 spaces
+- Tool: Biome 2.3.11
+- Indentation: 2 spaces
 - Line width: 80 characters
 - Line ending: LF (Unix)
-- Quotes: Single quotes for JavaScript/TypeScript
+- Quote style: Single quotes for JavaScript (e.g., `'hello'`)
+- Trailing commas: All (including function parameters)
 - Semicolons: Always required
-- Trailing commas: All (ES5 compatible)
-- Bracket spacing: Enabled
-- Arrow functions: Always use parentheses (e.g., `(arg) => {}`)
-- JSX quote style: Single quotes
+- Arrow function parentheses: Always (e.g., `(x) => x`)
+- Bracket spacing: Enabled (e.g., `{ key: value }`)
 
 **Linting:**
 - Tool: Biome 2.3.11
-- Config: `biome.json` at repository root
-- Extends: `recommended` rule set
+- Base: recommended rule set
 - Key rules enforced:
-  - `noDoubleEquals`: "error" (strict equality only)
-  - `noExplicitAny`: "warn" (allowed with warnings)
-  - `noExplicitAny` in tests: "off" (permissive in test files)
-  - `noUnusedVariables`: "error"
-  - `noUndeclaredVariables`: "error"
-  - `useConst`: "error" (const-first pattern)
-  - `useTemplate`: "error" (template literals over concatenation)
-  - `noCommentText`: "error" (prevent unhelpful comments)
-  - `noDebugger`: "error"
-  - All correctness rules enabled (no unreachable code, no const reassignment, etc.)
+  - `noUnusedVariables` (error): All variables must be used
+  - `useConst` (error): Prefer `const` over `let`
+  - `noDoubleEquals` (error): Use strict equality (`===`)
+  - `noDebugger` (error): No debugger statements
+  - `noExplicitAny` (warn): Avoid `any` types (relaxed in test files)
+  - `noUndeclaredVariables` (error): All variables must be declared
+  - `noUnreachable` (error): No unreachable code
+- Test override: `noExplicitAny` disabled in `*.test.ts` files for flexibility with mocks
 
 ## Import Organization
 
 **Order:**
-1. Node.js built-in modules (e.g., `import { readdir } from 'node:fs/promises'`)
-2. Internal modules (e.g., `import { createInterface } from 'node:readline/promises'`)
-3. No external dependencies observed in current codebase
+1. Node.js built-in imports (e.g., `import { readFile } from 'node:fs/promises'`)
+2. External packages (e.g., `import chalk from 'chalk'`, `import { z } from 'zod'`)
+3. Type imports from internal modules (e.g., `import type { Manifest } from '@manifest/manifest.types'`)
+4. Internal imports (e.g., `import { CliError } from '@errors/index'`)
+5. Relative imports from same directory or parent (use explicit aliases instead)
 
 **Path Aliases:**
-- Not configured in current minimal codebase
-- tsconfig.json allows for future alias configuration with `baseUrl` and `paths` options
+- Mandatory: All imports outside current directory use TypeScript path aliases
+- Never use relative paths (`../...`) or `src/...` imports
+- Standard aliases defined per package:
+  - `@ui/*` → `src/ui/*`
+  - `@config/*` → `src/config/*`
+  - `@errors/*` → `src/errors/*`
+  - `@manifest/*` → `src/manifest/*`
+  - `@providers/*` → `src/providers/*`
+  - `@shared/*` → `src/shared/*`
+  - `@app/*` → `src/app/*`
+  - `@commands/*` → `src/commands/*`
+  - `@drift/*` → `src/drift/*`
+  - `@engine/*` → `src/engine/*`
+  - `@fs/*` → `src/fs/*`
+  - `@validation/*` → `src/validation/*`
+- Biome's `organizeImports` assist (enabled) auto-sorts imports
 
 ## Error Handling
 
 **Patterns:**
-- Try-catch blocks for file I/O operations with early returns on error
-- Error handler pattern: `error instanceof Error ? error.message : String(error)`
-- Process exit codes: 
-  - `exit(0)` for successful completion
-  - `exit(1)` for user/validation errors
-  - `exit(2)` for system/runtime errors
-- Non-destructive error handling: warn on failure but continue (e.g., dashboard refresh failure)
-- Function-level error handling via `.catch()` on Promise-based operations
+- Custom error class: `CliError` extends `Error` with optional `exitCode` (1 or 2)
+- Error throwing: Always throw `CliError` with descriptive message for user-facing errors
+- Exit codes: `1` (default) for general errors, `2` for fatal/unrecoverable errors
+- Try-catch with type guards: Check error structure explicitly
+  ```typescript
+  try { /* async work */ }
+  catch (error) {
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT') {
+      throw new CliError(`File not found: ${path}`);
+    }
+    throw new CliError(
+      `Operation failed: ${error instanceof Error ? error.message : 'unknown'}`,
+      2,
+    );
+  }
+  ```
+- Never silently swallow errors; always log or re-throw with context
+- Schema validation errors: Use Zod's `safeParse()` and extract error details
+
+## Logging
+
+**Framework:** Custom `CliLogger` interface with `createLogger` factory
+
+**Patterns:**
+- Info messages: stdout, cyan color (user-facing status)
+- Warn messages: stderr, yellow color (non-critical issues)
+- Error messages: stderr, red color (failures); JSON mode outputs structured data to stderr
+- Success messages: stdout, green color (positive outcomes)
+- Debug messages: stdout, gray color; only shown with `--verbose` flag
+- JSON output: Pretty-printed to stdout (2-space indentation)
+- Never mix styled output in JSON mode (JSON mode outputs machine-readable data only)
+
+## Comments
+
+**When to Comment:**
+- Document non-obvious algorithm choices or workarounds
+- Explain WHY, not WHAT (code should express WHAT clearly)
+- Mark TODO/FIXME items with rationale
+- Avoid redundant comments that restate code
+
+**JSDoc/TSDoc:**
+- Optional for public functions and exports
+- Required for complex type parameters or overloads
+- Example:
+  ```typescript
+  /**
+   * Computes deterministic SHA-256 hash of directory contents.
+   * Hash is stable regardless of readdir filesystem order.
+   */
+  export async function computeDirectoryHash(dirPath: string): Promise<string> { /* ... */ }
+  ```
+
+## Function Design
+
+**Size:** 
+- Prefer small, focused functions (< 50 lines typical)
+- Extract helper functions for reusable logic
+- Example: `collectFiles()` extracted from `computeDirectoryHash()`
+
+**Parameters:**
+- Maximum 3-4 positional parameters; use object/interface for more
+- Use type-safe options interfaces for configuration
+  ```typescript
+  interface CreateLoggerOptions {
+    json: boolean;
+    verbose: boolean;
+  }
+  export function createLogger(options: CreateLoggerOptions): CliLogger { /* ... */ }
+  ```
+
+**Return Values:**
+- Prefer explicit return types on public functions
+- Use TypeScript inference for small helpers
+- Return early to reduce nesting
+- Async functions return `Promise<T>`
+
+## Module Design
+
+**Exports:**
+- Export both types (`export type`) and values (`export const`, `export function`)
+- Explicitly export what's public; don't use catch-all exports
+- Factory functions are primary public API (e.g., `createLogger`)
+- Implementation details kept private (no export)
+
+**Barrel Files:**
+- Canonical pattern: `index.ts` re-exports types and key functions from module
+- Example (`src/ui/index.ts`):
+  ```typescript
+  export type { CliLogger } from './logger';
+  export { createLogger } from './logger';
+  export type { Spinner } from './spinner';
+  export { createSpinner } from './spinner';
+  ```
+- Enables clean imports: `import { createLogger } from '@ui'` instead of `@ui/logger`
+
+---
+
+*Convention analysis: 2026-02-16*

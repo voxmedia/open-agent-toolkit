@@ -1,125 +1,100 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-02-02
-oat_source_head_sha: d25643fb7a57fd977d1a9590690d26986d2d0ce8
-oat_source_main_merge_base_sha: c8226d8b03ab10dd8a45097fab58277fba418693
+oat_generated_at: 2026-02-16
+oat_source_head_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
+oat_source_main_merge_base_sha: a80661894616fc9323542a4bcbcc22c08917e440
 oat_index_type: full
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 # open-agent-toolkit
 
 ## Overview
 
-The Open Agent Toolkit (OAT) is a modular monorepo providing structured agent workflow systems for AI-assisted software development. It implements a knowledge-first development approach with multi-phase workflows (discovery, specification, design, planning, implementation) and human-in-the-loop gates for quality control.
+Open Agent Toolkit (OAT) is an open-source toolkit for defining and managing agent skills, subagents, and hooks across multiple AI coding providers (Claude Code, Cursor, Codex CLI). It provides a provider-agnostic interoperability layer with optional workflow scaffolding for structured project execution.
 
 ## Purpose
 
-Facilitates AI-assisted software engineering through:
-- Structured workflow phases with clear boundaries and artifacts
-- Knowledge base generation for accurate codebase context
-- Agent-agnostic skill system supporting Claude Code, Cursor, and CLI
-- Human-in-the-loop quality gates between phases
-- Reusable patterns and templates for consistent development practices
+OAT solves the fragmentation problem of managing AI coding assistant configurations across different providers. It provides a canonical source of truth for skills and agents, with automated sync to each provider's expected directory structure. Optionally, it layers a structured discovery-to-implementation workflow on top.
 
 ## Technology Stack
 
-**Runtime:** Node.js 22.17.0
-**Language:** TypeScript 5.8.3 (ESM modules throughout)
-**Package Manager:** pnpm 10.13.1 with workspaces
-**Build System:** Turborepo 2.7.6 for monorepo orchestration
-**Code Quality:** Biome 2.3.11 for linting and formatting
-**Commit Standards:** Conventional Commits enforced via commitlint
+- **Language:** TypeScript 5.8.3 (ESM modules)
+- **Runtime:** Node.js 22.17.0
+- **Package Manager:** pnpm with workspaces
+- **Build System:** Turborepo 2.7.6 with TypeScript compilation
+- **Linting/Formatting:** Biome 2.3.11
+- **Testing:** Vitest 4.0.18
+- **CLI Framework:** Commander.js 12.x
+- **Validation:** Zod 3.x
 
 ## Architecture
 
-**Pattern:** Modular monorepo with layered architecture separating concerns:
-- **Agent Skills Layer** - Reusable workflow skills for development phases
-- **Knowledge Generation Layer** - Comprehensive codebase analysis system
-- **Project Workflow Layer** - State tracking and artifacts across phases
-- **CLI Layer** - Command-line interface for operations
-
-**Key Abstractions:**
-- Skills system following Agent Skills Open Standard
-- Knowledge base with auto-generated codebase analysis
-- Project state management with frontmatter-driven workflows
-- Template-based artifact generation
+Modular TypeScript CLI with layered architecture and adapter pattern for provider support. Key layers: Application (bootstrap), Commands (CLI handlers), Engine (sync computation/execution), Providers (Claude/Cursor/Codex adapters), Manifest (state persistence), Drift (divergence detection), and UI (output/logging).
 
 ## Key Features
 
-1. **Multi-Phase Workflow System** - Discovery → Spec → Design → Plan → Implement phases with HiL gates
-2. **Knowledge Base Generation** - Parallel mapper agents analyze tech stack, architecture, conventions, and concerns
-3. **Agent Skills** - 40+ specialized skills for documentation, project management, and workflow orchestration
-4. **CLI Tools** - `npx openskills` command-line interface for skill invocation
-5. **Git Integration** - Pre-commit hooks, commit validation, and branch management
+- **Provider Sync:** Symlink or copy canonical skills/agents to provider-specific locations
+- **Drift Detection:** Identify divergence between canonical and provider copies
+- **Multi-Provider Support:** Claude Code, Cursor, and Codex adapters
+- **Manifest-Based State:** JSON manifest tracks sync state with content hashes
+- **Workflow Skills:** Optional structured discovery/spec/design/plan/implement lifecycle
 
 ## Project Structure
 
 ```
-.agents/              Agent-related files and projects
-  skills/            OAT workflow skills
-  projects/          Multi-session development projects
-.oat/                OAT-specific tooling and state
-  repo/knowledge/    Generated codebase analysis
-  projects/          Active OAT workflow projects
-  scripts/           Automation scripts
-  templates/         Artifact templates
-packages/            Monorepo packages
-  cli/               CLI implementation
-tools/               Development tooling
-  git-hooks/         Pre-commit and validation hooks
+open-agent-toolkit/
+├── packages/cli/         # @oat/cli - Main CLI application
+│   └── src/
+│       ├── app/          # Bootstrap and program factory
+│       ├── commands/     # CLI commands (init, sync, status, providers, doctor)
+│       ├── engine/       # Sync plan computation and execution
+│       ├── providers/    # Provider adapters (claude, cursor, codex)
+│       ├── manifest/     # State persistence and hashing
+│       ├── drift/        # Drift detection
+│       ├── config/       # Configuration loading
+│       ├── fs/           # Filesystem abstractions
+│       ├── ui/           # Logger, spinner, output formatting
+│       └── shared/       # Common types
+├── .agents/              # Canonical skills and agents (source of truth)
+├── .oat/                 # Runtime state, projects, knowledge
+├── docs/                 # Documentation
+└── tools/                # Git hooks and utilities
 ```
 
 ## Getting Started
 
-**Prerequisites:**
-- Node.js >=22.17.0
-- pnpm >=10.13.1
-
-**Setup:**
 ```bash
-nvm use                # Use Node.js 22.17.0
-pnpm install          # Install dependencies
-pnpm build            # Build all packages
-```
+# Install dependencies
+pnpm install
 
-**Common Commands:**
-```bash
-pnpm dev              # Watch mode for all packages
-pnpm lint             # Lint code with Biome
-pnpm format           # Format code with Biome
-pnpm type-check       # TypeScript type checking
-pnpm test             # Run tests
+# Build
+pnpm build
+
+# Run CLI
+pnpm run cli -- --help
+pnpm run cli -- status --scope all
+pnpm run cli -- sync --scope all --apply
 ```
 
 ## Development Workflow
 
-1. **Start Project** - Use `/oat:new-project` to create structured project directory
-2. **Generate Knowledge** - Run `/oat:index` to analyze codebase
-3. **Discovery Phase** - Run `/oat:discovery` to gather requirements
-4. **Specification** - Run `/oat:spec` to create formal specification
-5. **Design** - Run `/oat:design` for technical design
-6. **Planning** - Run `/oat:plan` to create implementation plan
-7. **Implementation** - Run `/oat:implement` to execute plan with TDD
-
-**Skills Invocation:**
 ```bash
-npx openskills read <skill-name>        # Single skill
-npx openskills read skill-one,skill-two # Multiple skills
+pnpm build          # Build all packages
+pnpm lint           # Lint with Biome
+pnpm format         # Format with Biome
+pnpm type-check     # TypeScript type checking
+pnpm test           # Run Vitest tests
+pnpm dev            # Watch mode development
 ```
 
 ## Testing
 
-**Framework:** Test framework to be implemented
-**Test Command:** `turbo run test`
-**Structure:** Tests will be colocated with source files
+Vitest 4.0.18 with co-located test files (`*.test.ts`). Tests use vi.mock/vi.spyOn for mocking, temp directories for filesystem tests, and factory functions for test data. Run with `pnpm test`.
 
 ## Known Issues
 
-See [concerns.md](concerns.md) for technical debt, fragile areas, and known limitations. Key concerns include:
-- OAT CLI not yet packaged/published
-- Test framework not yet implemented
-- Some skills require validation and dogfooding
+See [concerns.md](concerns.md) for full details. Key areas: early-stage project (v0.0.1), single-package monorepo structure, in-progress implementation work tracked in `.oat/projects/`.
 
 ---
 

@@ -1,147 +1,147 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-02-02
-oat_source_head_sha: d25643fb7a57fd977d1a9590690d26986d2d0ce8
-oat_source_main_merge_base_sha: 6c147615ba8cf567d29814f1fe1d5667fc6e6fdf
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with /oat:index"
+oat_generated_at: 2026-02-16
+oat_source_head_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
+oat_source_main_merge_base_sha: a80661894616fc9323542a4bcbcc22c08917e440
+oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 ---
 
 # External Integrations
 
-**Analysis Date:** 2026-02-02
+**Analysis Date:** 2026-02-16
 
 ## APIs & External Services
 
-**Atlassian Services:**
-- Jira (DWP project) - Ticket creation
-  - SDK/Client: Atlassian MCP (Model Context Protocol)
-  - Purpose: Create tickets via create-ticket skill
-  - Auth: Configured via MCP integration (credentials managed separately)
+**No External API Integrations:**
+- OAT is self-contained with no outbound API calls to external services
+- No third-party cloud services, SaaS APIs, or microservice dependencies
+- Communication is limited to local filesystem operations and command execution
 
-**Model Context Protocol (MCP):**
-- Atlassian MCP integration for Jira access
-- Used by Claude Code and Cursor for ticket creation
-- Enables programmatic interaction with Jira DWP project
-
-**Code Editor Providers:**
-- Claude Code (Anthropic) - Primary IDE with skill system
-- Cursor - Supported IDE with skill system
-- Codex CLI - Command-line interface support planned
+**Provider Integrations (Local):**
+- Claude Code - File-based detection via `.claude` directory
+  - SDK/Client: Direct filesystem access
+  - Auth: None (local configuration only)
+- Cursor - File-based detection via `.cursor` directory
+  - SDK/Client: Direct filesystem access
+  - Auth: None (local configuration only)
+- Codex CLI - File-based detection via `.codex` directory
+  - SDK/Client: Direct filesystem access
+  - Auth: None (local configuration only)
 
 ## Data Storage
 
 **Databases:**
-- None - This is a lightweight toolkit without persistent data storage
+- None - OAT uses no database systems
+- All data is persisted in local JSON files
 
 **File Storage:**
-- Local filesystem only - Project files, skills, documentation, and knowledge base
-- Git repository for version control and history
+- Local filesystem only
+- No cloud storage integration
+- Manifest files: JSON format stored alongside skills/agents
+- Configuration: JSON files in `.oat/` and provider directories
+- Data locations:
+  - Canonical assets: `.agents/skills/` and `.agents/agents/`
+  - Sync manifests: `.oat/.sync.json` and provider-specific manifests
+  - Project artifacts: `.oat/projects/<scope>/<project>/`
 
 **Caching:**
-- Turbo cache - Build artifact caching in `.turbo/cache/`
-- No external caching services
+- pnpm store (`.pnpm-store/`) for dependency caching during development
+- Turbo cache (`.turbo/`) for build task caching
+- No application-level caching service; all caching is local
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- Custom integrations per IDE
-  - Claude Code: Native authentication via Anthropic
-  - Cursor: Built-in authentication
-  - Atlassian MCP: Configured separately for Jira access
-
-**Implementation:**
-- Environment-based secrets for local development
-- `.env.local` files in app directories (gitignored)
-- Secure credential handling for sensitive values
+- None - OAT does not require external authentication
+- Local user detection based on machine configuration
+- Provider-specific auth is managed by each AI tool (Claude Code, Cursor, Codex)
+- Implementation approach: File-based detection of provider directories; no token or credential management
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None configured - Development-focused project
+- None - No external error tracking or monitoring services
+- Local error handling via `CliError` class
+- Errors reported to stderr/stdout and exit codes
 
 **Logs:**
-- Console output from CLI and scripts
-- Git commit history for audit trail
-- OAT project state tracking in `.oat/projects/` and `.oat/projects/shared/`
+- Approach: Console-based logging with optional JSON output
+- Logger implementation: `ui/logger.ts` with chalk-based colored output
+- Verbose mode available via `--verbose` flag
+- Optional JSON structured logging via `--json` flag
+- No persistent logging; output is ephemeral to current shell session
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- GitHub - Source code repository
-- GitHub Actions - CI/CD pipeline
+- Deployed as local CLI tool via npm/pnpm
+- Execution: Direct Node.js invocation or via npm scripts
+- Package: `@oat/cli` (currently private, not on npm registry)
+- No cloud deployment or hosting required
 
 **CI Pipeline:**
-- GitHub Actions workflow (ci.yml)
-- Triggers: push to main, pull requests to main
+- Platform: GitHub Actions
+- Workflow file: `.github/workflows/ci.yml`
+- Triggers: Push to main, pull requests to main
+- Environment: Ubuntu latest
 - Steps:
   1. Checkout code
-  2. Setup pnpm and Node.js
-  3. Install dependencies with frozen lockfile
-  4. Lint code with Biome
-  5. Type check with TypeScript
-  6. Build with Turbo
+  2. Setup pnpm with cache
+  3. Setup Node.js from `.nvmrc`
+  4. Install frozen dependencies (`pnpm install --frozen-lockfile`)
+  5. Run checks (`pnpm check` - Biome linting)
+  6. Type checking (`pnpm type-check`)
+  7. Run tests (`pnpm test` - Vitest)
+  8. Build (`pnpm build` - TypeScript compilation via Turbo)
 
-**No Production Deployment:**
-- Toolkit is distributed via npm as CLI tool
-- Distributed as @oat/cli package
-- Can be invoked via npx openskills
+**Deployment Model:**
+- No automated deployment pipeline
+- Manual: Users install from source or npm (when public)
+- CLI used locally within projects or via global npm link
+- Git commit hooks handled via `tools/git-hooks/manage-hooks.js`
 
 ## Environment Configuration
 
 **Required env vars:**
-- GIT_HOOKS - Set to "0" to disable git hook setup (optional)
-- NODE_ENV - Implicit (Node.js standard)
-- CI - Set by GitHub Actions for conditional behavior
+- None - No environment variables required for operation
+- Optional: `GIT_HOOKS` environment variable (controls git hook setup in `prepare` script)
+- CLI overrides: `--cwd <path>` for working directory, `--scope <scope>` for limiting operations
 
 **Secrets location:**
-- `.env.local` in individual app directories (gitignored)
-- Sensitive values: API keys, credentials, tokens
-- GitHub Secrets for CI/CD sensitive values
-
-## Git Hooks
-
-**Incoming (Local Git Hooks):**
-- commit-msg - Validates commit message format
-- pre-commit - Runs linting and formatting on staged files
-- pre-push - Pre-push validation
-- post-checkout - Refreshes metadata after checkout
-
-**Outgoing (Git Interactions):**
-- Commits to local and remote repositories
-- Pull requests via GitHub (gh CLI)
-- Branch operations
+- No secrets management required
+- No API keys, tokens, or credentials needed
+- Provider-specific secrets (if any) are managed by each AI tool independently
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- None - Toolkit is stateless and event-driven by user actions
+- None - OAT does not expose HTTP endpoints or receive webhooks
 
 **Outgoing:**
-- None - No automatic webhooks or callbacks
+- None - OAT does not send webhooks or outbound HTTP requests
 
-## Development Integrations
+## Data Flow & Interactions
 
-**IDE Skills System:**
-- Agent Skills Open Standard compliance
-- Skills located in `.agents/skills/` directory
-- Skills provide specialized capabilities for Claude Code and Cursor
-- Available skills:
-  - oat-* skills for workflow management (discovery, spec, design, plan, implement)
-  - docs-* skills for documentation management
-  - create-* skills for bootstrapping new projects/skills
-  - Validated via npm script
+**Provider Sync Flow:**
+1. User runs `oat sync --scope <scope>`
+2. CLI scans `.agents/` for canonical assets
+3. Detects installed providers (Claude, Cursor, Codex) via directory presence
+4. Computes diff between canonical and provider views
+5. Outputs dry-run plan to console
+6. With `--apply`, updates provider directories using copy/symlink strategies
+7. Generates/updates `.sync.json` manifest with content hashes and timestamps
 
-**openskills CLI:**
-- Tool to invoke skills from command line
-- Usage: `npx openskills read <skill-name>`
-- Supports multiple skills: `npx openskills read skill-one,skill-two`
-- Returns skill content with base directory for resources
+**Manifest Management:**
+- Zod-validated JSON schemas for all file structures
+- Content hashing (SHA for copy strategy validation)
+- Datetime tracking for sync operations
+- No external validation or verification services
 
-**Git Integration:**
-- Pre-commit hooks via tools/git-hooks/
-- Commit message validation via commitlint
-- Conventional Commits format enforcement
+**Build Dependency Graph:**
+- Turbo orchestrates task execution across workspace packages
+- All packages use `workspace:*` for internal dependencies
+- No external package registry calls during CI (frozen lockfile)
 
 ---
 
-*Integration audit: 2026-02-02*
+*Integration audit: 2026-02-16*
