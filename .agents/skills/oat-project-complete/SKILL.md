@@ -139,6 +139,16 @@ PROJECT_PATH="$ARCHIVE_PATH"
 echo "Project archived to $ARCHIVE_PATH"
 ```
 
+**Git handling after archive:**
+
+If the archived directory is gitignored (check with `git check-ignore -q "$ARCHIVE_PATH"`), the move looks like a deletion to git — the original tracked files disappear and the archived copy is local-only. To commit:
+
+```bash
+git add -A "$PROJECTS_ROOT/$PROJECT_NAME" 2>/dev/null || true
+```
+
+This stages the deletions from the shared directory. The archived copy is preserved locally but not tracked by git.
+
 ### Step 7: Offer to Clear Active Project
 
 Ask user: "Would you like to clear the active project pointer?"
