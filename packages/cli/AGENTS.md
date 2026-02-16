@@ -20,8 +20,10 @@ Maintain consistent, safe CLI behavior across commands and modules.
 ## Working conventions
 
 - Keep command handlers thin; push logic into `engine/`, `manifest/`, `drift/`, and provider modules.
+- Follow command ownership rules for prompts/types/utils (domain-local first, shared only when generic).
 - Preserve dry-run-first and non-interactive/JSON contracts.
 - Use explicit exit semantics (0 success, 1 actionable/user error, 2 system/runtime error).
+- Avoid direct `console.*` calls in commands; route output through CLI logger utilities.
 - Avoid unmanaged destructive filesystem mutations.
 
 ## Completion checks
