@@ -149,6 +149,19 @@ git add -A "$PROJECTS_ROOT/$PROJECT_NAME" 2>/dev/null || true
 
 This stages the deletions from the shared directory. The archived copy is preserved locally but not tracked by git.
 
+**Worktree note (recommended):**
+
+If running from a git worktree and the primary repo archive path is accessible, copy the archived project there as well so history is available from the main checkout:
+
+```bash
+MAIN_REPO_ARCHIVE="/Users/thomas.stang/Code/open-agent-toolkit/.oat/projects/archived"
+
+if [[ -d "$(dirname "$MAIN_REPO_ARCHIVE")" ]]; then
+  mkdir -p "$MAIN_REPO_ARCHIVE"
+  cp -R "$ARCHIVE_PATH" "$MAIN_REPO_ARCHIVE/"
+fi
+```
+
 ### Step 7: Offer to Clear Active Project
 
 Ask user: "Would you like to clear the active project pointer?"
