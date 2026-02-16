@@ -86,6 +86,9 @@ The workflow layer can be adopted when you want structured project execution and
 3. `oat-project-review-provide` / `oat-project-pr-final`
 4. Optional: `oat-project-promote-full`
 
+Import discovery note:
+- To include extra provider-plan folders in recent-file discovery, set `OAT_PROVIDER_PLAN_DIRS` as a colon-separated list before running `oat-project-import-plan`.
+
 ### Workflow artifacts (if using workflow mode)
 
 - `.oat/projects/<scope>/<project>/implementation.md` (final summary + verification)

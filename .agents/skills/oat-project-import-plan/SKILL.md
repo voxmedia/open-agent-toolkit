@@ -79,6 +79,12 @@ If source path is not provided, discover likely recent plans first:
 bash .agents/skills/oat-project-import-plan/scripts/find-recent-provider-plans.sh --hours 24
 ```
 
+Optional: extend discovery roots via `OAT_PROVIDER_PLAN_DIRS` (colon-separated):
+
+```bash
+export OAT_PROVIDER_PLAN_DIRS="$HOME/custom-plans:$HOME/tmp/provider-plans"
+```
+
 Then ask user to either:
 - choose one of the listed files (by number), or
 - provide a manual file path.
