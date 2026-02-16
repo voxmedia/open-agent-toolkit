@@ -54,8 +54,9 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 ### Templates / Scripts
 
 - Templates: `.oat/templates/`
-  - `state.md`, `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`, `project-index.md`
+  - `state.md`, `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`
 - Scripted thin index generation: `.oat/scripts/generate-thin-index.sh`
+- Knowledge project index output: `.oat/repo/knowledge/project-index.md`
 
 ### State + Conventions
 
