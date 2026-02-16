@@ -323,6 +323,7 @@ describe('CLI command integration', () => {
 
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('Created/updated OAT project: quick-smoke');
+    expect(result.stdout).not.toContain('Dashboard generated: .oat/state.md');
 
     await expect(
       readFile(
