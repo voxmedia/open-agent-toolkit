@@ -1,6 +1,6 @@
 # Skill Template Reference
 
-Annotated template showing the standard structure for Honeycomb skills.
+Annotated template showing the standard structure for skills.
 
 ## Section Structure
 
@@ -23,17 +23,27 @@ Adjust based on complexity—not all sections are required:
 
 ```markdown
 ---
+# === Portable fields (work across all providers) ===
 name: skill-name
-# Required: kebab-case identifier, becomes /skill-name command
+# Required: kebab-case, max 64 chars, must match directory name
 
-description: When to use this skill - this is the primary trigger mechanism
-# Required: One sentence shown in autocomplete. Include "when to use" here.
+description: Use when [trigger condition]. [What it does as disambiguation keywords].
+# Required: Single line, ≤ 500 chars. Lead with "when to use" — this is the routing trigger.
+# Agents load ONLY name+description at startup to decide relevance.
 
+# === Spec-optional fields (recognized by some providers) ===
+# license: Apache-2.0
+# compatibility: Requires Node.js 18+
+# metadata:
+#   author: my-org
+#   version: "1.0"
+
+# === Claude Code / Cursor extension fields (ignored by Codex, safe to include) ===
 argument-hint: "[required-arg] [--optional-flag]"
 # Claude Code only: Shows in autocomplete after /skill-name
 
 disable-model-invocation: true
-# Both platforms: Set true for command-like skills users invoke explicitly
+# Claude Code + Cursor: Set true for command-like skills users invoke explicitly
 
 allowed-tools: Read, Write, Glob, Grep
 # Claude Code only: Tools agent can use without permission prompts
@@ -41,7 +51,7 @@ allowed-tools: Read, Write, Glob, Grep
 user-invocable: true
 # Claude Code only: Set false for helper skills that shouldn't appear in / menu
 
-context: fork
+# context: fork
 # Claude Code only: Uncomment to run in isolated subagent (rare)
 ---
 
@@ -150,3 +160,24 @@ Successful completion means:
 | Simple command-like | Concise | update-doc-refs, create-ticket |
 | Reference/standards | Detailed | repo-documentation |
 | Helper (auto-invoked) | Moderate | read-relevant-docs |
+
+## Cross-Provider Portability Notes
+
+**Portable baseline:** `name` + `description` are the only fields that work identically across all providers. Everything else is either spec-optional or provider-specific.
+
+**Safe layering strategy:** Start with the portable fields, then layer provider-specific fields on top. Codex explicitly ignores unknown keys, so including Claude-specific fields (like `allowed-tools`, `user-invocable`) won't break Codex — they just won't have effect there.
+
+**Description constraints for max portability:**
+- Single line (Codex enforces this)
+- ≤ 500 chars (Codex limit; spec allows 1024)
+- Lead with "Use when..." or "Run this when..."
+- Front-load trigger keywords in first 50 chars (may be truncated at scale)
+
+**Skill budget awareness (Claude Code):**
+- Claude Code has a ~16,000 character budget for skill descriptions at startup
+- At 60+ skills, descriptions may be silently truncated
+- Keep descriptions concise; the body handles detail
+
+**Shared references:** If multiple skills need the same document, place it in `.agents/docs/` and reference via relative path (`../../docs/my-guide.md`). Don't duplicate into each skill's `references/` directory.
+
+For the full compatibility matrix and resolved research questions, see `.agents/docs/skills-guide.md`.

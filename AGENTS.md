@@ -53,6 +53,12 @@ Usage notes:
 </skill>
 
 <skill>
+<name>review-backlog</name>
+<description>Review a backlog (and optional roadmap) to produce a structured analysis with value/effort ratings, dependency mapping, parallel lanes, and execution recommendations.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>oat-clear-active-project</name>
 <description>Clear the active project pointer</description>
 <location>project</location>
