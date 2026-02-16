@@ -1,7 +1,7 @@
 ---
 name: oat-review-provide
-description: Run an ad-hoc code review for a commit range when no OAT project/state exists.
-argument-hint: "[base_sha=<sha>|<sha1>..<sha2>] [--output <path>] [--mode auto|local|tracked|inline]"
+description: Run an ad-hoc code or file review when no OAT project/state exists.
+argument-hint: "[unstaged|staged|base_sha=<sha>|<sha1>..<sha2>|--files <path1,path2,...>] [--output <path>] [--mode auto|local|tracked|inline]"
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -9,18 +9,18 @@ allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 
 # Ad-Hoc Review
 
-Request and execute a code review that is not tied to an OAT project lifecycle.
+Request and execute a code/file review that is not tied to an OAT project lifecycle.
 
 ## Prerequisites
 
-- Git repository with commits to review.
+- Git repository with changes/files to review.
 - User wants a code/diff review without requiring `.oat/active-project` or project artifacts.
 
 ## Mode Assertion
 
 **OAT MODE: Ad-Hoc Review**
 
-**Purpose:** Review commit-range changes and write an optional review artifact even when no project state exists.
+**Purpose:** Review commit ranges, working-tree diffs, or explicit files and write an optional review artifact even when no project state exists.
 
 **BLOCKED Activities:**
 - No implementation/code changes.
@@ -57,14 +57,14 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ### Step 0: Resolve Review Scope
 
-Parse `$ARGUMENTS` and resolve a code-review range:
+Parse `$ARGUMENTS` and resolve one scope mode:
 
+- `--files <path1,path2,...>` → explicit file review (works for old/pre-existing files)
+- `unstaged` → review current unstaged working tree changes
+- `staged` → review staged changes (`--cached`)
 - `base_sha=<sha>` → `{sha}..HEAD`
 - `<sha1>..<sha2>` → exact range
-- If omitted, ask user to choose:
-  - provide `base_sha=<sha>`
-  - provide `<sha1>..<sha2>`
-  - confirm default `merge-base(main,HEAD)..HEAD`
+- If omitted, ask user to choose one of the above and recommend `unstaged` for in-progress local review.
 
 Recommended fallback:
 
@@ -73,9 +73,31 @@ MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main 
 SCOPE_RANGE="$MERGE_BASE..HEAD"
 ```
 
-### Step 1: Gather Scope Evidence
+### Step 1: Gather Scope Evidence (Mode-Aware)
 
-Collect files and commits in scope:
+For `--files` mode:
+- Split comma-separated list
+- Validate each file exists
+- Set `FILES_CHANGED` to explicit files
+- Set `SCOPE_RANGE=""` and `COMMITS=""`
+
+For `unstaged` mode:
+
+```bash
+FILES_CHANGED=$(git diff --name-only 2>/dev/null || true)
+FILE_COUNT=$(echo "$FILES_CHANGED" | sed '/^$/d' | wc -l | awk '{print $1}')
+COMMITS=""
+```
+
+For `staged` mode:
+
+```bash
+FILES_CHANGED=$(git diff --cached --name-only 2>/dev/null || true)
+FILE_COUNT=$(echo "$FILES_CHANGED" | sed '/^$/d' | wc -l | awk '{print $1}')
+COMMITS=""
+```
+
+For commit-range modes:
 
 ```bash
 FILES_CHANGED=$(git diff --name-only "$SCOPE_RANGE" 2>/dev/null || true)
@@ -147,18 +169,19 @@ For local-only or inline modes, do not commit unless user explicitly requests.
 
 ### Step 7: Output Summary
 
-Report:
+Report (required):
 - scope/range reviewed
 - files reviewed
 - findings counts by severity
-- artifact path (or inline mode)
+- `Review artifact: {absolute-or-repo-relative path}` (or explicitly `inline-only`)
 - whether bookkeeping commit was created/deferred
 
 ## Success Criteria
 
-- ✅ Commit range resolved and confirmed.
+- ✅ Scope mode resolved and confirmed (`--files`, `unstaged`, `staged`, or commit range).
 - ✅ Files in scope collected.
 - ✅ Output policy resolved (local-only, tracked, or inline).
 - ✅ Review findings produced with severity + file references.
 - ✅ Review artifact written (or inline review returned).
+- ✅ Artifact location explicitly reported after write.
 - ✅ Tracked bookkeeping commit is explicit (created or intentionally deferred).

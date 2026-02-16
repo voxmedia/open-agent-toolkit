@@ -8,6 +8,7 @@ oat_generated: true
 oat_generated_at: YYYY-MM-DD
 oat_review_type: code
 oat_review_scope: {scope}
+oat_review_scope_mode: {files|unstaged|staged|range}
 oat_project: null
 oat_review_mode: ad_hoc
 ---
