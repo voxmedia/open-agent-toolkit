@@ -4,6 +4,8 @@ This section describes provider interoperability behavior in `@oat/cli`.
 
 It is a standalone adoption path and does not require workflow project artifacts.
 
+Shared CLI conventions live in `docs/oat/cli/design-principles.md`.
+
 ## Contents
 
 - `docs/oat/cli/provider-interop/overview.md`

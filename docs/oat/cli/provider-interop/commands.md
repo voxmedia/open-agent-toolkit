@@ -1,5 +1,11 @@
 # Commands
 
+## Shared conventions
+
+These command definitions inherit the cross-cutting CLI conventions in:
+
+- `docs/oat/cli/design-principles.md`
+
 ## `oat init`
 
 Purpose:
