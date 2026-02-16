@@ -14,6 +14,17 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [tooling] Retire AGENTS skills-table refresh work item**
+  - Outcome:
+    - Removed the large `SKILLS_TABLE_START` / `SKILLS_TABLE_END` inventory block from `AGENTS.md`.
+    - Replaced it with a concise skills discovery contract that points to canonical `.agents/skills` + provider sync views.
+    - Marked the old "refresh AGENTS skills table" work item as obsolete because provider/symlink sync now handles discovery.
+  - Links:
+    - Reference update: `AGENTS.md`
+    - Backlog update: `.oat/repo/reference/backlog.md`
+  - Created: 2026-02-14
+  - Completed: 2026-02-16
+
 - [x] **(P1) [skills] Add ad-hoc review provide flow when no project state exists**
   - Outcome:
     - Added `oat-review-provide` for non-project review scopes:

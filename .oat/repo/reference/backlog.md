@@ -40,21 +40,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## Planned
 
-- [ ] **(P1) [tooling] Add CLI command to refresh AGENTS skills table from `.agents/skills`**
-  - Target milestone/phase: OAT CLI usability polish
-  - Notes:
-    - Add a command that regenerates the `AGENTS.md` block between `SKILLS_TABLE_START` and `SKILLS_TABLE_END` from skill frontmatter in `.agents/skills/*/SKILL.md`.
-    - Keep output deterministic (stable ordering, idempotent rewrite).
-    - Fail fast with actionable errors when required frontmatter fields are missing.
-    - Include a dry-run mode for preview and a write mode for apply.
-  - Success criteria:
-    - Running the command updates `AGENTS.md` with no manual editing.
-    - Removed skills disappear automatically; new skills appear automatically.
-    - Re-running without skill changes produces no diff.
-  - Links:
-    - Source issue: manual drift between `AGENTS.md` and `.agents/skills`
-  - Created: 2026-02-14
-
 - [ ] **(P2) [tooling] Optional Codex prompt-wrapper generation for synced OAT skills**
   - Target milestone/phase: Post-standardization enhancement
   - Notes:
@@ -129,7 +114,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Skills source: `.agents/skills/oat-idea-*/`
   - Success criteria:
     - Running `oat init ideas` creates `.oat/ideas/` with backlog and scratchpad ready to use.
-    - `oat-idea-*` skills are copied into `.agents/skills/` and registered in `AGENTS.md`.
+    - `oat-idea-*` skills are copied into `.agents/skills/` and show up in provider views after sync.
     - Idempotent — re-running doesn't overwrite existing ideas or customized skills.
   - Links:
     - Source: ideas workflow implementation (branch `provider-interop`)
@@ -141,10 +126,10 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Notes:
     - `oat init workflows` scaffolds `.oat/` directory structure (templates, projects root, scripts) and copies `oat-project-*` / `oat-review-*` / `oat-pr-*` workflow skills into the project's `.agents/skills/` directory.
     - Same distribution pattern as `oat init ideas` — init subcommands are how skills reach user projects.
-    - Registers skills in `AGENTS.md`.
+    - Ensures copied skills are discoverable through provider sync views.
   - Success criteria:
     - Running `oat init workflows` sets up the full project workflow in a new repo.
-    - Skills are copied into `.agents/skills/` and registered in `AGENTS.md`.
+    - Skills are copied into `.agents/skills/` and show up in provider views after sync.
     - Idempotent — re-running doesn't overwrite existing projects or customized skills.
   - Links:
     - Related: `oat init ideas` backlog entry

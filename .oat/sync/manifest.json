@@ -48,15 +48,6 @@
       "lastSynced": "2026-02-14T21:10:44.553Z"
     },
     {
-      "canonicalPath": ".agents/skills/update-repo-reference",
-      "providerPath": ".claude/skills/update-repo-reference",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.557Z"
-    },
-    {
       "canonicalPath": ".agents/skills/codex-skill",
       "providerPath": ".cursor/skills/codex-skill",
       "provider": "cursor",
@@ -100,15 +91,6 @@
       "strategy": "symlink",
       "contentHash": null,
       "lastSynced": "2026-02-14T21:10:44.557Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/update-repo-reference",
-      "providerPath": ".cursor/skills/update-repo-reference",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "lastSynced": "2026-02-14T21:10:44.562Z"
     },
     {
       "canonicalPath": ".agents/skills/oat-idea-ideate",
@@ -541,7 +523,25 @@
       "strategy": "symlink",
       "contentHash": null,
       "lastSynced": "2026-02-16T16:36:34.836Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/update-repo-reference",
+      "providerPath": ".claude/skills/update-repo-reference",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T17:14:19.627Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/update-repo-reference",
+      "providerPath": ".cursor/skills/update-repo-reference",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "lastSynced": "2026-02-16T17:14:19.628Z"
     }
   ],
-  "lastUpdated": "2026-02-16T16:36:34.836Z"
+  "lastUpdated": "2026-02-16T17:14:19.628Z"
 }
