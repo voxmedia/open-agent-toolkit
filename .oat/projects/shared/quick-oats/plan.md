@@ -528,7 +528,7 @@ git commit -m "docs(p05-t02): finalize quick-oats implementation record"
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
 | p05 | code | pending | - | - |
-| final | code | pending | - | - |
+| final | code | received | 2026-02-16 | reviews/final-review-2026-02-16.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
