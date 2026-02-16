@@ -13,9 +13,33 @@ OAT lifecycle order:
 7. PR (`oat-project-pr-progress` / `oat-project-pr-final`)
 8. Complete (`oat-project-complete`)
 
+## Alternate lifecycle lanes
+
+### Quick lane
+
+1. `oat-project-quick-start`
+2. `oat-project-implement`
+3. `oat-project-review-provide` / `oat-project-pr-final`
+4. Optional `oat-project-promote-full` to backfill full lifecycle artifacts in-place
+
+### Import lane
+
+1. `oat-project-import-plan`
+2. `oat-project-implement`
+3. `oat-project-review-provide` / `oat-project-pr-final`
+4. Optional `oat-project-promote-full` to switch project mode to full lifecycle
+
 ## Artifact progression
 
 `discovery.md` -> `spec.md` -> `design.md` -> `plan.md` -> `implementation.md`
+
+Quick lane progression:
+
+`discovery.md` -> `plan.md` -> `implementation.md` (`spec.md`/`design.md` optional)
+
+Import lane progression:
+
+`references/imported-plan.md` -> `plan.md` -> `implementation.md` (`spec.md`/`design.md` optional)
 
 ## Operational rules
 

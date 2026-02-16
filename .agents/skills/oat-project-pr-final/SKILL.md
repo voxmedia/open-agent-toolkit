@@ -14,15 +14,16 @@ Create a final PR description for the entire project (typically merging the feat
 
 Generate a PR-ready summary grounded in canonical OAT artifacts, including:
 - what shipped (from plan + implementation)
-- why (from spec)
-- how (from design)
+- why/how (from mode-appropriate requirements/design artifacts)
 - what was reviewed (from plan Reviews table + review artifacts)
 
 ## Prerequisites
 
 **Required:**
 - `.oat/active-project` points at an active project directory (or you can provide project name when prompted)
-- `{PROJECT_PATH}/spec.md`, `{PROJECT_PATH}/design.md`, `{PROJECT_PATH}/plan.md` exist
+- `{PROJECT_PATH}/plan.md` exists
+- In `full` mode: `{PROJECT_PATH}/spec.md` and `{PROJECT_PATH}/design.md` are required
+- In `quick`/`import` mode: `spec.md`/`design.md` are optional
 
 **Required (recommended to proceed):**
 - Final code review status is `passed` in `{PROJECT_PATH}/plan.md` `## Reviews` table.
@@ -96,13 +97,28 @@ If missing/invalid:
   echo "$PROJECT_PATH" > .oat/active-project
   ```
 
-### Step 1: Validate Required Artifacts
+### Step 1: Validate Required Artifacts (Mode-Aware)
+
+Resolve workflow mode from `state.md` (default `full`):
 
 ```bash
-ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/plan.md" 2>/dev/null
+WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | head -1 | awk '{print $2}')
+WORKFLOW_MODE=${WORKFLOW_MODE:-full}
+```
+
+```bash
+ls "$PROJECT_PATH/plan.md" 2>/dev/null
 ```
 
 If missing: block and tell user which artifact(s) are required.
+
+If `WORKFLOW_MODE=full`, also require:
+
+```bash
+ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" 2>/dev/null
+```
+
+If `WORKFLOW_MODE` is `quick` or `import`, proceed without spec/design and include a reduced-assurance note in the PR body.
 
 ### Step 2: Check Final Review Status
 
@@ -121,10 +137,12 @@ If `FINAL_ROW` is missing or does not contain `passed`:
 ### Step 3: Collect Project Summary
 
 Read:
-- `{PROJECT_PATH}/spec.md` (goals, priorities, verification)
-- `{PROJECT_PATH}/design.md` (architecture + testing strategy)
+- `{PROJECT_PATH}/spec.md` (goals, priorities, verification; optional in quick/import)
+- `{PROJECT_PATH}/design.md` (architecture + testing strategy; optional in quick/import)
 - `{PROJECT_PATH}/plan.md` (phases/tasks + reviews table)
 - `{PROJECT_PATH}/implementation.md` (if exists; preferred for “what actually happened”)
+- `{PROJECT_PATH}/discovery.md` (recommended for quick mode)
+- `{PROJECT_PATH}/references/imported-plan.md` (recommended for import mode)
 
 If `implementation.md` exists, check for a filled `## Final Summary (for PR/docs)` section:
 - If missing or obviously empty, warn the user that PR/docs quality will suffer and recommend:
@@ -193,7 +211,7 @@ oat_project: {PROJECT_PATH}
 
 ## Goals / Non-Goals
 
-{brief bullets from spec}
+{brief bullets from available requirement artifacts: spec in full mode; discovery/import source in quick/import}
 
 ## What Changed
 
@@ -209,10 +227,12 @@ oat_project: {PROJECT_PATH}
 
 ## References
 
-- Spec: `[spec.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/spec.md)` (fallback: `{PROJECT_PATH}/spec.md`)
-- Design: `[design.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/design.md)` (fallback: `{PROJECT_PATH}/design.md`)
+- Spec: `[spec.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/spec.md)` (optional in quick/import mode)
+- Design: `[design.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/design.md)` (optional in quick/import mode)
 - Plan: `[plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/plan.md)` (fallback: `{PROJECT_PATH}/plan.md`)
 - Implementation: `[implementation.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/implementation.md)` (fallback: `{PROJECT_PATH}/implementation.md`)
+- Discovery: `[discovery.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/discovery.md)` (recommended for quick mode)
+- Imported Source: `[references/imported-plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/references/imported-plan.md)` (recommended for import mode)
 - Reviews: `[reviews/]({REPO_WEB}/tree/{BRANCH}/{PROJECT_REL}/reviews)` (fallback: `{PROJECT_PATH}/reviews/`)
 ```
 

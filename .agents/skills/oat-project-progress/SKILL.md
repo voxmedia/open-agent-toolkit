@@ -128,7 +128,9 @@ ls -d .oat/projects/shared/*/ 2>/dev/null
 No active projects.
 
 Start a new project:
-  oat-project-discover - Start requirements gathering for a new feature
+  oat-project-new - Create a full-lifecycle project scaffold
+  oat-project-quick-start - Start a quick workflow project
+  oat-project-import-plan - Import an external markdown plan into OAT
 ```
 **Continue to Step 6 (show available skills).**
 
@@ -137,6 +139,7 @@ Start a new project:
 Read `{project}/state.md` frontmatter:
 - `oat_phase` - Current phase
 - `oat_phase_status` - in_progress or complete
+- `oat_workflow_mode` - full | quick | import
 - `oat_blockers` - Any blockers
 - `oat_hil_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
 - `oat_hil_completed` - Completed HiL checkpoints
@@ -145,6 +148,7 @@ Read `{project}/state.md` frontmatter:
 ```
 📁 {project-name}
    Active: {yes/no}
+   Mode: {oat_workflow_mode}
    Phase: {oat_phase} ({oat_phase_status})
    HiL Gates: {oat_hil_checkpoints}
    Completed: {oat_hil_completed as checkmarks}
@@ -157,6 +161,11 @@ Read `{project}/state.md` frontmatter:
 
 Based on project state, recommend next action.
 
+Read `oat_workflow_mode` from `state.md` frontmatter:
+- `full` (default if missing)
+- `quick`
+- `import`
+
 **HiL override (apply before phase routing):**
 - If current `oat_phase` is listed in `oat_hil_checkpoints` **and** not listed in `oat_hil_completed`, the phase's HiL gate is still pending.
 - In that case, do **not** advance to the next phase even if `oat_phase_status: complete`.
@@ -164,6 +173,10 @@ Based on project state, recommend next action.
   - discovery gate pending -> `oat-project-discover`
   - spec gate pending -> `oat-project-spec`
   - design gate pending -> `oat-project-design`
+
+Routing matrix by mode:
+
+**Full mode (`oat_workflow_mode: full`):**
 
 | oat_phase | oat_phase_status | Next Skill |
 |-----------|------------------|------------|
@@ -174,6 +187,26 @@ Based on project state, recommend next action.
 | design | in_progress | Continue `oat-project-design` |
 | design | complete | `oat-project-plan` |
 | plan | in_progress | Continue `oat-project-plan` |
+| plan | complete | `oat-project-implement` |
+| implement | in_progress | Continue `oat-project-implement` |
+| implement | complete | Ready for final review / PR |
+
+**Quick mode (`oat_workflow_mode: quick`):**
+
+| oat_phase | oat_phase_status | Next Skill |
+|-----------|------------------|------------|
+| discovery | in_progress | Continue `oat-project-discover` |
+| discovery | complete | `oat-project-plan` |
+| plan | in_progress | Continue `oat-project-plan` |
+| plan | complete | `oat-project-implement` |
+| implement | in_progress | Continue `oat-project-implement` |
+| implement | complete | Ready for final review / PR |
+
+**Import mode (`oat_workflow_mode: import`):**
+
+| oat_phase | oat_phase_status | Next Skill |
+|-----------|------------------|------------|
+| plan | in_progress | Continue `oat-project-import-plan` |
 | plan | complete | `oat-project-implement` |
 | implement | in_progress | Continue `oat-project-implement` |
 | implement | complete | Ready for final review / PR |
@@ -194,6 +227,9 @@ Knowledge:
   oat-project-index             - Generate/refresh codebase knowledge base
 
 Workflow:
+  oat-project-quick-start       - Start a quick workflow (discover -> plan -> implement)
+  oat-project-import-plan       - Import an external markdown plan and normalize plan.md
+  oat-project-promote-full      - Promote quick/import project to full lifecycle
   oat-project-discover          - Start discovery phase (requirements gathering)
   oat-project-spec              - Create specification from discovery
   oat-project-design            - Create technical design from spec

@@ -7,6 +7,8 @@ oat_hil_completed: []  # Progress: which HIL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: discovery  # Current phase: discovery | spec | design | plan | implement
 oat_phase_status: in_progress  # Status: in_progress | complete
+oat_workflow_mode: full  # full | quick | import
+oat_workflow_origin: native  # native | imported
 oat_generated: false
 oat_template: true
 oat_template_name: state

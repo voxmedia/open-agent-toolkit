@@ -12,7 +12,7 @@ Request and execute a code or artifact review for the current project scope.
 
 ## Purpose
 
-Produce an independent review artifact that verifies spec/design alignment and code quality.
+Produce an independent review artifact that verifies requirements/design alignment (mode-aware) and code quality.
 
 ## Prerequisites
 
@@ -73,7 +73,7 @@ Run the `oat-project-review-provide` skill and it will:
 
 ## Process
 
-### Step 0: Resolve Active Project
+### Step 0: Resolve Active Project (Hard Requirement)
 
 OAT stores the active project path in `.oat/active-project` (single line, local-only).
 
@@ -83,16 +83,21 @@ PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
-**If `PROJECT_PATH` is missing/invalid:**
-- Ask the user for `{project-name}`
-- Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
-- Write it for future use:
-  ```bash
-  mkdir -p .oat
-  echo "$PROJECT_PATH" > .oat/active-project
-  ```
+Validation rules:
+- `PROJECT_PATH` must be set and point to an existing directory.
+- `"$PROJECT_PATH/state.md"` must exist for mode-aware review validation.
 
-**If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+If either check fails, **stop and route**. Do not create/guess project pointers in this skill.
+
+Tell user:
+- This is a project-scoped skill and needs an initialized OAT project (`.oat/active-project` + project `state.md`).
+- Without project state, review can still proceed via non-project skill: `oat-review-provide`.
+- To continue with project workflow instead, run one of:
+  - `oat-project-open` (existing project)
+  - `oat-project-quick-start` (new quick project)
+  - `oat-project-import-plan` (external plan import)
+
+If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`.
 
 ### Step 1: Parse Arguments or Ask
 
@@ -106,24 +111,29 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
   - For code: `pNN-tNN` task / `pNN` phase / `final` / `base_sha=SHA` / `SHA..HEAD` range
   - For artifact: `discovery` / `spec` / `design` (and optionally `plan`)
 
-### Step 2: Validate Artifacts Exist
+### Step 2: Validate Artifacts Exist (Mode-Aware)
+
+Resolve workflow mode from state (default `full`):
 
 ```bash
-ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/discovery.md" 2>/dev/null
+WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | head -1 | awk '{print $2}')
+WORKFLOW_MODE=${WORKFLOW_MODE:-full}
 ```
 
-**Required for code review:**
-- spec.md (requirements to verify)
-- design.md (design decisions to verify)
-- plan.md (tasks being reviewed)
+**Required for code review (by mode):**
+- `full`: `spec.md`, `design.md`, `plan.md`
+- `quick`: `discovery.md`, `plan.md` (`spec.md`/`design.md` optional if present)
+- `import`: `plan.md` (`references/imported-plan.md` recommended, `spec.md`/`design.md` optional)
 
 **Required for artifact review:**
-- The artifact being reviewed (discovery.md / spec.md / design.md / plan.md)
-- discovery.md (required when reviewing spec.md)
-- spec.md (required when reviewing design.md or plan.md)
-- design.md (required when reviewing plan.md)
+- The artifact being reviewed must exist.
+- Upstream dependencies are required only when relevant to that artifact:
+  - reviewing `spec` requires `discovery.md`
+  - reviewing `design` requires `spec.md`
+  - reviewing `plan` in `full` mode requires `spec.md` + `design.md`
+  - reviewing `plan` in `quick/import` mode may use `discovery.md` and/or `references/imported-plan.md` instead
 
-**If missing:** Note which artifacts are missing. Do not guess - the review will flag gaps.
+**If missing:** Report missing required artifacts for the current mode and stop if requirements are not met.
 
 ### Step 3: Determine Scope and Commits
 
@@ -182,7 +192,15 @@ case "$SCOPE_TOKEN" in
   discovery) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/discovery.md") ;;
   spec) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/discovery.md") ;;
   design) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/design.md" "$PROJECT_PATH/spec.md") ;;
-  plan) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md") ;;
+  plan)
+    if [[ "$WORKFLOW_MODE" == "full" ]]; then
+      FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md")
+    elif [[ "$WORKFLOW_MODE" == "quick" ]]; then
+      FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/discovery.md")
+    else
+      FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/references/imported-plan.md")
+    fi
+    ;;
 esac
 FILE_COUNT=$(echo "$FILES_CHANGED" | wc -l | tr -d ' ')
 ```
@@ -228,11 +246,12 @@ Build the "Review Scope" metadata for the reviewer:
 **Date:** {today}
 
 **Artifact Paths:**
-- Spec: {PROJECT_PATH}/spec.md
-- Design: {PROJECT_PATH}/design.md
+- Spec: {PROJECT_PATH}/spec.md (required in full mode; optional in quick/import)
+- Design: {PROJECT_PATH}/design.md (required in full mode; optional in quick/import)
 - Plan: {PROJECT_PATH}/plan.md
 - Implementation: {PROJECT_PATH}/implementation.md
 - Discovery: {PROJECT_PATH}/discovery.md
+- Imported Plan Reference: {PROJECT_PATH}/references/imported-plan.md (optional; import mode)
 
 **Tasks in Scope (code review only):** {task IDs from plan.md matching scope}
 
@@ -280,7 +299,7 @@ To run review in a fresh session:
 If user insists on inline review in current session:
 - Tell user: "Running inline review. This is less reliable than fresh context."
 - Run "reset protocol":
-  1. Re-read spec.md, design.md, plan.md from scratch
+  1. Re-read required artifacts for current workflow mode from scratch
   2. Read all files in FILES_CHANGED
   3. Apply oat-reviewer checklist inline
   4. Write review artifact
@@ -306,7 +325,7 @@ If running inline (Tier 3), execute the review and write artifact.
 
 **Review checklist (from oat-reviewer):**
 1. Verify scope (don't review out-of-scope changes)
-2. If code review: verify spec/design alignment (missing/extra requirements)
+2. If code review: verify alignment to available requirements sources (`spec`/`design` for full mode; `discovery`/import reference for quick/import)
 3. If code review: verify code quality (correctness, tests, security, maintainability)
 4. If artifact review: verify completeness/clarity/readiness of the artifact and its alignment with upstream artifacts
 5. Categorize findings (Critical/Important/Medium/Minor)
@@ -314,6 +333,9 @@ If running inline (Tier 3), execute the review and write artifact.
 7. Write artifact with file:line references and fix guidance
 
 **Review artifact template:** (see `.agents/agents/oat-reviewer.md` for full format)
+
+Shared ad-hoc companion reference (non-project mode):
+- `.agents/skills/oat-review-provide/references/review-artifact-template.md`
 
 ```markdown
 ---

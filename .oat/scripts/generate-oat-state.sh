@@ -123,6 +123,7 @@ read_project_state() {
   OAT_BLOCKERS=$(parse_frontmatter "$state_file" "oat_blockers")
   OAT_HIL_CHECKPOINTS=$(parse_frontmatter "$state_file" "oat_hil_checkpoints")
   OAT_HIL_COMPLETED=$(parse_frontmatter "$state_file" "oat_hil_completed")
+  OAT_WORKFLOW_MODE=$(parse_frontmatter "$state_file" "oat_workflow_mode")
 
   # Defaults
   OAT_PHASE="${OAT_PHASE:-unknown}"
@@ -134,6 +135,7 @@ read_project_state() {
   OAT_BLOCKERS="${OAT_BLOCKERS:-[]}"
   OAT_HIL_CHECKPOINTS="${OAT_HIL_CHECKPOINTS:-[]}"
   OAT_HIL_COMPLETED="${OAT_HIL_COMPLETED:-[]}"
+  OAT_WORKFLOW_MODE="${OAT_WORKFLOW_MODE:-full}"
 
   # Human-in-loop status for current phase
   if phase_in_hil_list "$OAT_PHASE" "$OAT_HIL_CHECKPOINTS"; then
@@ -230,10 +232,10 @@ compute_next_step() {
   # No active project
   if [[ "$PROJECT_STATUS" == "not set" ]]; then
     if [[ "${HAS_PROJECTS:-false}" == "true" ]]; then
-      RECOMMENDED_STEP="/oat:open-project"
+      RECOMMENDED_STEP="oat-project-open"
       RECOMMENDED_REASON="Select an existing project to continue work"
     else
-      RECOMMENDED_STEP="/oat:new-project"
+      RECOMMENDED_STEP="oat-project-new"
       RECOMMENDED_REASON="Create a new project to start work"
     fi
     return
@@ -241,7 +243,7 @@ compute_next_step() {
 
   # Project has issues
   if [[ "$PROJECT_STATUS" != "active" ]]; then
-    RECOMMENDED_STEP="/oat:open-project"
+    RECOMMENDED_STEP="oat-project-open"
     RECOMMENDED_REASON="Current project has issues: $PROJECT_STATUS"
     return
   fi
@@ -250,24 +252,41 @@ compute_next_step() {
   if [[ "$OAT_PHASE_STATUS" == "complete" ]] &&
     phase_in_hil_list "$OAT_PHASE" "$OAT_HIL_CHECKPOINTS" &&
     ! phase_in_hil_list "$OAT_PHASE" "$OAT_HIL_COMPLETED"; then
-    RECOMMENDED_STEP="/oat:${OAT_PHASE}"
+    case "$OAT_PHASE" in
+      "discovery") RECOMMENDED_STEP="oat-project-discover" ;;
+      "spec") RECOMMENDED_STEP="oat-project-spec" ;;
+      "design") RECOMMENDED_STEP="oat-project-design" ;;
+      "plan") RECOMMENDED_STEP="oat-project-plan" ;;
+      "implement") RECOMMENDED_STEP="oat-project-implement" ;;
+      *) RECOMMENDED_STEP="oat-project-progress" ;;
+    esac
     RECOMMENDED_REASON="Complete ${OAT_PHASE} HiL approval before advancing"
     return
   fi
 
-  # Map phase + status to next skill
-  case "${OAT_PHASE}:${OAT_PHASE_STATUS}" in
-    "discovery:in_progress") RECOMMENDED_STEP="/oat:discovery"; RECOMMENDED_REASON="Continue discovery phase" ;;
-    "discovery:complete") RECOMMENDED_STEP="/oat:spec"; RECOMMENDED_REASON="Create specification from discovery" ;;
-    "spec:in_progress") RECOMMENDED_STEP="/oat:spec"; RECOMMENDED_REASON="Continue specification phase" ;;
-    "spec:complete") RECOMMENDED_STEP="/oat:design"; RECOMMENDED_REASON="Create design from specification" ;;
-    "design:in_progress") RECOMMENDED_STEP="/oat:design"; RECOMMENDED_REASON="Continue design phase" ;;
-    "design:complete") RECOMMENDED_STEP="/oat:plan"; RECOMMENDED_REASON="Create implementation plan from design" ;;
-    "plan:in_progress") RECOMMENDED_STEP="/oat:plan"; RECOMMENDED_REASON="Continue planning phase" ;;
-    "plan:complete") RECOMMENDED_STEP="/oat:implement"; RECOMMENDED_REASON="Start implementation" ;;
-    "implement:in_progress") RECOMMENDED_STEP="/oat:implement"; RECOMMENDED_REASON="Continue implementation" ;;
-    "implement:complete") RECOMMENDED_STEP="/oat:pr-project"; RECOMMENDED_REASON="Generate final PR description (final review passed)" ;;
-    *) RECOMMENDED_STEP="/oat:progress"; RECOMMENDED_REASON="Check current progress" ;;
+  # Map phase + status to next skill by workflow mode
+  case "${OAT_WORKFLOW_MODE}:${OAT_PHASE}:${OAT_PHASE_STATUS}" in
+    # full mode
+    "full:discovery:in_progress") RECOMMENDED_STEP="oat-project-discover"; RECOMMENDED_REASON="Continue discovery phase" ;;
+    "full:discovery:complete") RECOMMENDED_STEP="oat-project-spec"; RECOMMENDED_REASON="Create specification from discovery" ;;
+    "full:spec:in_progress") RECOMMENDED_STEP="oat-project-spec"; RECOMMENDED_REASON="Continue specification phase" ;;
+    "full:spec:complete") RECOMMENDED_STEP="oat-project-design"; RECOMMENDED_REASON="Create design from specification" ;;
+    "full:design:in_progress") RECOMMENDED_STEP="oat-project-design"; RECOMMENDED_REASON="Continue design phase" ;;
+    "full:design:complete") RECOMMENDED_STEP="oat-project-plan"; RECOMMENDED_REASON="Create implementation plan from design" ;;
+
+    # quick mode
+    "quick:discovery:in_progress") RECOMMENDED_STEP="oat-project-discover"; RECOMMENDED_REASON="Continue quick discovery phase" ;;
+    "quick:discovery:complete") RECOMMENDED_STEP="oat-project-plan"; RECOMMENDED_REASON="Generate plan directly for quick workflow" ;;
+
+    # import mode
+    "import:plan:in_progress") RECOMMENDED_STEP="oat-project-import-plan"; RECOMMENDED_REASON="Continue import-plan normalization" ;;
+
+    # shared routing
+    *":plan:in_progress") RECOMMENDED_STEP="oat-project-plan"; RECOMMENDED_REASON="Continue planning phase" ;;
+    *":plan:complete") RECOMMENDED_STEP="oat-project-implement"; RECOMMENDED_REASON="Start implementation" ;;
+    *":implement:in_progress") RECOMMENDED_STEP="oat-project-implement"; RECOMMENDED_REASON="Continue implementation" ;;
+    *":implement:complete") RECOMMENDED_STEP="oat-project-pr-final"; RECOMMENDED_REASON="Generate final PR description (final review passed)" ;;
+    *) RECOMMENDED_STEP="oat-project-progress"; RECOMMENDED_REASON="Check current progress" ;;
   esac
 }
 
@@ -336,6 +355,7 @@ EOF
 
 | Field | Value |
 |-------|-------|
+| Mode | ${OAT_WORKFLOW_MODE} |
 | Phase | ${OAT_PHASE} |
 | Status | ${OAT_PHASE_STATUS} |
 | HiL Gate | ${OAT_HIL_STATUS} |
@@ -370,12 +390,14 @@ EOF
 
 ## Quick Commands
 
-- \`/oat:progress\` - Check current status
-- \`/oat:index\` - Refresh knowledge base
-- \`/oat:new-project\` - Create a new project
-- \`/oat:open-project\` - Switch active project
-- \`/oat:clear-active-project\` - Clear active project
-- \`/oat:complete-project\` - Mark project complete
+- \`oat-project-progress\` - Check current status
+- \`oat-project-index\` - Refresh knowledge base
+- \`oat-project-new\` - Create a full-lifecycle project
+- \`oat-project-quick-start\` - Create a quick workflow project
+- \`oat-project-import-plan\` - Import an external provider plan
+- \`oat-project-open\` - Switch active project
+- \`oat-project-clear-active\` - Clear active project
+- \`oat-project-complete\` - Mark project complete
 
 ## Available Projects
 

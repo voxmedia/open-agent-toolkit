@@ -291,6 +291,27 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Outcome:
   - Links:
 
+- [x] **(P1) [workflow] Add quick/import project lanes with canonical plan normalization**
+  - Outcome:
+    - Added lifecycle entry skills:
+      - `oat-project-quick-start`
+      - `oat-project-import-plan`
+      - `oat-project-promote-full`
+    - Added mode/provenance metadata contracts:
+      - `.oat/templates/state.md`: `oat_workflow_mode`, `oat_workflow_origin`
+      - `.oat/templates/plan.md`: `oat_plan_source`, import traceability fields
+    - Made routing and downstream workflows mode-aware:
+      - `oat-project-progress`
+      - `oat-project-review-provide`
+      - `oat-project-pr-progress`
+      - `oat-project-pr-final`
+      - `.oat/scripts/generate-oat-state.sh`
+  - Links:
+    - Project: `.oat/projects/shared/quick-oats/`
+    - Plan: `.oat/projects/shared/quick-oats/plan.md`
+  - Created: 2026-02-16
+  - Completed: 2026-02-16
+
 - [x] **(P1) [skills] Normalize skill naming to namespace model (`oat-<domain>-<action>`)**
   - Outcome:
     - Adopted naming pattern: `oat-<domain>-<action>` for external-facing skills; internal-only skills kept unprefixed.
