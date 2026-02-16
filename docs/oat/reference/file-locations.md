@@ -15,7 +15,8 @@
 ## OAT workflow
 
 - Templates: `.oat/templates/`
-- Utility scripts: `.oat/scripts/`
+- Runtime sync state: `.oat/sync/`
+- Remaining utility scripts: `.oat/scripts/`
 - Repo knowledge: `.oat/repo/knowledge/`
 - Repo reference docs: `.oat/repo/reference/`
 - Repo reviews: `.oat/repo/reviews/`
@@ -47,6 +48,8 @@
 ## CLI code
 
 - `packages/cli/src/commands/`
+- `packages/cli/src/commands/project/`
+- `packages/cli/src/commands/internal/`
 - `packages/cli/src/engine/`
 - `packages/cli/src/providers/`
 - `packages/cli/src/manifest/`

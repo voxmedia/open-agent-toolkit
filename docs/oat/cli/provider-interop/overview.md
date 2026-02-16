@@ -26,6 +26,11 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 - `oat providers inspect`
 - `oat doctor`
 
+## Non-interop namespaces in the same CLI
+
+- `oat project new <name>` (workflow/project scaffolding)
+- `oat internal validate-oat-skills` (internal maintenance)
+
 ## Reference artifacts
 
 - `.oat/projects/<scope>/<project>/spec.md`
