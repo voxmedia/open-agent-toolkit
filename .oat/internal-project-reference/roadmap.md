@@ -20,7 +20,7 @@ As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline h
 | Phase 4: Active project pointer + Repo State Dashboard | Completed (polish remaining) | Pointer + generated `.oat/state.md` exist; clarify “first-class” regeneration contract |
 | Phase 5: Staleness + knowledge drift | Planned | Improve/enforce freshness beyond warn-only |
 | Phase 6: Parallel execution + reconcile | Deferred | Worktrees/subagents + reconciliation tooling |
-| Phase 7: Quick mode + template rendering helper | Planned | Faster path for small changes (guardrails) |
+| Phase 7: Quick mode + template rendering helper | In Progress | Quick/import lanes implemented; template rendering helper still planned |
 | Phase 8: Provider interop CLI + sync manifest | Next | `oat init/status/sync/doctor`, adapters, manifest, safe sync |
 | Phase 9: Multi-project switching + branch awareness | Later | Full `.oat/projects/(shared|local)/...` + hooks |
 | Phase 10: Memory system + provider enhancements | Later | Longer-term durability features |
@@ -37,6 +37,10 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
 - Workflow phases + routing:
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
   - Router: `oat-project-progress`
+- Alternate lanes:
+  - `oat-project-quick-start` (quick lane)
+  - `oat-project-import-plan` (import lane, canonicalized to `plan.md`)
+  - `oat-project-promote-full` (in-place promotion to full lifecycle)
 - Review + PR loop:
   - Review: `oat-project-review-provide`, `oat-project-review-receive` + `.agents/agents/oat-reviewer.md`
   - PR: `oat-project-pr-progress`, `oat-project-pr-final`
@@ -185,12 +189,19 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 
 **Goal:** Make small feature / quick fix workflows faster by safely skipping heavy steps (with guardrails).
 
+**Status:** In Progress
+- Done: quick lane starter (`oat-project-quick-start`)
+- Done: import lane starter (`oat-project-import-plan`)
+- Done: in-place promotion skill (`oat-project-promote-full`)
+- Done: mode-aware routing/review/PR/dashboard contracts (`full|quick|import`)
+- Remaining: template rendering helper (`oat template render ...`)
+
 **When to do it:**
 - After we have a stable "full mode", and
 - We find ourselves repeatedly doing small changes where full discovery/spec/design overhead isn't worth it.
 
 **Deliverables:**
-- Quick mode: reduced questioning; design optional when triggers aren't present
+- Quick/import mode lanes: reduced ceremony with canonical `plan.md` execution contract
 - Template rendering helper (`oat template render ...`) to avoid copy/paste and ensure consistent frontmatter
 
 ---

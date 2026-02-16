@@ -11,6 +11,7 @@ Track notable decisions made while evolving OAT in this repo, so future sessions
 | ADR-003 | 2026-01-31 | accepted | Add `create-oat-skill` to keep OAT skill conventions consistent |
 | ADR-004 | 2026-01-31 | accepted | Defer active-project name-only migration until CLI owns project commands |
 | ADR-005 | 2026-02-14 | accepted | Use skill-first invocation language; treat `/oat:*` as optional host alias |
+| ADR-006 | 2026-02-16 | accepted | Add quick/import workflow lanes with canonical plan normalization and mode-aware routing |
 
 ## Decisions
 
@@ -185,6 +186,58 @@ Adopt option 2:
 - Update OAT templates, skills, and internal references to skill-first wording.
 - Add a lightweight validation check to catch regressions to slash-only wording.
 - Evaluate optional Codex wrapper generation after wording normalization lands.
+
+---
+
+### ADR-006: Add quick/import workflow lanes with canonical plan normalization and mode-aware routing
+
+- **Date:** 2026-02-16
+- **Status:** accepted
+- **Drivers:** Support lower-touch execution for plan-first workflows from providers (Codex/Cursor/Claude) while preserving OAT state and review/PR tooling.
+- **Related:**
+  - `.agents/skills/oat-project-quick-start/SKILL.md`
+  - `.agents/skills/oat-project-import-plan/SKILL.md`
+  - `.agents/skills/oat-project-promote-full/SKILL.md`
+  - `.oat/templates/state.md`
+  - `.oat/templates/plan.md`
+
+#### Context
+
+OAT's full lifecycle (`discover -> spec -> design -> plan -> implement`) provides strong structure but is heavy for quick changes and externally-authored plans. We need a lightweight path that still keeps `plan.md`/`implementation.md`/`state.md` as the system of record.
+
+#### Options Considered
+
+1. Keep full lifecycle only (no quick/import support)
+2. Add quick/import entry lanes that normalize into canonical OAT `plan.md`
+3. Keep imported provider plans as non-canonical artifacts and teach all downstream skills new formats
+
+#### Decision
+
+Adopt option 2:
+- Add `oat-project-quick-start` for quick lane projects.
+- Add `oat-project-import-plan` for external markdown plan ingestion.
+- Preserve imported source at `references/imported-plan.md`; canonical execution artifact remains `plan.md`.
+- Add `oat-project-promote-full` for in-place promotion to full lifecycle.
+- Introduce metadata:
+  - `state.md`: `oat_workflow_mode` (`full|quick|import`), `oat_workflow_origin` (`native|imported`)
+  - `plan.md`: `oat_plan_source` (`full|quick|imported`) plus import traceability fields.
+- Make `oat-project-progress`, review, PR, and dashboard recommendations mode-aware.
+
+#### Consequences
+
+- Positive:
+  - Lower setup friction for quick and imported workflows.
+  - Reuses existing implementation/review/PR machinery.
+  - Maintains a single canonical plan format for downstream skills.
+- Trade-offs:
+  - Mode-aware branching increases contract complexity across skills.
+  - Quick/import projects may have reduced assurance when `spec.md`/`design.md` are absent.
+
+#### Follow-ups
+
+- Validate mode-aware behavior with dogfood projects.
+- Consider thin CLI wrappers for quick/import project bootstrap after contracts stabilize.
+- Keep optional provider-specific parsing enhancements deferred until demand warrants deeper normalization.
 
 ## ADR Template
 
