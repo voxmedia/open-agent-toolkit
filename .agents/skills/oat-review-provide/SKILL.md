@@ -1,7 +1,7 @@
 ---
 name: oat-review-provide
 description: Run an ad-hoc code or file review when no OAT project/state exists.
-argument-hint: "[unstaged|staged|base_sha=<sha>|<sha1>..<sha2>|--files <path1,path2,...>] [--output <path>] [--mode auto|local|tracked|inline]"
+argument-hint: "[unstaged|staged|base_branch=<branch>|base_sha=<sha>|<sha1>..<sha2>|--files <path1,path2,...>] [--output <path>] [--mode auto|local|tracked|inline]"
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -62,6 +62,7 @@ Parse `$ARGUMENTS` and resolve one scope mode:
 - `--files <path1,path2,...>` → explicit file review (works for old/pre-existing files)
 - `unstaged` → review current unstaged working tree changes
 - `staged` → review staged changes (`--cached`)
+- `base_branch=<branch>` → review current branch against merge-base with branch (e.g., `base_branch=main`)
 - `base_sha=<sha>` → `{sha}..HEAD`
 - `<sha1>..<sha2>` → exact range
 - If omitted, ask user to choose one of the above and recommend `unstaged` for in-progress local review.
@@ -70,6 +71,14 @@ Recommended fallback:
 
 ```bash
 MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null)
+SCOPE_RANGE="$MERGE_BASE..HEAD"
+```
+
+Branch-based range example:
+
+```bash
+BASE_BRANCH="main"
+MERGE_BASE=$(git merge-base "origin/$BASE_BRANCH" HEAD 2>/dev/null || git merge-base "$BASE_BRANCH" HEAD 2>/dev/null)
 SCOPE_RANGE="$MERGE_BASE..HEAD"
 ```
 
