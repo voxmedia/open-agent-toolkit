@@ -18,6 +18,7 @@ Project scope is used for project workflows and repo-local sync state. User scop
   active-project
   active-idea
   projects-root
+  config.json
   projects/
     shared/
     local/
@@ -39,6 +40,7 @@ Project scope is used for project workflows and repo-local sync state. User scop
 
 | Path | Purpose | Notes |
 |------|---------|-------|
+| `.oat/config.json` | Repo runtime config for non-sync settings | Phase-A home for new non-sync settings (e.g., `worktrees.root`) |
 | `.oat/active-project` | Pointer to the active project path | Used by project skills to resume context |
 | `.oat/active-idea` | Pointer to active idea | Used by idea skills |
 | `.oat/projects-root` | Optional override for default projects root | Defaults to `.oat/projects/shared` |
@@ -67,6 +69,16 @@ Primary ways this file is managed:
 
 - `oat init --scope project` (interactive provider selection)
 - `oat providers set --scope project --enabled ... --disabled ...`
+
+## Config ownership (phase-A)
+
+During phase-A consolidation:
+
+- `.oat/config.json` owns **new non-sync repo settings**.
+- `.oat/sync/config.json` continues to own sync/provider behavior.
+- Pointer files (`.oat/active-project`, `.oat/active-idea`, `.oat/projects-root`) remain compatible and are not migrated in this phase.
+
+This keeps existing workflow contracts stable while preventing additional one-off pointer files for new settings.
 
 ## Project artifact structure
 
@@ -140,6 +152,7 @@ User scope is primarily for:
 ## Practical guidance
 
 - Treat `.oat/templates/` as scaffolding source.
-- Treat `.oat/sync/manifest.json` and `.oat/sync/config.json` as runtime state/config.
+- Treat `.oat/config.json` as non-sync runtime config (phase-A and beyond).
+- Treat `.oat/sync/manifest.json` and `.oat/sync/config.json` as sync runtime state/config.
 - Treat project artifacts under `.oat/projects/**` as lifecycle source-of-truth for workflow execution.
 - Keep `state.md`, `plan.md`, and `implementation.md` consistent after each workflow step.
