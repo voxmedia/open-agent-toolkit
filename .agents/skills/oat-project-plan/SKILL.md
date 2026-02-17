@@ -328,7 +328,7 @@ Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
 - `oat_current_task: null`
-- `oat_last_commit: {commit_sha_from_step_14}`
+- `oat_last_commit: {commit_sha_from_step_15}`
 - `oat_blockers: []`
 - `oat_phase: plan`
 - `oat_phase_status: complete`
