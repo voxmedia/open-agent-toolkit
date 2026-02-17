@@ -291,6 +291,28 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related files: `.oat/active-project`, `.oat/projects/shared/*/state.md`, `.oat/state.md`
   - Created: 2026-02-17
 
+- [ ] **(P1) [tooling] Add artifact cleanup command for reviews and external plans**
+  - Target milestone/phase: OAT CLI lifecycle hygiene
+  - Notes:
+    - Add a command (for example, `oat cleanup artifacts`) to clean stale/duplicate artifacts in:
+      - `.oat/repo/reviews/`
+      - `.oat/repo/reference/external-plans/`
+    - Default behavior should auto-clean duplicate version chains while preserving the latest version:
+      - Example: if `foo.md`, `foo-v2.md`, `foo-v3.md` exist, keep only latest (`foo-v3.md`) by default.
+    - After duplicate pruning, present remaining candidate artifacts in an interactive multi-select prompt for optional removal.
+    - Keep explicit dry-run + apply semantics and print a deterministic summary (removed/kept/skipped).
+    - Guardrails:
+      - Never delete latest-in-chain duplicates automatically.
+      - If a file appears referenced by active project artifacts, require explicit confirmation before delete.
+  - Success criteria:
+    - Duplicate version chains are pruned automatically to latest with no manual triage.
+    - Users can multi-select additional stale artifacts for removal in one pass.
+    - Cleanup works consistently for both reviews and external plans.
+    - Output is audit-friendly and idempotent on repeated runs.
+  - Links:
+    - Related directories: `.oat/repo/reviews/`, `.oat/repo/reference/external-plans/`
+  - Created: 2026-02-17
+
 - [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-project-new`**
   - Target milestone/phase: Ideas → Projects integration
   - Notes:

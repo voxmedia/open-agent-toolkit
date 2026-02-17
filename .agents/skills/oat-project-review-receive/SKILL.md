@@ -124,13 +124,17 @@ Minor: {N}
 ```
 
 **If Critical + Important + Medium == 0:**
-- Mark the review as `passed` in the plan.md Reviews table (if plan.md exists)
-- No fix tasks are added
-- Route user to the next action:
-  - If scope is `final`: prompt for PR (or run the `oat-project-pr-final` skill when available)
-  - Otherwise: continue normal implementation
-  - Note: `passed` means “review passed” (not merely “fixes completed”). If fixes exist, use `fixes_completed` until a re-review passes.
-  - For `final` scope, only mark `passed` after deferred-medium resurfacing/disposition (Step 8.5) is complete.
+- For non-final scopes:
+  - Mark the review as `passed` in the plan.md Reviews table (if plan.md exists)
+  - No fix tasks are added
+  - Minor findings may be auto-deferred by default (Step 9)
+  - Route user to normal next action
+- For `final` scope:
+  - Do not mark `passed` until both gates are complete:
+    1. Deferred-medium resurfacing/disposition (Step 8.5)
+    2. Minor findings disposition is explicitly confirmed by user (Step 9)
+  - After both gates are complete, mark `passed` and route to PR/finalization
+- Note: `passed` means “review passed” (not merely “fixes completed”). If fixes exist, use `fixes_completed` until a re-review passes.
 
 ### Step 3: Determine Task Scope
 
@@ -222,7 +226,7 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 ```markdown
 ## Reviews
 - Update or add a row for `{scope}` in the Reviews table:
-  - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important/Medium and no unresolved deferred-medium gate for final)
+  - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important/Medium and no unresolved final-scope gates)
   - Date: `{today}`
   - Artifact: `reviews/{filename}.md`
 ```
@@ -230,7 +234,7 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 **Status semantics (v1):**
 - `fixes_added`: fix tasks were created and added to the plan
 - `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review completed and recorded as passing (no unresolved Critical/Important/Medium, and final-scope deferred-medium gate satisfied)
+- `passed`: re-review completed and recorded as passing (no unresolved Critical/Important/Medium, and all final-scope gates satisfied: deferred-medium + minor disposition)
 
 ### Step 7: Update Implementation.md
 
@@ -319,24 +323,31 @@ If any Medium is proposed for deferral:
 - If user declines deferral, convert that Medium to a fix task now.
 - If user approves deferral, record rationale in `implementation.md` under "Deferred Findings (Medium)".
 
-Minor findings are NOT converted to tasks by default.
+Minor findings handling is scope-aware:
 
-**Ask user:**
-```
-{N} minor findings not converted to tasks:
-- {Finding 1 summary}
-- {Finding 2 summary}
-...
+- If `scope != final`:
+  - Minor findings are auto-deferred by default.
+  - Record them in implementation.md under "Deferred Findings".
+  - Do not block review completion on minor disposition.
 
-Options:
-1. Defer all minor findings (default)
-2. Select specific minors to convert to tasks
-3. Convert all minors to tasks
+- If `scope == final`:
+  - Minor findings are NOT auto-deferred silently.
+  - Ask user explicitly:
+    ```
+    {N} minor findings pending final disposition:
+    - {Finding 1 summary}
+    - {Finding 2 summary}
+    ...
 
-Choose:
-```
+    Options:
+    1. Defer all minor findings with rationale
+    2. Select specific minors to convert to tasks
+    3. Convert all minors to tasks
 
-**If deferred:** Add to implementation.md "Deferred Findings" section.
+    Choose:
+    ```
+  - If deferred, record rationale in implementation.md under "Deferred Findings".
+  - Hard guard: do not mark final review `passed` until this explicit choice is recorded.
 
 ### Step 10: Route to Next Action
 
@@ -381,7 +392,7 @@ Actions taken:
 - Added {N} fix tasks to plan.md ({task_ids})
 - Updated implementation.md with review notes
 - Deferred/accepted Medium findings: {N}
-- Deferred {N} minor findings
+- Deferred {N} minor findings (auto for non-final, explicit decision for final)
 
 Review cycle: {N} of 3
 
@@ -414,4 +425,4 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 - Final-scope deferred Medium findings resurfaced and explicitly dispositioned
 - User routed to next action
 - Medium deferrals handled via explicit user approval
-- Minor findings handled (converted or deferred)
+- Minor findings handled (converted or deferred), with explicit user decision required for final scope
