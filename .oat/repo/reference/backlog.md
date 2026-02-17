@@ -69,6 +69,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related existing script: `pnpm run worktree:init`
     - Reference inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
     - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
+    - Implementation project: `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
   - Created: 2026-02-17
 
 - [ ] **(P1) [tooling] Consolidate OAT runtime config under `.oat/config.json` (phased)**
@@ -87,6 +88,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
     - Related decision: `.oat/repo/reference/decision-record.md`
+    - Implementation project: `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
   - Created: 2026-02-17
 
 - [ ] **(P1) [skills] Add stronger subagent orchestration skills (sequential + parallel dispatch)**
