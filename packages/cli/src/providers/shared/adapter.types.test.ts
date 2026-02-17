@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { PathMapping, ProviderAdapter } from './adapter.types';
-import { getActiveAdapters, getSyncMappings } from './adapter.utils';
+import {
+  getActiveAdapters,
+  getConfigAwareAdapters,
+  getSyncMappings,
+} from './adapter.utils';
 
 describe('ProviderAdapter types', () => {
   it('PathMapping has required fields', () => {
@@ -124,5 +128,90 @@ describe('ProviderAdapter types', () => {
       canonicalDir: '.agents/skills',
       providerDir: '.claude/skills',
     });
+  });
+
+  it('getConfigAwareAdapters keeps explicitly enabled provider active even when not detected', async () => {
+    const adapters: ProviderAdapter[] = [
+      {
+        name: 'claude',
+        displayName: 'Claude Code',
+        defaultStrategy: 'symlink',
+        projectMappings: [],
+        userMappings: [],
+        detect: async () => false,
+      },
+    ];
+
+    const result = await getConfigAwareAdapters(adapters, '/tmp/project', {
+      version: 1,
+      defaultStrategy: 'auto',
+      providers: {
+        claude: { enabled: true },
+      },
+    });
+
+    expect(result.activeAdapters.map((adapter) => adapter.name)).toEqual([
+      'claude',
+    ]);
+    expect(result.detectedUnset).toEqual([]);
+    expect(result.detectedDisabled).toEqual([]);
+  });
+
+  it('getConfigAwareAdapters excludes explicitly disabled provider and reports mismatch when detected', async () => {
+    const adapters: ProviderAdapter[] = [
+      {
+        name: 'claude',
+        displayName: 'Claude Code',
+        defaultStrategy: 'symlink',
+        projectMappings: [],
+        userMappings: [],
+        detect: async () => true,
+      },
+    ];
+
+    const result = await getConfigAwareAdapters(adapters, '/tmp/project', {
+      version: 1,
+      defaultStrategy: 'auto',
+      providers: {
+        claude: { enabled: false },
+      },
+    });
+
+    expect(result.activeAdapters).toEqual([]);
+    expect(result.detectedDisabled).toEqual(['claude']);
+    expect(result.detectedUnset).toEqual([]);
+  });
+
+  it('getConfigAwareAdapters falls back to detection for unset providers', async () => {
+    const adapters: ProviderAdapter[] = [
+      {
+        name: 'claude',
+        displayName: 'Claude Code',
+        defaultStrategy: 'symlink',
+        projectMappings: [],
+        userMappings: [],
+        detect: async () => true,
+      },
+      {
+        name: 'cursor',
+        displayName: 'Cursor',
+        defaultStrategy: 'symlink',
+        projectMappings: [],
+        userMappings: [],
+        detect: async () => false,
+      },
+    ];
+
+    const result = await getConfigAwareAdapters(adapters, '/tmp/project', {
+      version: 1,
+      defaultStrategy: 'auto',
+      providers: {},
+    });
+
+    expect(result.activeAdapters.map((adapter) => adapter.name)).toEqual([
+      'claude',
+    ]);
+    expect(result.detectedUnset).toEqual(['claude']);
+    expect(result.detectedDisabled).toEqual([]);
   });
 });

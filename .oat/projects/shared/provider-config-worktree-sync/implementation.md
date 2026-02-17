@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-17
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -25,41 +25,48 @@ oat_generated: false
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1 | in_progress | 2 | 1/2 |
-| Phase 2 | pending | 2 | 0/2 |
+| Phase 1 | complete | 2 | 2/2 |
+| Phase 2 | in_progress | 2 | 0/2 |
 | Phase 3 | pending | 2 | 0/2 |
 | Phase 4 | pending | 2 | 0/2 |
 | Phase 5 | pending | 2 | 0/2 |
 | Phase 6 | pending | 1 | 0/1 |
 
-**Total:** 1/11 tasks completed
+**Total:** 2/11 tasks completed
 
 ---
 
 ## Phase 1: Config Foundation and Provider Resolution
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-02-17
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added a first-class config write/update API for sync provider preferences.
+- Added config-aware provider resolution logic that handles enabled/disabled/unset states.
+- Captured mismatch signals for detected-but-disabled and detected-unset providers.
 
 **Key files touched:**
-- `{path}` - {why}
+- `packages/cli/src/config/sync-config.ts` - added config save and provider-enabled mutation helpers.
+- `packages/cli/src/providers/shared/adapter.utils.ts` - added config-aware adapter resolution helper.
 
 **Verification:**
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @oat/cli test src/config/sync-config.test.ts`
+- Result: pass
+- Run: `pnpm --filter @oat/cli test src/providers/shared/adapter.types.test.ts`
+- Result: pass
+- Run: `pnpm --filter @oat/cli type-check`
+- Result: pass
 
 **Notes / Decisions:**
-- {trade-offs or deviations discovered during implementation}
+- Kept existing `getActiveAdapters` behavior intact and introduced additive config-aware helper to minimize integration risk.
 
 ### Task p01-t01: Add sync config write/update utilities
 
 **Status:** completed
-**Commit:** pending
+**Commit:** d51ea2a
 
 **Outcome (required when completed):**
 - Added reusable sync config persistence APIs to support writing and mutation flows.
@@ -87,8 +94,28 @@ oat_generated: false
 
 ### Task p01-t02: Add config-aware provider activation utility
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** pending
+
+**Outcome (required when completed):**
+- Added `getConfigAwareAdapters` to centralize provider activation rules.
+- Explicitly enabled providers are active even when directory detection is false.
+- Explicitly disabled providers are excluded and surfaced in mismatch metadata when detected on disk.
+- Unset providers continue to use detection fallback and are surfaced for potential configuration prompts.
+
+**Files changed:**
+- `packages/cli/src/providers/shared/adapter.utils.ts` - added `getConfigAwareAdapters` and result metadata contract.
+- `packages/cli/src/providers/shared/adapter.types.test.ts` - added behavior tests for enabled/disabled/unset cases.
+- `packages/cli/src/providers/shared/index.ts` - exported new helper and result type.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/providers/shared/adapter.types.test.ts`
+- Result: pass (8 tests)
+- Run: `pnpm --filter @oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Keep provider state signaling (`detectedUnset`, `detectedDisabled`) at utility layer so sync/init commands can choose UX behavior without reimplementing detection logic.
 
 **Notes:**
 - RED tests added for explicit enabled/disabled/unset provider behavior.
@@ -115,18 +142,21 @@ Chronological log of implementation progress.
 
 **Session Start:** {time}
 
-- [x] p01-t01: Add sync config write/update utilities - pending
-- [ ] p01-t02: Add config-aware provider activation utility - in progress
+- [x] p01-t01: Add sync config write/update utilities - d51ea2a
+- [x] p01-t02: Add config-aware provider activation utility - pending
+- [ ] p02-t01: Implement `oat providers set` - pending
 
 **What changed (high level):**
 - Added config write/update utility surface for future provider command and sync remediation flows.
 - Added tests proving provider `enabled` mutations preserve strategy/default settings.
+- Added config-aware provider activation helper with explicit mismatch metadata.
 
 **Decisions:**
 - Use `atomicWriteJson` for config writes to keep persistence behavior consistent with other CLI state files.
+- Keep `getActiveAdapters` in place for compatibility while introducing additive config-aware resolution.
 
 **Follow-ups / TODO:**
-- Fill commit SHA for `p01-t01` after commit.
+- Fill commit SHA for `p01-t02` after commit.
 
 **Blockers:**
 - None
