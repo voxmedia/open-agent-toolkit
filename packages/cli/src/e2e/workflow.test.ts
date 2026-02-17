@@ -247,7 +247,9 @@ describe('e2e workflow', () => {
     );
 
     mockedConfirm.mockResolvedValue(false);
-    mockedCheckbox.mockResolvedValue(['0']);
+    mockedCheckbox
+      .mockResolvedValueOnce(['claude', 'cursor', 'codex'])
+      .mockResolvedValueOnce(['0']);
 
     const init = await runCli(root, ['init'], [], true);
     expect(init.exitCode).toBe(0);
