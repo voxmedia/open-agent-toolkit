@@ -271,6 +271,24 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related gap: skill removal currently requires manual deletion + sync
   - Created: 2026-02-16
 
+- [ ] **(P1) [tooling] Add project cleanup command for stale pointers and completion normalization**
+  - Target milestone/phase: OAT CLI lifecycle hygiene
+  - Notes:
+    - Add a command (for example, `oat project cleanup`) that audits project metadata and fixes common drift:
+      - invalid `.oat/active-project` pointer (missing target directory)
+      - missing `state.md` for projects that already have plan/implementation artifacts
+      - completed projects missing `oat_lifecycle: complete`
+      - stale `.oat/state.md` dashboard after cleanup actions
+    - Provide dry-run + apply semantics and explicit summary of changed vs skipped items.
+    - Keep cleanup non-destructive (no automatic archive/delete).
+  - Success criteria:
+    - One command can remediate common project-state drift safely.
+    - Cleanup output is deterministic and audit-friendly.
+    - Dashboard is regenerated after apply mode.
+  - Links:
+    - Related files: `.oat/active-project`, `.oat/projects/shared/*/state.md`, `.oat/state.md`
+  - Created: 2026-02-17
+
 - [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-project-new`**
   - Target milestone/phase: Ideas → Projects integration
   - Notes:
