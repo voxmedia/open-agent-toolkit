@@ -17,7 +17,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ INDEX
+   OAT ▸ CREATE REPO KNOWLEDGE INDEX
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (thin index generation, spawning mappers, writing outputs), print 2–5 short step indicators, e.g.:
   - `[1/4] Checking existing knowledge…`

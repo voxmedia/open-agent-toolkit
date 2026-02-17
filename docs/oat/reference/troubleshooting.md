@@ -6,9 +6,21 @@
 - Reload/restart host app session
 - Verify `AGENTS.md` skills table matches `.agents/skills/*/SKILL.md`
 
+## Worktree checkout missing provider links
+
+- Run: `pnpm run worktree:init`
+- This command installs dependencies, builds the workspace, and runs `oat sync --scope project --apply`.
+
 ## Codex appears detected but no skill sync actions are listed
 
 Expected for native-read skill mappings. Codex can read canonical skills without mirrored provider writes.
+
+## `sync` reports provider config mismatch
+
+- For interactive runs, select detected providers to enable when prompted.
+- For non-interactive runs, configure providers explicitly:
+  - `oat providers set --scope project --enabled <providers> --disabled <providers>`
+- Re-run `oat sync --scope project --apply` after updating config.
 
 ## `doctor` warns about canonical directories
 

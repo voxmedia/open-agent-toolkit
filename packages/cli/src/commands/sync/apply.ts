@@ -4,17 +4,7 @@ import type {
   SyncCommandDependencies,
   SyncSummary,
 } from './sync.types';
-
-function countPlannedOperations(scopePlans: ScopeSyncPlan[]): number {
-  return scopePlans.reduce((total, scopePlan) => {
-    return (
-      total +
-      [...scopePlan.plan.entries, ...scopePlan.plan.removals].filter(
-        (entry) => entry.operation !== 'skip',
-      ).length
-    );
-  }, 0);
-}
+import { countPlannedOperations } from './sync.utils';
 
 function countSkippedEntries(scopePlans: ScopeSyncPlan[]): number {
   return scopePlans.reduce((total, scopePlan) => {
@@ -89,12 +79,16 @@ export async function runSyncApply(
   }
 
   const summary = buildSummary(scopePlans, applied, failed);
+  const providerMismatches = scopePlans
+    .map((scopePlan) => scopePlan.providerMismatches)
+    .filter((mismatch) => mismatch !== undefined);
   if (context.json) {
     context.logger.json({
       scope: context.scope,
       apply: true,
       plans: scopePlans.map((scopePlan) => scopePlan.plan),
       summary,
+      providerMismatches,
     });
   } else {
     context.logger.info(formatAppliedOutput(scopePlans, dependencies));

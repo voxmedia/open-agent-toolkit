@@ -279,6 +279,31 @@ describe('CLI command integration', () => {
     );
   });
 
+  it('providers set writes provider enablement to sync config', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    const result = await runCli(root, [
+      'providers',
+      'set',
+      '--enabled',
+      'claude,cursor',
+      '--disabled',
+      'codex',
+    ]);
+
+    expect(result.exitCode).toBe(0);
+
+    const configRaw = await readFile(
+      join(root, '.oat', 'sync', 'config.json'),
+      'utf8',
+    );
+    const config = JSON.parse(configRaw);
+    expect(config.providers.claude.enabled).toBe(true);
+    expect(config.providers.cursor.enabled).toBe(true);
+    expect(config.providers.codex.enabled).toBe(false);
+  });
+
   it('idempotency: init + sync twice produces same state', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);

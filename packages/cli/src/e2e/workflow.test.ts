@@ -42,6 +42,7 @@ async function runCli(
   root: string,
   args: string[],
   globalArgs: string[] = [],
+  interactive = false,
 ): Promise<CliResult> {
   const program = createProgram();
   registerCommands(program);
@@ -50,11 +51,19 @@ async function runCli(
   const stderrChunks: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
   const originalStderrWrite = process.stderr.write.bind(process.stderr);
+  const stdinIsTTYDescriptor = Object.getOwnPropertyDescriptor(
+    process.stdin,
+    'isTTY',
+  );
   const previousExitCode = process.exitCode;
   process.exitCode = undefined;
 
   process.stdout.write = createWriteCapture(stdoutChunks);
   process.stderr.write = createWriteCapture(stderrChunks);
+  Object.defineProperty(process.stdin, 'isTTY', {
+    configurable: true,
+    value: interactive,
+  });
 
   try {
     await program.parseAsync(
@@ -64,6 +73,9 @@ async function runCli(
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.stderr.write = originalStderrWrite;
+    if (stdinIsTTYDescriptor) {
+      Object.defineProperty(process.stdin, 'isTTY', stdinIsTTYDescriptor);
+    }
   }
 
   const exitCode = process.exitCode ?? 0;
@@ -234,14 +246,12 @@ describe('e2e workflow', () => {
       'utf8',
     );
 
-    Object.defineProperty(process.stdin, 'isTTY', {
-      configurable: true,
-      value: true,
-    });
     mockedConfirm.mockResolvedValue(false);
-    mockedCheckbox.mockResolvedValue(['0']);
+    mockedCheckbox
+      .mockResolvedValueOnce(['claude', 'cursor', 'codex'])
+      .mockResolvedValueOnce(['0']);
 
-    const init = await runCli(root, ['init']);
+    const init = await runCli(root, ['init'], [], true);
     expect(init.exitCode).toBe(0);
 
     const canonicalPath = join(root, '.agents', 'skills', 'adopt-me');

@@ -73,7 +73,8 @@ Inputs:
 - source path from `$ARGUMENTS`
 - optional provider hint from `--provider`
 
-If source path is not provided, discover likely recent plans first:
+If source path is not provided, discover likely recent plans first. The discovery script checks both provider plan directories and this repository's external plan directory by default:
+- `.oat/repo/reference/external-plans/`
 
 ```bash
 bash .agents/skills/oat-project-import-plan/scripts/find-recent-provider-plans.sh --hours 24

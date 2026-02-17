@@ -159,7 +159,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Add a command to manage this after init (e.g., `oat providers set ...` or `oat providers enable/disable ...`).
     - Update `oat sync --apply` behavior so enabled providers can be materialized even when provider root directories do not already exist (worktree-safe bootstrap).
     - Add a worktree bootstrap script pattern that succeeds even when provider roots are initially absent, e.g.:
-      - `\"init:worktree\": \"pnpm install && pnpm run build && pnpm run cli sync --scope project --apply\"`
+      - `\"worktree:init\": \"pnpm install && pnpm run build && pnpm run cli sync --scope project --apply\"`
   - Success criteria:
     - Fresh worktree with no `.claude`/`.cursor`/`.codex` directories can still sync configured providers successfully.
     - Provider preference survives across runs via `.oat/sync/config.json`.
@@ -169,6 +169,22 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related behavior: provider activation currently depends on directory detection in `getActiveAdapters`.
     - Related files: `packages/cli/src/commands/init/index.ts`, `packages/cli/src/commands/sync/index.ts`, `packages/cli/src/config/sync-config.ts`
   - Created: 2026-02-16
+
+- [ ] **(P1) [tooling] Fix `oat project new --help` parsing bug that scaffolds a `--help` project**
+  - Target milestone/phase: OAT CLI command UX correctness
+  - Notes:
+    - Current behavior: running `pnpm run cli -- project new --help` scaffolds a project named `--help` instead of showing command help.
+    - Side effects: creates `.oat/projects/shared/--help`, updates `.oat/active-project`, and regenerates `.oat/state.md`.
+    - Investigate commander parsing/help wiring for subcommands with required positional arguments.
+    - Add regression coverage for both `oat project new --help` and `oat help project new`.
+  - Success criteria:
+    - `oat project new --help` prints usage and exits successfully without mutating project files.
+    - No accidental `.oat/projects/shared/--help` project directory or active-project pointer change.
+    - Command/help integration tests cover this path and prevent regressions.
+  - Links:
+    - Repro command: `pnpm run cli -- project new --help`
+    - Related files: `packages/cli/src/commands/project/new/index.ts`, `packages/cli/src/commands/help-snapshots.test.ts`, `packages/cli/src/commands/commands.integration.test.ts`
+  - Created: 2026-02-17
 
 - [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-project-new`**
   - Target milestone/phase: Ideas → Projects integration

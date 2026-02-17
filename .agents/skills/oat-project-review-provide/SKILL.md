@@ -31,7 +31,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ REQUEST REVIEW
+   OAT ▸ PROVIDE REVIEW
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (scope resolution, file gathering, writing artifact), print 2–5 short step indicators, e.g.:
   - `[1/4] Resolving scope + range…`

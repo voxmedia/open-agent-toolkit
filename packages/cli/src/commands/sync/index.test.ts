@@ -6,7 +6,10 @@ import {
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
 import type { Manifest } from '@manifest/index';
-import type { ProviderAdapter } from '@providers/shared';
+import type {
+  ConfigAwareAdaptersResult,
+  ProviderAdapter,
+} from '@providers/shared';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -15,6 +18,10 @@ import { createSyncCommand } from './index';
 interface HarnessOptions {
   plans?: SyncPlan[];
   executeResults?: SyncResult[];
+  interactive?: boolean;
+  loadedSyncConfig?: SyncConfig;
+  configAwareResults?: ConfigAwareAdaptersResult[];
+  providerSelectResponses?: Array<string[] | null>;
 }
 
 interface RunSyncArgs {
@@ -22,28 +29,30 @@ interface RunSyncArgs {
   commandArgs?: string[];
 }
 
-const ADAPTER: ProviderAdapter = {
-  name: 'claude',
-  displayName: 'Claude Code',
-  defaultStrategy: 'symlink',
-  projectMappings: [
-    {
-      contentType: 'skill',
-      canonicalDir: '.agents/skills',
-      providerDir: '.claude/skills',
-      nativeRead: false,
-    },
-  ],
-  userMappings: [
-    {
-      contentType: 'skill',
-      canonicalDir: '.agents/skills',
-      providerDir: '.claude/skills',
-      nativeRead: false,
-    },
-  ],
-  detect: async () => true,
-};
+function createAdapter(name = 'claude'): ProviderAdapter {
+  return {
+    name,
+    displayName: name === 'claude' ? 'Claude Code' : name,
+    defaultStrategy: 'symlink',
+    projectMappings: [
+      {
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: `.${name}/skills`,
+        nativeRead: false,
+      },
+    ],
+    userMappings: [
+      {
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: `.${name}/skills`,
+        nativeRead: false,
+      },
+    ],
+    detect: async () => true,
+  };
+}
 
 function createManifest(): Manifest {
   return {
@@ -95,10 +104,14 @@ function createEmptyPlan(scope: SyncPlan['scope'] = 'project'): SyncPlan {
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
+  adapter: ProviderAdapter;
   computeSyncPlan: ReturnType<typeof vi.fn>;
   executeSyncPlan: ReturnType<typeof vi.fn>;
+  saveSyncConfig: ReturnType<typeof vi.fn>;
+  selectProvidersWithAbort: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
+  const adapter = createAdapter();
   const plansQueue = options.plans
     ? [...options.plans]
     : [createPlan('create_symlink')];
@@ -113,6 +126,37 @@ function createHarness(options: HarnessOptions = {}): {
   const executeSyncPlan = vi.fn(async () => {
     return executeQueue.shift() ?? { applied: 0, failed: 0, skipped: 0 };
   });
+
+  const configAwareQueue = options.configAwareResults
+    ? [...options.configAwareResults]
+    : [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ];
+  const getConfigAwareAdapters = vi.fn(async () => {
+    return (
+      configAwareQueue.shift() ?? {
+        activeAdapters: [adapter],
+        detectedUnset: [],
+        detectedDisabled: [],
+      }
+    );
+  });
+
+  const providerSelectResponses = [...(options.providerSelectResponses ?? [])];
+  const selectProvidersWithAbort = vi.fn(
+    async () => providerSelectResponses.shift() ?? [],
+  );
+
+  const saveSyncConfig = vi.fn(
+    async (_configPath: string, config: SyncConfig) => {
+      return config;
+    },
+  );
+
   const command = createSyncCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
@@ -121,15 +165,20 @@ function createHarness(options: HarnessOptions = {}): {
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',
       home: '/tmp/home',
-      interactive: !(globalOptions.json ?? false),
+      interactive: options.interactive ?? !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
     resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
     loadManifest: vi.fn(async () => createManifest()),
-    loadSyncConfig: vi.fn(async () => DEFAULT_SYNC_CONFIG as SyncConfig),
+    loadSyncConfig: vi.fn(
+      async () =>
+        options.loadedSyncConfig ?? (DEFAULT_SYNC_CONFIG as SyncConfig),
+    ),
+    saveSyncConfig,
     scanCanonical: vi.fn(async () => [createCanonicalEntry()]),
-    getAdapters: () => [ADAPTER],
-    getActiveAdapters: vi.fn(async (adapters: ProviderAdapter[]) => adapters),
+    getAdapters: () => [adapter],
+    getConfigAwareAdapters,
+    selectProvidersWithAbort,
     computeSyncPlan,
     executeSyncPlan,
     formatSyncPlan: vi.fn((plan: SyncPlan, applied: boolean) => {
@@ -137,7 +186,15 @@ function createHarness(options: HarnessOptions = {}): {
     }),
   });
 
-  return { capture, command, computeSyncPlan, executeSyncPlan };
+  return {
+    capture,
+    command,
+    adapter,
+    computeSyncPlan,
+    executeSyncPlan,
+    saveSyncConfig,
+    selectProvidersWithAbort,
+  };
 }
 
 async function runSyncCommand(
@@ -249,9 +306,157 @@ describe('createSyncCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('prompts to remediate detected unset providers in interactive mode', async () => {
+    const {
+      command,
+      adapter,
+      selectProvidersWithAbort,
+      saveSyncConfig,
+      computeSyncPlan,
+    } = createHarness({
+      configAwareResults: [
+        {
+          activeAdapters: [createAdapter()],
+          detectedUnset: ['claude'],
+          detectedDisabled: [],
+        },
+        {
+          activeAdapters: [createAdapter()],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      providerSelectResponses: [['claude']],
+    });
+
+    await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(selectProvidersWithAbort).toHaveBeenCalledTimes(1);
+    expect(selectProvidersWithAbort.mock.calls[0]?.[0]).toContain(
+      'Detected provider directories are not enabled in config',
+    );
+    expect(saveSyncConfig).toHaveBeenCalledWith(
+      '/tmp/workspace/.oat/sync/config.json',
+      expect.objectContaining({
+        providers: expect.objectContaining({
+          claude: { enabled: true },
+        }),
+      }),
+    );
+    expect(
+      (computeSyncPlan.mock.calls[0]?.[0].adapters as ProviderAdapter[]).map(
+        (current) => current.name,
+      ),
+    ).toEqual([adapter.name]);
+  });
+
+  it('prompts to remediate detected disabled providers in interactive mode', async () => {
+    const { command, adapter, saveSyncConfig, computeSyncPlan } = createHarness(
+      {
+        configAwareResults: [
+          {
+            activeAdapters: [],
+            detectedUnset: [],
+            detectedDisabled: ['claude'],
+          },
+          {
+            activeAdapters: [createAdapter()],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        providerSelectResponses: [['claude']],
+        loadedSyncConfig: {
+          ...DEFAULT_SYNC_CONFIG,
+          providers: {
+            claude: { enabled: false },
+          },
+        },
+      },
+    );
+
+    await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(saveSyncConfig).toHaveBeenCalledWith(
+      '/tmp/workspace/.oat/sync/config.json',
+      expect.objectContaining({
+        providers: expect.objectContaining({
+          claude: { enabled: true },
+        }),
+      }),
+    );
+    expect(
+      (computeSyncPlan.mock.calls[0]?.[0].adapters as ProviderAdapter[]).map(
+        (current) => current.name,
+      ),
+    ).toEqual([adapter.name]);
+  });
+
+  it('persists declined detected unset providers as disabled', async () => {
+    const { command, saveSyncConfig, computeSyncPlan } = createHarness({
+      configAwareResults: [
+        {
+          activeAdapters: [createAdapter()],
+          detectedUnset: ['claude'],
+          detectedDisabled: [],
+        },
+        {
+          activeAdapters: [],
+          detectedUnset: [],
+          detectedDisabled: ['claude'],
+        },
+      ],
+      providerSelectResponses: [[]],
+    });
+
+    await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(saveSyncConfig).toHaveBeenCalledWith(
+      '/tmp/workspace/.oat/sync/config.json',
+      expect.objectContaining({
+        providers: expect.objectContaining({
+          claude: { enabled: false },
+        }),
+      }),
+    );
+    expect(computeSyncPlan.mock.calls[0]?.[0].adapters).toEqual([]);
+  });
+
+  it('warns in non-interactive mode and does not mutate config on mismatches', async () => {
+    const { command, saveSyncConfig, capture, selectProvidersWithAbort } =
+      createHarness({
+        interactive: false,
+        configAwareResults: [
+          {
+            activeAdapters: [createAdapter()],
+            detectedUnset: ['claude'],
+            detectedDisabled: [],
+          },
+        ],
+      });
+
+    await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(saveSyncConfig).not.toHaveBeenCalled();
+    expect(selectProvidersWithAbort).not.toHaveBeenCalled();
+    expect(capture.warn).toContain(
+      'Provider config mismatch detected [project] (unset: claude).',
+    );
+    expect(capture.info).toContain(
+      'Run "oat providers set --scope project --enabled <providers> --disabled <providers>" to configure supported providers.',
+    );
+  });
+
   it('outputs JSON plan when --json set', async () => {
     const { capture, command } = createHarness({
       plans: [createPlan('create_copy')],
+      configAwareResults: [
+        {
+          activeAdapters: [createAdapter()],
+          detectedUnset: ['claude'],
+          detectedDisabled: [],
+        },
+      ],
     });
 
     await runSyncCommand(command, {
@@ -266,6 +471,12 @@ describe('createSyncCommand', () => {
       summary: {
         plannedOperations: 1,
       },
+      providerMismatches: [
+        {
+          detectedUnset: ['claude'],
+          detectedDisabled: [],
+        },
+      ],
     });
   });
 

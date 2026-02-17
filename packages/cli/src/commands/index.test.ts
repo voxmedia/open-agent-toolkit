@@ -21,7 +21,7 @@ describe('command registration', () => {
     expect(commandNames()).toContain('sync');
   });
 
-  it('program has providers command with list and inspect', () => {
+  it('program has providers command with list, inspect, and set', () => {
     const program = createProgram();
     registerCommands(program);
     const providers = program.commands.find(
@@ -31,7 +31,9 @@ describe('command registration', () => {
     expect(providers).toBeDefined();
     const subcommands =
       providers?.commands.map((command) => command.name()) ?? [];
-    expect(subcommands).toEqual(expect.arrayContaining(['list', 'inspect']));
+    expect(subcommands).toEqual(
+      expect.arrayContaining(['list', 'inspect', 'set']),
+    );
   });
 
   it('program has doctor command', () => {

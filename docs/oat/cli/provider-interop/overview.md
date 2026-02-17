@@ -24,7 +24,14 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 - `oat sync`
 - `oat providers list`
 - `oat providers inspect`
+- `oat providers set`
 - `oat doctor`
+
+## Provider enablement model
+
+- Project provider enablement is stored in `.oat/sync/config.json` (`providers.<name>.enabled`).
+- `oat init --scope project` (interactive) prompts for supported providers and persists explicit true/false values.
+- `oat sync --scope project` uses config-aware provider activation and can prompt to remediate detected mismatches.
 
 ## Non-interop namespaces in the same CLI
 

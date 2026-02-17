@@ -107,6 +107,15 @@ pnpm run cli -- sync --scope all --apply
 Notes:
 - `sync` is dry-run by default.
 - `--apply` performs filesystem updates.
+- Project provider support is configured in `.oat/sync/config.json` (set via `oat init` interactive prompt or `oat providers set`).
+
+### 4) Bootstrap a new worktree checkout
+
+```bash
+pnpm run worktree:init
+```
+
+This installs dependencies, builds packages, and applies project-scope sync links in one step.
 
 Maintenance note:
 - `pnpm oat:validate-skills` routes to `oat internal validate-oat-skills` and validates required `oat-*` skill structure.
