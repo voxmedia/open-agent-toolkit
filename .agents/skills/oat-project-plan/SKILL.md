@@ -18,6 +18,10 @@ Prerequisites depend on the project's workflow mode (read `oat_workflow_mode` fr
 - **`quick`**: `discovery.md` required (design is optional). Planning proceeds from discovery decisions and repo knowledge context.
 - **`import`**: Route to `oat-project-import-plan` for initial normalization. This skill handles subsequent edits to an already-normalized plan.
 
+## Plan Format Contract
+
+When creating or editing `plan.md`, follow `oat-project-plan-writing` canonical format rules. This includes stable task IDs (`pNN-tNN`), required sections (`## Reviews`, `## Implementation Complete`, `## References`), required frontmatter keys (`oat_plan_source`, `oat_plan_hil_phases`, `oat_status`, `oat_ready_for`), and review table preservation rules.
+
 ## Mode Assertion
 
 **OAT MODE: Planning**
@@ -279,9 +283,9 @@ This creates traceability: Requirement → Tasks → Implementation
 
 ### Step 9.1: Keep Reviews Table Rows
 
-When updating `plan.md`, keep the full `## Reviews` table from the template:
+Follow the review table preservation rules from `oat-project-plan-writing`:
 - Include both **code** rows (p01/p02/…/final) and **artifact** rows (`spec`, `design`)
-- Add additional rows as needed (e.g., p03), but do not delete the artifact rows
+- Add additional rows as needed (e.g., p03), but never delete existing rows
 
 **Why stable IDs:** Using `p01-t03` instead of "Task 3" prevents broken references when tasks are inserted or reordered.
 
