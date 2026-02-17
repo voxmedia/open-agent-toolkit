@@ -171,7 +171,7 @@ oat_template: false
 ---
 ```
 
-### Step 5: Define Phases
+### Step 6: Define Phases
 
 Break design implementation phases into plan phases.
 
@@ -181,7 +181,7 @@ Break design implementation phases into plan phases.
 - Later phases can depend on earlier phases
 - End each phase with verification
 
-### Step 6: Break Into Tasks
+### Step 7: Break Into Tasks
 
 For each phase, create bite-sized tasks.
 
@@ -226,7 +226,7 @@ git commit -m "feat(p{NN}-t{NN}): {description}"
 ```
 ```
 
-### Step 7: Apply TDD Discipline
+### Step 8: Apply TDD Discipline
 
 For each task that involves code:
 
@@ -242,7 +242,7 @@ For each task that involves code:
 4. Run tests (green)
 5. Commit
 
-### Step 8: Specify Exact Details
+### Step 9: Specify Exact Details
 
 For each task, include:
 - **Files:** Exact paths for create/modify/delete
@@ -257,7 +257,7 @@ For each task, include:
 - Bundled unrelated changes
 - Full implementation code (leave that for oat-project-implement)
 
-### Step 9: Update Requirement Index
+### Step 10: Update Requirement Index
 
 Go back to spec.md and fill in the "Planned Tasks" column in the Requirement Index:
 
@@ -267,7 +267,7 @@ For each requirement (FR/NFR):
 
 This creates traceability: Requirement → Tasks → Implementation
 
-### Step 9.1: Keep Reviews Table Rows
+### Step 10.1: Keep Reviews Table Rows
 
 Follow the review table preservation rules from `oat-project-plan-writing`:
 - Include both **code** rows (p01/p02/…/final) and **artifact** rows (`spec`, `design`)
@@ -275,7 +275,7 @@ Follow the review table preservation rules from `oat-project-plan-writing`:
 
 **Why stable IDs:** Using `p01-t03` instead of "Task 3" prevents broken references when tasks are inserted or reordered.
 
-### Step 10: Configure Plan Phase Checkpoints
+### Step 11: Configure Plan Phase Checkpoints
 
 Ask user: "During implementation, should I stop for review at every phase boundary, or only at specific phases?"
 
@@ -293,7 +293,7 @@ Update plan.md frontmatter with user's choice.
 
 If `## Planning Checklist` is missing (older plans), add it before finalizing and then check both items.
 
-### Step 11: Review Plan with User
+### Step 12: Review Plan with User
 
 Present plan summary:
 - Number of phases
@@ -305,7 +305,7 @@ Ask: "Does this breakdown make sense? Any tasks missing?"
 
 Iterate until user confirms.
 
-### Step 12: Mark Plan Complete
+### Step 13: Mark Plan Complete
 
 Before setting `oat_status: complete`, verify:
 - `oat_plan_hil_phases` is explicitly set in frontmatter (empty array is valid for "every phase")
@@ -322,7 +322,7 @@ oat_last_updated: {today}
 ---
 ```
 
-### Step 13: Update Project State
+### Step 14: Update Project State
 
 Update `"$PROJECT_PATH/state.md"`:
 
@@ -351,7 +351,7 @@ Planning - Ready for implementation
 - ⧗ Awaiting implementation
 ```
 
-### Step 14: Commit Plan
+### Step 15: Commit Plan
 
 ```bash
 git add "$PROJECT_PATH/"
@@ -366,7 +366,7 @@ Total: {N} tasks
 Ready for implementation"
 ```
 
-### Step 15: Output Summary
+### Step 16: Output Summary
 
 ```
 Planning phase complete for {project-name}.
