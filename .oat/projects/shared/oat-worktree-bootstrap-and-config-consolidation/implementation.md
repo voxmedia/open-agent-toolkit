@@ -224,6 +224,7 @@ oat_generated: false
 - Skill validation re-run confirmed all oat skills still pass.
 - Repo dashboard regenerated after implementation updates.
 - Project artifacts updated to completion posture with re-review pending.
+- Full workspace verification passed (`test`, `lint`, `type-check`, `build`).
 
 **Files changed:**
 - `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/implementation.md` - final task tracking and completion posture.
@@ -244,6 +245,8 @@ oat_generated: false
 - Result: pass (`OK: validated 25 oat-* skills`).
 - Run: `bash .oat/scripts/generate-oat-state.sh`
 - Result: dashboard regenerated successfully.
+- Run: `pnpm test && pnpm lint && pnpm type-check && pnpm build`
+- Result: pass (all checks successful).
 
 ## Phase 1 Summary
 
@@ -292,6 +295,10 @@ oat_generated: false
 **Verification performed:**
 - `pnpm oat:validate-skills` (pass)
 - `bash .oat/scripts/generate-oat-state.sh` (pass)
+- `pnpm test` (pass)
+- `pnpm lint` (pass)
+- `pnpm type-check` (pass)
+- `pnpm build` (pass)
 
 **Design deltas (if any):**
 - Backlog and ADR updates were partially pre-seeded before task execution; implementation task aligned and finalized traceability links rather than introducing a brand-new ADR.
