@@ -172,16 +172,16 @@ describe('scaffoldProject', () => {
     const repoRoot = await createRepoRoot();
     tempDirs.push(repoRoot);
     await writeFile(
-      join(repoRoot, '.oat', 'templates', 'discovery.md'),
+      join(repoRoot, '.oat', 'templates', 'plan.md'),
       [
         '---',
         'oat_template: true',
-        'oat_template_name: discovery',
+        'oat_template_name: plan',
         'oat_template: true',
         'oat_template_name: duplicate',
         '---',
         '',
-        '# {Project Name} discovery.md',
+        '# {Project Name} plan.md',
         'Date: YYYY-MM-DD',
       ].join('\n'),
       'utf8',
@@ -196,33 +196,26 @@ describe('scaffoldProject', () => {
       today: '2026-02-16',
     });
 
-    const discovery = await readFile(
-      join(
-        repoRoot,
-        '.oat',
-        'projects',
-        'shared',
-        'multi-marker',
-        'discovery.md',
-      ),
+    const plan = await readFile(
+      join(repoRoot, '.oat', 'projects', 'shared', 'multi-marker', 'plan.md'),
       'utf8',
     );
-    expect(discovery).not.toContain('oat_template: true');
-    expect(discovery).not.toContain('oat_template_name:');
+    expect(plan).not.toContain('oat_template: true');
+    expect(plan).not.toContain('oat_template_name:');
   });
 
   it('does not strip malformed marker keys', async () => {
     const repoRoot = await createRepoRoot();
     tempDirs.push(repoRoot);
     await writeFile(
-      join(repoRoot, '.oat', 'templates', 'discovery.md'),
+      join(repoRoot, '.oat', 'templates', 'plan.md'),
       [
         '---',
         'oat_template : true',
-        'oat_template_name : discovery',
+        'oat_template_name : plan',
         '---',
         '',
-        '# {Project Name} discovery.md',
+        '# {Project Name} plan.md',
         'Date: YYYY-MM-DD',
       ].join('\n'),
       'utf8',
@@ -237,19 +230,19 @@ describe('scaffoldProject', () => {
       today: '2026-02-16',
     });
 
-    const discovery = await readFile(
+    const plan = await readFile(
       join(
         repoRoot,
         '.oat',
         'projects',
         'shared',
         'malformed-marker',
-        'discovery.md',
+        'plan.md',
       ),
       'utf8',
     );
-    expect(discovery).toContain('oat_template : true');
-    expect(discovery).toContain('oat_template_name : discovery');
+    expect(plan).toContain('oat_template : true');
+    expect(plan).toContain('oat_template_name : plan');
   });
 
   it('creates full mode artifacts and excludes project-index', async () => {
@@ -309,12 +302,7 @@ describe('scaffoldProject', () => {
       today: '2026-02-16',
     });
 
-    for (const file of [
-      'state.md',
-      'discovery.md',
-      'plan.md',
-      'implementation.md',
-    ]) {
+    for (const file of ['state.md', 'plan.md', 'implementation.md']) {
       await expect(
         readFile(
           join(repoRoot, '.oat', 'projects', 'shared', 'quick-mode', file),
@@ -323,7 +311,12 @@ describe('scaffoldProject', () => {
       ).resolves.toBeDefined();
     }
 
-    for (const file of ['spec.md', 'design.md', 'project-index.md']) {
+    for (const file of [
+      'discovery.md',
+      'spec.md',
+      'design.md',
+      'project-index.md',
+    ]) {
       await expect(
         readFile(
           join(repoRoot, '.oat', 'projects', 'shared', 'quick-mode', file),
@@ -353,6 +346,15 @@ describe('scaffoldProject', () => {
           'utf8',
         ),
       ).resolves.toBeDefined();
+    }
+
+    for (const file of ['discovery.md', 'spec.md', 'design.md']) {
+      await expect(
+        readFile(
+          join(repoRoot, '.oat', 'projects', 'shared', 'import-mode', file),
+          'utf8',
+        ),
+      ).rejects.toThrow();
     }
 
     await expect(

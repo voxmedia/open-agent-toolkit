@@ -86,6 +86,8 @@ Update `"$PROJECT_PATH/state.md"` frontmatter:
 
 ### Step 2: Capture Discovery (Quick)
 
+If `"$PROJECT_PATH/discovery.md"` is missing, create it from `.oat/templates/discovery.md` first.
+
 Use `"$PROJECT_PATH/discovery.md"` and capture:
 - initial request
 - key decisions
