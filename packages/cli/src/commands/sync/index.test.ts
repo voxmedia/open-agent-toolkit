@@ -406,9 +406,41 @@ describe('createSyncCommand', () => {
     expect(computeSyncPlan.mock.calls[0]?.[0].adapters).toEqual([]);
   });
 
+  it('warns in non-interactive mode and does not mutate config on mismatches', async () => {
+    const { command, saveSyncConfig, capture, selectProvidersWithAbort } =
+      createHarness({
+        interactive: false,
+        configAwareResults: [
+          {
+            activeAdapters: [ADAPTER],
+            detectedUnset: ['claude'],
+            detectedDisabled: [],
+          },
+        ],
+      });
+
+    await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(saveSyncConfig).not.toHaveBeenCalled();
+    expect(selectProvidersWithAbort).not.toHaveBeenCalled();
+    expect(capture.warn).toContain(
+      'Provider config mismatch detected [project] (unset: claude).',
+    );
+    expect(capture.info).toContain(
+      'Run "oat providers set --scope project --enabled <providers> --disabled <providers>" to configure supported providers.',
+    );
+  });
+
   it('outputs JSON plan when --json set', async () => {
     const { capture, command } = createHarness({
       plans: [createPlan('create_copy')],
+      configAwareResults: [
+        {
+          activeAdapters: [ADAPTER],
+          detectedUnset: ['claude'],
+          detectedDisabled: [],
+        },
+      ],
     });
 
     await runSyncCommand(command, {
@@ -423,6 +455,12 @@ describe('createSyncCommand', () => {
       summary: {
         plannedOperations: 1,
       },
+      providerMismatches: [
+        {
+          detectedUnset: ['claude'],
+          detectedDisabled: [],
+        },
+      ],
     });
   });
 

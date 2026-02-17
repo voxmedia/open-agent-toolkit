@@ -35,6 +35,9 @@ import type {
   SyncProviderMismatches,
 } from './sync.types';
 
+const PROVIDER_CONFIG_REMEDIATION =
+  'Run "oat providers set --scope project --enabled <providers> --disabled <providers>" to configure supported providers.';
+
 function defaultDependencies(): SyncCommandDependencies {
   return {
     buildCommandContext,
@@ -232,11 +235,47 @@ async function computePlans(
   return scopePlans;
 }
 
+function logNonInteractiveMismatchGuidance(
+  context: CommandContext,
+  scopePlans: ScopeSyncPlan[],
+): void {
+  if (context.interactive) {
+    return;
+  }
+
+  for (const scopePlan of scopePlans) {
+    if (scopePlan.scope !== 'project' || !scopePlan.providerMismatches) {
+      continue;
+    }
+
+    const { detectedUnset, detectedDisabled } = scopePlan.providerMismatches;
+    if (detectedUnset.length === 0 && detectedDisabled.length === 0) {
+      continue;
+    }
+
+    const parts: string[] = [];
+    if (detectedUnset.length > 0) {
+      parts.push(`unset: ${detectedUnset.join(', ')}`);
+    }
+    if (detectedDisabled.length > 0) {
+      parts.push(`disabled: ${detectedDisabled.join(', ')}`);
+    }
+
+    context.logger.warn(
+      `Provider config mismatch detected [project] (${parts.join('; ')}).`,
+    );
+    if (!context.json) {
+      context.logger.info(PROVIDER_CONFIG_REMEDIATION);
+    }
+  }
+}
+
 async function runSyncCommand(
   context: CommandContext,
   dependencies: SyncCommandDependencies,
 ): Promise<void> {
   const scopePlans = await computePlans(context, dependencies);
+  logNonInteractiveMismatchGuidance(context, scopePlans);
 
   if (context.apply) {
     await runSyncApply(context, scopePlans, dependencies);

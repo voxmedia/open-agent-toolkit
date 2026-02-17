@@ -59,12 +59,17 @@ export function runSyncDryRun(
   dependencies: SyncCommandDependencies,
 ): void {
   const summary = summarize(scopePlans);
+  const providerMismatches = scopePlans
+    .map((scopePlan) => scopePlan.providerMismatches)
+    .filter((mismatch) => mismatch !== undefined);
+
   if (context.json) {
     context.logger.json({
       scope: context.scope,
       apply: false,
       plans: scopePlans.map((scopePlan) => scopePlan.plan),
       summary,
+      providerMismatches,
     });
   } else {
     context.logger.info(formatDryRunOutput(scopePlans, dependencies));

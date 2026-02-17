@@ -89,12 +89,16 @@ export async function runSyncApply(
   }
 
   const summary = buildSummary(scopePlans, applied, failed);
+  const providerMismatches = scopePlans
+    .map((scopePlan) => scopePlan.providerMismatches)
+    .filter((mismatch) => mismatch !== undefined);
   if (context.json) {
     context.logger.json({
       scope: context.scope,
       apply: true,
       plans: scopePlans.map((scopePlan) => scopePlan.plan),
       summary,
+      providerMismatches,
     });
   } else {
     context.logger.info(formatAppliedOutput(scopePlans, dependencies));
