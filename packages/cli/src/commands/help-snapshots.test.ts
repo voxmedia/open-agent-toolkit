@@ -45,6 +45,7 @@ describe('help output snapshots', () => {
         providers        Inspect provider capabilities and paths
         doctor           Run environment and setup diagnostics
         project          Manage OAT project workflows
+        state            OAT repo state commands
         internal         Internal OAT maintenance commands
         help [command]   display help for command
       "
@@ -225,6 +226,23 @@ describe('help output snapshots', () => {
         --no-set-active  Do not update .oat/active-project
         --no-dashboard   Do not refresh .oat/state.md after scaffold
         -h, --help       display help for command
+      "
+    `);
+  });
+
+  it('state refresh --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'state',
+      'refresh',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat state refresh [options]
+
+      Regenerate the OAT repo state dashboard (.oat/state.md)
+
+      Options:
+        -h, --help  display help for command
       "
     `);
   });
