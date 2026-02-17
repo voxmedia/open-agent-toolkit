@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { fileExists } from '@fs/io';
 
 export type ProjectScaffoldMode = 'full' | 'quick' | 'import';
@@ -39,26 +40,6 @@ const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
   quick: ['state.md', 'discovery.md', 'plan.md', 'implementation.md'],
   import: ['state.md', 'plan.md', 'implementation.md'],
 };
-
-async function resolveProjectsRoot(
-  repoRoot: string,
-  env: NodeJS.ProcessEnv,
-): Promise<string> {
-  const envRoot = env.OAT_PROJECTS_ROOT?.trim();
-  if (envRoot) {
-    return envRoot.replace(/\/+$/, '');
-  }
-
-  const rootFile = join(repoRoot, '.oat', 'projects-root');
-  if (await fileExists(rootFile)) {
-    const fromFile = (await readFile(rootFile, 'utf8')).trim();
-    if (fromFile) {
-      return fromFile.replace(/\/+$/, '');
-    }
-  }
-
-  return '.oat/projects/shared';
-}
 
 function validateProjectName(name: string): void {
   if (name.startsWith('-')) {
