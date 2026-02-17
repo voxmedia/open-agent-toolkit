@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 8c90fb2
+oat_last_commit: 2347d5e
 oat_blockers: []
 oat_hil_checkpoints: []
 oat_hil_completed: []
@@ -48,6 +48,7 @@ Implementation tasks complete; awaiting final review.
 - ✓ Completed `p04-t02` (ADR-010 implementation linkage)
 - ✓ Phase 4 complete and advanced to `p05`
 - ✓ Completed `p05-t01` (validation + dashboard refresh)
+- ✓ Final verification checks passed (`test`, `lint`, `type-check`, `build`)
 - ⧗ Awaiting final review (`oat-project-review-provide`)
 
 ## Blockers
