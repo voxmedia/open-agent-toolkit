@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-progress
-description: Create a progress PR description for a specific plan phase (pNN) using OAT artifacts and commit conventions; optionally open a PR
+description: Use when an active OAT project needs a mid-project PR for a completed phase (pNN). Generates a phase-scoped progress PR description from OAT artifacts and commit history, with optional PR creation.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion

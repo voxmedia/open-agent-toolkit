@@ -1,6 +1,6 @@
 ---
 name: oat-idea-ideate
-description: Resume brainstorming on an existing idea through conversational discussion, or start from a scratchpad entry.
+description: Use when continuing brainstorming for an existing idea or starting from a scratchpad entry. Guides conversational ideation and refinement.
 argument-hint: "[--global]"
 disable-model-invocation: true
 user-invocable: true

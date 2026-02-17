@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-description: Use after running oat-project-review-provide - when a review artifact exists and findings need to be converted into actionable plan tasks for gap closure
+description: Use when review findings from oat-project-review-provide need closure. Converts review artifacts into actionable plan tasks.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion

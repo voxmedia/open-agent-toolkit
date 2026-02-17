@@ -1,6 +1,6 @@
 ---
 name: oat-idea-scratchpad
-description: Review scratchpad entries or quick-capture a new idea seed with optional notes.
+description: Use when you need quick idea capture or want to review scratchpad entries. Manages lightweight idea seeds and optional notes.
 argument-hint: "[review | capture] [--global]"
 disable-model-invocation: true
 user-invocable: true

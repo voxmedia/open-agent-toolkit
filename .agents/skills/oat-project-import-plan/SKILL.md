@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-description: Import an external provider markdown plan into an OAT project by preserving the source and normalizing it into canonical plan.md.
+description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: "<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]"
 disable-model-invocation: true
 user-invocable: true

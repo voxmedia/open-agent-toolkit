@@ -1,6 +1,6 @@
 ---
 name: {skill-name}
-description: {One sentence: when to use this skill}
+description: Use when {trigger condition}. {What this skill does for disambiguation.}
 argument-hint: "[args]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep

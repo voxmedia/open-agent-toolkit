@@ -1,6 +1,6 @@
 ---
-name: codex
-description: Use when the user asks to run Codex CLI (codex exec, codex resume) or references OpenAI Codex for code analysis, refactoring, or automated editing
+name: codex-skill
+description: Use when the user asks to run Codex CLI commands (codex exec, codex resume) or references OpenAI Codex workflows. Handles Codex-specific analysis, refactoring, and automated editing tasks.
 disable-model-invocation: true
 user-invocable: true
 ---

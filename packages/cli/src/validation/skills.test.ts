@@ -16,11 +16,11 @@ async function createSkillFile(
   return skillPath;
 }
 
-function validSkillContent(): string {
+function validSkillContent(skillName: string): string {
   return [
     '---',
-    'name: oat-demo',
-    'description: demo',
+    `name: ${skillName}`,
+    'description: Use when validating oat skill structure. Provides a valid fixture for validator tests.',
     'disable-model-invocation: true',
     'user-invocable: true',
     'allowed-tools: Read, Write',
@@ -91,8 +91,8 @@ describe('validateOatSkills', () => {
       'oat-missing-keys',
       [
         '---',
-        'name: oat-demo',
-        'description: demo',
+        'name: oat-missing-keys',
+        'description: Use when validating missing frontmatter keys. Provides fixture content for required-key checks.',
         'disable-model-invocation: true',
         '---',
         '',
@@ -127,8 +127,8 @@ describe('validateOatSkills', () => {
       'oat-no-progress-heading',
       [
         '---',
-        'name: oat-demo',
-        'description: demo',
+        'name: oat-no-progress-heading',
+        'description: Use when validating missing progress heading behavior. Provides fixture content for heading checks.',
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
@@ -156,8 +156,8 @@ describe('validateOatSkills', () => {
       'oat-no-banner',
       [
         '---',
-        'name: oat-demo',
-        'description: demo',
+        'name: oat-no-banner',
+        'description: Use when validating banner requirements. Provides fixture content for banner checks.',
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
@@ -184,12 +184,249 @@ describe('validateOatSkills', () => {
   it('passes for valid oat-* skills and ignores non-oat directories', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
     tempDirs.push(root);
-    await createSkillFile(root, 'oat-valid-one', validSkillContent());
-    await createSkillFile(root, 'oat-valid-two', validSkillContent());
+    await createSkillFile(
+      root,
+      'oat-valid-one',
+      validSkillContent('oat-valid-one'),
+    );
+    await createSkillFile(
+      root,
+      'oat-valid-two',
+      validSkillContent('oat-valid-two'),
+    );
     await createSkillFile(root, 'non-oat-dir', '# ignored');
 
     const result = await validateOatSkills(root);
     expect(result.validatedSkillCount).toBe(2);
     expect(result.findings).toEqual([]);
+  });
+
+  it('reports frontmatter name mismatch with directory', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-name-mismatch',
+      [
+        '---',
+        'name: oat-other-name',
+        'description: Use when validating name matching behavior. Provides fixture content for name checks.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        file: skillPath,
+        message:
+          'Frontmatter name must match directory name (expected: oat-name-mismatch, found: oat-other-name)',
+      }),
+    ]);
+  });
+
+  it('reports description that does not start with an allowed trigger stem', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-bad-description-prefix',
+      [
+        '---',
+        'name: oat-bad-description-prefix',
+        'description: This description does not use the required prefix.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        file: skillPath,
+        message:
+          'Frontmatter description must start with one of: "Use when", "Run when", "Trigger when"',
+      }),
+    ]);
+  });
+
+  it('accepts description that starts with Run when', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    await createSkillFile(
+      root,
+      'oat-run-when-valid',
+      [
+        '---',
+        'name: oat-run-when-valid',
+        'description: Run when validating alternate trigger stems for frontmatter descriptions. Confirms validator flexibility.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('accepts description that starts with Trigger when', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    await createSkillFile(
+      root,
+      'oat-trigger-when-valid',
+      [
+        '---',
+        'name: oat-trigger-when-valid',
+        'description: Trigger when validating alternate trigger stems for frontmatter descriptions. Confirms validator flexibility.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('accepts description that starts with Use when', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    await createSkillFile(
+      root,
+      'oat-use-when-valid',
+      [
+        '---',
+        'name: oat-use-when-valid',
+        'description: Use when validating the default trigger stem for frontmatter descriptions. Confirms validator baseline.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('rejects lowercase trigger stem even if wording matches', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-lowercase-trigger',
+      [
+        '---',
+        'name: oat-lowercase-trigger',
+        'description: use when validating case-sensitive trigger stems. This should fail current validation.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        file: skillPath,
+        message:
+          'Frontmatter description must start with one of: "Use when", "Run when", "Trigger when"',
+      }),
+    ]);
+  });
+
+  it('reports description longer than 500 characters', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const longDescription = `Use when validating description length enforcement. ${'x'.repeat(460)}`;
+    const skillPath = await createSkillFile(
+      root,
+      'oat-description-too-long',
+      [
+        '---',
+        'name: oat-description-too-long',
+        `description: ${longDescription}`,
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        file: skillPath,
+        message: expect.stringContaining(
+          'Frontmatter description exceeds 500 characters',
+        ),
+      }),
+    ]);
   });
 });

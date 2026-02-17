@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-description: Execute implementation plan task-by-task with state tracking and TDD discipline
+description: Use when plan.md is ready for execution. Implements plan tasks sequentially with TDD discipline and state tracking.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion

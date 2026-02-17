@@ -1,6 +1,6 @@
 ---
 name: create-oat-skill
-description: Create a new OAT workflow skill with standard sections, project-root resolution, and progress banner conventions.
+description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
 argument-hint: "[skill-name]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -42,7 +42,7 @@ Parse from `$ARGUMENTS`:
 
 If not provided, ask the user for:
 - Skill name (kebab-case)
-- 1-sentence description (autocomplete trigger)
+- Description using the create-skill formula: `Use when [trigger condition]. [What it does for disambiguation].`
 - Whether this is `oat-*` (should be for this skill)
 - Whether it needs project context (`.oat/active-project`) or is repo-level
 
@@ -94,6 +94,12 @@ Update `AGENTS.md` to include the new skill under `<available_skills>`.
 
 If `npx openskills sync -y` is available, it can be used. Otherwise, update `AGENTS.md` manually.
 
+Run OAT validator and resolve findings:
+
+```bash
+pnpm oat:validate-skills
+```
+
 ## Examples
 
 ### Basic Usage
@@ -113,3 +119,4 @@ We should add a new OAT skill to archive completed projects. Create the skill wi
 - ✅ New skill created at `.agents/skills/{skill-name}/SKILL.md`
 - ✅ Skill includes required OAT sections (mode + progress + project resolution if applicable)
 - ✅ Skill registered in `AGENTS.md`
+- ✅ `pnpm oat:validate-skills` passes

@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-description: Use when ready to review completed work before merging - after implementing a task, phase, or full project; when quality gate needed before PR
+description: Use when completed work in an active OAT project needs a quality gate before merge. Performs a lifecycle-scoped review after a task, phase, or full implementation, unlike oat-review-provide.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), AskUserQuestion

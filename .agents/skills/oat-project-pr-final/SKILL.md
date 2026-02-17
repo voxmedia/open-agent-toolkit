@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-description: Create the final project PR description (into main) using OAT artifacts and final review status; optionally open a PR
+description: Use when an active OAT project has completed all phases and is ready for final merge to main. Generates the final OAT lifecycle PR description from artifacts and review status, with optional PR creation.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion

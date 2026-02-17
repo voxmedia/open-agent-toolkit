@@ -30,6 +30,12 @@ function frontmatterHasKey(frontmatter: string, key: string): boolean {
   return re.test(frontmatter);
 }
 
+function getFrontmatterScalar(frontmatter: string, key: string): string | null {
+  const re = new RegExp(`^${key}:\\s*(.*)$`, 'm');
+  const match = frontmatter.match(re);
+  return match?.[1]?.trim() ?? null;
+}
+
 function hasProgressIndicatorsSection(content: string): boolean {
   return /^## Progress Indicators \(User-Facing\)\s*$/m.test(content);
 }
@@ -77,6 +83,8 @@ export async function validateOatSkills(
     }
 
     for (const key of [
+      'name',
+      'description',
       'disable-model-invocation',
       'user-invocable',
       'allowed-tools',
@@ -86,6 +94,38 @@ export async function validateOatSkills(
           file: skillPath,
           message: `Missing frontmatter key: ${key}`,
         });
+      }
+    }
+
+    const frontmatterName = getFrontmatterScalar(fm, 'name');
+    if (frontmatterName && frontmatterName !== dir) {
+      findings.push({
+        file: skillPath,
+        message: `Frontmatter name must match directory name (expected: ${dir}, found: ${frontmatterName})`,
+      });
+    }
+
+    const frontmatterDescription = getFrontmatterScalar(fm, 'description');
+    if (frontmatterDescription) {
+      if (/^[>|]/.test(frontmatterDescription)) {
+        findings.push({
+          file: skillPath,
+          message: 'Frontmatter description must be a single-line scalar',
+        });
+      } else {
+        if (!/^(Use|Run|Trigger) when\b/.test(frontmatterDescription)) {
+          findings.push({
+            file: skillPath,
+            message:
+              'Frontmatter description must start with one of: "Use when", "Run when", "Trigger when"',
+          });
+        }
+        if (frontmatterDescription.length > 500) {
+          findings.push({
+            file: skillPath,
+            message: `Frontmatter description exceeds 500 characters (${frontmatterDescription.length})`,
+          });
+        }
       }
     }
 

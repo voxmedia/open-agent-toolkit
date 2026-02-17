@@ -1,6 +1,6 @@
 ---
 name: oat-idea-summarize
-description: Finalize an idea by generating a summary document and adding it to the ideas backlog.
+description: Use when an idea is mature enough to move from brainstorming into the backlog. Generates a summary document and adds the idea to the backlog.
 argument-hint: "[--global]"
 disable-model-invocation: true
 user-invocable: true

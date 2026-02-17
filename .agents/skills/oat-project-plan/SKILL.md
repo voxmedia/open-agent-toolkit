@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-description: Create implementation plan from design with bite-sized TDD tasks
+description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion

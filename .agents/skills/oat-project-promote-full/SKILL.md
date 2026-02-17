@@ -1,6 +1,6 @@
 ---
 name: oat-project-promote-full
-description: Promote a quick or imported OAT project to full lifecycle by backfilling missing discovery/spec/design artifacts in place.
+description: Use when a quick or imported project now needs full-lifecycle rigor. Backfills missing discovery, spec, and design artifacts in place.
 argument-hint: "[--project <name>]"
 disable-model-invocation: true
 user-invocable: true
