@@ -200,6 +200,21 @@ describe('oat providers set', () => {
     expect(capture.error[0]).toContain('only --scope project');
   });
 
+  it('rejects user scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
+    tempDirs.push(root);
+
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, {
+      globalArgs: ['--scope', 'user'],
+      commandArgs: ['--enabled', 'claude'],
+    });
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.error[0]).toContain('only --scope project');
+  });
+
   it('preserves existing provider strategy when updating enabled', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
     tempDirs.push(root);
