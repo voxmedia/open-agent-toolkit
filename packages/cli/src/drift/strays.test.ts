@@ -117,6 +117,7 @@ describe('detectStrays', () => {
         name: 'canonical-skill',
         type: 'skill',
         canonicalPath: join(root, '.agents', 'skills', 'canonical-skill'),
+        isFile: false,
       },
     ];
 
@@ -172,6 +173,7 @@ describe('detectStrays', () => {
         name: 'canonical-skill',
         type: 'skill',
         canonicalPath: join(root, '.agents', 'skills', 'canonical-skill'),
+        isFile: false,
       },
     ];
 

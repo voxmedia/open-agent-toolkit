@@ -1,6 +1,6 @@
 import { lstat, readlink, stat } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { computeDirectoryHash } from '@manifest/hash';
+import { computeContentHash } from '@manifest/hash';
 import type { ManifestEntry } from '@manifest/manifest.types';
 import type { DriftReport } from './drift.types';
 
@@ -77,7 +77,7 @@ export async function detectDrift(
     return createReport(entry, { status: 'in_sync' });
   }
 
-  const currentHash = await computeDirectoryHash(providerPath);
+  const currentHash = await computeContentHash(providerPath, entry.isFile);
   if (entry.contentHash === currentHash) {
     return createReport(entry, { status: 'in_sync' });
   }

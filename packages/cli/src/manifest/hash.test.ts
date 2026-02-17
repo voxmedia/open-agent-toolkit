@@ -3,7 +3,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CliError } from '@errors/index';
 import { afterEach, describe, expect, it } from 'vitest';
-import { computeDirectoryHash } from './hash';
+import {
+  computeContentHash,
+  computeDirectoryHash,
+  computeFileHash,
+} from './hash';
 
 describe('computeDirectoryHash', () => {
   const tempDirs: string[] = [];
@@ -69,5 +73,86 @@ describe('computeDirectoryHash', () => {
     await expect(computeDirectoryHash(missing)).rejects.toBeInstanceOf(
       CliError,
     );
+  });
+});
+
+describe('computeFileHash', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => {
+        await rm(dir, { recursive: true, force: true });
+      }),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('produces deterministic SHA-256 for a file', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oat-hash-file-'));
+    tempDirs.push(dir);
+    const filePath = join(dir, 'agent.md');
+    await writeFile(filePath, '# My Agent\n', 'utf8');
+
+    const first = await computeFileHash(filePath);
+    const second = await computeFileHash(filePath);
+
+    expect(first).toMatch(/^[a-f0-9]{64}$/);
+    expect(first).toBe(second);
+  });
+
+  it('hash changes when file content changes', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oat-hash-file-'));
+    tempDirs.push(dir);
+    const filePath = join(dir, 'agent.md');
+    await writeFile(filePath, 'version one', 'utf8');
+
+    const before = await computeFileHash(filePath);
+    await writeFile(filePath, 'version two', 'utf8');
+    const after = await computeFileHash(filePath);
+
+    expect(before).not.toBe(after);
+  });
+
+  it('throws CliError when file does not exist', async () => {
+    const missing = join(tmpdir(), 'oat-hash-file-missing-does-not-exist.md');
+
+    await expect(computeFileHash(missing)).rejects.toBeInstanceOf(CliError);
+  });
+});
+
+describe('computeContentHash', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => {
+        await rm(dir, { recursive: true, force: true });
+      }),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('dispatches to computeFileHash for file entries', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oat-hash-content-'));
+    tempDirs.push(dir);
+    const filePath = join(dir, 'agent.md');
+    await writeFile(filePath, '# Agent\n', 'utf8');
+
+    const contentHash = await computeContentHash(filePath, true);
+    const fileHash = await computeFileHash(filePath);
+
+    expect(contentHash).toBe(fileHash);
+  });
+
+  it('dispatches to computeDirectoryHash for directory entries', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oat-hash-content-'));
+    tempDirs.push(dir);
+    await writeFile(join(dir, 'file.txt'), 'content', 'utf8');
+
+    const contentHash = await computeContentHash(dir, false);
+    const dirHash = await computeDirectoryHash(dir);
+
+    expect(contentHash).toBe(dirHash);
   });
 });

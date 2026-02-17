@@ -254,6 +254,120 @@ describe('sync engine integration', () => {
     expect(skillEntry?.contentHash).toMatch(/^[a-f0-9]{64}$/);
   });
 
+  it('file-based agent: syncs via symlink', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createTestAdapter();
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'agents', 'my-agent.md'),
+      '# My Agent\n',
+      'utf8',
+    );
+
+    const canonical = await scanCanonical(root, 'project');
+    const plan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(plan, createEmptyManifest(), manifestPath);
+
+    const agentStat = await lstat(
+      join(root, '.claude', 'agents', 'my-agent.md'),
+    );
+    expect(agentStat.isSymbolicLink()).toBe(true);
+  });
+
+  it('file-based agent: syncs via copy mode with correct hash', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createTestAdapter({ defaultStrategy: 'copy' });
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'agents', 'my-agent.md'),
+      '# My Agent\n',
+      'utf8',
+    );
+
+    const canonical = await scanCanonical(root, 'project');
+    const plan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(plan, createEmptyManifest(), manifestPath);
+
+    const copiedContent = await readFile(
+      join(root, '.claude', 'agents', 'my-agent.md'),
+      'utf8',
+    );
+    expect(copiedContent).toBe('# My Agent\n');
+
+    const manifest = await loadManifest(manifestPath);
+    const agentEntry = manifest.entries.find(
+      (entry) => entry.canonicalPath === '.agents/agents/my-agent.md',
+    );
+    expect(agentEntry?.strategy).toBe('copy');
+    expect(agentEntry?.contentHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it('file-based agent: removal cleans up provider path', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createTestAdapter();
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'agents', 'my-agent.md'),
+      '# My Agent\n',
+      'utf8',
+    );
+
+    const firstCanonical = await scanCanonical(root, 'project');
+    const firstPlan = await computeSyncPlan({
+      canonical: firstCanonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(firstPlan, createEmptyManifest(), manifestPath);
+
+    await rm(join(root, '.agents', 'agents', 'my-agent.md'));
+
+    const canonical = await scanCanonical(root, 'project');
+    const manifest = await loadManifest(manifestPath);
+    const plan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest,
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(plan.removals.some((entry) => entry.operation === 'remove')).toBe(
+      true,
+    );
+
+    await executeSyncPlan(plan, manifest, manifestPath);
+    await expect(
+      lstat(join(root, '.claude', 'agents', 'my-agent.md')),
+    ).rejects.toThrow();
+  });
+
   it('scope filtering: user scope skips agents', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);

@@ -1,7 +1,7 @@
 import { access, lstat, readlink } from 'node:fs/promises';
 import { basename, dirname, join, normalize, resolve } from 'node:path';
 import type { SyncConfig } from '@config/sync-config';
-import { computeDirectoryHash } from '@manifest/hash';
+import { computeContentHash } from '@manifest/hash';
 import { findEntry } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
@@ -112,11 +112,13 @@ function createRemovalEntry(
   scopeRoot: string,
 ): RemovalSyncPlanEntry {
   const canonicalRelative = manifestEntry.canonicalPath;
+  const name = basename(canonicalRelative);
   return {
     canonical: {
-      name: basename(canonicalRelative),
+      name,
       type: manifestEntry.contentType,
       canonicalPath: resolve(scopeRoot, canonicalRelative),
+      isFile: manifestEntry.isFile,
     },
     provider: manifestEntry.provider,
     providerPath: resolve(scopeRoot, manifestEntry.providerPath),
@@ -190,10 +192,14 @@ async function classifyOperation(
     };
   }
 
-  const canonicalHash = await computeDirectoryHash(
+  const canonicalHash = await computeContentHash(
     canonicalEntry.canonicalPath,
+    canonicalEntry.isFile,
   );
-  const providerHash = await computeDirectoryHash(providerPath);
+  const providerHash = await computeContentHash(
+    providerPath,
+    canonicalEntry.isFile,
+  );
 
   if (canonicalHash === providerHash) {
     return {

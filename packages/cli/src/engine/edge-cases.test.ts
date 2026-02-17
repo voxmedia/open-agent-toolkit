@@ -96,7 +96,7 @@ describe('edge cases', () => {
     );
   });
 
-  it('handles .agents/skills/ with nested non-directory entries', async () => {
+  it('handles .agents/skills/ with non-directory entries filtered out', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-edge-nondir-'));
     tempDirs.push(root);
     const skillsDir = join(root, '.agents', 'skills');
@@ -119,6 +119,7 @@ describe('edge cases', () => {
     expect(entries[0]).toMatchObject({
       name: 'actual-skill',
       type: 'skill',
+      isFile: false,
     });
   });
 });

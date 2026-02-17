@@ -22,6 +22,40 @@ async function collectFiles(
   }
 }
 
+export async function computeFileHash(filePath: string): Promise<string> {
+  try {
+    const content = await readFile(filePath);
+    const hash = createHash('sha256');
+    hash.update(content);
+    return hash.digest('hex');
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      throw new CliError(`File does not exist: ${filePath}`);
+    }
+
+    throw new CliError(
+      `Failed to compute hash for ${filePath}: ${
+        error instanceof Error ? error.message : 'unknown error'
+      }`,
+      2,
+    );
+  }
+}
+
+export async function computeContentHash(
+  contentPath: string,
+  isFile: boolean,
+): Promise<string> {
+  return isFile
+    ? computeFileHash(contentPath)
+    : computeDirectoryHash(contentPath);
+}
+
 export async function computeDirectoryHash(dirPath: string): Promise<string> {
   const root = resolve(dirPath);
   const files: string[] = [];
