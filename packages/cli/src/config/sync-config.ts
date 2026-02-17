@@ -16,6 +16,7 @@ export const SyncConfigSchema = z.object({
 });
 
 export type ProviderSyncConfig = z.infer<typeof ProviderConfigSchema>;
+// `providers` is optional in persisted JSON but always populated after normalization.
 export type SyncConfig = z.infer<typeof SyncConfigSchema> & {
   providers: Record<string, ProviderSyncConfig>;
 };
