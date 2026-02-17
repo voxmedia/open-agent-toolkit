@@ -394,6 +394,7 @@ Adopt option 2:
 - **Drivers:** Avoid configuration-file sprawl in `.oat/` while preserving backward compatibility for active workflow skills.
 - **Related:**
   - `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
+  - `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
   - `.oat/repo/reference/backlog.md`
   - `.oat/sync/config.json`
 
