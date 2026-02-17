@@ -200,7 +200,7 @@ git commit -m "fix({task_id}): {description}"
 
 ### Step 6: Update Plan.md
 
-Add new tasks to plan.md in the target phase.
+Add new tasks to plan.md in the target phase. When adding or editing tasks, preserve/restore shared `plan.md` invariants per the `oat-project-plan-writing` contract (stable task IDs, required sections, review table preservation, accurate `## Implementation Complete` totals).
 
 **Review-fix bookkeeping (required):**
 - When you add review-generated fix tasks:
