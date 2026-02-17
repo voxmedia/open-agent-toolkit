@@ -53,6 +53,8 @@ import { Command } from 'commander';
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
+const PROVIDER_CONFIG_REMEDIATION =
+  'Run "oat providers set --scope project --enabled <providers> --disabled <providers>" to configure supported providers.';
 const HOOK_PROMPT = 'Install optional pre-commit hook for drift warnings?';
 const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';
@@ -307,6 +309,10 @@ async function runInitCommand(
     }
 
     await dependencies.ensureCanonicalDirs(scopeRoot, scope);
+
+    if (scope === 'project' && !context.interactive && !context.json) {
+      context.logger.info(PROVIDER_CONFIG_REMEDIATION);
+    }
 
     if (scope === 'project' && context.interactive) {
       const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');

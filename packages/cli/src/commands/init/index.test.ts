@@ -43,6 +43,8 @@ interface RunInitArgs {
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
+const PROVIDER_CONFIG_REMEDIATION =
+  'Run "oat providers set --scope project --enabled <providers> --disabled <providers>" to configure supported providers.';
 const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';
 
@@ -81,6 +83,7 @@ function createHarness(options: HarnessOptions = {}): {
   confirmAction: ReturnType<typeof vi.fn>;
   selectManyWithAbort: ReturnType<typeof vi.fn>;
   selectProvidersWithAbort: ReturnType<typeof vi.fn>;
+  loadSyncConfig: ReturnType<typeof vi.fn>;
   saveSyncConfig: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
   installHook: ReturnType<typeof vi.fn>;
@@ -115,6 +118,9 @@ function createHarness(options: HarnessOptions = {}): {
   const saveSyncConfig = vi.fn(async (_path: string, config: SyncConfig) => {
     return config;
   });
+  const loadSyncConfig = vi.fn(
+    async () => options.loadedSyncConfig ?? DEFAULT_SYNC_CONFIG,
+  );
   const adapters =
     options.adapters ??
     ([
@@ -164,9 +170,7 @@ function createHarness(options: HarnessOptions = {}): {
     selectManyWithAbort,
     selectProvidersWithAbort,
     getAdapters: () => adapters,
-    loadSyncConfig: vi.fn(
-      async () => options.loadedSyncConfig ?? DEFAULT_SYNC_CONFIG,
-    ),
+    loadSyncConfig,
     saveSyncConfig,
     getConfigAwareAdapters: vi.fn(async () => ({
       activeAdapters: adapters.filter((adapter) => adapter.name === 'claude'),
@@ -193,6 +197,7 @@ function createHarness(options: HarnessOptions = {}): {
     confirmAction,
     selectManyWithAbort,
     selectProvidersWithAbort,
+    loadSyncConfig,
     saveSyncConfig,
     adoptStray,
     installHook,
@@ -313,6 +318,46 @@ describe('createInitCommand', () => {
         }),
       }),
     );
+  });
+
+  it('non-interactive mode does not mutate provider config and shows guidance', async () => {
+    const { command, capture, selectProvidersWithAbort, saveSyncConfig } =
+      createHarness({
+        interactive: false,
+        hookInstalled: true,
+      });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(selectProvidersWithAbort).not.toHaveBeenCalled();
+    expect(saveSyncConfig).not.toHaveBeenCalled();
+    expect(capture.info).toContain(PROVIDER_CONFIG_REMEDIATION);
+  });
+
+  it('scope all applies provider config prompt only for project scope', async () => {
+    const {
+      command,
+      selectProvidersWithAbort,
+      saveSyncConfig,
+      ensureCanonicalDirs,
+    } = createHarness({
+      interactive: true,
+      hookInstalled: true,
+      providerSelectResponses: [['claude']],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'all'] });
+
+    expect(selectProvidersWithAbort).toHaveBeenCalledTimes(1);
+    expect(saveSyncConfig).toHaveBeenCalledTimes(1);
+    expect(saveSyncConfig.mock.calls[0]?.[0]).toBe(
+      '/tmp/workspace/.oat/sync/config.json',
+    );
+    expect(ensureCanonicalDirs).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      'project',
+    );
+    expect(ensureCanonicalDirs).toHaveBeenCalledWith('/tmp/home', 'user');
   });
 
   it('detects strays and prompts for adoption in interactive mode', async () => {
