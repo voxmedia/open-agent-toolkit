@@ -288,10 +288,10 @@ async function runSyncCommand(
 export function createSyncCommand(
   overrides: Partial<SyncCommandDependencies> = {},
 ): Command {
-  const dependencies = {
+  const dependencies: SyncCommandDependencies = {
     ...defaultDependencies(),
     ...overrides,
-  } as SyncCommandDependencies;
+  };
 
   return new Command('sync')
     .description('Sync canonical content to provider views')
