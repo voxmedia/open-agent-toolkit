@@ -110,16 +110,16 @@ If already present, write timestamped copy:
 
 ### Step 3: Normalize Into Canonical OAT plan.md
 
-Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map imported content into:
+Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map imported content into the canonical structure. Apply `oat-project-plan-writing` invariants after mapping:
 - `## Phase N`
-- `### Task pNN-tNN`
+- `### Task pNN-tNN` (stable task IDs)
 - Step structure (RED/GREEN/Refactor/Verify/Commit)
-- `## Reviews` table
-- `## Implementation Complete`
+- Required sections: `## Reviews`, `## Implementation Complete`, `## References`
+- Review table preservation rules (never delete existing rows)
 
 Normalization rules:
 - Preserve original intent and ordering from source.
-- Generate stable task IDs.
+- Generate stable task IDs per `oat-project-plan-writing` format (`pNN-tNN`).
 - Where source lacks test/verify details, add explicit TODO-style placeholders with clear expected output.
 - Keep tasks executable and atomic.
 
