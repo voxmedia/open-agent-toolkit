@@ -23,6 +23,7 @@
 - `pnpm dev` - Run workspace development tasks
 - `pnpm run cli -- help` - Run the OAT CLI help from repo root
 - `pnpm run cli -- <command> [options]` - Execute specific OAT CLI commands during local testing
+- After creating or switching to a worktree, run `pnpm run worktree:init` before using the CLI workflow.
 
 ### Import Path Convention
 - Prefer same-directory imports (`./...`) for local modules.
