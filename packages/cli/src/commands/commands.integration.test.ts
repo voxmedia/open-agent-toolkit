@@ -104,6 +104,7 @@ async function seedValidOatSkill(
     [
       '---',
       `name: ${skillName}`,
+      'description: Use when validating internal CLI skill checks. Provides a valid oat-* fixture for integration tests.',
       'disable-model-invocation: true',
       'user-invocable: true',
       'allowed-tools: Read, Write',

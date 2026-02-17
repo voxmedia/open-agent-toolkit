@@ -1,6 +1,6 @@
 ---
 name: oat-project-progress
-description: Check project progress and get routed to the appropriate next skill
+description: Use when resuming work, checking status, or unsure which OAT skill to run next. Evaluates project progress and routes to the appropriate next step.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), AskUserQuestion

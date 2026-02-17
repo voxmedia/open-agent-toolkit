@@ -1,6 +1,6 @@
 ---
 name: oat-project-spec
-description: Create formal specification from discovery insights with structured requirements
+description: Use when discovery is complete and the project needs a formal requirements baseline. Transforms discovery output into structured specification artifacts.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion

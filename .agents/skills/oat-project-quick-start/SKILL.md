@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-description: Create a lightweight OAT quick workflow project that captures discovery and generates a runnable implementation plan without requiring spec/design.
+description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan.
 argument-hint: "<project-name>"
 disable-model-invocation: true
 user-invocable: true

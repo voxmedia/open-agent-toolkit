@@ -1,6 +1,6 @@
 ---
 name: create-skill
-description: Create a new skill in .agents/skills/ following the openskills standard. Use when adding reusable workflows or capabilities for AI coding agents.
+description: Use when adding a reusable workflow skill for AI coding agents. Scaffolds a new .agents/skills skill using the Agent Skills open standard.
 argument-hint: "[skill-name]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -49,7 +49,7 @@ If not provided in arguments, ask for:
 **Required:**
 
 - **Skill name**: kebab-case identifier (e.g., `create-ticket`, `docs-review`)
-- **Description**: When to use this skill (shown in autocomplete)
+- **Description**: Must follow the formula `Use when [trigger condition]. [What it does for disambiguation].`
 - **Purpose**: What problem does this skill solve?
 
 **Optional:**
@@ -94,7 +94,7 @@ For detailed guidance, see `references/skill-template.md`.
 ```markdown
 ---
 name: skill-name
-description: When to use this skill (primary trigger mechanism)
+description: Use when [trigger condition]. [What it does for disambiguation].
 argument-hint: "[arg1] [--flag]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep
@@ -172,6 +172,7 @@ The description is your **primary routing mechanism** — agents load only `name
 2. **Include keywords for disambiguation**: nouns + verbs that differentiate from similar skills
 3. **Don't summarize the workflow**: providers route on description without reading the body
 4. **Front-load trigger keywords in the first 50 characters** (truncation may occur at scale)
+5. **Use this exact pattern by default**: `Use when [trigger condition]. [What it does for disambiguation].`
 
 Examples:
 - Bad: "Reviews code by checking spec compliance, then code quality, then creates PR"
@@ -225,6 +226,7 @@ Verify:
 - Frontmatter syntax is valid
 - Skill appears in `AGENTS.md`
 - Examples include both invocation styles
+- If the skill name starts with `oat-`, run `pnpm oat:validate-skills` and fix any findings
 
 Provide:
 
@@ -350,6 +352,7 @@ Successful skill creation:
 
 - ✅ Skill created at `.agents/skills/{name}/SKILL.md`
 - ✅ `npx openskills sync -y` run successfully
+- ✅ For `oat-*` skills, `pnpm oat:validate-skills` passes
 - ✅ Skill appears in AGENTS.md
 - ✅ Frontmatter valid
 - ✅ Workflow uses "Step" naming

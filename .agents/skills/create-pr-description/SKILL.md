@@ -1,6 +1,6 @@
 ---
 name: create-pr-description
-description: Create a comprehensive PR description document based on git changes, planning documents, and project context. Use when ready to create or finalize a pull request description.
+description: Use when you need a general PR description outside phase-scoped OAT PR flows. Generates a comprehensive PR summary from git changes, planning artifacts, and project context.
 argument-hint: "[project-name] [--sha=<commit>] [--jira=<ticket>] [--detail=min|mod|max]"
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Glob, Grep, AskUserQuestion

@@ -1,6 +1,6 @@
 ---
 name: oat-idea-new
-description: Create a new idea directory for lightweight brainstorming and capture, then hand off to oat-idea-ideate.
+description: Use when starting ideation for a new concept or problem. Creates an idea directory for lightweight capture and handoff to ongoing ideation.
 argument-hint: "<idea-name> [--global]"
 disable-model-invocation: true
 user-invocable: true

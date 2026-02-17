@@ -1,6 +1,6 @@
 ---
 name: review-backlog
-description: Review a backlog (and optional roadmap) to produce a structured analysis with value/effort ratings, dependency mapping, parallel lanes, and execution recommendations.
+description: Use when prioritizing backlog work or evaluating a roadmap. Produces value-effort ratings, dependency mapping, and execution recommendations.
 argument-hint: "[backlog-path] [--roadmap=<path>] [--output=<path>]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash(git:*), AskUserQuestion, Task

@@ -1,6 +1,6 @@
 ---
 name: oat-project-design
-description: Create detailed technical design from specification with architecture and implementation details
+description: Use when discovery and specification are complete and implementation-ready decisions are needed. Produces detailed technical design artifacts, including architecture and interfaces.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion

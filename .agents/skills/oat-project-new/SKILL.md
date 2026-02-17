@@ -1,6 +1,6 @@
 ---
 name: oat-project-new
-description: Create a new OAT project directory under {PROJECTS_ROOT}, scaffold artifacts from templates, and set it as the active project.
+description: Use when starting a full-lifecycle OAT project from scratch. Scaffolds a new project under PROJECTS_ROOT and sets it active.
 argument-hint: "<project-name> [--force]"
 disable-model-invocation: true
 user-invocable: true

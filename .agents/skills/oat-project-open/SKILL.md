@@ -1,6 +1,6 @@
 ---
 name: oat-project-open
-description: Set the active project with validation
+description: Use when switching to or resuming a specific OAT project. Sets the active project pointer with validation.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
