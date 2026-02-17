@@ -29,28 +29,30 @@ interface RunSyncArgs {
   commandArgs?: string[];
 }
 
-const ADAPTER: ProviderAdapter = {
-  name: 'claude',
-  displayName: 'Claude Code',
-  defaultStrategy: 'symlink',
-  projectMappings: [
-    {
-      contentType: 'skill',
-      canonicalDir: '.agents/skills',
-      providerDir: '.claude/skills',
-      nativeRead: false,
-    },
-  ],
-  userMappings: [
-    {
-      contentType: 'skill',
-      canonicalDir: '.agents/skills',
-      providerDir: '.claude/skills',
-      nativeRead: false,
-    },
-  ],
-  detect: async () => true,
-};
+function createAdapter(name = 'claude'): ProviderAdapter {
+  return {
+    name,
+    displayName: name === 'claude' ? 'Claude Code' : name,
+    defaultStrategy: 'symlink',
+    projectMappings: [
+      {
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: `.${name}/skills`,
+        nativeRead: false,
+      },
+    ],
+    userMappings: [
+      {
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: `.${name}/skills`,
+        nativeRead: false,
+      },
+    ],
+    detect: async () => true,
+  };
+}
 
 function createManifest(): Manifest {
   return {
@@ -102,12 +104,14 @@ function createEmptyPlan(scope: SyncPlan['scope'] = 'project'): SyncPlan {
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
+  adapter: ProviderAdapter;
   computeSyncPlan: ReturnType<typeof vi.fn>;
   executeSyncPlan: ReturnType<typeof vi.fn>;
   saveSyncConfig: ReturnType<typeof vi.fn>;
   selectProvidersWithAbort: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
+  const adapter = createAdapter();
   const plansQueue = options.plans
     ? [...options.plans]
     : [createPlan('create_symlink')];
@@ -127,7 +131,7 @@ function createHarness(options: HarnessOptions = {}): {
     ? [...options.configAwareResults]
     : [
         {
-          activeAdapters: [ADAPTER],
+          activeAdapters: [adapter],
           detectedUnset: [],
           detectedDisabled: [],
         },
@@ -135,7 +139,7 @@ function createHarness(options: HarnessOptions = {}): {
   const getConfigAwareAdapters = vi.fn(async () => {
     return (
       configAwareQueue.shift() ?? {
-        activeAdapters: [ADAPTER],
+        activeAdapters: [adapter],
         detectedUnset: [],
         detectedDisabled: [],
       }
@@ -172,7 +176,7 @@ function createHarness(options: HarnessOptions = {}): {
     ),
     saveSyncConfig,
     scanCanonical: vi.fn(async () => [createCanonicalEntry()]),
-    getAdapters: () => [ADAPTER],
+    getAdapters: () => [adapter],
     getConfigAwareAdapters,
     selectProvidersWithAbort,
     computeSyncPlan,
@@ -185,6 +189,7 @@ function createHarness(options: HarnessOptions = {}): {
   return {
     capture,
     command,
+    adapter,
     computeSyncPlan,
     executeSyncPlan,
     saveSyncConfig,
@@ -304,18 +309,19 @@ describe('createSyncCommand', () => {
   it('prompts to remediate detected unset providers in interactive mode', async () => {
     const {
       command,
+      adapter,
       selectProvidersWithAbort,
       saveSyncConfig,
       computeSyncPlan,
     } = createHarness({
       configAwareResults: [
         {
-          activeAdapters: [ADAPTER],
+          activeAdapters: [createAdapter()],
           detectedUnset: ['claude'],
           detectedDisabled: [],
         },
         {
-          activeAdapters: [ADAPTER],
+          activeAdapters: [createAdapter()],
           detectedUnset: [],
           detectedDisabled: [],
         },
@@ -337,31 +343,37 @@ describe('createSyncCommand', () => {
         }),
       }),
     );
-    expect(computeSyncPlan.mock.calls[0]?.[0].adapters).toEqual([ADAPTER]);
+    expect(
+      (computeSyncPlan.mock.calls[0]?.[0].adapters as ProviderAdapter[]).map(
+        (current) => current.name,
+      ),
+    ).toEqual([adapter.name]);
   });
 
   it('prompts to remediate detected disabled providers in interactive mode', async () => {
-    const { command, saveSyncConfig, computeSyncPlan } = createHarness({
-      configAwareResults: [
-        {
-          activeAdapters: [],
-          detectedUnset: [],
-          detectedDisabled: ['claude'],
-        },
-        {
-          activeAdapters: [ADAPTER],
-          detectedUnset: [],
-          detectedDisabled: [],
-        },
-      ],
-      providerSelectResponses: [['claude']],
-      loadedSyncConfig: {
-        ...DEFAULT_SYNC_CONFIG,
-        providers: {
-          claude: { enabled: false },
+    const { command, adapter, saveSyncConfig, computeSyncPlan } = createHarness(
+      {
+        configAwareResults: [
+          {
+            activeAdapters: [],
+            detectedUnset: [],
+            detectedDisabled: ['claude'],
+          },
+          {
+            activeAdapters: [createAdapter()],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        providerSelectResponses: [['claude']],
+        loadedSyncConfig: {
+          ...DEFAULT_SYNC_CONFIG,
+          providers: {
+            claude: { enabled: false },
+          },
         },
       },
-    });
+    );
 
     await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
 
@@ -373,14 +385,18 @@ describe('createSyncCommand', () => {
         }),
       }),
     );
-    expect(computeSyncPlan.mock.calls[0]?.[0].adapters).toEqual([ADAPTER]);
+    expect(
+      (computeSyncPlan.mock.calls[0]?.[0].adapters as ProviderAdapter[]).map(
+        (current) => current.name,
+      ),
+    ).toEqual([adapter.name]);
   });
 
   it('persists declined detected unset providers as disabled', async () => {
     const { command, saveSyncConfig, computeSyncPlan } = createHarness({
       configAwareResults: [
         {
-          activeAdapters: [ADAPTER],
+          activeAdapters: [createAdapter()],
           detectedUnset: ['claude'],
           detectedDisabled: [],
         },
@@ -412,7 +428,7 @@ describe('createSyncCommand', () => {
         interactive: false,
         configAwareResults: [
           {
-            activeAdapters: [ADAPTER],
+            activeAdapters: [createAdapter()],
             detectedUnset: ['claude'],
             detectedDisabled: [],
           },
@@ -436,7 +452,7 @@ describe('createSyncCommand', () => {
       plans: [createPlan('create_copy')],
       configAwareResults: [
         {
-          activeAdapters: [ADAPTER],
+          activeAdapters: [createAdapter()],
           detectedUnset: ['claude'],
           detectedDisabled: [],
         },
