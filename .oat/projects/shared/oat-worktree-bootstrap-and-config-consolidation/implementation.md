@@ -266,6 +266,32 @@ oat_generated: false
 
 ---
 
+### Review Received: final
+
+**Date:** 2026-02-17  
+**Review artifact:** `reviews/final-review-2026-02-16.md`
+
+**Findings:**
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** none
+
+**Deferred Findings (Medium):**
+- None. Deferred-medium resurfacing check complete for final scope.
+
+**Deferred Findings (Minor):**
+- README note for optional skill mention (`oat-worktree-bootstrap`) deferred.
+- Precedence-list numbering harmonization between skill and conventions reference deferred.
+
+**Disposition:** Final review passed; no Critical/Important/Medium gaps requiring fix tasks.
+
+**Next:** Proceed with `oat-project-pr-final`.
+
+---
+
 ## References
 
 - Plan: `plan.md`
