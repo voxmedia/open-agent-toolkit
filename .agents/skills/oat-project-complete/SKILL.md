@@ -67,7 +67,28 @@ fi
 IMPL_FILE="${PROJECT_PATH}/implementation.md"
 
 if [[ -f "$IMPL_FILE" ]]; then
-  if rg -n "Deferred Findings \(Medium|Deferred Findings \(Medium/Minor" "$IMPL_FILE" >/dev/null 2>&1; then
+  medium_section=$(awk '
+    BEGIN { in_medium = 0 }
+    /^\*\*Deferred Findings \(Medium\):\*\*/ { in_medium = 1; next }
+    /^\*\*Deferred Findings \(Medium\/Minor\):\*\*/ { in_medium = 1; next }
+    in_medium && /^\*\*Deferred Findings \(Minor\):\*\*/ { in_medium = 0 }
+    in_medium && /^\*\*Disposition:\*\*/ { in_medium = 0 }
+    in_medium && /^---$/ { in_medium = 0 }
+    in_medium { print }
+  ' "$IMPL_FILE")
+
+  has_unresolved_medium="false"
+  while IFS= read -r line; do
+    if [[ "$line" =~ ^[[:space:]]*-[[:space:]]+ ]]; then
+      item=$(echo "$line" | sed -E 's/^[[:space:]]*-[[:space:]]+//')
+      if ! echo "$item" | grep -qiE '^none([[:space:]]|[[:punct:]]|$)'; then
+        has_unresolved_medium="true"
+        break
+      fi
+    fi
+  done <<< "$medium_section"
+
+  if [[ "$has_unresolved_medium" == "true" ]]; then
     echo "Warning: Deferred Medium findings are recorded in implementation.md."
     echo "Recommendation: resurface via final review and explicitly disposition before completion."
   fi
@@ -75,7 +96,7 @@ fi
 ```
 
 After Step 3 and 3.5 warnings:
-- Ask user for explicit confirmation to continue if final review is not `passed` OR deferred Medium findings are present.
+- Ask user for explicit confirmation to continue if final review is not `passed` OR unresolved deferred Medium findings are present.
 - Suggested prompt: "Completion gates are not fully satisfied. Continue marking lifecycle complete anyway?"
 
 ### Step 4: Check for PR Description (Warning Only)
