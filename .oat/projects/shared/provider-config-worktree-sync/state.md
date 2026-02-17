@@ -1,41 +1,42 @@
 ---
-oat_current_task: p03-t02
-oat_last_commit: 9ec9462
+oat_current_task: null
+oat_last_commit: 9fb057d
 oat_blockers: []
 oat_hil_checkpoints: []
 oat_hil_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_workflow_mode: import
 oat_workflow_origin: imported
+oat_lifecycle: complete
 oat_generated: false
 ---
 
 # Project State: provider-config-worktree-sync
 
-**Status:** Plan Complete (Imported)
+**Status:** Implementation Complete
 **Started:** 2026-02-17
 **Last Updated:** 2026-02-17
 
 ## Current Phase
 
-Plan complete from imported external source; ready to begin implementation.
+Implementation complete. All plan tasks (`p01`-`p06`) are finished and verification is green.
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (optional for import workflow)
-- **Spec:** Optional (not required for import workflow)
-- **Design:** Optional (not required for import workflow)
 - **Plan:** `plan.md` (complete, imported)
-- **Implementation:** `implementation.md` (initialized)
+- **Implementation:** `implementation.md` (complete)
+- **Discovery/Spec/Design:** Optional for import workflow
 
 ## Progress
 
-- ✓ Imported external plan source
-- ✓ Normalized canonical `plan.md`
-- ✓ Updated project metadata for import mode
-- ⧗ Awaiting implementation start (`oat-project-implement`)
+- ✓ Phase 1 complete: config write APIs and config-aware provider resolution
+- ✓ Phase 2 complete: `oat providers set` command + command surface coverage
+- ✓ Phase 3 complete: init provider selection and non-interactive safeguards
+- ✓ Phase 4 complete: sync mismatch remediation (interactive + non-interactive)
+- ✓ Phase 5 complete: docs, `worktree:init`, and AGENTS worktree guidance
+- ✓ Phase 6 complete: full CLI test/build/type-check verification
 
 ## Blockers
 
@@ -43,4 +44,4 @@ None
 
 ## Next Milestone
 
-Start implementation at `p01-t01` via `oat-project-implement`.
+Run review gate via `oat-project-review-provide`.
