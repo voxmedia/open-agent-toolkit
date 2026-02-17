@@ -19,6 +19,9 @@ interface ProvidersSetOptions {
   disabled?: string;
 }
 
+const PROJECT_SCOPE_ONLY_MESSAGE =
+  'oat providers set currently supports only --scope project. Re-run with --scope project.';
+
 function parseCsvList(raw?: string): string[] {
   if (!raw) {
     return [];
@@ -44,7 +47,7 @@ function createDependencies(): ProvidersSetDependencies {
         return resolveProjectRoot(context.cwd);
       }
 
-      throw new Error(`Unsupported scope for providers set: ${scope}`);
+      throw new Error(PROJECT_SCOPE_ONLY_MESSAGE);
     },
     getAdapters() {
       return [claudeAdapter, cursorAdapter, codexAdapter];
@@ -92,9 +95,7 @@ async function runProvidersSetCommand(
 ): Promise<void> {
   try {
     if (context.scope !== 'project') {
-      throw new Error(
-        'oat providers set currently supports only --scope project. Re-run with --scope project.',
-      );
+      throw new Error(PROJECT_SCOPE_ONLY_MESSAGE);
     }
 
     const enabledProviders = parseCsvList(options.enabled);
