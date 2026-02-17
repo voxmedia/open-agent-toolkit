@@ -148,6 +148,7 @@ pnpm run worktree:init
 ```
 
 This installs dependencies, builds packages, and applies project-scope sync links in one step.
+For a guided OAT-aware setup flow (create/reuse worktree + readiness checks), use the `oat-worktree-bootstrap` skill.
 
 Maintenance note:
 - `pnpm oat:validate-skills` routes to `oat internal validate-oat-skills` and validates required `oat-*` skill structure.

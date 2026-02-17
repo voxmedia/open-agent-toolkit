@@ -5,9 +5,8 @@
 1. Explicit `--path <root>` argument
 2. `OAT_WORKTREES_ROOT` environment variable
 3. `.oat/config.json` -> `worktrees.root`
-4. Existing local roots (prefer `.worktrees`, then `worktrees`)
-5. Existing sibling root (`../<repo>-worktrees`)
-6. Fallback default (`../<repo>-worktrees`)
+4. Existing roots (`.worktrees`, `worktrees`, `../<repo>-worktrees`)
+5. Fallback default (`../<repo>-worktrees`)
 
 For relative paths, resolve from repository root.
 
