@@ -60,6 +60,16 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 REPO_NAME=$(basename "$REPO_ROOT")
 ```
 
+### Step 0.5: Validate Active Project Pointer
+
+If `.oat/active-project` exists:
+- verify the pointed path exists and contains `state.md`
+- if invalid, do **not** silently rewrite it
+- prompt user to run one of:
+  - `oat-project-clear-active`
+  - `oat-project-open`
+- require explicit confirmation before continuing with worktree bootstrap
+
 ### Step 1: Resolve Worktree Root
 
 Resolve root using this precedence:
