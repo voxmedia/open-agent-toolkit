@@ -72,7 +72,7 @@ If `.oat/active-project` exists:
 
 If `.oat/active-project` does not exist:
 - continue (active project is optional for worktree bootstrap)
-- use fallback baseline-failure logging in Step 3 if needed
+- use console-only baseline-failure logging in Step 3 if needed
 
 ### Step 1: Resolve Worktree Root
 
@@ -122,7 +122,7 @@ Required behavior:
   - ask the user whether to `abort` or `proceed anyway`
   - if user proceeds:
     - when a valid active project with `implementation.md` exists, append a timestamped baseline-failure note there
-    - otherwise append the note to `.oat/worktree-bootstrap-baseline-failures.md` (repo-level fallback log)
+    - otherwise print the same note to console output only (do not create a fallback file)
 - If `git status --porcelain` is not clean after bootstrap/tests, stop and require cleanup before reporting ready.
 
 ### Step 4: Output Ready State

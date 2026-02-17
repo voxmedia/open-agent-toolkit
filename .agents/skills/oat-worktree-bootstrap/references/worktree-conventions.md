@@ -35,7 +35,7 @@ If baseline tests fail, require explicit user override before proceeding.
 
 If user proceeds with failing baseline tests:
 - Prefer appending a note to active project `implementation.md` when a valid active project is set.
-- If no valid active project exists yet, append the same note to `.oat/worktree-bootstrap-baseline-failures.md` instead (non-blocking fallback).
+- If no valid active project exists yet, print the same note to console output only (non-blocking fallback).
 
 Include:
 - timestamp
