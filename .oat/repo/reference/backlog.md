@@ -97,13 +97,21 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Add OAT skills for subagent-driven development and parallel agent dispatch patterns.
     - Scope should include: when to spawn subagents, task slicing rules, aggregation/reconciliation expectations, and failure handling.
     - Align with current OAT workflow artifacts so subagent outputs map cleanly into plan/implementation/review loops.
+    - Fold in autonomous worktree orchestration for large multi-phase projects:
+      - keep `oat-worktree-bootstrap` manual-safe for direct use,
+      - add an autonomous worktree companion contract for orchestrators,
+      - support fan-out/fan-in execution in isolated worktrees with deterministic merge-back,
+      - support `hil=final-only` mode where human approval is deferred until final review gate.
   - Success criteria:
     - Team has reusable skills for both “single focused subagent loop” and “parallel dispatch + reconcile” workflows.
     - Skills reduce ad-hoc prompting and improve consistency of multi-agent execution.
     - Guidance includes clear guardrails for quality gates before merge.
+    - Parallel orchestration path works without intermediate prompts while preserving final review gate and OAT artifact traceability.
   - Links:
     - Inspiration: https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
     - Inspiration: https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md
+    - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
     - Related roadmap area: Phase 6 (parallel execution + reconcile)
   - Created: 2026-02-17
 
