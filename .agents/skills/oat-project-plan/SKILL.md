@@ -12,13 +12,17 @@ Transform detailed design into an executable implementation plan with bite-sized
 
 ## Prerequisites
 
-**Required:** Complete design document. If missing, run the `oat-project-design` skill first.
+Prerequisites depend on the project's workflow mode (read `oat_workflow_mode` from `{PROJECT_PATH}/state.md`; default: `full`):
+
+- **`full`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, run the `oat-project-design` skill first.
+- **`quick`**: `discovery.md` required (design is optional). Planning proceeds from discovery decisions and repo knowledge context.
+- **`import`**: Route to `oat-project-import-plan` for initial normalization. This skill handles subsequent edits to an already-normalized plan.
 
 ## Mode Assertion
 
 **OAT MODE: Planning**
 
-**Purpose:** Break design into executable tasks with exact files, signatures/test cases, and commands.
+**Purpose:** Break design (or discovery, for quick mode) into executable tasks with exact files, signatures/test cases, and commands.
 
 ## Progress Indicators (User-Facing)
 
@@ -85,21 +89,47 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
 
-### Step 1: Check Design Complete
+### Step 1: Determine Workflow Mode and Check Prerequisites
+
+```bash
+WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
+WORKFLOW_MODE="${WORKFLOW_MODE:-full}"
+```
+
+**Mode: `full`**
+
+Check design is complete:
 
 ```bash
 cat "$PROJECT_PATH/design.md" | head -10 | grep "oat_status:"
 ```
 
-**Required frontmatter:**
-- `oat_status: complete`
-- `oat_ready_for: oat-project-plan`
+Required frontmatter: `oat_status: complete`, `oat_ready_for: oat-project-plan`.
+If not complete: Block and ask user to finish design first.
 
-**If not complete:** Block and ask user to finish design first.
+**Mode: `quick`**
 
-### Step 2: Read Design Document
+Check discovery exists:
 
-Read `"$PROJECT_PATH/design.md"` completely to understand:
+```bash
+test -s "$PROJECT_PATH/discovery.md"
+```
+
+If missing: Block and ask user to run `oat-project-discover` or `oat-project-quick-start` first. No design gate — proceed directly to plan authoring from discovery context.
+
+**Mode: `import`**
+
+Check normalized plan exists:
+
+```bash
+test -s "$PROJECT_PATH/plan.md"
+```
+
+If no normalized plan exists: Route to `oat-project-import-plan` first. If plan already exists: treat this as a resume/edit of the normalized plan.
+
+### Step 2: Read Source Artifacts
+
+**Mode: `full`** — Read `"$PROJECT_PATH/design.md"` completely to understand:
 - Architecture overview and components
 - Data models and schemas
 - API designs and interfaces
@@ -107,9 +137,17 @@ Read `"$PROJECT_PATH/design.md"` completely to understand:
 - Testing strategy
 - Security and performance considerations
 
+**Mode: `quick`** — Read `"$PROJECT_PATH/discovery.md"` to understand:
+- Initial request and objectives
+- Key decisions and constraints
+- Out-of-scope items
+- Success criteria
+
+**Mode: `import`** — Read the existing `"$PROJECT_PATH/plan.md"` and `"$PROJECT_PATH/references/imported-plan.md"` (if present) for context.
+
 ### Step 3: Read Knowledge Base for Context
 
-Read for implementation context:
+Read for implementation context (all modes):
 - `.oat/repo/knowledge/conventions.md` - Code patterns to follow
 - `.oat/repo/knowledge/testing.md` - Testing patterns
 - `.oat/repo/knowledge/stack.md` - Available tools and dependencies
@@ -145,7 +183,7 @@ oat_template: false
 
 ### Step 5: Define Phases
 
-Break design implementation phases into plan phases.
+Break source artifact (design for `full`, discovery for `quick`, existing plan for `import`) into plan phases.
 
 **Phase structure:**
 - Each phase delivers a complete, testable milestone
@@ -308,7 +346,7 @@ Update `"$PROJECT_PATH/state.md"`:
 
 **Note:** Only append to `oat_hil_completed` when the phase is configured as a HiL gate.
 
-Update content:
+Update content (adapt progress list to workflow mode — omit spec/design lines for `quick`/`import`):
 ```markdown
 ## Current Phase
 
@@ -317,8 +355,8 @@ Planning - Ready for implementation
 ## Progress
 
 - ✓ Discovery complete
-- ✓ Specification complete
-- ✓ Design complete
+- ✓ Specification complete    <!-- full mode only -->
+- ✓ Design complete           <!-- full mode only -->
 - ✓ Plan complete
 - ⧗ Awaiting implementation
 ```
