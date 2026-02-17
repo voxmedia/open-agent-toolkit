@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-17
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
 | Phase 1 | complete | 2 | 2/2 |
-| Phase 2 | in_progress | 2 | 0/2 |
+| Phase 2 | in_progress | 2 | 1/2 |
 | Phase 3 | pending | 2 | 0/2 |
 | Phase 4 | pending | 2 | 0/2 |
 | Phase 5 | pending | 2 | 0/2 |
 | Phase 6 | pending | 1 | 0/1 |
 
-**Total:** 2/11 tasks completed
+**Total:** 3/11 tasks completed
 
 ---
 
@@ -95,7 +95,7 @@ oat_generated: false
 ### Task p01-t02: Add config-aware provider activation utility
 
 **Status:** completed
-**Commit:** pending
+**Commit:** 378c09f
 
 **Outcome (required when completed):**
 - Added `getConfigAwareAdapters` to centralize provider activation rules.
@@ -122,15 +122,47 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Provider Management Command
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-02-17
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Implement `oat providers set`
 
-**Status:** pending
+**Status:** completed
+**Commit:** pending
+
+**Outcome (required when completed):**
+- Added a new `providers set` subcommand for explicit provider enable/disable writes.
+- Added strict input validation for unknown providers, overlap, and missing flags.
+- Enforced project-scope-only behavior for this initial rollout.
+- Persisted provider updates through `.oat/sync/config.json` while preserving existing config fields.
+
+**Files changed:**
+- `packages/cli/src/commands/providers/set/index.ts` - new command implementation and validation.
+- `packages/cli/src/commands/providers/set/index.test.ts` - coverage for happy path and validation failures.
+- `packages/cli/src/commands/providers/providers.types.ts` - set command dependency contract.
+- `packages/cli/src/commands/providers/index.ts` - registered `providers set` under the providers namespace.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/providers/set/index.test.ts`
+- Result: pass (6 tests)
+- Run: `pnpm --filter @oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- CSV input is normalized to lowercase to align with canonical adapter names.
+- Command preserves existing provider strategy/defaultStrategy values.
+
+---
+
+### Task p02-t02: Register command and update help snapshots
+
+**Status:** in_progress
 **Commit:** -
+
+**Notes:**
+- Command wiring is in place; remaining work is command-surface/help snapshot and integration updates.
 
 ---
 
@@ -143,20 +175,23 @@ Chronological log of implementation progress.
 **Session Start:** {time}
 
 - [x] p01-t01: Add sync config write/update utilities - d51ea2a
-- [x] p01-t02: Add config-aware provider activation utility - pending
-- [ ] p02-t01: Implement `oat providers set` - pending
+- [x] p01-t02: Add config-aware provider activation utility - 378c09f
+- [x] p02-t01: Implement `oat providers set` - pending
+- [ ] p02-t02: Register command and update help snapshots - in progress
 
 **What changed (high level):**
 - Added config write/update utility surface for future provider command and sync remediation flows.
 - Added tests proving provider `enabled` mutations preserve strategy/default settings.
 - Added config-aware provider activation helper with explicit mismatch metadata.
+- Added `oat providers set` with validation and project-scope config persistence.
 
 **Decisions:**
 - Use `atomicWriteJson` for config writes to keep persistence behavior consistent with other CLI state files.
 - Keep `getActiveAdapters` in place for compatibility while introducing additive config-aware resolution.
+- Keep provider set scope-limited to project for this iteration; user/all support can be added later with explicit backlog scope.
 
 **Follow-ups / TODO:**
-- Fill commit SHA for `p01-t02` after commit.
+- None.
 
 **Blockers:**
 - None
