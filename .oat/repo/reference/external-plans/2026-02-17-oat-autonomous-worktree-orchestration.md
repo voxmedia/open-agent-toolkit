@@ -3,15 +3,16 @@
 ## Summary
 Add an autonomous, OAT-oriented subagent orchestration capability for large multi-phase projects that preserves existing human-in-the-loop (HiL) checkpoints from project configuration/frontmatter.
 
-This extends existing worktree foundations with an orchestrator-friendly execution model: fan out parallel phase/task work in isolated worktrees, reconcile/merge back to a main working branch, and preserve OAT artifact discipline.
+This extends existing worktree foundations with an orchestrator-friendly execution model: fan out parallel phase/task work in isolated worktrees, run autonomous code-review gates per unit, reconcile/merge back to a main working branch, and preserve OAT artifact discipline.
 
 ## Problem Statement
 Current worktree skill guidance is intentionally manual-safe and explicit-invocation-first. That is appropriate for interactive use, but it limits unattended orchestration patterns where an orchestrator agent should be able to:
 1. bootstrap worktrees without prompting,
 2. dispatch parallel subagents,
 3. aggregate results,
-4. merge successful work back,
-5. defer human approval until the next configured HiL checkpoint.
+4. run autonomous review/fix loops before merge-back,
+5. merge successful work back,
+6. defer human approval until the next configured HiL checkpoint.
 
 ## Locked Decisions
 1. Keep `oat-worktree-bootstrap` as manual-safe and explicit-invocation oriented.
@@ -20,14 +21,17 @@ Current worktree skill guidance is intentionally manual-safe and explicit-invoca
 4. If no valid active project exists, orchestration must continue with console logging only (no new fallback artifact file for now).
 5. HiL behavior must use existing project HiL frontmatter/checkpoint semantics as source of truth; orchestration runs autonomously only between checkpoints.
 6. Reconciliation and merge-back must be deterministic and auditable.
+7. No unit branch may merge back into the orchestration branch unless it passes an autonomous review gate (or is explicitly marked failed/skipped by policy).
+8. Autonomous review interactions and outcomes must be persisted in project artifacts for traceability.
 
 ## In Scope
 1. Define autonomous worktree bootstrap skill contract for subagent/orchestrator execution.
 2. Define subagent orchestration skill contract for parallel fan-out/fan-in.
 3. Define merge-back/reconcile strategy for parallel branches/worktrees.
 4. Define failure handling, retries, and conflict escalation rules.
-5. Define OAT artifact updates required during orchestration (plan/implementation/review linkage).
-6. Update backlog and references to track this as part of subagent orchestration work.
+5. Define autonomous review-before-merge gate and reviewer/implementer role contracts.
+6. Define OAT artifact updates required during orchestration (plan/implementation/review linkage + review interaction traceability).
+7. Update backlog and references to track this as part of subagent orchestration work.
 
 ## Out of Scope
 1. Replacing existing manual-safe worktree skill behavior.
@@ -62,12 +66,16 @@ Draft behavior:
 1. Read project plan and identify parallelizable units (phase/task-level).
 2. Create per-unit worktree/branch strategy.
 3. Dispatch subagents with scoped objectives and file boundaries.
-4. Collect completion status and required evidence (tests, changed files, commits).
-5. Perform fan-in reconciliation:
+4. Run autonomous review gate per unit before merge-back:
+   - implementer output -> code/spec reviewer pass/fail,
+   - optional fix iteration loop when review fails,
+   - capture reviewer verdict + rationale.
+5. Collect completion status and required evidence (tests, changed files, commits, review verdicts).
+6. Perform fan-in reconciliation:
    - cherry-pick or merge unit branches into orchestration branch,
    - run integration verification,
    - classify and report conflicts.
-6. Update `implementation.md` with orchestration run summary.
+7. Update `implementation.md` with orchestration run summary.
 
 ## Orchestration Policies
 1. Eligibility: only tasks/phases explicitly marked parallel-safe are fanned out.
@@ -81,13 +89,18 @@ Draft behavior:
    - Source of truth: existing project HiL frontmatter/checkpoint configuration.
    - Orchestrator may fan out/fan in only for units before the next HiL checkpoint.
    - Example: if `p04` is a HiL checkpoint, `p02` and `p03` can run in parallel and reconcile before pausing at `p04`.
+5. Autonomous review gate policy:
+   - Each unit must pass reviewer gate before merge-back to orchestration branch.
+   - Reviewer gate uses deterministic pass/fail criteria (tests + contract checks + scoped code review findings).
+   - Failed reviews route to automated fix iteration up to configured retry limit, then mark unit failed/skipped.
 
 ## OAT Artifact Contract
 During orchestration runs, append structured sections in project `implementation.md`:
 1. run metadata (timestamp, branch/worktree map, policy mode),
 2. per-unit outcomes (success/failure, commit refs, tests),
-3. merge/reconcile outcomes,
-4. outstanding conflicts or manual follow-ups.
+3. review interaction records (reviewer role, verdict, key findings, retry count),
+4. merge/reconcile outcomes,
+5. outstanding conflicts or manual follow-ups.
 
 Plan linkage requirements:
 - review rows/status transitions remain canonical in `plan.md`.
@@ -103,7 +116,8 @@ Plan linkage requirements:
 ### Phase 2: Core flow
 1. Implement autonomous worktree bootstrap logic and status outputs.
 2. Implement fan-out subagent dispatch and per-unit result collection.
-3. Implement fan-in merge/reconcile logic with deterministic ordering.
+3. Implement autonomous unit review gate and fix-loop retry behavior.
+4. Implement fan-in merge/reconcile logic with deterministic ordering.
 
 ### Phase 3: OAT integration
 1. Integrate `implementation.md` orchestration logging.
@@ -113,21 +127,24 @@ Plan linkage requirements:
 ### Phase 4: Validation
 1. Dry-run orchestration on sample multi-phase plan.
 2. Execute parallel-safe phases in worktrees and reconcile.
-3. Validate checkpoint behavior against existing HiL frontmatter (including mid-plan checkpoints).
+3. Validate autonomous review gate blocks failed units from merge-back.
+4. Validate checkpoint behavior against existing HiL frontmatter (including mid-plan checkpoints).
 
 ## Test Scenarios
 1. Happy path: two parallel units succeed and merge cleanly.
 2. Mixed result: one unit fails, one succeeds; successful unit still merges.
-3. Merge conflict path: conflict detected, escalation output generated.
-4. No active project path: orchestration continues with console fallback logging.
-5. Mid-plan HiL checkpoint path: parallel units run before checkpoint, orchestrator pauses at configured checkpoint.
+3. Review gate fail path: unit fails review, fix loop retries, unit excluded if still failing.
+4. Merge conflict path: conflict detected, escalation output generated.
+5. No active project path: orchestration continues with console fallback logging.
+6. Mid-plan HiL checkpoint path: parallel units run before checkpoint, orchestrator pauses at configured checkpoint.
 
 ## Acceptance Criteria
 1. Orchestrator can run parallel worktree-based execution without interactive prompts between configured HiL checkpoints.
 2. Merge-back process is deterministic and auditable.
-3. Failures/conflicts are surfaced with actionable next steps, without silent loss of work.
-4. OAT artifacts remain consistent with existing lifecycle/review contracts.
-5. Manual-safe and autonomous skill contracts remain clearly separated.
+3. Unit branches cannot merge back without passing autonomous review gate (or explicit policy skip/fail disposition).
+4. Failures/conflicts are surfaced with actionable next steps, without silent loss of work.
+5. OAT artifacts capture review interaction history and remain consistent with existing lifecycle/review contracts.
+6. Manual-safe and autonomous skill contracts remain clearly separated.
 
 ## References
 1. Existing worktree foundation:
@@ -136,3 +153,7 @@ Plan linkage requirements:
    - https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
    - https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md
    - https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md
+   - https://github.com/obra/superpowers/blob/main/skills/finishing-a-development-branch/SKILL.md
+   - https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/code-quality-reviewer-prompt.md
+   - https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/implementer-prompt.md
+   - https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/spec-reviewer-prompt.md
