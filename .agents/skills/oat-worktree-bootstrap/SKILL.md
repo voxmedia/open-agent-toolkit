@@ -62,12 +62,32 @@ REPO_NAME=$(basename "$REPO_ROOT")
 
 ### Step 1: Resolve Worktree Root
 
-Use precedence defined in `references/worktree-conventions.md`.
+Resolve root using this precedence:
+
+1. Explicit `--path <root>`
+2. `OAT_WORKTREES_ROOT`
+3. `.oat/config.json` -> `worktrees.root`
+4. Existing roots in repository (`.worktrees`, `worktrees`, `../<repo>-worktrees`)
+5. Fallback default: `../<repo>-worktrees`
+
+For repo-relative values, resolve from `REPO_ROOT`.
+
+If the resolved root is project-local (`.worktrees` or `worktrees`), verify it is ignored by git before creating a new worktree.
 
 ### Step 2: Create or Reuse Worktree
 
-- If `--existing`, validate current path and continue.
-- Otherwise create/reuse `{root}/{branch-name}` using `git worktree`.
+- If `--existing`, validate the current directory is a git worktree and continue.
+- Otherwise:
+  - validate branch name format (`^[a-zA-Z0-9._/-]+$`)
+  - resolve target path as `{root}/{branch-name}`
+  - if branch already exists locally:
+    - `git worktree add "{target-path}" "{branch-name}"`
+  - if branch does not exist:
+    - `git worktree add "{target-path}" -b "{branch-name}" "{base-ref}"`
+
+`{base-ref}` defaults to `origin/main` unless `--base` is provided.
+
+If worktree creation fails, stop and report the exact git error with remediation guidance.
 
 ### Step 3: Run OAT Bootstrap
 
@@ -80,7 +100,11 @@ pnpm run cli -- status --scope project
 
 ### Step 4: Output Ready State
 
-Report worktree path, active branch, and next command to continue implementation.
+Report:
+- resolved worktree path
+- active branch
+- bootstrap/verification status
+- next command: `oat-project-implement`
 
 ## References
 
