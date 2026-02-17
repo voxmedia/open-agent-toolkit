@@ -1,42 +1,39 @@
 ---
-oat_current_task: null
-oat_last_commit: 9fb057d
+oat_current_task: p07-t01
+oat_last_commit: af08637
 oat_blockers: []
 oat_hil_checkpoints: []
 oat_hil_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_workflow_mode: import
 oat_workflow_origin: imported
-oat_lifecycle: complete
 oat_generated: false
 ---
 
 # Project State: provider-config-worktree-sync
 
-**Status:** Implementation Complete
+**Status:** Review Fix Tasks Queued
 **Started:** 2026-02-17
 **Last Updated:** 2026-02-17
 
 ## Current Phase
 
-Implementation complete. All plan tasks (`p01`-`p06`) are finished and verification is green.
+Implementation in progress. Final code review findings were converted into Phase 7 fix tasks.
 
 ## Artifacts
 
-- **Plan:** `plan.md` (complete, imported)
-- **Implementation:** `implementation.md` (complete)
-- **Discovery/Spec/Design:** Optional for import workflow
+- **Plan:** `plan.md` (updated with review-fix tasks `p07-t01` to `p07-t09`)
+- **Implementation:** `implementation.md` (updated with review summary and next task pointer)
+- **Review:** `reviews/final-review-2026-02-16.md` (processed)
 
 ## Progress
 
-- ✓ Phase 1 complete: config write APIs and config-aware provider resolution
-- ✓ Phase 2 complete: `oat providers set` command + command surface coverage
-- ✓ Phase 3 complete: init provider selection and non-interactive safeguards
-- ✓ Phase 4 complete: sync mismatch remediation (interactive + non-interactive)
-- ✓ Phase 5 complete: docs, `worktree:init`, and AGENTS worktree guidance
-- ✓ Phase 6 complete: full CLI test/build/type-check verification
+- ✓ Original implementation complete through `p06`
+- ✓ Final review received and processed
+- ✓ 9 review-fix tasks added to plan (`p07-t01`-`p07-t09`)
+- ⧗ Next task: `p07-t01`
 
 ## Blockers
 
@@ -44,4 +41,4 @@ None
 
 ## Next Milestone
 
-Run review gate via `oat-project-review-provide`.
+Execute review-fix tasks via `oat-project-implement`, then run final re-review.

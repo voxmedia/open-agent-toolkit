@@ -479,6 +479,266 @@ git commit -m "chore(p06-t01): verify provider config and sync workflow changes"
 
 ---
 
+## Phase 7: Final Review Fixes
+
+### Task p07-t01: (review) Consolidate providers set scope validation path
+
+**Files:**
+- Modify: `packages/cli/src/commands/providers/set/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: scope rejection can surface through multiple error paths.
+Location: `packages/cli/src/commands/providers/set/index.ts`
+
+**Step 2: Implement fix**
+
+Consolidate scope validation so all unsupported scopes return one consistent remediation message.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/providers/set/index.test.ts`
+Expected: `--scope all` and `--scope user` reject with the same clear message.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/providers/set/index.ts packages/cli/src/commands/providers/set/index.test.ts
+git commit -m "fix(p07-t01): consolidate providers set scope validation"
+```
+
+---
+
+### Task p07-t02: (review) Deduplicate mismatch provider list writes in sync remediation
+
+**Files:**
+- Modify: `packages/cli/src/commands/sync/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: remediation loop can theoretically process duplicated provider names across mismatch buckets.
+Location: `packages/cli/src/commands/sync/index.ts`
+
+**Step 2: Implement fix**
+
+Use a deduplicated set for mismatch provider iteration and add a short invariant comment about bucket exclusivity.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/sync/index.test.ts`
+Expected: remediation behavior remains unchanged and tests stay green.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/sync/index.ts
+git commit -m "fix(p07-t02): dedupe sync mismatch provider remediation writes"
+```
+
+---
+
+### Task p07-t03: (review) Make init stray scanning provider-config aware
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/init/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: stray detection currently scans by detection-only adapter activity, not configured provider enablement.
+Location: `packages/cli/src/commands/init/index.ts`
+
+**Step 2: Implement fix**
+
+Use config-aware adapter resolution (or explicit documented behavior) in stray collection so prompts align with configured provider support.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/init/index.test.ts`
+Expected: stray scanning behavior is explicit and covered by tests.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/index.ts packages/cli/src/commands/init/index.test.ts
+git commit -m "fix(p07-t03): align init stray scanning with provider config"
+```
+
+---
+
+### Task p07-t04: (review) Add explicit user-scope rejection test for providers set
+
+**Files:**
+- Modify: `packages/cli/src/commands/providers/set/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: plan expected `--scope user|all` rejection coverage; `--scope user` case is missing.
+Location: `packages/cli/src/commands/providers/set/index.test.ts`
+
+**Step 2: Implement fix**
+
+Add a dedicated `--scope user` rejection test matching the existing `--scope all` assertion pattern.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/providers/set/index.test.ts`
+Expected: test coverage includes both non-project scope variants.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/providers/set/index.test.ts
+git commit -m "test(p07-t04): cover providers set user-scope rejection"
+```
+
+---
+
+### Task p07-t05: (review) Document intentional SyncConfig type widening
+
+**Files:**
+- Modify: `packages/cli/src/config/sync-config.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `SyncConfig` runtime normalization guarantees providers are present, while persisted schema keeps `providers` optional.
+Location: `packages/cli/src/config/sync-config.ts`
+
+**Step 2: Implement fix**
+
+Add a concise comment documenting that type widening is intentional post-normalization.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli type-check`
+Expected: no type changes, only documentation clarity.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/config/sync-config.ts
+git commit -m "docs(p07-t05): clarify sync config type normalization"
+```
+
+---
+
+### Task p07-t06: (review) Extract shared sync planned-operations counter
+
+**Files:**
+- Modify: `packages/cli/src/commands/sync/apply.ts`
+- Modify: `packages/cli/src/commands/sync/dry-run.ts`
+- Create: `packages/cli/src/commands/sync/sync.utils.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: identical `countPlannedOperations` helper duplicated across apply and dry-run.
+Location: `packages/cli/src/commands/sync/apply.ts`, `packages/cli/src/commands/sync/dry-run.ts`
+
+**Step 2: Implement fix**
+
+Extract the shared counter to `sync.utils.ts` and reuse it in both modules.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/sync/index.test.ts`
+Expected: sync output and summary behavior unchanged.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/sync/apply.ts packages/cli/src/commands/sync/dry-run.ts packages/cli/src/commands/sync/sync.utils.ts
+git commit -m "refactor(p07-t06): share sync planned-operations counter"
+```
+
+---
+
+### Task p07-t07: (review) Centralize provider remediation guidance message
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/sync/index.ts`
+- Modify: `packages/cli/src/commands/init/index.test.ts`
+- Create: `packages/cli/src/commands/shared/messages.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: remediation guidance string duplicated across init, sync, and tests.
+Location: `packages/cli/src/commands/init/index.ts`, `packages/cli/src/commands/sync/index.ts`, `packages/cli/src/commands/init/index.test.ts`
+
+**Step 2: Implement fix**
+
+Define shared command message constant(s) and import from both commands and tests.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/init/index.test.ts src/commands/sync/index.test.ts`
+Expected: message remains consistent across command flows.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/index.ts packages/cli/src/commands/sync/index.ts packages/cli/src/commands/init/index.test.ts packages/cli/src/commands/shared/messages.ts
+git commit -m "refactor(p07-t07): share provider remediation guidance message"
+```
+
+---
+
+### Task p07-t08: (review) Remove sync command dependency type assertion
+
+**Files:**
+- Modify: `packages/cli/src/commands/sync/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: dependency merge currently uses `as SyncCommandDependencies` cast.
+Location: `packages/cli/src/commands/sync/index.ts`
+
+**Step 2: Implement fix**
+
+Replace assertion with explicit typed dependency object assignment.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli type-check`
+Expected: compile-time checks enforce dependency completeness without casts.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/sync/index.ts
+git commit -m "refactor(p07-t08): remove sync dependency assertion cast"
+```
+
+---
+
+### Task p07-t09: (review) Use adapter factory in sync command tests
+
+**Files:**
+- Modify: `packages/cli/src/commands/sync/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: module-level shared adapter constant in sync tests is mutable by structure and less isolated than factory usage.
+Location: `packages/cli/src/commands/sync/index.test.ts`
+
+**Step 2: Implement fix**
+
+Replace shared constant with `createAdapter()` factory usage in harness setup.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/sync/index.test.ts`
+Expected: tests remain deterministic and isolated.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/sync/index.test.ts
+git commit -m "test(p07-t09): use adapter factory in sync tests"
+```
+
+---
+
 ## Reviews
 
 Track review artifacts here after running `oat-project-review-provide` and `oat-project-review-receive`.
@@ -491,7 +751,7 @@ Track review artifacts here after running `oat-project-review-provide` and `oat-
 | p04 | code | pending | - | - |
 | p05 | code | pending | - | - |
 | p06 | code | pending | - | - |
-| final | code | received | 2026-02-16 | reviews/final-review-2026-02-16.md |
+| final | code | fixes_added | 2026-02-17 | reviews/final-review-2026-02-16.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
@@ -508,8 +768,9 @@ Track review artifacts here after running `oat-project-review-provide` and `oat-
 - Phase 4: 2 tasks - sync mismatch prompting and non-interactive warnings
 - Phase 5: 2 tasks - docs, AGENTS guidance, and `worktree:init` script
 - Phase 6: 1 task - end-to-end verification and finalization
+- Phase 7: 9 tasks - final review fixes and follow-up hardening
 
-**Total: 11 tasks**
+**Total: 20 tasks**
 
 Ready for implementation with `oat-project-implement`.
 
