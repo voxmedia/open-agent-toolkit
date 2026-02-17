@@ -233,7 +233,7 @@ Workflow:
   oat-project-discover          - Start discovery phase (requirements gathering)
   oat-project-spec              - Create specification from discovery
   oat-project-design            - Create technical design from spec
-  oat-project-plan              - Create implementation plan from design
+  oat-project-plan              - Create implementation plan from design (full mode)
   oat-project-implement         - Execute implementation plan
 
 Status:

@@ -12,13 +12,23 @@ Transform detailed design into an executable implementation plan with bite-sized
 
 ## Prerequisites
 
-**Required:** Complete design document. If missing, run the `oat-project-design` skill first.
+This skill is the plan authoring path for **full-mode** projects only. Quick and import modes have dedicated entry skills that produce `plan.md` directly.
+
+Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `full`):
+
+- **`full`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, run the `oat-project-design` skill first. Proceed with planning.
+- **`quick`**: **Stop.** Plan is already produced by the quick workflow. Tell the user: "Plan already produced by quick workflow. Run `oat-project-implement` to begin execution."
+- **`import`**: **Stop.** If a normalized `plan.md` exists, tell the user: "Imported plan is ready. Run `oat-project-implement` to begin execution." If no `plan.md` exists, tell the user: "Run `oat-project-import-plan` to import and normalize the external plan first."
+
+## Plan Format Contract
+
+When creating or editing `plan.md`, follow `oat-project-plan-writing` canonical format rules. This includes stable task IDs (`pNN-tNN`), required sections (`## Reviews`, `## Implementation Complete`, `## References`), required frontmatter keys (`oat_plan_source`, `oat_plan_hil_phases`, `oat_status`, `oat_ready_for`), and review table preservation rules.
 
 ## Mode Assertion
 
 **OAT MODE: Planning**
 
-**Purpose:** Break design into executable tasks with exact files, signatures/test cases, and commands.
+**Purpose:** Break design into executable tasks with exact files, signatures/test cases, and commands. Full-mode only — quick and import modes stop-and-route.
 
 ## Progress Indicators (User-Facing)
 
@@ -85,19 +95,37 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
 
-### Step 1: Check Design Complete
+### Step 1: Determine Workflow Mode and Route
+
+```bash
+WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
+WORKFLOW_MODE="${WORKFLOW_MODE:-full}"
+```
+
+**Mode: `quick`** — **STOP.** Print:
+```
+⚠️  This project uses quick mode. Plan is produced by the quick workflow.
+    Run the `oat-project-implement` skill to begin execution.
+```
+Exit skill.
+
+**Mode: `import`** — **STOP.** Check if `"$PROJECT_PATH/plan.md"` exists:
+- If yes: Print: "Imported plan is ready. Run `oat-project-implement` to begin execution."
+- If no: Print: "Run `oat-project-import-plan` to import and normalize the external plan first."
+Exit skill.
+
+**Mode: `full`** — Continue to Step 2.
+
+### Step 2: Check Design Complete
 
 ```bash
 cat "$PROJECT_PATH/design.md" | head -10 | grep "oat_status:"
 ```
 
-**Required frontmatter:**
-- `oat_status: complete`
-- `oat_ready_for: oat-project-plan`
+Required frontmatter: `oat_status: complete`, `oat_ready_for: oat-project-plan`.
+If not complete: Block and ask user to finish design first.
 
-**If not complete:** Block and ask user to finish design first.
-
-### Step 2: Read Design Document
+### Step 3: Read Design Document
 
 Read `"$PROJECT_PATH/design.md"` completely to understand:
 - Architecture overview and components
@@ -107,14 +135,14 @@ Read `"$PROJECT_PATH/design.md"` completely to understand:
 - Testing strategy
 - Security and performance considerations
 
-### Step 3: Read Knowledge Base for Context
+### Step 4: Read Knowledge Base for Context
 
 Read for implementation context:
 - `.oat/repo/knowledge/conventions.md` - Code patterns to follow
 - `.oat/repo/knowledge/testing.md` - Testing patterns
 - `.oat/repo/knowledge/stack.md` - Available tools and dependencies
 
-### Step 4: Initialize Plan Document
+### Step 5: Initialize Plan Document
 
 Check whether a plan already exists at `"$PROJECT_PATH/plan.md"`.
 
@@ -143,7 +171,7 @@ oat_template: false
 ---
 ```
 
-### Step 5: Define Phases
+### Step 6: Define Phases
 
 Break design implementation phases into plan phases.
 
@@ -153,7 +181,7 @@ Break design implementation phases into plan phases.
 - Later phases can depend on earlier phases
 - End each phase with verification
 
-### Step 6: Break Into Tasks
+### Step 7: Break Into Tasks
 
 For each phase, create bite-sized tasks.
 
@@ -198,7 +226,7 @@ git commit -m "feat(p{NN}-t{NN}): {description}"
 ```
 ```
 
-### Step 7: Apply TDD Discipline
+### Step 8: Apply TDD Discipline
 
 For each task that involves code:
 
@@ -214,7 +242,7 @@ For each task that involves code:
 4. Run tests (green)
 5. Commit
 
-### Step 8: Specify Exact Details
+### Step 9: Specify Exact Details
 
 For each task, include:
 - **Files:** Exact paths for create/modify/delete
@@ -229,7 +257,7 @@ For each task, include:
 - Bundled unrelated changes
 - Full implementation code (leave that for oat-project-implement)
 
-### Step 9: Update Requirement Index
+### Step 10: Update Requirement Index
 
 Go back to spec.md and fill in the "Planned Tasks" column in the Requirement Index:
 
@@ -239,15 +267,15 @@ For each requirement (FR/NFR):
 
 This creates traceability: Requirement → Tasks → Implementation
 
-### Step 9.1: Keep Reviews Table Rows
+### Step 10.1: Keep Reviews Table Rows
 
-When updating `plan.md`, keep the full `## Reviews` table from the template:
+Follow the review table preservation rules from `oat-project-plan-writing`:
 - Include both **code** rows (p01/p02/…/final) and **artifact** rows (`spec`, `design`)
-- Add additional rows as needed (e.g., p03), but do not delete the artifact rows
+- Add additional rows as needed (e.g., p03), but never delete existing rows
 
 **Why stable IDs:** Using `p01-t03` instead of "Task 3" prevents broken references when tasks are inserted or reordered.
 
-### Step 10: Configure Plan Phase Checkpoints
+### Step 11: Configure Plan Phase Checkpoints
 
 Ask user: "During implementation, should I stop for review at every phase boundary, or only at specific phases?"
 
@@ -265,7 +293,7 @@ Update plan.md frontmatter with user's choice.
 
 If `## Planning Checklist` is missing (older plans), add it before finalizing and then check both items.
 
-### Step 11: Review Plan with User
+### Step 12: Review Plan with User
 
 Present plan summary:
 - Number of phases
@@ -277,7 +305,7 @@ Ask: "Does this breakdown make sense? Any tasks missing?"
 
 Iterate until user confirms.
 
-### Step 12: Mark Plan Complete
+### Step 13: Mark Plan Complete
 
 Before setting `oat_status: complete`, verify:
 - `oat_plan_hil_phases` is explicitly set in frontmatter (empty array is valid for "every phase")
@@ -294,13 +322,13 @@ oat_last_updated: {today}
 ---
 ```
 
-### Step 13: Update Project State
+### Step 14: Update Project State
 
 Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
 - `oat_current_task: null`
-- `oat_last_commit: {commit_sha_from_step_14}`
+- `oat_last_commit: {commit_sha_from_step_15}`
 - `oat_blockers: []`
 - `oat_phase: plan`
 - `oat_phase_status: complete`
@@ -323,7 +351,7 @@ Planning - Ready for implementation
 - ⧗ Awaiting implementation
 ```
 
-### Step 14: Commit Plan
+### Step 15: Commit Plan
 
 ```bash
 git add "$PROJECT_PATH/"
@@ -338,7 +366,7 @@ Total: {N} tasks
 Ready for implementation"
 ```
 
-### Step 15: Output Summary
+### Step 16: Output Summary
 
 ```
 Planning phase complete for {project-name}.
