@@ -110,6 +110,7 @@ describe('help output snapshots', () => {
       Commands:
         list                List provider adapters and sync summary
         inspect <provider>  Inspect provider details and mapping state
+        set [options]       Enable or disable project providers in sync config
         help [command]      display help for command
       "
     `);
@@ -148,6 +149,25 @@ describe('help output snapshots', () => {
 
       Options:
         -h, --help  display help for command
+      "
+    `);
+  });
+
+  it('providers set --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'providers',
+      'set',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat providers set [options]
+
+      Enable or disable project providers in sync config
+
+      Options:
+        --enabled <providers>   Comma-separated providers to enable
+        --disabled <providers>  Comma-separated providers to disable
+        -h, --help              display help for command
       "
     `);
   });
