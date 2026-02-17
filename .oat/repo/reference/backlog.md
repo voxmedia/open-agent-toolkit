@@ -101,18 +101,34 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
       - keep `oat-worktree-bootstrap` manual-safe for direct use,
       - add an autonomous worktree companion contract for orchestrators,
       - support fan-out/fan-in execution in isolated worktrees with deterministic merge-back,
-      - support `hil=final-only` mode where human approval is deferred until final review gate.
+      - use existing HiL frontmatter/checkpoint semantics so orchestration delegates until the next configured HiL gate.
   - Success criteria:
     - Team has reusable skills for both “single focused subagent loop” and “parallel dispatch + reconcile” workflows.
     - Skills reduce ad-hoc prompting and improve consistency of multi-agent execution.
     - Guidance includes clear guardrails for quality gates before merge.
-    - Parallel orchestration path works without intermediate prompts while preserving final review gate and OAT artifact traceability.
+    - Parallel orchestration path works without intermediate prompts between configured HiL checkpoints while preserving OAT artifact traceability.
   - Links:
     - Inspiration: https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md
     - Inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
     - Inspiration: https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md
     - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
     - Related roadmap area: Phase 6 (parallel execution + reconcile)
+  - Created: 2026-02-17
+
+- [ ] **(P2) [workflow] Rename HiL terminology to HiLL (Human in Loop Lock)**
+  - Target milestone/phase: Workflow terminology consistency
+  - Notes:
+    - Evaluate terminology migration from "HiL" to "HiLL (Human in Loop Lock)" across workflow docs/skills/backlog/reference artifacts.
+    - Decide scope of migration for frontmatter and status fields:
+      - terminology-only in prose, or
+      - key-name migration (with compatibility aliases) where feasible.
+    - Ensure naming stays consistent with orchestrator checkpoint semantics and review gate language.
+  - Success criteria:
+    - Canonical docs and skill contracts use the chosen term consistently.
+    - If key names change, migration/compatibility behavior is documented and non-breaking.
+    - Team guidance clearly distinguishes lock/checkpoint behavior from general human-in-the-loop wording.
+  - Links:
+    - Related plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
   - Created: 2026-02-17
 
 - [ ] **(P1) [skills] Add `oat-project-document` for post-implementation documentation synthesis**

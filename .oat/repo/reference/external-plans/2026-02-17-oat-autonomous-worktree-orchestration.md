@@ -1,7 +1,7 @@
 # OAT Autonomous Worktree + Subagent Orchestration Plan
 
 ## Summary
-Add an autonomous, OAT-oriented subagent orchestration capability for large multi-phase projects where only the final phase has a human-in-the-loop gate.
+Add an autonomous, OAT-oriented subagent orchestration capability for large multi-phase projects that preserves existing human-in-the-loop (HiL) checkpoints from project configuration/frontmatter.
 
 This extends existing worktree foundations with an orchestrator-friendly execution model: fan out parallel phase/task work in isolated worktrees, reconcile/merge back to a main working branch, and preserve OAT artifact discipline.
 
@@ -11,14 +11,14 @@ Current worktree skill guidance is intentionally manual-safe and explicit-invoca
 2. dispatch parallel subagents,
 3. aggregate results,
 4. merge successful work back,
-5. defer human approval until final gate.
+5. defer human approval until the next configured HiL checkpoint.
 
 ## Locked Decisions
 1. Keep `oat-worktree-bootstrap` as manual-safe and explicit-invocation oriented.
 2. Add a separate autonomous companion contract (skill) for orchestrator use; do not overload the manual-safe skill with conflicting behavior.
 3. Autonomous path must avoid `AskUserQuestion` during normal execution.
 4. If no valid active project exists, orchestration must continue with console logging only (no new fallback artifact file for now).
-5. Final merge gate remains policy-driven; support a mode where only final review is HiL.
+5. HiL behavior must use existing project HiL frontmatter/checkpoint semantics as source of truth; orchestration runs autonomously only between checkpoints.
 6. Reconciliation and merge-back must be deterministic and auditable.
 
 ## In Scope
@@ -77,9 +77,10 @@ Draft behavior:
 3. Failure handling:
    - unit failure does not abort all units by default,
    - failed units are reported and excluded from merge unless policy says otherwise.
-4. Review policy modes:
-   - `hil=final-only`: no intermediate prompts, final review gate only,
-   - `hil=per-phase`: existing interactive checkpoints retained.
+4. HiL checkpoint policy:
+   - Source of truth: existing project HiL frontmatter/checkpoint configuration.
+   - Orchestrator may fan out/fan in only for units before the next HiL checkpoint.
+   - Example: if `p04` is a HiL checkpoint, `p02` and `p03` can run in parallel and reconcile before pausing at `p04`.
 
 ## OAT Artifact Contract
 During orchestration runs, append structured sections in project `implementation.md`:
@@ -97,7 +98,7 @@ Plan linkage requirements:
 ### Phase 1: Contract design
 1. Draft `oat-worktree-bootstrap-auto` skill contract.
 2. Draft `oat-subagent-orchestrate` skill contract.
-3. Define policy flags (`hil`, baseline strictness, merge strategy).
+3. Define policy flags (baseline strictness, merge strategy) and map existing HiL frontmatter into orchestration pause/resume behavior.
 
 ### Phase 2: Core flow
 1. Implement autonomous worktree bootstrap logic and status outputs.
@@ -112,17 +113,17 @@ Plan linkage requirements:
 ### Phase 4: Validation
 1. Dry-run orchestration on sample multi-phase plan.
 2. Execute parallel-safe phases in worktrees and reconcile.
-3. Validate final review workflow with final-only HiL mode.
+3. Validate checkpoint behavior against existing HiL frontmatter (including mid-plan checkpoints).
 
 ## Test Scenarios
 1. Happy path: two parallel units succeed and merge cleanly.
 2. Mixed result: one unit fails, one succeeds; successful unit still merges.
 3. Merge conflict path: conflict detected, escalation output generated.
 4. No active project path: orchestration continues with console fallback logging.
-5. Final-only HiL path: no intermediate prompts, final review gate enforced.
+5. Mid-plan HiL checkpoint path: parallel units run before checkpoint, orchestrator pauses at configured checkpoint.
 
 ## Acceptance Criteria
-1. Orchestrator can run parallel worktree-based execution without interactive prompts in final-only HiL mode.
+1. Orchestrator can run parallel worktree-based execution without interactive prompts between configured HiL checkpoints.
 2. Merge-back process is deterministic and auditable.
 3. Failures/conflicts are surfaced with actionable next steps, without silent loss of work.
 4. OAT artifacts remain consistent with existing lifecycle/review contracts.
