@@ -14,6 +14,17 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [tooling] Fix `oat project new --help` parsing bug that scaffolds a `--help` project**
+  - Outcome:
+    - Root cause: `pnpm run cli --` passes a literal `--` into Commander's argv, disabling option parsing. Commander consumed `--help` as the `<name>` positional argument, and `validateProjectName` allowed it because `-` was a valid character.
+    - Added dash-prefix rejection in `validateProjectName` (defensive layer).
+    - Added `name.startsWith('-')` guard in the action handler that calls `command.help()` instead of scaffolding (correct UX).
+    - Added regression tests in both `scaffold.test.ts` and `index.test.ts`.
+  - Links:
+    - Files: `packages/cli/src/commands/project/new/index.ts`, `packages/cli/src/commands/project/new/scaffold.ts`
+  - Created: 2026-02-17
+  - Completed: 2026-02-17
+
 - [x] **(P1) [tooling] Migrate `validate-oat-skills.ts` from `.oat/scripts/` to CLI**
   - Outcome:
     - Migrated skill validation logic to `oat internal validate-oat-skills` CLI command (`packages/cli/src/commands/internal/validate-oat-skills.ts`).

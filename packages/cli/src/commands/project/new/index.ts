@@ -116,6 +116,10 @@ export function createProjectNewCommand(
         options: ProjectNewCommandOptions,
         command: Command,
       ) => {
+        if (name.startsWith('-')) {
+          command.help();
+          return;
+        }
         const context = dependencies.buildCommandContext(
           readGlobalOptions(command),
         );

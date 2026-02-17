@@ -176,4 +176,14 @@ describe('createProjectNewCommand', () => {
     expect(capture.error[0]).toContain('invalid project name');
     expect(process.exitCode).toBe(1);
   });
+
+  it('shows help instead of scaffolding when name starts with a dash', async () => {
+    const { command, scaffoldProject } = createHarness();
+
+    await expect(runCommand(command, ['--help'])).rejects.toThrow(
+      /process\.exit/i,
+    );
+
+    expect(scaffoldProject).not.toHaveBeenCalled();
+  });
 });

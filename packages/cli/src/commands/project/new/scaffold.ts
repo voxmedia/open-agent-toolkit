@@ -69,6 +69,11 @@ async function resolveProjectsRoot(
 }
 
 function validateProjectName(name: string): void {
+  if (name.startsWith('-')) {
+    throw new Error(
+      `Invalid project name "${name}". Project names must not start with a dash.`,
+    );
+  }
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
     throw new Error(
       `Invalid project name "${name}". Use only letters, numbers, dash, and underscore.`,

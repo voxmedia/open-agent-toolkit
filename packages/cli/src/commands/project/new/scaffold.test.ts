@@ -119,6 +119,21 @@ describe('scaffoldProject', () => {
     ).rejects.toThrow(/Invalid project name/);
   });
 
+  it('rejects project names starting with a dash', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+
+    await expect(
+      scaffoldProject({
+        repoRoot,
+        projectName: '--help',
+        refreshDashboard: false,
+        setActive: false,
+        today: '2026-02-16',
+      }),
+    ).rejects.toThrow(/must not start with a dash/);
+  });
+
   it('cleans template markers and does not overwrite existing files', async () => {
     const repoRoot = await createRepoRoot();
     tempDirs.push(repoRoot);
