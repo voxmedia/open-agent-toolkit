@@ -3,13 +3,13 @@
 This file is the canonical OAT roadmap for this repo. It combines:
 - the dogfood workflow direction (`.oat/repo/archive/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`)
 - the early "product" vision (interop + CLI) (`.oat/repo/archive/past-artifacts/agentic_development_framework_v_1_plan.md`)
-- the review/subagent direction (`.oat/projects/shared/workflow-research/analysis/subagents/refined-subagent-proposal.md`)
+- the review/subagent direction (`.oat/projects/archived/workflow-research/analysis/subagents/refined-subagent-proposal.md`)
 
 For a birdseye snapshot of what exists *right now*, see `.oat/repo/reference/current-state.md`.
 
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
-As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline has been exercised end-to-end. The next focus is shifting toward the original product direction: provider interop via a safe, diff-first CLI (`oat init/status/sync/doctor`), while keeping the Repo State Dashboard and workflow contracts in sync.
+As of `2026-02-17` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor`, config-aware sync, worktree bootstrap). Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
 
 ## Status Summary
 
@@ -20,11 +20,11 @@ As of `git log -1` on branch `dogfood-workflow`, the dogfood workflow baseline h
 | Phase 4: Active project pointer + Repo State Dashboard | Completed (polish remaining) | Pointer + generated `.oat/state.md` exist; clarify “first-class” regeneration contract |
 | Phase 5: Staleness + knowledge drift | Planned | Improve/enforce freshness beyond warn-only |
 | Phase 6: Parallel execution + reconcile | Deferred | Worktrees/subagents + reconciliation tooling |
-| Phase 7: Quick mode + template rendering helper | In Progress | Quick/import lanes implemented; template rendering helper still planned |
-| Phase 8: Provider interop CLI + sync manifest | Next | `oat init/status/sync/doctor`, adapters, manifest, safe sync |
+| Phase 7: Quick mode + template rendering helper | In Progress | Quick/import lanes + canonical plan writing contract implemented; template rendering helper still planned |
+| Phase 8: Provider interop CLI + sync manifest | In Progress | Core command surface + config-aware provider sync shipped; lifecycle polish remains |
 | Phase 9: Multi-project switching + branch awareness | Later | Full `.oat/projects/(shared|local)/...` + hooks |
 | Phase 10: Memory system + provider enhancements | Later | Longer-term durability features |
-| Cross-cutting: skill invocation normalization | High priority | Use skill-first wording across OAT docs/skills; treat `/oat:*` as host-specific alias |
+| Cross-cutting: skill invocation normalization | Completed (guardrails ongoing) | Skill-first wording adopted; continue preventing regressions |
 
 ## Current State (Implemented)
 
@@ -37,6 +37,7 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
 - Workflow phases + routing:
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
   - Router: `oat-project-progress`
+  - Shared planning contract: `oat-project-plan-writing` (full/quick/import mode guidance)
 - Alternate lanes:
   - `oat-project-quick-start` (quick lane)
   - `oat-project-import-plan` (import lane, canonicalized to `plan.md`)
@@ -47,6 +48,11 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - PR: `oat-project-pr-progress`, `oat-project-pr-final`
 - Repo state dashboard:
   - `.oat/scripts/generate-oat-state.sh` generates `.oat/state.md` (gitignored) as a "single glance" dashboard
+- Provider interop CLI:
+  - Commands: `oat init`, `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`, `oat doctor`
+  - Sync state: `.oat/sync/manifest.json` + `.oat/sync/config.json`
+  - Config-aware provider activation with interactive/non-interactive mismatch remediation
+  - Worktree bootstrap path: `pnpm run worktree:init`
 - Workflow UX:
   - User-facing progress indicators across skills (separator banners + step indicators + “starting/done” updates for long-running work)
 - Skill authoring:
@@ -57,15 +63,15 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
 
 ## Known Gaps / Mismatches (What We Need To Resolve)
 
-The workflow baseline is now stable enough to shift focus to interop. Remaining gaps are mostly "product direction" work:
+Core workflow + interop foundations are now in place. Remaining gaps are mostly hardening/polish and long-tail product direction work:
 
 1. Make the Repo State Dashboard first-class
    - Exists today as a generated `.oat/state.md` (gitignored), but we need a clearer contract:
      - when it must be regenerated (and by which skills/scripts)
      - what fields are authoritative at repo-level vs project-level
 
-2. Provider interoperability is not implemented (CLI + adapters + sync)
-   - The core product value requires `oat init/status/sync/doctor`, provider adapters, and a safe sync manifest.
+2. Provider interoperability hardening (post-foundation)
+   - Core CLI and config-aware sync are implemented; remaining work is lifecycle completeness (remove/uninstall flows, deeper diagnostics, and expanded capability docs).
 
 3. Provider capability differences need explicit documentation + fallbacks
    - Some behaviors are provider-specific (skill args, subagents/Task tool, hooks).
@@ -75,10 +81,8 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
    - Dogfood uses `{PROJECTS_ROOT}` + `.oat/active-project` (path format).
    - Name-only `.oat/active-project` is intentionally deferred until CLI project commands own the contract (ADR-004).
 
-5. Invocation semantics are inconsistent across host clients
-   - Current docs frequently assume `/oat:*` slash command availability.
-   - This is not universal (for example, Codex depends on prompt wrappers/host wiring).
-   - We need a single contract: skill names are canonical; slash commands are optional aliases when supported.
+5. Invocation semantics guardrails
+   - Skill-first contract is adopted, but we still need lightweight validation/docs checks to prevent regressions to slash-only wording.
 
 ## Roadmap Phases
 
@@ -132,7 +136,6 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 - Done: `.oat/projects-root` + `.oat/active-project` pointer + skills resolve via it
 - Done: generated Repo State Dashboard (`.oat/state.md`) via `.oat/scripts/generate-oat-state.sh`
 - Remaining: tighten the "first-class" contract (who regenerates it, what fields it includes, and how it stays in sync with skills)
-- Remaining (high priority): normalize OAT invocation wording to skill-first across templates/skills/internal docs (`oat-*` canonical; `/oat:*` alias-only text)
 
 **When to do it:**
 - As soon as we have >1 project under `.oat/projects/shared/<name>/`, or
@@ -195,6 +198,7 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 - Done: import lane starter (`oat-project-import-plan`)
 - Done: in-place promotion skill (`oat-project-promote-full`)
 - Done: mode-aware routing/review/PR/dashboard contracts (`full|quick|import`)
+- Done: shared canonical plan-writing contract (`oat-project-plan-writing`) applied across planning/import/review flows
 - Remaining: template rendering helper (`oat template render ...`)
 
 **When to do it:**
@@ -211,8 +215,14 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
 
 **Goal:** Deliver the original interop value: provider adapters, sync, drift detection, and safe apply.
 
+**Status:** In Progress
+- Done: core command surface (`oat init/status/sync/providers/doctor`)
+- Done: config-aware provider activation and `oat providers set` for explicit enable/disable management
+- Done: worktree-safe bootstrap guidance/script (`pnpm run worktree:init`)
+- Remaining: lifecycle completeness commands (e.g., uninstall/remove), expanded capability matrix, and additional UX hardening
+
 **When to do it:**
-- Now that dogfood v1 has been exercised end-to-end, we can start building the CLI in parallel with smaller workflow polish.
+- Continue hardening current CLI behavior while expanding remaining lifecycle features.
 
 **Deliverables:**
 - P0: Validate provider assumptions (paths + precedence) in fixture repos
@@ -223,6 +233,7 @@ The workflow baseline is now stable enough to shift focus to interop. Remaining 
   - `oat init` (bootstrap `.agents/`, `.oat/`, `AGENTS.md`)
   - `oat status` (provider detection + drift/stray summary + capability matrix)
   - `oat sync` (diff-first, dry-run by default; apply only with explicit flag)
+  - `oat providers set` (explicit project provider enable/disable in sync config)
   - `oat doctor` (environment diagnostics + actionable fix steps)
 - P0: Provider adapters (config-driven)
   - Canonical source is `.agents/**`; provider dirs are generated views (symlink/copy)

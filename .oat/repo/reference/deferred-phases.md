@@ -5,7 +5,7 @@ This document lists the next phases of work that are explicitly deferred beyond 
 Primary references:
 - `.oat/repo/archive/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`
 - `.oat/repo/archive/past-artifacts/agentic_development_framework_v_1_plan.md`
-- `.oat/projects/shared/workflow-research/analysis/subagents/refined-subagent-proposal.md`
+- `.oat/projects/archived/workflow-research/analysis/subagents/refined-subagent-proposal.md`
 - Current snapshot: `.oat/repo/reference/current-state.md`
 
 ## Baseline (Already In Scope)
@@ -17,9 +17,14 @@ Dogfood v1 baseline is:
 - Active project selection: `.oat/active-project` (single-line path, local-only; gitignored)
 - Project scaffolding: `oat-project-new` (creates `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`)
 - Quick/import lanes: `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-promote-full`
+- Shared plan contract: `oat-project-plan-writing`
 - Review + PR loop: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-pr-progress`, `oat-project-pr-final`
 - Ad-hoc review: `oat-review-provide` (non-project scopes)
 - Repo State Dashboard: `.oat/state.md` generated via `.oat/scripts/generate-oat-state.sh` (gitignored)
+- Provider interop CLI foundation:
+  - `oat init`, `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`, `oat doctor`
+  - Config-aware provider activation via `.oat/sync/config.json`
+  - Worktree bootstrap script: `pnpm run worktree:init`
 
 ## Deferred Phases
 
@@ -76,6 +81,7 @@ For dogfood v1, the safest approach is:
 
 **Deliverables:**
 - Done: quick/import mode lanes with canonical `plan.md` execution contract
+- Done: shared plan-writing guidance (`oat-project-plan-writing`) with mode-aware plan contracts
 - Remaining: template rendering helper (`oat template render ...`) to avoid copy/paste and ensure consistent frontmatter
 
 ---
@@ -84,10 +90,14 @@ For dogfood v1, the safest approach is:
 
 **What:** Turn the dogfood workflow into a broader toolkit: provider adapters, sync, drift detection, and safe apply.
 
+**Status:** In Progress
+- Done: core command surface, sync manifest/config model, and provider config commands
+- Remaining: lifecycle completeness features and provider capability hardening
+
 **When to start:**
 - Now that dogfood v1 has been exercised end-to-end, we can start building the CLI in parallel with smaller workflow polish.
 
-**Deliverables (from early plan direction):**
+**Deliverables (remaining from early plan direction):**
 - `oat init`, `oat status`, `oat sync`, `oat doctor`
 - Provider adapters + capability matrix
 - `.oat/sync/manifest.json`-based management (diff-first, reversible)

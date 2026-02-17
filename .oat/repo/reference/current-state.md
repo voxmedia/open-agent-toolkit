@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is *right now* in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-02-16
+**Last Updated:** 2026-02-17
 
 ## Canonical References
 
@@ -24,6 +24,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Knowledge + routing:
   - `oat-repo-knowledge-index` (thin-first index + enrichment)
   - `oat-project-progress` (router / status)
+  - `oat-project-plan-writing` (shared plan writing contract used by planning/import/review flows)
 - Artifact generation:
   - `oat-project-new` (scaffold a project dir from templates)
   - `oat-project-quick-start` (quick lane: discovery -> plan -> implement)
@@ -43,6 +44,18 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 - `create-oat-skill` (scaffold new OAT skills using the standard OAT sections + banner conventions; references baseline guidance from `create-skill`)
 
+### Provider Interop CLI (Implemented Surface)
+
+- Commands:
+  - `oat init`, `oat status`, `oat sync`, `oat doctor`
+  - `oat providers list`, `oat providers inspect`, `oat providers set`
+- Provider config model:
+  - Project provider enablement lives in `.oat/sync/config.json` (`providers.<name>.enabled`).
+  - `oat init --scope project` prompts for provider selection in interactive mode.
+  - `oat sync --scope project` performs config-aware provider activation and mismatch remediation (interactive prompt in TTY mode, warning + remediation guidance in non-interactive mode).
+- Worktree bootstrap:
+  - Root script: `pnpm run worktree:init` (`pnpm install && pnpm run build && pnpm run cli -- sync --scope project --apply`).
+
 ### Tool Metadata
 
 - Most skills define `allowed-tools` in frontmatter as an advisory tool scope (provider-dependent).
@@ -50,6 +63,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - Write skills (e.g., `oat-project-discover` → `oat-project-implement`, `oat-project-review-receive`, PR skills) include `Write` and `Bash(git:*)`.
 - Internal validation:
   - `pnpm oat:validate-skills` checks that all `oat-*` skills include required frontmatter keys and the standard progress banner section.
+  - Backed by CLI command: `oat internal validate-oat-skills`.
 
 ### Templates / Scripts
 
@@ -84,6 +98,9 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Templates: `.oat/templates/*.md`
 - Knowledge: `.oat/repo/knowledge/*.md`
 - Project artifacts (default checked-in layout): `.oat/projects/shared/<project>/` (configurable via `.oat/projects-root`)
+- Provider sync state:
+  - `.oat/sync/config.json` (provider enablement/strategy config)
+  - `.oat/sync/manifest.json` (managed sync mappings and content hashes)
 
 ## Quickstart (Current)
 
@@ -110,6 +127,15 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 Non-project review path:
 - If no active project/state exists, use `oat-review-provide` (commit range, branch range, staged/unstaged, or explicit file list).
 
+Interop quickstart:
+1. Initialize canonical/provider sync scaffolding:
+   - `pnpm run cli -- init --scope project`
+2. Set explicit supported providers (optional, deterministic):
+   - `pnpm run cli -- providers set --scope project --enabled claude,codex --disabled cursor`
+3. Preview and apply sync:
+   - `pnpm run cli -- sync --scope project`
+   - `pnpm run cli -- sync --scope project --apply`
+
 ## Known Gaps / Next Steps
 
 - PR automation enhancements:
@@ -117,7 +143,7 @@ Non-project review path:
 - Repo-level dashboard:
   - Repo State Dashboard (`.oat/state.md`) exists, but needs to be made first-class (clear generation/refresh workflow + keep docs in sync with current semantics)
 - Provider interop (CLI):
-  - Build the safe interop CLI (`oat init/status/sync/doctor`) with adapters + sync manifest (see `.oat/repo/reference/roadmap.md` Phase 8)
+  - Core command surface is implemented; remaining work is lifecycle polish (for example, uninstall/remove flows, broader provider capability matrix, and additional ergonomics)
 - Multi-project model:
   - `.oat/projects/**` and `oat project ...` switching (in progress; dogfood now uses `.oat/projects/shared` as the default projects root)
 - Parallel execution + reconciliation:

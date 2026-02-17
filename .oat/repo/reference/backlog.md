@@ -40,6 +40,77 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## Planned
 
+- [ ] **(P1) [skills] Add OAT-native git worktree workflow skill**
+  - Target milestone/phase: Workflow ergonomics + onboarding reliability
+  - Notes:
+    - Add a dedicated skill for creating/using git worktrees in OAT repos (modeled after superpowers worktree guidance, but OAT-specific).
+    - Include explicit setup sequence for each new worktree:
+      - `pnpm install`
+      - `pnpm run worktree:init`
+      - any required CLI initialization/sync checks (`oat init`/`oat sync`) when applicable.
+    - Document safe conventions for branch naming, active project handling, and provider view sync in worktree contexts.
+  - Success criteria:
+    - User can invoke one skill to get a consistent, low-error worktree bootstrap flow.
+    - Skill guidance is aligned with current CLI behavior and avoids stale/manual setup steps.
+    - Worktree setup guidance is mirrored in docs where appropriate.
+  - Links:
+    - Related existing script: `pnpm run worktree:init`
+    - Reference inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
+  - Created: 2026-02-17
+
+- [ ] **(P1) [skills] Add stronger subagent orchestration skills (sequential + parallel dispatch)**
+  - Target milestone/phase: Phase 6 readiness (parallel execution + reconcile)
+  - Notes:
+    - Add OAT skills for subagent-driven development and parallel agent dispatch patterns.
+    - Scope should include: when to spawn subagents, task slicing rules, aggregation/reconciliation expectations, and failure handling.
+    - Align with current OAT workflow artifacts so subagent outputs map cleanly into plan/implementation/review loops.
+  - Success criteria:
+    - Team has reusable skills for both “single focused subagent loop” and “parallel dispatch + reconcile” workflows.
+    - Skills reduce ad-hoc prompting and improve consistency of multi-agent execution.
+    - Guidance includes clear guardrails for quality gates before merge.
+  - Links:
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md
+    - Related roadmap area: Phase 6 (parallel execution + reconcile)
+  - Created: 2026-02-17
+
+- [ ] **(P1) [skills] Add `oat-project-document` for post-implementation documentation synthesis**
+  - Target milestone/phase: Workflow quality + closeout discipline
+  - Notes:
+    - Add a dedicated skill to run after implementation/review cycles and generate documentation update recommendations (and optional patches) based on project artifacts + implementation diffs.
+    - Scope should include, where applicable:
+      - repo docs under `docs/oat/**`
+      - root `README.md`
+      - project or scoped `AGENTS.md` / `CLAUDE.md` instruction updates
+      - `.oat/repo/reference/**` updates for behavior/status drift.
+    - Support two execution contexts:
+      - active project before completion
+      - completed/archived project path (read-only source artifacts still available).
+    - Integrate into closeout flow:
+      - suggest `oat-project-document` before `oat-project-complete`
+      - optionally add a project frontmatter/status flag to record documentation-sync state.
+  - Success criteria:
+    - Running `oat-project-document` produces a clear docs delta plan and/or applies approved updates with traceability.
+    - Skill can target both active and archived projects without requiring phase mutation.
+    - `oat-project-complete` flow can recommend or gate on documentation sync status (policy configurable).
+  - Links:
+    - Related workflow skills: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-complete`
+  - Created: 2026-02-17
+
+- [ ] **(P2) [docs] Add web-research convention using `markdown.new/` URL prefix**
+  - Target milestone/phase: Agent instruction/docs quality
+  - Notes:
+    - Update AGENTS/docs guidance to prefer `https://markdown.new/<original-url>` when pulling website content for analysis, where applicable.
+    - Document tradeoffs and fallback behavior (use normal fetch path when markdown.new conversion is unavailable or lossy).
+    - Evaluate whether this is docs-only guidance or warrants a small helper skill.
+  - Success criteria:
+    - AGENTS/docs include a clear, concise convention for markdown-first web retrieval.
+    - Agents avoid unnecessary HTML parsing in common research/review tasks.
+    - Guidance remains optional and does not block direct URL usage when needed.
+  - Links:
+    - Service reference: https://markdown.new/
+  - Created: 2026-02-17
+
 - [ ] **(P2) [tooling] Optional Codex prompt-wrapper generation for synced OAT skills**
   - Target milestone/phase: Post-standardization enhancement
   - Notes:
@@ -64,6 +135,24 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - Source discussion: OAT feature ideas (agent context management)
   - Created: 2026-02-14
+
+- [ ] **(P1) [skills] Make `oat-reviewer` mode-aware for quick/import projects (or split reviewer profiles)**
+  - Target milestone/phase: Review workflow robustness across lanes
+  - Notes:
+    - Current reviewer path spawned by `oat-project-review-provide` can assume full-mode artifacts (`spec.md`, `design.md`) that may be absent in quick/import projects.
+    - Update canonical reviewer prompt (`.agents/agents/oat-reviewer.md`) to support artifact-availability-aware review behavior for `full|quick|import` modes.
+    - Evaluate whether to:
+      - keep one reviewer with mode-aware logic, or
+      - split into lane-specific reviewer prompts and route by mode.
+    - Ensure project review skill passes explicit mode + available-artifact context to reviewer invocation.
+  - Success criteria:
+    - Reviewer does not fail or degrade quality when `spec.md`/`design.md` are missing in quick/import projects.
+    - Review output explicitly states assumptions based on available artifacts.
+    - `oat-project-review-provide` routing/tests cover full, quick, and import review contexts.
+  - Links:
+    - Related skill: `.agents/skills/oat-project-review-provide/SKILL.md`
+    - Canonical reviewer prompt: `.agents/agents/oat-reviewer.md`
+  - Created: 2026-02-17
 
 - [ ] **(P1) [skills] Complete review receive + PR-review intake skill family**
   - Target milestone/phase: Workflow expansion after current docs stabilization
@@ -149,25 +238,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Command output clearly reports what was removed vs skipped.
   - Links:
     - Related gap: skill removal currently requires manual deletion + sync
-  - Created: 2026-02-16
-
-- [ ] **(P1) [tooling] Add explicit supported-provider configuration for project sync**
-  - Target milestone/phase: OAT CLI provider ergonomics
-  - Notes:
-    - `oat init` should optionally prompt for supported project providers (e.g., `claude`, `cursor`, `codex`) instead of relying only on provider directory detection.
-    - Persist provider enable/disable intent in `.oat/sync/config.json` (`providers.<name>.enabled`) rather than in sync manifest entries.
-    - Add a command to manage this after init (e.g., `oat providers set ...` or `oat providers enable/disable ...`).
-    - Update `oat sync --apply` behavior so enabled providers can be materialized even when provider root directories do not already exist (worktree-safe bootstrap).
-    - Add a worktree bootstrap script pattern that succeeds even when provider roots are initially absent, e.g.:
-      - `\"worktree:init\": \"pnpm install && pnpm run build && pnpm run cli sync --scope project --apply\"`
-  - Success criteria:
-    - Fresh worktree with no `.claude`/`.cursor`/`.codex` directories can still sync configured providers successfully.
-    - Provider preference survives across runs via `.oat/sync/config.json`.
-    - Users can change supported providers without manually editing config files.
-    - Sync output clearly indicates which providers were selected from config vs detected from filesystem.
-  - Links:
-    - Related behavior: provider activation currently depends on directory detection in `getActiveAdapters`.
-    - Related files: `packages/cli/src/commands/init/index.ts`, `packages/cli/src/commands/sync/index.ts`, `packages/cli/src/config/sync-config.ts`
   - Created: 2026-02-16
 
 - [ ] **(P1) [tooling] Fix `oat project new --help` parsing bug that scaffolds a `--help` project**

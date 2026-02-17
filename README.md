@@ -23,6 +23,21 @@ This repository currently includes three core pieces:
 
 ## Three Ways To Use OAT
 
+```mermaid
+flowchart TD
+  Start["Starting point"] --> Q1{"Need cross-provider sync and drift checks only?"}
+  Q1 -->|Yes| A["Interop-only mode"]
+  Q1 -->|No| Q2{"Need durable project artifacts and phase gates?"}
+  Q2 -->|No| B["Provider-agnostic tooling mode"]
+  Q2 -->|Yes| C["Workflow mode"]
+```
+
+| Mode | Best for | Primary entry points |
+|---|---|---|
+| Interop-only | Canonical skill/agent sync + drift diagnostics | `oat init`, `oat status`, `oat sync`, `oat providers ...`, `oat doctor` |
+| Provider-agnostic tooling | Reusing skills/utilities without full lifecycle overhead | `docs/oat/skills/index.md`, selected `oat-*` skills |
+| Workflow | Structured execution with durable artifacts and review gates | `oat-project-new`/`oat-project-open`, then lane-specific skills |
+
 ### A) Interop-only mode (CLI only)
 
 Use OAT only for cross-provider asset management:
@@ -36,9 +51,10 @@ Primary commands:
 - `oat init`
 - `oat status`
 - `oat sync`
-- `oat providers ...`
+- `oat providers list`
+- `oat providers inspect <provider>`
+- `oat providers set`
 - `oat doctor`
-- `oat project new <name>`
 
 This mode is useful even if you do not use OAT workflow skills at all.
 
@@ -57,12 +73,15 @@ Start points:
 
 ### C) Workflow mode (skills + project artifacts)
 
-Use OAT lifecycle skills to run full project execution with checkpoints:
+Use OAT lifecycle skills when you want explicit checkpoints and durable project artifacts.
 
-- Discovery -> Spec -> Design -> Plan -> Implement
-- Review receive/fix loops
-- PR artifact generation
-- Lifecycle completion and archival
+You can start in one of three lanes (each converges on implementation + full review workflows):
+
+1. Full lane: Discovery -> Spec -> Design -> Plan -> Implement -> Project review loop
+2. Quick lane: Quick start (discovery + plan baseline) -> Implement -> Project review loop
+3. Imported-plan lane: Plan with provider -> Import to OAT project -> Implement -> Project review loop
+
+All lanes support review/fix loops, PR artifact generation, and optional promotion to full lifecycle where applicable.
 
 This layer is optional and can build on top of interop + provider-agnostic tooling.
 
@@ -87,7 +106,7 @@ If you are interop-only, you can ignore most project artifact files.
 
 ```bash
 pnpm install
-pnpm run cli -- --help
+pnpm run cli -- help
 ```
 
 ### 2) Initialize and inspect
@@ -95,6 +114,7 @@ pnpm run cli -- --help
 ```bash
 pnpm run cli -- init --scope project
 pnpm run cli -- status --scope all
+pnpm run cli -- providers list
 ```
 
 ### 3) Sync provider views (when needed)
@@ -108,6 +128,8 @@ Notes:
 - `sync` is dry-run by default.
 - `--apply` performs filesystem updates.
 - Project provider support is configured in `.oat/sync/config.json` (set via `oat init` interactive prompt or `oat providers set`).
+- In non-interactive contexts, set provider intent explicitly:
+  - `pnpm run cli -- providers set --scope project --enabled claude,codex --disabled cursor`
 
 ### 4) Bootstrap a new worktree checkout
 
@@ -152,6 +174,7 @@ Once you have an `oat` executable available in your environment:
 
 ```bash
 oat init --scope project
+oat providers set --scope project --enabled claude,codex --disabled cursor
 oat status --scope all
 oat sync --scope all
 oat sync --scope all --apply
@@ -162,31 +185,64 @@ This gives you the core value of OAT without adopting workflow artifacts.
 
 ## Workflow At A Glance
 
-### Full workflow lane
+```mermaid
+flowchart LR
+  Full["Full lane: discover -> spec -> design -> plan"] --> Implement["Implement: oat-project-implement"]
+  Quick["Quick lane: oat-project-quick-start"] --> Implement
+  Import["Imported lane: oat-project-import-plan"] --> Implement
+  Implement --> Review{"Review context?"}
+  Review -->|Project-scoped| ProjectReview["oat-project-review-provide + oat-project-review-receive"]
+  Review -->|Ad-hoc / non-project| AdHocReview["oat-review-provide"]
+  ProjectReview --> PR["PR artifacts: oat-project-pr-progress / oat-project-pr-final"]
+```
 
-1. Create/open project (`oat-project-new` / `oat-project-open`)
-2. Discovery (`oat-project-discover`)
-3. Spec (`oat-project-spec`)
-4. Design (`oat-project-design`)
-5. Plan (`oat-project-plan`)
-6. Implement (`oat-project-implement`)
-7. Review loop (`oat-project-review-provide` + `oat-project-review-receive`)
-8. PR generation (`oat-project-pr-progress` / `oat-project-pr-final`)
-9. Complete lifecycle (`oat-project-complete`)
+### Choose a lane
 
-### Quick workflow lane
+1. Full workflow lane
+   - Create/open project (`oat-project-new` / `oat-project-open`)
+   - Discovery (`oat-project-discover`)
+   - Spec (`oat-project-spec`)
+   - Design (`oat-project-design`)
+   - Plan (`oat-project-plan`)
+   - Implement (`oat-project-implement`)
+2. Quick workflow lane
+   - Quick start (`oat-project-quick-start`, which captures discovery context and writes a runnable plan baseline)
+   - Implement (`oat-project-implement`)
+   - Optional promotion (`oat-project-promote-full`)
+3. Imported-plan workflow lane
+   - Produce discovery/plan externally with provider tooling
+   - Import external plan (`oat-project-import-plan`)
+   - Implement (`oat-project-implement`)
+   - Optional promotion (`oat-project-promote-full`)
 
-1. Quick start (`oat-project-quick-start`)
-2. Implement (`oat-project-implement`)
-3. Review/PR (`oat-project-review-provide`, `oat-project-pr-final`)
-4. Optional promotion to full lifecycle (`oat-project-promote-full`)
+### Typical lane sequences
 
-### Imported-plan workflow lane
+1. Provider-plan import sequence
+   - External discovery + planning with provider tooling
+   - `oat-project-import-plan`
+   - `oat-project-implement`
+   - `oat-project-review-provide` + `oat-project-review-receive`
+   - `oat-project-pr-final`
+2. Quick-start sequence
+   - `oat-project-quick-start` (discovery + initial plan scaffold)
+   - `oat-project-implement`
+   - `oat-project-review-provide` + `oat-project-review-receive`
+   - `oat-project-pr-final`
 
-1. Import external plan (`oat-project-import-plan`)
-2. Implement (`oat-project-implement`)
-3. Review/PR (`oat-project-review-provide`, `oat-project-pr-final`)
-4. Optional promotion to full lifecycle (`oat-project-promote-full`)
+### Shared workflow options
+
+1. Routing and next-step checks:
+   - `oat-project-progress`
+2. Canonical plan-writing contract:
+   - `oat-project-plan-writing` (shared full/quick/import planning semantics)
+3. Review path selection:
+   - Project-scoped review: `oat-project-review-provide` + `oat-project-review-receive`
+   - Ad-hoc/non-project review: `oat-review-provide`
+4. PR generation:
+   - Progress PR: `oat-project-pr-progress`
+   - Final PR: `oat-project-pr-final`
+5. Lifecycle completion:
+   - `oat-project-complete` (with optional active-project cleanup)
 
 ## Documentation
 

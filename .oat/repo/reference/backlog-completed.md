@@ -14,6 +14,21 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [tooling] Add explicit supported-provider configuration for project sync**
+  - Outcome:
+    - Added explicit project provider enable/disable management in `.oat/sync/config.json` via `oat providers set --scope project --enabled ... --disabled ...`.
+    - Added provider selection during `oat init --scope project` (interactive) and persisted explicit provider states.
+    - Updated `oat sync --scope project` to use config-aware adapter activation and provide mismatch remediation:
+      - interactive prompt path in TTY mode
+      - non-interactive warning path with deterministic remediation guidance.
+    - Added and documented worktree bootstrap flow: `pnpm run worktree:init` for fresh worktrees with missing provider roots.
+  - Links:
+    - CLI docs: `docs/oat/cli/provider-interop/config.md`
+    - Troubleshooting: `docs/oat/reference/troubleshooting.md`
+    - Implementation PR: `https://github.com/tkstang/open-agent-toolkit/pull/14`
+  - Created: 2026-02-16
+  - Completed: 2026-02-17
+
 - [x] **(P1) [tooling] Retire AGENTS skills-table refresh work item**
   - Outcome:
     - Removed the large `SKILLS_TABLE_START` / `SKILLS_TABLE_END` inventory block from `AGENTS.md`.
