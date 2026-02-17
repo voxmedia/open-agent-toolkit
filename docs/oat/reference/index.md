@@ -6,6 +6,8 @@ This section contains durable reference material for operating and maintaining O
 
 - `docs/oat/reference/file-locations.md`
   - Where core OAT files, assets, and artifacts live.
+- `docs/oat/reference/oat-directory-structure.md`
+  - Canonical `.oat/` tree map and per-file/per-folder purpose.
 - `docs/oat/reference/commit-conventions.md`
   - Commit patterns and traceability conventions.
 - `docs/oat/reference/troubleshooting.md`

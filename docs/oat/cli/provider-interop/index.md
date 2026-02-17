@@ -16,5 +16,7 @@ Shared CLI conventions live in `docs/oat/cli/design-principles.md`.
   - Provider-specific mapping behavior (Claude, Cursor, Codex).
 - `docs/oat/cli/provider-interop/manifest-and-drift.md`
   - Manifest model, drift states, and stray adoption.
+- `docs/oat/cli/provider-interop/config.md`
+  - Sync config model (`.oat/sync/config.json`) and provider enablement semantics.
 - `docs/oat/cli/provider-interop/hooks-and-safety.md`
   - Hook behavior and operational safety contracts.

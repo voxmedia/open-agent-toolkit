@@ -1,5 +1,8 @@
 # File Locations
 
+For detailed `.oat/` tree semantics, see:
+- `docs/oat/reference/oat-directory-structure.md`
+
 ## Canonical agent assets
 
 - Skills: `.agents/skills/`
