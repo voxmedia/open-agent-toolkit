@@ -58,6 +58,10 @@ const HOOK_PROMPT = 'Install optional pre-commit hook for drift warnings?';
 const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';
 
+function getDefaultAdapters(): ProviderAdapter[] {
+  return [claudeAdapter, cursorAdapter, codexAdapter];
+}
+
 interface InitOptions extends GlobalOptions {
   hook?: boolean;
 }
@@ -157,10 +161,7 @@ async function collectStraysDefault(
 ): Promise<InitStrayCandidate[]> {
   const adaptersToScan =
     activeAdapters ??
-    (await getActiveAdapters(
-      [claudeAdapter, cursorAdapter, codexAdapter],
-      scopeRoot,
-    ));
+    (await getActiveAdapters(getDefaultAdapters(), scopeRoot));
   const candidates: InitStrayCandidate[] = [];
 
   for (const adapter of adaptersToScan) {
@@ -219,7 +220,7 @@ function createDependencies(): InitDependencies {
     installHook,
     uninstallHook,
     getAdapters() {
-      return [claudeAdapter, cursorAdapter, codexAdapter];
+      return getDefaultAdapters();
     },
     async loadSyncConfig(configPath) {
       return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
