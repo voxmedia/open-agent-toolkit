@@ -302,7 +302,12 @@ describe('scaffoldProject', () => {
       today: '2026-02-16',
     });
 
-    for (const file of ['state.md', 'plan.md', 'implementation.md']) {
+    for (const file of [
+      'state.md',
+      'discovery.md',
+      'plan.md',
+      'implementation.md',
+    ]) {
       await expect(
         readFile(
           join(repoRoot, '.oat', 'projects', 'shared', 'quick-mode', file),
@@ -311,12 +316,7 @@ describe('scaffoldProject', () => {
       ).resolves.toBeDefined();
     }
 
-    for (const file of [
-      'discovery.md',
-      'spec.md',
-      'design.md',
-      'project-index.md',
-    ]) {
+    for (const file of ['spec.md', 'design.md', 'project-index.md']) {
       await expect(
         readFile(
           join(repoRoot, '.oat', 'projects', 'shared', 'quick-mode', file),

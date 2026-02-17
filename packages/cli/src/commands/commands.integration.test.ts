@@ -351,7 +351,12 @@ describe('CLI command integration', () => {
     expect(result.stdout).toContain('Created/updated OAT project: quick-smoke');
     expect(result.stdout).not.toContain('Dashboard generated: .oat/state.md');
 
-    for (const file of ['state.md', 'plan.md', 'implementation.md']) {
+    for (const file of [
+      'state.md',
+      'discovery.md',
+      'plan.md',
+      'implementation.md',
+    ]) {
       await expect(
         readFile(
           join(root, '.oat', 'projects', 'shared', 'quick-smoke', file),
@@ -360,7 +365,7 @@ describe('CLI command integration', () => {
       ).resolves.toContain('quick-smoke');
     }
 
-    for (const file of ['discovery.md', 'spec.md', 'design.md']) {
+    for (const file of ['spec.md', 'design.md']) {
       await expect(
         readFile(
           join(root, '.oat', 'projects', 'shared', 'quick-smoke', file),

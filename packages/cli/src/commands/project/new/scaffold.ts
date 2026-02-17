@@ -35,7 +35,7 @@ const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
     'plan.md',
     'implementation.md',
   ],
-  quick: ['state.md', 'plan.md', 'implementation.md'],
+  quick: ['state.md', 'discovery.md', 'plan.md', 'implementation.md'],
   import: ['state.md', 'plan.md', 'implementation.md'],
 };
 
