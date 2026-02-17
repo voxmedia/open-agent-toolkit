@@ -3,6 +3,7 @@ export {
   copyDirectory,
   createSymlink,
   ensureDir,
+  fileExists,
 } from './io';
 export {
   normalizeToPosixPath,

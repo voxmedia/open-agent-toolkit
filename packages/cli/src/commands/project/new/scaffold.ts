@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileExists } from '@fs/io';
 
 export type ProjectScaffoldMode = 'full' | 'quick' | 'import';
 
@@ -38,15 +39,6 @@ const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
   quick: ['state.md', 'discovery.md', 'plan.md', 'implementation.md'],
   import: ['state.md', 'plan.md', 'implementation.md'],
 };
-
-async function fileExists(path: string): Promise<boolean> {
-  try {
-    const s = await stat(path);
-    return s.isFile();
-  } catch {
-    return false;
-  }
-}
 
 async function resolveProjectsRoot(
   repoRoot: string,
