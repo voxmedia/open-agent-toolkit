@@ -27,11 +27,13 @@ Current worktree skill guidance is intentionally manual-safe and explicit-invoca
 ## In Scope
 1. Define autonomous worktree bootstrap skill contract for subagent/orchestrator execution.
 2. Define subagent orchestration skill contract for parallel fan-out/fan-in.
-3. Define merge-back/reconcile strategy for parallel branches/worktrees.
-4. Define failure handling, retries, and conflict escalation rules.
-5. Define autonomous review-before-merge gate and reviewer/implementer role contracts.
-6. Define OAT artifact updates required during orchestration (plan/implementation/review linkage + review interaction traceability).
-7. Update backlog and references to track this as part of subagent orchestration work.
+3. Define pre-implement execution-mode selection step (`single-thread` vs `subagent-driven`) after planning.
+4. Define project state/frontmatter tracking for selected execution mode.
+5. Define merge-back/reconcile strategy for parallel branches/worktrees.
+6. Define failure handling, retries, and conflict escalation rules.
+7. Define autonomous review-before-merge gate and reviewer/implementer role contracts.
+8. Define OAT artifact updates required during orchestration (plan/implementation/review linkage + review interaction traceability).
+9. Update backlog and references to track this as part of subagent orchestration work.
 
 ## Out of Scope
 1. Replacing existing manual-safe worktree skill behavior.
@@ -77,6 +79,23 @@ Draft behavior:
    - classify and report conflicts.
 7. Update `implementation.md` with orchestration run summary.
 
+### 3) Plan-to-implement execution selector (new)
+Suggested integration point: end of planning flows (before first implement step)
+
+Intent:
+- Match superpowers-style plan handoff by asking user how to execute the plan.
+- Keep default single-agent behavior while enabling subagent orchestration when chosen.
+
+Draft behavior:
+1. At plan completion, prompt:
+   - `single-thread` (existing implementation flow),
+   - `subagent-driven` (orchestrated worktree flow).
+2. Persist choice in project state/frontmatter (for example `oat_execution_mode`).
+3. Route next step based on persisted mode:
+   - `single-thread` -> `oat-project-implement`
+   - `subagent-driven` -> `oat-subagent-orchestrate`
+4. Allow explicit override per run, but keep persisted mode as default.
+
 ## Orchestration Policies
 1. Eligibility: only tasks/phases explicitly marked parallel-safe are fanned out.
 2. Merge strategy:
@@ -93,6 +112,10 @@ Draft behavior:
    - Each unit must pass reviewer gate before merge-back to orchestration branch.
    - Reviewer gate uses deterministic pass/fail criteria (tests + contract checks + scoped code review findings).
    - Failed reviews route to automated fix iteration up to configured retry limit, then mark unit failed/skipped.
+6. Execution mode policy:
+   - Source of truth: project state/frontmatter execution mode value.
+   - If unset, default to `single-thread` for backward compatibility.
+   - Orchestrator entrypoints must respect persisted mode unless explicit override is provided.
 
 ## OAT Artifact Contract
 During orchestration runs, append structured sections in project `implementation.md`:
@@ -101,6 +124,10 @@ During orchestration runs, append structured sections in project `implementation
 3. review interaction records (reviewer role, verdict, key findings, retry count),
 4. merge/reconcile outcomes,
 5. outstanding conflicts or manual follow-ups.
+
+Project state contract additions:
+- Store execution mode in project state/frontmatter (for example `oat_execution_mode: single-thread|subagent-driven`).
+- Optionally track orchestration policy options (for example merge strategy/retry policy) when subagent-driven mode is selected.
 
 Plan linkage requirements:
 - review rows/status transitions remain canonical in `plan.md`.
@@ -111,7 +138,8 @@ Plan linkage requirements:
 ### Phase 1: Contract design
 1. Draft `oat-worktree-bootstrap-auto` skill contract.
 2. Draft `oat-subagent-orchestrate` skill contract.
-3. Define policy flags (baseline strictness, merge strategy) and map existing HiL frontmatter into orchestration pause/resume behavior.
+3. Define plan-to-implement execution-mode selector contract.
+4. Define policy flags (baseline strictness, merge strategy) and map existing HiL frontmatter into orchestration pause/resume behavior.
 
 ### Phase 2: Core flow
 1. Implement autonomous worktree bootstrap logic and status outputs.
@@ -121,14 +149,16 @@ Plan linkage requirements:
 
 ### Phase 3: OAT integration
 1. Integrate `implementation.md` orchestration logging.
-2. Ensure compatibility with existing review skills and final gate semantics.
-3. Document usage patterns for large multi-phase projects.
+2. Integrate execution-mode persistence in project state/frontmatter.
+3. Ensure compatibility with existing review skills and final gate semantics.
+4. Document usage patterns for large multi-phase projects.
 
 ### Phase 4: Validation
 1. Dry-run orchestration on sample multi-phase plan.
 2. Execute parallel-safe phases in worktrees and reconcile.
 3. Validate autonomous review gate blocks failed units from merge-back.
 4. Validate checkpoint behavior against existing HiL frontmatter (including mid-plan checkpoints).
+5. Validate plan handoff selector persists execution mode and routes correctly.
 
 ## Test Scenarios
 1. Happy path: two parallel units succeed and merge cleanly.
@@ -137,6 +167,7 @@ Plan linkage requirements:
 4. Merge conflict path: conflict detected, escalation output generated.
 5. No active project path: orchestration continues with console fallback logging.
 6. Mid-plan HiL checkpoint path: parallel units run before checkpoint, orchestrator pauses at configured checkpoint.
+7. Plan handoff path: user selects `subagent-driven`, mode is persisted, and subsequent execution routes to orchestrator by default.
 
 ## Acceptance Criteria
 1. Orchestrator can run parallel worktree-based execution without interactive prompts between configured HiL checkpoints.
@@ -145,12 +176,14 @@ Plan linkage requirements:
 4. Failures/conflicts are surfaced with actionable next steps, without silent loss of work.
 5. OAT artifacts capture review interaction history and remain consistent with existing lifecycle/review contracts.
 6. Manual-safe and autonomous skill contracts remain clearly separated.
+7. Plan-to-implement handoff supports explicit execution-mode selection and persists it in project state/frontmatter.
 
 ## References
 1. Existing worktree foundation:
    - `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
 2. Superpowers inspiration:
    - https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
+   - https://github.com/obra/superpowers/blob/e16d611eee14ac4c3253b4bf4c55a98d905c2e64/skills/writing-plans/SKILL.md#L103
    - https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md
    - https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md
    - https://github.com/obra/superpowers/blob/main/skills/finishing-a-development-branch/SKILL.md

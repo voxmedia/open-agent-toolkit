@@ -97,6 +97,10 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Add OAT skills for subagent-driven development and parallel agent dispatch patterns.
     - Scope should include: when to spawn subagents, task slicing rules, aggregation/reconciliation expectations, and failure handling.
     - Align with current OAT workflow artifacts so subagent outputs map cleanly into plan/implementation/review loops.
+    - Add a plan-handoff selector before implementation starts:
+      - prompt for `single-thread` vs `subagent-driven` execution,
+      - persist the selected mode in project state/frontmatter,
+      - route implementation entrypoint based on persisted mode by default.
     - Fold in autonomous worktree orchestration for large multi-phase projects:
       - keep `oat-worktree-bootstrap` manual-safe for direct use,
       - add an autonomous worktree companion contract for orchestrators,
@@ -107,7 +111,9 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Skills reduce ad-hoc prompting and improve consistency of multi-agent execution.
     - Guidance includes clear guardrails for quality gates before merge.
     - Parallel orchestration path works without intermediate prompts between configured HiL checkpoints while preserving OAT artifact traceability.
+    - Execution mode is explicit and durable per project (state/frontmatter), with safe defaults for existing workflows.
   - Links:
+    - Inspiration: https://github.com/obra/superpowers/blob/e16d611eee14ac4c3253b4bf4c55a98d905c2e64/skills/writing-plans/SKILL.md#L103
     - Inspiration: https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md
     - Inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
     - Inspiration: https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md
