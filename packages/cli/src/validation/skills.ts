@@ -113,10 +113,11 @@ export async function validateOatSkills(
           message: 'Frontmatter description must be a single-line scalar',
         });
       } else {
-        if (!frontmatterDescription.startsWith('Use when')) {
+        if (!/^(Use|Run|Trigger) when\b/.test(frontmatterDescription)) {
           findings.push({
             file: skillPath,
-            message: 'Frontmatter description must start with "Use when"',
+            message:
+              'Frontmatter description must start with one of: "Use when", "Run when", "Trigger when"',
           });
         }
         if (frontmatterDescription.length > 500) {

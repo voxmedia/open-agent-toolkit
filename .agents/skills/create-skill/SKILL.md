@@ -49,7 +49,7 @@ If not provided in arguments, ask for:
 **Required:**
 
 - **Skill name**: kebab-case identifier (e.g., `create-ticket`, `docs-review`)
-- **Description**: Must follow the formula `Use when [trigger condition]. [What it does for disambiguation].`
+- **Description**: Prefer the formula `Use when [trigger condition]. [What it does for disambiguation].` Allowed trigger stems: `Use when`, `Run when`, or `Trigger when`.
 - **Purpose**: What problem does this skill solve?
 
 **Optional:**
@@ -172,7 +172,7 @@ The description is your **primary routing mechanism** — agents load only `name
 2. **Include keywords for disambiguation**: nouns + verbs that differentiate from similar skills
 3. **Don't summarize the workflow**: providers route on description without reading the body
 4. **Front-load trigger keywords in the first 50 characters** (truncation may occur at scale)
-5. **Use this exact pattern by default**: `Use when [trigger condition]. [What it does for disambiguation].`
+5. **Use this default pattern**: `Use when [trigger condition]. [What it does for disambiguation].` `Run when` and `Trigger when` are also valid trigger stems when wording is clearer.
 
 Examples:
 - Bad: "Reviews code by checking spec compliance, then code quality, then creates PR"
