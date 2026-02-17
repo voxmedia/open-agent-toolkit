@@ -16,6 +16,12 @@ import {
   readGlobalOptions,
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
+import {
+  DEFAULT_SYNC_CONFIG,
+  loadSyncConfig,
+  type SyncConfig,
+  saveSyncConfig,
+} from '@config/index';
 import { type DriftReport, detectStrays } from '@drift/index';
 import {
   type CanonicalEntry,
@@ -35,9 +41,12 @@ import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
 import { cursorAdapter } from '@providers/cursor';
 import {
+  type ConfigAwareAdaptersResult,
   getActiveAdapters,
+  getConfigAwareAdapters,
   getSyncMappings,
   type PathMapping,
+  type ProviderAdapter,
 } from '@providers/shared';
 import type { ConcreteScope, Scope } from '@shared/types';
 import { Command } from 'commander';
@@ -86,6 +95,11 @@ interface InitDependencies {
     choices: MultiSelectChoice<T>[],
     ctx: PromptContext,
   ) => Promise<T[] | null>;
+  selectProvidersWithAbort: <T extends string>(
+    message: string,
+    choices: MultiSelectChoice<T>[],
+    ctx: PromptContext,
+  ) => Promise<T[] | null>;
   adoptStray: (
     scopeRoot: string,
     stray: InitStrayCandidate,
@@ -94,6 +108,17 @@ interface InitDependencies {
   isHookInstalled: (projectRoot: string) => Promise<boolean>;
   installHook: (projectRoot: string) => Promise<void>;
   uninstallHook: (projectRoot: string) => Promise<void>;
+  getAdapters: () => ProviderAdapter[];
+  loadSyncConfig: (configPath: string) => Promise<SyncConfig>;
+  saveSyncConfig: (
+    configPath: string,
+    config: SyncConfig,
+  ) => Promise<SyncConfig>;
+  getConfigAwareAdapters: (
+    adapters: ProviderAdapter[],
+    scopeRoot: string,
+    config: SyncConfig,
+  ) => Promise<ConfigAwareAdaptersResult>;
 }
 
 interface InitScopeSummary {
@@ -181,10 +206,19 @@ function createDependencies(): InitDependencies {
     collectStrays: collectStraysDefault,
     confirmAction,
     selectManyWithAbort,
+    selectProvidersWithAbort: selectManyWithAbort,
     adoptStray: adoptStrayDefault,
     isHookInstalled,
     installHook,
     uninstallHook,
+    getAdapters() {
+      return [claudeAdapter, cursorAdapter, codexAdapter];
+    },
+    async loadSyncConfig(configPath) {
+      return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
+    },
+    saveSyncConfig,
+    getConfigAwareAdapters,
   };
 }
 
@@ -273,6 +307,49 @@ async function runInitCommand(
     }
 
     await dependencies.ensureCanonicalDirs(scopeRoot, scope);
+
+    if (scope === 'project' && context.interactive) {
+      const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');
+      const config = await dependencies.loadSyncConfig(configPath);
+      const adapters = dependencies.getAdapters();
+      const resolution = await dependencies.getConfigAwareAdapters(
+        adapters,
+        scopeRoot,
+        config,
+      );
+      const providerChoices = adapters.map((adapter) => ({
+        label: adapter.name,
+        value: adapter.name,
+        description: adapter.displayName,
+        checked:
+          config.providers[adapter.name]?.enabled === true ||
+          resolution.activeAdapters.some(
+            (active) => active.name === adapter.name,
+          ),
+      }));
+
+      const selectedProviders = await dependencies.selectProvidersWithAbort(
+        'Select supported project providers',
+        providerChoices,
+        { interactive: context.interactive },
+      );
+
+      if (selectedProviders !== null) {
+        const selectedProviderNames = new Set(selectedProviders);
+        const providers = { ...config.providers };
+        for (const adapter of adapters) {
+          providers[adapter.name] = {
+            ...(providers[adapter.name] ?? {}),
+            enabled: selectedProviderNames.has(adapter.name),
+          };
+        }
+
+        await dependencies.saveSyncConfig(configPath, {
+          ...config,
+          providers,
+        });
+      }
+    }
 
     const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
     let manifest = await dependencies.loadManifest(manifestPath);

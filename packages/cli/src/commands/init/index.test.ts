@@ -14,8 +14,10 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import type { CanonicalEntry } from '@engine/index';
 import { createEmptyManifest, type Manifest } from '@manifest/index';
+import type { ProviderAdapter } from '@providers/shared';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,8 +29,11 @@ interface HarnessOptions {
   strays?: InitStrayCandidate[];
   confirmResponses?: boolean[];
   selectResponses?: Array<string[] | null>;
+  providerSelectResponses?: Array<string[] | null>;
   hookInstalled?: boolean;
   useDefaultAdopt?: boolean;
+  adapters?: ProviderAdapter[];
+  loadedSyncConfig?: SyncConfig;
 }
 
 interface RunInitArgs {
@@ -75,6 +80,8 @@ function createHarness(options: HarnessOptions = {}): {
   saveManifest: ReturnType<typeof vi.fn>;
   confirmAction: ReturnType<typeof vi.fn>;
   selectManyWithAbort: ReturnType<typeof vi.fn>;
+  selectProvidersWithAbort: ReturnType<typeof vi.fn>;
+  saveSyncConfig: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
   installHook: ReturnType<typeof vi.fn>;
   uninstallHook: ReturnType<typeof vi.fn>;
@@ -87,8 +94,12 @@ function createHarness(options: HarnessOptions = {}): {
   };
   const confirmResponses = [...(options.confirmResponses ?? [])];
   const selectResponses = [...(options.selectResponses ?? [])];
+  const providerSelectResponses = [...(options.providerSelectResponses ?? [])];
   const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
   const selectManyWithAbort = vi.fn(async () => selectResponses.shift() ?? []);
+  const selectProvidersWithAbort = vi.fn(
+    async () => providerSelectResponses.shift() ?? [],
+  );
   const resolveScopeRoot = vi.fn(
     async (scope: 'project' | 'user') => scopeRoots[scope],
   );
@@ -101,6 +112,37 @@ function createHarness(options: HarnessOptions = {}): {
   );
   const installHook = vi.fn(async () => undefined);
   const uninstallHook = vi.fn(async () => undefined);
+  const saveSyncConfig = vi.fn(async (_path: string, config: SyncConfig) => {
+    return config;
+  });
+  const adapters =
+    options.adapters ??
+    ([
+      {
+        name: 'claude',
+        displayName: 'Claude Code',
+        defaultStrategy: 'symlink',
+        projectMappings: [],
+        userMappings: [],
+        detect: async () => true,
+      },
+      {
+        name: 'cursor',
+        displayName: 'Cursor',
+        defaultStrategy: 'symlink',
+        projectMappings: [],
+        userMappings: [],
+        detect: async () => false,
+      },
+      {
+        name: 'codex',
+        displayName: 'Codex CLI',
+        defaultStrategy: 'auto',
+        projectMappings: [],
+        userMappings: [],
+        detect: async () => false,
+      },
+    ] satisfies ProviderAdapter[]);
   const dependencyOverrides = {
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
@@ -120,6 +162,17 @@ function createHarness(options: HarnessOptions = {}): {
     collectStrays: vi.fn(async () => options.strays ?? []),
     confirmAction,
     selectManyWithAbort,
+    selectProvidersWithAbort,
+    getAdapters: () => adapters,
+    loadSyncConfig: vi.fn(
+      async () => options.loadedSyncConfig ?? DEFAULT_SYNC_CONFIG,
+    ),
+    saveSyncConfig,
+    getConfigAwareAdapters: vi.fn(async () => ({
+      activeAdapters: adapters.filter((adapter) => adapter.name === 'claude'),
+      detectedUnset: ['claude'],
+      detectedDisabled: [],
+    })),
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
     installHook,
     uninstallHook,
@@ -139,6 +192,8 @@ function createHarness(options: HarnessOptions = {}): {
     saveManifest,
     confirmAction,
     selectManyWithAbort,
+    selectProvidersWithAbort,
+    saveSyncConfig,
     adoptStray,
     installHook,
     uninstallHook,
@@ -196,6 +251,67 @@ describe('createInitCommand', () => {
     expect(saveManifest).toHaveBeenCalledWith(
       '/tmp/workspace/.oat/sync/manifest.json',
       expect.any(Object),
+    );
+  });
+
+  it('prompts for supported project providers in interactive mode', async () => {
+    const { command, selectProvidersWithAbort } = createHarness({
+      interactive: true,
+      hookInstalled: true,
+      providerSelectResponses: [['claude', 'cursor']],
+      loadedSyncConfig: {
+        ...DEFAULT_SYNC_CONFIG,
+        providers: {
+          cursor: { enabled: true },
+        },
+      },
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(selectProvidersWithAbort).toHaveBeenCalledTimes(1);
+    expect(selectProvidersWithAbort.mock.calls[0]?.[0]).toContain(
+      'Select supported project providers',
+    );
+    const choices = selectProvidersWithAbort.mock.calls[0]?.[1] as Array<{
+      value: string;
+      checked?: boolean;
+    }>;
+    expect(choices.find((choice) => choice.value === 'claude')?.checked).toBe(
+      true,
+    );
+    expect(choices.find((choice) => choice.value === 'cursor')?.checked).toBe(
+      true,
+    );
+    expect(choices.find((choice) => choice.value === 'codex')?.checked).toBe(
+      false,
+    );
+  });
+
+  it('persists explicit enabled flags for all known providers after prompt', async () => {
+    const { command, saveSyncConfig } = createHarness({
+      interactive: true,
+      hookInstalled: true,
+      providerSelectResponses: [['cursor']],
+      loadedSyncConfig: {
+        ...DEFAULT_SYNC_CONFIG,
+        providers: {
+          claude: { strategy: 'copy', enabled: true },
+        },
+      },
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(saveSyncConfig).toHaveBeenCalledWith(
+      '/tmp/workspace/.oat/sync/config.json',
+      expect.objectContaining({
+        providers: expect.objectContaining({
+          claude: { strategy: 'copy', enabled: false },
+          cursor: { enabled: true },
+          codex: { enabled: false },
+        }),
+      }),
     );
   });
 

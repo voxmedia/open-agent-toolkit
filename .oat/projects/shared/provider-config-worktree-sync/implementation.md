@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-17
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 |-------|--------|-------|-----------|
 | Phase 1 | complete | 2 | 2/2 |
 | Phase 2 | complete | 2 | 2/2 |
-| Phase 3 | in_progress | 2 | 0/2 |
+| Phase 3 | in_progress | 2 | 1/2 |
 | Phase 4 | pending | 2 | 0/2 |
 | Phase 5 | pending | 2 | 0/2 |
 | Phase 6 | pending | 1 | 0/1 |
 
-**Total:** 4/11 tasks completed
+**Total:** 5/11 tasks completed
 
 ---
 
@@ -181,11 +181,51 @@ oat_generated: false
 ### Task p02-t02: Register command and update help snapshots
 
 **Status:** completed
-**Commit:** pending
+**Commit:** 9ec9462
 
 **Notes:**
 - Updated provider command snapshots to include the new `set` subcommand.
 - Added an integration test that verifies `providers set` writes `.oat/sync/config.json`.
+
+---
+
+## Phase 3: Init Provider Selection and Persistence
+
+**Status:** in_progress
+**Started:** 2026-02-17
+
+### Task p03-t01: Add interactive provider prompt in init
+
+**Status:** completed
+**Commit:** pending
+
+**Outcome (required when completed):**
+- Added an interactive provider selection prompt to `oat init` for project scope.
+- Default selections now incorporate detected providers plus already-enabled provider config.
+- Init now persists explicit `enabled` true/false values for all known providers after selection.
+
+**Files changed:**
+- `packages/cli/src/commands/init/index.ts` - provider selection prompt and config persistence logic.
+- `packages/cli/src/commands/init/index.test.ts` - added tests for provider prompt defaults and explicit persistence.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/index.test.ts`
+- Result: pass (20 tests)
+- Run: `pnpm --filter @oat/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Provider selection uses a dedicated prompt dependency so stray-adoption flow stays isolated and predictable.
+
+---
+
+### Task p03-t02: Add non-interactive + scope-all safeguards
+
+**Status:** in_progress
+**Commit:** -
+
+**Notes:**
+- Next: guard provider config writes for non-interactive runs and scope-all behavior.
 
 ---
 
@@ -200,8 +240,9 @@ Chronological log of implementation progress.
 - [x] p01-t01: Add sync config write/update utilities - d51ea2a
 - [x] p01-t02: Add config-aware provider activation utility - 378c09f
 - [x] p02-t01: Implement `oat providers set` - 96741c8
-- [x] p02-t02: Register command and update help snapshots - pending
-- [ ] p03-t01: Add interactive provider prompt in init - pending
+- [x] p02-t02: Register command and update help snapshots - 9ec9462
+- [x] p03-t01: Add interactive provider prompt in init - pending
+- [ ] p03-t02: Add non-interactive + scope-all safeguards - in progress
 
 **What changed (high level):**
 - Added config write/update utility surface for future provider command and sync remediation flows.
@@ -209,6 +250,7 @@ Chronological log of implementation progress.
 - Added config-aware provider activation helper with explicit mismatch metadata.
 - Added `oat providers set` with validation and project-scope config persistence.
 - Added command-surface snapshots and integration coverage for `providers set`.
+- Added interactive provider selection + explicit config persistence in `oat init`.
 
 **Decisions:**
 - Use `atomicWriteJson` for config writes to keep persistence behavior consistent with other CLI state files.
