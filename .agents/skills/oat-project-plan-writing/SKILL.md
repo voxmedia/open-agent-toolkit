@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-description: Canonical plan.md format contract shared by all plan-producing and plan-mutating skills
+description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
