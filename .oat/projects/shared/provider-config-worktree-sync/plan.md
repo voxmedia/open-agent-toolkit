@@ -491,7 +491,7 @@ Track review artifacts here after running `oat-project-review-provide` and `oat-
 | p04 | code | pending | - | - |
 | p05 | code | pending | - | - |
 | p06 | code | pending | - | - |
-| final | code | pending | - | - |
+| final | code | received | 2026-02-16 | reviews/final-review-2026-02-16.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
