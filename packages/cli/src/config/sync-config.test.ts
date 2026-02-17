@@ -1,9 +1,14 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CliError } from '@errors/index';
 import { afterEach, describe, expect, it } from 'vitest';
-import { DEFAULT_SYNC_CONFIG, loadSyncConfig } from './sync-config';
+import {
+  DEFAULT_SYNC_CONFIG,
+  loadSyncConfig,
+  saveSyncConfig,
+  setProviderEnabled,
+} from './sync-config';
 
 describe('loadSyncConfig', () => {
   const tempDirs: string[] = [];
@@ -102,5 +107,78 @@ describe('loadSyncConfig', () => {
     );
 
     await expect(loadSyncConfig(configPath)).rejects.toBeInstanceOf(CliError);
+  });
+
+  it('saveSyncConfig creates parent directory and writes valid json', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
+    tempDirs.push(root);
+    const configPath = join(root, '.oat', 'sync', 'config.json');
+
+    await saveSyncConfig(configPath, {
+      version: 1,
+      defaultStrategy: 'copy',
+      providers: {
+        claude: { enabled: true },
+      },
+    });
+
+    const raw = await readFile(configPath, 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      defaultStrategy: 'copy',
+      providers: {
+        claude: { enabled: true },
+      },
+    });
+  });
+
+  it('setProviderEnabled updates enabled while preserving existing provider strategy', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
+    tempDirs.push(root);
+    const configPath = join(root, '.oat', 'sync', 'config.json');
+    await mkdir(join(root, '.oat', 'sync'), { recursive: true });
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        defaultStrategy: 'symlink',
+        providers: {
+          claude: { strategy: 'copy', enabled: true },
+        },
+      }),
+      'utf8',
+    );
+
+    const updated = await setProviderEnabled(configPath, 'claude', false);
+
+    expect(updated.defaultStrategy).toBe('symlink');
+    expect(updated.providers.claude).toEqual({
+      strategy: 'copy',
+      enabled: false,
+    });
+  });
+
+  it('setProviderEnabled creates provider entry and preserves defaultStrategy', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
+    tempDirs.push(root);
+    const configPath = join(root, '.oat', 'sync', 'config.json');
+    await mkdir(join(root, '.oat', 'sync'), { recursive: true });
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        defaultStrategy: 'copy',
+        providers: {
+          cursor: { strategy: 'symlink' },
+        },
+      }),
+      'utf8',
+    );
+
+    const updated = await setProviderEnabled(configPath, 'codex', true);
+
+    expect(updated.defaultStrategy).toBe('copy');
+    expect(updated.providers.cursor).toEqual({ strategy: 'symlink' });
+    expect(updated.providers.codex).toEqual({ enabled: true });
   });
 });

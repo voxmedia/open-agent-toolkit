@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { CliError } from '@errors/index';
+import { atomicWriteJson } from '@fs/io';
 import { SyncStrategySchema } from '@shared/types';
 import { z } from 'zod';
 
@@ -52,30 +53,36 @@ function normalizeConfig(
   };
 }
 
+function parseSyncConfig(
+  raw: string,
+  configPath: string,
+): z.infer<typeof SyncConfigSchema> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new CliError(
+      `Sync config at ${configPath} is not valid JSON. Fix the file and retry.`,
+    );
+  }
+
+  const result = SyncConfigSchema.safeParse(parsed);
+  if (!result.success) {
+    throw new CliError(
+      `Sync config at ${configPath} failed validation. Fix the file and retry.`,
+    );
+  }
+
+  return result.data;
+}
+
 export async function loadSyncConfig(
   configPath: string,
   defaults: SyncConfig = DEFAULT_SYNC_CONFIG,
 ): Promise<SyncConfig> {
   try {
     const raw = await readFile(configPath, 'utf8');
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      throw new CliError(
-        `Sync config at ${configPath} is not valid JSON. Fix the file and retry.`,
-      );
-    }
-
-    const result = SyncConfigSchema.safeParse(parsed);
-    if (!result.success) {
-      throw new CliError(
-        `Sync config at ${configPath} failed validation. Fix the file and retry.`,
-      );
-    }
-
-    return normalizeConfig(result.data, defaults);
+    return normalizeConfig(parseSyncConfig(raw, configPath), defaults);
   } catch (error) {
     if (
       typeof error === 'object' &&
@@ -100,4 +107,40 @@ export async function loadSyncConfig(
       2,
     );
   }
+}
+
+export async function saveSyncConfig(
+  configPath: string,
+  config: SyncConfig,
+): Promise<SyncConfig> {
+  const result = SyncConfigSchema.safeParse(config);
+  if (!result.success) {
+    throw new CliError(
+      `Sync config at ${configPath} failed validation. Fix the config object and retry.`,
+    );
+  }
+
+  const normalized = normalizeConfig(result.data, DEFAULT_SYNC_CONFIG);
+  await atomicWriteJson(configPath, normalized);
+  return normalized;
+}
+
+export async function setProviderEnabled(
+  configPath: string,
+  providerName: string,
+  enabled: boolean,
+): Promise<SyncConfig> {
+  const current = await loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
+  const next: SyncConfig = {
+    ...current,
+    providers: {
+      ...current.providers,
+      [providerName]: {
+        ...(current.providers[providerName] ?? {}),
+        enabled,
+      },
+    },
+  };
+
+  return saveSyncConfig(configPath, next);
 }

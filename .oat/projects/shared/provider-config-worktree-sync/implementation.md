@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-17
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -25,14 +25,18 @@ oat_generated: false
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1 | in_progress | N | 0/N |
-| Phase 2 | pending | N | 0/N |
+| Phase 1 | in_progress | 2 | 1/2 |
+| Phase 2 | pending | 2 | 0/2 |
+| Phase 3 | pending | 2 | 0/2 |
+| Phase 4 | pending | 2 | 0/2 |
+| Phase 5 | pending | 2 | 0/2 |
+| Phase 6 | pending | 1 | 0/1 |
 
-**Total:** 0/{N} tasks completed
+**Total:** 1/11 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Config Foundation and Provider Resolution
 
 **Status:** in_progress
 **Started:** 2026-02-17
@@ -52,36 +56,42 @@ oat_generated: false
 **Notes / Decisions:**
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add sync config write/update utilities
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** pending
 
 **Outcome (required when completed):**
-- {what materially changed (not “did task”, but “system now does X”)}
+- Added reusable sync config persistence APIs to support writing and mutation flows.
+- Config writes now validate/normalize before persisting to disk.
+- Provider enablement can now be toggled programmatically while preserving existing provider settings.
 
 **Files changed:**
-- `{path}` - {why}
+- `packages/cli/src/config/sync-config.ts` - added `saveSyncConfig` and `setProviderEnabled` helpers.
+- `packages/cli/src/config/sync-config.test.ts` - added regression coverage for write/update behavior.
+- `packages/cli/src/config/index.ts` - exported new config utility functions.
 
 **Verification:**
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @oat/cli test src/config/sync-config.test.ts`
+- Result: pass (7 tests)
+- Run: `pnpm --filter @oat/cli type-check`
+- Result: pass
 
 **Notes / Decisions:**
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- No design deltas; implementation follows planned API shape and keeps config schema version unchanged.
 
 **Issues Encountered:**
-- {Issue and resolution}
+- N/A
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add config-aware provider activation utility
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes:**
-- {Notes will be added during implementation}
+- RED tests added for explicit enabled/disabled/unset provider behavior.
 
 ---
 
@@ -105,20 +115,21 @@ Chronological log of implementation progress.
 
 **Session Start:** {time}
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Add sync config write/update utilities - pending
+- [ ] p01-t02: Add config-aware provider activation utility - in progress
 
 **What changed (high level):**
-- {short bullets suitable for PR/docs}
+- Added config write/update utility surface for future provider command and sync remediation flows.
+- Added tests proving provider `enabled` mutations preserve strategy/default settings.
 
 **Decisions:**
-- {Decision made and rationale}
+- Use `atomicWriteJson` for config writes to keep persistence behavior consistent with other CLI state files.
 
 **Follow-ups / TODO:**
-- {anything discovered during implementation that should be captured for later}
+- Fill commit SHA for `p01-t01` after commit.
 
 **Blockers:**
-- {Blocker description} - {status: resolved/pending}
+- None
 
 **Session End:** {time}
 
