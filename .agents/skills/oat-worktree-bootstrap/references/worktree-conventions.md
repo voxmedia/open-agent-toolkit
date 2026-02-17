@@ -33,7 +33,11 @@ If checks fail, stop and report exact remediation.
 
 If baseline tests fail, require explicit user override before proceeding.
 
-If user proceeds with failing baseline tests, append a note to active project `implementation.md` with:
+If user proceeds with failing baseline tests:
+- Prefer appending a note to active project `implementation.md` when a valid active project is set.
+- If no valid active project exists yet, append the same note to `.oat/worktree-bootstrap-baseline-failures.md` instead (non-blocking fallback).
+
+Include:
 - timestamp
 - failing command
 - short failure summary
