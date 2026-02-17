@@ -96,14 +96,14 @@ describe('edge cases', () => {
     );
   });
 
-  it('handles .agents/skills/ with mixed directory and file entries', async () => {
+  it('handles .agents/skills/ with non-directory entries filtered out', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-edge-nondir-'));
     tempDirs.push(root);
     const skillsDir = join(root, '.agents', 'skills');
     await mkdir(skillsDir, { recursive: true });
     await writeFile(
       join(skillsDir, 'README.md'),
-      '# file-based skill\n',
+      '# not a skill dir\n',
       'utf8',
     );
     await mkdir(join(skillsDir, 'actual-skill'), { recursive: true });
@@ -115,20 +115,11 @@ describe('edge cases', () => {
 
     const entries = await scanCanonical(root, 'project');
 
-    expect(entries).toHaveLength(2);
-    expect(entries).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: 'README.md',
-          type: 'skill',
-          isFile: true,
-        }),
-        expect.objectContaining({
-          name: 'actual-skill',
-          type: 'skill',
-          isFile: false,
-        }),
-      ]),
-    );
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      name: 'actual-skill',
+      type: 'skill',
+      isFile: false,
+    });
   });
 });

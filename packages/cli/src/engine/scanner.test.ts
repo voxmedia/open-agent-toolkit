@@ -76,10 +76,25 @@ describe('scanCanonical', () => {
   it('ignores non-.md files', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-scan-'));
     tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'agents', 'README.txt'),
+      'ignore me',
+      'utf8',
+    );
+
+    const entries = await scanCanonical(root, 'project');
+
+    expect(entries).toEqual([]);
+  });
+
+  it('ignores .md files under skills (file-based discovery is agents-only)', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-scan-'));
+    tempDirs.push(root);
     await mkdir(join(root, '.agents', 'skills'), { recursive: true });
     await writeFile(
-      join(root, '.agents', 'skills', 'README.txt'),
-      'ignore me',
+      join(root, '.agents', 'skills', 'my-skill.md'),
+      '# some skill\n',
       'utf8',
     );
 
@@ -139,6 +154,23 @@ describe('scanCanonical', () => {
     const entries = await scanCanonical(root, 'project');
 
     expect(entries[0]?.isFile).toBe(false);
+  });
+
+  it('treats a directory named with .md extension as isFile: false', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-scan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'agents', 'tricky-name.md'), {
+      recursive: true,
+    });
+
+    const entries = await scanCanonical(root, 'project');
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      name: 'tricky-name.md',
+      type: 'agent',
+      isFile: false,
+    });
   });
 
   it('populates canonicalPath as absolute path', async () => {

@@ -118,7 +118,7 @@ function createRemovalEntry(
       name,
       type: manifestEntry.contentType,
       canonicalPath: resolve(scopeRoot, canonicalRelative),
-      isFile: name.endsWith('.md'),
+      isFile: manifestEntry.isFile,
     },
     provider: manifestEntry.provider,
     providerPath: resolve(scopeRoot, manifestEntry.providerPath),

@@ -57,6 +57,7 @@ async function toManifestEntry(
     contentType: entry.canonical.type,
     strategy,
     contentHash,
+    isFile: entry.canonical.isFile,
     lastSynced: new Date().toISOString(),
   };
 }

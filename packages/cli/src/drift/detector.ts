@@ -77,8 +77,7 @@ export async function detectDrift(
     return createReport(entry, { status: 'in_sync' });
   }
 
-  const isFile = entry.canonicalPath.endsWith('.md');
-  const currentHash = await computeContentHash(providerPath, isFile);
+  const currentHash = await computeContentHash(providerPath, entry.isFile);
   if (entry.contentHash === currentHash) {
     return createReport(entry, { status: 'in_sync' });
   }

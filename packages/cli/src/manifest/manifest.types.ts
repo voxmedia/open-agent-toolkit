@@ -17,6 +17,7 @@ export const ManifestEntrySchema = z
     contentType: ContentTypeSchema,
     strategy: z.enum(['symlink', 'copy']),
     contentHash: z.string().nullable(),
+    isFile: z.boolean().default(false),
     lastSynced: z.string().datetime(),
   })
   .superRefine((entry, ctx) => {

@@ -77,6 +77,7 @@ export async function adoptStrayToCanonical<
       strategy === 'copy'
         ? await computeDirectoryHash(canonicalAbsolutePath)
         : null,
+    isFile: false,
     lastSynced: new Date().toISOString(),
   };
 

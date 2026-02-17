@@ -69,9 +69,13 @@ export async function scanCanonical(
       '.agents',
       contentType === 'skill' ? 'skills' : 'agents',
     );
+    const includeFiles = contentType === 'agent';
     const scanned = await readEntries(contentDir);
 
     for (const scannedEntry of scanned) {
+      if (scannedEntry.isFile && !includeFiles) {
+        continue;
+      }
       entries.push({
         name: scannedEntry.name,
         type: contentType,
