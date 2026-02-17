@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-02-17
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 4 | complete | 2 | 2/2 |
 | Phase 5 | complete | 2 | 2/2 |
 | Phase 6 | complete | 1 | 1/1 |
-| Phase 7 | in_progress | 9 | 0/9 |
+| Phase 7 | complete | 9 | 9/9 |
 
-**Total:** 11/20 tasks completed
+**Total:** 20/20 tasks completed
 
 ---
 
@@ -71,9 +71,17 @@ oat_generated: false
 
 ## Phase 7: Final Review Fixes
 
-**Status:** in_progress
+**Status:** complete
 
-- Next task: `p07-t01`
+- `p07-t01` completed in `6d2a48c`
+- `p07-t02` completed in `302e617`
+- `p07-t03` completed in `2e5d788` (with e2e follow-up in `f9e20fe`)
+- `p07-t04` completed in `1528aca`
+- `p07-t05` completed in `5ef83e3`
+- `p07-t06` completed in `c0d0d65`
+- `p07-t07` completed in `636e192`
+- `p07-t08` completed in `6d586bc`
+- `p07-t09` completed in `4d66102`
 
 ## Review Received: final
 
@@ -86,34 +94,19 @@ oat_generated: false
 - Medium: 3
 - Minor: 4
 
-**New tasks added:**
-- `p07-t01`
-- `p07-t02`
-- `p07-t03`
-- `p07-t04`
-- `p07-t05`
-- `p07-t06`
-- `p07-t07`
-- `p07-t08`
-- `p07-t09`
+**New tasks added:** `p07-t01` through `p07-t09`
 
-**Deferred Findings (Medium):**
-- None
+**Deferred Findings (Medium):** None
 
-**Deferred Findings (Minor):**
-- None (all minor findings converted to tasks by user choice)
+**Deferred Findings (Minor):** None (all minor findings converted to tasks)
 
-**Next:** Execute review-fix tasks via the `oat-project-implement` skill, starting at `p07-t01`.
-
-After the fix tasks are complete:
-- Update the review row status to `fixes_completed`
-- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+**Next:** Request final re-review via `oat-project-review-provide code final` and process with `oat-project-review-receive`.
 
 ## Test Results
 
-- `pnpm --filter @oat/cli test` - pass (44 files, 353 tests)
-- `pnpm --filter @oat/cli build` - pass
+- `pnpm --filter @oat/cli test` - pass (44 files, 355 tests)
 - `pnpm --filter @oat/cli type-check` - pass
+- `pnpm --filter @oat/cli build` - pass
 
 ## References
 
