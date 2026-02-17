@@ -1,9 +1,21 @@
 import type { CommandContext, GlobalOptions } from '@app/command-context';
+import type {
+  MultiSelectChoice,
+  PromptContext,
+} from '@commands/shared/shared.prompts';
 import type { SyncConfig } from '@config/index';
 import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
 import type { Manifest } from '@manifest/index';
-import type { ProviderAdapter } from '@providers/shared';
+import type {
+  ConfigAwareAdaptersResult,
+  ProviderAdapter,
+} from '@providers/shared';
 import type { ConcreteScope, Scope } from '@shared/types';
+
+export interface SyncProviderMismatches {
+  detectedUnset: string[];
+  detectedDisabled: string[];
+}
 
 export interface ScopeSyncPlan {
   scope: ConcreteScope;
@@ -11,6 +23,7 @@ export interface ScopeSyncPlan {
   manifestPath: string;
   manifest: Manifest;
   plan: SyncPlan;
+  providerMismatches?: SyncProviderMismatches;
 }
 
 export interface SyncSummary {
@@ -25,6 +38,7 @@ export interface SyncJsonPayload {
   apply: boolean;
   plans: SyncPlan[];
   summary: SyncSummary;
+  providerMismatches?: SyncProviderMismatches[];
 }
 
 export interface SyncCommandDependencies {
@@ -35,15 +49,25 @@ export interface SyncCommandDependencies {
   ) => Promise<string>;
   loadManifest: (manifestPath: string) => Promise<Manifest>;
   loadSyncConfig: (configPath: string) => Promise<SyncConfig>;
+  saveSyncConfig: (
+    configPath: string,
+    config: SyncConfig,
+  ) => Promise<SyncConfig>;
   scanCanonical: (
     scopeRoot: string,
     scope: ConcreteScope,
   ) => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
-  getActiveAdapters: (
+  getConfigAwareAdapters: (
     adapters: ProviderAdapter[],
     scopeRoot: string,
-  ) => Promise<ProviderAdapter[]>;
+    config: SyncConfig,
+  ) => Promise<ConfigAwareAdaptersResult>;
+  selectProvidersWithAbort: <T extends string>(
+    message: string,
+    choices: MultiSelectChoice<T>[],
+    ctx: PromptContext,
+  ) => Promise<T[] | null>;
   computeSyncPlan: (args: {
     canonical: CanonicalEntry[];
     adapters: ProviderAdapter[];

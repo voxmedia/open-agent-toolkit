@@ -1,22 +1,39 @@
 import { join } from 'node:path';
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import {
+  type MultiSelectChoice,
+  type PromptContext,
+  selectManyWithAbort,
+} from '@commands/shared/shared.prompts';
+import {
   readGlobalOptions,
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
-import { DEFAULT_SYNC_CONFIG, loadSyncConfig } from '@config/index';
+import {
+  DEFAULT_SYNC_CONFIG,
+  loadSyncConfig,
+  type SyncConfig,
+  saveSyncConfig,
+} from '@config/index';
 import { computeSyncPlan, executeSyncPlan, scanCanonical } from '@engine/index';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { loadManifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
 import { cursorAdapter } from '@providers/cursor';
-import { getActiveAdapters } from '@providers/shared';
+import {
+  getConfigAwareAdapters,
+  type ProviderAdapter,
+} from '@providers/shared';
 import { formatSyncPlan } from '@ui/output';
 import { Command } from 'commander';
 import { runSyncApply } from './apply';
 import { runSyncDryRun } from './dry-run';
-import type { ScopeSyncPlan, SyncCommandDependencies } from './sync.types';
+import type {
+  ScopeSyncPlan,
+  SyncCommandDependencies,
+  SyncProviderMismatches,
+} from './sync.types';
 
 function defaultDependencies(): SyncCommandDependencies {
   return {
@@ -32,14 +49,128 @@ function defaultDependencies(): SyncCommandDependencies {
       const config = await loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
       return config;
     },
+    saveSyncConfig,
     scanCanonical,
     getAdapters() {
       return [claudeAdapter, cursorAdapter, codexAdapter];
     },
-    getActiveAdapters,
+    getConfigAwareAdapters,
+    selectProvidersWithAbort: selectManyWithAbort,
     computeSyncPlan,
     executeSyncPlan,
     formatSyncPlan,
+  };
+}
+
+function hasProviderMismatches(mismatches: SyncProviderMismatches): boolean {
+  return (
+    mismatches.detectedUnset.length > 0 ||
+    mismatches.detectedDisabled.length > 0
+  );
+}
+
+function buildMismatchChoices(
+  adapters: ProviderAdapter[],
+  mismatches: SyncProviderMismatches,
+): MultiSelectChoice<string>[] {
+  const mismatchSet = new Set([
+    ...mismatches.detectedUnset,
+    ...mismatches.detectedDisabled,
+  ]);
+
+  return adapters
+    .filter((adapter) => mismatchSet.has(adapter.name))
+    .map((adapter) => {
+      const isDisabled = mismatches.detectedDisabled.includes(adapter.name);
+      return {
+        label: adapter.name,
+        value: adapter.name,
+        description: isDisabled
+          ? `${adapter.displayName} (detected, currently disabled)`
+          : `${adapter.displayName} (detected, not configured)`,
+        checked: true,
+      };
+    });
+}
+
+async function maybeResolveProviderMismatches(
+  context: CommandContext,
+  scope: ScopeSyncPlan['scope'],
+  scopeRoot: string,
+  configPath: string,
+  config: SyncConfig,
+  adapters: ProviderAdapter[],
+  mismatches: SyncProviderMismatches,
+  dependencies: SyncCommandDependencies,
+): Promise<{
+  config: SyncConfig;
+  mismatches: SyncProviderMismatches;
+  activeAdapters: ProviderAdapter[];
+}> {
+  if (
+    scope !== 'project' ||
+    !context.interactive ||
+    !hasProviderMismatches(mismatches)
+  ) {
+    return {
+      config,
+      mismatches,
+      activeAdapters: await dependencies
+        .getConfigAwareAdapters(adapters, scopeRoot, config)
+        .then((resolution) => resolution.activeAdapters),
+    };
+  }
+
+  const choices = buildMismatchChoices(adapters, mismatches);
+  const selected = await dependencies.selectProvidersWithAbort(
+    'Detected provider directories are not enabled in config. Select providers to enable for sync.',
+    choices,
+    { interactive: context.interactive } satisfies PromptContext,
+  );
+
+  if (selected === null) {
+    const resolution = await dependencies.getConfigAwareAdapters(
+      adapters,
+      scopeRoot,
+      config,
+    );
+    return {
+      config,
+      mismatches,
+      activeAdapters: resolution.activeAdapters,
+    };
+  }
+
+  const selectedSet = new Set(selected);
+  const providers = { ...config.providers };
+  for (const providerName of [
+    ...mismatches.detectedUnset,
+    ...mismatches.detectedDisabled,
+  ]) {
+    providers[providerName] = {
+      ...(providers[providerName] ?? {}),
+      enabled: selectedSet.has(providerName),
+    };
+  }
+
+  const savedConfig = await dependencies.saveSyncConfig(configPath, {
+    ...config,
+    providers,
+  });
+
+  const resolution = await dependencies.getConfigAwareAdapters(
+    adapters,
+    scopeRoot,
+    savedConfig,
+  );
+
+  return {
+    config: savedConfig,
+    mismatches: {
+      detectedUnset: resolution.detectedUnset,
+      detectedDisabled: resolution.detectedDisabled,
+    },
+    activeAdapters: resolution.activeAdapters,
   };
 }
 
@@ -59,16 +190,32 @@ async function computePlans(
       dependencies.scanCanonical(scopeRoot, scope),
     ]);
     const adapters = dependencies.getAdapters();
-    const activeAdapters = await dependencies.getActiveAdapters(
+    const initialResolution = await dependencies.getConfigAwareAdapters(
       adapters,
       scopeRoot,
+      config,
     );
+
+    const resolved = await maybeResolveProviderMismatches(
+      context,
+      scope,
+      scopeRoot,
+      configPath,
+      config,
+      adapters,
+      {
+        detectedUnset: initialResolution.detectedUnset,
+        detectedDisabled: initialResolution.detectedDisabled,
+      },
+      dependencies,
+    );
+
     const plan = await dependencies.computeSyncPlan({
       canonical,
-      adapters: activeAdapters,
+      adapters: resolved.activeAdapters,
       manifest,
       scope,
-      config,
+      config: resolved.config,
       scopeRoot,
     });
 
@@ -78,6 +225,7 @@ async function computePlans(
       manifestPath,
       manifest,
       plan,
+      providerMismatches: resolved.mismatches,
     });
   }
 
