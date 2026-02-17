@@ -109,11 +109,12 @@ Required frontmatter updates:
 - `oat_import_source_path: null`
 - `oat_import_provider: null`
 
-Plan requirements:
+Plan requirements — apply `oat-project-plan-writing` canonical format invariants:
 - Stable task IDs (`pNN-tNN`)
 - Verification step per task
 - Atomic commit message per task
-- `## Reviews` table preserved
+- Required sections: `## Reviews`, `## Implementation Complete`, `## References`
+- Review table preservation rules (never delete existing rows)
 
 ### Step 4: Sync Project State
 
