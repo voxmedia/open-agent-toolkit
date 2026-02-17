@@ -81,6 +81,7 @@ Resolve root using this precedence:
 5. Fallback default: `../<repo>-worktrees`
 
 For repo-relative values, resolve from `REPO_ROOT`.
+Treat `.oat/config.json` as phase-A non-sync settings ownership (do not mix with `.oat/sync/config.json`).
 
 If the resolved root is project-local (`.worktrees` or `worktrees`), verify it is ignored by git before creating a new worktree.
 

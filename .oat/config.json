@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "worktrees": {
+    "root": "../open-agent-toolkit-worktrees"
+  }
+}
