@@ -751,7 +751,7 @@ Track review artifacts here after running `oat-project-review-provide` and `oat-
 | p04 | code | pending | - | - |
 | p05 | code | pending | - | - |
 | p06 | code | pending | - | - |
-| final | code | received | 2026-02-16 | reviews/final-review-2026-02-16-v2.md |
+| final | code | passed | 2026-02-17 | reviews/final-review-2026-02-16-v2.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
@@ -772,7 +772,7 @@ Track review artifacts here after running `oat-project-review-provide` and `oat-
 
 **Total: 20 tasks**
 
-Ready for implementation with `oat-project-implement`.
+Ready for finalization with `oat-project-pr-final`.
 
 ---
 

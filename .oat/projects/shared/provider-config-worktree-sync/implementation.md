@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-review-provide
+oat_status: complete
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
 oat_last_updated: 2026-02-17
 oat_current_task_id: null
@@ -83,24 +83,25 @@ oat_generated: false
 - `p07-t08` completed in `6d586bc`
 - `p07-t09` completed in `4d66102`
 
-## Review Received: final
+## Review Received: final (v2 re-review)
 
 **Date:** 2026-02-17
-**Review artifact:** `reviews/final-review-2026-02-16.md`
+**Review artifact:** `reviews/final-review-2026-02-16-v2.md`
 
 **Findings:**
 - Critical: 0
-- Important: 2
-- Medium: 3
-- Minor: 4
+- Important: 0
+- Medium: 0
+- Minor: 1
 
-**New tasks added:** `p07-t01` through `p07-t09`
+**Deferred Findings (Medium):** None (deferred-medium resurfacing check: no outstanding deferred medium items)
 
-**Deferred Findings (Medium):** None
+**Deferred Findings (Minor):**
+- `collectStraysDefault` user-scope fallback adapter list duplication (pre-existing, non-regression, accepted for post-release follow-up)
 
-**Deferred Findings (Minor):** None (all minor findings converted to tasks)
+**Disposition:** Final review passed; no new implementation tasks added.
 
-**Next:** Request final re-review via `oat-project-review-provide code final` and process with `oat-project-review-receive`.
+**Next:** Run `oat-project-pr-final`.
 
 ## Test Results
 
