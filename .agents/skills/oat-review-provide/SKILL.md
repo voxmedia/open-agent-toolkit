@@ -47,7 +47,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ AD-HOC REVIEW
+   OAT ▸ PROVIDE AD-HOC REVIEW
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print 2–5 short step indicators.

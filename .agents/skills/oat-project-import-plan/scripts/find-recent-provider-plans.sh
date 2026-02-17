@@ -83,6 +83,7 @@ provider_from_path() {
     *"/.claude/"*) echo "claude" ;;
     *"/.cursor/"*) echo "cursor" ;;
     *"/.codex/"*) echo "codex" ;;
+    *"/.oat/repo/reference/external-plans/"*) echo "external" ;;
     *) echo "unknown" ;;
   esac
 }
@@ -105,11 +106,15 @@ add_dir() {
   done < <(find "$dir" -type f \( -name "*.md" -o -name "*.markdown" \) -print0 2>/dev/null)
 }
 
-# Common provider directories. Add extra directories with OAT_PROVIDER_PLAN_DIRS (colon-separated).
+# Common provider directories plus local repo external-plan directory.
+# Add extra directories with OAT_PROVIDER_PLAN_DIRS (colon-separated).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 SEARCH_DIRS=(
   "$HOME/.claude/plans"
   "$HOME/.codex/plans"
   "$HOME/.cursor/plans"
+  "$REPO_ROOT/.oat/repo/reference/external-plans"
 )
 
 if [[ -n "${OAT_PROVIDER_PLAN_DIRS:-}" ]]; then
