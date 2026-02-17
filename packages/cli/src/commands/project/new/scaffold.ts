@@ -1,7 +1,7 @@
-import { spawnSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import { generateStateDashboard } from '@commands/state/generate';
 import { fileExists } from '@fs/io';
 
 export type ProjectScaffoldMode = 'full' | 'quick' | 'import';
@@ -15,7 +15,7 @@ export interface ScaffoldProjectOptions {
   refreshDashboard?: boolean;
   env?: NodeJS.ProcessEnv;
   today?: string;
-  refreshDashboardCallback?: (repoRoot: string) => void;
+  refreshDashboardCallback?: (repoRoot: string) => void | Promise<void>;
 }
 
 export interface ScaffoldProjectResult {
@@ -66,9 +66,8 @@ function applyTemplateReplacements(
     .replaceAll(/\n?oat_template_name:\s*[^\n]*\n/gi, '\n');
 }
 
-function defaultRefreshDashboard(repoRoot: string): void {
-  const scriptPath = join(repoRoot, '.oat', 'scripts', 'generate-oat-state.sh');
-  spawnSync('bash', [scriptPath], { cwd: repoRoot, stdio: 'inherit' });
+async function defaultRefreshDashboard(repoRoot: string): Promise<void> {
+  await generateStateDashboard({ repoRoot });
 }
 
 async function scaffoldModeTemplates(
@@ -157,10 +156,18 @@ export async function scaffoldProject(
     await writeActiveProjectPointer(options.repoRoot, projectPath);
   }
 
+  let dashboardRefreshed = false;
   if (refreshDashboard) {
-    (options.refreshDashboardCallback ?? defaultRefreshDashboard)(
-      options.repoRoot,
-    );
+    try {
+      await (options.refreshDashboardCallback ?? defaultRefreshDashboard)(
+        options.repoRoot,
+      );
+      dashboardRefreshed = true;
+    } catch (error) {
+      console.error(
+        `Warning: dashboard refresh failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   return {
@@ -170,6 +177,6 @@ export async function scaffoldProject(
     createdFiles,
     skippedFiles,
     activePointerUpdated: setActive,
-    dashboardRefreshed: refreshDashboard,
+    dashboardRefreshed,
   };
 }
