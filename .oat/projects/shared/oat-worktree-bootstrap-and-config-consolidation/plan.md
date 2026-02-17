@@ -385,7 +385,7 @@ git commit -m "chore(p05-t01): finalize imported project artifacts and validatio
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
 | p05 | code | pending | - | - |
-| final | code | pending | - | - |
+| final | code | received | 2026-02-16 | reviews/final-review-2026-02-16.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
