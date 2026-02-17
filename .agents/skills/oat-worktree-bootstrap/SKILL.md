@@ -96,7 +96,17 @@ Run bootstrap and readiness checks in the target worktree:
 ```bash
 pnpm run worktree:init
 pnpm run cli -- status --scope project
+pnpm test
+git status --porcelain
 ```
+
+Required behavior:
+- Stop immediately if `worktree:init` or `status` fails.
+- If `pnpm test` fails:
+  - show a concise failure summary
+  - ask the user whether to `abort` or `proceed anyway`
+  - if user proceeds, append a timestamped baseline-failure note to active project `implementation.md`
+- If `git status --porcelain` is not clean after bootstrap/tests, stop and require cleanup before reporting ready.
 
 ### Step 4: Output Ready State
 

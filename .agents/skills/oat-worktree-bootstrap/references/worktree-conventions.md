@@ -26,11 +26,19 @@ Run baseline commands before reporting ready:
 ```bash
 pnpm run worktree:init
 pnpm run cli -- status --scope project
+pnpm test
+git status --porcelain
 ```
 
 If checks fail, stop and report exact remediation.
 
 If baseline tests fail, require explicit user override before proceeding.
+
+If user proceeds with failing baseline tests, append a note to active project `implementation.md` with:
+- timestamp
+- failing command
+- short failure summary
+- explicit statement that failures were pre-existing at worktree bootstrap time
 
 ## Typical Paths
 
