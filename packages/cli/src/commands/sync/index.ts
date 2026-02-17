@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
 import {
   type MultiSelectChoice,
   type PromptContext,
@@ -34,9 +35,6 @@ import type {
   SyncCommandDependencies,
   SyncProviderMismatches,
 } from './sync.types';
-
-const PROVIDER_CONFIG_REMEDIATION =
-  'Run "oat providers set --scope project --enabled <providers> --disabled <providers>" to configure supported providers.';
 
 function defaultDependencies(): SyncCommandDependencies {
   return {

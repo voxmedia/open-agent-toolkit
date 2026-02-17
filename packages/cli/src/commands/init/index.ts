@@ -6,6 +6,7 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { adoptStrayToCanonical } from '@commands/shared/adopt-stray';
+import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
 import {
   confirmAction,
   type MultiSelectChoice,
@@ -53,8 +54,6 @@ import { Command } from 'commander';
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
-const PROVIDER_CONFIG_REMEDIATION =
-  'Run "oat providers set --scope project --enabled <providers> --disabled <providers>" to configure supported providers.';
 const HOOK_PROMPT = 'Install optional pre-commit hook for drift warnings?';
 const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';

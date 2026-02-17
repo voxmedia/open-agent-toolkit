@@ -14,6 +14,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import type { CanonicalEntry } from '@engine/index';
 import { createEmptyManifest, type Manifest } from '@manifest/index';
@@ -43,8 +44,6 @@ interface RunInitArgs {
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
-const PROVIDER_CONFIG_REMEDIATION =
-  'Run "oat providers set --scope project --enabled <providers> --disabled <providers>" to configure supported providers.';
 const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';
 
