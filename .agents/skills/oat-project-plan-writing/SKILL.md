@@ -59,7 +59,8 @@ If any required section is missing when a skill edits `plan.md`, it must be rest
 - The `## Reviews` table includes both **code** rows (`p01`, `p02`, …, `final`) and **artifact** rows (`spec`, `design`).
 - Skills must **never delete** existing review rows.
 - New rows may be appended (e.g., `p03` for a newly added phase).
-- Status semantics: `pending` → `fixes_added` → `fixes_completed` → `passed`.
+- Status semantics: `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.
+  - `received`: review artifact exists but findings have not yet been converted into fix tasks.
 
 ### Implementation Complete Section
 

@@ -12,11 +12,13 @@ Transform detailed design into an executable implementation plan with bite-sized
 
 ## Prerequisites
 
-Prerequisites depend on the project's workflow mode (read `oat_workflow_mode` from `{PROJECT_PATH}/state.md`; default: `full`):
+This skill is the plan authoring path for **full-mode** projects only. Quick and import modes have dedicated entry skills that produce `plan.md` directly.
 
-- **`full`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, run the `oat-project-design` skill first.
-- **`quick`**: `discovery.md` required (design is optional). Planning proceeds from discovery decisions and repo knowledge context.
-- **`import`**: Route to `oat-project-import-plan` for initial normalization. This skill handles subsequent edits to an already-normalized plan.
+Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `full`):
+
+- **`full`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, run the `oat-project-design` skill first. Proceed with planning.
+- **`quick`**: **Stop.** Plan is already produced by the quick workflow. Tell the user: "Plan already produced by quick workflow. Run `oat-project-implement` to begin execution."
+- **`import`**: **Stop.** If a normalized `plan.md` exists, tell the user: "Imported plan is ready. Run `oat-project-implement` to begin execution." If no `plan.md` exists, tell the user: "Run `oat-project-import-plan` to import and normalize the external plan first."
 
 ## Plan Format Contract
 
@@ -26,7 +28,7 @@ When creating or editing `plan.md`, follow `oat-project-plan-writing` canonical 
 
 **OAT MODE: Planning**
 
-**Purpose:** Break design (or discovery, for quick mode) into executable tasks with exact files, signatures/test cases, and commands.
+**Purpose:** Break design into executable tasks with exact files, signatures/test cases, and commands. Full-mode only — quick and import modes stop-and-route.
 
 ## Progress Indicators (User-Facing)
 
@@ -93,16 +95,28 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
 
-### Step 1: Determine Workflow Mode and Check Prerequisites
+### Step 1: Determine Workflow Mode and Route
 
 ```bash
 WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
 WORKFLOW_MODE="${WORKFLOW_MODE:-full}"
 ```
 
-**Mode: `full`**
+**Mode: `quick`** — **STOP.** Print:
+```
+⚠️  This project uses quick mode. Plan is produced by the quick workflow.
+    Run the `oat-project-implement` skill to begin execution.
+```
+Exit skill.
 
-Check design is complete:
+**Mode: `import`** — **STOP.** Check if `"$PROJECT_PATH/plan.md"` exists:
+- If yes: Print: "Imported plan is ready. Run `oat-project-implement` to begin execution."
+- If no: Print: "Run `oat-project-import-plan` to import and normalize the external plan first."
+Exit skill.
+
+**Mode: `full`** — Continue to Step 2.
+
+### Step 2: Check Design Complete
 
 ```bash
 cat "$PROJECT_PATH/design.md" | head -10 | grep "oat_status:"
@@ -111,29 +125,9 @@ cat "$PROJECT_PATH/design.md" | head -10 | grep "oat_status:"
 Required frontmatter: `oat_status: complete`, `oat_ready_for: oat-project-plan`.
 If not complete: Block and ask user to finish design first.
 
-**Mode: `quick`**
+### Step 3: Read Design Document
 
-Check discovery exists:
-
-```bash
-test -s "$PROJECT_PATH/discovery.md"
-```
-
-If missing: Block and ask user to run `oat-project-discover` or `oat-project-quick-start` first. No design gate — proceed directly to plan authoring from discovery context.
-
-**Mode: `import`**
-
-Check normalized plan exists:
-
-```bash
-test -s "$PROJECT_PATH/plan.md"
-```
-
-If no normalized plan exists: Route to `oat-project-import-plan` first. If plan already exists: treat this as a resume/edit of the normalized plan.
-
-### Step 2: Read Source Artifacts
-
-**Mode: `full`** — Read `"$PROJECT_PATH/design.md"` completely to understand:
+Read `"$PROJECT_PATH/design.md"` completely to understand:
 - Architecture overview and components
 - Data models and schemas
 - API designs and interfaces
@@ -141,22 +135,14 @@ If no normalized plan exists: Route to `oat-project-import-plan` first. If plan 
 - Testing strategy
 - Security and performance considerations
 
-**Mode: `quick`** — Read `"$PROJECT_PATH/discovery.md"` to understand:
-- Initial request and objectives
-- Key decisions and constraints
-- Out-of-scope items
-- Success criteria
+### Step 4: Read Knowledge Base for Context
 
-**Mode: `import`** — Read the existing `"$PROJECT_PATH/plan.md"` and `"$PROJECT_PATH/references/imported-plan.md"` (if present) for context.
-
-### Step 3: Read Knowledge Base for Context
-
-Read for implementation context (all modes):
+Read for implementation context:
 - `.oat/repo/knowledge/conventions.md` - Code patterns to follow
 - `.oat/repo/knowledge/testing.md` - Testing patterns
 - `.oat/repo/knowledge/stack.md` - Available tools and dependencies
 
-### Step 4: Initialize Plan Document
+### Step 5: Initialize Plan Document
 
 Check whether a plan already exists at `"$PROJECT_PATH/plan.md"`.
 
@@ -187,7 +173,7 @@ oat_template: false
 
 ### Step 5: Define Phases
 
-Break source artifact (design for `full`, discovery for `quick`, existing plan for `import`) into plan phases.
+Break design implementation phases into plan phases.
 
 **Phase structure:**
 - Each phase delivers a complete, testable milestone
@@ -350,7 +336,7 @@ Update `"$PROJECT_PATH/state.md"`:
 
 **Note:** Only append to `oat_hil_completed` when the phase is configured as a HiL gate.
 
-Update content (adapt progress list to workflow mode — omit spec/design lines for `quick`/`import`):
+Update content:
 ```markdown
 ## Current Phase
 
@@ -359,8 +345,8 @@ Planning - Ready for implementation
 ## Progress
 
 - ✓ Discovery complete
-- ✓ Specification complete    <!-- full mode only -->
-- ✓ Design complete           <!-- full mode only -->
+- ✓ Specification complete
+- ✓ Design complete
 - ✓ Plan complete
 - ⧗ Awaiting implementation
 ```
