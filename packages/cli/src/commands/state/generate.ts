@@ -240,7 +240,11 @@ function calculateStaleness(
     return result;
   }
 
-  result.filesChanged = git.diffFileCount(repoRoot, knowledge.mergeBaseSha);
+  try {
+    result.filesChanged = git.diffFileCount(repoRoot, knowledge.mergeBaseSha);
+  } catch {
+    result.filesChanged = 0;
+  }
 
   if (knowledge.generatedAt) {
     const genDate = new Date(knowledge.generatedAt);
