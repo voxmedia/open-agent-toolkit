@@ -14,6 +14,28 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [tooling] Migrate `validate-oat-skills.ts` from `.oat/scripts/` to CLI**
+  - Outcome:
+    - Migrated skill validation logic to `oat internal validate-oat-skills` CLI command (`packages/cli/src/commands/internal/validate-oat-skills.ts`).
+    - Core validation logic extracted to `packages/cli/src/validation/skills.ts`.
+    - `.oat/scripts/validate-oat-skills.ts` removed.
+    - `pnpm oat:validate-skills` package.json script updated to call CLI command.
+  - Links:
+    - PR: `https://github.com/tkstang/open-agent-toolkit/pull/12`
+  - Created: 2026-02-14
+  - Completed: 2026-02-16
+
+- [x] **(P1) [tooling] Migrate `new-oat-project.ts` from `.oat/scripts/` to CLI**
+  - Outcome:
+    - Migrated project scaffolding to `oat project new <name>` CLI command (`packages/cli/src/commands/project/new/`).
+    - Preserved `--force`, `--no-set-active`, `--no-dashboard` flags plus added `--mode` flag.
+    - `oat-project-new` skill updated to use CLI command.
+    - `.oat/scripts/new-oat-project.ts` removed.
+  - Links:
+    - PR: `https://github.com/tkstang/open-agent-toolkit/pull/12`
+  - Created: 2026-02-14
+  - Completed: 2026-02-16
+
 - [x] **(P1) [tooling] Add explicit supported-provider configuration for project sync**
   - Outcome:
     - Added explicit project provider enable/disable management in `.oat/sync/config.json` via `oat providers set --scope project --enabled ... --disabled ...`.

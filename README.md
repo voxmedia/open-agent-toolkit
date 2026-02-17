@@ -75,13 +75,23 @@ Start points:
 
 Use OAT lifecycle skills when you want explicit checkpoints and durable project artifacts.
 
-You can start in one of three lanes (each converges on implementation + full review workflows):
+Recommended when:
+- You want traceable artifacts (`state/spec/design/plan/implementation`) for handoffs and audits.
+- You want review/fix loops and PR artifacts driven by a consistent workflow contract.
+- You want the option to start fast (quick/import) and promote to full lifecycle later.
 
-1. Full lane: Discovery -> Spec -> Design -> Plan -> Implement -> Project review loop
-2. Quick lane: Quick start (discovery + plan baseline) -> Implement -> Project review loop
-3. Imported-plan lane: Plan with provider -> Import to OAT project -> Implement -> Project review loop
+Lane options (all converge on implementation + project review workflows):
 
-All lanes support review/fix loops, PR artifact generation, and optional promotion to full lifecycle where applicable.
+| Lane | Typical sequence | Best fit |
+|---|---|---|
+| Full | Discovery -> Spec -> Design -> Plan -> Implement -> Project review loop | New initiatives or higher-risk changes that need full artifact rigor |
+| Quick | Quick start (discovery + plan baseline) -> Implement -> Project review loop | Smaller scoped work that still needs structured execution |
+| Imported-plan | Plan with provider -> Import to OAT project -> Implement -> Project review loop | External/provider-authored plans you want normalized into OAT artifacts |
+
+Shared across lanes:
+- Review/fix loops (`oat-project-review-provide` + `oat-project-review-receive`)
+- PR artifacts (`oat-project-pr-progress`, `oat-project-pr-final`)
+- Optional promotion to full lifecycle (`oat-project-promote-full`) where applicable
 
 This layer is optional and can build on top of interop + provider-agnostic tooling.
 
