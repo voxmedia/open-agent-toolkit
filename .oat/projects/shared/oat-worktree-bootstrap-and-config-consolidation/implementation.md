@@ -52,7 +52,7 @@ oat_generated: false
 - [x] `p03-t02`: documented phase-A ownership split in reference docs (`d559c98`).
 - [x] `p04-t01`: aligned backlog entries with phase-A implementation traceability (`62e5754`).
 - [x] `p04-t02`: updated ADR-010 linkage for phase-A implementation traceability (`b08cbad`).
-- [x] `p05-t01`: finalized project artifacts and ran validation/dashboard refresh (pending commit SHA).
+- [x] `p05-t01`: finalized project artifacts and ran validation/dashboard refresh (`8c90fb2`).
 
 **What changed (high level):**
 - Added new skill scaffold at `.agents/skills/oat-worktree-bootstrap/SKILL.md`.
@@ -218,7 +218,7 @@ oat_generated: false
 ### Task p05-t01: Validate artifacts and refresh dashboard state
 
 **Status:** completed
-**Commit:** pending
+**Commit:** `8c90fb2`
 
 **Outcome:**
 - Skill validation re-run confirmed all oat skills still pass.
