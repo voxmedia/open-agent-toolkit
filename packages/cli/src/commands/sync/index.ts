@@ -145,11 +145,13 @@ async function maybeResolveProviderMismatches(
   }
 
   const selectedSet = new Set(selected);
-  const providers = { ...config.providers };
-  for (const providerName of [
+  // `detectedUnset` and `detectedDisabled` are mutually exclusive by contract.
+  const mismatchedProviders = new Set([
     ...mismatches.detectedUnset,
     ...mismatches.detectedDisabled,
-  ]) {
+  ]);
+  const providers = { ...config.providers };
+  for (const providerName of mismatchedProviders) {
     providers[providerName] = {
       ...(providers[providerName] ?? {}),
       enabled: selectedSet.has(providerName),
