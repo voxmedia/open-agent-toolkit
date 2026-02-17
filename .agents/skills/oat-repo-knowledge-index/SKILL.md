@@ -653,9 +653,7 @@ Next: Start a project with oat-project-new or explore knowledge files
 After knowledge base generation, regenerate the repo state dashboard:
 
 ```bash
-if [[ -f ".oat/scripts/generate-oat-state.sh" ]]; then
-  .oat/scripts/generate-oat-state.sh
-fi
+pnpm run cli -- state refresh
 ```
 
 This ensures the dashboard reflects fresh knowledge status immediately.

@@ -141,7 +141,7 @@ Ensure `"$PROJECT_PATH/implementation.md"` exists and frontmatter is resumable:
 Always regenerate the repo dashboard after quick-start updates (including resume path):
 
 ```bash
-bash .oat/scripts/generate-oat-state.sh
+pnpm run cli -- state refresh
 ```
 
 ### Step 7: Output Next Action
