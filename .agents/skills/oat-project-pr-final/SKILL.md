@@ -266,8 +266,19 @@ gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 
 Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
 
+### Step 6: Update Project State Milestone
+
+After writing the PR artifact (and after optional PR creation), update `"$PROJECT_PATH/state.md"` so project routing reflects the next lifecycle step.
+
+Required update:
+- In the `## Next Milestone` section, set:
+  - `Run \`oat-project-complete\`.`
+
+If `state.md` is missing, skip with a warning.
+
 ## Success Criteria
 
 - Final PR description artifact written to `{PROJECT_PATH}/pr/`
 - Final review status checked and referenced
 - User has clear next step to open PR (manual or gh)
+- Project `state.md` next milestone points to `oat-project-complete`

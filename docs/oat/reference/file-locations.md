@@ -10,10 +10,16 @@ For detailed `.oat/` tree semantics, see:
 
 ## OAT runtime/state
 
+- Repo runtime config (non-sync settings): `.oat/config.json`
 - Active project pointer: `.oat/active-project`
 - Active idea pointer: `.oat/active-idea`
 - Optional root override: `.oat/projects-root`
 - Project manifests/config: `.oat/sync/`
+
+Phase-A ownership note:
+- `.oat/config.json` is the canonical home for new non-sync settings (for example, `worktrees.root`).
+- `.oat/sync/config.json` remains the sync/provider config contract.
+- Existing pointer files (`.oat/active-project`, `.oat/active-idea`, `.oat/projects-root`) remain valid during phased migration.
 
 ## OAT workflow
 

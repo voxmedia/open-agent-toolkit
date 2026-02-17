@@ -69,6 +69,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related existing script: `pnpm run worktree:init`
     - Reference inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
     - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
+    - Implementation project: `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
   - Created: 2026-02-17
 
 - [ ] **(P1) [tooling] Consolidate OAT runtime config under `.oat/config.json` (phased)**
@@ -87,6 +88,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
     - Related decision: `.oat/repo/reference/decision-record.md`
+    - Implementation project: `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
   - Created: 2026-02-17
 
 - [ ] **(P1) [skills] Add stronger subagent orchestration skills (sequential + parallel dispatch)**
@@ -95,14 +97,45 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Add OAT skills for subagent-driven development and parallel agent dispatch patterns.
     - Scope should include: when to spawn subagents, task slicing rules, aggregation/reconciliation expectations, and failure handling.
     - Align with current OAT workflow artifacts so subagent outputs map cleanly into plan/implementation/review loops.
+    - Add a plan-handoff selector before implementation starts:
+      - prompt for `single-thread` vs `subagent-driven` execution,
+      - persist the selected mode in project state/frontmatter,
+      - route implementation entrypoint based on persisted mode by default.
+    - Fold in autonomous worktree orchestration for large multi-phase projects:
+      - keep `oat-worktree-bootstrap` manual-safe for direct use,
+      - add an autonomous worktree companion contract for orchestrators,
+      - support fan-out/fan-in execution in isolated worktrees with deterministic merge-back,
+      - use existing HiL frontmatter/checkpoint semantics so orchestration delegates until the next configured HiL gate.
   - Success criteria:
     - Team has reusable skills for both “single focused subagent loop” and “parallel dispatch + reconcile” workflows.
     - Skills reduce ad-hoc prompting and improve consistency of multi-agent execution.
     - Guidance includes clear guardrails for quality gates before merge.
+    - Parallel orchestration path works without intermediate prompts between configured HiL checkpoints while preserving OAT artifact traceability.
+    - Execution mode is explicit and durable per project (state/frontmatter), with safe defaults for existing workflows.
   - Links:
+    - Inspiration: https://github.com/obra/superpowers/blob/e16d611eee14ac4c3253b4bf4c55a98d905c2e64/skills/writing-plans/SKILL.md#L103
     - Inspiration: https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
     - Inspiration: https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/finishing-a-development-branch/SKILL.md
+    - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
     - Related roadmap area: Phase 6 (parallel execution + reconcile)
+  - Created: 2026-02-17
+
+- [ ] **(P2) [workflow] Rename HiL terminology to HiLL (Human in Loop Lock)**
+  - Target milestone/phase: Workflow terminology consistency
+  - Notes:
+    - Evaluate terminology migration from "HiL" to "HiLL (Human in Loop Lock)" across workflow docs/skills/backlog/reference artifacts.
+    - Decide scope of migration for frontmatter and status fields:
+      - terminology-only in prose, or
+      - key-name migration (with compatibility aliases) where feasible.
+    - Ensure naming stays consistent with orchestrator checkpoint semantics and review gate language.
+  - Success criteria:
+    - Canonical docs and skill contracts use the chosen term consistently.
+    - If key names change, migration/compatibility behavior is documented and non-breaking.
+    - Team guidance clearly distinguishes lock/checkpoint behavior from general human-in-the-loop wording.
+  - Links:
+    - Related plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
   - Created: 2026-02-17
 
 - [ ] **(P1) [skills] Add `oat-project-document` for post-implementation documentation synthesis**
@@ -287,6 +320,51 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Dashboard is regenerated after apply mode.
   - Links:
     - Related files: `.oat/active-project`, `.oat/projects/shared/*/state.md`, `.oat/state.md`
+  - Created: 2026-02-17
+
+- [ ] **(P1) [tooling] Add artifact cleanup command for reviews and external plans**
+  - Target milestone/phase: OAT CLI lifecycle hygiene
+  - Notes:
+    - Add a command (for example, `oat cleanup artifacts`) to clean stale/duplicate artifacts in:
+      - `.oat/repo/reviews/`
+      - `.oat/repo/reference/external-plans/`
+    - Default behavior should auto-clean duplicate version chains while preserving the latest version:
+      - Example: if `foo.md`, `foo-v2.md`, `foo-v3.md` exist, keep only latest (`foo-v3.md`) by default.
+    - After duplicate pruning, present remaining candidate artifacts in an interactive multi-select prompt for optional removal.
+    - Keep explicit dry-run + apply semantics and print a deterministic summary (removed/kept/skipped).
+    - Guardrails:
+      - Never delete latest-in-chain duplicates automatically.
+      - If a file appears referenced by active project artifacts, require explicit confirmation before delete.
+  - Success criteria:
+    - Duplicate version chains are pruned automatically to latest with no manual triage.
+    - Users can multi-select additional stale artifacts for removal in one pass.
+    - Cleanup works consistently for both reviews and external plans.
+    - Output is audit-friendly and idempotent on repeated runs.
+  - Links:
+    - Related directories: `.oat/repo/reviews/`, `.oat/repo/reference/external-plans/`
+  - Created: 2026-02-17
+
+- [ ] **(P1) [tooling] Add configurable VCS policy + worktree sync behavior for OAT artifact directories**
+  - Target milestone/phase: Worktree ergonomics + artifact signal/noise control
+  - Notes:
+    - Add explicit configuration for whether high-churn artifact directories should be gitignored, including:
+      - `.oat/repo/reviews/`
+      - `.oat/repo/reference/external-plans/`
+    - Keep this user-configurable per repo (opt-in/opt-out), not hard-coded.
+    - Add config for worktree artifact propagation so context can still be available even when directories are ignored:
+      - copy selected directories/files from source branch -> new worktree during bootstrap
+      - optionally sync/copy generated artifacts back from worktree -> primary branch workspace before/after merge
+    - Ensure behavior is deterministic and explicit (dry-run/apply modes), with clear reporting of what was copied/skipped.
+    - Keep compatibility with current `.oat/config.json` phase-A direction; avoid introducing new one-off pointer files.
+  - Success criteria:
+    - Users can choose whether these artifact directories are tracked in git.
+    - Worktrees can still receive required context artifacts when gitignored policy is enabled.
+    - Generated worktree artifacts can be copied back to primary workspace via explicit policy.
+    - CLI output is audit-friendly and safe by default (no silent destructive overwrite).
+  - Links:
+    - Related directories: `.oat/repo/reviews/`, `.oat/repo/reference/external-plans/`
+    - Related config direction: `.oat/config.json`
+    - Related plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
   - Created: 2026-02-17
 
 - [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-project-new`**

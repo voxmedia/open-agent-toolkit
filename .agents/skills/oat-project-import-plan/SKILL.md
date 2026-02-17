@@ -65,7 +65,10 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 If no valid active project exists:
 - Use `--project` if provided, else ask user.
-- Create project via `oat-project-new` flow.
+- Create an import-mode scaffold directly:
+  ```bash
+  pnpm run cli -- project new "{project-name}" --mode import
+  ```
 
 ### Step 1: Resolve and Validate Source Plan Path
 
