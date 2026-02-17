@@ -90,6 +90,7 @@ interface InitDependencies {
     scope: ConcreteScope,
     manifest: Manifest,
     canonicalEntries: CanonicalEntry[],
+    activeAdapters?: ProviderAdapter[],
   ) => Promise<InitStrayCandidate[]>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
   selectManyWithAbort: <T extends string>(
@@ -153,12 +154,17 @@ async function collectStraysDefault(
   scope: ConcreteScope,
   manifest: Manifest,
   canonicalEntries: CanonicalEntry[],
+  activeAdapters?: ProviderAdapter[],
 ): Promise<InitStrayCandidate[]> {
-  const adapters = [claudeAdapter, cursorAdapter, codexAdapter];
-  const activeAdapters = await getActiveAdapters(adapters, scopeRoot);
+  const adaptersToScan =
+    activeAdapters ??
+    (await getActiveAdapters(
+      [claudeAdapter, cursorAdapter, codexAdapter],
+      scopeRoot,
+    ));
   const candidates: InitStrayCandidate[] = [];
 
-  for (const adapter of activeAdapters) {
+  for (const adapter of adaptersToScan) {
     const mappings = getSyncMappings(adapter, scope);
     for (const mapping of mappings) {
       const providerDir = join(scopeRoot, mapping.providerDir);
@@ -304,58 +310,67 @@ async function runInitCommand(
 
   for (const scope of scopes) {
     const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
+    let activeAdaptersForStrays: ProviderAdapter[] | undefined;
     if (scope === 'project') {
       projectRoot = scopeRoot;
-    }
-
-    await dependencies.ensureCanonicalDirs(scopeRoot, scope);
-
-    if (scope === 'project' && !context.interactive && !context.json) {
-      context.logger.info(PROVIDER_CONFIG_REMEDIATION);
-    }
-
-    if (scope === 'project' && context.interactive) {
       const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');
-      const config = await dependencies.loadSyncConfig(configPath);
       const adapters = dependencies.getAdapters();
-      const resolution = await dependencies.getConfigAwareAdapters(
+      let config = await dependencies.loadSyncConfig(configPath);
+      let resolution = await dependencies.getConfigAwareAdapters(
         adapters,
         scopeRoot,
         config,
       );
-      const providerChoices = adapters.map((adapter) => ({
-        label: adapter.name,
-        value: adapter.name,
-        description: adapter.displayName,
-        checked:
-          config.providers[adapter.name]?.enabled === true ||
-          resolution.activeAdapters.some(
-            (active) => active.name === adapter.name,
-          ),
-      }));
 
-      const selectedProviders = await dependencies.selectProvidersWithAbort(
-        'Select supported project providers',
-        providerChoices,
-        { interactive: context.interactive },
-      );
+      if (!context.interactive && !context.json) {
+        context.logger.info(PROVIDER_CONFIG_REMEDIATION);
+      }
 
-      if (selectedProviders !== null) {
-        const selectedProviderNames = new Set(selectedProviders);
-        const providers = { ...config.providers };
-        for (const adapter of adapters) {
-          providers[adapter.name] = {
-            ...(providers[adapter.name] ?? {}),
-            enabled: selectedProviderNames.has(adapter.name),
-          };
+      if (context.interactive) {
+        const providerChoices = adapters.map((adapter) => ({
+          label: adapter.name,
+          value: adapter.name,
+          description: adapter.displayName,
+          checked:
+            config.providers[adapter.name]?.enabled === true ||
+            resolution.activeAdapters.some(
+              (active) => active.name === adapter.name,
+            ),
+        }));
+
+        const selectedProviders = await dependencies.selectProvidersWithAbort(
+          'Select supported project providers',
+          providerChoices,
+          { interactive: context.interactive },
+        );
+
+        if (selectedProviders !== null) {
+          const selectedProviderNames = new Set(selectedProviders);
+          const providers = { ...config.providers };
+          for (const adapter of adapters) {
+            providers[adapter.name] = {
+              ...(providers[adapter.name] ?? {}),
+              enabled: selectedProviderNames.has(adapter.name),
+            };
+          }
+
+          config = await dependencies.saveSyncConfig(configPath, {
+            ...config,
+            providers,
+          });
         }
 
-        await dependencies.saveSyncConfig(configPath, {
-          ...config,
-          providers,
-        });
+        resolution = await dependencies.getConfigAwareAdapters(
+          adapters,
+          scopeRoot,
+          config,
+        );
       }
+
+      activeAdaptersForStrays = resolution.activeAdapters;
     }
+
+    await dependencies.ensureCanonicalDirs(scopeRoot, scope);
 
     const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
     let manifest = await dependencies.loadManifest(manifestPath);
@@ -369,6 +384,7 @@ async function runInitCommand(
       scope,
       manifest,
       canonicalEntries,
+      activeAdaptersForStrays,
     );
     let straysAdopted = 0;
 

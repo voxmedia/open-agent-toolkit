@@ -80,6 +80,7 @@ function createHarness(options: HarnessOptions = {}): {
   resolveScopeRoot: ReturnType<typeof vi.fn>;
   ensureCanonicalDirs: ReturnType<typeof vi.fn>;
   saveManifest: ReturnType<typeof vi.fn>;
+  collectStrays: ReturnType<typeof vi.fn>;
   confirmAction: ReturnType<typeof vi.fn>;
   selectManyWithAbort: ReturnType<typeof vi.fn>;
   selectProvidersWithAbort: ReturnType<typeof vi.fn>;
@@ -108,6 +109,7 @@ function createHarness(options: HarnessOptions = {}): {
   );
   const ensureCanonicalDirs = vi.fn(async () => undefined);
   const saveManifest = vi.fn(async () => undefined);
+  const collectStrays = vi.fn(async () => options.strays ?? []);
   const adoptStray = vi.fn(
     async (_scopeRoot: string, _stray, manifest: Manifest) => {
       return manifest;
@@ -165,7 +167,7 @@ function createHarness(options: HarnessOptions = {}): {
     loadManifest: vi.fn(async () => createEmptyManifest()),
     saveManifest,
     scanCanonical: vi.fn(async () => createCanonicalEntries()),
-    collectStrays: vi.fn(async () => options.strays ?? []),
+    collectStrays,
     confirmAction,
     selectManyWithAbort,
     selectProvidersWithAbort,
@@ -194,6 +196,7 @@ function createHarness(options: HarnessOptions = {}): {
     resolveScopeRoot,
     ensureCanonicalDirs,
     saveManifest,
+    collectStrays,
     confirmAction,
     selectManyWithAbort,
     selectProvidersWithAbort,
@@ -358,6 +361,38 @@ describe('createInitCommand', () => {
       'project',
     );
     expect(ensureCanonicalDirs).toHaveBeenCalledWith('/tmp/home', 'user');
+  });
+
+  it('uses config-aware active adapters for project stray scanning', async () => {
+    const { command, collectStrays } = createHarness({
+      interactive: false,
+      hookInstalled: true,
+      adapters: [
+        {
+          name: 'claude',
+          displayName: 'Claude Code',
+          defaultStrategy: 'symlink',
+          projectMappings: [],
+          userMappings: [],
+          detect: async () => true,
+        },
+        {
+          name: 'cursor',
+          displayName: 'Cursor',
+          defaultStrategy: 'symlink',
+          projectMappings: [],
+          userMappings: [],
+          detect: async () => true,
+        },
+      ],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(collectStrays).toHaveBeenCalledTimes(1);
+    const activeAdapters = collectStrays.mock
+      .calls[0]?.[4] as ProviderAdapter[];
+    expect(activeAdapters.map((adapter) => adapter.name)).toEqual(['claude']);
   });
 
   it('detects strays and prompts for adoption in interactive mode', async () => {
