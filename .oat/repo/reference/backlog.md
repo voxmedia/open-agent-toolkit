@@ -344,6 +344,29 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related directories: `.oat/repo/reviews/`, `.oat/repo/reference/external-plans/`
   - Created: 2026-02-17
 
+- [ ] **(P1) [tooling] Add configurable VCS policy + worktree sync behavior for OAT artifact directories**
+  - Target milestone/phase: Worktree ergonomics + artifact signal/noise control
+  - Notes:
+    - Add explicit configuration for whether high-churn artifact directories should be gitignored, including:
+      - `.oat/repo/reviews/`
+      - `.oat/repo/reference/external-plans/`
+    - Keep this user-configurable per repo (opt-in/opt-out), not hard-coded.
+    - Add config for worktree artifact propagation so context can still be available even when directories are ignored:
+      - copy selected directories/files from source branch -> new worktree during bootstrap
+      - optionally sync/copy generated artifacts back from worktree -> primary branch workspace before/after merge
+    - Ensure behavior is deterministic and explicit (dry-run/apply modes), with clear reporting of what was copied/skipped.
+    - Keep compatibility with current `.oat/config.json` phase-A direction; avoid introducing new one-off pointer files.
+  - Success criteria:
+    - Users can choose whether these artifact directories are tracked in git.
+    - Worktrees can still receive required context artifacts when gitignored policy is enabled.
+    - Generated worktree artifacts can be copied back to primary workspace via explicit policy.
+    - CLI output is audit-friendly and safe by default (no silent destructive overwrite).
+  - Links:
+    - Related directories: `.oat/repo/reviews/`, `.oat/repo/reference/external-plans/`
+    - Related config direction: `.oat/config.json`
+    - Related plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
+  - Created: 2026-02-17
+
 - [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-project-new`**
   - Target milestone/phase: Ideas → Projects integration
   - Notes:
