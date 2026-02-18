@@ -2,8 +2,8 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
-oat_hil_checkpoints: []
-oat_hil_completed: []
+oat_hill_checkpoints: []
+oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
 oat_phase_status: in_progress
