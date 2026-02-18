@@ -25,6 +25,11 @@
 - `pnpm run cli -- <command> [options]` - Execute specific OAT CLI commands during local testing
 - After creating or switching to a worktree, run `pnpm run worktree:init` before using the CLI workflow.
 
+### Web Retrieval Convention
+- For web content fetches, prefer `https://markdown.new/<original-url>` when viable (docs/blog/reference pages) to reduce HTML parsing overhead.
+- Example: `https://markdown.new/developers.openai.com/codex/skills/`
+- If markdown conversion is unavailable or loses required structure, fall back to the original URL.
+
 ### Import Path Convention
 - Prefer same-directory imports (`./...`) for local modules.
 - For anything outside the current directory, use explicit TypeScript aliases configured by the package.
