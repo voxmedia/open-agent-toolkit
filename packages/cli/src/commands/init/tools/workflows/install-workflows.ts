@@ -94,11 +94,11 @@ export async function installWorkflows(
   for (const skill of WORKFLOW_SKILLS) {
     const source = join(options.assetsRoot, 'skills', skill);
     const destination = join(options.targetRoot, '.agents', 'skills', skill);
-    const status = await copyDirWithStatus(source, destination, force);
+    const copyStatus = await copyDirWithStatus(source, destination, force);
 
-    if (status === 'copied') {
+    if (copyStatus === 'copied') {
       result.copiedSkills.push(skill);
-    } else if (status === 'updated') {
+    } else if (copyStatus === 'updated') {
       result.updatedSkills.push(skill);
     } else {
       result.skippedSkills.push(skill);
@@ -108,11 +108,11 @@ export async function installWorkflows(
   for (const agent of WORKFLOW_AGENTS) {
     const source = join(options.assetsRoot, 'agents', agent);
     const destination = join(options.targetRoot, '.agents', 'agents', agent);
-    const status = await copyFileWithStatus(source, destination, force);
+    const copyStatus = await copyFileWithStatus(source, destination, force);
 
-    if (status === 'copied') {
+    if (copyStatus === 'copied') {
       result.copiedAgents.push(agent);
-    } else if (status === 'updated') {
+    } else if (copyStatus === 'updated') {
       result.updatedAgents.push(agent);
     } else {
       result.skippedAgents.push(agent);
@@ -122,11 +122,11 @@ export async function installWorkflows(
   for (const template of WORKFLOW_TEMPLATES) {
     const source = join(options.assetsRoot, 'templates', template);
     const destination = join(options.targetRoot, '.oat', 'templates', template);
-    const status = await copyFileWithStatus(source, destination, force);
+    const copyStatus = await copyFileWithStatus(source, destination, force);
 
-    if (status === 'copied') {
+    if (copyStatus === 'copied') {
       result.copiedTemplates.push(template);
-    } else if (status === 'updated') {
+    } else if (copyStatus === 'updated') {
       result.updatedTemplates.push(template);
     } else {
       result.skippedTemplates.push(template);
@@ -143,14 +143,14 @@ export async function installWorkflows(
       continue;
     }
 
-    const status = await copyFileWithStatus(source, destination, force);
-    if (status !== 'skipped') {
+    const copyStatus = await copyFileWithStatus(source, destination, force);
+    if (copyStatus !== 'skipped') {
       await chmod(destination, 0o755);
     }
 
-    if (status === 'copied') {
+    if (copyStatus === 'copied') {
       result.copiedScripts.push(script);
-    } else if (status === 'updated') {
+    } else if (copyStatus === 'updated') {
       result.updatedScripts.push(script);
     } else {
       result.skippedScripts.push(script);

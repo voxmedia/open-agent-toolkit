@@ -60,11 +60,11 @@ export async function installIdeas(
   for (const skill of IDEA_SKILLS) {
     const source = join(options.assetsRoot, 'skills', skill);
     const destination = join(options.targetRoot, '.agents', 'skills', skill);
-    const status = await copyDirWithStatus(source, destination, force);
+    const copyStatus = await copyDirWithStatus(source, destination, force);
 
-    if (status === 'copied') {
+    if (copyStatus === 'copied') {
       result.copiedSkills.push(skill);
-    } else if (status === 'updated') {
+    } else if (copyStatus === 'updated') {
       result.updatedSkills.push(skill);
     } else {
       result.skippedSkills.push(skill);
@@ -74,11 +74,11 @@ export async function installIdeas(
   for (const mapping of INFRA_FILE_MAPPINGS) {
     const source = join(ideasTemplatesRoot, mapping.src);
     const destination = join(options.targetRoot, mapping.dest);
-    const status = await copyFileWithStatus(source, destination, force);
+    const copyStatus = await copyFileWithStatus(source, destination, force);
 
-    if (status === 'copied') {
+    if (copyStatus === 'copied') {
       result.copiedInfraFiles.push(mapping.dest);
-    } else if (status === 'updated') {
+    } else if (copyStatus === 'updated') {
       result.updatedInfraFiles.push(mapping.dest);
     } else {
       result.skippedInfraFiles.push(mapping.dest);
@@ -88,11 +88,11 @@ export async function installIdeas(
   for (const mapping of RUNTIME_TEMPLATE_MAPPINGS) {
     const source = join(ideasTemplatesRoot, mapping.src);
     const destination = join(options.targetRoot, mapping.dest);
-    const status = await copyFileWithStatus(source, destination, force);
+    const copyStatus = await copyFileWithStatus(source, destination, force);
 
-    if (status === 'copied') {
+    if (copyStatus === 'copied') {
       result.copiedTemplates.push(mapping.dest);
-    } else if (status === 'updated') {
+    } else if (copyStatus === 'updated') {
       result.updatedTemplates.push(mapping.dest);
     } else {
       result.skippedTemplates.push(mapping.dest);
