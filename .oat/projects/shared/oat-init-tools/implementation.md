@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-02-17
-oat_current_task_id: p01-t01
+oat_last_updated: 2026-02-18
+oat_current_task_id: null
 oat_generated: true
 oat_template: false
 ---
@@ -11,7 +11,7 @@ oat_template: false
 # Implementation: oat-init-tools
 
 **Started:** 2026-02-17
-**Last Updated:** 2026-02-17
+**Last Updated:** 2026-02-18
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,196 +26,514 @@ oat_template: false
 
 | Phase | Status | Tasks | Completed |
 |-------|--------|-------|-----------|
-| Phase 1: Build Infrastructure | pending | 4 | 0/4 |
-| Phase 2: Ideas Pack | pending | 2 | 0/2 |
-| Phase 3: Workflows Pack | pending | 2 | 0/2 |
-| Phase 4: Utility + Tools Group + Wiring | pending | 3 | 0/3 |
-| Phase 5: Idea Skill Updates | pending | 2 | 0/2 |
-| Phase 6: E2E Verification | pending | 1 | 0/1 |
+| Phase 1: Build Infrastructure | completed | 4 | 4/4 |
+| Phase 2: Ideas Pack | completed | 2 | 2/2 |
+| Phase 3: Workflows Pack | completed | 2 | 2/2 |
+| Phase 4: Utility + Tools Group + Wiring | completed | 3 | 3/3 |
+| Phase 5: Idea Skill Updates | completed | 2 | 2/2 |
+| Phase 6: E2E Verification | completed | 1 | 1/1 |
 
-**Total:** 0/14 tasks completed
+**Total:** 14/14 tasks completed
 
 ---
 
 ## Phase 1: Build Infrastructure
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-02-18
 
 ### Task p01-t01: Create asset bundling script
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 076c433
 
-**Notes:**
-- Create `packages/cli/scripts/bundle-assets.sh`
-- Must copy all 25 skill directories, 2 agents, all templates
-- Scripts are optional (conditional copy)
+**Outcome (required):**
+- Added a new bundling script at `packages/cli/scripts/bundle-assets.sh` to build a clean `packages/cli/assets/` tree.
+- Script copies the targeted 25 OAT skill directories plus agent docs and template assets needed for runtime installation.
+- Script includes optional script-asset copying guarded by `[ -f ... ]` checks so missing optional scripts do not fail bundling.
+
+**Files changed:**
+- `packages/cli/scripts/bundle-assets.sh` - idempotent asset bundling implementation for CLI packaging.
+
+**Verification:**
+- Run: `bash packages/cli/scripts/bundle-assets.sh && ls -la packages/cli/assets/skills/ | wc -l`
+- Result: pass (`28` lines from `ls -la` output, corresponding to 25 skill directories plus listing metadata)
+- Run: `find packages/cli/assets/skills -mindepth 1 -maxdepth 1 -type d | wc -l`
+- Result: pass (`25`)
+
+**Notes / Decisions:**
+- Used an explicit allowlist of skills from the imported plan instead of copying every `.agents/skills/*` directory.
+- Included `templates/ideas` as a directory copy and project templates as explicit file copies.
 
 ---
 
 ### Task p01-t02: Integrate bundling into build pipeline
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4f8f9a1
 
-**Notes:**
-- Modify `packages/cli/package.json`, `turbo.json`, `.gitignore`
+**Outcome (required):**
+- Updated CLI build command to run bundling before TypeScript compilation.
+- Added `assets/**` to Turbo build outputs so bundled artifacts participate in caching/output tracking.
+- Added `packages/cli/assets/` to gitignore to prevent bundled runtime artifacts from polluting git status.
+
+**Files changed:**
+- `packages/cli/package.json` - prepended bundling script to `build` command.
+- `turbo.json` - added `assets/**` to `build.outputs`.
+- `.gitignore` - ignored `packages/cli/assets/`.
+
+**Verification:**
+- Run: `pnpm build && ls packages/cli/assets/skills/oat-idea-new/SKILL.md`
+- Result: pass (build succeeds and target bundled skill file exists)
+
+**Notes / Decisions:**
+- The RED-step expectation ("build fails initially") did not reproduce because the pre-change build already passed; used it as baseline instead.
 
 ---
 
 ### Task p01-t03: Add resolveAssetsRoot() utility
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f58c7be
 
-**Notes:**
-- Create `packages/cli/src/fs/assets.ts`
-- Must work from both `src/` (tsx dev) and `dist/` (compiled)
+**Outcome (required):**
+- Added `resolveAssetsRoot()` in a new FS module that resolves bundled assets relative to module location for both `src/` and `dist/` execution.
+- Added guardrail validation using `stat()` and `CliError` when assets are missing or not a directory.
+- Added a focused Vitest test to verify the resolved path shape.
+
+**Files changed:**
+- `packages/cli/src/fs/assets.ts` - assets root resolver with validation/error handling.
+- `packages/cli/src/fs/assets.test.ts` - unit coverage for resolver behavior.
+- `packages/cli/src/fs/index.ts` - exports `resolveAssetsRoot` for shared CLI usage.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/fs/assets.test.ts && pnpm lint && pnpm type-check`
+- Result: pass (test/lint/type-check succeeded; lint reported existing workspace warnings outside this task)
+
+**Notes / Decisions:**
+- Implemented path resolution from `import.meta.url` with two-level traversal to `packages/cli`, which is stable for both source and compiled paths.
 
 ---
 
 ### Task p01-t04: Add fileExists() and dirExists() utilities
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5bd66a2
 
-**Notes:**
-- Modify `packages/cli/src/fs/io.ts` — add `stat` import
+**Outcome (required):**
+- Added `dirExists()` to shared filesystem utilities with the same resilient behavior as `fileExists()`.
+- Expanded `io.test.ts` with explicit coverage for both file and directory existence checks.
+- Exported `dirExists` from FS index for downstream command modules.
+
+**Files changed:**
+- `packages/cli/src/fs/io.ts` - added `dirExists` helper.
+- `packages/cli/src/fs/io.test.ts` - added tests for `fileExists` and `dirExists`.
+- `packages/cli/src/fs/index.ts` - exported `dirExists`.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/fs/io.test.ts && pnpm type-check`
+- Result: pass (all tests passed and type-check clean)
+
+**Notes / Decisions:**
+- `fileExists` already existed in the codebase, so this task focused on adding missing `dirExists` and covering both helpers with tests.
+
+### Phase Summary
+
+**Outcome (behavior-level):**
+- Build infrastructure for bundled CLI assets and foundational filesystem helpers is complete.
+
+**Key files touched:**
+- `packages/cli/scripts/bundle-assets.sh`
+- `packages/cli/package.json`
+- `turbo.json`
+- `.gitignore`
+- `packages/cli/src/fs/assets.ts`
+- `packages/cli/src/fs/io.ts`
+
+**Verification run:**
+- `pnpm build`
+- `pnpm --filter @oat/cli test src/fs/assets.test.ts`
+- `pnpm --filter @oat/cli test src/fs/io.test.ts`
+- `pnpm lint`
+- `pnpm type-check`
+
+**Notable decisions/deviations:**
+- Baseline `pnpm build` was already passing during p01-t02 RED step; treated as baseline verification rather than a failing precondition.
+- p01-t04 adjusted to existing code reality (`fileExists` pre-existed); completed missing `dirExists` and added test coverage for both.
 
 ---
 
 ## Phase 2: Ideas Pack
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-02-18
 
 ### Task p02-t01: Implement ideas install pure logic
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 90b78b2
 
-**Notes:**
-- Create `packages/cli/src/commands/init/tools/ideas/install-ideas.ts`
-- 4 skills, 2 infra files, 2 runtime templates
+**Outcome (required):**
+- Added a pure `installIdeas()` installer that copies ideas skill pack assets into project/user targets with idempotent `copied/updated/skipped` reporting.
+- Added deterministic handling for skills, ideas infra files, and runtime templates with `force` overwrite behavior.
+- Added integration-style tests covering fresh install, idempotent re-run, partial install, and force overwrite flows.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/ideas/install-ideas.ts` - pure install logic and typed result contract.
+- `packages/cli/src/commands/init/tools/ideas/install-ideas.test.ts` - end-to-end temp-dir tests for all core scenarios.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/ideas/install-ideas.test.ts && pnpm type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Installer returns category-specific arrays (`skills`, `infra`, `templates`) to support detailed command-layer reporting in `p02-t02`.
 
 ---
 
 ### Task p02-t02: Implement ideas Commander layer
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 05f6820
 
-**Notes:**
-- Create `packages/cli/src/commands/init/tools/ideas/index.ts`
-- Scope: all→project, project→project, user→home
+**Outcome (required):**
+- Added `createInitToolsIdeasCommand()` with dependency-injected command runner and clear scope resolution (`all`/`project` -> project root, `user` -> user home).
+- Implemented interactive `--force` overwrite confirmation before mutating existing assets.
+- Added structured text and JSON outputs, including per-category copy/update/skip counts and sync guidance.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/ideas/index.ts` - ideas command implementation and reporting logic.
+- `packages/cli/src/commands/init/tools/ideas/index.test.ts` - command harness tests for scope mapping, prompts, and output behavior.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/ideas/ && pnpm type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Added overwrite confirmation only for interactive mode; non-interactive runs honor `--force` directly.
+
+### Phase Summary
+
+**Outcome (behavior-level):**
+- `oat init tools ideas` now has both pure installer logic and command-layer behavior with scope-aware installs and reporting.
+
+**Key files touched:**
+- `packages/cli/src/commands/init/tools/ideas/install-ideas.ts`
+- `packages/cli/src/commands/init/tools/ideas/install-ideas.test.ts`
+- `packages/cli/src/commands/init/tools/ideas/index.ts`
+- `packages/cli/src/commands/init/tools/ideas/index.test.ts`
+
+**Verification run:**
+- `pnpm --filter @oat/cli test src/commands/init/tools/ideas/install-ideas.test.ts`
+- `pnpm --filter @oat/cli test src/commands/init/tools/ideas/`
+- `pnpm type-check`
+
+**Notable decisions/deviations:**
+- Implemented detailed category-level result arrays to simplify future pack-level aggregation in `oat init tools`.
 
 ---
 
 ## Phase 3: Workflows Pack
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-02-18
 
 ### Task p03-t01: Implement workflows install pure logic
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5b72342
 
-**Notes:**
-- Create `packages/cli/src/commands/init/tools/workflows/install-workflows.ts`
-- 20 skills, 2 agents, 6 templates, 2 scripts (optional), 1 config
+**Outcome (required):**
+- Added pure `installWorkflows()` logic to install workflow skill/agent/template/script packs with idempotent copied/updated/skipped accounting.
+- Added optional-script handling with graceful skip when script assets are missing and explicit `chmod 0o755` on copied/updated scripts.
+- Added `.oat/projects-root` initialization behavior (`.oat/projects/shared`) when absent while preserving existing values even under `force`.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` - workflow installer logic and typed result contract.
+- `packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts` - integration-style coverage for fresh/idempotent/force/missing-script/projects-root/chmod behavior.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/workflows/install-workflows.test.ts && pnpm type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Script constants use `generate-oat-state.sh` and `generate-thin-index.sh`, matching current deferred script-migration references; missing-script path remains non-fatal.
 
 ---
 
 ### Task p03-t02: Implement workflows Commander layer
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c4e919d
 
-**Notes:**
-- Create `packages/cli/src/commands/init/tools/workflows/index.ts`
-- Scope: user → reject with error
+**Outcome (required):**
+- Added `createInitToolsWorkflowsCommand()` with project-scope enforcement and dependency-injected execution for testability.
+- Implemented interactive `--force` confirmation workflow and structured success/error output in text and JSON modes.
+- Added command tests for scope behavior, overwrite confirmation, and output payload shape.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/workflows/index.ts` - workflows command implementation.
+- `packages/cli/src/commands/init/tools/workflows/index.test.ts` - command harness tests.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/workflows/ && pnpm type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept `--scope user` as a hard error with explicit remediation, matching plan constraints and avoiding ambiguous user-level workflow installation.
+
+### Phase Summary
+
+**Outcome (behavior-level):**
+- Workflows pack installation now has both pure install logic and command-layer behavior with explicit project-scope policy.
+
+**Key files touched:**
+- `packages/cli/src/commands/init/tools/workflows/install-workflows.ts`
+- `packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts`
+- `packages/cli/src/commands/init/tools/workflows/index.ts`
+- `packages/cli/src/commands/init/tools/workflows/index.test.ts`
+
+**Verification run:**
+- `pnpm --filter @oat/cli test src/commands/init/tools/workflows/install-workflows.test.ts`
+- `pnpm --filter @oat/cli test src/commands/init/tools/workflows/`
+- `pnpm type-check`
+
+**Notable decisions/deviations:**
+- Script copy set intentionally tolerates absent source scripts to support ongoing script-to-CLI migration without breaking installs.
 
 ---
 
 ## Phase 4: Utility + Tools Group + Wiring
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-02-18
 
 ### Task p04-t01: Implement utility install logic + Commander layer
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 445ae73
 
-**Notes:**
-- Create `packages/cli/src/commands/init/tools/utility/install-utility.ts`
-- Create `packages/cli/src/commands/init/tools/utility/index.ts`
-- Interactive multi-select using `selectManyWithAbort`
+**Outcome (required):**
+- Added pure `installUtility()` logic for utility-skill installation with copied/updated/skipped tracking and optional `force` behavior.
+- Added utility command layer with interactive multi-select (`selectManyWithAbort`) default-checked skills and scope-aware install roots.
+- Added unit/integration tests covering project/user installs, idempotency, selected-skill installs, interactive selection, and non-interactive defaults.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/utility/install-utility.ts`
+- `packages/cli/src/commands/init/tools/utility/install-utility.test.ts`
+- `packages/cli/src/commands/init/tools/utility/index.ts`
+- `packages/cli/src/commands/init/tools/utility/index.test.ts`
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/utility/ && pnpm type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Utility install accepts explicit `skills[]` from command selection, enabling future expansion without changing installer shape.
 
 ---
 
 ### Task p04-t02: Implement tools group command with interactive installer
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0c7ab89
 
-**Notes:**
-- Create `packages/cli/src/commands/init/tools/index.ts`
-- Grouped skill list with scope badges
+**Outcome (required):**
+- Added `createInitToolsCommand()` group command that registers `ideas`, `workflows`, and `utility` subcommands.
+- Implemented bare `oat init tools` action to install selected packs interactively (default all checked) or install all packs non-interactively.
+- Added mixed-scope handling: workflows always project-scoped; ideas/utility can route to selected project/user scope.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/index.ts`
+- `packages/cli/src/commands/init/tools/index.test.ts`
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/index.test.ts && pnpm type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Combined install path currently reports pack-level completion and sync reminders; per-pack detailed reporting remains in subcommands.
 
 ---
 
 ### Task p04-t03: Wire tools into oat init
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ab4b6ee
 
-**Notes:**
-- Modify `packages/cli/src/commands/init/index.ts`
-- One import + one `.addCommand()` call
+**Outcome (required):**
+- Wired the new tools command group into the main `oat init` command surface.
+- Updated init description text to include tool-pack initialization language.
+- Added regression coverage proving bare `oat init` behavior remains intact and `tools` subcommand registration exists.
+
+**Files changed:**
+- `packages/cli/src/commands/init/index.ts`
+- `packages/cli/src/commands/init/index.test.ts`
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/ && pnpm type-check`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept legacy `oat init` behavior untouched while layering the new tools command as an additive extension.
+
+### Phase Summary
+
+**Outcome (behavior-level):**
+- Utility pack, tools group command, and core `oat init` wiring are complete.
+
+**Key files touched:**
+- `packages/cli/src/commands/init/tools/utility/install-utility.ts`
+- `packages/cli/src/commands/init/tools/utility/index.ts`
+- `packages/cli/src/commands/init/tools/index.ts`
+- `packages/cli/src/commands/init/index.ts`
+
+**Verification run:**
+- `pnpm --filter @oat/cli test src/commands/init/tools/utility/`
+- `pnpm --filter @oat/cli test src/commands/init/tools/index.test.ts`
+- `pnpm --filter @oat/cli test src/commands/init/`
+- `pnpm type-check`
+
+**Notable decisions/deviations:**
+- Interactive pack selection uses pack-level choices with scope badges to keep installer UX concise while preserving scope-policy correctness.
 
 ---
 
 ## Phase 5: Idea Skill Updates
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-02-18
 
 ### Task p05-t01: Add level-relative template paths to idea skills
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cbf9cbf
 
-**Notes:**
-- Modify all 4 `oat-idea-*` SKILL.md files
-- Add `TEMPLATES_ROOT` variable, replace hardcoded paths
+**Outcome (required):**
+- Added `TEMPLATES_ROOT` variable mapping to project/user-level tables across all four idea skills.
+- Replaced hardcoded template source paths with `{TEMPLATES_ROOT}` references in relevant template-copy steps.
+- Preserved existing idea flow logic while making template resolution compatible with user-scope installs.
+
+**Files changed:**
+- `.agents/skills/oat-idea-new/SKILL.md`
+- `.agents/skills/oat-idea-ideate/SKILL.md`
+- `.agents/skills/oat-idea-summarize/SKILL.md`
+- `.agents/skills/oat-idea-scratchpad/SKILL.md`
+
+**Verification:**
+- Run: `grep -r 'TEMPLATES_ROOT' .agents/skills/oat-idea-*/SKILL.md | wc -l`
+- Result: pass (`10`)
+- Run: `rg -n \"\\.oat/templates/ideas/\" .agents/skills/oat-idea-*/SKILL.md`
+- Result: pass (no matches)
+
+**Notes / Decisions:**
+- Kept path updates narrowly scoped to template-source references for this task; level-resolution decision-chain changes are handled in p05-t02.
 
 ---
 
 ### Task p05-t02: Add dual-level prompt chain to idea skills
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** eef365b
 
-**Notes:**
-- Add new rule 4: prompt when both `.oat/ideas/` and `~/.oat/ideas/` exist
+**Outcome (required):**
+- Updated level-resolution chains in all four idea skills to include an explicit dual-root conflict prompt when both project and user idea directories exist.
+- Standardized resolution ordering and numbering so level selection is deterministic and conversationally explicit.
+- Preserved existing `--global`, active-pointer, and fallback behaviors while adding the new dual-level decision gate.
+
+**Files changed:**
+- `.agents/skills/oat-idea-new/SKILL.md`
+- `.agents/skills/oat-idea-ideate/SKILL.md`
+- `.agents/skills/oat-idea-summarize/SKILL.md`
+- `.agents/skills/oat-idea-scratchpad/SKILL.md`
+
+**Verification:**
+- Run: `grep -c 'BOTH.*ideas.*AND.*ideas' .agents/skills/oat-idea-*/SKILL.md`
+- Result: pass (all 4 skill files report the new rule)
+
+**Notes / Decisions:**
+- Applied the dual-level prompt contract consistently even to scratchpad flow to keep idea-level behavior uniform across all entrypoints.
+
+### Phase Summary
+
+**Outcome (behavior-level):**
+- Idea skills now support user-scope template resolution and explicit dual-level prompting when both project and global idea stores exist.
+
+**Key files touched:**
+- `.agents/skills/oat-idea-new/SKILL.md`
+- `.agents/skills/oat-idea-ideate/SKILL.md`
+- `.agents/skills/oat-idea-summarize/SKILL.md`
+- `.agents/skills/oat-idea-scratchpad/SKILL.md`
+
+**Verification run:**
+- `grep -r 'TEMPLATES_ROOT' .agents/skills/oat-idea-*/SKILL.md | wc -l`
+- `grep -c 'BOTH.*ideas.*AND.*ideas' .agents/skills/oat-idea-*/SKILL.md`
+
+**Notable decisions/deviations:**
+- Kept this phase docs-only and intentionally deferred CLI-level behavior changes to earlier/later code tasks.
 
 ---
 
 ## Phase 6: E2E Verification
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-02-18
 
 ### Task p06-t01: Run full test suite and manual verification
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 68b561d
 
-**Notes:**
-- `pnpm build`, CLI help, manual smoke test, full test suite, type-check, lint
+**Outcome (required):**
+- Ran final end-to-end verification across build, CLI help output, manual temp-repo smoke tests, full CLI test suite, workspace type-check, and workspace lint.
+- Validated `oat init tools` pack installation paths in a fresh git repo for ideas, workflows, utility, and combined tools installation flows.
+- Updated help snapshots to reflect the expanded `init` description and registered `tools` subcommand output.
+
+**Files changed:**
+- `packages/cli/src/commands/help-snapshots.test.ts` - refreshed inline help snapshots for root and `init` command output.
+
+**Verification:**
+- Run: `pnpm build`
+- Result: pass
+- Run: `pnpm exec tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts init --help`
+- Result: pass
+- Run: `pnpm exec tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts init tools --help`
+- Result: pass
+- Run: temp-repo smoke test via `--cwd <tmp> --scope project init`, `init tools ideas`, `init tools workflows`, `init tools utility`, and `init tools`
+- Result: pass (`skills=25`, expected representative files validated)
+- Run: `pnpm --filter @oat/cli test`
+- Result: pass (`57` test files, `458` tests)
+- Run: `pnpm type-check`
+- Result: pass
+- Run: `pnpm lint`
+- Result: pass with pre-existing warnings unrelated to this task
+- Run: `pnpm build`
+- Result: pass
+
+**Notes / Decisions:**
+- Switched runtime verification commands to direct `pnpm exec tsx ...` invocations to avoid argument-forwarding issues from `pnpm run cli`.
+- Kept lint output as-is because warnings were pre-existing and non-blocking (no lint errors).
+
+### Phase Summary
+
+**Outcome (behavior-level):**
+- End-to-end CLI behavior and packaging/install flows are verified; implementation tasks are complete and ready for final review.
+
+**Key files touched:**
+- `packages/cli/src/commands/help-snapshots.test.ts`
+
+**Verification run:**
+- `pnpm build`
+- `pnpm exec tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts init --help`
+- `pnpm exec tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts init tools --help`
+- temp-repo smoke tests for `init`, `init tools ideas`, `init tools workflows`, `init tools utility`, and `init tools`
+- `pnpm --filter @oat/cli test`
+- `pnpm type-check`
+- `pnpm lint`
+- `pnpm build`
+
+**Notable decisions/deviations:**
+- Final verification sequence used direct tsx entrypoint commands instead of `pnpm run cli -- ...` to ensure stable flag parsing in this environment.
 
 ---
 
@@ -225,7 +543,20 @@ oat_template: false
 
 **Session Start:** -
 
-- [ ] p01-t01: Create asset bundling script - pending
+- [x] p01-t01: Create asset bundling script - completed (`076c433`)
+- [x] p01-t02: Integrate bundling into build pipeline - completed (`4f8f9a1`)
+- [x] p01-t03: Add resolveAssetsRoot() utility - completed (`f58c7be`)
+- [x] p01-t04: Add fileExists() and dirExists() utilities - completed (`5bd66a2`)
+- [x] p02-t01: Implement ideas install pure logic - completed (`90b78b2`)
+- [x] p02-t02: Implement ideas Commander layer - completed (`05f6820`)
+- [x] p03-t01: Implement workflows install pure logic - completed (`5b72342`)
+- [x] p03-t02: Implement workflows Commander layer - completed (`c4e919d`)
+- [x] p04-t01: Implement utility install logic + Commander layer - completed (`445ae73`)
+- [x] p04-t02: Implement tools group command with interactive installer - completed (`0c7ab89`)
+- [x] p04-t03: Wire tools into oat init - completed (`ab4b6ee`)
+- [x] p05-t01: Add level-relative template paths to idea skills - completed (`cbf9cbf`)
+- [x] p05-t02: Add dual-level prompt chain to idea skills - completed (`eef365b`)
+- [x] p06-t01: Run full test suite and manual verification - completed (`68b561d`)
 
 **What changed (high level):**
 - Project created and plan imported
@@ -234,7 +565,7 @@ oat_template: false
 - Plan imported from Claude Code plan mode
 
 **Follow-ups / TODO:**
-- Begin implementation with p01-t01
+- Run `oat-project-review-provide code final` and process findings via `oat-project-review-receive`
 
 **Blockers:**
 - None
@@ -262,24 +593,42 @@ Track test execution during implementation.
 | 3 | - | - | - | - |
 | 4 | - | - | - | - |
 | 5 | - | - | - | - |
-| 6 | - | - | - | - |
+| 6 | build/help/smoke/test/type-check/lint | Yes | 0 | N/A |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
-- {TBD}
+- `oat init tools` now installs OAT tool packs (`ideas`, `workflows`, `utility`) with scope-aware behavior and interactive selection support.
+- CLI build now bundles runtime assets (skills/agents/templates/scripts) into `packages/cli/assets/` for distribution-time installs.
+- Idea skills now resolve templates by level (`project` vs `user`) and prompt explicitly when both idea roots exist.
 
 **Behavioral changes (user-facing):**
-- {TBD}
+- `oat init` help now advertises tool packs and includes `tools` as a subcommand.
+- `oat init tools ideas` installs 4 idea skills plus `.oat/ideas` and idea template files.
+- `oat init tools workflows` installs workflow skills/agents/templates and initializes `.oat/projects-root` when needed.
+- `oat init tools utility` installs utility skills with optional interactive selection.
+- Bare `oat init tools` can install selected packs interactively or install all packs in non-interactive mode.
 
 **Key files / modules:**
-- {TBD}
+- `packages/cli/scripts/bundle-assets.sh`
+- `packages/cli/src/fs/assets.ts`
+- `packages/cli/src/commands/init/tools/ideas/*`
+- `packages/cli/src/commands/init/tools/workflows/*`
+- `packages/cli/src/commands/init/tools/utility/*`
+- `packages/cli/src/commands/init/tools/index.ts`
+- `packages/cli/src/commands/init/index.ts`
+- `.agents/skills/oat-idea-*/SKILL.md`
 
 **Verification performed:**
-- {TBD}
+- Package build/bundling verification (`pnpm build`)
+- CLI help verification for `init` and `init tools`
+- Manual smoke verification in a fresh git repo for all tool-pack commands
+- Full CLI test suite (`pnpm --filter @oat/cli test`)
+- Workspace type-check (`pnpm type-check`)
+- Workspace lint (`pnpm lint`, warnings only, no errors)
 
 **Design deltas (if any):**
-- {TBD}
+- Runtime smoke verification used direct tsx CLI invocation instead of `pnpm run cli -- ...` due argument-forwarding differences in this shell environment.
 
 ## References
 
