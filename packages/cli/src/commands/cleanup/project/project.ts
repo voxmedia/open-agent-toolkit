@@ -1,5 +1,5 @@
 import { readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join, relative } from 'node:path';
+import { basename, dirname, isAbsolute, join } from 'node:path';
 import {
   buildCommandContext,
   type CommandContext,
@@ -12,7 +12,7 @@ import { ensureDir, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 import type { CleanupActionRecord, CleanupJsonPayload } from '../cleanup.types';
-import { createCleanupPayload } from '../cleanup.utils';
+import { createCleanupPayload, toRepoRelativePath } from '../cleanup.utils';
 import {
   createProjectCleanupScanResult,
   projectNeedsLifecycleComplete,
@@ -53,10 +53,6 @@ function defaultCommandDependencies(): CleanupProjectCommandDependencies {
     resolveProjectRoot,
     runCleanupProject,
   };
-}
-
-function toRepoRelativePath(repoRoot: string, targetPath: string): string {
-  return relative(repoRoot, targetPath).replaceAll('\\', '/');
 }
 
 async function discoverProjectDirectories(repoRoot: string): Promise<string[]> {

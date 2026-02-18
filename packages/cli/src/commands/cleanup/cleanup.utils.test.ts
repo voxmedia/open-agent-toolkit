@@ -4,6 +4,7 @@ import {
   buildCleanupSummary,
   createCleanupPayload,
   toCleanupMode,
+  toRepoRelativePath,
 } from './cleanup.utils';
 
 describe('cleanup utils', () => {
@@ -78,5 +79,14 @@ describe('cleanup utils', () => {
       skipped: 0,
       blocked: 0,
     });
+  });
+
+  it('normalizes repo-relative target paths', () => {
+    expect(
+      toRepoRelativePath(
+        '/tmp/workspace',
+        '/tmp/workspace/.oat/repo/reviews/r1.md',
+      ),
+    ).toBe('.oat/repo/reviews/r1.md');
   });
 });

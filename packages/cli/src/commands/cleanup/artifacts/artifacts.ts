@@ -1,5 +1,5 @@
 import { readdir, readFile, rename, rm, stat } from 'node:fs/promises';
-import { dirname, isAbsolute, join, relative } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 import {
   buildCommandContext,
   type CommandContext,
@@ -17,7 +17,7 @@ import { ensureDir } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 import type { CleanupActionRecord, CleanupJsonPayload } from '../cleanup.types';
-import { createCleanupPayload } from '../cleanup.utils';
+import { createCleanupPayload, toRepoRelativePath } from '../cleanup.utils';
 import type { ArtifactCleanupCandidate } from './artifacts.types';
 import {
   buildArchiveTargetPath,
@@ -60,10 +60,6 @@ function defaultCommandDependencies(): CleanupArtifactsCommandDependencies {
     resolveProjectRoot,
     runCleanupArtifacts,
   };
-}
-
-function toRepoRelativePath(repoRoot: string, targetPath: string): string {
-  return relative(repoRoot, targetPath).replaceAll('\\', '/');
 }
 
 async function pathIsDirectory(path: string): Promise<boolean> {

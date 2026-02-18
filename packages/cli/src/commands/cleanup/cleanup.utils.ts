@@ -1,3 +1,4 @@
+import { relative } from 'node:path';
 import type {
   CleanupActionRecord,
   CleanupJsonPayload,
@@ -5,6 +6,13 @@ import type {
   CleanupStatus,
   CleanupSummary,
 } from './cleanup.types';
+
+export function toRepoRelativePath(
+  repoRoot: string,
+  targetPath: string,
+): string {
+  return relative(repoRoot, targetPath).replaceAll('\\', '/');
+}
 
 interface BuildCleanupSummaryArgs {
   scanned: number;
