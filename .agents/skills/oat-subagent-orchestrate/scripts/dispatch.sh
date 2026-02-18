@@ -48,6 +48,7 @@ echo "orchestration_branch: $ORCHESTRATION_BRANCH"
 echo "unit_granularity: $UNIT_GRANULARITY"
 echo "plan_path: $PLAN_PATH"
 echo "project_path: $PROJECT_PATH"
+echo "log_path: $PROJECT_PATH/implementation.md"
 echo "units:"
 
 # Parse phases (## Phase N: ...)

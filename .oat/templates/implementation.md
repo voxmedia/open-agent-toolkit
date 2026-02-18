@@ -99,6 +99,17 @@ oat_template_name: implementation
 
 ---
 
+## Orchestration Runs
+
+> This section is used by `oat-subagent-orchestrate` to log parallel execution runs.
+> Each run appends a new subsection — never overwrite prior entries.
+> For single-thread execution (via `oat-project-implement`), this section remains empty.
+
+<!-- orchestration-runs-start -->
+<!-- orchestration-runs-end -->
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.

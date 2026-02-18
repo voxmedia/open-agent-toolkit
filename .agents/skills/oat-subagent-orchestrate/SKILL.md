@@ -228,40 +228,46 @@ If integration verification fails after a merge:
 
 ### Step 6: Report and Update Artifacts
 
-**Update `implementation.md`** with orchestration run section:
+**Logging is append-only.** Each orchestration run appends a new subsection inside `implementation.md`'s `## Orchestration Runs` section (between the `<!-- orchestration-runs-start -->` and `<!-- orchestration-runs-end -->` markers). Never overwrite or reorder prior run entries.
+
+**Template location:** `.oat/templates/implementation.md` includes the `## Orchestration Runs` section with sentinel markers. The orchestrator appends new entries before the `<!-- orchestration-runs-end -->` marker.
+
+**Append this block for each run:**
 
 ```markdown
-## Orchestration Run — {YYYY-MM-DD HH:MM}
+### Run {N} — {YYYY-MM-DD HH:MM}
 
 **Branch:** {orchestration-branch}
 **Policy:** baseline={policy}, merge={strategy}, retry-limit={N}
 **Units:** {N} dispatched, {N} passed, {N} failed, {N} conflicts
 
-### Unit Outcomes
+#### Unit Outcomes
 
 | Unit | Status | Commits | Tests | Review | Disposition |
 |------|--------|---------|-------|--------|-------------|
 | {id} | pass | {sha} | pass | pass | merged |
 | {id} | fail | {sha} | pass | fail (quality, retry 2/2) | excluded |
 
-### Review Interaction Log
+#### Review Interaction Log
 
-#### {unit-id}
+**{unit-id}:**
 - **Spec compliance:** pass (0 findings)
 - **Code quality:** fail → fix → pass (1 Important fixed, retry 1/2)
 - **Verdict:** pass
 - **Disposition:** merged
 
-### Merge Outcomes
+#### Merge Outcomes
 
 | Order | Unit | Strategy | Result | Integration |
 |-------|------|----------|--------|-------------|
 | 1 | {id} | merge | clean | tests pass |
 | 2 | {id} | cherry-pick | clean | tests pass |
 
-### Outstanding Items
-- {conflict descriptions or manual follow-ups}
+#### Outstanding Items
+- {conflict descriptions or manual follow-ups, or "None"}
 ```
+
+**Dispatch manifest logging:** The dispatch script outputs a `log_path` field pointing to `implementation.md` so the orchestrator knows where to append run results. This field is informational — the orchestrator reads it and handles the actual write.
 
 **Update `plan.md` review table:**
 - Autonomous review results map to the plan's review rows.
