@@ -30,15 +30,21 @@ Determine whether to operate at project level or user (global) level. The scratc
 **Resolution order:**
 
 1. If `$ARGUMENTS` contains `--global` → use **user level**
-2. If `.oat/ideas/scratchpad.md` exists → use **project level**
-3. If `~/.oat/ideas/scratchpad.md` exists → use **user level**
-4. Otherwise → default to **project level** (will be initialized in Step 3 if needed)
+2. If `.oat/active-idea` exists and points to a valid directory → use **project level**
+3. If `~/.oat/active-idea` exists and points to a valid directory → use **user level**
+4. If BOTH `.oat/ideas/` AND `~/.oat/ideas/` exist →
+   ask: "Ideas exist at both project and user level. Where should this idea go?"
+   options: "Project (.oat/ideas/)" / "Global (~/.oat/ideas/)"
+5. If `.oat/ideas/` exists → use **project level**
+6. If `~/.oat/ideas/` exists → use **user level**
+7. Otherwise → ask: "Project-level or global (user-level) ideas?"
 
 **Set variables:**
 
 | Variable | Project Level | User Level |
 |----------|--------------|------------|
 | `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
 
 ### Step 1: Determine Mode
 
@@ -67,10 +73,10 @@ Otherwise, ask the user: "Would you like to **review** what's on the scratchpad,
 4. Initialize scratchpad if needed:
    - Create `{IDEAS_ROOT}/` directory if it does not exist (`mkdir -p`)
    - If `{IDEAS_ROOT}/scratchpad.md` does not exist, copy from template:
-     - Source: `.oat/templates/ideas/ideas-scratchpad.md`
+     - Source: `{TEMPLATES_ROOT}/ideas-scratchpad.md`
      - Target: `{IDEAS_ROOT}/scratchpad.md`
    - If `{IDEAS_ROOT}/backlog.md` does not exist, copy from template:
-     - Source: `.oat/templates/ideas/ideas-backlog.md`
+     - Source: `{TEMPLATES_ROOT}/ideas-backlog.md`
      - Target: `{IDEAS_ROOT}/backlog.md`
 5. Append entry to `{IDEAS_ROOT}/scratchpad.md` under the `## Ideas` section:
 

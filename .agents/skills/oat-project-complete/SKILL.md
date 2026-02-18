@@ -67,26 +67,22 @@ fi
 IMPL_FILE="${PROJECT_PATH}/implementation.md"
 
 if [[ -f "$IMPL_FILE" ]]; then
-  medium_section=$(awk '
+  medium_items=$(awk '
     BEGIN { in_medium = 0 }
     /^\*\*Deferred Findings \(Medium\):\*\*/ { in_medium = 1; next }
     /^\*\*Deferred Findings \(Medium\/Minor\):\*\*/ { in_medium = 1; next }
-    in_medium && /^\*\*Deferred Findings \(Minor\):\*\*/ { in_medium = 0 }
-    in_medium && /^\*\*Disposition:\*\*/ { in_medium = 0 }
-    in_medium && /^---$/ { in_medium = 0 }
-    in_medium { print }
+    in_medium && /^\*\*/ { in_medium = 0; next }
+    in_medium && /^[[:space:]]*-[[:space:]]+/ { print }
   ' "$IMPL_FILE")
 
   has_unresolved_medium="false"
   while IFS= read -r line; do
-    if [[ "$line" =~ ^[[:space:]]*-[[:space:]]+ ]]; then
-      item=$(echo "$line" | sed -E 's/^[[:space:]]*-[[:space:]]+//')
-      if ! echo "$item" | grep -qiE '^none([[:space:]]|[[:punct:]]|$)'; then
-        has_unresolved_medium="true"
-        break
-      fi
+    item=$(echo "$line" | sed -E 's/^[[:space:]]*-[[:space:]]+//')
+    if ! echo "$item" | grep -qiE '^none([[:space:]]|[[:punct:]]|$)'; then
+      has_unresolved_medium="true"
+      break
     fi
-  done <<< "$medium_section"
+  done <<< "$medium_items"
 
   if [[ "$has_unresolved_medium" == "true" ]]; then
     echo "Warning: Deferred Medium findings are recorded in implementation.md."
@@ -102,8 +98,12 @@ After Step 3 and 3.5 warnings:
 ### Step 4: Check for PR Description (Warning Only)
 
 ```bash
-if [[ ! -f "${PROJECT_PATH}/pr-description.md" ]]; then
-  echo "Warning: No PR description found. Consider running the oat-project-pr-final skill first."
+PR_LEGACY="${PROJECT_PATH}/pr-description.md"
+PR_FINAL=$(ls -1 "${PROJECT_PATH}"/pr/project-pr-*.md 2>/dev/null | head -1 || true)
+
+if [[ ! -f "$PR_LEGACY" && -z "$PR_FINAL" ]]; then
+  echo "Warning: No PR description artifact found (checked pr-description.md and pr/project-pr-*.md)."
+  echo "Recommendation: run the oat-project-pr-final skill before completing."
 fi
 ```
 
@@ -170,9 +170,9 @@ git add -A "$PROJECTS_ROOT/$PROJECT_NAME" 2>/dev/null || true
 
 This stages the deletions from the shared directory. The archived copy is preserved locally but not tracked by git.
 
-**Worktree note (recommended):**
+**Worktree safeguard (required when available):**
 
-If running from a git worktree and the primary repo archive path is accessible, copy the archived project there as well so history is available from the main checkout:
+If running from a git worktree and the primary repo archive path is accessible, also copy the archived project there so it is retained outside the worktree lifecycle:
 
 ```bash
 MAIN_REPO_ARCHIVE="/Users/thomas.stang/Code/open-agent-toolkit/.oat/projects/archived"

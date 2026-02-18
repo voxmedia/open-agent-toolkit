@@ -10,7 +10,14 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { atomicWriteJson, copyDirectory, createSymlink, ensureDir } from './io';
+import {
+  atomicWriteJson,
+  copyDirectory,
+  createSymlink,
+  dirExists,
+  ensureDir,
+  fileExists,
+} from './io';
 
 describe('fs/io', () => {
   const tempDirs: string[] = [];
@@ -96,5 +103,31 @@ describe('fs/io', () => {
 
     const stat = await lstat(nested);
     expect(stat.isDirectory()).toBe(true);
+  });
+
+  it('fileExists returns true for existing files and false when missing', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    tempDirs.push(root);
+    const file = join(root, 'exists.txt');
+    const dir = join(root, 'dir');
+    await writeFile(file, 'present', 'utf8');
+    await mkdir(dir, { recursive: true });
+
+    await expect(fileExists(file)).resolves.toBe(true);
+    await expect(fileExists(join(root, 'missing.txt'))).resolves.toBe(false);
+    await expect(fileExists(dir)).resolves.toBe(false);
+  });
+
+  it('dirExists returns true for existing directories and false when missing', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    tempDirs.push(root);
+    const dir = join(root, 'exists-dir');
+    const file = join(root, 'file.txt');
+    await mkdir(dir, { recursive: true });
+    await writeFile(file, 'present', 'utf8');
+
+    await expect(dirExists(dir)).resolves.toBe(true);
+    await expect(dirExists(join(root, 'missing-dir'))).resolves.toBe(false);
+    await expect(dirExists(file)).resolves.toBe(false);
   });
 });

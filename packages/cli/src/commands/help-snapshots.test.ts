@@ -39,7 +39,7 @@ describe('help output snapshots', () => {
         -h, --help       display help for command
 
       Commands:
-        init [options]   Initialize canonical directories and manifest
+        init [options]   Initialize canonical directories, manifest, and tool packs
         status           Report provider sync and drift status
         sync [options]   Sync canonical content to provider views
         providers        Inspect provider capabilities and paths
@@ -57,14 +57,17 @@ describe('help output snapshots', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, ['init']).helpInformation();
     expect(help).toMatchInlineSnapshot(`
-      "Usage: oat init [options]
+      "Usage: oat init [options] [command]
 
-      Initialize canonical directories and manifest
+      Initialize canonical directories, manifest, and tool packs
 
       Options:
         --hook      Install optional pre-commit hook
         --no-hook   Skip optional pre-commit hook install
         -h, --help  display help for command
+
+      Commands:
+        tools       Install OAT tool packs (ideas, workflows, utility)
       "
     `);
   });

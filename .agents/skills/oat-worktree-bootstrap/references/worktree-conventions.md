@@ -2,6 +2,9 @@
 
 ## Root Selection Priority
 
+If bootstrapping an existing worktree (`--existing`), use the current directory as the target worktree and treat its parent as informational root only.
+
+For creation mode:
 1. Explicit `--path <root>` argument
 2. `OAT_WORKTREES_ROOT` environment variable
 3. `.oat/config.json` -> `worktrees.root`
@@ -49,3 +52,4 @@ Include:
 - Local visible root: `worktrees/<branch>`
 - Sibling root: `../<repo>-worktrees/<branch>`
 - Global root (explicit): `~/.oat/worktrees/<repo>/<branch>`
+- Tool-managed existing worktree: `~/.codex/worktrees/<id>/<repo>`

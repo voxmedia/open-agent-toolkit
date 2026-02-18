@@ -19,6 +19,15 @@ export async function fileExists(path: string): Promise<boolean> {
   }
 }
 
+export async function dirExists(path: string): Promise<boolean> {
+  try {
+    const s = await stat(path);
+    return s.isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 export type LinkStrategy = 'symlink' | 'copy';
 
 export async function ensureDir(dirPath: string): Promise<void> {

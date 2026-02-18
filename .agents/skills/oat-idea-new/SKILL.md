@@ -35,15 +35,19 @@ Determine whether to operate at project level or user (global) level.
 1. If `$ARGUMENTS` contains `--global` → use **user level**
 2. If `.oat/active-idea` exists and points to a valid directory → use **project level**
 3. If `~/.oat/active-idea` exists and points to a valid directory → use **user level**
-4. If `.oat/ideas/` exists → use **project level**
-5. If `~/.oat/ideas/` exists → use **user level**
-6. Otherwise → ask: "Project-level or global (user-level) ideas?"
+4. If BOTH `.oat/ideas/` AND `~/.oat/ideas/` exist →
+   ask: "Ideas exist at both project and user level. Where should this idea go?"
+   options: "Project (.oat/ideas/)" / "Global (~/.oat/ideas/)"
+5. If `.oat/ideas/` exists → use **project level**
+6. If `~/.oat/ideas/` exists → use **user level**
+7. Otherwise → ask: "Project-level or global (user-level) ideas?"
 
 **Set variables:**
 
 | Variable | Project Level | User Level |
 |----------|--------------|------------|
 | `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
 | `ACTIVE_IDEA_FILE` | `.oat/active-idea` | `~/.oat/active-idea` |
 
 ### Step 1: Get Idea Name
@@ -69,17 +73,17 @@ mkdir -p "{IDEAS_ROOT}/$IDEA_NAME"
 ```
 
 If `{IDEAS_ROOT}/backlog.md` doesn't exist, copy from template:
-- Source: `.oat/templates/ideas/ideas-backlog.md`
+- Source: `{TEMPLATES_ROOT}/ideas-backlog.md`
 - Target: `{IDEAS_ROOT}/backlog.md`
 
 If `{IDEAS_ROOT}/scratchpad.md` doesn't exist, copy from template:
-- Source: `.oat/templates/ideas/ideas-scratchpad.md`
+- Source: `{TEMPLATES_ROOT}/ideas-scratchpad.md`
 - Target: `{IDEAS_ROOT}/scratchpad.md`
 
 ### Step 4: Scaffold Discovery Document
 
 Copy template and apply replacements:
-- Source: `.oat/templates/ideas/idea-discovery.md`
+- Source: `{TEMPLATES_ROOT}/idea-discovery.md`
 - Target: `{IDEAS_ROOT}/$IDEA_NAME/discovery.md`
 
 Replacements:

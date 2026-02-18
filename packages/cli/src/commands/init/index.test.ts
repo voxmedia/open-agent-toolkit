@@ -261,6 +261,27 @@ describe('createInitCommand', () => {
     );
   });
 
+  it('bare oat init still works (regression)', async () => {
+    const { command, ensureCanonicalDirs } = createHarness({
+      interactive: false,
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(ensureCanonicalDirs).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      'project',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('oat init tools is a registered subcommand', () => {
+    const { command } = createHarness({ interactive: false });
+    expect(command.commands.map((subcommand) => subcommand.name())).toContain(
+      'tools',
+    );
+  });
+
   it('prompts for supported project providers in interactive mode', async () => {
     const { command, selectProvidersWithAbort } = createHarness({
       interactive: true,

@@ -8,7 +8,7 @@
     "oat": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc && tsc-alias",
+    "build": "bash scripts/bundle-assets.sh && tsc && tsc-alias",
     "clean": "rm -rf dist",
     "dev": "tsx watch src/index.ts",
     "check": "biome check .",

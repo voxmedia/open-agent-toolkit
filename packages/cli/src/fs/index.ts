@@ -1,7 +1,10 @@
+export { resolveAssetsRoot } from './assets';
 export {
   atomicWriteJson,
   copyDirectory,
+  copySingleFile,
   createSymlink,
+  dirExists,
   ensureDir,
   fileExists,
 } from './io';
