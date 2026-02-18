@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -7,6 +7,7 @@ import {
   findReferencedArtifactCandidates,
   planDuplicatePruneActions,
   planNonInteractiveArtifactActions,
+  runCleanupArtifacts,
 } from './artifacts/artifacts';
 import { runCleanupProject } from './project/project';
 
@@ -137,5 +138,45 @@ describe('cleanup integration', () => {
           action.target === '.oat/repo/reviews/stale.md',
       ),
     ).toBe(true);
+  });
+
+  it('artifact cleanup apply archives selected targets via planArchiveActions composition', async () => {
+    const root = await createRepoRoot();
+    tempDirs.push(root);
+    await writeFile(
+      join(root, '.oat', 'repo', 'reviews', 'stale.md'),
+      '# stale',
+      'utf8',
+    );
+
+    const payload = await runCleanupArtifacts(
+      {
+        repoRoot: root,
+        apply: true,
+        interactive: true,
+        timestamp: '20260218-121314',
+      },
+      {
+        runInteractiveStaleTriage: async () => ({
+          keep: [],
+          archive: ['.oat/repo/reviews/stale.md'],
+          delete: [],
+        }),
+      },
+    );
+
+    expect(payload.status).toBe('ok');
+    expect(payload.actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'archive',
+          target: '.oat/repo/archive/reviews/stale.md',
+          result: 'applied',
+        }),
+      ]),
+    );
+    await expect(
+      readFile(join(root, '.oat', 'repo', 'archive', 'reviews', 'stale.md')),
+    ).resolves.toBeDefined();
   });
 });
