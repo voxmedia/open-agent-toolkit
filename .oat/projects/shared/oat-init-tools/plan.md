@@ -707,6 +707,243 @@ Any final fixes committed individually.
 
 ---
 
+## Phase 7: Review Fixes (Final)
+
+Address findings from `reviews/final-review-2026-02-17.md` before re-review.
+
+### Task p07-t01: (review) Add utility --force interactive confirmation
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/tools/utility/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: utility command path lacks the interactive confirmation behavior used by ideas/workflows when `--force` is provided.
+Location: `packages/cli/src/commands/init/tools/utility/index.ts`
+
+**Step 2: Implement fix**
+
+Add a `confirmAction` dependency to utility command DI and gate overwrite with an interactive confirmation prompt before invoking `installUtility`.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/init/tools/utility/index.test.ts`
+Expected: utility command tests pass and force-confirm behavior is enforced.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/utility/index.ts
+git commit -m "fix(p07-t01): add utility force confirmation prompt"
+```
+
+---
+
+### Task p07-t02: (review) Add utility command --force confirmation tests
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/tools/utility/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: utility command has no explicit tests for interactive `--force` confirmation behavior.
+Location: `packages/cli/src/commands/init/tools/utility/index.test.ts`
+
+**Step 2: Implement fix**
+
+Add tests covering:
+- confirm prompt is called for interactive `--force`
+- decline path skips installer and exits cleanly
+- accept path proceeds to installer
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/init/tools/utility/index.test.ts`
+Expected: new tests fail before fix and pass after implementation.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/utility/index.test.ts
+git commit -m "test(p07-t02): cover utility force confirmation flow"
+```
+
+---
+
+### Task p07-t03: (review) Extract shared installer copy helpers
+
+**Files:**
+- Create: `packages/cli/src/commands/init/tools/shared/copy-helpers.ts`
+- Modify: `packages/cli/src/commands/init/tools/ideas/install-ideas.ts`
+- Modify: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts`
+- Modify: `packages/cli/src/commands/init/tools/utility/install-utility.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: copy/exists helper logic is duplicated across ideas/workflows/utility installer modules.
+Location: `packages/cli/src/commands/init/tools/{ideas,workflows,utility}`
+
+**Step 2: Implement fix**
+
+Create shared helpers for path existence, directory copy-with-status, and file copy-with-status. Reuse them in all three installer modules.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/init/tools/{ideas,workflows,utility}/`
+Expected: installer behavior remains unchanged and tests pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/shared/copy-helpers.ts packages/cli/src/commands/init/tools/ideas/install-ideas.ts packages/cli/src/commands/init/tools/workflows/install-workflows.ts packages/cli/src/commands/init/tools/utility/install-utility.ts
+git commit -m "refactor(p07-t03): extract shared installer copy helpers"
+```
+
+---
+
+### Task p07-t04: (review) Standardize copy helper naming in installer modules
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/tools/ideas/install-ideas.ts`
+- Modify: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: helper naming differs between ideas/workflows for equivalent behaviors.
+Location: `packages/cli/src/commands/init/tools/ideas/install-ideas.ts`, `packages/cli/src/commands/init/tools/workflows/install-workflows.ts`
+
+**Step 2: Implement fix**
+
+Use shared helper function names consistently in both modules and remove naming drift.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/init/tools/{ideas,workflows}/`
+Expected: tests pass with standardized helper usage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/ideas/install-ideas.ts packages/cli/src/commands/init/tools/workflows/install-workflows.ts
+git commit -m "refactor(p07-t04): standardize installer helper naming"
+```
+
+---
+
+### Task p07-t05: (review) Re-export copySingleFile from fs barrel
+
+**Files:**
+- Modify: `packages/cli/src/fs/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `copySingleFile` is exported by `io.ts` but missing from barrel export.
+Location: `packages/cli/src/fs/index.ts`
+
+**Step 2: Implement fix**
+
+Add `copySingleFile` to the `@fs` barrel re-exports.
+
+**Step 3: Verify**
+
+Run: `pnpm type-check && pnpm --filter @oat/cli test src/fs/io.test.ts`
+Expected: type-check and fs tests pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/fs/index.ts
+git commit -m "fix(p07-t05): re-export copySingleFile from fs barrel"
+```
+
+---
+
+### Task p07-t06: (review) Add utility installer force-overwrite tests
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/tools/utility/install-utility.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: utility installer tests do not cover `force=true` overwrite behavior.
+Location: `packages/cli/src/commands/init/tools/utility/install-utility.test.ts`
+
+**Step 2: Implement fix**
+
+Add an overwrite test that validates:
+- existing skill content is replaced when `force=true`
+- installer reports overwritten entries in `updatedSkills`
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/init/tools/utility/install-utility.test.ts`
+Expected: new overwrite test passes.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/utility/install-utility.test.ts
+git commit -m "test(p07-t06): add force-overwrite coverage for utility installer"
+```
+
+---
+
+### Task p07-t07: (review) Add cancellation test for bare init tools flow
+
+**Files:**
+- Modify: `packages/cli/src/commands/init/tools/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: no explicit negative test for interactive cancellation when selecting packs in bare `oat init tools`.
+Location: `packages/cli/src/commands/init/tools/index.test.ts`
+
+**Step 2: Implement fix**
+
+Add a test with `selectManyWithAbort` returning `null` and assert no installs run plus user-facing cancellation/no-selection messaging.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/init/tools/index.test.ts`
+Expected: cancellation path is covered and passing.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/index.test.ts
+git commit -m "test(p07-t07): cover cancellation path for init tools"
+```
+
+---
+
+### Task p07-t08: (review) Restrict bundled optional scripts to explicit allowlist
+
+**Files:**
+- Modify: `packages/cli/scripts/bundle-assets.sh`
+
+**Step 1: Understand the issue**
+
+Review finding: wildcard script copy can bundle unintended files from `.oat/scripts/`.
+Location: `packages/cli/scripts/bundle-assets.sh`
+
+**Step 2: Implement fix**
+
+Replace wildcard copy with explicit conditional copies for `generate-oat-state.sh` and `generate-thin-index.sh`.
+
+**Step 3: Verify**
+
+Run: `bash packages/cli/scripts/bundle-assets.sh && ls -la packages/cli/assets/scripts/`
+Expected: only expected script assets are bundled when present.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/scripts/bundle-assets.sh
+git commit -m "fix(p07-t08): restrict bundled optional scripts to allowlist"
+```
+
+---
+
 ## Reviews
 
 | Scope | Type | Status | Date | Artifact |
@@ -717,7 +954,7 @@ Any final fixes committed individually.
 | p04 | code | pending | - | - |
 | p05 | code | pending | - | - |
 | p06 | code | pending | - | - |
-| final | code | pending | - | - |
+| final | code | fixes_added | 2026-02-18 | reviews/final-review-2026-02-17.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
@@ -740,10 +977,11 @@ Any final fixes committed individually.
 - Phase 4: 3 tasks - Utility pack + tools group + init wiring
 - Phase 5: 2 tasks - Idea skill updates (template paths + dual-level prompts)
 - Phase 6: 1 task - End-to-end verification
+- Phase 7: 8 tasks - Final review fixes (important + minor findings)
 
-**Total: 14 tasks**
+**Total: 22 tasks**
 
-Ready for code review and merge.
+Ready for review-fix implementation and re-review.
 
 ---
 

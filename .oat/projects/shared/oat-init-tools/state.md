@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p07-t01
 oat_last_commit: d69fe63
 oat_blockers: []
 oat_hil_checkpoints: []
@@ -15,13 +15,13 @@ oat_template: false
 
 # Project State: oat-init-tools
 
-**Status:** Implementation Tasks Complete (Awaiting Final Review)
+**Status:** Implementation In Progress (Review Fix Tasks)
 **Started:** 2026-02-17
 **Last Updated:** 2026-02-18
 
 ## Current Phase
 
-Implementation — tasks complete; awaiting final review.
+Implementation — executing review-fix tasks from final review.
 
 ## Artifacts
 
@@ -29,7 +29,7 @@ Implementation — tasks complete; awaiting final review.
 - **Spec:** N/A (import mode)
 - **Design:** N/A (import mode)
 - **Plan:** `plan.md` (complete — imported)
-- **Implementation:** `implementation.md` (complete)
+- **Implementation:** `implementation.md` (in progress)
 
 ## Progress
 
@@ -51,7 +51,8 @@ Implementation — tasks complete; awaiting final review.
 - ✓ p05-t01 completed (`feat(p05-t01): add level-relative template paths to idea skills`)
 - ✓ p05-t02 completed (`feat(p05-t02): add dual-level prompt chain to idea skills`)
 - ✓ p06-t01 completed (`test(p06-t01): update help snapshots for init tools`)
-- ⧗ Awaiting final review
+- ✓ Final review received (`reviews/final-review-2026-02-17.md`) and converted to fix tasks
+- ⧗ Working on p07-t01 review-fix tasks
 
 ## Blockers
 
@@ -59,4 +60,4 @@ None
 
 ## Next Milestone
 
-Run final review (`oat-project-review-provide code final`) and process results
+Complete Phase 7 review-fix tasks, then re-run final review

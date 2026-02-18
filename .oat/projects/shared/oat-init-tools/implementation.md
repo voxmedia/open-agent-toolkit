@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-18
-oat_current_task_id: null
+oat_current_task_id: p07-t01
 oat_generated: true
 oat_template: false
 ---
@@ -32,8 +32,9 @@ oat_template: false
 | Phase 4: Utility + Tools Group + Wiring | completed | 3 | 3/3 |
 | Phase 5: Idea Skill Updates | completed | 2 | 2/2 |
 | Phase 6: E2E Verification | completed | 1 | 1/1 |
+| Phase 7: Review Fixes (Final) | in_progress | 8 | 0/8 |
 
-**Total:** 14/14 tasks completed
+**Total:** 14/22 tasks completed
 
 ---
 
@@ -537,6 +538,42 @@ oat_template: false
 
 ---
 
+## Review Received: final
+
+**Date:** 2026-02-18
+**Review artifact:** `reviews/final-review-2026-02-17.md`
+**Review cycle:** 1 of 3
+
+**Findings:**
+- Critical: 0
+- Important: 3
+- Medium: 0
+- Minor: 5
+
+**New tasks added:**
+- `p07-t01` — (review) Add utility --force interactive confirmation
+- `p07-t02` — (review) Add utility command --force confirmation tests
+- `p07-t03` — (review) Extract shared installer copy helpers
+- `p07-t04` — (review) Standardize copy helper naming in installer modules
+- `p07-t05` — (review) Re-export copySingleFile from fs barrel
+- `p07-t06` — (review) Add utility installer force-overwrite tests
+- `p07-t07` — (review) Add cancellation test for bare init tools flow
+- `p07-t08` — (review) Restrict bundled optional scripts to explicit allowlist
+
+**Deferred Findings (Medium):**
+- None
+
+**Minor Findings Disposition (final scope):**
+- User decision on 2026-02-18: convert all 5 minor findings into review-fix tasks (`p07-t04` through `p07-t08`).
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill starting from `p07-t01`.
+
+After the fix tasks are complete:
+- Update the review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+
+---
+
 ## Implementation Log
 
 ### 2026-02-17
@@ -557,6 +594,14 @@ oat_template: false
 - [x] p05-t01: Add level-relative template paths to idea skills - completed (`e2fb96f`)
 - [x] p05-t02: Add dual-level prompt chain to idea skills - completed (`222e95e`)
 - [x] p06-t01: Run full test suite and manual verification - completed (`d69fe63`)
+- [ ] p07-t01: (review) Add utility --force interactive confirmation - pending
+- [ ] p07-t02: (review) Add utility command --force confirmation tests - pending
+- [ ] p07-t03: (review) Extract shared installer copy helpers - pending
+- [ ] p07-t04: (review) Standardize copy helper naming in installer modules - pending
+- [ ] p07-t05: (review) Re-export copySingleFile from fs barrel - pending
+- [ ] p07-t06: (review) Add utility installer force-overwrite tests - pending
+- [ ] p07-t07: (review) Add cancellation test for bare init tools flow - pending
+- [ ] p07-t08: (review) Restrict bundled optional scripts to explicit allowlist - pending
 
 **What changed (high level):**
 - Project created and plan imported
@@ -565,7 +610,8 @@ oat_template: false
 - Plan imported from Claude Code plan mode
 
 **Follow-ups / TODO:**
-- Run `oat-project-review-provide code final` and process findings via `oat-project-review-receive`
+- Execute Phase 7 review-fix tasks via `oat-project-implement`
+- Re-run final code review and process with `oat-project-review-receive`
 
 **Blockers:**
 - None
