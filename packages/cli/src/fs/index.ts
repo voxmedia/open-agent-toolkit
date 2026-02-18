@@ -1,3 +1,4 @@
+export { resolveAssetsRoot } from './assets';
 export {
   atomicWriteJson,
   copyDirectory,
