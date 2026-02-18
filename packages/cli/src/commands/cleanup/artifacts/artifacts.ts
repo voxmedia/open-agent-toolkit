@@ -1,7 +1,14 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { isAbsolute, join, relative } from 'node:path';
+import {
+  confirmAction,
+  type MultiSelectChoice,
+  type PromptContext,
+  selectManyOrEmpty,
+} from '@commands/shared/shared.prompts';
 import { Command } from 'commander';
 import type { CleanupActionRecord } from '../cleanup.types';
+import type { ArtifactCleanupCandidate } from './artifacts.types';
 import {
   filterArtifactCandidates,
   findDuplicateChains,
@@ -129,6 +136,96 @@ export async function findReferencedArtifactCandidates(
 ): Promise<Set<string>> {
   const contents = await collectReferenceContents(repoRoot);
   return findReferenceHits(candidates, contents);
+}
+
+export interface InteractiveTriageResult {
+  keep: string[];
+  archive: string[];
+  delete: string[];
+}
+
+interface InteractiveTriageDependencies {
+  selectManyOrEmpty: <T extends string>(
+    message: string,
+    choices: MultiSelectChoice<T>[],
+    ctx: PromptContext,
+  ) => Promise<T[]>;
+  confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
+}
+
+function defaultInteractiveDependencies(): InteractiveTriageDependencies {
+  return {
+    selectManyOrEmpty,
+    confirmAction,
+  };
+}
+
+export async function runInteractiveStaleTriage(
+  candidates: ArtifactCleanupCandidate[],
+  ctx: PromptContext,
+  overrides: Partial<InteractiveTriageDependencies> = {},
+): Promise<InteractiveTriageResult> {
+  const dependencies = {
+    ...defaultInteractiveDependencies(),
+    ...overrides,
+  };
+  const candidateMap = new Map(
+    candidates.map((candidate) => [candidate.target, candidate]),
+  );
+  const baseChoices: MultiSelectChoice<string>[] = candidates.map(
+    (candidate) => ({
+      label: candidate.target,
+      value: candidate.target,
+      description: candidate.referenced ? 'referenced' : 'unreferenced',
+    }),
+  );
+
+  const archive = await dependencies.selectManyOrEmpty(
+    'Select stale artifacts to archive',
+    baseChoices,
+    ctx,
+  );
+  const remaining = candidates.filter(
+    (candidate) => !archive.includes(candidate.target),
+  );
+  const deleteChoices: MultiSelectChoice<string>[] = remaining.map(
+    (candidate) => ({
+      label: candidate.target,
+      value: candidate.target,
+      description: candidate.referenced ? 'referenced' : 'unreferenced',
+    }),
+  );
+  let toDelete = await dependencies.selectManyOrEmpty(
+    'Select stale artifacts to delete',
+    deleteChoices,
+    ctx,
+  );
+
+  const referencedSelectedForDelete = toDelete.filter(
+    (target) => candidateMap.get(target)?.referenced === true,
+  );
+  if (referencedSelectedForDelete.length > 0) {
+    const confirmed = await dependencies.confirmAction(
+      'Some selected delete targets are referenced. Delete anyway?',
+      ctx,
+    );
+    if (!confirmed) {
+      toDelete = toDelete.filter(
+        (target) => !referencedSelectedForDelete.includes(target),
+      );
+    }
+  }
+
+  const keep = candidates
+    .map((candidate) => candidate.target)
+    .filter((target) => !archive.includes(target) && !toDelete.includes(target))
+    .sort((left, right) => left.localeCompare(right));
+
+  return {
+    keep,
+    archive: [...archive].sort((left, right) => left.localeCompare(right)),
+    delete: [...toDelete].sort((left, right) => left.localeCompare(right)),
+  };
 }
 
 export function createCleanupArtifactsCommand(): Command {

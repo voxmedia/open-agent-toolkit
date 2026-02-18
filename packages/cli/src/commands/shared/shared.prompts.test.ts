@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   confirmAction,
   inputRequired,
+  selectManyOrEmpty,
   selectManyWithAbort,
   selectWithAbort,
 } from './shared.prompts';
@@ -147,5 +148,19 @@ describe('shared prompts', () => {
         interactive: false,
       }),
     ).rejects.toBeInstanceOf(CliError);
+  });
+
+  it('selectManyOrEmpty converts abort to empty selection', async () => {
+    const abortError = new Error('User force closed the prompt');
+    abortError.name = 'ExitPromptError';
+    vi.mocked(checkbox).mockRejectedValueOnce(abortError);
+
+    const result = await selectManyOrEmpty(
+      'Choose many',
+      [{ label: 'One', value: 'one' }],
+      { interactive: true },
+    );
+
+    expect(result).toEqual([]);
   });
 });
