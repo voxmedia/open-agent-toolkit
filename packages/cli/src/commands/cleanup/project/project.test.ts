@@ -8,8 +8,15 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
-import { runCleanupProject, scanCleanupProjectDrift } from './project';
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import {
+  createLoggerCapture,
+  type LoggerCapture,
+} from '@commands/__tests__/helpers';
+import { CliError } from '@errors/cli-error';
+import { Command } from 'commander';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createCleanupProjectCommand, runCleanupProject } from './project';
 
 async function createRepoRoot(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'oat-cleanup-project-'));
@@ -19,10 +26,100 @@ async function createRepoRoot(): Promise<string> {
   return root;
 }
 
+interface CommandHarnessOptions {
+  status?: 'ok' | 'drift';
+  runError?: unknown;
+  resolveError?: unknown;
+}
+
+function createCommandHarness(options: CommandHarnessOptions = {}): {
+  capture: LoggerCapture;
+  command: Command;
+} {
+  const capture = createLoggerCapture();
+  const status = options.status ?? 'ok';
+  const command = createCleanupProjectCommand({
+    buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+      scope: (globalOptions.scope ?? 'all') as 'project' | 'user' | 'all',
+      apply: false,
+      verbose: globalOptions.verbose ?? false,
+      json: globalOptions.json ?? false,
+      cwd: '/tmp/workspace',
+      home: '/tmp/home',
+      interactive: !(globalOptions.json ?? false),
+      logger: capture.logger,
+    }),
+    resolveProjectRoot: vi.fn(async () => {
+      if (options.resolveError) {
+        throw options.resolveError;
+      }
+      return '/tmp/workspace';
+    }),
+    runCleanupProject: vi.fn(async () => {
+      if (options.runError) {
+        throw options.runError;
+      }
+
+      return {
+        status,
+        mode: 'dry-run',
+        summary: {
+          scanned: 1,
+          issuesFound: status === 'drift' ? 1 : 0,
+          planned: status === 'drift' ? 1 : 0,
+          applied: 0,
+          skipped: 0,
+          blocked: 0,
+        },
+        actions:
+          status === 'drift'
+            ? [
+                {
+                  type: 'clear',
+                  target: '.oat/active-project',
+                  reason: 'invalid .oat/active-project pointer',
+                  phase: 'project-scan',
+                  result: 'planned',
+                },
+              ]
+            : [],
+      };
+    }),
+  });
+
+  return { capture, command };
+}
+
+async function runProjectCommand(
+  command: Command,
+  globalArgs: string[] = [],
+): Promise<void> {
+  const program = new Command()
+    .name('oat')
+    .option('--json')
+    .option('--verbose')
+    .option('--scope <scope>')
+    .option('--cwd <path>')
+    .exitOverride();
+  const cleanupCommand = new Command('cleanup');
+  cleanupCommand.addCommand(command);
+  program.addCommand(cleanupCommand);
+  await program.parseAsync([...globalArgs, 'cleanup', 'project'], {
+    from: 'user',
+  });
+}
+
 describe('cleanup project drift scanning', () => {
   const tempDirs: string[] = [];
+  let originalExitCode: number | undefined;
+
+  beforeEach(() => {
+    originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+  });
 
   afterEach(async () => {
+    process.exitCode = originalExitCode;
     await Promise.all(
       tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
     );
@@ -38,7 +135,7 @@ describe('cleanup project drift scanning', () => {
       'utf8',
     );
 
-    const payload = await scanCleanupProjectDrift({ repoRoot: root });
+    const payload = await runCleanupProject({ repoRoot: root, apply: false });
 
     expect(payload.actions).toEqual(
       expect.arrayContaining([
@@ -57,7 +154,7 @@ describe('cleanup project drift scanning', () => {
     await mkdir(projectDir, { recursive: true });
     await writeFile(join(projectDir, 'plan.md'), '# plan\n', 'utf8');
 
-    const payload = await scanCleanupProjectDrift({ repoRoot: root });
+    const payload = await runCleanupProject({ repoRoot: root, apply: false });
 
     expect(payload.actions).toEqual(
       expect.arrayContaining([
@@ -93,7 +190,7 @@ describe('cleanup project drift scanning', () => {
       'utf8',
     );
 
-    const payload = await scanCleanupProjectDrift({ repoRoot: root });
+    const payload = await runCleanupProject({ repoRoot: root, apply: false });
 
     expect(payload.actions).toEqual(
       expect.arrayContaining([
@@ -218,7 +315,7 @@ describe('cleanup project drift scanning', () => {
     await mkdir(projectDir, { recursive: true });
     await writeFile(join(projectDir, 'plan.md'), '# plan\n', 'utf8');
 
-    const payload = await scanCleanupProjectDrift({ repoRoot: root });
+    const payload = await runCleanupProject({ repoRoot: root, apply: false });
 
     expect(payload.status).toBe('drift');
     expect(payload.mode).toBe('dry-run');
@@ -282,5 +379,48 @@ describe('cleanup project drift scanning', () => {
         expect.objectContaining({ type: 'regenerate', result: 'applied' }),
       ]),
     );
+  });
+
+  it('sets exit code to 1 when dry-run reports drift', async () => {
+    const { command } = createCommandHarness({ status: 'drift' });
+
+    await runProjectCommand(command);
+
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('sets exit code to 0 when dry-run reports no drift', async () => {
+    const { command } = createCommandHarness({ status: 'ok' });
+
+    await runProjectCommand(command);
+
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('handles actionable command errors with exit code 1', async () => {
+    const { command, capture } = createCommandHarness({
+      runError: new CliError('cleanup command precondition failed', 1),
+    });
+
+    await runProjectCommand(command);
+
+    expect(capture.error[0]).toContain('cleanup command precondition failed');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('handles unexpected command errors with exit code 2', async () => {
+    const { command, capture } = createCommandHarness({
+      runError: new Error('unexpected cleanup failure'),
+    });
+
+    await runProjectCommand(command, ['--json']);
+
+    expect(capture.jsonPayloads[0]).toEqual(
+      expect.objectContaining({
+        status: 'error',
+        message: 'unexpected cleanup failure',
+      }),
+    );
+    expect(process.exitCode).toBe(2);
   });
 });

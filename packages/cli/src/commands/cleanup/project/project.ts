@@ -7,6 +7,7 @@ import {
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { generateStateDashboard } from '@commands/state/generate';
+import { CliError } from '@errors/cli-error';
 import { ensureDir, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -77,14 +78,17 @@ async function discoverProjectDirectories(repoRoot: string): Promise<string[]> {
     }
 
     const entries = await readdir(root, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        directories.push(join(root, entry.name));
-      }
+    const sortedDirectoryNames = entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort((left, right) => left.localeCompare(right));
+
+    for (const directoryName of sortedDirectoryNames) {
+      directories.push(join(root, directoryName));
     }
   }
 
-  return directories;
+  return directories.sort((left, right) => left.localeCompare(right));
 }
 
 async function planActiveProjectPointerCleanup(
@@ -255,19 +259,6 @@ async function applyCleanupAction(
   return { ...action, result: 'applied' };
 }
 
-export async function scanCleanupProjectDrift({
-  repoRoot,
-}: CleanupProjectRunOptions): Promise<CleanupJsonPayload> {
-  const { scanned, actions } = await collectPlannedActions(repoRoot);
-  return createCleanupPayload({
-    status: actions.length > 0 ? 'drift' : 'ok',
-    apply: false,
-    scanned,
-    issuesFound: actions.length,
-    actions,
-  });
-}
-
 export async function runCleanupProject(
   {
     repoRoot,
@@ -354,18 +345,28 @@ export function createCleanupProjectCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-      const payload = await dependencies.runCleanupProject({
-        repoRoot,
-        apply: options.apply ?? false,
-      });
+      try {
+        const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+        const payload = await dependencies.runCleanupProject({
+          repoRoot,
+          apply: options.apply ?? false,
+        });
 
-      if (context.json) {
-        context.logger.json(payload);
-      } else {
-        context.logger.info(formatCleanupProjectPlan(payload));
+        if (context.json) {
+          context.logger.json(payload);
+        } else {
+          context.logger.info(formatCleanupProjectPlan(payload));
+        }
+
+        process.exitCode = payload.status === 'ok' ? 0 : 1;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (context.json) {
+          context.logger.json({ status: 'error', message });
+        } else {
+          context.logger.error(message);
+        }
+        process.exitCode = error instanceof CliError ? error.exitCode : 2;
       }
-
-      process.exitCode = 0;
     });
 }
