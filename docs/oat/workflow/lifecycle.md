@@ -44,7 +44,7 @@ Import lane progression:
 ## Operational rules
 
 - Keep `state.md`, `plan.md`, and `implementation.md` synchronized.
-- Stop at configured HiL checkpoints.
+- Stop at configured HiLL checkpoints.
 - Do not move lifecycle forward when required review gates are unresolved.
 
 ## Active project resolution

@@ -16,7 +16,7 @@ Ideas are gitignored and entirely personal — no pressure to finish, no formal 
 | Location | `.oat/projects/shared/` (tracked) | `.oat/ideas/` or `~/.oat/ideas/` (gitignored) |
 | Levels | Project only | Project-level or user-level (global) |
 | Phases | discovery/spec/design/plan/implement | brainstorm/summarize |
-| State | Multi-phase with `state.md` and HiL gates | Two states in frontmatter (`brainstorming`/`summarized`) |
+| State | Multi-phase with `state.md` and HiLL gates | Two states in frontmatter (`brainstorming`/`summarized`) |
 | Knowledge base | Required | Not required |
 | Purpose | Structured development | Personal ideation |
 

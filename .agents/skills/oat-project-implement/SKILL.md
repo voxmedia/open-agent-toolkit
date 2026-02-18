@@ -104,9 +104,9 @@ Read `"$PROJECT_PATH/plan.md"` completely to understand:
 - Verification commands
 - Commit messages
 
-### Step 2.5: Confirm Plan HiL Checkpoints
+### Step 2.5: Confirm Plan HiLL Checkpoints
 
-Read `oat_plan_hil_phases` from `"$PROJECT_PATH/plan.md"` frontmatter and validate it.
+Read `oat_plan_hill_phases` from `"$PROJECT_PATH/plan.md"` frontmatter and validate it.
 
 - **Valid format:** JSON-like array of phase IDs (e.g., `["p01","p03"]`)
 - **Invalid format examples:** scalar string, malformed array, unknown phase IDs
@@ -116,12 +116,12 @@ Determine whether this is a first implementation run:
 - If it exists but still has template placeholders and no completed task evidence, treat as first run.
 
 Prompt behavior:
-- **If `oat_plan_hil_phases` is missing/empty/invalid:** ask user to confirm checkpoint phases before any task execution.
-- **If first run and `oat_plan_hil_phases` is valid:** ask user to confirm keep/change.
-- **If resuming and `oat_plan_hil_phases` is valid:** do not re-ask; print active checkpoint config and continue.
+- **If `oat_plan_hill_phases` is missing/empty/invalid:** ask user to confirm checkpoint phases before any task execution.
+- **If first run and `oat_plan_hill_phases` is valid:** ask user to confirm keep/change.
+- **If resuming and `oat_plan_hill_phases` is valid:** do not re-ask; print active checkpoint config and continue.
 
 When user confirms/changes:
-- Update `"$PROJECT_PATH/plan.md"` frontmatter `oat_plan_hil_phases` to the confirmed value before executing tasks.
+- Update `"$PROJECT_PATH/plan.md"` frontmatter `oat_plan_hill_phases` to the confirmed value before executing tasks.
 - Keep the value stable for the rest of the run unless the user explicitly requests a change.
 
 ### Step 3: Check Implementation State
@@ -290,10 +290,10 @@ oat_current_task_id: {first_task_of_next_phase}  # e.g., p02-t01
 ```
 
 **Plan phase checkpoint:**
-At the end of each plan phase (p01, p02, etc.), check `oat_plan_hil_phases` in plan.md:
+At the end of each plan phase (p01, p02, etc.), check `oat_plan_hill_phases` in plan.md:
 
-- **If `oat_plan_hil_phases` is empty or missing:** Stop at every phase boundary (default behavior)
-- **If `oat_plan_hil_phases` has values:** Only stop at listed phases (e.g., `["p01", "p04"]`)
+- **If `oat_plan_hill_phases` is empty or missing:** Stop at every phase boundary (default behavior)
+- **If `oat_plan_hill_phases` has values:** Only stop at listed phases (e.g., `["p01", "p04"]`)
   - To stop only at the end of implementation, set it to the **last plan phase ID** (e.g., `["p03"]`).
 
 When stopping:
@@ -314,9 +314,9 @@ When stopping:
   - Verification run
   - Notable decisions/deviations
 
-**Note on HiL types:**
-- **Workflow HiL** (`oat_hil_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-project-progress router.
-- **Plan phase checkpoints** (`oat_plan_hil_phases` in plan.md): Gates at plan phase boundaries during implementation. Default: stop at every phase. Configure to stop only at specific phases.
+**Note on HiLL types:**
+- **Workflow HiLL** (`oat_hill_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-project-progress router.
+- **Plan phase checkpoints** (`oat_plan_hill_phases` in plan.md): Gates at plan phase boundaries during implementation. Default: stop at every phase. Configure to stop only at specific phases.
 
 ### Step 9: Repeat Until Complete
 
@@ -392,9 +392,9 @@ Update `"$PROJECT_PATH/state.md"` so other skills reflect task completion and re
 - `oat_blockers: []`
 - `oat_phase: implement`
 - `oat_phase_status: in_progress` (until final review passes)
-- **If** `"implement"` is in `oat_hil_checkpoints`: append `"implement"` to `oat_hil_completed` array
+- **If** `"implement"` is in `oat_hill_checkpoints`: append `"implement"` to `oat_hill_completed` array
 
-**Note:** Only append to `oat_hil_completed` when the phase is configured as a HiL gate.
+**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
 
 Update content:
 ```markdown
@@ -477,7 +477,7 @@ Choose, or run: oat-project-review-provide code final
 - Update `"$PROJECT_PATH/state.md"` frontmatter:
   - `oat_phase: implement`
   - `oat_phase_status: complete`
-  - Append `"implement"` to `oat_hil_completed` (only if configured as a HiL gate)
+  - Append `"implement"` to `oat_hill_completed` (only if configured as a HiLL gate)
 - Update state content to “Implementation complete”.
 - Update `"$PROJECT_PATH/plan.md"`:
   - Set the `final` review row status to `passed` (if not already)

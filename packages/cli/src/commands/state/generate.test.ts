@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   type GitOperations,
   generateStateDashboard,
-  phaseInHilList,
+  phaseInHillList,
 } from './generate';
 
 const mockGit: GitOperations = {
@@ -95,8 +95,8 @@ describe('generateStateDashboard', () => {
       oat_phase_status: 'in_progress',
       oat_current_task: 'p02-t03',
       oat_workflow_mode: 'full',
-      oat_hil_checkpoints: '[]',
-      oat_hil_completed: '[]',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
     });
 
     await writeFile(
@@ -209,22 +209,22 @@ describe('generateStateDashboard', () => {
     expect(result.stalenessStatus).toBe('aging');
   });
 
-  it('routes computeNextStep correctly for full/quick/import modes with HiL gating', async () => {
+  it('routes computeNextStep correctly for full/quick/import modes with HiLL gating', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);
 
-    // Test HiL gating: phase complete + in HiL checkpoints + not in completed
-    await writeStateFile(root, '.oat/projects/shared/hil-proj', {
+    // Test HiLL gating: phase complete + in HiLL checkpoints + not in completed
+    await writeStateFile(root, '.oat/projects/shared/hill-proj', {
       oat_phase: 'design',
       oat_phase_status: 'complete',
       oat_workflow_mode: 'full',
-      oat_hil_checkpoints: '["design"]',
-      oat_hil_completed: '[]',
+      oat_hill_checkpoints: '["design"]',
+      oat_hill_completed: '[]',
     });
 
     await writeFile(
       join(root, '.oat', 'active-project'),
-      '.oat/projects/shared/hil-proj\n',
+      '.oat/projects/shared/hill-proj\n',
     );
 
     const result = await generateStateDashboard({
@@ -234,7 +234,7 @@ describe('generateStateDashboard', () => {
     });
 
     expect(result.recommendedStep).toBe('oat-project-design');
-    expect(result.recommendedReason).toContain('HiL approval');
+    expect(result.recommendedReason).toContain('HiLL approval');
   });
 
   it('lists multiple available projects', async () => {
@@ -292,16 +292,16 @@ describe('generateStateDashboard', () => {
   });
 });
 
-describe('phaseInHilList', () => {
+describe('phaseInHillList', () => {
   it('returns true when phase is in list', () => {
-    expect(phaseInHilList('design', '["design", "plan"]')).toBe(true);
+    expect(phaseInHillList('design', '["design", "plan"]')).toBe(true);
   });
 
   it('returns false when phase is not in list', () => {
-    expect(phaseInHilList('implement', '["design", "plan"]')).toBe(false);
+    expect(phaseInHillList('implement', '["design", "plan"]')).toBe(false);
   });
 
   it('returns false for empty list', () => {
-    expect(phaseInHilList('design', '[]')).toBe(false);
+    expect(phaseInHillList('design', '[]')).toBe(false);
   });
 });

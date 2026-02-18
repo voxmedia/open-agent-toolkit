@@ -1,4 +1,4 @@
-# HiL Checkpoints
+# Human-in-the-Loop Lifecycle (HiLL) Checkpoints
 
 OAT supports two checkpoint classes:
 
@@ -9,21 +9,21 @@ OAT supports two checkpoint classes:
 
 Frontmatter keys:
 
-- `oat_hil_checkpoints`
-- `oat_hil_completed`
+- `oat_hill_checkpoints`
+- `oat_hill_completed`
 
 Example:
 
 ```yaml
-oat_hil_checkpoints: ["discovery", "spec", "design"]
-oat_hil_completed: ["discovery"]
+oat_hill_checkpoints: ["discovery", "spec", "design"]
+oat_hill_completed: ["discovery"]
 ```
 
 ## Plan phase checkpoints (`plan.md`)
 
 Frontmatter key:
 
-- `oat_plan_hil_phases`
+- `oat_plan_hill_phases`
 
 Semantics:
 - Empty list: checkpoint every phase boundary.

@@ -124,10 +124,10 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_phase: plan`
 - `oat_phase_status: complete`
 - `oat_current_task: null`
-- set `oat_hil_checkpoints: []` for quick mode to avoid spec/design gate confusion
+- set `oat_hill_checkpoints: []` for quick mode to avoid spec/design gate confusion
 
 Recommended quick-mode gate defaults:
-- keep implementation phase checkpoints via `oat_plan_hil_phases`
+- keep implementation phase checkpoints via `oat_plan_hill_phases`
 - do not require discovery/spec/design artifact review rows to be passed before implementation
 
 ### Step 5: Initialize Implementation Tracking

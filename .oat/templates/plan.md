@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: YYYY-MM-DD
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hil_phases: []
+oat_plan_hill_phases: []
 oat_plan_source: full  # full | quick | imported
 oat_import_reference: null  # e.g., references/imported-plan.md
 oat_import_source_path: null  # original source path provided by user
@@ -29,8 +29,8 @@ oat_template_name: plan
 
 ## Planning Checklist
 
-- [ ] Confirmed HiL checkpoints with user
-- [ ] Set `oat_plan_hil_phases` in frontmatter
+- [ ] Confirmed HiLL checkpoints with user
+- [ ] Set `oat_plan_hill_phases` in frontmatter
 
 ---
 

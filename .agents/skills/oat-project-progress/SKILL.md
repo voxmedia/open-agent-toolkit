@@ -141,8 +141,8 @@ Read `{project}/state.md` frontmatter:
 - `oat_phase_status` - in_progress or complete
 - `oat_workflow_mode` - full | quick | import
 - `oat_blockers` - Any blockers
-- `oat_hil_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
-- `oat_hil_completed` - Completed HiL checkpoints
+- `oat_hill_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
+- `oat_hill_completed` - Completed HiLL checkpoints
 
 **Display format:**
 ```
@@ -150,9 +150,9 @@ Read `{project}/state.md` frontmatter:
    Active: {yes/no}
    Mode: {oat_workflow_mode}
    Phase: {oat_phase} ({oat_phase_status})
-   HiL Gates: {oat_hil_checkpoints}
-   Completed: {oat_hil_completed as checkmarks}
-   HiL Pending: {yes/no for current phase}
+   HiLL Gates: {oat_hill_checkpoints}
+   Completed: {oat_hill_completed as checkmarks}
+   HiLL Pending: {yes/no for current phase}
    Blockers: {oat_blockers or "None"}
    Next: {recommended_skill}
 ```
@@ -166,8 +166,8 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 - `quick`
 - `import`
 
-**HiL override (apply before phase routing):**
-- If current `oat_phase` is listed in `oat_hil_checkpoints` **and** not listed in `oat_hil_completed`, the phase's HiL gate is still pending.
+**HiLL override (apply before phase routing):**
+- If current `oat_phase` is listed in `oat_hill_checkpoints` **and** not listed in `oat_hill_completed`, the phase's HiLL gate is still pending.
 - In that case, do **not** advance to the next phase even if `oat_phase_status: complete`.
 - Recommend continuing the current phase skill to capture explicit approval:
   - discovery gate pending -> `oat-project-discover`

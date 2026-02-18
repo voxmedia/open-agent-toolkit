@@ -32,9 +32,9 @@ interface ProjectState {
   currentTask: string;
   lifecycle: string;
   blockers: string;
-  hilCheckpoints: string;
-  hilCompleted: string;
-  hilStatus: string;
+  hillCheckpoints: string;
+  hillCompleted: string;
+  hillStatus: string;
   workflowMode: string;
 }
 
@@ -140,7 +140,7 @@ async function readActiveProject(
   return result;
 }
 
-export function phaseInHilList(phase: string, listStr: string): boolean {
+export function phaseInHillList(phase: string, listStr: string): boolean {
   return listStr.includes(`"${phase}"`);
 }
 
@@ -160,18 +160,18 @@ async function readProjectState(
     (await parseFrontmatterField(stateFile, 'oat_lifecycle')) || 'active';
   const blockers =
     (await parseFrontmatterField(stateFile, 'oat_blockers')) || '[]';
-  const hilCheckpoints =
-    (await parseFrontmatterField(stateFile, 'oat_hil_checkpoints')) || '[]';
-  const hilCompleted =
-    (await parseFrontmatterField(stateFile, 'oat_hil_completed')) || '[]';
+  const hillCheckpoints =
+    (await parseFrontmatterField(stateFile, 'oat_hill_checkpoints')) || '[]';
+  const hillCompleted =
+    (await parseFrontmatterField(stateFile, 'oat_hill_completed')) || '[]';
   const workflowMode =
     (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) || 'full';
 
-  let hilStatus: string;
-  if (phaseInHilList(phase, hilCheckpoints)) {
-    hilStatus = phaseInHilList(phase, hilCompleted) ? 'passed' : 'pending';
+  let hillStatus: string;
+  if (phaseInHillList(phase, hillCheckpoints)) {
+    hillStatus = phaseInHillList(phase, hillCompleted) ? 'passed' : 'pending';
   } else {
-    hilStatus = 'n/a';
+    hillStatus = 'n/a';
   }
 
   return {
@@ -180,9 +180,9 @@ async function readProjectState(
     currentTask,
     lifecycle,
     blockers,
-    hilCheckpoints,
-    hilCompleted,
-    hilStatus,
+    hillCheckpoints,
+    hillCompleted,
+    hillStatus,
     workflowMode,
   };
 }
@@ -293,11 +293,11 @@ function computeNextStep(
     return { step: 'oat-project-progress', reason: 'Check current progress' };
   }
 
-  // HiL checkpoint gating
+  // HiLL checkpoint gating
   if (
     state.phaseStatus === 'complete' &&
-    phaseInHilList(state.phase, state.hilCheckpoints) &&
-    !phaseInHilList(state.phase, state.hilCompleted)
+    phaseInHillList(state.phase, state.hillCheckpoints) &&
+    !phaseInHillList(state.phase, state.hillCompleted)
   ) {
     const phaseSkillMap: Record<string, string> = {
       discovery: 'oat-project-discover',
@@ -308,7 +308,7 @@ function computeNextStep(
     };
     return {
       step: phaseSkillMap[state.phase] ?? 'oat-project-progress',
-      reason: `Complete ${state.phase} HiL approval before advancing`,
+      reason: `Complete ${state.phase} HiLL approval before advancing`,
     };
   }
 
@@ -447,7 +447,7 @@ function buildDashboardMarkdown(
     lines.push(`| Mode | ${state.workflowMode} |`);
     lines.push(`| Phase | ${state.phase} |`);
     lines.push(`| Status | ${state.phaseStatus} |`);
-    lines.push(`| HiL Gate | ${state.hilStatus} |`);
+    lines.push(`| HiLL Gate | ${state.hillStatus} |`);
     lines.push(`| Current Task | ${state.currentTask} |`);
     lines.push('');
     lines.push(`Details: \`${project.path}/state.md\``);

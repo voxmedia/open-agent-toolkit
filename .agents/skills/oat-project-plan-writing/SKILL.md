@@ -29,7 +29,7 @@ Every `plan.md` produced or edited by any OAT skill **must** satisfy these invar
 ```yaml
 ---
 oat_plan_source: full | quick | imported   # origin workflow mode
-oat_plan_hil_phases: []                     # HiL checkpoint phase list (empty = every phase)
+oat_plan_hill_phases: []                     # HiLL checkpoint phase list (empty = every phase)
 oat_status: in_progress | complete          # plan lifecycle status
 oat_ready_for: null | oat-project-implement # downstream consumer
 ---
