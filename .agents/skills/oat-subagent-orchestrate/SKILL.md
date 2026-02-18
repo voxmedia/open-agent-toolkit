@@ -365,12 +365,63 @@ When `--dry-run` is specified:
 - Report: identified units, worktree plan, estimated parallelism.
 - No code changes, no commits, no artifact updates.
 
+## Review Skill Compatibility
+
+The autonomous review gate (Step 4) operates alongside — not in place of — the existing manual review skills (`oat-project-review-provide` and `oat-project-review-receive`).
+
+### Scope Separation
+
+| Review Skill | Scope | Trigger |
+|-------------|-------|---------|
+| Autonomous gate (Step 4) | Per-unit (phase or task level) | Automatic after subagent completion |
+| `oat-project-review-provide` | Per-phase, final, or range | User-invoked or `oat-project-implement` final gate |
+| `oat-project-review-receive` | Processes review findings into plan tasks | User-invoked after review artifact exists |
+
+### Autonomous Gate vs Manual Review
+
+The autonomous gate is a **fast, binary quality check** (pass/fail per unit). It does not replace the richer manual review:
+
+- **Autonomous gate findings** use `critical`/`important`/`minor` severity but are limited to what automated checks and spec-diffing can detect.
+- **Manual review findings** use the full `Critical`/`Important`/`Medium`/`Minor` taxonomy with deeper semantic analysis.
+- If a unit passes the autonomous gate and merges, it is still subject to manual review via `oat-project-review-provide`.
+
+### plan.md Review Table Integration
+
+Autonomous review results update the `plan.md` Reviews table using the same status lifecycle:
+
+| Autonomous Outcome | plan.md Status |
+|-------------------|---------------|
+| All units in scope pass gate | `passed` (with date and artifact reference) |
+| Some units fail, fixes dispatched | `fixes_added` |
+| Fix loop exhausted, units excluded | `fixes_completed` (excluded units noted) |
+
+**Rules:**
+- Autonomous reviews write to phase-level rows (e.g., `p01`, `p02`) — not per-task rows.
+- The `final` review row is **never** set by the autonomous gate. The `final` row is reserved for the project-wide final review gate managed by `oat-project-implement` Step 14 or manual invocation of `oat-project-review-provide code final`.
+- If a manual review is requested after orchestration (e.g., `oat-project-review-provide code p02`), it may update the same row — the manual review takes precedence.
+
+### Final Gate Preservation
+
+After orchestration completes all phases:
+1. Orchestrator updates `implementation.md` and `state.md` with completion status.
+2. The `final` review in `plan.md` remains `pending`.
+3. The user (or `oat-project-implement` Step 14) must invoke `oat-project-review-provide code final` separately.
+4. This ensures the final review sees the fully reconciled codebase, not just individual unit outputs.
+
+### Artifact Compatibility
+
+Autonomous review verdicts are logged in `implementation.md` `## Orchestration Runs` sections (not as standalone review artifacts in `reviews/`). If manual follow-up review is needed:
+- `oat-project-review-provide` writes its artifact to `reviews/` as usual.
+- `oat-project-review-receive` processes that artifact into plan tasks as usual.
+- The orchestration log in `implementation.md` provides context but does not interfere.
+
 ## Constraints
 
 - **Never** use `AskUserQuestion` during execution between HiL checkpoints.
 - **Never** merge a unit that did not pass the autonomous review gate (unless policy explicitly marks it `skipped`).
 - **Never** silently lose work — failed units are reported, not deleted.
 - **Never** bypass existing `plan.md` review table semantics.
+- **Never** set the `final` review row to `passed` from the autonomous gate.
 - **Always** use deterministic merge ordering (by task ID).
 - **Always** run integration verification after each merge.
 
@@ -382,4 +433,5 @@ When `--dry-run` is specified:
 - Failed units excluded with actionable reports.
 - All outcomes logged to `implementation.md` with full traceability.
 - `plan.md` review table updated consistently with existing lifecycle.
+- Final review gate preserved for separate invocation post-orchestration.
 - Execution pauses at configured HiL checkpoints.
