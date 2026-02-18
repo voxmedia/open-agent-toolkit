@@ -321,7 +321,7 @@ Before marking complete, run through this quality checklist:
 **If all checks pass:**
 - Proceed to Step 17
 
-### Step 17: Human-in-the-Loop Gate (If Configured)
+### Step 17: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)
 
 Read `"$PROJECT_PATH/state.md"` frontmatter:
 - `oat_hill_checkpoints`
@@ -342,9 +342,9 @@ If `"spec"` is in `oat_hill_checkpoints`, require explicit user approval before 
   - `oat_ready_for: null`
 - Keep project state as in-progress for spec.
 - Do **not** append `"spec"` to `oat_hill_completed`.
-- Stop and report: "Specification draft saved; awaiting HiL approval."
+- Stop and report: "Specification draft saved; awaiting HiLL approval."
 
-If spec is not configured as a HiL checkpoint, or user explicitly approves, continue to Step 18.
+If spec is not configured as a HiLL checkpoint, or user explicitly approves, continue to Step 18.
 
 ### Step 18: Mark Specification Complete
 
@@ -370,7 +370,7 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_phase_status: complete`
 - **If** `"spec"` is in `oat_hill_checkpoints`: append `"spec"` to `oat_hill_completed` array
 
-**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiL gate.
+**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
 
 Update content:
 ```markdown

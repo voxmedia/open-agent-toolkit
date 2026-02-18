@@ -310,7 +310,7 @@ For each significant risk:
 
 **Iterate:** Make refinements based on feedback, update `oat_last_updated`.
 
-### Step 19: Human-in-the-Loop Gate (If Configured)
+### Step 19: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)
 
 Read `"$PROJECT_PATH/state.md"` frontmatter:
 - `oat_hill_checkpoints`
@@ -331,9 +331,9 @@ If `"design"` is in `oat_hill_checkpoints`, require explicit user approval befor
   - `oat_ready_for: null`
 - Keep project state as in-progress for design.
 - Do **not** append `"design"` to `oat_hill_completed`.
-- Stop and report: "Design draft saved; awaiting HiL approval."
+- Stop and report: "Design draft saved; awaiting HiLL approval."
 
-If design is not configured as a HiL checkpoint, or user explicitly approves, continue to Step 20.
+If design is not configured as a HiLL checkpoint, or user explicitly approves, continue to Step 20.
 
 ### Step 20: Mark Design Complete
 
@@ -359,7 +359,7 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_phase_status: complete`
 - **If** `"design"` is in `oat_hill_checkpoints`: append `"design"` to `oat_hill_completed` array
 
-**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiL gate.
+**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
 
 Update content:
 ```markdown

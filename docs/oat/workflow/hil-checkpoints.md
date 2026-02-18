@@ -1,4 +1,4 @@
-# HiL Checkpoints
+# Human-in-the-Loop Lifecycle (HiLL) Checkpoints
 
 OAT supports two checkpoint classes:
 

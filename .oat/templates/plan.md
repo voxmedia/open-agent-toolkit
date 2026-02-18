@@ -29,7 +29,7 @@ oat_template_name: plan
 
 ## Planning Checklist
 
-- [ ] Confirmed HiL checkpoints with user
+- [ ] Confirmed HiLL checkpoints with user
 - [ ] Set `oat_plan_hill_phases` in frontmatter
 
 ---

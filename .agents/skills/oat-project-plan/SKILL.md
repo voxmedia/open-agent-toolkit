@@ -288,7 +288,7 @@ Update plan.md frontmatter with user's choice.
 
 **Required plan body update (do not skip):**
 - In `## Planning Checklist`, mark:
-  - `[x] Confirmed HiL checkpoints with user`
+  - `[x] Confirmed HiLL checkpoints with user`
   - `[x] Set oat_plan_hill_phases in frontmatter`
 
 If `## Planning Checklist` is missing (older plans), add it before finalizing and then check both items.
@@ -299,7 +299,7 @@ Present plan summary:
 - Number of phases
 - Tasks per phase
 - Key milestones
-- HiL checkpoints configured
+- HiLL checkpoints configured
 
 Ask: "Does this breakdown make sense? Any tasks missing?"
 
@@ -310,7 +310,7 @@ Iterate until user confirms.
 Before setting `oat_status: complete`, verify:
 - `oat_plan_hill_phases` is explicitly set in frontmatter (empty array is valid for "every phase")
 - `## Planning Checklist` exists
-- both HiL checklist items are checked (`[x]`)
+- both HiLL checklist items are checked (`[x]`)
 
 Update frontmatter:
 ```yaml
@@ -334,7 +334,7 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_phase_status: complete`
 - **If** `"plan"` is in `oat_hill_checkpoints`: append `"plan"` to `oat_hill_completed` array
 
-**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiL gate.
+**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
 
 Update content:
 ```markdown

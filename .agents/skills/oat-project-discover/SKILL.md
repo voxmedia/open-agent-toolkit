@@ -263,7 +263,7 @@ Update discovery.md sections:
 - Avoid naming specific scripts/files/commands as deliverables in discovery.
 - If you need to preserve an implementation thought, record it as an Open Question for design.
 
-### Step 11: Human-in-the-Loop Gate (If Configured)
+### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)
 
 Read `"$PROJECT_PATH/state.md"` frontmatter:
 - `oat_hill_checkpoints`
@@ -284,9 +284,9 @@ If `"discovery"` is in `oat_hill_checkpoints`, require explicit user approval be
   - `oat_ready_for: null`
 - Keep project state as in-progress for discovery.
 - Do **not** append `"discovery"` to `oat_hill_completed`.
-- Stop and report: "Discovery draft saved; awaiting HiL approval."
+- Stop and report: "Discovery draft saved; awaiting HiLL approval."
 
-If discovery is not configured as a HiL checkpoint, or user explicitly approves, continue to Step 12.
+If discovery is not configured as a HiLL checkpoint, or user explicitly approves, continue to Step 12.
 
 ### Step 12: Mark Discovery Complete
 
@@ -307,7 +307,7 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_phase_status: complete`
 - **If** `"discovery"` is in `oat_hill_checkpoints`: append `"discovery"` to `oat_hill_completed` array
 
-**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiL gate. This keeps `oat_hill_completed` meaning "HiL gates passed" rather than "phases completed" (which is tracked by `oat_phase` and `oat_phase_status`).
+**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate. This keeps `oat_hill_completed` meaning "HiLL gates passed" rather than "phases completed" (which is tracked by `oat_phase` and `oat_phase_status`).
 
 **Content updates:**
 - Set **Last Updated:** to today

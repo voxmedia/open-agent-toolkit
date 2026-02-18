@@ -47,7 +47,7 @@ Ideas track two states in `discovery.md` frontmatter:
 - `brainstorming` — actively being explored
 - `summarized` — finalized with a summary document
 
-No `state.md` per idea. No HiL gates. No knowledge base dependency.
+No `state.md` per idea. No HiLL gates. No knowledge base dependency.
 
 ## Active idea pointer
 
