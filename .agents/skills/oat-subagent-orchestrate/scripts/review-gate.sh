@@ -19,11 +19,13 @@ set -euo pipefail
 UNIT_BRANCH=""
 WORKTREE_PATH=""
 RETRY_LIMIT=2
+RETRY_COUNT=0
 
 # ─── Parse Arguments ────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --retry-limit) RETRY_LIMIT="$2"; shift 2 ;;
+    --retry-count) RETRY_COUNT="$2"; shift 2 ;;
     -*)            echo "error: unknown flag $1" >&2; exit 1 ;;
     *)
       if [[ -z "$UNIT_BRANCH" ]]; then UNIT_BRANCH="$1"
@@ -61,7 +63,6 @@ echo "retry_limit: $RETRY_LIMIT"
 
 SPEC_VERDICT="pass"
 QUALITY_VERDICT="pending"
-RETRY_COUNT=0
 FINDINGS_CRITICAL=()
 FINDINGS_IMPORTANT=()
 FINDINGS_MINOR=()
@@ -160,17 +161,25 @@ for f in "${FINDINGS_MINOR[@]:-}"; do
   [[ -n "$f" ]] && echo "      - \"$f\""
 done
 
-# ─── Fix-Loop Hint ──────────────────────────────────────────────────────────
-# The orchestrator agent handles the fix-loop:
-# 1. If verdict is "fail", dispatch implementer subagent with findings
-# 2. Re-run this script (incrementing retry count)
-# 3. If retry_count >= retry_limit, mark unit as "failed" and exclude
+# ─── Fix-Loop ────────────────────────────────────────────────────────────────
+# The orchestrator agent drives the fix-loop:
+# 1. If verdict is "fail" and retries remain → action: retry
+#    Orchestrator dispatches implementer subagent with findings,
+#    then re-runs this script with --retry-count <N+1>
+# 2. If verdict is "fail" and retry_count >= retry_limit → action: dispatch_fix
+#    Terminal failure — manual intervention or exclusion needed
+# 3. If verdict is "pass" → action: finalize
 
 echo "fix_loop:"
+echo "  retry_count: $RETRY_COUNT"
 echo "  retry_limit: $RETRY_LIMIT"
-if [[ "$OVERALL" == "fail" && $RETRY_COUNT -lt $RETRY_LIMIT ]]; then
-  echo "  action: dispatch_fix"
-  echo "  next_retry: $((RETRY_COUNT + 1))"
+if [[ "$OVERALL" == "fail" ]]; then
+  if [[ $RETRY_COUNT -lt $RETRY_LIMIT ]]; then
+    echo "  action: retry"
+    echo "  next_retry_count: $((RETRY_COUNT + 1))"
+  else
+    echo "  action: dispatch_fix"
+  fi
 else
   echo "  action: finalize"
 fi

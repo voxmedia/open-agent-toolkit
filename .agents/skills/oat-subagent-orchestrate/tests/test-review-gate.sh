@@ -103,7 +103,8 @@ assert_contains "tests fail" "$FAIL_TEST_OUTPUT" "tests: fail"
 assert_contains "spec verdict fail" "$FAIL_TEST_OUTPUT" "spec_verdict: fail"
 assert_contains "overall fail" "$FAIL_TEST_OUTPUT" "overall: fail"
 assert_contains "needs fix or exclude" "$FAIL_TEST_OUTPUT" "disposition: needs_fix_or_exclude"
-assert_contains "dispatch fix action" "$FAIL_TEST_OUTPUT" "action: dispatch_fix"
+assert_contains "retry action (under limit)" "$FAIL_TEST_OUTPUT" "action: retry"
+assert_contains "next retry count" "$FAIL_TEST_OUTPUT" "next_retry_count: 1"
 # Code quality stage should NOT run when spec fails
 assert_not_contains "quality stage skipped" "$FAIL_TEST_OUTPUT" "quality_verdict: pass"
 
@@ -133,7 +134,7 @@ assert_contains "spec verdict pass" "$FAIL_LINT_OUTPUT" "spec_verdict: pass"
 assert_contains "lint fail" "$FAIL_LINT_OUTPUT" "lint: fail"
 assert_contains "quality verdict fail" "$FAIL_LINT_OUTPUT" "quality_verdict: fail"
 assert_contains "overall fail" "$FAIL_LINT_OUTPUT" "overall: fail"
-assert_contains "dispatch fix" "$FAIL_LINT_OUTPUT" "action: dispatch_fix"
+assert_contains "retry action (under limit)" "$FAIL_LINT_OUTPUT" "action: retry"
 
 echo ""
 
@@ -162,6 +163,49 @@ assert_contains "overall fail" "$DIRTY_OUTPUT" "overall: fail"
 
 # Clean up
 rm -f "$TMPDIR/uncommitted.txt"
+
+echo ""
+
+# ─── Test 5: Retry at limit (dispatch_fix terminal) ──────────────────
+echo "=== Test 5: Retry at limit (dispatch_fix terminal) ==="
+echo ""
+
+# Failing pnpm test, retry_count == retry_limit
+cat > "$SHIMDIR/bin/pnpm" <<'SHIM'
+#!/bin/bash
+case "$1" in
+  test) exit 1 ;;
+  *) exit 0 ;;
+esac
+SHIM
+chmod +x "$SHIMDIR/bin/pnpm"
+
+AT_LIMIT_OUTPUT=$(bash "$SKILL_DIR/scripts/review-gate.sh" "test-branch" "$TMPDIR" --retry-limit 2 --retry-count 2 2>&1)
+
+echo "--- Output ---"
+echo "$AT_LIMIT_OUTPUT" | head -25
+echo ""
+echo "--- Assertions ---"
+assert_contains "overall fail" "$AT_LIMIT_OUTPUT" "overall: fail"
+assert_contains "retry_count is 2" "$AT_LIMIT_OUTPUT" "retry_count: 2"
+assert_contains "dispatch_fix at limit" "$AT_LIMIT_OUTPUT" "action: dispatch_fix"
+assert_not_contains "no next_retry_count at limit" "$AT_LIMIT_OUTPUT" "next_retry_count:"
+
+echo ""
+
+# ─── Test 6: Retry under limit (retry with next count) ───────────────
+echo "=== Test 6: Retry under limit (retry with next count) ==="
+echo ""
+
+UNDER_LIMIT_OUTPUT=$(bash "$SKILL_DIR/scripts/review-gate.sh" "test-branch" "$TMPDIR" --retry-limit 2 --retry-count 1 2>&1)
+
+echo "--- Output ---"
+echo "$UNDER_LIMIT_OUTPUT" | head -25
+echo ""
+echo "--- Assertions ---"
+assert_contains "retry_count is 1" "$UNDER_LIMIT_OUTPUT" "retry_count: 1"
+assert_contains "action is retry" "$UNDER_LIMIT_OUTPUT" "action: retry"
+assert_contains "next_retry_count is 2" "$UNDER_LIMIT_OUTPUT" "next_retry_count: 2"
 
 echo ""
 echo "=== Results ==="
