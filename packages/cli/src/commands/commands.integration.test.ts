@@ -385,4 +385,34 @@ describe('CLI command integration', () => {
     expect(projectResult.exitCode).toBe(0);
     expect(artifactsResult.exitCode).toBe(0);
   });
+
+  it('cleanup project --json emits stable contract fields', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await mkdir(join(root, '.oat', 'projects', 'shared', 'demo'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'plan.md'),
+      '# plan',
+      'utf8',
+    );
+
+    const result = await runCli(
+      root,
+      ['cleanup', 'project', '--json'],
+      ['--json'],
+    );
+
+    expect(result.exitCode).toBe(0);
+    const payload = JSON.parse(result.stdout);
+    expect(payload).toEqual(
+      expect.objectContaining({
+        status: expect.any(String),
+        mode: expect.any(String),
+        summary: expect.any(Object),
+        actions: expect.any(Array),
+      }),
+    );
+  });
 });
