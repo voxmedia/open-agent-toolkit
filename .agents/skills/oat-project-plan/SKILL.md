@@ -22,7 +22,7 @@ Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `full`):
 
 ## Plan Format Contract
 
-When creating or editing `plan.md`, follow `oat-project-plan-writing` canonical format rules. This includes stable task IDs (`pNN-tNN`), required sections (`## Reviews`, `## Implementation Complete`, `## References`), required frontmatter keys (`oat_plan_source`, `oat_plan_hil_phases`, `oat_status`, `oat_ready_for`), and review table preservation rules.
+When creating or editing `plan.md`, follow `oat-project-plan-writing` canonical format rules. This includes stable task IDs (`pNN-tNN`), required sections (`## Reviews`, `## Implementation Complete`, `## References`), required frontmatter keys (`oat_plan_source`, `oat_plan_hill_phases`, `oat_status`, `oat_ready_for`), and review table preservation rules.
 
 ## Mode Assertion
 
@@ -280,16 +280,16 @@ Follow the review table preservation rules from `oat-project-plan-writing`:
 Ask user: "During implementation, should I stop for review at every phase boundary, or only at specific phases?"
 
 **Options:**
-- **Every phase** (default): Leave `oat_plan_hil_phases: []` - stop at end of every plan phase
-- **Only the end**: Set `oat_plan_hil_phases` to the **last plan phase ID** (e.g., `["p03"]`) - stop only at the end of implementation
-- **Specific phases**: Set `oat_plan_hil_phases: ["p01", "p04"]` - only stop at listed phases
+- **Every phase** (default): Leave `oat_plan_hill_phases: []` - stop at end of every plan phase
+- **Only the end**: Set `oat_plan_hill_phases` to the **last plan phase ID** (e.g., `["p03"]`) - stop only at the end of implementation
+- **Specific phases**: Set `oat_plan_hill_phases: ["p01", "p04"]` - only stop at listed phases
 
 Update plan.md frontmatter with user's choice.
 
 **Required plan body update (do not skip):**
 - In `## Planning Checklist`, mark:
   - `[x] Confirmed HiL checkpoints with user`
-  - `[x] Set oat_plan_hil_phases in frontmatter`
+  - `[x] Set oat_plan_hill_phases in frontmatter`
 
 If `## Planning Checklist` is missing (older plans), add it before finalizing and then check both items.
 
@@ -308,7 +308,7 @@ Iterate until user confirms.
 ### Step 13: Mark Plan Complete
 
 Before setting `oat_status: complete`, verify:
-- `oat_plan_hil_phases` is explicitly set in frontmatter (empty array is valid for "every phase")
+- `oat_plan_hill_phases` is explicitly set in frontmatter (empty array is valid for "every phase")
 - `## Planning Checklist` exists
 - both HiL checklist items are checked (`[x]`)
 
@@ -332,9 +332,9 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_blockers: []`
 - `oat_phase: plan`
 - `oat_phase_status: complete`
-- **If** `"plan"` is in `oat_hil_checkpoints`: append `"plan"` to `oat_hil_completed` array
+- **If** `"plan"` is in `oat_hill_checkpoints`: append `"plan"` to `oat_hill_completed` array
 
-**Note:** Only append to `oat_hil_completed` when the phase is configured as a HiL gate.
+**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiL gate.
 
 Update content:
 ```markdown

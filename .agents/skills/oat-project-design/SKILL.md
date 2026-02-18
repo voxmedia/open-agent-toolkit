@@ -313,10 +313,10 @@ For each significant risk:
 ### Step 19: Human-in-the-Loop Gate (If Configured)
 
 Read `"$PROJECT_PATH/state.md"` frontmatter:
-- `oat_hil_checkpoints`
-- `oat_hil_completed`
+- `oat_hill_checkpoints`
+- `oat_hill_completed`
 
-If `"design"` is in `oat_hil_checkpoints`, require explicit user approval before advancing.
+If `"design"` is in `oat_hill_checkpoints`, require explicit user approval before advancing.
 
 **Approval prompt (required):**
 - "Design artifact is ready. Approve design and unlock `oat-project-plan`?"
@@ -330,7 +330,7 @@ If `"design"` is in `oat_hil_checkpoints`, require explicit user approval before
   - `oat_status: in_progress`
   - `oat_ready_for: null`
 - Keep project state as in-progress for design.
-- Do **not** append `"design"` to `oat_hil_completed`.
+- Do **not** append `"design"` to `oat_hill_completed`.
 - Stop and report: "Design draft saved; awaiting HiL approval."
 
 If design is not configured as a HiL checkpoint, or user explicitly approves, continue to Step 20.
@@ -357,9 +357,9 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_blockers: []`
 - `oat_phase: design`
 - `oat_phase_status: complete`
-- **If** `"design"` is in `oat_hil_checkpoints`: append `"design"` to `oat_hil_completed` array
+- **If** `"design"` is in `oat_hill_checkpoints`: append `"design"` to `oat_hill_completed` array
 
-**Note:** Only append to `oat_hil_completed` when the phase is configured as a HiL gate.
+**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiL gate.
 
 Update content:
 ```markdown
