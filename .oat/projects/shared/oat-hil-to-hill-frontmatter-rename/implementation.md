@@ -39,6 +39,7 @@ oat_generated: false
 **Outcome:**
 - Enumerated 93 occurrences of old keys across 19 files
 - Categorized into active surfaces (templates, skills, docs, CLI code, project artifacts) and excluded surfaces (references/, plan body text)
+- Scanned `.oat/repo/reference/` and `.oat/repo/reviews/` for old keys — none found (imported plan scope item #4 satisfied; no rename needed)
 - Confirmed clean branch with no pending changes
 - All preconditions met for hard-cut rename
 
