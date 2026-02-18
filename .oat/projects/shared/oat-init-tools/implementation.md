@@ -45,7 +45,7 @@ oat_template: false
 ### Task p01-t01: Create asset bundling script
 
 **Status:** completed
-**Commit:** 076c433
+**Commit:** d79a49a
 
 **Outcome (required):**
 - Added a new bundling script at `packages/cli/scripts/bundle-assets.sh` to build a clean `packages/cli/assets/` tree.
@@ -70,7 +70,7 @@ oat_template: false
 ### Task p01-t02: Integrate bundling into build pipeline
 
 **Status:** completed
-**Commit:** 4f8f9a1
+**Commit:** 3444d08
 
 **Outcome (required):**
 - Updated CLI build command to run bundling before TypeScript compilation.
@@ -94,7 +94,7 @@ oat_template: false
 ### Task p01-t03: Add resolveAssetsRoot() utility
 
 **Status:** completed
-**Commit:** f58c7be
+**Commit:** f236509
 
 **Outcome (required):**
 - Added `resolveAssetsRoot()` in a new FS module that resolves bundled assets relative to module location for both `src/` and `dist/` execution.
@@ -118,7 +118,7 @@ oat_template: false
 ### Task p01-t04: Add fileExists() and dirExists() utilities
 
 **Status:** completed
-**Commit:** 5bd66a2
+**Commit:** c7b13ac
 
 **Outcome (required):**
 - Added `dirExists()` to shared filesystem utilities with the same resilient behavior as `fileExists()`.
@@ -171,7 +171,7 @@ oat_template: false
 ### Task p02-t01: Implement ideas install pure logic
 
 **Status:** completed
-**Commit:** 90b78b2
+**Commit:** b4ba7e9
 
 **Outcome (required):**
 - Added a pure `installIdeas()` installer that copies ideas skill pack assets into project/user targets with idempotent `copied/updated/skipped` reporting.
@@ -194,7 +194,7 @@ oat_template: false
 ### Task p02-t02: Implement ideas Commander layer
 
 **Status:** completed
-**Commit:** 05f6820
+**Commit:** d57894b
 
 **Outcome (required):**
 - Added `createInitToolsIdeasCommand()` with dependency-injected command runner and clear scope resolution (`all`/`project` -> project root, `user` -> user home).
@@ -241,7 +241,7 @@ oat_template: false
 ### Task p03-t01: Implement workflows install pure logic
 
 **Status:** completed
-**Commit:** 5b72342
+**Commit:** db409c3
 
 **Outcome (required):**
 - Added pure `installWorkflows()` logic to install workflow skill/agent/template/script packs with idempotent copied/updated/skipped accounting.
@@ -264,7 +264,7 @@ oat_template: false
 ### Task p03-t02: Implement workflows Commander layer
 
 **Status:** completed
-**Commit:** c4e919d
+**Commit:** fa39918
 
 **Outcome (required):**
 - Added `createInitToolsWorkflowsCommand()` with project-scope enforcement and dependency-injected execution for testability.
@@ -311,7 +311,7 @@ oat_template: false
 ### Task p04-t01: Implement utility install logic + Commander layer
 
 **Status:** completed
-**Commit:** 445ae73
+**Commit:** 5f6d44b
 
 **Outcome (required):**
 - Added pure `installUtility()` logic for utility-skill installation with copied/updated/skipped tracking and optional `force` behavior.
@@ -336,7 +336,7 @@ oat_template: false
 ### Task p04-t02: Implement tools group command with interactive installer
 
 **Status:** completed
-**Commit:** 0c7ab89
+**Commit:** e420bbb
 
 **Outcome (required):**
 - Added `createInitToolsCommand()` group command that registers `ideas`, `workflows`, and `utility` subcommands.
@@ -359,7 +359,7 @@ oat_template: false
 ### Task p04-t03: Wire tools into oat init
 
 **Status:** completed
-**Commit:** ab4b6ee
+**Commit:** 0d76318
 
 **Outcome (required):**
 - Wired the new tools command group into the main `oat init` command surface.
@@ -407,7 +407,7 @@ oat_template: false
 ### Task p05-t01: Add level-relative template paths to idea skills
 
 **Status:** completed
-**Commit:** cbf9cbf
+**Commit:** e2fb96f
 
 **Outcome (required):**
 - Added `TEMPLATES_ROOT` variable mapping to project/user-level tables across all four idea skills.
@@ -434,7 +434,7 @@ oat_template: false
 ### Task p05-t02: Add dual-level prompt chain to idea skills
 
 **Status:** completed
-**Commit:** eef365b
+**Commit:** 222e95e
 
 **Outcome (required):**
 - Updated level-resolution chains in all four idea skills to include an explicit dual-root conflict prompt when both project and user idea directories exist.
@@ -482,7 +482,7 @@ oat_template: false
 ### Task p06-t01: Run full test suite and manual verification
 
 **Status:** completed
-**Commit:** 68b561d
+**Commit:** d69fe63
 
 **Outcome (required):**
 - Ran final end-to-end verification across build, CLI help output, manual temp-repo smoke tests, full CLI test suite, workspace type-check, and workspace lint.
@@ -543,20 +543,20 @@ oat_template: false
 
 **Session Start:** -
 
-- [x] p01-t01: Create asset bundling script - completed (`076c433`)
-- [x] p01-t02: Integrate bundling into build pipeline - completed (`4f8f9a1`)
-- [x] p01-t03: Add resolveAssetsRoot() utility - completed (`f58c7be`)
-- [x] p01-t04: Add fileExists() and dirExists() utilities - completed (`5bd66a2`)
-- [x] p02-t01: Implement ideas install pure logic - completed (`90b78b2`)
-- [x] p02-t02: Implement ideas Commander layer - completed (`05f6820`)
-- [x] p03-t01: Implement workflows install pure logic - completed (`5b72342`)
-- [x] p03-t02: Implement workflows Commander layer - completed (`c4e919d`)
-- [x] p04-t01: Implement utility install logic + Commander layer - completed (`445ae73`)
-- [x] p04-t02: Implement tools group command with interactive installer - completed (`0c7ab89`)
-- [x] p04-t03: Wire tools into oat init - completed (`ab4b6ee`)
-- [x] p05-t01: Add level-relative template paths to idea skills - completed (`cbf9cbf`)
-- [x] p05-t02: Add dual-level prompt chain to idea skills - completed (`eef365b`)
-- [x] p06-t01: Run full test suite and manual verification - completed (`68b561d`)
+- [x] p01-t01: Create asset bundling script - completed (`d79a49a`)
+- [x] p01-t02: Integrate bundling into build pipeline - completed (`3444d08`)
+- [x] p01-t03: Add resolveAssetsRoot() utility - completed (`f236509`)
+- [x] p01-t04: Add fileExists() and dirExists() utilities - completed (`c7b13ac`)
+- [x] p02-t01: Implement ideas install pure logic - completed (`b4ba7e9`)
+- [x] p02-t02: Implement ideas Commander layer - completed (`d57894b`)
+- [x] p03-t01: Implement workflows install pure logic - completed (`db409c3`)
+- [x] p03-t02: Implement workflows Commander layer - completed (`fa39918`)
+- [x] p04-t01: Implement utility install logic + Commander layer - completed (`5f6d44b`)
+- [x] p04-t02: Implement tools group command with interactive installer - completed (`e420bbb`)
+- [x] p04-t03: Wire tools into oat init - completed (`0d76318`)
+- [x] p05-t01: Add level-relative template paths to idea skills - completed (`e2fb96f`)
+- [x] p05-t02: Add dual-level prompt chain to idea skills - completed (`222e95e`)
+- [x] p06-t01: Run full test suite and manual verification - completed (`d69fe63`)
 
 **What changed (high level):**
 - Project created and plan imported
