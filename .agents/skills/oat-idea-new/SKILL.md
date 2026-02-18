@@ -35,9 +35,12 @@ Determine whether to operate at project level or user (global) level.
 1. If `$ARGUMENTS` contains `--global` → use **user level**
 2. If `.oat/active-idea` exists and points to a valid directory → use **project level**
 3. If `~/.oat/active-idea` exists and points to a valid directory → use **user level**
-4. If `.oat/ideas/` exists → use **project level**
-5. If `~/.oat/ideas/` exists → use **user level**
-6. Otherwise → ask: "Project-level or global (user-level) ideas?"
+4. If BOTH `.oat/ideas/` AND `~/.oat/ideas/` exist →
+   ask: "Ideas exist at both project and user level. Where should this idea go?"
+   options: "Project (.oat/ideas/)" / "Global (~/.oat/ideas/)"
+5. If `.oat/ideas/` exists → use **project level**
+6. If `~/.oat/ideas/` exists → use **user level**
+7. Otherwise → ask: "Project-level or global (user-level) ideas?"
 
 **Set variables:**
 
