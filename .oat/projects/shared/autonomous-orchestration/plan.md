@@ -998,7 +998,7 @@ git commit -m "test(p04-t10): add rollback integrity and manifest parsing assert
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
-| final | code | fixes_completed | 2026-02-17 | reviews/final-review-2026-02-17.md |
+| final | code | received | 2026-02-17 | reviews/final-review-2026-02-17-v2.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
