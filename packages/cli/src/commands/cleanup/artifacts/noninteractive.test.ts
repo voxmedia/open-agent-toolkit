@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { planNonInteractiveArtifactActions } from './artifacts';
+import {
+  planArchiveActions,
+  planNonInteractiveArtifactActions,
+} from './artifacts';
 import {
   buildArchiveTargetPath,
   resolveArchiveBasePath,
@@ -24,6 +27,24 @@ describe('artifact non-interactive safety and archive mechanics', () => {
     );
 
     expect(resolved).toBe('.oat/repo/archive/reviews/bar-20260218-121314.md');
+  });
+
+  it('plans archive actions from source targets without double resolution', () => {
+    const actions = planArchiveActions(
+      ['.oat/repo/reviews/bar.md'],
+      new Set<string>(),
+      '20260218-121314',
+    );
+
+    expect(actions).toEqual([
+      {
+        type: 'archive',
+        target: '.oat/repo/archive/reviews/bar.md',
+        reason: 'archive stale artifact from .oat/repo/reviews/bar.md',
+        phase: 'archive',
+        result: 'planned',
+      },
+    ]);
   });
 
   it('requires --all-candidates --yes for non-interactive stale deletion', () => {
