@@ -10,9 +10,11 @@ import { Command } from 'commander';
 import type { CleanupActionRecord } from '../cleanup.types';
 import type { ArtifactCleanupCandidate } from './artifacts.types';
 import {
+  buildArchiveTargetPath,
   filterArtifactCandidates,
   findDuplicateChains,
   findReferenceHits,
+  resolveArchiveBasePath,
   selectLatestFromChain,
 } from './artifacts.utils';
 
@@ -136,6 +138,70 @@ export async function findReferencedArtifactCandidates(
 ): Promise<Set<string>> {
   const contents = await collectReferenceContents(repoRoot);
   return findReferenceHits(candidates, contents);
+}
+
+export interface NonInteractiveDeleteOptions {
+  allCandidates: boolean;
+  yes: boolean;
+}
+
+export function planNonInteractiveArtifactActions(
+  candidates: ArtifactCleanupCandidate[],
+  options: NonInteractiveDeleteOptions,
+): CleanupActionRecord[] {
+  if (!options.allCandidates || !options.yes) {
+    return candidates.map((candidate) => ({
+      type: 'skip',
+      target: candidate.target,
+      reason:
+        'non-interactive stale deletion skipped; pass --all-candidates --yes to enable deletion',
+      phase: 'safety-gates',
+      result: 'skipped',
+    }));
+  }
+
+  return candidates.map((candidate) => {
+    if (candidate.referenced) {
+      return {
+        type: 'block',
+        target: candidate.target,
+        reason:
+          'candidate is referenced and blocked from non-interactive deletion',
+        phase: 'safety-gates',
+        result: 'blocked',
+      } satisfies CleanupActionRecord;
+    }
+
+    return {
+      type: 'delete',
+      target: candidate.target,
+      reason:
+        'non-interactive stale deletion approved (--all-candidates --yes)',
+      phase: 'safety-gates',
+      result: 'planned',
+    } satisfies CleanupActionRecord;
+  });
+}
+
+export function planArchiveActions(
+  targets: string[],
+  existingTargets: Set<string>,
+  timestamp: string,
+): CleanupActionRecord[] {
+  return targets.map((target) => {
+    const archiveTarget = buildArchiveTargetPath(
+      resolveArchiveBasePath(target),
+      existingTargets,
+      timestamp,
+    );
+    return {
+      type: 'archive',
+      target: archiveTarget,
+      reason: `archive stale artifact from ${target}`,
+      phase: 'archive',
+      result: 'planned',
+    } satisfies CleanupActionRecord;
+  });
 }
 
 export interface InteractiveTriageResult {

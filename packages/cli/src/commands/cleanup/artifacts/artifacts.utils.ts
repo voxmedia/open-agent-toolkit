@@ -93,3 +93,41 @@ export function findReferenceHits(
 
   return hits;
 }
+
+export function resolveArchiveBasePath(sourcePath: string): string {
+  if (sourcePath.startsWith('.oat/repo/reference/external-plans/')) {
+    return sourcePath.replace(
+      '.oat/repo/reference/external-plans/',
+      '.oat/repo/archive/reference/external-plans/',
+    );
+  }
+
+  if (sourcePath.startsWith('.oat/repo/reviews/')) {
+    return sourcePath.replace(
+      '.oat/repo/reviews/',
+      '.oat/repo/archive/reviews/',
+    );
+  }
+
+  return sourcePath;
+}
+
+export function buildArchiveTargetPath(
+  sourcePath: string,
+  existingTargets: Set<string>,
+  timestamp: string,
+): string {
+  const basePath = resolveArchiveBasePath(sourcePath);
+  if (!existingTargets.has(basePath)) {
+    return basePath;
+  }
+
+  const dotIndex = basePath.lastIndexOf('.');
+  if (dotIndex <= basePath.lastIndexOf('/')) {
+    return `${basePath}-${timestamp}`;
+  }
+
+  const stem = basePath.slice(0, dotIndex);
+  const extension = basePath.slice(dotIndex);
+  return `${stem}-${timestamp}${extension}`;
+}
