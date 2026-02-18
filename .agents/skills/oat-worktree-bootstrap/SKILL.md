@@ -76,15 +76,20 @@ If `.oat/active-project` does not exist:
 
 ### Step 1: Resolve Worktree Root
 
-Resolve root using this precedence:
+Resolve root using this strict precedence (stop at the **first match**):
 
-1. Explicit `--path <root>`
-2. `OAT_WORKTREES_ROOT`
-3. `.oat/config.json` -> `worktrees.root`
-4. Existing roots in repository (`.worktrees`, `worktrees`, `../<repo>-worktrees`)
-5. Fallback default: `../<repo>-worktrees`
+1. Explicit `--path <root>` (CLI flag — highest priority)
+2. `OAT_WORKTREES_ROOT` (environment variable)
+3. `.oat/config.json` -> `worktrees.root` (persisted project config)
+4. First existing directory in this order (check each, use the first that exists):
+   a. `${REPO_ROOT}/.worktrees`
+   b. `${REPO_ROOT}/worktrees`
+   c. `../${REPO_NAME}-worktrees`
+5. Fallback default (nothing matched above): `../${REPO_NAME}-worktrees`
 
-For repo-relative values, resolve from `REPO_ROOT`.
+**IMPORTANT:** Precedence level 4 is an ordered list, not a set. Check `.worktrees` first. If it exists, use it — do NOT continue scanning for `../<repo>-worktrees` even if that also exists. Only fall through to the next candidate if the current one does not exist.
+
+For repo-relative values (levels 3–4a–4b), resolve from `REPO_ROOT`.
 Treat `.oat/config.json` as phase-A non-sync settings ownership (do not mix with `.oat/sync/config.json`).
 
 If the resolved root is project-local (`.worktrees` or `worktrees`), verify it is ignored by git before creating a new worktree.
