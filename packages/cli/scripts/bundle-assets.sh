@@ -49,8 +49,9 @@ for template in state.md discovery.md spec.md design.md plan.md implementation.m
 done
 cp -R "${REPO_ROOT}/.oat/templates/ideas" "${ASSETS}/templates/"
 
-if [ -d "${REPO_ROOT}/.oat/scripts" ]; then
-  for script in "${REPO_ROOT}"/.oat/scripts/*; do
-    [ -f "${script}" ] && cp "${script}" "${ASSETS}/scripts/"
-  done
-fi
+for script in generate-oat-state.sh generate-thin-index.sh; do
+  SOURCE_SCRIPT="${REPO_ROOT}/.oat/scripts/${script}"
+  if [ -f "${SOURCE_SCRIPT}" ]; then
+    cp "${SOURCE_SCRIPT}" "${ASSETS}/scripts/"
+  fi
+done
