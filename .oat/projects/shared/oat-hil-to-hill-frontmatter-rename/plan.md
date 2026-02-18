@@ -284,7 +284,7 @@ git commit -m "fix(p03-t01): fix remaining old-key references found during verif
 | p01 | code | pending | - | - |
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
-| final | code | passed | 2026-02-18 | reviews/final-review-2026-02-18.md |
+| final | code | received | 2026-02-18 | reviews/final-review-2026-02-18-v2.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
