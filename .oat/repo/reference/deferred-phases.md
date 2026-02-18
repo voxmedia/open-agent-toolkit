@@ -20,7 +20,7 @@ Dogfood v1 baseline is:
 - Shared plan contract: `oat-project-plan-writing`
 - Review + PR loop: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-pr-progress`, `oat-project-pr-final`
 - Ad-hoc review: `oat-review-provide` (non-project scopes)
-- Repo State Dashboard: `.oat/state.md` generated via `.oat/scripts/generate-oat-state.sh` (gitignored)
+- Repo State Dashboard: `.oat/state.md` generated via `oat state refresh` CLI command (gitignored)
 - Provider interop CLI foundation:
   - `oat init`, `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`, `oat doctor`
   - Config-aware provider activation via `.oat/sync/config.json`

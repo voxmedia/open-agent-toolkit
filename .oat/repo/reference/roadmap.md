@@ -47,7 +47,7 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - Ad-hoc review (no project state required): `oat-review-provide`
   - PR: `oat-project-pr-progress`, `oat-project-pr-final`
 - Repo state dashboard:
-  - `.oat/scripts/generate-oat-state.sh` generates `.oat/state.md` (gitignored) as a "single glance" dashboard
+  - `oat state refresh` CLI command generates `.oat/state.md` (gitignored) as a "single glance" dashboard
 - Provider interop CLI:
   - Commands: `oat init`, `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`, `oat doctor`
   - Sync state: `.oat/sync/manifest.json` + `.oat/sync/config.json`
@@ -134,7 +134,7 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 
 **Status:** Completed (polish remaining)
 - Done: `.oat/projects-root` + `.oat/active-project` pointer + skills resolve via it
-- Done: generated Repo State Dashboard (`.oat/state.md`) via `.oat/scripts/generate-oat-state.sh`
+- Done: generated Repo State Dashboard (`.oat/state.md`) via `oat state refresh` CLI command
 - Remaining: tighten the "first-class" contract (who regenerates it, what fields it includes, and how it stays in sync with skills)
 
 **When to do it:**

@@ -18,7 +18,6 @@ When OAT implementation changes (new skills/templates/scripts, changed behavior,
 - After adding/modifying an OAT skill under `.agents/skills/`
 - After changing skill frontmatter metadata (e.g., `user-invocable`, `disable-model-invocation`, `allowed-tools`)
 - After changing templates under `.oat/templates/`
-- After changing scripts under `.oat/scripts/`
 - After changing canonical repo reference doc locations under `.oat/repo/reference/`
 - After shifting roadmap status (e.g., “pending” -> “implemented”)
 
