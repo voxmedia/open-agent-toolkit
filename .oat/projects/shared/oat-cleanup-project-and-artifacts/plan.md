@@ -696,7 +696,7 @@ git commit -m "test(p04-t08): cover planArchiveActions composition"
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
-| final | code | fixes_completed | 2026-02-18 | reviews/final-review-2026-02-17.md |
+| final | code | received | 2026-02-18 | reviews/final-review-2026-02-18.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
