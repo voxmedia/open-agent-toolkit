@@ -32,6 +32,7 @@ export interface CleanupActionRecord {
 }
 
 export interface CleanupJsonPayload {
+  // Stable output contract for cleanup subcommands.
   status: CleanupStatus;
   mode: CleanupMode;
   summary: CleanupSummary;

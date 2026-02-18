@@ -205,4 +205,82 @@ describe('cleanup project drift scanning', () => {
     expect(stateContent).toContain('oat_lifecycle: complete');
     expect(refreshCalls).toBe(1);
   });
+
+  it('returns stable dry-run JSON payload contract', async () => {
+    const root = await createRepoRoot();
+    tempDirs.push(root);
+    await writeFile(
+      join(root, '.oat', 'active-project'),
+      '.oat/projects/shared/missing\n',
+      'utf8',
+    );
+    const projectDir = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(join(projectDir, 'plan.md'), '# plan\n', 'utf8');
+
+    const payload = await scanCleanupProjectDrift({ repoRoot: root });
+
+    expect(payload.status).toBe('drift');
+    expect(payload.mode).toBe('dry-run');
+    expect(payload.summary).toEqual({
+      scanned: 1,
+      issuesFound: 2,
+      planned: 2,
+      applied: 0,
+      skipped: 0,
+      blocked: 0,
+    });
+    expect(payload.actions).toHaveLength(2);
+    for (const action of payload.actions) {
+      expect(action).toEqual({
+        type: expect.any(String),
+        target: expect.any(String),
+        reason: expect.any(String),
+        phase: expect.any(String),
+        result: expect.any(String),
+      });
+    }
+  });
+
+  it('returns stable apply JSON payload contract', async () => {
+    const root = await createRepoRoot();
+    tempDirs.push(root);
+    await mkdir(join(root, '.oat', 'templates'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'templates', 'state.md'),
+      ['---', 'oat_template: true', '---', '', '# {Project Name}'].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.oat', 'active-project'),
+      '.oat/projects/shared/missing\n',
+      'utf8',
+    );
+    const projectDir = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(join(projectDir, 'plan.md'), '# plan\n', 'utf8');
+
+    const payload = await runCleanupProject(
+      { repoRoot: root, apply: true },
+      { refreshDashboard: async () => undefined },
+    );
+
+    expect(payload.status).toBe('ok');
+    expect(payload.mode).toBe('apply');
+    expect(payload.summary).toEqual({
+      scanned: 1,
+      issuesFound: 2,
+      planned: 0,
+      applied: 3,
+      skipped: 0,
+      blocked: 0,
+    });
+    expect(payload.actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'clear', result: 'applied' }),
+        expect.objectContaining({ type: 'create', result: 'applied' }),
+        expect.objectContaining({ type: 'regenerate', result: 'applied' }),
+      ]),
+    );
+  });
 });
