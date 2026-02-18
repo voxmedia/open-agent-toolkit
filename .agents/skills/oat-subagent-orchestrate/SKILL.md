@@ -425,6 +425,15 @@ Autonomous review verdicts are logged in `implementation.md` `## Orchestration R
 - **Always** use deterministic merge ordering (by task ID).
 - **Always** run integration verification after each merge.
 
+## Usage Patterns
+
+See `examples/` for detailed walkthroughs with plan excerpts and expected artifact output:
+
+| Pattern | File | Description |
+|---------|------|-------------|
+| Simple Parallel | `examples/pattern-parallel-phases.md` | Two independent phases run in parallel and merge cleanly |
+| HiL Checkpoint | `examples/pattern-hil-checkpoint.md` | Parallel phases run before a checkpoint, user reviews, then continues |
+
 ## Success Criteria
 
 - All eligible units dispatched and executed in isolated worktrees.
