@@ -1,12 +1,13 @@
-import { readdir, readFile, stat } from 'node:fs/promises';
-import { isAbsolute, join, relative } from 'node:path';
+import { readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
-import { fileExists } from '@fs/io';
+import { generateStateDashboard } from '@commands/state/generate';
+import { ensureDir, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 import type { CleanupActionRecord, CleanupJsonPayload } from '../cleanup.types';
@@ -15,10 +16,42 @@ import {
   createProjectCleanupScanResult,
   projectNeedsLifecycleComplete,
   projectNeedsStateFile,
+  renderProjectStateTemplate,
+  upsertLifecycleCompleteFrontmatter,
 } from './project.utils';
 
-export interface CleanupProjectScanOptions {
+export interface CleanupProjectRunOptions {
   repoRoot: string;
+  apply?: boolean;
+  today?: string;
+}
+
+interface CleanupProjectCommandDependencies {
+  buildCommandContext: (options: GlobalOptions) => CommandContext;
+  resolveProjectRoot: (cwd: string) => Promise<string>;
+  runCleanupProject: (
+    options: CleanupProjectRunOptions,
+  ) => Promise<CleanupJsonPayload>;
+}
+
+interface CleanupProjectRunDependencies {
+  refreshDashboard: (repoRoot: string) => Promise<void>;
+}
+
+function defaultRunDependencies(): CleanupProjectRunDependencies {
+  return {
+    refreshDashboard: async (repoRoot) => {
+      await generateStateDashboard({ repoRoot });
+    },
+  };
+}
+
+function defaultCommandDependencies(): CleanupProjectCommandDependencies {
+  return {
+    buildCommandContext,
+    resolveProjectRoot,
+    runCleanupProject,
+  };
 }
 
 function toRepoRelativePath(repoRoot: string, targetPath: string): string {
@@ -77,6 +110,7 @@ async function planActiveProjectPointerCleanup(
   } catch {
     pointerExists = false;
   }
+
   const pointerStateExists = await fileExists(
     join(resolvedPointer, 'state.md'),
   );
@@ -138,29 +172,150 @@ async function planProjectDirectoryCleanup(
   return actions;
 }
 
-export async function scanCleanupProjectDrift({
-  repoRoot,
-}: CleanupProjectScanOptions): Promise<CleanupJsonPayload> {
+async function collectPlannedActions(repoRoot: string): Promise<{
+  scanned: number;
+  actions: CleanupActionRecord[];
+}> {
   const projectDirectories = await discoverProjectDirectories(repoRoot);
   const pointerActions = await planActiveProjectPointerCleanup(repoRoot);
-
   const nestedActions = await Promise.all(
     projectDirectories.map((projectDirectory) =>
       planProjectDirectoryCleanup(repoRoot, projectDirectory),
     ),
   );
-  const actions = [...pointerActions, ...nestedActions.flat()];
-  const scanResult = createProjectCleanupScanResult(
-    projectDirectories.length,
-    [],
-  );
 
+  return {
+    scanned: createProjectCleanupScanResult(projectDirectories.length, [])
+      .scanned,
+    actions: [...pointerActions, ...nestedActions.flat()],
+  };
+}
+
+function fallbackStateTemplate(projectName: string, today: string): string {
+  return [
+    '---',
+    'oat_current_task: null',
+    'oat_last_commit: null',
+    'oat_blockers: []',
+    'oat_phase: discovery',
+    'oat_phase_status: in_progress',
+    'oat_workflow_mode: full',
+    'oat_workflow_origin: native',
+    'oat_generated: false',
+    '---',
+    '',
+    `# Project State: ${projectName}`,
+    '',
+    `**Started:** ${today}`,
+    `**Last Updated:** ${today}`,
+  ].join('\n');
+}
+
+async function loadStateTemplate(
+  repoRoot: string,
+  projectName: string,
+  today: string,
+): Promise<string> {
+  const templatePath = join(repoRoot, '.oat', 'templates', 'state.md');
+  if (!(await fileExists(templatePath))) {
+    return fallbackStateTemplate(projectName, today);
+  }
+
+  const templateContent = await readFile(templatePath, 'utf8');
+  return renderProjectStateTemplate(templateContent, projectName, today);
+}
+
+async function applyCleanupAction(
+  repoRoot: string,
+  action: CleanupActionRecord,
+  today: string,
+): Promise<CleanupActionRecord> {
+  const targetPath = join(repoRoot, action.target);
+
+  if (action.type === 'clear') {
+    await rm(targetPath, { force: true });
+    return { ...action, result: 'applied' };
+  }
+
+  if (action.type === 'create') {
+    const projectName = basename(dirname(targetPath));
+    const renderedState = await loadStateTemplate(repoRoot, projectName, today);
+    await ensureDir(dirname(targetPath));
+    await writeFile(targetPath, renderedState, 'utf8');
+    return { ...action, result: 'applied' };
+  }
+
+  if (action.type === 'update') {
+    const content = await readFile(targetPath, 'utf8');
+    const updatedContent = upsertLifecycleCompleteFrontmatter(content);
+    await writeFile(targetPath, updatedContent, 'utf8');
+    return { ...action, result: 'applied' };
+  }
+
+  return { ...action, result: 'applied' };
+}
+
+export async function scanCleanupProjectDrift({
+  repoRoot,
+}: CleanupProjectRunOptions): Promise<CleanupJsonPayload> {
+  const { scanned, actions } = await collectPlannedActions(repoRoot);
   return createCleanupPayload({
     status: actions.length > 0 ? 'drift' : 'ok',
     apply: false,
-    scanned: scanResult.scanned,
+    scanned,
     issuesFound: actions.length,
     actions,
+  });
+}
+
+export async function runCleanupProject(
+  {
+    repoRoot,
+    apply = false,
+    today = new Date().toISOString().slice(0, 10),
+  }: CleanupProjectRunOptions,
+  overrides: Partial<CleanupProjectRunDependencies> = {},
+): Promise<CleanupJsonPayload> {
+  const dependencies = {
+    ...defaultRunDependencies(),
+    ...overrides,
+  };
+
+  const { scanned, actions: plannedActions } =
+    await collectPlannedActions(repoRoot);
+
+  if (!apply) {
+    return createCleanupPayload({
+      status: plannedActions.length > 0 ? 'drift' : 'ok',
+      apply: false,
+      scanned,
+      issuesFound: plannedActions.length,
+      actions: plannedActions,
+    });
+  }
+
+  const appliedActions: CleanupActionRecord[] = [];
+  for (const action of plannedActions) {
+    appliedActions.push(await applyCleanupAction(repoRoot, action, today));
+  }
+
+  if (appliedActions.length > 0) {
+    await dependencies.refreshDashboard(repoRoot);
+    appliedActions.push({
+      type: 'regenerate',
+      target: '.oat/state.md',
+      reason: 'refresh dashboard after apply mutations',
+      phase: 'project-apply',
+      result: 'applied',
+    });
+  }
+
+  return createCleanupPayload({
+    status: 'ok',
+    apply: true,
+    scanned,
+    issuesFound: plannedActions.length,
+    actions: appliedActions,
   });
 }
 
@@ -168,7 +323,7 @@ function formatCleanupProjectPlan(payload: CleanupJsonPayload): string {
   const lines: string[] = [
     `cleanup project (${payload.mode})`,
     `status: ${payload.status}`,
-    `summary: scanned=${payload.summary.scanned}, issues=${payload.summary.issuesFound}, planned=${payload.summary.planned}`,
+    `summary: scanned=${payload.summary.scanned}, issues=${payload.summary.issuesFound}, planned=${payload.summary.planned}, applied=${payload.summary.applied}`,
   ];
 
   if (payload.actions.length === 0) {
@@ -184,38 +339,26 @@ function formatCleanupProjectPlan(payload: CleanupJsonPayload): string {
   return lines.join('\n');
 }
 
-interface CleanupProjectCommandDependencies {
-  buildCommandContext: (options: GlobalOptions) => CommandContext;
-  resolveProjectRoot: (cwd: string) => Promise<string>;
-  scanCleanupProjectDrift: (
-    options: CleanupProjectScanOptions,
-  ) => Promise<CleanupJsonPayload>;
-}
-
-function defaultDependencies(): CleanupProjectCommandDependencies {
-  return {
-    buildCommandContext,
-    resolveProjectRoot,
-    scanCleanupProjectDrift,
-  };
-}
-
 export function createCleanupProjectCommand(
   overrides: Partial<CleanupProjectCommandDependencies> = {},
 ): Command {
   const dependencies = {
-    ...defaultDependencies(),
+    ...defaultCommandDependencies(),
     ...overrides,
   };
 
   return new Command('project')
     .description('Cleanup project pointers, state, and lifecycle drift')
-    .action(async (_options, command) => {
+    .option('--apply', 'Apply cleanup changes (default is dry-run)')
+    .action(async (options: { apply?: boolean }, command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
       const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-      const payload = await dependencies.scanCleanupProjectDrift({ repoRoot });
+      const payload = await dependencies.runCleanupProject({
+        repoRoot,
+        apply: options.apply ?? false,
+      });
 
       if (context.json) {
         context.logger.json(payload);

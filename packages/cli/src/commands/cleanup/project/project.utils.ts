@@ -48,3 +48,35 @@ export function projectNeedsLifecycleComplete(
     !stateLifecycleIsComplete(stateContent)
   );
 }
+
+export function renderProjectStateTemplate(
+  templateContent: string,
+  projectName: string,
+  today: string,
+): string {
+  return templateContent
+    .replaceAll('{Project Name}', projectName)
+    .replaceAll('YYYY-MM-DD', today)
+    .replaceAll(/\n?oat_template:\s*true\s*\n/gi, '\n')
+    .replaceAll(/\n?oat_template_name:\s*[^\n]*\n/gi, '\n');
+}
+
+export function upsertLifecycleCompleteFrontmatter(content: string): string {
+  const hasFrontmatter = content.startsWith('---\n');
+  if (!hasFrontmatter) {
+    return ['---', 'oat_lifecycle: complete', '---', '', content].join('\n');
+  }
+
+  const blockEnd = content.indexOf('\n---', 4);
+  if (blockEnd === -1) {
+    return ['---', 'oat_lifecycle: complete', '---', '', content].join('\n');
+  }
+
+  const frontmatter = content.slice(4, blockEnd);
+  const rest = content.slice(blockEnd + 4);
+  const updatedFrontmatter = /^oat_lifecycle:\s*.+$/m.test(frontmatter)
+    ? frontmatter.replace(/^oat_lifecycle:\s*.+$/m, 'oat_lifecycle: complete')
+    : `${frontmatter}\noat_lifecycle: complete`;
+
+  return `---\n${updatedFrontmatter}\n---${rest}`;
+}
