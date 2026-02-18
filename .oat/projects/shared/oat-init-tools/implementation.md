@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-18
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: true
 oat_template: false
 ---
@@ -32,9 +32,9 @@ oat_template: false
 | Phase 4: Utility + Tools Group + Wiring | completed | 3 | 3/3 |
 | Phase 5: Idea Skill Updates | completed | 2 | 2/2 |
 | Phase 6: E2E Verification | completed | 1 | 1/1 |
-| Phase 7: Review Fixes (Final) | in_progress | 8 | 0/8 |
+| Phase 7: Review Fixes (Final) | completed | 8 | 8/8 |
 
-**Total:** 14/22 tasks completed
+**Total:** 22/22 tasks completed
 
 ---
 
@@ -538,6 +538,218 @@ oat_template: false
 
 ---
 
+## Phase 7: Review Fixes (Final)
+
+**Status:** completed
+**Started:** 2026-02-18
+
+### Task p07-t01: (review) Add utility --force interactive confirmation
+
+**Status:** completed
+**Commit:** 04a55d1
+
+**Outcome (required):**
+- Added `confirmAction` to utility command dependencies and default wiring.
+- Added interactive `--force` confirmation gate before overwrite behavior in utility install flow.
+- Preserved cancellation behavior with a non-error exit when overwrite is declined.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/utility/index.ts` - added force-confirm prompt logic and dependency wiring.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/utility/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+- Matched the same confirmation contract already used by ideas and workflows commands.
+
+---
+
+### Task p07-t02: (review) Add utility command --force confirmation tests
+
+**Status:** completed
+**Commit:** 310df80
+
+**Outcome (required):**
+- Added explicit tests for interactive `--force` confirmation in utility command handling.
+- Covered both decline and accept paths and verified installer invocation is gated correctly.
+- Extended harness with deterministic confirmation responses.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/utility/index.test.ts` - added force confirmation flow tests and harness support.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/utility/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+- Added response queues to harness to keep confirmation tests deterministic and side-effect free.
+
+---
+
+### Task p07-t03: (review) Extract shared installer copy helpers
+
+**Status:** completed
+**Commit:** 8b031e9
+
+**Outcome (required):**
+- Created shared helper module for copy-with-status and path existence checks.
+- Reused shared helpers in ideas, workflows, and utility installer implementations.
+- Removed duplicated helper logic across installer modules while preserving behavior.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/shared/copy-helpers.ts` - shared helper implementations.
+- `packages/cli/src/commands/init/tools/ideas/install-ideas.ts` - switched to shared helpers.
+- `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` - switched to shared helpers.
+- `packages/cli/src/commands/init/tools/utility/install-utility.ts` - switched to shared helpers.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/{ideas,workflows,utility}/`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept helper behavior identical to previous per-module logic to avoid behavioral regressions.
+
+---
+
+### Task p07-t04: (review) Standardize copy helper naming in installer modules
+
+**Status:** completed
+**Commit:** 9f74cb6
+
+**Outcome (required):**
+- Standardized call-site naming around shared helper results (`copyStatus`) in ideas/workflows installers.
+- Removed naming drift between modules for identical copy status handling blocks.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/ideas/install-ideas.ts` - standardized local copy status variable names.
+- `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` - standardized local copy status variable names.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/{ideas,workflows}/`
+- Result: pass
+
+**Notes / Decisions:**
+- Kept this refactor minimal and local to naming consistency only.
+
+---
+
+### Task p07-t05: (review) Re-export copySingleFile from fs barrel
+
+**Status:** completed
+**Commit:** 3a5c505
+
+**Outcome (required):**
+- Added `copySingleFile` to the `@fs` barrel exports for consistent API surface.
+
+**Files changed:**
+- `packages/cli/src/fs/index.ts` - added missing `copySingleFile` re-export.
+
+**Verification:**
+- Run: `pnpm type-check && pnpm --filter @oat/cli test src/fs/io.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+- No downstream call-site changes were needed because existing direct imports remained valid.
+
+---
+
+### Task p07-t06: (review) Add utility installer force-overwrite tests
+
+**Status:** completed
+**Commit:** 7e8be23
+
+**Outcome (required):**
+- Added overwrite coverage for utility installer when `force=true`.
+- Verified existing files are overwritten and result classification reports `updatedSkills`.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/utility/install-utility.test.ts` - added force-overwrite integration test.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/utility/install-utility.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+- Reused seeded temp assets and modified installed content to assert true overwrite semantics.
+
+---
+
+### Task p07-t07: (review) Add cancellation test for bare init tools flow
+
+**Status:** completed
+**Commit:** bc8034a
+
+**Outcome (required):**
+- Added explicit cancellation-path test for bare `oat init tools` interactive flow.
+- Fixed harness fallback behavior so explicit `null` prompt responses are preserved for cancellation testing.
+
+**Files changed:**
+- `packages/cli/src/commands/init/tools/index.test.ts` - added cancellation test and corrected harness null handling.
+
+**Verification:**
+- Run: `pnpm --filter @oat/cli test src/commands/init/tools/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+- Harness fix was necessary to test cancellation accurately; previous `??` fallback masked `null` responses.
+
+---
+
+### Task p07-t08: (review) Restrict bundled optional scripts to explicit allowlist
+
+**Status:** completed
+**Commit:** b3d00c1
+
+**Outcome (required):**
+- Replaced wildcard optional script copy with explicit allowlist for `generate-oat-state.sh` and `generate-thin-index.sh`.
+- Ensured missing optional scripts remain non-fatal under `set -euo pipefail` by using explicit `if` guards.
+
+**Files changed:**
+- `packages/cli/scripts/bundle-assets.sh` - explicit optional script allowlist copy behavior.
+
+**Verification:**
+- Run: `bash packages/cli/scripts/bundle-assets.sh && ls -la packages/cli/assets/scripts/`
+- Result: pass (scripts directory present; only allowlisted files are copied when available)
+
+**Notes / Decisions:**
+- Converted conditional copy to `if` blocks to avoid non-zero exit status from trailing false `[ -f ... ]` checks.
+
+### Phase Summary
+
+**Outcome (behavior-level):**
+- Final review findings are fully addressed; review-fix implementation is complete and ready for final re-review.
+
+**Key files touched:**
+- `packages/cli/src/commands/init/tools/utility/index.ts`
+- `packages/cli/src/commands/init/tools/utility/index.test.ts`
+- `packages/cli/src/commands/init/tools/shared/copy-helpers.ts`
+- `packages/cli/src/commands/init/tools/ideas/install-ideas.ts`
+- `packages/cli/src/commands/init/tools/workflows/install-workflows.ts`
+- `packages/cli/src/commands/init/tools/utility/install-utility.ts`
+- `packages/cli/src/fs/index.ts`
+- `packages/cli/src/commands/init/tools/utility/install-utility.test.ts`
+- `packages/cli/src/commands/init/tools/index.test.ts`
+- `packages/cli/scripts/bundle-assets.sh`
+
+**Verification run:**
+- `pnpm --filter @oat/cli test src/commands/init/tools/utility/index.test.ts`
+- `pnpm --filter @oat/cli test src/commands/init/tools/{ideas,workflows,utility}/`
+- `pnpm --filter @oat/cli test src/commands/init/tools/{ideas,workflows}/`
+- `pnpm type-check && pnpm --filter @oat/cli test src/fs/io.test.ts`
+- `pnpm --filter @oat/cli test src/commands/init/tools/utility/install-utility.test.ts`
+- `pnpm --filter @oat/cli test src/commands/init/tools/index.test.ts`
+- `bash packages/cli/scripts/bundle-assets.sh && ls -la packages/cli/assets/scripts/`
+- `pnpm test`
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm build`
+
+**Notable decisions/deviations:**
+- Kept lint warnings unchanged because they are pre-existing workspace warnings outside this review-fix scope.
+
+---
+
 ## Review Received: final
 
 **Date:** 2026-02-18
@@ -566,11 +778,13 @@ oat_template: false
 **Minor Findings Disposition (final scope):**
 - User decision on 2026-02-18: convert all 5 minor findings into review-fix tasks (`p07-t04` through `p07-t08`).
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill starting from `p07-t01`.
+**Execution status:** All review-fix tasks (`p07-t01` through `p07-t08`) completed on 2026-02-18.
 
-After the fix tasks are complete:
-- Update the review row status to `fixes_completed`
-- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+**Next:** Request final re-review via `oat-project-review-provide code final`, then process via `oat-project-review-receive`.
+
+After re-review:
+- If no Critical/Important findings remain, update review status to `passed`.
+- If new findings are returned, process them again via `oat-project-review-receive`.
 
 ---
 
@@ -594,14 +808,14 @@ After the fix tasks are complete:
 - [x] p05-t01: Add level-relative template paths to idea skills - completed (`e2fb96f`)
 - [x] p05-t02: Add dual-level prompt chain to idea skills - completed (`222e95e`)
 - [x] p06-t01: Run full test suite and manual verification - completed (`d69fe63`)
-- [ ] p07-t01: (review) Add utility --force interactive confirmation - pending
-- [ ] p07-t02: (review) Add utility command --force confirmation tests - pending
-- [ ] p07-t03: (review) Extract shared installer copy helpers - pending
-- [ ] p07-t04: (review) Standardize copy helper naming in installer modules - pending
-- [ ] p07-t05: (review) Re-export copySingleFile from fs barrel - pending
-- [ ] p07-t06: (review) Add utility installer force-overwrite tests - pending
-- [ ] p07-t07: (review) Add cancellation test for bare init tools flow - pending
-- [ ] p07-t08: (review) Restrict bundled optional scripts to explicit allowlist - pending
+- [x] p07-t01: (review) Add utility --force interactive confirmation - completed (`04a55d1`)
+- [x] p07-t02: (review) Add utility command --force confirmation tests - completed (`310df80`)
+- [x] p07-t03: (review) Extract shared installer copy helpers - completed (`8b031e9`)
+- [x] p07-t04: (review) Standardize copy helper naming in installer modules - completed (`9f74cb6`)
+- [x] p07-t05: (review) Re-export copySingleFile from fs barrel - completed (`3a5c505`)
+- [x] p07-t06: (review) Add utility installer force-overwrite tests - completed (`7e8be23`)
+- [x] p07-t07: (review) Add cancellation test for bare init tools flow - completed (`bc8034a`)
+- [x] p07-t08: (review) Restrict bundled optional scripts to explicit allowlist - completed (`b3d00c1`)
 
 **What changed (high level):**
 - Project created and plan imported
@@ -610,8 +824,8 @@ After the fix tasks are complete:
 - Plan imported from Claude Code plan mode
 
 **Follow-ups / TODO:**
-- Execute Phase 7 review-fix tasks via `oat-project-implement`
-- Re-run final code review and process with `oat-project-review-receive`
+- Re-run final code review via `oat-project-review-provide code final`
+- Process re-review outcome via `oat-project-review-receive`
 
 **Blockers:**
 - None
@@ -640,6 +854,7 @@ Track test execution during implementation.
 | 4 | - | - | - | - |
 | 5 | - | - | - | - |
 | 6 | build/help/smoke/test/type-check/lint | Yes | 0 | N/A |
+| 7 | targeted tool-pack tests + full test/lint/type-check/build | Yes | 0 | N/A |
 
 ## Final Summary (for PR/docs)
 
@@ -647,12 +862,14 @@ Track test execution during implementation.
 - `oat init tools` now installs OAT tool packs (`ideas`, `workflows`, `utility`) with scope-aware behavior and interactive selection support.
 - CLI build now bundles runtime assets (skills/agents/templates/scripts) into `packages/cli/assets/` for distribution-time installs.
 - Idea skills now resolve templates by level (`project` vs `user`) and prompt explicitly when both idea roots exist.
+- Final review fixes are implemented: utility `--force` interactive confirmation, shared installer copy helpers, strengthened test coverage, and explicit script bundling allowlist.
 
 **Behavioral changes (user-facing):**
 - `oat init` help now advertises tool packs and includes `tools` as a subcommand.
 - `oat init tools ideas` installs 4 idea skills plus `.oat/ideas` and idea template files.
 - `oat init tools workflows` installs workflow skills/agents/templates and initializes `.oat/projects-root` when needed.
 - `oat init tools utility` installs utility skills with optional interactive selection.
+- `oat init tools utility --force` now asks for confirmation in interactive mode before overwriting files.
 - Bare `oat init tools` can install selected packs interactively or install all packs in non-interactive mode.
 
 **Key files / modules:**
@@ -661,6 +878,7 @@ Track test execution during implementation.
 - `packages/cli/src/commands/init/tools/ideas/*`
 - `packages/cli/src/commands/init/tools/workflows/*`
 - `packages/cli/src/commands/init/tools/utility/*`
+- `packages/cli/src/commands/init/tools/shared/copy-helpers.ts`
 - `packages/cli/src/commands/init/tools/index.ts`
 - `packages/cli/src/commands/init/index.ts`
 - `.agents/skills/oat-idea-*/SKILL.md`
@@ -672,6 +890,7 @@ Track test execution during implementation.
 - Full CLI test suite (`pnpm --filter @oat/cli test`)
 - Workspace type-check (`pnpm type-check`)
 - Workspace lint (`pnpm lint`, warnings only, no errors)
+- Post-review-fix targeted suites for utility/ideas/workflows/tool-group paths plus full workspace verification (`pnpm test && pnpm lint && pnpm type-check && pnpm build`)
 
 **Design deltas (if any):**
 - Runtime smoke verification used direct tsx CLI invocation instead of `pnpm run cli -- ...` due argument-forwarding differences in this shell environment.

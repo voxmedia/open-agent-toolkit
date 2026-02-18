@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t01
-oat_last_commit: d69fe63
+oat_current_task: null
+oat_last_commit: b3d00c1
 oat_blockers: []
 oat_hil_checkpoints: []
 oat_hil_completed: []
@@ -15,13 +15,13 @@ oat_template: false
 
 # Project State: oat-init-tools
 
-**Status:** Implementation In Progress (Review Fix Tasks)
+**Status:** Implementation Tasks Complete (Awaiting Final Re-Review)
 **Started:** 2026-02-17
 **Last Updated:** 2026-02-18
 
 ## Current Phase
 
-Implementation — executing review-fix tasks from final review.
+Implementation — review-fix tasks complete; awaiting final re-review.
 
 ## Artifacts
 
@@ -29,7 +29,7 @@ Implementation — executing review-fix tasks from final review.
 - **Spec:** N/A (import mode)
 - **Design:** N/A (import mode)
 - **Plan:** `plan.md` (complete — imported)
-- **Implementation:** `implementation.md` (in progress)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
@@ -52,7 +52,15 @@ Implementation — executing review-fix tasks from final review.
 - ✓ p05-t02 completed (`feat(p05-t02): add dual-level prompt chain to idea skills`)
 - ✓ p06-t01 completed (`test(p06-t01): update help snapshots for init tools`)
 - ✓ Final review received (`reviews/final-review-2026-02-17.md`) and converted to fix tasks
-- ⧗ Working on p07-t01 review-fix tasks
+- ✓ p07-t01 completed (`fix(p07-t01): add utility force confirmation prompt`)
+- ✓ p07-t02 completed (`test(p07-t02): cover utility force confirmation flow`)
+- ✓ p07-t03 completed (`refactor(p07-t03): extract shared installer copy helpers`)
+- ✓ p07-t04 completed (`refactor(p07-t04): standardize installer helper naming`)
+- ✓ p07-t05 completed (`fix(p07-t05): re-export copySingleFile from fs barrel`)
+- ✓ p07-t06 completed (`test(p07-t06): add force-overwrite coverage for utility installer`)
+- ✓ p07-t07 completed (`test(p07-t07): cover cancellation path for init tools`)
+- ✓ p07-t08 completed (`fix(p07-t08): restrict bundled optional scripts to allowlist`)
+- ⧗ Awaiting final re-review
 
 ## Blockers
 
@@ -60,4 +68,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 7 review-fix tasks, then re-run final review
+Run final re-review (`oat-project-review-provide code final`) and process with `oat-project-review-receive`
