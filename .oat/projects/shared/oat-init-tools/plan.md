@@ -944,6 +944,37 @@ git commit -m "fix(p07-t08): restrict bundled optional scripts to allowlist"
 
 ---
 
+### Task p07-t09: (review) Add dedicated tests for shared copy helpers
+
+**Files:**
+- Create: `packages/cli/src/commands/init/tools/shared/copy-helpers.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: shared helper module has only transitive coverage and lacks direct unit tests.
+Location: `packages/cli/src/commands/init/tools/shared/copy-helpers.ts`
+
+**Step 2: Implement fix**
+
+Add focused unit tests that directly validate:
+- `pathExists` returns expected values for missing/files/directories
+- `copyDirWithStatus` status transitions (`copied`, `skipped`, `updated`)
+- `copyFileWithStatus` status transitions (`copied`, `skipped`, `updated`)
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test src/commands/init/tools/shared/copy-helpers.test.ts`
+Expected: dedicated helper tests pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/shared/copy-helpers.test.ts
+git commit -m "test(p07-t09): add dedicated coverage for shared copy helpers"
+```
+
+---
+
 ## Reviews
 
 | Scope | Type | Status | Date | Artifact |
@@ -954,7 +985,7 @@ git commit -m "fix(p07-t08): restrict bundled optional scripts to allowlist"
 | p04 | code | pending | - | - |
 | p05 | code | pending | - | - |
 | p06 | code | pending | - | - |
-| final | code | passed | 2026-02-18 | reviews/final-review-2026-02-17-v2.md |
+| final | code | fixes_added | 2026-02-18 | reviews/final-review-2026-02-17-v2.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
@@ -977,11 +1008,11 @@ git commit -m "fix(p07-t08): restrict bundled optional scripts to allowlist"
 - Phase 4: 3 tasks - Utility pack + tools group + init wiring
 - Phase 5: 2 tasks - Idea skill updates (template paths + dual-level prompts)
 - Phase 6: 1 task - End-to-end verification
-- Phase 7: 8 tasks - Final review fixes (important + minor findings)
+- Phase 7: 9 tasks - Final review fixes (important + minor findings)
 
-**Total: 22 tasks**
+**Total: 23 tasks**
 
-Review fixes complete; awaiting final re-review.
+Ready for review-fix implementation and re-review.
 
 ---
 

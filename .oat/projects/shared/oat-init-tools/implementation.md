@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-02-18
-oat_current_task_id: null
+oat_current_task_id: p07-t09
 oat_generated: true
 oat_template: false
 ---
@@ -32,9 +32,9 @@ oat_template: false
 | Phase 4: Utility + Tools Group + Wiring | completed | 3 | 3/3 |
 | Phase 5: Idea Skill Updates | completed | 2 | 2/2 |
 | Phase 6: E2E Verification | completed | 1 | 1/1 |
-| Phase 7: Review Fixes (Final) | completed | 8 | 8/8 |
+| Phase 7: Review Fixes (Final) | in_progress | 9 | 8/9 |
 
-**Total:** 22/22 tasks completed
+**Total:** 22/23 tasks completed
 
 ---
 
@@ -540,7 +540,7 @@ oat_template: false
 
 ## Phase 7: Review Fixes (Final)
 
-**Status:** completed
+**Status:** in_progress
 **Started:** 2026-02-18
 
 ### Task p07-t01: (review) Add utility --force interactive confirmation
@@ -715,10 +715,21 @@ oat_template: false
 **Notes / Decisions:**
 - Converted conditional copy to `if` blocks to avoid non-zero exit status from trailing false `[ -f ... ]` checks.
 
+---
+
+### Task p07-t09: (review) Add dedicated tests for shared copy helpers
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+- Add direct unit tests for `pathExists`, `copyDirWithStatus`, and `copyFileWithStatus` in `shared/copy-helpers.ts`.
+- Validate copied/skipped/updated status transitions with focused temp-dir assertions.
+
 ### Phase Summary
 
 **Outcome (behavior-level):**
-- Final review findings are fully addressed; review-fix implementation is complete and ready for final re-review.
+- Cycle 1 final-review findings are fully addressed; cycle 2 introduced one additional minor follow-up now queued as `p07-t09`.
 
 **Key files touched:**
 - `packages/cli/src/commands/init/tools/utility/index.ts`
@@ -778,13 +789,42 @@ oat_template: false
 **Minor Findings Disposition (final scope):**
 - User decision on 2026-02-18: convert all 5 minor findings into review-fix tasks (`p07-t04` through `p07-t08`).
 
-**Execution status:** All review-fix tasks (`p07-t01` through `p07-t08`) completed on 2026-02-18.
+**Execution status:** Cycle 1 review-fix tasks (`p07-t01` through `p07-t08`) completed on 2026-02-18.
 
 **Next:** Request final re-review via `oat-project-review-provide code final`, then process via `oat-project-review-receive`.
 
 After re-review:
 - If no Critical/Important findings remain, update review status to `passed`.
 - If new findings are returned, process them again via `oat-project-review-receive`.
+
+---
+
+## Review Received: final (cycle 2)
+
+**Date:** 2026-02-18
+**Review artifact:** `reviews/final-review-2026-02-17-v2.md`
+**Review cycle:** 2 of 3
+
+**Findings:**
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1
+
+**New tasks added:**
+- `p07-t09` — (review) Add dedicated tests for shared copy helpers
+
+**Deferred Findings (Medium):**
+- None
+
+**Minor Findings Disposition (final scope):**
+- User decision on 2026-02-18: convert the remaining minor finding to a review-fix task (`p07-t09`).
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill starting from `p07-t09`.
+
+After the fix task is complete:
+- Update the review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
 
 ---
 
@@ -816,6 +856,7 @@ After re-review:
 - [x] p07-t06: (review) Add utility installer force-overwrite tests - completed (`7e8be23`)
 - [x] p07-t07: (review) Add cancellation test for bare init tools flow - completed (`bc8034a`)
 - [x] p07-t08: (review) Restrict bundled optional scripts to explicit allowlist - completed (`b3d00c1`)
+- [ ] p07-t09: (review) Add dedicated tests for shared copy helpers - pending
 
 **What changed (high level):**
 - Project created and plan imported
@@ -824,6 +865,7 @@ After re-review:
 - Plan imported from Claude Code plan mode
 
 **Follow-ups / TODO:**
+- Execute `p07-t09` via `oat-project-implement`
 - Re-run final code review via `oat-project-review-provide code final`
 - Process re-review outcome via `oat-project-review-receive`
 
@@ -862,7 +904,7 @@ Track test execution during implementation.
 - `oat init tools` now installs OAT tool packs (`ideas`, `workflows`, `utility`) with scope-aware behavior and interactive selection support.
 - CLI build now bundles runtime assets (skills/agents/templates/scripts) into `packages/cli/assets/` for distribution-time installs.
 - Idea skills now resolve templates by level (`project` vs `user`) and prompt explicitly when both idea roots exist.
-- Final review fixes are implemented: utility `--force` interactive confirmation, shared installer copy helpers, strengthened test coverage, and explicit script bundling allowlist.
+- Final review cycle 1 fixes are implemented: utility `--force` interactive confirmation, shared installer copy helpers, strengthened test coverage, and explicit script bundling allowlist. A cycle 2 minor follow-up (`p07-t09`) is queued.
 
 **Behavioral changes (user-facing):**
 - `oat init` help now advertises tool packs and includes `tools` as a subcommand.

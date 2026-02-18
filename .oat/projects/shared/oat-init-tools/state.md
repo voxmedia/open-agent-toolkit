@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p07-t09
 oat_last_commit: b3d00c1
 oat_blockers: []
 oat_hil_checkpoints: []
@@ -15,13 +15,13 @@ oat_template: false
 
 # Project State: oat-init-tools
 
-**Status:** Implementation Tasks Complete (Awaiting Final Re-Review)
+**Status:** Implementation In Progress (Review Fix Tasks)
 **Started:** 2026-02-17
 **Last Updated:** 2026-02-18
 
 ## Current Phase
 
-Implementation — review-fix tasks complete; awaiting final re-review.
+Implementation — executing review-fix tasks from final re-review cycle 2.
 
 ## Artifacts
 
@@ -29,7 +29,7 @@ Implementation — review-fix tasks complete; awaiting final re-review.
 - **Spec:** N/A (import mode)
 - **Design:** N/A (import mode)
 - **Plan:** `plan.md` (complete — imported)
-- **Implementation:** `implementation.md` (complete)
+- **Implementation:** `implementation.md` (in progress)
 
 ## Progress
 
@@ -60,7 +60,8 @@ Implementation — review-fix tasks complete; awaiting final re-review.
 - ✓ p07-t06 completed (`test(p07-t06): add force-overwrite coverage for utility installer`)
 - ✓ p07-t07 completed (`test(p07-t07): cover cancellation path for init tools`)
 - ✓ p07-t08 completed (`fix(p07-t08): restrict bundled optional scripts to allowlist`)
-- ⧗ Awaiting final re-review
+- ✓ Final re-review cycle 2 received (`reviews/final-review-2026-02-17-v2.md`)
+- ⧗ Working on p07-t09 review-fix task
 
 ## Blockers
 
@@ -68,4 +69,4 @@ None
 
 ## Next Milestone
 
-Run final re-review (`oat-project-review-provide code final`) and process with `oat-project-review-receive`
+Complete p07-t09, then run final re-review again
