@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-02-17
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hil_phases: []
+oat_plan_hil_phases: ["p04"]
 oat_plan_source: imported
 oat_import_reference: references/imported-plan.md
 oat_import_source_path: .oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md
@@ -27,8 +27,8 @@ oat_generated: false
 
 ## Planning Checklist
 
-- [ ] Confirmed HiL checkpoints with user
-- [ ] Set `oat_plan_hil_phases` in frontmatter
+- [x] Confirmed HiL checkpoints with user
+- [x] Set `oat_plan_hil_phases` in frontmatter
 
 ---
 
@@ -813,6 +813,183 @@ git commit -m "test(p04-t05): validate execution-mode selector persistence and r
 
 ---
 
+### Task p04-t06: (review) Fix integration-fail rollback in reconcile.sh
+
+**Files:**
+- Modify: `.agents/skills/oat-subagent-orchestrate/scripts/reconcile.sh`
+- Modify: `.agents/skills/oat-subagent-orchestrate/tests/test-reconcile.sh`
+
+**Step 1: Understand the issue**
+
+Review finding (Critical): The rollback path after failed integration checks does not actually undo the merge commit. `git revert --no-commit HEAD` needs mainline selection for merge commits, then `git reset HEAD` + `git checkout -- .` discards the revert anyway. Result: output reports `reverted: 1` while failing unit changes remain in HEAD.
+Location: `reconcile.sh:144-146`
+
+**Step 2: Implement fix**
+
+Replace the rollback logic with a hard reset to pre-merge SHA (save before merge attempt). Before each `git merge`, capture `PRE_MERGE_SHA=$(git rev-parse HEAD)`. On integration failure, run `git reset --hard "$PRE_MERGE_SHA"` to cleanly undo the merge.
+
+**Step 3: Add failing-integration test**
+
+Add a test scenario to `test-reconcile.sh` that:
+- Creates a unit branch with changes that cause integration check (pnpm shim) to fail
+- Runs reconcile and asserts that the merged files/commit are absent from HEAD afterward
+- Asserts `reverted: 1` in output AND the tree matches pre-merge state
+
+**Step 4: Verify**
+
+Run: `bash .agents/skills/oat-subagent-orchestrate/tests/test-reconcile.sh`
+Expected: All assertions pass including new rollback test
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-subagent-orchestrate/scripts/reconcile.sh .agents/skills/oat-subagent-orchestrate/tests/test-reconcile.sh
+git commit -m "fix(p04-t06): fix integration-fail rollback to use hard reset"
+```
+
+---
+
+### Task p04-t07: (review) Implement fix-loop retry in review-gate.sh
+
+**Files:**
+- Modify: `.agents/skills/oat-subagent-orchestrate/scripts/review-gate.sh`
+- Modify: `.agents/skills/oat-subagent-orchestrate/tests/test-review-gate.sh`
+
+**Step 1: Understand the issue**
+
+Review finding (Important): review-gate.sh hardcodes `RETRY_COUNT=0` and only emits a hint (`dispatch_fix`) rather than executing re-invocation retries up to the retry limit.
+Location: `review-gate.sh:64, 171-173`
+
+**Step 2: Implement fix**
+
+- Accept `--retry-count <N>` as input (current attempt number, default 0).
+- When checks fail and `retry_count < retry_limit`, output `action: retry` with `next_retry_count: <N+1>` so the orchestrator re-invokes.
+- When `retry_count >= retry_limit`, emit `action: dispatch_fix` (terminal failure).
+- Update the structured output to include `retry_count` and `retry_limit` fields.
+
+**Step 3: Add retry test**
+
+Add test scenarios to `test-review-gate.sh`:
+- Retry under limit: assert `action: retry` and correct `next_retry_count`
+- Retry at limit: assert `action: dispatch_fix`
+
+**Step 4: Verify**
+
+Run: `bash .agents/skills/oat-subagent-orchestrate/tests/test-review-gate.sh`
+Expected: All assertions pass including retry scenarios
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-subagent-orchestrate/scripts/review-gate.sh .agents/skills/oat-subagent-orchestrate/tests/test-review-gate.sh
+git commit -m "fix(p04-t07): implement fix-loop retry logic in review gate"
+```
+
+---
+
+### Task p04-t08: (review) Fix dispatch manifest YAML task list structure
+
+**Files:**
+- Modify: `.agents/skills/oat-subagent-orchestrate/scripts/dispatch.sh`
+- Modify: `.agents/skills/oat-subagent-orchestrate/tests/test-dry-run.sh`
+
+**Step 1: Understand the issue**
+
+Review finding (Important): Each phase unit initializes `tasks: []` (empty inline array) but then appends list entries as if `tasks` were an open sequence. This produces invalid YAML for machine parsing.
+Location: `dispatch.sh:71, 88`
+
+**Step 2: Implement fix**
+
+When a phase has tasks, emit `tasks:` (block sequence header) followed by `  - task_id: "pNN-tNN"` items. When a phase has no tasks (shouldn't happen but for safety), emit `tasks: []`. Remove the conflicting `tasks: []` initialization before the loop.
+
+**Step 3: Add manifest structure test**
+
+Add a test in `test-dry-run.sh` that validates the manifest YAML structure:
+- `tasks:` header appears without `[]` when tasks are present
+- Each task item is indented as a list entry under its phase
+
+**Step 4: Verify**
+
+Run: `bash .agents/skills/oat-subagent-orchestrate/tests/test-dry-run.sh`
+Expected: All assertions pass including new structure checks
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-subagent-orchestrate/scripts/dispatch.sh .agents/skills/oat-subagent-orchestrate/tests/test-dry-run.sh
+git commit -m "fix(p04-t08): fix dispatch manifest YAML task list structure"
+```
+
+---
+
+### Task p04-t09: (review) Fix mode selector portability and anchor fallback
+
+**Files:**
+- Modify: `.agents/skills/oat-execution-mode-select/scripts/select-mode.sh`
+- Modify: `.agents/skills/oat-subagent-orchestrate/tests/test-mode-selector.sh`
+
+**Step 1: Understand the issue**
+
+Review finding (Medium x2):
+1. `sed -i ''` is BSD-only and fails on GNU/Linux.
+2. Mode insertion after `^oat_workflow_origin:` silently no-ops if the anchor line is absent; script still reports `persisted: true`.
+
+Location: `select-mode.sh:76, 79, 95`
+
+**Step 2: Implement fix**
+
+1. Replace `sed -i '' ...` with a portable temp-file approach: write to `"$file.tmp"`, then `mv "$file.tmp" "$file"`.
+2. After insertion, verify the target line exists in the file. If anchor was missing, insert before closing `---` delimiter as fallback. Report `persisted: false (anchor missing)` if fallback was needed.
+
+**Step 3: Add test for missing anchor**
+
+Add a test scenario to `test-mode-selector.sh` with a state.md that lacks `oat_workflow_origin:`. Assert that mode is still persisted (via fallback) and output reflects the fallback.
+
+**Step 4: Verify**
+
+Run: `bash .agents/skills/oat-subagent-orchestrate/tests/test-mode-selector.sh`
+Expected: All assertions pass including new portability/fallback scenarios
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-execution-mode-select/scripts/select-mode.sh .agents/skills/oat-subagent-orchestrate/tests/test-mode-selector.sh
+git commit -m "fix(p04-t09): fix mode selector portability and anchor fallback"
+```
+
+---
+
+### Task p04-t10: (review) Add rollback and manifest parsing test coverage
+
+**Files:**
+- Modify: `.agents/skills/oat-subagent-orchestrate/tests/test-reconcile.sh`
+- Modify: `.agents/skills/oat-subagent-orchestrate/tests/test-dry-run.sh`
+
+**Step 1: Understand the issue**
+
+Review finding (Minor): Tests miss the highest-risk failure modes — rollback integrity and manifest parseability are untested.
+
+Note: p04-t06 adds a failing-integration rollback test and p04-t08 adds manifest structure tests. This task adds any remaining coverage gaps not addressed by those tasks.
+
+**Step 2: Implement fix**
+
+- In `test-reconcile.sh`: add a test that verifies file content is restored after rollback (not just commit count).
+- In `test-dry-run.sh`: add assertions that validate manifest delimiter markers (`--- dispatch_manifest ---` open/close) are present and properly structured.
+
+**Step 3: Verify**
+
+Run: `bash .agents/skills/oat-subagent-orchestrate/tests/test-dry-run.sh && bash .agents/skills/oat-subagent-orchestrate/tests/test-reconcile.sh`
+Expected: All assertions pass
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-subagent-orchestrate/tests/test-reconcile.sh .agents/skills/oat-subagent-orchestrate/tests/test-dry-run.sh
+git commit -m "test(p04-t10): add rollback integrity and manifest parsing assertions"
+```
+
+---
+
 ## Reviews
 
 | Scope | Type | Status | Date | Artifact |
@@ -821,7 +998,7 @@ git commit -m "test(p04-t05): validate execution-mode selector persistence and r
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
-| final | code | received | 2026-02-17 | reviews/final-review-2026-02-17.md |
+| final | code | fixes_completed | 2026-02-17 | reviews/final-review-2026-02-17.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
@@ -841,9 +1018,9 @@ git commit -m "test(p04-t05): validate execution-mode selector persistence and r
 - Phase 1: 4 tasks - Contract design for autonomous bootstrap, orchestration, execution-mode selector, and policy flags
 - Phase 2: 4 tasks - Core flow implementation (bootstrap, dispatch, review gate, merge/reconcile)
 - Phase 3: 4 tasks - OAT integration (logging, state persistence, review compatibility, documentation)
-- Phase 4: 5 tasks - Validation (dry-run, parallel execution, review gate, HiL checkpoints, mode selector)
+- Phase 4: 10 tasks - Validation (dry-run, parallel execution, review gate, HiL checkpoints, mode selector) + review fixes (rollback, retry, manifest, portability, test coverage)
 
-**Total: 17 tasks**
+**Total: 22 tasks**
 
 Ready for code review and merge.
 

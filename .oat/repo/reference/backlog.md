@@ -355,6 +355,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
       - optionally sync/copy generated artifacts back from worktree -> primary branch workspace before/after merge
     - Ensure behavior is deterministic and explicit (dry-run/apply modes), with clear reporting of what was copied/skipped.
     - Keep compatibility with current `.oat/config.json` phase-A direction; avoid introducing new one-off pointer files.
+    - **Note:** `active-project` and `active-idea` propagation is already handled by `oat-worktree-bootstrap` Step 2.5 (quick fix added 2026-02-17). Remaining scope is the configurable policy for artifact directories.
   - Success criteria:
     - Users can choose whether these artifact directories are tracked in git.
     - Worktrees can still receive required context artifacts when gitignored policy is enabled.
