@@ -1,19 +1,7 @@
 import type {
-  ArtifactCleanupCandidate,
-  ArtifactCleanupScanResult,
   ArtifactDuplicateChain,
   ArtifactDuplicateEntry,
 } from './artifacts.types';
-
-export function createArtifactCleanupScanResult(
-  scanned: number,
-  candidates: ArtifactCleanupCandidate[],
-): ArtifactCleanupScanResult {
-  return {
-    scanned,
-    candidates,
-  };
-}
 
 interface ParsedArtifactVersion {
   chainKey: string;

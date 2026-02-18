@@ -14,7 +14,6 @@ import { Command } from 'commander';
 import type { CleanupActionRecord, CleanupJsonPayload } from '../cleanup.types';
 import { createCleanupPayload, toRepoRelativePath } from '../cleanup.utils';
 import {
-  createProjectCleanupScanResult,
   projectNeedsLifecycleComplete,
   projectNeedsStateFile,
   renderProjectStateTemplate,
@@ -185,8 +184,7 @@ async function collectPlannedActions(repoRoot: string): Promise<{
   );
 
   return {
-    scanned: createProjectCleanupScanResult(projectDirectories.length, [])
-      .scanned,
+    scanned: projectDirectories.length,
     actions: [...pointerActions, ...nestedActions.flat()],
   };
 }
