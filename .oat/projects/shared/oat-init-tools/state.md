@@ -1,12 +1,12 @@
 ---
-oat_current_task: p07-t09
-oat_last_commit: b3d00c1
+oat_current_task: null
+oat_last_commit: ee33d3f
 oat_blockers: []
 oat_hil_checkpoints: []
 oat_hil_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_workflow_mode: import
 oat_workflow_origin: imported
 oat_generated: true
@@ -15,13 +15,13 @@ oat_template: false
 
 # Project State: oat-init-tools
 
-**Status:** Implementation In Progress (Review Fix Tasks)
+**Status:** Implementation Complete
 **Started:** 2026-02-17
 **Last Updated:** 2026-02-18
 
 ## Current Phase
 
-Implementation — executing review-fix tasks from final re-review cycle 2.
+Implementation — completed, including cycle 2 minor follow-up.
 
 ## Artifacts
 
@@ -29,7 +29,7 @@ Implementation — executing review-fix tasks from final re-review cycle 2.
 - **Spec:** N/A (import mode)
 - **Design:** N/A (import mode)
 - **Plan:** `plan.md` (complete — imported)
-- **Implementation:** `implementation.md` (in progress)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
@@ -61,7 +61,8 @@ Implementation — executing review-fix tasks from final re-review cycle 2.
 - ✓ p07-t07 completed (`test(p07-t07): cover cancellation path for init tools`)
 - ✓ p07-t08 completed (`fix(p07-t08): restrict bundled optional scripts to allowlist`)
 - ✓ Final re-review cycle 2 received (`reviews/final-review-2026-02-17-v2.md`)
-- ⧗ Working on p07-t09 review-fix task
+- ✓ p07-t09 completed (`test(p07-t09): add dedicated coverage for shared copy helpers`)
+- ✓ Final review marked passed (user-reviewed minor follow-up)
 
 ## Blockers
 
@@ -69,4 +70,4 @@ None
 
 ## Next Milestone
 
-Complete p07-t09, then run final re-review again
+Prepare final PR via `oat-project-pr-final`
