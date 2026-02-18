@@ -509,6 +509,185 @@ git commit -m "docs(p04-t02): align cleanup docs and backlog with unified comman
 
 ---
 
+### Task p04-t03: (review) Wire `cleanup artifacts` command options and execution flow
+
+**Files:**
+- Modify: `packages/cli/src/commands/cleanup/artifacts/artifacts.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts`
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: The `cleanup artifacts` command is registered but has no options or action handler, so it is effectively a no-op at CLI level.
+Location: `packages/cli/src/commands/cleanup/artifacts/artifacts.ts`
+
+**Step 2: Implement fix**
+
+Add command options (`--apply`, `--all-candidates`, `--yes`) and wire the command action to orchestrate the existing artifact planning/triage utilities so behavior is reachable from CLI.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test -- packages/cli/src/commands/help-snapshots.test.ts packages/cli/src/commands/commands.integration.test.ts packages/cli/src/commands/cleanup/artifacts/*.test.ts`
+Expected: Help snapshots and artifact command integration/tests pass with wired command behavior.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/cleanup/artifacts/artifacts.ts packages/cli/src/commands/help-snapshots.test.ts packages/cli/src/commands/commands.integration.test.ts packages/cli/src/commands/cleanup/artifacts/*.test.ts
+git commit -m "feat(p04-t03): wire cleanup artifacts command execution"
+```
+
+---
+
+### Task p04-t04: (review) Fix archive target double-resolution in `planArchiveActions`
+
+**Files:**
+- Modify: `packages/cli/src/commands/cleanup/artifacts/artifacts.ts`
+- Modify: `packages/cli/src/commands/cleanup/artifacts/noninteractive.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `planArchiveActions` resolves archive base path before calling `buildArchiveTargetPath`, which resolves again internally.
+Location: `packages/cli/src/commands/cleanup/artifacts/artifacts.ts`
+
+**Step 2: Implement fix**
+
+Make caller/callee responsibilities explicit so archive base path is resolved exactly once, and keep path behavior deterministic.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test -- packages/cli/src/commands/cleanup/artifacts/noninteractive.test.ts`
+Expected: Archive planning tests pass and cover the no-double-resolution behavior.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/cleanup/artifacts/artifacts.ts packages/cli/src/commands/cleanup/artifacts/noninteractive.test.ts
+git commit -m "fix(p04-t04): resolve archive paths once in planArchiveActions"
+```
+
+---
+
+### Task p04-t05: (review) Add structured error handling and exit codes to `cleanup project`
+
+**Files:**
+- Modify: `packages/cli/src/commands/cleanup/project/project.ts`
+- Modify: `packages/cli/src/commands/cleanup/project/project.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Command action lacks try/catch and explicit exit-code handling for actionable vs runtime failures.
+Location: `packages/cli/src/commands/cleanup/project/project.ts`
+
+**Step 2: Implement fix**
+
+Wrap command action in error handling aligned with CLI conventions, emit JSON-safe error payloads when `--json` is used, and set exit code `1`/`2` based on failure class.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test -- packages/cli/src/commands/cleanup/project/project.test.ts`
+Expected: Project cleanup tests pass with explicit error-path and exit-code coverage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/cleanup/project/project.ts packages/cli/src/commands/cleanup/project/project.test.ts
+git commit -m "fix(p04-t05): add cleanup project error handling and exit codes"
+```
+
+---
+
+### Task p04-t06: (review) Extract shared repo-relative path helper for cleanup modules
+
+**Files:**
+- Modify: `packages/cli/src/commands/cleanup/cleanup.utils.ts`
+- Modify: `packages/cli/src/commands/cleanup/project/project.ts`
+- Modify: `packages/cli/src/commands/cleanup/artifacts/artifacts.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `toRepoRelativePath` is duplicated across project and artifacts modules.
+Location: `packages/cli/src/commands/cleanup/project/project.ts`, `packages/cli/src/commands/cleanup/artifacts/artifacts.ts`
+
+**Step 2: Implement fix**
+
+Move path-normalization helper into shared cleanup utilities and update both modules to use the shared function.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test -- packages/cli/src/commands/cleanup/**/*.test.ts`
+Expected: Cleanup module tests pass with shared helper usage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/cleanup/cleanup.utils.ts packages/cli/src/commands/cleanup/project/project.ts packages/cli/src/commands/cleanup/artifacts/artifacts.ts packages/cli/src/commands/cleanup/**/*.test.ts
+git commit -m "refactor(p04-t06): share repo-relative path helper"
+```
+
+---
+
+### Task p04-t07: (review) Remove unused cleanup types and scan-result factories
+
+**Files:**
+- Modify: `packages/cli/src/commands/cleanup/project/project.types.ts`
+- Modify: `packages/cli/src/commands/cleanup/project/project.utils.ts`
+- Modify: `packages/cli/src/commands/cleanup/artifacts/artifacts.types.ts`
+- Modify: `packages/cli/src/commands/cleanup/artifacts/artifacts.utils.ts`
+- Modify: `packages/cli/src/commands/cleanup/project/project.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Several exported types/factories are currently unused and add dead surface area.
+Location: cleanup project/artifacts types + utils modules.
+
+**Step 2: Implement fix**
+
+Remove dead definitions and adjust callers/imports to keep only active contracts used by runtime flow and tests.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli lint && pnpm --filter @oat/cli type-check && pnpm --filter @oat/cli test -- packages/cli/src/commands/cleanup/**/*.test.ts`
+Expected: No type/lint regressions and cleanup suites stay green.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/cleanup/project/project.types.ts packages/cli/src/commands/cleanup/project/project.utils.ts packages/cli/src/commands/cleanup/artifacts/artifacts.types.ts packages/cli/src/commands/cleanup/artifacts/artifacts.utils.ts packages/cli/src/commands/cleanup/project/project.ts packages/cli/src/commands/cleanup/**/*.test.ts
+git commit -m "refactor(p04-t07): remove unused cleanup scan contracts"
+```
+
+---
+
+### Task p04-t08: (review) Cover `planArchiveActions` composition and keep exports intentional
+
+**Files:**
+- Modify: `packages/cli/src/commands/cleanup/artifacts/artifacts.ts`
+- Modify: `packages/cli/src/commands/cleanup/artifacts/noninteractive.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `planArchiveActions` export lacks direct coverage and was previously unreferenced by command execution.
+Location: `packages/cli/src/commands/cleanup/artifacts/artifacts.ts`
+
+**Step 2: Implement fix**
+
+Ensure `planArchiveActions` is either used in the command orchestration path or made internal; add direct composition tests to lock expected behavior.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test -- packages/cli/src/commands/cleanup/artifacts/noninteractive.test.ts packages/cli/src/commands/cleanup/cleanup.integration.test.ts`
+Expected: Composition behavior is tested and stable.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/cleanup/artifacts/artifacts.ts packages/cli/src/commands/cleanup/artifacts/noninteractive.test.ts packages/cli/src/commands/cleanup/cleanup.integration.test.ts
+git commit -m "test(p04-t08): cover planArchiveActions composition"
+```
+
+---
+
 ## Reviews
 
 | Scope | Type | Status | Date | Artifact |
@@ -517,7 +696,7 @@ git commit -m "docs(p04-t02): align cleanup docs and backlog with unified comman
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
-| final | code | received | 2026-02-17 | reviews/final-review-2026-02-17.md |
+| final | code | fixes_completed | 2026-02-18 | reviews/final-review-2026-02-17.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
@@ -531,9 +710,9 @@ git commit -m "docs(p04-t02): align cleanup docs and backlog with unified comman
 - Phase 1: 3 tasks - command surface scaffolding and shared contracts
 - Phase 2: 3 tasks - project drift detection/remediation and contract locking
 - Phase 3: 4 tasks - artifact duplicate pruning, reference guards, and triage flows
-- Phase 4: 2 tasks - integration convergence, docs, and final verification
+- Phase 4: 8 tasks - integration convergence, docs, final verification, and final review fixes
 
-**Total: 12 tasks**
+**Total: 18 tasks**
 
 Ready for implementation with `oat-project-implement`.
 
