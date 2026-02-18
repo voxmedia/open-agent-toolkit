@@ -68,7 +68,7 @@ while IFS= read -r line; do
       echo "    phase: \"$CURRENT_PHASE\""
       echo "    phase_name: \"$PHASE_NAME\""
       echo "    type: phase"
-      echo "    tasks: []"
+      echo "    tasks:"
     fi
   fi
 

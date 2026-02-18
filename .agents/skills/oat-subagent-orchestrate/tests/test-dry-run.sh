@@ -28,6 +28,17 @@ assert_contains() {
   fi
 }
 
+assert_not_contains() {
+  local label="$1" output="$2" unexpected="$3"
+  if echo "$output" | grep -qF -- "$unexpected"; then
+    echo "  FAIL: $label — should NOT contain: $unexpected"
+    FAIL=$((FAIL + 1))
+  else
+    echo "  PASS: $label"
+    PASS=$((PASS + 1))
+  fi
+}
+
 assert_line_count() {
   local label="$1" output="$2" pattern="$3" expected="$4"
   local actual
@@ -75,6 +86,20 @@ assert_contains "task p02-t02 present" "$TASK_OUTPUT" 'unit_id: "p02-t02"'
 assert_contains "task p03-t01 present" "$TASK_OUTPUT" 'unit_id: "p03-t01"'
 assert_contains "task p04-t01 present" "$TASK_OUTPUT" 'unit_id: "p04-t01"'
 assert_contains "branch naming examples" "$TASK_OUTPUT" "examples:"
+
+echo ""
+echo "=== Test: Manifest YAML Structure ==="
+echo ""
+
+# Phase-level: tasks: should be block sequence header (no [])
+# When tasks are present, should NOT have "tasks: []" followed by list items
+assert_not_contains "no inline empty array before tasks" "$PHASE_OUTPUT" "tasks: []"
+
+# tasks: header (block sequence) should appear for each phase
+assert_line_count "tasks: header per phase" "$PHASE_OUTPUT" "    tasks:" 4
+
+# Task items should be indented under tasks:
+assert_contains "task item indented under phase" "$PHASE_OUTPUT" '      - "p01-t01"'
 
 echo ""
 echo "=== Results ==="
