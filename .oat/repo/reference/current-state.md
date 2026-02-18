@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is *right now* in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-02-17
+**Last Updated:** 2026-02-18
 
 ## Canonical References
 
@@ -27,10 +27,13 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - `oat-project-plan-writing` (shared plan writing contract used by planning/import/review flows)
 - Artifact generation:
   - `oat-project-new` (scaffold a project dir from templates)
+  - `oat-project-open`, `oat-project-clear-active`, `oat-project-complete` (active project lifecycle management)
   - `oat-project-quick-start` (quick lane: discovery -> plan -> implement)
   - `oat-project-import-plan` (import lane: provider plan -> canonical `plan.md`)
   - `oat-project-promote-full` (in-place promotion from quick/import to full lifecycle)
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
+- Idea workflow:
+  - `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 - Review loop:
   - `oat-review-provide` (ad-hoc/non-project review)
   - `oat-project-review-provide`
@@ -39,6 +42,8 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - PR skills:
   - `oat-project-pr-progress`
   - `oat-project-pr-final`
+- Worktree/bootstrap:
+  - `oat-worktree-bootstrap` (create/reuse worktree + baseline checks with deterministic root precedence)
 
 ### Skill Authoring (Meta)
 
@@ -55,6 +60,8 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - `oat sync --scope project` performs config-aware provider activation and mismatch remediation (interactive prompt in TTY mode, warning + remediation guidance in non-interactive mode).
 - Worktree bootstrap:
   - Root script: `pnpm run worktree:init` (`pnpm install && pnpm run build && pnpm run cli -- sync --scope project --apply`).
+  - Workflow skill: `oat-worktree-bootstrap`.
+  - Phase-A non-sync config: `.oat/config.json` (`worktrees.root`, default `.worktrees`).
 
 ### Tool Metadata
 
@@ -69,6 +76,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 - Templates: `.oat/templates/`
   - `state.md`, `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`
+  - Ideas templates: `ideas/idea-discovery.md`, `ideas/idea-summary.md`, `ideas/ideas-backlog.md`, `ideas/ideas-scratchpad.md`
 - Thin index generation: `oat index init` CLI command
 - Knowledge project index output: `.oat/repo/knowledge/project-index.md`
 
@@ -109,6 +117,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 2. Start a project:
    - `oat-project-new` (recommended) then `oat-project-discover`
    - This creates `{PROJECTS_ROOT}/<project>/...` artifacts (from `.oat/projects-root`) and writes `.oat/active-project`.
+   - For an existing project, use `oat-project-open` to set the active pointer first.
 3. Move through phases (or run router anytime):
    - `oat-project-progress`
    - `oat-project-spec`
@@ -147,11 +156,12 @@ Interop quickstart:
 - Multi-project model:
   - `.oat/projects/**` and `oat project ...` switching (in progress; dogfood now uses `.oat/projects/shared` as the default projects root)
 - Parallel execution + reconciliation:
-  - Worktrees/subagents executing tasks in parallel and reconciling back into canonical artifacts (deferred)
+  - Worktree bootstrap setup is implemented (`oat-worktree-bootstrap`), but parallel task fan-out + reconcile remains deferred
 
 ## Notes / Caveats
 
 - `.oat/projects-root` sets the default projects root (tracked). Default: `.oat/projects/shared` (checked in).
+- `.oat/config.json` holds new non-sync repo settings. Current key: `worktrees.root` (default `.worktrees`).
 - `.oat/projects/local/**` and `.oat/projects/archived/**` are gitignored (local-only).
 - `.oat/projects/shared/**` is tracked by default in this repo unless a local override is added.
 - `.oat/active-project` is local-only (gitignored). It won’t exist until you run a skill that creates/selects a project.

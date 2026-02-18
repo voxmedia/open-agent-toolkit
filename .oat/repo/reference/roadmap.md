@@ -9,7 +9,7 @@ For a birdseye snapshot of what exists *right now*, see `.oat/repo/reference/cur
 
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
-As of `2026-02-17` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor`, config-aware sync, worktree bootstrap). Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
+As of `2026-02-18` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor`, config-aware sync, worktree bootstrap, `.oat/config.json` phase-A settings). Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
 
 ## Status Summary
 
@@ -19,7 +19,7 @@ As of `2026-02-17` on `main`, dogfood workflow baseline and provider-interop CLI
 | Phase 3: Reviews + PR loop | Completed | Implemented + dogfooded |
 | Phase 4: Active project pointer + Repo State Dashboard | Completed (polish remaining) | Pointer + generated `.oat/state.md` exist; clarify “first-class” regeneration contract |
 | Phase 5: Staleness + knowledge drift | Planned | Improve/enforce freshness beyond warn-only |
-| Phase 6: Parallel execution + reconcile | Deferred | Worktrees/subagents + reconciliation tooling |
+| Phase 6: Parallel execution + reconcile | Deferred (groundwork started) | `oat-worktree-bootstrap` exists; parallel execution + reconcile tooling still pending |
 | Phase 7: Quick mode + template rendering helper | In Progress | Quick/import lanes + canonical plan writing contract implemented; template rendering helper still planned |
 | Phase 8: Provider interop CLI + sync manifest | In Progress | Core command surface + config-aware provider sync shipped; lifecycle polish remains |
 | Phase 9: Multi-project switching + branch awareness | Later | Full `.oat/projects/(shared|local)/...` + hooks |
@@ -34,6 +34,9 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - `oat-project-new` scaffolds `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`
   - `.oat/projects-root` sets `{PROJECTS_ROOT}` (default: `.oat/projects/shared`)
   - `.oat/active-project` stores the active project path (local-only); all `oat-*` skills resolve project from it (fallback: prompt)
+  - Project lifecycle utilities are implemented: `oat-project-open`, `oat-project-clear-active`, `oat-project-complete`
+- Ideas workflow:
+  - `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 - Workflow phases + routing:
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
   - Router: `oat-project-progress`
@@ -53,13 +56,15 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - Sync state: `.oat/sync/manifest.json` + `.oat/sync/config.json`
   - Config-aware provider activation with interactive/non-interactive mismatch remediation
   - Worktree bootstrap path: `pnpm run worktree:init`
+  - Worktree bootstrap skill: `oat-worktree-bootstrap` (deterministic root precedence)
+  - Non-sync config phase A: `.oat/config.json` (`worktrees.root`, default `.worktrees`)
 - Workflow UX:
   - User-facing progress indicators across skills (separator banners + step indicators + “starting/done” updates for long-running work)
 - Skill authoring:
   - `create-oat-skill` (scaffold new OAT skills with standard sections + banner conventions)
 - Internal validation:
   - `pnpm oat:validate-skills` (internal; validates `oat-*` skill frontmatter + banner conventions)
-- Templates under `.oat/templates/`: discovery/spec/design/plan/implementation/state/project-index
+- Templates under `.oat/templates/`: discovery/spec/design/plan/implementation/state + ideas templates (`ideas/*`)
 
 ## Known Gaps / Mismatches (What We Need To Resolve)
 
@@ -75,13 +80,17 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 
 3. Provider capability differences need explicit documentation + fallbacks
    - Some behaviors are provider-specific (skill args, subagents/Task tool, hooks).
-   - Before we ship CLI sync: validate the P0 assumptions (paths + precedence) and publish a minimal capability matrix.
+   - Continue validating P0 assumptions (paths + precedence) and publishing a minimal capability matrix as lifecycle commands expand.
 
 4. Directory model coordination
    - Dogfood uses `{PROJECTS_ROOT}` + `.oat/active-project` (path format).
    - Name-only `.oat/active-project` is intentionally deferred until CLI project commands own the contract (ADR-004).
 
-5. Invocation semantics guardrails
+5. Config consolidation follow-through
+   - `.oat/config.json` phase A is in place for non-sync settings (`worktrees.root`).
+   - Phase B/C migration work for existing pointers (`.oat/projects-root`, active pointers) remains planned.
+
+6. Invocation semantics guardrails
    - Skill-first contract is adopted, but we still need lightweight validation/docs checks to prevent regressions to slash-only wording.
 
 ## Roadmap Phases
@@ -177,6 +186,10 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 ### Phase 6 (Dogfood v1.4): Parallel Execution + Reconcile
 
 **Goal:** Support parallel phase/task execution (worktrees/stacked PRs/subagents) with reconciliation back into canonical artifacts.
+
+**Status:** Deferred (groundwork started)
+- Done: manual-safe worktree bootstrap skill (`oat-worktree-bootstrap`) with deterministic root precedence + baseline checks
+- Remaining: parallel fan-out execution contracts and reconcile tooling
 
 **When to do it:**
 - When we want to run phases in parallel (or keep multiple worktrees moving), and
