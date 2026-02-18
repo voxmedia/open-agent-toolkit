@@ -1,6 +1,5 @@
-import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { copyDirectory, dirExists, fileExists } from '@fs/io';
+import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 
 export const UTILITY_SKILLS = ['oat-review-provide'] as const;
 
@@ -17,10 +16,6 @@ export interface InstallUtilityResult {
   skippedSkills: string[];
 }
 
-async function pathExists(path: string): Promise<boolean> {
-  return (await fileExists(path)) || (await dirExists(path));
-}
-
 export async function installUtility(
   options: InstallUtilityOptions,
 ): Promise<InstallUtilityResult> {
@@ -34,22 +29,15 @@ export async function installUtility(
   for (const skill of options.skills) {
     const source = join(options.assetsRoot, 'skills', skill);
     const destination = join(options.targetRoot, '.agents', 'skills', skill);
-    const exists = await pathExists(destination);
+    const status = await copyDirWithStatus(source, destination, force);
 
-    if (exists && !force) {
-      result.skippedSkills.push(skill);
-      continue;
-    }
-
-    if (exists && force) {
-      await rm(destination, { recursive: true, force: true });
-      await copyDirectory(source, destination);
+    if (status === 'copied') {
+      result.copiedSkills.push(skill);
+    } else if (status === 'updated') {
       result.updatedSkills.push(skill);
-      continue;
+    } else {
+      result.skippedSkills.push(skill);
     }
-
-    await copyDirectory(source, destination);
-    result.copiedSkills.push(skill);
   }
 
   return result;

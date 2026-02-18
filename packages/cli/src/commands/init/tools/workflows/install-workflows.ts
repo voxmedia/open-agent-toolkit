@@ -1,12 +1,10 @@
-import { chmod, rm, writeFile } from 'node:fs/promises';
+import { chmod, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import {
-  copyDirectory,
-  copySingleFile,
-  dirExists,
-  ensureDir,
-  fileExists,
-} from '@fs/io';
+  copyDirWithStatus,
+  copyFileWithStatus,
+} from '@commands/init/tools/shared/copy-helpers';
+import { ensureDir, fileExists } from '@fs/io';
 
 export const WORKFLOW_SKILLS = [
   'oat-project-clear-active',
@@ -70,52 +68,6 @@ export interface InstallWorkflowsResult {
   updatedScripts: string[];
   skippedScripts: string[];
   projectsRootInitialized: boolean;
-}
-
-async function pathExists(path: string): Promise<boolean> {
-  return (await fileExists(path)) || (await dirExists(path));
-}
-
-async function copyDirWithStatus(
-  source: string,
-  destination: string,
-  force: boolean,
-): Promise<'copied' | 'updated' | 'skipped'> {
-  const exists = await pathExists(destination);
-
-  if (exists && !force) {
-    return 'skipped';
-  }
-
-  if (exists && force) {
-    await rm(destination, { recursive: true, force: true });
-    await copyDirectory(source, destination);
-    return 'updated';
-  }
-
-  await copyDirectory(source, destination);
-  return 'copied';
-}
-
-async function copyFileWithStatus(
-  source: string,
-  destination: string,
-  force: boolean,
-): Promise<'copied' | 'updated' | 'skipped'> {
-  const exists = await pathExists(destination);
-
-  if (exists && !force) {
-    return 'skipped';
-  }
-
-  if (exists && force) {
-    await rm(destination, { recursive: true, force: true });
-    await copySingleFile(source, destination);
-    return 'updated';
-  }
-
-  await copySingleFile(source, destination);
-  return 'copied';
 }
 
 export async function installWorkflows(

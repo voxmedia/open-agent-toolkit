@@ -1,6 +1,8 @@
-import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { copyDirectory, copySingleFile, dirExists, fileExists } from '@fs/io';
+import {
+  copyDirWithStatus,
+  copyFileWithStatus,
+} from '@commands/init/tools/shared/copy-helpers';
 
 export const IDEA_SKILLS = [
   'oat-idea-new',
@@ -37,52 +39,6 @@ export interface InstallIdeasResult {
   skippedTemplates: string[];
 }
 
-async function pathExists(path: string): Promise<boolean> {
-  return (await fileExists(path)) || (await dirExists(path));
-}
-
-async function copySkill(
-  source: string,
-  destination: string,
-  force: boolean,
-): Promise<'copied' | 'updated' | 'skipped'> {
-  const exists = await pathExists(destination);
-
-  if (exists && !force) {
-    return 'skipped';
-  }
-
-  if (exists && force) {
-    await rm(destination, { recursive: true, force: true });
-    await copyDirectory(source, destination);
-    return 'updated';
-  }
-
-  await copyDirectory(source, destination);
-  return 'copied';
-}
-
-async function copyFile(
-  source: string,
-  destination: string,
-  force: boolean,
-): Promise<'copied' | 'updated' | 'skipped'> {
-  const exists = await pathExists(destination);
-
-  if (exists && !force) {
-    return 'skipped';
-  }
-
-  if (exists && force) {
-    await rm(destination, { recursive: true, force: true });
-    await copySingleFile(source, destination);
-    return 'updated';
-  }
-
-  await copySingleFile(source, destination);
-  return 'copied';
-}
-
 export async function installIdeas(
   options: InstallIdeasOptions,
 ): Promise<InstallIdeasResult> {
@@ -104,7 +60,7 @@ export async function installIdeas(
   for (const skill of IDEA_SKILLS) {
     const source = join(options.assetsRoot, 'skills', skill);
     const destination = join(options.targetRoot, '.agents', 'skills', skill);
-    const status = await copySkill(source, destination, force);
+    const status = await copyDirWithStatus(source, destination, force);
 
     if (status === 'copied') {
       result.copiedSkills.push(skill);
@@ -118,7 +74,7 @@ export async function installIdeas(
   for (const mapping of INFRA_FILE_MAPPINGS) {
     const source = join(ideasTemplatesRoot, mapping.src);
     const destination = join(options.targetRoot, mapping.dest);
-    const status = await copyFile(source, destination, force);
+    const status = await copyFileWithStatus(source, destination, force);
 
     if (status === 'copied') {
       result.copiedInfraFiles.push(mapping.dest);
@@ -132,7 +88,7 @@ export async function installIdeas(
   for (const mapping of RUNTIME_TEMPLATE_MAPPINGS) {
     const source = join(ideasTemplatesRoot, mapping.src);
     const destination = join(options.targetRoot, mapping.dest);
-    const status = await copyFile(source, destination, force);
+    const status = await copyFileWithStatus(source, destination, force);
 
     if (status === 'copied') {
       result.copiedTemplates.push(mapping.dest);
