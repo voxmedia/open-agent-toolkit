@@ -1,10 +1,5 @@
 import { Command } from 'commander';
-
-function createCleanupProjectCommand(): Command {
-  return new Command('project').description(
-    'Cleanup project pointers, state, and lifecycle drift',
-  );
-}
+import { createCleanupProjectCommand } from './project/project';
 
 function createCleanupArtifactsCommand(): Command {
   return new Command('artifacts').description(
