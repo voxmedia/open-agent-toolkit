@@ -219,12 +219,12 @@ describe('help output snapshots', () => {
       Cleanup OAT project and artifact hygiene issues
 
       Options:
-        -h, --help         display help for command
+        -h, --help           display help for command
 
       Commands:
-        project [options]  Cleanup project pointers, state, and lifecycle drift
-        artifacts          Cleanup stale review and external-plan artifacts
-        help [command]     display help for command
+        project [options]    Cleanup project pointers, state, and lifecycle drift
+        artifacts [options]  Cleanup stale review and external-plan artifacts
+        help [command]       display help for command
       "
     `);
   });
