@@ -16,7 +16,9 @@ Dogfood v1 baseline is:
 - `oat-project-progress` router
 - Active project selection: `.oat/active-project` (single-line path, local-only; gitignored)
 - Project scaffolding: `oat-project-new` (creates `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`)
+- Project lifecycle management: `oat-project-open`, `oat-project-clear-active`, `oat-project-complete`
 - Quick/import lanes: `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-promote-full`
+- Ideas workflow: `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 - Shared plan contract: `oat-project-plan-writing`
 - Review + PR loop: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-pr-progress`, `oat-project-pr-final`
 - Ad-hoc review: `oat-review-provide` (non-project scopes)
@@ -25,6 +27,9 @@ Dogfood v1 baseline is:
   - `oat init`, `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`, `oat doctor`
   - Config-aware provider activation via `.oat/sync/config.json`
   - Worktree bootstrap script: `pnpm run worktree:init`
+- Worktree bootstrap skill + config phase A:
+  - `oat-worktree-bootstrap` (deterministic root precedence + readiness checks)
+  - `.oat/config.json` key `worktrees.root` (default `.worktrees`)
 
 ## Deferred Phases
 
@@ -59,6 +64,8 @@ For dogfood v1, the safest approach is:
 ### Phase 6 (Dogfood v1.4): Parallel Execution + Reconcile
 
 **What:** Support parallel phase/task execution (worktrees/stacked PRs/subagents) with reconciliation back into canonical artifacts.
+
+**Current status:** Deferred, but prerequisites started (`oat-worktree-bootstrap` is implemented for manual-safe worktree setup).
 
 **When to start:**
 - When we actively want to run phases in parallel (or keep multiple worktrees moving), and
