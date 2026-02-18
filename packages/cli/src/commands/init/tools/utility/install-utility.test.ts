@@ -129,4 +129,40 @@ describe('installUtility', () => {
       ),
     ).rejects.toThrow();
   });
+
+  it('overwrites existing skills when force=true', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+
+    await installUtility({
+      assetsRoot,
+      targetRoot,
+      skills: ['oat-review-provide'],
+    });
+
+    const installedSkillPath = join(
+      targetRoot,
+      '.agents',
+      'skills',
+      'oat-review-provide',
+      'SKILL.md',
+    );
+    await writeFile(installedSkillPath, '# changed\n', 'utf8');
+
+    const result = await installUtility({
+      assetsRoot,
+      targetRoot,
+      skills: ['oat-review-provide'],
+      force: true,
+    });
+
+    expect(result.copiedSkills).toEqual([]);
+    expect(result.updatedSkills).toEqual(['oat-review-provide']);
+    expect(result.skippedSkills).toEqual([]);
+    await expect(readFile(installedSkillPath, 'utf8')).resolves.toContain(
+      'oat-review-provide',
+    );
+  });
 });
