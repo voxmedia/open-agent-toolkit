@@ -95,8 +95,8 @@ describe('generateStateDashboard', () => {
       oat_phase_status: 'in_progress',
       oat_current_task: 'p02-t03',
       oat_workflow_mode: 'full',
-      oat_hil_checkpoints: '[]',
-      oat_hil_completed: '[]',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
     });
 
     await writeFile(
@@ -218,8 +218,8 @@ describe('generateStateDashboard', () => {
       oat_phase: 'design',
       oat_phase_status: 'complete',
       oat_workflow_mode: 'full',
-      oat_hil_checkpoints: '["design"]',
-      oat_hil_completed: '[]',
+      oat_hill_checkpoints: '["design"]',
+      oat_hill_completed: '[]',
     });
 
     await writeFile(

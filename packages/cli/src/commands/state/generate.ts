@@ -161,9 +161,9 @@ async function readProjectState(
   const blockers =
     (await parseFrontmatterField(stateFile, 'oat_blockers')) || '[]';
   const hilCheckpoints =
-    (await parseFrontmatterField(stateFile, 'oat_hil_checkpoints')) || '[]';
+    (await parseFrontmatterField(stateFile, 'oat_hill_checkpoints')) || '[]';
   const hilCompleted =
-    (await parseFrontmatterField(stateFile, 'oat_hil_completed')) || '[]';
+    (await parseFrontmatterField(stateFile, 'oat_hill_completed')) || '[]';
   const workflowMode =
     (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) || 'full';
 
