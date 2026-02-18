@@ -44,6 +44,7 @@ describe('help output snapshots', () => {
         sync [options]   Sync canonical content to provider views
         providers        Inspect provider capabilities and paths
         doctor           Run environment and setup diagnostics
+        index            OAT index generation commands
         project          Manage OAT project workflows
         state            OAT repo state commands
         internal         Internal OAT maintenance commands
@@ -183,6 +184,40 @@ describe('help output snapshots', () => {
 
       Options:
         -h, --help  display help for command
+      "
+    `);
+  });
+
+  it('index --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['index']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat index [options] [command]
+
+      OAT index generation commands
+
+      Options:
+        -h, --help      display help for command
+
+      Commands:
+        init [options]  Generate a thin project-index.md for quick repo orientation
+        help [command]  display help for command
+      "
+    `);
+  });
+
+  it('index init --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['index', 'init']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat index init [options]
+
+      Generate a thin project-index.md for quick repo orientation
+
+      Options:
+        --head-sha <sha>        Override HEAD SHA
+        --merge-base-sha <sha>  Override merge-base SHA
+        -h, --help              display help for command
       "
     `);
   });
