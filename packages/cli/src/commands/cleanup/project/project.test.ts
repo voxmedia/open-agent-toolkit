@@ -397,6 +397,15 @@ describe('cleanup project drift scanning', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('includes skipped and blocked counts in text summary output', async () => {
+    const { command, capture } = createCommandHarness({ status: 'drift' });
+
+    await runProjectCommand(command);
+
+    expect(capture.info[0]).toContain('skipped=0');
+    expect(capture.info[0]).toContain('blocked=0');
+  });
+
   it('handles actionable command errors with exit code 1', async () => {
     const { command, capture } = createCommandHarness({
       runError: new CliError('cleanup command precondition failed', 1),

@@ -308,7 +308,7 @@ function formatCleanupProjectPlan(payload: CleanupJsonPayload): string {
   const lines: string[] = [
     `cleanup project (${payload.mode})`,
     `status: ${payload.status}`,
-    `summary: scanned=${payload.summary.scanned}, issues=${payload.summary.issuesFound}, planned=${payload.summary.planned}, applied=${payload.summary.applied}`,
+    `summary: scanned=${payload.summary.scanned}, issues=${payload.summary.issuesFound}, planned=${payload.summary.planned}, applied=${payload.summary.applied}, skipped=${payload.summary.skipped}, blocked=${payload.summary.blocked}`,
   ];
 
   if (payload.actions.length === 0) {
