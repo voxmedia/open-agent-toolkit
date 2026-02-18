@@ -4,6 +4,7 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import {
+  confirmAction,
   type MultiSelectChoice,
   type PromptContext,
   selectManyWithAbort,
@@ -38,6 +39,7 @@ interface InitToolsUtilityDependencies {
     choices: MultiSelectChoice<T>[],
     ctx: PromptContext,
   ) => Promise<T[] | null>;
+  confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
 }
 
 const DEFAULT_DEPENDENCIES: InitToolsUtilityDependencies = {
@@ -47,6 +49,7 @@ const DEFAULT_DEPENDENCIES: InitToolsUtilityDependencies = {
   resolveAssetsRoot,
   installUtility: defaultInstallUtility,
   selectManyWithAbort,
+  confirmAction,
 };
 
 function resolveScope(context: CommandContext): UtilityScope {
@@ -123,6 +126,20 @@ async function runInitToolsUtility(
       }
       process.exitCode = 0;
       return;
+    }
+
+    if (options.force && context.interactive) {
+      const confirmed = await dependencies.confirmAction(
+        `Force overwrite existing utility assets in ${scope} scope?`,
+        { interactive: context.interactive },
+      );
+      if (!confirmed) {
+        if (!context.json) {
+          context.logger.info('Cancelled: no files were overwritten.');
+        }
+        process.exitCode = 0;
+        return;
+      }
     }
 
     const assetsRoot = await dependencies.resolveAssetsRoot();
