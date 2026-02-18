@@ -16,6 +16,7 @@ coverage
 # build outputs
 dist/
 build/
+packages/cli/assets/
 
 # turborepo
 .turbo/
