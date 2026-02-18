@@ -3,6 +3,7 @@ export {
   atomicWriteJson,
   copyDirectory,
   createSymlink,
+  dirExists,
   ensureDir,
   fileExists,
 } from './io';
