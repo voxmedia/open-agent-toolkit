@@ -283,10 +283,10 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related gap: skill removal currently requires manual deletion + sync
   - Created: 2026-02-16
 
-- [ ] **(P1) [tooling] Add project cleanup command for stale pointers and completion normalization**
+- [x] **(P1) [tooling] Add project cleanup command for stale pointers and completion normalization**
   - Target milestone/phase: OAT CLI lifecycle hygiene
   - Notes:
-    - Add a command (for example, `oat project cleanup`) that audits project metadata and fixes common drift:
+    - Added `oat cleanup project` to audit project metadata and fix common drift:
       - invalid `.oat/active-project` pointer (missing target directory)
       - missing `state.md` for projects that already have plan/implementation artifacts
       - completed projects missing `oat_lifecycle: complete`
@@ -300,6 +300,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - Related files: `.oat/active-project`, `.oat/projects/shared/*/state.md`, `.oat/state.md`
   - Created: 2026-02-17
+  - Completed: 2026-02-18
 
 - [ ] **(P1) [tooling] Add `oat project open|switch|pause` lifecycle commands**
   - Target milestone/phase: OAT CLI lifecycle hygiene + workflow ergonomics
@@ -319,10 +320,10 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related decisions: `.oat/repo/reference/decision-record.md` (ADR-001, ADR-004)
   - Created: 2026-02-18
 
-- [ ] **(P1) [tooling] Add artifact cleanup command for reviews and external plans**
+- [x] **(P1) [tooling] Add artifact cleanup command for reviews and external plans**
   - Target milestone/phase: OAT CLI lifecycle hygiene
   - Notes:
-    - Add a command (for example, `oat cleanup artifacts`) to clean stale/duplicate artifacts in:
+    - Added `oat cleanup artifacts` cleanup scaffolding with duplicate pruning, reference guards, interactive triage, and non-interactive safety gating for:
       - `.oat/repo/reviews/`
       - `.oat/repo/reference/external-plans/`
     - Default behavior should auto-clean duplicate version chains while preserving the latest version:
@@ -340,6 +341,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - Related directories: `.oat/repo/reviews/`, `.oat/repo/reference/external-plans/`
   - Created: 2026-02-17
+  - Completed: 2026-02-18
 
 - [ ] **(P1) [tooling] Add configurable VCS policy + worktree sync behavior for OAT artifact directories**
   - Target milestone/phase: Worktree ergonomics + artifact signal/noise control
