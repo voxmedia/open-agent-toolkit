@@ -65,9 +65,16 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 If no valid active project exists:
 - Use `--project` if provided, else ask user.
-- Create an import-mode scaffold directly:
+- Resolve `TARGET_PROJECT_PATH="${PROJECTS_ROOT}/{project-name}"`.
+- If `TARGET_PROJECT_PATH/state.md` exists, set:
+  ```bash
+  echo "$TARGET_PROJECT_PATH" > .oat/active-project
+  PROJECT_PATH="$TARGET_PROJECT_PATH"
+  ```
+- Otherwise create an import-mode scaffold (which sets active project by default):
   ```bash
   pnpm run cli -- project new "{project-name}" --mode import
+  PROJECT_PATH="$TARGET_PROJECT_PATH"
   ```
 
 ### Step 1: Resolve and Validate Source Plan Path
@@ -147,6 +154,26 @@ Set `"$PROJECT_PATH/state.md"` frontmatter:
 - `oat_phase_status: complete`
 - `oat_current_task: null`
 
+### Step 5.5: Ensure Active Project Pointer
+
+Import mode must leave the imported project as active for immediate execution.
+
+Validate target project before writing pointer:
+
+```bash
+if [[ ! -f "$PROJECT_PATH/state.md" ]]; then
+  echo "Error: Project missing state.md: $PROJECT_PATH/state.md" >&2
+  exit 1
+fi
+```
+
+```bash
+echo "$PROJECT_PATH" > .oat/active-project
+pnpm run cli -- state refresh
+```
+
+If `.oat/active-project` already exists with a different path, treat this as a project switch and note it in output.
+
 ### Step 6: Ensure Implementation Artifact Exists
 
 If missing, scaffold from template:
@@ -160,6 +187,8 @@ Report:
 - source imported path
 - normalized phases/tasks count
 - first task ID
+- active project pointer path
+- dashboard refresh status
 - next command: `oat-project-implement`
 
 ## Success Criteria
@@ -169,3 +198,5 @@ Report:
 - ✅ `plan.md` metadata marks `oat_plan_source: imported`.
 - ✅ `state.md` marks `oat_workflow_mode: import`.
 - ✅ `implementation.md` is present and resumable.
+- ✅ `.oat/active-project` points to the imported project.
+- ✅ `.oat/state.md` has been refreshed after pointer update.

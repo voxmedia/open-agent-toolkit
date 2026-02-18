@@ -291,6 +291,24 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related files: `.oat/active-project`, `.oat/projects/shared/*/state.md`, `.oat/state.md`
   - Created: 2026-02-17
 
+- [ ] **(P1) [tooling] Add `oat project open|switch|pause` lifecycle commands**
+  - Target milestone/phase: OAT CLI lifecycle hygiene + workflow ergonomics
+  - Notes:
+    - Add `oat project open <project-name>` to validate project existence and set `.oat/active-project`.
+    - Add `oat project switch <project-name>` as an explicit switching command (can alias `open` behavior but should preserve clear user-facing intent in help/output).
+    - Add `oat project pause [<project-name>]` to mark a project as paused and record pause metadata in `state.md` (at minimum timestamp + optional reason), while keeping active-project behavior explicit.
+    - Ensure all commands refresh `.oat/state.md` after apply operations for consistent dashboard bookkeeping.
+    - Keep semantics compatible with current path-based active pointer contract (see ADR-001/ADR-004).
+  - Success criteria:
+    - `oat project open` provides CLI-native project activation with validation (no manual pointer edits required).
+    - `oat project switch` provides deterministic, test-covered switching behavior and clear output about old/new active project.
+    - `oat project pause` records paused state in project metadata and is reflected in dashboard output/recommendations.
+    - Command help and tests cover success and common failure paths (missing project, invalid name, missing `state.md`).
+  - Links:
+    - Related skills: `.agents/skills/oat-project-open/SKILL.md`, `.agents/skills/oat-project-clear-active/SKILL.md`
+    - Related decisions: `.oat/repo/reference/decision-record.md` (ADR-001, ADR-004)
+  - Created: 2026-02-18
+
 - [ ] **(P1) [tooling] Add artifact cleanup command for reviews and external plans**
   - Target milestone/phase: OAT CLI lifecycle hygiene
   - Notes:

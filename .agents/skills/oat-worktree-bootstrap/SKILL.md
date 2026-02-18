@@ -74,9 +74,15 @@ If `.oat/active-project` does not exist:
 - continue (active project is optional for worktree bootstrap)
 - use console-only baseline-failure logging in Step 3 if needed
 
-### Step 1: Resolve Worktree Root
+### Step 1: Resolve Target Worktree Context
 
-Resolve root using this strict precedence (stop at the **first match**):
+If `--existing`:
+- validate the current directory appears in `git worktree list --porcelain`
+- set `TARGET_WORKTREE` to the current directory
+- set `WORKTREE_ROOT` to the parent directory of `TARGET_WORKTREE` (informational)
+- skip root-path convention checks; externally managed paths are allowed (for example Codex-managed worktrees under `~/.codex/worktrees/...`)
+
+Otherwise, resolve `WORKTREE_ROOT` using this strict precedence (stop at the **first match**):
 
 1. Explicit `--path <root>` (CLI flag — highest priority)
 2. `OAT_WORKTREES_ROOT` (environment variable)
@@ -93,17 +99,18 @@ For repo-relative values (levels 3–4a–4b), resolve from `REPO_ROOT`.
 Treat `.oat/config.json` as phase-A non-sync settings ownership (do not mix with `.oat/sync/config.json`).
 
 If the resolved root is project-local (`.worktrees` or `worktrees`), verify it is ignored by git before creating a new worktree.
+Set `TARGET_WORKTREE` to `{WORKTREE_ROOT}/{branch-name}`.
 
 ### Step 2: Create or Reuse Worktree
 
 - If `--existing`, validate the current directory is a git worktree and continue.
 - Otherwise:
   - validate branch name format (`^[a-zA-Z0-9._/-]+$`)
-  - resolve target path as `{root}/{branch-name}`
+  - resolve target path as `TARGET_WORKTREE`
   - if branch already exists locally:
-    - `git worktree add "{target-path}" "{branch-name}"`
+    - `git worktree add "{TARGET_WORKTREE}" "{branch-name}"`
   - if branch does not exist:
-    - `git worktree add "{target-path}" -b "{branch-name}" "{base-ref}"`
+    - `git worktree add "{TARGET_WORKTREE}" -b "{branch-name}" "{base-ref}"`
 
 `{base-ref}` defaults to `origin/main` unless `--base` is provided.
 
