@@ -374,4 +374,15 @@ describe('CLI command integration', () => {
       ).rejects.toThrow();
     }
   });
+
+  it('cleanup subcommands parse successfully', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    const projectResult = await runCli(root, ['cleanup', 'project']);
+    const artifactsResult = await runCli(root, ['cleanup', 'artifacts']);
+
+    expect(projectResult.exitCode).toBe(0);
+    expect(artifactsResult.exitCode).toBe(0);
+  });
 });
