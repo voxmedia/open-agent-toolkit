@@ -14,6 +14,40 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P2) [tooling] Remove `.oat/scripts/` directory after all migrations complete (B16)**
+  - Outcome:
+    - `.oat/scripts/` directory deleted after all four script migrations completed.
+    - All reference docs updated to use CLI commands instead of script paths.
+  - Links:
+    - Project: `.oat/projects/shared/oat-state-index-cli/`
+  - Created: 2026-02-14
+  - Completed: 2026-02-17
+
+- [x] **(P1) [tooling] Migrate `generate-thin-index.sh` to CLI (B15)**
+  - Outcome:
+    - Migrated thin index generation to `oat index init` CLI command (`packages/cli/src/commands/index-cmd/thin-index.ts`).
+    - Options: `--head-sha <sha>`, `--merge-base-sha <sha>`.
+    - `oat-repo-knowledge-index` skill updated to call CLI command.
+    - 17 unit tests + 5 handler tests.
+    - `.oat/scripts/generate-thin-index.sh` removed.
+  - Links:
+    - Project: `.oat/projects/shared/oat-state-index-cli/`
+  - Created: 2026-02-14
+  - Completed: 2026-02-17
+
+- [x] **(P1) [tooling] Migrate `generate-oat-state.sh` to CLI (B14)**
+  - Outcome:
+    - Migrated state dashboard generation to `oat state refresh` CLI command (`packages/cli/src/commands/state/generate.ts`).
+    - 1:1 translation of 419-line shell script to TypeScript with injectable git operations.
+    - 6 skills updated to call CLI command instead of shell script.
+    - 13 unit tests + 4 handler tests.
+    - `scaffold.ts` dashboard refresh seam replaced with direct `generateStateDashboard` call.
+    - `.oat/scripts/generate-oat-state.sh` removed.
+  - Links:
+    - Project: `.oat/projects/shared/oat-state-index-cli/`
+  - Created: 2026-02-14
+  - Completed: 2026-02-17
+
 - [x] **(P1) [tooling] Fix `oat project new --help` parsing bug that scaffolds a `--help` project**
   - Outcome:
     - Root cause: `pnpm run cli --` passes a literal `--` into Commander's argv, disabling option parsing. Commander consumed `--help` as the `<name>` positional argument, and `validateProjectName` allowed it because `-` was a valid character.
