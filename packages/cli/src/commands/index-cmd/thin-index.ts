@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { fileExists } from '@fs/io';
 

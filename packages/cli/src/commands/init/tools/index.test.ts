@@ -1,8 +1,5 @@
 import type { CommandContext, GlobalOptions } from '@app/command-context';
-import {
-  createLoggerCapture,
-  type LoggerCapture,
-} from '@commands/__tests__/helpers';
+import { createLoggerCapture } from '@commands/__tests__/helpers';
 import type {
   MultiSelectChoice,
   SelectChoice,

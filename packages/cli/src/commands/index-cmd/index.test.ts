@@ -37,7 +37,7 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
-    generateThinIndex: vi.fn(async (opts) => {
+    generateThinIndex: vi.fn(async (_opts) => {
       if (options.throwError) {
         throw new Error('index generation failed');
       }
