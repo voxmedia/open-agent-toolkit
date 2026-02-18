@@ -34,10 +34,11 @@ When executing this skill, provide lightweight progress feedback so the user can
    OAT ▸ PROVIDE REVIEW
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work (scope resolution, file gathering, writing artifact), print 2–5 short step indicators, e.g.:
-  - `[1/4] Resolving scope + range…`
-  - `[2/4] Collecting files + context…`
-  - `[3/4] Running review (fresh context)…`
-  - `[4/4] Writing review artifact…`
+  - `[1/5] Resolving scope + range…`
+  - `[2/5] Collecting files + context…`
+  - `[3/5] Checking subagent availability…`
+  - `[4/5] Running review…`
+  - `[5/5] Writing review artifact…`
 - For long-running operations (reviewing large diffs, running verification commands), print a start line and a completion line (duration optional).
 - Keep it concise; don’t print a line for every shell command.
 
@@ -269,19 +270,41 @@ Build the "Review Scope" metadata for the reviewer:
 
 ### Step 6: Execute Review (3-Tier Capability Model)
 
-**Tier 1: Subagent (if available)**
+**Step 6a: Probe Subagent Availability**
 
-If the host supports spawning subagents (e.g., Claude Code Task tool):
-- Spawn `oat-reviewer` agent with the Review Scope metadata
-- Instruct it to write the review artifact
-- Subagent ends with: "Review complete. Return to main session and run the `oat-project-review-receive` skill"
+Before selecting a tier, announce the probe and its result so the user can see what's happening:
 
-Tell user: "Running review via subagent (fresh context)..."
+```
+[3/5] Checking subagent availability…
+  → oat-reviewer: {available | not resolved} ({reason})
+  → Selected: Tier {1|2|3} — {Subagent (fresh context) | Fresh session (recommended) | Inline review}
+```
 
-**Tier 2: Fresh Session (recommended fallback)**
+Detection logic:
+- If the host supports the Task tool with custom `subagent_type` values (e.g., Claude Code, Codex), attempt to resolve `oat-reviewer`. It should be registered at `.claude/agents/oat-reviewer.md` (symlink to `.agents/agents/oat-reviewer.md`).
+- If the Task tool is available and `oat-reviewer` can be dispatched → **Tier 1**.
+- If the Task tool is not available or subagent dispatch is not supported → **Tier 2**.
+- If user explicitly requests inline or confirms they are already in a fresh session → **Tier 3**.
 
-If subagents not available:
-- Tell user: "Subagent not available. For best results, run this review in a fresh session."
+**Step 6b: Tier 1 — Subagent (if available)**
+
+First, pre-compute the review artifact path using Step 7 naming conventions so it can be passed to the subagent.
+
+Then spawn the reviewer:
+- Use Task tool with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`)
+- Pass the Review Scope metadata block from Step 5 as the prompt
+- Include the pre-computed artifact path for the subagent to write to
+- Run in background if supported (`run_in_background: true`)
+
+The `oat-reviewer` agent definition contains the full review process, mode contract, severity categories, artifact template, and critical rules. No additional instructions need to be injected.
+
+After the subagent completes:
+- Verify the review artifact was written to the expected path
+- Continue with Step 9 (plan update) and Step 9.5 (commit)
+
+**Step 6c: Tier 2 — Fresh Session (recommended fallback)**
+
+If subagent not available:
 - If user is already in a fresh session (confirmed), proceed to Tier 3.
 - If user prefers fresh session: provide instructions and exit.
 
@@ -294,10 +317,9 @@ To run review in a fresh session:
 4. Run the oat-project-review-receive skill
 ```
 
-**Tier 3: Inline Reset (fallback)**
+**Step 6d: Tier 3 — Inline Reset (fallback)**
 
 If user insists on inline review in current session:
-- Tell user: "Running inline review. This is less reliable than fresh context."
 - Run "reset protocol":
   1. Re-read required artifacts for current workflow mode from scratch
   2. Read all files in FILES_CHANGED

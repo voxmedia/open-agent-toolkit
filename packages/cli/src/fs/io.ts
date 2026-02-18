@@ -8,7 +8,7 @@ import {
   symlink,
   writeFile,
 } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join, relative } from 'node:path';
 
 export async function fileExists(path: string): Promise<boolean> {
   try {
@@ -68,8 +68,15 @@ export async function createSymlink(
 ): Promise<LinkStrategy> {
   await ensureDir(dirname(linkPath));
 
+  // Use relative symlink targets so links stay valid when the source tree
+  // moves (e.g., git worktrees that are later deleted). The original absolute
+  // path is preserved for the copy fallback below.
+  const symlinkTarget = isAbsolute(target)
+    ? relative(dirname(linkPath), target)
+    : target;
+
   try {
-    await symlink(target, linkPath, isFile ? 'file' : 'dir');
+    await symlink(symlinkTarget, linkPath, isFile ? 'file' : 'dir');
     return 'symlink';
   } catch (error) {
     onFallback?.(error);

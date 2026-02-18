@@ -4,11 +4,12 @@ import {
   mkdtemp,
   readdir,
   readFile,
+  readlink,
   rm,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   atomicWriteJson,
@@ -43,6 +44,38 @@ describe('fs/io', () => {
     const stat = await lstat(linkDir);
     expect(stat.isSymbolicLink()).toBe(true);
     expect(strategy).toBe('symlink');
+  });
+
+  it('createSymlink uses relative target when given absolute paths', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    tempDirs.push(root);
+    const srcDir = join(root, 'canonical', 'agents');
+    const linkDir = join(root, 'provider', 'agents', 'link');
+    await mkdir(srcDir, { recursive: true });
+
+    await createSymlink(srcDir, linkDir);
+
+    const linkTarget = await readlink(linkDir);
+    expect(isAbsolute(linkTarget)).toBe(false);
+    // Verify the symlink still resolves correctly
+    const stat = await lstat(linkDir);
+    expect(stat.isSymbolicLink()).toBe(true);
+  });
+
+  it('createSymlink creates a file symlink with relative target', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    tempDirs.push(root);
+    const srcFile = join(root, 'canonical', 'agent.md');
+    const linkFile = join(root, 'provider', 'agent.md');
+    await mkdir(join(root, 'canonical'), { recursive: true });
+    await writeFile(srcFile, 'content', 'utf8');
+
+    await createSymlink(srcFile, linkFile, undefined, true);
+
+    const linkTarget = await readlink(linkFile);
+    expect(isAbsolute(linkTarget)).toBe(false);
+    // Verify the symlink resolves and content is readable
+    expect(await readFile(linkFile, 'utf8')).toBe('content');
   });
 
   it('createSymlink with copy fallback copies directory when symlink fails', async () => {
