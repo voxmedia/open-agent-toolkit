@@ -373,6 +373,24 @@ describe('scaffoldProject', () => {
     ).resolves.toBe('');
   });
 
+  it('does not reject when refreshDashboardCallback throws', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'throw-demo',
+      refreshDashboard: true,
+      refreshDashboardCallback: () => {
+        throw new Error('dashboard kaboom');
+      },
+      today: '2026-02-16',
+    });
+
+    expect(result.dashboardRefreshed).toBe(false);
+    expect(result.projectPath).toContain('throw-demo');
+  });
+
   it('updates active-project pointer and triggers dashboard refresh callback', async () => {
     const repoRoot = await createRepoRoot();
     tempDirs.push(repoRoot);

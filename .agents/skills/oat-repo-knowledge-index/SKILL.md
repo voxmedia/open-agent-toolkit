@@ -68,7 +68,7 @@ Store as `HEAD_SHA` and `MERGE_BASE_SHA` for frontmatter.
 **Purpose:** Create a fast, lightweight index immediately so other skills can load it without waiting for full analysis.
 
 ```bash
-bash .oat/scripts/generate-thin-index.sh "$HEAD_SHA" "$MERGE_BASE_SHA"
+pnpm run cli -- index init --head-sha "$HEAD_SHA" --merge-base-sha "$MERGE_BASE_SHA"
 ```
 
 This script:
@@ -653,9 +653,7 @@ Next: Start a project with oat-project-new or explore knowledge files
 After knowledge base generation, regenerate the repo state dashboard:
 
 ```bash
-if [[ -f ".oat/scripts/generate-oat-state.sh" ]]; then
-  .oat/scripts/generate-oat-state.sh
-fi
+pnpm run cli -- state refresh
 ```
 
 This ensures the dashboard reflects fresh knowledge status immediately.

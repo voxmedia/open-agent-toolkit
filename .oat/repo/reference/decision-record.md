@@ -125,7 +125,7 @@ Add a `create-oat-skill` skill as a specialization of `create-skill`:
 - **Related:**
   - `.oat/repo/reference/deferred-phases.md`
   - `.oat/repo/reference/current-state.md`
-  - `.oat/scripts/generate-oat-state.sh` (already reads both formats)
+  - `oat state refresh` CLI command (reads both formats)
 
 #### Decision
 

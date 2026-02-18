@@ -46,7 +46,7 @@ echo "Active project cleared."
 ### Step 3: Regenerate Dashboard
 
 ```bash
-.oat/scripts/generate-oat-state.sh
+pnpm run cli -- state refresh
 ```
 
 ### Step 4: Confirm to User

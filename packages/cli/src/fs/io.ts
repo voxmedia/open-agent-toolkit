@@ -4,10 +4,20 @@ import {
   readFile,
   rename,
   rm,
+  stat,
   symlink,
   writeFile,
 } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+
+export async function fileExists(path: string): Promise<boolean> {
+  try {
+    const s = await stat(path);
+    return s.isFile();
+  } catch {
+    return false;
+  }
+}
 
 export type LinkStrategy = 'symlink' | 'copy';
 

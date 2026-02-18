@@ -1,1 +1,1 @@
-/Users/thomas.stang/Code/open-agent-toolkit/.agents/agents/oat-codebase-mapper.md
+/Users/thomas.stang/Code/open-agent-toolkit-worktrees/oat-state-index-cli/.agents/agents/oat-codebase-mapper.md

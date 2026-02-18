@@ -272,9 +272,7 @@ Next Step: {recommendation}
 After all progress checks, regenerate the repo state dashboard:
 
 ```bash
-if [[ -f ".oat/scripts/generate-oat-state.sh" ]]; then
-  .oat/scripts/generate-oat-state.sh
-fi
+pnpm run cli -- state refresh
 ```
 
 ## Success Criteria

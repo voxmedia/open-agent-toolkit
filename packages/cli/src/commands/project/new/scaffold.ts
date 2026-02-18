@@ -1,6 +1,8 @@
-import { spawnSync } from 'node:child_process';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import { generateStateDashboard } from '@commands/state/generate';
+import { fileExists } from '@fs/io';
 
 export type ProjectScaffoldMode = 'full' | 'quick' | 'import';
 
@@ -13,7 +15,7 @@ export interface ScaffoldProjectOptions {
   refreshDashboard?: boolean;
   env?: NodeJS.ProcessEnv;
   today?: string;
-  refreshDashboardCallback?: (repoRoot: string) => void;
+  refreshDashboardCallback?: (repoRoot: string) => void | Promise<void>;
 }
 
 export interface ScaffoldProjectResult {
@@ -38,35 +40,6 @@ const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
   quick: ['state.md', 'discovery.md', 'plan.md', 'implementation.md'],
   import: ['state.md', 'plan.md', 'implementation.md'],
 };
-
-async function fileExists(path: string): Promise<boolean> {
-  try {
-    const s = await stat(path);
-    return s.isFile();
-  } catch {
-    return false;
-  }
-}
-
-async function resolveProjectsRoot(
-  repoRoot: string,
-  env: NodeJS.ProcessEnv,
-): Promise<string> {
-  const envRoot = env.OAT_PROJECTS_ROOT?.trim();
-  if (envRoot) {
-    return envRoot.replace(/\/+$/, '');
-  }
-
-  const rootFile = join(repoRoot, '.oat', 'projects-root');
-  if (await fileExists(rootFile)) {
-    const fromFile = (await readFile(rootFile, 'utf8')).trim();
-    if (fromFile) {
-      return fromFile.replace(/\/+$/, '');
-    }
-  }
-
-  return '.oat/projects/shared';
-}
 
 function validateProjectName(name: string): void {
   if (name.startsWith('-')) {
@@ -93,9 +66,8 @@ function applyTemplateReplacements(
     .replaceAll(/\n?oat_template_name:\s*[^\n]*\n/gi, '\n');
 }
 
-function defaultRefreshDashboard(repoRoot: string): void {
-  const scriptPath = join(repoRoot, '.oat', 'scripts', 'generate-oat-state.sh');
-  spawnSync('bash', [scriptPath], { cwd: repoRoot, stdio: 'inherit' });
+async function defaultRefreshDashboard(repoRoot: string): Promise<void> {
+  await generateStateDashboard({ repoRoot });
 }
 
 async function scaffoldModeTemplates(
@@ -184,10 +156,18 @@ export async function scaffoldProject(
     await writeActiveProjectPointer(options.repoRoot, projectPath);
   }
 
+  let dashboardRefreshed = false;
   if (refreshDashboard) {
-    (options.refreshDashboardCallback ?? defaultRefreshDashboard)(
-      options.repoRoot,
-    );
+    try {
+      await (options.refreshDashboardCallback ?? defaultRefreshDashboard)(
+        options.repoRoot,
+      );
+      dashboardRefreshed = true;
+    } catch (error) {
+      console.error(
+        `Warning: dashboard refresh failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   return {
@@ -197,6 +177,6 @@ export async function scaffoldProject(
     createdFiles,
     skippedFiles,
     activePointerUpdated: setActive,
-    dashboardRefreshed: refreshDashboard,
+    dashboardRefreshed,
   };
 }

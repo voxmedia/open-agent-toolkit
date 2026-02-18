@@ -48,7 +48,6 @@ Project scope is used for project workflows and repo-local sync state. User scop
 | `.oat/ideas/` | Project-level ideas store | Often gitignored |
 | `.oat/sync/` | Interop sync state/config | See details below |
 | `.oat/templates/` | Artifact templates used by OAT skills | Source for scaffolding |
-| `.oat/scripts/` | OAT utility scripts | Internal workflow utilities |
 | `.oat/repo/` | Repo-level knowledge/reference/review artifacts | Durable operational records |
 
 ## `.oat/sync/` details

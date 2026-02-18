@@ -25,7 +25,6 @@ Phase-A ownership note:
 
 - Templates: `.oat/templates/`
 - Runtime sync state: `.oat/sync/`
-- Remaining utility scripts: `.oat/scripts/`
 - Repo knowledge: `.oat/repo/knowledge/`
 - Repo reference docs: `.oat/repo/reference/`
 - Repo reviews: `.oat/repo/reviews/`

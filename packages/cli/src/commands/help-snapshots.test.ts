@@ -44,7 +44,9 @@ describe('help output snapshots', () => {
         sync [options]   Sync canonical content to provider views
         providers        Inspect provider capabilities and paths
         doctor           Run environment and setup diagnostics
+        index            OAT index generation commands
         project          Manage OAT project workflows
+        state            OAT repo state commands
         internal         Internal OAT maintenance commands
         help [command]   display help for command
       "
@@ -186,6 +188,40 @@ describe('help output snapshots', () => {
     `);
   });
 
+  it('index --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['index']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat index [options] [command]
+
+      OAT index generation commands
+
+      Options:
+        -h, --help      display help for command
+
+      Commands:
+        init [options]  Generate a thin project-index.md for quick repo orientation
+        help [command]  display help for command
+      "
+    `);
+  });
+
+  it('index init --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['index', 'init']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat index init [options]
+
+      Generate a thin project-index.md for quick repo orientation
+
+      Options:
+        --head-sha <sha>        Override HEAD SHA
+        --merge-base-sha <sha>  Override merge-base SHA
+        -h, --help              display help for command
+      "
+    `);
+  });
+
   it('project --help matches snapshot', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, ['project']).helpInformation();
@@ -225,6 +261,23 @@ describe('help output snapshots', () => {
         --no-set-active  Do not update .oat/active-project
         --no-dashboard   Do not refresh .oat/state.md after scaffold
         -h, --help       display help for command
+      "
+    `);
+  });
+
+  it('state refresh --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'state',
+      'refresh',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat state refresh [options]
+
+      Regenerate the OAT repo state dashboard (.oat/state.md)
+
+      Options:
+        -h, --help  display help for command
       "
     `);
   });
