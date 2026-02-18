@@ -1,1 +1,1 @@
-/Users/thomas.stang/Code/open-agent-toolkit-worktrees/oat-state-index-cli/.agents/agents/oat-reviewer.md
+/Users/thomas.stang/.codex/worktrees/82fe/open-agent-toolkit/.agents/agents/oat-reviewer.md

@@ -332,11 +332,16 @@ Minor findings handling is scope-aware:
 
 - If `scope == final`:
   - Minor findings are NOT auto-deferred silently.
+  - Before asking for disposition, explain each minor in plain language:
+    - what the issue is,
+    - potential user/maintainer impact,
+    - why fixing now vs deferring is reasonable.
+  - Keep explanations concise (1-3 sentences per minor) and include file/line when available.
   - Ask user explicitly:
     ```
     {N} minor findings pending final disposition:
-    - {Finding 1 summary}
-    - {Finding 2 summary}
+    - {Finding 1 summary} — {brief explanation}
+    - {Finding 2 summary} — {brief explanation}
     ...
 
     Options:
