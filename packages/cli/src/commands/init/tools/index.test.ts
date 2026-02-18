@@ -27,12 +27,16 @@ function createHarness(options: HarnessOptions = {}) {
   const scopeSelection = [...(options.scopeSelection ?? ['project'])];
 
   const selectManyWithAbort = vi.fn(
-    async (_message: string, _choices: MultiSelectChoice<string>[]) =>
-      packSelection.shift() ?? ['ideas', 'workflows', 'utility'],
+    async (_message: string, _choices: MultiSelectChoice<string>[]) => {
+      const next = packSelection.shift();
+      return next === undefined ? ['ideas', 'workflows', 'utility'] : next;
+    },
   );
   const selectWithAbort = vi.fn(
-    async (_message: string, _choices: SelectChoice<'project' | 'user'>[]) =>
-      scopeSelection.shift() ?? 'project',
+    async (_message: string, _choices: SelectChoice<'project' | 'user'>[]) => {
+      const next = scopeSelection.shift();
+      return next === undefined ? 'project' : next;
+    },
   );
 
   const installIdeas = vi.fn(async () => ({
@@ -202,5 +206,21 @@ describe('createInitToolsCommand', () => {
     expect(installUtility).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
+  });
+
+  it('bare oat init tools cancellation exits without installing packs', async () => {
+    const { command, capture, installIdeas, installWorkflows, installUtility } =
+      createHarness({
+        interactive: true,
+        packSelection: [null],
+      });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(installIdeas).not.toHaveBeenCalled();
+    expect(installWorkflows).not.toHaveBeenCalled();
+    expect(installUtility).not.toHaveBeenCalled();
+    expect(capture.info).toContain('No tool packs selected.');
+    expect(process.exitCode).toBe(0);
   });
 });
