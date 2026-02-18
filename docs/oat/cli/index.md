@@ -13,6 +13,10 @@ The CLI is a standalone value path: you can use it without adopting OAT workflow
 
 ## Additional command groups
 
+- `oat cleanup project`
+  - Project-state hygiene cleanup (pointer/state/lifecycle drift), dry-run by default.
+- `oat cleanup artifacts`
+  - Review/reference artifact hygiene cleanup with duplicate pruning and stale triage.
 - `oat project new <name>`
   - Mode-aware project scaffolding (`--mode full|quick|import`).
 - `oat internal validate-oat-skills`

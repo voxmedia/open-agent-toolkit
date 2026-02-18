@@ -34,7 +34,7 @@ flowchart TD
 
 | Mode | Best for | Primary entry points |
 |---|---|---|
-| Interop-only | Canonical skill/agent sync + drift diagnostics | `oat init`, `oat status`, `oat sync`, `oat providers ...`, `oat doctor` |
+| Interop-only | Canonical skill/agent sync + drift diagnostics | `oat init`, `oat status`, `oat sync`, `oat providers ...`, `oat cleanup ...`, `oat doctor` |
 | Provider-agnostic tooling | Reusing skills/utilities without full lifecycle overhead | `docs/oat/skills/index.md`, selected `oat-*` skills |
 | Workflow | Structured execution with durable artifacts and review gates | `oat-project-new`/`oat-project-open`, then lane-specific skills |
 
@@ -45,6 +45,7 @@ Use OAT only for cross-provider asset management:
 - Initialize canonical directories
 - Detect drift and strays
 - Sync provider views safely
+- Audit and clean workflow/project hygiene drift
 - Run diagnostics
 
 Primary commands:
@@ -54,6 +55,8 @@ Primary commands:
 - `oat providers list`
 - `oat providers inspect <provider>`
 - `oat providers set`
+- `oat cleanup project`
+- `oat cleanup artifacts`
 - `oat doctor`
 
 This mode is useful even if you do not use OAT workflow skills at all.
@@ -141,7 +144,26 @@ Notes:
 - In non-interactive contexts, set provider intent explicitly:
   - `pnpm run cli -- providers set --scope project --enabled claude,codex --disabled cursor`
 
-### 4) Bootstrap a new worktree checkout
+### 4) Audit and clean project/artifact hygiene (optional)
+
+```bash
+pnpm run cli -- cleanup project
+pnpm run cli -- cleanup artifacts
+```
+
+Apply mode examples:
+
+```bash
+pnpm run cli -- cleanup project --apply
+pnpm run cli -- cleanup artifacts --apply
+```
+
+Notes:
+- Cleanup commands are dry-run by default.
+- `cleanup artifacts --apply` uses interactive triage in TTY contexts by default.
+- In non-interactive contexts, use `--all-candidates --yes` to allow stale-candidate mutation.
+
+### 5) Bootstrap a new worktree checkout
 
 ```bash
 pnpm run worktree:init
@@ -189,6 +211,8 @@ oat providers set --scope project --enabled claude,codex --disabled cursor
 oat status --scope all
 oat sync --scope all
 oat sync --scope all --apply
+oat cleanup project
+oat cleanup artifacts
 oat doctor --scope all
 ```
 
