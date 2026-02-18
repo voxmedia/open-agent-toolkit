@@ -954,7 +954,7 @@ git commit -m "fix(p07-t08): restrict bundled optional scripts to allowlist"
 | p04 | code | pending | - | - |
 | p05 | code | pending | - | - |
 | p06 | code | pending | - | - |
-| final | code | fixes_completed | 2026-02-18 | reviews/final-review-2026-02-17.md |
+| final | code | passed | 2026-02-18 | reviews/final-review-2026-02-17-v2.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
