@@ -101,6 +101,18 @@ assert_line_count "tasks: header per phase" "$PHASE_OUTPUT" "    tasks:" 4
 # Task items should be indented under tasks:
 assert_contains "task item indented under phase" "$PHASE_OUTPUT" '      - "p01-t01"'
 
+# Manifest delimiters: open and close markers are present and properly structured
+assert_contains "manifest open marker" "$PHASE_OUTPUT" "--- dispatch_manifest ---"
+# Closing delimiter: should end with bare "---" (from dispatch.sh line after hil_checkpoints)
+LAST_DASHES=$(echo "$PHASE_OUTPUT" | grep -c '^---$' || true)
+if [[ "$LAST_DASHES" -ge 1 ]]; then
+  echo "  PASS: manifest closing delimiter present"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: manifest closing delimiter missing"
+  FAIL=$((FAIL + 1))
+fi
+
 echo ""
 echo "=== Results ==="
 echo "Passed: $PASS"

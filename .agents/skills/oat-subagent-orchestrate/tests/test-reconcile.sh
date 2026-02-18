@@ -228,6 +228,16 @@ else
   FAIL=$((FAIL + 1))
 fi
 
+# Verify file content integrity: package.json should have original content
+ROLLBACK_PKG=$(cat "$TMPDIR2/package.json")
+if [[ "$ROLLBACK_PKG" == '{ "name": "rollback-test" }' ]]; then
+  echo "  PASS: package.json content restored after rollback"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: package.json content differs after rollback: $ROLLBACK_PKG"
+  FAIL=$((FAIL + 1))
+fi
+
 # Restore PATH for subsequent tests
 export PATH="${PATH#$SHIMDIR2/bin:}"
 
