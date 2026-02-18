@@ -154,6 +154,83 @@ else
   FAIL=$((FAIL + 1))
 fi
 
+# ─── Test 2: Failing Integration Rollback ─────────────────────────────
+echo ""
+echo "=== Test 2: Failing Integration Rollback ==="
+echo ""
+
+# Create a fresh temp repo for the rollback test
+TMPDIR2=$(mktemp -d)
+SHIMDIR2=$(mktemp -d)
+# Update trap to clean both
+trap 'rm -rf "$TMPDIR" "$TMPDIR2" "$SHIMDIR2"' EXIT
+
+cd "$TMPDIR2"
+git init -b orchestration-branch
+git config user.email "test@test.com"
+git config user.name "Test"
+
+# Initial commit
+echo '{ "name": "rollback-test" }' > package.json
+git add .
+git commit -m "initial commit"
+
+# Record the initial HEAD (should match post-rollback)
+INITIAL_SHA=$(git rev-parse HEAD)
+
+# Create a unit branch with a new file
+git checkout -b "project/p01"
+echo 'export const Broken = true;' > broken-feature.ts
+git add .
+git commit -m "feat(p01): add broken feature"
+git checkout orchestration-branch
+
+# Create pnpm shim OUTSIDE git repo that fails on 'test'
+mkdir -p "$SHIMDIR2/bin"
+cat > "$SHIMDIR2/bin/pnpm" <<'SHIM'
+#!/bin/bash
+case "$1" in
+  test) exit 1 ;;
+  *) exit 0 ;;
+esac
+SHIM
+chmod +x "$SHIMDIR2/bin/pnpm"
+export PATH="$SHIMDIR2/bin:$PATH"
+
+ROLLBACK_OUTPUT=$(bash "$SKILL_DIR/scripts/reconcile.sh" orchestration-branch "project/p01" 2>&1)
+
+echo "$ROLLBACK_OUTPUT"
+echo ""
+echo "--- Assertions ---"
+
+# The merge should be reverted
+assert_contains "result is reverted" "$ROLLBACK_OUTPUT" "result: reverted"
+assert_contains "integration verdict fail" "$ROLLBACK_OUTPUT" "verdict: fail"
+assert_contains "reverted count is 1" "$ROLLBACK_OUTPUT" "reverted: 1"
+assert_contains "merged count is 0" "$ROLLBACK_OUTPUT" "merged: 0"
+
+# The merged file should NOT exist after rollback
+if [[ ! -f "$TMPDIR2/broken-feature.ts" ]]; then
+  echo "  PASS: merged file absent after rollback"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: merged file still present after rollback"
+  FAIL=$((FAIL + 1))
+fi
+
+# HEAD should match pre-merge state
+POST_ROLLBACK_SHA=$(git rev-parse HEAD)
+if [[ "$POST_ROLLBACK_SHA" == "$INITIAL_SHA" ]]; then
+  echo "  PASS: HEAD matches pre-merge SHA after rollback"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: HEAD ($POST_ROLLBACK_SHA) does not match pre-merge ($INITIAL_SHA)"
+  FAIL=$((FAIL + 1))
+fi
+
+# Restore PATH for subsequent tests
+export PATH="${PATH#$SHIMDIR2/bin:}"
+
 echo ""
 echo "=== Results ==="
 echo "Passed: $PASS"

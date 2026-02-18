@@ -67,6 +67,7 @@ for UNIT_BRANCH in "${SORTED_BRANCHES[@]}"; do
   # ─── Attempt Merge ────────────────────────────────────────────────────
   STRATEGY_USED="$MERGE_STRATEGY"
   MERGE_RESULT="pending"
+  PRE_MERGE_SHA=$(git rev-parse HEAD)
 
   if [[ "$MERGE_STRATEGY" == "merge" ]]; then
     if git merge --no-ff "$UNIT_BRANCH" -m "merge($UNIT_ID): reconcile unit into orchestration branch" 2>/dev/null; then
@@ -120,7 +121,6 @@ for UNIT_BRANCH in "${SORTED_BRANCHES[@]}"; do
   fi
 
   echo "    strategy: \"$STRATEGY_USED\""
-  echo "    result: $MERGE_RESULT"
 
   # ─── Integration Verification ─────────────────────────────────────────
   if [[ "$MERGE_RESULT" == "clean" ]]; then
@@ -140,19 +140,20 @@ for UNIT_BRANCH in "${SORTED_BRANCHES[@]}"; do
       TOTAL_MERGED=$((TOTAL_MERGED + 1))
     else
       INTEGRATION="fail"
-      # Revert the merge
-      git revert --no-commit HEAD 2>/dev/null && git reset HEAD 2>/dev/null || true
-      git checkout -- . 2>/dev/null || true
+      # Rollback to pre-merge state
+      git reset --hard "$PRE_MERGE_SHA" 2>/dev/null || true
       MERGE_RESULT="reverted"
       TOTAL_REVERTED=$((TOTAL_REVERTED + 1))
     fi
 
+    echo "    result: $MERGE_RESULT"
     echo "    integration:"
     echo "      tests: $([ "$TESTS_PASS" == true ] && echo 'pass' || echo 'fail')"
     echo "      lint: $([ "$LINT_PASS" == true ] && echo 'pass' || echo 'fail')"
     echo "      type_check: $([ "$TYPECHECK_PASS" == true ] && echo 'pass' || echo 'fail')"
     echo "      verdict: $INTEGRATION"
   else
+    echo "    result: $MERGE_RESULT"
     TOTAL_CONFLICTS=$((TOTAL_CONFLICTS + 1))
     echo "    integration: skipped (merge not clean)"
 
