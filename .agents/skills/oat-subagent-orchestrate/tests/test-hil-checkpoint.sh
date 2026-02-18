@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+# Test: HiL checkpoint behavior
+#
+# Validates that dispatch.sh correctly extracts oat_plan_hil_phases from
+# plan frontmatter and that the orchestrator can determine checkpoint boundaries.
+#
+# Scenarios:
+# 1. Plan with HiL at p04 — phases p01-p03 can run, must pause before p04
+# 2. Plan with HiL at p02 — only p01 runs before checkpoint
+# 3. Plan with no HiL — default behavior (pause at every phase)
+#
+# Usage: bash tests/test-hil-checkpoint.sh
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+FIXTURES_DIR="$SCRIPT_DIR/fixtures"
+PASS=0
+FAIL=0
+
+assert_contains() {
+  local label="$1" output="$2" expected="$3"
+  if echo "$output" | grep -qF -- "$expected"; then
+    echo "  PASS: $label"
+    PASS=$((PASS + 1))
+  else
+    echo "  FAIL: $label — expected to contain: $expected"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+# ─── Test 1: HiL at p04 ──────────────────────────────────────────────────
+echo "=== Test 1: HiL checkpoint at p04 ==="
+echo ""
+
+OUTPUT_1=$(bash "$SKILL_DIR/scripts/dispatch.sh" "$FIXTURES_DIR/sample-plan.md" "$FIXTURES_DIR" "test-branch" 2>&1)
+
+# Extract HiL checkpoints line
+HIL_LINE_1=$(echo "$OUTPUT_1" | grep "hil_checkpoints:")
+assert_contains "extracts hil_checkpoints" "$HIL_LINE_1" "hil_checkpoints:"
+# The sample-plan.md has oat_plan_hil_phases: ["p04"]
+assert_contains "contains p04 checkpoint" "$HIL_LINE_1" "p04"
+
+echo ""
+
+# ─── Test 2: HiL at p02 (modified fixture) ───────────────────────────────
+echo "=== Test 2: HiL checkpoint at p02 ==="
+echo ""
+
+# Create a modified fixture with HiL at p02
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
+
+sed 's/oat_plan_hil_phases: \["p04"\]/oat_plan_hil_phases: ["p02"]/' "$FIXTURES_DIR/sample-plan.md" > "$TMPDIR/plan-hil-p02.md"
+
+OUTPUT_2=$(bash "$SKILL_DIR/scripts/dispatch.sh" "$TMPDIR/plan-hil-p02.md" "$TMPDIR" "test-branch" 2>&1)
+
+HIL_LINE_2=$(echo "$OUTPUT_2" | grep "hil_checkpoints:")
+assert_contains "extracts p02 checkpoint" "$HIL_LINE_2" "p02"
+
+echo ""
+
+# ─── Test 3: No HiL phases (empty) ───────────────────────────────────────
+echo "=== Test 3: No HiL phases (empty array) ==="
+echo ""
+
+sed 's/oat_plan_hil_phases: \["p04"\]/oat_plan_hil_phases: []/' "$FIXTURES_DIR/sample-plan.md" > "$TMPDIR/plan-no-hil.md"
+
+OUTPUT_3=$(bash "$SKILL_DIR/scripts/dispatch.sh" "$TMPDIR/plan-no-hil.md" "$TMPDIR" "test-branch" 2>&1)
+
+HIL_LINE_3=$(echo "$OUTPUT_3" | grep "hil_checkpoints:")
+assert_contains "extracts empty hil_checkpoints" "$HIL_LINE_3" "hil_checkpoints: []"
+
+echo ""
+
+# ─── Test 4: Validate partition logic (script-level) ─────────────────────
+echo "=== Test 4: Validate checkpoint partition logic ==="
+echo ""
+
+# Parse the dispatch manifest from Test 1 and verify phase ordering
+# The sample plan has 4 phases. With HiL at p04:
+# Run 1: p01, p02, p03 (before checkpoint)
+# Run 2: p04 (after checkpoint, requires user approval)
+
+# Verify all 4 phases are identified in the manifest
+PHASE_COUNT=$(echo "$OUTPUT_1" | grep -c "type: phase" || true)
+if [[ "$PHASE_COUNT" -eq 4 ]]; then
+  echo "  PASS: all 4 phases identified in manifest"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: expected 4 phases, got $PHASE_COUNT"
+  FAIL=$((FAIL + 1))
+fi
+
+# Verify checkpoint info allows orchestrator to partition
+# The orchestrator reads hil_checkpoints and stops before dispatching p04
+assert_contains "p01 is in pre-checkpoint run" "$OUTPUT_1" 'unit_id: "p01"'
+assert_contains "p02 is in pre-checkpoint run" "$OUTPUT_1" 'unit_id: "p02"'
+assert_contains "p03 is in pre-checkpoint run" "$OUTPUT_1" 'unit_id: "p03"'
+assert_contains "p04 is identified for post-checkpoint" "$OUTPUT_1" 'unit_id: "p04"'
+
+echo ""
+
+# ─── Test 5: Multiple HiL checkpoints ────────────────────────────────────
+echo "=== Test 5: Multiple HiL checkpoints ==="
+echo ""
+
+sed 's/oat_plan_hil_phases: \["p04"\]/oat_plan_hil_phases: ["p02", "p04"]/' "$FIXTURES_DIR/sample-plan.md" > "$TMPDIR/plan-multi-hil.md"
+
+OUTPUT_5=$(bash "$SKILL_DIR/scripts/dispatch.sh" "$TMPDIR/plan-multi-hil.md" "$TMPDIR" "test-branch" 2>&1)
+
+HIL_LINE_5=$(echo "$OUTPUT_5" | grep "hil_checkpoints:")
+assert_contains "extracts multiple checkpoints" "$HIL_LINE_5" "p02"
+assert_contains "includes second checkpoint" "$HIL_LINE_5" "p04"
+
+echo ""
+echo "=== Results ==="
+echo "Passed: $PASS"
+echo "Failed: $FAIL"
+
+if [[ $FAIL -gt 0 ]]; then
+  echo "OVERALL: FAIL"
+  exit 1
+else
+  echo "OVERALL: PASS"
+fi
