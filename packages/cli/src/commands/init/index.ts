@@ -51,6 +51,7 @@ import {
 } from '@providers/shared';
 import type { ConcreteScope, Scope } from '@shared/types';
 import { Command } from 'commander';
+import { createInitToolsCommand } from './tools';
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
@@ -475,9 +476,10 @@ export function createInitCommand(
   };
 
   return new Command('init')
-    .description('Initialize canonical directories and manifest')
+    .description('Initialize canonical directories, manifest, and tool packs')
     .option('--hook', 'Install optional pre-commit hook')
     .option('--no-hook', 'Skip optional pre-commit hook install')
+    .addCommand(createInitToolsCommand())
     .action(async (_options, command: Command) => {
       const options = readGlobalOptions(command) as InitOptions;
       const context = dependencies.buildCommandContext(options);
