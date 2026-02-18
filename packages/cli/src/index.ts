@@ -7,10 +7,20 @@ import { registerCommands } from './commands';
 import { CliError } from './errors';
 import { createLogger } from './ui';
 
+export function normalizeArgv(argv: string[]): string[] {
+  // `pnpm run <script> -- ...` passes a literal `--` into argv.
+  // Strip that sentinel so Commander can parse subcommand options normally.
+  if (argv.length >= 3 && argv[2] === '--') {
+    return [argv[0], argv[1], ...argv.slice(3)];
+  }
+
+  return argv;
+}
+
 export async function main(argv: string[] = process.argv): Promise<void> {
   const program = createProgram();
   registerCommands(program);
-  await program.parseAsync(argv);
+  await program.parseAsync(normalizeArgv(argv));
 }
 
 function isEntrypoint(): boolean {

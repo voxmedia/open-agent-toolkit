@@ -153,6 +153,25 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related backlog area: artifact cleanup and stale review/external-plan management
   - Created: 2026-02-18
 
+- [ ] **(P1) [skills] Switch user-facing skill/docs command examples from `pnpm run cli` to direct `oat` CLI**
+  - Target milestone/phase: Workflow UX consistency + invocation reliability
+  - Notes:
+    - Update user-facing `oat-*` skills, docs, and templates to prefer direct `oat <command>` invocation.
+    - Remove/avoid guidance that uses `pnpm run cli -- ...` in end-user workflows.
+    - Keep `pnpm`-based invocation only for repo-maintainer/dev contexts where explicitly intended.
+    - Add clear local setup guidance for dogfooding:
+      - build + globally link `@oat/cli`,
+      - verify `oat --help` works before running workflow skills.
+    - Ensure worktree/bootstrap docs align with direct `oat` usage.
+  - Success criteria:
+    - User-facing guidance no longer depends on `pnpm run cli -- ...`.
+    - Workflow skills are consistent about using direct `oat` commands.
+    - Local setup docs include a deterministic path to install/link `oat` for development.
+    - No regressions in existing tests/snapshots that assert CLI help or command text.
+  - Links:
+    - Related issue context: `pnpm run cli -- ...` argv sentinel behavior
+  - Created: 2026-02-18
+
 - [ ] **(P2) [tooling] Optional Codex prompt-wrapper generation for synced OAT skills**
   - Target milestone/phase: Post-standardization enhancement
   - Notes:
