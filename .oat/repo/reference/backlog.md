@@ -130,19 +130,28 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related workflow skills: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-complete`
   - Created: 2026-02-17
 
-- [ ] **(P2) [docs] Add web-research convention using `markdown.new/` URL prefix**
-  - Target milestone/phase: Agent instruction/docs quality
+- [ ] **(P1) [workflow] Add first-class OAT project/repo management workflow family (`oat-pjm-*` or `oat-repo-reference-*`)**
+  - Target milestone/phase: Workflow governance + reference hygiene
   - Notes:
-    - Update AGENTS/docs guidance to prefer `https://markdown.new/<original-url>` when pulling website content for analysis, where applicable.
-    - Document tradeoffs and fallback behavior (use normal fetch path when markdown.new conversion is unavailable or lossy).
-    - Evaluate whether this is docs-only guidance or warrants a small helper skill.
+    - Formalize the internal flows currently being run ad-hoc:
+      - backlog capture/review/completion
+      - decision-record updates
+      - current-state/reference refresh
+      - review and external-plan hygiene (dedupe, archive, cleanup)
+    - Support both operating modes:
+      - **version-controlled mode** (artifacts tracked in git)
+      - **local-only mode** (artifacts kept out of git by policy/config)
+    - Add explicit configuration for:
+      - which `.oat/` directories are gitignored by policy
+      - which directories should copy local <-> worktree during bootstrap/sync
+    - Prefer interactive multi-select flows for cleanup/archive decisions.
   - Success criteria:
-    - AGENTS/docs include a clear, concise convention for markdown-first web retrieval.
-    - Agents avoid unnecessary HTML parsing in common research/review tasks.
-    - Guidance remains optional and does not block direct URL usage when needed.
+    - Teams can run a repeatable PM/reference lifecycle with clear commands/skills.
+    - Same workflow supports both tracked and local-only artifact policies.
+    - Cleanup/archive flows reduce stale duplicates without losing important context.
   - Links:
-    - Service reference: https://markdown.new/
-  - Created: 2026-02-17
+    - Related backlog area: artifact cleanup and stale review/external-plan management
+  - Created: 2026-02-18
 
 - [ ] **(P2) [tooling] Optional Codex prompt-wrapper generation for synced OAT skills**
   - Target milestone/phase: Post-standardization enhancement
@@ -168,24 +177,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - Source discussion: OAT feature ideas (agent context management)
   - Created: 2026-02-14
-
-- [ ] **(P1) [skills] Make `oat-reviewer` mode-aware for quick/import projects (or split reviewer profiles)**
-  - Target milestone/phase: Review workflow robustness across lanes
-  - Notes:
-    - Current reviewer path spawned by `oat-project-review-provide` can assume full-mode artifacts (`spec.md`, `design.md`) that may be absent in quick/import projects.
-    - Update canonical reviewer prompt (`.agents/agents/oat-reviewer.md`) to support artifact-availability-aware review behavior for `full|quick|import` modes.
-    - Evaluate whether to:
-      - keep one reviewer with mode-aware logic, or
-      - split into lane-specific reviewer prompts and route by mode.
-    - Ensure project review skill passes explicit mode + available-artifact context to reviewer invocation.
-  - Success criteria:
-    - Reviewer does not fail or degrade quality when `spec.md`/`design.md` are missing in quick/import projects.
-    - Review output explicitly states assumptions based on available artifacts.
-    - `oat-project-review-provide` routing/tests cover full, quick, and import review contexts.
-  - Links:
-    - Related skill: `.agents/skills/oat-project-review-provide/SKILL.md`
-    - Canonical reviewer prompt: `.agents/agents/oat-reviewer.md`
-  - Created: 2026-02-17
 
 - [ ] **(P1) [skills] Complete review receive + PR-review intake skill family**
   - Target milestone/phase: Workflow expansion after current docs stabilization

@@ -14,6 +14,27 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [skills] Make `oat-reviewer` mode-aware for quick/import projects (B09)**
+  - Outcome:
+    - `oat-project-review-provide` enforces mode-specific artifact requirements for `full|quick|import`.
+    - Review metadata now carries mode + available artifact context (including `discovery.md` and `references/imported-plan.md` where relevant).
+    - Canonical reviewer prompt updated to evaluate requirements from mode-appropriate evidence instead of assuming `spec.md` + `design.md` are always present.
+  - Links:
+    - Skill: `.agents/skills/oat-project-review-provide/SKILL.md`
+    - Reviewer prompt: `.agents/agents/oat-reviewer.md`
+  - Created: 2026-02-17
+  - Completed: 2026-02-18
+
+- [x] **(P2) [docs] Add web-research convention using `markdown.new/` URL prefix (B06)**
+  - Outcome:
+    - Added markdown-first web retrieval guidance to root `AGENTS.md`, including `markdown.new` usage and fallback semantics.
+    - Standardized recommendation for lower-overhead research fetches when source pages are suitable for markdown conversion.
+  - Links:
+    - Guidance: `AGENTS.md`
+    - Service: https://markdown.new/
+  - Created: 2026-02-17
+  - Completed: 2026-02-18
+
 - [x] **(P2) [tooling] Remove `.oat/scripts/` directory after all migrations complete (B16)**
   - Outcome:
     - `.oat/scripts/` directory deleted after all four script migrations completed.
