@@ -276,6 +276,81 @@ If integration verification fails after a merge:
 - If the next unit/phase is a configured HiL checkpoint, pause execution.
 - Report: what completed, what's next, and prompt for user approval to continue.
 
+## Policy Flags
+
+All policies have sensible defaults. Override per-run via CLI flags or persist in `state.md` when `subagent-driven` mode is selected.
+
+### Policy Table
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--merge-strategy` | `merge` \| `cherry-pick` | `merge` | Default merge strategy for fan-in reconciliation. |
+| `--retry-limit` | integer (0-5) | `2` | Max fix-loop retries per unit before marking failed. |
+| `--baseline-policy` | `strict` \| `allow-failing` | `strict` | Passed to `oat-worktree-bootstrap-auto` for baseline checks. |
+| `--dry-run` | boolean | `false` | Run plan analysis and unit identification without execution. |
+| `--unit-granularity` | `phase` \| `task` | `phase` | Fan-out granularity: phase-level or task-level units. |
+
+### Merge Strategy Policy
+
+| Strategy | Behavior | When to Use |
+|----------|----------|-------------|
+| `merge` | `git merge --no-ff` per unit in task-ID order | Default; clean parallel branches with no overlapping files |
+| `cherry-pick` | Cherry-pick individual commits per unit | Fallback when merge conflicts; finer-grained conflict isolation |
+
+**Interaction:** If `merge` fails for a unit, automatically falls back to `cherry-pick` regardless of the configured strategy. If `cherry-pick` also fails, the unit is classified as `conflict` and reported for manual resolution.
+
+### Retry Policy
+
+| Retry Limit | Behavior |
+|-------------|----------|
+| `0` | No retries; first review failure marks unit as failed |
+| `1-5` | Dispatch implementer to fix, re-run failed review stage, up to N times |
+
+**Interaction with review gate:** Each retry dispatches a fresh implementer subagent with the review findings. The same review stage (spec or quality) re-runs. If the stage that previously passed is invalidated by fixes, both stages re-run.
+
+### Baseline Policy
+
+Passed through to `oat-worktree-bootstrap-auto`. See that skill's policy documentation for details.
+
+| Policy | Orchestration Behavior |
+|--------|----------------------|
+| `strict` | Failed bootstrap excludes unit from dispatch |
+| `allow-failing` | Failed bootstrap emits warning; unit still dispatched |
+
+### HiL Checkpoint Mapping
+
+**Source of truth:** `oat_plan_hil_phases` in `plan.md` frontmatter.
+
+**Behavior:**
+1. Orchestrator reads `oat_plan_hil_phases` at the start of each run.
+2. Before dispatching units in a phase that is a HiL checkpoint, orchestrator pauses.
+3. Pause means: complete all in-flight units, reconcile, report, then wait for user approval.
+4. If `oat_plan_hil_phases` is empty, default behavior is to pause at every phase boundary (same as `oat-project-implement`).
+
+**Example:**
+```yaml
+oat_plan_hil_phases: ["p03"]
+```
+- p01 and p02: orchestrator may fan out and reconcile without pausing.
+- Before p03: orchestrator pauses, reports progress, waits for user.
+- p03 onward: resumes after approval.
+
+**Interaction with parallel execution:** HiL checkpoints partition the plan into "runs". Within each run, phases may execute in parallel if eligible. The checkpoint boundary is a hard barrier — all units in the current run must complete before the checkpoint.
+
+### Policy Persistence
+
+When `subagent-driven` mode is selected via `oat-execution-mode-select`, policies can be persisted in `state.md` frontmatter:
+
+```yaml
+oat_execution_mode: subagent-driven
+oat_orchestration_merge_strategy: merge
+oat_orchestration_retry_limit: 2
+oat_orchestration_baseline_policy: strict
+oat_orchestration_unit_granularity: phase
+```
+
+CLI flags override persisted values for that run and also update the persisted value.
+
 ## Dry-Run Mode
 
 When `--dry-run` is specified:

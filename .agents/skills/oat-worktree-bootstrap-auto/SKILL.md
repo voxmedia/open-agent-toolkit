@@ -163,6 +163,24 @@ Append to `implementation.md` under `## Implementation Log`:
 - {check_name}: {failure summary}
 ```
 
+## Policy Flags
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--baseline-policy` | `strict` \| `allow-failing` | `strict` | Controls behavior when baseline checks fail. |
+
+**Policy details:**
+
+| Policy | On Failure | Logging | Status Output |
+|--------|-----------|---------|---------------|
+| `strict` | Fail fast, return error immediately | Error in status output | `status: error` |
+| `allow-failing` | Continue, collect warnings | Append to `implementation.md` (or console) | `status: warning` |
+
+**Orchestrator integration:**
+- When invoked by `oat-subagent-orchestrate`, the baseline policy is passed through from the orchestration run policy.
+- The orchestrator may set `--baseline-policy allow-failing` for exploratory runs and `strict` for production-quality execution.
+- The bootstrap skill does not interpret HiL checkpoints — that responsibility belongs to the orchestrator.
+
 ## Constraints
 
 - **Never** use `AskUserQuestion` — all decisions are policy-driven.
