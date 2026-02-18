@@ -109,10 +109,10 @@ done < "$PLAN_PATH"
 
 echo "---"
 
-# ─── Step 2: Check HiL Checkpoints ─────────────────────────────────────────
-# Extract oat_plan_hil_phases from frontmatter
-HIL_PHASES=$(sed -n '/^---$/,/^---$/p' "$PLAN_PATH" | grep 'oat_plan_hil_phases' | sed 's/.*: //' || true)
-echo "hil_checkpoints: $HIL_PHASES"
+# ─── Step 2: Check HiLL Checkpoints ─────────────────────────────────────────
+# Extract oat_plan_hill_phases from frontmatter
+HIL_PHASES=$(sed -n '/^---$/,/^---$/p' "$PLAN_PATH" | grep 'oat_plan_hill_phases' | sed 's/.*: //' || true)
+echo "hill_checkpoints: $HIL_PHASES"
 
 # ─── Step 3: Output Branch Naming Plan ──────────────────────────────────────
 PROJECT_NAME=$(basename "$PROJECT_PATH")

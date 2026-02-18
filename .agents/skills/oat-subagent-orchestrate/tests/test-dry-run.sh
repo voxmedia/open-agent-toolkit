@@ -67,7 +67,7 @@ assert_contains "phase p01 present" "$PHASE_OUTPUT" 'unit_id: "p01"'
 assert_contains "phase p02 present" "$PHASE_OUTPUT" 'unit_id: "p02"'
 assert_contains "phase p03 present" "$PHASE_OUTPUT" 'unit_id: "p03"'
 assert_contains "phase p04 present" "$PHASE_OUTPUT" 'unit_id: "p04"'
-assert_contains "HiL checkpoints extracted" "$PHASE_OUTPUT" "hil_checkpoints:"
+assert_contains "HiLL checkpoints extracted" "$PHASE_OUTPUT" "hill_checkpoints:"
 assert_contains "branch naming pattern" "$PHASE_OUTPUT" "branch_naming:"
 
 echo ""
@@ -103,7 +103,7 @@ assert_contains "task item indented under phase" "$PHASE_OUTPUT" '      - "p01-t
 
 # Manifest delimiters: open and close markers are present and properly structured
 assert_contains "manifest open marker" "$PHASE_OUTPUT" "--- dispatch_manifest ---"
-# Closing delimiter: should end with bare "---" (from dispatch.sh line after hil_checkpoints)
+# Closing delimiter: should end with bare "---" (from dispatch.sh line after hill_checkpoints)
 LAST_DASHES=$(echo "$PHASE_OUTPUT" | grep -c '^---$' || true)
 if [[ "$LAST_DASHES" -ge 1 ]]; then
   echo "  PASS: manifest closing delimiter present"

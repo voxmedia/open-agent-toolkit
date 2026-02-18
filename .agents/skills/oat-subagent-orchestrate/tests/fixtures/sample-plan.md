@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-02-17
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hil_phases: ["p04"]
+oat_plan_hill_phases: ["p04"]
 oat_plan_source: test
 oat_generated: false
 ---
@@ -20,8 +20,8 @@ oat_generated: false
 
 ## Planning Checklist
 
-- [x] Confirmed HiL checkpoints with user
-- [x] Set `oat_plan_hil_phases` in frontmatter
+- [x] Confirmed HiLL checkpoints with user
+- [x] Set `oat_plan_hill_phases` in frontmatter
 
 ---
 

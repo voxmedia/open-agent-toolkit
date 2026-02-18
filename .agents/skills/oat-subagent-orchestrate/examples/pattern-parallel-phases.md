@@ -6,7 +6,7 @@ Two independent phases execute in parallel, then merge cleanly.
 
 ```yaml
 ---
-oat_plan_hil_phases: ["p03"]
+oat_plan_hill_phases: ["p03"]
 ---
 ```
 
@@ -58,7 +58,7 @@ oat_plan_hil_phases: ["p03"]
 5. **Reconciliation** merges in deterministic order:
    - Merge p01 (order 1) -> integration verification passes
    - Merge p02 (order 2) -> integration verification passes
-6. **HiL checkpoint** at p03: orchestrator pauses, reports progress, waits for user.
+6. **HiLL checkpoint** at p03: orchestrator pauses, reports progress, waits for user.
 7. After user approval, p03 executes sequentially (it modifies files from both p01 and p02).
 
 ## Expected Artifact Output

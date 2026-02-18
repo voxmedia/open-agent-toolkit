@@ -1,4 +1,4 @@
-# Usage Pattern: Mixed Parallel with HiL Checkpoint
+# Usage Pattern: Mixed Parallel with HiLL Checkpoint
 
 Parallel phases run before a checkpoint, then user reviews before continuing.
 
@@ -6,7 +6,7 @@ Parallel phases run before a checkpoint, then user reviews before continuing.
 
 ```yaml
 ---
-oat_plan_hil_phases: ["p03"]
+oat_plan_hill_phases: ["p03"]
 ---
 ```
 
@@ -25,7 +25,7 @@ oat_plan_hil_phases: ["p03"]
 - Create: `src/validation/rules.ts`
 - Create: `src/validation/rules.test.ts`
 
-## Phase 3: API Layer (HiL checkpoint)
+## Phase 3: API Layer (HiLL checkpoint)
 
 ### Task p03-t01: Create REST endpoints using schema + validation
 **Files:**
@@ -37,13 +37,13 @@ oat_plan_hil_phases: ["p03"]
 ## Orchestration Flow
 
 1. **Dispatch manifest** identifies p01 and p02 as parallel-safe.
-2. p03 is the HiL checkpoint — orchestrator will pause before dispatching p03.
+2. p03 is the HiLL checkpoint — orchestrator will pause before dispatching p03.
 3. **Parallel execution** of p01 and p02 proceeds as in the simple pattern.
 4. **Reconciliation** merges p01 and p02.
-5. **HiL pause** — orchestrator reports:
+5. **HiLL pause** — orchestrator reports:
 
 ```
-Orchestration paused at HiL checkpoint: Phase 3
+Orchestration paused at HiLL checkpoint: Phase 3
 
 Completed:
 - Phase 1: Data Layer (2 tasks, all passed, merged)
@@ -78,7 +78,7 @@ In `implementation.md`, the orchestration run shows completion up to the checkpo
 ... (unit outcomes as in simple pattern) ...
 
 #### Outstanding Items
-- HiL checkpoint reached: Phase 3 awaiting user approval
+- HiLL checkpoint reached: Phase 3 awaiting user approval
 ```
 
 After user approves and p03 executes:

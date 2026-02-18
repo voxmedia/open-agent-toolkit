@@ -21,7 +21,7 @@ Enable an orchestrator agent to:
 5. Reconcile unit branches into the orchestration branch.
 6. Log all outcomes to OAT project artifacts.
 
-All execution is non-interactive between configured HiL checkpoints.
+All execution is non-interactive between configured HiLL checkpoints.
 
 ## Prerequisites
 
@@ -49,7 +49,7 @@ plan.md
 │  1. Read Plan + Identify Units      │
 │     - Parse phases/tasks            │
 │     - Check parallel-safe markers   │
-│     - Respect HiL checkpoint gates  │
+│     - Respect HiLL checkpoint gates  │
 └──────────────┬──────────────────────┘
                │
                ▼
@@ -89,7 +89,7 @@ plan.md
 │  6. Report + Artifact Update        │
 │     - Update implementation.md      │
 │     - Update plan.md review rows    │
-│     - Pause at HiL checkpoint       │
+│     - Pause at HiLL checkpoint       │
 └─────────────────────────────────────┘
 ```
 
@@ -108,10 +108,10 @@ Read `plan.md` and classify each phase/task:
 - Default: phase-level (all tasks within a phase run in one unit).
 - Optional: task-level (individual tasks as separate units).
 
-**HiL checkpoint gating:**
-- Read `oat_plan_hil_phases` from `plan.md` frontmatter.
-- Fan out only for units before the next HiL checkpoint.
-- Example: if `oat_plan_hil_phases: ["p04"]`, phases p01-p03 may execute in parallel/sequence, but orchestrator must pause before p04.
+**HiLL checkpoint gating:**
+- Read `oat_plan_hill_phases` from `plan.md` frontmatter.
+- Fan out only for units before the next HiLL checkpoint.
+- Example: if `oat_plan_hill_phases: ["p04"]`, phases p01-p03 may execute in parallel/sequence, but orchestrator must pause before p04.
 
 ### Step 2: Bootstrap Worktrees Per Unit
 
@@ -278,8 +278,8 @@ If integration verification fails after a merge:
 - Advance `oat_current_task` to the next unprocessed task.
 - Update `oat_last_commit` to the final merge commit.
 
-**HiL checkpoint pause:**
-- If the next unit/phase is a configured HiL checkpoint, pause execution.
+**HiLL checkpoint pause:**
+- If the next unit/phase is a configured HiLL checkpoint, pause execution.
 - Report: what completed, what's next, and prompt for user approval to continue.
 
 ## Policy Flags
@@ -323,25 +323,25 @@ Passed through to `oat-worktree-bootstrap-auto`. See that skill's policy documen
 | `strict` | Failed bootstrap excludes unit from dispatch |
 | `allow-failing` | Failed bootstrap emits warning; unit still dispatched |
 
-### HiL Checkpoint Mapping
+### HiLL Checkpoint Mapping
 
-**Source of truth:** `oat_plan_hil_phases` in `plan.md` frontmatter.
+**Source of truth:** `oat_plan_hill_phases` in `plan.md` frontmatter.
 
 **Behavior:**
-1. Orchestrator reads `oat_plan_hil_phases` at the start of each run.
-2. Before dispatching units in a phase that is a HiL checkpoint, orchestrator pauses.
+1. Orchestrator reads `oat_plan_hill_phases` at the start of each run.
+2. Before dispatching units in a phase that is a HiLL checkpoint, orchestrator pauses.
 3. Pause means: complete all in-flight units, reconcile, report, then wait for user approval.
-4. If `oat_plan_hil_phases` is empty, default behavior is to pause at every phase boundary (same as `oat-project-implement`).
+4. If `oat_plan_hill_phases` is empty, default behavior is to pause at every phase boundary (same as `oat-project-implement`).
 
 **Example:**
 ```yaml
-oat_plan_hil_phases: ["p03"]
+oat_plan_hill_phases: ["p03"]
 ```
 - p01 and p02: orchestrator may fan out and reconcile without pausing.
 - Before p03: orchestrator pauses, reports progress, waits for user.
 - p03 onward: resumes after approval.
 
-**Interaction with parallel execution:** HiL checkpoints partition the plan into "runs". Within each run, phases may execute in parallel if eligible. The checkpoint boundary is a hard barrier — all units in the current run must complete before the checkpoint.
+**Interaction with parallel execution:** HiLL checkpoints partition the plan into "runs". Within each run, phases may execute in parallel if eligible. The checkpoint boundary is a hard barrier — all units in the current run must complete before the checkpoint.
 
 ### Policy Persistence
 
@@ -417,7 +417,7 @@ Autonomous review verdicts are logged in `implementation.md` `## Orchestration R
 
 ## Constraints
 
-- **Never** use `AskUserQuestion` during execution between HiL checkpoints.
+- **Never** use `AskUserQuestion` during execution between HiLL checkpoints.
 - **Never** merge a unit that did not pass the autonomous review gate (unless policy explicitly marks it `skipped`).
 - **Never** silently lose work — failed units are reported, not deleted.
 - **Never** bypass existing `plan.md` review table semantics.
@@ -432,7 +432,7 @@ See `examples/` for detailed walkthroughs with plan excerpts and expected artifa
 | Pattern | File | Description |
 |---------|------|-------------|
 | Simple Parallel | `examples/pattern-parallel-phases.md` | Two independent phases run in parallel and merge cleanly |
-| HiL Checkpoint | `examples/pattern-hil-checkpoint.md` | Parallel phases run before a checkpoint, user reviews, then continues |
+| HiLL Checkpoint | `examples/pattern-hil-checkpoint.md` | Parallel phases run before a checkpoint, user reviews, then continues |
 
 ## Success Criteria
 
@@ -443,4 +443,4 @@ See `examples/` for detailed walkthroughs with plan excerpts and expected artifa
 - All outcomes logged to `implementation.md` with full traceability.
 - `plan.md` review table updated consistently with existing lifecycle.
 - Final review gate preserved for separate invocation post-orchestration.
-- Execution pauses at configured HiL checkpoints.
+- Execution pauses at configured HiLL checkpoints.
