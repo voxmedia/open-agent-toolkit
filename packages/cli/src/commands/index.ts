@@ -1,4 +1,5 @@
 import type { Command } from 'commander';
+import { createCleanupCommand } from './cleanup';
 import { createDoctorCommand } from './doctor';
 import { createIndexCommand } from './index-cmd';
 import { createInitCommand } from './init';
@@ -15,6 +16,7 @@ export function registerCommands(program: Command): void {
   program.addCommand(createSyncCommand());
   program.addCommand(createProvidersCommand());
   program.addCommand(createDoctorCommand());
+  program.addCommand(createCleanupCommand());
   program.addCommand(createIndexCommand());
   program.addCommand(createProjectCommand());
   program.addCommand(createStateCommand());
