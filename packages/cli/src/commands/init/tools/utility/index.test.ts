@@ -13,23 +13,27 @@ interface HarnessOptions {
   scope?: Scope;
   interactive?: boolean;
   selectResponses?: Array<string[] | null>;
+  confirmResponses?: boolean[];
 }
 
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
   selectManyWithAbort: ReturnType<typeof vi.fn>;
+  confirmAction: ReturnType<typeof vi.fn>;
   installUtility: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const selectResponses = [
     ...(options.selectResponses ?? [['oat-review-provide']]),
   ];
+  const confirmResponses = [...(options.confirmResponses ?? [true])];
 
   const selectManyWithAbort = vi.fn(
     async (_message: string, _choices: MultiSelectChoice<string>[]) =>
       selectResponses.shift() ?? ['oat-review-provide'],
   );
+  const confirmAction = vi.fn(async () => confirmResponses.shift() ?? true);
   const installUtility = vi.fn(async () => ({
     copiedSkills: ['oat-review-provide'],
     updatedSkills: [],
@@ -52,9 +56,16 @@ function createHarness(options: HarnessOptions = {}): {
     resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
     installUtility,
     selectManyWithAbort,
+    confirmAction,
   });
 
-  return { capture, command, selectManyWithAbort, installUtility };
+  return {
+    capture,
+    command,
+    selectManyWithAbort,
+    confirmAction,
+    installUtility,
+  };
 }
 
 async function runCommand(
@@ -143,6 +154,35 @@ describe('createInitToolsUtilityCommand', () => {
 
     expect(installUtility).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+  });
+
+  it('--force with interactive confirms before overwriting (decline)', async () => {
+    const { command, confirmAction, installUtility, capture } = createHarness({
+      interactive: true,
+      confirmResponses: [false],
+    });
+
+    await runCommand(command, ['--force'], ['--scope', 'project']);
+
+    expect(confirmAction).toHaveBeenCalledTimes(1);
+    expect(installUtility).not.toHaveBeenCalled();
+    expect(capture.info).toContain('Cancelled: no files were overwritten.');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('--force with interactive confirms before overwriting (accept)', async () => {
+    const { command, confirmAction, installUtility } = createHarness({
+      interactive: true,
+      confirmResponses: [true],
+    });
+
+    await runCommand(command, ['--force'], ['--scope', 'project']);
+
+    expect(confirmAction).toHaveBeenCalledTimes(1);
+    expect(installUtility).toHaveBeenCalledTimes(1);
+    expect(installUtility).toHaveBeenCalledWith(
+      expect.objectContaining({ force: true }),
     );
   });
 });
