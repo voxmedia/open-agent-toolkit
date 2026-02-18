@@ -38,7 +38,7 @@ Implementation - Tasks complete; awaiting final review.
 - ✓ Phase 1: Preflight audit complete
 - ✓ Phase 2: Hard-cut rename complete (5 tasks, 4 commits)
 - ✓ Phase 3: Verification sweep passed (509/509 tests, lint clean, type-check clean)
-- ⧗ Awaiting final review
+- ✓ Final review passed
 
 ## Blockers
 
@@ -46,4 +46,4 @@ None
 
 ## Next Milestone
 
-Final code review required before PR.
+Run `oat-project-complete`.
