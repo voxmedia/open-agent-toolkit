@@ -14,6 +14,30 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [skills] Add OAT-native git worktree workflow skill**
+  - Outcome:
+    - Added `oat-worktree-bootstrap` with create/resume modes, deterministic worktree-root precedence, and readiness checks (`worktree:init`, `oat status`, tests, clean git status).
+    - Added active-project pointer validation guardrails and explicit baseline-failure handling before continuing.
+    - Updated guidance to prefer ordered candidate-root resolution and avoid ambiguous fallback behavior.
+  - Links:
+    - Skill: `.agents/skills/oat-worktree-bootstrap/SKILL.md`
+    - Related config: `.oat/config.json`
+    - Project: `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
+  - Created: 2026-02-17
+  - Completed: 2026-02-17
+
+- [x] **(P1) [tooling] Introduce `.oat/config.json` phase-A non-sync settings ownership**
+  - Outcome:
+    - Added `.oat/config.json` as the canonical home for new non-sync settings.
+    - Implemented `worktrees.root` as the first key and set repo-local default to `.worktrees`.
+    - Kept existing pointer/sync files stable (`.oat/projects-root`, `.oat/active-project`, `.oat/sync/config.json`) for backward compatibility.
+  - Links:
+    - Config file: `.oat/config.json`
+    - Decision: `.oat/repo/reference/decision-record.md` (ADR-010)
+    - Follow-up backlog item: `.oat/repo/reference/backlog.md`
+  - Created: 2026-02-17
+  - Completed: 2026-02-17
+
 - [x] **(P1) [tooling] Fix `oat project new --help` parsing bug that scaffolds a `--help` project**
   - Outcome:
     - Root cause: `pnpm run cli --` passes a literal `--` into Commander's argv, disabling option parsing. Commander consumed `--help` as the `<name>` positional argument, and `validateProjectName` allowed it because `-` was a valid character.

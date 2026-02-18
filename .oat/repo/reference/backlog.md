@@ -40,49 +40,18 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## Planned
 
-- [ ] **(P1) [skills] Add OAT-native git worktree workflow skill**
-  - Target milestone/phase: Workflow ergonomics + onboarding reliability
-  - Notes:
-    - Add a dedicated skill for creating/using git worktrees in OAT repos (modeled after superpowers worktree guidance, but OAT-specific).
-    - Root selection should support repo-local, sibling, and global locations with deterministic precedence:
-      - explicit `--path`
-      - `OAT_WORKTREES_ROOT`
-      - `.oat/config.json` -> `worktrees.root`
-      - discovered existing dirs (`.worktrees`, `worktrees`, `../<repo>-worktrees`)
-      - fallback default (`../<repo>-worktrees`)
-    - Include explicit setup sequence for each new worktree:
-      - `pnpm install`
-      - `pnpm run worktree:init`
-      - any required CLI initialization/sync checks (`oat init`/`oat sync`) when applicable.
-    - Require baseline verification before reporting worktree readiness:
-      - `pnpm run worktree:init`
-      - `pnpm run cli -- status --scope project`
-      - `pnpm test`
-      - clean `git status --porcelain`
-    - If baseline tests fail, require explicit user override to proceed and record pre-existing failure context in project `implementation.md`.
-    - Document safe conventions for branch naming, active project handling, and provider view sync in worktree contexts.
-  - Success criteria:
-    - User can invoke one skill to get a consistent, low-error worktree bootstrap flow.
-    - Skill guidance is aligned with current CLI behavior and avoids stale/manual setup steps.
-    - Worktree setup guidance is mirrored in docs where appropriate.
-  - Links:
-    - Related existing script: `pnpm run worktree:init`
-    - Reference inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
-    - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
-    - Implementation project: `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
-  - Created: 2026-02-17
-
-- [ ] **(P1) [tooling] Consolidate OAT runtime config under `.oat/config.json` (phased)**
+- [ ] **(P1) [tooling] Continue OAT runtime config consolidation under `.oat/config.json` (Phase B/C)**
   - Target milestone/phase: Workflow ergonomics + configuration hygiene
   - Notes:
-    - Introduce `.oat/config.json` as the canonical home for new non-sync repo-level settings (Phase A), starting with `worktrees.root`.
+    - Phase A is implemented: `.oat/config.json` is in use for `worktrees.root` and `oat-worktree-bootstrap` reads it with deterministic precedence.
+    - Continue phased consolidation work for remaining legacy pointers/settings.
     - Keep existing pointers stable for now (`.oat/active-project`, `.oat/active-idea`, `.oat/projects-root`) to avoid breaking skill contracts.
     - Keep sync config stable for now (`.oat/sync/config.json`) and evaluate later migration after CLI ownership is clearer.
-    - Track follow-up migration phases:
-      - Phase B: evaluate moving `.oat/projects-root` into `.oat/config.json` with compatibility reads.
+    - Scope for follow-up migration phases:
+      - Phase B: move `.oat/projects-root` into `.oat/config.json` with compatibility reads.
       - Phase C: evaluate pointer-file strategy (`active-project`, `active-idea`) and migration mechanics.
   - Success criteria:
-    - New settings stop introducing one-off text files in `.oat/`.
+    - Existing pointer/settings files have a documented and safe migration path into `.oat/config.json`.
     - Backward compatibility is preserved for existing skill workflows.
     - Migration phases and ownership are documented with explicit sequencing.
   - Links:
