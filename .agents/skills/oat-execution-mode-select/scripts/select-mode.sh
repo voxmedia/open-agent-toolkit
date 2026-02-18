@@ -71,17 +71,39 @@ else
   exit 0
 fi
 
+# ─── Portable sed helper ──────────────────────────────────────────────────
+# Replaces sed -i '' (BSD-only) with portable temp-file approach
+sed_portable() {
+  local file="$1"
+  shift
+  sed "$@" "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+}
+
 # ─── Persist Mode ──────────────────────────────────────────────────────────
 if grep -q '^oat_execution_mode:' "$STATE_PATH"; then
-  sed -i '' "s/^oat_execution_mode:.*/oat_execution_mode: $MODE/" "$STATE_PATH"
+  sed_portable "$STATE_PATH" "s/^oat_execution_mode:.*/oat_execution_mode: $MODE/"
 else
-  # Insert after oat_workflow_origin line (or at end of frontmatter)
-  sed -i '' "/^oat_workflow_origin:/a\\
-oat_execution_mode: $MODE" "$STATE_PATH"
+  # Try inserting after oat_workflow_origin line
+  if grep -q '^oat_workflow_origin:' "$STATE_PATH"; then
+    sed_portable "$STATE_PATH" "/^oat_workflow_origin:/a\\
+oat_execution_mode: $MODE"
+  else
+    # Fallback: insert before closing frontmatter delimiter
+    # Matches the second --- (closing delimiter) and inserts before it
+    sed_portable "$STATE_PATH" "0,/^---$/!{/^---$/i\\
+oat_execution_mode: $MODE
+}"
+  fi
 fi
 
-echo "selected_mode: $MODE"
-echo "persisted: true"
+# Verify persistence succeeded
+if grep -q "^oat_execution_mode: $MODE" "$STATE_PATH"; then
+  echo "selected_mode: $MODE"
+  echo "persisted: true"
+else
+  echo "selected_mode: $MODE"
+  echo "persisted: false (write failed)"
+fi
 
 # ─── Route Output ──────────────────────────────────────────────────────────
 case "$MODE" in
@@ -92,11 +114,11 @@ case "$MODE" in
     echo "next_command: oat-subagent-orchestrate"
     # Persist default orchestration policies if not already present
     if ! grep -q '^oat_orchestration_merge_strategy:' "$STATE_PATH"; then
-      sed -i '' "/^oat_execution_mode:/a\\
+      sed_portable "$STATE_PATH" "/^oat_execution_mode:/a\\
 oat_orchestration_merge_strategy: merge\\
 oat_orchestration_retry_limit: 2\\
 oat_orchestration_baseline_policy: strict\\
-oat_orchestration_unit_granularity: phase" "$STATE_PATH"
+oat_orchestration_unit_granularity: phase"
       echo "orchestration_defaults_persisted: true"
     else
       echo "orchestration_defaults_persisted: false (already present)"

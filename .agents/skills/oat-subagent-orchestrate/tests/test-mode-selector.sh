@@ -143,6 +143,25 @@ echo ""
 MISSING_OUTPUT=$(bash "$SELECTOR_SCRIPT" "$TMPDIR/nonexistent.md" 2>&1 || true)
 assert_contains "error for missing file" "$MISSING_OUTPUT" "error: state file not found"
 
+# ─── Test 8: Missing anchor (no oat_workflow_origin line) ─────────────
+echo ""
+echo "=== Test 8: Missing anchor (no oat_workflow_origin line) ==="
+echo ""
+
+# Create a state.md without oat_workflow_origin
+cat > "$TMPDIR/state-no-anchor.md" <<'STATE'
+---
+oat_current_task: null
+oat_last_commit: null
+---
+
+# Project State: Test (no anchor)
+STATE
+
+NO_ANCHOR_OUTPUT=$(bash "$SELECTOR_SCRIPT" "$TMPDIR/state-no-anchor.md" --mode single-thread 2>&1)
+assert_contains "mode persisted via fallback" "$NO_ANCHOR_OUTPUT" "persisted: true"
+assert_file_contains "mode present in file" "$TMPDIR/state-no-anchor.md" "oat_execution_mode: single-thread"
+
 echo ""
 echo "=== Results ==="
 echo "Passed: $PASS"
