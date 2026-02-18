@@ -39,6 +39,7 @@ Determine whether to operate at project level or user (global) level. The scratc
 | Variable | Project Level | User Level |
 |----------|--------------|------------|
 | `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
 
 ### Step 1: Determine Mode
 
@@ -67,10 +68,10 @@ Otherwise, ask the user: "Would you like to **review** what's on the scratchpad,
 4. Initialize scratchpad if needed:
    - Create `{IDEAS_ROOT}/` directory if it does not exist (`mkdir -p`)
    - If `{IDEAS_ROOT}/scratchpad.md` does not exist, copy from template:
-     - Source: `.oat/templates/ideas/ideas-scratchpad.md`
+     - Source: `{TEMPLATES_ROOT}/ideas-scratchpad.md`
      - Target: `{IDEAS_ROOT}/scratchpad.md`
    - If `{IDEAS_ROOT}/backlog.md` does not exist, copy from template:
-     - Source: `.oat/templates/ideas/ideas-backlog.md`
+     - Source: `{TEMPLATES_ROOT}/ideas-backlog.md`
      - Target: `{IDEAS_ROOT}/backlog.md`
 5. Append entry to `{IDEAS_ROOT}/scratchpad.md` under the `## Ideas` section:
 

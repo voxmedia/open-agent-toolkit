@@ -47,6 +47,7 @@ Determine whether to operate at project level or user (global) level.
 | Variable | Project Level | User Level |
 |----------|--------------|------------|
 | `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
 | `ACTIVE_IDEA_FILE` | `.oat/active-idea` | `~/.oat/active-idea` |
 
 ### Step 1: Resolve Active Idea
@@ -75,7 +76,7 @@ Read `{IDEAS_ROOT}/$IDEA_NAME/discovery.md`.
 ### Step 3: Generate Summary
 
 Copy the summary template and synthesize content from the discovery document:
-- Source: `.oat/templates/ideas/idea-summary.md`
+- Source: `{TEMPLATES_ROOT}/idea-summary.md`
 - Target: `{IDEAS_ROOT}/$IDEA_NAME/summary.md`
 
 **Synthesis guidelines:**

@@ -44,6 +44,7 @@ Determine whether to operate at project level or user (global) level.
 | Variable | Project Level | User Level |
 |----------|--------------|------------|
 | `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
 | `ACTIVE_IDEA_FILE` | `.oat/active-idea` | `~/.oat/active-idea` |
 
 ### Step 1: Get Idea Name
@@ -69,17 +70,17 @@ mkdir -p "{IDEAS_ROOT}/$IDEA_NAME"
 ```
 
 If `{IDEAS_ROOT}/backlog.md` doesn't exist, copy from template:
-- Source: `.oat/templates/ideas/ideas-backlog.md`
+- Source: `{TEMPLATES_ROOT}/ideas-backlog.md`
 - Target: `{IDEAS_ROOT}/backlog.md`
 
 If `{IDEAS_ROOT}/scratchpad.md` doesn't exist, copy from template:
-- Source: `.oat/templates/ideas/ideas-scratchpad.md`
+- Source: `{TEMPLATES_ROOT}/ideas-scratchpad.md`
 - Target: `{IDEAS_ROOT}/scratchpad.md`
 
 ### Step 4: Scaffold Discovery Document
 
 Copy template and apply replacements:
-- Source: `.oat/templates/ideas/idea-discovery.md`
+- Source: `{TEMPLATES_ROOT}/idea-discovery.md`
 - Target: `{IDEAS_ROOT}/$IDEA_NAME/discovery.md`
 
 Replacements:
