@@ -68,3 +68,28 @@ export function findDuplicateChains(
 export function selectLatestFromChain(chain: ArtifactDuplicateChain): string {
   return chain.entries[0]?.target ?? '';
 }
+
+export function filterArtifactCandidates(
+  candidates: string[],
+  excludedTargets: Set<string>,
+): string[] {
+  return candidates.filter((candidate) => !excludedTargets.has(candidate));
+}
+
+export function findReferenceHits(
+  candidates: string[],
+  referenceContents: string[],
+): Set<string> {
+  const hits = new Set<string>();
+
+  for (const candidate of candidates) {
+    for (const content of referenceContents) {
+      if (content.includes(candidate)) {
+        hits.add(candidate);
+        break;
+      }
+    }
+  }
+
+  return hits;
+}
