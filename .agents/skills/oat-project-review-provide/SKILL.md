@@ -271,10 +271,21 @@ Build the "Review Scope" metadata for the reviewer:
 
 **Tier 1: Subagent (if available)**
 
-If the host supports spawning subagents (e.g., Claude Code Task tool):
-- Spawn `oat-reviewer` agent with the Review Scope metadata
-- Instruct it to write the review artifact
-- Subagent ends with: "Review complete. Return to main session and run the `oat-project-review-receive` skill"
+If the host supports spawning subagents (e.g., Claude Code Task tool, Codex):
+
+First, pre-compute the review artifact path using Step 7 naming conventions so it can be passed to the subagent.
+
+Then spawn the reviewer:
+- Use Task tool with `subagent_type: "oat-reviewer"` (resolves from `.agents/agents/oat-reviewer.md`)
+- Pass the Review Scope metadata block from Step 5 as the prompt
+- Include the pre-computed artifact path for the subagent to write to
+- Run in background if supported (`run_in_background: true`)
+
+The `oat-reviewer` agent definition contains the full review process, mode contract, severity categories, artifact template, and critical rules. No additional instructions need to be injected.
+
+After the subagent completes:
+- Verify the review artifact was written to the expected path
+- Continue with Step 9 (plan update) and Step 9.5 (commit)
 
 Tell user: "Running review via subagent (fresh context)..."
 
