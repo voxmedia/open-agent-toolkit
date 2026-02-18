@@ -1,1 +1,1 @@
-/Users/thomas.stang/.codex/worktrees/82fe/open-agent-toolkit/.agents/agents/oat-codebase-mapper.md
+../../.agents/agents/oat-codebase-mapper.md

@@ -1,1 +1,1 @@
-/Users/thomas.stang/.codex/worktrees/82fe/open-agent-toolkit/.agents/agents/oat-reviewer.md
+../../.agents/agents/oat-reviewer.md
