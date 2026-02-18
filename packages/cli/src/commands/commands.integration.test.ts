@@ -374,4 +374,83 @@ describe('CLI command integration', () => {
       ).rejects.toThrow();
     }
   });
+
+  it('cleanup subcommands parse successfully', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    const projectResult = await runCli(root, ['cleanup', 'project']);
+    const artifactsResult = await runCli(root, ['cleanup', 'artifacts']);
+
+    expect(projectResult.exitCode).toBe(0);
+    expect(artifactsResult.exitCode).toBe(0);
+  });
+
+  it('cleanup artifacts --json emits stable contract fields', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await mkdir(join(root, '.oat', 'repo', 'reviews'), { recursive: true });
+    await mkdir(join(root, '.oat', 'repo', 'reference', 'external-plans'), {
+      recursive: true,
+    });
+    await writeFile(join(root, '.oat', 'repo', 'reviews', 'r1.md'), '# r1');
+    await writeFile(
+      join(root, '.oat', 'repo', 'reference', 'external-plans', 'p1.md'),
+      '# p1',
+    );
+
+    const result = await runCli(
+      root,
+      ['cleanup', 'artifacts', '--json'],
+      ['--json'],
+    );
+
+    expect(result.exitCode).toBe(1);
+    const payload = JSON.parse(result.stdout);
+    expect(payload).toEqual(
+      expect.objectContaining({
+        status: 'drift',
+        mode: 'dry-run',
+        summary: expect.any(Object),
+        actions: expect.any(Array),
+      }),
+    );
+    expect(payload.summary).toEqual(
+      expect.objectContaining({
+        scanned: 2,
+        issuesFound: 2,
+      }),
+    );
+    expect(payload.actions.length).toBeGreaterThan(0);
+  });
+
+  it('cleanup project --json emits stable contract fields', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await mkdir(join(root, '.oat', 'projects', 'shared', 'demo'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'plan.md'),
+      '# plan',
+      'utf8',
+    );
+
+    const result = await runCli(
+      root,
+      ['cleanup', 'project', '--json'],
+      ['--json'],
+    );
+
+    expect(result.exitCode).toBe(1);
+    const payload = JSON.parse(result.stdout);
+    expect(payload).toEqual(
+      expect.objectContaining({
+        status: 'drift',
+        mode: expect.any(String),
+        summary: expect.any(Object),
+        actions: expect.any(Array),
+      }),
+    );
+  });
 });

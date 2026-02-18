@@ -9,7 +9,11 @@ Two PR paths:
 
 Expected artifacts:
 
-- Required: `spec.md`, `design.md`, `plan.md`
+- Required (all modes): `plan.md`
+- Required (full mode): `spec.md`, `design.md`
+- Optional (quick/import): `spec.md`, `design.md`
+- Recommended (quick mode): `discovery.md`
+- Recommended (import mode): `references/imported-plan.md`
 - Recommended: `implementation.md` final summary
 - Required gate for final PR: review table final row should be `passed`
 

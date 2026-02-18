@@ -121,3 +121,12 @@ export async function selectManyWithAbort<T extends string>(
     throw error;
   }
 }
+
+export async function selectManyOrEmpty<T extends string>(
+  message: string,
+  choices: MultiSelectChoice<T>[],
+  ctx: PromptContext,
+): Promise<T[]> {
+  const selected = await selectManyWithAbort(message, choices, ctx);
+  return selected ?? [];
+}

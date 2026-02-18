@@ -44,6 +44,7 @@ describe('help output snapshots', () => {
         sync [options]   Sync canonical content to provider views
         providers        Inspect provider capabilities and paths
         doctor           Run environment and setup diagnostics
+        cleanup          Cleanup OAT project and artifact hygiene issues
         index            OAT index generation commands
         project          Manage OAT project workflows
         state            OAT repo state commands
@@ -205,6 +206,25 @@ describe('help output snapshots', () => {
       Commands:
         init [options]  Generate a thin project-index.md for quick repo orientation
         help [command]  display help for command
+      "
+    `);
+  });
+
+  it('cleanup --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['cleanup']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat cleanup [options] [command]
+
+      Cleanup OAT project and artifact hygiene issues
+
+      Options:
+        -h, --help           display help for command
+
+      Commands:
+        project [options]    Cleanup project pointers, state, and lifecycle drift
+        artifacts [options]  Cleanup stale review and external-plan artifacts
+        help [command]       display help for command
       "
     `);
   });

@@ -56,6 +56,27 @@ Purpose:
 
 ## Other implemented namespaces
 
+## `oat cleanup project`
+
+Purpose:
+- Cleanup project pointers, state, and lifecycle drift
+
+Key behavior:
+- Scans `.oat/projects/shared/*` and `.oat/projects/local/*` plus `.oat/active-project`
+- Dry-run default with `--apply` for mutation
+- Repairs invalid active-project pointer, missing `state.md`, and missing `oat_lifecycle: complete` on completed projects
+
+## `oat cleanup artifacts`
+
+Purpose:
+- Cleanup stale review and external-plan artifacts
+
+Key behavior:
+- Scans `.oat/repo/reviews/` and `.oat/repo/reference/external-plans/`
+- Dry-run default with `--apply` for mutation
+- Prunes duplicate chains automatically; handles stale candidates via archive/delete/keep triage
+- In non-interactive apply mode, stale deletions require `--all-candidates --yes`; referenced candidates remain blocked
+
 ## `oat project new <name>`
 
 Purpose:

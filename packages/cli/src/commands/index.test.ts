@@ -40,6 +40,21 @@ describe('command registration', () => {
     expect(commandNames()).toContain('doctor');
   });
 
+  it('program has cleanup command with project and artifacts', () => {
+    const program = createProgram();
+    registerCommands(program);
+    const cleanup = program.commands.find(
+      (command) => command.name() === 'cleanup',
+    );
+
+    expect(cleanup).toBeDefined();
+    const subcommands =
+      cleanup?.commands.map((command) => command.name()) ?? [];
+    expect(subcommands).toEqual(
+      expect.arrayContaining(['project', 'artifacts']),
+    );
+  });
+
   it('program has project command with new', () => {
     const program = createProgram();
     registerCommands(program);
@@ -76,6 +91,7 @@ describe('command registration', () => {
     expect(help).toContain('sync');
     expect(help).toContain('providers');
     expect(help).toContain('doctor');
+    expect(help).toContain('cleanup');
     expect(help).toContain('project');
     expect(help).toContain('internal');
   });

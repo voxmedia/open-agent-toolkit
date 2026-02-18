@@ -25,12 +25,18 @@ Status progression in `plan.md` Reviews table:
 ## Current policy
 
 - Critical/Important: address before pass.
-- Medium: address by default; defer only with explicit approval and disposition.
-- Minor: normally addressed, can be deferred with rationale.
+- Medium: address by default; defer only with explicit approval and recorded rationale/disposition.
+- Minor (non-final scopes): auto-deferred by default with rationale; do not block review completion.
+- Minor (final scope): not auto-deferred; require explicit user disposition (defer vs convert), and explain each minor in plain language before asking.
 
 ## Phase and final review
 
 Use phase-scoped review artifacts during implementation (`p01`, `p02`, etc), then run final review before project closeout.
+
+Final review `passed` gate requires:
+- No unresolved Critical/Important/Medium findings.
+- Deferred Medium findings resurfaced and explicitly dispositioned.
+- Minor findings explicitly dispositioned (after plain-language explanation).
 
 ## Reference artifacts
 

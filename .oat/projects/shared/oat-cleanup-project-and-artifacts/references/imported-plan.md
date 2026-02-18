@@ -10,15 +10,6 @@ This consolidates backlog items:
 - `.oat/repo/reference/backlog.md` (project cleanup command)
 - `.oat/repo/reference/backlog.md` (artifact cleanup command)
 
-## Implementation Status (2026-02-18)
-- `oat cleanup project` implemented with dry-run/apply drift remediation.
-- `oat cleanup artifacts` foundation implemented:
-  - duplicate-chain prune planning
-  - stale candidate discovery with reference guards
-  - interactive Keep/Archive/Delete triage helpers
-  - non-interactive safety gate and archive path/collision helpers
-- Test coverage added for unit, integration, and idempotency scenarios.
-
 ## Locked Decisions
 1. Command surface is top-level `oat cleanup ...`.
 2. Mutating behavior defaults to dry-run first; mutation requires `--apply`.
