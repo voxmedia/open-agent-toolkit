@@ -821,7 +821,7 @@ git commit -m "test(p04-t05): validate execution-mode selector persistence and r
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
-| final | code | pending | - | - |
+| final | code | received | 2026-02-17 | reviews/final-review-2026-02-17.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
