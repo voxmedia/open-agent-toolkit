@@ -79,6 +79,41 @@ During phase-A consolidation:
 
 This keeps existing workflow contracts stable while preventing additional one-off pointer files for new settings.
 
+### `.oat/config.json` schema
+
+Current schema keys:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `version` | `number` | `1` | Schema version |
+| `worktrees.root` | `string` | `".worktrees"` | Root directory for git worktrees (repo-relative or absolute) |
+
+Example:
+
+```json
+{
+  "version": 1,
+  "worktrees": {
+    "root": ".worktrees"
+  }
+}
+```
+
+### Worktree root precedence
+
+When resolving the worktree root directory, `oat-worktree-bootstrap` uses this strict precedence (stops at the first match):
+
+1. **`--path <root>` flag** — Explicit CLI override (highest priority)
+2. **`OAT_WORKTREES_ROOT` env var** — Environment-level override
+3. **`.oat/config.json` `worktrees.root`** — Persisted project config
+4. **First existing directory** (checked in order):
+   - `<repo>/.worktrees`
+   - `<repo>/worktrees`
+   - `../<repo-name>-worktrees`
+5. **Fallback default** — `../<repo-name>-worktrees`
+
+For repo-relative values (levels 3-4), paths are resolved from the repository root. If the resolved root is project-local (`.worktrees` or `worktrees`), the skill verifies it is git-ignored before creating new worktrees.
+
 ## Project artifact structure
 
 Each OAT project lives under:
