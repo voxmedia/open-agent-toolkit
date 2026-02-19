@@ -44,7 +44,7 @@ If not provided in `$ARGUMENTS`, ask the user for `{project-name}` (slug format:
 Use the CLI scaffolder:
 
 ```bash
-pnpm run cli -- project new "{project-name}" --mode full
+oat project new "{project-name}" --mode full
 ```
 
 Optional flags:

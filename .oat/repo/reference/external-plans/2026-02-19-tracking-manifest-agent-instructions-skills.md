@@ -56,29 +56,27 @@ The manifest uses optimistic per-key merge semantics: each writer reads the file
 ```jsonc
 {
   "version": 1,
-  "operations": {
-    "agentInstructions": {
-      "lastRun": "2026-02-19T14:30:00Z",   // ISO 8601 timestamp
-      "commitHash": "abc1234",               // HEAD at time of run
-      "branch": "main",                      // branch at time of run
-      "mode": "full",                        // "full" | "delta"
-      "providers": ["agents_md", "claude", "cursor"],  // providers analyzed/applied
-      "artifactPath": ".oat/repo/analysis/agent-instructions-2026-02-19-1430.md"  // output location
-    },
-    "knowledgeIndex": {
-      "lastRun": "2026-02-18T10:00:00Z",
-      "commitHash": "def5678",
-      "branch": "main",
-      "mode": "full",
-      "artifactPath": ".oat/repo/knowledge/"
-    }
+  "agentInstructions": {
+    "lastRunAt": "2026-02-19T14:30:00Z",   // ISO 8601 timestamp
+    "commitHash": "abc1234",                // HEAD at time of run
+    "baseBranch": "main",                   // branch at time of run
+    "mode": "full",                         // "full" | "delta"
+    "formats": ["agents_md", "claude", "cursor"],  // formats analyzed/applied
+    "artifactPath": ".oat/repo/analysis/agent-instructions-2026-02-19-1430.md"  // output location
+  },
+  "knowledgeIndex": {
+    "lastRunAt": "2026-02-18T10:00:00Z",
+    "commitHash": "def5678",
+    "baseBranch": "main"
   }
 }
 ```
 
-**Required fields per operation:** `lastRun`, `commitHash`, `branch`, `mode`. Optional: `providers`, `artifactPath`.
+**Schema aligns with backlog** (`.oat/repo/reference/backlog.md`): flat top-level operation keys, `lastRunAt`/`commitHash`/`baseBranch` field names, `formats` (not `providers`).
 
-**Write protocol:** Read → parse → merge own key under `operations` → write. If file is missing or unparseable, reinitialize with `{"version": 1, "operations": {}}` and then write.
+**Required fields per operation:** `lastRunAt`, `commitHash`, `baseBranch`. Optional: `mode`, `formats`, `artifactPath`.
+
+**Write protocol:** Read → parse → merge own top-level key → write. If file is missing or unparseable, reinitialize with `{"version": 1}` and then write.
 
 **Delta mode fallback:** If the stored `commitHash` cannot be resolved by `git rev-parse`, fall back to full mode, log the reason in the output summary, and rewrite the tracking entry after the successful run.
 
@@ -101,9 +99,9 @@ No new config block in `.oat/config.json` needed — we reuse the existing `.oat
 | Provider | Always-on Format | Glob-scoped Format | File Pattern |
 |----------|-----------------|-------------------|--------------|
 | (always) | AGENTS.md | — | `**/AGENTS.md` |
-| claude | — | Claude rules | `.claude/rules/*.md` (`paths` frontmatter) |
+| claude | CLAUDE.md | Claude rules | `**/CLAUDE.md`, `.claude/rules/*.md` (`paths` frontmatter) |
 | cursor | — | Cursor rules | `.cursor/rules/*.mdc`, `.cursor/rules/*.md` (`alwaysApply`/`globs`/`description` frontmatter) |
-| copilot | — | Scoped instructions | `.github/instructions/*.instructions.md` (`applyTo` frontmatter) |
+| copilot | `copilot-instructions.md` (shim) | Scoped instructions | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` (`applyTo` frontmatter) |
 | codex | (reads AGENTS.md natively) | — | — |
 | cline | — | Cline rules | `.cline/rules/*` |
 
@@ -121,7 +119,19 @@ paths:                            globs: src/styles/**/*.css         applyTo: "s
 
 The apply skill writes the body once and stamps provider-specific frontmatter. The analyze skill flags body divergence across formats as a drift finding.
 
-**Copilot note:** Root-level `.github/copilot-instructions.md` is NOT generated — it's redundant with root AGENTS.md (Copilot reads AGENTS.md natively). Only scoped `.github/instructions/*.instructions.md` files are generated, as the Copilot equivalent of Claude conditional rules and Cursor glob-scoped rules.
+**Copilot note:** Root-level `.github/copilot-instructions.md` is generated as a **minimal shim** rather than duplicating content. The shim should include an inline comment explaining why it exists, e.g.:
+
+```markdown
+<!-- This file exists because VS Code Copilot's AGENTS.md support is setting-gated
+     (chat.useAgentsMdFile) and may not be enabled in all environments. This shim
+     ensures Copilot Chat always has a pointer to the canonical project instructions. -->
+
+See [AGENTS.md](../AGENTS.md) for project-wide instructions.
+```
+
+Scoped `.github/instructions/*.instructions.md` files are generated as the Copilot equivalent of Claude conditional rules and Cursor glob-scoped rules.
+
+**CLAUDE.md note:** CLAUDE.md is included in the Claude provider's always-on format. It typically uses `@AGENTS.md` to import the canonical instructions rather than duplicating content. Discovery includes `**/CLAUDE.md` when the Claude provider is active.
 
 **`AGENTS.override.md`:** Deferred from v1. Discovery and evaluation only cover `AGENTS.md`. Override files will be documented as a known gap in analysis output.
 
@@ -260,7 +270,7 @@ Step 7: Output summary (files created/updated, PR URL, next step)
 4. **Analyze skill**: Run `oat-agent-instructions-analyze` against this repo — should produce analysis artifact in `.oat/repo/analysis/` with findings for the existing instruction files
 5. **Apply skill**: Run `oat-agent-instructions-apply` with the analysis artifact — should offer to create/update instruction files and produce a PR
 6. **Cross-format consistency**: For any glob-scoped rule generated across providers, verify bodies are identical and only frontmatter differs
-7. **Skill validation**: `pnpm run cli -- validate-skills` passes, both skills appear in sync
+7. **Skill validation**: `pnpm oat:validate-skills` passes, both skills appear in sync
 8. **Knowledge index**: Run `oat-repo-knowledge-index`, verify tracking.json gets a `knowledgeIndex` entry
 
 ---
@@ -279,3 +289,10 @@ Updates applied from Codex reviews (`ad-hoc-review-2026-02-19-tracking-manifest-
 8. **Added cross-format body consistency** as quality criterion #10 and drift finding — glob-scoped rules share content, only frontmatter differs per provider
 9. **Restructured apply templates** — single `glob-scoped-rule.md` body template + per-provider `frontmatter/` directory instead of monolithic per-provider templates
 10. **Expanded verification** with provider resolution test (#3), cross-format consistency check (#6), and added Copilot research doc to critical files
+
+Updates applied from Codex follow-up review:
+
+11. **Added CLAUDE.md to Claude provider mapping** — Claude row now includes `**/CLAUDE.md` as always-on format alongside glob-scoped `.claude/rules/*.md` (Important: internal format mapping inconsistency)
+12. **Added `copilot-instructions.md` shim** — minimal pointer file generated for compatibility since AGENTS.md support is setting-gated in VS Code Copilot (`chat.useAgentsMdFile`). Documented as explicit compatibility tradeoff (Important: under-coverage for non-coding-agent contexts)
+13. **Fixed verification command** — changed `pnpm run cli -- validate-skills` to `pnpm oat:validate-skills` to match repo scripts (Minor: non-existent CLI subcommand)
+14. **Aligned tracking.json schema with backlog** — flat top-level keys (`agentInstructions`, `knowledgeIndex`), field names `lastRunAt`/`baseBranch`/`formats` match backlog.md (Minor: schema divergence)

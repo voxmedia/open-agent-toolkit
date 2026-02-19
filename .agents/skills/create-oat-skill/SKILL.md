@@ -93,7 +93,7 @@ If the skill needs templates/scripts, add:
 Sync the skill to provider views:
 
 ```bash
-pnpm run cli sync --apply
+oat sync --apply
 ```
 
 Run OAT validator and resolve findings:

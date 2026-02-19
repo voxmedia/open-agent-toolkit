@@ -72,7 +72,7 @@ If no valid active project exists:
 - Create project via the same scaffolding path used by `oat-project-new`:
 
 ```bash
-pnpm run cli -- project new "{project-name}" --mode quick
+oat project new "{project-name}" --mode quick
 ```
 
 This guarantees:
@@ -145,7 +145,7 @@ Ensure `"$PROJECT_PATH/implementation.md"` exists and frontmatter is resumable:
 Always regenerate the repo dashboard after quick-start updates (including resume path):
 
 ```bash
-pnpm run cli -- state refresh
+oat state refresh
 ```
 
 ### Step 7: Output Next Action

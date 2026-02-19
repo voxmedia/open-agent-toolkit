@@ -275,7 +275,7 @@ Next Step: {recommendation}
 After all progress checks, regenerate the repo state dashboard:
 
 ```bash
-pnpm run cli -- state refresh
+oat state refresh
 ```
 
 ## Success Criteria

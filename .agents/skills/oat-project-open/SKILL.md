@@ -94,7 +94,7 @@ echo "Active project set to: $PROJECT_NAME"
 ### Step 6: Regenerate Dashboard
 
 ```bash
-pnpm run cli -- state refresh
+oat state refresh
 ```
 
 ### Step 7: Confirm to User

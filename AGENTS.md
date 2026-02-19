@@ -6,7 +6,7 @@
 
 - Canonical skills live in `.agents/skills`.
 - Provider-linked views are managed by sync tooling; do not duplicate full skill inventories in this file.
-- Refresh provider views with `pnpm run cli sync --scope all --apply`.
+- Refresh provider views with `oat sync --scope all --apply`.
 
 </skills_system>
 

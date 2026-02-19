@@ -28,7 +28,7 @@ Canonical home for agent skills, subagents, and supporting documentation used by
 Skills live in `.agents/skills/<skill-name>/SKILL.md` and sync to provider-specific views via:
 
 ```bash
-pnpm run cli -- sync --scope all --apply
+oat sync --scope all --apply
 ```
 
 For the full skill inventory, see [`docs/oat/skills/index.md`](../docs/oat/skills/index.md).
@@ -55,7 +55,7 @@ For details on available subagents and how to use them, see [`.agents/docs/subag
 OAT project documentation lives in `.oat/projects/` (gitignored). Create new projects with:
 
 ```bash
-pnpm run cli -- project new <project-name>
+oat project new <project-name>
 ```
 
 See [`docs/oat/projects/`](../docs/oat/projects/) for the project lifecycle workflow.

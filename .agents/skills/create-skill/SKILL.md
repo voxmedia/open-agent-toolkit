@@ -217,7 +217,7 @@ Skills can include supporting files in subdirectories:
 After creating the skill, run OAT sync to update provider views:
 
 ```bash
-pnpm run cli sync --apply
+oat sync --apply
 ```
 
 Verify:
@@ -354,7 +354,7 @@ I need a skill for running database migrations
 
 **Skill not appearing in menu:**
 
-- Run `pnpm run cli sync --apply` to regenerate provider views
+- Run `oat sync --apply` to regenerate provider views
 - Verify YAML frontmatter syntax is valid
 - Check that skill name matches directory name
 - Ensure `user-invocable` is not set to `false` (Claude Code)
@@ -376,7 +376,7 @@ I need a skill for running database migrations
 Successful skill creation:
 
 - ✅ Skill created at `.agents/skills/{name}/SKILL.md`
-- ✅ `pnpm run cli sync --apply` run successfully
+- ✅ `oat sync --apply` run successfully
 - ✅ For `oat-*` skills, `pnpm oat:validate-skills` passes
 - ✅ Skill appears in AGENTS.md
 - ✅ Frontmatter valid

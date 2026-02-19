@@ -77,7 +77,7 @@ If no valid active project exists:
   ```
 - Otherwise create an import-mode scaffold (which sets active project by default):
   ```bash
-  pnpm run cli -- project new "{project-name}" --mode import
+  oat project new "{project-name}" --mode import
   PROJECT_PATH="$TARGET_PROJECT_PATH"
   ```
 
@@ -173,7 +173,7 @@ fi
 
 ```bash
 echo "$PROJECT_PATH" > .oat/active-project
-pnpm run cli -- state refresh
+oat state refresh
 ```
 
 If `.oat/active-project` already exists with a different path, treat this as a project switch and note it in output.

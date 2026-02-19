@@ -14,6 +14,17 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [skills] Switch user-facing skill/docs command examples from `pnpm run cli` to direct `oat` CLI**
+  - Outcome:
+    - Replaced all `pnpm run cli --` references in user-facing `oat-*` skills, `.agents/README.md`, and `AGENTS.md` skills discovery with direct `oat <command>` invocation.
+    - Kept `pnpm run cli` only in `AGENTS.md` Development Workflow section (repo-maintainer context) and `bootstrap.sh` (executable script).
+    - Added `cli:link` script to root `package.json` for build + global link in one step.
+    - No test/snapshot regressions (verified: no `pnpm run cli` references in test or snap files).
+  - Links:
+    - 16 files updated across `.agents/skills/`, `.agents/README.md`, `AGENTS.md`, `package.json`
+  - Created: 2026-02-18
+  - Completed: 2026-02-19
+
 - [x] **(P1) [tooling] Add project cleanup command for stale pointers and completion normalization**
   - Outcome:
     - Added `oat cleanup project` to audit project metadata and fix common drift: invalid active-project pointer, missing `state.md`, completed projects missing `oat_lifecycle: complete`, stale dashboard.

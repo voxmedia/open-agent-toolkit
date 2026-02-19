@@ -148,7 +148,7 @@ Run bootstrap and readiness checks in the target worktree:
 
 ```bash
 pnpm run worktree:init
-pnpm run cli -- status --scope project
+oat status --scope project
 pnpm test
 git status --porcelain
 ```

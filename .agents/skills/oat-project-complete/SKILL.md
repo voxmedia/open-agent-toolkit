@@ -199,7 +199,7 @@ echo "Active project cleared."
 ### Step 8: Regenerate Dashboard
 
 ```bash
-pnpm run cli -- state refresh
+oat state refresh
 ```
 
 ### Step 9: Confirm to User

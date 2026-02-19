@@ -27,7 +27,7 @@ Run baseline commands before reporting ready:
 
 ```bash
 pnpm run worktree:init
-pnpm run cli -- status --scope project
+oat status --scope project
 pnpm test
 git status --porcelain
 ```

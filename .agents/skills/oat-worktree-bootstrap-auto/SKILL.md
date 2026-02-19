@@ -79,7 +79,7 @@ Execute in the target worktree directory:
 
 ```bash
 pnpm run worktree:init          # install + build + sync
-pnpm run cli -- status --scope project
+oat status --scope project
 pnpm test
 git status --porcelain
 ```
@@ -108,7 +108,7 @@ mkdir -p "{target-path}/.cursor/rules"
 Then re-run sync to establish symlinks:
 
 ```bash
-pnpm run cli -- sync --scope all --apply
+oat sync --scope all --apply
 ```
 
 ### Step 5: Return Structured Status
