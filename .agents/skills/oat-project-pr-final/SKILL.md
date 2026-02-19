@@ -252,7 +252,7 @@ If user chooses (1), provide best-effort guidance:
   ```bash
   BODY_FILE="{path}"
   TMP_BODY="$(mktemp -t oat-pr-body.XXXXXX.md)"
-  awk 'NR==1 && $0=="---" {infm=1; next} infm && $0=="---" {infm=0; next} !infm {print}' "$BODY_FILE" > "$TMP_BODY"
+  sed '1{/^---$/d;}; 1,/^---$/d' "$BODY_FILE" > "$TMP_BODY"
   ```
 - Use the stripped body file with `gh`:
 ```bash

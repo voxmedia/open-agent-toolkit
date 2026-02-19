@@ -14,6 +14,73 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [tooling] Add project cleanup command for stale pointers and completion normalization**
+  - Outcome:
+    - Added `oat cleanup project` to audit project metadata and fix common drift: invalid active-project pointer, missing `state.md`, completed projects missing `oat_lifecycle: complete`, stale dashboard.
+    - Dry-run + apply semantics with deterministic summary.
+  - Links:
+    - CLI: `packages/cli/src/commands/cleanup/project/`
+    - Related files: `.oat/active-project`, `.oat/projects/shared/*/state.md`, `.oat/state.md`
+  - Created: 2026-02-17
+  - Completed: 2026-02-18
+
+- [x] **(P1) [tooling] Add artifact cleanup command for reviews and external plans**
+  - Outcome:
+    - Added `oat cleanup artifacts` with duplicate pruning, reference guards, interactive triage for `.oat/repo/reviews/` and `.oat/repo/reference/external-plans/`.
+    - Auto-cleans duplicate version chains, preserves latest. Dry-run + apply semantics.
+  - Links:
+    - CLI: `packages/cli/src/commands/cleanup/artifacts/`
+    - Related directories: `.oat/repo/reviews/`, `.oat/repo/reference/external-plans/`
+  - Created: 2026-02-17
+  - Completed: 2026-02-18
+
+- [x] **(P1) [tooling] Add `oat init ideas` subcommand to scaffold ideas workflow**
+  - Outcome:
+    - Implemented as `oat init tools ideas` with `--force` flag.
+    - Scaffolds `.oat/ideas/` directory with templates and copies `oat-idea-*` skills into target project's `.agents/skills/`.
+    - Idempotent (skips existing files unless `--force`).
+  - Links:
+    - CLI: `packages/cli/src/commands/init/tools/ideas/`
+  - Created: 2026-02-14
+  - Completed: 2026-02-18
+
+- [x] **(P1) [tooling] Add `oat init workflows` subcommand to scaffold project workflow**
+  - Outcome:
+    - Implemented as `oat init tools workflows` with `--force` flag.
+    - Scaffolds workflow skills, agents, templates, and scripts into target project's `.agents/skills/`.
+    - Idempotent (skips existing files unless `--force`).
+  - Links:
+    - CLI: `packages/cli/src/commands/init/tools/workflows/`
+  - Created: 2026-02-14
+  - Completed: 2026-02-18
+
+- [x] **(P1) [skills] Add stronger subagent orchestration skills (sequential + parallel dispatch)**
+  - Outcome:
+    - Shipped `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto` skill contracts with reference shell scripts and test suite.
+    - `oat_execution_mode` field added to `state.md` template; orchestration status fields in `implementation.md` template.
+    - Execution mode persisted per project (`single-thread` default). Orchestrator governs HiLL checkpoints.
+  - Links:
+    - PR: #21
+    - Project: `.oat/projects/archived/autonomous-orchestration/`
+    - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
+    - Inspiration: https://github.com/obra/superpowers/blob/e16d611eee14ac4c3253b4bf4c55a98d905c2e64/skills/writing-plans/SKILL.md#L103
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/finishing-a-development-branch/SKILL.md
+  - Created: 2026-02-17
+  - Completed: 2026-02-19
+
+- [x] **(P2) [workflow] Rename HiL terminology to HiLL (Human in Loop Lock)**
+  - Outcome:
+    - Hard-cut rename of `oat_hil_checkpoints` -> `oat_hill_checkpoints`, `oat_hil_completed` -> `oat_hill_completed`, `oat_plan_hil_phases` -> `oat_plan_hill_phases` across all active surfaces.
+    - No backward compatibility shim. Archived project artifacts intentionally not migrated.
+  - Links:
+    - PR: #23
+    - Project: `.oat/projects/archived/oat-hil-to-hill-frontmatter-rename/`
+  - Created: 2026-02-17
+  - Completed: 2026-02-19
+
 - [x] **(P1) [skills] Make `oat-reviewer` mode-aware for quick/import projects (B09)**
   - Outcome:
     - `oat-project-review-provide` enforces mode-specific artifact requirements for `full|quick|import`.

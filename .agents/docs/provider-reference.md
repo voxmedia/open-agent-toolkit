@@ -165,7 +165,9 @@ The package manager for the agent skills ecosystem. Installs skills across 27+ a
 |----------|-----|
 | **Rules documentation** | https://cursor.com/docs/context/rules |
 
-**Rules location:** `.cursor/rules/*.mdc`
+**Rules location:** `.cursor/rules/*.mdc` (legacy) or `.cursor/rules/<name>/RULE.md` (Cursor 2.2+ folder format)
+
+**AGENTS.md:** Natively supported. Nested `AGENTS.md` in subdirectories supported with hierarchical precedence. Recommended as a cross-tool alternative to `.cursor/rules/`.
 
 ### Other Cursor Resources
 
@@ -266,11 +268,28 @@ The package manager for the agent skills ecosystem. Installs skills across 27+ a
 - Project: `.github/skills/<skill-name>/SKILL.md`
 - Personal: `~/.copilot/skills/<skill-name>/SKILL.md`
 
+### Instructions & Rules
+
+| Resource | URL |
+|----------|-----|
+| **Custom instructions (adding)** | https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot |
+| **Custom instructions (VS Code)** | https://code.visualstudio.com/docs/copilot/customization/custom-instructions |
+| **Prompt files** | https://code.visualstudio.com/docs/copilot/customization/prompt-files |
+| **Custom agents reference** | https://docs.github.com/en/copilot/reference/custom-agents-configuration |
+| **Coding agent environment** | https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/customize-the-agent-environment |
+| **Organization instructions** | https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-organization-instructions |
+
+**Instruction file locations:**
+- Repository-wide: `.github/copilot-instructions.md`
+- Scoped: `.github/instructions/*.instructions.md` (with `applyTo` globs)
+- Prompt files: `.github/prompts/*.prompt.md` (manually invoked via `/name`)
+- Agent files: `*.agent.md`
+- AGENTS.md: `**/AGENTS.md` (native support)
+
 ### Other Copilot Resources
 
 | Resource | URL |
 |----------|-----|
-| **Copilot instructions** | `.github/copilot-instructions.md` |
 | **Copilot CLI** | https://github.com/github/copilot-cli |
 
 ---
@@ -305,14 +324,17 @@ The package manager for the agent skills ecosystem. Installs skills across 27+ a
 
 ### Tool-Specific Instruction Files
 
-| Tool | File / Location | Scope |
-|------|----------------|-------|
-| **All tools** | `AGENTS.md` (any directory) | Universal, hierarchical |
-| Claude Code | `CLAUDE.md` | Claude-specific |
-| Cursor | `.cursor/rules/*.mdc` | Cursor-specific |
-| Copilot | `.github/copilot-instructions.md` | Copilot-specific |
-| Gemini | `GEMINI.md` | Gemini-specific |
-| Windsurf | `.windsurf/rules/*.md` | Windsurf-specific |
+| Tool | File / Location | Scope | Activation |
+|------|----------------|-------|------------|
+| **All tools** | `AGENTS.md` (any directory) | Universal, hierarchical | Always-on |
+| Claude Code | `CLAUDE.md` | Claude-specific | Always-on |
+| Claude Code | `.claude/rules/*.md` | Claude-specific | Always-on or `paths` glob |
+| Cursor | `.cursor/rules/*.mdc` | Cursor-specific | `alwaysApply`, `globs`, or `description` |
+| Copilot | `.github/copilot-instructions.md` | Copilot repo-wide | Always-on |
+| Copilot | `.github/instructions/*.instructions.md` | Copilot scoped | `applyTo` glob |
+| Copilot | `.github/prompts/*.prompt.md` | Copilot task templates | Manual (`/name`) |
+| Gemini | `GEMINI.md` | Gemini-specific | Always-on |
+| Windsurf | `.windsurf/rules/*.md` | Windsurf-specific | Always-on |
 
 ### Proposed Spec Extensions (Watch)
 

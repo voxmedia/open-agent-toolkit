@@ -40,71 +40,117 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## Planned
 
-- [ ] **(P1) [tooling] Continue OAT runtime config consolidation under `.oat/config.json` (Phase B/C)**
+- [ ] **(P0) [skills] Agent instructions skill family (`oat-agent-instructions-analyze`, `oat-agent-instructions-apply`)**
+  - Target milestone/phase: Core value delivery — first non-workflow skill family
+  - Notes:
+    - **`oat-agent-instructions-analyze`**: Scans codebase for agent instruction coverage, quality, drift, and gaps.
+      - Detects existing instruction files (`AGENTS.md` by default; optionally Cursor rules, Copilot instructions, Cline rules based on config).
+      - For each: evaluates quality against guidance in `.agents/docs/agent-instruction.md`, checks coverage, identifies staleness.
+      - For directories without instructions: assesses whether they'd benefit (code complexity, public API surface, distinct domain boundaries).
+      - Drift detection: reads `.oat/tracking.json` for last run commit hash, diffs changed files since then, flags instructions that may be stale.
+      - Two modes: **delta** (only files changed since last run — lower token cost) and **full** (review entire codebase). Quality analysis always runs regardless of mode.
+      - Outputs a structured analysis artifact with severity ratings (Critical / High / Medium / Low), similar to code review findings template.
+    - **`oat-agent-instructions-apply`**: Interactive application of analysis findings.
+      - Intake: "Do you have an existing analysis artifact?" If yes, load it and present findings for review. If no, suggest running analyze first.
+      - User reviews/modifies recommendations before proceeding.
+      - Generates or updates instruction files based on approved recommendations.
+      - Creates a branch + PR for human and code review.
+      - Updates `.oat/tracking.json` with current commit hash + timestamp.
+    - **Multi-format support** (config-driven):
+      - Default: `AGENTS.md` files only.
+      - Configurable in `.oat/config.json` under `agentInstructions.formats`: `agents_md` (default true), `cursor_rules`, `copilot_instructions`, `cline_rules`.
+      - Separate analysis reports per format when multi-format is enabled.
+    - **Reference knowledge base**: `.agents/docs/agent-instruction.md` (existing) provides quality criteria and best practices for analysis.
+  - Success criteria:
+    - Running analyze on a codebase with no instructions produces actionable "here's where you need them" recommendations.
+    - Running analyze on a codebase with existing instructions detects drift, quality gaps, and missing coverage.
+    - Delta mode significantly reduces token usage on repeat runs by scoping to changed files.
+    - Apply creates clean PRs with well-structured instruction files following the guidance.
+    - `.oat/tracking.json` records run metadata for incremental analysis.
+  - Links:
+    - Reference: `.agents/docs/agent-instruction.md`
+    - Related: `.oat/tracking.json` (shared tracking manifest — see below)
+  - Created: 2026-02-19
+
+- [ ] **(P1) [skills] Documentation analysis skill family (`oat-docs-analyze`, `oat-docs-apply`)**
+  - Target milestone/phase: Core value delivery — docs quality and coverage
+  - Notes:
+    - Same analyze→apply pattern as agent instructions, applied to documentation:
+      - `docs/` directories, `README.md` files, MkDocs sites, basic markdown docs directories.
+    - **`oat-docs-analyze`**: Reviews existing docs for quality, coverage, staleness, drift, verbosity, and gaps.
+      - Quality analysis always runs (accuracy, completeness, verbosity, structure).
+      - Delta mode: review only files changed since last tracked run.
+      - Full mode: comprehensive review of entire docs surface.
+      - Outputs structured analysis artifact with Critical / High / Medium / Low severity ratings.
+    - **`oat-docs-apply`**: Interactive application of analysis findings + docs generation.
+      - If no docs directory exists, proposes adding one (basic markdown or MkDocs scaffold — MkDocs support is a later enhancement).
+      - Creates/updates docs based on approved recommendations.
+      - Creates a branch + PR for review.
+    - Related to but distinct from:
+      - `docs-completed-projects-gap-review` (PR #24) — narrower, focuses on gaps left by completed OAT projects.
+      - `oat-project-document` (B03) — project-lifecycle-scoped docs synthesis at closeout.
+      - This family is codebase-wide and lifecycle-independent.
+    - MkDocs scaffolding is a future enhancement (eventually `oat init docs --mkdocs` or similar).
+  - Success criteria:
+    - Running analyze detects stale/drifted docs, missing coverage, and quality issues.
+    - Delta mode scopes analysis to files changed since last run via `.oat/tracking.json`.
+    - Apply generates clean PRs with well-structured documentation.
+  - Links:
+    - Reference: `.agents/docs/` (existing docs guidance)
+    - Related skill: `docs-completed-projects-gap-review` (PR #24)
+    - Related backlog: `oat-project-document` (B03)
+  - Created: 2026-02-19
+
+- [ ] **(P1) [tooling] Add shared OAT tracking manifest (`.oat/tracking.json`)**
+  - Target milestone/phase: Infrastructure for analyze/apply skill families
+  - Notes:
+    - Unified tracking file for "when did OAT operations last run against what commit."
+    - Tracks run metadata for: knowledge index, agent instructions analysis, docs analysis (extensible for future operations).
+    - Schema:
+      ```json
+      {
+        "version": 1,
+        "knowledgeIndex": { "lastRunAt": "...", "commitHash": "...", "baseBranch": "main" },
+        "agentInstructions": { "lastRunAt": "...", "commitHash": "...", "baseBranch": "main", "mode": "delta", "formats": ["agents_md"] },
+        "docs": { "lastRunAt": "...", "commitHash": "...", "baseBranch": "main", "mode": "full" }
+      }
+      ```
+    - Delta mode for any operation: `git diff <tracking.commitHash>..HEAD -- <relevant paths>`.
+    - Version-controlled (shared repo metadata — describes state of generated artifacts, not per-developer state).
+    - Knowledge index currently embeds tracking per-file via frontmatter (`oat_generated_at`, `Generated from commit`). Migrate to also write central tracking here so all operations use one lookup.
+    - Skills read via `jq` (no CLI accessor prerequisite).
+  - Success criteria:
+    - All analyze/generate skills read and write `.oat/tracking.json` for incremental run support.
+    - Knowledge index writes central tracking in addition to per-file frontmatter.
+    - Delta mode works consistently across all skill families.
+  - Links:
+    - Related: agent instructions skill family, docs skill family, `oat-repo-knowledge-index`
+  - Created: 2026-02-19
+
+- [ ] **(P1) [tooling] Continue OAT runtime config consolidation under `.oat/config.json` + `.oat/config.local.json` (Phase B/C)**
   - Target milestone/phase: Workflow ergonomics + configuration hygiene
   - Notes:
     - Phase A is implemented: `.oat/config.json` is in use for `worktrees.root` and `oat-worktree-bootstrap` reads it with deterministic precedence.
-    - Continue phased consolidation work for remaining legacy pointers/settings.
-    - Keep existing pointers stable for now (`.oat/active-project`, `.oat/active-idea`, `.oat/projects-root`) to avoid breaking skill contracts.
-    - Keep sync config stable for now (`.oat/sync/config.json`) and evaluate later migration after CLI ownership is clearer.
-    - Scope for follow-up migration phases:
+    - **Approach: split tracked vs local config**
+      - `.oat/config.json` (tracked) — shared repo settings: `worktrees.root`, `projects.root` (from `.oat/projects-root`), provider config pointers, VCS policy flags.
+      - `.oat/config.local.json` (gitignored) — per-developer state: `activeProject` (from `.oat/active-project`), `activeIdea` (from `.oat/active-idea`), per-dev overrides.
+      - Runtime merge: `config.local.json` keys win over `config.json` for any overlapping keys.
+    - **Why this solves the worktree problem**: `oat-worktree-bootstrap` copies one file (`config.local.json`) instead of hunting for N individual pointer files. New per-developer settings automatically propagate without skill updates.
+    - **Migration mechanics**:
+      - Skills switch from `cat .oat/active-project` to `jq -r '.activeProject' .oat/config.local.json`.
       - Phase B: move `.oat/projects-root` into `.oat/config.json` with compatibility reads.
-      - Phase C: evaluate pointer-file strategy (`active-project`, `active-idea`) and migration mechanics.
+      - Phase C: move `active-project` and `active-idea` into `.oat/config.local.json`, update skills to use `jq`, drop legacy pointer files.
+    - Keep sync config stable for now (`.oat/sync/config.json`) and evaluate later migration after CLI ownership is clearer.
   - Success criteria:
-    - Existing pointer/settings files have a documented and safe migration path into `.oat/config.json`.
-    - Backward compatibility is preserved for existing skill workflows.
-    - Migration phases and ownership are documented with explicit sequencing.
+    - `.oat/config.local.json` is gitignored and holds all per-developer state.
+    - `.oat/config.json` holds all shared repo config.
+    - Skills read config via `jq` — no CLI accessor prerequisite needed.
+    - `oat-worktree-bootstrap` propagates `config.local.json` as a single file copy.
+    - Legacy pointer files removed after migration.
   - Links:
     - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
     - Related decision: `.oat/repo/reference/decision-record.md`
     - Implementation project: `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
-  - Created: 2026-02-17
-
-- [ ] **(P1) [skills] Add stronger subagent orchestration skills (sequential + parallel dispatch)**
-  - Target milestone/phase: Phase 6 readiness (parallel execution + reconcile)
-  - Notes:
-    - Add OAT skills for subagent-driven development and parallel agent dispatch patterns.
-    - Scope should include: when to spawn subagents, task slicing rules, aggregation/reconciliation expectations, and failure handling.
-    - Align with current OAT workflow artifacts so subagent outputs map cleanly into plan/implementation/review loops.
-    - Add a plan-handoff selector before implementation starts:
-      - prompt for `single-thread` vs `subagent-driven` execution,
-      - persist the selected mode in project state/frontmatter,
-      - route implementation entrypoint based on persisted mode by default.
-    - Fold in autonomous worktree orchestration for large multi-phase projects:
-      - keep `oat-worktree-bootstrap` manual-safe for direct use,
-      - add an autonomous worktree companion contract for orchestrators,
-      - support fan-out/fan-in execution in isolated worktrees with deterministic merge-back,
-      - use existing HiL frontmatter/checkpoint semantics so orchestration delegates until the next configured HiL gate.
-  - Success criteria:
-    - Team has reusable skills for both “single focused subagent loop” and “parallel dispatch + reconcile” workflows.
-    - Skills reduce ad-hoc prompting and improve consistency of multi-agent execution.
-    - Guidance includes clear guardrails for quality gates before merge.
-    - Parallel orchestration path works without intermediate prompts between configured HiL checkpoints while preserving OAT artifact traceability.
-    - Execution mode is explicit and durable per project (state/frontmatter), with safe defaults for existing workflows.
-  - Links:
-    - Inspiration: https://github.com/obra/superpowers/blob/e16d611eee14ac4c3253b4bf4c55a98d905c2e64/skills/writing-plans/SKILL.md#L103
-    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md
-    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
-    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md
-    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/finishing-a-development-branch/SKILL.md
-    - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
-    - Related roadmap area: Phase 6 (parallel execution + reconcile)
-  - Created: 2026-02-17
-
-- [ ] **(P2) [workflow] Rename HiL terminology to HiLL (Human in Loop Lock)**
-  - Target milestone/phase: Workflow terminology consistency
-  - Notes:
-    - Evaluate terminology migration from "HiL" to "HiLL (Human in Loop Lock)" across workflow docs/skills/backlog/reference artifacts.
-    - Decide scope of migration for frontmatter and status fields:
-      - terminology-only in prose, or
-      - key-name migration (with compatibility aliases) where feasible.
-    - Ensure naming stays consistent with orchestrator checkpoint semantics and review gate language.
-  - Success criteria:
-    - Canonical docs and skill contracts use the chosen term consistently.
-    - If key names change, migration/compatibility behavior is documented and non-breaking.
-    - Team guidance clearly distinguishes lock/checkpoint behavior from general human-in-the-loop wording.
-  - Links:
-    - Related plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
   - Created: 2026-02-17
 
 - [ ] **(P1) [skills] Add `oat-project-document` for post-implementation documentation synthesis**
@@ -258,37 +304,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Source discussion: OAT feature ideas (dependency intelligence)
   - Created: 2026-02-14
 
-- [ ] **(P1) [tooling] Add `oat init ideas` subcommand to scaffold ideas workflow**
-  - Target milestone/phase: OAT CLI init subcommands
-  - Notes:
-    - `oat init ideas` scaffolds `.oat/ideas/` directory with `backlog.md` and `scratchpad.md` from templates.
-    - Copies `oat-idea-*` skill files (`oat-idea-new`, `oat-idea-ideate`, `oat-idea-summarize`) into the project's `.agents/skills/` directory.
-    - Same distribution pattern as `oat init workflows` for project workflow skills — init subcommands are how skills reach user projects.
-    - Templates source: `.oat/templates/ideas/`
-    - Skills source: `.agents/skills/oat-idea-*/`
-  - Success criteria:
-    - Running `oat init ideas` creates `.oat/ideas/` with backlog and scratchpad ready to use.
-    - `oat-idea-*` skills are copied into `.agents/skills/` and show up in provider views after sync.
-    - Idempotent — re-running doesn't overwrite existing ideas or customized skills.
-  - Links:
-    - Source: ideas workflow implementation (branch `provider-interop`)
-    - Plan: `.claude/plans/cheeky-questing-barto.md`
-  - Created: 2026-02-14
-
-- [ ] **(P1) [tooling] Add `oat init workflows` subcommand to scaffold project workflow**
-  - Target milestone/phase: OAT CLI init subcommands
-  - Notes:
-    - `oat init workflows` scaffolds `.oat/` directory structure (templates, projects root, scripts) and copies `oat-project-*` / `oat-review-*` / `oat-pr-*` workflow skills into the project's `.agents/skills/` directory.
-    - Same distribution pattern as `oat init ideas` — init subcommands are how skills reach user projects.
-    - Ensures copied skills are discoverable through provider sync views.
-  - Success criteria:
-    - Running `oat init workflows` sets up the full project workflow in a new repo.
-    - Skills are copied into `.agents/skills/` and show up in provider views after sync.
-    - Idempotent — re-running doesn't overwrite existing projects or customized skills.
-  - Links:
-    - Related: `oat init ideas` backlog entry
-  - Created: 2026-02-14
-
 - [ ] **(P2) [tooling] Add skill uninstall command (`oat remove skill` / `oat uninstall skill`)**
   - Target milestone/phase: OAT CLI lifecycle completeness
   - Notes:
@@ -304,25 +319,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - Related gap: skill removal currently requires manual deletion + sync
   - Created: 2026-02-16
-
-- [x] **(P1) [tooling] Add project cleanup command for stale pointers and completion normalization**
-  - Target milestone/phase: OAT CLI lifecycle hygiene
-  - Notes:
-    - Added `oat cleanup project` to audit project metadata and fix common drift:
-      - invalid `.oat/active-project` pointer (missing target directory)
-      - missing `state.md` for projects that already have plan/implementation artifacts
-      - completed projects missing `oat_lifecycle: complete`
-      - stale `.oat/state.md` dashboard after cleanup actions
-    - Provide dry-run + apply semantics and explicit summary of changed vs skipped items.
-    - Keep cleanup non-destructive (no automatic archive/delete).
-  - Success criteria:
-    - One command can remediate common project-state drift safely.
-    - Cleanup output is deterministic and audit-friendly.
-    - Dashboard is regenerated after apply mode.
-  - Links:
-    - Related files: `.oat/active-project`, `.oat/projects/shared/*/state.md`, `.oat/state.md`
-  - Created: 2026-02-17
-  - Completed: 2026-02-18
 
 - [ ] **(P1) [tooling] Add `oat project open|switch|pause` lifecycle commands**
   - Target milestone/phase: OAT CLI lifecycle hygiene + workflow ergonomics
@@ -341,29 +337,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related skills: `.agents/skills/oat-project-open/SKILL.md`, `.agents/skills/oat-project-clear-active/SKILL.md`
     - Related decisions: `.oat/repo/reference/decision-record.md` (ADR-001, ADR-004)
   - Created: 2026-02-18
-
-- [x] **(P1) [tooling] Add artifact cleanup command for reviews and external plans**
-  - Target milestone/phase: OAT CLI lifecycle hygiene
-  - Notes:
-    - Added `oat cleanup artifacts` cleanup scaffolding with duplicate pruning, reference guards, interactive triage, and non-interactive safety gating for:
-      - `.oat/repo/reviews/`
-      - `.oat/repo/reference/external-plans/`
-    - Default behavior should auto-clean duplicate version chains while preserving the latest version:
-      - Example: if `foo.md`, `foo-v2.md`, `foo-v3.md` exist, keep only latest (`foo-v3.md`) by default.
-    - After duplicate pruning, present remaining candidate artifacts in an interactive multi-select prompt for optional removal.
-    - Keep explicit dry-run + apply semantics and print a deterministic summary (removed/kept/skipped).
-    - Guardrails:
-      - Never delete latest-in-chain duplicates automatically.
-      - If a file appears referenced by active project artifacts, require explicit confirmation before delete.
-  - Success criteria:
-    - Duplicate version chains are pruned automatically to latest with no manual triage.
-    - Users can multi-select additional stale artifacts for removal in one pass.
-    - Cleanup works consistently for both reviews and external plans.
-    - Output is audit-friendly and idempotent on repeated runs.
-  - Links:
-    - Related directories: `.oat/repo/reviews/`, `.oat/repo/reference/external-plans/`
-  - Created: 2026-02-17
-  - Completed: 2026-02-18
 
 - [ ] **(P1) [tooling] Add configurable VCS policy + worktree sync behavior for OAT artifact directories**
   - Target milestone/phase: Worktree ergonomics + artifact signal/noise control

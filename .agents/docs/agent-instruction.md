@@ -246,6 +246,18 @@ Modular rules:
 - Prefer <80 lines
 - One topic per file
 
+### Provider Hard Limits
+
+| Provider | Limit | Source |
+|----------|-------|--------|
+| Codex | 32 KiB combined instruction files | OpenAI Codex docs (official) |
+| Copilot | ~1,000 lines max per instruction file | GitHub docs (official) |
+| Copilot agents | 30,000 chars per agent body | GitHub docs (official) |
+| Claude Code | Skill descriptions: 2% of context window (~16,000 chars fallback) | Claude Code docs (official) |
+| Cursor | No documented hard limit; 500 lines recommended | Cursor docs (official) |
+
+Use 32 KiB as a safe cross-provider ceiling for total combined instruction content.
+
 **Salience rule:** canonical commands and non-negotiables should appear in the first screenful.
 
 ---
@@ -458,14 +470,53 @@ Guidelines:
 - Avoid duplication with root instructions
 - Keep rule sets narrow and enforceable
 
+## 14.3 Copilot scoped instructions: `.github/instructions/*.instructions.md`
+
+Copilot's scoped instruction files function like rules — they activate conditionally based on file patterns.
+
+Frontmatter fields:
+
+| Field | Description |
+|-------|-------------|
+| `applyTo` | Glob pattern(s), comma-separated. Relative to workspace root. |
+| `description` | Short description; enables semantic matching when no `applyTo`. |
+| `name` | Display name in VS Code UI. Defaults to filename. |
+| `excludeAgent` | Prevents use by a specific agent (`"code-review"` or `"coding-agent"`). |
+
+Guidelines:
+
+- Scoped instructions are **additive** — they combine with (not replace) `copilot-instructions.md`
+- When multiple files match, VS Code combines them with no guaranteed order
+- Use `excludeAgent` to prevent code review from applying coding-focused instructions (and vice versa)
+- Keep within the ~1,000 line per-file recommendation
+
 ---
 
 # 15. Copilot Notes
 
-- `.github/copilot-instructions.md` is repo-wide.
-- `.github/instructions/*.instructions.md` can apply via `applyTo` globs.
+## 15.1 Instruction Types
+
+| Type | Location | Activation | Purpose |
+|------|----------|------------|---------|
+| **Repository instructions** | `.github/copilot-instructions.md` | Always-on | Repo-wide conventions |
+| **Scoped instructions** | `.github/instructions/*.instructions.md` | `applyTo` glob match | File-type or area-specific rules |
+| **Prompt files** | `.github/prompts/*.prompt.md` | Manual (`/name` in chat) | Reusable task templates |
+| **Agent files** | `*.agent.md` | Auto or manual | Custom agent definitions |
+| **AGENTS.md** | `**/AGENTS.md` | Always-on | Cross-tool instructions |
+
+Instructions = rules/standards (always-on or pattern-matched). Prompt files = tasks/workflows (manually invoked). Keep this distinction clear.
+
+## 15.2 Composability
+
+- Scoped instructions are **additive** to `copilot-instructions.md`, not replacements.
+- AGENTS.md is read natively alongside Copilot's own instruction files.
 - Avoid conflicts between Copilot instructions and AGENTS/CLAUDE content.
 - Prefer a single canonical policy and compose rather than duplicate.
+
+## 15.3 Limitations
+
+- Custom instructions do **not** affect inline code completions (autocomplete).
+- Organization instructions (public preview) are limited to GitHub.com chat, code review, and coding agent — not IDE chat.
 
 ---
 
@@ -502,10 +553,21 @@ Before merging instruction changes:
 
 # 18. References
 
+### Official Documentation
+
 - AGENTS.md ecosystem: <https://agents.md/>
 - OpenAI Codex AGENTS.md guide: <https://developers.openai.com/codex/guides/agents-md/>
 - Claude Code memory & rules: <https://code.claude.com/docs/en/memory>
+- Claude Code best practices: <https://code.claude.com/docs/en/best-practices>
 - Cursor rules: <https://cursor.com/docs/context/rules>
+- Copilot custom instructions: <https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot>
+- Copilot custom agents reference: <https://docs.github.com/en/copilot/reference/custom-agents-configuration>
+- VS Code custom instructions: <https://code.visualstudio.com/docs/copilot/customization/custom-instructions>
+- VS Code prompt files: <https://code.visualstudio.com/docs/copilot/customization/prompt-files>
+- Anthropic context engineering: <https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents>
+
+### Research
+
 - ManyIFEval ("Curse of Instructions"): <https://openreview.net/forum?id=R6q67CDBCH>
 - "Lost in the Middle": <https://arxiv.org/abs/2307.03172>
 - Context degradation ("Context Rot"): <https://research.trychroma.com/context-rot>
