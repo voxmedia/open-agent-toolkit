@@ -90,9 +90,11 @@ If the skill needs templates/scripts, add:
 
 ### Step 5: Register the Skill
 
-Update `AGENTS.md` to include the new skill under `<available_skills>`.
+Sync the skill to provider views:
 
-If `npx openskills sync -y` is available, it can be used. Otherwise, update `AGENTS.md` manually.
+```bash
+pnpm run cli sync --apply
+```
 
 Run OAT validator and resolve findings:
 

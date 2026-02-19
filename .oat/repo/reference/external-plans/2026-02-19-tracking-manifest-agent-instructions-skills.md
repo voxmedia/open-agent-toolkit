@@ -39,19 +39,54 @@ The agent instructions skills are OAT's first "value out of the box" skill famil
     instruction-file-templates/
       agents-md-root.md                                # Root AGENTS.md template
       agents-md-scoped.md                              # Scoped/package AGENTS.md template
-      claude-rule.md                                   # .claude/rules/*.md template (paths frontmatter for conditional, plain md for always-on)
-      cursor-rule.md                                   # .cursor/rules/*.mdc template (alwaysApply/globs/description frontmatter)
-      copilot-instructions.md                          # .github/copilot-instructions.md + .github/instructions/*.instructions.md template
+      glob-scoped-rule.md                              # Shared body template for glob-scoped rules (provider-agnostic content)
+      frontmatter/
+        claude-rule.md                                 # .claude/rules/*.md frontmatter (`paths` array)
+        cursor-rule.md                                 # .cursor/rules/*.mdc frontmatter (`alwaysApply`/`globs`/`description`)
+        copilot-instruction.md                         # .github/instructions/*.instructions.md frontmatter (`applyTo` glob)
     apply-plan-template.md                             # What the user reviews before generation
   scripts/
     resolve-tracking.sh -> ../oat-agent-instructions-analyze/scripts/resolve-tracking.sh
 ```
 
+## `tracking.json` Schema
+
+The manifest uses optimistic per-key merge semantics: each writer reads the file, updates only its own operation key, and writes back. This is safe because OAT operations are human-initiated and sequential.
+
+```jsonc
+{
+  "version": 1,
+  "operations": {
+    "agentInstructions": {
+      "lastRun": "2026-02-19T14:30:00Z",   // ISO 8601 timestamp
+      "commitHash": "abc1234",               // HEAD at time of run
+      "branch": "main",                      // branch at time of run
+      "mode": "full",                        // "full" | "delta"
+      "providers": ["agents_md", "claude", "cursor"],  // providers analyzed/applied
+      "artifactPath": ".oat/repo/analysis/agent-instructions-2026-02-19-1430.md"  // output location
+    },
+    "knowledgeIndex": {
+      "lastRun": "2026-02-18T10:00:00Z",
+      "commitHash": "def5678",
+      "branch": "main",
+      "mode": "full",
+      "artifactPath": ".oat/repo/knowledge/"
+    }
+  }
+}
+```
+
+**Required fields per operation:** `lastRun`, `commitHash`, `branch`, `mode`. Optional: `providers`, `artifactPath`.
+
+**Write protocol:** Read → parse → merge own key under `operations` → write. If file is missing or unparseable, reinitialize with `{"version": 1, "operations": {}}` and then write.
+
+**Delta mode fallback:** If the stored `commitHash` cannot be resolved by `git rev-parse`, fall back to full mode, log the reason in the output summary, and rewrite the tracking entry after the successful run.
+
 ## Provider Detection & Multi-Format Support
 
 **AGENTS.md is always analyzed** — it's the canonical, provider-agnostic format.
 
-Provider-specific formats (Cursor rules, Copilot instructions, Cline rules) are only analyzed/generated when the provider is detected or explicitly requested. The resolution hierarchy:
+Provider-specific formats are only analyzed/generated when the provider is detected or explicitly requested. The resolution hierarchy:
 
 1. **Explicit argument** (`--providers claude,cursor,copilot`) — overrides everything
 2. **`.oat/sync/config.json`** — already exists with `providers.{name}.enabled` — use this as the primary source
@@ -63,14 +98,32 @@ No new config block in `.oat/config.json` needed — we reuse the existing `.oat
 
 **Provider → instruction file format mapping:**
 
-| Provider | Instruction Format | File Pattern |
-|----------|-------------------|--------------|
-| (always) | AGENTS.md | `**/AGENTS.md` |
-| claude | CLAUDE.md + Claude rules | `**/CLAUDE.md`, `.claude/rules/*.md` (unconditional or `paths`-scoped) |
-| cursor | Cursor rules | `.cursor/rules/*.mdc`, `.cursor/rules/*.md` (`alwaysApply`/`globs`/`description` frontmatter) |
-| copilot | Copilot instructions | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` (`applyTo` globs) |
-| codex | (reads AGENTS.md natively) | — |
-| cline | Cline rules | `.cline/rules/*` |
+| Provider | Always-on Format | Glob-scoped Format | File Pattern |
+|----------|-----------------|-------------------|--------------|
+| (always) | AGENTS.md | — | `**/AGENTS.md` |
+| claude | — | Claude rules | `.claude/rules/*.md` (`paths` frontmatter) |
+| cursor | — | Cursor rules | `.cursor/rules/*.mdc`, `.cursor/rules/*.md` (`alwaysApply`/`globs`/`description` frontmatter) |
+| copilot | — | Scoped instructions | `.github/instructions/*.instructions.md` (`applyTo` frontmatter) |
+| codex | (reads AGENTS.md natively) | — | — |
+| cline | — | Cline rules | `.cline/rules/*` |
+
+**Key insight: glob-scoped rules share content across providers.** The markdown body of a glob-scoped rule (e.g., "Use BEM naming for CSS classes") is identical across Claude, Cursor, and Copilot formats. Only the frontmatter differs:
+
+```markdown
+# Claude rule                    # Cursor rule                      # Copilot instruction
+---                               ---                                ---
+paths:                            globs: src/styles/**/*.css         applyTo: "src/styles/**/*.css"
+  - src/styles/**/*.css           description: CSS conventions        ---
+---                               alwaysApply: false
+                                  ---
+# (same body)                    # (same body)                      # (same body)
+```
+
+The apply skill writes the body once and stamps provider-specific frontmatter. The analyze skill flags body divergence across formats as a drift finding.
+
+**Copilot note:** Root-level `.github/copilot-instructions.md` is NOT generated — it's redundant with root AGENTS.md (Copilot reads AGENTS.md natively). Only scoped `.github/instructions/*.instructions.md` files are generated, as the Copilot equivalent of Claude conditional rules and Cursor glob-scoped rules.
+
+**`AGENTS.override.md`:** Deferred from v1. Discovery and evaluation only cover `AGENTS.md`. Override files will be documented as a known gap in analysis output.
 
 ## Key Design Decisions
 
@@ -82,8 +135,11 @@ No new config block in `.oat/config.json` needed — we reuse the existing `.oat
 - Full: scan entire repo, evaluate all files and directories
 - Delta: read `tracking.json` commit hash, `git diff --name-only {hash}..HEAD`, scope gap/drift analysis to changed file directories
 - Quality analysis always runs on ALL instruction files regardless of mode (cheap and catches staleness)
+- **Fallback:** If stored commit hash is unresolvable (rebased/pruned), switch to full mode automatically and log the reason
 
 **Analysis output location:** `.oat/repo/analysis/` (new peer to `knowledge/` and `reviews/`). Version-controlled, shared.
+
+**Artifact and branch naming:** Use `YYYY-MM-DD-HHmm` suffix (e.g., `agent-instructions-2026-02-19-1430.md`, `oat/agent-instructions-2026-02-19-1430`) to prevent same-day collisions from multiple runs.
 
 ---
 
@@ -93,13 +149,13 @@ No new config block in `.oat/config.json` needed — we reuse the existing `.oat
 
 | ID | Task | Files |
 |----|------|-------|
-| T-01 | Create `.oat/tracking.json` with `{"version": 1}` | `.oat/tracking.json` |
+| T-01 | Create `.oat/tracking.json` with schema | `.oat/tracking.json` |
 | T-02 | Create `resolve-tracking.sh` (read/write/init subcommands) | `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh` |
 | T-03 | Create `resolve-instruction-files.sh` (discover files by provider detection) | `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-instruction-files.sh` |
 | T-04 | Create `resolve-providers.sh` (provider resolution: args → sync config → auto-detect → interactive) | `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-providers.sh` |
 | T-05 | Create `.oat/repo/analysis/` directory + update `.oat/repo/README.md` | `.oat/repo/analysis/.gitkeep`, `.oat/repo/README.md` |
 
-All Phase 1 tasks can run in parallel. T-03 depends on T-04 (uses provider list to determine which file patterns to search).
+Parallelizable subset: T-01, T-02, T-04, T-05 can run in parallel. T-03 depends on T-04 (uses provider list to determine which file patterns to search).
 
 ### Phase 2: Analyze Skill
 
@@ -119,7 +175,7 @@ Step 1: Discover instruction files (run resolve-instruction-files.sh with provid
 Step 2: Evaluate quality (each file against quality-checklist.md criteria)
 Step 3: Assess coverage gaps (walk directory tree against directory-assessment-criteria.md)
 Step 4: Drift detection — delta mode only (git diff changed files → check parent instructions)
-Step 5: Write analysis artifact to .oat/repo/analysis/agent-instructions-YYYY-MM-DD.md
+Step 5: Write analysis artifact to .oat/repo/analysis/agent-instructions-YYYY-MM-DD-HHmm.md
 Step 6: Update tracking.json
 Step 7: Output summary (files evaluated, coverage %, findings by severity, next step)
 ```
@@ -135,18 +191,19 @@ Step 7: Output summary (files evaluated, coverage %, findings by severity, next 
 7. No circular imports
 8. Definition of Done present with objective criteria
 9. Staleness (referenced paths still exist, commands still valid)
+10. Cross-format body consistency (glob-scoped rules with same target should have identical bodies)
 
 **Severity categories:**
 - **Critical**: Instructions actively wrong (mislead agent), missing security non-negotiables
 - **High**: Significant gap — important directory has no coverage, major drift
-- **Medium**: Quality issues — over size budget, duplication, stale commands
+- **Medium**: Quality issues — over size budget, duplication, stale commands, cross-format body divergence
 - **Low**: Polish — could be better structured, minor staleness
 
 ### Phase 3: Apply Skill
 
 | ID | Task | Files |
 |----|------|-------|
-| T-09 | Create instruction file templates (root, scoped, claude rules, cursor rules, copilot) | `references/instruction-file-templates/*.md` |
+| T-09 | Create instruction file templates (root AGENTS.md, scoped AGENTS.md, glob-scoped rule body + per-provider frontmatter) | `references/instruction-file-templates/*.md` |
 | T-10 | Create apply plan template | `references/apply-plan-template.md` |
 | T-11 | Symlink resolve-tracking.sh into apply skill | `scripts/resolve-tracking.sh` |
 | T-12 | Write the apply SKILL.md | `SKILL.md` (~350 lines) |
@@ -158,7 +215,7 @@ T-09, T-10, T-11 can run in parallel. T-12 depends on all three.
 ```
 Step 0: Intake (existing analysis artifact? search .oat/repo/analysis/ for latest, or suggest running analyze)
 Step 1: User reviews recommendations (numbered list, approve/modify/skip each)
-Step 2: Create branch (git checkout -b oat/agent-instructions-YYYY-MM-DD)
+Step 2: Create branch (git checkout -b oat/agent-instructions-YYYY-MM-DD-HHmm)
 Step 3: Generate/update instruction files (templates for new, preserve manual customizations for updates)
 Step 4: Commit (git add specific files, user confirms)
 Step 5: Push + PR via gh (follow oat-project-pr-final pattern, fallback to manual)
@@ -166,14 +223,14 @@ Step 6: Update tracking.json
 Step 7: Output summary (files created/updated, PR URL, next step)
 ```
 
-**Multi-format composition:** AGENTS.md generated first (canonical). CLAUDE.md uses `@AGENTS.md` import. Cursor rules are additive `.mdc` files for topics beyond what AGENTS.md covers. No content duplication across formats.
+**Multi-format composition:** AGENTS.md generated first (canonical). CLAUDE.md uses `@AGENTS.md` import. Glob-scoped rules are written as a single body with provider-specific frontmatter stamped per detected provider. No content duplication across formats.
 
 ### Phase 4: Integration
 
 | ID | Task | Files |
 |----|------|-------|
 | T-13 | Update `oat-repo-knowledge-index` to write to tracking.json | `.agents/skills/oat-repo-knowledge-index/SKILL.md` (add one step) |
-| T-14 | Validate + sync skills (`pnpm oat:validate-skills`, `oat sync --scope all --apply`) | — |
+| T-14 | Validate + sync skills (`pnpm run cli -- sync --scope all --apply`) | — |
 | T-15 | Update `.oat/repo/README.md` with analysis/ docs | `.oat/repo/README.md` |
 
 ---
@@ -186,6 +243,7 @@ Step 7: Output summary (files created/updated, PR URL, next step)
 | `.agents/docs/provider-reference.md` | Provider format reference — where each tool reads instruction files |
 | `.agents/docs/rules-files.md` | Cross-provider deep dive on rules/instruction files (Claude, Cursor, Copilot rules specifics) |
 | `.agents/docs/cursor-rules-files.md` | Cursor-specific `.mdc` format reference (frontmatter, activation modes, naming) |
+| `.oat/repo/reviews/github-copilot-instructions-research-2026-02-19.md` | Copilot instruction system deep research (scoped instructions, AGENTS.md support, feature matrix) |
 | `.agents/skills/oat-repo-knowledge-index/SKILL.md` | Pattern for tracking, frontmatter, parallel agents |
 | `.agents/skills/oat-review-provide/SKILL.md` | Pattern for severity findings, artifact destination, bookkeeping |
 | `.agents/skills/oat-project-pr-final/SKILL.md` | Pattern for branch/PR creation via gh |
@@ -197,8 +255,27 @@ Step 7: Output summary (files created/updated, PR URL, next step)
 ## Verification
 
 1. **tracking.json**: Create it, run `resolve-tracking.sh write agentInstructions abc123 main full agents_md`, verify JSON structure with `jq . .oat/tracking.json`
-2. **resolve-instruction-files.sh**: Run against this repo, verify it finds `AGENTS.md` (root + packages/cli), `CLAUDE.md` (root + packages/cli)
-3. **Analyze skill**: Run `oat-agent-instructions-analyze` against this repo — should produce analysis artifact in `.oat/repo/analysis/` with findings for the existing instruction files
-4. **Apply skill**: Run `oat-agent-instructions-apply` with the analysis artifact — should offer to create/update instruction files and produce a PR
-5. **Skill validation**: `pnpm oat:validate-skills` passes, both skills appear in sync
-6. **Knowledge index**: Run `oat-repo-knowledge-index`, verify tracking.json gets a `knowledgeIndex` entry
+2. **resolve-instruction-files.sh**: Run against this repo, verify it finds `AGENTS.md` (root + packages/cli), `CLAUDE.md` (root + packages/cli), and any `.claude/rules/`, `.cursor/rules/`, `.github/instructions/` files
+3. **resolve-providers.sh**: Run with no args, verify it reads `.oat/sync/config.json` and falls back to auto-detection
+4. **Analyze skill**: Run `oat-agent-instructions-analyze` against this repo — should produce analysis artifact in `.oat/repo/analysis/` with findings for the existing instruction files
+5. **Apply skill**: Run `oat-agent-instructions-apply` with the analysis artifact — should offer to create/update instruction files and produce a PR
+6. **Cross-format consistency**: For any glob-scoped rule generated across providers, verify bodies are identical and only frontmatter differs
+7. **Skill validation**: `pnpm run cli -- validate-skills` passes, both skills appear in sync
+8. **Knowledge index**: Run `oat-repo-knowledge-index`, verify tracking.json gets a `knowledgeIndex` entry
+
+---
+
+## Review Changelog
+
+Updates applied from Codex reviews (`ad-hoc-review-2026-02-19-tracking-manifest-agent-instructions-skills.md` and `...-context-docs.md`):
+
+1. **Added `tracking.json` schema section** — required fields per operation, write protocol, merge semantics (Important #1 from both reviews)
+2. **Added delta mode fallback** — unresolvable commit hash → full mode + log reason (Important #2 / Minor #2)
+3. **Added `HHmm` timestamp suffix** to artifact filenames and branch names to prevent same-day collisions (Important #3)
+4. **Fixed Phase 1 parallelism wording** — "parallelizable subset" with explicit T-03→T-04 dependency (Minor #1)
+5. **Normalized CLI commands** to `pnpm run cli --` convention (Minor #2)
+6. **Deferred `AGENTS.override.md`** from v1 scope, documented as known gap (Open Question #2)
+7. **Clarified Copilot scope** — no root `copilot-instructions.md` (redundant with AGENTS.md); scoped `.instructions.md` kept as Copilot's glob-targeted rule format parallel to Claude/Cursor (Open Question #1)
+8. **Added cross-format body consistency** as quality criterion #10 and drift finding — glob-scoped rules share content, only frontmatter differs per provider
+9. **Restructured apply templates** — single `glob-scoped-rule.md` body template + per-provider `frontmatter/` directory instead of monolithic per-provider templates
+10. **Expanded verification** with provider resolution test (#3), cross-format consistency check (#6), and added Copilot research doc to critical files

@@ -214,10 +214,10 @@ Skills can include supporting files in subdirectories:
 
 ### Step 5: Sync and Verify
 
-After creating the skill, run openskills sync to update AGENTS.md:
+After creating the skill, run OAT sync to update provider views:
 
 ```bash
-npx openskills sync -y
+pnpm run cli sync --apply
 ```
 
 Verify:
@@ -255,6 +255,31 @@ Provide:
 - Document all arguments with defaults
 - Keep command-like skills concise; complex workflows can be detailed
 - Avoid duplication—info lives in SKILL.md or references, not both
+
+### Interactive Input
+
+Skills that need user decisions (parameter choices, confirmations, disambiguation) should include interactive prompts in their workflow steps.
+
+**Write instructions portably:** Use natural language like "Ask the user which approach they prefer" in workflow prose. All providers can handle this conversationally.
+
+**Claude Code enhancement:** Add `AskUserQuestion` to `allowed-tools` in frontmatter. Claude Code renders these as structured UI prompts with selectable options, headers, and multi-select support. Other providers ignore the field and handle the same instructions as conversational questions.
+
+**When to include interactive input:**
+- Decisions with 2–4 discrete options (approach, config, scope)
+- Confirmation gates before destructive or high-impact actions
+- Collecting required parameters not provided in arguments
+
+**When NOT to:**
+- Autonomous/subagent skills — use argument defaults or flags to drive decisions instead of prompting mid-execution
+- Questions with open-ended answers — just ask conversationally in the skill prose
+
+### Progress Feedback
+
+For multi-step skills, print brief progress updates so the user knows what's happening:
+
+- Use `[N/N]` step indicators for sequential work (e.g., `[1/3] Resolving dependencies…`)
+- For long-running operations (tests, builds, large diffs), print a start line and a completion line
+- Keep it concise — don't print a line for every shell command
 
 ### Shared References
 
@@ -320,7 +345,7 @@ I need a skill for running database migrations
 - [Cursor Skills](https://cursor.com/docs/context/skills) — Cursor-specific features
 - [Codex CLI Skills](https://developers.openai.com/codex/skills) — Codex-specific features
 - [Gemini CLI Skills](https://geminicli.com/docs/cli/skills/) — Gemini-specific features
-- [npx skills CLI](https://github.com/vercel-labs/skills) — cross-tool distribution
+- [npx skills CLI](https://github.com/vercel-labs/skills) — installing remote/community skills
 - [Skills best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) — authoring guidance
 - `.agents/docs/skills-guide.md` — local deep-dive: compatibility matrix, resolved questions, patterns
 - `.agents/docs/reference-architecture.md` — local: where skills/agents/docs live and why
@@ -329,7 +354,7 @@ I need a skill for running database migrations
 
 **Skill not appearing in menu:**
 
-- Run `npx openskills sync -y` to regenerate AGENTS.md
+- Run `pnpm run cli sync --apply` to regenerate provider views
 - Verify YAML frontmatter syntax is valid
 - Check that skill name matches directory name
 - Ensure `user-invocable` is not set to `false` (Claude Code)
@@ -351,7 +376,7 @@ I need a skill for running database migrations
 Successful skill creation:
 
 - ✅ Skill created at `.agents/skills/{name}/SKILL.md`
-- ✅ `npx openskills sync -y` run successfully
+- ✅ `pnpm run cli sync --apply` run successfully
 - ✅ For `oat-*` skills, `pnpm oat:validate-skills` passes
 - ✅ Skill appears in AGENTS.md
 - ✅ Frontmatter valid
