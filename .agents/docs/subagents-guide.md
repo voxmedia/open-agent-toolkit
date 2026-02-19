@@ -115,6 +115,11 @@ System prompt body.
 - No resumable sessions
 - Less documented overall; much of the community knowledge comes from experimentation
 
+**Delegation behavior:**
+- **Automatic:** Cursor Agent delegates based on task + subagent `description`
+- **Explicit:** Use `/name` (for example `/oat-reviewer`) or mention the subagent naturally
+- **Invocation model note:** Cursor docs describe explicit invocation via prompts, not a user-facing `subagent_type` parameter
+
 **Cursor CLI subagents:**
 Cursor CLI (`cursor-agent`) can spawn subagents in headless mode via shell commands:
 ```
@@ -124,10 +129,19 @@ This enables fan-out/fan-in patterns with dynamic model selection. Community-dis
 
 ### Codex CLI (OpenAI)
 
-**Locations:**
-- Project: `.codex/agents/<name>.md` (experimental)
+**Locations and config:**
+- Runtime role config (required): `~/.codex/config.toml` and/or project `.codex/config.toml`
+- Role config files (required for per-role overrides): `.codex/agents/<role>.toml`
 
-**Status:** Experimental, releasing soon. Follows the same Markdown + YAML frontmatter pattern. Documentation pending.
+**Current model:**
+- Enable multi-agent with `[features] multi_agent = true`
+- Declare roles in `[agents.<name>]`
+- Dispatch by role name using `agent_type`
+- Use `config_file = "agents/<role>.toml"` when role-specific model/sandbox/instructions are needed
+
+See:
+- https://developers.openai.com/codex/multi-agent
+- https://developers.openai.com/codex/local-config
 
 ### Cross-Tool MCP Bridge (Community)
 

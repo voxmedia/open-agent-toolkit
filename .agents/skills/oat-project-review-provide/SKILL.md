@@ -281,8 +281,13 @@ Before selecting a tier, announce the probe and its result so the user can see w
 ```
 
 Detection logic:
-- If the host supports the Task tool with custom `subagent_type` values (e.g., Claude Code, Codex), attempt to resolve `oat-reviewer`. It should be registered at `.claude/agents/oat-reviewer.md` (symlink to `.agents/agents/oat-reviewer.md`).
-- If the Task tool is available and `oat-reviewer` can be dispatched → **Tier 1**.
+- If the host is Claude Code, use Task-style subagent dispatch with `subagent_type: "oat-reviewer"` and resolve from `.claude/agents/oat-reviewer.md`.
+- If the host is Cursor, invoke `oat-reviewer` using Cursor-native explicit invocation (`/oat-reviewer`) or natural mention, and resolve from `.cursor/agents/oat-reviewer.md` (or `.claude/agents/oat-reviewer.md` compatibility path).
+- If the host is Codex multi-agent, verify Codex requirements first:
+  - `[features] multi_agent = true` is enabled in active Codex config.
+  - If explicit role pinning is desired, `agent_type` must be a built-in role (`default`/`worker`/`explorer`) or a custom role declared under `[agents.<name>]`.
+  - Codex may also auto-select and spawn agents without explicit role pinning.
+- If the runtime can dispatch reviewer work (`subagent_type` in Claude Code, Cursor invocation via `/name` or natural mention, or Codex multi-agent spawn/auto-spawn) → **Tier 1**.
 - If the Task tool is not available or subagent dispatch is not supported → **Tier 2**.
 - If user explicitly requests inline or confirms they are already in a fresh session → **Tier 3**.
 
@@ -291,7 +296,10 @@ Detection logic:
 First, pre-compute the review artifact path using Step 7 naming conventions so it can be passed to the subagent.
 
 Then spawn the reviewer:
-- Use Task tool with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`)
+- Use provider-appropriate dispatch:
+  - Claude Code: Task tool with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`).
+  - Cursor: explicit invocation `/oat-reviewer` (or natural mention) with agent resolved from `.cursor/agents/oat-reviewer.md` or `.claude/agents/oat-reviewer.md` compatibility path.
+  - Codex style: ask Codex to spawn agent(s) for review work and wait for all results; optionally pin `agent_type` when a specific built-in/custom role is required.
 - Pass the Review Scope metadata block from Step 5 as the prompt
 - Include the pre-computed artifact path for the subagent to write to
 - Run in background if supported (`run_in_background: true`)

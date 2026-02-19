@@ -82,7 +82,7 @@ Subagents are a **converging but still tool-specific** concept:
 |------|------------------|-------------|
 | Claude Code | `.claude/agents/` | Markdown + YAML frontmatter (`name`, `description`, `tools`, `model`, `skills`, `permissionMode`) |
 | Cursor | `.cursor/agents/` | Markdown + YAML frontmatter (`name`, `description`, `model`, `tools`) |
-| Codex | `.codex/agents/` | Markdown + YAML frontmatter (experimental) |
+| Codex | `.codex/config.toml` + `.codex/agents/*.toml` | Role-based multi-agent dispatch via `[agents.<name>]` + `agent_type`; role config files referenced with `config_file` |
 
 Unlike skills, there is **no open standard for subagents yet**, and no equivalent of `npx skills` for cross-tool agent distribution. Each tool's frontmatter schema differs slightly.
 
@@ -361,7 +361,7 @@ Subagents remain **tool-specific** — there is no cross-tool subagent standard 
 |------|----------|---------|
 | Claude Code | `.claude/agents/repo-scanner.md` | Native — supports `name`, `description`, `tools`, `model`, `skills`, `permissionMode` |
 | Cursor | `.cursor/agents/repo-scanner.md` | Native — supports `name`, `description`, `model`, `tools` |
-| Codex | `.codex/agents/repo-scanner.md` | Experimental |
+| Codex | `.codex/agents/repo-scanner.toml` + role in `.codex/config.toml` | Runtime dispatch is config-role based (`agent_type`); role behavior comes from TOML config layers |
 
 The system prompt body can be largely shared across tools, but frontmatter schemas differ. If maintaining multiple copies becomes overhead, consider a shared source with build-time distribution.
 

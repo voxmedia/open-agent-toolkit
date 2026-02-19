@@ -146,9 +146,14 @@ This creates a new directory in `.oat/projects/shared/<project-name>/` with:
 - **Session Independence**: Handoff documents enable clean context transitions between agent sessions
 - **Quality Gates**: Review documents provide checkpoints for validating approach and catching issues
 
-## Subagents (Claude Code Only)
+## Subagents (Provider-Dependent)
 
-Subagents are specialized AI assistants that can be delegated to for focused tasks. They live in `.claude/agents/` and are only available in Claude Code (not Cursor).
+Subagents are specialized AI assistants that can be delegated to for focused tasks. OAT keeps canonical agent definitions in `.agents/agents/` and syncs provider views for Claude/Cursor (`.claude/agents/`, `.cursor/agents/`). Codex multi-agent runtime uses role config in `.codex/config.toml` with TOML role files.
+
+Provider behavior differs:
+- Claude Code typically dispatches subagents using `subagent_type`.
+- Cursor uses `/name` explicit invocation (or natural mention) and can load agents from `.cursor/agents/` plus `.claude/agents/` compatibility paths.
+- Codex multi-agent dispatch uses `agent_type` roles from Codex config (`[agents.<name>]`), with `[features] multi_agent = true`.
 
 ### Available Subagents
 

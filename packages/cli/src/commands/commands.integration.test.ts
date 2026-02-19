@@ -225,15 +225,11 @@ describe('CLI command integration', () => {
     const cursorAgentStat = await lstat(
       join(root, '.cursor', 'agents', 'agent-one'),
     );
-    const codexAgentStat = await lstat(
-      join(root, '.codex', 'agents', 'agent-one'),
-    );
 
     expect(claudeSkillStat.isSymbolicLink()).toBe(true);
     expect(cursorSkillStat.isSymbolicLink()).toBe(true);
     expect(claudeAgentStat.isSymbolicLink()).toBe(true);
     expect(cursorAgentStat.isSymbolicLink()).toBe(true);
-    expect(codexAgentStat.isSymbolicLink()).toBe(true);
   });
 
   it('status --json outputs valid JSON with no prompts', async () => {
