@@ -19,8 +19,10 @@ Create a new OAT project directory, scaffold standard artifacts from `.oat/templ
    OAT ▸ NEW PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Before multi-step work (validation, scaffolding, dashboard refresh), print 2–5 short step indicators.
-- For long-running operations, print a brief “starting…” line and a matching “done” line (duration optional).
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/3] Validating project name…`
+  - `[2/3] Scaffolding project artifacts…`
+  - `[3/3] Refreshing dashboard…`
 
 ## Process
 

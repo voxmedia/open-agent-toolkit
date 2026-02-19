@@ -21,8 +21,11 @@ Create a new idea directory, scaffold a discovery document, verify setup, and ha
 
   Replace `[project]` with `[global]` when operating at user level.
 
-- Before multi-step work (directory creation, template scaffolding), print 2-5 short step indicators.
-- For long-running operations, print a brief "starting..." line and a matching "done" line.
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/4] Validating idea name…`
+  - `[2/4] Scaffolding idea directory…`
+  - `[3/4] Updating backlog + scratchpad…`
+  - `[4/4] Handing off to ideation…`
 
 ## Process
 

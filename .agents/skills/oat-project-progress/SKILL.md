@@ -19,8 +19,11 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    OAT ▸ PROGRESS
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Before multi-step work (staleness check, project scan, recommendation), print 2–4 short step indicators.
-- For any operation that may take noticeable time, print a start line and a completion line (duration optional).
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/4] Checking knowledge base…`
+  - `[2/4] Scanning project status…`
+  - `[3/4] Determining next steps…`
+  - `[4/4] Refreshing dashboard…`
 
 ## Usage
 

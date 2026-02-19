@@ -19,8 +19,11 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    OAT ▸ OPEN PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Before multi-step work (listing, validating, writing pointer, dashboard refresh), print 2–5 short step indicators.
-- For any operation that may take noticeable time, print a start line and a completion line (duration optional).
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/4] Listing available projects…`
+  - `[2/4] Validating project selection…`
+  - `[3/4] Setting active project pointer…`
+  - `[4/4] Refreshing dashboard…`
 
 ## Process
 

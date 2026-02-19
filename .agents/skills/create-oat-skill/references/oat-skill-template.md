@@ -45,8 +45,11 @@ When executing this skill, provide lightweight progress feedback so the user can
    OAT ▸ {LABEL}
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Before multi-step work, print 2–5 short step indicators (don’t print a line for every shell command).
-- For long-running operations, print a brief “starting…” line and a matching “done” line (duration optional).
+- Before multi-step work, print step indicators with the `[N/N]` format, e.g.:
+  - `[1/3] {First major action}…`
+  - `[2/3] {Second major action}…`
+  - `[3/3] {Final action}…`
+- Replace the examples above with skill-specific step labels that match the actual process steps. Do not leave generic placeholders.
 
 ## Process
 

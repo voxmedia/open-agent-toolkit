@@ -25,7 +25,11 @@ Read the brainstorming discovery document, synthesize a clean summary, and updat
 
   Replace `[project]` with `[global]` when operating at user level.
 
-- Print step indicators: "Reading discovery...", "Generating summary...", "Updating backlog..."
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/4] Resolving active idea…`
+  - `[2/4] Reading discovery document…`
+  - `[3/4] Generating summary…`
+  - `[4/4] Updating backlog…`
 
 ## Process
 

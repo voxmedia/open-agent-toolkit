@@ -21,6 +21,10 @@ Review your ideas scratchpad or quick-capture a new idea seed.
 
   Replace `[project]` with `[global]` when operating at user level.
 
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/2] Resolving ideas level…`
+  - `[2/2] Reading scratchpad…` (review mode) or `[2/2] Capturing new idea…` (capture mode)
+
 ## Process
 
 ### Step 0: Resolve Ideas Level

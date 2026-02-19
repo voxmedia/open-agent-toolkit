@@ -20,6 +20,8 @@ When a skill invokes this contract during plan authoring, it should print a sub-
 
 This is a sub-phase indicator; the calling skill owns the top-level banner.
 
+- When invoked by a calling skill, print the sub-banner immediately before plan authoring begins.
+
 ## Canonical Plan Format
 
 Every `plan.md` produced or edited by any OAT skill **must** satisfy these invariants.

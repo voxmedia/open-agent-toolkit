@@ -51,8 +51,11 @@ When executing this skill, provide lightweight progress feedback so the user can
    OAT ▸ PROMOTE TO FULL
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Before multi-step work, print 2–5 short step indicators.
-- For long-running operations, print a brief “starting…” line and a matching “done” line.
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/4] Checking promotion eligibility…`
+  - `[2/4] Inspecting existing artifacts…`
+  - `[3/4] Backfilling missing lifecycle artifacts…`
+  - `[4/4] Switching to full mode + reporting…`
 
 ## Process
 

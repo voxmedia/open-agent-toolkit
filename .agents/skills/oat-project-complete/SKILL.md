@@ -19,8 +19,11 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    OAT ▸ COMPLETE PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Before multi-step work (updating state, optional archive/cleanup, dashboard refresh), print 2–5 short step indicators.
-- For any operation that may take noticeable time, print a start line and a completion line (duration optional).
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/4] Checking completion gates…`
+  - `[2/4] Marking lifecycle complete…`
+  - `[3/4] Archiving project (if approved)…`
+  - `[4/4] Refreshing dashboard…`
 
 ## Process
 

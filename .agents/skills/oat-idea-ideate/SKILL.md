@@ -53,7 +53,10 @@ If you catch yourself:
 
   Replace `[project]` with `[global]` when operating at user level.
 
-- When resolving or listing ideas, print a brief status line.
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/3] Resolving active idea…`
+  - `[2/3] Loading discovery document…`
+  - `[3/3] Starting brainstorming session…`
 
 ## Process
 

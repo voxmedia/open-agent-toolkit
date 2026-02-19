@@ -29,9 +29,12 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    OAT ▸ SPEC
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Before multi-step work (validating discovery, drafting requirements, finalizing + committing), print 2–5 short step indicators.
-- For any operation that may take noticeable time, print a start line and a completion line (duration optional).
-- Keep it concise; don’t print a line for every shell command.
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/5] Validating discovery + reading context…`
+  - `[2/5] Drafting requirements…`
+  - `[3/5] Refining with user…`
+  - `[4/5] Running quality gate checks…`
+  - `[5/5] Updating state + committing…`
 
 **BLOCKED Activities:**
 - ❌ No implementation code

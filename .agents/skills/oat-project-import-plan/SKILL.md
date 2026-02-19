@@ -50,8 +50,12 @@ When executing this skill, provide lightweight progress feedback so the user can
    OAT ▸ IMPORT PLAN
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Before multi-step work, print 2–5 short step indicators.
-- For long-running operations, print a brief “starting…” line and a matching “done” line.
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/5] Resolving project + source plan…`
+  - `[2/5] Preserving imported source…`
+  - `[3/5] Normalizing plan to OAT task structure…`
+  - `[4/5] Updating project metadata + state…`
+  - `[5/5] Refreshing dashboard…`
 
 ## Process
 

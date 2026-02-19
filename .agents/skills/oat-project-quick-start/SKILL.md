@@ -50,8 +50,12 @@ When executing this skill, provide lightweight progress feedback so the user can
    OAT ▸ QUICK START
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Before multi-step work, print 2–5 short step indicators.
-- For long-running operations, print a brief “starting…” line and a matching “done” line.
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/5] Scaffolding quick-mode project…`
+  - `[2/5] Capturing discovery decisions…`
+  - `[3/5] Generating execution plan…`
+  - `[4/5] Initializing implementation tracker…`
+  - `[5/5] Refreshing dashboard…`
 
 ## Process
 

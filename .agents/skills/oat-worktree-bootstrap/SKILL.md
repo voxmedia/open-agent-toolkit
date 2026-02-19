@@ -40,8 +40,11 @@ Create or resume a git worktree and prepare it for OAT development.
    OAT ▸ WORKTREE BOOTSTRAP
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Before multi-step operations, print 2–5 short step indicators.
-- For long-running checks, print a start line and a completion line.
+- Before multi-step operations, print step indicators, e.g.:
+  - `[1/4] Resolving worktree target…`
+  - `[2/4] Creating/validating worktree…`
+  - `[3/4] Running OAT bootstrap checks…`
+  - `[4/4] Reporting ready state…`
 
 ## Inputs
 

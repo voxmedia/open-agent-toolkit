@@ -50,8 +50,11 @@ When executing this skill, provide lightweight progress feedback so the user can
    OAT ▸ PROVIDE AD-HOC REVIEW
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Before multi-step work, print 2–5 short step indicators.
-- For long-running operations, print a brief “starting…” line and a matching “done” line.
+- Before multi-step work, print step indicators, e.g.:
+  - `[1/4] Resolving review scope…`
+  - `[2/4] Gathering files + context…`
+  - `[3/4] Running review analysis…`
+  - `[4/4] Writing review artifact…`
 
 ## Process
 
