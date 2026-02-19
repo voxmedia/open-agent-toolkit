@@ -431,7 +431,7 @@ git commit -m "fix(p03-t04): fix phase statuses and state commit pointer"
 | p01 | code | pending | - | - |
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
-| final | code | fixes_added | 2026-02-19 | reviews/final-review-2026-02-19.md |
+| final | code | fixes_completed | 2026-02-19 | reviews/final-review-2026-02-19.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
