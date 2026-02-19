@@ -681,7 +681,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-02-19T00:29:17.287Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/docs-completed-projects-gap-review",
+      "providerPath": ".claude/skills/docs-completed-projects-gap-review",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-19T00:57:37.029Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/docs-completed-projects-gap-review",
+      "providerPath": ".cursor/skills/docs-completed-projects-gap-review",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-19T00:57:37.032Z"
     }
   ],
-  "lastUpdated": "2026-02-19T00:29:17.287Z"
+  "lastUpdated": "2026-02-19T00:57:37.032Z"
 }
