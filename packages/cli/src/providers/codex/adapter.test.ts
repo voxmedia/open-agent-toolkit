@@ -30,13 +30,13 @@ describe('codexAdapter', () => {
     expect(skillMapping?.providerDir).toBe('.agents/skills');
   });
 
-  it('project agents map to .codex/agents with nativeRead: false', () => {
+  it('project mappings include only skills', () => {
     const agentMapping = codexAdapter.projectMappings.find(
       (mapping) => mapping.contentType === 'agent',
     );
 
-    expect(agentMapping?.providerDir).toBe('.codex/agents');
-    expect(agentMapping?.nativeRead).toBe(false);
+    expect(agentMapping).toBeUndefined();
+    expect(codexAdapter.projectMappings).toHaveLength(1);
   });
 
   it('user skills mapping has nativeRead: true', () => {

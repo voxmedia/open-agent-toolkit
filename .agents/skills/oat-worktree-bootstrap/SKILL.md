@@ -119,6 +119,29 @@ Set `TARGET_WORKTREE` to `{WORKTREE_ROOT}/{branch-name}`.
 
 If worktree creation fails, stop and report the exact git error with remediation guidance.
 
+### Step 2.5: Propagate Local-Only Pointers
+
+After the worktree is created (or validated with `--existing`), copy gitignored local-only pointer files from the source repo into the new worktree so that downstream skills (e.g., `oat-project-implement`) can resolve context without re-prompting.
+
+Files to propagate (if they exist in the source repo):
+- `.oat/active-project`
+- `.oat/active-idea`
+
+```bash
+for POINTER in active-project active-idea; do
+  SRC="$REPO_ROOT/.oat/$POINTER"
+  DST="{target-path}/.oat/$POINTER"
+  if [[ -f "$SRC" && ! -f "$DST" ]]; then
+    cp "$SRC" "$DST"
+  fi
+done
+```
+
+Rules:
+- Only copy if the source file exists **and** the destination does not (never overwrite).
+- After copying, validate the pointer target exists in the worktree. If not, print a warning but do not block bootstrap.
+- This is a pragmatic subset of the broader worktree artifact sync policy (see backlog P1 item).
+
 ### Step 3: Run OAT Bootstrap
 
 Run bootstrap and readiness checks in the target worktree:

@@ -7,12 +7,6 @@ export const CODEX_PROJECT_MAPPINGS: PathMapping[] = [
     providerDir: '.agents/skills',
     nativeRead: true,
   },
-  {
-    contentType: 'agent',
-    canonicalDir: '.agents/agents',
-    providerDir: '.codex/agents',
-    nativeRead: false,
-  },
 ];
 
 export const CODEX_USER_MAPPINGS: PathMapping[] = [

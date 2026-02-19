@@ -151,6 +151,13 @@ The package manager for the agent skills ecosystem. Installs skills across 27+ a
 
 **Subagent locations:**
 - Project: `.cursor/agents/<name>.md`
+- User: `~/.cursor/agents/<name>.md`
+- Compatibility paths also supported: `.claude/agents/`, `.codex/agents/`, `~/.claude/agents/`, `~/.codex/agents/`
+
+**Invocation behavior:**
+- Explicit: `/name` (for example `/oat-reviewer`)
+- Explicit (natural language): mention the subagent by name in the prompt
+- Automatic: delegated by Agent based on task + subagent `description`
 
 ### Rules
 
@@ -194,7 +201,22 @@ The package manager for the agent skills ecosystem. Installs skills across 27+ a
 
 | Resource | URL |
 |----------|-----|
-| **Codex agents (experimental)** | `.codex/agents/` (documentation pending) |
+| **Codex multi-agents** | https://developers.openai.com/codex/multi-agent |
+| **Codex local config** | https://developers.openai.com/codex/local-config |
+
+**Codex multi-agent requirements:**
+- Enable feature flag in config:
+  - `[features]`
+  - `multi_agent = true`
+- Define role(s) in config:
+  - `[agents.oat-reviewer]` (or role names your workflow dispatches)
+- Dispatch by role name using `agent_type` (not `subagent_type`).
+- Role-specific overrides are TOML files (for example `~/.codex/agents/reviewer.toml`) referenced via `config_file`.
+
+**Note on OAT provider sync:**
+- Codex runtime dispatch is config-role based (`[agents.<name>]`) and TOML-backed.
+- OAT currently does not sync canonical markdown agents into `.codex/agents`.
+- Canonical markdown agent definitions require a markdown→TOML adapter to become Codex-executable role configs.
 
 ### Other Codex Resources
 
