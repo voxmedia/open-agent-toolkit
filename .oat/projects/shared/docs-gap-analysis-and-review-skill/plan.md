@@ -396,7 +396,7 @@ git commit -m "chore(p03-t03): sync provider views after docs updates"
 | p01 | code | pending | - | - |
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
-| final | code | pending | - | - |
+| final | code | received | 2026-02-19 | reviews/final-review-2026-02-19.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
