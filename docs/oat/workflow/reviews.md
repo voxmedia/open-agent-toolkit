@@ -38,6 +38,17 @@ Final review `passed` gate requires:
 - Deferred Medium findings resurfaced and explicitly dispositioned.
 - Minor findings explicitly dispositioned (after plain-language explanation).
 
+## Subagent Compatibility
+
+`oat-project-review-provide` uses provider-aware subagent dispatch when available:
+
+- Claude Code: dispatch `oat-reviewer` with `subagent_type` (resolved from `.claude/agents/oat-reviewer.md`).
+- Cursor: dispatch `oat-reviewer` via explicit `/oat-reviewer` invocation or natural mention (resolved from `.cursor/agents/oat-reviewer.md`; `.claude/agents/oat-reviewer.md` is also supported for compatibility).
+- Codex multi-agent runtimes: Codex can auto-decide when to spawn agents, or you can explicitly request agent spawning (optionally with `agent_type`).
+  - Requires Codex config prerequisites:
+    - `[features] multi_agent = true`
+    - If explicit role pinning is used, role must be built-in (`default`/`worker`/`explorer`) or configured under `[agents.<name>]`.
+- If subagent dispatch is unavailable, follow the existing fallback path (fresh session preferred, inline reset as fallback).
 ## Reference artifacts
 
 - `.oat/projects/<scope>/<project>/plan.md` (`## Reviews`)

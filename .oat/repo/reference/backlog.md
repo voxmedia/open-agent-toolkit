@@ -182,6 +182,28 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related to invocation compatibility standardization item above
   - Created: 2026-02-14
 
+- [ ] **(P1) [tooling] Add Codex markdown→TOML subagent adapter and re-enable Codex agent sync**
+  - Target milestone/phase: Codex multi-agent compatibility hardening
+  - Notes:
+    - Implement an adapter that converts canonical markdown agent definitions (`.agents/agents/*.md`) into Codex role configuration:
+      - role entries in `.codex/config.toml` (`[agents.<name>]`)
+      - optional per-role TOML files under `.codex/agents/*.toml` referenced via `config_file`
+    - Keep current behavior until adapter is complete:
+      - do not sync canonical agents into `.codex/agents`
+      - keep skills sync/native-read behavior unchanged
+    - Ensure generated role config preserves core metadata and instruction intent while avoiding provider-specific field leakage.
+    - Define idempotent regeneration rules so repeated syncs are deterministic and safe.
+  - Success criteria:
+    - `oat sync --apply` can generate Codex-consumable role config from canonical agents without manual TOML edits.
+    - Generated config passes Codex multi-agent prerequisites (`[features] multi_agent = true` and valid role declarations).
+    - Provider docs and doctor/status messaging reflect adapter-backed behavior.
+    - Existing Claude/Cursor agent sync behavior is unchanged.
+  - Links:
+    - Codex multi-agent docs: https://developers.openai.com/codex/multi-agent
+    - Codex local config docs: https://developers.openai.com/codex/local-config
+    - Related file: `packages/cli/src/providers/codex/paths.ts`
+  - Created: 2026-02-19
+
 - [ ] **(P1) [tooling] Add context management commands for `AGENTS.md` ↔ `CLAUDE.md` integrity**
   - Target milestone/phase: OAT CLI workflow quality
   - Notes:
@@ -355,6 +377,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
       - optionally sync/copy generated artifacts back from worktree -> primary branch workspace before/after merge
     - Ensure behavior is deterministic and explicit (dry-run/apply modes), with clear reporting of what was copied/skipped.
     - Keep compatibility with current `.oat/config.json` phase-A direction; avoid introducing new one-off pointer files.
+    - **Note:** `active-project` and `active-idea` propagation is already handled by `oat-worktree-bootstrap` Step 2.5 (quick fix added 2026-02-17). Remaining scope is the configurable policy for artifact directories.
   - Success criteria:
     - Users can choose whether these artifact directories are tracked in git.
     - Worktrees can still receive required context artifacts when gitignored policy is enabled.

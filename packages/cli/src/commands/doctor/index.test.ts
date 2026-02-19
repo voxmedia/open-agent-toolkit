@@ -43,7 +43,6 @@ function createHarness(options: HarnessOptions = {}): {
   const defaultPathExists = {
     '/tmp/workspace/.agents/skills': true,
     '/tmp/workspace/.agents/agents': true,
-    '/tmp/workspace/.codex/agents': true,
     '/tmp/workspace/.oat/sync/manifest.json': true,
   };
   const pathExists = {
@@ -139,19 +138,6 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('manifest');
     expect(capture.info[0]).toContain('Manifest validation failed');
-  });
-
-  it('checks Codex agent path availability', async () => {
-    const { command, capture } = createHarness({
-      pathExists: {
-        '/tmp/workspace/.codex/agents': false,
-      },
-    });
-
-    await runDoctor(command);
-
-    expect(capture.info[0]).toContain('codex_agents_path');
-    expect(capture.info[0]).toContain('Codex agents path is not available');
   });
 
   it('checks symlink creation capability', async () => {

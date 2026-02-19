@@ -69,8 +69,8 @@ describe('ProviderAdapter types', () => {
 
   it('getSyncMappings filters nativeRead entries', () => {
     const adapter: ProviderAdapter = {
-      name: 'codex',
-      displayName: 'Codex CLI',
+      name: 'example',
+      displayName: 'Example Provider',
       defaultStrategy: 'auto',
       projectMappings: [
         {
@@ -82,7 +82,7 @@ describe('ProviderAdapter types', () => {
         {
           contentType: 'agent',
           canonicalDir: '.agents/agents',
-          providerDir: '.codex/agents',
+          providerDir: '.example/agents',
           nativeRead: false,
         },
       ],
