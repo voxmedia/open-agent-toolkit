@@ -54,7 +54,38 @@ Purpose:
 Purpose:
 - Run environment diagnostics with pass/warn/fail outcomes and fix guidance
 
+## `oat providers set`
+
+Purpose:
+- Enable or disable project providers in sync config
+
+Key behavior:
+- Modifies `.oat/sync/config.json` to toggle provider enablement
+- Options: `--enabled <providers>`, `--disabled <providers>` (comma-separated)
+- Changes take effect on next `oat sync --apply`
+
 ## Other implemented namespaces
+
+## `oat state refresh`
+
+Purpose:
+- Regenerate the OAT repo state dashboard (`.oat/state.md`)
+
+Key behavior:
+- Scans all projects under the projects root
+- Computes per-project status (phase, task progress, blockers)
+- Writes a summary dashboard to `.oat/state.md`
+- No options required; operates on the current repo
+
+## `oat index init`
+
+Purpose:
+- Generate a thin `project-index.md` for quick repo orientation
+
+Key behavior:
+- Produces a lightweight index of key files and structure
+- Options: `--head-sha <sha>` (override HEAD), `--merge-base-sha <sha>` (override merge-base)
+- Useful for providing AI agents with a quick repo map
 
 ## `oat cleanup project`
 
