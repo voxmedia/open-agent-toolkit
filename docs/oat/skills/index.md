@@ -14,6 +14,7 @@ Project skills are stored in `.agents/skills`.
 - `oat-project-spec`
 - `oat-project-design`
 - `oat-project-plan`
+- `oat-project-plan-writing` — Shared contract for authoring/mutating `plan.md`; defines format invariants, stable task IDs, and resume guardrails (used by multiple lifecycle skills)
 - `oat-project-implement`
 - `oat-project-progress`
 - `oat-project-complete`
@@ -43,6 +44,8 @@ Project skills are stored in `.agents/skills`.
 - `create-ticket`
 - `update-repo-reference`
 - `codex`
+- `review-backlog` — Analyze a backlog document to produce value/effort ratings, dependency mapping, and execution recommendations
+- `docs-completed-projects-gap-review` — Audit documentation for gaps left by completed OAT projects; produces a prioritized fix plan
 
 ## Discovery source
 

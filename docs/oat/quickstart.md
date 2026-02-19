@@ -42,6 +42,10 @@ pnpm run cli -- project new my-project --mode quick
 pnpm oat:validate-skills
 ```
 
+### Worktree setup
+
+Use `oat-worktree-bootstrap` for an OAT-aware guided flow when creating or resuming git worktree checkouts. It resolves worktree paths, runs bootstrap checks (`worktree:init`, tests), and validates project sync state before implementation.
+
 ### Consumer usage (without pnpm scripts)
 
 When `@oat/cli` is consumed as a built package or linked binary, use `oat` directly:
