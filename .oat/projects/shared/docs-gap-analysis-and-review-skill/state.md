@@ -6,7 +6,7 @@ oat_hill_checkpoints: ["discovery", "spec", "design"]
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_workflow_mode: import
 oat_workflow_origin: imported
 oat_generated: false
@@ -14,13 +14,13 @@ oat_generated: false
 
 # Project State: docs-gap-analysis-and-review-skill
 
-**Status:** Implementation tasks complete; awaiting final review
+**Status:** Implementation complete — final review passed
 **Started:** 2026-02-18
 **Last Updated:** 2026-02-18
 
 ## Current Phase
 
-Implementation — Tasks complete; awaiting final review.
+Implementation — Complete. Final review passed.
 
 ## Artifacts
 
@@ -38,7 +38,7 @@ Implementation — Tasks complete; awaiting final review.
 - ✓ Phase 2: Fixed P0 documentation gaps (README, CLI index, commands.md, skills index)
 - ✓ Phase 3: Fixed P1 documentation gaps (quickstart, config schema) + sync verified
 - ✓ Implementation tasks complete
-- ⧗ Awaiting final review
+- ✓ Final review passed
 
 ## Blockers
 
@@ -46,4 +46,4 @@ None
 
 ## Next Milestone
 
-Final review via `oat-project-review-provide code final`
+Create PR via `oat-project-pr-final`
