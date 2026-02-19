@@ -387,6 +387,41 @@ git add -A
 git commit -m "chore(p03-t03): sync provider views after docs updates"
 ```
 
+### Task p03-t04: (review) Fix implementation.md phase statuses and state.md commit pointer
+
+**Files:**
+- Modify: `.oat/projects/shared/docs-gap-analysis-and-review-skill/implementation.md`
+- Modify: `.oat/projects/shared/docs-gap-analysis-and-review-skill/state.md`
+
+**Step 1: Understand the issue**
+
+Review finding (Medium): Phase-level status fields in `implementation.md` are marked `in_progress` while the Progress Overview table shows all phases complete (3/3). This conflicts with the resume contract.
+
+Review finding (Minor): `state.md` `oat_last_commit` points to `329f83d` but the branch has a newer commit. Update to latest.
+
+**Step 2: Implement fix**
+
+In `implementation.md`:
+- Set Phase 1 status to `complete`
+- Set Phase 2 status to `complete`
+- Set Phase 3 status to `complete`
+- Ensure all three match the Progress Overview table
+
+In `state.md`:
+- Update `oat_last_commit` to the latest commit SHA after this task's commit
+
+**Step 3: Verify**
+
+Run: `grep "Status.*in_progress" .oat/projects/shared/docs-gap-analysis-and-review-skill/implementation.md`
+Expected: No matches (all phases should be `complete`)
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/docs-gap-analysis-and-review-skill/implementation.md .oat/projects/shared/docs-gap-analysis-and-review-skill/state.md
+git commit -m "fix(p03-t04): fix phase statuses and state commit pointer"
+```
+
 ---
 
 ## Reviews
@@ -396,7 +431,7 @@ git commit -m "chore(p03-t03): sync provider views after docs updates"
 | p01 | code | pending | - | - |
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
-| final | code | received | 2026-02-19 | reviews/final-review-2026-02-19.md |
+| final | code | fixes_added | 2026-02-19 | reviews/final-review-2026-02-19.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
@@ -415,9 +450,9 @@ git commit -m "chore(p03-t03): sync provider views after docs updates"
 **Summary:**
 - Phase 1: 2 tasks - Create `docs-completed-projects-gap-review` skill (SKILL.md + report template)
 - Phase 2: 4 tasks - Fix P0 documentation gaps (README rewrite, CLI index, commands.md, skills index)
-- Phase 3: 3 tasks - Fix P1 documentation gaps (quickstart, config schema) + sync & verify
+- Phase 3: 4 tasks - Fix P1 documentation gaps (quickstart, config schema) + sync & verify + review fixes
 
-**Total: 9 tasks**
+**Total: 10 tasks**
 
 Ready for code review and merge.
 

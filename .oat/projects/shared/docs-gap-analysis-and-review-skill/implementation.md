@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-02-18
-oat_current_task_id: null
+oat_last_updated: 2026-02-19
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 |-------|--------|-------|-----------|
 | Phase 1 | complete | 2 | 2/2 |
 | Phase 2 | complete | 4 | 4/4 |
-| Phase 3 | complete | 3 | 3/3 |
+| Phase 3 | in_progress | 4 | 3/4 |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/10 tasks completed
 
 ---
 
@@ -308,6 +308,41 @@ oat_generated: false
 
 **Notes / Decisions:**
 - No new provider entries needed; the new `docs-completed-projects-gap-review` skill is non-`oat-*` so not synced to providers
+
+### Task p03-t04: (review) Fix implementation.md phase statuses and state.md commit pointer
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+- Medium: Phase status fields inconsistent with completion state
+- Minor: state.md oat_last_commit lags latest commit
+
+---
+
+### Review Received: final
+
+**Date:** 2026-02-19
+**Review artifact:** reviews/final-review-2026-02-19.md
+
+**Findings:**
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 1
+
+**New tasks added:** p03-t04
+
+**Deferred Findings (Medium):** None — 1 Medium converted to fix task.
+
+**Minor Finding Disposition (final scope):**
+- `state.md oat_last_commit` lag: Converted to fix task (bundled with Medium fix) per user decision.
+
+**Next:** Execute fix task p03-t04 via the `oat-project-implement` skill.
+
+After the fix task is complete:
+- Update the review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
 
 ---
 
