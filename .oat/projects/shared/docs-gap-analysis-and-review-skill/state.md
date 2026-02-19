@@ -46,4 +46,4 @@ None
 
 ## Next Milestone
 
-Create PR via `oat-project-pr-final`
+Run `oat-project-complete`.
