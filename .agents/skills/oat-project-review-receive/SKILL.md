@@ -123,6 +123,18 @@ Medium: {N}
 Minor: {N}
 ```
 
+Assign stable finding IDs for this receive run and keep them consistent in all prompts:
+- Critical: `C1`, `C2`, ...
+- Important: `I1`, `I2`, ...
+- Medium: `M1`, `M2`, ...
+- Minor: `m1`, `m2`, ...
+
+For each finding, build a structured register entry:
+- ID, severity, title, file/line (if available)
+- Reviewer finding (issue + suggested fix)
+- Agent analysis (agree/disagree + why)
+- Recommendation (convert to task now vs defer with rationale)
+
 **If Critical + Important + Medium == 0:**
 - For non-final scopes:
   - Mark the review as `passed` in the plan.md Reviews table (if plan.md exists)
@@ -135,6 +147,42 @@ Minor: {N}
     2. Minor findings disposition is explicitly confirmed by user (Step 9)
   - After both gates are complete, mark `passed` and route to PR/finalization
 - Note: `passed` means “review passed” (not merely “fixes completed”). If fixes exist, use `fixes_completed` until a re-review passes.
+
+### Step 2.5: Present Findings Overview + Analysis (Required Before Any Disposition Prompt)
+
+Before asking the user to defer/convert findings, present a concise but complete summary so they do not need to open the review file.
+
+Required output structure:
+
+```markdown
+Findings Overview:
+- Critical: {N}
+- Important: {N}
+- Medium: {N}
+- Minor: {N}
+
+Critical Findings:
+{for each C* finding}
+- `{ID}` `{title}` (`{file}:{line}` if known)
+  - Reviewer finding: {issue + reviewer fix guidance}
+  - Finding analysis: {why you agree/disagree; practical risk if not fixed}
+  - Recommendation: {convert_to_task | defer_with_rationale}
+
+Important Findings:
+{same pattern}
+
+Medium Findings:
+{same pattern}
+
+Minor Findings:
+{same pattern, include fix-now vs defer-now tradeoff in plain language}
+```
+
+Rules:
+- Include all non-empty severities; if a severity has zero findings, state `None`.
+- Keep each analysis concise and decision-oriented.
+- Use finding IDs in every section and in every later user choice prompt.
+- Do not ask the user for disposition decisions until this overview is shown.
 
 ### Step 3: Determine Task Scope
 
@@ -340,17 +388,18 @@ Minor findings handling is scope-aware:
   - Ask user explicitly:
     ```
     {N} minor findings pending final disposition:
-    - {Finding 1 summary} — {brief explanation}
-    - {Finding 2 summary} — {brief explanation}
+    - {m1}: {summary} — {brief explanation}
+    - {m2}: {summary} — {brief explanation}
     ...
 
     Options:
     1. Defer all minor findings with rationale
-    2. Select specific minors to convert to tasks
+    2. Select specific minor IDs to convert to tasks (e.g., m2,m3)
     3. Convert all minors to tasks
 
     Choose:
     ```
+  - If option 2 is chosen, echo back selected IDs and the corresponding finding titles before proceeding.
   - If deferred, record rationale in implementation.md under "Deferred Findings".
   - Hard guard: do not mark final review `passed` until this explicit choice is recorded.
 
@@ -398,6 +447,7 @@ Actions taken:
 - Updated implementation.md with review notes
 - Deferred/accepted Medium findings: {N}
 - Deferred {N} minor findings (auto for non-final, explicit decision for final)
+- Finding disposition map: {ID -> converted|deferred|accepted + rationale summary}
 
 Review cycle: {N} of 3
 
@@ -423,6 +473,7 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 - Active project resolved
 - Review artifact located and read
 - Findings parsed and categorized
+- Findings overview + per-finding analysis presented to user before disposition choices
 - Fix tasks created for Critical/Important/Medium findings by default
 - Plan.md updated with new tasks
 - Implementation.md updated with review notes

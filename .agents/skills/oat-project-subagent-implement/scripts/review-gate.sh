@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# oat-subagent-orchestrate: Autonomous review gate with fix-loop retry
+# oat-project-subagent-implement: Autonomous review gate with fix-loop retry
 #
 # Usage: review-gate.sh <unit-branch> <worktree-path> [--retry-limit <N>]
 #

@@ -117,6 +117,20 @@ Key behavior:
 - Non-destructive scaffold generation (fills missing files, keeps existing files)
 - Supports `--mode`, `--force`, `--no-set-active`, and `--no-dashboard`
 
+## `oat project set-mode <mode>`
+
+Purpose:
+- Set active-project implementation mode (`single-thread` or `subagent-driven`)
+
+Key behavior:
+- Reads active project from `.oat/active-project`
+- Updates `oat_execution_mode` in active project `state.md`
+- When setting `subagent-driven`, adds orchestration defaults only if missing:
+  - `oat_orchestration_merge_strategy: merge`
+  - `oat_orchestration_retry_limit: 2`
+  - `oat_orchestration_baseline_policy: strict`
+  - `oat_orchestration_unit_granularity: phase`
+
 ## `oat internal validate-oat-skills`
 
 Purpose:

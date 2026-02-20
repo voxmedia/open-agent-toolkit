@@ -1,9 +1,9 @@
 ---
-name: oat-subagent-orchestrate
-description: Drive parallel execution across eligible plan phases/tasks using autonomous worktrees, review gates, and deterministic merge-back.
+name: oat-project-subagent-implement
+description: Use when you need parallel execution across eligible plan phases/tasks using autonomous worktrees, review gates, and deterministic merge-back.
 argument-hint: "[--dry-run] [--merge-strategy <merge|cherry-pick>] [--retry-limit <N>]"
 disable-model-invocation: true
-user-invocable: false
+user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, Task
 ---
 
@@ -27,7 +27,6 @@ All execution is non-interactive between configured HiLL checkpoints.
 
 - Active OAT project with a complete `plan.md`.
 - `oat-worktree-bootstrap-auto` skill available.
-- Execution mode set to `subagent-driven` in project state (or explicit invocation).
 
 ## Relationship to Existing Skills
 
@@ -37,7 +36,24 @@ All execution is non-interactive between configured HiLL checkpoints.
 | `oat-project-implement` | Single-thread fallback; not used during orchestration |
 | `oat-project-review-provide` | Manual review skill; autonomous gate is a parallel concept |
 | `oat-project-review-receive` | Processes review findings; autonomous gate produces compatible artifacts |
-| `oat-execution-mode-select` | Routes to this skill when `subagent-driven` mode is chosen |
+
+## Progress Indicators (User-Facing)
+
+When executing this skill, provide lightweight progress feedback so the user can tell what is happening:
+
+- Print a phase banner once at start:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ SUBAGENT IMPLEMENT
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Before multi-step work, print concise indicators, for example:
+  - `[1/6] Reading plan + identifying units…`
+  - `[2/6] Bootstrapping worktrees…`
+  - `[3/6] Dispatching subagents…`
+  - `[4/6] Running autonomous review gates…`
+  - `[5/6] Reconciling merges…`
+  - `[6/6] Updating artifacts + reporting…`
 
 ## Orchestration Lifecycle
 
@@ -94,6 +110,18 @@ plan.md
 ```
 
 ## Process
+
+### Step 0: Resolve Active Project and Persist Subagent Defaults
+
+Resolve active project from `.oat/active-project` and read `state.md`.
+
+Persist required runtime defaults in `state.md` frontmatter:
+- `oat_execution_mode: subagent-driven`
+- Write orchestration defaults only when keys are missing (never overwrite existing values):
+  - `oat_orchestration_merge_strategy: merge`
+  - `oat_orchestration_retry_limit: 2`
+  - `oat_orchestration_baseline_policy: strict`
+  - `oat_orchestration_unit_granularity: phase`
 
 ### Step 1: Read Plan and Identify Parallelizable Units
 
@@ -345,7 +373,7 @@ oat_plan_hill_phases: ["p03"]
 
 ### Policy Persistence
 
-When `subagent-driven` mode is selected via `oat-execution-mode-select`, policies can be persisted in `state.md` frontmatter:
+When this skill is invoked, `subagent-driven` mode and orchestration defaults can be persisted in `state.md` frontmatter:
 
 ```yaml
 oat_execution_mode: subagent-driven

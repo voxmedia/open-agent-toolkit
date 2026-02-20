@@ -154,7 +154,9 @@ Report:
 - workflow mode (`quick`)
 - total phases/tasks generated
 - first task ID
-- next command: `oat-project-implement`
+- next options:
+  - `oat-project-implement` (sequential, default)
+  - `oat-project-subagent-implement` (parallel with autonomous review gates)
 - dashboard location: `.oat/state.md` (confirm it was regenerated)
 
 ## Success Criteria

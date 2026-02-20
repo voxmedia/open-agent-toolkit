@@ -37,6 +37,10 @@ oat_ready_for: null | oat-project-implement # downstream consumer
 ---
 ```
 
+Runtime routing note:
+- Keep `oat_ready_for` canonical as `oat-project-implement`.
+- Use `oat_execution_mode` in `state.md` (`single-thread` or `subagent-driven`) to choose sequential vs subagent implementation flow at runtime.
+
 Additional frontmatter keys (`oat_phase`, `oat_phase_status`, `oat_blockers`, `oat_last_updated`, `oat_generated`, `oat_template`, `oat_import_reference`, `oat_import_source_path`, `oat_import_provider`) are set by calling skills as needed.
 
 ### Stable Task IDs

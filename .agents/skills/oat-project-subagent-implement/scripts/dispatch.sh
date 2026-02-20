@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# oat-subagent-orchestrate: Fan-out dispatch and result collection
+# oat-project-subagent-implement: Fan-out dispatch and result collection
 #
 # Usage: dispatch.sh <plan-path> <project-path> <orchestration-branch> [--unit-granularity <phase|task>]
 #

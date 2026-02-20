@@ -169,6 +169,10 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 - `quick`
 - `import`
 
+Read `oat_execution_mode` from `state.md` frontmatter:
+- `single-thread` (default if missing)
+- `subagent-driven`
+
 **HiLL override (apply before phase routing):**
 - If current `oat_phase` is listed in `oat_hill_checkpoints` **and** not listed in `oat_hill_completed`, the phase's HiLL gate is still pending.
 - In that case, do **not** advance to the next phase even if `oat_phase_status: complete`.
@@ -190,8 +194,8 @@ Routing matrix by mode:
 | design | in_progress | Continue `oat-project-design` |
 | design | complete | `oat-project-plan` |
 | plan | in_progress | Continue `oat-project-plan` |
-| plan | complete | `oat-project-implement` |
-| implement | in_progress | Continue `oat-project-implement` |
+| plan | complete | `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
+| implement | in_progress | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
 | implement | complete | Ready for final review / PR |
 
 **Quick mode (`oat_workflow_mode: quick`):**
@@ -201,8 +205,8 @@ Routing matrix by mode:
 | discovery | in_progress | Continue `oat-project-discover` |
 | discovery | complete | `oat-project-plan` |
 | plan | in_progress | Continue `oat-project-plan` |
-| plan | complete | `oat-project-implement` |
-| implement | in_progress | Continue `oat-project-implement` |
+| plan | complete | `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
+| implement | in_progress | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
 | implement | complete | Ready for final review / PR |
 
 **Import mode (`oat_workflow_mode: import`):**
@@ -210,8 +214,8 @@ Routing matrix by mode:
 | oat_phase | oat_phase_status | Next Skill |
 |-----------|------------------|------------|
 | plan | in_progress | Continue `oat-project-import-plan` |
-| plan | complete | `oat-project-implement` |
-| implement | in_progress | Continue `oat-project-implement` |
+| plan | complete | `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
+| implement | in_progress | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
 | implement | complete | Ready for final review / PR |
 
 **If blockers exist:**
@@ -220,6 +224,10 @@ Routing matrix by mode:
 
 Address blocker before continuing.
 ```
+
+Execution-mode note:
+- Keep `oat_ready_for` in `plan.md` canonical (`oat-project-implement`).
+- Runtime routing at plan completion is controlled by `oat_execution_mode` in `state.md`.
 
 ### Step 6: Show Available Skills
 
@@ -238,6 +246,7 @@ Workflow:
   oat-project-design            - Create technical design from spec
   oat-project-plan              - Create implementation plan from design (full mode)
   oat-project-implement         - Execute implementation plan
+  oat-project-subagent-implement - Execute implementation plan with subagent orchestration
 
 Status:
   oat-project-progress          - Check project progress (this skill)

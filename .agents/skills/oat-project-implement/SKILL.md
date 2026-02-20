@@ -84,6 +84,19 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
 
+### Step 0.5: Execution Mode Redirect Guard
+
+Read execution mode from `"$PROJECT_PATH/state.md"` frontmatter:
+
+```bash
+EXEC_MODE=$(grep "^oat_execution_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
+EXEC_MODE="${EXEC_MODE:-single-thread}"
+```
+
+If `EXEC_MODE` is `subagent-driven`:
+- Tell the user: `Execution mode is subagent-driven. Use oat-project-subagent-implement instead.`
+- STOP (do not proceed with sequential implementation)
+
 ### Step 1: Check Plan Complete
 
 ```bash
