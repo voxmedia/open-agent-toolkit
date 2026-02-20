@@ -459,16 +459,17 @@ echo "$FINAL_ROW"
 Implementation complete. Final review required.
 
 Review options:
-1. Run review via subagent (recommended if available)
-2. Run review in fresh session (recommended fallback)
-3. Run review inline (less reliable)
+1. Run review in this session via a subagent (recommended if provider supported)
+2. Run review in a fresh session and return to this session to receive review
+3. Run review inline
 
-Choose, or run: oat-project-review-provide code final
+To run in a separate session use: oat-project-review-provide code final
 ```
 
 **After user chooses:**
-- If subagent/fresh session: User runs `oat-project-review-provide code final` in appropriate context
-- If inline: Proceed with inline review per oat-project-review-provide skill
+- If subagent (option 1): Agent spawns the review via Task tool — no command needed from user
+- If fresh session (option 2): User runs `oat-project-review-provide code final` in a separate session, then returns here
+- If inline (option 3): Agent executes the review directly per oat-project-review-provide skill
 - After review: User runs `oat-project-review-receive` to process findings
 - If Critical/Important findings: Fix tasks added, re-run the `oat-project-implement` skill
 - Loop until final review passes (max 3 cycles per oat-project-review-receive)
