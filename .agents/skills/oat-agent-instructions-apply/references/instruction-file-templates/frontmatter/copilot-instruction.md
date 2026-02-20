@@ -69,4 +69,4 @@ excludeAgent: "code-review"
 - Location: `.github/instructions/*.instructions.md`
 - Scoped instructions are additive — they combine with (not replace) `copilot-instructions.md`
 - `applyTo` uses comma-separated globs (not arrays like Claude/Cursor)
-- See `.agents/docs/rules-files.md` section 4.2 for full details
+- See `references/docs/rules-files.md` section 4.2 for full details

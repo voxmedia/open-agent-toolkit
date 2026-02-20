@@ -65,4 +65,4 @@ paths:
 - Symlinks supported
 - Only documented frontmatter field: `paths` (array of glob strings)
 - Activation: rule loads when Claude reads files matching any pattern in `paths`
-- See `.agents/docs/rules-files.md` section 2.5 for full details
+- See `references/docs/rules-files.md` section 2.5 for full details

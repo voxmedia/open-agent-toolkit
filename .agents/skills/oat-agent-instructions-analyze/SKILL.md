@@ -98,9 +98,9 @@ If no instruction files are found at all (not even a root AGENTS.md), report thi
 For each discovered instruction file, evaluate against the quality checklist at `references/quality-checklist.md`.
 
 **Required context — read these docs before evaluating:**
-- `.agents/docs/agent-instruction.md` — full quality criteria and best practices
-- `.agents/docs/rules-files.md` — cross-provider rules file format reference
-- `.agents/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format reference (if cursor provider is active)
+- `references/docs/agent-instruction.md` — full quality criteria and best practices
+- `references/docs/rules-files.md` — cross-provider rules file format reference
+- `references/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format reference (if cursor provider is active)
 
 **For each file:**
 1. Read the file content.
@@ -207,9 +207,9 @@ Next step: Run oat-agent-instructions-apply to act on these findings.
 
 ## References
 
-- Quality criteria source: `.agents/docs/agent-instruction.md`
-- Cross-provider rules reference: `.agents/docs/rules-files.md`
-- Cursor-specific format: `.agents/docs/cursor-rules-files.md`
+- Quality criteria source: `references/docs/agent-instruction.md`
+- Cross-provider rules reference: `references/docs/rules-files.md`
+- Cursor-specific format: `references/docs/cursor-rules-files.md`
 - Copilot instruction system: `.oat/repo/reviews/github-copilot-instructions-research-2026-02-19.md`
 - Quality checklist: `references/quality-checklist.md`
 - Directory criteria: `references/directory-assessment-criteria.md`

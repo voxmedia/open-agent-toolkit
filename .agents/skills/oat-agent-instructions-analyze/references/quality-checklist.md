@@ -1,6 +1,6 @@
 # Instruction File Quality Checklist
 
-Per-file evaluation criteria for agent instruction files. Use this checklist to score each instruction file during analysis. The full quality guidance lives in `.agents/docs/agent-instruction.md` — this is a distilled, actionable checklist.
+Per-file evaluation criteria for agent instruction files. Use this checklist to score each instruction file during analysis. The full quality guidance lives in `docs/agent-instruction.md` — this is a distilled, actionable checklist.
 
 ## Evaluation Criteria
 

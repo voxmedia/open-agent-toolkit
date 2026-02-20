@@ -1,6 +1,6 @@
 # Directory Assessment Criteria
 
-When does a directory need its own instruction file? Use these criteria to identify coverage gaps during analysis. The full guidance lives in `.agents/docs/agent-instruction.md` — this is a distilled, actionable checklist.
+When does a directory need its own instruction file? Use these criteria to identify coverage gaps during analysis. The full guidance lives in `docs/agent-instruction.md` — this is a distilled, actionable checklist.
 
 ## Primary Indicators (any one = likely needs instructions)
 

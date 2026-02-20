@@ -84,4 +84,4 @@ globs:
 - Naming: kebab-case recommended (e.g., `code-style-guide.mdc`)
 - Three frontmatter fields: `description` (string), `alwaysApply` (boolean), `globs` (string or array)
 - `@filename.ts` syntax supported for file references within rules
-- See `.agents/docs/cursor-rules-files.md` section 3 for full field reference
+- See `references/docs/cursor-rules-files.md` section 3 for full field reference

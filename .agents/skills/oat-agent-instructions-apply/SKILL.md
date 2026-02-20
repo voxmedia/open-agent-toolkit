@@ -151,9 +151,9 @@ For each approved recommendation, in the order from Step 2:
 4. Do not rewrite the entire file unless the user explicitly approves.
 
 **Required context — read these docs before generating:**
-- `.agents/docs/agent-instruction.md` — quality criteria and best practices
-- `.agents/docs/rules-files.md` — cross-provider format reference
-- `.agents/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format (if cursor provider is active)
+- `references/docs/agent-instruction.md` — quality criteria and best practices
+- `references/docs/rules-files.md` — cross-provider format reference
+- `references/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format (if cursor provider is active)
 
 ### Step 6: Commit and PR
 
@@ -252,9 +252,9 @@ Apply complete.
 
 ## References
 
-- Quality criteria: `.agents/docs/agent-instruction.md`
-- Cross-provider rules: `.agents/docs/rules-files.md`
-- Cursor-specific format: `.agents/docs/cursor-rules-files.md`
+- Quality criteria: `references/docs/agent-instruction.md`
+- Cross-provider rules: `references/docs/rules-files.md`
+- Cursor-specific format: `references/docs/cursor-rules-files.md`
 - Analysis artifact: `.oat/repo/analysis/agent-instructions-*.md`
 - Templates: `references/instruction-file-templates/`
 - Apply plan template: `references/apply-plan-template.md`
