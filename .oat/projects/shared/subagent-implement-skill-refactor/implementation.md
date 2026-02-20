@@ -163,7 +163,7 @@ oat_generated: false
 - `m1` Scope-creep note for Progress Indicators in `oat-project-subagent-implement/SKILL.md` — deferred (intentional UX improvement).
 - `m2` Scope-creep note for Progress Indicators/description wording in `oat-worktree-bootstrap-auto/SKILL.md` — deferred (intentional consistency improvement).
 
-**Next:** Re-run final review (`oat-project-review-provide code final`) and process via `oat-project-review-receive` to reach `passed`.
+**Next:** Proceed with `oat-project-pr-final` and then `oat-project-complete` (final review status set to `passed` by explicit user override after `fixes_completed`).
 
 ---
 
