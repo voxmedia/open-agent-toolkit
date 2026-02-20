@@ -537,6 +537,74 @@ git add .oat/repo/README.md
 git commit -m "docs(p04-t03): document analysis directory in repo README"
 ```
 
+### Task p04-t04: (review) Update imported plan reference to match decided schema
+
+**Files:**
+- Modify: `.oat/projects/shared/agent-instructions-skills/references/imported-plan.md`
+
+**Step 1: Understand the issue**
+
+Review finding: Important #1 — The imported plan shows `operations` container and field names `lastRun`/`branch`/`providers`, but the implementation intentionally uses flat top-level keys with `lastRunAt`/`baseBranch`/`formats` per backlog convention. The imported plan reference is stale.
+Location: `references/imported-plan.md:56-81`
+
+**Step 2: Implement fix**
+
+Update the `## tracking.json Schema` section in the imported plan to reflect the actual decided schema:
+- Flat top-level keys (no `operations` container)
+- Field names: `lastRunAt`, `commitHash`, `baseBranch`, `mode`, `formats`, `artifactPath`
+- Write protocol: read → parse → merge own key at top level → write
+- Init with `{"version": 1}` (not `{"version": 1, "operations": {}}`)
+
+Add a note that this was updated post-import to reflect the backlog alignment decision.
+
+**Step 3: Verify**
+
+Read the updated section, confirm schema matches `resolve-tracking.sh` comment header.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/agent-instructions-skills/references/imported-plan.md
+git commit -m "fix(p04-t04): update imported plan schema to match backlog-aligned implementation"
+```
+
+---
+
+### Task p04-t05: (review) Add artifactPath support to tracking write API and callers
+
+**Files:**
+- Modify: `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh`
+- Modify: `.agents/skills/oat-agent-instructions-analyze/SKILL.md`
+- Modify: `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: Medium #1 — The tracking write API accepts formats as variadic args but has no way to pass `artifactPath`. The analyze skill passes providers as formats (correct mapping), but the knowledge index call omits formats entirely. Neither caller passes an artifact path.
+Location: `resolve-tracking.sh:59`, analyze `SKILL.md:172`, knowledge-index `SKILL.md:636`
+
+**Step 2: Implement fix**
+
+1. Update `resolve-tracking.sh` write command to accept optional `--artifact-path <path>` flag before the variadic formats.
+2. Update the analyze skill's tracking call (Step 6) to pass `--artifact-path "$ARTIFACT_PATH"` and the resolved providers as formats.
+3. Update the knowledge index tracking call (Step 10b) to pass `--artifact-path` (if applicable) and format data.
+
+**Step 3: Verify**
+
+Run: `bash resolve-tracking.sh write testOp abc123 main full --artifact-path ".oat/repo/analysis/test.md" agents_md claude`
+Expected: JSON output includes `artifactPath` field.
+
+Run: `bash resolve-tracking.sh write testOp2 abc123 main full agents_md`
+Expected: JSON output has empty/null `artifactPath` (backward compatible).
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh \
+       .agents/skills/oat-agent-instructions-analyze/SKILL.md \
+       .agents/skills/oat-repo-knowledge-index/SKILL.md
+git commit -m "fix(p04-t05): add artifactPath support to tracking write API and callers"
+```
+
 ---
 
 ## Reviews
@@ -547,7 +615,7 @@ git commit -m "docs(p04-t03): document analysis directory in repo README"
 | p02 | code | pending | - | - |
 | p03 | code | pending | - | - |
 | p04 | code | pending | - | - |
-| final | code | received | 2026-02-19 | reviews/final-review-2026-02-19-v2.md |
+| final | code | passed | 2026-02-19 | reviews/final-review-2026-02-19-v2.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 
@@ -567,9 +635,9 @@ git commit -m "docs(p04-t03): document analysis directory in repo README"
 - Phase 1: 5 tasks — Foundation (tracking manifest, shell scripts, analysis directory)
 - Phase 2: 3 tasks — Analyze skill (templates, references, SKILL.md)
 - Phase 3: 4 tasks — Apply skill (templates, symlink, SKILL.md)
-- Phase 4: 3 tasks — Integration (knowledge index update, validation, docs)
+- Phase 4: 5 tasks — Integration (knowledge index update, validation, docs, review fixes)
 
-**Total: 15 tasks**
+**Total: 17 tasks**
 
 Ready for code review and merge.
 
