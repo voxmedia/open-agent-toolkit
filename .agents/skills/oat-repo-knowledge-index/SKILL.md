@@ -628,6 +628,17 @@ git commit -m "docs: generate knowledge base
 Generated from commit: {MERGE_BASE_SHA}"
 ```
 
+### Step 10b: Update Tracking Manifest
+
+Record the knowledge index run in the shared tracking manifest:
+
+```bash
+bash .agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh \
+  write knowledgeIndex "$(git rev-parse HEAD)" "$(git branch --show-current)" full
+```
+
+This enables delta mode for future runs — other OAT operations can check when the knowledge index was last generated.
+
 ### Step 11: Output Summary
 
 ```
