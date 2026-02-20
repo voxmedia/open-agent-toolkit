@@ -16,6 +16,12 @@ Tracked, repo-wide OAT records live under `.oat/repo/`.
   - Repo-scoped review artifacts that are intentionally tracked.
 - `knowledge/`
   - Generated repo knowledge artifacts produced by `oat-repo-knowledge-index`.
+- `analysis/`
+  - Generated analysis artifacts produced by OAT analyze skills.
+  - Current artifact types:
+    - `agent-instructions-YYYY-MM-DD-HHmm.md` — instruction file coverage, quality, and drift reports (from `oat-agent-instructions-analyze`)
+  - These artifacts are consumed by apply skills (e.g., `oat-agent-instructions-apply`) to generate or update files.
+  - Naming uses timestamp suffixes to prevent same-day collisions.
 - `archive/`
   - Historical dogfood-era docs and superseded artifacts kept for context.
   - Typical subdirectories:
