@@ -24,6 +24,21 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
   - Created: YYYY-MM-DD
 
+- [ ] **(P1) [tooling] Add skill versioning to SKILL.md frontmatter and `oat init tools` update detection**
+  - Context: `oat init tools` currently checks only file existence — if a skill directory exists, it reports "skipped". Users have no way to know their installed skills are outdated without using `--force` to blindly overwrite.
+  - Proposed change:
+    - Add `version` field to SKILL.md frontmatter (semver, e.g., `version: 1.0.0`).
+    - Teach `oat init tools` to compare installed vs bundled versions: if bundled is newer, prompt to update; if versions match, skip; if no version field, treat as v0.0.0.
+    - Optionally surface outdated skills in `oat doctor` / `oat status`.
+  - Success criteria:
+    - `oat init tools` detects and offers to update outdated skills without `--force`.
+    - Skills without version field are treated as upgradeable.
+    - `--force` still works as a blunt override.
+  - Links:
+    - Idea: `.oat/ideas/skill-versioning/discovery.md`
+    - Related: `packages/cli/src/commands/init/tools/shared/copy-helpers.ts`
+  - Created: 2026-02-19
+
 - [ ] **(P2) [workflow] Backlog Refinement Flow (Jira ticket generation)**
   - Context: Need a structured, conversational way to break large initiatives into epics/stories/tasks during planning, then create them in Jira with minimal manual effort.
   - Proposed change:
@@ -39,38 +54,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Created: 2026-01-29
 
 ## Planned
-
-- [ ] **(P0) [skills] Agent instructions skill family (`oat-agent-instructions-analyze`, `oat-agent-instructions-apply`)**
-  - Target milestone/phase: Core value delivery — first non-workflow skill family
-  - Notes:
-    - **`oat-agent-instructions-analyze`**: Scans codebase for agent instruction coverage, quality, drift, and gaps.
-      - Detects existing instruction files (`AGENTS.md` by default; optionally Cursor rules, Copilot instructions, Cline rules based on config).
-      - For each: evaluates quality against guidance in `.agents/docs/agent-instruction.md`, checks coverage, identifies staleness.
-      - For directories without instructions: assesses whether they'd benefit (code complexity, public API surface, distinct domain boundaries).
-      - Drift detection: reads `.oat/tracking.json` for last run commit hash, diffs changed files since then, flags instructions that may be stale.
-      - Two modes: **delta** (only files changed since last run — lower token cost) and **full** (review entire codebase). Quality analysis always runs regardless of mode.
-      - Outputs a structured analysis artifact with severity ratings (Critical / High / Medium / Low), similar to code review findings template.
-    - **`oat-agent-instructions-apply`**: Interactive application of analysis findings.
-      - Intake: "Do you have an existing analysis artifact?" If yes, load it and present findings for review. If no, suggest running analyze first.
-      - User reviews/modifies recommendations before proceeding.
-      - Generates or updates instruction files based on approved recommendations.
-      - Creates a branch + PR for human and code review.
-      - Updates `.oat/tracking.json` with current commit hash + timestamp.
-    - **Multi-format support** (config-driven):
-      - Default: `AGENTS.md` files only.
-      - Configurable in `.oat/config.json` under `agentInstructions.formats`: `agents_md` (default true), `cursor_rules`, `copilot_instructions`, `cline_rules`.
-      - Separate analysis reports per format when multi-format is enabled.
-    - **Reference knowledge base**: `.agents/docs/agent-instruction.md` (existing) provides quality criteria and best practices for analysis.
-  - Success criteria:
-    - Running analyze on a codebase with no instructions produces actionable "here's where you need them" recommendations.
-    - Running analyze on a codebase with existing instructions detects drift, quality gaps, and missing coverage.
-    - Delta mode significantly reduces token usage on repeat runs by scoping to changed files.
-    - Apply creates clean PRs with well-structured instruction files following the guidance.
-    - `.oat/tracking.json` records run metadata for incremental analysis.
-  - Links:
-    - Reference: `.agents/docs/agent-instruction.md`
-    - Related: `.oat/tracking.json` (shared tracking manifest — see below)
-  - Created: 2026-02-19
 
 - [ ] **(P1) [skills] Documentation analysis skill family (`oat-docs-analyze`, `oat-docs-apply`)**
   - Target milestone/phase: Core value delivery — docs quality and coverage
@@ -99,32 +82,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Reference: `.agents/docs/` (existing docs guidance)
     - Related skill: `docs-completed-projects-gap-review` (PR #24)
     - Related backlog: `oat-project-document` (B03)
-  - Created: 2026-02-19
-
-- [ ] **(P1) [tooling] Add shared OAT tracking manifest (`.oat/tracking.json`)**
-  - Target milestone/phase: Infrastructure for analyze/apply skill families
-  - Notes:
-    - Unified tracking file for "when did OAT operations last run against what commit."
-    - Tracks run metadata for: knowledge index, agent instructions analysis, docs analysis (extensible for future operations).
-    - Schema:
-      ```json
-      {
-        "version": 1,
-        "knowledgeIndex": { "lastRunAt": "...", "commitHash": "...", "baseBranch": "main" },
-        "agentInstructions": { "lastRunAt": "...", "commitHash": "...", "baseBranch": "main", "mode": "delta", "formats": ["agents_md"] },
-        "docs": { "lastRunAt": "...", "commitHash": "...", "baseBranch": "main", "mode": "full" }
-      }
-      ```
-    - Delta mode for any operation: `git diff <tracking.commitHash>..HEAD -- <relevant paths>`.
-    - Version-controlled (shared repo metadata — describes state of generated artifacts, not per-developer state).
-    - Knowledge index currently embeds tracking per-file via frontmatter (`oat_generated_at`, `Generated from commit`). Migrate to also write central tracking here so all operations use one lookup.
-    - Skills read via `jq` (no CLI accessor prerequisite).
-  - Success criteria:
-    - All analyze/generate skills read and write `.oat/tracking.json` for incremental run support.
-    - Knowledge index writes central tracking in addition to per-file frontmatter.
-    - Delta mode works consistently across all skill families.
-  - Links:
-    - Related: agent instructions skill family, docs skill family, `oat-repo-knowledge-index`
   - Created: 2026-02-19
 
 - [ ] **(P1) [tooling] Continue OAT runtime config consolidation under `.oat/config.json` + `.oat/config.local.json` (Phase B/C)**

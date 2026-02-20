@@ -14,6 +14,30 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P0) [skills] Agent instructions skill family (`oat-agent-instructions-analyze`, `oat-agent-instructions-apply`)**
+  - Outcome:
+    - Analyze skill scans codebase for instruction file coverage, quality, and drift with severity-rated analysis artifacts.
+    - Apply skill interactively generates/updates instruction files with multi-provider support (AGENTS.md, Claude rules, Cursor rules, Copilot instructions) and PR workflow.
+    - 7 instruction file templates, 3 helper scripts (tracking, providers, file discovery), quality checklist and directory assessment criteria.
+    - Reference docs bundled as symlinks (dereferenced during CLI distribution).
+  - Links:
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/25
+    - Project: `.oat/projects/archived/agent-instructions-skills/`
+  - Created: 2026-02-19
+  - Completed: 2026-02-19
+
+- [x] **(P1) [tooling] Add shared OAT tracking manifest (`.oat/tracking.json`)**
+  - Outcome:
+    - `.oat/tracking.json` with `{"version": 1}` schema and optimistic per-key merge via `resolve-tracking.sh`.
+    - Supports `read`, `write`, `init` subcommands with optional `--artifact-path` flag.
+    - Knowledge index integrated — writes tracking entry after successful runs.
+    - Delta mode infrastructure ready for all skill families.
+  - Links:
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/25 (shipped with agent instructions)
+    - Script: `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh`
+  - Created: 2026-02-19
+  - Completed: 2026-02-19
+
 - [x] **(P1) [skills] Switch user-facing skill/docs command examples from `pnpm run cli` to direct `oat` CLI**
   - Outcome:
     - Replaced all `pnpm run cli --` references in user-facing `oat-*` skills, `.agents/README.md`, and `AGENTS.md` skills discovery with direct `oat <command>` invocation.
