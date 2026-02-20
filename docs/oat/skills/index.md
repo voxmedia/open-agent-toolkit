@@ -16,6 +16,7 @@ Project skills are stored in `.agents/skills`.
 - `oat-project-plan`
 - `oat-project-plan-writing` — Shared contract for authoring/mutating `plan.md`; defines format invariants, stable task IDs, and resume guardrails (used by multiple lifecycle skills)
 - `oat-project-implement`
+- `oat-project-subagent-implement`
 - `oat-project-progress`
 - `oat-project-complete`
 
@@ -37,6 +38,7 @@ Project skills are stored in `.agents/skills`.
 ## Utility and maintenance skills
 
 - `oat-worktree-bootstrap`
+- `oat-worktree-bootstrap-auto`
 - `oat-repo-knowledge-index`
 - `create-oat-skill`
 - `create-skill`

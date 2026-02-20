@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# oat-subagent-orchestrate: Fan-in merge/reconcile logic
+# oat-project-subagent-implement: Fan-in merge/reconcile logic
 #
 # Usage: reconcile.sh <orchestration-branch> [--merge-strategy <merge|cherry-pick>] <unit-branch>...
 #

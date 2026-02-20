@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap-auto
-description: Autonomous worktree bootstrap for orchestrator/subagent use. Non-interactive companion to oat-worktree-bootstrap.
+description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: "<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]"
 disable-model-invocation: true
 user-invocable: false
@@ -24,6 +24,23 @@ This skill is the **autonomous companion** to `oat-worktree-bootstrap`. Key diff
 | Logging | Console + optional artifact | Artifact-first, console fallback |
 
 Both skills share the same worktree root resolution precedence and branch naming conventions.
+
+## Progress Indicators (User-Facing)
+
+When this skill is executed, provide concise status updates:
+
+- Print a phase banner once at start:
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OAT ▸ WORKTREE BOOTSTRAP AUTO
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Before major phases, print compact indicators, for example:
+  - `[1/5] Resolving worktree root…`
+  - `[2/5] Creating/reusing worktree…`
+  - `[3/5] Running baseline checks…`
+  - `[4/5] Syncing provider directories…`
+  - `[5/5] Returning structured status…`
 
 ## Inputs
 
@@ -177,7 +194,7 @@ Append to `implementation.md` under `## Implementation Log`:
 | `allow-failing` | Continue, collect warnings | Append to `implementation.md` (or console) | `status: warning` |
 
 **Orchestrator integration:**
-- When invoked by `oat-subagent-orchestrate`, the baseline policy is passed through from the orchestration run policy.
+- When invoked by `oat-project-subagent-implement`, the baseline policy is passed through from the orchestration run policy.
 - The orchestrator may set `--baseline-policy allow-failing` for exploratory runs and `strict` for production-quality execution.
 - The bootstrap skill does not interpret HiLL checkpoints — that responsibility belongs to the orchestrator.
 

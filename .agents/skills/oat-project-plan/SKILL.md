@@ -377,7 +377,9 @@ Phases:
 
 Total: {N} tasks
 
-Next: Start implementation with the oat-project-implement skill
+Next: Choose your implementation approach:
+- oat-project-implement — Sequential task execution (default)
+- oat-project-subagent-implement — Parallel worktree execution with autonomous review gates
 ```
 
 ## Success Criteria

@@ -222,10 +222,14 @@ This gives you the core value of OAT without adopting workflow artifacts.
 
 ```mermaid
 flowchart LR
-  Full["Full lane: discover -> spec -> design -> plan"] --> Implement["Implement: oat-project-implement"]
-  Quick["Quick lane: oat-project-quick-start"] --> Implement
-  Import["Imported lane: oat-project-import-plan"] --> Implement
-  Implement --> Review{"Review context?"}
+  Full["Full lane: discover -> spec -> design -> plan"] --> Mode{"Implementation mode?"}
+  Quick["Quick lane: oat-project-quick-start"] --> Mode
+  Import["Imported lane: oat-project-import-plan"] --> Mode
+  Mode -->|Sequential| ImplementSeq["oat-project-implement"]
+  Mode -->|Subagent-driven| ImplementSub["oat-project-subagent-implement"]
+  SetMode["oat project set-mode <mode>"] --> Mode
+  ImplementSeq --> Review{"Review context?"}
+  ImplementSub --> Review
   Review -->|Project-scoped| ProjectReview["oat-project-review-provide + oat-project-review-receive"]
   Review -->|Ad-hoc / non-project| AdHocReview["oat-review-provide"]
   ProjectReview --> PR["PR artifacts: oat-project-pr-progress / oat-project-pr-final"]
@@ -239,15 +243,15 @@ flowchart LR
    - Spec (`oat-project-spec`)
    - Design (`oat-project-design`)
    - Plan (`oat-project-plan`)
-   - Implement (`oat-project-implement`)
+   - Implement (`oat-project-implement` or `oat-project-subagent-implement`)
 2. Quick workflow lane
    - Quick start (`oat-project-quick-start`, which captures discovery context and writes a runnable plan baseline)
-   - Implement (`oat-project-implement`)
+   - Implement (`oat-project-implement` or `oat-project-subagent-implement`)
    - Optional promotion (`oat-project-promote-full`)
 3. Imported-plan workflow lane
    - Produce discovery/plan externally with provider tooling
    - Import external plan (`oat-project-import-plan`)
-   - Implement (`oat-project-implement`)
+   - Implement (`oat-project-implement` or `oat-project-subagent-implement`)
    - Optional promotion (`oat-project-promote-full`)
 
 ### Typical lane sequences
@@ -255,12 +259,12 @@ flowchart LR
 1. Provider-plan import sequence
    - External discovery + planning with provider tooling
    - `oat-project-import-plan`
-   - `oat-project-implement`
+   - `oat-project-implement` or `oat-project-subagent-implement`
    - `oat-project-review-provide` + `oat-project-review-receive`
    - `oat-project-pr-final`
 2. Quick-start sequence
    - `oat-project-quick-start` (discovery + initial plan scaffold)
-   - `oat-project-implement`
+   - `oat-project-implement` or `oat-project-subagent-implement`
    - `oat-project-review-provide` + `oat-project-review-receive`
    - `oat-project-pr-final`
 
@@ -268,15 +272,17 @@ flowchart LR
 
 1. Routing and next-step checks:
    - `oat-project-progress`
-2. Canonical plan-writing contract:
+2. Execution mode persistence:
+   - `oat project set-mode <single-thread|subagent-driven>`
+3. Canonical plan-writing contract:
    - `oat-project-plan-writing` (shared full/quick/import planning semantics)
-3. Review path selection:
+4. Review path selection:
    - Project-scoped review: `oat-project-review-provide` + `oat-project-review-receive`
    - Ad-hoc/non-project review: `oat-review-provide`
-4. PR generation:
+5. PR generation:
    - Progress PR: `oat-project-pr-progress`
    - Final PR: `oat-project-pr-final`
-5. Lifecycle completion:
+6. Lifecycle completion:
    - `oat-project-complete` (with optional active-project cleanup)
 
 ## Documentation

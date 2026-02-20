@@ -258,6 +258,7 @@ describe('help output snapshots', () => {
 
       Commands:
         new [options] <name>  Create or update an OAT project scaffold
+        set-mode <mode>       Set project implementation execution mode
         help [command]        display help for command
       "
     `);
@@ -284,6 +285,26 @@ describe('help output snapshots', () => {
         --no-set-active  Do not update .oat/active-project
         --no-dashboard   Do not refresh .oat/state.md after scaffold
         -h, --help       display help for command
+      "
+    `);
+  });
+
+  it('project set-mode --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'set-mode',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project set-mode [options] <mode>
+
+      Set project implementation execution mode
+
+      Arguments:
+        mode        Execution mode: single-thread or subagent-driven
+
+      Options:
+        -h, --help  display help for command
       "
     `);
   });

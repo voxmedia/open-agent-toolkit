@@ -193,7 +193,9 @@ Report:
 - first task ID
 - active project pointer path
 - dashboard refresh status
-- next command: `oat-project-implement`
+- next options:
+  - `oat-project-implement` (sequential, default)
+  - `oat-project-subagent-implement` (parallel with autonomous review gates)
 
 ## Success Criteria
 
