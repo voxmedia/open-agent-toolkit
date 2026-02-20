@@ -703,26 +703,6 @@
       "lastSynced": "2026-02-19T00:57:37.032Z"
     },
     {
-      "canonicalPath": ".agents/skills/oat-agent-instructions-analyze",
-      "providerPath": ".claude/skills/oat-agent-instructions-analyze",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "isFile": false,
-      "lastSynced": "2026-02-20T00:43:40.919Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-agent-instructions-apply",
-      "providerPath": ".claude/skills/oat-agent-instructions-apply",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "isFile": false,
-      "lastSynced": "2026-02-20T00:43:40.924Z"
-    },
-    {
       "canonicalPath": ".agents/skills/oat-execution-mode-select",
       "providerPath": ".claude/skills/oat-execution-mode-select",
       "provider": "claude",
@@ -753,26 +733,6 @@
       "lastSynced": "2026-02-20T00:43:40.925Z"
     },
     {
-      "canonicalPath": ".agents/skills/oat-agent-instructions-analyze",
-      "providerPath": ".cursor/skills/oat-agent-instructions-analyze",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "isFile": false,
-      "lastSynced": "2026-02-20T00:43:40.925Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-agent-instructions-apply",
-      "providerPath": ".cursor/skills/oat-agent-instructions-apply",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "isFile": false,
-      "lastSynced": "2026-02-20T00:43:40.926Z"
-    },
-    {
       "canonicalPath": ".agents/skills/oat-execution-mode-select",
       "providerPath": ".cursor/skills/oat-execution-mode-select",
       "provider": "cursor",
@@ -801,7 +761,47 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-02-20T00:43:40.926Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-agent-instructions-analyze",
+      "providerPath": ".claude/skills/oat-agent-instructions-analyze",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-20T01:49:00.463Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-agent-instructions-apply",
+      "providerPath": ".claude/skills/oat-agent-instructions-apply",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-20T01:49:00.466Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-agent-instructions-analyze",
+      "providerPath": ".cursor/skills/oat-agent-instructions-analyze",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-20T01:49:00.469Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-agent-instructions-apply",
+      "providerPath": ".cursor/skills/oat-agent-instructions-apply",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-20T01:49:00.470Z"
     }
   ],
-  "lastUpdated": "2026-02-20T00:43:40.926Z"
+  "lastUpdated": "2026-02-20T01:49:00.470Z"
 }
