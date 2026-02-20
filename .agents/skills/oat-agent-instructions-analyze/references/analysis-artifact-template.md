@@ -63,6 +63,8 @@ None | {numbered list}
 
 ## Coverage Gaps
 
+### Directory Coverage
+
 Directories assessed as needing instruction files but currently uncovered.
 
 | # | Directory | Reason | Severity |
@@ -70,7 +72,18 @@ Directories assessed as needing instruction files but currently uncovered.
 | 1 | `{path/}` | {Has own package.json / distinct domain / ...} | {High/Medium} |
 | ... | | | |
 
-{Or: "No coverage gaps identified."}
+{Or: "No directory coverage gaps identified."}
+
+### Glob-Scoped Rule Opportunities
+
+File-type patterns with recurring conventions that would benefit from targeted rules files. These are cross-cutting concerns that span multiple directories — best addressed with glob-scoped rules rather than directory-level AGENTS.md files.
+
+| # | Pattern | Count | Convention Summary | Severity |
+|---|---------|-------|--------------------|----------|
+| 1 | `{glob}` | {N} | {brief description of conventions agents should follow} | {Medium/Low} |
+| ... | | | | |
+
+{Or: "No glob-scoped rule opportunities identified."}
 
 ## Cross-Format Consistency
 
