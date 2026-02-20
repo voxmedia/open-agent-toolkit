@@ -174,6 +174,7 @@ bash "$SCRIPT_DIR/resolve-tracking.sh" write \
   "$(git rev-parse HEAD)" \
   "$(git branch --show-current)" \
   "{mode}" \
+  --artifact-path "$ARTIFACT_PATH" \
   {providers...}
 ```
 

@@ -4,7 +4,7 @@
 # Usage:
 #   resolve-tracking.sh init
 #   resolve-tracking.sh read <operation>
-#   resolve-tracking.sh write <operation> <commitHash> <baseBranch> <mode> [formats...]
+#   resolve-tracking.sh write <operation> <commitHash> <baseBranch> <mode> [--artifact-path <path>] [formats...]
 #
 # Schema (flat top-level keys per backlog convention):
 #   {
@@ -56,11 +56,19 @@ cmd_read() {
 }
 
 cmd_write() {
-  local operation="${1:?Usage: resolve-tracking.sh write <operation> <commitHash> <baseBranch> <mode> [formats...]}"
+  local operation="${1:?Usage: resolve-tracking.sh write <operation> <commitHash> <baseBranch> <mode> [--artifact-path <path>] [formats...]}"
   local commit_hash="${2:?Missing commitHash}"
   local base_branch="${3:?Missing baseBranch}"
   local mode="${4:?Missing mode}"
   shift 4
+
+  # Parse optional --artifact-path flag before variadic formats
+  local artifact_path=""
+  if [[ "${1:-}" == "--artifact-path" ]]; then
+    artifact_path="${2:?Missing artifact path value after --artifact-path}"
+    shift 2
+  fi
+
   local formats=("$@")
 
   # Build formats JSON array
@@ -81,21 +89,40 @@ cmd_write() {
     existing='{"version":1}'
   fi
 
-  # Merge operation entry
-  echo "$existing" | jq \
-    --arg op "$operation" \
-    --arg ts "$timestamp" \
-    --arg hash "$commit_hash" \
-    --arg branch "$base_branch" \
-    --arg mode "$mode" \
-    --argjson formats "$formats_json" \
-    '.[$op] = {
-      lastRunAt: $ts,
-      commitHash: $hash,
-      baseBranch: $branch,
-      mode: $mode,
-      formats: $formats
-    }' > "$TRACKING_FILE"
+  # Merge operation entry (include artifactPath only if provided)
+  if [[ -n "$artifact_path" ]]; then
+    echo "$existing" | jq \
+      --arg op "$operation" \
+      --arg ts "$timestamp" \
+      --arg hash "$commit_hash" \
+      --arg branch "$base_branch" \
+      --arg mode "$mode" \
+      --argjson formats "$formats_json" \
+      --arg artifact "$artifact_path" \
+      '.[$op] = {
+        lastRunAt: $ts,
+        commitHash: $hash,
+        baseBranch: $branch,
+        mode: $mode,
+        formats: $formats,
+        artifactPath: $artifact
+      }' > "$TRACKING_FILE"
+  else
+    echo "$existing" | jq \
+      --arg op "$operation" \
+      --arg ts "$timestamp" \
+      --arg hash "$commit_hash" \
+      --arg branch "$base_branch" \
+      --arg mode "$mode" \
+      --argjson formats "$formats_json" \
+      '.[$op] = {
+        lastRunAt: $ts,
+        commitHash: $hash,
+        baseBranch: $branch,
+        mode: $mode,
+        formats: $formats
+      }' > "$TRACKING_FILE"
+  fi
 
   echo "Updated $TRACKING_FILE [$operation]"
 }
@@ -119,7 +146,7 @@ case "${1:-}" in
     echo "Commands:" >&2
     echo "  init                                              Create tracking.json if missing" >&2
     echo "  read <operation>                                  Read operation entry" >&2
-    echo "  write <operation> <hash> <branch> <mode> [fmts]   Write/merge operation entry" >&2
+    echo "  write <op> <hash> <branch> <mode> [--artifact-path <p>] [fmts]" >&2
     exit 1
     ;;
 esac

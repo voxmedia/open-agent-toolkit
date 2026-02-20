@@ -634,7 +634,8 @@ Record the knowledge index run in the shared tracking manifest:
 
 ```bash
 bash .agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh \
-  write knowledgeIndex "$(git rev-parse HEAD)" "$(git branch --show-current)" full
+  write knowledgeIndex "$(git rev-parse HEAD)" "$(git branch --show-current)" full \
+  --artifact-path ".oat/repo/knowledge/"
 ```
 
 This enables delta mode for future runs — other OAT operations can check when the knowledge index was last generated.
