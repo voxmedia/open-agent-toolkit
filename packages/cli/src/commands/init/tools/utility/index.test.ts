@@ -133,7 +133,13 @@ describe('createInitToolsUtilityCommand', () => {
 
     expect(selectManyWithAbort).not.toHaveBeenCalled();
     expect(installUtility).toHaveBeenCalledWith(
-      expect.objectContaining({ skills: ['oat-review-provide'] }),
+      expect.objectContaining({
+        skills: [
+          'oat-review-provide',
+          'oat-agent-instructions-analyze',
+          'oat-agent-instructions-apply',
+        ],
+      }),
     );
   });
 

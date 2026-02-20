@@ -1,7 +1,11 @@
 import { join } from 'node:path';
 import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 
-export const UTILITY_SKILLS = ['oat-review-provide'] as const;
+export const UTILITY_SKILLS = [
+  'oat-review-provide',
+  'oat-agent-instructions-analyze',
+  'oat-agent-instructions-apply',
+] as const;
 
 export interface InstallUtilityOptions {
   assetsRoot: string;

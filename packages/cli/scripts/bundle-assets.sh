@@ -34,6 +34,8 @@ SKILLS=(
   oat-repo-knowledge-index
   oat-worktree-bootstrap
   oat-review-provide
+  oat-agent-instructions-analyze
+  oat-agent-instructions-apply
 )
 
 for skill in "${SKILLS[@]}"; do

@@ -102,6 +102,49 @@ Run OAT validator and resolve findings:
 pnpm oat:validate-skills
 ```
 
+### Step 6: Register for CLI Distribution
+
+New OAT skills must be registered in two places so `oat init tools` can install them for users.
+
+**Ask the user:** "Should this skill be distributed via `oat init tools`? If so, which category: **ideas**, **workflows**, or **utility**?"
+
+Category guidance:
+- **ideas** — `oat-idea-*` skills for brainstorming and capture
+- **workflows** — `oat-project-*`, `oat-repo-*`, `oat-worktree-*` skills for project lifecycle and codebase operations
+- **utility** — cross-cutting tools that don't fit the above (e.g., `oat-review-provide`, `oat-agent-*`)
+
+If the user confirms, make both of these changes:
+
+**1. Add to `packages/cli/scripts/bundle-assets.sh`**
+
+Add the skill name to the `SKILLS` array (alphabetical within its group):
+
+```bash
+SKILLS=(
+  # ... existing entries ...
+  {skill-name}
+)
+```
+
+**2. Add to the corresponding TypeScript constant**
+
+| Category | File | Constant |
+|----------|------|----------|
+| ideas | `packages/cli/src/commands/init/tools/ideas/install-ideas.ts` | `IDEA_SKILLS` |
+| workflows | `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` | `WORKFLOW_SKILLS` |
+| utility | `packages/cli/src/commands/init/tools/utility/install-utility.ts` | `UTILITY_SKILLS` |
+
+Add the skill name to the array.
+
+**3. Rebuild and test**
+
+```bash
+pnpm build
+pnpm test
+```
+
+Verify the skill appears in `packages/cli/assets/skills/` after build. If a test asserts the exact skill list for the category (e.g., non-interactive mode expectations), update that test to include the new skill.
+
 ## Examples
 
 ### Basic Usage
@@ -122,3 +165,4 @@ We should add a new OAT skill to archive completed projects. Create the skill wi
 - ✅ Skill includes required OAT sections (mode + progress + project resolution if applicable)
 - ✅ Skill registered in `AGENTS.md`
 - ✅ `pnpm oat:validate-skills` passes
+- ✅ If distributable: added to `bundle-assets.sh` and the appropriate category constant, tests pass
