@@ -9,7 +9,7 @@ For a birdseye snapshot of what exists *right now*, see `.oat/repo/reference/cur
 
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
-As of `2026-02-18` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor`, config-aware sync, worktree bootstrap, `.oat/config.json` phase-A settings). Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
+As of `2026-02-21` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor`, config-aware sync, worktree bootstrap, `.oat/config.json` phase-A settings). Agent instructions skills and subagent orchestration contracts are shipped. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
 
 ## Status Summary
 
@@ -19,7 +19,7 @@ As of `2026-02-18` on `main`, dogfood workflow baseline and provider-interop CLI
 | Phase 3: Reviews + PR loop | Completed | Implemented + dogfooded |
 | Phase 4: Active project pointer + Repo State Dashboard | Completed (polish remaining) | Pointer + generated `.oat/state.md` exist; clarify “first-class” regeneration contract |
 | Phase 5: Staleness + knowledge drift | Planned | Improve/enforce freshness beyond warn-only |
-| Phase 6: Parallel execution + reconcile | Deferred (groundwork started) | `oat-worktree-bootstrap` exists; parallel execution + reconcile tooling still pending |
+| Phase 6: Parallel execution + reconcile | Deferred (groundwork expanded) | `oat-worktree-bootstrap` + subagent orchestration skills (PR #21, refined in PR #26) exist; parallel fan-out + reconcile tooling still pending |
 | Phase 7: Quick mode + template rendering helper | In Progress | Quick/import lanes + canonical plan writing contract implemented; template rendering helper still planned |
 | Phase 8: Provider interop CLI + sync manifest | In Progress | Core command surface + config-aware provider sync shipped; lifecycle polish remains |
 | Phase 9: Multi-project switching + branch awareness | Later | Full `.oat/projects/(shared|local)/...` + hooks |
@@ -62,6 +62,14 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - User-facing progress indicators across skills (separator banners + step indicators + “starting/done” updates for long-running work)
 - Skill authoring:
   - `create-oat-skill` (scaffold new OAT skills with standard sections + banner conventions)
+- Agent instructions:
+  - `oat-agent-instructions-analyze`, `oat-agent-instructions-apply` (multi-provider instruction file analysis and generation)
+  - `.oat/tracking.json` shared tracking manifest for delta mode operations
+- Subagent orchestration:
+  - `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto` (execution mode selection, dispatch, and autonomous bootstrap)
+- Cleanup:
+  - `oat cleanup project` (stale pointers, missing state, lifecycle completion normalization)
+  - `oat cleanup artifacts` (duplicate pruning for reviews and external plans)
 - Internal validation:
   - `pnpm oat:validate-skills` (internal; validates `oat-*` skill frontmatter + banner conventions)
 - Templates under `.oat/templates/`: discovery/spec/design/plan/implementation/state + ideas templates (`ideas/*`)
@@ -187,8 +195,9 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 
 **Goal:** Support parallel phase/task execution (worktrees/stacked PRs/subagents) with reconciliation back into canonical artifacts.
 
-**Status:** Deferred (groundwork started)
+**Status:** Deferred (groundwork expanded)
 - Done: manual-safe worktree bootstrap skill (`oat-worktree-bootstrap`) with deterministic root precedence + baseline checks
+- Done: subagent orchestration skill contracts (`oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto`) with execution mode persistence, dispatch, review gate, and fix-loop retry (PR #21, refined in PR #26)
 - Remaining: parallel fan-out execution contracts and reconcile tooling
 
 **When to do it:**

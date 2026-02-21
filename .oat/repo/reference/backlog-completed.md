@@ -14,6 +14,16 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [skills] Refine subagent implementation flow and review receive UX**
+  - Outcome:
+    - Refactored subagent orchestration dispatch and result collection for cleaner implementation flow.
+    - Improved review receive UX with better applied plan detail propagation into PR body.
+    - Fixed tracking manifest to store root-branch commit hash for accurate delta tracking.
+  - Links:
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/26
+  - Created: 2026-02-19
+  - Completed: 2026-02-21
+
 - [x] **(P0) [skills] Agent instructions skill family (`oat-agent-instructions-analyze`, `oat-agent-instructions-apply`)**
   - Outcome:
     - Analyze skill scans codebase for instruction file coverage, quality, and drift with severity-rated analysis artifacts.

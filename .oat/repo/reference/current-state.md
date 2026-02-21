@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is *right now* in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-02-18
+**Last Updated:** 2026-02-21
 
 ## Canonical References
 
@@ -45,6 +45,22 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Worktree/bootstrap:
   - `oat-worktree-bootstrap` (create/reuse worktree + baseline checks with deterministic root precedence)
 
+### Agent Instructions (Utility)
+
+- `oat-agent-instructions-analyze` (scan codebase for instruction file coverage, quality, and drift; severity-rated analysis artifacts)
+- `oat-agent-instructions-apply` (interactive generation/update of instruction files with multi-provider support: AGENTS.md, Claude rules, Cursor rules, Copilot instructions)
+- Shared tracking manifest: `.oat/tracking.json` (delta mode support via `resolve-tracking.sh`)
+- 7 instruction file templates, 3 helper scripts (tracking, providers, file discovery), quality checklist and directory assessment criteria
+- Reference docs bundled as symlinks (dereferenced during CLI distribution)
+
+### Subagent Orchestration
+
+- `oat-execution-mode-select` (select and persist execution mode: `single-thread` | `sequential-subagent` | `parallel-subagent`)
+- `oat-subagent-orchestrate` (dispatch subagents with fan-out, review gate, and fix-loop retry)
+- `oat-worktree-bootstrap-auto` (autonomous worktree bootstrap with rollback safety)
+- `oat_execution_mode` field in `state.md` template; orchestration status fields in `implementation.md` template
+- HiLL checkpoint governance integrated into orchestration policy
+
 ### Skill Authoring (Meta)
 
 - `create-oat-skill` (scaffold new OAT skills using the standard OAT sections + banner conventions; references baseline guidance from `create-skill`)
@@ -54,6 +70,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Commands:
   - `oat init`, `oat status`, `oat sync`, `oat doctor`
   - `oat providers list`, `oat providers inspect`, `oat providers set`
+  - `oat cleanup project`, `oat cleanup artifacts`
 - Provider config model:
   - Project provider enablement lives in `.oat/sync/config.json` (`providers.<name>.enabled`).
   - `oat init --scope project` prompts for provider selection in interactive mode.
@@ -106,6 +123,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Templates: `.oat/templates/*.md`
 - Knowledge: `.oat/repo/knowledge/*.md`
 - Project artifacts (default checked-in layout): `.oat/projects/shared/<project>/` (configurable via `.oat/projects-root`)
+- Tracking manifest: `.oat/tracking.json` (delta mode support for skill families)
 - Provider sync state:
   - `.oat/sync/config.json` (provider enablement/strategy config)
   - `.oat/sync/manifest.json` (managed sync mappings and content hashes)
@@ -138,12 +156,12 @@ Non-project review path:
 
 Interop quickstart:
 1. Initialize canonical/provider sync scaffolding:
-   - `pnpm run cli -- init --scope project`
+   - `oat init --scope project`
 2. Set explicit supported providers (optional, deterministic):
-   - `pnpm run cli -- providers set --scope project --enabled claude,codex --disabled cursor`
+   - `oat providers set --scope project --enabled claude,codex --disabled cursor`
 3. Preview and apply sync:
-   - `pnpm run cli -- sync --scope project`
-   - `pnpm run cli -- sync --scope project --apply`
+   - `oat sync --scope project`
+   - `oat sync --scope project --apply`
 
 ## Known Gaps / Next Steps
 

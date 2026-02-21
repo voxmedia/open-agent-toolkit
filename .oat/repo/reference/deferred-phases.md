@@ -30,6 +30,13 @@ Dogfood v1 baseline is:
 - Worktree bootstrap skill + config phase A:
   - `oat-worktree-bootstrap` (deterministic root precedence + readiness checks)
   - `.oat/config.json` key `worktrees.root` (default `.worktrees`)
+- Agent instructions:
+  - `oat-agent-instructions-analyze`, `oat-agent-instructions-apply` (multi-provider instruction file analysis and generation)
+  - `.oat/tracking.json` shared tracking manifest for delta mode operations
+- Subagent orchestration:
+  - `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto` (execution mode, dispatch, autonomous bootstrap)
+- Cleanup:
+  - `oat cleanup project`, `oat cleanup artifacts`
 
 ## Deferred Phases
 
@@ -65,7 +72,7 @@ For dogfood v1, the safest approach is:
 
 **What:** Support parallel phase/task execution (worktrees/stacked PRs/subagents) with reconciliation back into canonical artifacts.
 
-**Current status:** Deferred, but prerequisites started (`oat-worktree-bootstrap` is implemented for manual-safe worktree setup).
+**Current status:** Deferred, but groundwork expanded. `oat-worktree-bootstrap` is implemented for manual-safe worktree setup, and subagent orchestration skills (`oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto`) provide execution mode selection, dispatch contracts, and autonomous bootstrap with review gate and fix-loop retry (PR #21, refined in PR #26).
 
 **When to start:**
 - When we actively want to run phases in parallel (or keep multiple worktrees moving), and
