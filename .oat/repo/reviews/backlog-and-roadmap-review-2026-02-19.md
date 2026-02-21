@@ -167,9 +167,9 @@ The backlog contains **15 active items** (1 Inbox, 14 Planned) spanning 5 themes
 
 ---
 
-### B08 — Context management commands (`AGENTS.md` ↔ `CLAUDE.md` integrity)
+### B08 — Agent instructions management commands (`AGENTS.md` ↔ `CLAUDE.md` integrity)
 
-> Add `oat context sync` and `oat context validate` to ensure `CLAUDE.md` files point at co-located `AGENTS.md`.
+> Add `oat instructions sync` and `oat instructions validate` to ensure `CLAUDE.md` files point at co-located `AGENTS.md`.
 
 | Dimension | Rating | Rationale |
 |---|---|---|
