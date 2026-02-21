@@ -105,6 +105,8 @@ For each finding and coverage gap in the analysis artifact, determine the action
 
 Fill the apply plan template at `references/apply-plan-template.md` with each recommendation.
 
+Persist the exact markdown plan shown to the user as `APPLY_PLAN_MARKDOWN` (including recommendation tables and the summary table). This is the source that must be embedded in the PR description.
+
 ### Step 3: User Reviews Plan
 
 Present the recommendation plan to the user. For each recommendation, ask:
@@ -115,6 +117,16 @@ Present the recommendation plan to the user. For each recommendation, ask:
 Wait for user decisions on all recommendations before proceeding.
 
 If all recommendations are skipped, output "No actions approved. Exiting." and stop.
+
+Build an `APPLIED_PLAN_DETAILS` block from approved/modified recommendations with:
+- Recommendation ID
+- Action (create/update)
+- Target path
+- Provider
+- Decision (approved/modified)
+- User notes (if any)
+
+Also build `APPLIED_PLAN_MARKDOWN`: a markdown block containing only the approved/modified recommendation sections from the presented plan, preserving table formatting.
 
 ### Step 4: Create Branch
 
@@ -180,16 +192,34 @@ Choose:
 
 **If creating PR:**
 
+The PR body must include both:
+1. **Overview** — why this PR exists, source analysis artifact, and provider scope.
+2. **Applied Plan Details** — the exact plan markdown presented in terminal (tables included), filtered to approved/modified recommendations.
+
 ```bash
 git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
 gh pr create --base main \
   --title "chore: update agent instruction files" \
   --body "$(cat <<'PRBODY'
-## Summary
+## Overview
 
 - Generated/updated agent instruction files based on analysis
 - Source: {analysis-artifact-path}
 - Providers: {provider-list}
+- Result: {N} created, {N} updated, {N} skipped
+
+## Applied Plan Details
+
+The following section is copied from the presented apply plan (`APPLY_PLAN_MARKDOWN`), preserving its tables:
+
+{APPLY_PLAN_MARKDOWN}
+
+## Applied Plan Summary
+
+| Rec # | Action | Target | Provider | Decision | Notes |
+|------:|--------|--------|----------|----------|-------|
+| {1} | {create/update} | `{path}` | {provider} | {approved/modified} | {note or "-"} |
+| ... | ... | ... | ... | ... | ... |
 
 ## Changes
 
@@ -211,7 +241,13 @@ PRBODY
 PR creation failed. To create manually:
 1. Push: git push -u origin {branch}
 2. Open PR at your repository's web interface
-3. Use the commit message as PR description
+3. Use this structure in the PR body:
+   - `## Overview`
+   - `## Applied Plan Details`
+   - Paste `APPLY_PLAN_MARKDOWN` (tables intact) under `## Applied Plan Details`
+   - `## Applied Plan Summary`
+   - `## Changes`
+   - `## Verification`
 ```
 
 ### Step 7: Update Tracking and Output Summary
