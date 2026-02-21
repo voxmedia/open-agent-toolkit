@@ -259,6 +259,7 @@ git commit -m "feat(p02-t02): register Copilot and Gemini providers in all comma
 | final | code | pending | - | - |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
+| plan | artifact | received | 2026-02-21 | reviews/artifact-plan-review-2026-02-21.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
