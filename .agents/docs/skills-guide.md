@@ -125,24 +125,25 @@ Provider-specific fields can be layered on top but should be treated as non-port
 
 Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignored (documented) | ❓ not documented / unknown
 
-| Field | Agent Skills Spec | Cursor | Claude Code | Codex CLI | Gemini CLI |
-|-------|-------------------|--------|-------------|-----------|------------|
-| `name` | ✅ required | ✅ required | ✅ optional¹ | ✅ required | ✅ documented |
-| `description` | ✅ required | ✅ required | ✅ recommended² | ✅ required | ✅ documented |
-| `license` | ✅ optional | ✅ optional | ❓ | 💤 ignored | ❓ |
-| `compatibility` | ✅ optional | ✅ optional | ❓ | 💤 ignored | ❓ |
-| `metadata` | ✅ optional | ✅ optional | ❓ | 💤 ignored | ❓ |
-| `allowed-tools` | ⚠️ experimental | ❓ | ✅ | 💤 ignored | ❓ |
-| `disable-model-invocation` | ❌ | ✅ | ✅ | 💤 ignored | ❓ |
-| `user-invocable` | ❌ | ❓ | ✅ | 💤 ignored | ❓ |
-| `argument-hint` | ❌ | ❓ | ✅ | 💤 ignored | ❓ |
-| `model` | ❌ | ❓ | ✅ | 💤 ignored | ❓ |
-| `context` / `agent` (subagent) | ❌ | ❓ | ✅ | 💤 ignored | ❓ |
-| `hooks` (skill-scoped) | ❌ | ❓ | ✅ | 💤 ignored | ❓ |
-| `short-description` | ❌ | ❓ | ❓ | ⚠️ example-only | ❓ |
+| Field | Agent Skills Spec | Cursor | Claude Code | Codex CLI | Copilot | Gemini CLI |
+|-------|-------------------|--------|-------------|-----------|---------|------------|
+| `name` | ✅ required | ✅ required | ✅ optional¹ | ✅ required | ✅ required | ✅ documented |
+| `description` | ✅ required | ✅ required | ✅ recommended² | ✅ required | ✅ required | ✅ documented |
+| `license` | ✅ optional | ✅ optional | ❓ | 💤 ignored | ⚠️ may be required³ | ❓ |
+| `compatibility` | ✅ optional | ✅ optional | ❓ | 💤 ignored | ❓ | ❓ |
+| `metadata` | ✅ optional | ✅ optional | ❓ | 💤 ignored | ❓ | ❓ |
+| `allowed-tools` | ⚠️ experimental | ❓ | ✅ | 💤 ignored | ❓ | ❓ |
+| `disable-model-invocation` | ❌ | ✅ | ✅ | 💤 ignored | ❓ | ❓ |
+| `user-invocable` | ❌ | ❓ | ✅ | 💤 ignored | ❌ | ❓ |
+| `argument-hint` | ❌ | ❓ | ✅ | 💤 ignored | ❌ | ❓ |
+| `model` | ❌ | ❓ | ✅ | 💤 ignored | ❌ | ❓ |
+| `context` / `agent` (subagent) | ❌ | ❓ | ✅ | 💤 ignored | ❌ | ❓ |
+| `hooks` (skill-scoped) | ❌ | ❓ | ✅ | 💤 ignored | ❌ | ❓ |
+| `short-description` | ❌ | ❓ | ❓ | ⚠️ example-only | ❓ | ❓ |
 
 ¹ Claude Code uses directory name if `name` omitted
 ² Claude Code uses first paragraph of body if `description` omitted
+³ Copilot may require `license` in practice (see https://github.com/github/copilot-cli/issues/894)
 
 **Key takeaway:** Codex's "ignores extra keys" means you can include Claude/Cursor-only fields without breaking Codex, but you cannot depend on them affecting Codex behavior. `name` + `description` are the only truly portable interface.
 
@@ -234,9 +235,15 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 **Docs:** https://geminicli.com/docs/cli/skills/
 
 **Skill locations:**
-- Workspace: `.gemini/skills/<skill-name>/SKILL.md` (highest precedence)
-- User: `~/.gemini/skills/<skill-name>/SKILL.md`
+- Workspace:
+  - `.gemini/skills/<skill-name>/SKILL.md`
+  - `.agents/skills/<skill-name>/SKILL.md` (**tool-agnostic alias**)
+- User:
+  - `~/.gemini/skills/<skill-name>/SKILL.md`
+  - `~/.agents/skills/<skill-name>/SKILL.md` (**tool-agnostic alias**)
 - Extension skills (bundled in installed extensions)
+
+**Notable:** Gemini reads from `.agents/skills/` natively at both workspace and user scopes, making it zero-sync like Codex for projects that use the canonical `.agents/skills/` layout.
 
 **Gemini-specific behaviors:**
 - Uses **explicit user consent** on activation — shows a confirmation prompt with directory path
@@ -250,8 +257,14 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 **Docs:** https://code.visualstudio.com/docs/copilot/customization/agent-skills
 
 **Skill locations:**
-- Project: `.github/skills/<skill-name>/SKILL.md`
-- Personal: `~/.copilot/skills/<skill-name>/SKILL.md`
+- Project:
+  - `.github/skills/<skill-name>/SKILL.md`
+  - `.claude/skills/<skill-name>/SKILL.md` (**Claude compatibility**)
+- Personal:
+  - `~/.copilot/skills/<skill-name>/SKILL.md` (Copilot coding agent and GitHub Copilot CLI only)
+  - `~/.claude/skills/<skill-name>/SKILL.md` (**Claude compatibility**; Copilot coding agent and GitHub Copilot CLI only)
+
+**Notable:** Like Cursor, Copilot reads from `.claude/skills/` for cross-tool compatibility at both project and personal scopes. Organization-level and enterprise-level skill support is coming soon.
 
 **Notes:** The `license` field may be required in practice even though the spec marks it optional (see https://github.com/github/copilot-cli/issues/894).
 
@@ -266,6 +279,7 @@ When multiple skills share the same name, providers differ:
 | Claude Code | Enterprise > personal > project; plugin skills namespaced (`plugin-name:skill-name`) |
 | Cursor | Not clearly documented; validate empirically |
 | Codex CLI | Does **not** deduplicate — multiple same-named skills can appear in selectors |
+| GitHub Copilot | Not clearly documented; org/enterprise skills coming soon |
 | Gemini CLI | Workspace > User > Extension |
 
 ---
@@ -274,11 +288,11 @@ When multiple skills share the same name, providers differ:
 
 ### Who Can Invoke?
 
-| Control | Spec | Cursor | Claude Code | Codex | Gemini |
-|---------|------|--------|-------------|-------|--------|
-| Agent auto-invokes | Default | Default | Default | Implicit | Via `activate_skill` |
-| User explicit only | ❌ | `disable-model-invocation: true` | `disable-model-invocation: true` | Explicit `$` / `/skills` | Confirmation prompt |
-| Hide from user, agent-only | ❌ | ❓ | `user-invocable: false` | ❌ | ❌ |
+| Control | Spec | Cursor | Claude Code | Codex | Copilot | Gemini |
+|---------|------|--------|-------------|-------|---------|--------|
+| Agent auto-invokes | Default | Default | Default | Implicit | Default | Via `activate_skill` |
+| User explicit only | ❌ | `disable-model-invocation: true` | `disable-model-invocation: true` | Explicit `$` / `/skills` | ❓ | Confirmation prompt |
+| Hide from user, agent-only | ❌ | ❓ | `user-invocable: false` | ❌ | ❌ | ❌ |
 
 **Guidance for workflow-heavy skills:** Default to `disable-model-invocation: true` for skills that edit files, run commands, or have side effects — prevents accidental triggers.
 
@@ -490,21 +504,23 @@ The proposal has community interest but no official timeline or maintainer respo
 |------|-------------|--------------------------|--------------------------|
 | Claude Code | `.claude/skills/` | ✅ (native) | ❌ |
 | Cursor | `.cursor/skills/` | ✅ (cross-compat) | ❌ |
-| Codex CLI | `.agents/skills/` | ❌ | ✅ (project level) |
-| GitHub Copilot | `.github/skills/` | ❌ | ❌ |
+| Codex CLI | `.agents/skills/` | ❌ | ✅ (native) |
+| GitHub Copilot | `.github/skills/` | ✅ (cross-compat) | ❌ |
+| Gemini CLI | `.gemini/skills/` | ❌ | ✅ (native alias) |
 
 **Recommended approach:** Author skills in `.agents/skills/` (tool-agnostic canonical source), then symlink only where needed:
 
 ```bash
-# Only two symlinks needed:
-ln -s ../../.agents/skills/my-skill .claude/skills/my-skill    # Claude Code + Cursor
-ln -s ../../.agents/skills/my-skill .github/skills/my-skill    # GitHub Copilot
-# Codex reads .agents/skills/ natively at project level — no symlink needed
+# Two symlinks needed:
+ln -s ../../.agents/skills/my-skill .claude/skills/my-skill    # Claude Code + Cursor + Copilot
+ln -s ../../.agents/skills/my-skill .github/skills/my-skill    # GitHub Copilot (native path)
+# Codex reads .agents/skills/ natively — no symlink needed
+# Gemini reads .agents/skills/ natively — no symlink needed
 ```
 
-**One canonical source, two symlinks, four tools.**
+**One canonical source, two symlinks, five tools.** (Copilot reads `.claude/skills/` cross-compat, so the `.github/skills` symlink is optional but recommended for explicitness.)
 
-**Note (updated Feb 2026):** Codex now reads `.agents/skills/` natively at both project level (`$CWD/.agents/skills` up to `$REPO_ROOT/.agents/skills`) and user level (`$HOME/.agents/skills`). No symlinks needed for Codex at any scope.
+**Note (updated Feb 2026):** Codex now reads `.agents/skills/` natively at both project level (`$CWD/.agents/skills` up to `$REPO_ROOT/.agents/skills`) and user level (`$HOME/.agents/skills`). Gemini CLI also reads `.agents/skills/` natively at both workspace and user scopes. No symlinks needed for Codex or Gemini at any scope.
 
 **Source:** https://cursor.com/docs/context/skills, https://code.visualstudio.com/docs/copilot/customization/agent-skills, https://developers.openai.com/codex/skills, https://github.com/vercel-labs/skills
 

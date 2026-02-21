@@ -244,7 +244,23 @@ The package manager for the agent skills ecosystem. Installs skills across 27+ a
 
 **Skill locations:**
 - Project: `.gemini/skills/<skill-name>/SKILL.md`
+- Project (alias): `.agents/skills/<skill-name>/SKILL.md`
 - Personal: `~/.gemini/skills/<skill-name>/SKILL.md`
+- Personal (alias): `~/.agents/skills/<skill-name>/SKILL.md`
+
+### Subagents (Experimental)
+
+| Resource | URL |
+|----------|-----|
+| **Subagents documentation** | https://geminicli.com/docs/core/subagents/ |
+
+**Subagent locations:**
+- Project: `.gemini/agents/<name>.md`
+- Personal: `~/.gemini/agents/<name>.md`
+
+**Requires opt-in:** `"experimental": { "enableAgents": true }` in `settings.json`
+
+**Key frontmatter fields:** `name`, `description`, `tools`, `model`, `temperature`, `max_turns`, `timeout_mins`, `kind`
 
 ### Other Gemini Resources
 
@@ -266,7 +282,30 @@ The package manager for the agent skills ecosystem. Installs skills across 27+ a
 
 **Skill locations:**
 - Project: `.github/skills/<skill-name>/SKILL.md`
-- Personal: `~/.copilot/skills/<skill-name>/SKILL.md`
+- Project (cross-compat): `.claude/skills/<skill-name>/SKILL.md`
+- Personal: `~/.copilot/skills/<skill-name>/SKILL.md` (Copilot coding agent and GitHub Copilot CLI only)
+- Personal (cross-compat): `~/.claude/skills/<skill-name>/SKILL.md` (Copilot coding agent and GitHub Copilot CLI only)
+
+### Subagents (Custom Agents)
+
+| Resource | URL |
+|----------|-----|
+| **Custom agents documentation** | https://code.visualstudio.com/docs/copilot/customization/custom-agents |
+| **Custom agents configuration reference** | https://docs.github.com/en/copilot/reference/custom-agents-configuration |
+
+**Subagent locations:**
+- Project: `.github/agents/<name>.md` or `<name>.agent.md` (both accepted)
+- Project (cross-compat): `.claude/agents/<name>.md` (Claude format auto-detected, tool names auto-mapped)
+- Personal: `~/.copilot/agents/<name>.md` (Copilot CLI)
+- Organization/Enterprise: `/agents/<name>.md` in `.github-private` repo
+
+**File extensions:** Both `.md` and `.agent.md` accepted in `.github/agents/`. The filename (minus extension) is used for deduplication across levels.
+
+**Base format:** Same markdown + YAML frontmatter as Claude Code (`name`, `description`, `tools`). Syncing plain `.md` files from `.agents/agents/` works directly.
+
+**Copilot-specific extensions (additive, not required):** `agents` (subagent access control), `handoffs` (workflow chaining), `target` (execution environment), `mcp-servers` (inline MCP config), `model` as prioritized failover list
+
+**Key frontmatter fields:** `name`, `description`, `tools`, `agents`, `model`, `user-invokable`, `disable-model-invocation`, `target`, `mcp-servers`, `handoffs`, `argument-hint`
 
 ### Instructions & Rules
 

@@ -127,6 +127,77 @@ cursor-agent -p [task] --output-format=text --force --model [model]
 ```
 This enables fan-out/fan-in patterns with dynamic model selection. Community-discovered; not formally documented.
 
+### GitHub Copilot
+
+**Docs:** https://code.visualstudio.com/docs/copilot/customization/custom-agents
+
+**Locations:**
+- Project: `.github/agents/<name>.md` or `.github/agents/<name>.agent.md` (both accepted)
+- Project (cross-compat): `.claude/agents/<name>.md` (Claude format auto-detected, tool names auto-mapped)
+- Personal: `~/.copilot/agents/<name>.md` (Copilot CLI)
+- Custom: Configurable via `chat.agentFilesLocations` setting (VS Code)
+- Organization/Enterprise: `/agents/<name>.md` in `.github-private` repo
+
+**File format (`.agent.md`):**
+```markdown
+---
+name: agent-name                        # Optional — defaults to filename
+description: When to use this agent     # Optional — placeholder text in chat input
+tools:                                  # Optional — available tools (built-in, MCP, or extension)
+  - codebase
+  - editFiles
+  - fetch
+  - terminalLastCommand
+agents:                                 # Optional — subagents this agent can invoke (* = all, [] = none)
+  - code-reviewer
+  - test-writer
+model:                                  # Optional — model or prioritized list
+  - copilot-4o
+  - gpt-4o
+user-invokable: true                    # Optional — show in dropdown (default true)
+disable-model-invocation: false         # Optional — prevent subagent delegation (default false)
+target: vscode                          # Optional — "vscode" or "github-copilot"
+argument-hint: "[files or description]" # Optional — guidance text for user
+mcp-servers:                            # Optional — inline MCP server configs
+  - type: stdio
+    command: npx
+    args: ["-y", "@example/mcp-server"]
+handoffs:                               # Optional — guided workflow transitions
+  - label: "Review code"
+    agent: code-reviewer
+    prompt: "Review the changes"
+    send: false
+    model: gpt-4o
+---
+
+System prompt body goes here.
+```
+
+**Key features:**
+- **`agents` field:** Controls which subagents this agent can delegate to. Set `*` for all, `[]` for none. Requires `agent` tool in `tools` list.
+- **`model` as prioritized list:** Unique to Copilot — specifies multiple models tried in order (failover chain).
+- **`handoffs`:** Guided workflow transitions with buttons that chain agents sequentially (e.g., Plan → Implement → Review). Preserves context across handoffs.
+- **`target`:** Controls where the agent runs — `vscode` for VS Code or `github-copilot` for the Copilot coding agent.
+- **`mcp-servers`:** Inline MCP server configuration scoped to the agent.
+- **Claude format compatibility:** Files in `.claude/agents/` use comma-separated tool strings; VS Code auto-maps Claude tool names to VS Code equivalents.
+
+**Key differences from Claude Code:**
+- Uses `.agent.md` extension (not plain `.md`)
+- `agents` field for subagent access control (Claude Code doesn't restrict which subagents can call which)
+- `model` accepts prioritized list for failover (Claude Code uses single alias)
+- `handoffs` for sequential workflow chaining (no equivalent in Claude Code)
+- `mcp-servers` inline on the agent (Claude Code configures MCP globally)
+- `target` field for execution environment selection
+- No `skills` field — can't auto-load skills into agent context
+- No `permissionMode` field
+- No resumable sessions
+- `user-invokable` (note spelling) instead of Claude's `user-invocable` on skills
+
+**Delegation behavior:**
+- **Automatic:** Copilot delegates based on task + agent `description` (unless `disable-model-invocation: true`)
+- **Explicit:** User selects agent from dropdown or mentions by name
+- **Subagent scoping:** The `agents` field explicitly controls which agents can be invoked as subagents — more granular than Claude Code's approach
+
 ### Codex CLI (OpenAI)
 
 **Locations and config:**
@@ -142,6 +213,66 @@ This enables fan-out/fan-in patterns with dynamic model selection. Community-dis
 See:
 - https://developers.openai.com/codex/multi-agent
 - https://developers.openai.com/codex/local-config
+
+### Gemini CLI (Experimental)
+
+**Docs:** https://geminicli.com/docs/core/subagents/
+
+**Status:** Experimental — requires opt-in via `settings.json`:
+```json
+{
+  "experimental": { "enableAgents": true }
+}
+```
+
+**Locations:**
+- Project: `.gemini/agents/<name>.md`
+- Personal: `~/.gemini/agents/<name>.md`
+
+**File format:**
+```markdown
+---
+name: agent-name                    # Required — lowercase, numbers, hyphens, underscores
+description: When to use this agent # Required — drives auto-delegation
+tools:                              # Optional — defaults to standard set if omitted
+  - read_file
+  - run_shell_command
+model: gemini-2.5-pro              # Optional — defaults to main session model
+temperature: 0.7                    # Optional — 0.0–2.0
+max_turns: 15                       # Optional — conversation turn limit (default 15)
+timeout_mins: 5                     # Optional — execution timeout in minutes (default 5)
+kind: local                         # Optional — "local" (default) or "remote"
+---
+
+System prompt body goes here.
+```
+
+**Key features:**
+- **`tools` as YAML list:** Same pattern as Cursor (not comma-separated like Claude Code)
+- **`temperature` field:** Unique to Gemini — not available in Claude Code or Cursor subagents
+- **`max_turns` / `timeout_mins`:** Explicit resource limits; prevents runaway subagents
+- **`kind: remote`:** Experimental Agent-to-Agent (A2A) support for remote subagent execution
+- **YOLO mode:** Subagents execute tools **without individual user confirmation** — exercise caution with write/shell tools
+
+**Built-in subagents:**
+
+| Name | Purpose |
+|------|---------|
+| **codebase_investigator** | Deep code analysis and dependency mapping |
+| **cli_help** | Gemini CLI documentation and configuration queries |
+| **generalist_agent** | Routes tasks to specialized subagents |
+
+**Delegation behavior:**
+- **Automatic:** Main agent sees subagents as tools with matching names and delegates based on task + `description`
+- **Explicit:** User can mention the subagent by name in the prompt
+
+**Key differences from Claude Code:**
+- `tools` is a YAML list (not comma-separated string)
+- Has `temperature`, `max_turns`, `timeout_mins` fields (not in Claude Code)
+- No `skills` field — can't auto-load skills into subagent context
+- No `permissionMode` field — always runs in auto-approve mode
+- No resumable sessions
+- Requires experimental feature flag to enable
 
 ### Cross-Tool MCP Bridge (Community)
 
