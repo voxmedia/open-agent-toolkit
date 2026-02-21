@@ -4,7 +4,13 @@
 
 Every OAT workflow session currently requires manual pointer file manipulation (`cat .oat/active-project`, editing `.oat/projects-root`) and there are no CLI commands for opening, switching, or pausing projects. Meanwhile, configuration is scattered across multiple single-value text files (`.oat/active-project`, `.oat/projects-root`) instead of being consolidated into structured JSON.
 
-This plan combines **B15** (project open/pause CLI commands) and **B02** (config consolidation Phase B/C) using a config-first approach: build the config.local.json infrastructure first, then implement project commands on top, then migrate all skills and CLI consumers in one clean cut.
+### Why combine B15 + B02
+
+The backlog review (2026-02-19) rated B15 (project lifecycle commands) as high-value/medium-effort and identified B02 Phase B/C (config consolidation for active-project and projects-root) as a natural dependency — open/pause commands need to read and write project state, so building them on top of pointer files only to immediately migrate those files to config.json would create throwaway work. Combining them into a single project eliminates that rework and reduces project management overhead.
+
+The roadmap confirms this sequencing: Phase 9 (Multi-project switching) depends on B15, making it a critical-path item.
+
+This plan uses a config-first approach: build the config.local.json infrastructure first, then implement project commands on top, then migrate all skills and CLI consumers in one clean cut.
 
 ## Design Decisions
 
@@ -19,6 +25,50 @@ This plan combines **B15** (project open/pause CLI commands) and **B02** (config
 - **Active-idea out of scope**: `.oat/active-idea` and `~/.oat/active-idea` remain as pointer files — not migrated in this project
 - **`--reason` persistence**: pause reason saved to state.md frontmatter (`oat_pause_reason`); open reason is stdout-only
 - **Config CLI commands**: `oat config get/set/list` provide a clean interface for reading/writing config — skills use these instead of raw `jq` against config files
+
+## Alternatives Considered
+
+### Approach sequencing
+
+Three approaches were evaluated:
+
+1. **Config-First (chosen):** Build config.local.json infrastructure (Phase 2), then commands on top (Phases 3-4), then migrate consumers (Phases 6-7). Clean dependency chain — each phase builds on the previous one. Chosen because it avoids throwaway code and makes testing straightforward.
+
+2. **Commands-First:** Build open/pause commands using existing pointer files, then migrate to config.local.json later. Rejected because the commands would be written against the pointer file API and then immediately rewritten — double the work for the core logic.
+
+3. **Interleaved:** Build config and commands in parallel across phases. Rejected as unnecessarily complex phasing with no clear benefit over the sequential approach.
+
+### Pause semantics
+
+Two models were considered for what happens when a project is paused:
+
+1. **Mark paused, keep active pointer:** Set `oat_lifecycle: paused` in state.md but leave `activeProject` in config.local.json. Dashboard would show "paused" status. Rejected because it creates ambiguity — an "active" project that is "paused" sends mixed signals to both users and skill logic that checks for an active project.
+
+2. **Clear pointer + lastPausedProject (chosen):** Clear `activeProject` on pause (only when the paused project matches the active one) and record `lastPausedProject` so the dashboard can surface resume guidance. This gives clean semantics: active means active, no active means nothing is active. The `lastPausedProject` field bridges the UX gap so users aren't left without context.
+
+### Open vs open + switch
+
+A dedicated `switch` command was considered but rejected — it adds CLI surface area with no real benefit. `open` detects when another project is already active and contextually messages "switching from X to Y." One command, two behaviors based on state.
+
+### Resume command
+
+A dedicated `resume` command was considered but rejected in favor of resume-via-`open`. When `open` detects `oat_lifecycle: paused` in the target project's state.md, it clears pause metadata automatically. This avoids a third lifecycle command and keeps the mental model simple: `open` to start or resume, `pause` to stop.
+
+### Compatibility shim (dual-write)
+
+A dual-write approach was considered: write to both pointer files and config.local.json during a transition period so old and new code paths both work. Rejected because all 22 project skills live in the same repo and can be batch-updated in a single phase. The small user base and monorepo structure make a clean cut lower-risk than maintaining dual-write complexity.
+
+### Active-idea migration
+
+The initial design included migrating `.oat/active-idea` into config.local.json alongside `activeProject`. A code review identified that idea skills use both project-level `.oat/active-idea` and user-level `~/.oat/active-idea` with distinct precedence rules. Migrating that requires designing dual-level (repo + user) config precedence, which is a separate concern. Scoped out to a follow-up backlog item to avoid scope creep.
+
+### Config CLI commands
+
+The original plan had skills using `jq` directly against config files (e.g., `jq -r '.activeProject // empty' .oat/config.local.json`). This was flagged as fragile — it creates a `jq` dependency in every skill, duplicates precedence logic, and makes the empty-string/null distinction error-prone. `oat config get/set/list` centralizes all resolution logic (env overrides, legacy fallbacks, defaults) behind a stable CLI interface.
+
+### Repo-relative paths
+
+A code review identified that storing absolute paths in config.local.json breaks worktree propagation — when `.oat/config.local.json` is copied to a new worktree, absolute paths would point back to the source worktree's filesystem location. Storing repo-relative paths (e.g., `.oat/projects/shared/my-project`) ensures the copied file works correctly in any worktree without path fixup.
 
 ---
 
@@ -104,6 +154,7 @@ Provide a CLI interface for reading/writing config values. This eliminates the `
 - Reads a config value with full precedence resolution
 - Key routing: keys like `activeProject`, `lastPausedProject` read from config.local.json; keys like `projects.root`, `worktrees.root` read from config.json
 - Environment variable overrides apply (e.g., `OAT_PROJECTS_ROOT` overrides `projects.root`)
+- `projects.root` uses the same `resolveProjectsRoot()` chain: env → config.json → `.oat/projects-root` file (compat) → default. This ensures skills migrated in Phase 7 get the correct value even if the repo only has a legacy `.oat/projects-root` file. The legacy fallback is removed in Phase 9.
 - Outputs raw value to stdout (no decoration) for easy shell capture: `$(oat config get activeProject)`
 - Outputs empty string + exit 0 if key exists but is null/unset
 - Exit 1 if key is unrecognized
@@ -112,6 +163,7 @@ Provide a CLI interface for reading/writing config values. This eliminates the `
 - Writes a config value to the appropriate file based on key
 - Local keys (`activeProject`, `lastPausedProject`) → config.local.json
 - Shared keys (`projects.root`, `worktrees.root`) → config.json
+- **Null coercion for nullable keys:** `oat config set activeProject ""` coerces to `null` in JSON (not stored as empty string). Same for `lastPausedProject`. This keeps storage consistent with `clearActiveProject()` and ensures `get --json` / `list --json` output uses `null`, not `""`.
 - Creates the config file if it doesn't exist
 - JSON output mode supported
 
@@ -134,7 +186,9 @@ Provide a CLI interface for reading/writing config values. This eliminates the `
 
 **Tests:** `packages/cli/src/commands/config/index.test.ts`
 - get existing key, get missing key, get with env override
+- get `projects.root` falls back to `.oat/projects-root` file when config.json has no value
 - set local key, set shared key, set creates file if missing
+- set nullable key to `""` stores `null` in JSON (not empty string)
 - list shows merged view with sources
 - JSON output mode for all three subcommands
 
@@ -237,9 +291,10 @@ Behavior:
 - Keep skill names for workflow commands (oat-project-progress etc.)
 
 **Tests:** Update `packages/cli/src/commands/state/generate.test.ts`
-- Dashboard with paused project (active pointer still set — pausing a non-active project)
-- Dashboard with no active project + lastPausedProject (paused the active project)
-- computeNextStep with paused lifecycle
+- Dashboard with active project A while a different project B is paused (active pointer stays on A, B's state.md shows paused)
+- Dashboard with no active project + lastPausedProject set (user paused the active project — shows resume guidance)
+- computeNextStep with no active project + lastPausedProject
+- computeNextStep with active project whose lifecycle is paused (edge case: stale state.md)
 - readActiveProject from config.local.json (no pointer file)
 
 ---
