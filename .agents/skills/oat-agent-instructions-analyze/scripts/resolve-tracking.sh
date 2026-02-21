@@ -4,6 +4,7 @@
 # Usage:
 #   resolve-tracking.sh init
 #   resolve-tracking.sh read <operation>
+#   resolve-tracking.sh root
 #   resolve-tracking.sh write <operation> <commitHash> <baseBranch> <mode> [--artifact-path <path>] [formats...]
 #
 # Schema (flat top-level keys per backlog convention):
@@ -21,6 +22,10 @@
 #
 # Write protocol: optimistic per-key merge. Each writer reads the file,
 # updates only its own operation key, and writes back.
+#
+# NOTE: write() normalizes commitHash/baseBranch to the repository root branch tip
+# (origin/main, origin/master, etc.) at write time so the stored commit remains
+# resolvable even when feature-branch commits are rebased or squashed.
 
 set -euo pipefail
 
@@ -33,6 +38,69 @@ if ! command -v jq &>/dev/null; then
   echo "Error: jq is required but not found in PATH" >&2
   exit 1
 fi
+
+detect_default_remote() {
+  if git show-ref --verify --quiet "refs/remotes/origin/HEAD"; then
+    echo "origin"
+    return
+  fi
+
+  local first_remote
+  first_remote="$(git remote 2>/dev/null | head -1 || true)"
+  if [[ -n "$first_remote" ]]; then
+    echo "$first_remote"
+  fi
+}
+
+detect_root_branch() {
+  local remote branch
+  remote="$(detect_default_remote)"
+
+  if [[ -n "$remote" ]]; then
+    branch="$(git symbolic-ref --quiet --short "refs/remotes/${remote}/HEAD" 2>/dev/null || true)"
+    if [[ -n "$branch" ]]; then
+      echo "${branch#${remote}/}"
+      return
+    fi
+  fi
+
+  for candidate in main master trunk; do
+    if [[ -n "$remote" ]] && git show-ref --verify --quiet "refs/remotes/${remote}/${candidate}"; then
+      echo "$candidate"
+      return
+    fi
+    if git show-ref --verify --quiet "refs/heads/${candidate}"; then
+      echo "$candidate"
+      return
+    fi
+  done
+
+  branch="$(git branch --show-current 2>/dev/null || true)"
+  if [[ -n "$branch" ]]; then
+    echo "$branch"
+    return
+  fi
+
+  echo "HEAD"
+}
+
+resolve_root_commit_hash() {
+  local branch="${1:?Missing branch}"
+  local remote
+  remote="$(detect_default_remote)"
+
+  if [[ -n "$remote" ]] && git show-ref --verify --quiet "refs/remotes/${remote}/${branch}"; then
+    git rev-parse "${remote}/${branch}"
+    return
+  fi
+
+  if git show-ref --verify --quiet "refs/heads/${branch}"; then
+    git rev-parse "${branch}"
+    return
+  fi
+
+  git rev-parse HEAD
+}
 
 cmd_init() {
   mkdir -p "$(dirname "$TRACKING_FILE")"
@@ -55,6 +123,15 @@ cmd_read() {
   jq -r --arg op "$operation" '.[$op] // empty' "$TRACKING_FILE"
 }
 
+cmd_root() {
+  local root_branch root_hash
+  root_branch="$(detect_root_branch)"
+  root_hash="$(resolve_root_commit_hash "$root_branch")"
+
+  jq -n --arg branch "$root_branch" --arg hash "$root_hash" \
+    '{baseBranch: $branch, commitHash: $hash}'
+}
+
 cmd_write() {
   local operation="${1:?Usage: resolve-tracking.sh write <operation> <commitHash> <baseBranch> <mode> [--artifact-path <path>] [formats...]}"
   local commit_hash="${2:?Missing commitHash}"
@@ -70,6 +147,18 @@ cmd_write() {
   fi
 
   local formats=("$@")
+
+  # Normalize tracking target to root branch tip to keep commitHash resolvable.
+  local normalized_branch normalized_hash
+  normalized_branch="$(detect_root_branch)"
+  normalized_hash="$(resolve_root_commit_hash "$normalized_branch")"
+
+  if [[ "$base_branch" != "$normalized_branch" || "$commit_hash" != "$normalized_hash" ]]; then
+    echo "Info: normalizing tracking target to root branch '${normalized_branch}' (${normalized_hash})" >&2
+  fi
+
+  base_branch="$normalized_branch"
+  commit_hash="$normalized_hash"
 
   # Build formats JSON array
   local formats_json="[]"
@@ -136,16 +225,20 @@ case "${1:-}" in
     shift
     cmd_read "$@"
     ;;
+  root)
+    cmd_root
+    ;;
   write)
     shift
     cmd_write "$@"
     ;;
   *)
-    echo "Usage: resolve-tracking.sh {init|read|write} [args...]" >&2
+    echo "Usage: resolve-tracking.sh {init|read|root|write} [args...]" >&2
     echo "" >&2
     echo "Commands:" >&2
     echo "  init                                              Create tracking.json if missing" >&2
     echo "  read <operation>                                  Read operation entry" >&2
+    echo "  root                                              Print root branch + commit as JSON" >&2
     echo "  write <op> <hash> <branch> <mode> [--artifact-path <p>] [fmts]" >&2
     exit 1
     ;;

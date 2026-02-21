@@ -98,9 +98,9 @@ If no instruction files are found at all (not even a root AGENTS.md), report thi
 For each discovered instruction file, evaluate against the quality checklist at `references/quality-checklist.md`.
 
 **Required context — read these docs before evaluating:**
-- `references/docs/agent-instruction.md` — full quality criteria and best practices
-- `references/docs/rules-files.md` — cross-provider rules file format reference
-- `references/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format reference (if cursor provider is active)
+- `.agents/docs/agent-instruction.md` — full quality criteria and best practices
+- `.agents/docs/rules-files.md` — cross-provider rules file format reference
+- `.agents/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format reference (if cursor provider is active)
 
 **For each file:**
 1. Read the file content.
@@ -118,8 +118,6 @@ For each discovered instruction file, evaluate against the quality checklist at 
 
 ### Step 3: Assess Coverage Gaps
 
-**3a. Directory coverage:**
-
 Walk the directory tree and evaluate each directory against `references/directory-assessment-criteria.md`.
 
 **In delta mode:** Only assess directories that contain files changed since the last tracked commit. Skip unchanged directories.
@@ -130,68 +128,9 @@ For each directory meeting 1+ primary indicators from the criteria doc:
 - Check if it's covered by an existing instruction file (either a direct AGENTS.md or a parent's scoped rule with matching globs).
 - If uncovered, add to the coverage gaps list with severity and recommendation.
 
-**3b. File-pattern analysis (glob-scoped rule opportunities):**
-
-Identify file-type patterns in the codebase that have conventions worth capturing as glob-scoped rules. These are cross-cutting concerns that span multiple directories — best addressed with targeted rules rather than directory-level AGENTS.md files.
-
-**In full mode** — comprehensive scan using all three signal sources below.
-
-**In delta mode** — scope to what changed since the last tracked commit:
-- Check if changed files introduce new file-type patterns not covered by existing glob rules (e.g., first `.stories.tsx` files added, new CSS module convention adopted).
-- Check if new tooling was added to `package.json` that implies new file-type conventions.
-- Existing glob-scoped rule drift is handled in Step 4 — do not duplicate that work here.
-
-**Signal sources for identifying candidates:**
-
-**Signal 1 — File extensions and naming patterns:**
-
-Scan the tracked file tree for recurring extensions, compound suffixes, and naming conventions:
-
-```bash
-git ls-files | grep -oE '\.[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$' | sort | uniq -c | sort -rn | head -30
-```
-
-Look for patterns that suggest distinct file roles — e.g., test files, story/docs files, style/CSS files, configuration files, migration files, type definition files, hook files, etc. The specific patterns vary by project; use the extension frequency list and the project's tech stack to guide discovery.
-
-**Signal 2 — Tooling from `package.json` / project config:**
-
-Read `package.json` (root and per-package in monorepos) and identify installed tools that imply file-type conventions. Examples of what to look for:
-- Test runners → test file conventions
-- Component dev tools (Storybook, Ladle) → story file conventions
-- CSS-in-JS / CSS modules / preprocessors → style file conventions
-- Linters, formatters, bundlers → config file conventions
-- ORMs, migration tools → migration/schema file conventions
-- Framework-specific patterns (Next.js pages, Express routes, etc.)
-
-The specific tools will vary by project. The goal is to identify tooling that creates implicit conventions agents should follow.
-
-**Signal 3 — Repeated configuration files:**
-
-In monorepos, look for configuration files repeated across packages (e.g., `tsconfig.json`, `jest.config.*`, `vite.config.*`, `.env.sample`). Even a single config file in a monorepo may warrant a glob rule if agents commonly misconfigure it.
-
-**For each candidate pattern, assess:**
-- Does the pattern have project-specific conventions an agent should know? Read a few representative files to understand the conventions.
-- Would an agent likely make mistakes without guidance? (wrong imports, missing setup, incorrect structure)
-- Is the pattern already covered by existing instruction files?
-
-**Output:** For each candidate, record:
-
-| Pattern | Count | Convention | Covered? | Recommendation |
-|---------|-------|-----------|----------|----------------|
-| `{glob}` | {N} | {brief convention summary} | {Yes/No} | {Create glob-scoped rule / Already covered} |
-
-**Severity:** Medium for patterns where agents would benefit from guidance. Low for nice-to-have patterns with minimal risk.
-
-**Skip patterns that:**
-- Have very few files and no meaningful conventions to capture
-- Are already well-covered by existing instruction files
-- Are standard enough that agents handle them correctly without project-specific guidance
-
 ### Step 4: Drift Detection (Delta Mode Only)
 
 **Skip this step entirely in full mode.**
-
-**4a. Directory instruction drift:**
 
 For files changed since the last tracked commit:
 1. Identify the nearest parent instruction file for each changed file.
@@ -202,19 +141,6 @@ Common drift signals:
 - Changed file is in a directory whose AGENTS.md references removed/renamed paths.
 - New package.json scripts not reflected in instruction file commands.
 - New dependencies or framework changes not reflected in tech stack documentation.
-
-**4b. Glob-scoped rule drift:**
-
-For each existing glob-scoped rule, check whether changed files matching its glob pattern have shifted conventions:
-1. List changed files that match the rule's glob pattern.
-2. If any matched files changed, read a sample and compare conventions against what the rule documents.
-3. Flag rules whose guidance no longer matches actual conventions (e.g., test setup changed, style patterns evolved, new imports expected).
-
-Common drift signals:
-- Test framework or configuration changed (new runner, different assertion library, new setup file).
-- Styling approach changed (CSS modules → CSS-in-JS, or vice versa).
-- Story format changed (CSF2 → CSF3, MDX adopted).
-- New tooling conventions not reflected in existing rules.
 
 ### Step 5: Cross-Format Consistency (Multi-Provider Only)
 
@@ -243,10 +169,14 @@ Write the artifact to `$ARTIFACT_PATH`.
 **Update tracking:**
 
 ```bash
+ROOT_TARGET=$(bash "$SCRIPT_DIR/resolve-tracking.sh" root)
+ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
+ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
+
 bash "$SCRIPT_DIR/resolve-tracking.sh" write \
   agentInstructions \
-  "$(git rev-parse HEAD)" \
-  "$(git branch --show-current)" \
+  "$ROOT_HASH" \
+  "$ROOT_BRANCH" \
   "{mode}" \
   --artifact-path "$ARTIFACT_PATH" \
   {providers...}
@@ -281,9 +211,9 @@ Next step: Run oat-agent-instructions-apply to act on these findings.
 
 ## References
 
-- Quality criteria source: `references/docs/agent-instruction.md`
-- Cross-provider rules reference: `references/docs/rules-files.md`
-- Cursor-specific format: `references/docs/cursor-rules-files.md`
+- Quality criteria source: `.agents/docs/agent-instruction.md`
+- Cross-provider rules reference: `.agents/docs/rules-files.md`
+- Cursor-specific format: `.agents/docs/cursor-rules-files.md`
 - Copilot instruction system: `.oat/repo/reviews/github-copilot-instructions-research-2026-02-19.md`
 - Quality checklist: `references/quality-checklist.md`
 - Directory criteria: `references/directory-assessment-criteria.md`

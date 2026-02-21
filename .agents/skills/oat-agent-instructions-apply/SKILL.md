@@ -82,31 +82,26 @@ The provider list determines which file formats to generate. If running interact
 
 ### Step 2: Build Recommendation Plan
 
-For each finding, coverage gap, and glob-scoped rule opportunity in the analysis artifact, determine the action:
+For each finding and coverage gap in the analysis artifact, determine the action:
 
-**For directory coverage gaps (new AGENTS.md files):**
+**For coverage gaps (new files):**
 - Determine the target file path based on the directory and provider
 - Select the appropriate template from `references/instruction-file-templates/`
 - For AGENTS.md files: use `agents-md-root.md` or `agents-md-scoped.md`
-
-**For glob-scoped rule opportunities (from the analysis artifact's "Glob-Scoped Rule Opportunities" section):**
-- For each identified file-type pattern, create a glob-scoped rule using `glob-scoped-rule.md` body + appropriate `frontmatter/` wrapper
-- Read several representative files matching the pattern to understand conventions before writing the rule body
-- Rule body should capture project-specific conventions — not generic best practices the agent already knows
+- For glob-scoped rules: use `glob-scoped-rule.md` body + appropriate `frontmatter/` wrapper
 
 **For quality findings (updates to existing files):**
 - Identify the specific issue and the fix
 - Preserve existing manual customizations — only modify the problematic section
 
 **Multi-format composition order:**
-1. **AGENTS.md first** — the canonical, provider-agnostic file (root + every scoped directory)
-2. **CLAUDE.md shims** — if claude provider is active, create a `CLAUDE.md` containing only `@AGENTS.md` at **every directory level** where an AGENTS.md was created (root + each scoped package/directory). Claude Code reads the nearest CLAUDE.md per directory — without a per-directory shim, scoped AGENTS.md files are invisible to Claude.
-3. **Always-on Cursor project rule** — if cursor provider is active, generate a `.cursor/rules/{project-name}.mdc` with `alwaysApply: true` frontmatter that summarizes key project facts (package manager, workspace structure, essential commands, code style, non-negotiables). This ensures Cursor agents always have project context. Use the Always-On mode from `frontmatter/cursor-rule.md`.
-4. **Glob-scoped rules** — identical body content, stamped with per-provider frontmatter:
+1. **AGENTS.md first** — the canonical, provider-agnostic file
+2. **CLAUDE.md** — if claude provider is active, ensure `@AGENTS.md` import exists
+3. **Glob-scoped rules** — identical body content, stamped with per-provider frontmatter:
    - Claude: `.claude/rules/{name}.md` with `paths` frontmatter
-   - Cursor: `.cursor/rules/{name}.mdc` with `alwaysApply: false` + `globs` frontmatter
+   - Cursor: `.cursor/rules/{name}.mdc` with `alwaysApply`/`globs`/`description` frontmatter
    - Copilot: `.github/instructions/{name}.instructions.md` with `applyTo` frontmatter
-5. **Copilot shim** — if copilot provider is active, generate `.github/copilot-instructions.md` from `frontmatter/copilot-shim.md` template
+4. **Copilot shim** — if copilot provider is active, generate `.github/copilot-instructions.md` from `frontmatter/copilot-shim.md` template
 
 Fill the apply plan template at `references/apply-plan-template.md` with each recommendation.
 
@@ -143,9 +138,7 @@ For each approved recommendation, in the order from Step 2:
    - Directory structure for architecture section
    - Existing instruction files for consistency
 3. Generate the file content by filling the template with project-specific details.
-4. **CLAUDE.md shims** — for every directory where an AGENTS.md is created or already exists, if Claude is a provider, also create a `CLAUDE.md` containing exactly `@AGENTS.md` (one line, no other content). This applies to root AND every scoped directory.
-5. **Always-on Cursor rule** — if Cursor is a provider, create `.cursor/rules/{project-name}.mdc` with `alwaysApply: true`. Content should be a concise summary of key project facts (package manager, workspace layout, essential commands, code style, non-negotiables) — not a full copy of AGENTS.md. Target ~30-60 lines.
-6. For glob-scoped rules across multiple providers:
+4. For glob-scoped rules across multiple providers:
    - Write the body content once (from `glob-scoped-rule.md` template)
    - Stamp with each provider's frontmatter
    - Verify body content is identical across all provider versions
@@ -158,9 +151,9 @@ For each approved recommendation, in the order from Step 2:
 4. Do not rewrite the entire file unless the user explicitly approves.
 
 **Required context — read these docs before generating:**
-- `references/docs/agent-instruction.md` — quality criteria and best practices
-- `references/docs/rules-files.md` — cross-provider format reference
-- `references/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format (if cursor provider is active)
+- `.agents/docs/agent-instruction.md` — quality criteria and best practices
+- `.agents/docs/rules-files.md` — cross-provider format reference
+- `.agents/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format (if cursor provider is active)
 
 ### Step 6: Commit and PR
 
@@ -227,10 +220,14 @@ PR creation failed. To create manually:
 
 ```bash
 SCRIPT_DIR=".agents/skills/oat-agent-instructions-analyze/scripts"
+ROOT_TARGET=$(bash "$SCRIPT_DIR/resolve-tracking.sh" root)
+ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
+ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
+
 bash "$SCRIPT_DIR/resolve-tracking.sh" write \
   agentInstructionsApply \
-  "$(git rev-parse HEAD)" \
-  "$(git branch --show-current)" \
+  "$ROOT_HASH" \
+  "$ROOT_BRANCH" \
   "apply" \
   {providers...}
 ```
@@ -259,9 +256,9 @@ Apply complete.
 
 ## References
 
-- Quality criteria: `references/docs/agent-instruction.md`
-- Cross-provider rules: `references/docs/rules-files.md`
-- Cursor-specific format: `references/docs/cursor-rules-files.md`
+- Quality criteria: `.agents/docs/agent-instruction.md`
+- Cross-provider rules: `.agents/docs/rules-files.md`
+- Cursor-specific format: `.agents/docs/cursor-rules-files.md`
 - Analysis artifact: `.oat/repo/analysis/agent-instructions-*.md`
 - Templates: `references/instruction-file-templates/`
 - Apply plan template: `references/apply-plan-template.md`

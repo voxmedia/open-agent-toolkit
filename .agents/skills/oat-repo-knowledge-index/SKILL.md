@@ -68,7 +68,7 @@ Store as `HEAD_SHA` and `MERGE_BASE_SHA` for frontmatter.
 **Purpose:** Create a fast, lightweight index immediately so other skills can load it without waiting for full analysis.
 
 ```bash
-oat index init --head-sha "$HEAD_SHA" --merge-base-sha "$MERGE_BASE_SHA"
+pnpm run cli -- index init --head-sha "$HEAD_SHA" --merge-base-sha "$MERGE_BASE_SHA"
 ```
 
 This script:
@@ -633,8 +633,12 @@ Generated from commit: {MERGE_BASE_SHA}"
 Record the knowledge index run in the shared tracking manifest:
 
 ```bash
+ROOT_TARGET=$(bash .agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh root)
+ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
+ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
+
 bash .agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh \
-  write knowledgeIndex "$(git rev-parse HEAD)" "$(git branch --show-current)" full \
+  write knowledgeIndex "$ROOT_HASH" "$ROOT_BRANCH" full \
   --artifact-path ".oat/repo/knowledge/"
 ```
 
@@ -665,7 +669,7 @@ Next: Start a project with oat-project-new or explore knowledge files
 After knowledge base generation, regenerate the repo state dashboard:
 
 ```bash
-oat state refresh
+pnpm run cli -- state refresh
 ```
 
 This ensures the dashboard reflects fresh knowledge status immediately.
