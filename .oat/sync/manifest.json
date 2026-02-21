@@ -703,16 +703,6 @@
       "lastSynced": "2026-02-19T00:57:37.032Z"
     },
     {
-      "canonicalPath": ".agents/skills/oat-project-subagent-implement",
-      "providerPath": ".claude/skills/oat-project-subagent-implement",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "isFile": false,
-      "lastSynced": "2026-02-20T01:55:28.976Z"
-    },
-    {
       "canonicalPath": ".agents/skills/oat-worktree-bootstrap-auto",
       "providerPath": ".claude/skills/oat-worktree-bootstrap-auto",
       "provider": "claude",
@@ -721,16 +711,6 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-02-20T01:55:28.976Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-project-subagent-implement",
-      "providerPath": ".cursor/skills/oat-project-subagent-implement",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "isFile": false,
-      "lastSynced": "2026-02-20T01:55:28.977Z"
     },
     {
       "canonicalPath": ".agents/skills/oat-worktree-bootstrap-auto",
@@ -781,7 +761,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-02-20T01:49:00.470Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-subagent-implement",
+      "providerPath": ".claude/skills/oat-project-subagent-implement",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-21T19:48:38.913Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-subagent-implement",
+      "providerPath": ".cursor/skills/oat-project-subagent-implement",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-21T19:48:38.914Z"
     }
   ],
-  "lastUpdated": "2026-02-20T01:55:28.977Z"
+  "lastUpdated": "2026-02-21T19:48:38.914Z"
 }

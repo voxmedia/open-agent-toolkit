@@ -55,13 +55,10 @@ yarn-error.log*
 # OAT repo archive (local historical scratch only)
 .oat/repo/archive/**
 
-# Ignore provider-managed local symlink views
-.claude/skills/**
-.claude/commands/**
-.cursor/skills/**
-.cursor/commands/**
-
 .conductor
 
 # Git worktrees (local dev only)
 .worktrees/
+# Ignore claude worktrees
+.claude/worktrees/
+.claude/worktrees/**
