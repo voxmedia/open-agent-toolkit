@@ -1,0 +1,4 @@
+{
+  "setup": ["pnpm run worktree:init"],
+  "teardown": []
+}
