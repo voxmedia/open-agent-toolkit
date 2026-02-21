@@ -14,7 +14,9 @@ import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { loadManifest, type Manifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import { geminiAdapter } from '@providers/gemini';
 import type { ConcreteScope } from '@shared/types';
 import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
@@ -66,7 +68,13 @@ async function checkSymlinkSupportDefault(
 async function checkProvidersDefault(
   scopeRoot: string,
 ): Promise<Array<{ name: string; detected: boolean; version: string | null }>> {
-  const adapters = [claudeAdapter, cursorAdapter, codexAdapter];
+  const adapters = [
+    claudeAdapter,
+    cursorAdapter,
+    codexAdapter,
+    copilotAdapter,
+    geminiAdapter,
+  ];
 
   return Promise.all(
     adapters.map(async (adapter) => ({

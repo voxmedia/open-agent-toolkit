@@ -1,31 +1,31 @@
 import type { PathMapping } from '@providers/shared/adapter.types';
 
-export const CODEX_PROJECT_MAPPINGS: PathMapping[] = [
+export const COPILOT_PROJECT_MAPPINGS: PathMapping[] = [
   {
     contentType: 'skill',
     canonicalDir: '.agents/skills',
-    providerDir: '.agents/skills',
-    nativeRead: true,
+    providerDir: '.github/skills',
+    nativeRead: false,
   },
   {
     contentType: 'agent',
     canonicalDir: '.agents/agents',
-    providerDir: '.agents/agents',
-    nativeRead: true,
+    providerDir: '.github/agents',
+    nativeRead: false,
   },
 ];
 
-export const CODEX_USER_MAPPINGS: PathMapping[] = [
+export const COPILOT_USER_MAPPINGS: PathMapping[] = [
   {
     contentType: 'skill',
     canonicalDir: '.agents/skills',
-    providerDir: '.agents/skills',
-    nativeRead: true,
+    providerDir: '.copilot/skills',
+    nativeRead: false,
   },
   {
     contentType: 'agent',
     canonicalDir: '.agents/agents',
-    providerDir: '.agents/agents',
-    nativeRead: true,
+    providerDir: '.copilot/agents',
+    nativeRead: false,
   },
 ];

@@ -21,7 +21,9 @@ import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { loadManifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import { geminiAdapter } from '@providers/gemini';
 import {
   getConfigAwareAdapters,
   type ProviderAdapter,
@@ -53,7 +55,13 @@ function defaultDependencies(): SyncCommandDependencies {
     saveSyncConfig,
     scanCanonical,
     getAdapters() {
-      return [claudeAdapter, cursorAdapter, codexAdapter];
+      return [
+        claudeAdapter,
+        cursorAdapter,
+        codexAdapter,
+        copilotAdapter,
+        geminiAdapter,
+      ];
     },
     getConfigAwareAdapters,
     selectProvidersWithAbort: selectManyWithAbort,

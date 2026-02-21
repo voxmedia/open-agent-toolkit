@@ -249,13 +249,49 @@ git commit -m "feat(p02-t02): register Copilot and Gemini providers in all comma
 
 ---
 
+### Task p02-t03: (review) Add agent mappings to Codex provider
+
+Codex project and user mappings only include `skill` but should also include `agent` with `nativeRead: true` — same pattern as Gemini. Codex reads `.agents/agents/` natively just like `.agents/skills/`.
+
+**Files:**
+- Modify: `packages/cli/src/providers/codex/paths.ts` — Add agent to both project and user mappings
+- Modify: `packages/cli/src/providers/codex/adapter.test.ts` — Update expected mappings
+
+**Step 1: Write test (RED)**
+
+Update Codex adapter test to expect agent mappings in both project and user mappings.
+
+Run: `pnpm --filter @oat/cli test -- --run packages/cli/src/providers/codex/adapter.test.ts`
+Expected: Test fails (RED)
+
+**Step 2: Implement fix (GREEN)**
+
+Add `{ contentType: 'agent', canonicalDir: '.agents/agents', providerDir: '.agents/agents', nativeRead: true }` to both `CODEX_PROJECT_MAPPINGS` and `CODEX_USER_MAPPINGS`.
+
+Run: `pnpm --filter @oat/cli test -- --run packages/cli/src/providers/`
+Expected: All tests pass (GREEN)
+
+**Step 3: Verify**
+
+Run: `pnpm lint && pnpm type-check`
+Expected: No errors
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/providers/codex/
+git commit -m "fix(p02-t03): add agent mappings to Codex provider"
+```
+
+---
+
 ## Reviews
 
 | Scope | Type | Status | Date | Artifact |
 |-------|------|--------|------|----------|
 | p01 | code | pending | - | - |
 | p02 | code | pending | - | - |
-| final | code | pending | - | - |
+| final | code | passed | 2026-02-21 | reviews/final-review-2026-02-21.md |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
 | plan | artifact | passed | 2026-02-21 | reviews/artifact-plan-review-2026-02-21.md |
@@ -274,9 +310,9 @@ git commit -m "feat(p02-t02): register Copilot and Gemini providers in all comma
 
 **Summary:**
 - Phase 1: 2 tasks - New Gemini and Copilot provider adapters
-- Phase 2: 2 tasks - User-scope agents for all providers + command registration
+- Phase 2: 3 tasks - User-scope agents for all providers + command registration + review fix
 
-**Total: 4 tasks**
+**Total: 5 tasks**
 
 Status: Pending implementation.
 

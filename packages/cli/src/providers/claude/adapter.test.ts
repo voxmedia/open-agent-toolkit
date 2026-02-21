@@ -38,12 +38,18 @@ describe('claudeAdapter', () => {
     ]);
   });
 
-  it('user mappings: skills → .claude/skills', () => {
+  it('user mappings: skills → .claude/skills, agents → .claude/agents', () => {
     expect(claudeAdapter.userMappings).toEqual([
       {
         contentType: 'skill',
         canonicalDir: '.agents/skills',
         providerDir: '.claude/skills',
+        nativeRead: false,
+      },
+      {
+        contentType: 'agent',
+        canonicalDir: '.agents/agents',
+        providerDir: '.claude/agents',
         nativeRead: false,
       },
     ]);

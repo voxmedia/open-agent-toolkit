@@ -1,6 +1,6 @@
 import type { PathMapping } from '@providers/shared/adapter.types';
 
-export const CODEX_PROJECT_MAPPINGS: PathMapping[] = [
+export const GEMINI_PROJECT_MAPPINGS: PathMapping[] = [
   {
     contentType: 'skill',
     canonicalDir: '.agents/skills',
@@ -15,7 +15,7 @@ export const CODEX_PROJECT_MAPPINGS: PathMapping[] = [
   },
 ];
 
-export const CODEX_USER_MAPPINGS: PathMapping[] = [
+export const GEMINI_USER_MAPPINGS: PathMapping[] = [
   {
     contentType: 'skill',
     canonicalDir: '.agents/skills',

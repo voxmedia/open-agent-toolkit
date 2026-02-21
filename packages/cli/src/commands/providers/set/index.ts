@@ -11,7 +11,9 @@ import {
 import { resolveProjectRoot } from '@fs/paths';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import { geminiAdapter } from '@providers/gemini';
 import { Command } from 'commander';
 
 interface ProvidersSetOptions {
@@ -50,7 +52,13 @@ function createDependencies(): ProvidersSetDependencies {
       throw new Error(PROJECT_SCOPE_ONLY_MESSAGE);
     },
     getAdapters() {
-      return [claudeAdapter, cursorAdapter, codexAdapter];
+      return [
+        claudeAdapter,
+        cursorAdapter,
+        codexAdapter,
+        copilotAdapter,
+        geminiAdapter,
+      ];
     },
     async loadSyncConfig(configPath) {
       return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);

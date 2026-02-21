@@ -40,7 +40,9 @@ import {
 import type { Manifest } from '@manifest/manifest.types';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import { geminiAdapter } from '@providers/gemini';
 import {
   type ConfigAwareAdaptersResult,
   getActiveAdapters,
@@ -60,7 +62,13 @@ const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';
 
 function getDefaultAdapters(): ProviderAdapter[] {
-  return [claudeAdapter, cursorAdapter, codexAdapter];
+  return [
+    claudeAdapter,
+    cursorAdapter,
+    codexAdapter,
+    copilotAdapter,
+    geminiAdapter,
+  ];
 }
 
 interface InitOptions extends GlobalOptions {

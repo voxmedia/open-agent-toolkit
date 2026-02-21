@@ -30,21 +30,28 @@ describe('codexAdapter', () => {
     expect(skillMapping?.providerDir).toBe('.agents/skills');
   });
 
-  it('project mappings include only skills', () => {
+  it('project mappings include skills and agents', () => {
     const agentMapping = codexAdapter.projectMappings.find(
       (mapping) => mapping.contentType === 'agent',
     );
 
-    expect(agentMapping).toBeUndefined();
-    expect(codexAdapter.projectMappings).toHaveLength(1);
+    expect(agentMapping?.nativeRead).toBe(true);
+    expect(agentMapping?.providerDir).toBe('.agents/agents');
+    expect(codexAdapter.projectMappings).toHaveLength(2);
   });
 
-  it('user skills mapping has nativeRead: true', () => {
+  it('user mappings include skills and agents with nativeRead: true', () => {
     expect(codexAdapter.userMappings).toEqual([
       {
         contentType: 'skill',
         canonicalDir: '.agents/skills',
         providerDir: '.agents/skills',
+        nativeRead: true,
+      },
+      {
+        contentType: 'agent',
+        canonicalDir: '.agents/agents',
+        providerDir: '.agents/agents',
         nativeRead: true,
       },
     ]);

@@ -37,12 +37,18 @@ describe('cursorAdapter', () => {
     expect(agentMapping?.providerDir).toBe('.cursor/agents');
   });
 
-  it('user mappings: skills → .cursor/skills', () => {
+  it('user mappings: skills → .cursor/skills, agents → .cursor/agents', () => {
     expect(cursorAdapter.userMappings).toEqual([
       {
         contentType: 'skill',
         canonicalDir: '.agents/skills',
         providerDir: '.cursor/skills',
+        nativeRead: false,
+      },
+      {
+        contentType: 'agent',
+        canonicalDir: '.agents/agents',
+        providerDir: '.cursor/agents',
         nativeRead: false,
       },
     ]);

@@ -14,7 +14,9 @@ import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { loadManifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import { geminiAdapter } from '@providers/gemini';
 import { getSyncMappings } from '@providers/shared';
 import type { ContentType } from '@shared/types';
 import { Command } from 'commander';
@@ -82,7 +84,13 @@ function createDependencies(): ProvidersListDependencies {
       return resolveScopeRoot(scope, context.cwd, context.home);
     },
     getAdapters() {
-      return [claudeAdapter, cursorAdapter, codexAdapter];
+      return [
+        claudeAdapter,
+        cursorAdapter,
+        codexAdapter,
+        copilotAdapter,
+        geminiAdapter,
+      ];
     },
     getSyncMappings,
     loadManifest,

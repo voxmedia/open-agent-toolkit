@@ -25,7 +25,9 @@ import type { Manifest } from '@manifest/index';
 import { loadManifest, saveManifest } from '@manifest/manager';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import { geminiAdapter } from '@providers/gemini';
 import {
   getActiveAdapters,
   getSyncMappings,
@@ -127,7 +129,13 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   saveManifest,
   scanCanonical,
   getAdapters() {
-    return [claudeAdapter, cursorAdapter, codexAdapter];
+    return [
+      claudeAdapter,
+      cursorAdapter,
+      codexAdapter,
+      copilotAdapter,
+      geminiAdapter,
+    ];
   },
   getActiveAdapters,
   getSyncMappings,

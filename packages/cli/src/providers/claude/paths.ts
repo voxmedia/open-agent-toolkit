@@ -22,4 +22,10 @@ export const CLAUDE_USER_MAPPINGS: PathMapping[] = [
     providerDir: '.claude/skills',
     nativeRead: false,
   },
+  {
+    contentType: 'agent',
+    canonicalDir: '.agents/agents',
+    providerDir: '.claude/agents',
+    nativeRead: false,
+  },
 ];

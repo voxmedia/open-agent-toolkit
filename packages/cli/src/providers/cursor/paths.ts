@@ -22,4 +22,10 @@ export const CURSOR_USER_MAPPINGS: PathMapping[] = [
     providerDir: '.cursor/skills',
     nativeRead: false,
   },
+  {
+    contentType: 'agent',
+    canonicalDir: '.agents/agents',
+    providerDir: '.cursor/agents',
+    nativeRead: false,
+  },
 ];
