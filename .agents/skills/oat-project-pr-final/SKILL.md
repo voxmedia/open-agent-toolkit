@@ -247,22 +247,20 @@ Do you want to open a PR now?
 2) No (I will open manually)
 ```
 
-If user chooses (1), provide best-effort guidance:
-- Strip YAML frontmatter from the local artifact into a temporary body file:
-  ```bash
-  BODY_FILE="{path}"
-  TMP_BODY="$(mktemp -t oat-pr-body.XXXXXX.md)"
-  sed '1{/^---$/d;}; 1,/^---$/d' "$BODY_FILE" > "$TMP_BODY"
-  ```
-- Use the stripped body file with `gh`:
+If user chooses (1):
+
+**CRITICAL — Strip YAML frontmatter before submitting to GitHub.**
+The local artifact file contains YAML frontmatter (`---` delimited block at the top) for OAT metadata. This frontmatter MUST NOT appear in the GitHub PR body. Before passing the file to `gh pr create`, strip everything from the start of the file through and including the closing `---` line. Verify the resulting body starts with the markdown heading (e.g., `# feat: ...`), not YAML keys.
+
+Steps:
+1. Write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
+2. Verify the temp file does not start with YAML frontmatter keys.
+3. Push and create the PR:
 ```bash
 git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
 gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 ```
-- Optionally clean up temp file:
-  ```bash
-  rm -f "$TMP_BODY"
-  ```
+4. Clean up the temp file.
 
 Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
 
