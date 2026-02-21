@@ -27,8 +27,7 @@ oat_generated: false
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user
-- [x] Set `oat_plan_hill_phases` in frontmatter
+- [x] HiLL checkpoints: none required (imported plan, no lifecycle gates)
 
 ---
 
@@ -163,7 +162,7 @@ The contract test currently enforces that user mappings contain only `skill` con
 - Modify: `packages/cli/src/providers/claude/adapter.test.ts` — Update expected user mappings
 - Modify: `packages/cli/src/providers/cursor/adapter.test.ts` — Update expected user mappings
 
-Note: Codex and Gemini already have user-scope agent mappings via `nativeRead: true` (pointing at `.agents/agents`). Copilot already has user-scope agents in its mappings from p01-t02.
+Note: Copilot already has user-scope agents in its mappings from p01-t02. Codex and Gemini use `nativeRead: true` pointing at `.agents/agents` — verify that Codex actually supports `~/.agents/agents/` at user scope before adding (check Codex docs or test empirically). If Codex does not support user-scope agents, omit the agent mapping from `CODEX_USER_MAPPINGS` and document the limitation.
 
 **Step 1: Write test (RED)**
 
@@ -259,7 +258,7 @@ git commit -m "feat(p02-t02): register Copilot and Gemini providers in all comma
 | final | code | pending | - | - |
 | spec | artifact | pending | - | - |
 | design | artifact | pending | - | - |
-| plan | artifact | received | 2026-02-21 | reviews/artifact-plan-review-2026-02-21.md |
+| plan | artifact | passed | 2026-02-21 | reviews/artifact-plan-review-2026-02-21.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -279,7 +278,7 @@ git commit -m "feat(p02-t02): register Copilot and Gemini providers in all comma
 
 **Total: 4 tasks**
 
-Ready for code review and merge.
+Status: Pending implementation.
 
 ---
 
