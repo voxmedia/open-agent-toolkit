@@ -24,6 +24,29 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
   - Created: YYYY-MM-DD
 
+- [ ] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows**
+  - Context: The OAT project workflow currently assumes the AI agent does the coding with discipline: atomic commits tied to task numbers, updating `implementation.md` as it executes the plan. When a human implements tasks manually without following this discipline, artifacts drift from reality and downstream skills (project review, final review) become less accurate or require extra effort to reconstruct state.
+  - Proposed change:
+    - Add a reconciliation skill that bridges the gap between human implementation and OAT's artifact-driven workflow.
+    - **Checkpoint anchor concept**: Find the last commit matching an OAT-style task-number commit pattern. Treat that as a checkpoint — artifacts before it are likely accurate. Then examine all commits (or the diff) between that checkpoint and HEAD to detect "human drift" from the plan.
+    - **Reconciliation output**: Produce suggested updates such as:
+      - "Task 5 appears addressed by commits A, B, C"
+      - "These changes don't map to any planned task — new unplanned work detected"
+      - "Implementation doc missing entries for X; proposed log entries below"
+    - Auto-update `implementation.md` with drafted entries for human-implemented work.
+    - Potentially update plan state (task status) or flag mismatches.
+    - Provide a lightweight confirmation/editing loop (human-in-the-loop) when uncertain about mappings.
+  - Success criteria:
+    - Skill can identify the last OAT-structured checkpoint commit and scope analysis to post-checkpoint changes.
+    - Produces accurate mapping of commits → planned tasks (including flagging unmapped/unplanned work).
+    - Generates draft `implementation.md` entries that maintain the same format/quality as AI-generated entries.
+    - Downstream skills (project review, final review) produce reliable results after reconciliation runs.
+    - Human-in-the-loop confirmation for uncertain mappings — no silent assumptions.
+  - Links:
+    - Related skills: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-implement`
+    - Related artifacts: `implementation.md`, `plan.md` (task status)
+  - Created: 2026-02-21
+
 - [ ] **(P1) [skills] Enforce autonomous review gates in `oat-project-subagent-implement`**
   - Context: The skill's autonomous review gate (Step 4) has no hard enforcement before merge (Step 5). During first real usage (adding Copilot/Gemini providers), Phase 1 subagents were dispatched and merged without the review gate running.
   - Proposed change:
