@@ -184,18 +184,24 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Created: 2026-02-14
 
 
-- [ ] **(P2) [skills] Add PR review follow-on skill set (`provide/respond/summarize`)**
+- [ ] **(P2) [skills] Add PR review follow-on skill set (remaining: `provide-remote`, `respond-remote`, `summarize-remote`)**
   - Target milestone/phase: Post review receive skill family
   - Notes:
-    - Evaluate and add `oat-review-pr-provide`, `oat-review-pr-respond`, and `oat-review-pr-summarize`.
-    - Scope these as optional extensions once base review receive workflow is stable.
+    - **Already implemented:** `oat-review-receive-remote` and `oat-project-review-receive-remote` handle ingesting PR review comments into actionable tasks.
+    - **Remaining skills to evaluate:**
+      - `oat-review-provide-remote` / `oat-project-review-provide-remote`: Post OAT review findings as GitHub PR review comments (reverse of receive-remote).
+      - `oat-review-respond-remote` / `oat-project-review-respond-remote`: Reply to individual PR review threads after fixes are applied (mark resolved, post fix summary).
+      - `oat-review-summarize-remote` / `oat-project-review-summarize-remote`: Generate a summary comment on a PR (changes overview, review status, outstanding items).
+    - Scope these as optional extensions; core review flow works without them.
   - Success criteria:
-    - Clear contracts and non-overlapping responsibilities for each PR review skill.
+    - Clear contracts and non-overlapping responsibilities for each skill.
     - Optional set can be adopted incrementally without changing core review flow.
+    - All GitHub interactions require explicit user confirmation before posting.
   - Links:
     - Source discussion: OAT feature ideas (potential future review extensions)
     - Prerequisite (completed): review receive skill family (PR #29)
   - Created: 2026-02-14
+  - Updated: 2026-02-23
 
 - [ ] **(P2) [skills] Add dependency intelligence skill family**
   - Target milestone/phase: Post naming normalization
