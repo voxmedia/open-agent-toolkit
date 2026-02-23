@@ -1,5 +1,6 @@
 ---
 name: oat-project-design
+version: 1.0.0
 description: Use when discovery and specification are complete and implementation-ready decisions are needed. Produces detailed technical design artifacts, including architecture and interfaces.
 disable-model-invocation: true
 user-invocable: true

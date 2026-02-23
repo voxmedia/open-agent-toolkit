@@ -12,7 +12,7 @@ OAT is organized as three distinct capabilities that can be used together or ind
 
 - Interop-only users:
   - Start with `docs/oat/quickstart.md`
-  - Then `docs/oat/cli/index.md` and `docs/oat/cli/provider-interop/index.md`
+  - Then `docs/oat/cli/index.md` (bootstrap/tool-packs/diagnostics) and `docs/oat/cli/provider-interop/index.md` (status/sync/providers)
 - Provider-agnostic tooling users:
   - Start with `docs/oat/skills/index.md`
   - Then `docs/oat/reference/index.md`
@@ -27,6 +27,9 @@ OAT is organized as three distinct capabilities that can be used together or ind
 - Quickstart: `docs/oat/quickstart.md`
 - CLI docs index: `docs/oat/cli/index.md`
 - CLI design principles: `docs/oat/cli/design-principles.md`
+- CLI bootstrap docs: `docs/oat/cli/bootstrap.md`
+- CLI tool-pack docs: `docs/oat/cli/tool-packs-and-assets.md`
+- CLI diagnostics docs: `docs/oat/cli/diagnostics.md`
 - Provider interop docs index: `docs/oat/cli/provider-interop/index.md`
 - Workflow docs index: `docs/oat/workflow/index.md`
 - Skills map: `docs/oat/skills/index.md`

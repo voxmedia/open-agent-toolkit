@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   copyDirWithStatus,
+  copyDirWithVersionCheck,
   copyFileWithStatus,
   pathExists,
 } from './copy-helpers';
@@ -95,5 +96,140 @@ describe('copy-helpers', () => {
     await expect(readFile(destinationFile, 'utf8')).resolves.toContain(
       'from-source',
     );
+  });
+
+  it('copyDirWithVersionCheck returns copied for new installs', async () => {
+    const root = await makeTempDir();
+    const sourceDir = join(root, 'source-skill');
+    const destinationDir = join(root, 'destination-skill');
+    await mkdir(sourceDir, { recursive: true });
+    await writeFile(
+      join(sourceDir, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 1.0.0\n---\n',
+      'utf8',
+    );
+
+    await expect(
+      copyDirWithVersionCheck(sourceDir, destinationDir, false),
+    ).resolves.toEqual({ status: 'copied' });
+  });
+
+  it('copyDirWithVersionCheck returns updated for force updates', async () => {
+    const root = await makeTempDir();
+    const sourceDir = join(root, 'source-skill');
+    const destinationDir = join(root, 'destination-skill');
+    await mkdir(sourceDir, { recursive: true });
+    await mkdir(destinationDir, { recursive: true });
+    await writeFile(
+      join(sourceDir, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 1.0.0\n---\n',
+      'utf8',
+    );
+    await writeFile(
+      join(destinationDir, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 0.9.0\n---\n',
+      'utf8',
+    );
+    await writeFile(join(destinationDir, 'payload.txt'), 'mutated\n', 'utf8');
+
+    await expect(
+      copyDirWithVersionCheck(sourceDir, destinationDir, true),
+    ).resolves.toEqual({ status: 'updated' });
+    await expect(pathExists(join(destinationDir, 'payload.txt'))).resolves.toBe(
+      false,
+    );
+  });
+
+  it('copyDirWithVersionCheck returns outdated when bundled is newer', async () => {
+    const root = await makeTempDir();
+    const sourceDir = join(root, 'source-skill');
+    const destinationDir = join(root, 'destination-skill');
+    await mkdir(sourceDir, { recursive: true });
+    await mkdir(destinationDir, { recursive: true });
+    await writeFile(
+      join(sourceDir, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 1.2.0\n---\n',
+      'utf8',
+    );
+    await writeFile(
+      join(destinationDir, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 1.1.0\n---\n',
+      'utf8',
+    );
+    await writeFile(join(destinationDir, 'payload.txt'), 'mutated\n', 'utf8');
+
+    await expect(
+      copyDirWithVersionCheck(sourceDir, destinationDir, false),
+    ).resolves.toEqual({
+      status: 'outdated',
+      installedVersion: '1.1.0',
+      bundledVersion: '1.2.0',
+    });
+    await expect(
+      readFile(join(destinationDir, 'payload.txt'), 'utf8'),
+    ).resolves.toBe('mutated\n');
+  });
+
+  it('copyDirWithVersionCheck returns skipped when versions are current or newer', async () => {
+    const root = await makeTempDir();
+    const sourceDir = join(root, 'source-skill');
+    const destinationDirCurrent = join(root, 'destination-skill-current');
+    const destinationDirNewer = join(root, 'destination-skill-newer');
+
+    await mkdir(sourceDir, { recursive: true });
+    await mkdir(destinationDirCurrent, { recursive: true });
+    await mkdir(destinationDirNewer, { recursive: true });
+
+    await writeFile(
+      join(sourceDir, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 1.2.0\n---\n',
+      'utf8',
+    );
+    await writeFile(
+      join(destinationDirCurrent, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 1.2.0\n---\n',
+      'utf8',
+    );
+    await writeFile(
+      join(destinationDirNewer, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 2.0.0\n---\n',
+      'utf8',
+    );
+
+    await expect(
+      copyDirWithVersionCheck(sourceDir, destinationDirCurrent, false),
+    ).resolves.toEqual({ status: 'skipped' });
+    await expect(
+      copyDirWithVersionCheck(sourceDir, destinationDirNewer, false),
+    ).resolves.toEqual({ status: 'skipped' });
+  });
+
+  it('copyDirWithVersionCheck treats missing version as 0.0.0', async () => {
+    const root = await makeTempDir();
+    const sourceDir = join(root, 'source-skill');
+    const destinationDir = join(root, 'destination-skill');
+    await mkdir(sourceDir, { recursive: true });
+    await mkdir(destinationDir, { recursive: true });
+    await writeFile(
+      join(sourceDir, 'SKILL.md'),
+      '---\nname: oat-demo\n---\n',
+      'utf8',
+    );
+    await writeFile(
+      join(destinationDir, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 1.0.0\n---\n',
+      'utf8',
+    );
+
+    await expect(
+      copyDirWithVersionCheck(sourceDir, destinationDir, false),
+    ).resolves.toEqual({ status: 'skipped' });
+    await expect(
+      copyDirWithVersionCheck(destinationDir, sourceDir, false),
+    ).resolves.toEqual({
+      status: 'outdated',
+      installedVersion: null,
+      bundledVersion: '1.0.0',
+    });
   });
 });

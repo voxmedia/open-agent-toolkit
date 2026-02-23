@@ -44,6 +44,7 @@ describe('help output snapshots', () => {
         sync [options]   Sync canonical content to provider views
         config           Read and write OAT config values
         providers        Inspect provider capabilities and paths
+        remove           Remove installed skills and managed provider views
         doctor           Run environment and setup diagnostics
         cleanup          Cleanup OAT project and artifact hygiene issues
         instructions     Manage AGENTS.md and CLAUDE.md instruction file integrity
@@ -190,6 +191,75 @@ describe('help output snapshots', () => {
 
       Options:
         -h, --help  display help for command
+      "
+    `);
+  });
+
+  it('remove --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['remove']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat remove [options] [command]
+
+      Remove installed skills and managed provider views
+
+      Options:
+        -h, --help              display help for command
+
+      Commands:
+        skill [options] <name>  Remove a single installed skill by name
+        skills [options]        Remove installed skills by pack
+        help [command]          display help for command
+      "
+    `);
+  });
+
+  it('remove command exposes both skill and skills subcommands', () => {
+    const program = createRegisteredProgram();
+    const removeCommand = getCommandByPath(program, ['remove']);
+    const commandNames = removeCommand.commands.map((command) =>
+      command.name(),
+    );
+    expect(commandNames).toContain('skill');
+    expect(commandNames).toContain('skills');
+  });
+
+  it('remove skill --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'remove',
+      'skill',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat remove skill [options] <name>
+
+      Remove a single installed skill by name
+
+      Arguments:
+        name        Skill name (e.g., oat-idea-scratchpad)
+
+      Options:
+        --apply     Apply removal changes (default is dry-run)
+        -h, --help  display help for command
+      "
+    `);
+  });
+
+  it('remove skills --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'remove',
+      'skills',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat remove skills [options]
+
+      Remove installed skills by pack
+
+      Options:
+        --pack <pack>  Skill pack to remove (ideas|workflows|utility)
+        --apply        Apply removal changes (default is dry-run)
+        -h, --help     display help for command
       "
     `);
   });

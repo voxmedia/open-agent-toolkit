@@ -1,5 +1,6 @@
 ---
 name: oat-project-implement
+version: 1.0.0
 description: Use when plan.md is ready for execution. Implements plan tasks sequentially with TDD discipline and state tracking.
 disable-model-invocation: true
 user-invocable: true

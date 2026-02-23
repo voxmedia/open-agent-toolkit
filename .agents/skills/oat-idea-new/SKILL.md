@@ -1,5 +1,6 @@
 ---
 name: oat-idea-new
+version: 1.0.0
 description: Use when starting ideation for a new concept or problem. Creates an idea directory for lightweight capture and handoff to ongoing ideation.
 argument-hint: "<idea-name> [--global]"
 disable-model-invocation: true

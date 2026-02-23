@@ -7,24 +7,35 @@ The CLI is a standalone value path: you can use it without adopting OAT workflow
 ## Contents
 
 - [`design-principles.md`](design-principles.md) — Cross-cutting CLI design and implementation conventions.
+- [`bootstrap.md`](bootstrap.md) — Foundational CLI setup (`oat init`).
+- [`tool-packs-and-assets.md`](tool-packs-and-assets.md) — OAT tool-pack install/update/remove lifecycle (`oat init tools`, `oat remove`).
+- [`diagnostics.md`](diagnostics.md) — Cross-cutting diagnostics (`oat doctor`).
 - [`provider-interop/index.md`](provider-interop/index.md) — Provider-interop command surface and behavior.
 
 ## Command Groups
 
-### Core Commands
+### Bootstrap Commands
 
 | Command | Purpose |
 |---------|---------|
-| `oat init` | Initialize canonical directories, manifest, and tool packs. Sets up `.agents/skills/`, provider views, and the sync manifest. |
-| `oat status` | Report provider sync and drift status. Shows which skills are in sync, drifted, or missing across providers. |
-| `oat sync` | Sync canonical content to provider views. Use `--apply` to execute the sync plan. |
-| `oat instructions` | Validate and repair AGENTS.md to CLAUDE.md pointer integrity. Includes `validate` (read-only) and `sync` (dry-run/apply). |
-| `oat doctor` | Run environment and setup diagnostics. Checks Node version, pnpm availability, directory structure, and manifest health. |
+| `oat init` | Initialize canonical directories, sync config/manifest, and optional setup hooks. Sets up the base OAT structure for a scope. |
+
+See [`bootstrap.md`](bootstrap.md) for details.
+
+### Tool Packs and Installed Assets
+
+| Command | Purpose |
+|---------|---------|
+| `oat init tools` | Install OAT tool packs (`ideas`, `workflows`, `utility`) with version-aware outdated-skill reporting and interactive update prompts in TTY mode. |
+| `oat remove` | Remove installed skills or packs (`remove skill`, `remove skills --pack`) with dry-run by default and managed provider-view cleanup on apply. |
+
+See [`tool-packs-and-assets.md`](tool-packs-and-assets.md) for details.
 
 ### Instruction Integrity Commands
 
 | Command | Purpose |
 |---------|---------|
+| `oat instructions` | Validate and repair AGENTS.md to CLAUDE.md pointer integrity. Includes `validate` (read-only) and `sync` (dry-run/apply). |
 | `oat instructions validate` | Read-only integrity check for AGENTS.md sibling CLAUDE.md pointer files. Returns non-zero when missing or mismatched pointers are found. |
 | `oat instructions sync` | Plan/apply pointer repairs. Dry-run by default; use `--apply` to write and `--force` to overwrite mismatched CLAUDE.md content. |
 
@@ -32,12 +43,22 @@ The CLI is a standalone value path: you can use it without adopting OAT workflow
 
 | Command | Purpose |
 |---------|---------|
+| `oat status` | Report provider sync and drift status. Shows which skills are in sync, drifted, or missing across providers. |
+| `oat sync` | Sync canonical content to provider views. Use `--apply` to execute the sync plan. |
 | `oat providers` | Inspect provider capabilities and paths. Lists registered providers and their configuration. |
 | `oat providers set` | Set provider enable/disable state for a scope. See [`provider-interop/commands.md`](provider-interop/commands.md). |
 | `oat providers inspect` | Inspect a specific provider's paths, capabilities, and sync state. |
 | `oat providers list` | List all registered providers with their enabled/disabled status. |
 
 See [`provider-interop/`](provider-interop/index.md) for detailed provider-interop documentation.
+
+### Diagnostics
+
+| Command | Purpose |
+|---------|---------|
+| `oat doctor` | Run environment and setup diagnostics, including bundled-vs-installed OAT skill version checks with `oat init tools` remediation guidance. |
+
+See [`diagnostics.md`](diagnostics.md) for details.
 
 ### Project Lifecycle Commands
 

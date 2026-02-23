@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import {
-  copyDirWithStatus,
+  copyDirWithVersionCheck,
   copyFileWithStatus,
 } from '@commands/init/tools/shared/copy-helpers';
 
@@ -31,6 +31,11 @@ export interface InstallIdeasResult {
   copiedSkills: string[];
   updatedSkills: string[];
   skippedSkills: string[];
+  outdatedSkills: Array<{
+    name: string;
+    installed: string | null;
+    bundled: string | null;
+  }>;
   copiedInfraFiles: string[];
   updatedInfraFiles: string[];
   skippedInfraFiles: string[];
@@ -49,6 +54,7 @@ export async function installIdeas(
     copiedSkills: [],
     updatedSkills: [],
     skippedSkills: [],
+    outdatedSkills: [],
     copiedInfraFiles: [],
     updatedInfraFiles: [],
     skippedInfraFiles: [],
@@ -60,12 +66,22 @@ export async function installIdeas(
   for (const skill of IDEA_SKILLS) {
     const source = join(options.assetsRoot, 'skills', skill);
     const destination = join(options.targetRoot, '.agents', 'skills', skill);
-    const copyStatus = await copyDirWithStatus(source, destination, force);
+    const copyResult = await copyDirWithVersionCheck(
+      source,
+      destination,
+      force,
+    );
 
-    if (copyStatus === 'copied') {
+    if (copyResult.status === 'copied') {
       result.copiedSkills.push(skill);
-    } else if (copyStatus === 'updated') {
+    } else if (copyResult.status === 'updated') {
       result.updatedSkills.push(skill);
+    } else if (copyResult.status === 'outdated') {
+      result.outdatedSkills.push({
+        name: skill,
+        installed: copyResult.installedVersion ?? null,
+        bundled: copyResult.bundledVersion ?? null,
+      });
     } else {
       result.skippedSkills.push(skill);
     }

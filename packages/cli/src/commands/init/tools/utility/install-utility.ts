@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
+import { copyDirWithVersionCheck } from '@commands/init/tools/shared/copy-helpers';
 
 export const UTILITY_SKILLS = [
   'oat-review-provide',
@@ -20,6 +20,11 @@ export interface InstallUtilityResult {
   copiedSkills: string[];
   updatedSkills: string[];
   skippedSkills: string[];
+  outdatedSkills: Array<{
+    name: string;
+    installed: string | null;
+    bundled: string | null;
+  }>;
 }
 
 export async function installUtility(
@@ -30,17 +35,28 @@ export async function installUtility(
     copiedSkills: [],
     updatedSkills: [],
     skippedSkills: [],
+    outdatedSkills: [],
   };
 
   for (const skill of options.skills) {
     const source = join(options.assetsRoot, 'skills', skill);
     const destination = join(options.targetRoot, '.agents', 'skills', skill);
-    const status = await copyDirWithStatus(source, destination, force);
+    const resultWithVersion = await copyDirWithVersionCheck(
+      source,
+      destination,
+      force,
+    );
 
-    if (status === 'copied') {
+    if (resultWithVersion.status === 'copied') {
       result.copiedSkills.push(skill);
-    } else if (status === 'updated') {
+    } else if (resultWithVersion.status === 'updated') {
       result.updatedSkills.push(skill);
+    } else if (resultWithVersion.status === 'outdated') {
+      result.outdatedSkills.push({
+        name: skill,
+        installed: resultWithVersion.installedVersion ?? null,
+        bundled: resultWithVersion.bundledVersion ?? null,
+      });
     } else {
       result.skippedSkills.push(skill);
     }

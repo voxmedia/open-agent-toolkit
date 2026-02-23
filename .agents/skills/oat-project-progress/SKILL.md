@@ -1,5 +1,6 @@
 ---
 name: oat-project-progress
+version: 1.0.0
 description: Use when resuming work, checking status, or unsure which OAT skill to run next. Evaluates project progress and routes to the appropriate next step.
 disable-model-invocation: true
 user-invocable: true

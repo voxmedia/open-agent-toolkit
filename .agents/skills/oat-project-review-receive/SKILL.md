@@ -1,5 +1,6 @@
 ---
 name: oat-project-review-receive
+version: 1.0.0
 description: Use when review findings from oat-project-review-provide need closure. Converts review artifacts into actionable plan tasks.
 disable-model-invocation: true
 user-invocable: true

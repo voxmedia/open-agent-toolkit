@@ -1,7 +1,7 @@
 import { chmod, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import {
-  copyDirWithStatus,
+  copyDirWithVersionCheck,
   copyFileWithStatus,
 } from '@commands/init/tools/shared/copy-helpers';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
@@ -60,6 +60,11 @@ export interface InstallWorkflowsResult {
   copiedSkills: string[];
   updatedSkills: string[];
   skippedSkills: string[];
+  outdatedSkills: Array<{
+    name: string;
+    installed: string | null;
+    bundled: string | null;
+  }>;
   copiedAgents: string[];
   updatedAgents: string[];
   skippedAgents: string[];
@@ -82,6 +87,7 @@ export async function installWorkflows(
     copiedSkills: [],
     updatedSkills: [],
     skippedSkills: [],
+    outdatedSkills: [],
     copiedAgents: [],
     updatedAgents: [],
     skippedAgents: [],
@@ -98,12 +104,22 @@ export async function installWorkflows(
   for (const skill of WORKFLOW_SKILLS) {
     const source = join(options.assetsRoot, 'skills', skill);
     const destination = join(options.targetRoot, '.agents', 'skills', skill);
-    const copyStatus = await copyDirWithStatus(source, destination, force);
+    const copyResult = await copyDirWithVersionCheck(
+      source,
+      destination,
+      force,
+    );
 
-    if (copyStatus === 'copied') {
+    if (copyResult.status === 'copied') {
       result.copiedSkills.push(skill);
-    } else if (copyStatus === 'updated') {
+    } else if (copyResult.status === 'updated') {
       result.updatedSkills.push(skill);
+    } else if (copyResult.status === 'outdated') {
+      result.outdatedSkills.push({
+        name: skill,
+        installed: copyResult.installedVersion ?? null,
+        bundled: copyResult.bundledVersion ?? null,
+      });
     } else {
       result.skippedSkills.push(skill);
     }

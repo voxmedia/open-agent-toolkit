@@ -1,5 +1,6 @@
 ---
 name: oat-project-review-provide
+version: 1.0.0
 description: Use when completed work in an active OAT project needs a quality gate before merge. Performs a lifecycle-scoped review after a task, phase, or full implementation, unlike oat-review-provide.
 disable-model-invocation: true
 user-invocable: true

@@ -19,12 +19,12 @@ async function seedAssets(assetsRoot: string): Promise<void> {
   await mkdir(join(assetsRoot, 'skills', 'other-skill'), { recursive: true });
   await writeFile(
     join(assetsRoot, 'skills', 'oat-review-provide', 'SKILL.md'),
-    '# oat-review-provide\n',
+    '---\nname: oat-review-provide\nversion: 1.0.0\n---\n',
     'utf8',
   );
   await writeFile(
     join(assetsRoot, 'skills', 'other-skill', 'SKILL.md'),
-    '# other-skill\n',
+    '---\nname: other-skill\nversion: 1.0.0\n---\n',
     'utf8',
   );
 }
@@ -52,6 +52,7 @@ describe('installUtility', () => {
     });
 
     expect(result.copiedSkills).toEqual(['oat-review-provide']);
+    expect(result.outdatedSkills).toEqual([]);
     await expect(
       readFile(
         join(targetRoot, '.agents', 'skills', 'oat-review-provide', 'SKILL.md'),
@@ -73,6 +74,7 @@ describe('installUtility', () => {
     });
 
     expect(result.copiedSkills).toEqual(['oat-review-provide']);
+    expect(result.outdatedSkills).toEqual([]);
     await expect(
       readFile(
         join(userRoot, '.agents', 'skills', 'oat-review-provide', 'SKILL.md'),
@@ -101,6 +103,7 @@ describe('installUtility', () => {
     expect(second.copiedSkills).toEqual([]);
     expect(second.updatedSkills).toEqual([]);
     expect(second.skippedSkills).toEqual(['oat-review-provide']);
+    expect(second.outdatedSkills).toEqual([]);
   });
 
   it('installs only selected skills from skills array', async () => {
@@ -116,6 +119,7 @@ describe('installUtility', () => {
     });
 
     expect(result.copiedSkills).toEqual(['other-skill']);
+    expect(result.outdatedSkills).toEqual([]);
     await expect(
       readFile(
         join(targetRoot, '.agents', 'skills', 'other-skill', 'SKILL.md'),
@@ -161,8 +165,40 @@ describe('installUtility', () => {
     expect(result.copiedSkills).toEqual([]);
     expect(result.updatedSkills).toEqual(['oat-review-provide']);
     expect(result.skippedSkills).toEqual([]);
+    expect(result.outdatedSkills).toEqual([]);
     await expect(readFile(installedSkillPath, 'utf8')).resolves.toContain(
       'oat-review-provide',
     );
+  });
+
+  it('tracks outdated utility skills when bundled version is newer', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+    await installUtility({
+      assetsRoot,
+      targetRoot,
+      skills: ['oat-review-provide'],
+    });
+
+    await writeFile(
+      join(assetsRoot, 'skills', 'oat-review-provide', 'SKILL.md'),
+      '---\nname: oat-review-provide\nversion: 1.1.0\n---\n',
+      'utf8',
+    );
+
+    const result = await installUtility({
+      assetsRoot,
+      targetRoot,
+      skills: ['oat-review-provide'],
+    });
+
+    expect(result.copiedSkills).toEqual([]);
+    expect(result.updatedSkills).toEqual([]);
+    expect(result.skippedSkills).toEqual([]);
+    expect(result.outdatedSkills).toEqual([
+      { name: 'oat-review-provide', installed: '1.0.0', bundled: '1.1.0' },
+    ]);
   });
 });

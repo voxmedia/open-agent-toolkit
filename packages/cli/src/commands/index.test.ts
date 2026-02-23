@@ -40,6 +40,18 @@ describe('command registration', () => {
     expect(commandNames()).toContain('doctor');
   });
 
+  it('program has remove command with skill and skills', () => {
+    const program = createProgram();
+    registerCommands(program);
+    const remove = program.commands.find(
+      (command) => command.name() === 'remove',
+    );
+
+    expect(remove).toBeDefined();
+    const subcommands = remove?.commands.map((command) => command.name()) ?? [];
+    expect(subcommands).toEqual(expect.arrayContaining(['skill', 'skills']));
+  });
+
   it('program has cleanup command with project and artifacts', () => {
     const program = createProgram();
     registerCommands(program);
@@ -106,6 +118,7 @@ describe('command registration', () => {
     expect(help).toContain('sync');
     expect(help).toContain('config');
     expect(help).toContain('providers');
+    expect(help).toContain('remove');
     expect(help).toContain('doctor');
     expect(help).toContain('cleanup');
     expect(help).toContain('instructions');

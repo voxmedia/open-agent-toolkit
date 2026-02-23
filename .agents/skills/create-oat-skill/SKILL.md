@@ -1,5 +1,6 @@
 ---
 name: create-oat-skill
+version: 1.0.0
 description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
 argument-hint: "[skill-name]"
 disable-model-invocation: true
@@ -16,6 +17,7 @@ Create a new OAT workflow skill under `.agents/skills/` that follows OAT convent
 This skill is a specialization of the general skill-creation workflow.
 
 - Follow the baseline principles and structure from `.agents/skills/create-skill/SKILL.md` (progressive disclosure, section layout, examples, troubleshooting, success criteria).
+- Apply the same frontmatter versioning rules from `create-skill`: include `version: 1.0.0` for new skills and bump patch/minor/major on future edits.
 - This skill adds/overrides only the OAT-specific requirements (progress banners, `{PROJECTS_ROOT}` + local-config active-project resolution, and OAT-safe bash patterns).
 
 ## When to Use
@@ -55,6 +57,10 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 - `## Progress Indicators (User-Facing)` (with separator banner)
 - `### Step 0: Resolve Active Project` (if project-scoped)
 - `## Success Criteria`
+
+**Required frontmatter metadata:**
+- Include `version: 1.0.0` for new skills.
+- On later edits, bump patch for fixes/clarifications, minor for backward-compatible behavior additions, major for breaking workflow/interface changes.
 
 **Progress indicators (required):**
 - Start-of-skill banner with horizontal separators:
@@ -162,6 +168,7 @@ We should add a new OAT skill to archive completed projects. Create the skill wi
 ## Success Criteria
 
 - ✅ New skill created at `.agents/skills/{skill-name}/SKILL.md`
+- ✅ Skill frontmatter includes valid semver `version:` (`1.0.0` for new skills)
 - ✅ Skill includes required OAT sections (mode + progress + project resolution if applicable)
 - ✅ Skill registered in `AGENTS.md`
 - ✅ `pnpm oat:validate-skills` passes

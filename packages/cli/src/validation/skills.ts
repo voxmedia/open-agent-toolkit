@@ -1,5 +1,6 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 
 export interface ValidationFinding {
   file: string;
@@ -20,11 +21,6 @@ async function isDirectory(path: string): Promise<boolean> {
   }
 }
 
-function getFrontmatterBlock(content: string): string | null {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n/m);
-  return match?.[1] ?? null;
-}
-
 function frontmatterHasKey(frontmatter: string, key: string): boolean {
   const re = new RegExp(`^${key}:`, 'm');
   return re.test(frontmatter);
@@ -34,6 +30,10 @@ function getFrontmatterScalar(frontmatter: string, key: string): string | null {
   const re = new RegExp(`^${key}:\\s*(.*)$`, 'm');
   const match = frontmatter.match(re);
   return match?.[1]?.trim() ?? null;
+}
+
+function isValidSemver(value: string): boolean {
+  return /^\d+\.\d+\.\d+$/.test(value);
 }
 
 function hasProgressIndicatorsSection(content: string): boolean {
@@ -126,6 +126,16 @@ export async function validateOatSkills(
             message: `Frontmatter description exceeds 500 characters (${frontmatterDescription.length})`,
           });
         }
+      }
+    }
+
+    if (frontmatterHasKey(fm, 'version')) {
+      const version = getFrontmatterScalar(fm, 'version') ?? '';
+      if (!isValidSemver(version)) {
+        findings.push({
+          file: skillPath,
+          message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
+        });
       }
     }
 

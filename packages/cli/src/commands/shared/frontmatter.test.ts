@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   getFrontmatterBlock,
   getFrontmatterField,
+  getSkillVersion,
   parseFrontmatterField,
 } from './frontmatter';
 
@@ -98,6 +99,45 @@ describe('frontmatter', () => {
       await writeFile(filePath, '# Just a heading');
 
       expect(await parseFrontmatterField(filePath, 'oat_phase')).toBe('');
+    });
+  });
+
+  describe('getSkillVersion', () => {
+    it('returns the version when present in SKILL.md frontmatter', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-skill-'));
+      tempDirs.push(dir);
+      const skillPath = join(dir, 'SKILL.md');
+      await writeFile(
+        skillPath,
+        '---\nname: oat-demo\nversion: 1.2.3\n---\n# Body',
+      );
+
+      expect(await getSkillVersion(dir)).toBe('1.2.3');
+    });
+
+    it('returns null when version is missing', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-skill-'));
+      tempDirs.push(dir);
+      const skillPath = join(dir, 'SKILL.md');
+      await writeFile(skillPath, '---\nname: oat-demo\n---\n# Body');
+
+      expect(await getSkillVersion(dir)).toBeNull();
+    });
+
+    it('returns null when SKILL.md has no frontmatter', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-skill-'));
+      tempDirs.push(dir);
+      const skillPath = join(dir, 'SKILL.md');
+      await writeFile(skillPath, '# Body only');
+
+      expect(await getSkillVersion(dir)).toBeNull();
+    });
+
+    it('returns null when SKILL.md is missing', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-skill-'));
+      tempDirs.push(dir);
+
+      await expect(getSkillVersion(dir)).resolves.toBeNull();
     });
   });
 });

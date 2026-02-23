@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 export function getFrontmatterBlock(content: string): string | null {
   const match = content.match(/^---\n([\s\S]*?)\n---/);
@@ -27,4 +28,16 @@ export async function parseFrontmatterField(
   } catch {
     return '';
   }
+}
+
+export async function getSkillVersion(
+  skillDir: string,
+): Promise<string | null> {
+  // parseFrontmatterField() returns '' when SKILL.md is missing or unreadable,
+  // so read failures are normalized to null here.
+  const version = await parseFrontmatterField(
+    join(skillDir, 'SKILL.md'),
+    'version',
+  );
+  return version.length > 0 ? version : null;
 }

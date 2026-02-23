@@ -32,6 +32,28 @@ Notes:
 - `sync` is dry-run by default.
 - `--apply` performs filesystem changes.
 
+### Install or update OAT tool packs (optional)
+
+```bash
+pnpm run cli -- init tools
+```
+
+Notes:
+- Installs OAT tool packs (`ideas`, `workflows`, `utility`) into canonical directories.
+- If installed OAT skills are older than bundled versions, interactive runs prompt for selective updates.
+- Non-interactive runs report outdated skills without updating them.
+
+### Remove installed skills or packs (optional)
+
+```bash
+pnpm run cli -- remove skill oat-idea-scratchpad        # dry-run
+pnpm run cli -- remove skills --pack utility --apply    # apply pack removal
+```
+
+Notes:
+- `oat remove` is dry-run by default; use `--apply` to perform deletions.
+- Managed provider views are removed alongside canonical skill deletion; unmanaged views are preserved with warnings.
+
 ### Validate instruction pointers
 
 ```bash
@@ -66,10 +88,12 @@ When `@oat/cli` is consumed as a built package or linked binary, use `oat` direc
 ```bash
 oat --help
 oat init --scope project
+oat init tools
 oat status --scope all
 oat sync --scope all --apply
 oat instructions validate
 oat instructions sync --apply
+oat remove skills --pack utility
 oat doctor --scope all
 oat project new my-project --mode spec-driven
 ```

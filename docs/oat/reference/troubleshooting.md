@@ -34,6 +34,12 @@ Expected for native-read skill mappings. Codex can read canonical skills without
 - Run `oat init` for the relevant scope.
 - Re-run `oat doctor` after initialization.
 
+## `doctor` warns about outdated installed OAT skills
+
+- Run `oat init tools` to install/update bundled OAT tool packs.
+- In TTY mode, select which outdated skills to update when prompted.
+- In non-interactive mode, rerun the relevant pack subcommand with `--force` if you want to overwrite outdated installed skills.
+
 ## Manifest not found or invalid
 
 - Missing manifest: run `sync --apply` or `init`

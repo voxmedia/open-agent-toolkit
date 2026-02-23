@@ -38,7 +38,11 @@ async function seedAssets(assetsRoot: string): Promise<void> {
   for (const skill of IDEA_SKILLS) {
     const skillDir = join(skillsRoot, skill);
     await mkdir(skillDir, { recursive: true });
-    await writeFile(join(skillDir, 'SKILL.md'), `# ${skill}\n`, 'utf8');
+    await writeFile(
+      join(skillDir, 'SKILL.md'),
+      `---\nname: ${skill}\nversion: 1.0.0\n---\n`,
+      'utf8',
+    );
   }
 
   for (const file of INFRA_FILES) {
@@ -87,6 +91,7 @@ describe('installIdeas', () => {
     expect(result.copiedTemplates).toHaveLength(2);
     expect(result.updatedSkills).toEqual([]);
     expect(result.skippedSkills).toEqual([]);
+    expect(result.outdatedSkills).toEqual([]);
 
     for (const skill of IDEA_SKILLS) {
       await expect(
@@ -125,6 +130,7 @@ describe('installIdeas', () => {
     expect(second.updatedInfraFiles).toEqual([]);
     expect(second.updatedTemplates).toEqual([]);
     expect(second.skippedSkills).toHaveLength(4);
+    expect(second.outdatedSkills).toEqual([]);
     expect(second.skippedInfraFiles).toHaveLength(2);
     expect(second.skippedTemplates).toHaveLength(2);
   });
@@ -140,7 +146,7 @@ describe('installIdeas', () => {
     });
     await writeFile(
       join(targetRoot, '.agents', 'skills', 'oat-idea-new', 'SKILL.md'),
-      'existing\n',
+      '---\nname: oat-idea-new\nversion: 1.0.0\n---\n',
       'utf8',
     );
 
@@ -148,6 +154,7 @@ describe('installIdeas', () => {
 
     expect(result.skippedSkills).toEqual(['oat-idea-new']);
     expect(result.copiedSkills).toHaveLength(3);
+    expect(result.outdatedSkills).toEqual([]);
     expect(result.copiedInfraFiles).toHaveLength(2);
     expect(result.copiedTemplates).toHaveLength(2);
   });
@@ -172,11 +179,35 @@ describe('installIdeas', () => {
     expect(result.copiedInfraFiles).toEqual([]);
     expect(result.copiedTemplates).toEqual([]);
     expect(result.updatedSkills).toHaveLength(4);
+    expect(result.outdatedSkills).toEqual([]);
     expect(result.updatedInfraFiles).toHaveLength(2);
     expect(result.updatedTemplates).toHaveLength(2);
 
     await expect(
       read(join(targetRoot, '.agents', 'skills', 'oat-idea-new', 'SKILL.md')),
-    ).resolves.toContain('# oat-idea-new');
+    ).resolves.toContain('name: oat-idea-new');
+  });
+
+  it('tracks outdated skills when bundled versions are newer', async () => {
+    const workspaceRoot = await makeTempDir();
+    const assetsRoot = join(workspaceRoot, 'assets');
+    const targetRoot = join(workspaceRoot, 'target');
+    await seedAssets(assetsRoot);
+    await installIdeas({ assetsRoot, targetRoot });
+
+    await writeFile(
+      join(assetsRoot, 'skills', 'oat-idea-new', 'SKILL.md'),
+      '---\nname: oat-idea-new\nversion: 1.1.0\n---\n',
+      'utf8',
+    );
+
+    const result = await installIdeas({ assetsRoot, targetRoot });
+
+    expect(result.outdatedSkills).toEqual([
+      { name: 'oat-idea-new', installed: '1.0.0', bundled: '1.1.0' },
+    ]);
+    await expect(
+      read(join(targetRoot, '.agents', 'skills', 'oat-idea-new', 'SKILL.md')),
+    ).resolves.toContain('version: 1.0.0');
   });
 });

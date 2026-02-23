@@ -11,7 +11,7 @@ Shared CLI conventions live in `docs/oat/cli/design-principles.md`.
 - `docs/oat/cli/provider-interop/overview.md`
   - Scope, principles, and command surface.
 - `docs/oat/cli/provider-interop/commands.md`
-  - Command-level behavior (`init`, `status`, `sync`, `providers`, `cleanup`, `doctor`).
+  - Command-level behavior for provider interop (`status`, `sync`, `providers ...`).
 - `docs/oat/cli/provider-interop/providers.md`
   - Provider-specific mapping behavior (Claude, Cursor, Copilot, Gemini, Codex).
 - `docs/oat/cli/provider-interop/manifest-and-drift.md`
@@ -20,3 +20,9 @@ Shared CLI conventions live in `docs/oat/cli/design-principles.md`.
   - Sync config model (`.oat/sync/config.json`) and provider enablement semantics.
 - `docs/oat/cli/provider-interop/hooks-and-safety.md`
   - Hook behavior and operational safety contracts.
+
+## Related CLI docs (non-interop command families)
+
+- `docs/oat/cli/bootstrap.md` (`oat init`)
+- `docs/oat/cli/tool-packs-and-assets.md` (`oat init tools`, `oat remove`)
+- `docs/oat/cli/diagnostics.md` (`oat doctor`)

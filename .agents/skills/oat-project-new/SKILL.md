@@ -1,5 +1,6 @@
 ---
 name: oat-project-new
+version: 1.0.0
 description: Use when starting a spec-driven OAT project from scratch. Scaffolds a new project under PROJECTS_ROOT and sets it active.
 argument-hint: "<project-name> [--force]"
 disable-model-invocation: true

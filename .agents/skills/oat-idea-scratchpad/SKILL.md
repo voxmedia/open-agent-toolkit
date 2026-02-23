@@ -1,5 +1,6 @@
 ---
 name: oat-idea-scratchpad
+version: 1.0.0
 description: Use when you need quick idea capture or want to review scratchpad entries. Manages lightweight idea seeds and optional notes.
 argument-hint: "[review | capture] [--global]"
 disable-model-invocation: true

@@ -27,6 +27,9 @@ Adjust based on complexity—not all sections are required:
 name: skill-name
 # Required: kebab-case, max 64 chars, must match directory name
 
+version: 1.0.0
+# Required: semver. Start new skills at 1.0.0.
+
 description: Use when [trigger condition]. [What it does as disambiguation keywords].
 # Required: Single line, ≤ 500 chars. Lead with "when to use" — this is the routing trigger.
 # Agents load ONLY name+description at startup to decide relevance.
@@ -160,6 +163,12 @@ Successful completion means:
 | Simple command-like | Concise | update-doc-refs, create-ticket |
 | Reference/standards | Detailed | repo-documentation |
 | Helper (auto-invoked) | Moderate | read-relevant-docs |
+
+## Versioning Guidance
+
+- Include `version:` in frontmatter for every skill and use semver (`MAJOR.MINOR.PATCH`).
+- Start new skills at `1.0.0`.
+- Bump patch for fixes/clarifications, minor for backward-compatible behavior additions, major for breaking workflow/interface changes.
 
 ## Cross-Provider Portability Notes
 

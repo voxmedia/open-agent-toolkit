@@ -70,7 +70,11 @@ async function seedAssets(
   for (const skill of WORKFLOW_SKILLS) {
     const dir = join(assetsRoot, 'skills', skill);
     await mkdir(dir, { recursive: true });
-    await writeFile(join(dir, 'SKILL.md'), `# ${skill}\n`, 'utf8');
+    await writeFile(
+      join(dir, 'SKILL.md'),
+      `---\nname: ${skill}\nversion: 1.0.0\n---\n`,
+      'utf8',
+    );
   }
 
   for (const agent of WORKFLOW_AGENTS) {
@@ -113,6 +117,7 @@ describe('installWorkflows', () => {
     const result = await installWorkflows({ assetsRoot, targetRoot });
 
     expect(result.copiedSkills).toHaveLength(21);
+    expect(result.outdatedSkills).toEqual([]);
     expect(result.copiedAgents).toHaveLength(2);
     expect(result.copiedTemplates).toHaveLength(6);
     expect(result.copiedScripts).toHaveLength(2);
@@ -203,6 +208,7 @@ describe('installWorkflows', () => {
     expect(second.copiedTemplates).toEqual([]);
     expect(second.copiedScripts).toEqual([]);
     expect(second.skippedSkills).toHaveLength(21);
+    expect(second.outdatedSkills).toEqual([]);
     expect(second.skippedAgents).toHaveLength(2);
     expect(second.skippedTemplates).toHaveLength(6);
     expect(second.skippedScripts).toHaveLength(2);
@@ -228,8 +234,60 @@ describe('installWorkflows', () => {
     });
 
     expect(result.updatedSkills).toHaveLength(21);
+    expect(result.outdatedSkills).toEqual([]);
     expect(result.updatedAgents).toHaveLength(2);
     expect(result.updatedTemplates).toHaveLength(6);
     expect(result.updatedScripts).toHaveLength(2);
+  });
+
+  it('tracks outdated skills without overwriting when not forced', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+    await installWorkflows({ assetsRoot, targetRoot });
+
+    await writeFile(
+      join(assetsRoot, 'skills', 'oat-project-new', 'SKILL.md'),
+      '---\nname: oat-project-new\nversion: 1.1.0\n---\n',
+      'utf8',
+    );
+
+    const result = await installWorkflows({ assetsRoot, targetRoot });
+
+    expect(result.outdatedSkills).toEqual([
+      { name: 'oat-project-new', installed: '1.0.0', bundled: '1.1.0' },
+    ]);
+    await expect(
+      readFile(
+        join(targetRoot, '.agents', 'skills', 'oat-project-new', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('version: 1.0.0');
+  });
+
+  it('preserves null version fields for unversioned outdated skills', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+    await installWorkflows({ assetsRoot, targetRoot });
+
+    await writeFile(
+      join(targetRoot, '.agents', 'skills', 'oat-project-new', 'SKILL.md'),
+      '---\nname: oat-project-new\n---\n',
+      'utf8',
+    );
+    await writeFile(
+      join(assetsRoot, 'skills', 'oat-project-new', 'SKILL.md'),
+      '---\nname: oat-project-new\nversion: 1.1.0\n---\n',
+      'utf8',
+    );
+
+    const result = await installWorkflows({ assetsRoot, targetRoot });
+
+    expect(result.outdatedSkills).toEqual([
+      { name: 'oat-project-new', installed: null, bundled: '1.1.0' },
+    ]);
   });
 });

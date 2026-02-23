@@ -34,7 +34,7 @@ flowchart TD
 
 | Mode | Best for | Primary entry points |
 |---|---|---|
-| Interop-only | Canonical skill/agent sync + drift diagnostics | `oat init`, `oat status`, `oat sync`, `oat instructions ...`, `oat providers ...`, `oat cleanup ...`, `oat doctor` |
+| Interop-only | Canonical skill/agent sync + drift diagnostics + tool-pack lifecycle | `oat init`, `oat init tools`, `oat status`, `oat sync`, `oat instructions ...`, `oat providers ...`, `oat remove ...`, `oat cleanup ...`, `oat doctor` |
 | Provider-agnostic tooling | Reusing skills/utilities without spec-driven lifecycle overhead | `docs/oat/skills/index.md`, selected `oat-*` skills |
 | Workflow | Structured execution with durable artifacts and review gates | `oat-project-new`/`oat-project-open`, then lane-specific skills |
 
@@ -46,6 +46,8 @@ Use OAT only for cross-provider asset management:
 - Detect drift and strays
 - Sync provider views safely
 - Validate AGENTS.md to CLAUDE.md pointer integrity and repair drift
+- Install/update bundled OAT tool packs with version-aware prompts (`oat init tools`)
+- Remove installed skills or packs (`oat remove ...`) with dry-run/apply semantics
 - Audit and clean workflow/project hygiene drift
 - Run diagnostics
 
@@ -55,9 +57,12 @@ Primary commands:
 - `oat sync`
 - `oat instructions validate`
 - `oat instructions sync`
+- `oat init tools`
 - `oat providers list`
 - `oat providers inspect <provider>`
 - `oat providers set`
+- `oat remove skill <name>`
+- `oat remove skills --pack <ideas|workflows|utility>`
 - `oat cleanup project`
 - `oat cleanup artifacts`
 - `oat doctor`
@@ -150,6 +155,17 @@ Notes:
 - In non-interactive contexts, set provider intent explicitly:
   - `pnpm run cli -- providers set --scope project --enabled claude,codex --disabled cursor`
 
+### 3.5) Install or update OAT tool packs (optional)
+
+```bash
+pnpm run cli -- init tools
+```
+
+Notes:
+- Installs OAT skills/agents/templates/scripts by pack (`ideas`, `workflows`, `utility`).
+- When installed skills are older than bundled versions, interactive runs prompt you to update selected skills.
+- Non-interactive runs report outdated skills without updating them (use pack subcommands with `--force` to overwrite).
+
 ### 4) Validate instruction pointers (recommended)
 
 ```bash
@@ -233,6 +249,8 @@ oat sync --scope all
 oat sync --scope all --apply
 oat instructions validate
 oat instructions sync --apply
+oat init tools
+oat remove skills --pack utility     # dry-run by default
 oat cleanup project
 oat cleanup artifacts
 oat doctor --scope all

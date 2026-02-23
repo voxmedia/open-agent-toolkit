@@ -1,4 +1,11 @@
-import { access, mkdtemp, readFile, rm, symlink } from 'node:fs/promises';
+import {
+  access,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  symlink,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -6,10 +13,13 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { compareVersions } from '@commands/init/tools/shared/version';
+import { getSkillVersion } from '@commands/shared/frontmatter';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
+import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import TOML from '@iarna/toml';
 import { loadManifest, type Manifest } from '@manifest/index';
@@ -37,6 +47,24 @@ interface DoctorDependencies {
     Array<{ name: string; detected: boolean; version: string | null }>
   >;
   readFile: (path: string) => Promise<string>;
+  resolveAssetsRoot: () => Promise<string>;
+  checkSkillVersions: (
+    scopeRoot: string,
+    assetsRoot: string,
+    pathExists: (path: string) => Promise<boolean>,
+  ) => Promise<SkillVersionReport>;
+}
+
+interface OutdatedSkillVersion {
+  skill: string;
+  installedVersion: string | null;
+  bundledVersion: string | null;
+}
+
+interface SkillVersionReport {
+  installedSkillCount: number;
+  skippedMissingBundledCount: number;
+  outdatedSkills: OutdatedSkillVersion[];
 }
 
 async function pathExistsDefault(path: string): Promise<boolean> {
@@ -87,6 +115,77 @@ async function checkProvidersDefault(
   );
 }
 
+async function checkSkillVersionsDefault(
+  scopeRoot: string,
+  assetsRoot: string,
+  pathExists: (path: string) => Promise<boolean>,
+): Promise<SkillVersionReport> {
+  const installedSkillsRoot = join(scopeRoot, '.agents', 'skills');
+  const entries = await readdir(installedSkillsRoot, {
+    withFileTypes: true,
+    encoding: 'utf8',
+  }).catch(() => null);
+  if (!entries) {
+    return {
+      installedSkillCount: 0,
+      skippedMissingBundledCount: 0,
+      outdatedSkills: [],
+    };
+  }
+
+  const skillNames = entries
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith('oat-'))
+    .map((entry) => entry.name)
+    .sort();
+
+  const outdatedSkills: OutdatedSkillVersion[] = [];
+  let skippedMissingBundledCount = 0;
+
+  for (const skillName of skillNames) {
+    const installedSkillDir = join(installedSkillsRoot, skillName);
+    const bundledSkillDir = join(assetsRoot, 'skills', skillName);
+    const bundledExists = await pathExists(bundledSkillDir);
+    if (!bundledExists) {
+      skippedMissingBundledCount += 1;
+      continue;
+    }
+
+    const [installedVersion, bundledVersion] = await Promise.all([
+      getSkillVersion(installedSkillDir),
+      getSkillVersion(bundledSkillDir),
+    ]);
+    const comparison = compareVersions(installedVersion, bundledVersion);
+    if (comparison === 'outdated') {
+      outdatedSkills.push({
+        skill: skillName,
+        installedVersion: installedVersion ?? null,
+        bundledVersion: bundledVersion ?? null,
+      });
+    }
+  }
+
+  return {
+    installedSkillCount: skillNames.length,
+    skippedMissingBundledCount,
+    outdatedSkills,
+  };
+}
+
+function formatVersionForDisplay(version: string | null): string {
+  return version ?? '(unversioned)';
+}
+
+function formatOutdatedSkillList(
+  outdatedSkills: OutdatedSkillVersion[],
+): string {
+  return outdatedSkills
+    .map(
+      (skillVersion) =>
+        `${skillVersion.skill} (${formatVersionForDisplay(skillVersion.installedVersion)} < ${formatVersionForDisplay(skillVersion.bundledVersion)})`,
+    )
+    .join(', ');
+}
+
 function createDependencies(): DoctorDependencies {
   return {
     buildCommandContext,
@@ -101,6 +200,14 @@ function createDependencies(): DoctorDependencies {
     checkSymlinkSupport: checkSymlinkSupportDefault,
     checkProviders: checkProvidersDefault,
     readFile: async (path) => readFile(path, 'utf8'),
+    resolveAssetsRoot,
+    // Default binding remains self-contained, but still honors the caller-
+    // provided pathExists dependency from runChecksForScope when available.
+    checkSkillVersions: (
+      scopeRoot,
+      assetsRoot,
+      pathExists = pathExistsDefault,
+    ) => checkSkillVersionsDefault(scopeRoot, assetsRoot, pathExists),
   };
 }
 
@@ -196,6 +303,58 @@ async function runChecksForScope(
   });
 
   if (scope === 'project') {
+    try {
+      const assetsRoot = await dependencies.resolveAssetsRoot();
+      const skillVersions = await dependencies.checkSkillVersions(
+        scopeRoot,
+        assetsRoot,
+        dependencies.pathExists,
+      );
+      if (skillVersions.outdatedSkills.length > 0) {
+        checks.push({
+          name: `${scope}:skill_versions`,
+          description: 'Installed skill version parity with bundled assets',
+          status: 'warn',
+          message: `Outdated installed skills: ${formatOutdatedSkillList(
+            skillVersions.outdatedSkills,
+          )}`,
+          fix: 'Run `oat init tools` to update outdated skills.',
+        });
+      } else if (skillVersions.installedSkillCount === 0) {
+        checks.push({
+          name: `${scope}:skill_versions`,
+          description: 'Installed skill version parity with bundled assets',
+          status: 'pass',
+          message: 'No installed oat-* skills found for version comparison.',
+        });
+      } else if (skillVersions.skippedMissingBundledCount > 0) {
+        checks.push({
+          name: `${scope}:skill_versions`,
+          description: 'Installed skill version parity with bundled assets',
+          status: 'pass',
+          message: `All comparable skill versions are current. Skipped ${skillVersions.skippedMissingBundledCount} skill(s) without bundled counterpart.`,
+        });
+      } else {
+        checks.push({
+          name: `${scope}:skill_versions`,
+          description: 'Installed skill version parity with bundled assets',
+          status: 'pass',
+          message: 'All installed skill versions are current.',
+        });
+      }
+    } catch (error) {
+      checks.push({
+        name: `${scope}:skill_versions`,
+        description: 'Installed skill version parity with bundled assets',
+        status: 'warn',
+        message:
+          error instanceof Error
+            ? `Unable to compare installed skill versions: ${error.message}`
+            : 'Unable to compare installed skill versions.',
+        fix: 'Run `pnpm build` and rerun `oat doctor`.',
+      });
+    }
+
     const codexConfigPath = join(scopeRoot, '.codex', 'config.toml');
     const codexConfigExists = await dependencies.pathExists(codexConfigPath);
 

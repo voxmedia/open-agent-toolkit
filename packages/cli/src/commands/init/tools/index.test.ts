@@ -40,6 +40,7 @@ function createHarness(options: HarnessOptions = {}) {
     copiedSkills: ['oat-idea-new'],
     updatedSkills: [],
     skippedSkills: [],
+    outdatedSkills: [],
     copiedInfraFiles: [],
     updatedInfraFiles: [],
     skippedInfraFiles: [],
@@ -51,6 +52,7 @@ function createHarness(options: HarnessOptions = {}) {
     copiedSkills: ['oat-project-new'],
     updatedSkills: [],
     skippedSkills: [],
+    outdatedSkills: [],
     copiedAgents: [],
     updatedAgents: [],
     skippedAgents: [],
@@ -66,7 +68,9 @@ function createHarness(options: HarnessOptions = {}) {
     copiedSkills: ['oat-review-provide'],
     updatedSkills: [],
     skippedSkills: [],
+    outdatedSkills: [],
   }));
+  const copyDirWithStatus = vi.fn(async () => 'updated' as const);
 
   const command = createInitToolsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -87,6 +91,7 @@ function createHarness(options: HarnessOptions = {}) {
     installIdeas,
     installWorkflows,
     installUtility,
+    copyDirWithStatus,
   });
 
   return {
@@ -97,6 +102,7 @@ function createHarness(options: HarnessOptions = {}) {
     installIdeas,
     installWorkflows,
     installUtility,
+    copyDirWithStatus,
   };
 }
 
@@ -219,5 +225,112 @@ describe('createInitToolsCommand', () => {
     expect(installUtility).not.toHaveBeenCalled();
     expect(capture.info).toContain('No tool packs selected.');
     expect(process.exitCode).toBe(0);
+  });
+
+  it('prompts for outdated skills and updates selected entries in interactive mode', async () => {
+    const {
+      command,
+      selectManyWithAbort,
+      installWorkflows,
+      copyDirWithStatus,
+    } = createHarness({
+      interactive: true,
+      packSelection: [['workflows'], ['oat-project-new']],
+    });
+
+    installWorkflows.mockResolvedValueOnce({
+      copiedSkills: [],
+      updatedSkills: [],
+      skippedSkills: ['oat-project-plan'],
+      outdatedSkills: [
+        { name: 'oat-project-new', installed: '1.0.0', bundled: '1.1.0' },
+      ],
+      copiedAgents: [],
+      updatedAgents: [],
+      skippedAgents: [],
+      copiedTemplates: [],
+      updatedTemplates: [],
+      skippedTemplates: [],
+      copiedScripts: [],
+      updatedScripts: [],
+      skippedScripts: [],
+      projectsRootInitialized: false,
+    });
+
+    await runCommand(command);
+
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(2);
+    expect(selectManyWithAbort.mock.calls[1]?.[0]).toContain(
+      'Update outdated skills?',
+    );
+    expect(copyDirWithStatus).toHaveBeenCalledTimes(1);
+    expect(copyDirWithStatus).toHaveBeenCalledWith(
+      '/tmp/assets/skills/oat-project-new',
+      '/tmp/workspace/.agents/skills/oat-project-new',
+      true,
+    );
+  });
+
+  it('reports outdated skills without updating in non-interactive mode', async () => {
+    const { command, capture, installWorkflows, copyDirWithStatus } =
+      createHarness({ interactive: false });
+
+    installWorkflows.mockResolvedValueOnce({
+      copiedSkills: [],
+      updatedSkills: [],
+      skippedSkills: ['oat-project-plan'],
+      outdatedSkills: [
+        { name: 'oat-project-new', installed: '1.0.0', bundled: '1.1.0' },
+      ],
+      copiedAgents: [],
+      updatedAgents: [],
+      skippedAgents: [],
+      copiedTemplates: [],
+      updatedTemplates: [],
+      skippedTemplates: [],
+      copiedScripts: [],
+      updatedScripts: [],
+      skippedScripts: [],
+      projectsRootInitialized: false,
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(copyDirWithStatus).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).toContain('Outdated skills:');
+    expect(capture.info.join('\n')).toContain(
+      'Non-interactive mode: outdated skills were not updated.',
+    );
+  });
+
+  it('renders unversioned outdated skill entries clearly in non-json output', async () => {
+    const { command, capture, installWorkflows } = createHarness({
+      interactive: false,
+    });
+
+    installWorkflows.mockResolvedValueOnce({
+      copiedSkills: [],
+      updatedSkills: [],
+      skippedSkills: ['oat-project-plan'],
+      outdatedSkills: [
+        { name: 'oat-project-new', installed: null, bundled: '1.1.0' },
+      ],
+      copiedAgents: [],
+      updatedAgents: [],
+      skippedAgents: [],
+      copiedTemplates: [],
+      updatedTemplates: [],
+      skippedTemplates: [],
+      copiedScripts: [],
+      updatedScripts: [],
+      skippedScripts: [],
+      projectsRootInitialized: false,
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(capture.info.join('\n')).toContain(
+      'oat-project-new  (unversioned) -> 1.1.0',
+    );
   });
 });

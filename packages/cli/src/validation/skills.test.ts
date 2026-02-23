@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -428,5 +435,140 @@ describe('validateOatSkills', () => {
         ),
       }),
     ]);
+  });
+
+  it('accepts valid semver version frontmatter when present', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    await createSkillFile(
+      root,
+      'oat-semver-valid',
+      [
+        '---',
+        'name: oat-semver-valid',
+        'version: 1.2.3',
+        'description: Use when validating optional semver version metadata in frontmatter.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('reports invalid semver version frontmatter', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-semver-invalid',
+      [
+        '---',
+        'name: oat-semver-invalid',
+        'version: 1.2',
+        'description: Use when validating invalid semver version metadata in frontmatter.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        file: skillPath,
+        message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
+      }),
+    ]);
+  });
+
+  it('requires bundled oat skill files to include valid semver versions', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const bundleScriptPath = join(
+      repoRoot,
+      'packages',
+      'cli',
+      'scripts',
+      'bundle-assets.sh',
+    );
+    const bundleScript = await readFile(bundleScriptPath, 'utf8');
+    const lines = bundleScript.split('\n');
+
+    const bundledSkills: string[] = [];
+    let inSkillsBlock = false;
+    for (const line of lines) {
+      if (line.trim() === 'SKILLS=(') {
+        inSkillsBlock = true;
+        continue;
+      }
+      if (inSkillsBlock && line.trim() === ')') {
+        break;
+      }
+      if (inSkillsBlock) {
+        const name = line.trim();
+        if (name.startsWith('oat-')) {
+          bundledSkills.push(name);
+        }
+      }
+    }
+
+    expect(bundledSkills.length).toBeGreaterThan(0);
+
+    for (const skillName of bundledSkills) {
+      const skillPath = join(
+        repoRoot,
+        '.agents',
+        'skills',
+        skillName,
+        'SKILL.md',
+      );
+      const content = await readFile(skillPath, 'utf8');
+      const match = content.match(/^version:\s*(.+)$/m);
+      expect(match?.[1]?.trim()).toMatch(/^\d+\.\d+\.\d+$/);
+    }
+  });
+
+  it('requires all repo skill files to include valid semver versions', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillsRoot = join(repoRoot, '.agents', 'skills');
+    const entries = await readdir(skillsRoot, { withFileTypes: true });
+    const skillDirs = entries
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+      .map((entry) => entry.name)
+      .sort();
+
+    expect(skillDirs.length).toBeGreaterThan(0);
+
+    const invalidVersions: string[] = [];
+    for (const skillName of skillDirs) {
+      const skillPath = join(skillsRoot, skillName, 'SKILL.md');
+      const content = await readFile(skillPath, 'utf8');
+      const version = content.match(/^version:\s*(.+)$/m)?.[1]?.trim();
+      if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
+        invalidVersions.push(`${skillName}: ${version ?? '<missing>'}`);
+      }
+    }
+
+    expect(invalidVersions).toEqual([]);
   });
 });

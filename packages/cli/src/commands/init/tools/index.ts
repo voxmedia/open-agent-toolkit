@@ -1,8 +1,10 @@
+import { join } from 'node:path';
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 import {
   type MultiSelectChoice,
   type PromptContext,
@@ -59,6 +61,22 @@ interface InitToolsDependencies {
   installUtility: (
     options: InstallUtilityOptions,
   ) => Promise<InstallUtilityResult>;
+  copyDirWithStatus: (
+    source: string,
+    destination: string,
+    force: boolean,
+  ) => Promise<'copied' | 'updated' | 'skipped'>;
+}
+
+interface OutdatedSkillRecord {
+  name: string;
+  installed: string | null;
+  bundled: string | null;
+  targetRoot: string;
+}
+
+function formatVersionForDisplay(version: string | null): string {
+  return version ?? '(unversioned)';
 }
 
 const PACK_CHOICES: MultiSelectChoice<ToolPack>[] = [
@@ -77,6 +95,7 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   installIdeas: defaultInstallIdeas,
   installWorkflows: defaultInstallWorkflows,
   installUtility: defaultInstallUtility,
+  copyDirWithStatus,
 };
 
 function isUserEligibleSelection(selections: ToolPack[]): boolean {
@@ -138,6 +157,39 @@ function reportSuccess(
   }
 }
 
+function reportOutdatedSkills(
+  context: CommandContext,
+  outdatedSkills: OutdatedSkillRecord[],
+): void {
+  if (outdatedSkills.length === 0) {
+    return;
+  }
+
+  context.logger.info('Outdated skills:');
+  for (const skill of outdatedSkills) {
+    context.logger.info(
+      `  ${skill.name}  ${formatVersionForDisplay(skill.installed)} -> ${formatVersionForDisplay(skill.bundled)}`,
+    );
+  }
+}
+
+async function updateOutdatedSkills(
+  outdatedSkills: OutdatedSkillRecord[],
+  assetsRoot: string,
+  dependencies: InitToolsDependencies,
+): Promise<string[]> {
+  const updatedNames: string[] = [];
+
+  for (const skill of outdatedSkills) {
+    const source = join(assetsRoot, 'skills', skill.name);
+    const destination = join(skill.targetRoot, '.agents', 'skills', skill.name);
+    await dependencies.copyDirWithStatus(source, destination, true);
+    updatedNames.push(skill.name);
+  }
+
+  return updatedNames;
+}
+
 async function runInitTools(
   context: CommandContext,
   dependencies: InitToolsDependencies,
@@ -174,27 +226,75 @@ async function runInitTools(
     const userEligibleRoot =
       userEligibleScope === 'user' ? userRoot : projectRoot;
     const assetsRoot = await dependencies.resolveAssetsRoot();
+    const outdatedSkills: OutdatedSkillRecord[] = [];
 
     if (selectedPacks.includes('ideas')) {
-      await dependencies.installIdeas({
+      const ideasResult = await dependencies.installIdeas({
         assetsRoot,
         targetRoot: userEligibleRoot,
       });
+      for (const skill of ideasResult.outdatedSkills) {
+        outdatedSkills.push({ ...skill, targetRoot: userEligibleRoot });
+      }
     }
 
     if (selectedPacks.includes('workflows')) {
-      await dependencies.installWorkflows({
+      const workflowsResult = await dependencies.installWorkflows({
         assetsRoot,
         targetRoot: projectRoot,
       });
+      for (const skill of workflowsResult.outdatedSkills) {
+        outdatedSkills.push({ ...skill, targetRoot: projectRoot });
+      }
     }
 
     if (selectedPacks.includes('utility')) {
-      await dependencies.installUtility({
+      const utilityResult = await dependencies.installUtility({
         assetsRoot,
         targetRoot: userEligibleRoot,
         skills: [...UTILITY_SKILLS],
       });
+      for (const skill of utilityResult.outdatedSkills) {
+        outdatedSkills.push({ ...skill, targetRoot: userEligibleRoot });
+      }
+    }
+
+    if (outdatedSkills.length > 0) {
+      reportOutdatedSkills(context, outdatedSkills);
+
+      if (context.interactive) {
+        const selectedNames =
+          (await dependencies.selectManyWithAbort(
+            'Update outdated skills?',
+            outdatedSkills.map((skill) => ({
+              label: `${skill.name} (${skill.installed} -> ${skill.bundled})`,
+              value: skill.name,
+              checked: true,
+            })),
+            { interactive: context.interactive },
+          )) ?? [];
+
+        const selectedSet = new Set(selectedNames);
+        const selectedOutdated = outdatedSkills.filter((skill) =>
+          selectedSet.has(skill.name),
+        );
+        const updatedNames = await updateOutdatedSkills(
+          selectedOutdated,
+          assetsRoot,
+          dependencies,
+        );
+
+        if (updatedNames.length > 0) {
+          context.logger.info(
+            `Updated outdated skills: ${updatedNames.join(', ')}`,
+          );
+        }
+      } else {
+        context.logger.info(
+          'Non-interactive mode: outdated skills were not updated.',
+        );
+        context.logger.info('Use --force to update installed skills.');
+      }
     }
 
     reportSuccess(context, selectedPacks, userEligibleScope);
