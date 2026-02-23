@@ -36,8 +36,11 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 - Review loop:
   - `oat-review-provide` (ad-hoc/non-project review)
+  - `oat-review-receive` (ad-hoc local review receive: parse findings, triage, generate standalone tasks)
+  - `oat-review-receive-remote` (ad-hoc GitHub PR review receive: fetch unresolved PR comments, triage, generate standalone tasks)
   - `oat-project-review-provide`
   - `oat-project-review-receive`
+  - `oat-project-review-receive-remote` (project-scoped GitHub PR review receive: fetch PR comments, create plan tasks, update project artifacts)
   - Reviewer prompt: `.agents/agents/oat-reviewer.md`
 - PR skills:
   - `oat-project-pr-progress`
@@ -49,6 +52,9 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 - `oat-agent-instructions-analyze` (scan codebase for instruction file coverage, quality, and drift; severity-rated analysis artifacts)
 - `oat-agent-instructions-apply` (interactive generation/update of instruction files with multi-provider support: AGENTS.md, Claude rules, Cursor rules, Copilot instructions)
+- CLI integrity commands:
+  - `oat instructions validate` (report missing/mismatched AGENTS.md ↔ CLAUDE.md context pointers)
+  - `oat instructions sync` (repair missing/invalid context pointers with dry-run + apply semantics)
 - Shared tracking manifest: `.oat/tracking.json` (delta mode support via `resolve-tracking.sh`)
 - 7 instruction file templates, 3 helper scripts (tracking, providers, file discovery), quality checklist and directory assessment criteria
 - Reference docs bundled as symlinks (dereferenced during CLI distribution)
@@ -71,10 +77,16 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - `oat init`, `oat status`, `oat sync`, `oat doctor`
   - `oat providers list`, `oat providers inspect`, `oat providers set`
   - `oat cleanup project`, `oat cleanup artifacts`
+  - `oat instructions validate`, `oat instructions sync`
 - Provider config model:
   - Project provider enablement lives in `.oat/sync/config.json` (`providers.<name>.enabled`).
   - `oat init --scope project` prompts for provider selection in interactive mode.
   - `oat sync --scope project` performs config-aware provider activation and mismatch remediation (interactive prompt in TTY mode, warning + remediation guidance in non-interactive mode).
+- Supported providers: Claude Code, Cursor, Codex CLI, GitHub Copilot, Gemini CLI.
+- Codex TOML sync:
+  - Canonical agent parser/renderer (`agents/canonical/`) converts markdown agent definitions to/from structured format.
+  - Codex codec (`providers/codex/codec/`) handles export-to-codex, import-from-codex, config-merge, and sync-extension for TOML-based agent configuration.
+  - Sync extension generates `.codex/agents/*.toml` role files and merges role declarations into `.codex/config.toml`.
 - Worktree bootstrap:
   - Root script: `pnpm run worktree:init` (`pnpm install && pnpm run build && pnpm run cli -- sync --scope project --apply`).
   - Workflow skill: `oat-worktree-bootstrap`.
@@ -154,6 +166,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 Non-project review path:
 - If no active project/state exists, use `oat-review-provide` (commit range, branch range, staged/unstaged, or explicit file list).
+- To receive/triage review findings outside project context: `oat-review-receive` (local artifacts) or `oat-review-receive-remote` (GitHub PR comments).
 
 Interop quickstart:
 1. Initialize canonical/provider sync scaffolding:
@@ -171,7 +184,7 @@ Interop quickstart:
 - Repo-level dashboard:
   - Repo State Dashboard (`.oat/state.md`) exists, but needs to be made first-class (clear generation/refresh workflow + keep docs in sync with current semantics)
 - Provider interop (CLI):
-  - Core command surface is implemented; remaining work is lifecycle polish (for example, uninstall/remove flows, broader provider capability matrix, and additional ergonomics)
+  - Core command surface and Codex TOML sync are implemented; remaining work is lifecycle polish (for example, uninstall/remove flows, broader provider capability matrix, and additional ergonomics)
 - Multi-project model:
   - Core lifecycle switching is implemented (`oat project open/pause`, config-backed active project state); remaining work is broader branch-aware multi-project automation and local/shared model polish
 - Parallel execution + reconciliation:

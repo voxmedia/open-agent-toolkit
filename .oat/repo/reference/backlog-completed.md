@@ -14,6 +14,41 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [skills] Complete review receive + PR-review intake skill family**
+  - Outcome:
+    - Added `oat-review-receive` for ad-hoc local review artifact triage (parse findings, classify severity, generate standalone tasks).
+    - Added `oat-review-receive-remote` for ad-hoc GitHub PR review comment ingestion (fetch unresolved comments via `npx agent-reviews`, triage, generate standalone tasks).
+    - Added `oat-project-review-receive-remote` for project-scoped GitHub PR review receive (fetch PR comments, create plan tasks, update project artifacts).
+    - All review receive skills enforce non-mutating mode (no code changes, no silent dismissals).
+  - Links:
+    - Skills: `.agents/skills/oat-review-receive/`, `.agents/skills/oat-review-receive-remote/`, `.agents/skills/oat-project-review-receive-remote/`
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/29
+  - Created: 2026-02-14
+  - Completed: 2026-02-23
+
+- [x] **(P1) [tooling] Add Codex markdown→TOML subagent adapter and re-enable Codex agent sync**
+  - Outcome:
+    - Implemented canonical agent parser/renderer (`packages/cli/src/agents/canonical/`) for structured conversion of markdown agent definitions.
+    - Implemented Codex codec (`packages/cli/src/providers/codex/codec/`) with export-to-codex, import-from-codex, config-merge, and sync-extension modules.
+    - Sync extension generates `.codex/agents/*.toml` role files and merges role declarations into `.codex/config.toml`.
+    - Idempotent regeneration: repeated syncs produce deterministic output.
+  - Links:
+    - Implementation: `packages/cli/src/agents/canonical/`, `packages/cli/src/providers/codex/codec/`
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/32
+  - Created: 2026-02-19
+  - Completed: 2026-02-23
+
+- [x] **(P1) [tooling] Add context management commands for `AGENTS.md` ↔ `CLAUDE.md` integrity**
+  - Outcome:
+    - Implemented as `oat instructions validate` (report missing/mismatched instruction file pointers) and `oat instructions sync` (repair with dry-run + apply semantics).
+    - Recursively scans for `AGENTS.md` files and validates sibling `CLAUDE.md` contains `@AGENTS.md` context pointer.
+    - Supports `--dry-run` (default) and `--apply` modes with clear reporting.
+  - Links:
+    - Implementation: `packages/cli/src/commands/instructions/`
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/31
+  - Created: 2026-02-14
+  - Completed: 2026-02-23
+
 - [x] **(P1) [tooling] B15+B02 project lifecycle config consolidation (`oat config`, `oat project open/pause`)**
   - Outcome:
     - Consolidated project lifecycle state into `.oat/config.json` / `.oat/config.local.json` (`projects.root`, `activeProject`, `lastPausedProject`) with repo-relative active project paths.

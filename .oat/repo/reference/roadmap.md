@@ -9,7 +9,7 @@ For a birdseye snapshot of what exists *right now*, see `.oat/repo/reference/cur
 
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
-As of `2026-02-23` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor`, config-aware sync, worktree bootstrap, `oat config`, `oat project open/pause`). Project lifecycle state is config-backed (`.oat/config.json` + `.oat/config.local.json`) with final review/PR loops dogfooded through completion. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
+As of `2026-02-23` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor/instructions`, config-aware sync, Codex TOML sync, worktree bootstrap, `oat config`, `oat project open/pause`). Project lifecycle state is config-backed (`.oat/config.json` + `.oat/config.local.json`) with final review/PR loops dogfooded through completion. Review receive skill family (local + remote) is implemented for both project and ad-hoc contexts. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
 
 ## Status Summary
 
@@ -21,7 +21,7 @@ As of `2026-02-23` on `main`, dogfood workflow baseline and provider-interop CLI
 | Phase 5: Staleness + knowledge drift | Planned | Improve/enforce freshness beyond warn-only |
 | Phase 6: Parallel execution + reconcile | Deferred (groundwork expanded) | `oat-worktree-bootstrap` + subagent orchestration skills (PR #21, refined in PR #26) exist; parallel fan-out + reconcile tooling still pending |
 | Phase 7: Quick mode + template rendering helper | In Progress | Quick/import lanes + canonical plan writing contract implemented; template rendering helper still planned |
-| Phase 8: Provider interop CLI + sync manifest | In Progress | Core command surface + config-aware provider sync shipped; lifecycle polish remains |
+| Phase 8: Provider interop CLI + sync manifest | In Progress | Core command surface + config-aware provider sync + Codex TOML sync + instructions validate/sync shipped; lifecycle polish remains |
 | Phase 9: Multi-project switching + branch awareness | Later | Full `.oat/projects/(shared|local)/...` + hooks |
 | Phase 10: Memory system + provider enhancements | Later | Longer-term durability features |
 | Cross-cutting: skill invocation normalization | Completed (guardrails ongoing) | Skill-first wording adopted; continue preventing regressions |
@@ -46,13 +46,17 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - `oat-project-import-plan` (import lane, canonicalized to `plan.md`)
   - `oat-project-promote-spec-driven` (in-place promotion to spec-driven lifecycle)
 - Review + PR loop:
-  - Review: `oat-project-review-provide`, `oat-project-review-receive` + `.agents/agents/oat-reviewer.md`
-  - Ad-hoc review (no project state required): `oat-review-provide`
+  - Review provide: `oat-project-review-provide`, `oat-review-provide` (ad-hoc)
+  - Review receive (local): `oat-project-review-receive`, `oat-review-receive` (ad-hoc)
+  - Review receive (remote/PR): `oat-project-review-receive-remote`, `oat-review-receive-remote` (ad-hoc)
+  - Reviewer prompt: `.agents/agents/oat-reviewer.md`
   - PR: `oat-project-pr-progress`, `oat-project-pr-final`
 - Repo state dashboard:
   - `oat state refresh` CLI command generates `.oat/state.md` (gitignored) as a "single glance" dashboard
 - Provider interop CLI:
-  - Commands: `oat init`, `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`, `oat doctor`
+  - Commands: `oat init`, `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`, `oat doctor`, `oat instructions validate/sync`
+  - Supported providers: Claude Code, Cursor, Codex CLI, GitHub Copilot, Gemini CLI
+  - Codex TOML sync: canonical agent parser/renderer + Codex codec (export/import/config-merge/sync-extension for `.codex/agents/*.toml` and `.codex/config.toml`)
   - Sync state: `.oat/sync/manifest.json` + `.oat/sync/config.json`
   - Config-aware provider activation with interactive/non-interactive mismatch remediation
   - Worktree bootstrap path: `pnpm run worktree:init`
@@ -64,6 +68,7 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - `create-oat-skill` (scaffold new OAT skills with standard sections + banner conventions)
 - Agent instructions:
   - `oat-agent-instructions-analyze`, `oat-agent-instructions-apply` (multi-provider instruction file analysis and generation)
+  - `oat instructions validate` / `oat instructions sync` (AGENTS.md ↔ CLAUDE.md integrity checking and repair)
   - `.oat/tracking.json` shared tracking manifest for delta mode operations
 - Subagent orchestration:
   - `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto` (execution mode selection, dispatch, and autonomous bootstrap)
@@ -240,8 +245,11 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Goal:** Deliver the original interop value: provider adapters, sync, drift detection, and safe apply.
 
 **Status:** In Progress
-- Done: core command surface (`oat init/status/sync/providers/doctor`)
+- Done: core command surface (`oat init/status/sync/providers/doctor/instructions`)
 - Done: config-aware provider activation and `oat providers set` for explicit enable/disable management
+- Done: Codex TOML sync (canonical agent parser/renderer + codec for `.codex/agents/*.toml` and `.codex/config.toml` generation)
+- Done: `oat instructions validate/sync` for AGENTS.md ↔ CLAUDE.md integrity
+- Done: GitHub Copilot and Gemini CLI provider support
 - Done: worktree-safe bootstrap guidance/script (`pnpm run worktree:init`)
 - Remaining: lifecycle completeness commands (e.g., uninstall/remove), expanded capability matrix, and additional UX hardening
 

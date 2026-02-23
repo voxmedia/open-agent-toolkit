@@ -20,11 +20,16 @@ Dogfood v1 baseline is:
 - Quick/import lanes: `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-promote-spec-driven`
 - Ideas workflow: `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 - Shared plan contract: `oat-project-plan-writing`
-- Review + PR loop: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-pr-progress`, `oat-project-pr-final`
-- Ad-hoc review: `oat-review-provide` (non-project scopes)
+- Review + PR loop:
+  - Provide: `oat-project-review-provide`, `oat-review-provide` (ad-hoc)
+  - Receive (local): `oat-project-review-receive`, `oat-review-receive` (ad-hoc)
+  - Receive (remote/PR): `oat-project-review-receive-remote`, `oat-review-receive-remote` (ad-hoc)
+  - PR: `oat-project-pr-progress`, `oat-project-pr-final`
 - Repo State Dashboard: `.oat/state.md` generated via `oat state refresh` CLI command (gitignored)
 - Provider interop CLI foundation:
-  - `oat init`, `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`, `oat doctor`
+  - `oat init`, `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`, `oat doctor`, `oat instructions validate/sync`
+  - Supported providers: Claude Code, Cursor, Codex CLI, GitHub Copilot, Gemini CLI
+  - Codex TOML sync (canonical agent parser + codec for `.codex/agents/*.toml` and `.codex/config.toml`)
   - Config-aware provider activation via `.oat/sync/config.json`
   - Worktree bootstrap script: `pnpm run worktree:init`
 - Worktree bootstrap skill + config phase A:
@@ -32,6 +37,7 @@ Dogfood v1 baseline is:
   - `.oat/config.json` key `worktrees.root` (default `.worktrees`)
 - Agent instructions:
   - `oat-agent-instructions-analyze`, `oat-agent-instructions-apply` (multi-provider instruction file analysis and generation)
+  - `oat instructions validate` / `oat instructions sync` (AGENTS.md ↔ CLAUDE.md integrity)
   - `.oat/tracking.json` shared tracking manifest for delta mode operations
 - Subagent orchestration:
   - `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto` (execution mode, dispatch, autonomous bootstrap)
@@ -107,8 +113,8 @@ Current canonical behavior:
 **What:** Turn the dogfood workflow into a broader toolkit: provider adapters, sync, drift detection, and safe apply.
 
 **Status:** In Progress
-- Done: core command surface, sync manifest/config model, and provider config commands
-- Remaining: lifecycle completeness features and provider capability hardening
+- Done: core command surface, sync manifest/config model, provider config commands, Codex TOML sync, instructions validate/sync, Copilot/Gemini provider support
+- Remaining: lifecycle completeness features (uninstall/remove) and provider capability hardening
 
 **When to start:**
 - Now that dogfood v1 has been exercised end-to-end, we can start building the CLI in parallel with smaller workflow polish.
