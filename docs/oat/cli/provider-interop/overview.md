@@ -7,7 +7,8 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 ## Scope
 
 - Canonical directories: `.agents/skills`, `.agents/agents`
-- Managed provider views: `.claude/*`, `.cursor/*`, `.codex/*` (where applicable)
+- Managed provider views: `.claude/*`, `.cursor/*`, `.github/*`, `.copilot/*`, `.codex/*` (where applicable)
+- Native-read providers may use canonical `.agents/*` directly without mirrored provider directories (for example, Gemini and Codex canonical mappings)
 - Manifest tracking: `.oat/sync/manifest.json` (project) and `~/.oat/sync/manifest.json` (user)
 
 ## Design principles
@@ -16,6 +17,7 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 - Explicit apply for mutation
 - Scoped destructive actions only for manifest-tracked entries
 - Cross-provider compatibility via adapters
+- Canonical `.agents/agents` is source of truth for subagents; provider views are derived
 
 ## Implemented command surface
 
@@ -32,6 +34,9 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 - Project provider enablement is stored in `.oat/sync/config.json` (`providers.<name>.enabled`).
 - `oat init --scope project` (interactive) prompts for supported providers and persists explicit true/false values.
 - `oat sync --scope project` uses config-aware provider activation and can prompt to remediate detected mismatches.
+- Codex project-scope subagent sync is generated output (`.codex/agents/*.toml` + `.codex/config.toml`) computed at command layer after path-mapping sync.
+- Codex aggregate config drift is reported via sync/status extension metadata (`aggregateConfigHash`); it is not persisted as a separate manifest schema entry.
+- Codex user-scope role generation remains intentionally deferred in this release.
 
 ## Non-interop namespaces in the same CLI
 

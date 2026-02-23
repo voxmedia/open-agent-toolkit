@@ -13,7 +13,7 @@ Shared CLI conventions live in `docs/oat/cli/design-principles.md`.
 - `docs/oat/cli/provider-interop/commands.md`
   - Command-level behavior (`init`, `status`, `sync`, `providers`, `cleanup`, `doctor`).
 - `docs/oat/cli/provider-interop/providers.md`
-  - Provider-specific mapping behavior (Claude, Cursor, Codex).
+  - Provider-specific mapping behavior (Claude, Cursor, Copilot, Gemini, Codex).
 - `docs/oat/cli/provider-interop/manifest-and-drift.md`
   - Manifest model, drift states, and stray adoption.
 - `docs/oat/cli/provider-interop/config.md`

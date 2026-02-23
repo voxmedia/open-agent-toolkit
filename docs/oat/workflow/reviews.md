@@ -48,6 +48,8 @@ Final review `passed` gate requires:
   - Requires Codex config prerequisites:
     - `[features] multi_agent = true`
     - If explicit role pinning is used, role must be built-in (`default`/`worker`/`explorer`) or configured under `[agents.<name>]`.
+  - Project-scope Codex role files are generated from canonical `.agents/agents/*.md` during `oat sync --scope project --apply`.
+  - User-scope Codex role generation (`~/.codex`) is intentionally deferred.
 - If subagent dispatch is unavailable, follow the existing fallback path (fresh session preferred, inline reset as fallback).
 ## Reference artifacts
 

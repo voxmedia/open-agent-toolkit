@@ -7,6 +7,10 @@ import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
 import type { Manifest } from '@manifest/index';
 import type {
+  CodexExtensionApplyResult,
+  CodexExtensionPlan,
+} from '@providers/codex/codec/sync-extension';
+import type {
   ConfigAwareAdaptersResult,
   ProviderAdapter,
 } from '@providers/shared';
@@ -16,8 +20,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createSyncCommand } from './index';
 
 interface HarnessOptions {
+  adapters?: ProviderAdapter[];
   plans?: SyncPlan[];
   executeResults?: SyncResult[];
+  codexExtensionPlans?: CodexExtensionPlan[];
+  codexExtensionApplyResults?: CodexExtensionApplyResult[];
   interactive?: boolean;
   loadedSyncConfig?: SyncConfig;
   configAwareResults?: ConfigAwareAdaptersResult[];
@@ -50,6 +57,24 @@ function createAdapter(name = 'claude'): ProviderAdapter {
         nativeRead: false,
       },
     ],
+    detect: async () => true,
+  };
+}
+
+function createCodexAdapter(): ProviderAdapter {
+  return {
+    name: 'codex',
+    displayName: 'Codex CLI',
+    defaultStrategy: 'copy',
+    projectMappings: [
+      {
+        contentType: 'agent',
+        canonicalDir: '.agents/agents',
+        providerDir: '.codex/agents',
+        nativeRead: false,
+      },
+    ],
+    userMappings: [],
     detect: async () => true,
   };
 }
@@ -104,14 +129,17 @@ function createEmptyPlan(scope: SyncPlan['scope'] = 'project'): SyncPlan {
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
-  adapter: ProviderAdapter;
+  adapters: ProviderAdapter[];
   computeSyncPlan: ReturnType<typeof vi.fn>;
   executeSyncPlan: ReturnType<typeof vi.fn>;
+  computeCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
+  applyCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
   saveSyncConfig: ReturnType<typeof vi.fn>;
   selectProvidersWithAbort: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
-  const adapter = createAdapter();
+  const adapters = options.adapters ?? [createAdapter()];
+  const primaryAdapter = adapters[0] ?? createAdapter();
   const plansQueue = options.plans
     ? [...options.plans]
     : [createPlan('create_symlink')];
@@ -131,7 +159,7 @@ function createHarness(options: HarnessOptions = {}): {
     ? [...options.configAwareResults]
     : [
         {
-          activeAdapters: [adapter],
+          activeAdapters: [primaryAdapter],
           detectedUnset: [],
           detectedDisabled: [],
         },
@@ -139,11 +167,26 @@ function createHarness(options: HarnessOptions = {}): {
   const getConfigAwareAdapters = vi.fn(async () => {
     return (
       configAwareQueue.shift() ?? {
-        activeAdapters: [adapter],
+        activeAdapters: [primaryAdapter],
         detectedUnset: [],
         detectedDisabled: [],
       }
     );
+  });
+
+  const codexExtensionPlans = [...(options.codexExtensionPlans ?? [])];
+  const computeCodexProjectExtensionPlan = vi.fn(async () => {
+    return (
+      codexExtensionPlans.shift() ?? {
+        operations: [],
+        managedRoles: [],
+        aggregateConfigHash: 'hash',
+      }
+    );
+  });
+  const codexApplyResults = [...(options.codexExtensionApplyResults ?? [])];
+  const applyCodexProjectExtensionPlan = vi.fn(async () => {
+    return codexApplyResults.shift() ?? { applied: 0, failed: 0, skipped: 0 };
   });
 
   const providerSelectResponses = [...(options.providerSelectResponses ?? [])];
@@ -176,11 +219,22 @@ function createHarness(options: HarnessOptions = {}): {
     ),
     saveSyncConfig,
     scanCanonical: vi.fn(async () => [createCanonicalEntry()]),
-    getAdapters: () => [adapter],
+    getAdapters: () => adapters,
     getConfigAwareAdapters,
     selectProvidersWithAbort,
     computeSyncPlan,
     executeSyncPlan,
+    computeCodexProjectExtensionPlan,
+    toCodexExtensionOperations: vi.fn((plan: CodexExtensionPlan) =>
+      plan.operations.map((operation) => ({
+        action: operation.action,
+        target: operation.target,
+        path: operation.path,
+        reason: operation.reason,
+        roleName: operation.roleName,
+      })),
+    ),
+    applyCodexProjectExtensionPlan,
     formatSyncPlan: vi.fn((plan: SyncPlan, applied: boolean) => {
       return `sync-${applied ? 'applied' : 'dry'}-${plan.scope}-${plan.entries.length + plan.removals.length}`;
     }),
@@ -189,9 +243,11 @@ function createHarness(options: HarnessOptions = {}): {
   return {
     capture,
     command,
-    adapter,
+    adapters,
     computeSyncPlan,
     executeSyncPlan,
+    computeCodexProjectExtensionPlan,
+    applyCodexProjectExtensionPlan,
     saveSyncConfig,
     selectProvidersWithAbort,
   };
@@ -309,7 +365,7 @@ describe('createSyncCommand', () => {
   it('prompts to remediate detected unset providers in interactive mode', async () => {
     const {
       command,
-      adapter,
+      adapters,
       selectProvidersWithAbort,
       saveSyncConfig,
       computeSyncPlan,
@@ -347,12 +403,12 @@ describe('createSyncCommand', () => {
       (computeSyncPlan.mock.calls[0]?.[0].adapters as ProviderAdapter[]).map(
         (current) => current.name,
       ),
-    ).toEqual([adapter.name]);
+    ).toEqual([adapters[0]?.name]);
   });
 
   it('prompts to remediate detected disabled providers in interactive mode', async () => {
-    const { command, adapter, saveSyncConfig, computeSyncPlan } = createHarness(
-      {
+    const { command, adapters, saveSyncConfig, computeSyncPlan } =
+      createHarness({
         configAwareResults: [
           {
             activeAdapters: [],
@@ -372,8 +428,7 @@ describe('createSyncCommand', () => {
             claude: { enabled: false },
           },
         },
-      },
-    );
+      });
 
     await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
 
@@ -389,7 +444,7 @@ describe('createSyncCommand', () => {
       (computeSyncPlan.mock.calls[0]?.[0].adapters as ProviderAdapter[]).map(
         (current) => current.name,
       ),
-    ).toEqual([adapter.name]);
+    ).toEqual([adapters[0]?.name]);
   });
 
   it('persists declined detected unset providers as disabled', async () => {
@@ -478,6 +533,104 @@ describe('createSyncCommand', () => {
         },
       ],
     });
+  });
+
+  it('includes codex extension operations in dry-run JSON output', async () => {
+    const { capture, command, computeCodexProjectExtensionPlan } =
+      createHarness({
+        adapters: [createCodexAdapter()],
+        plans: [createEmptyPlan('project')],
+        configAwareResults: [
+          {
+            activeAdapters: [createCodexAdapter()],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        codexExtensionPlans: [
+          {
+            operations: [
+              {
+                action: 'create',
+                target: 'role',
+                path: '.codex/agents/reviewer.toml',
+                reason: 'managed role file missing',
+                roleName: 'reviewer',
+                content: 'developer_instructions = "review"',
+              },
+            ],
+            managedRoles: ['reviewer'],
+            aggregateConfigHash: 'hash-reviewer',
+          },
+        ],
+      });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(computeCodexProjectExtensionPlan).toHaveBeenCalledTimes(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      codexExtensions: [
+        {
+          operations: [
+            {
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/reviewer.toml',
+              reason: 'managed role file missing',
+              roleName: 'reviewer',
+            },
+          ],
+          managedRoles: ['reviewer'],
+          aggregateConfigHash: 'hash-reviewer',
+        },
+      ],
+    });
+  });
+
+  it('applies codex extension plan during --apply when codex operations are pending', async () => {
+    const {
+      command,
+      executeSyncPlan,
+      applyCodexProjectExtensionPlan,
+      capture,
+    } = createHarness({
+      adapters: [createCodexAdapter()],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [createCodexAdapter()],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'codex config differs',
+              content: '[features]\nmulti_agent = true\n',
+            },
+          ],
+          managedRoles: ['reviewer'],
+          aggregateConfigHash: 'hash-cfg',
+        },
+      ],
+      codexExtensionApplyResults: [{ applied: 1, failed: 0, skipped: 0 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: ['--apply'],
+    });
+
+    expect(executeSyncPlan).not.toHaveBeenCalled();
+    expect(applyCodexProjectExtensionPlan).toHaveBeenCalledTimes(1);
+    expect(capture.success).toContain('\nSync applied successfully.');
   });
 
   it('exits 0 on success, 1 on partial failure', async () => {

@@ -1,4 +1,4 @@
-import { access, mkdtemp, rm, symlink } from 'node:fs/promises';
+import { access, mkdtemp, readFile, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -11,6 +11,7 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import TOML from '@iarna/toml';
 import { loadManifest, type Manifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
@@ -35,6 +36,7 @@ interface DoctorDependencies {
   ) => Promise<
     Array<{ name: string; detected: boolean; version: string | null }>
   >;
+  readFile: (path: string) => Promise<string>;
 }
 
 async function pathExistsDefault(path: string): Promise<boolean> {
@@ -98,6 +100,7 @@ function createDependencies(): DoctorDependencies {
     loadManifest,
     checkSymlinkSupport: checkSymlinkSupportDefault,
     checkProviders: checkProvidersDefault,
+    readFile: async (path) => readFile(path, 'utf8'),
   };
 }
 
@@ -191,6 +194,113 @@ async function runChecksForScope(
         ? undefined
         : 'Install or enable a provider directory (e.g. .claude, .cursor, .codex).',
   });
+
+  if (scope === 'project') {
+    const codexConfigPath = join(scopeRoot, '.codex', 'config.toml');
+    const codexConfigExists = await dependencies.pathExists(codexConfigPath);
+
+    if (codexConfigExists) {
+      let parsedConfig: Record<string, unknown> | null = null;
+      try {
+        parsedConfig = TOML.parse(
+          await dependencies.readFile(codexConfigPath),
+        ) as Record<string, unknown>;
+        checks.push({
+          name: `${scope}:codex_config_toml`,
+          description: 'Codex config TOML parseability',
+          status: 'pass',
+          message: '.codex/config.toml parsed successfully.',
+        });
+      } catch (error) {
+        checks.push({
+          name: `${scope}:codex_config_toml`,
+          description: 'Codex config TOML parseability',
+          status: 'fail',
+          message:
+            error instanceof Error
+              ? `Failed to parse .codex/config.toml: ${error.message}`
+              : 'Failed to parse .codex/config.toml.',
+          fix: 'Repair .codex/config.toml syntax and rerun doctor.',
+        });
+      }
+
+      if (parsedConfig) {
+        const features =
+          parsedConfig.features &&
+          typeof parsedConfig.features === 'object' &&
+          !Array.isArray(parsedConfig.features)
+            ? (parsedConfig.features as Record<string, unknown>)
+            : null;
+        const agents =
+          parsedConfig.agents &&
+          typeof parsedConfig.agents === 'object' &&
+          !Array.isArray(parsedConfig.agents)
+            ? (parsedConfig.agents as Record<string, unknown>)
+            : null;
+
+        const managedRoles = Object.entries(agents ?? {})
+          .filter(([, config]) => {
+            if (
+              !config ||
+              typeof config !== 'object' ||
+              Array.isArray(config)
+            ) {
+              return false;
+            }
+            const configFile = (config as Record<string, unknown>).config_file;
+            return (
+              typeof configFile === 'string' && configFile.startsWith('agents/')
+            );
+          })
+          .map(([roleName]) => roleName);
+
+        if (managedRoles.length > 0) {
+          const multiAgentEnabled =
+            features?.multi_agent === true || features?.multi_agent === 'true';
+          checks.push({
+            name: `${scope}:codex_multi_agent`,
+            description: 'Codex multi-agent feature flag',
+            status: multiAgentEnabled ? 'pass' : 'warn',
+            message: multiAgentEnabled
+              ? 'features.multi_agent is enabled for codex managed roles.'
+              : 'Codex managed roles detected but features.multi_agent is not true.',
+            fix: multiAgentEnabled
+              ? undefined
+              : 'Set [features] multi_agent = true in .codex/config.toml.',
+          });
+
+          const missingRoleFiles: string[] = [];
+          for (const roleName of managedRoles) {
+            const roleConfig = (agents as Record<string, unknown>)[
+              roleName
+            ] as Record<string, unknown>;
+            const configFile = roleConfig.config_file;
+            if (typeof configFile !== 'string') {
+              continue;
+            }
+            const absoluteRolePath = join(scopeRoot, '.codex', configFile);
+            if (!(await dependencies.pathExists(absoluteRolePath))) {
+              missingRoleFiles.push(configFile);
+            }
+          }
+
+          checks.push({
+            name: `${scope}:codex_role_file_refs`,
+            description: 'Codex role config_file references',
+            status: missingRoleFiles.length === 0 ? 'pass' : 'warn',
+            message:
+              missingRoleFiles.length === 0
+                ? 'All codex role config_file references exist.'
+                : `Missing codex role files: ${missingRoleFiles.join(', ')}`,
+            fix:
+              missingRoleFiles.length === 0
+                ? undefined
+                : 'Regenerate codex roles with `oat sync --scope project --apply`.',
+          });
+        }
+      }
+    }
+  }
 
   return checks;
 }

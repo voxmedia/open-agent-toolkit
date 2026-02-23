@@ -9,6 +9,7 @@
     "paths": {
       "@commands/*": ["src/commands/*"],
       "@providers/*": ["src/providers/*"],
+      "@agents/*": ["src/agents/*"],
       "@engine/*": ["src/engine/*"],
       "@manifest/*": ["src/manifest/*"],
       "@drift/*": ["src/drift/*"],

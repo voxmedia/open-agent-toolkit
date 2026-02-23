@@ -17,6 +17,7 @@ import {
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import type { CanonicalEntry } from '@engine/index';
+import { CliError } from '@errors/index';
 import { createEmptyManifest, type Manifest } from '@manifest/index';
 import type { ProviderAdapter } from '@providers/shared';
 import type { Scope } from '@shared/types';
@@ -33,7 +34,9 @@ interface HarnessOptions {
   providerSelectResponses?: Array<string[] | null>;
   hookInstalled?: boolean;
   useDefaultAdopt?: boolean;
+  useDefaultCollectStrays?: boolean;
   adapters?: ProviderAdapter[];
+  configAwareActiveAdapterNames?: string[];
   loadedSyncConfig?: SyncConfig;
 }
 
@@ -166,7 +169,6 @@ function createHarness(options: HarnessOptions = {}): {
     loadManifest: vi.fn(async () => createEmptyManifest()),
     saveManifest,
     scanCanonical: vi.fn(async () => createCanonicalEntries()),
-    collectStrays,
     confirmAction,
     selectManyWithAbort,
     selectProvidersWithAbort,
@@ -174,8 +176,12 @@ function createHarness(options: HarnessOptions = {}): {
     loadSyncConfig,
     saveSyncConfig,
     getConfigAwareAdapters: vi.fn(async () => ({
-      activeAdapters: adapters.filter((adapter) => adapter.name === 'claude'),
-      detectedUnset: ['claude'],
+      activeAdapters: adapters.filter((adapter) =>
+        (options.configAwareActiveAdapterNames ?? ['claude']).includes(
+          adapter.name,
+        ),
+      ),
+      detectedUnset: options.configAwareActiveAdapterNames ?? ['claude'],
       detectedDisabled: [],
     })),
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
@@ -185,6 +191,9 @@ function createHarness(options: HarnessOptions = {}): {
 
   if (!options.useDefaultAdopt) {
     dependencyOverrides.adoptStray = adoptStray;
+  }
+  if (!options.useDefaultCollectStrays) {
+    dependencyOverrides.collectStrays = collectStrays;
   }
 
   const command = createInitCommand(dependencyOverrides);
@@ -432,6 +441,67 @@ describe('createInitCommand', () => {
     );
   });
 
+  it('detects codex role strays via default collector and includes codex adoption metadata', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-init-codex-stray-'));
+    tempDirs.push(root);
+
+    const codexConfigPath = join(root, '.codex', 'config.toml');
+    const codexRolePath = join(root, '.codex', 'agents', 'reviewer.toml');
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+    await writeFile(
+      codexConfigPath,
+      `[agents.reviewer]
+description = "Reviewer"
+config_file = "agents/reviewer.toml"
+`,
+      'utf8',
+    );
+    await writeFile(
+      codexRolePath,
+      'developer_instructions = "Review code for defects."\n',
+      'utf8',
+    );
+
+    const codexOnlyAdapter: ProviderAdapter = {
+      name: 'codex',
+      displayName: 'Codex CLI',
+      defaultStrategy: 'auto',
+      projectMappings: [],
+      userMappings: [],
+      detect: async () => true,
+    };
+
+    const { command, selectManyWithAbort, adoptStray } = createHarness({
+      interactive: true,
+      scopeRootByScope: { project: root },
+      useDefaultCollectStrays: true,
+      adapters: [codexOnlyAdapter],
+      configAwareActiveAdapterNames: ['codex'],
+      hookInstalled: true,
+      selectResponses: [['0']],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
+    const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
+      label: string;
+      description?: string;
+    }>;
+    expect(choices[0]?.label).toContain('(codex)');
+    expect(choices[0]?.description).toContain('.codex/agents/reviewer.toml');
+
+    expect(adoptStray).toHaveBeenCalledTimes(1);
+    const adoptedCandidate = adoptStray.mock
+      .calls[0]?.[1] as InitStrayCandidate;
+    expect(adoptedCandidate.provider).toBe('codex');
+    expect(adoptedCandidate.adoption).toMatchObject({
+      kind: 'codex_role',
+      roleName: 'reviewer',
+      description: 'Reviewer',
+    });
+  });
+
   it('supports skip-all by leaving checklist empty', async () => {
     const { command, selectManyWithAbort, adoptStray } = createHarness({
       interactive: true,
@@ -448,6 +518,52 @@ describe('createInitCommand', () => {
 
     expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
     expect(adoptStray).not.toHaveBeenCalled();
+  });
+
+  it('on adoption conflict, keeps canonical when replacement is declined', async () => {
+    const { command, adoptStray, confirmAction, capture } = createHarness({
+      interactive: true,
+      strays: [createStray()],
+      hookInstalled: true,
+      selectResponses: [['0']],
+      confirmResponses: [false],
+    });
+    adoptStray.mockRejectedValueOnce(
+      new CliError(
+        'Cannot adopt .claude/skills/stray-skill because canonical file already exists.',
+      ),
+    );
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(adoptStray).toHaveBeenCalledTimes(1);
+    expect(confirmAction).toHaveBeenCalledTimes(1);
+    expect(capture.warn).toContain(
+      'Skipped conflicting stray entry [project]: .claude/skills/stray-skill',
+    );
+  });
+
+  it('on adoption conflict, retries with replaceCanonical when confirmed', async () => {
+    const { command, adoptStray, confirmAction } = createHarness({
+      interactive: true,
+      strays: [createStray()],
+      hookInstalled: true,
+      selectResponses: [['0']],
+      confirmResponses: [true],
+    });
+    adoptStray
+      .mockRejectedValueOnce(
+        new CliError(
+          'Cannot adopt .claude/skills/stray-skill because canonical file already exists.',
+        ),
+      )
+      .mockResolvedValueOnce(createEmptyManifest());
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(adoptStray).toHaveBeenCalledTimes(2);
+    expect(confirmAction).toHaveBeenCalledTimes(1);
+    expect(adoptStray.mock.calls[1]?.[3]).toEqual({ replaceCanonical: true });
   });
 
   it('skips adoption in non-interactive mode with guidance text', async () => {

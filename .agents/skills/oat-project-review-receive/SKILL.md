@@ -134,6 +134,7 @@ For each finding, build a structured register entry:
 - Reviewer finding (issue + suggested fix)
 - Agent analysis (agree/disagree + why)
 - Recommendation (convert to task now vs defer with rationale)
+- Task Scope (`Large` | `Moderate` | `Minor` | `Negligible`)
 
 **If Critical + Important + Medium == 0:**
 - For non-final scopes:
@@ -167,6 +168,7 @@ Critical Findings:
   - Reviewer finding: {issue + reviewer fix guidance}
   - Finding analysis: {why you agree/disagree; practical risk if not fixed}
   - Recommendation: {convert_to_task | defer_with_rationale}
+  - Task Scope: {Large | Moderate | Minor | Negligible}
 
 Important Findings:
 {same pattern}
@@ -182,6 +184,12 @@ Rules:
 - Include all non-empty severities; if a severity has zero findings, state `None`.
 - Keep each analysis concise and decision-oriented.
 - Use finding IDs in every section and in every later user choice prompt.
+- Every finding must include exactly one `Task Scope` line using: `Large`, `Moderate`, `Minor`, or `Negligible`.
+- Scope meaning:
+  - `Large`: likely multi-file or cross-module behavior change
+  - `Moderate`: bounded implementation in one area with some verification breadth
+  - `Minor`: small localized code/test/doc change
+  - `Negligible`: trivial cleanup/refactor with very low risk
 - Do not ask the user for disposition decisions until this overview is shown.
 
 ### Step 3: Determine Task Scope

@@ -12,13 +12,32 @@ function summarize(scopePlans: ScopeSyncPlan[]): SyncSummary {
     applied: 0,
     failed: 0,
     skipped: scopePlans.reduce((total, scopePlan) => {
+      const codexSkipped =
+        scopePlan.codexExtension?.operations.filter(
+          (operation) => operation.action === 'skip',
+        ).length ?? 0;
       return (
         total +
         scopePlan.plan.entries.filter((entry) => entry.operation === 'skip')
-          .length
+          .length +
+        codexSkipped
       );
     }, 0),
   };
+}
+
+function formatCodexExtension(scopePlan: ScopeSyncPlan): string {
+  const codexExtension = scopePlan.codexExtension;
+  if (!codexExtension) {
+    return '';
+  }
+
+  const lines = codexExtension.operations.map((operation) => {
+    const role = operation.roleName ? ` (${operation.roleName})` : '';
+    return `- codex:${operation.target}:${operation.action} ${operation.path}${role} (${operation.reason})`;
+  });
+
+  return `Codex extension (dry-run)\n${lines.join('\n')}`;
 }
 
 function formatDryRunOutput(
@@ -38,7 +57,11 @@ function formatDryRunOutput(
 
   return scopePlans
     .map((scopePlan) => {
-      return `Scope: ${scopePlan.scope}\n${dependencies.formatSyncPlan(scopePlan.plan, false)}`;
+      const syncOutput = dependencies.formatSyncPlan(scopePlan.plan, false);
+      const codexOutput = formatCodexExtension(scopePlan);
+      return codexOutput
+        ? `Scope: ${scopePlan.scope}\n${syncOutput}\n\n${codexOutput}`
+        : `Scope: ${scopePlan.scope}\n${syncOutput}`;
     })
     .join('\n\n');
 }
@@ -52,6 +75,9 @@ export function runSyncDryRun(
   const providerMismatches = scopePlans
     .map((scopePlan) => scopePlan.providerMismatches)
     .filter((mismatch) => mismatch !== undefined);
+  const codexExtensions = scopePlans
+    .map((scopePlan) => scopePlan.codexExtension)
+    .filter((extension) => extension !== undefined);
 
   if (context.json) {
     context.logger.json({
@@ -60,6 +86,7 @@ export function runSyncDryRun(
       plans: scopePlans.map((scopePlan) => scopePlan.plan),
       summary,
       providerMismatches,
+      codexExtensions,
     });
   } else {
     context.logger.info(formatDryRunOutput(scopePlans, dependencies));

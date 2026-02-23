@@ -3,9 +3,12 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import type { CodexRoleStray } from '@commands/shared/codex-strays';
 import type { DriftReport } from '@drift/index';
 import type { CanonicalEntry } from '@engine/index';
+import { CliError } from '@errors/index';
 import type { Manifest, ManifestEntry } from '@manifest/index';
+import type { CodexExtensionPlan } from '@providers/codex/codec/sync-extension';
 import type { ProviderAdapter } from '@providers/shared';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
@@ -13,9 +16,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createStatusCommand } from './index';
 
 interface TestHarnessOptions {
+  adapters?: ProviderAdapter[];
   manifestEntries?: ManifestEntry[];
   driftReports?: DriftReport[];
   strayReports?: DriftReport[];
+  codexRoleStrays?: CodexRoleStray[];
+  codexExtensionPlan?: CodexExtensionPlan;
   canonicalEntries?: CanonicalEntry[];
   interactive?: boolean;
   selectManyResponses?: Array<string[] | null>;
@@ -72,6 +78,24 @@ function createAdapter(): ProviderAdapter {
   };
 }
 
+function createCodexAdapter(): ProviderAdapter {
+  return {
+    name: 'codex',
+    displayName: 'Codex CLI',
+    defaultStrategy: 'copy',
+    projectMappings: [
+      {
+        contentType: 'agent',
+        canonicalDir: '.agents/agents',
+        providerDir: '.codex/agents',
+        nativeRead: false,
+      },
+    ],
+    userMappings: [],
+    detect: async () => true,
+  };
+}
+
 function createManifest(entries: ManifestEntry[]): Manifest {
   return {
     version: 1,
@@ -101,11 +125,12 @@ function createHarness(options: TestHarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
   selectManyWithAbort: ReturnType<typeof vi.fn>;
+  confirmAction: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
   saveManifest: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
-  const adapter = createAdapter();
+  const adapters = options.adapters ?? [createAdapter()];
   const fallbackManifestEntries =
     options.driftReports && options.driftReports.length === 0
       ? []
@@ -132,10 +157,28 @@ function createHarness(options: TestHarnessOptions = {}): {
   const selectManyWithAbort = vi.fn(
     async () => selectManyResponses.shift() ?? [],
   );
+  const confirmAction = vi.fn(async () => false);
   const adoptStray = vi.fn(async (_scopeRoot, _stray, manifest: Manifest) => {
     return manifest;
   });
   const saveManifest = vi.fn(async () => undefined);
+  const detectCodexRoleStrays = vi.fn(
+    async () => options.codexRoleStrays ?? [],
+  );
+  const computeCodexProjectExtensionPlan = vi.fn(async () => {
+    return (
+      options.codexExtensionPlan ?? {
+        operations: [],
+        managedRoles: [],
+        aggregateConfigHash: 'hash',
+      }
+    );
+  });
+  const applyCodexProjectExtensionPlan = vi.fn(async () => ({
+    applied: 0,
+    failed: 0,
+    skipped: 0,
+  }));
   let driftIndex = 0;
 
   const command = createStatusCommand({
@@ -153,21 +196,34 @@ function createHarness(options: TestHarnessOptions = {}): {
     loadManifest: vi.fn(async () => createManifest(manifestEntries)),
     saveManifest,
     scanCanonical: vi.fn(async () => canonicalEntries),
-    getAdapters: () => [adapter],
+    getAdapters: () => adapters,
     getActiveAdapters: vi.fn(async (adapters: ProviderAdapter[]) => adapters),
-    getSyncMappings: vi.fn(() => adapter.projectMappings),
+    getSyncMappings: vi.fn(
+      (adapter: ProviderAdapter) => adapter.projectMappings,
+    ),
     detectDrift: vi.fn(async () => {
       const report = driftReports[driftIndex] ?? driftReports.at(-1);
       driftIndex += 1;
       return report ?? driftReports[0]!;
     }),
     detectStrays: vi.fn(async () => strayReports),
+    detectCodexRoleStrays,
+    computeCodexProjectExtensionPlan,
+    applyCodexProjectExtensionPlan,
     selectManyWithAbort,
+    confirmAction,
     adoptStray,
     formatStatusTable: formatReports,
   });
 
-  return { capture, command, selectManyWithAbort, adoptStray, saveManifest };
+  return {
+    capture,
+    command,
+    selectManyWithAbort,
+    confirmAction,
+    adoptStray,
+    saveManifest,
+  };
 }
 
 async function runStatusCommand(
@@ -370,6 +426,156 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'project']);
 
     expect(selectManyWithAbort).not.toHaveBeenCalled();
+  });
+
+  it('non-interactive mode skips adoption attempts even when strays exist', async () => {
+    const { command, selectManyWithAbort, confirmAction, adoptStray, capture } =
+      createHarness({
+        interactive: false,
+        driftReports: [],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/stray-skill',
+            state: { status: 'stray' },
+          },
+        ],
+      });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+    expect(confirmAction).not.toHaveBeenCalled();
+    expect(adoptStray).not.toHaveBeenCalled();
+    expect(capture.warn).toContain(REMEDIATION_TEXT);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('reports codex extension drift operations for project scope', async () => {
+    const { capture, command } = createHarness({
+      adapters: [createCodexAdapter()],
+      manifestEntries: [],
+      driftReports: [],
+      canonicalEntries: [],
+      codexExtensionPlan: {
+        operations: [
+          {
+            action: 'create',
+            target: 'role',
+            path: '.codex/agents/reviewer.toml',
+            reason: 'missing role',
+            roleName: 'reviewer',
+            content: 'role content',
+          },
+          {
+            action: 'update',
+            target: 'config',
+            path: '.codex/config.toml',
+            reason: 'config drifted',
+            content: 'config content',
+          },
+        ],
+        managedRoles: ['reviewer'],
+        aggregateConfigHash: 'abc123',
+      },
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(capture.info[0]).toContain('codex:missing');
+    expect(capture.info[0]).toContain('codex:drifted:modified');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('reports codex role strays discovered from codex detector', async () => {
+    const { capture, command } = createHarness({
+      adapters: [createCodexAdapter()],
+      interactive: false,
+      manifestEntries: [],
+      driftReports: [],
+      strayReports: [],
+      codexRoleStrays: [
+        {
+          roleName: 'reviewer',
+          providerPath: '.codex/agents/reviewer.toml',
+          description: 'Reviewer role',
+        },
+      ],
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(capture.info[0]).toContain('codex:stray');
+    expect(capture.warn).toContain(REMEDIATION_TEXT);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('prompts for replacement on adoption conflict and skips when declined', async () => {
+    const { command, selectManyWithAbort, confirmAction, adoptStray } =
+      createHarness({
+        interactive: true,
+        driftReports: [],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/stray-skill',
+            state: { status: 'stray' },
+          },
+        ],
+        selectManyResponses: [['0']],
+      });
+
+    adoptStray.mockRejectedValueOnce(
+      new CliError(
+        'Cannot adopt .claude/skills/stray-skill because canonical file already exists.',
+      ),
+    );
+    confirmAction.mockResolvedValue(false);
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
+    expect(confirmAction).toHaveBeenCalledTimes(1);
+    expect(adoptStray).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries adoption with replaceCanonical when conflict replacement is confirmed', async () => {
+    const { command, selectManyWithAbort, confirmAction, adoptStray } =
+      createHarness({
+        interactive: true,
+        driftReports: [],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/stray-skill',
+            state: { status: 'stray' },
+          },
+        ],
+        selectManyResponses: [['0']],
+      });
+
+    adoptStray
+      .mockRejectedValueOnce(
+        new CliError(
+          'Cannot adopt .claude/skills/stray-skill because canonical file already exists.',
+        ),
+      )
+      .mockResolvedValueOnce(
+        createManifest([
+          createManifestEntry({ providerPath: '.claude/skills/stray-skill' }),
+        ]),
+      );
+    confirmAction.mockResolvedValue(true);
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
+    expect(confirmAction).toHaveBeenCalledTimes(1);
+    expect(adoptStray).toHaveBeenCalledTimes(2);
+    expect(adoptStray.mock.calls[1]?.[3]).toEqual({ replaceCanonical: true });
   });
 
   it('renders user-scope stray labels as [user] ~/.<provider path>', async () => {

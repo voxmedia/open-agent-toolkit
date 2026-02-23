@@ -21,6 +21,11 @@ import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { loadManifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import {
+  applyCodexProjectExtensionPlan,
+  computeCodexProjectExtensionPlan,
+  toCodexExtensionOperations,
+} from '@providers/codex/codec/sync-extension';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
 import { geminiAdapter } from '@providers/gemini';
@@ -67,6 +72,9 @@ function defaultDependencies(): SyncCommandDependencies {
     selectProvidersWithAbort: selectManyWithAbort,
     computeSyncPlan,
     executeSyncPlan,
+    computeCodexProjectExtensionPlan,
+    toCodexExtensionOperations,
+    applyCodexProjectExtensionPlan,
     formatSyncPlan,
   };
 }
@@ -230,13 +238,34 @@ async function computePlans(
       scopeRoot,
     });
 
+    let codexExtensionPlan: ScopeSyncPlan['codexExtensionPlan'];
+    let codexExtension: ScopeSyncPlan['codexExtension'];
+    const activeAdapterNames = resolved.activeAdapters.map(
+      (adapter) => adapter.name,
+    );
+    if (scope === 'project' && activeAdapterNames.includes('codex')) {
+      codexExtensionPlan = await dependencies.computeCodexProjectExtensionPlan(
+        scopeRoot,
+        canonical,
+      );
+      codexExtension = {
+        operations: dependencies.toCodexExtensionOperations(codexExtensionPlan),
+        managedRoles: codexExtensionPlan.managedRoles,
+        aggregateConfigHash: codexExtensionPlan.aggregateConfigHash,
+      };
+    }
+
     scopePlans.push({
       scope,
       scopeRoot,
       manifestPath,
       manifest,
+      canonical,
+      activeAdapterNames,
       plan,
       providerMismatches: resolved.mismatches,
+      codexExtensionPlan,
+      codexExtension,
     });
   }
 

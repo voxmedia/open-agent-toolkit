@@ -9,3 +9,11 @@ export {
   getConfigAwareAdapters,
   getSyncMappings,
 } from './adapter.utils';
+export type {
+  ProviderAgentCodec,
+  ProviderAgentRecord,
+} from './agent-codec.types';
+export {
+  exportMarkdownAgentRecord,
+  importMarkdownAgentRecord,
+} from './markdown-agent-codec';

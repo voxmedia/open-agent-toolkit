@@ -5,7 +5,14 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
-import { adoptStrayToCanonical } from '@commands/shared/adopt-stray';
+import {
+  adoptStrayToCanonical,
+  isAdoptionConflictError,
+} from '@commands/shared/adopt-stray';
+import {
+  detectCodexRoleStrays,
+  regenerateCodexAfterAdoption,
+} from '@commands/shared/codex-strays';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
 import {
   confirmAction,
@@ -40,6 +47,10 @@ import {
 import type { Manifest } from '@manifest/manifest.types';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import {
+  applyCodexProjectExtensionPlan,
+  computeCodexProjectExtensionPlan,
+} from '@providers/codex/codec/sync-extension';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
 import { geminiAdapter } from '@providers/gemini';
@@ -79,6 +90,11 @@ export interface InitStrayCandidate {
   provider: string;
   report: DriftReport;
   mapping: PathMapping;
+  adoption?: {
+    kind: 'codex_role';
+    roleName: string;
+    description?: string;
+  };
 }
 
 interface InitDependencies {
@@ -119,6 +135,7 @@ interface InitDependencies {
     scopeRoot: string,
     stray: InitStrayCandidate,
     manifest: Manifest,
+    options?: { replaceCanonical?: boolean },
   ) => Promise<Manifest>;
   isHookInstalled: (projectRoot: string) => Promise<boolean>;
   installHook: (projectRoot: string) => Promise<void>;
@@ -196,6 +213,38 @@ async function collectStraysDefault(
     }
   }
 
+  if (
+    scope === 'project' &&
+    adaptersToScan.some((adapter) => adapter.name === 'codex')
+  ) {
+    const codexStrays = await detectCodexRoleStrays(
+      scopeRoot,
+      canonicalEntries,
+    );
+    for (const stray of codexStrays) {
+      candidates.push({
+        provider: 'codex',
+        report: {
+          canonical: null,
+          provider: 'codex',
+          providerPath: stray.providerPath,
+          state: { status: 'stray' },
+        },
+        mapping: {
+          contentType: 'agent',
+          canonicalDir: '.agents/agents',
+          providerDir: '.codex/agents',
+          nativeRead: false,
+        },
+        adoption: {
+          kind: 'codex_role',
+          roleName: stray.roleName,
+          description: stray.description,
+        },
+      });
+    }
+  }
+
   return candidates;
 }
 
@@ -203,8 +252,9 @@ async function adoptStrayDefault(
   scopeRoot: string,
   stray: InitStrayCandidate,
   manifest: Manifest,
+  options?: { replaceCanonical?: boolean },
 ): Promise<Manifest> {
-  return adoptStrayToCanonical(scopeRoot, stray, manifest);
+  return adoptStrayToCanonical(scopeRoot, stray, manifest, options);
 }
 
 function createDependencies(): InitDependencies {
@@ -420,13 +470,48 @@ async function runInitCommand(
       const selectedIndices = new Set(
         (selectedValues ?? []).map((value) => Number.parseInt(value, 10)),
       );
+      let codexStrayAdopted = false;
       for (const [index, stray] of strays.entries()) {
         if (!selectedIndices.has(index)) {
           continue;
         }
 
-        manifest = await dependencies.adoptStray(scopeRoot, stray, manifest);
-        straysAdopted += 1;
+        try {
+          manifest = await dependencies.adoptStray(scopeRoot, stray, manifest);
+          straysAdopted += 1;
+          codexStrayAdopted = codexStrayAdopted || stray.provider === 'codex';
+        } catch (error) {
+          if (!isAdoptionConflictError(error)) {
+            throw error;
+          }
+
+          const shouldReplace = await dependencies.confirmAction(
+            `Conflict detected for ${formatPathForScope(scope, stray.report.providerPath)}. Replace canonical content with stray content?`,
+            { interactive: context.interactive },
+          );
+          if (!shouldReplace) {
+            context.logger.warn(
+              `Skipped conflicting stray entry [${scope}]: ${formatPathForScope(scope, stray.report.providerPath)}`,
+            );
+            continue;
+          }
+
+          manifest = await dependencies.adoptStray(scopeRoot, stray, manifest, {
+            replaceCanonical: true,
+          });
+          straysAdopted += 1;
+          codexStrayAdopted = codexStrayAdopted || stray.provider === 'codex';
+        }
+      }
+
+      if (codexStrayAdopted && scope === 'project') {
+        await regenerateCodexAfterAdoption({
+          scopeRoot,
+          scanCanonical: async () =>
+            dependencies.scanCanonical(scopeRoot, scope),
+          computeExtensionPlan: computeCodexProjectExtensionPlan,
+          applyExtensionPlan: applyCodexProjectExtensionPlan,
+        });
       }
 
       if (straysAdopted > 0) {

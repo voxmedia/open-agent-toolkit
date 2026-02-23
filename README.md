@@ -1,6 +1,6 @@
 # Open Agent Toolkit (OAT)
 
-Open Agent Toolkit (OAT) is an open-source toolkit built on open standards for defining and managing agent skills, subagents, and hooks across multiple AI coding providers (Claude Code, Cursor, Codex CLI). It provides a provider-agnostic interoperability layer first, with optional, human-in-the-loop workflow scaffolding layered on top.
+Open Agent Toolkit (OAT) is an open-source toolkit built on open standards for defining and managing agent skills, subagents, and hooks across multiple AI coding providers (Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex CLI). It provides a provider-agnostic interoperability layer first, with optional, human-in-the-loop workflow scaffolding layered on top.
 
 OAT has three distinct capabilities:
 
@@ -141,6 +141,8 @@ Notes:
 - `sync` is dry-run by default.
 - `--apply` performs filesystem updates.
 - Project provider support is configured in `.oat/sync/config.json` (set via `oat init` interactive prompt or `oat providers set`).
+- Canonical subagents in `.agents/agents/*.md` are the source of truth. For Codex project scope, `sync --apply` generates `.codex/agents/*.toml` and merges `.codex/config.toml`.
+- Stray adoption in `oat init` / `oat status` reconciles canonical plus the adopted provider first; run `oat sync --scope all --apply` for cross-provider fanout.
 - In non-interactive contexts, set provider intent explicitly:
   - `pnpm run cli -- providers set --scope project --enabled claude,codex --disabled cursor`
 

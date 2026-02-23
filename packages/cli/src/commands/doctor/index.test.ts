@@ -12,6 +12,7 @@ import { createDoctorCommand } from './index';
 interface HarnessOptions {
   scope?: Scope;
   pathExists?: Record<string, boolean>;
+  fileContents?: Record<string, string>;
   loadManifestThrows?: boolean;
   symlinkSupported?: boolean;
   providers?: Array<{
@@ -49,6 +50,9 @@ function createHarness(options: HarnessOptions = {}): {
     ...defaultPathExists,
     ...(options.pathExists ?? {}),
   };
+  const fileContents = {
+    ...(options.fileContents ?? {}),
+  };
   const command = createDoctorCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? scope) as Scope,
@@ -78,6 +82,13 @@ function createHarness(options: HarnessOptions = {}): {
           { name: 'cursor', detected: false, version: null },
         ]
       );
+    }),
+    readFile: vi.fn(async (path: string) => {
+      const content = fileContents[path];
+      if (content === undefined) {
+        throw new Error(`ENOENT: no such file or directory, open '${path}'`);
+      }
+      return content;
     }),
   });
 
@@ -230,5 +241,105 @@ describe('createDoctorCommand', () => {
     });
     await runDoctor(failHarness.command);
     expect(process.exitCode).toBe(2);
+  });
+
+  it('passes codex TOML parse + multi_agent + role-file checks', async () => {
+    const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+    const reviewerRolePath = '/tmp/workspace/.codex/agents/reviewer.toml';
+    const { command, capture } = createHarness({
+      pathExists: {
+        '/tmp/workspace/.agents/skills': true,
+        '/tmp/workspace/.agents/agents': true,
+        '/tmp/workspace/.oat/sync/manifest.json': true,
+        [codexConfigPath]: true,
+        [reviewerRolePath]: true,
+      },
+      fileContents: {
+        [codexConfigPath]: `[features]
+multi_agent = true
+
+[agents.reviewer]
+config_file = "agents/reviewer.toml"
+`,
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('codex_config_toml');
+    expect(capture.info[0]).toContain('parsed successfully');
+    expect(capture.info[0]).toContain('codex_multi_agent');
+    expect(capture.info[0]).toContain('enabled for codex managed roles');
+    expect(capture.info[0]).toContain('codex_role_file_refs');
+    expect(capture.info[0]).toContain('references exist');
+  });
+
+  it('fails when codex config.toml cannot be parsed', async () => {
+    const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+    const { command, capture } = createHarness({
+      pathExists: {
+        [codexConfigPath]: true,
+      },
+      fileContents: {
+        [codexConfigPath]: 'not = [valid',
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('codex_config_toml');
+    expect(capture.info[0]).toContain('Failed to parse .codex/config.toml');
+    expect(process.exitCode).toBe(2);
+  });
+
+  it('warns when codex managed roles exist but multi_agent is not true', async () => {
+    const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+    const reviewerRolePath = '/tmp/workspace/.codex/agents/reviewer.toml';
+    const { command, capture } = createHarness({
+      pathExists: {
+        [codexConfigPath]: true,
+        [reviewerRolePath]: true,
+      },
+      fileContents: {
+        [codexConfigPath]: `[features]
+multi_agent = false
+
+[agents.reviewer]
+config_file = "agents/reviewer.toml"
+`,
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('codex_multi_agent');
+    expect(capture.info[0]).toContain('is not true');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('warns when codex role config_file points to a missing file', async () => {
+    const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+    const { command, capture } = createHarness({
+      pathExists: {
+        [codexConfigPath]: true,
+        '/tmp/workspace/.codex/agents/reviewer.toml': false,
+      },
+      fileContents: {
+        [codexConfigPath]: `[features]
+multi_agent = true
+
+[agents.reviewer]
+config_file = "agents/reviewer.toml"
+`,
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('codex_role_file_refs');
+    expect(capture.info[0]).toContain(
+      'Missing codex role files: agents/reviewer.toml',
+    );
+    expect(process.exitCode).toBe(1);
   });
 });

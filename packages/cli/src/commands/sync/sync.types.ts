@@ -7,6 +7,10 @@ import type { SyncConfig } from '@config/index';
 import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
 import type { Manifest } from '@manifest/index';
 import type {
+  CodexExtensionApplyResult,
+  CodexExtensionPlan,
+} from '@providers/codex/codec/sync-extension';
+import type {
   ConfigAwareAdaptersResult,
   ProviderAdapter,
 } from '@providers/shared';
@@ -23,7 +27,11 @@ export interface ScopeSyncPlan {
   manifestPath: string;
   manifest: Manifest;
   plan: SyncPlan;
+  canonical?: CanonicalEntry[];
+  activeAdapterNames?: string[];
   providerMismatches?: SyncProviderMismatches;
+  codexExtensionPlan?: CodexExtensionPlan;
+  codexExtension?: CodexExtensionSummary;
 }
 
 export interface SyncSummary {
@@ -39,6 +47,27 @@ export interface SyncJsonPayload {
   plans: SyncPlan[];
   summary: SyncSummary;
   providerMismatches?: SyncProviderMismatches[];
+  codexExtensions?: CodexExtensionSummary[];
+}
+
+export type CodexExtensionAction = 'create' | 'update' | 'remove' | 'skip';
+export type CodexExtensionTarget = 'role' | 'config';
+
+export interface CodexExtensionOperation {
+  action: CodexExtensionAction;
+  target: CodexExtensionTarget;
+  path: string;
+  reason: string;
+  roleName?: string;
+}
+
+export interface CodexExtensionSummary {
+  operations: CodexExtensionOperation[];
+  managedRoles: string[];
+  aggregateConfigHash: string;
+  applied?: number;
+  failed?: number;
+  skipped?: number;
 }
 
 export interface SyncCommandDependencies {
@@ -81,5 +110,16 @@ export interface SyncCommandDependencies {
     manifest: Manifest,
     manifestPath: string,
   ) => Promise<SyncResult>;
+  computeCodexProjectExtensionPlan: (
+    scopeRoot: string,
+    canonicalEntries: CanonicalEntry[],
+  ) => Promise<CodexExtensionPlan>;
+  toCodexExtensionOperations: (
+    plan: CodexExtensionPlan,
+  ) => CodexExtensionOperation[];
+  applyCodexProjectExtensionPlan: (
+    scopeRoot: string,
+    plan: CodexExtensionPlan,
+  ) => Promise<CodexExtensionApplyResult>;
   formatSyncPlan: (plan: SyncPlan, applied: boolean) => string;
 }

@@ -4,8 +4,17 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
-import { adoptStrayToCanonical } from '@commands/shared/adopt-stray';
 import {
+  adoptStrayToCanonical,
+  isAdoptionConflictError,
+} from '@commands/shared/adopt-stray';
+import {
+  type CodexRoleStray,
+  detectCodexRoleStrays,
+  regenerateCodexAfterAdoption,
+} from '@commands/shared/codex-strays';
+import {
+  confirmAction,
   type MultiSelectChoice,
   type PromptContext,
   selectManyWithAbort,
@@ -25,6 +34,11 @@ import type { Manifest } from '@manifest/index';
 import { loadManifest, saveManifest } from '@manifest/manager';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import {
+  applyCodexProjectExtensionPlan,
+  type CodexExtensionPlan,
+  computeCodexProjectExtensionPlan,
+} from '@providers/codex/codec/sync-extension';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
 import { geminiAdapter } from '@providers/gemini';
@@ -88,15 +102,29 @@ interface StatusDependencies {
     manifest: Manifest,
     canonicalEntries: CanonicalEntry[],
   ) => Promise<DriftReport[]>;
+  detectCodexRoleStrays: (
+    scopeRoot: string,
+    canonicalEntries: CanonicalEntry[],
+  ) => Promise<CodexRoleStray[]>;
+  computeCodexProjectExtensionPlan: (
+    scopeRoot: string,
+    canonicalEntries: CanonicalEntry[],
+  ) => Promise<CodexExtensionPlan>;
+  applyCodexProjectExtensionPlan: (
+    scopeRoot: string,
+    plan: CodexExtensionPlan,
+  ) => Promise<unknown>;
   selectManyWithAbort: <T extends string>(
     message: string,
     choices: MultiSelectChoice<T>[],
     ctx: PromptContext,
   ) => Promise<T[] | null>;
+  confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
   adoptStray: (
     scopeRoot: string,
     stray: StatusStrayCandidate,
     manifest: Manifest,
+    options?: { replaceCanonical?: boolean },
   ) => Promise<Manifest>;
   formatStatusTable: (reports: DriftReport[]) => string;
 }
@@ -105,6 +133,11 @@ interface StatusStrayCandidate {
   provider: string;
   report: DriftReport;
   mapping: PathMapping;
+  adoption?: {
+    kind: 'codex_role';
+    roleName: string;
+    description?: string;
+  };
 }
 
 interface ScopeReportCollection {
@@ -141,7 +174,11 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   getSyncMappings,
   detectDrift,
   detectStrays,
+  detectCodexRoleStrays,
+  computeCodexProjectExtensionPlan,
+  applyCodexProjectExtensionPlan,
   selectManyWithAbort,
+  confirmAction,
   adoptStray: adoptStrayDefault,
   formatStatusTable,
 };
@@ -212,8 +249,9 @@ async function adoptStrayDefault(
   scopeRoot: string,
   stray: StatusStrayCandidate,
   manifest: Manifest,
+  options?: { replaceCanonical?: boolean },
 ): Promise<Manifest> {
-  return adoptStrayToCanonical(scopeRoot, stray, manifest);
+  return adoptStrayToCanonical(scopeRoot, stray, manifest, options);
 }
 
 function formatPathForScope(
@@ -341,6 +379,71 @@ async function collectScopeReports(
     }
   }
 
+  if (
+    scope === 'project' &&
+    activeAdapters.some((adapter) => adapter.name === 'codex')
+  ) {
+    const codexExtensionPlan =
+      await dependencies.computeCodexProjectExtensionPlan(
+        scopeRoot,
+        canonicalEntries,
+      );
+    for (const operation of codexExtensionPlan.operations) {
+      if (operation.action === 'skip') {
+        continue;
+      }
+      if (operation.target === 'role') {
+        reports.push({
+          canonical: operation.roleName
+            ? `.agents/agents/${operation.roleName}.md`
+            : null,
+          provider: 'codex',
+          providerPath: operation.path,
+          state:
+            operation.action === 'create'
+              ? { status: 'missing' }
+              : { status: 'drifted', reason: 'modified' },
+        });
+      } else {
+        reports.push({
+          canonical: null,
+          provider: 'codex',
+          providerPath: operation.path,
+          state: { status: 'drifted', reason: 'modified' },
+        });
+      }
+    }
+
+    const codexStrays = await dependencies.detectCodexRoleStrays(
+      scopeRoot,
+      canonicalEntries,
+    );
+    for (const codexStray of codexStrays) {
+      const report: DriftReport = {
+        canonical: null,
+        provider: 'codex',
+        providerPath: codexStray.providerPath,
+        state: { status: 'stray' },
+      };
+      reports.push(report);
+      strayCandidates.push({
+        provider: 'codex',
+        report,
+        mapping: {
+          contentType: 'agent',
+          canonicalDir: '.agents/agents',
+          providerDir: '.codex/agents',
+          nativeRead: false,
+        },
+        adoption: {
+          kind: 'codex_role',
+          roleName: codexStray.roleName,
+          description: codexStray.description,
+        },
+      });
+    }
+  }
+
   return {
     scope,
     scopeRoot,
@@ -414,6 +517,7 @@ async function runStatusCommand(
           (selectedValues ?? []).map((value) => Number.parseInt(value, 10)),
         );
         let adoptedCount = 0;
+        let codexStrayAdopted = false;
 
         for (const [
           index,
@@ -423,13 +527,63 @@ async function runStatusCommand(
             continue;
           }
 
-          scopeCollection.manifest = await dependencies.adoptStray(
-            scopeCollection.scopeRoot,
-            strayCandidate,
-            scopeCollection.manifest,
-          );
-          adoptedCount += 1;
-          manifestChanged = true;
+          try {
+            scopeCollection.manifest = await dependencies.adoptStray(
+              scopeCollection.scopeRoot,
+              strayCandidate,
+              scopeCollection.manifest,
+            );
+            adoptedCount += 1;
+            manifestChanged = true;
+            codexStrayAdopted =
+              codexStrayAdopted || strayCandidate.provider === 'codex';
+          } catch (error) {
+            if (!isAdoptionConflictError(error)) {
+              throw error;
+            }
+
+            const shouldReplace = await dependencies.confirmAction(
+              `Conflict detected for ${formatPathForScope(
+                scopeCollection.scope,
+                strayCandidate.report.providerPath,
+              )}. Replace canonical with stray content?`,
+              { interactive: context.interactive },
+            );
+
+            if (!shouldReplace) {
+              context.logger.warn(
+                `Skipped adopting conflicting stray [${scopeCollection.scope}] ${formatPathForScope(
+                  scopeCollection.scope,
+                  strayCandidate.report.providerPath,
+                )}.`,
+              );
+              continue;
+            }
+
+            scopeCollection.manifest = await dependencies.adoptStray(
+              scopeCollection.scopeRoot,
+              strayCandidate,
+              scopeCollection.manifest,
+              { replaceCanonical: true },
+            );
+            adoptedCount += 1;
+            manifestChanged = true;
+            codexStrayAdopted =
+              codexStrayAdopted || strayCandidate.provider === 'codex';
+          }
+        }
+
+        if (codexStrayAdopted && scopeCollection.scope === 'project') {
+          await regenerateCodexAfterAdoption({
+            scopeRoot: scopeCollection.scopeRoot,
+            scanCanonical: async () =>
+              dependencies.scanCanonical(
+                scopeCollection.scopeRoot,
+                scopeCollection.scope,
+              ),
+            computeExtensionPlan: dependencies.computeCodexProjectExtensionPlan,
+            applyExtensionPlan: dependencies.applyCodexProjectExtensionPlan,
+          });
         }
 
         if (manifestChanged) {

@@ -8,10 +8,15 @@ import { countPlannedOperations } from './sync.utils';
 
 function countSkippedEntries(scopePlans: ScopeSyncPlan[]): number {
   return scopePlans.reduce((total, scopePlan) => {
+    const codexSkipped =
+      scopePlan.codexExtension?.operations.filter(
+        (operation) => operation.action === 'skip',
+      ).length ?? 0;
     return (
       total +
       scopePlan.plan.entries.filter((entry) => entry.operation === 'skip')
-        .length
+        .length +
+      codexSkipped
     );
   }, 0);
 }
@@ -46,7 +51,18 @@ function formatAppliedOutput(
 
   return scopePlans
     .map((scopePlan) => {
-      return `Scope: ${scopePlan.scope}\n${dependencies.formatSyncPlan(scopePlan.plan, true)}`;
+      const syncOutput = dependencies.formatSyncPlan(scopePlan.plan, true);
+      const codexExtension = scopePlan.codexExtension;
+      if (!codexExtension) {
+        return `Scope: ${scopePlan.scope}\n${syncOutput}`;
+      }
+
+      const codexLines = codexExtension.operations.map((operation) => {
+        const role = operation.roleName ? ` (${operation.roleName})` : '';
+        return `- codex:${operation.target}:${operation.action} ${operation.path}${role} (${operation.reason})`;
+      });
+
+      return `Scope: ${scopePlan.scope}\n${syncOutput}\n\nCodex extension (applied)\n${codexLines.join('\n')}`;
     })
     .join('\n\n');
 }
@@ -60,28 +76,54 @@ export async function runSyncApply(
   let failed = 0;
 
   for (const scopePlan of scopePlans) {
-    const hasPlannedOperations = [
+    const hasSyncPlannedOperations = [
       ...scopePlan.plan.entries,
       ...scopePlan.plan.removals,
     ].some((entry) => entry.operation !== 'skip');
+    const hasCodexPlannedOperations =
+      scopePlan.codexExtensionPlan?.operations.some(
+        (operation) => operation.action !== 'skip',
+      ) ?? false;
 
-    if (!hasPlannedOperations) {
+    if (!hasSyncPlannedOperations && !hasCodexPlannedOperations) {
       continue;
     }
 
-    const result = await dependencies.executeSyncPlan(
-      scopePlan.plan,
-      scopePlan.manifest,
-      scopePlan.manifestPath,
-    );
-    applied += result.applied;
-    failed += result.failed;
+    if (hasSyncPlannedOperations) {
+      const result = await dependencies.executeSyncPlan(
+        scopePlan.plan,
+        scopePlan.manifest,
+        scopePlan.manifestPath,
+      );
+      applied += result.applied;
+      failed += result.failed;
+    }
+
+    if (scopePlan.codexExtensionPlan && hasCodexPlannedOperations) {
+      const codexResult = await dependencies.applyCodexProjectExtensionPlan(
+        scopePlan.scopeRoot,
+        scopePlan.codexExtensionPlan,
+      );
+      applied += codexResult.applied;
+      failed += codexResult.failed;
+      if (scopePlan.codexExtension) {
+        scopePlan.codexExtension = {
+          ...scopePlan.codexExtension,
+          applied: codexResult.applied,
+          failed: codexResult.failed,
+          skipped: codexResult.skipped,
+        };
+      }
+    }
   }
 
   const summary = buildSummary(scopePlans, applied, failed);
   const providerMismatches = scopePlans
     .map((scopePlan) => scopePlan.providerMismatches)
     .filter((mismatch) => mismatch !== undefined);
+  const codexExtensions = scopePlans
+    .map((scopePlan) => scopePlan.codexExtension)
+    .filter((extension) => extension !== undefined);
   if (context.json) {
     context.logger.json({
       scope: context.scope,
@@ -89,6 +131,7 @@ export async function runSyncApply(
       plans: scopePlans.map((scopePlan) => scopePlan.plan),
       summary,
       providerMismatches,
+      codexExtensions,
     });
   } else {
     context.logger.info(formatAppliedOutput(scopePlans, dependencies));
