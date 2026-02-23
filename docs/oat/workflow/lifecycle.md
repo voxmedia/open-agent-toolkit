@@ -35,7 +35,7 @@ OAT lifecycle order:
    - `oat-project-implement` (sequential)
    - `oat-project-subagent-implement` (parallel/subagent-driven)
 3. `oat-project-review-provide` / `oat-project-pr-final`
-4. Optional `oat-project-promote-full` to backfill full lifecycle artifacts in-place
+4. Optional `oat-project-promote-spec-driven` to backfill spec-driven lifecycle artifacts in-place
 
 ### Import lane
 
@@ -44,11 +44,11 @@ OAT lifecycle order:
    - `oat-project-implement` (sequential)
    - `oat-project-subagent-implement` (parallel/subagent-driven)
 3. `oat-project-review-provide` / `oat-project-pr-final`
-4. Optional `oat-project-promote-full` to switch project mode to full lifecycle
+4. Optional `oat-project-promote-spec-driven` to switch project mode to spec-driven lifecycle
 
 ## Lane diagrams
 
-### Full lifecycle lane
+### Spec-Driven workflow lane
 
 ```mermaid
 flowchart LR

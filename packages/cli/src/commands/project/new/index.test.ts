@@ -9,7 +9,7 @@ import { createProjectNewCommand } from './index';
 
 interface HarnessOptions {
   result?: {
-    mode: 'full' | 'quick' | 'import';
+    mode: 'spec-driven' | 'quick' | 'import';
     projectPath: string;
     projectsRoot: string;
     createdFiles: string[];
@@ -32,7 +32,7 @@ function createHarness(options: HarnessOptions = {}): {
     }
     return (
       options.result ?? {
-        mode: 'full',
+        mode: 'spec-driven',
         projectPath: '.oat/projects/shared/demo',
         projectsRoot: '.oat/projects/shared',
         createdFiles: ['state.md'],
@@ -120,7 +120,7 @@ describe('createProjectNewCommand', () => {
   it('prints success output for text mode', async () => {
     const { command, capture } = createHarness({
       result: {
-        mode: 'full',
+        mode: 'spec-driven',
         projectPath: '.oat/projects/shared/demo',
         projectsRoot: '.oat/projects/shared',
         createdFiles: ['state.md'],

@@ -35,7 +35,7 @@ flowchart TD
 | Mode | Best for | Primary entry points |
 |---|---|---|
 | Interop-only | Canonical skill/agent sync + drift diagnostics | `oat init`, `oat status`, `oat sync`, `oat providers ...`, `oat cleanup ...`, `oat doctor` |
-| Provider-agnostic tooling | Reusing skills/utilities without full lifecycle overhead | `docs/oat/skills/index.md`, selected `oat-*` skills |
+| Provider-agnostic tooling | Reusing skills/utilities without spec-driven lifecycle overhead | `docs/oat/skills/index.md`, selected `oat-*` skills |
 | Workflow | Structured execution with durable artifacts and review gates | `oat-project-new`/`oat-project-open`, then lane-specific skills |
 
 ### A) Interop-only mode (CLI only)
@@ -63,7 +63,7 @@ This mode is useful even if you do not use OAT workflow skills at all.
 
 ### B) Provider-agnostic tooling mode (skills + utilities)
 
-Use reusable skills and tooling without adopting the full project lifecycle:
+Use reusable skills and tooling without adopting the spec-driven project lifecycle:
 
 - Draft ideas and plans with your preferred provider
 - Keep plan-first docs outside OAT, then sync/import into an OAT project when ready
@@ -81,20 +81,20 @@ Use OAT lifecycle skills when you want explicit checkpoints and durable project 
 Recommended when:
 - You want traceable artifacts (`state/spec/design/plan/implementation`) for handoffs and audits.
 - You want review/fix loops and PR artifacts driven by a consistent workflow contract.
-- You want the option to start fast (quick/import) and promote to full lifecycle later.
+- You want the option to start fast (quick/import) and promote to spec-driven lifecycle later.
 
 Lane options (all converge on implementation + project review workflows):
 
 | Lane | Typical sequence | Best fit |
 |---|---|---|
-| Full | Discovery -> Spec -> Design -> Plan -> Implement -> Project review loop | New initiatives or higher-risk changes that need full artifact rigor |
+| Spec-Driven | Discovery -> Spec -> Design -> Plan -> Implement -> Project review loop | New initiatives or higher-risk changes that need strong artifact rigor |
 | Quick | Quick start (discovery + plan baseline) -> Implement -> Project review loop | Smaller scoped work that still needs structured execution |
 | Imported-plan | Plan with provider -> Import to OAT project -> Implement -> Project review loop | External/provider-authored plans you want normalized into OAT artifacts |
 
 Shared across lanes:
 - Review/fix loops (`oat-project-review-provide` + `oat-project-review-receive`)
 - PR artifacts (`oat-project-pr-progress`, `oat-project-pr-final`)
-- Optional promotion to full lifecycle (`oat-project-promote-full`) where applicable
+- Optional promotion to spec-driven lifecycle (`oat-project-promote-spec-driven`) where applicable
 
 This layer is optional and can build on top of interop + provider-agnostic tooling.
 
@@ -222,7 +222,7 @@ This gives you the core value of OAT without adopting workflow artifacts.
 
 ```mermaid
 flowchart LR
-  Full["Full lane: discover -> spec -> design -> plan"] --> Mode{"Implementation mode?"}
+  SpecDriven["Spec-Driven lane: discover -> spec -> design -> plan"] --> Mode{"Implementation mode?"}
   Quick["Quick lane: oat-project-quick-start"] --> Mode
   Import["Imported lane: oat-project-import-plan"] --> Mode
   Mode -->|Sequential| ImplementSeq["oat-project-implement"]
@@ -237,7 +237,7 @@ flowchart LR
 
 ### Choose a lane
 
-1. Full workflow lane
+1. Spec-Driven workflow lane
    - Create/open project (`oat-project-new` / `oat-project-open`)
    - Discovery (`oat-project-discover`)
    - Spec (`oat-project-spec`)
@@ -247,12 +247,12 @@ flowchart LR
 2. Quick workflow lane
    - Quick start (`oat-project-quick-start`, which captures discovery context and writes a runnable plan baseline)
    - Implement (`oat-project-implement` or `oat-project-subagent-implement`)
-   - Optional promotion (`oat-project-promote-full`)
+   - Optional promotion (`oat-project-promote-spec-driven`)
 3. Imported-plan workflow lane
    - Produce discovery/plan externally with provider tooling
    - Import external plan (`oat-project-import-plan`)
    - Implement (`oat-project-implement` or `oat-project-subagent-implement`)
-   - Optional promotion (`oat-project-promote-full`)
+   - Optional promotion (`oat-project-promote-spec-driven`)
 
 ### Typical lane sequences
 
@@ -275,7 +275,7 @@ flowchart LR
 2. Execution mode persistence:
    - `oat project set-mode <single-thread|subagent-driven>`
 3. Canonical plan-writing contract:
-   - `oat-project-plan-writing` (shared full/quick/import planning semantics)
+   - `oat-project-plan-writing` (shared spec-driven/quick/import planning semantics)
 4. Review path selection:
    - Project-scoped review: `oat-project-review-provide` + `oat-project-review-receive`
    - Ad-hoc/non-project review: `oat-review-provide`

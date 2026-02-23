@@ -12,11 +12,11 @@ Transform detailed design into an executable implementation plan with bite-sized
 
 ## Prerequisites
 
-This skill is the plan authoring path for **full-mode** projects only. Quick and import modes have dedicated entry skills that produce `plan.md` directly.
+This skill is the plan authoring path for **spec-driven** projects only. Quick and import modes have dedicated entry skills that produce `plan.md` directly.
 
-Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `full`):
+Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`):
 
-- **`full`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, run the `oat-project-design` skill first. Proceed with planning.
+- **`spec-driven`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, run the `oat-project-design` skill first. Proceed with planning.
 - **`quick`**: **Stop.** Plan is already produced by the quick workflow. Tell the user: "Plan already produced by quick workflow. Run `oat-project-implement` to begin execution."
 - **`import`**: **Stop.** If a normalized `plan.md` exists, tell the user: "Imported plan is ready. Run `oat-project-implement` to begin execution." If no `plan.md` exists, tell the user: "Run `oat-project-import-plan` to import and normalize the external plan first."
 
@@ -28,7 +28,7 @@ When creating or editing `plan.md`, follow `oat-project-plan-writing` canonical 
 
 **OAT MODE: Planning**
 
-**Purpose:** Break design into executable tasks with exact files, signatures/test cases, and commands. Full-mode only — quick and import modes stop-and-route.
+**Purpose:** Break design into executable tasks with exact files, signatures/test cases, and commands. Spec-driven only — quick and import modes stop-and-route.
 
 ## Progress Indicators (User-Facing)
 
@@ -99,7 +99,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 ```bash
 WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
-WORKFLOW_MODE="${WORKFLOW_MODE:-full}"
+WORKFLOW_MODE="${WORKFLOW_MODE:-spec-driven}"
 ```
 
 **Mode: `quick`** — **STOP.** Print:
@@ -114,7 +114,7 @@ Exit skill.
 - If no: Print: "Run `oat-project-import-plan` to import and normalize the external plan first."
 Exit skill.
 
-**Mode: `full`** — Continue to Step 2.
+**Mode: `spec-driven`** — Continue to Step 2.
 
 ### Step 2: Check Design Complete
 

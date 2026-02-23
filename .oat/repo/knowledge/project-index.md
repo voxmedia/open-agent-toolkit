@@ -78,7 +78,7 @@ oat_warning: "GENERATED FILE - Thin index, will be enriched after mapper complet
   .agents/skills/oat-project-pr-final
   .agents/skills/oat-project-pr-progress
   .agents/skills/oat-project-progress
-  .agents/skills/oat-project-promote-full
+  .agents/skills/oat-project-promote-spec-driven
   .agents/skills/oat-project-quick-start
   .agents/skills/oat-project-review-provide
   .agents/skills/oat-project-review-receive
@@ -115,7 +115,7 @@ oat_warning: "GENERATED FILE - Thin index, will be enriched after mapper complet
   .claude/skills/oat-project-pr-final
   .claude/skills/oat-project-pr-progress
   .claude/skills/oat-project-progress
-  .claude/skills/oat-project-promote-full
+  .claude/skills/oat-project-promote-spec-driven
   .claude/skills/oat-project-quick-start
   .claude/skills/oat-project-review-provide
   .claude/skills/oat-project-review-receive
@@ -154,7 +154,7 @@ oat_warning: "GENERATED FILE - Thin index, will be enriched after mapper complet
   .cursor/skills/oat-project-pr-final
   .cursor/skills/oat-project-pr-progress
   .cursor/skills/oat-project-progress
-  .cursor/skills/oat-project-promote-full
+  .cursor/skills/oat-project-promote-spec-driven
   .cursor/skills/oat-project-quick-start
   .cursor/skills/oat-project-review-provide
   .cursor/skills/oat-project-review-receive

@@ -13,7 +13,7 @@ Create a progress PR description (typically at a plan phase boundary) and write 
 ## Purpose
 
 Generate a PR-ready summary that is:
-- grounded in OAT artifacts (mode-aware: full uses spec/design; quick/import may use discovery/import reference)
+- grounded in OAT artifacts (mode-aware: spec-driven uses spec/design; quick/import may use discovery/import reference)
 - scoped to a specific phase (pNN) or an explicit git range
 - easy to paste into GitHub (or used with `gh pr create` if desired)
 
@@ -119,11 +119,11 @@ If scope is `range`/`base_sha`, set:
 
 ### Step 2: Load Artifacts (Mode-Aware)
 
-Resolve workflow mode from `state.md` (default `full`):
+Resolve workflow mode from `state.md` (default `spec-driven`):
 
 ```bash
 WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | head -1 | awk '{print $2}')
-WORKFLOW_MODE=${WORKFLOW_MODE:-full}
+WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
 ```
 
 Read (as available):
@@ -134,9 +134,9 @@ Read (as available):
 - `{PROJECT_PATH}/discovery.md` (recommended for quick mode)
 - `{PROJECT_PATH}/references/imported-plan.md` (recommended for import mode)
 
-If `WORKFLOW_MODE != full` and spec/design are missing:
+If `WORKFLOW_MODE != spec-driven` and spec/design are missing:
 - continue (do not block)
-- include an explicit note in PR summary that full requirements/design artifacts are absent for this scope
+- include an explicit note in PR summary that spec-driven requirements/design artifacts are absent for this scope
 
 ### Step 3: Check Review Status (Recommended)
 
@@ -213,7 +213,7 @@ oat_project: {PROJECT_PATH}
 
 ## Why
 
-{How this supports goals from available requirement artifacts: spec in full mode, discovery/import reference in quick/import mode}
+{How this supports goals from available requirement artifacts: spec in spec-driven mode, discovery/import reference in quick/import mode}
 
 ## Scope
 

@@ -22,7 +22,7 @@ Generate a PR-ready summary grounded in canonical OAT artifacts, including:
 **Required:**
 - `.oat/active-project` points at an active project directory (or you can provide project name when prompted)
 - `{PROJECT_PATH}/plan.md` exists
-- In `full` mode: `{PROJECT_PATH}/spec.md` and `{PROJECT_PATH}/design.md` are required
+- In `spec-driven` mode: `{PROJECT_PATH}/spec.md` and `{PROJECT_PATH}/design.md` are required
 - In `quick`/`import` mode: `spec.md`/`design.md` are optional
 
 **Required (recommended to proceed):**
@@ -99,11 +99,11 @@ If missing/invalid:
 
 ### Step 1: Validate Required Artifacts (Mode-Aware)
 
-Resolve workflow mode from `state.md` (default `full`):
+Resolve workflow mode from `state.md` (default `spec-driven`):
 
 ```bash
 WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | head -1 | awk '{print $2}')
-WORKFLOW_MODE=${WORKFLOW_MODE:-full}
+WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
 ```
 
 ```bash
@@ -112,7 +112,7 @@ ls "$PROJECT_PATH/plan.md" 2>/dev/null
 
 If missing: block and tell user which artifact(s) are required.
 
-If `WORKFLOW_MODE=full`, also require:
+If `WORKFLOW_MODE=spec-driven`, also require:
 
 ```bash
 ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" 2>/dev/null
@@ -211,7 +211,7 @@ oat_project: {PROJECT_PATH}
 
 ## Goals / Non-Goals
 
-{brief bullets from available requirement artifacts: spec in full mode; discovery/import source in quick/import}
+{brief bullets from available requirement artifacts: spec in spec-driven mode; discovery/import source in quick/import}
 
 ## What Changed
 

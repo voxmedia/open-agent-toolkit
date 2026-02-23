@@ -165,7 +165,8 @@ async function readProjectState(
   const hillCompleted =
     (await parseFrontmatterField(stateFile, 'oat_hill_completed')) || '[]';
   const workflowMode =
-    (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) || 'full';
+    (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) ||
+    'spec-driven';
 
   let hillStatus: string;
   if (phaseInHillList(phase, hillCheckpoints)) {
@@ -315,27 +316,27 @@ function computeNextStep(
   // Workflow mode routing
   const key = `${state.workflowMode}:${state.phase}:${state.phaseStatus}`;
   const routeMap: Record<string, { step: string; reason: string }> = {
-    'full:discovery:in_progress': {
+    'spec-driven:discovery:in_progress': {
       step: 'oat-project-discover',
       reason: 'Continue discovery phase',
     },
-    'full:discovery:complete': {
+    'spec-driven:discovery:complete': {
       step: 'oat-project-spec',
       reason: 'Create specification from discovery',
     },
-    'full:spec:in_progress': {
+    'spec-driven:spec:in_progress': {
       step: 'oat-project-spec',
       reason: 'Continue specification phase',
     },
-    'full:spec:complete': {
+    'spec-driven:spec:complete': {
       step: 'oat-project-design',
       reason: 'Create design from specification',
     },
-    'full:design:in_progress': {
+    'spec-driven:design:in_progress': {
       step: 'oat-project-design',
       reason: 'Continue design phase',
     },
-    'full:design:complete': {
+    'spec-driven:design:complete': {
       step: 'oat-project-plan',
       reason: 'Create implementation plan from design',
     },
@@ -476,7 +477,7 @@ function buildDashboardMarkdown(
   lines.push('');
   lines.push('- `oat-project-progress` - Check current status');
   lines.push('- `oat-repo-knowledge-index` - Refresh knowledge base');
-  lines.push('- `oat-project-new` - Create a full-lifecycle project');
+  lines.push('- `oat-project-new` - Create a spec-driven project');
   lines.push('- `oat-project-quick-start` - Create a quick workflow project');
   lines.push('- `oat-project-import-plan` - Import an external provider plan');
   lines.push('- `oat-project-open` - Switch active project');

@@ -26,7 +26,7 @@ SKILLS=(
   oat-project-pr-final
   oat-project-pr-progress
   oat-project-progress
-  oat-project-promote-full
+  oat-project-promote-spec-driven
   oat-project-quick-start
   oat-project-review-provide
   oat-project-review-receive

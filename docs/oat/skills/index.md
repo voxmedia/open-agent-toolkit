@@ -7,7 +7,7 @@ Project skills are stored in `.agents/skills`.
 - `oat-project-new`
 - `oat-project-quick-start`
 - `oat-project-import-plan`
-- `oat-project-promote-full`
+- `oat-project-promote-spec-driven`
 - `oat-project-open`
 - `oat-project-clear-active`
 - `oat-project-discover`

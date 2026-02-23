@@ -279,8 +279,8 @@ describe('help output snapshots', () => {
         name             Project name (letters, numbers, dash, underscore)
 
       Options:
-        --mode <mode>    Scaffold mode (choices: "full", "quick", "import", default:
-                         "full")
+        --mode <mode>    Scaffold mode (choices: "spec-driven", "quick", "import",
+                         default: "spec-driven")
         --force          Non-destructive scaffold; create missing files only
         --no-set-active  Do not update .oat/active-project
         --no-dashboard   Do not refresh .oat/state.md after scaffold

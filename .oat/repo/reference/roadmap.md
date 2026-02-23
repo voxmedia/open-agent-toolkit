@@ -40,11 +40,11 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
 - Workflow phases + routing:
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
   - Router: `oat-project-progress`
-  - Shared planning contract: `oat-project-plan-writing` (full/quick/import mode guidance)
+  - Shared planning contract: `oat-project-plan-writing` (spec-driven/quick/import mode guidance)
 - Alternate lanes:
   - `oat-project-quick-start` (quick lane)
   - `oat-project-import-plan` (import lane, canonicalized to `plan.md`)
-  - `oat-project-promote-full` (in-place promotion to full lifecycle)
+  - `oat-project-promote-spec-driven` (in-place promotion to spec-driven lifecycle)
 - Review + PR loop:
   - Review: `oat-project-review-provide`, `oat-project-review-receive` + `.agents/agents/oat-reviewer.md`
   - Ad-hoc review (no project state required): `oat-review-provide`
@@ -218,14 +218,14 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Status:** In Progress
 - Done: quick lane starter (`oat-project-quick-start`)
 - Done: import lane starter (`oat-project-import-plan`)
-- Done: in-place promotion skill (`oat-project-promote-full`)
-- Done: mode-aware routing/review/PR/dashboard contracts (`full|quick|import`)
+- Done: in-place promotion skill (`oat-project-promote-spec-driven`)
+- Done: mode-aware routing/review/PR/dashboard contracts (`spec-driven|quick|import`)
 - Done: shared canonical plan-writing contract (`oat-project-plan-writing`) applied across planning/import/review flows
 - Remaining: template rendering helper (`oat template render ...`)
 
 **When to do it:**
-- After we have a stable "full mode", and
-- We find ourselves repeatedly doing small changes where full discovery/spec/design overhead isn't worth it.
+- After we have a stable "spec-driven mode", and
+- We find ourselves repeatedly doing small changes where spec-driven discovery/spec/design overhead isn't worth it.
 
 **Deliverables:**
 - Quick/import mode lanes: reduced ceremony with canonical `plan.md` execution contract

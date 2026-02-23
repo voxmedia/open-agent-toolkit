@@ -151,7 +151,7 @@ describe('scaffoldProject', () => {
     await scaffoldProject({
       repoRoot,
       projectName: 'demo',
-      mode: 'full',
+      mode: 'spec-driven',
       refreshDashboard: false,
       setActive: false,
       today: '2026-02-16',
@@ -245,14 +245,14 @@ describe('scaffoldProject', () => {
     expect(plan).toContain('oat_template_name : plan');
   });
 
-  it('creates full mode artifacts and excludes project-index', async () => {
+  it('creates spec-driven mode artifacts and excludes project-index', async () => {
     const repoRoot = await createRepoRoot();
     tempDirs.push(repoRoot);
 
     await scaffoldProject({
       repoRoot,
-      projectName: 'full-mode',
-      mode: 'full',
+      projectName: 'spec-driven-mode',
+      mode: 'spec-driven',
       refreshDashboard: false,
       setActive: false,
       today: '2026-02-16',
@@ -268,7 +268,14 @@ describe('scaffoldProject', () => {
     ]) {
       await expect(
         readFile(
-          join(repoRoot, '.oat', 'projects', 'shared', 'full-mode', file),
+          join(
+            repoRoot,
+            '.oat',
+            'projects',
+            'shared',
+            'spec-driven-mode',
+            file,
+          ),
           'utf8',
         ),
       ).resolves.toContain(file);
@@ -281,7 +288,7 @@ describe('scaffoldProject', () => {
           '.oat',
           'projects',
           'shared',
-          'full-mode',
+          'spec-driven-mode',
           'project-index.md',
         ),
         'utf8',

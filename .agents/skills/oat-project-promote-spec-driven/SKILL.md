@@ -1,15 +1,15 @@
 ---
-name: oat-project-promote-full
-description: Use when a quick or imported project now needs full-lifecycle rigor. Backfills missing discovery, spec, and design artifacts in place.
+name: oat-project-promote-spec-driven
+description: Use when a quick or imported project now needs Spec-Driven lifecycle rigor. Backfills missing discovery, spec, and design artifacts in place.
 argument-hint: "[--project <name>]"
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 ---
 
-# Promote Project To Full Lifecycle
+# Promote Project To Spec-Driven Lifecycle
 
-Convert a quick/import workflow project into a full OAT lifecycle project without creating a new project directory.
+Convert a quick/import workflow project into a Spec-Driven OAT lifecycle project without creating a new project directory.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ Convert a quick/import workflow project into a full OAT lifecycle project withou
 
 ## Mode Assertion
 
-**OAT MODE: Promote Full Lifecycle**
+**OAT MODE: Promote Spec-Driven Lifecycle**
 
 **Purpose:** Backfill missing lifecycle artifacts (`discovery.md`, `spec.md`, `design.md`) while preserving existing `plan.md` and execution history.
 
@@ -39,7 +39,7 @@ If you catch yourself:
 **Recovery:**
 1. Keep all existing project artifacts intact.
 2. Fill only missing lifecycle documents.
-3. Update mode/state fields for full lifecycle routing.
+3. Update mode/state fields for Spec-Driven lifecycle routing.
 
 ## Progress Indicators (User-Facing)
 
@@ -48,14 +48,14 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ PROMOTE TO FULL
+   OAT ▸ PROMOTE TO SPEC-DRIVEN
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
   - `[1/4] Checking promotion eligibility…`
   - `[2/4] Inspecting existing artifacts…`
   - `[3/4] Backfilling missing lifecycle artifacts…`
-  - `[4/4] Switching to full mode + reporting…`
+  - `[4/4] Switching to spec-driven mode + reporting…`
 
 ## Process
 
@@ -74,7 +74,7 @@ If missing/invalid, ask for project name and set active project pointer.
 Read `"$PROJECT_PATH/state.md"` and verify:
 - `oat_workflow_mode` is `quick` or `import`
 
-If already `full`, report no-op and stop unless user asks for artifact refresh.
+If already `spec-driven`, report no-op and stop unless user asks for artifact refresh.
 
 ### Step 2: Inspect Existing Artifacts
 
@@ -106,16 +106,16 @@ Backfill policy:
 
 Do not rewrite plan history.
 
-Keep `oat_plan_source` unchanged unless user explicitly requests a new full-plan regeneration.
+Keep `oat_plan_source` unchanged unless user explicitly requests a new spec-driven-plan regeneration.
 
 If user requests regeneration:
 - create a new plan revision section in `plan.md`
 - keep imported/quick provenance in references and notes
 
-### Step 5: Switch Project To Full Mode
+### Step 5: Switch Project To Spec-Driven Mode
 
 Update `"$PROJECT_PATH/state.md"` frontmatter:
-- `oat_workflow_mode: full`
+- `oat_workflow_mode: spec-driven`
 - keep `oat_workflow_origin` as-is (`native` or `imported`)
 - align `oat_phase` and `oat_phase_status` with current actual progress
 
@@ -135,6 +135,6 @@ Output:
 
 - ✅ Project remains in same directory with history preserved.
 - ✅ Missing discovery/spec/design artifacts are backfilled.
-- ✅ `state.md` now marks `oat_workflow_mode: full`.
+- ✅ `state.md` now marks `oat_workflow_mode: spec-driven`.
 - ✅ `plan.md` provenance is preserved (`oat_plan_source` unchanged unless user asked to regenerate).
-- ✅ Next-step routing is valid for full lifecycle skills.
+- ✅ Next-step routing is valid for Spec-Driven lifecycle skills.

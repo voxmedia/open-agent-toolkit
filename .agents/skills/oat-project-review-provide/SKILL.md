@@ -114,15 +114,15 @@ If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`.
 
 ### Step 2: Validate Artifacts Exist (Mode-Aware)
 
-Resolve workflow mode from state (default `full`):
+Resolve workflow mode from state (default `spec-driven`):
 
 ```bash
 WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | head -1 | awk '{print $2}')
-WORKFLOW_MODE=${WORKFLOW_MODE:-full}
+WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
 ```
 
 **Required for code review (by mode):**
-- `full`: `spec.md`, `design.md`, `plan.md`
+- `spec-driven`: `spec.md`, `design.md`, `plan.md`
 - `quick`: `discovery.md`, `plan.md` (`spec.md`/`design.md` optional if present)
 - `import`: `plan.md` (`references/imported-plan.md` recommended, `spec.md`/`design.md` optional)
 
@@ -131,7 +131,7 @@ WORKFLOW_MODE=${WORKFLOW_MODE:-full}
 - Upstream dependencies are required only when relevant to that artifact:
   - reviewing `spec` requires `discovery.md`
   - reviewing `design` requires `spec.md`
-  - reviewing `plan` in `full` mode requires `spec.md` + `design.md`
+  - reviewing `plan` in `spec-driven` mode requires `spec.md` + `design.md`
   - reviewing `plan` in `quick/import` mode may use `discovery.md` and/or `references/imported-plan.md` instead
 
 **If missing:** Report missing required artifacts for the current mode and stop if requirements are not met.
@@ -194,7 +194,7 @@ case "$SCOPE_TOKEN" in
   spec) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/discovery.md") ;;
   design) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/design.md" "$PROJECT_PATH/spec.md") ;;
   plan)
-    if [[ "$WORKFLOW_MODE" == "full" ]]; then
+    if [[ "$WORKFLOW_MODE" == "spec-driven" ]]; then
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md")
     elif [[ "$WORKFLOW_MODE" == "quick" ]]; then
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/discovery.md")
@@ -247,8 +247,8 @@ Build the "Review Scope" metadata for the reviewer:
 **Date:** {today}
 
 **Artifact Paths:**
-- Spec: {PROJECT_PATH}/spec.md (required in full mode; optional in quick/import)
-- Design: {PROJECT_PATH}/design.md (required in full mode; optional in quick/import)
+- Spec: {PROJECT_PATH}/spec.md (required in spec-driven mode; optional in quick/import)
+- Design: {PROJECT_PATH}/design.md (required in spec-driven mode; optional in quick/import)
 - Plan: {PROJECT_PATH}/plan.md
 - Implementation: {PROJECT_PATH}/implementation.md
 - Discovery: {PROJECT_PATH}/discovery.md
@@ -355,7 +355,7 @@ If running inline (Tier 3), execute the review and write artifact.
 
 **Review checklist (from oat-reviewer):**
 1. Verify scope (don't review out-of-scope changes)
-2. If code review: verify alignment to available requirements sources (`spec`/`design` for full mode; `discovery`/import reference for quick/import)
+2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import)
 3. If code review: verify code quality (correctness, tests, security, maintainability)
 4. If artifact review: verify completeness/clarity/readiness of the artifact and its alignment with upstream artifacts
 5. Categorize findings (Critical/Important/Medium/Minor)

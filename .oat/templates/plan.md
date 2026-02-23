@@ -6,7 +6,7 @@ oat_last_updated: YYYY-MM-DD
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_hill_phases: []
-oat_plan_source: full  # full | quick | imported
+oat_plan_source: spec-driven  # spec-driven | quick | imported
 oat_import_reference: null  # e.g., references/imported-plan.md
 oat_import_source_path: null  # original source path provided by user
 oat_import_provider: null  # codex | cursor | claude | null
@@ -161,7 +161,7 @@ Ready for code review and merge.
 
 ## References
 
-- Design: `design.md` (required in full mode; optional in quick/import mode)
-- Spec: `spec.md` (required in full mode; optional in quick/import mode)
+- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
+- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
 - Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)

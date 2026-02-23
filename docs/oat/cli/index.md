@@ -35,7 +35,7 @@ See [`provider-interop/`](provider-interop/index.md) for detailed provider-inter
 
 | Command | Purpose |
 |---------|---------|
-| `oat project new <name>` | Mode-aware project scaffolding (`--mode full\|quick\|import`). Creates project directories and template files. |
+| `oat project new <name>` | Mode-aware project scaffolding (`--mode spec-driven\|quick\|import`). Creates project directories and template files. |
 | `oat project set-mode <mode>` | Set project implementation mode (`single-thread` or `subagent-driven`) in active project `state.md`. |
 | `oat cleanup project` | Project-state hygiene cleanup (pointer/state/lifecycle drift). Dry-run by default. |
 | `oat cleanup artifacts` | Review/reference artifact hygiene cleanup with duplicate pruning and stale triage. |

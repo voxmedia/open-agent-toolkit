@@ -94,7 +94,7 @@ describe('generateStateDashboard', () => {
       oat_phase: 'implement',
       oat_phase_status: 'in_progress',
       oat_current_task: 'p02-t03',
-      oat_workflow_mode: 'full',
+      oat_workflow_mode: 'spec-driven',
       oat_hill_checkpoints: '[]',
       oat_hill_completed: '[]',
     });
@@ -117,7 +117,7 @@ describe('generateStateDashboard', () => {
     const dashboard = await readFile(result.dashboardPath, 'utf8');
     expect(dashboard).toContain('| Phase | implement |');
     expect(dashboard).toContain('| Current Task | p02-t03 |');
-    expect(dashboard).toContain('| Mode | full |');
+    expect(dashboard).toContain('| Mode | spec-driven |');
   });
 
   it('handles missing active-project gracefully', async () => {
@@ -209,7 +209,7 @@ describe('generateStateDashboard', () => {
     expect(result.stalenessStatus).toBe('aging');
   });
 
-  it('routes computeNextStep correctly for full/quick/import modes with HiLL gating', async () => {
+  it('routes computeNextStep correctly for spec-driven/quick/import modes with HiLL gating', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);
 
@@ -217,7 +217,7 @@ describe('generateStateDashboard', () => {
     await writeStateFile(root, '.oat/projects/shared/hill-proj', {
       oat_phase: 'design',
       oat_phase_status: 'complete',
-      oat_workflow_mode: 'full',
+      oat_workflow_mode: 'spec-driven',
       oat_hill_checkpoints: '["design"]',
       oat_hill_completed: '[]',
     });

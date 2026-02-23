@@ -104,8 +104,8 @@ export function createProjectNewCommand(
     .argument('<name>', 'Project name (letters, numbers, dash, underscore)')
     .addOption(
       new Option('--mode <mode>', 'Scaffold mode')
-        .choices(['full', 'quick', 'import'])
-        .default('full'),
+        .choices(['spec-driven', 'quick', 'import'])
+        .default('spec-driven'),
     )
     .option('--force', 'Non-destructive scaffold; create missing files only')
     .option('--no-set-active', 'Do not update .oat/active-project')

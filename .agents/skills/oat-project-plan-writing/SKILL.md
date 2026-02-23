@@ -30,7 +30,7 @@ Every `plan.md` produced or edited by any OAT skill **must** satisfy these invar
 
 ```yaml
 ---
-oat_plan_source: full | quick | imported   # origin workflow mode
+oat_plan_source: spec-driven | quick | imported   # origin workflow mode
 oat_plan_hill_phases: []                     # HiLL checkpoint phase list (empty = every phase)
 oat_status: in_progress | complete          # plan lifecycle status
 oat_ready_for: null | oat-project-implement # downstream consumer
@@ -76,15 +76,15 @@ If any required section is missing when a skill edits `plan.md`, it must be rest
 
 ## Mode-Specific Planning Inputs
 
-Required inputs vary by workflow mode. The calling skill reads `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `full`).
+Required inputs vary by workflow mode. The calling skill reads `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`).
 
 | Mode     | Required Inputs                                      | Design Gate |
 |----------|------------------------------------------------------|-------------|
-| `full`   | Complete `design.md` (`oat_status: complete`)        | Yes         |
+| `spec-driven` | Complete `design.md` (`oat_status: complete`)   | Yes         |
 | `quick`  | `discovery.md` + repo knowledge context              | No          |
 | `import` | Preserved external source + normalized `plan.md`     | No          |
 
-- **`full`**: Plan is derived from a complete design document. All design components must be covered by tasks.
+- **`spec-driven`**: Plan is derived from a complete design document. All design components must be covered by tasks.
 - **`quick`**: Plan is generated directly from discovery decisions and repo knowledge. No design artifact is required.
 - **`import`**: External plan is preserved in `references/imported-plan.md` and normalized into canonical format. Subsequent edits follow this contract.
 

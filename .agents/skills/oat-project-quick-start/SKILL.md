@@ -23,7 +23,7 @@ Create or resume a project in **quick mode** and produce a runnable `plan.md` wi
 **Purpose:** Capture intent quickly (`discovery.md`) and generate an execution-ready `plan.md` for `oat-project-implement`.
 
 **BLOCKED Activities:**
-- No full spec/design authoring unless user explicitly asks to promote to full workflow.
+- No spec-driven spec/design authoring unless user explicitly asks to promote to the spec-driven workflow.
 - No implementation code changes.
 
 **ALLOWED Activities:**
@@ -33,7 +33,7 @@ Create or resume a project in **quick mode** and produce a runnable `plan.md` wi
 
 **Self-Correction Protocol:**
 If you catch yourself:
-- Expanding into full lifecycle documentation → STOP and keep scope to quick workflow artifacts.
+- Expanding into spec-driven lifecycle documentation → STOP and keep scope to quick workflow artifacts.
 - Writing implementation code → STOP and return to plan authoring.
 
 **Recovery:**

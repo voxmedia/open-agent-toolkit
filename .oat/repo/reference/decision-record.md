@@ -14,7 +14,7 @@ Track notable decisions made while evolving OAT in this repo, so future sessions
 | ADR-006 | 2026-02-16 | accepted | Add quick/import workflow lanes with canonical plan normalization and mode-aware routing |
 | ADR-007 | 2026-02-16 | accepted | Split project-scoped review from ad-hoc review and default non-project artifacts to local-only storage |
 | ADR-008 | 2026-02-16 | accepted | Use explicit provider config with config-aware sync remediation for worktree-safe interop |
-| ADR-009 | 2026-02-16 | accepted | Centralize full/quick/import plan semantics in `oat-project-plan-writing` |
+| ADR-009 | 2026-02-16 | accepted | Centralize spec-driven/quick/import plan semantics in `oat-project-plan-writing` |
 | ADR-010 | 2026-02-17 | accepted | Introduce `.oat/config.json` for new non-sync settings and phase broader consolidation |
 | ADR-011 | 2026-02-17 | accepted | Make worktree-root resolution deterministic and default `worktrees.root` to repo-local `.worktrees` |
 
@@ -202,17 +202,17 @@ Adopt option 2:
 - **Related:**
   - `.agents/skills/oat-project-quick-start/SKILL.md`
   - `.agents/skills/oat-project-import-plan/SKILL.md`
-  - `.agents/skills/oat-project-promote-full/SKILL.md`
+  - `.agents/skills/oat-project-promote-spec-driven/SKILL.md`
   - `.oat/templates/state.md`
   - `.oat/templates/plan.md`
 
 #### Context
 
-OAT's full lifecycle (`discover -> spec -> design -> plan -> implement`) provides strong structure but is heavy for quick changes and externally-authored plans. We need a lightweight path that still keeps `plan.md`/`implementation.md`/`state.md` as the system of record.
+OAT's spec-driven lifecycle (`discover -> spec -> design -> plan -> implement`) provides strong structure but is heavy for quick changes and externally-authored plans. We need a lightweight path that still keeps `plan.md`/`implementation.md`/`state.md` as the system of record.
 
 #### Options Considered
 
-1. Keep full lifecycle only (no quick/import support)
+1. Keep spec-driven lifecycle only (no quick/import support)
 2. Add quick/import entry lanes that normalize into canonical OAT `plan.md`
 3. Keep imported provider plans as non-canonical artifacts and teach all downstream skills new formats
 
@@ -222,10 +222,10 @@ Adopt option 2:
 - Add `oat-project-quick-start` for quick lane projects.
 - Add `oat-project-import-plan` for external markdown plan ingestion.
 - Preserve imported source at `references/imported-plan.md`; canonical execution artifact remains `plan.md`.
-- Add `oat-project-promote-full` for in-place promotion to full lifecycle.
+- Add `oat-project-promote-spec-driven` for in-place promotion to spec-driven lifecycle.
 - Introduce metadata:
-  - `state.md`: `oat_workflow_mode` (`full|quick|import`), `oat_workflow_origin` (`native|imported`)
-  - `plan.md`: `oat_plan_source` (`full|quick|imported`) plus import traceability fields.
+  - `state.md`: `oat_workflow_mode` (`spec-driven|quick|import`), `oat_workflow_origin` (`native|imported`)
+  - `plan.md`: `oat_plan_source` (`spec-driven|quick|imported`) plus import traceability fields.
 - Make `oat-project-progress`, review, PR, and dashboard recommendations mode-aware.
 
 #### Consequences
@@ -342,7 +342,7 @@ Adopt option 2:
 
 ---
 
-### ADR-009: Centralize full/quick/import plan semantics in `oat-project-plan-writing`
+### ADR-009: Centralize spec-driven/quick/import plan semantics in `oat-project-plan-writing`
 
 - **Date:** 2026-02-16
 - **Status:** accepted
@@ -356,7 +356,7 @@ Adopt option 2:
 
 #### Context
 
-Full-mode planning, quick-mode planning, and imported-plan normalization all touched `plan.md` with overlapping but non-identical rules. This increased drift risk and made mode-aware routing hard to keep consistent.
+Spec-driven planning, quick-mode planning, and imported-plan normalization all touched `plan.md` with overlapping but non-identical rules. This increased drift risk and made mode-aware routing hard to keep consistent.
 
 #### Options Considered
 
@@ -367,7 +367,7 @@ Full-mode planning, quick-mode planning, and imported-plan normalization all tou
 #### Decision
 
 Adopt option 2:
-- Add `oat-project-plan-writing` as the canonical plan contract for `full|quick|import` modes.
+- Add `oat-project-plan-writing` as the canonical plan contract for `spec-driven|quick|import` modes.
 - Update dependent skills to route through/shared-reference this contract.
 - Standardize plan status transitions and mode-aware guardrails (including resume behavior and stop-and-route semantics).
 

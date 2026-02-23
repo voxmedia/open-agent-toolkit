@@ -197,7 +197,7 @@ function fallbackStateTemplate(projectName: string, today: string): string {
     'oat_blockers: []',
     'oat_phase: discovery',
     'oat_phase_status: in_progress',
-    'oat_workflow_mode: full',
+    'oat_workflow_mode: spec-driven',
     'oat_workflow_origin: native',
     'oat_generated: false',
     '---',

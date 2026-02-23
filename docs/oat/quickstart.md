@@ -56,12 +56,12 @@ oat init --scope project
 oat status --scope all
 oat sync --scope all --apply
 oat doctor --scope all
-oat project new my-project --mode full
+oat project new my-project --mode spec-driven
 ```
 
 ## Path B: Provider-agnostic tooling (skills + utilities)
 
-Use shared skills and helper tooling without adopting the full OAT project lifecycle.
+Use shared skills and helper tooling without adopting the spec-driven OAT project lifecycle.
 
 This is also the right path for plan-first ideation that can later be synced/imported into an OAT project.
 
@@ -75,7 +75,7 @@ The workflow layer can be adopted when you want structured project execution and
 
 ### Typical OAT workflow (skills)
 
-#### Full lifecycle lane
+#### Spec-Driven workflow lane
 
 1. `oat-project-new` / `oat-project-open`
 2. `oat-project-discover`
@@ -96,7 +96,7 @@ The workflow layer can be adopted when you want structured project execution and
    - `oat-project-implement` (sequential, default)
    - `oat-project-subagent-implement` (parallel/subagent-driven)
 3. `oat-project-review-provide` / `oat-project-pr-final`
-4. Optional: `oat-project-promote-full`
+4. Optional: `oat-project-promote-spec-driven`
 
 #### Imported plan lane
 
@@ -105,7 +105,7 @@ The workflow layer can be adopted when you want structured project execution and
    - `oat-project-implement` (sequential, default)
    - `oat-project-subagent-implement` (parallel/subagent-driven)
 3. `oat-project-review-provide` / `oat-project-pr-final`
-4. Optional: `oat-project-promote-full`
+4. Optional: `oat-project-promote-spec-driven`
 
 Import discovery note:
 - To include extra provider-plan folders in recent-file discovery, set `OAT_PROVIDER_PLAN_DIRS` as a colon-separated list before running `oat-project-import-plan`.

@@ -4,7 +4,7 @@ import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { generateStateDashboard } from '@commands/state/generate';
 import { fileExists } from '@fs/io';
 
-export type ProjectScaffoldMode = 'full' | 'quick' | 'import';
+export type ProjectScaffoldMode = 'spec-driven' | 'quick' | 'import';
 
 export interface ScaffoldProjectOptions {
   repoRoot: string;
@@ -29,7 +29,7 @@ export interface ScaffoldProjectResult {
 }
 
 const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
-  full: [
+  'spec-driven': [
     'state.md',
     'discovery.md',
     'spec.md',
@@ -130,7 +130,7 @@ async function writeActiveProjectPointer(
 export async function scaffoldProject(
   options: ScaffoldProjectOptions,
 ): Promise<ScaffoldProjectResult> {
-  const mode = options.mode ?? 'full';
+  const mode = options.mode ?? 'spec-driven';
   const setActive = options.setActive ?? true;
   const refreshDashboard = options.refreshDashboard ?? true;
   const env = options.env ?? process.env;

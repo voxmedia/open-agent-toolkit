@@ -111,7 +111,7 @@ Key behavior:
 ## `oat project new <name>`
 
 Purpose:
-- Create/update OAT project scaffolds with mode support (`full`, `quick`, `import`)
+- Create/update OAT project scaffolds with mode support (`spec-driven`, `quick`, `import`)
 
 Key behavior:
 - Non-destructive scaffold generation (fills missing files, keeps existing files)

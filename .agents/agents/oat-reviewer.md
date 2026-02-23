@@ -36,7 +36,7 @@ You will be given a "Review Scope" block including:
 - **scope**: What to review (`pNN-tNN` task, `pNN` phase, `final`, `BASE..HEAD` range, or an artifact name like `spec` / `design`)
 - **commits/range**: Git commits or SHA range for changed files
 - **files_changed**: List of files modified in scope
-- **workflow_mode**: `full` | `quick` | `import` (default to `full` if absent)
+- **workflow_mode**: `spec-driven` | `quick` | `import` (default to `spec-driven` if absent)
 - **artifact_paths**: Paths to available artifacts (spec/design/plan/implementation/discovery/import reference)
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope)
 
@@ -44,7 +44,7 @@ You will be given a "Review Scope" block including:
 ## Mode Contract
 Use workflow mode to determine required evidence:
 
-- **full**: `spec.md`, `design.md`, `plan.md` are expected.
+- **spec-driven**: `spec.md`, `design.md`, `plan.md` are expected.
 - **quick**: `discovery.md` + `plan.md` are expected (`spec.md`/`design.md` optional if present).
 - **import**: `plan.md` is expected (`references/imported-plan.md` preferred; `spec.md`/`design.md` optional).
 
@@ -59,7 +59,7 @@ Read available artifacts to understand what SHOULD have been built:
 
 1. **Always read `plan.md`** (if present) and **`implementation.md`** (if present).
 2. Read requirements/design sources by mode:
-   - `full`: read `spec.md` and `design.md`.
+   - `spec-driven`: read `spec.md` and `design.md`.
    - `quick`: read `discovery.md` and `plan.md`; read `spec.md`/`design.md` only if they exist.
    - `import`: read `plan.md` and `references/imported-plan.md` (if present); read `spec.md`/`design.md` only if they exist.
 3. In your notes and review summary, explicitly list which artifacts were available and used.
@@ -78,7 +78,7 @@ Do NOT:
 This step applies to **code reviews** only.
 
 For each requirement in scope, use the best available requirement source by mode:
-- `full`: `spec.md` (primary), `design.md` mapping (secondary)
+- `spec-driven`: `spec.md` (primary), `design.md` mapping (secondary)
 - `quick`: `discovery.md` + `plan.md`
 - `import`: normalized `plan.md` + `references/imported-plan.md` (if present)
 
@@ -116,7 +116,7 @@ Treat the artifact as a product deliverable. Verify it is:
    - spec review aligns with discovery (problem/goals/constraints/success criteria)
    - design review aligns with spec requirements and verification
    - plan review aligns with the mode-specific upstream set:
-     - `full`: spec + design
+     - `spec-driven`: spec + design
      - `quick`: discovery (+ spec/design if present)
      - `import`: imported-plan reference (+ discovery/spec/design if present)
 

@@ -1,6 +1,6 @@
 ---
 name: oat-project-new
-description: Use when starting a full-lifecycle OAT project from scratch. Scaffolds a new project under PROJECTS_ROOT and sets it active.
+description: Use when starting a spec-driven OAT project from scratch. Scaffolds a new project under PROJECTS_ROOT and sets it active.
 argument-hint: "<project-name> [--force]"
 disable-model-invocation: true
 user-invocable: true
@@ -44,7 +44,7 @@ If not provided in `$ARGUMENTS`, ask the user for `{project-name}` (slug format:
 Use the CLI scaffolder:
 
 ```bash
-oat project new "{project-name}" --mode full
+oat project new "{project-name}" --mode spec-driven
 ```
 
 Optional flags:

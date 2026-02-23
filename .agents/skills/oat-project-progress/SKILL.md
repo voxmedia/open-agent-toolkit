@@ -131,7 +131,7 @@ ls -d .oat/projects/shared/*/ 2>/dev/null
 No active projects.
 
 Start a new project:
-  oat-project-new - Create a full-lifecycle project scaffold
+  oat-project-new - Create a spec-driven project scaffold
   oat-project-quick-start - Start a quick workflow project
   oat-project-import-plan - Import an external markdown plan into OAT
 ```
@@ -142,7 +142,7 @@ Start a new project:
 Read `{project}/state.md` frontmatter:
 - `oat_phase` - Current phase
 - `oat_phase_status` - in_progress or complete
-- `oat_workflow_mode` - full | quick | import
+- `oat_workflow_mode` - spec-driven | quick | import
 - `oat_blockers` - Any blockers
 - `oat_hill_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
 - `oat_hill_completed` - Completed HiLL checkpoints
@@ -165,7 +165,7 @@ Read `{project}/state.md` frontmatter:
 Based on project state, recommend next action.
 
 Read `oat_workflow_mode` from `state.md` frontmatter:
-- `full` (default if missing)
+- `spec-driven` (default if missing)
 - `quick`
 - `import`
 
@@ -183,7 +183,7 @@ Read `oat_execution_mode` from `state.md` frontmatter:
 
 Routing matrix by mode:
 
-**Full mode (`oat_workflow_mode: full`):**
+**Spec-Driven mode (`oat_workflow_mode: spec-driven`):**
 
 | oat_phase | oat_phase_status | Next Skill |
 |-----------|------------------|------------|
@@ -240,11 +240,11 @@ Knowledge:
 Workflow:
   oat-project-quick-start       - Start a quick workflow (discover -> plan -> implement)
   oat-project-import-plan       - Import an external markdown plan and normalize plan.md
-  oat-project-promote-full      - Promote quick/import project to full lifecycle
+  oat-project-promote-spec-driven - Promote quick/import project to spec-driven lifecycle
   oat-project-discover          - Start discovery phase (requirements gathering)
   oat-project-spec              - Create specification from discovery
   oat-project-design            - Create technical design from spec
-  oat-project-plan              - Create implementation plan from design (full mode)
+  oat-project-plan              - Create implementation plan from design (spec-driven mode)
   oat-project-implement         - Execute implementation plan
   oat-project-subagent-implement - Execute implementation plan with subagent orchestration
 

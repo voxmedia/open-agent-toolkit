@@ -153,7 +153,7 @@ Typical contents:
 
 Not all workflow modes require every artifact:
 
-- `full`: discovery + spec + design + plan + implementation
+- `spec-driven`: discovery + spec + design + plan + implementation
 - `quick`: discovery + plan + implementation (spec/design optional)
 - `import`: imported plan + implementation (spec/design optional)
 

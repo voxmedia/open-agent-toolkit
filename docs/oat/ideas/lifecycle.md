@@ -80,7 +80,7 @@ The backlog (`backlog.md`) aggregates all ideas in three sections:
 
 ## Promotion to project
 
-To promote a summarized idea to a full OAT project:
+To promote a summarized idea to a Spec-Driven OAT project:
 
 1. Run the `oat-project-new` skill with the idea name to scaffold the project
 2. Run the `oat-project-discover` skill and use the idea's `summary.md` as the initial request

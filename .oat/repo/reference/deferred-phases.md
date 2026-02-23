@@ -17,7 +17,7 @@ Dogfood v1 baseline is:
 - Active project selection: `.oat/active-project` (single-line path, local-only; gitignored)
 - Project scaffolding: `oat-project-new` (creates `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`)
 - Project lifecycle management: `oat-project-open`, `oat-project-clear-active`, `oat-project-complete`
-- Quick/import lanes: `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-promote-full`
+- Quick/import lanes: `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-promote-spec-driven`
 - Ideas workflow: `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 - Shared plan contract: `oat-project-plan-writing`
 - Review + PR loop: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-pr-progress`, `oat-project-pr-final`
@@ -90,8 +90,8 @@ For dogfood v1, the safest approach is:
 **What:** Make "small feature / quick fix" workflows faster by safely skipping heavy steps (with guardrails).
 
 **When to start:**
-- After we have a stable "full mode", and
-- We find ourselves repeatedly doing small changes where full discovery/spec/design overhead isn't worth it.
+- After we have a stable "spec-driven mode", and
+- We find ourselves repeatedly doing small changes where spec-driven discovery/spec/design overhead isn't worth it.
 
 **Deliverables:**
 - Done: quick/import mode lanes with canonical `plan.md` execution contract

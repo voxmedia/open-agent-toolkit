@@ -12,8 +12,8 @@ Project artifacts live under `.oat/projects/<scope>/<project>/`.
 - `implementation.md`: execution log, verification, final summary
 
 Mode-sensitive notes:
-- `state.md` includes workflow mode metadata (`full`, `quick`, `import`) for routing.
-- `spec.md` and `design.md` are required in full mode, optional in quick/import mode.
+- `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`) for routing.
+- `spec.md` and `design.md` are required in spec-driven mode, optional in quick/import mode.
 - `plan.md` remains canonical execution artifact across all modes.
 
 ## Supporting artifacts

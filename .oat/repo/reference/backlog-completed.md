@@ -128,7 +128,7 @@ Historical record of completed backlog items moved out of the active backlog for
 
 - [x] **(P1) [skills] Make `oat-reviewer` mode-aware for quick/import projects (B09)**
   - Outcome:
-    - `oat-project-review-provide` enforces mode-specific artifact requirements for `full|quick|import`.
+    - `oat-project-review-provide` enforces mode-specific artifact requirements for `spec-driven|quick|import`.
     - Review metadata now carries mode + available artifact context (including `discovery.md` and `references/imported-plan.md` where relevant).
     - Canonical reviewer prompt updated to evaluate requirements from mode-appropriate evidence instead of assuming `spec.md` + `design.md` are always present.
   - Links:
@@ -290,7 +290,7 @@ Historical record of completed backlog items moved out of the active backlog for
     - Added lifecycle entry skills:
       - `oat-project-quick-start`
       - `oat-project-import-plan`
-      - `oat-project-promote-full`
+      - `oat-project-promote-spec-driven`
     - Added mode/provenance metadata contracts:
       - `.oat/templates/state.md`: `oat_workflow_mode`, `oat_workflow_origin`
       - `.oat/templates/plan.md`: `oat_plan_source`, import traceability fields

@@ -23,7 +23,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[1/4] Checking completion gates…`
   - `[2/4] Marking lifecycle complete…`
   - `[3/4] Archiving project (if approved)…`
-  - `[4/4] Refreshing dashboard…`
+  - `[4/4] Refreshing dashboard + committing bookkeeping…`
 
 ## Process
 
@@ -146,11 +146,43 @@ esac
 
 If `IS_SHARED_PROJECT` is `true`, ask user:
 
-"This is a shared project. Move it to `.oat/projects/archived/` now?"
+"This is a shared project. Archive it now?"
 
 If user approves:
 
 ```bash
+MAIN_WORKTREE_PATH=$(git worktree list --porcelain 2>/dev/null | awk '
+  /^worktree / { wt=$2 }
+  /^branch refs\\/heads\\/main$/ { print wt; exit }
+')
+MAIN_REPO_ARCHIVE=""
+if [[ -n "$MAIN_WORKTREE_PATH" ]]; then
+  MAIN_REPO_ARCHIVE="${MAIN_WORKTREE_PATH}/.oat/projects/archived"
+fi
+LOCAL_ARCHIVED_ROOT=".oat/projects/archived"
+USE_MAIN_REPO_ARCHIVE="false"
+
+# Heuristic: if this checkout is a worktree and the main repo archive parent exists,
+# use the main repo archive as the canonical archive destination.
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null || true)
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null || true)
+  if [[ -n "$GIT_COMMON_DIR" && -n "$GIT_DIR" && "$GIT_COMMON_DIR" != "$GIT_DIR" ]]; then
+    if [[ -d "$(dirname "$MAIN_REPO_ARCHIVE")" ]]; then
+      USE_MAIN_REPO_ARCHIVE="true"
+      ARCHIVED_ROOT="$MAIN_REPO_ARCHIVE"
+    else
+      echo "Warning: Running in a worktree, but main repo archive path is unavailable: $MAIN_REPO_ARCHIVE"
+      echo "A worktree-local archive may be deleted when the worktree is removed and is not a durable archive."
+      echo "Require explicit confirmation before proceeding with local-only archive."
+    fi
+  fi
+fi
+
+if [[ "$USE_MAIN_REPO_ARCHIVE" != "true" ]]; then
+  ARCHIVED_ROOT="$LOCAL_ARCHIVED_ROOT"
+fi
+
 mkdir -p "$ARCHIVED_ROOT"
 ARCHIVE_PATH="${ARCHIVED_ROOT}/${PROJECT_NAME}"
 
@@ -163,6 +195,13 @@ PROJECT_PATH="$ARCHIVE_PATH"
 echo "Project archived to $ARCHIVE_PATH"
 ```
 
+**Worktree durability guard (required):**
+
+- If running in a worktree and `MAIN_REPO_ARCHIVE` is unavailable, do not silently continue with a local-only archive.
+- Ask the user explicitly: "Main repo archive path is unavailable, so this archive may be lost when the worktree is deleted. Continue with local-only archive anyway?"
+- If the user declines, skip archiving and continue the completion flow without archive.
+- If your repository does not use `main` as the default branch, use `git worktree list --porcelain` to identify the primary worktree path by another stable rule (for example the non-ephemeral root checkout), then append `/.oat/projects/archived`.
+
 **Git handling after archive:**
 
 If the archived directory is gitignored (check with `git check-ignore -q "$ARCHIVE_PATH"`), the move looks like a deletion to git — the original tracked files disappear and the archived copy is local-only. To commit:
@@ -173,18 +212,25 @@ git add -A "$PROJECTS_ROOT/$PROJECT_NAME" 2>/dev/null || true
 
 This stages the deletions from the shared directory. The archived copy is preserved locally but not tracked by git.
 
-**Worktree safeguard (required when available):**
+**Worktree archive target (required when available):**
 
-If running from a git worktree and the primary repo archive path is accessible, also copy the archived project there so it is retained outside the worktree lifecycle:
+If running from a git worktree, the primary repo archive directory is the canonical/durable archive destination.
+
+Reference path:
 
 ```bash
-MAIN_REPO_ARCHIVE="/Users/thomas.stang/Code/open-agent-toolkit/.oat/projects/archived"
-
-if [[ -d "$(dirname "$MAIN_REPO_ARCHIVE")" ]]; then
-  mkdir -p "$MAIN_REPO_ARCHIVE"
-  cp -R "$ARCHIVE_PATH" "$MAIN_REPO_ARCHIVE/"
-fi
+MAIN_WORKTREE_PATH=$(git worktree list --porcelain | awk '
+  /^worktree / { wt=$2 }
+  /^branch refs\\/heads\\/main$/ { print wt; exit }
+')
+MAIN_REPO_ARCHIVE="${MAIN_WORKTREE_PATH}/.oat/projects/archived"
 ```
+
+Guidance:
+- In a worktree, prefer moving directly to `MAIN_REPO_ARCHIVE` instead of archiving locally and copying later.
+- Do not treat the worktree-local archive as durable.
+- If forced to use a local-only archive, warn and require explicit user confirmation.
+- Do not hardcode user-specific absolute paths.
 
 ### Step 7: Offer to Clear Active Project
 
@@ -202,8 +248,34 @@ echo "Active project cleared."
 oat state refresh
 ```
 
-### Step 9: Confirm to User
+### Step 9: Commit + Push Bookkeeping (Required)
+
+Completion is not done until bookkeeping changes are committed and pushed. This prevents local-only `state.md` updates that leave project status stale for later sessions/reviews.
+
+Expected changes may include:
+- `{PROJECT_PATH}/state.md`
+- `{PROJECT_PATH}/implementation.md` (if touched earlier in the lifecycle closeout)
+- `{PROJECT_PATH}/plan.md` (if review receive just ran)
+- `.oat/active-project` (if cleared)
+- Shared-project deletions under `{PROJECTS_ROOT}/{PROJECT_NAME}` (if archived)
+
+Run:
+
+```bash
+git status --short
+git add -A
+git commit -m "chore(oat): complete project lifecycle for ${PROJECT_NAME}"
+git push
+```
+
+Rules:
+- If there are unrelated unstaged/staged changes, stage and commit only the completion/bookkeeping files (do not sweep unrelated work into this commit).
+- If there is nothing to commit, state that explicitly and verify whether the completion bookkeeping was already committed in a prior commit.
+- If push fails, report the failure and do not claim completion is fully recorded.
+
+### Step 10: Confirm to User
 
 Show user:
 - "Project **{PROJECT_NAME}** marked as complete."
 - If archived: "Archived location: **{PROJECT_PATH}**"
+- Include commit hash and push result for the bookkeeping changes.
