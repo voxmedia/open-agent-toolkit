@@ -24,6 +24,7 @@ export const WORKFLOW_SKILLS = [
   'oat-project-quick-start',
   'oat-project-review-provide',
   'oat-project-review-receive',
+  'oat-project-review-receive-remote',
   'oat-project-spec',
   'oat-repo-knowledge-index',
   'oat-worktree-bootstrap',

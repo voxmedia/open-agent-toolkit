@@ -184,7 +184,17 @@ For each bootstrapped unit, dispatch a subagent via the `Task` tool with:
 
 ### Step 4: Autonomous Review Gate
 
-After each subagent completes, run a two-stage review gate:
+After each implementer subagent completes, run a mandatory reviewer gate as a **peer subagent** and record the verdict map entry before any merge decision.
+
+**Reviewer dispatch mechanism (required):**
+1. Dispatch `oat-reviewer` as a peer subagent (`subagent_type: "oat-reviewer"`) against the same unit worktree.
+2. Provide reviewer context:
+   - Unit scope (files changed in unit branch/worktree).
+   - Project artifacts (`plan.md`, `spec.md`, `design.md` when available).
+   - Review type: `code`.
+3. Reviewer writes artifact to:
+   - `reviews/{unit-id}-gate-review.md`
+4. Orchestrator reads the artifact and extracts stage verdict + finding severities.
 
 **Stage 1: Spec compliance**
 - Verify implementation matches plan task specification.
@@ -194,34 +204,53 @@ After each subagent completes, run a two-stage review gate:
 **Stage 2: Code quality**
 - Only runs if spec compliance passes.
 - Check: tests passing, lint clean, type-check clean, no Critical/Important findings.
-- Severity classification: Critical, Important, Minor.
+- Severity classification: Critical, Important, Medium, Minor (4-tier, consistent with receive skills).
 
 **Pass criteria:**
 - No Critical or Important findings across both stages.
 - All verification commands from plan pass.
 
-**Fail handling — fix-loop retry:**
-1. On review failure, dispatch implementer subagent to fix identified issues.
-2. Re-run the same review stage that failed.
-3. Repeat up to `--retry-limit` times (default: 2).
-4. If retry limit exhausted: mark unit as `failed` and exclude from merge-back.
+**Fail handling — fix-loop dispatch (required):**
+1. On review failure, dispatch a fix implementer subagent in the same worktree.
+2. Provide fix input:
+   - Review artifact path (`reviews/{unit-id}-gate-review.md`)
+   - Critical/Important findings list
+   - Original unit task specification
+3. After fix subagent completes, re-dispatch reviewer peer subagent.
+4. Repeat until pass or retry limit (`--retry-limit`, default 2) is exhausted.
+5. If retry limit is exhausted:
+   - mark unit as `failed`
+   - set disposition to `excluded`
+   - record unresolved findings in orchestration log
 
-**Verdict capture (per unit):**
+**Verdict map (source of truth for Step 5):**
 ```yaml
 unit_id: "{unit-id}"
 reviewer_stage: spec | quality
 verdict: pass | fail
 retry_count: N
+review_artifact: "reviews/{unit-id}-gate-review.md"
 findings:
   critical: []
   important: []
+  medium: []
   minor: []
 disposition: merged | excluded | skipped
 ```
 
 ### Step 5: Fan-In Reconciliation
 
-Merge passing units back into the orchestration branch:
+Merge passing units back into the orchestration branch. Before executing any merge, apply the hard pre-merge verdict gate.
+
+**Pre-merge verdict gate (required):**
+
+For each unit eligible for merge, check its verdict map entry:
+
+1. **No verdict entry exists** → set disposition to `skipped`, reason `review_gate_missing`. Refuse merge. Log: "Unit {unit-id} skipped: no reviewer verdict recorded."
+2. **Verdict is not `pass`** → set disposition to `excluded`, reason `review_gate_failed`. Refuse merge. Log: "Unit {unit-id} excluded: reviewer verdict is {verdict}, not pass."
+3. **Verdict is `pass`** → unit may proceed to merge.
+
+Only units with `verdict == pass` in the verdict map enter the merge loop below. All other units are reported in the orchestration run log with their disposition and reason.
 
 **Merge ordering:** Deterministic by task ID (ascending). Example: p02-t01 before p02-t02.
 
@@ -279,8 +308,12 @@ If integration verification fails after a merge:
 #### Review Interaction Log
 
 **{unit-id}:**
+- **Reviewer dispatch:** peer subagent (`oat-reviewer`)
+- **Review artifact:** `reviews/{unit-id}-gate-review.md`
+- **review_gate_executed:** true
 - **Spec compliance:** pass (0 findings)
 - **Code quality:** fail → fix → pass (1 Important fixed, retry 1/2)
+- **Fix-loop iterations:** 1 of 2 — fixed: [finding-ids]; unresolved: none
 - **Verdict:** pass
 - **Disposition:** merged
 
@@ -409,8 +442,8 @@ The autonomous review gate (Step 4) operates alongside — not in place of — t
 
 The autonomous gate is a **fast, binary quality check** (pass/fail per unit). It does not replace the richer manual review:
 
-- **Autonomous gate findings** use `critical`/`important`/`minor` severity but are limited to what automated checks and spec-diffing can detect.
-- **Manual review findings** use the full `Critical`/`Important`/`Medium`/`Minor` taxonomy with deeper semantic analysis.
+- **Autonomous gate findings** use the same `Critical`/`Important`/`Medium`/`Minor` 4-tier severity model as receive skills, but are limited to what automated checks and spec-diffing can detect.
+- **Manual review findings** use the same 4-tier taxonomy with deeper semantic analysis.
 - If a unit passes the autonomous gate and merges, it is still subject to manual review via `oat-project-review-provide`.
 
 ### plan.md Review Table Integration
@@ -446,7 +479,8 @@ Autonomous review verdicts are logged in `implementation.md` `## Orchestration R
 ## Constraints
 
 - **Never** use `AskUserQuestion` during execution between HiLL checkpoints.
-- **Never** merge a unit that did not pass the autonomous review gate (unless policy explicitly marks it `skipped`).
+- **Never** merge a unit without an explicit pass verdict from the reviewer gate.
+- **Always** dispatch reviewer as a peer subagent (`oat-reviewer`), not nested or inline.
 - **Never** silently lose work — failed units are reported, not deleted.
 - **Never** bypass existing `plan.md` review table semantics.
 - **Never** set the `final` review row to `passed` from the autonomous gate.

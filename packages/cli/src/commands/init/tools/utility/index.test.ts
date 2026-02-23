@@ -136,6 +136,8 @@ describe('createInitToolsUtilityCommand', () => {
       expect.objectContaining({
         skills: [
           'oat-review-provide',
+          'oat-review-receive',
+          'oat-review-receive-remote',
           'oat-agent-instructions-analyze',
           'oat-agent-instructions-apply',
         ],

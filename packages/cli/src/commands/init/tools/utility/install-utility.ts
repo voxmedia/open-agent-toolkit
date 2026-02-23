@@ -3,6 +3,8 @@ import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 
 export const UTILITY_SKILLS = [
   'oat-review-provide',
+  'oat-review-receive',
+  'oat-review-receive-remote',
   'oat-agent-instructions-analyze',
   'oat-agent-instructions-apply',
 ] as const;

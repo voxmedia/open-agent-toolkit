@@ -282,8 +282,8 @@ flowchart LR
 3. Canonical plan-writing contract:
    - `oat-project-plan-writing` (shared spec-driven/quick/import planning semantics)
 4. Review path selection:
-   - Project-scoped review: `oat-project-review-provide` + `oat-project-review-receive`
-   - Ad-hoc/non-project review: `oat-review-provide`
+   - Project-scoped review: `oat-project-review-provide` + `oat-project-review-receive` (local) / `oat-project-review-receive-remote` (GitHub PR)
+   - Ad-hoc/non-project review: `oat-review-provide` + `oat-review-receive` (local) / `oat-review-receive-remote` (GitHub PR)
 5. PR generation:
    - Progress PR: `oat-project-pr-progress`
    - Final PR: `oat-project-pr-final`

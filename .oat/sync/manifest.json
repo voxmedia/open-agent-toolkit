@@ -773,6 +773,36 @@
       "lastSynced": "2026-02-21T23:41:10.862Z"
     },
     {
+      "canonicalPath": ".agents/skills/oat-project-review-receive-remote",
+      "providerPath": ".claude/skills/oat-project-review-receive-remote",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-21T23:51:52.644Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-review-receive",
+      "providerPath": ".claude/skills/oat-review-receive",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-21T23:51:52.645Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-review-receive-remote",
+      "providerPath": ".claude/skills/oat-review-receive-remote",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-21T23:51:52.645Z"
+    },
+    {
       "canonicalPath": ".agents/skills/oat-project-promote-spec-driven",
       "providerPath": ".cursor/skills/oat-project-promote-spec-driven",
       "provider": "cursor",
@@ -781,7 +811,37 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-02-21T23:41:10.863Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-review-receive-remote",
+      "providerPath": ".cursor/skills/oat-project-review-receive-remote",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-21T23:51:52.646Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-review-receive",
+      "providerPath": ".cursor/skills/oat-review-receive",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-21T23:51:52.646Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-review-receive-remote",
+      "providerPath": ".cursor/skills/oat-review-receive-remote",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-02-21T23:51:52.646Z"
     }
   ],
-  "lastUpdated": "2026-02-21T23:41:10.863Z"
+  "lastUpdated": "2026-02-21T23:51:52.646Z"
 }
