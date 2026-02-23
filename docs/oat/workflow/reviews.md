@@ -9,8 +9,15 @@ Review loop:
 
 ## Project vs ad-hoc
 
+**Provide** (request a review):
 - `oat-project-review-provide` is project-scoped and requires `.oat/active-project` + project `state.md`.
 - `oat-review-provide` is for non-project commit-range reviews (ad-hoc, no project state required).
+
+**Receive** (process review findings):
+- `oat-project-review-receive` processes local review artifacts within a project context (converts findings to plan tasks).
+- `oat-project-review-receive-remote` processes GitHub PR comment feedback within a project context (converts findings to plan tasks with stable `pNN-tNN` IDs).
+- `oat-review-receive` processes local review artifacts in ad-hoc mode (standalone task-list output, no project state mutation).
+- `oat-review-receive-remote` processes GitHub PR comment feedback in ad-hoc mode (standalone task-list output, optional reply posting).
 
 ## Status model
 
@@ -58,5 +65,8 @@ Final review `passed` gate requires:
 - `.oat/projects/local/orphan-reviews/` (default local-only storage for ad-hoc review artifacts)
 - `.oat/repo/reviews/` (tracked storage convention when explicitly desired)
 - `.agents/skills/oat-review-provide/SKILL.md`
+- `.agents/skills/oat-review-receive/SKILL.md`
+- `.agents/skills/oat-review-receive-remote/SKILL.md`
 - `.agents/skills/oat-project-review-provide/SKILL.md`
 - `.agents/skills/oat-project-review-receive/SKILL.md`
+- `.agents/skills/oat-project-review-receive-remote/SKILL.md`

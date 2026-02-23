@@ -30,8 +30,11 @@ Project skills are stored in `.agents/skills`.
 ## Review and PR skills
 
 - `oat-review-provide`
+- `oat-review-receive`
+- `oat-review-receive-remote`
 - `oat-project-review-provide`
 - `oat-project-review-receive`
+- `oat-project-review-receive-remote`
 - `oat-project-pr-progress`
 - `oat-project-pr-final`
 
