@@ -1,5 +1,5 @@
 import { readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import {
   buildCommandContext,
   type CommandContext,
@@ -7,6 +7,7 @@ import {
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { generateStateDashboard } from '@commands/state/generate';
+import { clearActiveProject, readOatLocalConfig } from '@config/oat-config';
 import { CliError } from '@errors/cli-error';
 import { ensureDir, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
@@ -89,19 +90,13 @@ async function discoverProjectDirectories(repoRoot: string): Promise<string[]> {
 async function planActiveProjectPointerCleanup(
   repoRoot: string,
 ): Promise<CleanupActionRecord[]> {
-  const activeProjectPath = join(repoRoot, '.oat', 'active-project');
-  if (!(await fileExists(activeProjectPath))) {
+  const localConfig = await readOatLocalConfig(repoRoot);
+  const activeProjectPath = localConfig.activeProject?.trim();
+  if (!activeProjectPath) {
     return [];
   }
 
-  const rawPointer = (await readFile(activeProjectPath, 'utf8')).trim();
-  if (!rawPointer) {
-    return [];
-  }
-
-  const resolvedPointer = isAbsolute(rawPointer)
-    ? rawPointer
-    : join(repoRoot, rawPointer);
+  const resolvedPointer = join(repoRoot, activeProjectPath);
 
   let pointerExists = false;
   try {
@@ -120,8 +115,8 @@ async function planActiveProjectPointerCleanup(
   return [
     {
       type: 'clear',
-      target: '.oat/active-project',
-      reason: 'invalid .oat/active-project pointer',
+      target: '.oat/config.local.json',
+      reason: 'invalid activeProject in .oat/config.local.json',
       phase: 'project-scan',
       result: 'planned',
     },
@@ -231,6 +226,11 @@ async function applyCleanupAction(
   const targetPath = join(repoRoot, action.target);
 
   if (action.type === 'clear') {
+    if (action.target === '.oat/config.local.json') {
+      await clearActiveProject(repoRoot);
+      return { ...action, result: 'applied' };
+    }
+
     await rm(targetPath, { force: true });
     return { ...action, result: 'applied' };
   }

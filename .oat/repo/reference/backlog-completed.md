@@ -14,6 +14,20 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [tooling] B15+B02 project lifecycle config consolidation (`oat config`, `oat project open/pause`)**
+  - Outcome:
+    - Consolidated project lifecycle state into `.oat/config.json` / `.oat/config.local.json` (`projects.root`, `activeProject`, `lastPausedProject`) with repo-relative active project paths.
+    - Added `oat config get/set/list` and migrated workflow skills/CLI consumers to config-backed resolution (no canonical pointer-file reads in migrated flows).
+    - Added `oat project open` / `oat project pause` with pause metadata, resume semantics, and dashboard integration.
+    - Removed legacy pointer fallback behavior from migrated command paths and documented ADR decisions + review-fix follow-up work.
+  - Links:
+    - Project: `.oat/projects/shared/b15-b02-project-lifecycle-config-consolidation/`
+    - Reviews: `.oat/projects/shared/b15-b02-project-lifecycle-config-consolidation/reviews/`
+    - Decisions: `.oat/repo/reference/decision-record.md` (ADR-012, ADR-013)
+    - PR: `https://github.com/tkstang/open-agent-toolkit/pull/33`
+  - Created: 2026-02-17
+  - Completed: 2026-02-23
+
 - [x] **(P1) [skills] Refine subagent implementation flow and review receive UX**
   - Outcome:
     - Refactored subagent orchestration dispatch and result collection for cleaner implementation flow.

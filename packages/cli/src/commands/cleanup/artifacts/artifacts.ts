@@ -1,5 +1,5 @@
 import { readdir, readFile, rename, rm, stat } from 'node:fs/promises';
-import { dirname, isAbsolute, join } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
   buildCommandContext,
   type CommandContext,
@@ -12,6 +12,7 @@ import {
   selectManyOrEmpty,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { readOatLocalConfig } from '@config/oat-config';
 import { CliError } from '@errors/cli-error';
 import { ensureDir } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
@@ -148,13 +149,10 @@ async function collectReferenceContents(repoRoot: string): Promise<string[]> {
 
   let activeProjectFiles: string[] = [];
   try {
-    const activeProjectPath = (
-      await readFile(join(repoRoot, '.oat/active-project'), 'utf8')
-    ).trim();
+    const localConfig = await readOatLocalConfig(repoRoot);
+    const activeProjectPath = localConfig.activeProject?.trim();
     if (activeProjectPath) {
-      const resolvedActiveProject = isAbsolute(activeProjectPath)
-        ? activeProjectPath
-        : join(repoRoot, activeProjectPath);
+      const resolvedActiveProject = join(repoRoot, activeProjectPath);
       activeProjectFiles = await collectMarkdownFiles(resolvedActiveProject);
     }
   } catch {

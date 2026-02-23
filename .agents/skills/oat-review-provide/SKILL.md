@@ -14,7 +14,7 @@ Request and execute a code/file review that is not tied to an OAT project lifecy
 ## Prerequisites
 
 - Git repository with changes/files to review.
-- User wants a code/diff review without requiring `.oat/active-project` or project artifacts.
+- User wants a code/diff review without requiring an `activeProject` entry in `.oat/config.local.json` or project artifacts.
 
 ## Mode Assertion
 

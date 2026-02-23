@@ -99,8 +99,9 @@ Import lane progression:
 
 ## Active project resolution
 
-- `.oat/active-project` stores the active project path.
-- `.oat/projects-root` may override default shared project root.
+- Active project state is stored in `.oat/config.local.json` (`activeProject`, repo-relative path).
+- Projects root is stored in `.oat/config.json` (`projects.root`) and can be read via `oat config get projects.root`.
+- Workflow skills prefer `oat config get activeProject` / `oat config get projects.root` rather than reading pointer files directly.
 
 ## Reference artifacts
 

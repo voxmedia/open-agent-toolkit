@@ -14,7 +14,7 @@ Dogfood v1 baseline is:
 - `oat-repo-knowledge-index` + `.oat/repo/knowledge/**`
 - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
 - `oat-project-progress` router
-- Active project selection: `.oat/active-project` (single-line path, local-only; gitignored)
+- Active project selection: config-backed via `.oat/config.local.json` (`activeProject`, `lastPausedProject`) and `oat config get activeProject`
 - Project scaffolding: `oat-project-new` (creates `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`)
 - Project lifecycle management: `oat-project-open`, `oat-project-clear-active`, `oat-project-complete`
 - Quick/import lanes: `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-promote-spec-driven`
@@ -40,18 +40,20 @@ Dogfood v1 baseline is:
 
 ## Deferred Phases
 
-### Active project pointer format migration (deferred)
+### Active-project name-only migration (deferred)
 
-We discussed migrating `.oat/active-project` from storing a full path → storing a project name (resolved via `{PROJECTS_ROOT}/{name}`), but this is a coordination problem because many existing skills assume the pointer contains a path.
+The CLI now owns project lifecycle commands and config-backed active project state (`activeProject` in `.oat/config.local.json`, repo-relative path). Earlier deferred pointer-file migration concerns have been resolved by ADR-012/ADR-013 and the B15+B02 implementation.
 
-For dogfood v1, the safest approach is:
-- **Write:** Keep writing a full path to `.oat/active-project` (backward compatible with existing skills).
-- **Read:** New tooling may accept either format where safe:
-  - Legacy full path (current canonical)
-  - Name-only (future), resolved via `.oat/projects-root` / `OAT_PROJECTS_ROOT`
-- **Migration:** Treat name-only as a separate coordinated update (update every skill’s “resolve active project” logic first, then flip writes).
+What remains deferred is a narrower follow-on question:
+- whether `activeProject` should continue storing a repo-relative path (current canonical), or
+- move to a name-only value resolved via `projects.root`.
 
-**Decision:** Name-only migration is explicitly deferred until the CLI owns project commands (see `.oat/repo/reference/decision-record.md` ADR-004).
+Current canonical behavior:
+- **Write:** repo-relative path in `.oat/config.local.json` (`activeProject`)
+- **Read:** via `oat config get activeProject` (skills/scripts should not parse pointer files directly)
+- **Compatibility:** legacy `.oat/active-project` files may remain inert; they are not canonical in migrated flows
+
+**Decision status:** Name-only `activeProject` storage remains optional future work; repo-relative path storage is the current ADR-backed baseline.
 
 ### Phase 5 (Dogfood v1.3): Staleness + Knowledge Drift Upgrades
 

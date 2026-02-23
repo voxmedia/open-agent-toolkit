@@ -93,7 +93,7 @@ Purpose:
 - Cleanup project pointers, state, and lifecycle drift
 
 Key behavior:
-- Scans `.oat/projects/shared/*` and `.oat/projects/local/*` plus `.oat/active-project`
+- Scans `.oat/projects/shared/*` and `.oat/projects/local/*` plus config-backed active project state (`activeProject` in `.oat/config.local.json`; legacy `.oat/active-project` may be cleaned when encountered)
 - Dry-run default with `--apply` for mutation
 - Repairs invalid active-project pointer, missing `state.md`, and missing `oat_lifecycle: complete` on completed projects
 
@@ -123,7 +123,7 @@ Purpose:
 - Set active-project implementation mode (`single-thread` or `subagent-driven`)
 
 Key behavior:
-- Reads active project from `.oat/active-project`
+- Reads active project from config-backed lifecycle state (`oat config get activeProject` / `.oat/config.local.json`)
 - Updates `oat_execution_mode` in active project `state.md`
 - When setting `subagent-driven`, adds orchestration defaults only if missing:
   - `oat_orchestration_merge_strategy: merge`

@@ -41,7 +41,7 @@ Parse from `$ARGUMENTS`:
 
 Scan for completed OAT project artifacts:
 
-1. Read `.oat/projects-root` to find the projects directory.
+1. Resolve projects root via `oat config get projects.root` (fallback to `.oat/projects/shared` if unset).
 2. List all project directories under the projects root.
 3. For each project, read `state.md` frontmatter:
    - Include if `oat_phase_status: complete` or if the project has a merged PR.

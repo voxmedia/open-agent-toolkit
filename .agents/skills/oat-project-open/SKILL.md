@@ -1,6 +1,6 @@
 ---
 name: oat-project-open
-description: Use when switching to or resuming a specific OAT project. Sets the active project pointer with validation.
+description: Use when switching to or resuming a specific OAT project. Delegates to `oat project open` for validation and activation.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Bash, AskUserQuestion
 
 # Open Project
 
-Set the active OAT project with validation.
+Open an OAT project with CLI-native validation.
 
 ## Progress Indicators (User-Facing)
 
@@ -20,86 +20,25 @@ When executing this skill, provide lightweight progress feedback so the user can
    OAT ▸ OPEN PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Before multi-step work, print step indicators, e.g.:
-  - `[1/4] Listing available projects…`
-  - `[2/4] Validating project selection…`
-  - `[3/4] Setting active project pointer…`
-  - `[4/4] Refreshing dashboard…`
+  - `[1/3] Resolving project selection…`
+  - `[2/3] Running oat project open…`
+  - `[3/3] Confirming active project…`
 
 ## Process
 
-### Step 1: Resolve Projects Root
+### Step 1: Resolve Project Selection
+
+If the user provided a project name, use it.
+Otherwise ask: "Which project should I open?".
+
+### Step 2: Run CLI Command
 
 ```bash
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".oat/projects/shared")}"
-PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+oat project open "{project-name}"
 ```
 
-### Step 2: List Available Projects
-
-Show user available projects:
-
-```bash
-echo "Available projects in ${PROJECTS_ROOT}/:"
-for dir in "${PROJECTS_ROOT}"/*/; do
-  [[ -d "$dir" ]] || continue
-  name=$(basename "$dir")
-  if [[ -f "${dir}state.md" ]]; then
-    phase=$(grep "^oat_phase:" "${dir}state.md" | head -1 | sed 's/oat_phase:[[:space:]]*//')
-    echo "  - ${name} (${phase:-unknown})"
-  fi
-done
-```
-
-### Step 3: Accept Project Selection
-
-Ask user: "Which project would you like to open?"
-
-Accept project name from user input.
-
-### Step 4: Validate Project
-
-```bash
-PROJECT_NAME="{user_input}"
-PROJECT_PATH="${PROJECTS_ROOT}/${PROJECT_NAME}"
-
-# Validate name (alphanumeric, dash, underscore only)
-if [[ ! "$PROJECT_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
-  echo "Error: Invalid project name. Use only alphanumeric, dash, underscore." >&2
-  exit 1
-fi
-
-# Validate directory exists
-if [[ ! -d "$PROJECT_PATH" ]]; then
-  echo "Error: Project directory not found: $PROJECT_PATH" >&2
-  exit 1
-fi
-
-# Validate state.md exists
-if [[ ! -f "${PROJECT_PATH}/state.md" ]]; then
-  echo "Error: Project missing state.md: ${PROJECT_PATH}/state.md" >&2
-  exit 1
-fi
-```
-
-### Step 5: Write Active Project Pointer
-
-Write full path for v1 compatibility:
-
-```bash
-mkdir -p .oat
-echo "$PROJECT_PATH" > .oat/active-project
-echo "Active project set to: $PROJECT_NAME"
-```
-
-### Step 6: Regenerate Dashboard
-
-```bash
-oat state refresh
-```
-
-### Step 7: Confirm to User
+### Step 3: Confirm to User
 
 Show user:
-- Active project: {PROJECT_NAME}
-- Phase: {oat_phase from state.md}
-- Next step: {from Repo State Dashboard}
+- Active project: {project-name}
+- State dashboard refreshed by the command

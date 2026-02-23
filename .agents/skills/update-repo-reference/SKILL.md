@@ -79,9 +79,9 @@ rg -n "pending\\)|planned\\)|not yet implemented|Remaining:" .oat/repo/reference
 rg -n "\\.oat/repo/reference/(current-state|roadmap|deferred-phases|decision-record|backlog|backlog-completed)\\.md" .oat/repo/reference docs/oat .agents/skills AGENTS.md
 ```
 
-3. Search for hardcoded legacy project root references (prefer `.oat/projects-root` + `.oat/active-project`):
+3. Search for hardcoded project-root assumptions (prefer `oat config get projects.root` + `oat config get activeProject`):
 ```bash
-rg -n "\\.oat/projects/shared/" .agents/skills/oat-*/SKILL.md .oat/templates .oat/repo/reference -S
+rg -n "\\.oat/projects/shared/|\\.oat/projects-root|\\.oat/active-project" .agents/skills/oat-*/SKILL.md .oat/templates .oat/repo/reference -S
 ```
 
 4. Ensure new skills are registered in `AGENTS.md` (if meant to be discoverable):

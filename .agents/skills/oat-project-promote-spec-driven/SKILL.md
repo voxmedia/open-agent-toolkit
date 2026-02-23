@@ -62,8 +62,8 @@ When executing this skill, provide lightweight progress feedback so the user can
 ### Step 0: Resolve Active Project
 
 ```bash
-PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".oat/projects/shared")}"
+PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 

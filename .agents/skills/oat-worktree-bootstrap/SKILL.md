@@ -63,9 +63,15 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 REPO_NAME=$(basename "$REPO_ROOT")
 ```
 
-### Step 0.5: Validate Active Project Pointer
+### Step 0.5: Validate Active Project Config
 
-If `.oat/active-project` exists:
+Resolve active project from local config:
+
+```bash
+ACTIVE_PROJECT=$(oat config get activeProject 2>/dev/null || true)
+```
+
+If `ACTIVE_PROJECT` is set:
 - verify the pointed path exists and contains `state.md`
 - if invalid, do **not** silently rewrite it
 - prompt user to run one of:
@@ -73,7 +79,7 @@ If `.oat/active-project` exists:
   - `oat-project-open`
 - require explicit confirmation before continuing with worktree bootstrap
 
-If `.oat/active-project` does not exist:
+If `ACTIVE_PROJECT` is missing:
 - continue (active project is optional for worktree bootstrap)
 - use console-only baseline-failure logging in Step 3 if needed
 
@@ -119,18 +125,18 @@ Set `TARGET_WORKTREE` to `{WORKTREE_ROOT}/{branch-name}`.
 
 If worktree creation fails, stop and report the exact git error with remediation guidance.
 
-### Step 2.5: Propagate Local-Only Pointers
+### Step 2.5: Propagate Local-Only Config
 
-After the worktree is created (or validated with `--existing`), copy gitignored local-only pointer files from the source repo into the new worktree so that downstream skills (e.g., `oat-project-implement`) can resolve context without re-prompting.
+After the worktree is created (or validated with `--existing`), copy gitignored local-only context files from the source repo into the new worktree so downstream skills (e.g., `oat-project-implement`) can resolve context without re-prompting.
 
 Files to propagate (if they exist in the source repo):
-- `.oat/active-project`
+- `.oat/config.local.json`
 - `.oat/active-idea`
 
 ```bash
-for POINTER in active-project active-idea; do
-  SRC="$REPO_ROOT/.oat/$POINTER"
-  DST="{target-path}/.oat/$POINTER"
+for LOCAL_FILE in config.local.json active-idea; do
+  SRC="$REPO_ROOT/.oat/$LOCAL_FILE"
+  DST="{target-path}/.oat/$LOCAL_FILE"
   if [[ -f "$SRC" && ! -f "$DST" ]]; then
     cp "$SRC" "$DST"
   fi
@@ -139,7 +145,8 @@ done
 
 Rules:
 - Only copy if the source file exists **and** the destination does not (never overwrite).
-- After copying, validate the pointer target exists in the worktree. If not, print a warning but do not block bootstrap.
+- `config.local.json` uses repo-relative paths, so copied values remain valid across sibling worktrees.
+- After copying, validate `activeProject` (if present in `config.local.json`) resolves to a real project path in the worktree. If not, print a warning but do not block bootstrap.
 - This is a pragmatic subset of the broader worktree artifact sync policy (see backlog P1 item).
 
 ### Step 3: Run OAT Bootstrap

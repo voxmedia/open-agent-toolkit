@@ -133,7 +133,7 @@ describe('installWorkflows', () => {
     expect(scriptStat.mode & 0o111).not.toBe(0);
   });
 
-  it('writes .oat/projects-root when absent and does not overwrite when present', async () => {
+  it('writes project-root defaults when absent and does not overwrite when present', async () => {
     const root = await makeTempDir();
     const assetsRoot = join(root, 'assets');
     const targetRoot = join(root, 'target');
@@ -141,13 +141,25 @@ describe('installWorkflows', () => {
 
     const first = await installWorkflows({ assetsRoot, targetRoot });
     expect(first.projectsRootInitialized).toBe(true);
+    expect(first.projectsRootConfigInitialized).toBe(true);
     await expect(
       readFile(join(targetRoot, '.oat', 'projects-root'), 'utf8'),
+    ).resolves.toContain('.oat/projects/shared');
+    await expect(
+      readFile(join(targetRoot, '.oat', 'config.json'), 'utf8'),
+    ).resolves.toContain('"projects"');
+    await expect(
+      readFile(join(targetRoot, '.oat', 'config.json'), 'utf8'),
     ).resolves.toContain('.oat/projects/shared');
 
     await writeFile(
       join(targetRoot, '.oat', 'projects-root'),
       '.oat/projects/custom\n',
+      'utf8',
+    );
+    await writeFile(
+      join(targetRoot, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { root: '.oat/projects/custom-config' } })}\n`,
       'utf8',
     );
     const second = await installWorkflows({
@@ -156,9 +168,13 @@ describe('installWorkflows', () => {
       force: true,
     });
     expect(second.projectsRootInitialized).toBe(false);
+    expect(second.projectsRootConfigInitialized).toBe(false);
     await expect(
       readFile(join(targetRoot, '.oat', 'projects-root'), 'utf8'),
     ).resolves.toContain('.oat/projects/custom');
+    await expect(
+      readFile(join(targetRoot, '.oat', 'config.json'), 'utf8'),
+    ).resolves.toContain('.oat/projects/custom-config');
   });
 
   it('gracefully skips missing source scripts', async () => {

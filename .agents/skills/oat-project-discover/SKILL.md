@@ -64,13 +64,13 @@ If you catch yourself:
 
 ### Step 1: Resolve Active Project (or Create a New One)
 
-OAT stores the active project path in `.oat/active-project` (single line, local-only).
+OAT stores active project context in `.oat/config.local.json` (`activeProject`, local-only).
 
 **Recommendation:** Prefer creating projects via the `oat-project-new` skill (scaffolds all artifacts up front). `oat-project-new` is the canonical "create project" step; this discovery skill should not be responsible for directory/template scaffolding.
 
 ```bash
-PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".oat/projects/shared")}"
+PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
@@ -89,7 +89,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 - Offer:
   - New project: run the `oat-project-new` skill with `{project-name}`
   - Existing project: run the `oat-project-open` skill
-- Stop here until `.oat/active-project` is set to a valid project directory.
+- Stop here until `activeProject` in `.oat/config.local.json` is set to a valid project directory.
 
 ### Step 2: Check Knowledge Base Exists
 

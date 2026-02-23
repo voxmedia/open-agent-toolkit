@@ -51,8 +51,8 @@ describe('cleanup integration', () => {
       'utf8',
     );
     await writeFile(
-      join(root, '.oat', 'active-project'),
-      '.oat/projects/shared/missing\n',
+      join(root, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/missing' })}\n`,
       'utf8',
     );
     await writeFile(

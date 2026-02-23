@@ -66,11 +66,11 @@ If you catch yourself:
 
 ### Step 0: Resolve Active Project
 
-OAT stores the active project path in `.oat/active-project` (single line, local-only).
+OAT stores active project context in `.oat/config.local.json` (`activeProject`, local-only).
 
 ```bash
-PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".oat/projects/shared")}"
+PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
@@ -80,7 +80,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 - Write it for future phases:
   ```bash
   mkdir -p .oat
-  echo "$PROJECT_PATH" > .oat/active-project
+  oat config set activeProject "$PROJECT_PATH"
   ```
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).

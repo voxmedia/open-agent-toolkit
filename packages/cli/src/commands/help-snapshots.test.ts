@@ -42,6 +42,7 @@ describe('help output snapshots', () => {
         init [options]   Initialize canonical directories, manifest, and tool packs
         status           Report provider sync and drift status
         sync [options]   Sync canonical content to provider views
+        config           Read and write OAT config values
         providers        Inspect provider capabilities and paths
         doctor           Run environment and setup diagnostics
         cleanup          Cleanup OAT project and artifact hygiene issues
@@ -254,12 +255,14 @@ describe('help output snapshots', () => {
       Manage OAT project workflows
 
       Options:
-        -h, --help            display help for command
+        -h, --help              display help for command
 
       Commands:
-        new [options] <name>  Create or update an OAT project scaffold
-        set-mode <mode>       Set project implementation execution mode
-        help [command]        display help for command
+        new [options] <name>    Create or update an OAT project scaffold
+        open [options] <name>   Open or switch to an OAT project
+        pause [options] [name]  Pause an OAT project
+        set-mode <mode>         Set project implementation execution mode
+        help [command]          display help for command
       "
     `);
   });
@@ -282,7 +285,7 @@ describe('help output snapshots', () => {
         --mode <mode>    Scaffold mode (choices: "spec-driven", "quick", "import",
                          default: "spec-driven")
         --force          Non-destructive scaffold; create missing files only
-        --no-set-active  Do not update .oat/active-project
+        --no-set-active  Do not update active project in local config
         --no-dashboard   Do not refresh .oat/state.md after scaffold
         -h, --help       display help for command
       "

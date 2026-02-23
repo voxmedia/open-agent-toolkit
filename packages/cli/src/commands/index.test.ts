@@ -55,7 +55,7 @@ describe('command registration', () => {
     );
   });
 
-  it('program has project command with new', () => {
+  it('program has project command with new, open, pause, and set-mode', () => {
     const program = createProgram();
     registerCommands(program);
     const project = program.commands.find(
@@ -65,7 +65,9 @@ describe('command registration', () => {
     expect(project).toBeDefined();
     const subcommands =
       project?.commands.map((command) => command.name()) ?? [];
-    expect(subcommands).toContain('new');
+    expect(subcommands).toEqual(
+      expect.arrayContaining(['new', 'open', 'pause', 'set-mode']),
+    );
   });
 
   it('program has internal command with validate-oat-skills', () => {
@@ -89,6 +91,7 @@ describe('command registration', () => {
     expect(help).toContain('init');
     expect(help).toContain('status');
     expect(help).toContain('sync');
+    expect(help).toContain('config');
     expect(help).toContain('providers');
     expect(help).toContain('doctor');
     expect(help).toContain('cleanup');

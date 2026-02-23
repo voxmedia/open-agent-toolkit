@@ -73,9 +73,12 @@ async function writeState(
   const content = `---\n${stateFrontmatterLines.join('\n')}\n---\n\n# State\n`;
   await writeFile(statePath, content, 'utf8');
 
-  const pointerPath = join(root, '.oat', 'active-project');
   await mkdir(join(root, '.oat'), { recursive: true });
-  await writeFile(pointerPath, '.oat/projects/shared/demo\n', 'utf8');
+  await writeFile(
+    join(root, '.oat', 'config.local.json'),
+    `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/demo' })}\n`,
+    'utf8',
+  );
 
   return statePath;
 }
@@ -210,12 +213,15 @@ describe('oat project set-mode', () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-project-set-mode-'));
     tempDirs.push(root);
 
-    const pointerPath = join(root, '.oat', 'active-project');
     await mkdir(join(root, '.oat', 'projects', 'shared', 'demo'), {
       recursive: true,
     });
     await mkdir(join(root, '.oat'), { recursive: true });
-    await writeFile(pointerPath, '.oat/projects/shared/demo\n', 'utf8');
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/demo' })}\n`,
+      'utf8',
+    );
 
     const { command, capture } = createHarness({ cwd: root });
     await runCommand(command, ['single-thread']);

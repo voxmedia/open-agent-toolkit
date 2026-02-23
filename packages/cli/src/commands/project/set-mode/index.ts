@@ -2,13 +2,18 @@ import {
   readFile as defaultReadFile,
   writeFile as defaultWriteFile,
 } from 'node:fs/promises';
-import { isAbsolute, join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import {
   getFrontmatterBlock,
   getFrontmatterField,
 } from '@commands/shared/frontmatter';
+import {
+  replaceFrontmatter,
+  upsertFrontmatterField,
+} from '@commands/shared/frontmatter-write';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { readOatLocalConfig } from '@config/oat-config';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
@@ -23,7 +28,6 @@ interface SetModeDependencies {
   writeFile: typeof defaultWriteFile;
 }
 
-const DEFAULT_PROJECTS_ROOT = '.oat/projects/shared';
 const ORCHESTRATION_DEFAULTS = [
   { field: 'oat_orchestration_merge_strategy', value: 'merge' },
   { field: 'oat_orchestration_retry_limit', value: '2' },
@@ -42,69 +46,6 @@ function isExecutionMode(value: string): value is ExecutionMode {
   return value === 'single-thread' || value === 'subagent-driven';
 }
 
-function upsertFrontmatterField(
-  block: string,
-  field: string,
-  value: string,
-  overwrite: boolean,
-): { nextBlock: string; changed: boolean; added: boolean } {
-  const matcher = new RegExp(`^${field}:\\s*([^\\n]*?)(\\s*#.*)?$`, 'm');
-  const match = block.match(matcher);
-
-  if (match) {
-    if (!overwrite) {
-      return { nextBlock: block, changed: false, added: false };
-    }
-
-    const comment = match[2] ?? '';
-    const nextBlock = block.replace(matcher, `${field}: ${value}${comment}`);
-    return { nextBlock, changed: nextBlock !== block, added: false };
-  }
-
-  const normalized = block.endsWith('\n') ? block : `${block}\n`;
-  return {
-    nextBlock: `${normalized}${field}: ${value}`,
-    changed: true,
-    added: true,
-  };
-}
-
-function replaceFrontmatter(content: string, nextBlock: string): string {
-  return content.replace(/^---\n([\s\S]*?)\n---/, `---\n${nextBlock}\n---`);
-}
-
-function resolveActiveProjectPath(
-  repoRoot: string,
-  pointerValue: string,
-  projectsRootValue: string,
-): string {
-  if (isAbsolute(pointerValue)) {
-    return pointerValue;
-  }
-
-  if (pointerValue.includes('/')) {
-    return resolve(repoRoot, pointerValue);
-  }
-
-  return resolve(repoRoot, projectsRootValue, pointerValue);
-}
-
-async function readProjectsRoot(
-  repoRoot: string,
-  dependencies: SetModeDependencies,
-): Promise<string> {
-  const projectsRootPath = join(repoRoot, '.oat', 'projects-root');
-
-  try {
-    const value = (
-      await dependencies.readFile(projectsRootPath, 'utf8')
-    ).trim();
-    return value || DEFAULT_PROJECTS_ROOT;
-  } catch {
-    return DEFAULT_PROJECTS_ROOT;
-  }
-}
-
 async function runSetMode(
   modeArg: string,
   context: CommandContext,
@@ -118,31 +59,16 @@ async function runSetMode(
     }
 
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-    const activeProjectFile = join(repoRoot, '.oat', 'active-project');
+    const localConfig = await readOatLocalConfig(repoRoot);
+    const activeProject = localConfig.activeProject?.trim();
 
-    let pointerRaw: string;
-    try {
-      pointerRaw = (
-        await dependencies.readFile(activeProjectFile, 'utf8')
-      ).trim();
-    } catch {
+    if (!activeProject) {
       throw new Error(
-        'No active project found (.oat/active-project is missing).',
+        'No active project found (.oat/config.local.json has no activeProject).',
       );
     }
 
-    if (!pointerRaw) {
-      throw new Error(
-        'No active project found (.oat/active-project is empty).',
-      );
-    }
-
-    const projectsRoot = await readProjectsRoot(repoRoot, dependencies);
-    const activeProjectPath = resolveActiveProjectPath(
-      repoRoot,
-      pointerRaw,
-      projectsRoot,
-    );
+    const activeProjectPath = join(repoRoot, activeProject);
     const statePath = join(activeProjectPath, 'state.md');
 
     let stateContent: string;

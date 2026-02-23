@@ -15,10 +15,9 @@ Project scope is used for project workflows and repo-local sync state. User scop
 
 ```text
 .oat/
-  active-project
   active-idea
-  projects-root
   config.json
+  config.local.json
   projects/
     shared/
     local/
@@ -40,10 +39,9 @@ Project scope is used for project workflows and repo-local sync state. User scop
 
 | Path | Purpose | Notes |
 |------|---------|-------|
-| `.oat/config.json` | Repo runtime config for non-sync settings | Phase-A home for new non-sync settings (e.g., `worktrees.root`) |
-| `.oat/active-project` | Pointer to the active project path | Used by project skills to resume context |
+| `.oat/config.json` | Shared repo runtime config for non-sync settings | Includes `worktrees.root`, `projects.root` |
+| `.oat/config.local.json` | Local per-developer runtime state | Gitignored; includes `activeProject`, `lastPausedProject` |
 | `.oat/active-idea` | Pointer to active idea | Used by idea skills |
-| `.oat/projects-root` | Optional override for default projects root | Defaults to `.oat/projects/shared` |
 | `.oat/projects/` | OAT project artifacts | `shared`, `local`, `archived` scopes |
 | `.oat/ideas/` | Project-level ideas store | Often gitignored |
 | `.oat/sync/` | Interop sync state/config | See details below |
@@ -69,15 +67,16 @@ Primary ways this file is managed:
 - `oat init --scope project` (interactive provider selection)
 - `oat providers set --scope project --enabled ... --disabled ...`
 
-## Config ownership (phase-A)
+## Config ownership (current)
 
-During phase-A consolidation:
+Current config ownership:
 
-- `.oat/config.json` owns **new non-sync repo settings**.
+- `.oat/config.json` owns shared non-sync repo settings (including `worktrees.root` and `projects.root`).
+- `.oat/config.local.json` owns per-developer project lifecycle state (`activeProject`, `lastPausedProject`).
 - `.oat/sync/config.json` continues to own sync/provider behavior.
-- Pointer files (`.oat/active-project`, `.oat/active-idea`, `.oat/projects-root`) remain compatible and are not migrated in this phase.
+- `.oat/active-idea` remains pointer-file based (idea migration is separate scope).
 
-This keeps existing workflow contracts stable while preventing additional one-off pointer files for new settings.
+Legacy `.oat/active-project` / `.oat/projects-root` files may still be present in some environments but are no longer the canonical source in migrated command paths.
 
 ### `.oat/config.json` schema
 
@@ -87,12 +86,16 @@ Current schema keys:
 |-----|------|---------|-------------|
 | `version` | `number` | `1` | Schema version |
 | `worktrees.root` | `string` | `".worktrees"` | Root directory for git worktrees (repo-relative or absolute) |
+| `projects.root` | `string` | `".oat/projects/shared"` | Default root directory for OAT projects |
 
 Example:
 
 ```json
 {
   "version": 1,
+  "projects": {
+    "root": ".oat/projects/shared"
+  },
   "worktrees": {
     "root": ".worktrees"
   }
@@ -186,7 +189,7 @@ User scope is primarily for:
 ## Practical guidance
 
 - Treat `.oat/templates/` as scaffolding source.
-- Treat `.oat/config.json` as non-sync runtime config (phase-A and beyond).
+- Treat `.oat/config.json` + `.oat/config.local.json` as OAT runtime config/state (`oat config get/set/list` is the preferred interface).
 - Treat `.oat/sync/manifest.json` and `.oat/sync/config.json` as sync runtime state/config.
 - Treat project artifacts under `.oat/projects/**` as lifecycle source-of-truth for workflow execution.
 - Keep `state.md`, `plan.md`, and `implementation.md` consistent after each workflow step.

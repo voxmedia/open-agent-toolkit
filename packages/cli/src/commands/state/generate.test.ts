@@ -35,6 +35,17 @@ async function writeStateFile(
   await writeFile(fullPath, `---\n${fm}\n---\n# State\n`, 'utf8');
 }
 
+async function writeLocalConfig(
+  repoRoot: string,
+  config: Record<string, unknown>,
+): Promise<void> {
+  await writeFile(
+    join(repoRoot, '.oat', 'config.local.json'),
+    `${JSON.stringify({ version: 1, ...config })}\n`,
+    'utf8',
+  );
+}
+
 describe('generateStateDashboard', () => {
   const tempDirs: string[] = [];
 
@@ -99,10 +110,9 @@ describe('generateStateDashboard', () => {
       oat_hill_completed: '[]',
     });
 
-    await writeFile(
-      join(root, '.oat', 'active-project'),
-      '.oat/projects/shared/test-proj\n',
-    );
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/test-proj',
+    });
 
     const result = await generateStateDashboard({
       repoRoot: root,
@@ -120,7 +130,7 @@ describe('generateStateDashboard', () => {
     expect(dashboard).toContain('| Mode | spec-driven |');
   });
 
-  it('handles missing active-project gracefully', async () => {
+  it('handles missing active project gracefully', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);
 
@@ -134,14 +144,13 @@ describe('generateStateDashboard', () => {
     expect(result.projectName).toBeNull();
   });
 
-  it('handles active-project pointing to non-existent dir', async () => {
+  it('handles config-local activeProject pointing to non-existent dir', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);
 
-    await writeFile(
-      join(root, '.oat', 'active-project'),
-      '.oat/projects/shared/missing-proj\n',
-    );
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/missing-proj',
+    });
 
     const result = await generateStateDashboard({
       repoRoot: root,
@@ -222,10 +231,9 @@ describe('generateStateDashboard', () => {
       oat_hill_completed: '[]',
     });
 
-    await writeFile(
-      join(root, '.oat', 'active-project'),
-      '.oat/projects/shared/hill-proj\n',
-    );
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/hill-proj',
+    });
 
     const result = await generateStateDashboard({
       repoRoot: root,
@@ -257,6 +265,108 @@ describe('generateStateDashboard', () => {
     const dashboard = await readFile(result.dashboardPath, 'utf8');
     expect(dashboard).toContain('**proj-a** - discovery');
     expect(dashboard).toContain('**proj-b** - implement');
+  });
+
+  it('keeps active project when another project is paused', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+
+    await writeStateFile(root, '.oat/projects/shared/active-a', {
+      oat_phase: 'implement',
+      oat_phase_status: 'in_progress',
+      oat_current_task: 'p02-t01',
+      oat_workflow_mode: 'full',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+      oat_lifecycle: 'active',
+    });
+    await writeStateFile(root, '.oat/projects/shared/paused-b', {
+      oat_phase: 'plan',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'import',
+      oat_lifecycle: 'paused',
+      oat_pause_timestamp: '2026-02-20T12:00:00.000Z',
+      oat_pause_reason: 'waiting',
+    });
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/active-a',
+    });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-02-21',
+      git: mockGit,
+    });
+
+    expect(result.projectName).toBe('active-a');
+    expect(result.recommendedStep).toBe('oat-project-implement');
+  });
+
+  it('shows resume guidance when no active project and lastPausedProject exists', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+
+    await writeStateFile(root, '.oat/projects/shared/paused-demo', {
+      oat_phase: 'implement',
+      oat_phase_status: 'in_progress',
+      oat_workflow_mode: 'full',
+      oat_lifecycle: 'paused',
+      oat_pause_timestamp: '2026-02-20T12:00:00.000Z',
+      oat_pause_reason: 'waiting',
+    });
+    await writeLocalConfig(root, {
+      activeProject: null,
+      lastPausedProject: '.oat/projects/shared/paused-demo',
+    });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-02-21',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('oat project open paused-demo');
+    expect(result.recommendedReason).toContain('Resume paused project');
+
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain('## Last Paused Project');
+    expect(dashboard).toContain('**paused-demo**');
+  });
+
+  it('computeNextStep resumes when active project lifecycle is paused', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+
+    await writeStateFile(root, '.oat/projects/shared/paused-active', {
+      oat_phase: 'implement',
+      oat_phase_status: 'in_progress',
+      oat_current_task: 'p03-t01',
+      oat_workflow_mode: 'full',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+      oat_lifecycle: 'paused',
+      oat_pause_timestamp: '2026-02-20T12:00:00.000Z',
+      oat_pause_reason: 'qa hold',
+    });
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/paused-active',
+    });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-02-21',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('oat project open paused-active');
+    expect(result.recommendedReason).toContain('paused');
+
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain('| Lifecycle | paused |');
+    expect(dashboard).toContain(
+      '| Pause Timestamp | 2026-02-20T12:00:00.000Z |',
+    );
+    expect(dashboard).toContain('| Pause Reason | qa hold |');
   });
 
   it('generates valid dashboard with throwing git mock (degraded output)', async () => {

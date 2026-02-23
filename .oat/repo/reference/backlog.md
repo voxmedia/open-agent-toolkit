@@ -47,6 +47,24 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related artifacts: `implementation.md`, `plan.md` (task status)
   - Created: 2026-02-21
 
+- [ ] **(P2) [tooling] Migrate active-idea pointers to config-local state**
+  - Context:
+    - `activeProject` / `lastPausedProject` have moved to `.oat/config.local.json`, but idea context still relies on pointer files (`.oat/active-idea` and `~/.oat/active-idea`).
+    - This split keeps lifecycle semantics consistent but leaves idea context on a separate storage/read model.
+  - Proposed change:
+    - Move active-idea state to config-local surfaces with explicit dual-level precedence (repo-local + user-level), preserving existing behavior where needed.
+    - Update idea skills/commands and worktree propagation logic to use config-based reads/writes instead of direct pointer-file access.
+    - Keep a bounded compatibility window for legacy pointer reads before removal.
+  - Success criteria:
+    - Idea commands/skills resolve active idea from config-backed sources with deterministic precedence.
+    - Worktree bootstrap/copy behavior preserves active-idea context without pointer-file special cases.
+    - Legacy pointer-file fallback can be removed after migration validation.
+  - Links:
+    - `.oat/repo/reference/external-plans/b15-b02-project-lifecycle-config-consolidation.md`
+    - `packages/cli/src/config/oat-config.ts`
+    - `.agents/skills/oat-worktree-bootstrap/SKILL.md`
+  - Created: 2026-02-22
+
 - [ ] **(P1) [skills] Enforce autonomous review gates in `oat-project-subagent-implement`**
   - Context: The skill's autonomous review gate (Step 4) has no hard enforcement before merge (Step 5). During first real usage (adding Copilot/Gemini providers), Phase 1 subagents were dispatched and merged without the review gate running.
   - Proposed change:
@@ -123,32 +141,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related skill: `docs-completed-projects-gap-review` (PR #24)
     - Related backlog: `oat-project-document` (B03)
   - Created: 2026-02-19
-
-- [ ] **(P1) [tooling] Continue OAT runtime config consolidation under `.oat/config.json` + `.oat/config.local.json` (Phase B/C)**
-  - Target milestone/phase: Workflow ergonomics + configuration hygiene
-  - Notes:
-    - Phase A is implemented: `.oat/config.json` is in use for `worktrees.root` and `oat-worktree-bootstrap` reads it with deterministic precedence.
-    - **Approach: split tracked vs local config**
-      - `.oat/config.json` (tracked) — shared repo settings: `worktrees.root`, `projects.root` (from `.oat/projects-root`), provider config pointers, VCS policy flags.
-      - `.oat/config.local.json` (gitignored) — per-developer state: `activeProject` (from `.oat/active-project`), `activeIdea` (from `.oat/active-idea`), per-dev overrides.
-      - Runtime merge: `config.local.json` keys win over `config.json` for any overlapping keys.
-    - **Why this solves the worktree problem**: `oat-worktree-bootstrap` copies one file (`config.local.json`) instead of hunting for N individual pointer files. New per-developer settings automatically propagate without skill updates.
-    - **Migration mechanics**:
-      - Skills switch from `cat .oat/active-project` to `jq -r '.activeProject' .oat/config.local.json`.
-      - Phase B: move `.oat/projects-root` into `.oat/config.json` with compatibility reads.
-      - Phase C: move `active-project` and `active-idea` into `.oat/config.local.json`, update skills to use `jq`, drop legacy pointer files.
-    - Keep sync config stable for now (`.oat/sync/config.json`) and evaluate later migration after CLI ownership is clearer.
-  - Success criteria:
-    - `.oat/config.local.json` is gitignored and holds all per-developer state.
-    - `.oat/config.json` holds all shared repo config.
-    - Skills read config via `jq` — no CLI accessor prerequisite needed.
-    - `oat-worktree-bootstrap` propagates `config.local.json` as a single file copy.
-    - Legacy pointer files removed after migration.
-  - Links:
-    - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
-    - Related decision: `.oat/repo/reference/decision-record.md`
-    - Implementation project: `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
-  - Created: 2026-02-17
 
 - [ ] **(P1) [skills] Add `oat-project-document` for post-implementation documentation synthesis**
   - Target milestone/phase: Workflow quality + closeout discipline
@@ -298,24 +290,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - Related gap: skill removal currently requires manual deletion + sync
   - Created: 2026-02-16
-
-- [ ] **(P1) [tooling] Add `oat project open|switch|pause` lifecycle commands**
-  - Target milestone/phase: OAT CLI lifecycle hygiene + workflow ergonomics
-  - Notes:
-    - Add `oat project open <project-name>` to validate project existence and set `.oat/active-project`.
-    - Add `oat project switch <project-name>` as an explicit switching command (can alias `open` behavior but should preserve clear user-facing intent in help/output).
-    - Add `oat project pause [<project-name>]` to mark a project as paused and record pause metadata in `state.md` (at minimum timestamp + optional reason), while keeping active-project behavior explicit.
-    - Ensure all commands refresh `.oat/state.md` after apply operations for consistent dashboard bookkeeping.
-    - Keep semantics compatible with current path-based active pointer contract (see ADR-001/ADR-004).
-  - Success criteria:
-    - `oat project open` provides CLI-native project activation with validation (no manual pointer edits required).
-    - `oat project switch` provides deterministic, test-covered switching behavior and clear output about old/new active project.
-    - `oat project pause` records paused state in project metadata and is reflected in dashboard output/recommendations.
-    - Command help and tests cover success and common failure paths (missing project, invalid name, missing `state.md`).
-  - Links:
-    - Related skills: `.agents/skills/oat-project-open/SKILL.md`, `.agents/skills/oat-project-clear-active/SKILL.md`
-    - Related decisions: `.oat/repo/reference/decision-record.md` (ADR-001, ADR-004)
-  - Created: 2026-02-18
 
 - [ ] **(P1) [tooling] Add configurable VCS policy + worktree sync behavior for OAT artifact directories**
   - Target milestone/phase: Worktree ergonomics + artifact signal/noise control

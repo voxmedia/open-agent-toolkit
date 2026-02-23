@@ -113,7 +113,7 @@ plan.md
 
 ### Step 0: Resolve Active Project and Persist Subagent Defaults
 
-Resolve active project from `.oat/active-project` and read `state.md`.
+Resolve active project via `oat config get activeProject` (stored in `.oat/config.local.json`) and read `state.md`.
 
 Persist required runtime defaults in `state.md` frontmatter:
 - `oat_execution_mode: subagent-driven`

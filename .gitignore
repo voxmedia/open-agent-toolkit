@@ -39,7 +39,7 @@ yarn-error.log*
 .mcp.json
 
 # OAT local-only workspace state
-.oat/active-project
+.oat/config.local.json
 .oat/active-idea
 .oat/state.md
 

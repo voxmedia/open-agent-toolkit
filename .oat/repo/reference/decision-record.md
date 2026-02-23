@@ -17,6 +17,8 @@ Track notable decisions made while evolving OAT in this repo, so future sessions
 | ADR-009 | 2026-02-16 | accepted | Centralize spec-driven/quick/import plan semantics in `oat-project-plan-writing` |
 | ADR-010 | 2026-02-17 | accepted | Introduce `.oat/config.json` for new non-sync settings and phase broader consolidation |
 | ADR-011 | 2026-02-17 | accepted | Make worktree-root resolution deterministic and default `worktrees.root` to repo-local `.worktrees` |
+| ADR-012 | 2026-02-22 | accepted | Adopt config-local lifecycle state for active/paused project context |
+| ADR-013 | 2026-02-22 | accepted | Standardize `oat project open/pause` lifecycle semantics |
 
 ## Decisions
 
@@ -490,6 +492,106 @@ Adopt option 2:
 
 - Keep current-state/roadmap docs aligned with the precedence contract.
 - Preserve non-breaking override paths (`--path`, env, config) for repos with different conventions.
+
+---
+
+### ADR-012: Adopt config-local lifecycle state for active/paused project context
+
+- **Date:** 2026-02-22
+- **Status:** accepted
+- **Supersedes:** ADR-001, ADR-004
+- **Drivers:** Remove pointer-file churn, support worktree-safe project context, and align lifecycle state with CLI-managed config interfaces.
+- **Related:**
+  - `.oat/repo/reference/external-plans/b15-b02-project-lifecycle-config-consolidation.md`
+  - `.oat/config.json`
+  - `.oat/config.local.json`
+  - `packages/cli/src/config/oat-config.ts`
+
+#### Context
+
+Earlier ADRs intentionally kept `.oat/active-project` path-based while deferring migration until CLI project commands existed. With `oat config` and lifecycle commands now in place, continuing to treat pointer files as primary state would keep dual representations and increase drift risk, especially across worktrees.
+
+#### Options Considered
+
+1. Keep pointer files as canonical and read config as optional compatibility
+2. Move lifecycle state to config files and retain temporary fallback reads
+3. Move lifecycle state to config files and remove pointer fallbacks after migration
+
+#### Decision
+
+Adopt option 3:
+- Canonical per-developer lifecycle state is now `.oat/config.local.json`:
+  - `activeProject`
+  - `lastPausedProject`
+- Canonical shared projects root is `.oat/config.json`:
+  - `projects.root`
+- Paths are stored repo-relative to keep worktree propagation portable.
+- Active-idea pointers remain file-based (`.oat/active-idea`) as an explicit follow-up scope.
+- Legacy `.oat/active-project` and `.oat/projects-root` fallback behavior is removed from migrated command paths.
+
+#### Consequences
+
+- Positive:
+  - One lifecycle source of truth for active/paused project context.
+  - Better portability across worktrees with repo-relative local config values.
+  - Cleaner command/skill interfaces via `oat config get/set/list`.
+- Negative / trade-offs:
+  - Legacy pointer files become inert and can confuse users if manually inspected.
+  - Active-idea remains on separate storage semantics until a future migration.
+
+#### Follow-ups
+
+- Track active-idea migration (`.oat/active-idea` / `~/.oat/active-idea`) as separate scoped work.
+- Keep docs and skills aligned on config-first lifecycle reads/writes.
+
+---
+
+### ADR-013: Standardize `oat project open/pause` lifecycle semantics
+
+- **Date:** 2026-02-22
+- **Status:** accepted
+- **Drivers:** Provide a consistent operator model for activate/switch/pause/resume flows without introducing redundant commands.
+- **Related:**
+  - `packages/cli/src/commands/project/open/index.ts`
+  - `packages/cli/src/commands/project/pause/index.ts`
+  - `packages/cli/src/commands/state/generate.ts`
+  - `.oat/repo/reference/external-plans/b15-b02-project-lifecycle-config-consolidation.md`
+
+#### Context
+
+Lifecycle interactions previously depended on direct pointer edits and ambiguous pause behavior. We needed deterministic semantics that work for both command consumers and dashboard guidance.
+
+#### Options Considered
+
+1. Separate commands for open/switch/resume with independent state handling
+2. Single `open` command for activate/switch/resume plus `pause` for suspension with contextual pointer clearing
+3. Keep pointer-level workflows and treat pause as UI-only metadata
+
+#### Decision
+
+Adopt option 2:
+- `oat project open <name>` handles:
+  - fresh activation
+  - switching from another active project
+  - resuming paused projects (clears paused frontmatter state)
+- `oat project pause [name]` writes pause metadata to target project `state.md`.
+- Pointer clearing occurs only when paused project matches current `activeProject`; when cleared, `lastPausedProject` is recorded for dashboard resume guidance.
+- Resume guidance surfaces through dashboard/state generation using `lastPausedProject`.
+
+#### Consequences
+
+- Positive:
+  - Simple lifecycle mental model: open to activate/resume, pause to suspend.
+  - Deterministic behavior for named-project pause vs active-project pause.
+  - Dashboard can guide next action even with no active project.
+- Negative / trade-offs:
+  - Pause metadata now influences both state frontmatter and local config fields.
+  - Users expecting dedicated `resume`/`switch` verbs must adapt to `open` behavior.
+
+#### Follow-ups
+
+- Keep help text and skill wrappers aligned with open/pause semantics.
+- Preserve regression coverage for pause/open + dashboard next-step behavior.
 
 ## ADR Template
 

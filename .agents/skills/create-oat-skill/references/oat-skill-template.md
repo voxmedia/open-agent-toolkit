@@ -58,15 +58,16 @@ When executing this skill, provide lightweight progress feedback so the user can
 If this skill is project-scoped, resolve `PROJECT_PATH` and `PROJECTS_ROOT`:
 
 ```bash
-PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo \".oat/projects/shared\")}"
+PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo \".oat/projects/shared\")}"
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 If `PROJECT_PATH` is missing/invalid:
 - Ask for `{project-name}`
 - Set `PROJECT_PATH="${PROJECTS_ROOT}/{project-name}"`
-- Write `.oat/active-project`
+- Persist with `oat config set activeProject "$PROJECT_PATH"`.
+- TODO(back-compat): validate `oat config` exists on older target branches before relying on this snippet.
 
 ### Step 1: {First Step}
 

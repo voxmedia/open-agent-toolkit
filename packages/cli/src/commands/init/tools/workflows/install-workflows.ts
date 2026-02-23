@@ -4,6 +4,7 @@ import {
   copyDirWithStatus,
   copyFileWithStatus,
 } from '@commands/init/tools/shared/copy-helpers';
+import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { ensureDir, fileExists } from '@fs/io';
 
 export const WORKFLOW_SKILLS = [
@@ -69,6 +70,7 @@ export interface InstallWorkflowsResult {
   updatedScripts: string[];
   skippedScripts: string[];
   projectsRootInitialized: boolean;
+  projectsRootConfigInitialized: boolean;
 }
 
 export async function installWorkflows(
@@ -90,6 +92,7 @@ export async function installWorkflows(
     updatedScripts: [],
     skippedScripts: [],
     projectsRootInitialized: false,
+    projectsRootConfigInitialized: false,
   };
 
   for (const skill of WORKFLOW_SKILLS) {
@@ -164,6 +167,15 @@ export async function installWorkflows(
     await ensureDir(dirname(projectsRootPath));
     await writeFile(projectsRootPath, '.oat/projects/shared\n', 'utf8');
     result.projectsRootInitialized = true;
+  }
+
+  const config = await readOatConfig(options.targetRoot);
+  if (!config.projects?.root?.trim()) {
+    await writeOatConfig(options.targetRoot, {
+      ...config,
+      projects: { root: '.oat/projects/shared' },
+    });
+    result.projectsRootConfigInitialized = true;
   }
 
   return result;

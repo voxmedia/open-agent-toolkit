@@ -16,7 +16,7 @@ Create a new OAT workflow skill under `.agents/skills/` that follows OAT convent
 This skill is a specialization of the general skill-creation workflow.
 
 - Follow the baseline principles and structure from `.agents/skills/create-skill/SKILL.md` (progressive disclosure, section layout, examples, troubleshooting, success criteria).
-- This skill adds/overrides only the OAT-specific requirements (progress banners, `{PROJECTS_ROOT}` + `.oat/active-project` resolution, and OAT-safe bash patterns).
+- This skill adds/overrides only the OAT-specific requirements (progress banners, `{PROJECTS_ROOT}` + local-config active-project resolution, and OAT-safe bash patterns).
 
 ## When to Use
 
@@ -44,7 +44,7 @@ If not provided, ask the user for:
 - Skill name (kebab-case)
 - Description using the create-skill formula: `Use when [trigger condition]. [What it does for disambiguation].`
 - Whether this is `oat-*` (should be for this skill)
-- Whether it needs project context (`.oat/active-project`) or is repo-level
+- Whether it needs project context (`activeProject` in `.oat/config.local.json`) or is repo-level
 
 ### Step 2: Draft the Skill Using the OAT Template
 
@@ -67,13 +67,13 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 **Project root resolution (required for project-scoped skills):**
 - Always resolve `{PROJECTS_ROOT}` via:
   - `$OAT_PROJECTS_ROOT` env var
-  - `.oat/projects-root`
+  - `oat config get projects.root`
   - fallback `.oat/projects/shared`
 - Never hardcode `.oat/projects/shared` directly except as the fallback.
 
 **Active project (required for project-scoped skills):**
-- Prefer `.oat/active-project` as the pointer.
-- If missing/invalid: prompt for `{project-name}`, derive `PROJECT_PATH="${PROJECTS_ROOT}/{project-name}"`, then write `.oat/active-project`.
+- Prefer `activeProject` in `.oat/config.local.json` as the pointer.
+- If missing/invalid: prompt for `{project-name}`, derive `PROJECT_PATH="${PROJECTS_ROOT}/{project-name}"`, then persist with `oat config set activeProject "$PROJECT_PATH"`.
 
 **Bash safety (recommended):**
 - Prefer portable bash (`set -eu`, avoid `pipefail` unless explicitly handled).

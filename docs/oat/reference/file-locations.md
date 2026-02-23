@@ -11,15 +11,17 @@ For detailed `.oat/` tree semantics, see:
 ## OAT runtime/state
 
 - Repo runtime config (non-sync settings): `.oat/config.json`
-- Active project pointer: `.oat/active-project`
+- Local runtime config (per-developer state): `.oat/config.local.json`
 - Active idea pointer: `.oat/active-idea`
-- Optional root override: `.oat/projects-root`
+- Projects root config: `projects.root` in `.oat/config.json` (read via `oat config get projects.root`)
 - Project manifests/config: `.oat/sync/`
 
-Phase-A ownership note:
-- `.oat/config.json` is the canonical home for new non-sync settings (for example, `worktrees.root`).
+Config ownership note:
+- `.oat/config.json` is the canonical home for shared non-sync settings (for example, `worktrees.root`, `projects.root`).
+- `.oat/config.local.json` is the canonical home for per-developer lifecycle state (for example, `activeProject`, `lastPausedProject`).
 - `.oat/sync/config.json` remains the sync/provider config contract.
-- Existing pointer files (`.oat/active-project`, `.oat/active-idea`, `.oat/projects-root`) remain valid during phased migration.
+- Active-idea pointers remain pointer-file based (`.oat/active-idea`, `~/.oat/active-idea`) and are not part of the current config migration.
+- Legacy `.oat/active-project` / `.oat/projects-root` files may still exist as inert compatibility artifacts in some repos/worktrees.
 
 ## OAT workflow
 

@@ -10,7 +10,7 @@ Review loop:
 ## Project vs ad-hoc
 
 **Provide** (request a review):
-- `oat-project-review-provide` is project-scoped and requires `.oat/active-project` + project `state.md`.
+- `oat-project-review-provide` is project-scoped and requires active project state (resolved via `oat config get activeProject` / `.oat/config.local.json`) plus project `state.md`.
 - `oat-review-provide` is for non-project commit-range reviews (ad-hoc, no project state required).
 
 **Receive** (process review findings):

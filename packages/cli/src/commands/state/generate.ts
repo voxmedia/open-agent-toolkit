@@ -1,8 +1,9 @@
 import { execSync } from 'node:child_process';
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { readdir, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { parseFrontmatterField } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import { readOatLocalConfig } from '@config/oat-config';
 import { ensureDir, fileExists } from '@fs/io';
 
 export interface GitOperations {
@@ -31,6 +32,8 @@ interface ProjectState {
   phaseStatus: string;
   currentTask: string;
   lifecycle: string;
+  pauseTimestamp: string;
+  pauseReason: string;
   blockers: string;
   hillCheckpoints: string;
   hillCompleted: string;
@@ -42,6 +45,7 @@ interface ActiveProject {
   name: string;
   path: string;
   status: string;
+  lastPausedProject: string | null;
 }
 
 interface KnowledgeStatus {
@@ -92,33 +96,21 @@ async function hasAnyProjects(projectsRoot: string): Promise<boolean> {
   }
 }
 
-async function readActiveProject(
-  repoRoot: string,
-  projectsRoot: string,
-): Promise<ActiveProject> {
-  const result: ActiveProject = { name: '', path: '', status: 'not set' };
-  const pointerPath = join(repoRoot, '.oat', 'active-project');
-
-  if (!(await fileExists(pointerPath))) return result;
-
-  let rawValue: string;
-  try {
-    rawValue = (await readFile(pointerPath, 'utf8')).trim();
-  } catch {
-    return result;
-  }
-
+async function readActiveProject(repoRoot: string): Promise<ActiveProject> {
+  const localConfig = await readOatLocalConfig(repoRoot);
+  const result: ActiveProject = {
+    name: '',
+    path: '',
+    status: 'not set',
+    lastPausedProject: localConfig.lastPausedProject ?? null,
+  };
+  const rawValue = localConfig.activeProject?.trim();
   if (!rawValue) return result;
 
-  if (rawValue.includes('/')) {
-    result.name = basename(rawValue);
-    result.path = rawValue;
-  } else {
-    result.name = rawValue;
-    result.path = `${projectsRoot}/${rawValue}`;
-  }
+  result.name = basename(rawValue);
+  result.path = rawValue;
 
-  const fullProjectPath = join(repoRoot, result.path);
+  const fullProjectPath = join(repoRoot, rawValue);
 
   try {
     const entries = await readdir(fullProjectPath);
@@ -158,6 +150,14 @@ async function readProjectState(
   if (!currentTask || currentTask === 'null') currentTask = '-';
   const lifecycle =
     (await parseFrontmatterField(stateFile, 'oat_lifecycle')) || 'active';
+  const pauseTimestamp =
+    lifecycle === 'paused'
+      ? await parseFrontmatterField(stateFile, 'oat_pause_timestamp')
+      : '';
+  const pauseReason =
+    lifecycle === 'paused'
+      ? await parseFrontmatterField(stateFile, 'oat_pause_reason')
+      : '';
   const blockers =
     (await parseFrontmatterField(stateFile, 'oat_blockers')) || '[]';
   const hillCheckpoints =
@@ -180,6 +180,8 @@ async function readProjectState(
     phaseStatus,
     currentTask,
     lifecycle,
+    pauseTimestamp,
+    pauseReason,
     blockers,
     hillCheckpoints,
     hillCompleted,
@@ -266,11 +268,17 @@ function calculateStaleness(
 }
 
 function computeNextStep(
-  projectStatus: string,
+  project: ActiveProject,
   hasProjects: boolean,
   state: ProjectState | null,
 ): { step: string; reason: string } {
-  if (projectStatus === 'not set') {
+  if (project.status === 'not set') {
+    if (project.lastPausedProject) {
+      return {
+        step: `oat project open ${basename(project.lastPausedProject)}`,
+        reason: 'Resume paused project or open a different one',
+      };
+    }
     if (hasProjects) {
       return {
         step: 'oat-project-open',
@@ -283,15 +291,22 @@ function computeNextStep(
     };
   }
 
-  if (projectStatus !== 'active') {
+  if (project.status !== 'active') {
     return {
       step: 'oat-project-open',
-      reason: `Current project has issues: ${projectStatus}`,
+      reason: `Current project has issues: ${project.status}`,
     };
   }
 
   if (!state) {
     return { step: 'oat-project-progress', reason: 'Check current progress' };
+  }
+
+  if (state.lifecycle === 'paused') {
+    return {
+      step: `oat project open ${project.name}`,
+      reason: 'Project is paused — open to resume',
+    };
   }
 
   // HiLL checkpoint gating
@@ -440,6 +455,15 @@ function buildDashboardMarkdown(
   }
   lines.push('');
 
+  if (project.status === 'not set' && project.lastPausedProject) {
+    lines.push('## Last Paused Project');
+    lines.push('');
+    lines.push(
+      `**${basename(project.lastPausedProject)}** (\`${project.lastPausedProject}\`)`,
+    );
+    lines.push('');
+  }
+
   if (project.status === 'active' && state) {
     lines.push('## Active Project Summary');
     lines.push('');
@@ -448,6 +472,15 @@ function buildDashboardMarkdown(
     lines.push(`| Mode | ${state.workflowMode} |`);
     lines.push(`| Phase | ${state.phase} |`);
     lines.push(`| Status | ${state.phaseStatus} |`);
+    if (state.lifecycle !== 'active') {
+      lines.push(`| Lifecycle | ${state.lifecycle} |`);
+      if (state.pauseTimestamp) {
+        lines.push(`| Pause Timestamp | ${state.pauseTimestamp} |`);
+      }
+      if (state.pauseReason) {
+        lines.push(`| Pause Reason | ${state.pauseReason} |`);
+      }
+    }
     lines.push(`| HiLL Gate | ${state.hillStatus} |`);
     lines.push(`| Current Task | ${state.currentTask} |`);
     lines.push('');
@@ -480,8 +513,8 @@ function buildDashboardMarkdown(
   lines.push('- `oat-project-new` - Create a spec-driven project');
   lines.push('- `oat-project-quick-start` - Create a quick workflow project');
   lines.push('- `oat-project-import-plan` - Import an external provider plan');
-  lines.push('- `oat-project-open` - Switch active project');
-  lines.push('- `oat-project-clear-active` - Clear active project');
+  lines.push('- `oat project open <name>` - Open or resume a project');
+  lines.push('- `oat project pause [name]` - Pause active or named project');
   lines.push('- `oat-project-complete` - Mark project complete');
   lines.push('');
 
@@ -505,7 +538,7 @@ export async function generateStateDashboard(
   const projectsRoot = await resolveProjectsRoot(repoRoot, env);
   const hasProjects = await hasAnyProjects(join(repoRoot, projectsRoot));
 
-  const project = await readActiveProject(repoRoot, projectsRoot);
+  const project = await readActiveProject(repoRoot);
 
   let state: ProjectState | null = null;
   if (project.status === 'active') {
@@ -514,7 +547,7 @@ export async function generateStateDashboard(
 
   const knowledge = await readKnowledgeStatus(repoRoot);
   const staleness = calculateStaleness(knowledge, git, repoRoot, today);
-  const nextStep = computeNextStep(project.status, hasProjects, state);
+  const nextStep = computeNextStep(project, hasProjects, state);
 
   const projectsList = await listAvailableProjects(repoRoot, projectsRoot);
   const markdown = buildDashboardMarkdown(

@@ -68,8 +68,8 @@ describe('artifact stale-candidate discovery and reference guards', () => {
     const root = await createRepoRoot();
     tempDirs.push(root);
     await writeFile(
-      join(root, '.oat', 'active-project'),
-      '.oat/projects/shared/demo\n',
+      join(root, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/demo' })}\n`,
       'utf8',
     );
     await writeFile(

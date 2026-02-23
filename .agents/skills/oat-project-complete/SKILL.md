@@ -30,7 +30,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 ### Step 1: Resolve Active Project
 
 ```bash
-PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
+PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
 
 if [[ -z "$PROJECT_PATH" ]]; then
   echo "Error: No active project set. Use the oat-project-open skill first." >&2
@@ -134,7 +134,7 @@ fi
 Detect whether the active project is under shared projects root:
 
 ```bash
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".oat/projects/shared")}"
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ARCHIVED_ROOT=".oat/projects/archived"
 IS_SHARED_PROJECT="false"
@@ -238,7 +238,7 @@ Ask user: "Would you like to clear the active project pointer?"
 
 If yes:
 ```bash
-rm -f .oat/active-project
+oat config set activeProject ""
 echo "Active project cleared."
 ```
 

@@ -137,7 +137,7 @@ describe('createProjectNewCommand', () => {
       'Project path: .oat/projects/shared/demo',
     );
     expect(capture.info[2]).toContain(
-      'Active project pointer updated: .oat/active-project',
+      'Active project updated in local config: .oat/config.local.json',
     );
     expect(process.exitCode).toBe(0);
   });

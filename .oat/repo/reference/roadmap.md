@@ -9,7 +9,7 @@ For a birdseye snapshot of what exists *right now*, see `.oat/repo/reference/cur
 
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
-As of `2026-02-21` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor`, config-aware sync, worktree bootstrap, `.oat/config.json` phase-A settings). Agent instructions skills and subagent orchestration contracts are shipped. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
+As of `2026-02-23` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor`, config-aware sync, worktree bootstrap, `oat config`, `oat project open/pause`). Project lifecycle state is config-backed (`.oat/config.json` + `.oat/config.local.json`) with final review/PR loops dogfooded through completion. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
 
 ## Status Summary
 
@@ -17,7 +17,7 @@ As of `2026-02-21` on `main`, dogfood workflow baseline and provider-interop CLI
 |---|---|---|
 | Dogfood workflow baseline | Completed | `oat-repo-knowledge-index`, `oat-project-new`, phases (`discover → implement`), router, review loop, PR skills |
 | Phase 3: Reviews + PR loop | Completed | Implemented + dogfooded |
-| Phase 4: Active project pointer + Repo State Dashboard | Completed (polish remaining) | Pointer + generated `.oat/state.md` exist; clarify “first-class” regeneration contract |
+| Phase 4: Active project lifecycle state + Repo State Dashboard | Completed (polish remaining) | Config-backed lifecycle state + `oat project open/pause` + generated `.oat/state.md`; continue dashboard contract polish |
 | Phase 5: Staleness + knowledge drift | Planned | Improve/enforce freshness beyond warn-only |
 | Phase 6: Parallel execution + reconcile | Deferred (groundwork expanded) | `oat-worktree-bootstrap` + subagent orchestration skills (PR #21, refined in PR #26) exist; parallel fan-out + reconcile tooling still pending |
 | Phase 7: Quick mode + template rendering helper | In Progress | Quick/import lanes + canonical plan writing contract implemented; template rendering helper still planned |
@@ -32,9 +32,9 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
 - Knowledge: `oat-repo-knowledge-index` + `.oat/repo/knowledge/**` (thin->full project index, mapper outputs under `.oat/repo/knowledge/`)
 - Projects:
   - `oat-project-new` scaffolds `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`
-  - `.oat/projects-root` sets `{PROJECTS_ROOT}` (default: `.oat/projects/shared`)
-  - `.oat/active-project` stores the active project path (local-only); all `oat-*` skills resolve project from it (fallback: prompt)
-  - Project lifecycle utilities are implemented: `oat-project-open`, `oat-project-clear-active`, `oat-project-complete`
+  - `.oat/config.json` + `.oat/config.local.json` back shared/local runtime config (`projects.root`, `worktrees.root`, `activeProject`, `lastPausedProject`)
+  - `oat config get/set/list` provides CLI accessors for config-backed workflow state
+  - Project lifecycle utilities are implemented: `oat project open`, `oat project pause`, `oat-project-open`, `oat-project-clear-active`, `oat-project-complete`
 - Ideas workflow:
   - `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 - Workflow phases + routing:
@@ -91,12 +91,12 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
    - Continue validating P0 assumptions (paths + precedence) and publishing a minimal capability matrix as lifecycle commands expand.
 
 4. Directory model coordination
-   - Dogfood uses `{PROJECTS_ROOT}` + `.oat/active-project` (path format).
-   - Name-only `.oat/active-project` is intentionally deferred until CLI project commands own the contract (ADR-004).
+   - Dogfood uses `{PROJECTS_ROOT}` + config-backed active project state (`activeProject` in `.oat/config.local.json`).
+   - Remaining work is broader multi-project branch-awareness and local/shared model automation.
 
 5. Config consolidation follow-through
-   - `.oat/config.json` phase A is in place for non-sync settings (`worktrees.root`).
-   - Phase B/C migration work for existing pointers (`.oat/projects-root`, active pointers) remains planned.
+   - `projects.root` and project lifecycle state migration are implemented.
+   - Remaining consolidation is long-tail config ownership (for example active-idea and other non-sync settings) rather than active-project/projects-root.
 
 6. Invocation semantics guardrails
    - Skill-first contract is adopted, but we still need lightweight validation/docs checks to prevent regressions to slash-only wording.
@@ -145,12 +145,13 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 
 ---
 
-### Phase 4 (Dogfood v1.2): Active Project Pointer + Repo State Dashboard
+### Phase 4 (Dogfood v1.2): Active Project Lifecycle State + Repo State Dashboard
 
 **Goal:** Make project selection deterministic without committing to the full `.oat/projects/**` product model yet.
 
 **Status:** Completed (polish remaining)
-- Done: `.oat/projects-root` + `.oat/active-project` pointer + skills resolve via it
+- Done: config-backed lifecycle state (`.oat/config.json`, `.oat/config.local.json`) + `oat config get/set/list`
+- Done: `oat project open` / `oat project pause` lifecycle commands and dashboard integration
 - Done: generated Repo State Dashboard (`.oat/state.md`) via `oat state refresh` CLI command
 - Remaining: tighten the "first-class" contract (who regenerates it, what fields it includes, and how it stays in sync with skills)
 
@@ -159,11 +160,12 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 - When we see the wrong project being used / repeated prompts for project name.
 
 **Deliverables:**
-- `.oat/projects-root` containing the default projects root (e.g., `.oat/projects/shared`)
-- `.oat/active-project` pointer file containing the active project directory path (under the configured projects root)
+- `.oat/config.json` + `.oat/config.local.json` for shared/local OAT runtime state (`projects.root`, `worktrees.root`, `activeProject`, `lastPausedProject`)
+- `oat config get/set/list` command surface for config reads/writes in skills and scripts
+- `oat project open` / `oat project pause` commands with dashboard refresh integration
 - Optional Repo State Dashboard (`.oat/state.md`) derived from the active project's `state.md` + knowledge freshness summary
 - Update all workflow skills to resolve project via:
-  1) `.oat/active-project` (preferred)
+  1) `oat config get activeProject` / `.oat/config.local.json` (preferred)
   2) fallback prompts (if missing)
 - Update OAT docs/templates/skills to use skill-first invocation guidance:
   - Canonical: `oat-project-implement` (skill name)
@@ -172,7 +174,7 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 
 **Exit criteria:**
 - All skills run against the intended project with no ambiguity and minimal prompting.
-- The active project can be switched explicitly (even if manual) without editing skill files.
+- The active project can be switched/paused explicitly via CLI commands without manual file edits.
 
 ---
 

@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { generateStateDashboard } from '@commands/state/generate';
+import { setActiveProject } from '@config/oat-config';
 import { fileExists } from '@fs/io';
 
 export type ProjectScaffoldMode = 'spec-driven' | 'quick' | 'import';
@@ -119,14 +120,6 @@ async function ensureStructure(
   }
 }
 
-async function writeActiveProjectPointer(
-  repoRoot: string,
-  projectPath: string,
-): Promise<void> {
-  await mkdir(join(repoRoot, '.oat'), { recursive: true });
-  await writeFile(join(repoRoot, '.oat', 'active-project'), `${projectPath}\n`);
-}
-
 export async function scaffoldProject(
   options: ScaffoldProjectOptions,
 ): Promise<ScaffoldProjectResult> {
@@ -153,7 +146,7 @@ export async function scaffoldProject(
   );
 
   if (setActive) {
-    await writeActiveProjectPointer(options.repoRoot, projectPath);
+    await setActiveProject(options.repoRoot, projectPath);
   }
 
   let dashboardRefreshed = false;

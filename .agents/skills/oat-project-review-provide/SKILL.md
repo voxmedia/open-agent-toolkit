@@ -76,11 +76,11 @@ Run the `oat-project-review-provide` skill and it will:
 
 ### Step 0: Resolve Active Project (Hard Requirement)
 
-OAT stores the active project path in `.oat/active-project` (single line, local-only).
+OAT stores active project context in `.oat/config.local.json` (`activeProject`, local-only).
 
 ```bash
-PROJECT_PATH=$(cat .oat/active-project 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(cat .oat/projects-root 2>/dev/null || echo ".oat/projects/shared")}"
+PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
@@ -91,7 +91,7 @@ Validation rules:
 If either check fails, **stop and route**. Do not create/guess project pointers in this skill.
 
 Tell user:
-- This is a project-scoped skill and needs an initialized OAT project (`.oat/active-project` + project `state.md`).
+- This is a project-scoped skill and needs an initialized OAT project (`activeProject` in `.oat/config.local.json` + project `state.md`).
 - Without project state, review can still proceed via non-project skill: `oat-review-provide`.
 - To continue with project workflow instead, run one of:
   - `oat-project-open` (existing project)
