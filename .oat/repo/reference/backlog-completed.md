@@ -14,6 +14,19 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [skills] Enforce autonomous review gates in `oat-project-subagent-implement`**
+  - Outcome:
+    - Step 4 implements mandatory peer subagent reviewer dispatch (`oat-reviewer`) with two-stage checks (spec compliance + code quality) and fix-loop retry bounded by `oat_orchestration_retry_limit`.
+    - Step 5 pre-merge verdict gate refuses merge when no verdict entry exists or verdict is not `pass` — no skip possible.
+    - Review verdicts logged with full traceability in `implementation.md` `## Orchestration Runs` section (Review Interaction Log).
+    - Reviewer dispatched as peer subagent, not nested.
+  - Links:
+    - Skill: `.agents/skills/oat-project-subagent-implement/SKILL.md`
+    - GitHub issue: #27
+    - Related PR: https://github.com/tkstang/open-agent-toolkit/pull/29
+  - Created: 2026-02-21
+  - Completed: 2026-02-23
+
 - [x] **(P1) [skills] Complete review receive + PR-review intake skill family**
   - Outcome:
     - Added `oat-review-receive` for ad-hoc local review artifact triage (parse findings, classify severity, generate standalone tasks).

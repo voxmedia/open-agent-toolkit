@@ -65,22 +65,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - `.agents/skills/oat-worktree-bootstrap/SKILL.md`
   - Created: 2026-02-22
 
-- [ ] **(P1) [skills] Enforce autonomous review gates in `oat-project-subagent-implement`**
-  - Context: The skill's autonomous review gate (Step 4) has no hard enforcement before merge (Step 5). During first real usage (adding Copilot/Gemini providers), Phase 1 subagents were dispatched and merged without the review gate running.
-  - Proposed change:
-    - Implement orchestrator-driven review loop: after each implementer subagent completes, orchestrator dispatches a separate **reviewer** subagent (read-only, same worktree) that returns findings.
-    - If Critical/Important findings exist, orchestrator dispatches a **fix** subagent with the findings, then re-runs reviewer. Loop bounded by `oat_orchestration_retry_limit`.
-    - Merge step refuses to proceed if review gate hasn't been executed for that unit.
-    - Review verdicts logged in `implementation.md` orchestration runs section.
-  - Success criteria:
-    - Merge step requires review gate execution per unit (no skip possible).
-    - Review verdicts are logged with full traceability in orchestration run artifacts.
-    - Fix loop respects `oat_orchestration_retry_limit` and excludes failed units cleanly.
-    - Reviewer subagent is a peer dispatch (no subagent nesting).
-  - Links:
-    - Skill: `.agents/skills/oat-project-subagent-implement/SKILL.md`
-    - GitHub issue: #27
-  - Created: 2026-02-21
 
 - [ ] **(P1) [tooling] Add skill versioning to SKILL.md frontmatter and `oat init tools` update detection**
   - Context: `oat init tools` currently checks only file existence — if a skill directory exists, it reports "skipped". Users have no way to know their installed skills are outdated without using `--force` to blindly overwrite.
