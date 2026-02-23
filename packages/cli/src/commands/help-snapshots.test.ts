@@ -46,6 +46,7 @@ describe('help output snapshots', () => {
         providers        Inspect provider capabilities and paths
         doctor           Run environment and setup diagnostics
         cleanup          Cleanup OAT project and artifact hygiene issues
+        instructions     Manage AGENTS.md and CLAUDE.md instruction file integrity
         index            OAT index generation commands
         project          Manage OAT project workflows
         state            OAT repo state commands
@@ -226,6 +227,61 @@ describe('help output snapshots', () => {
         project [options]    Cleanup project pointers, state, and lifecycle drift
         artifacts [options]  Cleanup stale review and external-plan artifacts
         help [command]       display help for command
+      "
+    `);
+  });
+
+  it('instructions --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['instructions']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat instructions [options] [command]
+
+      Manage AGENTS.md and CLAUDE.md instruction file integrity
+
+      Options:
+        -h, --help      display help for command
+
+      Commands:
+        validate        Validate AGENTS.md to CLAUDE.md pointer integrity
+        sync [options]  Repair AGENTS.md to CLAUDE.md pointer drift
+        help [command]  display help for command
+      "
+    `);
+  });
+
+  it('instructions validate --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'instructions',
+      'validate',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat instructions validate [options]
+
+      Validate AGENTS.md to CLAUDE.md pointer integrity
+
+      Options:
+        -h, --help  display help for command
+      "
+    `);
+  });
+
+  it('instructions sync --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'instructions',
+      'sync',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat instructions sync [options]
+
+      Repair AGENTS.md to CLAUDE.md pointer drift
+
+      Options:
+        --apply     Apply sync changes (default is dry-run)
+        --force     Overwrite mismatched CLAUDE.md files
+        -h, --help  display help for command
       "
     `);
   });

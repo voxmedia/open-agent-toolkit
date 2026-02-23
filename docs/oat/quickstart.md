@@ -32,6 +32,19 @@ Notes:
 - `sync` is dry-run by default.
 - `--apply` performs filesystem changes.
 
+### Validate instruction pointers
+
+```bash
+pnpm run cli -- instructions validate
+pnpm run cli -- instructions sync
+pnpm run cli -- instructions sync --apply
+```
+
+Notes:
+- `instructions validate` is read-only.
+- `instructions sync` is dry-run by default.
+- Use `instructions sync --apply --force` if you intend to overwrite mismatched `CLAUDE.md` content.
+
 ### Additional CLI commands
 
 ```bash
@@ -55,6 +68,8 @@ oat --help
 oat init --scope project
 oat status --scope all
 oat sync --scope all --apply
+oat instructions validate
+oat instructions sync --apply
 oat doctor --scope all
 oat project new my-project --mode spec-driven
 ```

@@ -34,7 +34,7 @@ flowchart TD
 
 | Mode | Best for | Primary entry points |
 |---|---|---|
-| Interop-only | Canonical skill/agent sync + drift diagnostics | `oat init`, `oat status`, `oat sync`, `oat providers ...`, `oat cleanup ...`, `oat doctor` |
+| Interop-only | Canonical skill/agent sync + drift diagnostics | `oat init`, `oat status`, `oat sync`, `oat instructions ...`, `oat providers ...`, `oat cleanup ...`, `oat doctor` |
 | Provider-agnostic tooling | Reusing skills/utilities without spec-driven lifecycle overhead | `docs/oat/skills/index.md`, selected `oat-*` skills |
 | Workflow | Structured execution with durable artifacts and review gates | `oat-project-new`/`oat-project-open`, then lane-specific skills |
 
@@ -45,6 +45,7 @@ Use OAT only for cross-provider asset management:
 - Initialize canonical directories
 - Detect drift and strays
 - Sync provider views safely
+- Validate AGENTS.md to CLAUDE.md pointer integrity and repair drift
 - Audit and clean workflow/project hygiene drift
 - Run diagnostics
 
@@ -52,6 +53,8 @@ Primary commands:
 - `oat init`
 - `oat status`
 - `oat sync`
+- `oat instructions validate`
+- `oat instructions sync`
 - `oat providers list`
 - `oat providers inspect <provider>`
 - `oat providers set`
@@ -147,7 +150,20 @@ Notes:
 - In non-interactive contexts, set provider intent explicitly:
   - `pnpm run cli -- providers set --scope project --enabled claude,codex --disabled cursor`
 
-### 4) Audit and clean project/artifact hygiene (optional)
+### 4) Validate instruction pointers (recommended)
+
+```bash
+pnpm run cli -- instructions validate
+pnpm run cli -- instructions sync
+pnpm run cli -- instructions sync --apply
+```
+
+Notes:
+- `instructions validate` is read-only.
+- `instructions sync` is dry-run by default.
+- Use `instructions sync --apply --force` to overwrite mismatched `CLAUDE.md` files.
+
+### 5) Audit and clean project/artifact hygiene (optional)
 
 ```bash
 pnpm run cli -- cleanup project
@@ -166,7 +182,7 @@ Notes:
 - `cleanup artifacts --apply` uses interactive triage in TTY contexts by default.
 - In non-interactive contexts, use `--all-candidates --yes` to allow stale-candidate mutation.
 
-### 5) Bootstrap a new worktree checkout
+### 6) Bootstrap a new worktree checkout
 
 ```bash
 pnpm run worktree:init
@@ -202,6 +218,7 @@ cd packages/cli
 npm link
 oat --help
 oat sync --scope all --apply
+oat instructions validate
 ```
 
 ## Interop-Only Quickstart (Consumer Intent)
@@ -214,6 +231,8 @@ oat providers set --scope project --enabled claude,codex --disabled cursor
 oat status --scope all
 oat sync --scope all
 oat sync --scope all --apply
+oat instructions validate
+oat instructions sync --apply
 oat cleanup project
 oat cleanup artifacts
 oat doctor --scope all

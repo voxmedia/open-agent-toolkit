@@ -66,6 +66,27 @@ Key behavior:
 
 ## Other implemented namespaces
 
+## `oat instructions validate`
+
+Purpose:
+- Validate AGENTS.md to CLAUDE.md pointer integrity
+
+Key behavior:
+- Read-only validation of sibling `CLAUDE.md` pointer files for each discovered `AGENTS.md`
+- Reports `ok`, `missing`, and `content_mismatch` states
+- Exit code `0` when all entries are valid, `1` when drift is detected
+
+## `oat instructions sync`
+
+Purpose:
+- Repair AGENTS.md to CLAUDE.md pointer drift
+
+Key behavior:
+- Dry-run by default; use `--apply` to write changes
+- Creates missing `CLAUDE.md` pointers
+- Skips mismatched files unless `--force` is provided
+- Writes canonical pointer content `@AGENTS.md\n`
+
 ## `oat state refresh`
 
 Purpose:

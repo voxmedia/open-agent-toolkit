@@ -55,6 +55,19 @@ describe('command registration', () => {
     );
   });
 
+  it('program has instructions command with validate and sync', () => {
+    const program = createProgram();
+    registerCommands(program);
+    const instructions = program.commands.find(
+      (command) => command.name() === 'instructions',
+    );
+
+    expect(instructions).toBeDefined();
+    const subcommands =
+      instructions?.commands.map((command) => command.name()) ?? [];
+    expect(subcommands).toEqual(expect.arrayContaining(['validate', 'sync']));
+  });
+
   it('program has project command with new, open, pause, and set-mode', () => {
     const program = createProgram();
     registerCommands(program);
@@ -95,6 +108,7 @@ describe('command registration', () => {
     expect(help).toContain('providers');
     expect(help).toContain('doctor');
     expect(help).toContain('cleanup');
+    expect(help).toContain('instructions');
     expect(help).toContain('project');
     expect(help).toContain('internal');
   });

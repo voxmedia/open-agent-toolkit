@@ -2,7 +2,7 @@
 
 The provider interop CLI in `packages/cli` manages canonical agent assets under `.agents/` and reconciles provider-specific views.
 
-This capability is intentionally independent from OAT workflow artifacts. Teams can adopt interop-only usage (`init/status/sync/providers/doctor`) without using discovery/spec/design/plan/implement project workflows.
+This capability is intentionally independent from OAT workflow artifacts. Teams can adopt interop-only usage (`init/status/sync/providers/doctor`) and optional instruction-pointer integrity checks (`instructions validate/sync`) without using discovery/spec/design/plan/implement project workflows.
 
 ## Scope
 
@@ -41,6 +41,7 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 ## Non-interop namespaces in the same CLI
 
 - `oat project new <name>` (workflow/project scaffolding)
+- `oat instructions validate` / `oat instructions sync` (AGENTS.md to CLAUDE.md pointer integrity)
 - `oat internal validate-oat-skills` (internal maintenance)
 
 ## Reference artifacts

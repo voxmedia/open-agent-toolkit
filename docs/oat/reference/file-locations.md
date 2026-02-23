@@ -61,6 +61,7 @@ Config ownership note:
 - `packages/cli/src/commands/cleanup/`
 - `packages/cli/src/commands/cleanup/project/`
 - `packages/cli/src/commands/cleanup/artifacts/`
+- `packages/cli/src/commands/instructions/`
 - `packages/cli/src/commands/project/`
 - `packages/cli/src/commands/internal/`
 - `packages/cli/src/engine/`

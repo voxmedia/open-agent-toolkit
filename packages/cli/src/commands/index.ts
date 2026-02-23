@@ -4,6 +4,7 @@ import { createConfigCommand } from './config';
 import { createDoctorCommand } from './doctor';
 import { createIndexCommand } from './index-cmd';
 import { createInitCommand } from './init';
+import { createInstructionsCommand } from './instructions';
 import { createInternalCommand } from './internal';
 import { createProjectCommand } from './project';
 import { createProvidersCommand } from './providers';
@@ -19,6 +20,7 @@ export function registerCommands(program: Command): void {
   program.addCommand(createProvidersCommand());
   program.addCommand(createDoctorCommand());
   program.addCommand(createCleanupCommand());
+  program.addCommand(createInstructionsCommand());
   program.addCommand(createIndexCommand());
   program.addCommand(createProjectCommand());
   program.addCommand(createStateCommand());

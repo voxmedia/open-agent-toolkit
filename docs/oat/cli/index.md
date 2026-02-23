@@ -18,7 +18,15 @@ The CLI is a standalone value path: you can use it without adopting OAT workflow
 | `oat init` | Initialize canonical directories, manifest, and tool packs. Sets up `.agents/skills/`, provider views, and the sync manifest. |
 | `oat status` | Report provider sync and drift status. Shows which skills are in sync, drifted, or missing across providers. |
 | `oat sync` | Sync canonical content to provider views. Use `--apply` to execute the sync plan. |
+| `oat instructions` | Validate and repair AGENTS.md to CLAUDE.md pointer integrity. Includes `validate` (read-only) and `sync` (dry-run/apply). |
 | `oat doctor` | Run environment and setup diagnostics. Checks Node version, pnpm availability, directory structure, and manifest health. |
+
+### Instruction Integrity Commands
+
+| Command | Purpose |
+|---------|---------|
+| `oat instructions validate` | Read-only integrity check for AGENTS.md sibling CLAUDE.md pointer files. Returns non-zero when missing or mismatched pointers are found. |
+| `oat instructions sync` | Plan/apply pointer repairs. Dry-run by default; use `--apply` to write and `--force` to overwrite mismatched CLAUDE.md content. |
 
 ### Provider-Interop Commands
 

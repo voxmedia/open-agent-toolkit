@@ -22,6 +22,13 @@ Expected for native-read skill mappings. Codex can read canonical skills without
   - `oat providers set --scope project --enabled <providers> --disabled <providers>`
 - Re-run `oat sync --scope project --apply` after updating config.
 
+## `instructions validate` reports `missing` or `content_mismatch`
+
+- Run `oat instructions sync` to preview changes.
+- Run `oat instructions sync --apply` to create missing pointer files.
+- If mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --apply --force`.
+- Re-run `oat instructions validate` and confirm status is `ok`.
+
 ## `doctor` warns about canonical directories
 
 - Run `oat init` for the relevant scope.
@@ -42,3 +49,4 @@ Expected for native-read skill mappings. Codex can read canonical skills without
 - `.oat/projects/<scope>/<project>/implementation.md`
 - `.oat/projects/<scope>/<project>/reviews/`
 - `packages/cli/src/commands/doctor/index.ts`
+- `packages/cli/src/commands/instructions/`
