@@ -256,7 +256,7 @@ Expected changes may include:
 - `{PROJECT_PATH}/state.md`
 - `{PROJECT_PATH}/implementation.md` (if touched earlier in the lifecycle closeout)
 - `{PROJECT_PATH}/plan.md` (if review receive just ran)
-- `.oat/active-project` (if cleared)
+- `.oat/config.local.json` (if `activeProject` cleared)
 - Shared-project deletions under `{PROJECTS_ROOT}/{PROJECT_NAME}` (if archived)
 
 Run:

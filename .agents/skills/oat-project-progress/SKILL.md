@@ -121,11 +121,6 @@ Active Project: (not set)
 ls -d "$PROJECTS_ROOT"/*/ 2>/dev/null
 ```
 
-**If you are migrating from the legacy location and it differs from `PROJECTS_ROOT`, you may also want to check:**
-```bash
-ls -d .oat/projects/shared/*/ 2>/dev/null
-```
-
 **If no projects:**
 ```
 No active projects.
