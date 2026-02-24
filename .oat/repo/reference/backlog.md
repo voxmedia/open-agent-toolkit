@@ -24,6 +24,25 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
   - Created: YYYY-MM-DD
 
+- [ ] **(P2) [tooling] Scaffold `.oat/projects/{shared,local,archived}` during `oat init`**
+  - Context: `oat init --scope project` scaffolds `.agents/` and `.oat/sync/` but does not create the projects directory tree. The `shared/`, `local/`, and `archived/` directories are created on-demand by individual skills/commands, which means new repos don't have the expected structure until the first project is created.
+  - Proposed change:
+    - Add `.oat/projects/{shared,local,archived}` creation to `oat init --scope project`.
+    - Create `.gitkeep` files in `local/` and `archived/` so the directories are tracked despite gitignore rules.
+    - Scaffold gitignored local workspace files if they don't exist:
+      - `.oat/config.local.json` (empty `{"version": 1}`)
+      - `.oat/state.md` (empty or minimal template)
+      - `.oat/active-idea` (empty)
+    - Respect `projects.root` config if already set (scaffold under the configured root instead of the default).
+    - Ensure `.gitignore` entries for `local/**`, `archived/**` (with `!.gitkeep` exceptions), and local workspace files are present.
+  - Success criteria:
+    - After `oat init --scope project`, the full `.oat/` workspace is ready for use — projects tree, local config, and state files all exist.
+    - Idempotent — re-running init does not error or overwrite existing directories/files.
+    - Gitignore rules cover all local-only files.
+  - Links:
+    - Related: `packages/cli/src/commands/init/index.ts`
+  - Created: 2026-02-23
+
 - [ ] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows**
   - Context: The OAT project workflow currently assumes the AI agent does the coding with discipline: atomic commits tied to task numbers, updating `implementation.md` as it executes the plan. When a human implements tasks manually without following this discipline, artifacts drift from reality and downstream skills (project review, final review) become less accurate or require extra effort to reconstruct state.
   - Proposed change:
