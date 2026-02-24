@@ -91,10 +91,10 @@ Test if the runtime allows Write tool in background agents.
 mkdir -p .oat/repo/knowledge/.preflight
 ```
 
-Spawn a test agent to check Write permission:
+Spawn a test agent to check Write permission (must use the same subagent type as the mapper agents):
 
 ```
-subagent_type: "Explore"
+subagent_type: "oat-codebase-mapper"
 model: "haiku"
 run_in_background: true
 description: "Test write permissions"
