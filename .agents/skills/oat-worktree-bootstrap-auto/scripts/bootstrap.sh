@@ -139,14 +139,14 @@ YAML
   exit 1
 fi
 
-run_check "project_status" pnpm run cli -- status --scope project
+run_check "project_status" oat status --scope project
 run_check "tests" pnpm test
 run_check "git_clean" test -z "$(git status --porcelain)"
 
 # ─── Step 4: Create Provider Directories ────────────────────────────────────
 mkdir -p "$TARGET_PATH/.claude/skills"
 mkdir -p "$TARGET_PATH/.cursor/rules"
-if pnpm run cli -- sync --scope all --apply >/dev/null 2>&1; then
+if oat sync --scope all --apply >/dev/null 2>&1; then
   CHECK_RESULTS["provider_sync"]="pass"
 else
   CHECK_RESULTS["provider_sync"]="fail"
