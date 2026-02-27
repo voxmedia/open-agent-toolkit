@@ -551,6 +551,21 @@ The safe assumption: Cursor likely doesn't error on `allowed-tools` (similar to 
 
 **Source:** https://cursor.com/docs/context/skills, https://github.com/vercel-labs/skills#compatibility
 
+### Q: How should skills collect missing required arguments across Codex and Claude?
+
+**Answer:** Treat this as a two-layer pattern: frontmatter hinting for discovery, then provider-native interaction at runtime.
+
+- **Layer 1 (discovery UX):** Use `argument-hint` when a provider supports it (for slash/autocomplete discoverability), but do not treat it as input collection. Codex ignores unknown frontmatter keys, so `argument-hint` is non-functional there.
+- **Layer 2 (runtime clarification):** Use the provider's native user-question mechanism when available:
+  - **Claude Agent SDK:** Handle `AskUserQuestion` in `canUseTool`. If you restrict tools with a `tools` array, include `AskUserQuestion` explicitly. Parse `questions[]` (`question`, `header`, `options`, `multiSelect`) and return `answers` mapped by question text.
+  - **Codex:** Use `request_user_input` when the runtime exposes it. As of PR #12735 (Feb 25, 2026), Codex app-server behavior was expanded so Default mode can use `request_user_input`, with guidance to prefer assumptions first and ask only when unavoidable; rollout can still be mode/config dependent in host environments.
+- **Portable fallback:** If no native question tool is available in the active provider/mode, ask directly in plain text, wait for confirmation, then continue.
+- **Execution transparency:** After answers are gathered, print a short resolved-options summary before running side effects (for example: chosen mode, scope, and any defaults applied).
+
+**Practical guidance for OAT skills:** Use `argument-hint` to advertise expected args, but always implement a runtime clarification path that is provider-aware (`AskUserQuestion`/`request_user_input` when present if required arguments cannot be parsed from user skill call, direct question otherwise).
+
+**Source:** https://github.com/openai/codex/pull/12735, https://platform.claude.com/docs/en/agent-sdk/user-input, https://www.neonwatty.com/posts/interview-skills-claude-code/
+
 ---
 
 ## Remaining Open Questions

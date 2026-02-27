@@ -46,12 +46,15 @@ When executing this skill, provide lightweight progress feedback so the user can
 - No fixing issues directly (convert to tasks first)
 - No skipping findings
 - No re-reviewing
+- For `artifact` reviews: no converting findings into plan tasks
+- For `artifact` reviews: no deferring findings by default
 
 **ALLOWED Activities:**
 - Reading review artifacts
 - Updating plan.md with new tasks
 - Updating implementation.md
 - Routing to oat-project-implement
+- For `artifact` reviews: updating reviewed artifact files directly after user confirmation
 
 ## Process
 
@@ -136,6 +139,10 @@ For each finding, build a structured register entry:
 - Agent analysis (agree/disagree + why)
 - Recommendation (convert to task now vs defer with rationale)
 - Task Scope (`Large` | `Moderate` | `Minor` | `Negligible`)
+- For `artifact` reviews, use dispositions:
+  - `resolved_in_artifact`
+  - `rejected_with_rationale` (invalid/not applicable)
+  - `needs_user_direction` (unclear or disagreement)
 
 **If Critical + Important + Medium == 0:**
 - For non-final scopes:
@@ -193,19 +200,27 @@ Rules:
   - `Negligible`: trivial cleanup/refactor with very low risk
 - Do not ask the user for disposition decisions until this overview is shown.
 
+### Step 2.6: Select Review Handling Mode (Required)
+
+Read `oat_review_type` from review artifact frontmatter:
+
+- If `oat_review_type == artifact`:
+  - Present findings and proposed artifact edits/dispositions to the user first.
+  - Require explicit user confirmation before applying any artifact edits.
+  - Resolve findings directly in artifact files; do not convert findings into plan tasks.
+  - Do not defer findings by default. Only use `rejected_with_rationale` for invalid findings, or `needs_user_direction` when user input is required.
+- If `oat_review_type == code`:
+  - Follow the existing task-conversion flow in Steps 3-10.
+
 ### Step 3: Determine Task Scope
+
+Applies to `code` reviews only. (`artifact` reviews are handled via Step 2.6, Step 10A, and the artifact summary path in Step 11.)
 
 **Which phase should receive fix tasks?**
 
 1. Check review scope from artifact frontmatter (`oat_review_scope`)
 2. If scope is `pNN` (phase) or `pNN-tNN` (task): add fix tasks to that phase
 3. If scope is `final` or range: add fix tasks to a new "Review Fixes" phase or the last phase
-
-**If the review type is `artifact`:**
-- Prefer to add fix tasks as documentation tasks (update spec/design/plan) only if plan.md exists.
-- If plan.md does NOT exist yet (early artifact review), do NOT invent a plan. Instead:
-  - Tell the user to apply the review changes directly to the artifact
-  - Then re-run the relevant phase skill to continue (spec/design/plan), or re-request an artifact re-review.
 
 ### Step 4: Determine Next Task IDs
 
@@ -442,6 +457,15 @@ Choose:
 **If exit:**
 - Tell user: "Fix tasks added to plan. Run the `oat-project-implement` skill when ready."
 
+### Step 10A: Route to Next Action for Artifact Reviews
+
+For `artifact` reviews, do not route to implementation tasks. After user-approved artifact edits are applied:
+
+- If any finding is `needs_user_direction`, ask targeted follow-up question(s) and wait for decision.
+- If all findings are `resolved_in_artifact` or `rejected_with_rationale`, ask user:
+  1. Re-run `oat-project-review-provide artifact {scope}`
+  2. Continue phase flow (approve artifact / proceed to next phase skill)
+
 ### Step 11: Output Summary
 
 ```
@@ -461,6 +485,23 @@ Actions taken:
 Review cycle: {N} of 3
 
 Next: {recommended action based on user choice}
+```
+
+For `artifact` reviews, summarize instead:
+
+```
+Review received for {project-name}.
+
+Review: {review_filename}
+Scope: {scope}
+Findings: {N} critical, {N} important, {N} medium, {N} minor
+
+Actions taken:
+- Applied {N} artifact edits
+- No plan tasks created
+- Finding disposition map: {ID -> resolved_in_artifact|rejected_with_rationale|needs_user_direction}
+
+Next: {re-review artifact or continue phase, per user choice}
 ```
 
 ## Re-Review Scoping
@@ -491,3 +532,5 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 - User routed to next action
 - Medium deferrals handled via explicit user approval
 - Minor findings handled (converted or deferred), with explicit user decision required for final scope
+- For `artifact` reviews: findings are resolved directly in artifacts (or rejected with rationale if invalid), with no default deferrals
+- For `artifact` reviews: user confirms proposed edits before they are applied
