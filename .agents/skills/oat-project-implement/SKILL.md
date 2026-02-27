@@ -270,6 +270,14 @@ Keep project state in sync after each task (recommended source of truth for “w
   - `oat_current_task: {next_task_id}`
   - `oat_last_commit: {sha}`
 
+**Bookkeeping commit (required):**
+After the code commit (Step 6) and state updates above, commit all modified OAT tracking files:
+```bash
+git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
+git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for {task_id}"
+```
+Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
+
 **If executing review-generated tasks** (task title prefixed with `(review)`):
 - Ensure `implementation.md` stays accurate:
   - The “Review Received” section reflects whether findings were deferred vs converted to tasks
@@ -293,6 +301,14 @@ Keep project state in sync after each task (recommended source of truth for “w
      - `oat_phase: implement`
      - `oat_phase_status: in_progress` (until the re-review passes)
      - `oat_current_task: null`
+
+  **Bookkeeping commit (required):**
+  After completing the review-fix checklist above, commit all modified OAT tracking files:
+  ```bash
+  git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
+  git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for {task_id}"
+  ```
+  Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
 
 ### Step 8: Check Plan Phase Completion
 
@@ -327,6 +343,14 @@ When stopping:
   - Key files touched (paths)
   - Verification run
   - Notable decisions/deviations
+
+**Bookkeeping commit (required):**
+After phase summary and task pointer advancement, commit all modified OAT tracking files:
+```bash
+git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
+git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for {phase} completion"
+```
+Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
 
 **Note on HiLL types:**
 - **Workflow HiLL** (`oat_hill_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-project-progress router.
@@ -425,6 +449,14 @@ Implementation - Tasks complete; awaiting final review.
 - ✓ Implementation tasks complete
 - ⧗ Awaiting final review
 ```
+
+**Bookkeeping commit (required):**
+After updating state.md to reflect implementation completion, commit all modified OAT tracking files:
+```bash
+git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
+git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for implementation complete"
+```
+Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
 
 ### Step 13: Final Verification
 
