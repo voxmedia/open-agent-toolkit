@@ -2,12 +2,14 @@ import { join } from 'node:path';
 import { copyDirWithVersionCheck } from '@commands/init/tools/shared/copy-helpers';
 
 export const UTILITY_SKILLS = [
+  'oat-agent-instructions-analyze',
+  'oat-agent-instructions-apply',
+  'oat-docs-analyze',
+  'oat-docs-apply',
+  'oat-repo-maintainability-review',
   'oat-review-provide',
   'oat-review-receive',
   'oat-review-receive-remote',
-  'oat-agent-instructions-analyze',
-  'oat-agent-instructions-apply',
-  'oat-repo-maintainability-review',
 ] as const;
 
 export interface InstallUtilityOptions {

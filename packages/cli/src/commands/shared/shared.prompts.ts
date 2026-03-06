@@ -66,6 +66,31 @@ export async function inputRequired(
   }
 }
 
+export async function inputWithDefault(
+  message: string,
+  defaultValue: string,
+  ctx: PromptContext,
+): Promise<string | null> {
+  if (!ctx.interactive) {
+    throw new CliError('Input prompt requires interactive mode.', 1);
+  }
+
+  try {
+    const value = (
+      await input({
+        message,
+        default: defaultValue,
+      })
+    ).trim();
+    return value.length === 0 ? defaultValue : value;
+  } catch (error) {
+    if (isAbortError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 export async function selectWithAbort<T extends string>(
   message: string,
   choices: SelectChoice<T>[],

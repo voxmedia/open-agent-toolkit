@@ -1,3 +1,18 @@
 {
-  "version": 1
+  "version": 1,
+  "docs": {
+    "lastRunAt": "2026-03-06T01:48:38Z",
+    "commitHash": "f837089fc2b9227892a721908c4512345513c33a",
+    "baseBranch": "main",
+    "mode": "full",
+    "formats": [],
+    "artifactPath": ".oat/repo/analysis/docs-2026-03-06-0147.md"
+  },
+  "docsApply": {
+    "lastRunAt": "2026-03-06T01:48:38Z",
+    "commitHash": "f837089fc2b9227892a721908c4512345513c33a",
+    "baseBranch": "main",
+    "mode": "apply",
+    "formats": []
+  }
 }

@@ -1,0 +1,6 @@
+mkdocs==1.4.2
+mkdocs-git-revision-date-plugin==0.3.2
+mkdocs-glightbox==0.3.1
+mkdocs-material==9.0.14
+mkdocs-macros-plugin==0.7.0
+mkdocs-callouts==1.13.2

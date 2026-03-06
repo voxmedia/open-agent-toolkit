@@ -31,7 +31,7 @@ Skills live in `.agents/skills/<skill-name>/SKILL.md` and sync to provider-speci
 oat sync --scope all --apply
 ```
 
-For the full skill inventory, see [`docs/oat/skills/index.md`](../docs/oat/skills/index.md).
+For the full skill inventory, see [`apps/oat-docs/docs/skills/index.md`](../apps/oat-docs/docs/skills/index.md).
 
 For guidance on creating new skills, see [`.agents/docs/skills-guide.md`](docs/skills-guide.md).
 
@@ -60,10 +60,10 @@ flowchart TD
 
 ## Documentation
 
-- **OAT overview:** [`docs/oat/index.md`](../docs/oat/index.md)
-- **Quickstart:** [`docs/oat/quickstart.md`](../docs/oat/quickstart.md)
-- **CLI reference:** [`docs/oat/cli/index.md`](../docs/oat/cli/index.md)
-- **Skills index:** [`docs/oat/skills/index.md`](../docs/oat/skills/index.md)
+- **OAT overview:** [`apps/oat-docs/docs/index.md`](../apps/oat-docs/docs/index.md)
+- **Quickstart:** [`apps/oat-docs/docs/quickstart.md`](../apps/oat-docs/docs/quickstart.md)
+- **CLI reference:** [`apps/oat-docs/docs/cli/index.md`](../apps/oat-docs/docs/cli/index.md)
+- **Skills index:** [`apps/oat-docs/docs/skills/index.md`](../apps/oat-docs/docs/skills/index.md)
 - **Agent instruction guide:** [`.agents/docs/agent-instruction.md`](docs/agent-instruction.md)
 - **Provider reference:** [`.agents/docs/provider-reference.md`](docs/provider-reference.md)
 
@@ -75,4 +75,4 @@ OAT project documentation lives in `.oat/projects/` (gitignored). Create new pro
 oat project new <project-name>
 ```
 
-See [`docs/oat/projects/`](../docs/oat/projects/) for the project lifecycle workflow.
+See [`apps/oat-docs/docs/projects/index.md`](../apps/oat-docs/docs/projects/index.md) for the project lifecycle workflow.

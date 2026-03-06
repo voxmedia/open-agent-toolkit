@@ -11,6 +11,8 @@ mkdir -p "${ASSETS}/skills" "${ASSETS}/agents" "${ASSETS}/templates" "${ASSETS}/
 SKILLS=(
   oat-agent-instructions-analyze
   oat-agent-instructions-apply
+  oat-docs-analyze
+  oat-docs-apply
   oat-repo-maintainability-review
   oat-idea-ideate
   oat-idea-new
@@ -54,6 +56,7 @@ for template in state.md discovery.md spec.md design.md plan.md implementation.m
   cp "${REPO_ROOT}/.oat/templates/${template}" "${ASSETS}/templates/"
 done
 cp -R "${REPO_ROOT}/.oat/templates/ideas" "${ASSETS}/templates/"
+cp -R "${REPO_ROOT}/.oat/templates/docs-app" "${ASSETS}/templates/"
 
 for script in generate-oat-state.sh generate-thin-index.sh; do
   SOURCE_SCRIPT="${REPO_ROOT}/.oat/scripts/${script}"

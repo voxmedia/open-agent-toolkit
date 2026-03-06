@@ -67,3 +67,8 @@ For multi-session or complex development tasks, use the structured agent project
 Projects live in `.oat/projects/<scope>/<project>/` with:
 - Core files: `state.md`, `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`
 - Optional: `reviews/`, `pr/`
+
+### Utility Skill Additions
+
+- `oat-docs-analyze` - Analyze a docs surface for `index.md` contract coverage, nav drift, and docs app readiness.
+- `oat-docs-apply` - Apply approved docs-analysis recommendations with branch, nav-sync, and PR workflow support.

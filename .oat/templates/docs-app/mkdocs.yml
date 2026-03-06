@@ -1,0 +1,47 @@
+site_name: {{SITE_NAME}}
+docs_dir: "./docs"
+
+site_description: {{SITE_NAME}}
+
+plugins:
+  - git-revision-date
+  - macros
+  - search
+  - glightbox
+  - callouts
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - nl2br
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.details
+  - pymdownx.emoji
+  - pymdownx.inlinehilite
+  - pymdownx.highlight:
+      linenums: false
+      guess_lang: true
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+theme:
+  name: material
+  features:
+    - navigation.indexes
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Contributing: contributing.md

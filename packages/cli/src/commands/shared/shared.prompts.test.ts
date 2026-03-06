@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   confirmAction,
   inputRequired,
+  inputWithDefault,
   selectManyOrEmpty,
   selectManyWithAbort,
   selectWithAbort,
@@ -73,6 +74,44 @@ describe('shared prompts', () => {
   it('inputRequired throws CliError in non-interactive mode', async () => {
     await expect(
       inputRequired('Enter value', { interactive: false }),
+    ).rejects.toBeInstanceOf(CliError);
+  });
+
+  it('inputWithDefault returns trimmed input in interactive mode', async () => {
+    vi.mocked(input).mockResolvedValueOnce('  oat-docs  ');
+
+    const result = await inputWithDefault('Enter value', 'default-docs', {
+      interactive: true,
+    });
+
+    expect(result).toBe('oat-docs');
+  });
+
+  it('inputWithDefault returns default for empty input', async () => {
+    vi.mocked(input).mockResolvedValueOnce('   ');
+
+    const result = await inputWithDefault('Enter value', 'default-docs', {
+      interactive: true,
+    });
+
+    expect(result).toBe('default-docs');
+  });
+
+  it('inputWithDefault returns null on prompt abort', async () => {
+    const abortError = new Error('User force closed the prompt');
+    abortError.name = 'ExitPromptError';
+    vi.mocked(input).mockRejectedValueOnce(abortError);
+
+    const result = await inputWithDefault('Enter value', 'default-docs', {
+      interactive: true,
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('inputWithDefault throws CliError in non-interactive mode', async () => {
+    await expect(
+      inputWithDefault('Enter value', 'default-docs', { interactive: false }),
     ).rejects.toBeInstanceOf(CliError);
   });
 

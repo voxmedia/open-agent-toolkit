@@ -6,9 +6,9 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 ## Canonical References
 
-- Workflow lifecycle: `docs/oat/workflow/lifecycle.md`
-- Workflow reviews: `docs/oat/workflow/reviews.md`
-- Workflow PR flow: `docs/oat/workflow/pr-flow.md`
+- Workflow lifecycle: `apps/oat-docs/docs/workflow/lifecycle.md`
+- Workflow reviews: `apps/oat-docs/docs/workflow/reviews.md`
+- Workflow PR flow: `apps/oat-docs/docs/workflow/pr-flow.md`
 - Roadmap: `.oat/repo/reference/roadmap.md`
 - Deferred phases: `.oat/repo/reference/deferred-phases.md`
 - Backlog: `.oat/repo/reference/backlog.md`

@@ -1,0 +1,81 @@
+site_name: Oat Docs Documentation
+docs_dir: ./docs
+site_description: Oat Docs Documentation
+plugins:
+  - git-revision-date
+  - macros
+  - search
+  - glightbox
+  - callouts
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - nl2br
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.details
+  - pymdownx.emoji
+  - pymdownx.inlinehilite
+  - pymdownx.highlight:
+      linenums: false
+      guess_lang: true
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+theme:
+  name: material
+  features:
+    - navigation.indexes
+    - content.code.copy
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - CLI:
+      - cli/index.md
+      - Design Principles: cli/design-principles.md
+      - Bootstrap: cli/bootstrap.md
+      - Docs App Commands: cli/docs-apps.md
+      - Tool Packs and Assets: cli/tool-packs-and-assets.md
+      - Diagnostics: cli/diagnostics.md
+      - Provider Interop:
+          - cli/provider-interop/index.md
+          - Scope and Surface: cli/provider-interop/scope-and-surface.md
+          - Commands: cli/provider-interop/commands.md
+          - Providers: cli/provider-interop/providers.md
+          - Manifest and Drift: cli/provider-interop/manifest-and-drift.md
+          - Config: cli/provider-interop/config.md
+          - Hooks and Safety: cli/provider-interop/hooks-and-safety.md
+  - Workflow:
+      - workflow/index.md
+      - Lifecycle: workflow/lifecycle.md
+      - HiLL Checkpoints: workflow/hil-checkpoints.md
+      - Reviews: workflow/reviews.md
+      - PR Flow: workflow/pr-flow.md
+  - Projects:
+      - projects/index.md
+      - Artifacts: projects/artifacts.md
+      - State Machine: projects/state-machine.md
+  - Skills:
+      - skills/index.md
+      - Execution Contracts: skills/execution-contracts.md
+      - Docs Workflows: skills/docs-workflows.md
+  - Ideas:
+      - ideas/index.md
+      - Lifecycle: ideas/lifecycle.md
+  - Reference:
+      - reference/index.md
+      - File Locations: reference/file-locations.md
+      - Docs Index Contract: reference/docs-index-contract.md
+      - OAT Directory Structure: reference/oat-directory-structure.md
+      - Commit Conventions: reference/commit-conventions.md
+      - Troubleshooting: reference/troubleshooting.md
+  - Contributing: contributing.md

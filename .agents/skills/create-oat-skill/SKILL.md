@@ -1,6 +1,6 @@
 ---
 name: create-oat-skill
-version: 1.0.0
+version: 1.0.1
 description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
 argument-hint: "[skill-name]"
 disable-model-invocation: true

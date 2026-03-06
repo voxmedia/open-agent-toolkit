@@ -1,0 +1,20 @@
+{
+  "name": "oat-docs",
+  "type": "module",
+  "private": true,
+  "version": "0.1.0",
+  "description": "MkDocs Material documentation for Open Agent Toolkit.",
+  "scripts": {
+    "docs:dev": "mkdocs serve",
+    "docs:build": "mkdocs build",
+    "docs:setup": "sh ./setup-docs.sh",
+    "docs:lint": "markdownlint-cli2 'docs/**/*.md'",
+    "docs:format": "prettier --write 'docs/**/*.md'",
+    "docs:format:check": "prettier --check 'docs/**/*.md'",
+    "test": "echo 'Documentation tests complete'"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.13.0",
+    "prettier": "^3.4.2"
+  }
+}

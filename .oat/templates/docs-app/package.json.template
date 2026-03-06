@@ -1,0 +1,19 @@
+{
+  "name": "{{PACKAGE_NAME}}",
+  "type": "module",
+  "private": true,
+  "version": "0.1.0",
+  "description": "MkDocs Material documentation for {{SITE_NAME}}.",
+  "scripts": {
+    "docs:dev": "mkdocs serve",
+    "docs:build": "mkdocs build",
+    "docs:setup": "sh ./setup-docs.sh",
+    "docs:lint": "{{DOCS_LINT_SCRIPT}}",
+    "docs:format": "{{DOCS_FORMAT_SCRIPT}}",
+    "docs:format:check": "{{DOCS_FORMAT_CHECK_SCRIPT}}",
+    "test": "echo 'Documentation tests complete'"
+  },
+  "devDependencies": {
+{{DEV_DEPENDENCIES}}
+  }
+}
