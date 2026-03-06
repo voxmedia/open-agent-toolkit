@@ -20,6 +20,8 @@ oat_analysis_commit: {commitHash}
 - **Coverage:** {N}% of assessed directories have instruction files
 - **Findings:** {N} Critical, {N} High, {N} Medium, {N} Low
 - **Delta scope:** {N/A or "N files changed since {base-commit}"}
+- **Evidence-backed recommendations:** {N}
+- **Open questions / ask-user items:** {N}
 
 ## Instruction File Inventory
 
@@ -41,6 +43,9 @@ None | {numbered list}
 1. **{Title}**
    - File: `{path}:{line}`
    - Issue: {description}
+   - Evidence: {exact file refs, config/docs, or representative code samples}
+   - Confidence: {high | medium | low}
+   - Disclosure: {inline | link_only | omit | ask_user}
    - Fix: {specific guidance}
 
 ### High
@@ -67,10 +72,10 @@ None | {numbered list}
 
 Directories assessed as needing instruction files but currently uncovered.
 
-| # | Directory | Reason | Severity |
-|---|-----------|--------|----------|
-| 1 | `{path/}` | {Has own package.json / distinct domain / ...} | {High/Medium} |
-| ... | | | |
+| # | Directory | Reason | Evidence | Disclosure | Link Target | Severity |
+|---|-----------|--------|----------|------------|-------------|----------|
+| 1 | `{path/}` | {Has own package.json / distinct domain / ...} | {exact refs} | {inline/link_only/omit/ask_user} | {path/URL or N/A} | {High/Medium} |
+| ... | | | | | | |
 
 {Or: "No directory coverage gaps identified."}
 
@@ -78,10 +83,10 @@ Directories assessed as needing instruction files but currently uncovered.
 
 File-type patterns with recurring conventions that would benefit from targeted rules files. These are cross-cutting concerns that span multiple directories — best addressed with glob-scoped rules rather than directory-level AGENTS.md files.
 
-| # | Pattern | Count | Convention Summary | Severity |
-|---|---------|-------|--------------------|----------|
-| 1 | `{glob}` | {N} | {brief description of conventions agents should follow} | {Medium/Low} |
-| ... | | | | |
+| # | Pattern | Count | Convention Summary | Evidence | Disclosure | Severity |
+|---|---------|-------|--------------------|----------|------------|----------|
+| 1 | `{glob}` | {N} | {brief description of conventions agents should follow} | {exact refs} | {inline/link_only/omit/ask_user} | {Medium/Low} |
+| ... | | | | | | |
 
 {Or: "No glob-scoped rule opportunities identified."}
 
@@ -95,13 +100,44 @@ File-type patterns with recurring conventions that would benefit from targeted r
 
 {Or: "Single provider — cross-format check not applicable."}
 
+## Progressive Disclosure Decisions
+
+Capture which details should live in always-on instructions versus linked documentation/config.
+
+| Topic | Decision | Keep Inline In | Link Target | Evidence |
+|-------|----------|----------------|-------------|----------|
+| `{topic}` | {inline/link_only/omit/ask_user} | `{AGENTS.md / scoped file / rule}` | `{path or URL}` | {exact refs} |
+| ... | | | | |
+
+{Or: "No additional progressive disclosure decisions beyond the findings/recommendations below."}
+
 ## Recommendations
 
 Prioritized actions based on findings above.
 
 1. **{Action}** — {rationale} (addresses finding #{N})
+   - Target: `{path}`
+   - Provider/Format: {provider / format}
+   - Evidence: {exact refs}
+   - Confidence: {high | medium | low}
+   - Disclosure: {inline | link_only | omit | ask_user}
+   - Link Targets: {path/URL or N/A}
 2. **{Action}** — {rationale} (addresses gap #{N})
+   - Target: `{path}`
+   - Provider/Format: {provider / format}
+   - Evidence: {exact refs}
+   - Confidence: {high | medium | low}
+   - Disclosure: {inline | link_only | omit | ask_user}
+   - Link Targets: {path/URL or N/A}
 3. ...
+
+## Apply Contract
+
+- `oat-agent-instructions-apply` may only implement recommendations backed by evidence in this artifact.
+- Recommendations marked `omit` must stay out of generated instructions.
+- Recommendations marked `ask_user` require explicit user confirmation before generation.
+- If cited config/docs/files are missing at apply time, stop and re-run analyze or ask the user rather than inventing a replacement rule.
+- If formatter/linter config already enforces a style rule, generated instructions should prefer commands and links over prose restatement.
 
 ## Next Step
 

@@ -36,6 +36,30 @@ Generate or update agent instruction files based on an analysis artifact, with u
 - Creating branches, committing, and pushing (with user confirmation).
 - Writing tracking updates to `.oat/tracking.json`.
 
+## Question Handling Across Hosts
+
+When this skill needs a user decision:
+1. Use `AskUserQuestion` when running in Claude Code with tool availability.
+2. Use Codex structured user-input tooling when available in the current Codex host/runtime.
+3. Otherwise ask the same question in plain conversational text.
+
+Keep the question content consistent across hosts so the workflow remains portable even when the UI differs.
+
+## Analyze vs Apply Boundary
+
+Treat the analysis artifact as the source of truth for what should be generated and why.
+
+Apply may:
+- read the exact evidence sources cited by the artifact
+- verify that cited files still exist
+- translate approved recommendations into concrete instruction text
+
+Apply must **not**:
+- invent unsupported conventions
+- infer formatting/style rules from defaults or a small sample
+- create new recommendations that are not present in the artifact
+- silently fill in missing evidence gaps
+
 ## Progress Indicators (User-Facing)
 
 - Print a phase banner once at start:
@@ -65,6 +89,15 @@ ls -t .oat/repo/analysis/agent-instructions-*.md 2>/dev/null | head -1
 
 **If found:** Read the artifact, extract findings and recommendations.
 
+Validate that the artifact includes evidence, confidence, and progressive disclosure decisions for each recommendation.
+Also validate that every `link_only` recommendation includes at least one concrete link target to a canonical doc, config, or example.
+If the artifact is missing that detail, treat it as incomplete:
+```
+Analysis artifact is missing evidence-backed recommendation detail.
+Re-run oat-agent-instructions-analyze before applying changes.
+```
+Then stop.
+
 **If not found:** Tell the user:
 ```
 No analysis artifact found in .oat/repo/analysis/.
@@ -83,17 +116,26 @@ The provider list determines which file formats to generate. If running interact
 
 ### Step 2: Build Recommendation Plan
 
-For each finding and coverage gap in the analysis artifact, determine the action:
+For each finding and coverage gap in the analysis artifact, determine the action.
+The artifact should already specify the rationale, evidence, confidence, and disclosure decision.
+Do not rediscover conventions from scratch during this step.
 
 **For coverage gaps (new files):**
 - Determine the target file path based on the directory and provider
 - Select the appropriate template from `references/instruction-file-templates/`
 - For AGENTS.md files: use `agents-md-root.md` or `agents-md-scoped.md`
 - For glob-scoped rules: use `glob-scoped-rule.md` body + appropriate `frontmatter/` wrapper
+- Carry forward the artifact's evidence refs, confidence, and disclosure mode into the plan
+- If the artifact marks a coverage-gap recommendation `omit`, do not include it in the apply plan
+- If the artifact marks a coverage-gap recommendation `ask_user`, include it with the evidence and require explicit user approval
+- If a `link_only` coverage-gap recommendation has no link target, stop and ask for a fresh analysis instead of guessing
 
 **For quality findings (updates to existing files):**
 - Identify the specific issue and the fix
 - Preserve existing manual customizations — only modify the problematic section
+- If the artifact marks a recommendation `omit`, do not include it in the apply plan
+- If the artifact marks a recommendation `ask_user`, include it with the evidence and require explicit user approval
+- If evidence is missing or stale, stop and ask for a fresh analysis instead of guessing
 
 **Multi-format composition order:**
 1. **AGENTS.md first** — the canonical, provider-agnostic file
@@ -110,12 +152,37 @@ Persist the exact markdown plan shown to the user as `APPLY_PLAN_MARKDOWN` (incl
 
 ### Step 3: User Reviews Plan
 
-Present the recommendation plan to the user. For each recommendation, ask:
-- **approve** — proceed with generation
-- **modify** — approve with user-specified changes
-- **skip** — do not act on this recommendation
+Present the full recommendation plan to the user first, then ask which review mode they want:
+- **apply all** — approve the full set as presented
+- **apply interactively** — switch to recommendation-by-recommendation review
+- **discuss** — pause for questions, adjustments, or scope changes before approval
+- **cancel** — stop without applying anything
 
-Wait for user decisions on all recommendations before proceeding.
+For the review-mode choice:
+- Claude Code: use `AskUserQuestion`
+- Codex: use structured user-input tooling when available in the current host/runtime
+- Fallback: ask in plain text
+
+The prompt should ask for exactly one of: `apply all`, `apply interactively`, `discuss`, `cancel`.
+
+If the user chooses **cancel**, output "No actions approved. Exiting." and stop.
+
+If the user chooses **apply all**:
+- confirm that the full plan is approved
+- capture any global notes that apply across the whole plan
+- treat all non-blocked recommendations as approved unless the user names exceptions
+
+If the user chooses **apply interactively**:
+- for each recommendation, ask:
+  - **approve** — proceed with generation
+  - **modify** — approve with user-specified changes
+  - **skip** — do not act on this recommendation
+- use the same host-specific question handling (`AskUserQuestion` / Codex structured input when available / plain text fallback)
+- wait for user decisions on all recommendations before proceeding
+
+If the user chooses **discuss**:
+- answer questions and revise the plan if needed
+- re-present the updated plan and ask again: `apply all`, `apply interactively`, `discuss`, or `cancel`
 
 If all recommendations are skipped, output "No actions approved. Exiting." and stop.
 
@@ -124,7 +191,9 @@ Build an `APPLIED_PLAN_DETAILS` block from approved/modified recommendations wit
 - Action (create/update)
 - Target path
 - Provider
-- Decision (approved/modified)
+- Disclosure
+- Evidence refs
+- Decision (`approved_via_apply_all` / `approved` / `modified`)
 - User notes (if any)
 
 Also build `APPLIED_PLAN_MARKDOWN`: a markdown block containing only the approved/modified recommendation sections from the presented plan, preserving table formatting.
@@ -146,12 +215,18 @@ For each approved recommendation, in the order from Step 2:
 **Creating new files:**
 
 1. Read the appropriate template from `references/instruction-file-templates/`.
-2. Read the project context needed to fill the template:
+2. Read only the project context needed to fill the approved recommendation:
+   - the evidence files cited in the artifact
    - `package.json` for commands and dependencies
-   - Directory structure for architecture section
-   - Existing instruction files for consistency
-3. Generate the file content by filling the template with project-specific details.
-4. For glob-scoped rules across multiple providers:
+   - directory structure for architecture section
+   - existing instruction files for consistency
+3. Generate the file content by filling the template with project-specific details from the cited evidence.
+4. Preserve progressive disclosure decisions from the artifact:
+   - `inline` → keep the essential rule in the instruction file
+   - `link_only` → add a concise pointer to the canonical doc/config/example
+   - `omit` → do not encode the item in the instruction file
+   - `ask_user` → require explicit user confirmation before writing
+5. For glob-scoped rules across multiple providers:
    - Write the body content once (from `glob-scoped-rule.md` template)
    - Stamp with each provider's frontmatter
    - Verify body content is identical across all provider versions
@@ -160,8 +235,14 @@ For each approved recommendation, in the order from Step 2:
 
 1. Read the existing file.
 2. Identify the section(s) that need updating based on the finding.
-3. Make targeted edits — preserve all content the finding doesn't address.
+3. Make targeted edits using only the approved recommendation and its cited evidence.
 4. Do not rewrite the entire file unless the user explicitly approves.
+
+**Negative rules:**
+- Do not add tabs-vs-spaces, quote style, import sorting, naming, or similar formatting rules unless the artifact cites repo evidence for them.
+- Do not upgrade a repeated code pattern into a hard instruction unless the artifact already approved it.
+- If formatter/linter config exists, prefer `run formatter/lint` or a link to the config/doc over prose restatement of the same rule.
+- If a cited source no longer exists, stop that recommendation and ask for a fresh analysis or user guidance.
 
 **Required context — read these docs before generating:**
 - `.agents/docs/agent-instruction.md` — quality criteria and best practices
@@ -181,6 +262,11 @@ Files: {count} created, {count} updated."
 ```
 
 **Ask user about PR:**
+
+Use host-specific question handling here as well:
+- Claude Code: use `AskUserQuestion`
+- Codex: use structured user-input tooling when available in the current host/runtime
+- Fallback: ask in plain text
 
 ```
 Files committed. Options:
@@ -232,6 +318,7 @@ The following section is copied from the presented apply plan (`APPLY_PLAN_MARKD
 - [ ] No content duplication across formats
 - [ ] Glob-scoped rules have identical body content across providers
 - [ ] Commands referenced in instruction files are valid
+- [ ] Every non-obvious convention in generated text is backed by cited analysis evidence
 PRBODY
 )"
 ```

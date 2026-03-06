@@ -85,6 +85,14 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 - Prefer portable bash (`set -eu`, avoid `pipefail` unless explicitly handled).
 - Quote variables; validate user-provided names; prevent path traversal.
 
+**Question handling (required when the skill needs user decisions):**
+- Write the workflow prose so it stays portable across hosts.
+- If structured prompts help, document the runtime split explicitly:
+  - Claude Code: use `AskUserQuestion` when available
+  - Codex: use structured user-input tooling when available in the current host/runtime
+  - Fallback: ask in plain conversational text
+- Do not hard-code a specific Codex question tool name in the skill text unless the host/runtime contract is guaranteed.
+
 ### Step 4: Create Files
 
 Create:

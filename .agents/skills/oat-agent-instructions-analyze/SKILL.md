@@ -32,6 +32,16 @@ Scan, evaluate, and report on agent instruction file coverage, quality, and drif
 - Writing analysis artifact to `.oat/repo/analysis/`.
 - Updating `.oat/tracking.json`.
 
+## Analyze vs Apply Boundary
+
+`oat-agent-instructions-analyze` owns discovery, evaluation, evidence gathering, and recommendation shaping.
+The analysis artifact must be detailed enough that `oat-agent-instructions-apply` can execute approved
+recommendations without rediscovering repo conventions from scratch.
+
+`oat-agent-instructions-apply` may verify that cited files still exist and may read those same cited
+sources while generating output, but it must not invent unsupported conventions, create new recommendations,
+or fill in missing evidence gaps on its own.
+
 ## Progress Indicators (User-Facing)
 
 - Print a phase banner once at start:
@@ -103,11 +113,22 @@ For each discovered instruction file, evaluate against the quality checklist at 
 - `.agents/docs/rules-files.md` — cross-provider rules file format reference
 - `.agents/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format reference (if cursor provider is active)
 
+**Evidence standard:**
+- Every non-obvious convention, drift claim, or proposed rule must be backed by concrete evidence captured in the artifact.
+- Preferred evidence sources: formatter/linter/editor config (`.editorconfig`, Biome, ESLint, Prettier, Ruff, etc.),
+  `package.json` scripts, existing checked-in instruction files, repo documentation, and repeated codebase patterns
+  with exact file references.
+- Do **not** infer formatting or linting conventions from ecosystem defaults or a small code sample.
+- If a formatter or linter already enforces a rule, prefer recording the command and linking to the config/doc rather
+  than restating tabs/spaces, quote style, import ordering, or similar trivia as prose instructions.
+
 **For each file:**
 1. Read the file content.
-2. Check each applicable criterion from the quality checklist.
-3. Note findings with severity ratings.
-4. Record line count and quality assessment (pass / minor issues / significant issues / major issues).
+2. Read the local evidence sources needed to validate the file's claims.
+3. Check each applicable criterion from the quality checklist.
+4. Note findings with severity ratings, exact source refs, and a confidence rating.
+5. Record a disclosure decision for each recommendation: `inline`, `link_only`, `omit`, or `ask_user`.
+6. Record line count and quality assessment (pass / minor issues / significant issues / major issues).
 
 **Provider-specific validation:**
 - **AGENTS.md**: Check section structure, command accuracy, size budget.
@@ -127,7 +148,8 @@ Walk the directory tree and evaluate each directory against `references/director
 
 For each directory meeting 1+ primary indicators from the criteria doc:
 - Check if it's covered by an existing instruction file (either a direct AGENTS.md or a parent's scoped rule with matching globs).
-- If uncovered, add to the coverage gaps list with severity and recommendation.
+- If uncovered, add to the coverage gaps list with severity, evidence, and a recommendation.
+- For each recommendation, decide what belongs inline vs what should link to deeper documentation or config files.
 
 ### Step 4: Drift Detection (Delta Mode Only)
 
@@ -142,6 +164,7 @@ Common drift signals:
 - Changed file is in a directory whose AGENTS.md references removed/renamed paths.
 - New package.json scripts not reflected in instruction file commands.
 - New dependencies or framework changes not reflected in tech stack documentation.
+- Existing instructions claim formatting/style conventions that are not backed by current repo evidence.
 
 ### Step 5: Cross-Format Consistency (Multi-Provider Only)
 
@@ -162,6 +185,12 @@ ARTIFACT_PATH=".oat/repo/analysis/agent-instructions-${TIMESTAMP}.md"
 ```
 
 Fill in all template sections with findings from Steps 2-5.
+
+The artifact is the contract for apply. It must contain:
+- exact evidence references for each finding and recommendation
+- confidence for each recommendation
+- progressive disclosure decisions (`inline`, `link_only`, `omit`, `ask_user`)
+- canonical documentation/config links when deeper detail should stay out of always-on instructions
 
 Write the artifact to `$ARTIFACT_PATH`.
 

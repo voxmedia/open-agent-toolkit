@@ -269,6 +269,13 @@ Skills that need user decisions (parameter choices, confirmations, disambiguatio
 
 **Write instructions portably:** Use natural language like "Ask the user which approach they prefer" in workflow prose. All providers can handle this conversationally.
 
+**Host-specific structured input guidance:** If the skill benefits from structured prompts, document the host split explicitly in the workflow:
+- Claude Code: use `AskUserQuestion` when available
+- Codex: use structured user-input tooling when available in the current Codex host/runtime
+- Fallback: ask the same question in plain conversational text
+
+Do **not** hard-code a specific Codex question tool name in skill prose unless the runtime contract is guaranteed. Prefer capability-based wording ("structured user-input tooling when available") so the skill remains portable across Codex hosts.
+
 **Claude Code enhancement:** Add `AskUserQuestion` to `allowed-tools` in frontmatter. Claude Code renders these as structured UI prompts with selectable options, headers, and multi-select support. Other providers ignore the field and handle the same instructions as conversational questions.
 
 **When to include interactive input:**

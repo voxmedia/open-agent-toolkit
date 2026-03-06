@@ -41,6 +41,10 @@ Use this template when generating an AGENTS.md for a subdirectory (package, serv
 - [ ] Tests pass (`{test-command}`)
 - [ ] Lint clean (`{lint-command}`)
 - [ ] Type check passes (`{type-check-command}`)
+
+## References
+
+- `{doc-path-or-url}` - {when to read it}
 ```
 
 ## Guidance
@@ -50,3 +54,5 @@ Use this template when generating an AGENTS.md for a subdirectory (package, serv
 - Do NOT duplicate root-level guidance — only add what's different
 - Commands should be runnable from the package directory
 - Inherits from root AGENTS.md by default; this file adds or overrides
+- Keep only directory-specific essentials inline; link to deeper module docs/config when helpful
+- Only include conventions backed by repo evidence for this subtree

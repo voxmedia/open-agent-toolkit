@@ -145,7 +145,7 @@ Provider notes:
 - Required arguments must be resolved before analysis starts.
 - Clarification channel priority:
   1. Use `AskUserQuestion` when running in Claude with tool availability.
-  2. Use `request_user_input` when running in Codex with tool availability.
+  2. Use Codex structured user-input tooling when available in the current Codex host/runtime.
   3. Fall back to direct plain-language prompts when structured tools are unavailable.
 - Clarification remains blocking in all modes: do not continue until answers are explicit.
 - After clarification, print run options:

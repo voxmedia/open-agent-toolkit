@@ -24,6 +24,10 @@ See `frontmatter/` for provider-specific frontmatter examples.
 - {Pattern 1 — e.g., "Use `describe`/`it` blocks, not `test` blocks"}
 - {Pattern 2}
 
+## References
+
+- `{doc-path-or-url}` - {when to read it instead of expanding inline}
+
 ## Examples
 
 {Optional: include a short before/after or canonical example.}
@@ -48,3 +52,5 @@ See `frontmatter/` for provider-specific frontmatter examples.
 - Keep instructions concrete and actionable, not aspirational
 - This body is used verbatim across Claude rules, Cursor rules, and Copilot instructions
 - Only the frontmatter wrapper changes per provider (see `frontmatter/` directory)
+- Use progressive disclosure: keep the rule short and link to deeper docs/examples when needed
+- Do not encode style trivia unless it is backed by repo evidence and genuinely helps the matching files

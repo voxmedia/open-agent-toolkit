@@ -72,11 +72,26 @@ Per-file evaluation criteria for agent instruction files. Use this checklist to 
 - [ ] Body divergence is flagged as drift
 - **Severity if failing:** Medium
 
+### 11. Claims Are Evidence-Backed
+
+- [ ] Every non-obvious convention is backed by a concrete repo source (config, docs, existing instructions, or representative code samples)
+- [ ] Formatting/style claims are omitted unless supported by repo evidence
+- [ ] If a formatter or linter enforces the rule, the file prefers commands/links over prose restatement
+- **Severity if failing:** High (actively misleading) or Medium (unsupported claim)
+
+### 12. Progressive Disclosure Is Used
+
+- [ ] Always-on instructions keep only the minimal essential guidance inline
+- [ ] Deeper detail links to canonical docs/config/examples instead of copying them into the instruction file
+- [ ] The file clearly distinguishes inline essentials from optional deeper reading
+- **Severity if failing:** Medium
+
 ## Scoring
 
-For each file, count passing criteria out of the applicable set (some criteria only apply to certain file types):
+For each file, count passing criteria out of the applicable set (some criteria only apply to certain file types).
+A "miss" means one numbered criterion does not pass for that file after ignoring non-applicable checks within the criterion:
 
-- **10/10 applicable passing** → Quality: pass
-- **8-9/10** → Quality: minor issues
-- **5-7/10** → Quality: significant issues
-- **<5/10** → Quality: major issues
+- **All applicable passing** → Quality: pass
+- **1-2 misses** → Quality: minor issues
+- **3-5 misses** → Quality: significant issues
+- **6+ misses** → Quality: major issues

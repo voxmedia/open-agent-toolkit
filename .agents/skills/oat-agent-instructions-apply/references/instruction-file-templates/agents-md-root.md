@@ -36,7 +36,8 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 ## Code Conventions
 
 ### Style
-- {Key style rules — formatting, naming, imports}
+- {Only repo-specific, evidence-backed rules that are NOT already reliably enforced by formatter/linter}
+- {Prefer links to canonical docs/config when the detail is too deep for always-on instructions}
 
 ### Patterns
 - {Key architectural patterns — e.g., "prefer composition over inheritance"}
@@ -52,6 +53,10 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 - [ ] Lint clean (`{lint-command}`)
 - [ ] Type check passes (`{type-check-command}`)
 - [ ] Build succeeds (`{build-command}`)
+
+## References
+
+- `{doc-path-or-url}` - {when to read it}
 ```
 
 ## Guidance
@@ -61,3 +66,6 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 - Non-negotiables (security, data handling) should be near the top
 - Don't duplicate content that belongs in scoped files
 - This file is read by ALL providers — keep it provider-agnostic
+- Only include conventions that are backed by repo evidence
+- If formatter/linter config already enforces a style rule, prefer commands or links over restating the rule
+- Use progressive disclosure: keep essentials inline and link to deeper docs/config/examples
