@@ -7,6 +7,7 @@ export const UTILITY_SKILLS = [
   'oat-review-receive-remote',
   'oat-agent-instructions-analyze',
   'oat-agent-instructions-apply',
+  'oat-repo-maintainability-review',
 ] as const;
 
 export interface InstallUtilityOptions {
