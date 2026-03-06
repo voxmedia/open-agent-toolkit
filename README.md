@@ -82,6 +82,7 @@ Start points:
 - [Skills overview](apps/oat-docs/docs/skills/index.md)
 - [Docs workflows](apps/oat-docs/docs/skills/docs-workflows.md)
 - [Docs app commands](apps/oat-docs/docs/cli/docs-apps.md)
+- [Add docs to a new repo](apps/oat-docs/docs/cli/docs-consumer-quickstart.md)
 - [Reference](apps/oat-docs/docs/reference/index.md)
 
 ### C) Workflow mode (skills + project artifacts)
@@ -179,6 +180,7 @@ Notes:
 - `docs init` scaffolds an MkDocs Material docs app with OAT defaults.
 - `docs nav sync` regenerates `mkdocs.yml` navigation from directory `index.md` `## Contents` sections.
 - `docs analyze` and `docs apply` expose the docs workflow entrypoints and pair with the `oat-docs-analyze` / `oat-docs-apply` skills.
+- For the full consumer setup flow, see [Add docs to a new repo](apps/oat-docs/docs/cli/docs-consumer-quickstart.md).
 
 ### 4) Validate instruction pointers (recommended)
 

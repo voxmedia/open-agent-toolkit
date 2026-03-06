@@ -6,6 +6,7 @@ The CLI is a standalone value path: you can use it without adopting OAT workflow
 
 ## Contents
 
+- [Add Docs to a New Repo](docs-consumer-quickstart.md) — Consumer quick guide for bootstrapping a docs app and docs workflows.
 - [Design Principles](design-principles.md) — Cross-cutting CLI design and implementation conventions.
 - [Bootstrap](bootstrap.md) — Foundational CLI setup (`oat init`).
 - [Docs App Commands](docs-apps.md) — Docs app bootstrap, nav sync, and docs workflow entrypoints.
@@ -22,6 +23,13 @@ The CLI is a standalone value path: you can use it without adopting OAT workflow
 | `oat init` | Initialize canonical directories, sync config/manifest, and optional setup hooks. Sets up the base OAT structure for a scope. |
 
 See [`bootstrap.md`](bootstrap.md) for details.
+
+### Docs Consumer Quickstart
+
+Use this when you want to add an OAT-managed docs app plus the docs
+analyze/apply workflow to a new repository.
+
+See [`docs-consumer-quickstart.md`](docs-consumer-quickstart.md).
 
 ### Docs App Commands
 

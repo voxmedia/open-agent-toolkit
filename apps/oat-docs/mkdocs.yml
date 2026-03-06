@@ -41,6 +41,7 @@ nav:
   - Quickstart: quickstart.md
   - CLI:
       - cli/index.md
+      - Add Docs to a New Repo: cli/docs-consumer-quickstart.md
       - Design Principles: cli/design-principles.md
       - Bootstrap: cli/bootstrap.md
       - Docs App Commands: cli/docs-apps.md

@@ -117,6 +117,7 @@ Start here:
 - [`skills/index.md`](skills/index.md)
 - [`skills/docs-workflows.md`](skills/docs-workflows.md)
 - [`cli/docs-apps.md`](cli/docs-apps.md)
+- [`cli/docs-consumer-quickstart.md`](cli/docs-consumer-quickstart.md)
 - [`reference/index.md`](reference/index.md)
 
 ## Path C: Workflow layer (optional)

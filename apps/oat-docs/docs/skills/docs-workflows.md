@@ -49,5 +49,6 @@ to open every page.
 ## Related docs
 
 - [`../cli/docs-apps.md`](../cli/docs-apps.md)
+- [`../cli/docs-consumer-quickstart.md`](../cli/docs-consumer-quickstart.md)
 - [`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)
 - [`execution-contracts.md`](execution-contracts.md)
