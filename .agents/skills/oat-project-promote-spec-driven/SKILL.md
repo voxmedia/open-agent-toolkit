@@ -1,6 +1,6 @@
 ---
 name: oat-project-promote-spec-driven
-version: 1.0.0
+version: 1.2.0
 description: Use when a quick or imported project now needs Spec-Driven lifecycle rigor. Backfills missing discovery, spec, and design artifacts in place.
 argument-hint: "[--project <name>]"
 disable-model-invocation: true

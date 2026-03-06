@@ -1,6 +1,6 @@
 ---
 name: create-skill
-version: 1.0.1
+version: 1.2.0
 description: Use when adding a reusable workflow skill for AI coding agents. Scaffolds a new .agents/skills skill using the Agent Skills open standard.
 argument-hint: "[skill-name]"
 disable-model-invocation: true

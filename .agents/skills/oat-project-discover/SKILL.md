@@ -1,6 +1,6 @@
 ---
 name: oat-project-discover
-version: 1.0.0
+version: 1.2.0
 description: Use when starting a project or when requirements are still unclear. Runs structured discovery to gather requirements, constraints, and context.
 disable-model-invocation: true
 user-invocable: true

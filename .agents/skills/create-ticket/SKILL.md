@@ -1,6 +1,6 @@
 ---
 name: create-ticket
-version: 1.0.0
+version: 1.2.0
 description: Use when a bug, task, or story needs tracking in the DWP Jira project. Creates a Jira ticket through Atlassian MCP integration.
 argument-hint: "[title \"...\"] [type \"...\"] [priority \"...\"]"
 disable-model-invocation: true

@@ -1,6 +1,6 @@
 ---
 name: oat-project-spec
-version: 1.0.0
+version: 1.2.0
 description: Use when discovery is complete and the project needs a formal requirements baseline. Transforms discovery output into structured specification artifacts.
 disable-model-invocation: true
 user-invocable: true

@@ -1,6 +1,6 @@
 ---
 name: oat-project-subagent-implement
-version: 1.0.0
+version: 1.2.0
 description: Use when you need parallel execution across eligible plan phases/tasks using autonomous worktrees, review gates, and deterministic merge-back.
 argument-hint: "[--dry-run] [--merge-strategy <merge|cherry-pick>] [--retry-limit <N>]"
 disable-model-invocation: true

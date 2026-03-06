@@ -1,6 +1,6 @@
 ---
 name: oat-docs-apply
-version: 1.1.0
+version: 1.2.0
 description: Run when you have a docs analysis artifact and want to generate or update documentation structure and content. Creates a branch, applies approved changes, and optionally opens a PR.
 disable-model-invocation: true
 user-invocable: true

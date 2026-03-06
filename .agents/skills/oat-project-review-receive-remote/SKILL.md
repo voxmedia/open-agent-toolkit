@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive-remote
-version: 1.0.0
+version: 1.2.0
 description: Use when processing GitHub PR review comments within project context. Fetches PR comments, creates plan tasks, and updates project artifacts.
 disable-model-invocation: true
 user-invocable: true

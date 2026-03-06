@@ -1,6 +1,6 @@
 ---
 name: update-repo-reference
-version: 1.0.0
+version: 1.2.0
 description: Use when OAT implementation changes and repository reference docs must be synchronized. Updates .oat/repo/reference to match current behavior.
 disable-model-invocation: true
 user-invocable: true

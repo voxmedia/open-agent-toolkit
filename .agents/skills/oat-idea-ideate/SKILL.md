@@ -1,6 +1,6 @@
 ---
 name: oat-idea-ideate
-version: 1.0.0
+version: 1.2.0
 description: Use when continuing brainstorming for an existing idea or starting from a scratchpad entry. Guides conversational ideation and refinement.
 argument-hint: "[--global]"
 disable-model-invocation: true

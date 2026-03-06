@@ -1,6 +1,6 @@
 ---
 name: review-backlog
-version: 1.0.0
+version: 1.2.0
 description: Use when prioritizing backlog work or evaluating a roadmap. Produces value-effort ratings, dependency mapping, and execution recommendations.
 argument-hint: "[backlog-path] [--roadmap=<path>] [--output=<path>]"
 disable-model-invocation: true

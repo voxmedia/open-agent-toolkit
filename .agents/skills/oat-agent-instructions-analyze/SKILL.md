@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.0.0
+version: 1.2.0
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true

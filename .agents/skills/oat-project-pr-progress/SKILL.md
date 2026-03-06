@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-progress
-version: 1.0.0
+version: 1.2.0
 description: Use when an active OAT project needs a mid-project PR for a completed phase (pNN). Generates a phase-scoped progress PR description from OAT artifacts and commit history, with optional PR creation.
 disable-model-invocation: true
 user-invocable: true

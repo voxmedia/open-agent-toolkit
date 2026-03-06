@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-version: 1.0.0
+version: 1.2.0
 description: Use when an active OAT project has completed all phases and is ready for final merge to main. Generates the final OAT lifecycle PR description from artifacts and review status, with optional PR creation.
 disable-model-invocation: true
 user-invocable: true
