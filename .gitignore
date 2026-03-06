@@ -17,6 +17,7 @@ coverage
 dist/
 build/
 packages/cli/assets/
+apps/oat-docs/site/
 
 # turborepo
 .turbo/

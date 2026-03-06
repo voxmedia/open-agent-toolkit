@@ -2,5 +2,8 @@
   "version": 1,
   "worktrees": {
     "root": ".worktrees"
+  },
+  "projects": {
+    "root": ".oat/projects/shared"
   }
 }

@@ -841,7 +841,67 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-02-21T23:51:52.646Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-docs-analyze",
+      "providerPath": ".claude/skills/oat-docs-analyze",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-06T23:48:55.754Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-docs-apply",
+      "providerPath": ".claude/skills/oat-docs-apply",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-06T23:48:55.755Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-repo-maintainability-review",
+      "providerPath": ".claude/skills/oat-repo-maintainability-review",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-06T23:48:55.755Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-docs-analyze",
+      "providerPath": ".cursor/skills/oat-docs-analyze",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-06T23:48:55.755Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-docs-apply",
+      "providerPath": ".cursor/skills/oat-docs-apply",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-06T23:48:55.756Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-repo-maintainability-review",
+      "providerPath": ".cursor/skills/oat-repo-maintainability-review",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-06T23:48:55.756Z"
     }
   ],
-  "lastUpdated": "2026-02-21T23:51:52.646Z"
+  "lastUpdated": "2026-03-06T23:48:55.756Z"
 }
