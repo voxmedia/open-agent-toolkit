@@ -142,6 +142,16 @@ For each discovered instruction file, evaluate against the quality checklist at 
 
 Walk the directory tree and evaluate each directory against `references/directory-assessment-criteria.md`.
 
+Before general coverage-gap analysis, assess **provider baseline gaps** for every active provider.
+These checks are mandatory even when the missing file does not appear in the discovered inventory.
+
+Provider baseline examples:
+- **Claude**: if a directory has `AGENTS.md` and the claude provider is active but the matching `CLAUDE.md` shim is missing, record an explicit recommendation to create `CLAUDE.md` with the canonical `@AGENTS.md` import.
+- **Copilot**: if the copilot provider is active but `.github/copilot-instructions.md` is missing, record an explicit recommendation to create the minimal Copilot shim.
+- **agents_md / codex**: no extra always-on shim beyond `AGENTS.md`.
+
+Do not leave these as implied apply-time behavior. They must appear in the analysis artifact as explicit provider-baseline recommendations.
+
 **In delta mode:** Only assess directories that contain files changed since the last tracked commit. Skip unchanged directories.
 
 **In full mode:** Assess all directories (excluding `node_modules/`, `dist/`, `.git/`, `.oat/`, etc.).

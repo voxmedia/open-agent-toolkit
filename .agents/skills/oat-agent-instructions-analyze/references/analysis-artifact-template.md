@@ -66,6 +66,18 @@ None | {numbered list}
 
 None | {numbered list}
 
+## Provider Baseline Gaps
+
+Missing always-on provider compatibility files that should exist even when no corresponding file was discovered during inventory.
+
+| # | Provider | Required Path | Format | Reason | Evidence | Severity |
+|---|----------|---------------|--------|--------|----------|----------|
+| 1 | `claude` | `CLAUDE.md` | Claude import shim | {claude active + AGENTS.md present + shim missing} | {exact refs} | {High/Medium} |
+| 2 | `copilot` | `.github/copilot-instructions.md` | Copilot shim | {copilot active + shim missing} | {exact refs} | {High/Medium} |
+| ... | | | | | | |
+
+{Or: "No provider baseline gaps identified."}
+
 ## Coverage Gaps
 
 ### Directory Coverage
@@ -122,14 +134,21 @@ Prioritized actions based on findings above.
    - Confidence: {high | medium | low}
    - Disclosure: {inline | link_only | omit | ask_user}
    - Link Targets: {path/URL or N/A}
-2. **{Action}** — {rationale} (addresses gap #{N})
+2. **{Action}** — {rationale} (addresses provider baseline gap #{N})
    - Target: `{path}`
    - Provider/Format: {provider / format}
    - Evidence: {exact refs}
    - Confidence: {high | medium | low}
    - Disclosure: {inline | link_only | omit | ask_user}
    - Link Targets: {path/URL or N/A}
-3. ...
+3. **{Action}** — {rationale} (addresses gap #{N})
+   - Target: `{path}`
+   - Provider/Format: {provider / format}
+   - Evidence: {exact refs}
+   - Confidence: {high | medium | low}
+   - Disclosure: {inline | link_only | omit | ask_user}
+   - Link Targets: {path/URL or N/A}
+4. ...
 
 ## Apply Contract
 

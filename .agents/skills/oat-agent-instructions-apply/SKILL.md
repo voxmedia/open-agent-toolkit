@@ -116,9 +116,16 @@ The provider list determines which file formats to generate. If running interact
 
 ### Step 2: Build Recommendation Plan
 
-For each finding and coverage gap in the analysis artifact, determine the action.
+For each finding, provider baseline gap, and coverage gap in the analysis artifact, determine the action.
 The artifact should already specify the rationale, evidence, confidence, and disclosure decision.
 Do not rediscover conventions from scratch during this step.
+
+**For provider baseline gaps (always-on provider files):**
+- Treat them as first-class recommendations from the artifact, not as implied apply-time behavior
+- Examples include missing Claude `CLAUDE.md` import shims and missing `.github/copilot-instructions.md` shims
+- Carry forward the artifact's evidence refs, confidence, and disclosure mode into the plan
+- If the artifact marks a provider-baseline recommendation `omit`, do not include it in the apply plan
+- If the artifact marks a provider-baseline recommendation `ask_user`, include it with the evidence and require explicit user approval
 
 **For coverage gaps (new files):**
 - Determine the target file path based on the directory and provider
