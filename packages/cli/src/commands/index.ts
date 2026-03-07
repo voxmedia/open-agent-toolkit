@@ -13,6 +13,7 @@ import { createRemoveCommand } from './remove';
 import { createStateCommand } from './state';
 import { createStatusCommand } from './status';
 import { createSyncCommand } from './sync';
+import { createToolsCommand } from './tools';
 
 export function registerCommands(program: Command): void {
   program.addCommand(createInitCommand());
@@ -28,5 +29,6 @@ export function registerCommands(program: Command): void {
   program.addCommand(createIndexCommand());
   program.addCommand(createProjectCommand());
   program.addCommand(createStateCommand());
+  program.addCommand(createToolsCommand());
   program.addCommand(createInternalCommand());
 }

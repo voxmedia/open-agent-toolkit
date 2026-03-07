@@ -41,3 +41,10 @@ export async function getSkillVersion(
   );
   return version.length > 0 ? version : null;
 }
+
+export async function getAgentVersion(
+  agentPath: string,
+): Promise<string | null> {
+  const version = await parseFrontmatterField(agentPath, 'version');
+  return version.length > 0 ? version : null;
+}

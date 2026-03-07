@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  getAgentVersion,
   getFrontmatterBlock,
   getFrontmatterField,
   getSkillVersion,
@@ -138,6 +139,35 @@ describe('frontmatter', () => {
       tempDirs.push(dir);
 
       await expect(getSkillVersion(dir)).resolves.toBeNull();
+    });
+  });
+
+  describe('getAgentVersion', () => {
+    it('returns the version from agent .md frontmatter', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-agent-'));
+      tempDirs.push(dir);
+      const agentPath = join(dir, 'oat-reviewer.md');
+      await writeFile(
+        agentPath,
+        '---\nname: oat-reviewer\nversion: 1.0.0\n---\n## Role',
+      );
+
+      expect(await getAgentVersion(agentPath)).toBe('1.0.0');
+    });
+
+    it('returns null when version is missing', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-agent-'));
+      tempDirs.push(dir);
+      const agentPath = join(dir, 'oat-reviewer.md');
+      await writeFile(agentPath, '---\nname: oat-reviewer\n---\n## Role');
+
+      expect(await getAgentVersion(agentPath)).toBeNull();
+    });
+
+    it('returns null for non-existent file', async () => {
+      await expect(
+        getAgentVersion('/nonexistent/agent.md'),
+      ).resolves.toBeNull();
     });
   });
 });

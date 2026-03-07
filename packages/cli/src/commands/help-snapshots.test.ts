@@ -52,6 +52,7 @@ describe('help output snapshots', () => {
         index            OAT index generation commands
         project          Manage OAT project workflows
         state            OAT repo state commands
+        tools            Manage OAT tool packs (install, update, remove, list)
         internal         Internal OAT maintenance commands
         help [command]   display help for command
       "
@@ -539,6 +540,150 @@ describe('help output snapshots', () => {
       "Usage: oat state refresh [options]
 
       Regenerate the OAT repo state dashboard (.oat/state.md)
+
+      Options:
+        -h, --help  display help for command
+      "
+    `);
+  });
+
+  it('tools --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['tools']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat tools [options] [command]
+
+      Manage OAT tool packs (install, update, remove, list)
+
+      Options:
+        -h, --help               display help for command
+
+      Commands:
+        list                     List installed tools with version and status
+        outdated                 Show tools with available updates
+        info <name>              Show details for an installed tool
+        update [options] [name]  Update installed tools to bundled versions
+        remove [options] [name]  Remove installed tools
+        install [options]        Install OAT tool packs (ideas, workflows, utility)
+        help [command]           display help for command
+      "
+    `);
+  });
+
+  it('tools list --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['tools', 'list']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat tools list [options]
+
+      List installed tools with version and status
+
+      Options:
+        -h, --help  display help for command
+      "
+    `);
+  });
+
+  it('tools outdated --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'tools',
+      'outdated',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat tools outdated [options]
+
+      Show tools with available updates
+
+      Options:
+        -h, --help  display help for command
+      "
+    `);
+  });
+
+  it('tools install --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'tools',
+      'install',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat tools install [options] [command]
+
+      Install OAT tool packs (ideas, workflows, utility)
+
+      Options:
+        --no-sync            Skip auto-sync after install
+        -h, --help           display help for command
+
+      Commands:
+        ideas [options]      Install OAT ideas skills, templates, and idea workflow
+                             files
+        workflows [options]  Install OAT workflows skills, agents, templates, and
+                             scripts
+        utility [options]    Install OAT utility skills
+      "
+    `);
+  });
+
+  it('tools remove --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'tools',
+      'remove',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat tools remove [options] [name]
+
+      Remove installed tools
+
+      Arguments:
+        name           Tool name to remove
+
+      Options:
+        --pack <pack>  Remove all tools in a pack (ideas|workflows|utility)
+        --all          Remove all installed tools
+        --dry-run      Preview removals without applying
+        --no-sync      Skip auto-sync after removal
+        -h, --help     display help for command
+      "
+    `);
+  });
+
+  it('tools update --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'tools',
+      'update',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat tools update [options] [name]
+
+      Update installed tools to bundled versions
+
+      Arguments:
+        name           Tool name to update
+
+      Options:
+        --pack <pack>  Update all tools in a pack (ideas|workflows|utility)
+        --all          Update all outdated tools
+        --dry-run      Preview updates without applying
+        --no-sync      Skip auto-sync after update
+        -h, --help     display help for command
+      "
+    `);
+  });
+
+  it('tools info --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['tools', 'info']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat tools info [options] <name>
+
+      Show details for an installed tool
+
+      Arguments:
+        name        Tool name
 
       Options:
         -h, --help  display help for command
