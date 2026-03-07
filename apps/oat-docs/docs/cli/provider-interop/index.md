@@ -18,5 +18,5 @@ Shared CLI conventions live in [`../design-principles.md`](../design-principles.
 ## Related CLI docs (non-interop command families)
 
 - [`../bootstrap.md`](../bootstrap.md) (`oat init`)
-- [`../tool-packs-and-assets.md`](../tool-packs-and-assets.md) (`oat init tools`, `oat remove`)
+- [`../tool-packs-and-assets.md`](../tool-packs-and-assets.md) (`oat tools ...`)
 - [`../diagnostics.md`](../diagnostics.md) (`oat doctor`)

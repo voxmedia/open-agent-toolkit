@@ -42,12 +42,16 @@ See [`docs-consumer-quickstart.md`](docs-consumer-quickstart.md).
 
 See [`docs-apps.md`](docs-apps.md) for details.
 
-### Tool Packs and Installed Assets
+### Tool Management (`oat tools`)
 
-| Command          | Purpose                                                                                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `oat init tools` | Install OAT tool packs (`ideas`, `workflows`, `utility`) with version-aware outdated-skill reporting and interactive update prompts in TTY mode. |
-| `oat remove`     | Remove installed skills or packs (`remove skill`, `remove skills --pack`) with dry-run by default and managed provider-view cleanup on apply.    |
+| Command                | Purpose                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `oat tools list`       | List installed tools with version, pack, scope, and update status.                                |
+| `oat tools outdated`   | Show only tools with available updates.                                                           |
+| `oat tools info`       | Detailed view of a single tool (version, pack, scope, update availability).                       |
+| `oat tools install`    | Install tool packs (`ideas`, `workflows`, `utility`) with auto-sync.                              |
+| `oat tools update`     | Update installed tools to bundled versions (`--pack`, `--all`, `--dry-run`, `--no-sync`).         |
+| `oat tools remove`     | Remove installed tools (`--pack`, `--all`, `--dry-run`, `--no-sync`).                             |
 
 See [`tool-packs-and-assets.md`](tool-packs-and-assets.md) for details.
 
@@ -76,7 +80,7 @@ See [`provider-interop/`](provider-interop/index.md) for detailed provider-inter
 
 | Command      | Purpose                                                                                                                                    |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `oat doctor` | Run environment and setup diagnostics, including bundled-vs-installed OAT skill version checks with `oat init tools` remediation guidance. |
+| `oat doctor` | Run environment and setup diagnostics, including bundled-vs-installed OAT skill version checks with `oat tools update` remediation guidance. |
 
 See [`diagnostics.md`](diagnostics.md) for details.
 

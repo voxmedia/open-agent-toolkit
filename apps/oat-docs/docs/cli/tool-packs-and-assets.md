@@ -1,64 +1,109 @@
 # Tool Packs and Installed Assets
 
-This page covers CLI commands that manage bundled OAT tool packs and installed OAT skill assets in canonical directories.
+This page covers CLI commands that manage bundled OAT tool packs and installed OAT skill/agent assets in canonical directories.
 
-## `oat init tools`
+## `oat tools` command group
+
+The `oat tools` command group provides a unified interface for managing installed tools (skills and agents) across scopes.
+
+### `oat tools list`
+
+Purpose:
+
+- List all installed tools with version, pack membership, scope, and update status
+
+Key behavior:
+
+- Scans installed skills and agents across project and user scopes
+- Displays version, pack (`ideas`, `workflows`, `utility`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
+- Supports `--scope` filtering and `--json` output
+
+### `oat tools outdated`
+
+Purpose:
+
+- Show only tools that have available updates (status `outdated`)
+
+Key behavior:
+
+- Filters scan results to tools where the installed version is older than the bundled version
+- Displays installed and available versions side by side
+- Supports `--scope` filtering and `--json` output
+
+### `oat tools info <name>`
+
+Purpose:
+
+- Show detailed information about a single installed tool
+
+Key behavior:
+
+- Displays name, type (skill/agent), version, bundled version, pack, scope, and status
+- Reports whether the tool is invocable (for skills) and whether an update is available
+- Returns exit code 1 if the tool is not found in any scope
+
+### `oat tools install`
 
 Purpose:
 
 - Install bundled OAT tool packs (`ideas`, `workflows`, `utility`)
-- Copy/update OAT skills and related assets into canonical directories for the selected scope
 
 Key behavior:
 
+- Same pack selection and install flow as `oat init tools`
 - Pack-oriented install subcommands: `ideas`, `workflows`, `utility`
 - Tracks installed vs bundled skill versions and reports outdated skills
 - Interactive runs can prompt to update selected outdated skills
-- Non-interactive runs report outdated skills without mutating them
-- Pack subcommands support `--force` to overwrite instead of preserving local installed versions
+- Auto-sync runs automatically after successful install (provider views are updated)
+- Use `--no-sync` to skip auto-sync
 
-Notes:
-
-- This is an installed-asset lifecycle command, not a provider-interop sync command.
-- After changing canonical assets, use `oat sync --scope ... --apply` to fan out updates to provider views.
-
-## `oat remove`
+### `oat tools update`
 
 Purpose:
 
-- Remove installed skills and managed provider views
+- Update installed tools to the latest bundled versions
 
 Key behavior:
 
-- Dry-run by default; `--apply` performs deletions
-- Supports both single-skill and pack removal workflows
-- Removes canonical skill directories plus manifest-managed provider views for the selected scope(s)
-- Preserves unmanaged provider views and reports warnings instead of deleting them
+- Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
+- Compares installed versions against bundled versions and copies updated assets
+- Dry-run mode with `--dry-run`; auto-sync after mutations by default
+- Use `--no-sync` to skip auto-sync
+- Reports tools that are already current, newer than bundled, or not bundled (custom)
 
-## `oat remove skill <name>`
+### `oat tools remove`
 
 Purpose:
 
-- Remove one installed skill by name (for example, `oat-idea-scratchpad`)
+- Remove installed tools (skills and agents)
 
 Key behavior:
 
-- Dry-run default with `--apply` opt-in
-- Scope-aware execution across `project`, `user`, or `all`
-- Emits structured JSON payloads in `--json` mode for dry-run/apply/not-found outcomes
+- Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
+- Removes skill directories and agent `.md` files from canonical locations
+- Dry-run mode with `--dry-run`; auto-sync after mutations by default
+- Use `--no-sync` to skip auto-sync
 
-## `oat remove skills --pack <ideas|workflows|utility>`
+### Auto-sync behavior
 
-Purpose:
+All mutation commands (`install`, `update`, `remove`) automatically run `oat sync --apply --scope <scope>` after successful operations. This ensures provider views stay in sync with canonical assets without manual intervention.
 
-- Remove all installed skills from a bundled OAT pack
+Use `--no-sync` on any mutation command to skip this step.
 
-Key behavior:
+## Legacy commands
 
-- Pack membership is derived from installer constants (`IDEA_SKILLS`, `WORKFLOW_SKILLS`, `UTILITY_SKILLS`)
-- Reuses single-skill removal behavior for each selected skill
-- Dry-run default with aggregate summary; apply mode supports interactive confirmation for larger removals
-- Emits a single aggregate JSON payload in `--json` mode
+### `oat init tools`
+
+The `oat init tools` command remains available for backward compatibility. It has the same install behavior as `oat tools install` but does not include auto-sync — you must run `oat sync --scope ... --apply` manually after install.
+
+### `oat remove`
+
+The `oat remove` command group remains available for backward compatibility. It provides skill removal with dry-run/apply semantics and managed provider-view cleanup.
+
+- `oat remove skill <name>` — remove one installed skill by name
+- `oat remove skills --pack <pack>` — remove all installed skills from a bundled pack
+
+These commands use dry-run by default with `--apply` to perform deletions.
 
 Related docs:
 

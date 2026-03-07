@@ -20,6 +20,6 @@ Key behavior:
 
 Related commands:
 
-- `oat init tools` (tool-pack installation and version-aware updates): `tool-packs-and-assets.md`
+- `oat tools ...` (tool-pack install, update, remove, list, info): `tool-packs-and-assets.md`
 - `oat status` / `oat sync` (provider interop): `provider-interop/index.md`
 - `oat doctor` (diagnostics): `diagnostics.md`

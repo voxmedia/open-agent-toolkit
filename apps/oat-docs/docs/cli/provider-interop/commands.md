@@ -9,7 +9,7 @@ These command definitions inherit the cross-cutting CLI conventions in:
 ## Adjacent command docs (outside provider interop scope)
 
 - `oat init` (bootstrap): `../bootstrap.md`
-- `oat init tools`, `oat remove ...` (tool-pack / installed asset lifecycle): `../tool-packs-and-assets.md`
+- `oat tools ...` (tool-pack lifecycle — install, update, remove, list, info): `../tool-packs-and-assets.md`
 - `oat doctor` (cross-cutting diagnostics): `../diagnostics.md`
 
 ## `oat status`

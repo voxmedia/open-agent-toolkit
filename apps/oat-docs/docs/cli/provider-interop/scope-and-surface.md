@@ -30,8 +30,7 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 ## Adjacent CLI commands (commonly used with provider interop)
 
 - `oat init` (bootstrap canonical structure and sync config) — see `../bootstrap.md`
-- `oat init tools` (install/update bundled OAT tool packs) — see `../tool-packs-and-assets.md`
-- `oat remove ...` (remove installed OAT skills/packs) — see `../tool-packs-and-assets.md`
+- `oat tools ...` (install/update/remove/list/inspect tools) — see `../tool-packs-and-assets.md`
 - `oat doctor` (environment + skill-version diagnostics) — see `../diagnostics.md`
 
 ## Provider enablement model

@@ -34,7 +34,7 @@ flowchart TD
 
 | Mode | Best for | Primary entry points |
 |---|---|---|
-| Interop-only | Canonical skill/agent sync + drift diagnostics + tool-pack lifecycle | `oat init`, `oat init tools`, `oat status`, `oat sync`, `oat instructions ...`, `oat providers ...`, `oat remove ...`, `oat cleanup ...`, `oat doctor` |
+| Interop-only | Canonical skill/agent sync + drift diagnostics + tool-pack lifecycle | `oat init`, `oat tools ...`, `oat status`, `oat sync`, `oat instructions ...`, `oat providers ...`, `oat cleanup ...`, `oat doctor` |
 | Provider-agnostic tooling | Reusing skills/utilities without spec-driven lifecycle overhead | `apps/oat-docs/docs/skills/index.md`, `apps/oat-docs/docs/skills/docs-workflows.md`, `apps/oat-docs/docs/cli/docs-apps.md`, selected `oat-*` skills |
 | Workflow | Structured execution with durable artifacts and review gates | `oat-project-new`/`oat-project-open`, then lane-specific skills |
 
@@ -46,8 +46,7 @@ Use OAT only for cross-provider asset management:
 - Detect drift and strays
 - Sync provider views safely
 - Validate AGENTS.md to CLAUDE.md pointer integrity and repair drift
-- Install/update bundled OAT tool packs with version-aware prompts (`oat init tools`)
-- Remove installed skills or packs (`oat remove ...`) with dry-run/apply semantics
+- Manage installed tools: list, inspect, install, update, and remove (`oat tools ...`) with auto-sync
 - Audit and clean workflow/project hygiene drift
 - Run diagnostics
 
@@ -57,12 +56,15 @@ Primary commands:
 - `oat sync`
 - `oat instructions validate`
 - `oat instructions sync`
-- `oat init tools`
+- `oat tools list`
+- `oat tools outdated`
+- `oat tools info <name>`
+- `oat tools install`
+- `oat tools update [name] --pack --all`
+- `oat tools remove [name] --pack --all`
 - `oat providers list`
 - `oat providers inspect <provider>`
 - `oat providers set`
-- `oat remove skill <name>`
-- `oat remove skills --pack <ideas|workflows|utility>`
 - `oat cleanup project`
 - `oat cleanup artifacts`
 - `oat doctor`
@@ -161,13 +163,16 @@ Notes:
 ### 3.5) Install or update OAT tool packs (optional)
 
 ```bash
-pnpm run cli -- init tools
+pnpm run cli -- tools install
+pnpm run cli -- tools outdated
+pnpm run cli -- tools update --all
 ```
 
 Notes:
-- Installs OAT skills/agents/templates/scripts by pack (`ideas`, `workflows`, `utility`).
-- When installed skills are older than bundled versions, interactive runs prompt you to update selected skills.
-- Non-interactive runs report outdated skills without updating them (use pack subcommands with `--force` to overwrite).
+- `tools install` installs OAT skills/agents/templates/scripts by pack (`ideas`, `workflows`, `utility`) and auto-syncs provider views.
+- `tools outdated` shows which installed tools have available updates.
+- `tools update --all` updates all outdated tools to bundled versions.
+- Use `--no-sync` on any mutation command to skip auto-sync.
 
 ### 3.6) Bootstrap or maintain a docs app (optional)
 
@@ -265,8 +270,10 @@ oat sync --scope all
 oat sync --scope all --apply
 oat instructions validate
 oat instructions sync --apply
-oat init tools
-oat remove skills --pack utility     # dry-run by default
+oat tools install
+oat tools list
+oat tools outdated
+oat tools update --all
 oat cleanup project
 oat cleanup artifacts
 oat doctor --scope all
