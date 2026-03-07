@@ -9,7 +9,7 @@ For a birdseye snapshot of what exists *right now*, see `.oat/repo/reference/cur
 
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
-As of `2026-02-23` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor/instructions`, config-aware sync, Codex TOML sync, worktree bootstrap, `oat config`, `oat project open/pause`). Project lifecycle state is config-backed (`.oat/config.json` + `.oat/config.local.json`) with final review/PR loops dogfooded through completion. Review receive skill family (local + remote) is implemented for both project and ad-hoc contexts. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
+As of `2026-03-07` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor/instructions/tools`, config-aware sync, Codex TOML sync, worktree bootstrap, `oat config`, `oat project open/pause`). Project lifecycle state is config-backed (`.oat/config.json` + `.oat/config.local.json`) with final review/PR loops dogfooded through completion. Review receive skill family (local + remote) is implemented for both project and ad-hoc contexts. `oat tools` command group provides full skill lifecycle management (list, outdated, info, install, update, remove). `oat-project-reconcile` bridges manual/human implementation back into OAT tracking. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
 
 ## Status Summary
 
@@ -71,7 +71,13 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - `oat instructions validate` / `oat instructions sync` (AGENTS.md ↔ CLAUDE.md integrity checking and repair)
   - `.oat/tracking.json` shared tracking manifest for delta mode operations
 - Subagent orchestration:
-  - `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto` (execution mode selection, dispatch, and autonomous bootstrap)
+  - `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-project-subagent-implement`, `oat-worktree-bootstrap-auto` (execution mode selection, dispatch, parallel plan execution, and autonomous bootstrap)
+- Reconciliation:
+  - `oat-project-reconcile` (map manual/human commits to planned tasks and update tracking artifacts)
+- Documentation analysis:
+  - `oat-docs-analyze`, `oat-docs-apply` (docs structure/coverage analysis and apply flow)
+- Repo maintainability:
+  - `oat-repo-maintainability-review` (structured maintainability analysis with actionable findings)
 - Cleanup:
   - `oat cleanup project` (stale pointers, missing state, lifecycle completion normalization)
   - `oat cleanup artifacts` (duplicate pruning for reviews and external plans)
@@ -251,7 +257,8 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 - Done: `oat instructions validate/sync` for AGENTS.md ↔ CLAUDE.md integrity
 - Done: GitHub Copilot and Gemini CLI provider support
 - Done: worktree-safe bootstrap guidance/script (`pnpm run worktree:init`)
-- Remaining: lifecycle completeness commands (e.g., uninstall/remove), expanded capability matrix, and additional UX hardening
+- Done: `oat tools` command group (list, outdated, info, install, update, remove) for skill lifecycle management
+- Remaining: expanded capability matrix and additional UX hardening
 
 **When to do it:**
 - Continue hardening current CLI behavior while expanding remaining lifecycle features.

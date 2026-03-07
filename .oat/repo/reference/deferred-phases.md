@@ -41,8 +41,16 @@ Dogfood v1 baseline is:
   - `.oat/tracking.json` shared tracking manifest for delta mode operations
 - Subagent orchestration:
   - `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto` (execution mode, dispatch, autonomous bootstrap)
+- Reconciliation:
+  - `oat-project-reconcile` (map manual/human commits to planned tasks and update tracking artifacts)
+- Documentation analysis:
+  - `oat-docs-analyze`, `oat-docs-apply` (docs structure/coverage analysis and apply flow)
+- Repo maintainability:
+  - `oat-repo-maintainability-review` (structured maintainability analysis with actionable findings)
 - Cleanup:
   - `oat cleanup project`, `oat cleanup artifacts`
+- Skill lifecycle:
+  - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools install`, `oat tools update`, `oat tools remove`
 
 ## Deferred Phases
 
@@ -113,8 +121,8 @@ Current canonical behavior:
 **What:** Turn the dogfood workflow into a broader toolkit: provider adapters, sync, drift detection, and safe apply.
 
 **Status:** In Progress
-- Done: core command surface, sync manifest/config model, provider config commands, Codex TOML sync, instructions validate/sync, Copilot/Gemini provider support
-- Remaining: lifecycle completeness features (uninstall/remove) and provider capability hardening
+- Done: core command surface, sync manifest/config model, provider config commands, Codex TOML sync, instructions validate/sync, Copilot/Gemini provider support, `oat tools` lifecycle commands (list/outdated/info/install/update/remove)
+- Remaining: expanded provider capability matrix and UX hardening
 
 **When to start:**
 - Now that dogfood v1 has been exercised end-to-end, we can start building the CLI in parallel with smaller workflow polish.

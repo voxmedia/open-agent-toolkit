@@ -63,12 +63,7 @@ Update these files (as applicable):
 Optional:
 - `.oat/repo/archive/` for historical notes we intentionally keep out of active reference flow.
 
-### Step 3: Update Pointer Docs (If Applicable)
-
-If we keep compatibility pointers in `docs/plans/`, ensure they still point at the canonical repo reference docs:
-- `docs/plans/deferred-phases.md`
-
-### Step 4: Sanity Checks (Fast)
+### Step 3: Sanity Checks (Fast)
 
 1. Search for stale “pending/planned” references:
 ```bash
@@ -90,7 +85,7 @@ rg -n "\\.oat/projects/shared/|\\.oat/projects-root|\\.oat/active-project" .agen
 rg -n "<name>update-repo-reference</name>" AGENTS.md || true
 ```
 
-### Step 5: Output
+### Step 4: Output
 
 Provide:
 - The list of files updated

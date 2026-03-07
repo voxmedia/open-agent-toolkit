@@ -43,8 +43,8 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related: `packages/cli/src/commands/init/index.ts`
   - Created: 2026-02-23
 
-- [x] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows** — moved to In Progress
-  - See In Progress section below.
+- [x] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows** — COMPLETED
+  - See backlog-completed.md.
   - Created: 2026-02-21
 
 - [ ] **(P2) [tooling] Migrate active-idea pointers to config-local state**
@@ -66,8 +66,8 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Created: 2026-02-22
 
 
-- [x] **(P1) [tooling] Add skill versioning to SKILL.md frontmatter and `oat init tools` update detection** — ALREADY IMPLEMENTED
-  - Note: This was implemented as part of `copy-helpers.ts` (`copyDirWithVersionCheck`), `version.ts`, and `frontmatter.ts`. All 43 skills have `version:` frontmatter. `oat init tools` already detects outdated skills and offers interactive updates. Should be moved to `backlog-completed.md`.
+- [x] **(P1) [tooling] Add skill versioning to SKILL.md frontmatter and `oat init tools` update detection** — COMPLETED
+  - See backlog-completed.md.
   - Created: 2026-02-19
 
 - [ ] **(P2) [workflow] Backlog Refinement Flow (Jira ticket generation)**
@@ -86,33 +86,8 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## Planned
 
-- [ ] **(P1) [skills] Documentation analysis skill family (`oat-docs-analyze`, `oat-docs-apply`)**
-  - Target milestone/phase: Core value delivery — docs quality and coverage
-  - Notes:
-    - Same analyze→apply pattern as agent instructions, applied to documentation:
-      - `docs/` directories, `README.md` files, MkDocs sites, basic markdown docs directories.
-    - **`oat-docs-analyze`**: Reviews existing docs for quality, coverage, staleness, drift, verbosity, and gaps.
-      - Quality analysis always runs (accuracy, completeness, verbosity, structure).
-      - Delta mode: review only files changed since last tracked run.
-      - Full mode: comprehensive review of entire docs surface.
-      - Outputs structured analysis artifact with Critical / High / Medium / Low severity ratings.
-    - **`oat-docs-apply`**: Interactive application of analysis findings + docs generation.
-      - If no docs directory exists, proposes adding one (basic markdown or MkDocs scaffold — MkDocs support is a later enhancement).
-      - Creates/updates docs based on approved recommendations.
-      - Creates a branch + PR for review.
-    - Related to but distinct from:
-      - `docs-completed-projects-gap-review` (PR #24) — narrower, focuses on gaps left by completed OAT projects.
-      - `oat-project-document` (B03) — project-lifecycle-scoped docs synthesis at closeout.
-      - This family is codebase-wide and lifecycle-independent.
-    - MkDocs scaffolding is a future enhancement (eventually `oat init docs --mkdocs` or similar).
-  - Success criteria:
-    - Running analyze detects stale/drifted docs, missing coverage, and quality issues.
-    - Delta mode scopes analysis to files changed since last run via `.oat/tracking.json`.
-    - Apply generates clean PRs with well-structured documentation.
-  - Links:
-    - Reference: `.agents/docs/` (existing docs guidance)
-    - Related skill: `docs-completed-projects-gap-review` (PR #24)
-    - Related backlog: `oat-project-document` (B03)
+- [x] **(P1) [skills] Documentation analysis skill family (`oat-docs-analyze`, `oat-docs-apply`)** — COMPLETED
+  - See backlog-completed.md.
   - Created: 2026-02-19
 
 - [ ] **(P1) [skills] Add `oat-project-document` for post-implementation documentation synthesis**
@@ -273,10 +248,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## In Progress
 
-- [ ] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows**
-  - Project: `.oat/projects/shared/oat-project-reconcile/`
-  - Current phase: implement (Phase 2 — integration)
-  - Notes: Core skill (`oat-project-reconcile`) implemented with 6 workflow steps: checkpoint detection, commit analysis, task mapping, HiTL confirmation, artifact updates, bookkeeping commit. Provider sync and progress routing integration in progress.
+(No items currently in progress.)
 
 ## Deferred
 

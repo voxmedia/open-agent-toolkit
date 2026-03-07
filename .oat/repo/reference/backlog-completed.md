@@ -14,6 +14,37 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows**
+  - Outcome:
+    - `oat-project-reconcile` skill implemented with 6 workflow steps: checkpoint detection, commit analysis, task mapping, HiTL confirmation, artifact updates, bookkeeping commit.
+    - Bridges manual/human implementation back into OAT tracking artifacts.
+  - Links:
+    - Skill: `.agents/skills/oat-project-reconcile/SKILL.md`
+    - Project: `.oat/projects/shared/oat-project-reconcile/`
+    - PR: #42
+  - Created: 2026-02-21
+  - Completed: 2026-03-07
+
+- [x] **(P1) [skills] Documentation analysis skill family (`oat-docs-analyze`, `oat-docs-apply`)**
+  - Outcome:
+    - `oat-docs-analyze` evaluates documentation structure, navigation, and coverage against docs app contract; produces severity-rated analysis artifacts.
+    - `oat-docs-apply` applies approved analysis findings with branch, docs updates, and optional PR workflow.
+    - Same analyze→apply pattern as agent instructions, applied to documentation surfaces.
+  - Links:
+    - Skills: `.agents/skills/oat-docs-analyze/SKILL.md`, `.agents/skills/oat-docs-apply/SKILL.md`
+  - Created: 2026-02-19
+  - Completed: 2026-03-07
+
+- [x] **(P1) [tooling] Add skill versioning to SKILL.md frontmatter and `oat init tools` update detection**
+  - Outcome:
+    - All 44 skills have `version:` frontmatter (currently 1.2.0).
+    - `oat tools outdated` detects skills needing updates; `oat tools update` applies them.
+    - Implemented via `copy-helpers.ts` (`copyDirWithVersionCheck`), `version.ts`, and `frontmatter.ts`.
+  - Links:
+    - PR: #34
+  - Created: 2026-02-19
+  - Completed: 2026-03-07
+
 - [x] **(P1) [skills] Enforce autonomous review gates in `oat-project-subagent-implement`**
   - Outcome:
     - Step 4 implements mandatory peer subagent reviewer dispatch (`oat-reviewer`) with two-stage checks (spec compliance + code quality) and fix-loop retry bounded by `oat_orchestration_retry_limit`.

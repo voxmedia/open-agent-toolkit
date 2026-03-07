@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is *right now* in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-03-06
+**Last Updated:** 2026-03-07
 
 ## Canonical References
 
@@ -45,8 +45,19 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - PR skills:
   - `oat-project-pr-progress`
   - `oat-project-pr-final`
+- Reconciliation:
+  - `oat-project-reconcile` (map manual/human commits to planned tasks and update tracking artifacts after confirmation)
 - Worktree/bootstrap:
   - `oat-worktree-bootstrap` (create/reuse worktree + baseline checks with deterministic root precedence)
+
+### Documentation Analysis (Utility)
+
+- `oat-docs-analyze` (evaluate documentation structure, navigation, and coverage against the OAT docs app contract; severity-rated analysis artifacts)
+- `oat-docs-apply` (apply approved docs analysis findings: branch, update docs, optionally open PR)
+
+### Repo Maintainability (Utility)
+
+- `oat-repo-maintainability-review` (structured maintainability analysis for a repository or directory target with actionable findings)
 
 ### Agent Instructions (Utility)
 
@@ -63,6 +74,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 - `oat-execution-mode-select` (select and persist execution mode: `single-thread` | `sequential-subagent` | `parallel-subagent`)
 - `oat-subagent-orchestrate` (dispatch subagents with fan-out, review gate, and fix-loop retry)
+- `oat-project-subagent-implement` (parallel execution across eligible plan phases/tasks using autonomous worktrees, review gates, and deterministic merge-back)
 - `oat-worktree-bootstrap-auto` (autonomous worktree bootstrap with rollback safety)
 - `oat_execution_mode` field in `state.md` template; orchestration status fields in `implementation.md` template
 - HiLL checkpoint governance integrated into orchestration policy
@@ -78,6 +90,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - `oat providers list`, `oat providers inspect`, `oat providers set`
   - `oat cleanup project`, `oat cleanup artifacts`
   - `oat instructions validate`, `oat instructions sync`
+  - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install`
 - Provider config model:
   - Project provider enablement lives in `.oat/sync/config.json` (`providers.<name>.enabled`).
   - `oat init --scope project` prompts for provider selection in interactive mode.
@@ -94,12 +107,16 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 ### Tool Metadata
 
+- 44 skills total; all `oat-*` skills versioned at 1.2.0+ with `version:` frontmatter.
 - Most skills define `allowed-tools` in frontmatter as an advisory tool scope (provider-dependent).
   - Read-only skills (e.g., `oat-project-progress`, `oat-project-review-provide`) omit `Write`/`Edit`.
   - Write skills (e.g., `oat-project-discover` → `oat-project-implement`, `oat-project-review-receive`, PR skills) include `Write` and `Bash(git:*)`.
 - Internal validation:
   - `pnpm oat:validate-skills` checks that all `oat-*` skills include required frontmatter keys and the standard progress banner section.
   - Backed by CLI command: `oat internal validate-oat-skills`.
+- Skill lifecycle management:
+  - `oat tools list` / `oat tools outdated` / `oat tools info` for discovery and status.
+  - `oat tools install` / `oat tools update` / `oat tools remove` for lifecycle operations.
 
 ### Templates / Scripts
 
@@ -184,7 +201,7 @@ Interop quickstart:
 - Repo-level dashboard:
   - Repo State Dashboard (`.oat/state.md`) exists, but needs to be made first-class (clear generation/refresh workflow + keep docs in sync with current semantics)
 - Provider interop (CLI):
-  - Core command surface and Codex TOML sync are implemented; remaining work is lifecycle polish (for example, uninstall/remove flows, broader provider capability matrix, and additional ergonomics)
+  - Core command surface, Codex TOML sync, and `oat tools` lifecycle commands are implemented; remaining work is broader provider capability matrix and additional ergonomics
 - Multi-project model:
   - Core lifecycle switching is implemented (`oat project open/pause`, config-backed active project state); remaining work is broader branch-aware multi-project automation and local/shared model polish
 - Parallel execution + reconciliation:
