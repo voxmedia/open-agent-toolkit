@@ -206,36 +206,43 @@ oat_pr_scope: {pNN|range}
 oat_project: {PROJECT_PATH}
 ---
 
-# PR: Progress - {project-name} ({scope})
+# {project-name} ({scope})
 
-## What
+## Summary
 
 {1-3 sentence summary of what this phase delivered}
 
-## Why
+## Goals / Non-Goals
 
-{How this supports goals from available requirement artifacts: spec in spec-driven mode, discovery/import reference in quick/import mode}
+{goals addressed by this phase, from available requirement artifacts: spec in spec-driven mode, discovery/import reference in quick/import mode}
 
-## Scope
+## Changes
 
 - Project: `{PROJECT_PATH}`
 - Scope: `{scope}`
 - Commits:
 {bulleted list}
 
-## Validation
+## Verification
 
 - Tests: {what was run / expected}
 - Lint/Types/Build: {what was run / expected}
 
+## Reviews
+
+{phase review row from plan.md Reviews table, if available}
+
 ## References
 
-- Spec: `[spec.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/spec.md)` (optional in quick/import mode)
-- Design: `[design.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/design.md)` (optional in quick/import mode)
+Only include links to artifacts that actually exist in the project. Omit any that are absent.
+
+- Spec: `[spec.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/spec.md)`
+- Design: `[design.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/design.md)`
 - Plan: `[plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/plan.md)` (fallback: `{PROJECT_PATH}/plan.md`)
 - Implementation: `[implementation.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/implementation.md)` (fallback: `{PROJECT_PATH}/implementation.md`)
-- Discovery: `[discovery.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/discovery.md)` (recommended for quick mode)
-- Imported Source: `[references/imported-plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/references/imported-plan.md)` (recommended for import mode)
+- Discovery: `[discovery.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/discovery.md)`
+- Imported Source: `[references/imported-plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/references/imported-plan.md)`
+- Reviews: `[reviews/]({REPO_WEB}/tree/{BRANCH}/{PROJECT_REL}/reviews)` (fallback: `{PROJECT_PATH}/reviews/`)
 ```
 
 ### Step 6: Optional - Open PR

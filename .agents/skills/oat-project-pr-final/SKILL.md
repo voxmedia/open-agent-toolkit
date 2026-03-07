@@ -204,7 +204,7 @@ oat_pr_scope: final
 oat_project: {PROJECT_PATH}
 ---
 
-# PR: {project-name}
+# {project-name}
 
 ## Summary
 
@@ -214,7 +214,7 @@ oat_project: {PROJECT_PATH}
 
 {brief bullets from available requirement artifacts: spec in spec-driven mode; discovery/import source in quick/import}
 
-## What Changed
+## Changes
 
 {phase-by-phase or capability-by-capability bullets from plan/implementation}
 
@@ -228,12 +228,14 @@ oat_project: {PROJECT_PATH}
 
 ## References
 
-- Spec: `[spec.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/spec.md)` (optional in quick/import mode)
-- Design: `[design.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/design.md)` (optional in quick/import mode)
+Only include links to artifacts that actually exist in the project. Omit any that are absent.
+
+- Spec: `[spec.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/spec.md)`
+- Design: `[design.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/design.md)`
 - Plan: `[plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/plan.md)` (fallback: `{PROJECT_PATH}/plan.md`)
 - Implementation: `[implementation.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/implementation.md)` (fallback: `{PROJECT_PATH}/implementation.md`)
-- Discovery: `[discovery.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/discovery.md)` (recommended for quick mode)
-- Imported Source: `[references/imported-plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/references/imported-plan.md)` (recommended for import mode)
+- Discovery: `[discovery.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/discovery.md)`
+- Imported Source: `[references/imported-plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/references/imported-plan.md)`
 - Reviews: `[reviews/]({REPO_WEB}/tree/{BRANCH}/{PROJECT_REL}/reviews)` (fallback: `{PROJECT_PATH}/reviews/`)
 ```
 

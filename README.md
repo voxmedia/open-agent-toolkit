@@ -284,8 +284,11 @@ flowchart LR
   Mode -->|Sequential| ImplementSeq["oat-project-implement"]
   Mode -->|Subagent-driven| ImplementSub["oat-project-subagent-implement"]
   SetMode["oat project set-mode <mode>"] --> Mode
-  ImplementSeq --> Review{"Review context?"}
-  ImplementSub --> Review
+  ImplementSeq --> Reconcile{"Manual commits to reconcile?"}
+  ImplementSub --> Reconcile
+  Reconcile -->|Yes| ReconcileSkill["oat-project-reconcile"]
+  ReconcileSkill --> Review{"Review context?"}
+  Reconcile -->|No| Review
   Review -->|Project-scoped local| ProjectReview["oat-project-review-provide + oat-project-review-receive"]
   Review -->|Project-scoped remote| ProjectReviewRemote["oat-project-review-receive-remote"]
   Review -->|Ad-hoc local| AdHocReview["oat-review-provide + oat-review-receive"]
@@ -329,18 +332,20 @@ flowchart LR
 ### Shared workflow options
 
 1. Routing and next-step checks:
-   - `oat-project-progress`
-2. Execution mode persistence:
+   - `oat-project-progress` (includes drift detection that suggests reconciliation when manual commits are detected)
+2. Reconciliation (manual commit → task mapping):
+   - `oat-project-reconcile` — analyzes untracked commits, maps them to planned tasks using five signals, and updates tracking artifacts after human confirmation
+3. Execution mode persistence:
    - `oat project set-mode <single-thread|subagent-driven>`
-3. Canonical plan-writing contract:
+4. Canonical plan-writing contract:
    - `oat-project-plan-writing` (shared spec-driven/quick/import planning semantics)
-4. Review path selection:
+5. Review path selection:
    - Project-scoped review: `oat-project-review-provide` + `oat-project-review-receive` (local) / `oat-project-review-receive-remote` (GitHub PR)
    - Ad-hoc/non-project review: `oat-review-provide` + `oat-review-receive` (local) / `oat-review-receive-remote` (GitHub PR)
-5. PR generation:
+6. PR generation:
    - Progress PR: `oat-project-pr-progress`
    - Final PR: `oat-project-pr-final`
-6. Lifecycle completion:
+7. Lifecycle completion:
    - `oat-project-complete` (with optional active-project cleanup)
 
 ## Documentation

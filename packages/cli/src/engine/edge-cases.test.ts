@@ -1,4 +1,4 @@
-import { chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import * as fsp from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { detectStrays } from '@drift/index';
@@ -10,8 +10,15 @@ import {
   ManifestSchema,
   saveManifest,
 } from '@manifest/index';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { scanCanonical } from './scanner';
+
+const { mkdir, mkdtemp, rm, writeFile } = fsp;
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof fsp>();
+  return { ...actual, readdir: vi.fn().mockImplementation(actual.readdir) };
+});
 
 describe('edge cases', () => {
   const tempDirs: string[] = [];
@@ -35,25 +42,23 @@ describe('edge cases', () => {
   });
 
   it('handles permission denied on provider dir', async () => {
-    // Skip when running as root — chmod 0o000 has no effect for uid 0
-    if (process.getuid?.() === 0) return;
-
     const root = await mkdtemp(join(tmpdir(), 'oat-edge-perm-'));
     tempDirs.push(root);
     const providerDir = join(root, '.claude', 'skills');
     await mkdir(providerDir, { recursive: true });
 
-    await chmod(providerDir, 0o000);
-    try {
-      await expect(
-        detectStrays('claude', providerDir, createEmptyManifest(), []),
-      ).rejects.toMatchObject({
-        name: 'CliError',
-        exitCode: 1,
-      });
-    } finally {
-      await chmod(providerDir, 0o755);
-    }
+    const eaccesError = Object.assign(new Error('EACCES: permission denied'), {
+      code: 'EACCES',
+    });
+    const mockedReaddir = vi.mocked(fsp.readdir);
+    mockedReaddir.mockRejectedValueOnce(eaccesError);
+
+    await expect(
+      detectStrays('claude', providerDir, createEmptyManifest(), []),
+    ).rejects.toMatchObject({
+      name: 'CliError',
+      exitCode: 1,
+    });
   });
 
   it('recovers from corrupt manifest with clear error message', async () => {

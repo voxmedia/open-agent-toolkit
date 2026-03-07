@@ -43,27 +43,8 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related: `packages/cli/src/commands/init/index.ts`
   - Created: 2026-02-23
 
-- [ ] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows**
-  - Context: The OAT project workflow currently assumes the AI agent does the coding with discipline: atomic commits tied to task numbers, updating `implementation.md` as it executes the plan. When a human implements tasks manually without following this discipline, artifacts drift from reality and downstream skills (project review, final review) become less accurate or require extra effort to reconstruct state.
-  - Proposed change:
-    - Add a reconciliation skill that bridges the gap between human implementation and OAT's artifact-driven workflow.
-    - **Checkpoint anchor concept**: Find the last commit matching an OAT-style task-number commit pattern. Treat that as a checkpoint — artifacts before it are likely accurate. Then examine all commits (or the diff) between that checkpoint and HEAD to detect "human drift" from the plan.
-    - **Reconciliation output**: Produce suggested updates such as:
-      - "Task 5 appears addressed by commits A, B, C"
-      - "These changes don't map to any planned task — new unplanned work detected"
-      - "Implementation doc missing entries for X; proposed log entries below"
-    - Auto-update `implementation.md` with drafted entries for human-implemented work.
-    - Potentially update plan state (task status) or flag mismatches.
-    - Provide a lightweight confirmation/editing loop (human-in-the-loop) when uncertain about mappings.
-  - Success criteria:
-    - Skill can identify the last OAT-structured checkpoint commit and scope analysis to post-checkpoint changes.
-    - Produces accurate mapping of commits → planned tasks (including flagging unmapped/unplanned work).
-    - Generates draft `implementation.md` entries that maintain the same format/quality as AI-generated entries.
-    - Downstream skills (project review, final review) produce reliable results after reconciliation runs.
-    - Human-in-the-loop confirmation for uncertain mappings — no silent assumptions.
-  - Links:
-    - Related skills: `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-implement`
-    - Related artifacts: `implementation.md`, `plan.md` (task status)
+- [x] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows** — moved to In Progress
+  - See In Progress section below.
   - Created: 2026-02-21
 
 - [ ] **(P2) [tooling] Migrate active-idea pointers to config-local state**
@@ -85,19 +66,8 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Created: 2026-02-22
 
 
-- [ ] **(P1) [tooling] Add skill versioning to SKILL.md frontmatter and `oat init tools` update detection**
-  - Context: `oat init tools` currently checks only file existence — if a skill directory exists, it reports "skipped". Users have no way to know their installed skills are outdated without using `--force` to blindly overwrite.
-  - Proposed change:
-    - Add `version` field to SKILL.md frontmatter (semver, e.g., `version: 1.0.0`).
-    - Teach `oat init tools` to compare installed vs bundled versions: if bundled is newer, prompt to update; if versions match, skip; if no version field, treat as v0.0.0.
-    - Optionally surface outdated skills in `oat doctor` / `oat status`.
-  - Success criteria:
-    - `oat init tools` detects and offers to update outdated skills without `--force`.
-    - Skills without version field are treated as upgradeable.
-    - `--force` still works as a blunt override.
-  - Links:
-    - Idea: `.oat/ideas/skill-versioning/discovery.md`
-    - Related: `packages/cli/src/commands/init/tools/shared/copy-helpers.ts`
+- [x] **(P1) [tooling] Add skill versioning to SKILL.md frontmatter and `oat init tools` update detection** — ALREADY IMPLEMENTED
+  - Note: This was implemented as part of `copy-helpers.ts` (`copyDirWithVersionCheck`), `version.ts`, and `frontmatter.ts`. All 43 skills have `version:` frontmatter. `oat init tools` already detects outdated skills and offers interactive updates. Should be moved to `backlog-completed.md`.
   - Created: 2026-02-19
 
 - [ ] **(P2) [workflow] Backlog Refinement Flow (Jira ticket generation)**
@@ -303,10 +273,10 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## In Progress
 
-- [ ] **(P?) [area] {Title}**
-  - Project: `.oat/projects/shared/{project-name}/`
-  - Current phase:
-  - Notes:
+- [ ] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows**
+  - Project: `.oat/projects/shared/oat-project-reconcile/`
+  - Current phase: implement (Phase 2 — integration)
+  - Notes: Core skill (`oat-project-reconcile`) implemented with 6 workflow steps: checkpoint detection, commit analysis, task mapping, HiTL confirmation, artifact updates, bookkeeping commit. Provider sync and progress routing integration in progress.
 
 ## Deferred
 

@@ -901,7 +901,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-03-06T23:48:55.756Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-reconcile",
+      "providerPath": ".claude/skills/oat-project-reconcile",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-07T04:34:00.316Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-reconcile",
+      "providerPath": ".cursor/skills/oat-project-reconcile",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-07T04:34:00.317Z"
     }
   ],
-  "lastUpdated": "2026-03-06T23:48:55.756Z"
+  "lastUpdated": "2026-03-07T04:34:00.317Z"
 }

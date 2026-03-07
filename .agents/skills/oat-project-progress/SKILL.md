@@ -177,6 +177,35 @@ Read `oat_execution_mode` from `state.md` frontmatter:
   - spec gate pending -> `oat-project-spec`
   - design gate pending -> `oat-project-design`
 
+**Drift detection (apply before routing `implement | in_progress`):**
+
+When `oat_phase: implement` and `oat_phase_status: in_progress`, check for artifact drift before recommending next skill:
+
+```bash
+# Use the project path from Step 4's per-project loop (or ACTIVE_PROJECT_PATH for single-project)
+# Count planned tasks
+PLAN_TASKS=$(grep -cE '^### Task p[0-9]+-t[0-9]+:' "$ACTIVE_PROJECT_PATH/plan.md" 2>/dev/null || echo 0)
+
+# Count completed tasks in implementation.md
+IMPL_COMPLETED=$(grep -cE '^\*\*Status:\*\* completed' "$ACTIVE_PROJECT_PATH/implementation.md" 2>/dev/null || echo 0)
+
+# Check for commits since last tracked SHA
+LAST_SHA=$(grep "^oat_last_commit:" "$ACTIVE_PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
+if [ -n "$LAST_SHA" ]; then
+  UNTRACKED_COMMITS=$(git rev-list --count "$LAST_SHA"..HEAD 2>/dev/null || echo 0)
+else
+  UNTRACKED_COMMITS=0
+fi
+```
+
+**Drift indicators (any one is sufficient):**
+- `PLAN_TASKS` > `IMPL_COMPLETED` and `UNTRACKED_COMMITS` > 0 (plan has more tasks than completed entries, and there are untracked commits — most direct signal)
+- `IMPL_COMPLETED` < number of task-convention commits on branch (tasks implemented but not logged)
+- `UNTRACKED_COMMITS` > 3 and `oat_current_task_id` is null or stale
+- Commits exist that match `feat(pNN-tNN):` pattern but lack corresponding completed entries in `implementation.md`
+
+If drift is detected, recommend `oat-project-reconcile` alongside the normal implementation skill.
+
 Routing matrix by mode:
 
 **Spec-Driven mode (`oat_workflow_mode: spec-driven`):**
@@ -191,7 +220,7 @@ Routing matrix by mode:
 | design | complete | `oat-project-plan` |
 | plan | in_progress | Continue `oat-project-plan` |
 | plan | complete | `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
-| implement | in_progress | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
+| implement | in_progress | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement`. If artifacts appear out of sync with recent commits (e.g., `implementation.md` has fewer completed tasks than commits suggest), also mention `oat-project-reconcile` as an option. |
 | implement | complete | Ready for final review / PR |
 
 **Quick mode (`oat_workflow_mode: quick`):**
@@ -202,7 +231,7 @@ Routing matrix by mode:
 | discovery | complete | `oat-project-plan` |
 | plan | in_progress | Continue `oat-project-plan` |
 | plan | complete | `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
-| implement | in_progress | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
+| implement | in_progress | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |
 | implement | complete | Ready for final review / PR |
 
 **Import mode (`oat_workflow_mode: import`):**
@@ -211,7 +240,7 @@ Routing matrix by mode:
 |-----------|------------------|------------|
 | plan | in_progress | Continue `oat-project-import-plan` |
 | plan | complete | `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
-| implement | in_progress | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement` |
+| implement | in_progress | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |
 | implement | complete | Ready for final review / PR |
 
 **If blockers exist:**
@@ -243,6 +272,7 @@ Workflow:
   oat-project-plan              - Create implementation plan from design (spec-driven mode)
   oat-project-implement         - Execute implementation plan
   oat-project-subagent-implement - Execute implementation plan with subagent orchestration
+  oat-project-reconcile         - Reconcile manual/human commits with plan tasks
 
 Status:
   oat-project-progress          - Check project progress (this skill)

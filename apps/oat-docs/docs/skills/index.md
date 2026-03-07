@@ -23,6 +23,7 @@ Project skills are stored in `.agents/skills`.
 - `oat-project-implement`
 - `oat-project-subagent-implement`
 - `oat-project-progress`
+- `oat-project-reconcile` — Maps manual/human commits back to planned tasks and reconciles tracking artifacts after user confirmation; works across all workflow modes
 - `oat-project-complete`
 
 ## Ideas skills
