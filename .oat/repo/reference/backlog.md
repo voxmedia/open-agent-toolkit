@@ -24,6 +24,20 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
   - Created: YYYY-MM-DD
 
+- [ ] **(P1) [tooling] Flip CLI-wide mutability convention from `--apply` to `--dry-run`**
+  - Context: New `oat tools` commands use `--dry-run` (mutate by default), but existing commands (`oat sync`, `oat instructions sync`, etc.) still use `--apply` (dry-run by default). This split was an intentional scoping decision during `oat tools` implementation (see ADR-014).
+  - Proposed change:
+    - Flip all existing mutating commands to mutate by default with `--dry-run` opt-in.
+    - Remove `--apply` flags (or keep as deprecated no-ops for one release cycle).
+    - Purely mechanical — no behavior changes beyond default semantics.
+  - Success criteria:
+    - All mutating CLI commands share the same convention: mutate by default, `--dry-run` to preview.
+    - Existing scripts/docs referencing `--apply` are updated or warned.
+  - Links:
+    - Source: `.oat/projects/shared/oat-tools-command-group/discovery.md` (Question 3, Deferred Ideas)
+    - Decision: ADR-014
+  - Created: 2026-03-07
+
 - [ ] **(P2) [tooling] Scaffold `.oat/projects/{shared,local,archived}` during `oat init`**
   - Context: `oat init --scope project` scaffolds `.agents/` and `.oat/sync/` but does not create the projects directory tree. The `shared/`, `local/`, and `archived/` directories are created on-demand by individual skills/commands, which means new repos don't have the expected structure until the first project is created.
   - Proposed change:
@@ -42,10 +56,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - Related: `packages/cli/src/commands/init/index.ts`
   - Created: 2026-02-23
-
-- [x] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows** — COMPLETED
-  - See backlog-completed.md.
-  - Created: 2026-02-21
 
 - [ ] **(P2) [tooling] Migrate active-idea pointers to config-local state**
   - Context:
@@ -66,10 +76,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Created: 2026-02-22
 
 
-- [x] **(P1) [tooling] Add skill versioning to SKILL.md frontmatter and `oat init tools` update detection** — COMPLETED
-  - See backlog-completed.md.
-  - Created: 2026-02-19
-
 - [ ] **(P2) [workflow] Backlog Refinement Flow (Jira ticket generation)**
   - Context: Need a structured, conversational way to break large initiatives into epics/stories/tasks during planning, then create them in Jira with minimal manual effort.
   - Proposed change:
@@ -86,16 +92,13 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## Planned
 
-- [x] **(P1) [skills] Documentation analysis skill family (`oat-docs-analyze`, `oat-docs-apply`)** — COMPLETED
-  - See backlog-completed.md.
-  - Created: 2026-02-19
-
 - [ ] **(P1) [skills] Add `oat-project-document` for post-implementation documentation synthesis**
   - Target milestone/phase: Workflow quality + closeout discipline
   - Notes:
     - Add a dedicated skill to run after implementation/review cycles and generate documentation update recommendations (and optional patches) based on project artifacts + implementation diffs.
     - Scope should include, where applicable:
-      - repo docs under `docs/oat/**`
+      - repo docs under specified docs directory
+        - NOTE: We need to support setting a docs directory in .oat/config.json, could mirror worktrees/projects and have "documentation" with "root" key, this would support future documentation configuration values. E.g. documentation.tooling: MkDocs/etc.
       - root `README.md`
       - project or scoped `AGENTS.md` / `CLAUDE.md` instruction updates
       - `.oat/repo/reference/**` updates for behavior/status drift.
@@ -179,22 +182,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - Source discussion: OAT feature ideas (dependency intelligence)
   - Created: 2026-02-14
-
-- [ ] **(P2) [tooling] Add skill uninstall command (`oat remove skill` / `oat uninstall skill`)**
-  - Target milestone/phase: OAT CLI lifecycle completeness
-  - Notes:
-    - Add a first-class CLI command to remove skills from canonical storage and propagate deletion to provider views.
-    - Support both project and user scopes via existing `--scope` behavior.
-    - Handle both managed (manifest-tracked) and unmanaged/stray provider entries with safe prompts.
-    - Keep dry-run support and explicit apply semantics consistent with `oat sync`.
-  - Success criteria:
-    - User can remove one or more skills without manual filesystem cleanup.
-    - Provider views are cleaned up deterministically after removal.
-    - Manifest state remains consistent (no orphaned managed entries).
-    - Command output clearly reports what was removed vs skipped.
-  - Links:
-    - Related gap: skill removal currently requires manual deletion + sync
-  - Created: 2026-02-16
 
 - [ ] **(P1) [tooling] Add configurable VCS policy + worktree sync behavior for OAT artifact directories**
   - Target milestone/phase: Worktree ergonomics + artifact signal/noise control

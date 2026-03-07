@@ -35,6 +35,17 @@ Historical record of completed backlog items moved out of the active backlog for
   - Created: 2026-02-19
   - Completed: 2026-03-07
 
+- [x] **(P2) [tooling] Add skill uninstall command (`oat remove skill` / `oat uninstall skill`)**
+  - Outcome:
+    - Implemented as `oat tools remove` within the `oat tools` command group.
+    - Supports removal by name, pack, or all; handles both project and user scopes.
+    - Canonical storage cleanup with clear reporting of what was removed vs skipped.
+  - Links:
+    - Command: `packages/cli/src/commands/tools/remove/`
+    - PR: #41
+  - Created: 2026-02-16
+  - Completed: 2026-03-07
+
 - [x] **(P1) [tooling] Add skill versioning to SKILL.md frontmatter and `oat init tools` update detection**
   - Outcome:
     - All 44 skills have `version:` frontmatter (currently 1.2.0).

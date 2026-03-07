@@ -33,6 +33,27 @@ Write down a 1-3 bullet summary of the change:
 - Behavior changes (routing, gating, review loop, PR loop)
 - Any file moves/renames
 
+### Step 1b: Mine Recent Project Artifacts for Deferred Work and Decisions
+
+Recent project artifacts often contain deferred tasks, convention decisions, and out-of-scope items that need to surface into reference docs. These are easy to miss if you only look at the reference docs themselves.
+
+For each recently completed or in-progress project (check recent commits for project paths, or scan `{PROJECTS_ROOT}/*/state.md` for recently updated projects):
+
+1. Read `discovery.md` — look for:
+   - **Out of Scope** / **Deferred Ideas** sections → new backlog items
+   - **Key Decisions** → potential ADR entries
+   - **Open Questions** that were resolved → decisions to record
+2. Read `design.md` (if it exists) — look for:
+   - Design decisions that establish conventions → ADR candidates
+   - Deferred/future phases → backlog items
+3. Read `spec.md` (if it exists) — look for:
+   - Non-requirements or explicitly deferred requirements → backlog items
+
+For each finding, determine whether it should become:
+- A **backlog item** (deferred work to track)
+- A **decision record entry** (convention or contract worth preserving)
+- A **roadmap update** (phase status change or new deliverable)
+
 ### Step 2: Update Canonical Repo Docs (Always)
 
 Update these files (as applicable):
@@ -52,9 +73,10 @@ Update these files (as applicable):
    - Keep the Phase 3/4/… statuses consistent with roadmap
    - Ensure deliverables reflect reality (no “pending” for implemented work)
 
-4. `.oat/repo/reference/backlog.md`
+4. `.oat/repo/reference/backlog.md` + `.oat/repo/reference/backlog-completed.md`
    - Capture new tasks/ideas discovered during dogfooding that are not ready to implement
    - Link to friction logs, commits, or PRs where relevant
+   - Move completed items (`[x]`) out of `backlog.md` entirely — add detailed completion entries to `backlog-completed.md` and remove the stubs from `backlog.md` so it stays focused on actionable work
 
 5. `.oat/repo/reference/decision-record.md`
    - Record notable decisions (especially workflow contracts, directory layout, and phase guardrails)
