@@ -99,4 +99,7 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Next Steps
 
-Ready for the `oat-project-spec` skill to create formal specification (after HiLL approval if configured).
+Use this discovery artifact to drive the next workflow step:
+
+- **Quick mode:** proceed directly to `plan.md`. A separate `design.md` is optional and should only be created when the available technical detail is rich enough that a distinct design artifact will materially improve clarity.
+- **Spec-driven mode:** continue to `oat-project-spec` (after HiLL approval if configured).

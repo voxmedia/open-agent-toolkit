@@ -417,4 +417,20 @@ describe('scaffoldProject', () => {
     expect(localConfig.activeProject).toBe(result.projectPath);
     expect(refreshDashboard).toHaveBeenCalledWith(repoRoot);
   });
+
+  it('keeps the repo discovery template workflow-safe for quick projects', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const discoveryTemplate = await readFile(
+      join(repoRoot, '.oat', 'templates', 'discovery.md'),
+      'utf8',
+    );
+
+    expect(discoveryTemplate).not.toContain(
+      'Ready for the `oat-project-spec` skill to create formal specification',
+    );
+    expect(discoveryTemplate).toMatch(/quick mode|plan\.md/i);
+    expect(discoveryTemplate).toMatch(
+      /design\.md.*optional|optional.*design\.md/i,
+    );
+  });
 });

@@ -571,4 +571,121 @@ describe('validateOatSkills', () => {
 
     expect(invalidVersions).toEqual([]);
   });
+
+  it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillPath = join(
+      repoRoot,
+      '.agents',
+      'skills',
+      'oat-project-quick-start',
+      'SKILL.md',
+    );
+    const content = await readFile(skillPath, 'utf8');
+
+    expect(content).toMatch(
+      /synthesi(?:ze|s)\s+`?discovery\.md`?\s+from .*session context/i,
+    );
+    expect(content).toMatch(
+      /backfill(?:s|ing)? .*discovery.*(discussion|q&a|decisions)/i,
+    );
+    expect(content).toMatch(
+      /ask only (?:the )?minimum additional questions needed to remove blockers/i,
+    );
+  });
+
+  it('tracks the quick-start skill contract version explicitly', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillPath = join(
+      repoRoot,
+      '.agents',
+      'skills',
+      'oat-project-quick-start',
+      'SKILL.md',
+    );
+    const content = await readFile(skillPath, 'utf8');
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.1');
+  });
+
+  it('reports missing quick-start-specific discovery guidance', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-quick-start',
+      [
+        '---',
+        'name: oat-project-quick-start',
+        'description: Use when validating quick-start specific guardrails.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Quick Start',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ QUICK START',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '',
+        'Minimal body without the required quick-start discovery semantics.',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        file: skillPath,
+        message:
+          'Quick-start must describe synthesizing discovery.md from session context when enough detail is already available',
+      }),
+      expect.objectContaining({
+        file: skillPath,
+        message:
+          'Quick-start must describe backfilling discovery.md after startup Q&A before planning',
+      }),
+      expect.objectContaining({
+        file: skillPath,
+        message:
+          'Quick-start must limit follow-up questions to the minimum needed to remove blockers',
+      }),
+    ]);
+  });
+
+  it('accepts equivalent quick-start wording for discovery synthesis guidance', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    await createSkillFile(
+      root,
+      'oat-project-quick-start',
+      [
+        '---',
+        'name: oat-project-quick-start',
+        'version: 1.0.0',
+        'description: Use when validating quick-start specific guardrails.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Quick Start',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ QUICK START',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '',
+        'Populate `discovery.md` from the current session context when enough detail already exists.',
+        'Only ask the minimum follow-up questions required to unblock planning.',
+        'If startup Q&A is needed, record that discussion and the resulting decisions back into discovery.md before finalizing plan.md.',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([]);
+  });
 });

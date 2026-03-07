@@ -47,6 +47,75 @@ function hasBannerSnippet(content: string): boolean {
   );
 }
 
+function validateQuickStartSemantics(
+  skillPath: string,
+  content: string,
+  findings: ValidationFinding[],
+): void {
+  // Keep these checks intent-based rather than tied to one exact sentence so
+  // small wording edits in the skill do not create false validation failures.
+  const mentionsDiscovery = /`?discovery\.md`?/i.test(content);
+  const mentionsSessionContext =
+    /(session context|current conversation|current session|existing context)/i.test(
+      content,
+    );
+  const mentionsDiscoverySynthesis =
+    /(synthesi(?:ze|s)|populate|draft|create)/i.test(content);
+  const mentionsEnoughExistingDetail =
+    /(enough detail|sufficient detail|detail already exists|already available)/i.test(
+      content,
+    );
+
+  if (
+    !(
+      mentionsDiscovery &&
+      mentionsSessionContext &&
+      mentionsDiscoverySynthesis &&
+      mentionsEnoughExistingDetail
+    )
+  ) {
+    findings.push({
+      file: skillPath,
+      message:
+        'Quick-start must describe synthesizing discovery.md from session context when enough detail is already available',
+    });
+  }
+
+  if (
+    !(
+      mentionsDiscovery &&
+      /(backfill(?:s|ing)?|record|capture|reflect)/i.test(content) &&
+      /(discussion|q&a|questions|answers|decisions|options considered)/i.test(
+        content,
+      ) &&
+      /(before planning|before finalizing .*plan\.md|before writing .*plan\.md)/i.test(
+        content,
+      )
+    )
+  ) {
+    findings.push({
+      file: skillPath,
+      message:
+        'Quick-start must describe backfilling discovery.md after startup Q&A before planning',
+    });
+  }
+
+  if (
+    !(
+      /(?:ask|only ask)/i.test(content) &&
+      /(minimum|minimum additional|minimum follow-up)/i.test(content) &&
+      /questions?/i.test(content) &&
+      /(remove blockers|resolve blockers|unblock planning)/i.test(content)
+    )
+  ) {
+    findings.push({
+      file: skillPath,
+      message:
+        'Quick-start must limit follow-up questions to the minimum needed to remove blockers',
+    });
+  }
+}
+
 export async function validateOatSkills(
   repoRoot: string,
 ): Promise<ValidateOatSkillsResult> {
@@ -151,6 +220,10 @@ export async function validateOatSkills(
         message:
           'Progress Indicators section missing banner snippet (separator lines + "OAT ▸ ...")',
       });
+    }
+
+    if (dir === 'oat-project-quick-start') {
+      validateQuickStartSemantics(skillPath, content, findings);
     }
   }
 

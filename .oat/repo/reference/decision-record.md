@@ -225,6 +225,7 @@ Adopt option 2:
 - Add `oat-project-import-plan` for external markdown plan ingestion.
 - Preserve imported source at `references/imported-plan.md`; canonical execution artifact remains `plan.md`.
 - Add `oat-project-promote-spec-driven` for in-place promotion to spec-driven lifecycle.
+- Keep quick mode discovery-first: synthesize/backfill `discovery.md` from session context and only create a separate `design.md` when the available technical detail justifies it.
 - Introduce metadata:
   - `state.md`: `oat_workflow_mode` (`spec-driven|quick|import`), `oat_workflow_origin` (`native|imported`)
   - `plan.md`: `oat_plan_source` (`spec-driven|quick|imported`) plus import traceability fields.

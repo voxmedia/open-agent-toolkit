@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 1.2.0
+version: 1.2.1
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan.
 argument-hint: "<project-name>"
 disable-model-invocation: true
@@ -93,14 +93,22 @@ Update `"$PROJECT_PATH/state.md"` frontmatter:
 
 If `"$PROJECT_PATH/discovery.md"` is missing, create it from `.oat/templates/discovery.md` first.
 
+If enough data is available in the current session context, synthesize `discovery.md` from that session context before moving to planning. This can be true even in a clean session with no prior project context, as long as the user request and follow-up discussion provide enough detail.
+
+Ask only the minimum additional questions needed to remove blockers for a quality plan. If quick-start needs to ask startup questions, backfill `discovery.md` with the product discussion, Q&A, options considered, and resulting decisions before finalizing `plan.md`.
+
 Use `"$PROJECT_PATH/discovery.md"` and capture:
 - initial request
+- clarifying Q&A that materially shaped the project
 - key decisions
+- options considered (when relevant)
 - constraints
 - out-of-scope
 - success criteria
 
 Keep this concise and outcome-oriented.
+
+Do not create spec-driven artifacts by default. A separate `design.md` is only warranted when the available technical detail is rich enough that a distinct design artifact will materially improve clarity; otherwise keep the detail in discovery and proceed directly to plan authoring.
 
 ### Step 3: Generate Plan Directly
 
@@ -164,6 +172,6 @@ Report:
 
 - ✅ Active project exists and pointer is valid.
 - ✅ `state.md` marks `oat_workflow_mode: quick`.
-- ✅ `discovery.md` contains quick discovery decisions.
+- ✅ `discovery.md` contains synthesized or backfilled quick discovery decisions from the session context.
 - ✅ `plan.md` is complete and executable (`oat_ready_for: oat-project-implement`).
 - ✅ `implementation.md` is initialized for resumable execution.

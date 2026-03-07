@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is *right now* in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-02-23
+**Last Updated:** 2026-03-06
 
 ## Canonical References
 
@@ -28,7 +28,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - Artifact generation:
   - `oat-project-new` (scaffold a project dir from templates)
   - `oat-project-open`, `oat-project-clear-active`, `oat-project-complete` (active project lifecycle management)
-  - `oat-project-quick-start` (quick lane: discovery -> plan -> implement)
+  - `oat-project-quick-start` (quick lane: synthesize/backfill discovery -> plan -> implement, with optional design when warranted)
   - `oat-project-import-plan` (import lane: provider plan -> canonical `plan.md`)
   - `oat-project-promote-spec-driven` (in-place promotion from quick/import to spec-driven lifecycle)
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
