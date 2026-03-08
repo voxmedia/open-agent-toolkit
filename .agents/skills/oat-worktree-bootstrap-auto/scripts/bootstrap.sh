@@ -103,6 +103,17 @@ else
   fi
 fi
 
+# ─── Step 2.5: Propagate Local-Only Config + Local Paths ──────────────────
+SRC_CONFIG="$REPO_ROOT/.oat/config.local.json"
+DST_CONFIG="$TARGET_PATH/.oat/config.local.json"
+if [[ -f "$SRC_CONFIG" && ! -f "$DST_CONFIG" ]]; then
+  mkdir -p "$TARGET_PATH/.oat"
+  cp "$SRC_CONFIG" "$DST_CONFIG"
+fi
+
+# Sync localPaths into the worktree (non-blocking)
+oat local sync "$TARGET_PATH" 2>/dev/null || true
+
 # ─── Step 3: Run Baseline Checks ───────────────────────────────────────────
 cd "$TARGET_PATH"
 

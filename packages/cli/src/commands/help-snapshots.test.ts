@@ -43,6 +43,7 @@ describe('help output snapshots', () => {
         status           Report provider sync and drift status
         sync [options]   Sync canonical content to provider views
         config           Read and write OAT config values
+        local            Manage local-only paths (gitignored, worktree-synced)
         providers        Inspect provider capabilities and paths
         remove           Remove installed skills and managed provider views
         doctor           Run environment and setup diagnostics

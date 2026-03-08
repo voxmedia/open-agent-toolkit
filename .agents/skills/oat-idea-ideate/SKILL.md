@@ -68,8 +68,8 @@ Determine whether to operate at project level or user (global) level.
 **Resolution order:**
 
 1. If `$ARGUMENTS` contains `--global` → use **user level**
-2. If `.oat/active-idea` exists and points to a valid directory → use **project level**
-3. If `~/.oat/active-idea` exists and points to a valid directory → use **user level**
+2. If `.oat/config.local.json` has `activeIdea` pointing to a valid directory → use **project level**
+3. If `~/.oat/config.json` has `activeIdea` pointing to a valid directory → use **user level**
 4. If BOTH `.oat/ideas/` AND `~/.oat/ideas/` exist →
    ask: "Ideas exist at both project and user level. Where should this idea go?"
    options: "Project (.oat/ideas/)" / "Global (~/.oat/ideas/)"
@@ -83,14 +83,13 @@ Determine whether to operate at project level or user (global) level.
 |----------|--------------|------------|
 | `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
 | `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
-| `ACTIVE_IDEA_FILE` | `.oat/active-idea` | `~/.oat/active-idea` |
 
 ### Step 1: Resolve Active Idea
 
-Read `{ACTIVE_IDEA_FILE}`:
+Read `activeIdea` from config:
 
 ```bash
-IDEA_PATH=$(cat {ACTIVE_IDEA_FILE} 2>/dev/null || true)
+IDEA_PATH=$(oat config get activeIdea 2>/dev/null || true)
 ```
 
 **If valid (directory exists with discovery.md):**
@@ -107,7 +106,7 @@ IDEA_PATH=$(cat {ACTIVE_IDEA_FILE} 2>/dev/null || true)
 - Present combined list to the user:
   - Existing ideas (with state: brainstorming/summarized)
   - Scratchpad entries marked as "not yet started"
-- If user picks an existing idea → write `{ACTIVE_IDEA_FILE}` and proceed to Step 2
+- If user picks an existing idea → run `oat config set activeIdea "{idea-path}"` and proceed to Step 2
 - If user picks a scratchpad entry → scaffold the idea inline by reading the **`oat-idea-new`** skill (`.agents/skills/oat-idea-new/SKILL.md`) and executing its Steps 3-7 (Initialize Ideas Directory, Scaffold Discovery Document, Update Backlog, Check Scratchpad, Set Active Idea Pointer). Then proceed to Step 2 with the new idea.
 - If no ideas and no scratchpad entries exist → tell the user: "No ideas found. Run the `oat-idea-new` skill to create one, or run the `oat-idea-scratchpad` skill to capture a quick idea seed." Then stop.
 

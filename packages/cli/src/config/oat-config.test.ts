@@ -3,13 +3,19 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  clearActiveIdea,
   clearActiveProject,
   readOatConfig,
   readOatLocalConfig,
+  readUserConfig,
+  resolveActiveIdea,
   resolveActiveProject,
+  resolveLocalPaths,
+  setActiveIdea,
   setActiveProject,
   writeOatConfig,
   writeOatLocalConfig,
+  writeUserConfig,
 } from './oat-config';
 
 describe('oat-config', () => {
@@ -131,6 +137,144 @@ describe('oat-config', () => {
       name: null,
       path: null,
       status: 'unset',
+    });
+  });
+
+  describe('localPaths normalization', () => {
+    it('should deduplicate and sort localPaths', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await writeOatConfig(repoRoot, {
+        version: 1,
+        localPaths: [
+          '.oat/projects',
+          '.oat/config.local.json',
+          '.oat/projects',
+          '.oat/ideas',
+        ],
+      });
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.localPaths).toEqual([
+        '.oat/config.local.json',
+        '.oat/ideas',
+        '.oat/projects',
+      ]);
+    });
+
+    it('should default to undefined when omitted', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await writeOatConfig(repoRoot, { version: 1 });
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.localPaths).toBeUndefined();
+    });
+
+    it('should filter out non-string values', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          localPaths: ['.oat/projects', 42, null, '', '.oat/ideas'],
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.localPaths).toEqual(['.oat/ideas', '.oat/projects']);
+    });
+
+    it('resolveLocalPaths returns empty array when localPaths is undefined', () => {
+      expect(resolveLocalPaths({ version: 1 })).toEqual([]);
+    });
+
+    it('resolveLocalPaths returns the localPaths array when defined', () => {
+      expect(
+        resolveLocalPaths({ version: 1, localPaths: ['.oat/projects'] }),
+      ).toEqual(['.oat/projects']);
+    });
+  });
+
+  describe('activeIdea config', () => {
+    it('should normalize activeIdea in local config', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await writeOatLocalConfig(repoRoot, {
+        version: 1,
+        activeIdea: '.oat/ideas/my-idea',
+      });
+
+      const config = await readOatLocalConfig(repoRoot);
+      expect(config.activeIdea).toBe('.oat/ideas/my-idea');
+    });
+
+    it('should resolve activeIdea with repo > user precedence', async () => {
+      const repoRoot = await createRepoRoot();
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));
+      tempDirs.push(userConfigDir);
+
+      // Set user-level idea
+      await writeUserConfig(userConfigDir, {
+        version: 1,
+        activeIdea: '.oat/ideas/user-idea',
+      });
+
+      // No repo-level idea set
+      const result1 = await resolveActiveIdea(repoRoot, userConfigDir);
+      expect(result1).toBe('.oat/ideas/user-idea');
+
+      // Set repo-level idea (should take precedence)
+      await writeOatLocalConfig(repoRoot, {
+        version: 1,
+        activeIdea: '.oat/ideas/repo-idea',
+      });
+
+      const result2 = await resolveActiveIdea(repoRoot, userConfigDir);
+      expect(result2).toBe('.oat/ideas/repo-idea');
+    });
+
+    it('should read/write user-level config at ~/.oat/config.json', async () => {
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));
+      tempDirs.push(userConfigDir);
+
+      await writeUserConfig(userConfigDir, {
+        version: 1,
+        activeIdea: '.oat/ideas/test',
+      });
+
+      const config = await readUserConfig(userConfigDir);
+      expect(config.activeIdea).toBe('.oat/ideas/test');
+    });
+
+    it('setActiveIdea writes to local config', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await setActiveIdea(repoRoot, '.oat/ideas/new-idea');
+
+      const config = await readOatLocalConfig(repoRoot);
+      expect(config.activeIdea).toBe('.oat/ideas/new-idea');
+    });
+
+    it('clearActiveIdea removes from local config', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await setActiveIdea(repoRoot, '.oat/ideas/new-idea');
+      await clearActiveIdea(repoRoot);
+
+      const config = await readOatLocalConfig(repoRoot);
+      expect(config.activeIdea).toBeNull();
+    });
+
+    it('returns null when no activeIdea is set anywhere', async () => {
+      const repoRoot = await createRepoRoot();
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));
+      tempDirs.push(userConfigDir);
+
+      const result = await resolveActiveIdea(repoRoot, userConfigDir);
+      expect(result).toBeNull();
     });
   });
 

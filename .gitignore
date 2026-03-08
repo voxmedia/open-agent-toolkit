@@ -41,7 +41,6 @@ yarn-error.log*
 
 # OAT local-only workspace state
 .oat/config.local.json
-.oat/active-idea
 .oat/state.md
 
 # OAT ideas (personal, gitignored)

@@ -12,6 +12,7 @@ The CLI is a standalone value path: you can use it without adopting OAT workflow
 - [Docs App Commands](docs-apps.md) — Docs app bootstrap, nav sync, and docs workflow entrypoints.
 - [Tool Packs and Assets](tool-packs-and-assets.md) — OAT tool-pack install, update, and remove lifecycle.
 - [Diagnostics](diagnostics.md) — Cross-cutting diagnostics (`oat doctor`).
+- [Local Path Management](local-paths.md) — Manage gitignored, worktree-synced local paths.
 - [Provider Interop](provider-interop/index.md) — Provider-interop command surface and behavior.
 
 ## Command Groups
@@ -54,6 +55,18 @@ See [`docs-apps.md`](docs-apps.md) for details.
 | `oat tools remove`     | Remove installed tools (`--pack`, `--all`, `--dry-run`, `--no-sync`).                             |
 
 See [`tool-packs-and-assets.md`](tool-packs-and-assets.md) for details.
+
+### Local Path Management (`oat local`)
+
+| Command              | Purpose                                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| `oat local status`   | List configured `localPaths` with existence and `.gitignore` membership status.                            |
+| `oat local apply`    | Write a managed `.gitignore` section for configured `localPaths`. Use `--dry-run` to preview.              |
+| `oat local sync`     | Copy `localPaths` between main repo and a worktree (`--from` for reverse, `--force` to overwrite).        |
+| `oat local add`      | Add paths to `localPaths` config with validation.                                                         |
+| `oat local remove`   | Remove paths from `localPaths` config.                                                                    |
+
+See [`local-paths.md`](local-paths.md) for details.
 
 ### Instruction Integrity Commands
 

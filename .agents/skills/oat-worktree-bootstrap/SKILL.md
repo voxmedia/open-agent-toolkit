@@ -126,29 +126,39 @@ Set `TARGET_WORKTREE` to `{WORKTREE_ROOT}/{branch-name}`.
 
 If worktree creation fails, stop and report the exact git error with remediation guidance.
 
-### Step 2.5: Propagate Local-Only Config
+### Step 2.5: Propagate Local-Only Config + Local Paths
 
 After the worktree is created (or validated with `--existing`), copy gitignored local-only context files from the source repo into the new worktree so downstream skills (e.g., `oat-project-implement`) can resolve context without re-prompting.
 
-Files to propagate (if they exist in the source repo):
-- `.oat/config.local.json`
-- `.oat/active-idea`
+**Config propagation:**
+
+Copy `.oat/config.local.json` if it exists in the source repo:
 
 ```bash
-for LOCAL_FILE in config.local.json active-idea; do
-  SRC="$REPO_ROOT/.oat/$LOCAL_FILE"
-  DST="{target-path}/.oat/$LOCAL_FILE"
-  if [[ -f "$SRC" && ! -f "$DST" ]]; then
-    cp "$SRC" "$DST"
-  fi
-done
+SRC="$REPO_ROOT/.oat/config.local.json"
+DST="{target-path}/.oat/config.local.json"
+if [[ -f "$SRC" && ! -f "$DST" ]]; then
+  cp "$SRC" "$DST"
+fi
 ```
 
 Rules:
 - Only copy if the source file exists **and** the destination does not (never overwrite).
 - `config.local.json` uses repo-relative paths, so copied values remain valid across sibling worktrees.
+- `activeIdea` is stored in `config.local.json`, so it propagates automatically with the config copy.
 - After copying, validate `activeProject` (if present in `config.local.json`) resolves to a real project path in the worktree. If not, print a warning but do not block bootstrap.
-- This is a pragmatic subset of the broader worktree artifact sync policy (see backlog P1 item).
+
+**Local paths sync:**
+
+After config propagation, sync configured `localPaths` into the worktree:
+
+```bash
+oat local sync "{target-path}" 2>/dev/null || true
+```
+
+- Uses the `localPaths` array from `.oat/config.json` to copy local-only directories (e.g., `.oat/ideas/`, `.oat/projects/local/`) into the worktree.
+- Non-blocking: if sync fails or no `localPaths` are configured, bootstrap continues.
+- Does not overwrite existing paths in the target (use `--force` to override).
 
 ### Step 3: Run OAT Bootstrap
 

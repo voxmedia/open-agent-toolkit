@@ -37,8 +37,8 @@ Determine whether to operate at project level or user (global) level.
 **Resolution order:**
 
 1. If `$ARGUMENTS` contains `--global` → use **user level**
-2. If `.oat/active-idea` exists and points to a valid directory → use **project level**
-3. If `~/.oat/active-idea` exists and points to a valid directory → use **user level**
+2. If `.oat/config.local.json` has `activeIdea` pointing to a valid directory → use **project level**
+3. If `~/.oat/config.json` has `activeIdea` pointing to a valid directory → use **user level**
 4. If BOTH `.oat/ideas/` AND `~/.oat/ideas/` exist →
    ask: "Ideas exist at both project and user level. Where should this idea go?"
    options: "Project (.oat/ideas/)" / "Global (~/.oat/ideas/)"
@@ -52,7 +52,6 @@ Determine whether to operate at project level or user (global) level.
 |----------|--------------|------------|
 | `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
 | `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
-| `ACTIVE_IDEA_FILE` | `.oat/active-idea` | `~/.oat/active-idea` |
 
 ### Step 1: Get Idea Name
 
@@ -116,10 +115,10 @@ If found, check it off and append a note. Preserve any nested bullet notes benea
 
 ### Step 7: Set Active Idea Pointer
 
-Write the idea path to `{ACTIVE_IDEA_FILE}`:
+Write the active idea path to config:
 
-```
-{IDEAS_ROOT}/{idea-name}
+```bash
+oat config set activeIdea "{IDEAS_ROOT}/{idea-name}"
 ```
 
 ### Step 8: Verify and Hand Off
@@ -132,7 +131,7 @@ Idea "{Idea Name}" created successfully.
 Level:     {project | global}
 Directory: {IDEAS_ROOT}/{idea-name}/
 Backlog:   {IDEAS_ROOT}/backlog.md (entry added)
-Active:    {ACTIVE_IDEA_FILE} (set)
+Active:    config activeIdea (set)
 
 Starting brainstorming...
 ```
@@ -145,5 +144,5 @@ Then immediately invoke the **`oat-idea-ideate`** skill (located at `.agents/ski
 - ✅ `discovery.md` scaffolded with correct name and date
 - ✅ `{IDEAS_ROOT}/backlog.md` exists and includes the new idea
 - ✅ `{IDEAS_ROOT}/scratchpad.md` exists (initialized if first idea)
-- ✅ `{ACTIVE_IDEA_FILE}` points to the new idea
+- ✅ `activeIdea` config value points to the new idea
 - ✅ `oat-idea-ideate` skill invoked and brainstorming started

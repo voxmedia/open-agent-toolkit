@@ -11,7 +11,7 @@ Ideas can be stored at two levels:
 
 All idea skills accept a `--global` flag to operate at user level. Without the flag, skills auto-detect the level by checking for an active idea pointer or existing ideas directory at each level.
 
-Each level has its own independent backlog, scratchpad, and active-idea pointer.
+Each level has its own independent backlog, scratchpad, and active-idea config value.
 
 ## Flow
 
@@ -49,14 +49,16 @@ Ideas track two states in `discovery.md` frontmatter:
 
 No `state.md` per idea. No HiLL gates. No knowledge base dependency.
 
-## Active idea pointer
+## Active idea
 
-Each level has its own pointer file (both gitignored):
+Each level stores the active idea in its config file:
 
-- Project level: `.oat/active-idea`
-- User level: `~/.oat/active-idea`
+- Project level: `activeIdea` in `.oat/config.local.json` (gitignored)
+- User level: `activeIdea` in `~/.oat/config.json`
 
-Ideas and projects use separate pointers and do not interfere with each other.
+Read/write via CLI: `oat config get activeIdea` / `oat config set activeIdea <path>`.
+
+Ideas and projects use separate config keys and do not interfere with each other.
 
 ## Scratchpad
 

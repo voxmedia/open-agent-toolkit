@@ -7,6 +7,7 @@ import { createIndexCommand } from './index-cmd';
 import { createInitCommand } from './init';
 import { createInstructionsCommand } from './instructions';
 import { createInternalCommand } from './internal';
+import { createLocalCommand } from './local';
 import { createProjectCommand } from './project';
 import { createProvidersCommand } from './providers';
 import { createRemoveCommand } from './remove';
@@ -20,6 +21,7 @@ export function registerCommands(program: Command): void {
   program.addCommand(createStatusCommand());
   program.addCommand(createSyncCommand());
   program.addCommand(createConfigCommand());
+  program.addCommand(createLocalCommand());
   program.addCommand(createProvidersCommand());
   program.addCommand(createRemoveCommand());
   program.addCommand(createDoctorCommand());

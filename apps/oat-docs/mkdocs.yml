@@ -47,6 +47,7 @@ nav:
       - Docs App Commands: cli/docs-apps.md
       - Tool Packs and Assets: cli/tool-packs-and-assets.md
       - Diagnostics: cli/diagnostics.md
+      - Local Paths: cli/local-paths.md
       - Provider Interop:
           - cli/provider-interop/index.md
           - Scope and Surface: cli/provider-interop/scope-and-surface.md

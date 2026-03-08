@@ -91,6 +91,32 @@ If the resolved root is project-local (`.worktrees` or `worktrees`), verify it i
 
 On failure: return structured error, do not prompt.
 
+### Step 2.5: Propagate Local-Only Config + Local Paths
+
+After the worktree is created or reused, copy gitignored local-only config and sync configured local paths.
+
+**Config propagation:**
+
+```bash
+SRC="$REPO_ROOT/.oat/config.local.json"
+DST="$TARGET_PATH/.oat/config.local.json"
+if [[ -f "$SRC" && ! -f "$DST" ]]; then
+  cp "$SRC" "$DST"
+fi
+```
+
+- Only copy if source exists and destination does not (never overwrite).
+- `activeIdea` is stored in `config.local.json`, so it propagates automatically.
+
+**Local paths sync:**
+
+```bash
+oat local sync "$TARGET_PATH" 2>/dev/null || true
+```
+
+- Copies configured `localPaths` (e.g., `.oat/ideas/`, `.oat/projects/local/`) into the worktree.
+- Non-blocking: if sync fails or no `localPaths` are configured, bootstrap continues.
+
 ### Step 3: Run Baseline Checks
 
 Execute in the target worktree directory:

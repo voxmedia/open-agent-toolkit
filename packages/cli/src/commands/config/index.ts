@@ -13,6 +13,7 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 type ConfigKey =
+  | 'activeIdea'
   | 'activeProject'
   | 'lastPausedProject'
   | 'documentation.config'
@@ -48,6 +49,7 @@ interface ConfigCommandDependencies {
 }
 
 const KEY_ORDER: ConfigKey[] = [
+  'activeIdea',
   'activeProject',
   'lastPausedProject',
   'documentation.root',
@@ -193,7 +195,11 @@ async function setConfigValue(
   rawValue: string,
   dependencies: ConfigCommandDependencies,
 ): Promise<ConfigValue> {
-  if (key === 'activeProject' || key === 'lastPausedProject') {
+  if (
+    key === 'activeIdea' ||
+    key === 'activeProject' ||
+    key === 'lastPausedProject'
+  ) {
     const localConfig = await dependencies.readOatLocalConfig(repoRoot);
     const nextValue = rawValue === '' ? null : rawValue;
     await dependencies.writeOatLocalConfig(repoRoot, {

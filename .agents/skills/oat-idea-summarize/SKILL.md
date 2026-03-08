@@ -14,7 +14,7 @@ Read the brainstorming discovery document, synthesize a clean summary, and updat
 
 ## Prerequisites
 
-- An active idea must exist (`{ACTIVE_IDEA_FILE}` set, with a `discovery.md` that has meaningful content)
+- An active idea must exist (`activeIdea` set in config, with a `discovery.md` that has meaningful content)
 
 ## Progress Indicators (User-Facing)
 
@@ -41,8 +41,8 @@ Determine whether to operate at project level or user (global) level.
 **Resolution order:**
 
 1. If `$ARGUMENTS` contains `--global` → use **user level**
-2. If `.oat/active-idea` exists and points to a valid directory → use **project level**
-3. If `~/.oat/active-idea` exists and points to a valid directory → use **user level**
+2. If `.oat/config.local.json` has `activeIdea` pointing to a valid directory → use **project level**
+3. If `~/.oat/config.json` has `activeIdea` pointing to a valid directory → use **user level**
 4. If BOTH `.oat/ideas/` AND `~/.oat/ideas/` exist →
    ask: "Ideas exist at both project and user level. Where should this idea go?"
    options: "Project (.oat/ideas/)" / "Global (~/.oat/ideas/)"
@@ -56,16 +56,15 @@ Determine whether to operate at project level or user (global) level.
 |----------|--------------|------------|
 | `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
 | `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
-| `ACTIVE_IDEA_FILE` | `.oat/active-idea` | `~/.oat/active-idea` |
 
 ### Step 1: Resolve Active Idea
 
-Read the file `{ACTIVE_IDEA_FILE}` using the Read tool to get `IDEA_PATH`.
+Read `activeIdea` from config (`oat config get activeIdea`) to get `IDEA_PATH`.
 
 **If missing or invalid:**
 - Use the Glob tool to list idea directories: `{IDEAS_ROOT}/*/discovery.md`
 - Ask the user to pick one
-- Write `{ACTIVE_IDEA_FILE}` with the chosen idea path
+- Run `oat config set activeIdea "{chosen-idea-path}"`
 
 Derive `IDEA_NAME` from the directory basename.
 

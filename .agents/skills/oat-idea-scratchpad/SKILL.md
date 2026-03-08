@@ -35,8 +35,8 @@ Determine whether to operate at project level or user (global) level. The scratc
 **Resolution order:**
 
 1. If `$ARGUMENTS` contains `--global` → use **user level**
-2. If `.oat/active-idea` exists and points to a valid directory → use **project level**
-3. If `~/.oat/active-idea` exists and points to a valid directory → use **user level**
+2. If `.oat/config.local.json` has `activeIdea` pointing to a valid directory → use **project level**
+3. If `~/.oat/config.json` has `activeIdea` pointing to a valid directory → use **user level**
 4. If BOTH `.oat/ideas/` AND `~/.oat/ideas/` exist →
    ask: "Ideas exist at both project and user level. Where should this idea go?"
    options: "Project (.oat/ideas/)" / "Global (~/.oat/ideas/)"
