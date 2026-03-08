@@ -5,5 +5,12 @@
   },
   "projects": {
     "root": ".oat/projects/shared"
-  }
+  },
+  "localPaths": [
+    ".oat/ideas",
+    ".oat/projects/**/pr",
+    ".oat/projects/**/reviews",
+    ".oat/projects/archived",
+    ".oat/projects/local"
+  ]
 }

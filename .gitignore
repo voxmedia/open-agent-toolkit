@@ -39,22 +39,6 @@ yarn-error.log*
 # Claude Code MCP configuration (contains API keys)
 .mcp.json
 
-# OAT local-only workspace state
-.oat/config.local.json
-.oat/state.md
-
-# OAT ideas (personal, gitignored)
-.oat/ideas/
-
-# OAT projects
-.oat/projects/local/**
-.oat/projects/archived/**
-!.oat/projects/local/.gitkeep
-!.oat/projects/archived/.gitkeep
-
-# OAT repo archive (local historical scratch only)
-.oat/repo/archive/**
-
 .conductor
 
 # Git worktrees (local dev only)
@@ -62,3 +46,24 @@ yarn-error.log*
 # Ignore claude worktrees
 .claude/worktrees/
 .claude/worktrees/**
+
+# OAT repo archive (local historical scratch only)
+.oat/repo/archive/**
+
+# OAT projects
+.oat/projects/local/**
+.oat/projects/archived/**
+!.oat/projects/local/.gitkeep
+!.oat/projects/archived/.gitkeep
+
+# OAT local-only workspace state
+.oat/config.local.json
+.oat/state.md
+
+# OAT local paths
+.oat/ideas/
+.oat/projects/**/pr/
+.oat/projects/**/reviews/
+.oat/projects/archived/
+.oat/projects/local/
+# END OAT local paths
