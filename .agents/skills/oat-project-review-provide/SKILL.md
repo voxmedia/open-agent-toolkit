@@ -178,6 +178,53 @@ If review type is `code`, use the scope resolution below.
    SCOPE_RANGE="$MERGE_BASE..HEAD"
    ```
 
+### Step 3.5: Resolve Target Branch and Working Directory
+
+Before gathering files, verify that the review will run and write artifacts against the correct branch and working directory.
+
+**Detect current state:**
+```bash
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+TARGET_BRANCH="${TARGET_BRANCH:-$CURRENT_BRANCH}"  # from user scope, worktree context, or default
+```
+
+**If target branch matches current branch:** proceed normally — no branch resolution needed.
+
+**If target branch differs from current branch:**
+
+1. Check if the target branch has a worktree:
+   ```bash
+   WORKTREE_PATH=$(git worktree list --porcelain | awk -v branch="$TARGET_BRANCH" '
+     /^worktree / { wt=$2 }
+     /^branch / { if ($2 == "refs/heads/" branch) print wt }
+   ')
+   ```
+
+2. **If worktree exists for target branch:**
+   - Use `WORKTREE_PATH` as the base directory for all file reads and artifact writes.
+   - Update `PROJECT_PATH` to resolve relative to the worktree root (the project's relative path within the repo stays the same, but the repo root changes to `WORKTREE_PATH`).
+   - Run git diff/log commands scoped to the worktree: `git -C "$WORKTREE_PATH" ...`
+   - The review artifact must be written inside the worktree's project directory, **not** the current session's working directory.
+   - Print: `Review target: worktree at {WORKTREE_PATH} (branch: {TARGET_BRANCH})`
+
+3. **If no worktree exists (regular branch on main worktree):**
+   - **Stop and notify the user.** Do not silently write to the wrong branch.
+   - Print:
+     ```
+     ⚠️  Target branch "{TARGET_BRANCH}" differs from current branch "{CURRENT_BRANCH}".
+     No worktree found for "{TARGET_BRANCH}".
+
+     Options:
+     1. Switch to branch "{TARGET_BRANCH}" (git checkout) — artifact will be written on that branch
+     2. Provide review inline only (no artifact written to disk)
+     3. Cancel and create a worktree first
+
+     Choose:
+     ```
+   - If user chooses option 1: run `git checkout {TARGET_BRANCH}`, then proceed.
+   - If user chooses option 2: set `INLINE_ONLY=true` — skip artifact write (Step 7/8) and output review findings directly in the session. The user can manually save the output.
+   - If user chooses option 3: stop and suggest `oat-worktree-bootstrap-auto`.
+
 ### Step 4: Get Files Changed
 
 If review type is `code`, once scope range is determined:
@@ -303,6 +350,7 @@ Then spawn the reviewer:
   - Codex style: ask Codex to spawn agent(s) for review work and wait for all results; optionally pin `agent_type` when a specific built-in/custom role is required.
 - Pass the Review Scope metadata block from Step 5 as the prompt
 - Include the pre-computed artifact path for the subagent to write to
+- **If a worktree was resolved in Step 3.5:** include the worktree path in the prompt so the subagent writes the artifact to the worktree directory, not the current session's working directory
 - Run in background if supported (`run_in_background: true`)
 
 The `oat-reviewer` agent definition contains the full review process, mode contract, severity categories, artifact template, and critical rules. No additional instructions need to be injected.
@@ -337,6 +385,8 @@ If user insists on inline review in current session:
 
 ### Step 7: Determine Review Artifact Path
 
+**If `INLINE_ONLY=true`** (user chose inline-only in Step 3.5): skip this step — no artifact path needed.
+
 **Naming convention:**
 - Phase review: `{PROJECT_PATH}/reviews/pNN-review-YYYY-MM-DD.md`
 - Task review: `{PROJECT_PATH}/reviews/pNN-tNN-review-YYYY-MM-DD.md`
@@ -345,6 +395,8 @@ If user insists on inline review in current session:
 - Artifact review: `{PROJECT_PATH}/reviews/artifact-{artifact}-review-YYYY-MM-DD.md`
 
 **If file exists for today:** append `-v2`, `-v3`, etc.
+
+**Important:** `PROJECT_PATH` here must be the resolved path from Step 3.5. If a worktree was detected, this path is relative to the worktree root, ensuring the artifact is written on the correct branch.
 
 ```bash
 mkdir -p "$PROJECT_PATH/reviews"
@@ -436,7 +488,11 @@ If plan.md is missing (e.g., spec/design review before planning), skip this upda
 
 ### Step 9.5: Commit Review Bookkeeping Atomically (Required)
 
+**If `INLINE_ONLY=true`:** skip this step — no artifact was written to disk.
+
 After writing the review artifact and applying the Step 9 Reviews-table update, create an atomic bookkeeping commit.
+
+**If a worktree was resolved in Step 3.5:** run git commands scoped to the worktree (`git -C "$WORKTREE_PATH" ...`) so the commit lands on the worktree branch, not the current session's branch.
 
 **Commit scope:**
 - Always include the review artifact file: `reviews/{filename}.md`
@@ -489,11 +545,12 @@ Next: Run the oat-project-review-receive skill to convert findings into plan tas
 
 - Active project resolved
 - Review type and scope determined
+- Target branch and working directory resolved (worktree detection in Step 3.5)
 - Commit range identified
 - Files changed list obtained
 - Review executed (subagent, fresh session guidance, or inline)
-- Review artifact written to correct path
+- Review artifact written to the correct branch's working directory (worktree path if applicable; inline-only if user chose that option)
 - Plan.md Reviews section updated
-- Review artifact + plan bookkeeping committed atomically (or explicitly deferred with user approval)
+- Review artifact + plan bookkeeping committed atomically on the correct branch (or explicitly deferred with user approval)
 - For final scope, deferred findings ledger included in reviewer context
 - User guided to next step (`oat-project-review-receive`)

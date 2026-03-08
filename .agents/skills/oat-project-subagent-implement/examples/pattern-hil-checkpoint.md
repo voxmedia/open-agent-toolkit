@@ -1,12 +1,12 @@
 # Usage Pattern: Mixed Parallel with HiLL Checkpoint
 
-Parallel phases run before a checkpoint, then user reviews before continuing.
+Phases run up to and including a checkpoint phase, then user reviews before continuing.
 
 ## Plan Excerpt
 
 ```yaml
 ---
-oat_plan_hill_phases: ["p03"]
+oat_plan_hill_phases: ["p02"]
 ---
 ```
 
@@ -18,14 +18,14 @@ oat_plan_hill_phases: ["p03"]
 - Create: `src/db/schema.ts`
 - Create: `src/db/migrations/001.sql`
 
-## Phase 2: Business Logic
+## Phase 2: Business Logic (HiLL checkpoint)
 
 ### Task p02-t01: Create validation rules
 **Files:**
 - Create: `src/validation/rules.ts`
 - Create: `src/validation/rules.test.ts`
 
-## Phase 3: API Layer (HiLL checkpoint)
+## Phase 3: API Layer
 
 ### Task p03-t01: Create REST endpoints using schema + validation
 **Files:**
@@ -37,13 +37,13 @@ oat_plan_hill_phases: ["p03"]
 ## Orchestration Flow
 
 1. **Dispatch manifest** identifies p01 and p02 as parallel-safe.
-2. p03 is the HiLL checkpoint — orchestrator will pause before dispatching p03.
+2. p02 is the HiLL checkpoint — orchestrator will pause **after p02 completes**, not before.
 3. **Parallel execution** of p01 and p02 proceeds as in the simple pattern.
 4. **Reconciliation** merges p01 and p02.
 5. **HiLL pause** — orchestrator reports:
 
 ```
-Orchestration paused at HiLL checkpoint: Phase 3
+Orchestration paused at HiLL checkpoint: Phase 2
 
 Completed:
 - Phase 1: Data Layer (2 tasks, all passed, merged)
@@ -59,7 +59,8 @@ Continue? (y/n)
 
 ## Key Behaviors
 
-- **Checkpoint boundary is a hard barrier.** All units in the pre-checkpoint run must complete and reconcile before the checkpoint fires.
+- **Checkpoint fires after the listed phase completes.** `["p02"]` means "complete p02, then pause" — not "pause before p02."
+- **All units up to and including the checkpoint phase** must complete and reconcile before the pause fires.
 - **Post-checkpoint phases** may resume with either parallel or sequential execution depending on file dependencies.
 - **User approval** is interactive (`AskUserQuestion`) — this is the one allowed interaction point during orchestration.
 - **State persistence:** If the session ends at the checkpoint, `state.md` reflects the pause state and can be resumed.

@@ -52,11 +52,12 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
-  - `[1/5] Resolving project + source plan…`
-  - `[2/5] Preserving imported source…`
-  - `[3/5] Normalizing plan to OAT task structure…`
-  - `[4/5] Updating project metadata + state…`
-  - `[5/5] Refreshing dashboard…`
+  - `[1/6] Resolving project + source plan…`
+  - `[2/6] Preserving imported source…`
+  - `[3/6] Normalizing plan to OAT task structure…`
+  - `[4/6] Configuring HiLL checkpoints…`
+  - `[5/6] Updating project metadata + state…`
+  - `[6/6] Refreshing dashboard…`
 
 ## Process
 
@@ -138,6 +139,24 @@ Normalization rules:
 - Where source lacks test/verify details, add explicit TODO-style placeholders with clear expected output.
 - Keep tasks executable and atomic.
 
+### Step 3.5: Configure Plan Phase Checkpoints
+
+Ask user: "During implementation, should I stop for review at every phase boundary, or only at specific phases?"
+
+**Options:**
+- **Every phase** (default): Leave `oat_plan_hill_phases: []` - stop at end of every plan phase
+- **Only the end**: Set `oat_plan_hill_phases` to the **last plan phase ID** (e.g., `["p03"]`) - stop only at the end of implementation
+- **Specific phases**: Set `oat_plan_hill_phases: ["p01", "p04"]` - only stop at listed phases
+
+Update `plan.md` frontmatter with user's choice.
+
+**Required plan body update (do not skip):**
+- In `## Planning Checklist`, mark:
+  - `[x] Confirmed HiLL checkpoints with user`
+  - `[x] Set oat_plan_hill_phases in frontmatter`
+
+If `## Planning Checklist` is missing (older template), add it before finalizing and then check both items.
+
 ### Step 4: Update Plan Metadata
 
 Set frontmatter in `"$PROJECT_PATH/plan.md"`:
@@ -146,6 +165,7 @@ Set frontmatter in `"$PROJECT_PATH/plan.md"`:
 - `oat_phase: plan`
 - `oat_phase_status: complete`
 - `oat_plan_source: imported`
+- `oat_plan_hill_phases: {value from Step 3.5}`
 - `oat_import_reference: references/imported-plan.md`
 - `oat_import_source_path: {source-path}`
 - `oat_import_provider: {codex|cursor|claude|null}`
@@ -205,5 +225,7 @@ Report:
 - ✅ `plan.md` metadata marks `oat_plan_source: imported`.
 - ✅ `state.md` marks `oat_workflow_mode: import`.
 - ✅ `implementation.md` is present and resumable.
+- ✅ HiLL checkpoints confirmed with user and `oat_plan_hill_phases` set in frontmatter.
+- ✅ `## Planning Checklist` items checked in `plan.md`.
 - ✅ `activeProject` in `.oat/config.local.json` points to the imported project.
 - ✅ `.oat/state.md` has been refreshed after pointer update.

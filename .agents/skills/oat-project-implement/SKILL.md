@@ -320,13 +320,16 @@ oat_current_task_id: {first_task_of_next_phase}  # e.g., p02-t01
 ```
 
 **Plan phase checkpoint:**
-At the end of each plan phase (p01, p02, etc.), check `oat_plan_hill_phases` in plan.md:
+At the end of each plan phase (p01, p02, etc.), check `oat_plan_hill_phases` in plan.md to decide whether to pause:
 
-- **If `oat_plan_hill_phases` is empty or missing:** Stop at every phase boundary (default behavior)
-- **If `oat_plan_hill_phases` has values:** Only stop at listed phases (e.g., `["p01", "p04"]`)
-  - To stop only at the end of implementation, set it to the **last plan phase ID** (e.g., `["p03"]`).
+- **If `oat_plan_hill_phases` is empty or missing:** Pause after every phase (default behavior).
+- **If `oat_plan_hill_phases` has values:** Pause only after completing a listed phase.
+  - Example: `["p01", "p04"]` → pause after p01 completes and after p04 completes; skip p02, p03.
+  - Example: `["p03"]` where p03 is the last phase → run all phases without pausing, then pause after p03 (end of implementation).
 
-When stopping:
+**Key semantic: listed phases are where you stop AFTER completing them, not before.** `["p03"]` means "complete p03, then pause" — not "pause before starting p03."
+
+When pausing:
 - Output phase summary (tasks completed, commits made)
 - Ask user: "Phase {N} ({phase_name}) complete. Continue to next phase?"
 - Wait for user approval before proceeding to next plan phase
@@ -354,7 +357,7 @@ Do not use `git add -A` or glob patterns. Only commit the three OAT project file
 
 **Note on HiLL types:**
 - **Workflow HiLL** (`oat_hill_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-project-progress router.
-- **Plan phase checkpoints** (`oat_plan_hill_phases` in plan.md): Gates at plan phase boundaries during implementation. Default: stop at every phase. Configure to stop only at specific phases.
+- **Plan phase checkpoints** (`oat_plan_hill_phases` in plan.md): Gates at plan phase boundaries during implementation. Default: pause after every phase. Configure to pause only after specific phases. Listed phases are where you stop AFTER completing them.
 
 ### Step 9: Repeat Until Complete
 

@@ -27,8 +27,10 @@ Frontmatter key:
 
 Semantics:
 
-- Empty list: checkpoint every phase boundary.
-- Explicit list: checkpoint only named phases (`p01`, `p04`, etc).
+- Empty list: checkpoint after every phase boundary.
+- Explicit list: checkpoint only after completing the named phases (`p01`, `p04`, etc).
+
+Listed phases are where you stop **after completing them**, not before. `["p03"]` means "complete p03, then pause" — not "pause before starting p03." Setting the last phase ID (e.g., `["p03"]` when p03 is final) means "stop only at the end of implementation."
 
 ## Reference artifacts
 

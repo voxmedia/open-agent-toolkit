@@ -139,8 +139,9 @@ Read `plan.md` and classify each phase/task:
 
 **HiLL checkpoint gating:**
 - Read `oat_plan_hill_phases` from `plan.md` frontmatter.
-- Fan out only for units before the next HiLL checkpoint.
-- Example: if `oat_plan_hill_phases: ["p04"]`, phases p01-p03 may execute in parallel/sequence, but orchestrator must pause before p04.
+- Listed phases are where the orchestrator pauses **after completing them**, not before.
+- Example: if `oat_plan_hill_phases: ["p04"]`, phases p01-p04 all execute, then orchestrator pauses after p04 completes. Phases p01-p03 have no checkpoint pause.
+- Example: if `oat_plan_hill_phases: ["p02", "p04"]`, orchestrator runs p01-p02, pauses after p02 completes, then after approval runs p03-p04 and pauses after p04 completes.
 
 ### Step 2: Bootstrap Worktrees Per Unit
 
@@ -341,7 +342,7 @@ If integration verification fails after a merge:
 - Update `oat_last_commit` to the final merge commit.
 
 **HiLL checkpoint pause:**
-- If the next unit/phase is a configured HiLL checkpoint, pause execution.
+- If the phase that just completed is a configured HiLL checkpoint, pause execution.
 - Report: what completed, what's next, and prompt for user approval to continue.
 
 ## Policy Flags
@@ -391,19 +392,22 @@ Passed through to `oat-worktree-bootstrap-auto`. See that skill's policy documen
 
 **Behavior:**
 1. Orchestrator reads `oat_plan_hill_phases` at the start of each run.
-2. Before dispatching units in a phase that is a HiLL checkpoint, orchestrator pauses.
-3. Pause means: complete all in-flight units, reconcile, report, then wait for user approval.
-4. If `oat_plan_hill_phases` is empty, default behavior is to pause at every phase boundary (same as `oat-project-implement`).
+2. After completing all tasks in a listed checkpoint phase, orchestrator pauses.
+3. Pause means: complete all in-flight units (including the checkpoint phase itself), reconcile, report, then wait for user approval.
+4. If `oat_plan_hill_phases` is empty, default behavior is to pause after every phase boundary (same as `oat-project-implement`).
+
+**Key semantic: listed phases are where you stop AFTER completing them, not before.** `["p03"]` means "complete p03, then pause" — not "pause before starting p03."
 
 **Example:**
 ```yaml
 oat_plan_hill_phases: ["p03"]
 ```
-- p01 and p02: orchestrator may fan out and reconcile without pausing.
-- Before p03: orchestrator pauses, reports progress, waits for user.
-- p03 onward: resumes after approval.
+- p01, p02, and p03: orchestrator may fan out and reconcile without pausing between them.
+- After p03 completes: orchestrator pauses, reports progress, waits for user.
+- If there are phases after p03, they resume after approval.
+- If p03 is the last phase, this is equivalent to "stop only at the end of implementation."
 
-**Interaction with parallel execution:** HiLL checkpoints partition the plan into "runs". Within each run, phases may execute in parallel if eligible. The checkpoint boundary is a hard barrier — all units in the current run must complete before the checkpoint.
+**Interaction with parallel execution:** HiLL checkpoints partition the plan into "runs". Within each run, phases may execute in parallel if eligible. The checkpoint boundary fires after the listed phase completes — all units up to and including the checkpoint phase must complete before the pause.
 
 ### Policy Persistence
 
@@ -495,7 +499,7 @@ See `examples/` for detailed walkthroughs with plan excerpts and expected artifa
 | Pattern | File | Description |
 |---------|------|-------------|
 | Simple Parallel | `examples/pattern-parallel-phases.md` | Two independent phases run in parallel and merge cleanly |
-| HiLL Checkpoint | `examples/pattern-hil-checkpoint.md` | Parallel phases run before a checkpoint, user reviews, then continues |
+| HiLL Checkpoint | `examples/pattern-hil-checkpoint.md` | Phases run through a checkpoint phase, user reviews after it completes, then continues |
 
 ## Success Criteria
 
