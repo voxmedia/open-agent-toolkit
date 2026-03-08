@@ -24,6 +24,23 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
   - Created: YYYY-MM-DD
 
+- [ ] **(P2) [tooling] Managed OAT gitignore section in `oat init`**
+  - Context: Every OAT repo needs a set of core `.gitignore` entries for infrastructure files (`.oat/config.local.json`, `.oat/state.md`, `.oat/projects/local/**`, `.oat/projects/archived/**`, plus `.gitkeep` negations). These are currently added manually. The new `oat local apply` command manages a separate section for user-configured `localPaths`, but the core OAT entries are a different concern — they're always needed regardless of `localPaths` config.
+  - Proposed change:
+    - Add a managed gitignore section (e.g., `# OAT core` / `# END OAT core`) to `oat init --scope project` that writes the standard OAT infrastructure entries.
+    - Make it idempotent — re-running `oat init` updates the section without duplicating entries.
+    - Coexist with the `oat local apply` managed section (`# OAT local paths`), which handles user-configured `localPaths`.
+    - Allow users to remove manually-maintained duplicates once the managed section is in place.
+  - Success criteria:
+    - `oat init --scope project` creates/updates a `# OAT core` managed section in `.gitignore`.
+    - Section includes: `.oat/config.local.json`, `.oat/state.md`, `.oat/projects/local/**`, `.oat/projects/archived/**`, `!.oat/projects/local/.gitkeep`, `!.oat/projects/archived/.gitkeep`.
+    - Idempotent on re-run; does not duplicate entries.
+    - Does not conflict with the `# OAT local paths` section from `oat local apply`.
+  - Links:
+    - Related: `oat local apply` managed section in `packages/cli/src/commands/local/apply.ts`
+    - Current manual entries: `.gitignore` lines 43-56
+  - Created: 2026-03-08
+
 - [ ] **(P1) [tooling] Single source of truth for bundled skill lists**
   - Context: When adding a new skill to the CLI bundle, three independent arrays must be updated manually: (1) `packages/cli/scripts/bundle-assets.sh` `SKILLS` array (build-time asset generation), (2) `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` `WORKFLOW_SKILLS` (runtime installer), (3) `packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts` local `WORKFLOW_SKILLS` copy (test seeding). A consistency test (`bundle-consistency.test.ts`) now catches drift at CI time, but the root cause — three independent copies — remains.
   - Proposed change:
