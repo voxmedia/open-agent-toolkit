@@ -17,6 +17,7 @@ const WORKFLOW_SKILLS = [
   'oat-project-complete',
   'oat-project-design',
   'oat-project-discover',
+  'oat-project-document',
   'oat-project-implement',
   'oat-project-import-plan',
   'oat-project-new',
@@ -108,7 +109,7 @@ describe('installWorkflows', () => {
     tempDirs.length = 0;
   });
 
-  it('copies all 21 skills, 2 agents, 6 templates, and 2 scripts on fresh install', async () => {
+  it('copies all 22 skills, 2 agents, 6 templates, and 2 scripts on fresh install', async () => {
     const root = await makeTempDir();
     const assetsRoot = join(root, 'assets');
     const targetRoot = join(root, 'target');
@@ -116,7 +117,7 @@ describe('installWorkflows', () => {
 
     const result = await installWorkflows({ assetsRoot, targetRoot });
 
-    expect(result.copiedSkills).toHaveLength(21);
+    expect(result.copiedSkills).toHaveLength(22);
     expect(result.outdatedSkills).toEqual([]);
     expect(result.copiedAgents).toHaveLength(2);
     expect(result.copiedTemplates).toHaveLength(6);
@@ -207,7 +208,7 @@ describe('installWorkflows', () => {
     expect(second.copiedAgents).toEqual([]);
     expect(second.copiedTemplates).toEqual([]);
     expect(second.copiedScripts).toEqual([]);
-    expect(second.skippedSkills).toHaveLength(21);
+    expect(second.skippedSkills).toHaveLength(22);
     expect(second.outdatedSkills).toEqual([]);
     expect(second.skippedAgents).toHaveLength(2);
     expect(second.skippedTemplates).toHaveLength(6);
@@ -233,7 +234,7 @@ describe('installWorkflows', () => {
       force: true,
     });
 
-    expect(result.updatedSkills).toHaveLength(21);
+    expect(result.updatedSkills).toHaveLength(22);
     expect(result.outdatedSkills).toEqual([]);
     expect(result.updatedAgents).toHaveLength(2);
     expect(result.updatedTemplates).toHaveLength(6);

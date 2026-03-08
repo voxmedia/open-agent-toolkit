@@ -95,8 +95,33 @@ if [[ -f "$IMPL_FILE" ]]; then
 fi
 ```
 
-After Step 3 and 3.5 warnings:
-- Ask user for explicit confirmation to continue if final review is not `passed` OR unresolved deferred Medium findings are present.
+### Step 3.6: Check Documentation Sync Status
+
+```bash
+STATE_FILE="${PROJECT_PATH}/state.md"
+DOCS_UPDATED=$(grep "^oat_docs_updated:" "$STATE_FILE" 2>/dev/null | awk '{print $2}' || true)
+
+# Read policy from config (default: false = soft suggestion)
+REQUIRE_DOCS=$(oat config get documentation.requireForProjectCompletion 2>/dev/null || echo "false")
+
+if [[ "$DOCS_UPDATED" == "null" || -z "$DOCS_UPDATED" ]]; then
+  if [[ "$REQUIRE_DOCS" == "true" ]]; then
+    echo "Gate: Documentation sync required (documentation.requireForProjectCompletion is true)."
+    echo "Action: Run oat-project-document first, or choose to skip."
+  else
+    echo "Suggestion: Consider running oat-project-document to sync documentation before completing."
+  fi
+fi
+```
+
+If `oat_docs_updated` is `null` or empty:
+- **If `requireForProjectCompletion` is `true`:** Hard gate — ask user to run `oat-project-document` or explicitly skip. If user chooses to skip, update `state.md` frontmatter to set `oat_docs_updated: skipped`.
+- **If `requireForProjectCompletion` is `false` (default):** Soft suggestion — inform user about `oat-project-document` and allow proceeding. If user wants to skip, set `oat_docs_updated: skipped`.
+
+If `oat_docs_updated` is `skipped` or `complete`: proceed normally.
+
+After Step 3, 3.5, and 3.6 warnings:
+- Ask user for explicit confirmation to continue if final review is not `passed` OR unresolved deferred Medium findings are present OR documentation gate is blocking.
 - Suggested prompt: "Completion gates are not fully satisfied. Continue marking lifecycle complete anyway?"
 
 ### Step 4: Check for PR Description (Warning Only)

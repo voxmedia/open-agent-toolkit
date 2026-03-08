@@ -100,7 +100,7 @@ Lane options (all converge on implementation + project review workflows):
 
 | Lane | Typical sequence | Best fit |
 |---|---|---|
-| Spec-Driven | Discovery -> Spec -> Design -> Plan -> Implement -> Project review loop | New initiatives or higher-risk changes that need strong artifact rigor |
+| Spec-Driven | Discovery -> Spec -> Design -> Plan -> Implement -> Project review loop -> Docs sync (optional) | New initiatives or higher-risk changes that need strong artifact rigor |
 | Quick | Quick start (discovery + plan baseline) -> Implement -> Project review loop | Smaller scoped work that still needs structured execution |
 | Imported-plan | Plan with provider -> Import to OAT project -> Implement -> Project review loop | External/provider-authored plans you want normalized into OAT artifacts |
 
@@ -312,6 +312,7 @@ flowchart LR
    - Design (`oat-project-design`)
    - Plan (`oat-project-plan`)
    - Implement (`oat-project-implement` or `oat-project-subagent-implement`)
+   - Documentation sync (`oat-project-document`, optional)
 2. Quick workflow lane
    - Quick start (`oat-project-quick-start`, which captures discovery context and writes a runnable plan baseline)
    - Implement (`oat-project-implement` or `oat-project-subagent-implement`)
@@ -330,11 +331,15 @@ flowchart LR
    - `oat-project-implement` or `oat-project-subagent-implement`
    - `oat-project-review-provide` + `oat-project-review-receive`
    - `oat-project-pr-final`
+   - `oat-project-document` (optional)
+   - `oat-project-complete`
 2. Quick-start sequence
    - `oat-project-quick-start` (discovery + initial plan scaffold)
    - `oat-project-implement` or `oat-project-subagent-implement`
    - `oat-project-review-provide` + `oat-project-review-receive`
    - `oat-project-pr-final`
+   - `oat-project-document` (optional)
+   - `oat-project-complete`
 
 ### Shared workflow options
 
@@ -352,7 +357,9 @@ flowchart LR
 6. PR generation:
    - Progress PR: `oat-project-pr-progress`
    - Final PR: `oat-project-pr-final`
-7. Lifecycle completion:
+7. Documentation sync (optional):
+   - `oat-project-document` — reads project artifacts and code to identify docs needing updates, presents a delta plan, and applies approved changes
+8. Lifecycle completion:
    - `oat-project-complete` (with optional active-project cleanup)
 
 ## Documentation

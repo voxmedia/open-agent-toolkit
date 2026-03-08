@@ -39,6 +39,7 @@ interface ProjectState {
   hillCompleted: string;
   hillStatus: string;
   workflowMode: string;
+  docsUpdated: string;
 }
 
 interface ActiveProject {
@@ -167,6 +168,12 @@ async function readProjectState(
   const workflowMode =
     (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) ||
     'spec-driven';
+  const docsUpdatedRaw = await parseFrontmatterField(
+    stateFile,
+    'oat_docs_updated',
+  );
+  const docsUpdated =
+    docsUpdatedRaw && docsUpdatedRaw !== 'null' ? docsUpdatedRaw : '';
 
   let hillStatus: string;
   if (phaseInHillList(phase, hillCheckpoints)) {
@@ -187,6 +194,7 @@ async function readProjectState(
     hillCompleted,
     hillStatus,
     workflowMode,
+    docsUpdated,
   };
 }
 
@@ -386,13 +394,23 @@ function computeNextStep(
       step: 'oat-project-implement',
       reason: 'Continue implementation',
     },
-    'implement:complete': {
-      step: 'oat-project-pr-final',
-      reason: 'Generate final PR description (final review passed)',
-    },
   };
 
   if (sharedMap[sharedKey]) return sharedMap[sharedKey]!;
+
+  // Implementation complete — recommend docs sync if not yet done, then PR
+  if (state.phase === 'implement' && state.phaseStatus === 'complete') {
+    if (!state.docsUpdated || state.docsUpdated === '') {
+      return {
+        step: 'oat-project-document',
+        reason: 'Sync documentation before generating PR',
+      };
+    }
+    return {
+      step: 'oat-project-pr-final',
+      reason: 'Generate final PR description (final review passed)',
+    };
+  }
 
   return { step: 'oat-project-progress', reason: 'Check current progress' };
 }
@@ -483,6 +501,13 @@ function buildDashboardMarkdown(
     }
     lines.push(`| HiLL Gate | ${state.hillStatus} |`);
     lines.push(`| Current Task | ${state.currentTask} |`);
+    const docsLabel =
+      state.docsUpdated === 'complete'
+        ? '✓ complete'
+        : state.docsUpdated === 'skipped'
+          ? '⊘ skipped'
+          : '⚠ not yet run';
+    lines.push(`| Docs Updated | ${docsLabel} |`);
     lines.push('');
     lines.push(`Details: \`${project.path}/state.md\``);
     lines.push('');

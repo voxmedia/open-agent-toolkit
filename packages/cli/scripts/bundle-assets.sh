@@ -22,6 +22,7 @@ SKILLS=(
   oat-project-complete
   oat-project-design
   oat-project-discover
+  oat-project-document
   oat-project-implement
   oat-project-import-plan
   oat-project-new

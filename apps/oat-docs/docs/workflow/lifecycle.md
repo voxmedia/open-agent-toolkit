@@ -11,7 +11,8 @@ OAT lifecycle order:
 5. Implement (`oat-project-implement` or `oat-project-subagent-implement`)
 6. Review loop (`oat-project-review-provide` / `oat-project-review-receive`)
 7. PR (`oat-project-pr-progress` / `oat-project-pr-final`)
-8. Complete (`oat-project-complete`)
+8. Documentation sync (`oat-project-document`) — optional; reads project artifacts to identify docs needing updates
+9. Complete (`oat-project-complete`)
 
 ## Implementation modes
 
@@ -55,7 +56,7 @@ flowchart LR
   D["Discover"] --> S["Spec"] --> G["Design"] --> P["Plan"]
   P --> I1["Implement (oat-project-implement)"]
   P --> I2["Implement (oat-project-subagent-implement)"]
-  I1 --> R["Review"] --> PR["PR"] --> C["Complete"]
+  I1 --> R["Review"] --> PR["PR"] --> Doc["Docs (optional)"] --> C["Complete"]
   I2 --> R
 ```
 

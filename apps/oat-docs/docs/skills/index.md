@@ -44,10 +44,13 @@ Project skills are stored in `.agents/skills`.
 - `oat-project-pr-progress`
 - `oat-project-pr-final`
 
-## Utility and maintenance skills
+## Documentation skills
 
+- `oat-project-document` — Reads project artifacts and implementation code, identifies documentation surfaces needing updates, presents a delta plan for approval, and applies changes. Integrates with `oat-project-complete` via `oat_docs_updated` state field.
 - `oat-docs-analyze` — Analyze docs structure, coverage, drift, and `index.md` contract conformance
 - `oat-docs-apply` — Apply approved, evidence-backed docs recommendations from a docs analysis artifact
+
+## Utility and maintenance skills
 - `oat-worktree-bootstrap`
 - `oat-worktree-bootstrap-auto`
 - `oat-repo-knowledge-index`

@@ -14,6 +14,22 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [skills] Add `oat-project-document` for post-implementation documentation synthesis**
+  - Outcome:
+    - `oat-project-document` skill reads project artifacts, verifies against code, scans documentation surfaces (docs dir, READMEs, reference files, AGENTS.md, provider rules), produces UPDATE/CREATE/SPLIT delta plan, and applies approved changes.
+    - Supports `--auto` flag for autonomous flows (skips interactive approval).
+    - Added `documentation` config schema to `.oat/config.json` (root, tooling, config, requireForProjectCompletion).
+    - Added `oat_docs_updated` state field (null | skipped | complete) to state.md template.
+    - Integrated documentation sync check into `oat-project-complete` (soft suggestion by default, hard gate when configured).
+    - State dashboard shows docs sync status and routes to `oat-project-document` when implementation is complete but docs not synced.
+  - Links:
+    - Skill: `.agents/skills/oat-project-document/SKILL.md`
+    - Project: `.oat/projects/shared/oat-project-document/`
+    - Config: `packages/cli/src/config/oat-config.ts` (OatDocumentationConfig)
+    - State: `packages/cli/src/commands/state/generate.ts` (docsUpdated)
+  - Created: 2026-02-17
+  - Completed: 2026-03-08
+
 - [x] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows**
   - Outcome:
     - `oat-project-reconcile` skill implemented with 6 workflow steps: checkpoint detection, commit analysis, task mapping, HiTL confirmation, artifact updates, bookkeeping commit.

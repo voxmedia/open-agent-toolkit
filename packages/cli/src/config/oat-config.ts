@@ -3,10 +3,18 @@ import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { atomicWriteJson, dirExists, fileExists } from '@fs/io';
 import { normalizeToPosixPath } from '@fs/paths';
 
+export interface OatDocumentationConfig {
+  root?: string;
+  tooling?: string;
+  config?: string;
+  requireForProjectCompletion?: boolean;
+}
+
 export interface OatConfig {
   version: number;
   worktrees?: { root: string };
   projects?: { root: string };
+  documentation?: OatDocumentationConfig;
 }
 
 export interface OatLocalConfig {
@@ -108,6 +116,35 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     parsed.projects.root.trim()
   ) {
     next.projects = { root: parsed.projects.root.trim() };
+  }
+
+  if (isRecord(parsed.documentation)) {
+    const doc: OatDocumentationConfig = {};
+    if (
+      typeof parsed.documentation.root === 'string' &&
+      parsed.documentation.root.trim()
+    ) {
+      doc.root = parsed.documentation.root.trim();
+    }
+    if (
+      typeof parsed.documentation.tooling === 'string' &&
+      parsed.documentation.tooling.trim()
+    ) {
+      doc.tooling = parsed.documentation.tooling.trim();
+    }
+    if (
+      typeof parsed.documentation.config === 'string' &&
+      parsed.documentation.config.trim()
+    ) {
+      doc.config = parsed.documentation.config.trim();
+    }
+    if (typeof parsed.documentation.requireForProjectCompletion === 'boolean') {
+      doc.requireForProjectCompletion =
+        parsed.documentation.requireForProjectCompletion;
+    }
+    if (Object.keys(doc).length > 0) {
+      next.documentation = doc;
+    }
   }
 
   return next;

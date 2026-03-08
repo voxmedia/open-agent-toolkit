@@ -15,6 +15,10 @@ import { Command } from 'commander';
 type ConfigKey =
   | 'activeProject'
   | 'lastPausedProject'
+  | 'documentation.config'
+  | 'documentation.requireForProjectCompletion'
+  | 'documentation.root'
+  | 'documentation.tooling'
   | 'projects.root'
   | 'worktrees.root';
 
@@ -46,6 +50,10 @@ interface ConfigCommandDependencies {
 const KEY_ORDER: ConfigKey[] = [
   'activeProject',
   'lastPausedProject',
+  'documentation.root',
+  'documentation.tooling',
+  'documentation.config',
+  'documentation.requireForProjectCompletion',
   'projects.root',
   'worktrees.root',
 ];
@@ -116,6 +124,31 @@ async function getConfigValue(
     return resolveProjectsRootWithSource(repoRoot, dependencies);
   }
 
+  if (key.startsWith('documentation.')) {
+    const config = await dependencies.readOatConfig(repoRoot);
+    const doc = config.documentation;
+    let value: string | null = null;
+
+    if (key === 'documentation.root') {
+      value = doc?.root ?? null;
+    } else if (key === 'documentation.tooling') {
+      value = doc?.tooling ?? null;
+    } else if (key === 'documentation.config') {
+      value = doc?.config ?? null;
+    } else if (key === 'documentation.requireForProjectCompletion') {
+      value =
+        doc?.requireForProjectCompletion != null
+          ? String(doc.requireForProjectCompletion)
+          : 'false';
+    }
+
+    return {
+      key,
+      value,
+      source: doc ? 'config.json' : 'default',
+    };
+  }
+
   if (key === 'worktrees.root') {
     const envRoot = dependencies.processEnv.OAT_WORKTREES_ROOT?.trim();
     if (envRoot) {
@@ -144,8 +177,9 @@ async function getConfigValue(
   }
 
   const localConfig = await dependencies.readOatLocalConfig(repoRoot);
-  const hasKey = Object.hasOwn(localConfig, key);
-  const value = localConfig[key] ?? null;
+  const localKey = key as keyof OatLocalConfig;
+  const hasKey = Object.hasOwn(localConfig, localKey);
+  const value = (localConfig[localKey] as string | null | undefined) ?? null;
   return {
     key,
     value,
@@ -174,6 +208,40 @@ async function setConfigValue(
   }
 
   const config = await dependencies.readOatConfig(repoRoot);
+
+  if (key.startsWith('documentation.')) {
+    const doc = { ...config.documentation };
+
+    if (key === 'documentation.root') {
+      doc.root = normalizeSharedRoot(rawValue);
+    } else if (key === 'documentation.tooling') {
+      doc.tooling = rawValue.trim();
+    } else if (key === 'documentation.config') {
+      doc.config = normalizeSharedRoot(rawValue);
+    } else if (key === 'documentation.requireForProjectCompletion') {
+      doc.requireForProjectCompletion =
+        rawValue.trim().toLowerCase() === 'true';
+    }
+
+    await dependencies.writeOatConfig(repoRoot, {
+      ...config,
+      documentation: doc,
+    });
+
+    const resultValue =
+      key === 'documentation.requireForProjectCompletion'
+        ? String(doc.requireForProjectCompletion ?? false)
+        : ((doc[
+            key.replace('documentation.', '') as keyof typeof doc
+          ] as string) ?? null);
+
+    return {
+      key,
+      value: resultValue,
+      source: 'config.json',
+    };
+  }
+
   const normalizedValue = normalizeSharedRoot(rawValue);
 
   if (key === 'projects.root') {

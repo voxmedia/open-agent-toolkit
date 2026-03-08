@@ -138,7 +138,8 @@ The workflow layer can be adopted when you want structured project execution and
    - `oat-project-subagent-implement` (parallel/subagent-driven)
 7. `oat-project-review-provide` + `oat-project-review-receive`
 8. `oat-project-pr-final`
-9. `oat-project-complete`
+9. `oat-project-document` (optional — sync documentation surfaces)
+10. `oat-project-complete`
 
 #### Quick lane (discovery -> plan -> implement)
 
@@ -147,7 +148,8 @@ The workflow layer can be adopted when you want structured project execution and
    - `oat-project-implement` (sequential, default)
    - `oat-project-subagent-implement` (parallel/subagent-driven)
 3. `oat-project-review-provide` / `oat-project-pr-final`
-4. Optional: `oat-project-promote-spec-driven`
+4. `oat-project-document` (optional — sync documentation surfaces)
+5. Optional: `oat-project-promote-spec-driven`
 
 #### Imported plan lane
 
@@ -156,7 +158,8 @@ The workflow layer can be adopted when you want structured project execution and
    - `oat-project-implement` (sequential, default)
    - `oat-project-subagent-implement` (parallel/subagent-driven)
 3. `oat-project-review-provide` / `oat-project-pr-final`
-4. Optional: `oat-project-promote-spec-driven`
+4. `oat-project-document` (optional — sync documentation surfaces)
+5. Optional: `oat-project-promote-spec-driven`
 
 Import discovery note:
 

@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is *right now* in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-03-07
+**Last Updated:** 2026-03-08
 
 ## Canonical References
 
@@ -47,6 +47,8 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - `oat-project-pr-final`
 - Reconciliation:
   - `oat-project-reconcile` (map manual/human commits to planned tasks and update tracking artifacts after confirmation)
+- Documentation sync:
+  - `oat-project-document` (post-implementation documentation synthesis: reads project artifacts, verifies against code, scans documentation surfaces, produces delta plan, applies approved updates)
 - Worktree/bootstrap:
   - `oat-worktree-bootstrap` (create/reuse worktree + baseline checks with deterministic root precedence)
 
@@ -107,7 +109,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 ### Tool Metadata
 
-- 44 skills total; all `oat-*` skills versioned at 1.2.0+ with `version:` frontmatter.
+- 45 skills total; all `oat-*` skills versioned at 1.2.0+ with `version:` frontmatter.
 - Most skills define `allowed-tools` in frontmatter as an advisory tool scope (provider-dependent).
   - Read-only skills (e.g., `oat-project-progress`, `oat-project-review-provide`) omit `Write`/`Edit`.
   - Write skills (e.g., `oat-project-discover` → `oat-project-implement`, `oat-project-review-receive`, PR skills) include `Write` and `Bash(git:*)`.
@@ -177,7 +179,9 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
    - `oat-project-review-receive`
    - `oat-project-implement` (executes new fix tasks, if any)
    - Repeat until `final` review is `passed` (3-cycle cap per scope)
-5. PR description generation:
+5. Documentation sync (optional, recommended before completion):
+   - `oat-project-document` (analyzes artifacts + code, recommends doc updates, applies approved changes)
+6. PR description generation:
    - `oat-project-pr-progress pNN` (optional progress PR)
    - `oat-project-pr-final` (final PR)
 
@@ -209,7 +213,7 @@ Interop quickstart:
 
 ## Notes / Caveats
 
-- `.oat/config.json` holds shared non-sync repo settings, including `worktrees.root` (default `.worktrees`) and `projects.root` (default `.oat/projects/shared`).
+- `.oat/config.json` holds shared non-sync repo settings, including `worktrees.root` (default `.worktrees`), `projects.root` (default `.oat/projects/shared`), and `documentation.*` (root, tooling, config, requireForProjectCompletion).
 - `.oat/config.local.json` is gitignored and holds per-developer lifecycle state (`activeProject`, `lastPausedProject`).
 - `.oat/projects/local/**` and `.oat/projects/archived/**` are gitignored (local-only).
 - `.oat/projects/shared/**` is tracked by default in this repo unless a local override is added.
