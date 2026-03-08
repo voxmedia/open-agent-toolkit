@@ -33,7 +33,7 @@ function createHarness(options: HarnessOptions = {}): {
   const command = createInstructionsValidateCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: globalOptions.scope ?? 'project',
-      apply: globalOptions.apply ?? false,
+      dryRun: globalOptions.dryRun ?? false,
       verbose: globalOptions.verbose ?? false,
       json: options.json ?? globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',

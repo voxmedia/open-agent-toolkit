@@ -146,7 +146,7 @@ run_check "git_clean" test -z "$(git status --porcelain)"
 # ─── Step 4: Create Provider Directories ────────────────────────────────────
 mkdir -p "$TARGET_PATH/.claude/skills"
 mkdir -p "$TARGET_PATH/.cursor/rules"
-if oat sync --scope all --apply >/dev/null 2>&1; then
+if oat sync --scope all >/dev/null 2>&1; then
   CHECK_RESULTS["provider_sync"]="pass"
 else
   CHECK_RESULTS["provider_sync"]="fail"

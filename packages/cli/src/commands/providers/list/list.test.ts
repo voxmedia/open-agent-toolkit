@@ -89,7 +89,7 @@ function createHarness(options: HarnessOptions = {}): {
   const command = createProvidersCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: '/tmp/workspace',

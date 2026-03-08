@@ -86,7 +86,7 @@ describe('instructions command integration', () => {
     tempDirs.length = 0;
   });
 
-  it('missing CLAUDE.md -> sync --apply creates pointer -> validate passes', async () => {
+  it('missing CLAUDE.md -> sync creates pointer -> validate passes', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
 
@@ -101,7 +101,7 @@ describe('instructions command integration', () => {
     const beforePayload = JSON.parse(before.stdout);
     expect(beforePayload.summary.missing).toBe(1);
 
-    const syncApply = await runCli(root, ['instructions', 'sync', '--apply']);
+    const syncApply = await runCli(root, ['instructions', 'sync']);
     expect(syncApply.exitCode).toBe(0);
 
     await expect(lstat(join(root, 'CLAUDE.md'))).resolves.toBeDefined();
@@ -129,7 +129,7 @@ describe('instructions command integration', () => {
 
     const dryRun = await runCli(
       root,
-      ['instructions', 'sync', '--json'],
+      ['instructions', 'sync', '--dry-run', '--json'],
       ['--json'],
     );
     expect(dryRun.exitCode).toBe(1);
@@ -143,7 +143,7 @@ describe('instructions command integration', () => {
 
     const applyNoForce = await runCli(
       root,
-      ['instructions', 'sync', '--apply', '--json'],
+      ['instructions', 'sync', '--json'],
       ['--json'],
     );
     expect(applyNoForce.exitCode).toBe(1);
@@ -154,12 +154,7 @@ describe('instructions command integration', () => {
       result: 'skipped',
     });
 
-    const applyForce = await runCli(root, [
-      'instructions',
-      'sync',
-      '--apply',
-      '--force',
-    ]);
+    const applyForce = await runCli(root, ['instructions', 'sync', '--force']);
     expect(applyForce.exitCode).toBe(0);
     await expect(readFile(join(root, 'CLAUDE.md'), 'utf8')).resolves.toBe(
       EXPECTED_CLAUDE_CONTENT,

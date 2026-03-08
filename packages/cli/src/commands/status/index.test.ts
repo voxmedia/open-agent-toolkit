@@ -184,7 +184,7 @@ function createHarness(options: TestHarnessOptions = {}): {
   const command = createStatusCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',

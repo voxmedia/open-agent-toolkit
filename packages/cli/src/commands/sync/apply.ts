@@ -127,7 +127,7 @@ export async function runSyncApply(
   if (context.json) {
     context.logger.json({
       scope: context.scope,
-      apply: true,
+      dryRun: false,
       plans: scopePlans.map((scopePlan) => scopePlan.plan),
       summary,
       providerMismatches,

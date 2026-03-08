@@ -85,7 +85,7 @@ function reportSuccess(
   context.logger.info(
     `Skills: copied=${result.copiedSkills.length}, updated=${result.updatedSkills.length}, skipped=${result.skippedSkills.length}`,
   );
-  context.logger.info(`Run: oat sync --scope ${scope} --apply`);
+  context.logger.info(`Run: oat sync --scope ${scope}`);
 }
 
 async function runInitToolsUtility(

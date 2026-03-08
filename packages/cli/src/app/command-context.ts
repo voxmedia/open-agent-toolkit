@@ -6,7 +6,7 @@ import { type CliLogger, createLogger } from '@ui/logger';
 
 export interface GlobalOptions {
   scope?: Scope;
-  apply?: boolean;
+  dryRun?: boolean;
   verbose?: boolean;
   json?: boolean;
   cwd?: string;
@@ -14,7 +14,7 @@ export interface GlobalOptions {
 
 export interface CommandContext {
   scope: Scope;
-  apply: boolean;
+  dryRun: boolean;
   verbose: boolean;
   json: boolean;
   cwd: string;
@@ -29,7 +29,7 @@ export function buildCommandContext(options: GlobalOptions): CommandContext {
 
   return {
     scope: options.scope ?? 'all',
-    apply: options.apply ?? false,
+    dryRun: options.dryRun ?? false,
     verbose,
     json,
     cwd: resolve(options.cwd ?? process.cwd()),

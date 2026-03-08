@@ -43,7 +43,7 @@ function createHarness(options: HarnessOptions = {}): {
   const command = createInitToolsUtilityCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? options.scope ?? 'all') as Scope,
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',

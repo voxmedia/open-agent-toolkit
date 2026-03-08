@@ -16,14 +16,7 @@ const defaultSyncDependencies: AutoSyncDependencies = {
     await new Promise<void>((resolve, reject) => {
       execFile(
         process.execPath,
-        [
-          ...process.execArgv,
-          process.argv[1]!,
-          'sync',
-          '--apply',
-          '--scope',
-          scope,
-        ],
+        [...process.execArgv, process.argv[1]!, 'sync', '--scope', scope],
         { cwd },
         (error) => {
           if (error) reject(error);

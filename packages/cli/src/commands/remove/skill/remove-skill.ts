@@ -34,7 +34,7 @@ import type { ConcreteScope, Scope } from '@shared/types';
 import { Command } from 'commander';
 
 interface RemoveSkillOptions {
-  apply?: boolean;
+  dryRun?: boolean;
 }
 
 interface ProviderView {
@@ -278,7 +278,7 @@ async function applyPlan(
 export async function runRemoveSkill(
   context: CommandContext,
   skillName: string,
-  apply: boolean,
+  dryRun: boolean,
   dependencies: RemoveSkillDependencies,
 ): Promise<boolean> {
   const scopes = resolveConcreteScopes(context.scope);
@@ -307,7 +307,7 @@ export async function runRemoveSkill(
     return false;
   }
 
-  if (!apply) {
+  if (dryRun) {
     for (const plan of plans) {
       logDryRun(context, plan);
     }
@@ -347,7 +347,7 @@ export function createRemoveSkillCommand(
   return new Command('skill')
     .description('Remove a single installed skill by name')
     .argument('<name>', 'Skill name (e.g., oat-idea-scratchpad)')
-    .option('--apply', 'Apply removal changes (default is dry-run)')
+    .option('--dry-run', 'Preview removal without applying')
     .action(
       async (
         skillName: string,
@@ -362,7 +362,7 @@ export function createRemoveSkillCommand(
           const removed = await runRemoveSkill(
             context,
             skillName,
-            options.apply ?? false,
+            options.dryRun ?? false,
             dependencies,
           );
           process.exitCode = removed ? 0 : 1;

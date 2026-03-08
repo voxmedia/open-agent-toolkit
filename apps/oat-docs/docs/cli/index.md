@@ -61,14 +61,14 @@ See [`tool-packs-and-assets.md`](tool-packs-and-assets.md) for details.
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `oat instructions`          | Validate and repair AGENTS.md to CLAUDE.md pointer integrity. Includes `validate` (read-only) and `sync` (dry-run/apply).                |
 | `oat instructions validate` | Read-only integrity check for AGENTS.md sibling CLAUDE.md pointer files. Returns non-zero when missing or mismatched pointers are found. |
-| `oat instructions sync`     | Plan/apply pointer repairs. Dry-run by default; use `--apply` to write and `--force` to overwrite mismatched CLAUDE.md content.          |
+| `oat instructions sync`     | Plan/apply pointer repairs. Mutates by default; use `--dry-run` to preview and `--force` to overwrite mismatched CLAUDE.md content.      |
 
 ### Provider-Interop Commands
 
 | Command                 | Purpose                                                                                                            |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `oat status`            | Report provider sync and drift status. Shows which skills are in sync, drifted, or missing across providers.       |
-| `oat sync`              | Sync canonical content to provider views. Use `--apply` to execute the sync plan.                                  |
+| `oat sync`              | Sync canonical content to provider views. Mutates by default; use `--dry-run` to preview.                          |
 | `oat providers`         | Inspect provider capabilities and paths. Lists registered providers and their configuration.                       |
 | `oat providers set`     | Set provider enable/disable state for a scope. See [`provider-interop/commands.md`](provider-interop/commands.md). |
 | `oat providers inspect` | Inspect a specific provider's paths, capabilities, and sync state.                                                 |
@@ -90,7 +90,7 @@ See [`diagnostics.md`](diagnostics.md) for details.
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `oat project new <name>`      | Mode-aware project scaffolding (`--mode spec-driven\|quick\|import`). Creates project directories and template files. |
 | `oat project set-mode <mode>` | Set project implementation mode (`single-thread` or `subagent-driven`) in active project `state.md`.                  |
-| `oat cleanup project`         | Project-state hygiene cleanup (pointer/state/lifecycle drift). Dry-run by default.                                    |
+| `oat cleanup project`         | Project-state hygiene cleanup (pointer/state/lifecycle drift). Mutates by default; use `--dry-run` to preview.        |
 | `oat cleanup artifacts`       | Review/reference artifact hygiene cleanup with duplicate pruning and stale triage.                                    |
 
 ### Repo State and Index Commands

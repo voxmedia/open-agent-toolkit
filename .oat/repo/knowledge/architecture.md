@@ -180,8 +180,8 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 
 **Sync Command (commands/sync/index.ts):**
 - Location: `packages/cli/src/commands/sync/index.ts`
-- Triggers: `oat sync [--scope] [--apply] [--verbose] [--json]`
-- Responsibilities: Orchestrate sync workflow, compute plans per scope, execute if apply=true
+- Triggers: `oat sync [--scope] [--dry-run] [--verbose] [--json]`
+- Responsibilities: Orchestrate sync workflow, compute plans per scope, execute by default (preview with --dry-run)
 
 **Init Command (commands/init/index.ts):**
 - Location: `packages/cli/src/commands/init/index.ts`

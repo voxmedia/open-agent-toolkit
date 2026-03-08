@@ -128,7 +128,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 3. Detects installed providers (Claude, Cursor, Codex) via directory presence
 4. Computes diff between canonical and provider views
 5. Outputs dry-run plan to console
-6. With `--apply`, updates provider directories using copy/symlink strategies
+6. Updates provider directories using copy/symlink strategies (use `--dry-run` to preview)
 7. Generates/updates `.sync.json` manifest with content hashes and timestamps
 
 **Manifest Management:**

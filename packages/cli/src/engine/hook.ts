@@ -16,7 +16,7 @@ const execFileAsync = promisify(execFile);
 export const HOOK_MARKER_START = '# >>> oat pre-commit hook >>>';
 export const HOOK_MARKER_END = '# <<< oat pre-commit hook <<<';
 export const HOOK_DRIFT_WARNING =
-  "oat: project provider views are out of sync - run 'oat status --scope project' or 'oat sync --apply --scope project'";
+  "oat: project provider views are out of sync - run 'oat status --scope project' or 'oat sync --scope project'";
 
 interface RunHookCheckOptions {
   runStatusCommand?: (cwd: string) => Promise<boolean>;

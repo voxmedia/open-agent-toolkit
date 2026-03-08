@@ -22,7 +22,7 @@ function createHarness(options: HarnessOptions = {}): {
   const command = createValidateOatSkillsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: '/tmp/workspace',

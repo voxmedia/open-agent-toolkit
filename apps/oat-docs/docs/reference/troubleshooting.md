@@ -2,14 +2,14 @@
 
 ## Skills not visible in host UI
 
-- Run: `pnpm run cli -- sync --scope all --apply`
+- Run: `pnpm run cli -- sync --scope all`
 - Reload/restart host app session
 - Verify `AGENTS.md` skills table matches `.agents/skills/*/SKILL.md`
 
 ## Worktree checkout missing provider links
 
 - Run: `pnpm run worktree:init`
-- This command installs dependencies, builds the workspace, and runs `oat sync --scope project --apply`.
+- This command installs dependencies, builds the workspace, and runs `oat sync --scope project`.
 
 ## Codex appears detected but no skill sync actions are listed
 
@@ -20,13 +20,13 @@ Expected for native-read skill mappings. Codex can read canonical skills without
 - For interactive runs, select detected providers to enable when prompted.
 - For non-interactive runs, configure providers explicitly:
   - `oat providers set --scope project --enabled <providers> --disabled <providers>`
-- Re-run `oat sync --scope project --apply` after updating config.
+- Re-run `oat sync --scope project` after updating config.
 
 ## `instructions validate` reports `missing` or `content_mismatch`
 
 - Run `oat instructions sync` to preview changes.
-- Run `oat instructions sync --apply` to create missing pointer files.
-- If mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --apply --force`.
+- Run `oat instructions sync` to create missing pointer files.
+- If mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --force`.
 - Re-run `oat instructions validate` and confirm status is `ok`.
 
 ## `doctor` warns about canonical directories
@@ -42,7 +42,7 @@ Expected for native-read skill mappings. Codex can read canonical skills without
 
 ## Manifest not found or invalid
 
-- Missing manifest: run `sync --apply` or `init`
+- Missing manifest: run `sync` or `init`
 - Invalid manifest: repair/remove file and rerun
 
 ## Status/output mismatches with lifecycle expectations

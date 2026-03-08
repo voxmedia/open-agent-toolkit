@@ -183,7 +183,7 @@ describe('e2e workflow', () => {
 
     await runCli(root, ['init']);
     await seedCanonical(root);
-    const sync = await runCli(root, ['sync', '--apply']);
+    const sync = await runCli(root, ['sync']);
     expect(sync.exitCode).toBe(0);
 
     const providers = await runCli(
@@ -212,7 +212,7 @@ describe('e2e workflow', () => {
 
     await runCli(root, ['init']);
     await seedCanonical(root);
-    await runCli(root, ['sync', '--apply']);
+    await runCli(root, ['sync']);
 
     const driftPath = join(root, '.claude', 'skills', 'skill-one');
     await rm(driftPath, { recursive: true, force: true });
@@ -224,7 +224,7 @@ describe('e2e workflow', () => {
     const beforePayload = JSON.parse(before.stdout);
     expect(beforePayload.summary.drifted).toBeGreaterThan(0);
 
-    const sync = await runCli(root, ['sync', '--apply']);
+    const sync = await runCli(root, ['sync']);
     expect(sync.exitCode).toBe(0);
 
     const after = await runCli(root, ['status', '--json'], ['--json']);
@@ -275,7 +275,7 @@ describe('e2e workflow', () => {
       providers: {},
     });
 
-    const sync = await runCli(root, ['sync', '--apply']);
+    const sync = await runCli(root, ['sync']);
     expect(sync.exitCode).toBe(0);
 
     const copiedPath = join(root, '.claude', 'skills', 'skill-one');
@@ -299,14 +299,14 @@ describe('e2e workflow', () => {
 
     await runCli(root, ['init']);
     await seedCanonical(root);
-    await runCli(root, ['sync', '--apply']);
+    await runCli(root, ['sync']);
 
     await rm(join(root, '.agents', 'skills', 'skill-one'), {
       recursive: true,
       force: true,
     });
 
-    const sync = await runCli(root, ['sync', '--apply']);
+    const sync = await runCli(root, ['sync']);
     expect(sync.exitCode).toBe(0);
 
     await expect(

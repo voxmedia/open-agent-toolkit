@@ -25,13 +25,11 @@ Creates canonical directories and can offer stray adoption/hook installation.
 ```bash
 pnpm run cli -- status --scope all
 pnpm run cli -- sync --scope all
-pnpm run cli -- sync --scope all --apply
 ```
 
 Notes:
 
-- `sync` is dry-run by default.
-- `--apply` performs filesystem changes.
+- `sync` mutates by default; use `--dry-run` to preview changes without writing.
 
 ### Install or update OAT tool packs (optional)
 
@@ -48,13 +46,13 @@ Notes:
 ### Remove installed skills or packs (optional)
 
 ```bash
-pnpm run cli -- remove skill oat-idea-scratchpad        # dry-run
-pnpm run cli -- remove skills --pack utility --apply    # apply pack removal
+pnpm run cli -- remove skill oat-idea-scratchpad
+pnpm run cli -- remove skills --pack utility
 ```
 
 Notes:
 
-- `oat remove` is dry-run by default; use `--apply` to perform deletions.
+- `oat remove` mutates by default; use `--dry-run` to preview deletions.
 - Managed provider views are removed alongside canonical skill deletion; unmanaged views are preserved with warnings.
 
 ### Validate instruction pointers
@@ -62,14 +60,13 @@ Notes:
 ```bash
 pnpm run cli -- instructions validate
 pnpm run cli -- instructions sync
-pnpm run cli -- instructions sync --apply
 ```
 
 Notes:
 
 - `instructions validate` is read-only.
-- `instructions sync` is dry-run by default.
-- Use `instructions sync --apply --force` if you intend to overwrite mismatched `CLAUDE.md` content.
+- `instructions sync` mutates by default; use `--dry-run` to preview changes.
+- Use `instructions sync --force` if you intend to overwrite mismatched `CLAUDE.md` content.
 
 ### Additional CLI commands
 
@@ -98,9 +95,9 @@ oat --help
 oat init --scope project
 oat init tools
 oat status --scope all
-oat sync --scope all --apply
+oat sync --scope all
 oat instructions validate
-oat instructions sync --apply
+oat instructions sync
 oat remove skills --pack utility
 oat doctor --scope all
 oat project new my-project --mode spec-driven

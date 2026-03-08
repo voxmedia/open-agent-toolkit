@@ -40,7 +40,7 @@ function createHarness(options: HarnessOptions = {}): {
   const command = createInstructionsSyncCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: globalOptions.scope ?? 'project',
-      apply: globalOptions.apply ?? false,
+      dryRun: globalOptions.dryRun ?? false,
       verbose: globalOptions.verbose ?? false,
       json: options.json ?? globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',
@@ -107,16 +107,14 @@ describe('createInstructionsSyncCommand', () => {
       ],
     });
 
-    await runSyncCommand(command);
+    await runSyncCommand(command, { commandArgs: ['--dry-run'] });
 
     expect(writeFile).not.toHaveBeenCalled();
     expect(capture.info[0]).toContain('instructions dry-run');
     expect(capture.warn).toContain(
       '\nDry-run only: no filesystem changes were made.',
     );
-    expect(capture.info).toContain(
-      'Apply changes with: oat instructions sync --apply',
-    );
+    expect(capture.info).toContain('Run without --dry-run to apply changes.');
     expect(process.exitCode).toBe(0);
   });
 
@@ -132,7 +130,7 @@ describe('createInstructionsSyncCommand', () => {
       ],
     });
 
-    await runSyncCommand(command);
+    await runSyncCommand(command, { commandArgs: ['--dry-run'] });
 
     expect(writeFile).not.toHaveBeenCalled();
     expect(capture.info[0]).toContain('status: drift');
@@ -152,14 +150,14 @@ describe('createInstructionsSyncCommand', () => {
       ],
     });
 
-    await runSyncCommand(command, { commandArgs: ['--force'] });
+    await runSyncCommand(command, { commandArgs: ['--dry-run', '--force'] });
 
     expect(capture.info[0]).toContain('update packages/cli/CLAUDE.md');
     expect(capture.info[0]).toContain('[planned]');
     expect(process.exitCode).toBe(0);
   });
 
-  it('--apply writes pointer content for planned create and update actions', async () => {
+  it('apply (default) writes pointer content for planned create and update actions', async () => {
     const { command, writeFile, capture } = createHarness({
       entries: [
         {
@@ -177,7 +175,7 @@ describe('createInstructionsSyncCommand', () => {
       ],
     });
 
-    await runSyncCommand(command, { commandArgs: ['--apply', '--force'] });
+    await runSyncCommand(command, { commandArgs: ['--force'] });
 
     expect(writeFile).toHaveBeenCalledTimes(2);
     expect(writeFile).toHaveBeenNthCalledWith(
@@ -196,7 +194,7 @@ describe('createInstructionsSyncCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('--apply without --force leaves mismatches skipped and exits 1', async () => {
+  it('apply (default) without --force leaves mismatches skipped and exits 1', async () => {
     const { command, writeFile } = createHarness({
       entries: [
         {
@@ -208,7 +206,7 @@ describe('createInstructionsSyncCommand', () => {
       ],
     });
 
-    await runSyncCommand(command, { commandArgs: ['--apply'] });
+    await runSyncCommand(command);
 
     expect(writeFile).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);
@@ -226,7 +224,10 @@ describe('createInstructionsSyncCommand', () => {
       ],
     });
 
-    await runSyncCommand(dryRun.command, { globalArgs: ['--json'] });
+    await runSyncCommand(dryRun.command, {
+      globalArgs: ['--json'],
+      commandArgs: ['--dry-run'],
+    });
     expect(dryRun.capture.jsonPayloads[0]).toMatchObject({
       mode: 'dry-run',
       status: 'drift',
@@ -252,7 +253,6 @@ describe('createInstructionsSyncCommand', () => {
 
     await runSyncCommand(apply.command, {
       globalArgs: ['--json'],
-      commandArgs: ['--apply'],
     });
 
     expect(apply.capture.jsonPayloads[0]).toMatchObject({

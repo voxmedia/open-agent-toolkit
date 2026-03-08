@@ -16,7 +16,7 @@ import {
 
 interface RemoveSkillsOptions {
   pack?: string;
-  apply?: boolean;
+  dryRun?: boolean;
 }
 
 type PackName = 'ideas' | 'workflows' | 'utility';
@@ -35,7 +35,7 @@ interface RemoveSkillsDependencies {
   runRemoveSkill: (
     context: CommandContext,
     skillName: string,
-    apply: boolean,
+    dryRun: boolean,
     dependencies: RemoveSkillDependencies,
   ) => Promise<boolean>;
   removeSkillDependencies: RemoveSkillDependencies;
@@ -68,7 +68,7 @@ export function createRemoveSkillsCommand(
       '--pack <pack>',
       'Skill pack to remove (ideas|workflows|utility)',
     )
-    .option('--apply', 'Apply removal changes (default is dry-run)')
+    .option('--dry-run', 'Preview removal without applying')
     .action(async (options: RemoveSkillsOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
@@ -108,7 +108,7 @@ export function createRemoveSkillsCommand(
           const removed = await dependencies.runRemoveSkill(
             executionContext,
             skillName,
-            options.apply ?? false,
+            options.dryRun ?? false,
             dependencies.removeSkillDependencies,
           );
           if (removed) {

@@ -32,7 +32,7 @@ function createHarness(options: HarnessOptions = {}): {
   const command = createRemoveSkillsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? options.scope ?? 'project') as Scope,
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: '/tmp/workspace',

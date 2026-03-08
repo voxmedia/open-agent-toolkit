@@ -151,9 +151,9 @@ function reportSuccess(
 
   context.logger.info(`Installed tool packs: ${selectedPacks.join(', ')}`);
   context.logger.info(`User-eligible pack scope: ${utilityScope}`);
-  context.logger.info('Run: oat sync --scope project --apply');
+  context.logger.info('Run: oat sync --scope project');
   if (utilityScope === 'user') {
-    context.logger.info('Also run: oat sync --scope user --apply');
+    context.logger.info('Also run: oat sync --scope user');
   }
 }
 

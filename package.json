@@ -24,7 +24,7 @@
     "test": "turbo run test",
     "type-check": "turbo run type-check",
     "cli:link": "pnpm run build --filter=@oat/cli && cd packages/cli && pnpm link --global",
-    "worktree:init": "pnpm install && pnpm run build && pnpm run cli -- sync --scope project --apply"
+    "worktree:init": "pnpm install && pnpm run build && pnpm run cli -- sync --scope project"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.11",

@@ -57,7 +57,7 @@ It is read by:
 
 - Initial setup (interactive): `oat init --scope project`
 - Explicit updates: `oat providers set --scope project --enabled <providers> --disabled <providers>`
-- Apply sync changes: `oat sync --scope project --apply`
+- Apply sync changes: `oat sync --scope project`
 
 ## Related references
 

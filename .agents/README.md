@@ -28,7 +28,7 @@ Canonical home for agent skills, subagents, and supporting documentation used by
 Skills live in `.agents/skills/<skill-name>/SKILL.md` and sync to provider-specific views via:
 
 ```bash
-oat sync --scope all --apply
+oat sync --scope all
 ```
 
 For the full skill inventory, see [`apps/oat-docs/docs/skills/index.md`](../apps/oat-docs/docs/skills/index.md).

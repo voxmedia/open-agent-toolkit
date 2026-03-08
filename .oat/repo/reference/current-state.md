@@ -67,7 +67,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 - `oat-agent-instructions-apply` (interactive generation/update of instruction files with multi-provider support: AGENTS.md, Claude rules, Cursor rules, Copilot instructions)
 - CLI integrity commands:
   - `oat instructions validate` (report missing/mismatched AGENTS.md ↔ CLAUDE.md context pointers)
-  - `oat instructions sync` (repair missing/invalid context pointers with dry-run + apply semantics)
+  - `oat instructions sync` (repair missing/invalid context pointers; mutates by default, `--dry-run` to preview)
 - Shared tracking manifest: `.oat/tracking.json` (delta mode support via `resolve-tracking.sh`)
 - 7 instruction file templates, 3 helper scripts (tracking, providers, file discovery), quality checklist and directory assessment criteria
 - Reference docs bundled as symlinks (dereferenced during CLI distribution)
@@ -103,7 +103,7 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
   - Codex codec (`providers/codex/codec/`) handles export-to-codex, import-from-codex, config-merge, and sync-extension for TOML-based agent configuration.
   - Sync extension generates `.codex/agents/*.toml` role files and merges role declarations into `.codex/config.toml`.
 - Worktree bootstrap:
-  - Root script: `pnpm run worktree:init` (`pnpm install && pnpm run build && pnpm run cli -- sync --scope project --apply`).
+  - Root script: `pnpm run worktree:init` (`pnpm install && pnpm run build && pnpm run cli -- sync --scope project`).
   - Workflow skill: `oat-worktree-bootstrap`.
   - Phase-A non-sync config: `.oat/config.json` (`worktrees.root`, default `.worktrees`).
 
@@ -195,8 +195,8 @@ Interop quickstart:
 2. Set explicit supported providers (optional, deterministic):
    - `oat providers set --scope project --enabled claude,codex --disabled cursor`
 3. Preview and apply sync:
-   - `oat sync --scope project`
-   - `oat sync --scope project --apply`
+   - `oat sync --scope project --dry-run` (preview)
+   - `oat sync --scope project` (apply)
 
 ## Known Gaps / Next Steps
 

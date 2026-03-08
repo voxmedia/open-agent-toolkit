@@ -82,7 +82,7 @@ function reportSuccess(
   context.logger.info(`Skills: ${counts.skills}`);
   context.logger.info(`Infra files: ${counts.infra}`);
   context.logger.info(`Runtime templates: ${counts.templates}`);
-  context.logger.info(`Run: oat sync --scope ${scope} --apply`);
+  context.logger.info(`Run: oat sync --scope ${scope}`);
 }
 
 async function runInitToolsIdeas(

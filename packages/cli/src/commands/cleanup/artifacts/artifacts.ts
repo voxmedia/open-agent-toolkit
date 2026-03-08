@@ -30,7 +30,7 @@ import {
 
 export interface CleanupArtifactsRunOptions {
   repoRoot: string;
-  apply?: boolean;
+  dryRun?: boolean;
   allCandidates?: boolean;
   yes?: boolean;
   interactive?: boolean;
@@ -451,7 +451,7 @@ function formatCleanupArtifactsPlan(payload: CleanupJsonPayload): string {
 export async function runCleanupArtifacts(
   {
     repoRoot,
-    apply = false,
+    dryRun = false,
     allCandidates = false,
     yes = false,
     interactive = false,
@@ -483,7 +483,7 @@ export async function runCleanupArtifacts(
   }));
 
   let staleActions: CleanupActionRecord[] = [];
-  if (!apply) {
+  if (dryRun) {
     staleActions = buildDryRunStaleActions(staleCandidates);
   } else if (interactive && !allCandidates && !yes) {
     const triage = await dependencies.runInteractiveStaleTriage(
@@ -507,10 +507,10 @@ export async function runCleanupArtifacts(
   const issuesFound = duplicatePruneActions.length + staleCandidates.length;
   const scanned = allCandidateTargets.length;
 
-  if (!apply) {
+  if (dryRun) {
     return createCleanupPayload({
       status: issuesFound > 0 ? 'drift' : 'ok',
-      apply: false,
+      dryRun: true,
       scanned,
       issuesFound,
       actions: plannedActions,
@@ -527,7 +527,7 @@ export async function runCleanupArtifacts(
   );
   return createCleanupPayload({
     status: unresolved ? 'drift' : 'ok',
-    apply: true,
+    dryRun: false,
     scanned,
     issuesFound,
     actions: appliedActions,
@@ -544,15 +544,15 @@ export function createCleanupArtifactsCommand(
 
   return new Command('artifacts')
     .description('Cleanup stale review and external-plan artifacts')
-    .option('--apply', 'Apply cleanup changes (default is dry-run)')
+    .option('--dry-run', 'Preview cleanup without applying')
     .option(
       '--all-candidates',
-      'Allow non-interactive stale cleanup candidates in apply mode',
+      'Allow non-interactive stale cleanup candidates',
     )
     .option('--yes', 'Confirm non-interactive stale cleanup mutations')
     .action(
       async (
-        options: { apply?: boolean; allCandidates?: boolean; yes?: boolean },
+        options: { dryRun?: boolean; allCandidates?: boolean; yes?: boolean },
         command,
       ) => {
         const context = dependencies.buildCommandContext(
@@ -563,7 +563,7 @@ export function createCleanupArtifactsCommand(
           const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
           const payload = await dependencies.runCleanupArtifacts({
             repoRoot,
-            apply: options.apply ?? false,
+            dryRun: options.dryRun ?? false,
             allCandidates: options.allCandidates ?? false,
             yes: options.yes ?? false,
             interactive: context.interactive,

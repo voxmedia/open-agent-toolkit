@@ -314,12 +314,12 @@ async function runSyncCommand(
   const scopePlans = await computePlans(context, dependencies);
   logNonInteractiveMismatchGuidance(context, scopePlans);
 
-  if (context.apply) {
-    await runSyncApply(context, scopePlans, dependencies);
+  if (context.dryRun) {
+    runSyncDryRun(context, scopePlans, dependencies);
     return;
   }
 
-  runSyncDryRun(context, scopePlans, dependencies);
+  await runSyncApply(context, scopePlans, dependencies);
 }
 
 export function createSyncCommand(
@@ -332,7 +332,7 @@ export function createSyncCommand(
 
   return new Command('sync')
     .description('Sync canonical content to provider views')
-    .option('--apply', 'Apply sync changes (default is dry-run)')
+    .option('--dry-run', 'Preview sync changes without applying')
     .action(async (_options, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),

@@ -126,7 +126,7 @@ mkdir -p "{target-path}/.cursor/rules"
 Then re-run sync to establish symlinks:
 
 ```bash
-oat sync --scope all --apply
+oat sync --scope all
 ```
 
 ### Step 5: Return Structured Status

@@ -148,15 +148,13 @@ pnpm run cli -- providers list
 
 ```bash
 pnpm run cli -- sync --scope all
-pnpm run cli -- sync --scope all --apply
 ```
 
 Notes:
-- `sync` is dry-run by default.
-- `--apply` performs filesystem updates.
+- `sync` mutates by default; use `--dry-run` to preview changes without writing.
 - Project provider support is configured in `.oat/sync/config.json` (set via `oat init` interactive prompt or `oat providers set`).
-- Canonical subagents in `.agents/agents/*.md` are the source of truth. For Codex project scope, `sync --apply` generates `.codex/agents/*.toml` and merges `.codex/config.toml`.
-- Stray adoption in `oat init` / `oat status` reconciles canonical plus the adopted provider first; run `oat sync --scope all --apply` for cross-provider fanout.
+- Canonical subagents in `.agents/agents/*.md` are the source of truth. For Codex project scope, `sync` generates `.codex/agents/*.toml` and merges `.codex/config.toml`.
+- Stray adoption in `oat init` / `oat status` reconciles canonical plus the adopted provider first; run `oat sync --scope all` for cross-provider fanout.
 - In non-interactive contexts, set provider intent explicitly:
   - `pnpm run cli -- providers set --scope project --enabled claude,codex --disabled cursor`
 
@@ -192,13 +190,12 @@ Notes:
 ```bash
 pnpm run cli -- instructions validate
 pnpm run cli -- instructions sync
-pnpm run cli -- instructions sync --apply
 ```
 
 Notes:
 - `instructions validate` is read-only.
-- `instructions sync` is dry-run by default.
-- Use `instructions sync --apply --force` to overwrite mismatched `CLAUDE.md` files.
+- `instructions sync` mutates by default; use `--dry-run` to preview changes.
+- Use `instructions sync --force` to overwrite mismatched `CLAUDE.md` files.
 
 ### 5) Audit and clean project/artifact hygiene (optional)
 
@@ -207,16 +204,9 @@ pnpm run cli -- cleanup project
 pnpm run cli -- cleanup artifacts
 ```
 
-Apply mode examples:
-
-```bash
-pnpm run cli -- cleanup project --apply
-pnpm run cli -- cleanup artifacts --apply
-```
-
 Notes:
-- Cleanup commands are dry-run by default.
-- `cleanup artifacts --apply` uses interactive triage in TTY contexts by default.
+- Cleanup commands mutate by default; use `--dry-run` to preview changes.
+- `cleanup artifacts` uses interactive triage in TTY contexts by default.
 - In non-interactive contexts, use `--all-candidates --yes` to allow stale-candidate mutation.
 
 ### 6) Bootstrap a new worktree checkout
@@ -254,7 +244,7 @@ Optional local linking for `oat` command:
 cd packages/cli
 npm link
 oat --help
-oat sync --scope all --apply
+oat sync --scope all
 oat instructions validate
 ```
 
@@ -267,9 +257,8 @@ oat init --scope project
 oat providers set --scope project --enabled claude,codex --disabled cursor
 oat status --scope all
 oat sync --scope all
-oat sync --scope all --apply
 oat instructions validate
-oat instructions sync --apply
+oat instructions sync
 oat tools install
 oat tools list
 oat tools outdated

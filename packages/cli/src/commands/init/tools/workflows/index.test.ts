@@ -62,7 +62,7 @@ function createHarness(options: HarnessOptions = {}) {
   const command = createInitToolsWorkflowsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? options.scope ?? 'all') as Scope,
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',
@@ -166,7 +166,7 @@ describe('createInitToolsWorkflowsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'project']);
     expect(capture.info[0]).toContain('Installed workflows tool pack');
-    expect(capture.info.at(-1)).toContain('oat sync --scope project --apply');
+    expect(capture.info.at(-1)).toContain('oat sync --scope project');
 
     const jsonHarness = createHarness();
     await runCommand(jsonHarness.command, [], ['--scope', 'project', '--json']);

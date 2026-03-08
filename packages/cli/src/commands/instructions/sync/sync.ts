@@ -139,9 +139,9 @@ export function createInstructionsSyncCommand(
 
   return new Command('sync')
     .description('Repair AGENTS.md to CLAUDE.md pointer drift')
-    .option('--apply', 'Apply sync changes (default is dry-run)')
+    .option('--dry-run', 'Preview sync changes without applying')
     .option('--force', 'Overwrite mismatched CLAUDE.md files')
-    .action(async (options: { apply?: boolean; force?: boolean }, command) => {
+    .action(async (options: { dryRun?: boolean; force?: boolean }, command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
@@ -154,14 +154,14 @@ export function createInstructionsSyncCommand(
           force: options.force ?? false,
         });
 
-        const apply = options.apply ?? false;
-        const actions = apply
-          ? await applySyncActions(plannedActions, dependencies)
-          : plannedActions;
+        const dryRun = options.dryRun ?? false;
+        const actions = dryRun
+          ? plannedActions
+          : await applySyncActions(plannedActions, dependencies);
 
         const payload = buildInstructionsPayload({
-          mode: apply ? 'apply' : 'dry-run',
-          entries: apply ? getPostSyncEntries(entries, actions) : entries,
+          mode: dryRun ? 'dry-run' : 'apply',
+          entries: dryRun ? entries : getPostSyncEntries(entries, actions),
           actions,
         });
 
@@ -169,14 +169,12 @@ export function createInstructionsSyncCommand(
           context.logger.json(payload);
         } else {
           context.logger.info(formatInstructionsReport(payload, repoRoot));
-          if (!apply) {
+          if (dryRun) {
             context.logger.warn(
               '\nDry-run only: no filesystem changes were made.',
             );
             if (plannedActions.length > 0) {
-              context.logger.info(
-                'Apply changes with: oat instructions sync --apply',
-              );
+              context.logger.info('Run without --dry-run to apply changes.');
             } else {
               context.logger.info('No changes to apply.');
             }

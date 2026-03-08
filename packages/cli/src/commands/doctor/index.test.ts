@@ -102,7 +102,7 @@ function createHarness(options: HarnessOptions = {}): {
   const command = createDoctorCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? scope) as Scope,
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: '/tmp/workspace',

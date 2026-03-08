@@ -249,7 +249,7 @@ async function runChecksForScope(
         : 'Manifest file not found; default empty manifest in use.',
       fix: manifestExists
         ? undefined
-        : 'Run `oat sync --apply` or `oat init` to create manifest.',
+        : 'Run `oat sync` or `oat init` to create manifest.',
     });
   } catch (error) {
     checks.push({
@@ -454,7 +454,7 @@ async function runChecksForScope(
             fix:
               missingRoleFiles.length === 0
                 ? undefined
-                : 'Regenerate codex roles with `oat sync --scope project --apply`.',
+                : 'Regenerate codex roles with `oat sync --scope project`.',
           });
         }
       }

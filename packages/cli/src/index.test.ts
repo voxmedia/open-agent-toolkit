@@ -40,8 +40,8 @@ describe('main', () => {
     createProgramMock.mockReturnValue({ parseAsync: parseAsyncMock });
   });
 
-  it('parses normalized argv so --apply is not dropped', async () => {
-    await main(['node', 'cli.js', '--', 'sync', '--scope', 'all', '--apply']);
+  it('parses normalized argv so --dry-run is not dropped', async () => {
+    await main(['node', 'cli.js', '--', 'sync', '--scope', 'all', '--dry-run']);
 
     expect(createProgramMock).toHaveBeenCalledTimes(1);
     expect(registerCommandsMock).toHaveBeenCalledTimes(1);
@@ -51,7 +51,7 @@ describe('main', () => {
       'sync',
       '--scope',
       'all',
-      '--apply',
+      '--dry-run',
     ]);
   });
 });

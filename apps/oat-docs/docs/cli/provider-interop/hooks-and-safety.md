@@ -6,8 +6,8 @@
 
 ## Safety contracts
 
-- `sync` defaults to dry-run.
-- `--apply` required for filesystem mutation.
+- `sync` mutates by default; use `--dry-run` to preview.
+- All mutation commands write immediately unless `--dry-run` is passed.
 - Removals are limited to manifest-managed entries.
 - JSON/non-interactive paths avoid interactive prompts.
 - Hook warnings are non-blocking by default.

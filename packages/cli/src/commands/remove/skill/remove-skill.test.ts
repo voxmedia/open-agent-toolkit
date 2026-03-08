@@ -78,7 +78,7 @@ function createHarness(options: {
   const command = createRemoveSkillCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? options.scope ?? 'project') as Scope,
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: options.projectRoot,
@@ -197,7 +197,11 @@ describe('createRemoveSkillCommand', () => {
     );
 
     const { command, capture } = createHarness({ projectRoot: root });
-    await runRemoveSkillCommand(command, ['--scope', 'project'], [skillName]);
+    await runRemoveSkillCommand(
+      command,
+      ['--scope', 'project'],
+      [skillName, '--dry-run'],
+    );
 
     await expect(
       dirExists(join(root, '.agents', 'skills', skillName)),
@@ -241,11 +245,7 @@ describe('createRemoveSkillCommand', () => {
     );
 
     const { command } = createHarness({ projectRoot: root });
-    await runRemoveSkillCommand(
-      command,
-      ['--scope', 'project'],
-      [skillName, '--apply'],
-    );
+    await runRemoveSkillCommand(command, ['--scope', 'project'], [skillName]);
 
     await expect(
       dirExists(join(root, '.agents', 'skills', skillName)),
@@ -299,7 +299,11 @@ describe('createRemoveSkillCommand', () => {
       scope: 'all',
     });
 
-    await runRemoveSkillCommand(command, ['--scope', 'all'], [skillName]);
+    await runRemoveSkillCommand(
+      command,
+      ['--scope', 'all'],
+      [skillName, '--dry-run'],
+    );
 
     expect(capture.info.join('\n')).toContain('[dry-run][user] remove');
     expect(capture.info.join('\n')).not.toContain('[dry-run][project] remove');
@@ -344,11 +348,7 @@ describe('createRemoveSkillCommand', () => {
     );
 
     const { command } = createHarness({ projectRoot, userRoot, scope: 'all' });
-    await runRemoveSkillCommand(
-      command,
-      ['--scope', 'all'],
-      [skillName, '--apply'],
-    );
+    await runRemoveSkillCommand(command, ['--scope', 'all'], [skillName]);
 
     await expect(
       dirExists(join(projectRoot, '.agents', 'skills', skillName)),
@@ -412,7 +412,7 @@ describe('createRemoveSkillCommand', () => {
     await runRemoveSkillCommand(
       command,
       ['--json', '--scope', 'project'],
-      [skillName],
+      [skillName, '--dry-run'],
     );
 
     expect(capture.jsonPayloads[0]).toEqual({
@@ -454,7 +454,7 @@ describe('createRemoveSkillCommand', () => {
     await runRemoveSkillCommand(
       command,
       ['--json', '--scope', 'project'],
-      [skillName, '--apply'],
+      [skillName],
     );
 
     expect(capture.jsonPayloads[0]).toEqual({

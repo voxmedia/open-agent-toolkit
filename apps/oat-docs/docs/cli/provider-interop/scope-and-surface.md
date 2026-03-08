@@ -13,8 +13,8 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 
 ## Design principles
 
-- Dry-run first
-- Explicit apply for mutation
+- Mutate by default; `--dry-run` to preview
+- Explicit `--dry-run` for safe preview of mutations
 - Scoped destructive actions only for manifest-tracked entries
 - Cross-provider compatibility via adapters
 - Canonical `.agents/agents` is source of truth for subagents; provider views are derived

@@ -34,7 +34,7 @@ function createCommandHarness(options: CommandHarnessOptions = {}): {
   const command = createCleanupProjectCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'all') as 'project' | 'user' | 'all',
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: '/tmp/workspace',
@@ -128,7 +128,7 @@ describe('cleanup project drift scanning', () => {
       'utf8',
     );
 
-    const payload = await runCleanupProject({ repoRoot: root, apply: false });
+    const payload = await runCleanupProject({ repoRoot: root, dryRun: true });
 
     expect(payload.actions).toEqual(
       expect.arrayContaining([
@@ -147,7 +147,7 @@ describe('cleanup project drift scanning', () => {
     await mkdir(projectDir, { recursive: true });
     await writeFile(join(projectDir, 'plan.md'), '# plan\n', 'utf8');
 
-    const payload = await runCleanupProject({ repoRoot: root, apply: false });
+    const payload = await runCleanupProject({ repoRoot: root, dryRun: true });
 
     expect(payload.actions).toEqual(
       expect.arrayContaining([
@@ -183,7 +183,7 @@ describe('cleanup project drift scanning', () => {
       'utf8',
     );
 
-    const payload = await runCleanupProject({ repoRoot: root, apply: false });
+    const payload = await runCleanupProject({ repoRoot: root, dryRun: true });
 
     expect(payload.actions).toEqual(
       expect.arrayContaining([
@@ -208,7 +208,7 @@ describe('cleanup project drift scanning', () => {
     await runCleanupProject(
       {
         repoRoot: root,
-        apply: true,
+        dryRun: false,
       },
       {
         refreshDashboard: async () => {
@@ -246,7 +246,7 @@ describe('cleanup project drift scanning', () => {
     await writeFile(join(projectDir, 'plan.md'), '# plan\n', 'utf8');
 
     await runCleanupProject(
-      { repoRoot: root, apply: true, today: '2026-02-18' },
+      { repoRoot: root, dryRun: false, today: '2026-02-18' },
       { refreshDashboard: async () => undefined },
     );
 
@@ -284,7 +284,7 @@ describe('cleanup project drift scanning', () => {
     await runCleanupProject(
       {
         repoRoot: root,
-        apply: true,
+        dryRun: false,
       },
       {
         refreshDashboard: async () => {
@@ -310,7 +310,7 @@ describe('cleanup project drift scanning', () => {
     await mkdir(projectDir, { recursive: true });
     await writeFile(join(projectDir, 'plan.md'), '# plan\n', 'utf8');
 
-    const payload = await runCleanupProject({ repoRoot: root, apply: false });
+    const payload = await runCleanupProject({ repoRoot: root, dryRun: true });
 
     expect(payload.status).toBe('drift');
     expect(payload.mode).toBe('dry-run');
@@ -353,7 +353,7 @@ describe('cleanup project drift scanning', () => {
     await writeFile(join(projectDir, 'plan.md'), '# plan\n', 'utf8');
 
     const payload = await runCleanupProject(
-      { repoRoot: root, apply: true },
+      { repoRoot: root, dryRun: false },
       { refreshDashboard: async () => undefined },
     );
 

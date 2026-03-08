@@ -203,7 +203,7 @@ function createHarness(options: HarnessOptions = {}): {
   const command = createSyncCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
-      apply: globalOptions.apply ?? false,
+      dryRun: globalOptions.dryRun ?? false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',
@@ -287,16 +287,17 @@ describe('createSyncCommand', () => {
   it('dry-run: shows plan without making changes', async () => {
     const { capture, command, executeSyncPlan } = createHarness();
 
-    await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: ['--dry-run'],
+    });
 
     expect(executeSyncPlan).not.toHaveBeenCalled();
     expect(capture.info[0]).toContain('sync-dry-project');
     expect(capture.warn).toContain(
       '\nDry-run only: no filesystem changes were made.',
     );
-    expect(capture.info).toContain(
-      'Apply changes with: oat sync --scope project --apply',
-    );
+    expect(capture.info).toContain('Run without --dry-run to apply changes.');
   });
 
   it('dry-run no-op: shows no changes to apply guidance', async () => {
@@ -304,7 +305,10 @@ describe('createSyncCommand', () => {
       plans: [createEmptyPlan('project')],
     });
 
-    await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: ['--dry-run'],
+    });
 
     expect(executeSyncPlan).not.toHaveBeenCalled();
     expect(capture.warn).toContain(
@@ -313,7 +317,7 @@ describe('createSyncCommand', () => {
     expect(capture.info).toContain('No changes to apply.');
   });
 
-  it('--apply: executes sync plan', async () => {
+  it('apply (default): executes sync plan', async () => {
     const { capture, command, executeSyncPlan } = createHarness({
       plans: [createPlan('create_symlink')],
       executeResults: [{ applied: 1, failed: 0, skipped: 0 }],
@@ -321,14 +325,13 @@ describe('createSyncCommand', () => {
 
     await runSyncCommand(command, {
       globalArgs: ['--scope', 'project'],
-      commandArgs: ['--apply'],
     });
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
     expect(capture.success).toContain('\nSync applied successfully.');
   });
 
-  it('--apply idempotent: second run reports nothing to do', async () => {
+  it('apply idempotent: second run reports nothing to do', async () => {
     const { capture, command, executeSyncPlan } = createHarness({
       plans: [createPlan('create_symlink'), createEmptyPlan()],
       executeResults: [{ applied: 1, failed: 0, skipped: 0 }],
@@ -336,11 +339,9 @@ describe('createSyncCommand', () => {
 
     await runSyncCommand(command, {
       globalArgs: ['--scope', 'project'],
-      commandArgs: ['--apply'],
     });
     await runSyncCommand(command, {
       globalArgs: ['--scope', 'project'],
-      commandArgs: ['--apply'],
     });
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
@@ -355,7 +356,6 @@ describe('createSyncCommand', () => {
 
     await runSyncCommand(command, {
       globalArgs: ['--scope', 'project'],
-      commandArgs: ['--apply'],
     });
 
     expect(capture.warn).toContain('\nSync completed with partial failures.');
@@ -516,12 +516,13 @@ describe('createSyncCommand', () => {
 
     await runSyncCommand(command, {
       globalArgs: ['--scope', 'project', '--json'],
+      commandArgs: ['--dry-run'],
     });
 
     expect(capture.jsonPayloads).toHaveLength(1);
     expect(capture.info).toHaveLength(0);
     expect(capture.jsonPayloads[0]).toMatchObject({
-      apply: false,
+      dryRun: true,
       scope: 'project',
       summary: {
         plannedOperations: 1,
@@ -589,7 +590,7 @@ describe('createSyncCommand', () => {
     });
   });
 
-  it('applies codex extension plan during --apply when codex operations are pending', async () => {
+  it('applies codex extension plan during apply (default) when codex operations are pending', async () => {
     const {
       command,
       executeSyncPlan,
@@ -625,7 +626,6 @@ describe('createSyncCommand', () => {
 
     await runSyncCommand(command, {
       globalArgs: ['--scope', 'project'],
-      commandArgs: ['--apply'],
     });
 
     expect(executeSyncPlan).not.toHaveBeenCalled();
@@ -641,7 +641,6 @@ describe('createSyncCommand', () => {
 
     await runSyncCommand(successHarness.command, {
       globalArgs: ['--scope', 'project'],
-      commandArgs: ['--apply'],
     });
     expect(process.exitCode).toBe(0);
 
@@ -652,7 +651,6 @@ describe('createSyncCommand', () => {
 
     await runSyncCommand(failureHarness.command, {
       globalArgs: ['--scope', 'project'],
-      commandArgs: ['--apply'],
     });
     expect(process.exitCode).toBe(1);
   });

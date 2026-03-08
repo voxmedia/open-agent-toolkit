@@ -101,7 +101,7 @@ describe('help output snapshots', () => {
       Sync canonical content to provider views
 
       Options:
-        --apply     Apply sync changes (default is dry-run)
+        --dry-run   Preview sync changes without applying
         -h, --help  display help for command
       "
     `);
@@ -241,7 +241,7 @@ describe('help output snapshots', () => {
         name        Skill name (e.g., oat-idea-scratchpad)
 
       Options:
-        --apply     Apply removal changes (default is dry-run)
+        --dry-run   Preview removal without applying
         -h, --help  display help for command
       "
     `);
@@ -260,7 +260,7 @@ describe('help output snapshots', () => {
 
       Options:
         --pack <pack>  Skill pack to remove (ideas|workflows|utility)
-        --apply        Apply removal changes (default is dry-run)
+        --dry-run      Preview removal without applying
         -h, --help     display help for command
       "
     `);
@@ -441,7 +441,7 @@ describe('help output snapshots', () => {
       Repair AGENTS.md to CLAUDE.md pointer drift
 
       Options:
-        --apply     Apply sync changes (default is dry-run)
+        --dry-run   Preview sync changes without applying
         --force     Overwrite mismatched CLAUDE.md files
         -h, --help  display help for command
       "

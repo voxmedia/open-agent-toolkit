@@ -637,8 +637,8 @@ Adopt option 3:
 
 #### Follow-ups
 
-- Create and execute the CLI-wide `--apply` → `--dry-run` convention flip (backlog item tracked).
-- Update all docs, skill references, and scripts that mention `--apply`.
+- ~~Create and execute the CLI-wide `--apply` → `--dry-run` convention flip (backlog item tracked).~~ Done — `.oat/projects/shared/auto-apply-dry-run/`, PR #46.
+- ~~Update all docs, skill references, and scripts that mention `--apply`.~~ Done — included in the same PR.
 
 ---
 

@@ -70,7 +70,7 @@ packages/cli/src/
 
 ## UX and Output Principles
 
-- Default to safe behavior for mutating commands (dry-run first where applicable).
+- Mutating commands apply by default; use `--dry-run` to preview changes safely.
 - Never require interaction in non-TTY or `--json` mode.
 - In interactive mode, prompts should be explicit, reversible where possible, and scoped to actionable choices.
 - JSON output must be machine-consumable and stable in structure for automation paths.

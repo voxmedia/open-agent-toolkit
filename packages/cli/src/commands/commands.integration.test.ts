@@ -175,7 +175,7 @@ describe('CLI command integration', () => {
     const beforePayload = JSON.parse(before.stdout);
     expect(beforePayload.summary.missing).toBeGreaterThan(0);
 
-    const sync = await runCli(root, ['sync', '--apply']);
+    const sync = await runCli(root, ['sync']);
     expect(sync.exitCode).toBe(0);
 
     const after = await runCli(root, ['status', '--json'], ['--json']);
@@ -204,13 +204,13 @@ describe('CLI command integration', () => {
     expect(manifest.entries).toEqual([]);
   });
 
-  it('sync --apply creates symlinks for detected providers', async () => {
+  it('sync creates symlinks for detected providers', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
     await runCli(root, ['init']);
     await seedCanonical(root);
 
-    const result = await runCli(root, ['sync', '--apply']);
+    const result = await runCli(root, ['sync']);
     expect(result.exitCode).toBe(0);
 
     const claudeSkillStat = await lstat(
@@ -248,7 +248,7 @@ describe('CLI command integration', () => {
     tempDirs.push(root);
     await runCli(root, ['init']);
     await seedCanonical(root);
-    await runCli(root, ['sync', '--apply']);
+    await runCli(root, ['sync']);
 
     const result = await runCli(root, ['doctor', '--json'], ['--json']);
     const payload = JSON.parse(result.stdout);
@@ -306,13 +306,13 @@ describe('CLI command integration', () => {
     tempDirs.push(root);
     await runCli(root, ['init']);
     await seedCanonical(root);
-    await runCli(root, ['sync', '--apply']);
+    await runCli(root, ['sync']);
 
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
     const before = await readFile(manifestPath, 'utf8');
 
     await runCli(root, ['init']);
-    await runCli(root, ['sync', '--apply']);
+    await runCli(root, ['sync']);
 
     const after = await readFile(manifestPath, 'utf8');
     expect(after).toBe(before);
@@ -397,7 +397,7 @@ describe('CLI command integration', () => {
 
     const result = await runCli(
       root,
-      ['cleanup', 'artifacts', '--json'],
+      ['cleanup', 'artifacts', '--dry-run', '--json'],
       ['--json'],
     );
 
@@ -434,7 +434,7 @@ describe('CLI command integration', () => {
 
     const result = await runCli(
       root,
-      ['cleanup', 'project', '--json'],
+      ['cleanup', 'project', '--dry-run', '--json'],
       ['--json'],
     );
 

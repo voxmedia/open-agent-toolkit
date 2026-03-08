@@ -24,7 +24,7 @@ function createHarness(options: HarnessOptions): {
   const command = createConfigCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? options.cwd,

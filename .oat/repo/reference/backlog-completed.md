@@ -30,6 +30,20 @@ Historical record of completed backlog items moved out of the active backlog for
   - Created: 2026-02-17
   - Completed: 2026-03-08
 
+- [x] **(P1) [tooling] Flip CLI-wide mutability convention from `--apply` to `--dry-run`**
+  - Outcome:
+    - Unified all OAT CLI mutating commands under `--dry-run` opt-in convention (mutate by default).
+    - Flipped 6 legacy commands (`sync`, `instructions sync`, `remove skill`, `remove skills`, `cleanup artifacts`, `cleanup project`) from `--apply` (dry-run by default) to match the newer `oat tools` convention.
+    - Renamed `CommandContext.apply` → `CommandContext.dryRun` and `SyncJsonPayload.apply` → `SyncJsonPayload.dryRun` (inverted semantics).
+    - Removed `--apply` entirely (clean break, no deprecation period; pre-1.0).
+    - Updated all tests (34 files), docs (9 files), skills/agent docs (8 files), and reference docs.
+  - Links:
+    - Project: `.oat/projects/shared/auto-apply-dry-run/`
+    - ADR: ADR-014 (deferred flip from `oat tools` implementation)
+    - Related: `packages/cli/src/app/command-context.ts`
+  - Created: 2026-03-07
+  - Completed: 2026-03-07
+
 - [x] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows**
   - Outcome:
     - `oat-project-reconcile` skill implemented with 6 workflow steps: checkpoint detection, commit analysis, task mapping, HiTL confirmation, artifact updates, bookkeeping commit.

@@ -66,7 +66,7 @@ function createHarness(options: HarnessOptions = {}): {
   const command = createInitToolsIdeasCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? options.scope ?? 'all') as Scope,
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',
@@ -202,7 +202,7 @@ describe('createInitToolsIdeasCommand', () => {
     expect(capture.info.some((line) => line.includes('Skills: copied=1'))).toBe(
       true,
     );
-    expect(capture.info.at(-1)).toContain('oat sync --scope project --apply');
+    expect(capture.info.at(-1)).toContain('oat sync --scope project');
     expect(process.exitCode).toBe(0);
   });
 

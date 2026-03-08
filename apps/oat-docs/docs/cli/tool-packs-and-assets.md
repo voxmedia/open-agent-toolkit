@@ -86,7 +86,7 @@ Key behavior:
 
 ### Auto-sync behavior
 
-All mutation commands (`install`, `update`, `remove`) automatically run `oat sync --apply --scope <scope>` after successful operations. This ensures provider views stay in sync with canonical assets without manual intervention.
+All mutation commands (`install`, `update`, `remove`) automatically run `oat sync --scope <scope>` after successful operations. This ensures provider views stay in sync with canonical assets without manual intervention.
 
 Use `--no-sync` on any mutation command to skip this step.
 
@@ -94,7 +94,7 @@ Use `--no-sync` on any mutation command to skip this step.
 
 ### `oat init tools`
 
-The `oat init tools` command remains available for backward compatibility. It has the same install behavior as `oat tools install` but does not include auto-sync — you must run `oat sync --scope ... --apply` manually after install.
+The `oat init tools` command remains available for backward compatibility. It has the same install behavior as `oat tools install` but does not include auto-sync — you must run `oat sync --scope ...` manually after install.
 
 ### `oat remove`
 
@@ -103,7 +103,7 @@ The `oat remove` command group remains available for backward compatibility. It 
 - `oat remove skill <name>` — remove one installed skill by name
 - `oat remove skills --pack <pack>` — remove all installed skills from a bundled pack
 
-These commands use dry-run by default with `--apply` to perform deletions.
+These commands mutate by default; use `--dry-run` to preview deletions.
 
 Related docs:
 

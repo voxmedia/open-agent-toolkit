@@ -82,7 +82,7 @@ export function runSyncDryRun(
   if (context.json) {
     context.logger.json({
       scope: context.scope,
-      apply: false,
+      dryRun: true,
       plans: scopePlans.map((scopePlan) => scopePlan.plan),
       summary,
       providerMismatches,
@@ -92,9 +92,7 @@ export function runSyncDryRun(
     context.logger.info(formatDryRunOutput(scopePlans, dependencies));
     context.logger.warn('\nDry-run only: no filesystem changes were made.');
     if (summary.plannedOperations > 0) {
-      context.logger.info(
-        `Apply changes with: oat sync --scope ${context.scope} --apply`,
-      );
+      context.logger.info('Run without --dry-run to apply changes.');
     } else {
       context.logger.info('No changes to apply.');
     }

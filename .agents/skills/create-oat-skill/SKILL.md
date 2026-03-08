@@ -107,7 +107,7 @@ If the skill needs templates/scripts, add:
 Sync the skill to provider views:
 
 ```bash
-oat sync --apply
+oat sync
 ```
 
 Run OAT validator and resolve findings:

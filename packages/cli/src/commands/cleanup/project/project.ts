@@ -23,7 +23,7 @@ import {
 
 export interface CleanupProjectRunOptions {
   repoRoot: string;
-  apply?: boolean;
+  dryRun?: boolean;
   today?: string;
 }
 
@@ -256,7 +256,7 @@ async function applyCleanupAction(
 export async function runCleanupProject(
   {
     repoRoot,
-    apply = false,
+    dryRun = false,
     today = new Date().toISOString().slice(0, 10),
   }: CleanupProjectRunOptions,
   overrides: Partial<CleanupProjectRunDependencies> = {},
@@ -269,10 +269,10 @@ export async function runCleanupProject(
   const { scanned, actions: plannedActions } =
     await collectPlannedActions(repoRoot);
 
-  if (!apply) {
+  if (dryRun) {
     return createCleanupPayload({
       status: plannedActions.length > 0 ? 'drift' : 'ok',
-      apply: false,
+      dryRun: true,
       scanned,
       issuesFound: plannedActions.length,
       actions: plannedActions,
@@ -297,7 +297,7 @@ export async function runCleanupProject(
 
   return createCleanupPayload({
     status: 'ok',
-    apply: true,
+    dryRun: false,
     scanned,
     issuesFound: plannedActions.length,
     actions: appliedActions,
@@ -334,8 +334,8 @@ export function createCleanupProjectCommand(
 
   return new Command('project')
     .description('Cleanup project pointers, state, and lifecycle drift')
-    .option('--apply', 'Apply cleanup changes (default is dry-run)')
-    .action(async (options: { apply?: boolean }, command) => {
+    .option('--dry-run', 'Preview cleanup without applying')
+    .action(async (options: { dryRun?: boolean }, command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
@@ -343,7 +343,7 @@ export function createCleanupProjectCommand(
         const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
         const payload = await dependencies.runCleanupProject({
           repoRoot,
-          apply: options.apply ?? false,
+          dryRun: options.dryRun ?? false,
         });
 
         if (context.json) {

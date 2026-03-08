@@ -76,7 +76,7 @@ function reportSuccess(
   context.logger.info(
     `Projects root initialized: ${result.projectsRootInitialized ? 'yes' : 'no'}`,
   );
-  context.logger.info('Run: oat sync --scope project --apply');
+  context.logger.info('Run: oat sync --scope project');
 }
 
 async function runInitToolsWorkflows(

@@ -319,8 +319,8 @@ Author skills in `.agents/skills/` (canonical source). Use OAT's built-in sync t
 # Dry-run to preview what will be synced
 oat sync --scope all
 
-# Apply the sync
-oat sync --scope all --apply
+# Dry-run to preview only (no writes)
+oat sync --scope all --dry-run
 ```
 
 OAT sync handles symlink/copy distribution from `.agents/skills/` to provider-specific directories, with manifest tracking and drift detection.
@@ -390,7 +390,7 @@ The system prompt body can be largely shared across tools, but frontmatter schem
 ### Phase 3: Automated Orchestration
 
 - CI/Cloud agents consume `.agents/docs/` standards automatically
-- OAT sync + drift detection keeps tool-specific paths in sync (`oat status` reports drift, `oat sync --apply` resolves it)
+- OAT sync + drift detection keeps tool-specific paths in sync (`oat status` reports drift, `oat sync` resolves it)
 - Scheduled audit skills run against shared standards
 - `oat doctor` validates environment health
 

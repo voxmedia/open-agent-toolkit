@@ -62,11 +62,11 @@ describe('cleanup integration', () => {
     );
 
     const first = await runCleanupProject(
-      { repoRoot: root, apply: true, today: '2026-02-18' },
+      { repoRoot: root, dryRun: false, today: '2026-02-18' },
       { refreshDashboard: async () => undefined },
     );
     const second = await runCleanupProject(
-      { repoRoot: root, apply: true, today: '2026-02-18' },
+      { repoRoot: root, dryRun: false, today: '2026-02-18' },
       { refreshDashboard: async () => undefined },
     );
 
@@ -152,7 +152,7 @@ describe('cleanup integration', () => {
     const payload = await runCleanupArtifacts(
       {
         repoRoot: root,
-        apply: true,
+        dryRun: false,
         interactive: true,
         timestamp: '20260218-121314',
       },

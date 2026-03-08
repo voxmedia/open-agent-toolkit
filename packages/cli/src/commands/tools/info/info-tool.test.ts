@@ -14,7 +14,7 @@ function createContext(
   const capture = createLoggerCapture();
   return {
     scope: 'all',
-    apply: false,
+    dryRun: false,
     verbose: false,
     json: false,
     cwd: '/project',

@@ -336,7 +336,7 @@ For automated distribution, use **OAT sync** (for local/internal skills) or **`n
 
 ```bash
 # OAT sync — manages local canonical → provider distribution with manifest tracking
-oat sync --scope all --apply
+oat sync --scope all
 
 # npx skills — installs remote skills from GitHub or skills.sh
 npx skills add github-user/skill-repo -a claude-code -a github-copilot

@@ -8,9 +8,9 @@ import {
 } from './cleanup.utils';
 
 describe('cleanup utils', () => {
-  it('maps apply flag to mode', () => {
-    expect(toCleanupMode(false)).toBe('dry-run');
-    expect(toCleanupMode(true)).toBe('apply');
+  it('maps dryRun flag to mode', () => {
+    expect(toCleanupMode(true)).toBe('dry-run');
+    expect(toCleanupMode(false)).toBe('apply');
   });
 
   it('builds deterministic action ordering and summary counts', () => {
@@ -47,7 +47,7 @@ describe('cleanup utils', () => {
 
     const payload = createCleanupPayload({
       status: 'drift',
-      apply: false,
+      dryRun: true,
       scanned: 12,
       issuesFound: 4,
       actions,

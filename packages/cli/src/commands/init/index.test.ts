@@ -156,7 +156,7 @@ function createHarness(options: HarnessOptions = {}): {
   const dependencyOverrides = {
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
-      apply: false,
+      dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',
@@ -760,7 +760,7 @@ config_file = "agents/reviewer.toml"
     const command = createInitCommand({
       buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
         scope: (globalOptions.scope ?? 'project') as Scope,
-        apply: false,
+        dryRun: false,
         verbose: false,
         json: false,
         cwd: root,
@@ -800,7 +800,7 @@ config_file = "agents/reviewer.toml"
     const command = createInitCommand({
       buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
         scope: (globalOptions.scope ?? 'project') as Scope,
-        apply: false,
+        dryRun: false,
         verbose: false,
         json: false,
         cwd: root,
@@ -830,7 +830,7 @@ config_file = "agents/reviewer.toml"
       'if ! oat status --scope project >/dev/null 2>&1; then',
     );
     expect(hookContents).toContain(
-      "oat: project provider views are out of sync - run 'oat status --scope project' or 'oat sync --apply --scope project'",
+      "oat: project provider views are out of sync - run 'oat status --scope project' or 'oat sync --scope project'",
     );
   });
 
@@ -846,7 +846,7 @@ config_file = "agents/reviewer.toml"
     const command = createInitCommand({
       buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
         scope: (globalOptions.scope ?? 'project') as Scope,
-        apply: false,
+        dryRun: false,
         verbose: false,
         json: false,
         cwd: root,

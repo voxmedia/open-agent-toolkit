@@ -22,11 +22,11 @@ interface BuildCleanupSummaryArgs {
 
 interface CreateCleanupPayloadArgs extends BuildCleanupSummaryArgs {
   status: CleanupStatus;
-  apply: boolean;
+  dryRun: boolean;
 }
 
-export function toCleanupMode(apply: boolean): CleanupMode {
-  return apply ? 'apply' : 'dry-run';
+export function toCleanupMode(dryRun: boolean): CleanupMode {
+  return dryRun ? 'dry-run' : 'apply';
 }
 
 export function normalizeCleanupActions(
@@ -66,7 +66,7 @@ export function buildCleanupSummary({
 
 export function createCleanupPayload({
   status,
-  apply,
+  dryRun,
   scanned,
   issuesFound,
   actions,
@@ -74,7 +74,7 @@ export function createCleanupPayload({
   const normalizedActions = normalizeCleanupActions(actions);
   return {
     status,
-    mode: toCleanupMode(apply),
+    mode: toCleanupMode(dryRun),
     summary: buildCleanupSummary({
       scanned,
       issuesFound,

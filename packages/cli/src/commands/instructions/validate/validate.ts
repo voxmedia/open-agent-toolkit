@@ -47,7 +47,7 @@ export function createInstructionsValidateCommand(
         } else {
           context.logger.info(formatInstructionsReport(payload, repoRoot));
           if (payload.status === 'drift') {
-            context.logger.info('Fix with: oat instructions sync --apply');
+            context.logger.info('Fix with: oat instructions sync');
           }
         }
 

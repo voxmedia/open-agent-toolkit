@@ -32,8 +32,7 @@ Purpose:
 
 Key behavior:
 
-- Dry-run default
-- `--apply` for mutation
+- Mutates by default; use `--dry-run` to preview
 - Strategy-aware operations (`symlink`, `copy`, `auto`)
 - Provider enable/disable honored via sync config
 
@@ -59,7 +58,7 @@ Key behavior:
 
 - Modifies `.oat/sync/config.json` to toggle provider enablement
 - Options: `--enabled <providers>`, `--disabled <providers>` (comma-separated)
-- Changes take effect on next `oat sync --apply`
+- Changes take effect on next `oat sync`
 
 ## Notes
 
@@ -90,7 +89,7 @@ Purpose:
 
 Key behavior:
 
-- Dry-run by default; use `--apply` to write changes
+- Mutates by default; use `--dry-run` to preview changes
 - Creates missing `CLAUDE.md` pointers
 - Skips mismatched files unless `--force` is provided
 - Writes canonical pointer content `@AGENTS.md\n`

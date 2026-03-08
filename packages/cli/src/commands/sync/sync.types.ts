@@ -43,7 +43,7 @@ export interface SyncSummary {
 
 export interface SyncJsonPayload {
   scope: Scope;
-  apply: boolean;
+  dryRun: boolean;
   plans: SyncPlan[];
   summary: SyncSummary;
   providerMismatches?: SyncProviderMismatches[];

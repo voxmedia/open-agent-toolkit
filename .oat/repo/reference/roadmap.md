@@ -271,7 +271,7 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 - P0: CLI command surface (interop foundation)
   - `oat init` (bootstrap `.agents/`, `.oat/`, `AGENTS.md`)
   - `oat status` (provider detection + drift/stray summary + capability matrix)
-  - `oat sync` (diff-first, dry-run by default; apply only with explicit flag)
+  - `oat sync` (diff-first, mutate by default; `--dry-run` to preview)
   - `oat providers set` (explicit project provider enable/disable in sync config)
   - `oat doctor` (environment diagnostics + actionable fix steps)
 - P0: Provider adapters (config-driven)
