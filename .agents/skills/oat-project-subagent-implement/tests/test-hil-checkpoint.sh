@@ -5,9 +5,9 @@
 # plan frontmatter and that the orchestrator can determine checkpoint boundaries.
 #
 # Scenarios:
-# 1. Plan with HiLL at p04 — phases p01-p03 can run, must pause before p04
-# 2. Plan with HiLL at p02 — only p01 runs before checkpoint
-# 3. Plan with no HiLL — default behavior (pause at every phase)
+# 1. Plan with HiLL at p04 — all phases run, pause after p04 completes
+# 2. Plan with HiLL at p02 — p01-p02 run, pause after p02 completes
+# 3. Plan with no HiLL — default behavior (pause after every phase)
 #
 # Usage: bash tests/test-hil-checkpoint.sh
 
@@ -80,8 +80,8 @@ echo ""
 
 # Parse the dispatch manifest from Test 1 and verify phase ordering
 # The sample plan has 4 phases. With HiLL at p04:
-# Run 1: p01, p02, p03 (before checkpoint)
-# Run 2: p04 (after checkpoint, requires user approval)
+# Run 1: p01, p02, p03, p04 (all run through checkpoint)
+# Pause: after p04 completes (end of implementation)
 
 # Verify all 4 phases are identified in the manifest
 PHASE_COUNT=$(echo "$OUTPUT_1" | grep -c "type: phase" || true)
@@ -94,7 +94,7 @@ else
 fi
 
 # Verify checkpoint info allows orchestrator to partition
-# The orchestrator reads hill_checkpoints and stops before dispatching p04
+# The orchestrator reads hill_checkpoints and pauses after completing p04
 assert_contains "p01 is in pre-checkpoint run" "$OUTPUT_1" 'unit_id: "p01"'
 assert_contains "p02 is in pre-checkpoint run" "$OUTPUT_1" 'unit_id: "p02"'
 assert_contains "p03 is in pre-checkpoint run" "$OUTPUT_1" 'unit_id: "p03"'
