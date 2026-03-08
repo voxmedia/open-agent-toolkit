@@ -208,6 +208,24 @@ If review type is `artifact`:
 
 If review type is `code`, use the scope resolution below.
 
+**Step 3a: Detect Re-Review Context**
+
+Before resolving scope, check if this is a re-review of fixes from a prior review cycle:
+
+1. Scan `plan.md` for tasks tagged with `(review)` in the scope being reviewed (e.g., `(p02-review)` fix tasks for a `p02` phase review).
+2. If `(review)` fix tasks exist **and** their status is `completed`:
+   - This is a re-review. Offer the user a narrowed scope:
+     ```
+     Detected completed review fix tasks for this scope:
+     - {task IDs and descriptions}
+
+     Scope to fix task commits only? (Y/n)
+     ```
+   - **If yes (default):** gather only the commits associated with those fix tasks using commit convention grep (e.g., `git log --oneline --grep="\(pNN-tNN\)" HEAD~50..HEAD` for each fix task ID). Set `SCOPE_RANGE` to cover only those commits.
+   - **If no:** proceed with full scope resolution below (re-review everything).
+
+3. If no `(review)` fix tasks exist, or they are not yet completed, proceed with normal scope resolution.
+
 **Priority order for scope resolution:**
 
 1. **Explicit user input (preferred):**
