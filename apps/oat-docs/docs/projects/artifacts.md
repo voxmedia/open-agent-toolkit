@@ -5,16 +5,16 @@ Project artifacts live under `.oat/projects/<scope>/<project>/`.
 ## Core artifacts
 
 - `state.md`: lifecycle state and checkpoint metadata
-- `discovery.md`: problem framing, constraints, and discovery outcomes
+- `discovery.md`: problem framing, constraints, solution space exploration (for exploratory requests), and discovery outcomes
 - `spec.md`: requirements + acceptance criteria
-- `design.md`: architecture and implementation approach
+- `design.md`: architecture and implementation approach (full in spec-driven mode; optional lightweight version in quick mode covering architecture, components, and testing strategy)
 - `plan.md`: phase/task breakdown and review tracking
 - `implementation.md`: execution log, verification, final summary
 
 Mode-sensitive notes:
 
 - `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`) for routing.
-- `spec.md` and `design.md` are required in spec-driven mode, optional in quick/import mode.
+- `spec.md` and `design.md` are required in spec-driven mode, optional in quick/import mode. Quick mode offers a lightweight `design.md` (architecture, components, testing strategy) at a post-discovery decision point.
 - `plan.md` remains canonical execution artifact across all modes.
 
 ## Supporting artifacts

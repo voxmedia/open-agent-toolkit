@@ -29,11 +29,37 @@ Discovery is for requirements and decisions, not implementation details.
 **A:** {User's answer}
 **Decision:** {What this means for the project}
 
-## Options Considered
+## Solution Space
 
-### Option A: {Approach Name}
+_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+
+{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+
+### Approach 1: {Strategy Name} _(Recommended)_
 
 **Description:** {What this approach involves}
+**When this is the right choice:** {Conditions under which this approach is best}
+**Tradeoffs:** {What you give up by choosing this}
+
+### Approach 2: {Strategy Name}
+
+**Description:** {What this approach involves}
+**When this is the right choice:** {Conditions under which this approach is best}
+**Tradeoffs:** {What you give up by choosing this}
+
+### Chosen Direction
+
+**Approach:** {Which approach was selected}
+**Rationale:** {Why this approach over the alternatives}
+**User validated:** {Yes/No — explicit buy-in before proceeding}
+
+## Options Considered
+
+{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+
+### Option A: {Option Name}
+
+**Description:** {What this option involves}
 
 **Pros:**
 - {Benefit 1}
@@ -45,7 +71,7 @@ Discovery is for requirements and decisions, not implementation details.
 
 **Chosen:** {A/B/Neither}
 
-**Summary:** {1-2 sentence summary of the chosen approach and why}
+**Summary:** {1-2 sentence summary of the chosen option and why}
 
 ## Key Decisions
 
@@ -101,5 +127,7 @@ Discovery is for requirements and decisions, not implementation details.
 
 Use this discovery artifact to drive the next workflow step:
 
-- **Quick mode:** proceed directly to `plan.md`. A separate `design.md` is optional and should only be created when the available technical detail is rich enough that a distinct design artifact will materially improve clarity.
+- **Quick mode → straight to plan:** proceed directly to `plan.md` when scope is clear and no architecture decisions remain.
+- **Quick mode → optional lightweight design:** produce a focused `design.md` (architecture, components, data flow, testing) before planning. Choose this when discovery surfaced architecture choices or component boundaries.
+- **Quick mode → promote:** escalate to spec-driven if discovery revealed the scope is larger or more complex than expected.
 - **Spec-driven mode:** continue to `oat-project-spec` (after HiLL approval if configured).

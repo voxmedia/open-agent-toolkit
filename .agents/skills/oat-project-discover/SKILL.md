@@ -1,6 +1,6 @@
 ---
 name: oat-project-discover
-version: 1.2.0
+version: 1.3.0
 description: Use when starting a project or when requirements are still unclear. Runs structured discovery to gather requirements, constraints, and context.
 disable-model-invocation: true
 user-invocable: true
@@ -226,23 +226,42 @@ This focuses the conversation on what matters most to the user.
 ### Step 8: Ask Clarifying Questions
 
 **For each selected gray area:**
-- Ask targeted questions one at a time
+- Ask targeted questions **one at a time** — let each answer inform the next question
+- Prefer **multiple choice** questions when feasible to reduce cognitive load, with an "Other" escape hatch
 - After each answer:
   1. Add to discovery.md "Clarifying Questions" section
   2. Update frontmatter: `oat_last_updated: {today}`
+  3. Briefly acknowledge what the answer means for the project before asking the next question
 
 **Question quality:**
 - Open-ended where possible
 - Domain-aware (reference knowledge base context)
 - Focused on decisions, not implementation details
+- **Lead with your perspective** — frame questions around what you think the answer should be and ask the user to confirm or redirect
 
-### Step 9: Explore Approaches
+### Step 9: Explore Solution Space
 
-Propose 2-3 approaches with pros/cons. Document in discovery.md "Options Considered".
+Before converging on an approach, invest in genuine divergent exploration. Simple projects are where unexamined assumptions cause the most wasted work.
 
-When an approach is selected, add a "Summary" line explaining the choice.
+**Step 9a: Propose Approaches**
 
-**Handle scope creep:**
+Propose 2-3 **genuinely distinct** approaches (not minor variations). For each:
+- Describe the approach concretely
+- Explain tradeoffs — not just pros/cons, but *when* each approach is the better choice
+- **Lead with your recommendation and explain why**
+
+Document in discovery.md `## Solution Space` section.
+
+**Step 9b: Validate Before Converging**
+
+Present the approaches to the user and get explicit buy-in on the chosen direction before moving to decisions and boundaries. Summarize:
+- The recommended approach
+- Why it's preferred over the alternatives
+- Any tradeoffs the user should be aware of
+
+When an approach is selected, document it in `## Options Considered` with a "Summary" line explaining the choice.
+
+**Step 9c: Handle Scope Creep**
 - If user suggests additional features during discussion → add to "Deferred Ideas"
 - If uncertainty arises → add to "Open Questions"
 - Keep discovery focused on the core problem

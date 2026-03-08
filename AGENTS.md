@@ -59,6 +59,55 @@
 - Watch mode available for both packages (`pnpm dev`) and applications (`tsx watch`)
 - Clean builds with `pnpm clean` to remove all `dist/` directories
 
+## Feature Planning Triage
+
+When a user asks to plan, design, or implement a new feature or significant change, **always present the workflow options before beginning any planning work.**
+
+### Trigger Conditions
+
+Detect planning intent from phrases like: "plan", "design", "let's build", "add a feature", "implement", "I want to add/create/build...", or any request that implies multi-step feature work.
+
+### Workflow Options
+
+Present these options to the user, with a recommendation based on the assessment heuristic below:
+
+1. **Full spec-driven workflow** — Discovery → Spec → Design → Plan → Implement
+   _Best for: complex features, cross-cutting concerns, multiple components, projects needing formal requirements or traceability._
+   → Use `oat-project-new` (scaffolds spec-driven project)
+
+2. **Quick workflow** — Discovery → [Optional Lightweight Design] → Plan → Implement
+   _Best for: bounded features at any size, clear requirements, rapid iteration preferred. Can still produce a design artifact when architecture decisions matter._
+   → Use `oat-project-quick-start`
+
+3. **Import external plan** — Normalize an existing plan into OAT format → Implement
+   _Best for: plans already drafted in another tool, session, or document._
+   → Use `oat-project-import-plan`
+
+4. **Provider plan mode → import** — Use provider's native plan mode, then import the result into an OAT project for tracked implementation.
+   _Best for: users who prefer provider planning UX but want OAT tracking._
+
+5. **No project workflow** — Proceed without OAT project tracking.
+   _Best for: small fixes, straightforward changes, or explicit user preference._
+
+### Recommendation Heuristic
+
+Before presenting options, assess the request and lead with a recommendation:
+
+- **Multiple components/APIs/data models, unclear boundaries, or cross-cutting concerns** → Recommend spec-driven (#1)
+- **Bounded feature of any size, some design questions but clear requirements** → Recommend quick (#2)
+- **User references an existing plan or external artifact** → Recommend import (#3)
+- **User is already in plan mode or prefers that UX** → Recommend provider plan mode → import (#4)
+- **Simple, well-understood change or user says "just do it"** → Recommend no workflow (#5)
+
+The distinguishing factor is **requirements clarity and design risk**, not task count. A large but well-understood migration is fine for quick mode. A small but architecturally unclear feature might need spec-driven.
+
+### Guardrail
+
+Once a workflow is selected (or explicitly declined), do NOT produce ad-hoc planning artifacts outside the chosen workflow. All planning output must flow through the selected workflow's artifacts (`discovery.md`, `spec.md`, `design.md`, `plan.md`, etc.) or, if no workflow was selected, proceed directly to implementation.
+
+If the user declines all workflows, confirm once:
+> "Got it — I'll proceed without project tracking. If this grows in scope, I can set up a project workflow at any point."
+
 ## Agent Workflow
 
 For multi-session or complex development tasks, use the structured agent project workflow:

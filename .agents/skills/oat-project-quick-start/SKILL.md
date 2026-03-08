@@ -1,7 +1,7 @@
 ---
 name: oat-project-quick-start
-version: 1.2.1
-description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan.
+version: 1.3.0
+description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: "<project-name>"
 disable-model-invocation: true
 user-invocable: true
@@ -29,7 +29,8 @@ Create or resume a project in **quick mode** and produce a runnable `plan.md` wi
 
 **ALLOWED Activities:**
 - Project scaffolding and project pointer updates.
-- Lightweight discovery conversation and decisions capture.
+- Discovery conversation with adaptive depth (including brainstorming when appropriate).
+- Optional lightweight design artifact (`design.md`) when user chooses it at the decision point.
 - Plan generation with stable task IDs and verification commands.
 
 **Self-Correction Protocol:**
@@ -52,11 +53,13 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
-  - `[1/5] Scaffolding quick-mode project…`
-  - `[2/5] Capturing discovery decisions…`
-  - `[3/5] Generating execution plan…`
-  - `[4/5] Initializing implementation tracker…`
-  - `[5/5] Refreshing dashboard…`
+  - `[1/6] Scaffolding quick-mode project…`
+  - `[2/6] Exploring solution space + capturing discovery…`
+  - `[3/6] Decision point: design depth…`
+  - `[4/6] Generating execution plan…`
+  - `[5/6] Initializing implementation tracker…`
+  - `[6/6] Refreshing dashboard…`
+  - _(If lightweight design is chosen, insert design steps between 3 and 4)_
 
 ## Process
 
@@ -89,26 +92,129 @@ Update `"$PROJECT_PATH/state.md"` frontmatter:
 - `oat_phase: discovery`
 - `oat_phase_status: in_progress`
 
-### Step 2: Capture Discovery (Quick)
+### Step 2: Capture Discovery (Adaptive Depth)
 
 If `"$PROJECT_PATH/discovery.md"` is missing, create it from `.oat/templates/discovery.md` first.
 
-If enough data is available in the current session context, synthesize `discovery.md` from that session context before moving to planning. This can be true even in a clean session with no prior project context, as long as the user request and follow-up discussion provide enough detail.
+**Adapt discovery depth to the ambiguity of the request.** Do not rush past exploration to get to planning.
 
-Ask only the minimum additional questions needed to remove blockers for a quality plan. If quick-start needs to ask startup questions, backfill `discovery.md` with the product discussion, Q&A, options considered, and resulting decisions before finalizing `plan.md`.
+#### 2a: Assess Request Ambiguity
 
-Use `"$PROJECT_PATH/discovery.md"` and capture:
+Before asking questions, classify the request:
+
+- **Well-understood** — the user has a clear mental model, requirements are specific, approach is obvious. Examples: "add a CLI flag for verbose output", "rename X to Y across the codebase."
+  → Synthesize `discovery.md` from available session context quickly. Ask only the minimum additional questions needed to remove blockers for a quality plan.
+
+- **Exploratory** — the user is thinking out loud, requirements have gaps, multiple approaches are viable. Signals: "I'm considering...", "what do you think about...", "how should we approach...", "I want to add X but I'm not sure how."
+  → Invest in solution space exploration before converging.
+
+#### 2b: Solution Space Exploration (Exploratory Requests)
+
+For exploratory requests, spend time in divergent thinking before converging on an approach:
+
+1. **Propose 2-3 distinct approaches** — not minor variations, but genuinely different strategies. For each:
+   - Describe the approach concretely
+   - List tradeoffs (not just pros/cons — explain *when* each approach is the better choice)
+   - **Lead with your recommendation and explain why**
+
+2. **One question at a time** — ask focused clarifying questions sequentially, not as a batch. After each answer, update your understanding and let the next question be informed by the response.
+
+3. **Incremental validation** — after exploring the solution space and converging on an approach, summarize the chosen direction and get explicit user buy-in before moving to decisions and constraints.
+
+Document the exploration in the `## Solution Space` section of `discovery.md`.
+
+#### 2c: Capture Decisions
+
+Whether well-understood or exploratory, backfill `discovery.md` with the discussion, Q&A, and decisions from the session:
 - initial request
+- solution space exploration (if applicable)
 - clarifying Q&A that materially shaped the project
 - key decisions
-- options considered (when relevant)
+- options considered and chosen approach
 - constraints
 - out-of-scope
 - success criteria
 
 Keep this concise and outcome-oriented.
 
-Do not create spec-driven artifacts by default. A separate `design.md` is only warranted when the available technical detail is rich enough that a distinct design artifact will materially improve clarity; otherwise keep the detail in discovery and proceed directly to plan authoring.
+### Step 2.5: Decision Point — Design Depth
+
+**Auto-advance rule:** If the request was classified as **well-understood** in Step 2a and discovery surfaced no architecture decisions, component boundary questions, or unexpected complexity, skip this decision point entirely and continue directly to Step 3. This preserves the minimal-ceremony contract for straightforward requests.
+
+**Otherwise**, present the user with a choice about how to proceed:
+
+> "Discovery is complete. How would you like to proceed?"
+> 1. **Straight to plan** — scope is clear, ready to generate tasks
+> 2. **Lightweight design first** — draft architecture and components before planning _(produces design.md)_
+> 3. **Promote to spec-driven** — this needs formal requirements and full design
+
+Use `AskUserQuestion` to present this choice.
+
+**Recommendation heuristic** — lead with a recommendation based on discovery findings:
+- If discovery revealed clear scope with no significant architecture decisions → recommend "Straight to plan"
+- If discovery surfaced architecture choices, component boundaries, or data model questions → recommend "Lightweight design first"
+- If discovery revealed the scope is larger or more complex than initially expected → recommend "Promote to spec-driven"
+
+**If user chooses "Straight to plan":** continue to Step 3.
+
+**If user chooses "Lightweight design first":** execute Step 2.75 before continuing to Step 3.
+
+**If user chooses "Promote to spec-driven":**
+- Update `discovery.md` frontmatter:
+  - `oat_status: complete`
+  - `oat_ready_for: oat-project-spec`
+  - `oat_last_updated: {today}`
+- Update `state.md`:
+  - `oat_workflow_mode: spec-driven`
+  - `oat_phase: discovery`
+  - `oat_phase_status: complete`
+- Refresh repo dashboard: `oat state refresh`
+- Inform the user: "Discovery is complete. Run `oat-project-spec` next to formalize requirements."
+- Stop here. Do not generate a plan.
+
+### Step 2.75: Lightweight Design (Optional)
+
+Produce a focused `design.md` covering only what's needed for a quality plan. This is NOT the full spec-driven design — it's a quick architectural sketch.
+
+Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
+
+**Required sections (always fill these):**
+1. **Overview** — 2-3 paragraph summary of the technical approach
+2. **Architecture** — system context, key components, and data flow
+3. **Component Design** — for each component: purpose, responsibilities, interfaces
+4. **Testing Strategy** — key test levels and scenarios (no requirement-to-test mapping needed in quick mode)
+
+**Optional sections (include only when relevant to the feature):**
+- Data Models — if new models or schema changes are involved
+- API Design — if new endpoints or interfaces are introduced
+- Error Handling — if non-obvious error scenarios exist
+
+**Skip these sections in quick mode** (they belong to spec-driven design):
+- Security Considerations (unless the feature is security-related)
+- Performance Considerations (unless the feature has specific performance requirements)
+- Deployment Strategy
+- Migration Plan
+- Dependencies (captured in discovery instead)
+- Risks and Mitigation (captured in discovery instead)
+
+**Present design incrementally for validation:**
+1. Draft architecture overview → present to user for validation
+2. Draft component design → present to user for validation
+3. Draft data flow + testing approach → present to user for validation
+4. Finalize `design.md`
+
+After each chunk, ask: "Does this look right, or should we adjust before continuing?"
+
+Update `design.md` frontmatter:
+```yaml
+---
+oat_status: complete
+oat_ready_for: null
+oat_last_updated: {today}
+oat_generated: false
+oat_template: false
+---
+```
 
 ### Step 3: Generate Plan Directly
 

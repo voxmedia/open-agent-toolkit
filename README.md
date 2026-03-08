@@ -101,7 +101,7 @@ Lane options (all converge on implementation + project review workflows):
 | Lane | Typical sequence | Best fit |
 |---|---|---|
 | Spec-Driven | Discovery -> Spec -> Design -> Plan -> Implement -> Project review loop -> Docs sync (optional) | New initiatives or higher-risk changes that need strong artifact rigor |
-| Quick | Quick start (discovery + plan baseline) -> Implement -> Project review loop | Smaller scoped work that still needs structured execution |
+| Quick | Quick start (adaptive discovery + [optional lightweight design] + plan) -> Implement -> Project review loop | Bounded features with clear requirements; can promote to spec-driven if complexity grows |
 | Imported-plan | Plan with provider -> Import to OAT project -> Implement -> Project review loop | External/provider-authored plans you want normalized into OAT artifacts |
 
 Shared across lanes:
@@ -275,7 +275,7 @@ This gives you the core value of OAT without adopting workflow artifacts.
 ```mermaid
 flowchart LR
   SpecDriven["Spec-Driven lane: discover -> spec -> design -> plan"] --> Mode{"Implementation mode?"}
-  Quick["Quick lane: oat-project-quick-start"] --> Mode
+  Quick["Quick lane: oat-project-quick-start\n(adaptive discovery + optional design)"] --> Mode
   Import["Imported lane: oat-project-import-plan"] --> Mode
   Mode -->|Sequential| ImplementSeq["oat-project-implement"]
   Mode -->|Subagent-driven| ImplementSub["oat-project-subagent-implement"]
@@ -303,7 +303,8 @@ flowchart LR
    - Implement (`oat-project-implement` or `oat-project-subagent-implement`)
    - Documentation sync (`oat-project-document`, optional)
 2. Quick workflow lane
-   - Quick start (`oat-project-quick-start`, which captures discovery context and writes a runnable plan baseline)
+   - Quick start (`oat-project-quick-start` — adaptive discovery with solution space exploration for exploratory requests, minimal ceremony for well-understood ones)
+   - Decision point: straight to plan, optional lightweight `design.md`, or promote to spec-driven
    - Implement (`oat-project-implement` or `oat-project-subagent-implement`)
    - Optional promotion (`oat-project-promote-spec-driven`)
 3. Imported-plan workflow lane
@@ -323,7 +324,7 @@ flowchart LR
    - `oat-project-document` (optional)
    - `oat-project-complete`
 2. Quick-start sequence
-   - `oat-project-quick-start` (discovery + initial plan scaffold)
+   - `oat-project-quick-start` (adaptive discovery + optional lightweight design + plan)
    - `oat-project-implement` or `oat-project-subagent-implement`
    - `oat-project-review-provide` + `oat-project-review-receive`
    - `oat-project-pr-final`

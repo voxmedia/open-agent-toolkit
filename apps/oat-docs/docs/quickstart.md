@@ -138,15 +138,16 @@ The workflow layer can be adopted when you want structured project execution and
 9. `oat-project-document` (optional — sync documentation surfaces)
 10. `oat-project-complete`
 
-#### Quick lane (discovery -> plan -> implement)
+#### Quick lane (adaptive discovery -> [optional design] -> plan -> implement)
 
-1. `oat-project-quick-start`
-2. Implementation mode:
+1. `oat-project-quick-start` (adaptive discovery — minimal ceremony for well-understood requests, solution space exploration for exploratory ones)
+2. Decision point: straight to plan, optional lightweight `design.md`, or promote to spec-driven
+3. Implementation mode:
    - `oat-project-implement` (sequential, default)
    - `oat-project-subagent-implement` (parallel/subagent-driven)
-3. `oat-project-review-provide` / `oat-project-pr-final`
-4. `oat-project-document` (optional — sync documentation surfaces)
-5. Optional: `oat-project-promote-spec-driven`
+4. `oat-project-review-provide` / `oat-project-pr-final`
+5. `oat-project-document` (optional — sync documentation surfaces)
+6. Optional: `oat-project-promote-spec-driven`
 
 #### Imported plan lane
 

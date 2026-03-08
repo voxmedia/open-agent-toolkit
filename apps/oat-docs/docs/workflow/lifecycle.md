@@ -31,12 +31,13 @@ OAT lifecycle order:
 
 ### Quick lane diagram
 
-1. `oat-project-quick-start`
-2. Implement:
+1. `oat-project-quick-start` (adaptive discovery — well-understood requests synthesize quickly, exploratory requests invest in solution space exploration)
+2. Decision point: straight to plan, optional lightweight `design.md`, or promote to spec-driven
+3. Implement:
    - `oat-project-implement` (sequential)
    - `oat-project-subagent-implement` (parallel/subagent-driven)
-3. `oat-project-review-provide` / `oat-project-pr-final`
-4. Optional `oat-project-promote-spec-driven` to backfill spec-driven lifecycle artifacts in-place
+4. `oat-project-review-provide` / `oat-project-pr-final`
+5. Optional `oat-project-promote-spec-driven` to backfill spec-driven lifecycle artifacts in-place
 
 ### Import lane diagram
 
@@ -64,8 +65,12 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  Q["Quick Start"] --> QI1["Implement (oat-project-implement)"]
-  Q --> QI2["Implement (oat-project-subagent-implement)"]
+  Q["Quick Start\n(adaptive discovery)"] --> D{"Design depth?"}
+  D -->|Straight to plan| P["Plan"]
+  D -->|Lightweight design| LD["Design (quick)"] --> P
+  D -->|Promote| SD["→ Spec-Driven lane"]
+  P --> QI1["Implement (oat-project-implement)"]
+  P --> QI2["Implement (oat-project-subagent-implement)"]
   QI1 --> QR["Review / PR"]
   QI2 --> QR
 ```
@@ -86,7 +91,7 @@ flowchart LR
 
 Quick lane progression:
 
-`discovery.md` -> `plan.md` -> `implementation.md` (`spec.md`/`design.md` optional)
+`discovery.md` -> [`design.md` (optional lightweight)] -> `plan.md` -> `implementation.md`
 
 Import lane progression:
 
