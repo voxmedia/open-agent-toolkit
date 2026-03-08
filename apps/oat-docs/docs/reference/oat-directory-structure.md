@@ -69,7 +69,7 @@ Primary ways this file is managed:
 
 Current config ownership:
 
-- `.oat/config.json` owns shared non-sync repo settings (including `worktrees.root` and `projects.root`).
+- `.oat/config.json` owns shared non-sync repo settings (including `worktrees.root`, `projects.root`, and `documentation.*`).
 - `.oat/config.local.json` owns per-developer project lifecycle state (`activeProject`, `lastPausedProject`, `activeIdea`).
 - `~/.oat/config.json` owns user-level state (`activeIdea` at global scope).
 - `.oat/sync/config.json` continues to own sync/provider behavior.
@@ -86,6 +86,12 @@ Current schema keys:
 | `worktrees.root` | `string` | `".worktrees"`           | Root directory for git worktrees (repo-relative or absolute) |
 | `projects.root`  | `string` | `".oat/projects/shared"` | Default root directory for OAT projects                      |
 | `localPaths`     | `string[]` | -                      | Gitignored directories to sync between main repo and worktrees. Supports glob patterns. Managed via `oat local add/remove`. |
+| `documentation.root` | `string` | -                   | Root directory containing documentation source files (e.g., `apps/docs/docs`) |
+| `documentation.tooling` | `string` | -                | Documentation framework identifier (e.g., `mkdocs`, `fumadocs`) |
+| `documentation.config` | `string` | -                 | Path to the documentation framework config file (e.g., `mkdocs.yml`, `next.config.js`) |
+| `documentation.requireForProjectCompletion` | `boolean` | `false` | When `true`, OAT project completion gates require documentation to be updated |
+
+All `documentation.*` keys are managed via `oat config get/set` and are set automatically by `oat docs init`.
 
 Example:
 
@@ -97,6 +103,12 @@ Example:
   },
   "worktrees": {
     "root": ".worktrees"
+  },
+  "documentation": {
+    "root": "apps/docs/docs",
+    "tooling": "mkdocs",
+    "config": "mkdocs.yml",
+    "requireForProjectCompletion": false
   }
 }
 ```
