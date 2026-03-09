@@ -61,6 +61,23 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Prior incident: `oat-project-document` was added to `install-workflows.ts` but missed in `bundle-assets.sh`, causing the bundled asset to be deleted on every build
   - Created: 2026-03-08
 
+- [ ] **(P2) [skills] Rename `create-skill` to `create-agnostic-skill` and add to utility pack**
+  - Context: The `create-skill` skill creates provider-agnostic skills but its name doesn't communicate that. It also isn't part of any installable pack — it's only available if manually present in `.agents/skills/`.
+  - Proposed change:
+    - Rename `.agents/skills/create-skill/` to `.agents/skills/create-agnostic-skill/`.
+    - Update all internal references (skill name frontmatter, any cross-references from other skills).
+    - Add `create-agnostic-skill` to the utility pack in `oat tools init` so it's installable via `oat tools init --pack utility` (or included when installing all packs).
+    - Update `bundle-assets.sh` and any pack manifests accordingly.
+  - Success criteria:
+    - Skill is renamed and all references updated.
+    - Available via `oat tools init` as part of the utility pack.
+    - Name clearly communicates provider-agnostic skill creation purpose.
+  - Links:
+    - Current skill: `.agents/skills/create-skill/SKILL.md`
+    - Pack installer: `packages/cli/src/commands/init/tools/`
+    - Build script: `packages/cli/scripts/bundle-assets.sh`
+  - Created: 2026-03-08
+
 - [ ] **(P1) [tooling] Add timestamp frontmatter to project state documents**
   - Context: Project `state.md` files currently lack machine-readable timestamps. Tooling that wants to find projects by most recently updated or created date has no structured field to query. Skills that scan archived projects for documentation gaps (e.g., `oat-docs-analyze`) also benefit from knowing when a project was created, completed, or last updated.
   - Proposed change:
