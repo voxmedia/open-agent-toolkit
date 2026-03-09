@@ -6,6 +6,10 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import {
+  type ApplyOatCoreResult,
+  applyOatCoreGitignore,
+} from '@commands/init/gitignore';
+import {
   adoptStrayToCanonical,
   isAdoptionConflictError,
 } from '@commands/shared/adopt-stray';
@@ -151,6 +155,7 @@ interface InitDependencies {
     scopeRoot: string,
     config: SyncConfig,
   ) => Promise<ConfigAwareAdaptersResult>;
+  applyOatCoreGitignore: (repoRoot: string) => Promise<ApplyOatCoreResult>;
 }
 
 interface InitScopeSummary {
@@ -286,6 +291,7 @@ function createDependencies(): InitDependencies {
     },
     saveSyncConfig,
     getConfigAwareAdapters,
+    applyOatCoreGitignore,
   };
 }
 
@@ -430,6 +436,10 @@ async function runInitCommand(
     }
 
     await dependencies.ensureCanonicalDirs(scopeRoot, scope);
+
+    if (scope === 'project') {
+      await dependencies.applyOatCoreGitignore(scopeRoot);
+    }
 
     const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
     let manifest = await dependencies.loadManifest(manifestPath);

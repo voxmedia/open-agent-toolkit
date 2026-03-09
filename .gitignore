@@ -50,20 +50,17 @@ yarn-error.log*
 # OAT repo archive (local historical scratch only)
 .oat/repo/archive/**
 
-# OAT projects
+# OAT core
+.oat/config.local.json
+.oat/state.md
 .oat/projects/local/**
 .oat/projects/archived/**
 !.oat/projects/local/.gitkeep
 !.oat/projects/archived/.gitkeep
-
-# OAT local-only workspace state
-.oat/config.local.json
-.oat/state.md
+# END OAT core
 
 # OAT local paths
 .oat/ideas/
 .oat/projects/**/pr/
 .oat/projects/**/reviews/
-.oat/projects/archived/
-.oat/projects/local/
 # END OAT local paths

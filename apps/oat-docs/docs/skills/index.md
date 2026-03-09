@@ -55,7 +55,7 @@ Project skills are stored in `.agents/skills`.
 - `oat-worktree-bootstrap-auto`
 - `oat-repo-knowledge-index`
 - `create-oat-skill`
-- `create-skill`
+- `create-agnostic-skill`
 - `create-pr-description`
 - `create-ticket`
 - `update-repo-reference`

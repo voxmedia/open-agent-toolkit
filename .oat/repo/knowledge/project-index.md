@@ -59,7 +59,7 @@ oat_warning: "GENERATED FILE - Thin index, will be enriched after mapper complet
   .agents/skills/codex-skill
   .agents/skills/create-oat-skill
   .agents/skills/create-pr-description
-  .agents/skills/create-skill
+  .agents/skills/create-agnostic-skill
   .agents/skills/create-ticket
   .agents/skills/oat-idea-ideate
   .agents/skills/oat-idea-new
@@ -96,7 +96,7 @@ oat_warning: "GENERATED FILE - Thin index, will be enriched after mapper complet
   .claude/skills/codex-skill
   .claude/skills/create-oat-skill
   .claude/skills/create-pr-description
-  .claude/skills/create-skill
+  .claude/skills/create-agnostic-skill
   .claude/skills/create-ticket
   .claude/skills/oat-idea-ideate
   .claude/skills/oat-idea-new
@@ -135,7 +135,7 @@ oat_warning: "GENERATED FILE - Thin index, will be enriched after mapper complet
   .cursor/skills/codex-skill
   .cursor/skills/create-oat-skill
   .cursor/skills/create-pr-description
-  .cursor/skills/create-skill
+  .cursor/skills/create-agnostic-skill
   .cursor/skills/create-ticket
   .cursor/skills/oat-idea-ideate
   .cursor/skills/oat-idea-new

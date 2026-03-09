@@ -63,6 +63,7 @@ function createHarness(options: HarnessOptions = {}) {
     updatedScripts: [],
     skippedScripts: [],
     projectsRootInitialized: false,
+    resolvedProjectsRoot: '.oat/projects/shared',
   }));
   const installUtility = vi.fn(async () => ({
     copiedSkills: ['oat-review-provide'],
@@ -71,6 +72,20 @@ function createHarness(options: HarnessOptions = {}) {
     outdatedSkills: [],
   }));
   const copyDirWithStatus = vi.fn(async () => 'updated' as const);
+  const addLocalPaths = vi.fn(async (_repoRoot: string, paths: string[]) => ({
+    added: paths,
+    alreadyPresent: [] as string[],
+    rejected: [] as Array<{ path: string; reason: string }>,
+    all: paths,
+  }));
+  const applyGitignore = vi.fn(async () => ({ action: 'updated' }));
+  const readOatConfig = vi.fn(async () => ({
+    version: 1 as const,
+    localPaths: [] as string[],
+  }));
+  const resolveLocalPaths = vi.fn(
+    (config: { localPaths?: string[] }) => config.localPaths ?? [],
+  );
 
   const command = createInitToolsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -92,6 +107,10 @@ function createHarness(options: HarnessOptions = {}) {
     installWorkflows,
     installUtility,
     copyDirWithStatus,
+    addLocalPaths,
+    applyGitignore,
+    readOatConfig,
+    resolveLocalPaths,
   });
 
   return {
@@ -103,6 +122,10 @@ function createHarness(options: HarnessOptions = {}) {
     installWorkflows,
     installUtility,
     copyDirWithStatus,
+    addLocalPaths,
+    applyGitignore,
+    readOatConfig,
+    resolveLocalPaths,
   };
 }
 
@@ -194,12 +217,12 @@ describe('createInitToolsCommand', () => {
     } = createHarness({
       interactive: true,
       packSelection: [['ideas', 'workflows', 'utility']],
-      scopeSelection: ['user'],
+      scopeSelection: ['user', 'local'],
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(selectWithAbort).toHaveBeenCalledTimes(1);
+    expect(selectWithAbort).toHaveBeenCalledTimes(2);
     expect(installWorkflows).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
@@ -255,6 +278,7 @@ describe('createInitToolsCommand', () => {
       updatedScripts: [],
       skippedScripts: [],
       projectsRootInitialized: false,
+      resolvedProjectsRoot: '.oat/projects/shared',
     });
 
     await runCommand(command);
@@ -292,6 +316,7 @@ describe('createInitToolsCommand', () => {
       updatedScripts: [],
       skippedScripts: [],
       projectsRootInitialized: false,
+      resolvedProjectsRoot: '.oat/projects/shared',
     });
 
     await runCommand(command, [], ['--scope', 'all']);
@@ -325,6 +350,7 @@ describe('createInitToolsCommand', () => {
       updatedScripts: [],
       skippedScripts: [],
       projectsRootInitialized: false,
+      resolvedProjectsRoot: '.oat/projects/shared',
     });
 
     await runCommand(command, [], ['--scope', 'all']);

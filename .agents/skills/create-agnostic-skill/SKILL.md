@@ -1,5 +1,5 @@
 ---
-name: create-skill
+name: create-agnostic-skill
 version: 1.2.1
 description: Use when adding a reusable workflow skill for AI coding agents. Scaffolds a new .agents/skills skill using the Agent Skills open standard.
 argument-hint: "[skill-name]"
@@ -335,11 +335,11 @@ Legend: ✅ supported | ⚠️ provider-specific | 💤 ignored | ❓ unknown
 ### Basic Usage
 
 ```
-/create-skill my-new-skill
+/create-agnostic-skill my-new-skill
 ```
 
 ```
-/create-skill deploy-preview
+/create-agnostic-skill deploy-preview
 ```
 
 ### Conversational

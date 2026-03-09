@@ -10,46 +10,13 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { installWorkflows } from './install-workflows';
-
-const WORKFLOW_SKILLS = [
-  'oat-project-clear-active',
-  'oat-project-complete',
-  'oat-project-design',
-  'oat-project-discover',
-  'oat-project-document',
-  'oat-project-implement',
-  'oat-project-import-plan',
-  'oat-project-new',
-  'oat-project-open',
-  'oat-project-plan',
-  'oat-project-plan-writing',
-  'oat-project-pr-final',
-  'oat-project-pr-progress',
-  'oat-project-progress',
-  'oat-project-promote-spec-driven',
-  'oat-project-quick-start',
-  'oat-project-review-provide',
-  'oat-project-review-receive',
-  'oat-project-review-receive-remote',
-  'oat-project-spec',
-  'oat-repo-knowledge-index',
-  'oat-worktree-bootstrap',
-] as const;
-
-const WORKFLOW_AGENTS = ['oat-codebase-mapper.md', 'oat-reviewer.md'] as const;
-const WORKFLOW_TEMPLATES = [
-  'state.md',
-  'discovery.md',
-  'spec.md',
-  'design.md',
-  'plan.md',
-  'implementation.md',
-] as const;
-const WORKFLOW_SCRIPTS = [
-  'generate-oat-state.sh',
-  'generate-thin-index.sh',
-] as const;
+import {
+  installWorkflows,
+  WORKFLOW_AGENTS,
+  WORKFLOW_SCRIPTS,
+  WORKFLOW_SKILLS,
+  WORKFLOW_TEMPLATES,
+} from './install-workflows';
 
 const tempDirs: string[] = [];
 
@@ -181,6 +148,95 @@ describe('installWorkflows', () => {
     await expect(
       readFile(join(targetRoot, '.oat', 'config.json'), 'utf8'),
     ).resolves.toContain('.oat/projects/custom-config');
+  });
+
+  it('scaffolds projects directories with .gitkeep files on fresh install', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+
+    const result = await installWorkflows({ assetsRoot, targetRoot });
+
+    expect(result.projectsDirsScaffolded).toBe(true);
+    const sharedStat = await stat(
+      join(targetRoot, '.oat', 'projects', 'shared'),
+    );
+    expect(sharedStat.isDirectory()).toBe(true);
+    await expect(
+      readFile(
+        join(targetRoot, '.oat', 'projects', 'local', '.gitkeep'),
+        'utf8',
+      ),
+    ).resolves.toBe('');
+    await expect(
+      readFile(
+        join(targetRoot, '.oat', 'projects', 'archived', '.gitkeep'),
+        'utf8',
+      ),
+    ).resolves.toBe('');
+  });
+
+  it('scaffolds projects directories under custom projects.root', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+
+    // Pre-configure a custom projects root
+    await mkdir(join(targetRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(targetRoot, '.oat', 'projects-root'),
+      '.oat/custom-projects/shared\n',
+      'utf8',
+    );
+    await writeFile(
+      join(targetRoot, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        projects: { root: '.oat/custom-projects/shared' },
+      }),
+      'utf8',
+    );
+
+    const result = await installWorkflows({ assetsRoot, targetRoot });
+
+    expect(result.projectsDirsScaffolded).toBe(true);
+    expect(result.resolvedProjectsRoot).toBe('.oat/custom-projects/shared');
+    // Shared dir should be under the custom root
+    const sharedStat = await stat(
+      join(targetRoot, '.oat', 'custom-projects', 'shared'),
+    );
+    expect(sharedStat.isDirectory()).toBe(true);
+    // Sibling dirs should also be under the custom root
+    await expect(
+      readFile(
+        join(targetRoot, '.oat', 'custom-projects', 'local', '.gitkeep'),
+        'utf8',
+      ),
+    ).resolves.toBe('');
+    await expect(
+      readFile(
+        join(targetRoot, '.oat', 'custom-projects', 'archived', '.gitkeep'),
+        'utf8',
+      ),
+    ).resolves.toBe('');
+    // Default location should NOT exist
+    await expect(
+      stat(join(targetRoot, '.oat', 'projects', 'shared')),
+    ).rejects.toThrow();
+  });
+
+  it('does not re-scaffold projects dirs when shared already exists', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+
+    await installWorkflows({ assetsRoot, targetRoot });
+    const second = await installWorkflows({ assetsRoot, targetRoot });
+
+    expect(second.projectsDirsScaffolded).toBe(false);
   });
 
   it('gracefully skips missing source scripts', async () => {

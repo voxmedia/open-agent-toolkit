@@ -3,13 +3,9 @@ import {
   copyDirWithVersionCheck,
   copyFileWithStatus,
 } from '@commands/init/tools/shared/copy-helpers';
+import { IDEA_SKILLS } from '@commands/init/tools/shared/skill-manifest';
 
-export const IDEA_SKILLS = [
-  'oat-idea-new',
-  'oat-idea-ideate',
-  'oat-idea-summarize',
-  'oat-idea-scratchpad',
-] as const;
+export { IDEA_SKILLS };
 
 const INFRA_FILE_MAPPINGS = [
   { src: 'ideas-backlog.md', dest: '.oat/ideas/backlog.md' },

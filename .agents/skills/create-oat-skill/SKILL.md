@@ -16,8 +16,8 @@ Create a new OAT workflow skill under `.agents/skills/` that follows OAT convent
 
 This skill is a specialization of the general skill-creation workflow.
 
-- Follow the baseline principles and structure from `.agents/skills/create-skill/SKILL.md` (progressive disclosure, section layout, examples, troubleshooting, success criteria).
-- Apply the same frontmatter versioning rules from `create-skill`: include `version: 1.0.0` for new skills and bump patch/minor/major on future edits.
+- Follow the baseline principles and structure from `.agents/skills/create-agnostic-skill/SKILL.md` (progressive disclosure, section layout, examples, troubleshooting, success criteria).
+- Apply the same frontmatter versioning rules from `create-agnostic-skill`: include `version: 1.0.0` for new skills and bump patch/minor/major on future edits.
 - This skill adds/overrides only the OAT-specific requirements (progress banners, `{PROJECTS_ROOT}` + local-config active-project resolution, and OAT-safe bash patterns).
 
 ## When to Use
@@ -44,7 +44,7 @@ Parse from `$ARGUMENTS`:
 
 If not provided, ask the user for:
 - Skill name (kebab-case)
-- Description using the create-skill formula: `Use when [trigger condition]. [What it does for disambiguation].`
+- Description using the create-agnostic-skill formula: `Use when [trigger condition]. [What it does for disambiguation].`
 - Whether this is `oat-*` (should be for this skill)
 - Whether it needs project context (`activeProject` in `.oat/config.local.json`) or is repo-level
 

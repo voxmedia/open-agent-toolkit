@@ -187,6 +187,10 @@ function createHarness(options: HarnessOptions = {}): {
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
     installHook,
     uninstallHook,
+    applyOatCoreGitignore: vi.fn(async () => ({
+      action: 'no-change' as const,
+      entries: [],
+    })),
   };
 
   if (!options.useDefaultAdopt) {

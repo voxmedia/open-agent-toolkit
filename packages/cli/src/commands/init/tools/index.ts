@@ -5,6 +5,8 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
+import { applyGitignore } from '@commands/local/apply';
+import { addLocalPaths } from '@commands/local/manage';
 import {
   type MultiSelectChoice,
   type PromptContext,
@@ -13,6 +15,11 @@ import {
   selectWithAbort,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import {
+  type OatConfig,
+  readOatConfig,
+  resolveLocalPaths,
+} from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -66,6 +73,16 @@ interface InitToolsDependencies {
     destination: string,
     force: boolean,
   ) => Promise<'copied' | 'updated' | 'skipped'>;
+  addLocalPaths: (
+    repoRoot: string,
+    paths: string[],
+  ) => Promise<{ added: string[]; all: string[] }>;
+  applyGitignore: (
+    repoRoot: string,
+    localPaths: string[],
+  ) => Promise<{ action: string }>;
+  readOatConfig: (repoRoot: string) => Promise<OatConfig>;
+  resolveLocalPaths: (config: OatConfig) => string[];
 }
 
 interface OutdatedSkillRecord {
@@ -96,6 +113,10 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   installWorkflows: defaultInstallWorkflows,
   installUtility: defaultInstallUtility,
   copyDirWithStatus,
+  addLocalPaths,
+  applyGitignore,
+  readOatConfig,
+  resolveLocalPaths,
 };
 
 function isUserEligibleSelection(selections: ToolPack[]): boolean {
@@ -245,6 +266,59 @@ async function runInitTools(
       });
       for (const skill of workflowsResult.outdatedSkills) {
         outdatedSkills.push({ ...skill, targetRoot: projectRoot });
+      }
+
+      const resolvedRoot =
+        workflowsResult.resolvedProjectsRoot || '.oat/projects/shared';
+      const projectsBase = resolvedRoot.replace(/\/[^/]+$/, '');
+      const PR_REVIEW_LOCAL_PATHS = [
+        `${projectsBase}/**/pr`,
+        `${projectsBase}/**/reviews`,
+      ];
+
+      const existingConfig = await dependencies.readOatConfig(projectRoot);
+      const existingLocalPaths = new Set(
+        dependencies.resolveLocalPaths(existingConfig),
+      );
+      const alreadyConfigured = PR_REVIEW_LOCAL_PATHS.every((p) =>
+        existingLocalPaths.has(p),
+      );
+
+      if (!alreadyConfigured) {
+        let makeLocal = true;
+        if (context.interactive) {
+          const selected = await dependencies.selectWithAbort(
+            'Should PR and review directories for shared projects be local-only (gitignored) or version-controlled?',
+            [
+              {
+                label: 'Local only (recommended)',
+                value: 'local',
+                description:
+                  'PR and review artifacts stay local, synced via oat local sync',
+              },
+              {
+                label: 'Version controlled',
+                value: 'tracked',
+                description:
+                  'PR and review artifacts are committed to the repo',
+              },
+            ],
+            { interactive: context.interactive },
+          );
+          makeLocal = selected !== 'tracked';
+        }
+
+        if (makeLocal) {
+          const addResult = await dependencies.addLocalPaths(
+            projectRoot,
+            PR_REVIEW_LOCAL_PATHS,
+          );
+          if (addResult.added.length > 0) {
+            const config = await dependencies.readOatConfig(projectRoot);
+            const allPaths = dependencies.resolveLocalPaths(config);
+            await dependencies.applyGitignore(projectRoot, allPaths);
+          }
+        }
       }
     }
 

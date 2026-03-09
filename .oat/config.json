@@ -15,8 +15,6 @@
   "localPaths": [
     ".oat/ideas",
     ".oat/projects/**/pr",
-    ".oat/projects/**/reviews",
-    ".oat/projects/archived",
-    ".oat/projects/local"
+    ".oat/projects/**/reviews"
   ]
 }

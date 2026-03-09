@@ -83,7 +83,8 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
 
 ### Skill Authoring (Meta)
 
-- `create-oat-skill` (scaffold new OAT skills using the standard OAT sections + banner conventions; references baseline guidance from `create-skill`)
+- `create-agnostic-skill` (scaffold new provider-agnostic skills using the Agent Skills open standard; bundled in the utility pack)
+- `create-oat-skill` (scaffold new OAT skills using the standard OAT sections + banner conventions; references baseline guidance from `create-agnostic-skill`)
 
 ### Provider Interop CLI (Implemented Surface)
 

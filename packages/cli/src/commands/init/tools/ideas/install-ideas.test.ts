@@ -2,14 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { installIdeas } from './install-ideas';
-
-const IDEA_SKILLS = [
-  'oat-idea-new',
-  'oat-idea-ideate',
-  'oat-idea-summarize',
-  'oat-idea-scratchpad',
-] as const;
+import { IDEA_SKILLS, installIdeas } from './install-ideas';
 
 const INFRA_FILES = [
   { src: 'ideas-backlog.md', dest: '.oat/ideas/backlog.md' },

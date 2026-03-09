@@ -4,52 +4,21 @@ import {
   copyDirWithVersionCheck,
   copyFileWithStatus,
 } from '@commands/init/tools/shared/copy-helpers';
+import {
+  WORKFLOW_AGENTS,
+  WORKFLOW_SCRIPTS,
+  WORKFLOW_SKILLS,
+  WORKFLOW_TEMPLATES,
+} from '@commands/init/tools/shared/skill-manifest';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
-import { ensureDir, fileExists } from '@fs/io';
+import { dirExists, ensureDir, fileExists } from '@fs/io';
 
-export const WORKFLOW_SKILLS = [
-  'oat-project-clear-active',
-  'oat-project-complete',
-  'oat-project-design',
-  'oat-project-discover',
-  'oat-project-document',
-  'oat-project-implement',
-  'oat-project-import-plan',
-  'oat-project-new',
-  'oat-project-open',
-  'oat-project-plan',
-  'oat-project-plan-writing',
-  'oat-project-pr-final',
-  'oat-project-pr-progress',
-  'oat-project-progress',
-  'oat-project-promote-spec-driven',
-  'oat-project-quick-start',
-  'oat-project-review-provide',
-  'oat-project-review-receive',
-  'oat-project-review-receive-remote',
-  'oat-project-spec',
-  'oat-repo-knowledge-index',
-  'oat-worktree-bootstrap',
-] as const;
-
-export const WORKFLOW_AGENTS = [
-  'oat-codebase-mapper.md',
-  'oat-reviewer.md',
-] as const;
-
-export const WORKFLOW_TEMPLATES = [
-  'state.md',
-  'discovery.md',
-  'spec.md',
-  'design.md',
-  'plan.md',
-  'implementation.md',
-] as const;
-
-export const WORKFLOW_SCRIPTS = [
-  'generate-oat-state.sh',
-  'generate-thin-index.sh',
-] as const;
+export {
+  WORKFLOW_AGENTS,
+  WORKFLOW_SCRIPTS,
+  WORKFLOW_SKILLS,
+  WORKFLOW_TEMPLATES,
+};
 
 export interface InstallWorkflowsOptions {
   assetsRoot: string;
@@ -77,6 +46,8 @@ export interface InstallWorkflowsResult {
   skippedScripts: string[];
   projectsRootInitialized: boolean;
   projectsRootConfigInitialized: boolean;
+  projectsDirsScaffolded: boolean;
+  resolvedProjectsRoot: string;
 }
 
 export async function installWorkflows(
@@ -100,6 +71,8 @@ export async function installWorkflows(
     skippedScripts: [],
     projectsRootInitialized: false,
     projectsRootConfigInitialized: false,
+    projectsDirsScaffolded: false,
+    resolvedProjectsRoot: '',
   };
 
   for (const skill of WORKFLOW_SKILLS) {
@@ -193,6 +166,27 @@ export async function installWorkflows(
       projects: { root: '.oat/projects/shared' },
     });
     result.projectsRootConfigInitialized = true;
+  }
+
+  const effectiveRoot = config.projects?.root?.trim() || '.oat/projects/shared';
+  result.resolvedProjectsRoot = effectiveRoot;
+  const sharedDir = join(options.targetRoot, effectiveRoot);
+  const projectsBase = dirname(sharedDir);
+  const localGitkeep = join(projectsBase, 'local', '.gitkeep');
+  const archivedGitkeep = join(projectsBase, 'archived', '.gitkeep');
+
+  const sharedExists = await dirExists(sharedDir);
+  if (!sharedExists) {
+    await ensureDir(sharedDir);
+    await ensureDir(dirname(localGitkeep));
+    await ensureDir(dirname(archivedGitkeep));
+    if (!(await fileExists(localGitkeep))) {
+      await writeFile(localGitkeep, '', 'utf8');
+    }
+    if (!(await fileExists(archivedGitkeep))) {
+      await writeFile(archivedGitkeep, '', 'utf8');
+    }
+    result.projectsDirsScaffolded = true;
   }
 
   return result;

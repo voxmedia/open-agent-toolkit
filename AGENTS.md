@@ -61,11 +61,7 @@
 
 ## Feature Planning Triage
 
-When a user asks to plan, design, or implement a new feature or significant change, **always present the workflow options before beginning any planning work.**
-
-### Trigger Conditions
-
-Detect planning intent from phrases like: "plan", "design", "let's build", "add a feature", "implement", "I want to add/create/build...", or any request that implies multi-step feature work.
+**Pre-implementation gate:** Before making any code changes, confirm that either a workflow option has been selected or the user has explicitly opted out. If neither has happened, present the workflow options below. This applies even if the task seems small — the user decides scope, not the agent.
 
 ### Workflow Options
 

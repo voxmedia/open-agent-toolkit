@@ -24,59 +24,29 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
   - Created: YYYY-MM-DD
 
-- [ ] **(P2) [tooling] Managed OAT gitignore section in `oat init`**
-  - Context: Every OAT repo needs a set of core `.gitignore` entries for infrastructure files (`.oat/config.local.json`, `.oat/state.md`, `.oat/projects/local/**`, `.oat/projects/archived/**`, plus `.gitkeep` negations). These are currently added manually. The new `oat local apply` command manages a separate section for user-configured `localPaths`, but the core OAT entries are a different concern — they're always needed regardless of `localPaths` config.
+- [ ] **(P1) [skills] Add retroactive project capture skill (`oat-project-capture`)**
+  - Context: When work happens outside the OAT project workflow (e.g., mobile/cloud sessions, quick fixes, ad-hoc brainstorming that turns into implementation), there's no way to retroactively create project tracking artifacts. The agent has full conversation context — requirements discussed, decisions made, alternatives considered — but none of it gets captured into OAT's project structure. This is especially common with cloud mobile sessions where the user works with the agent, then wants to open a PR and review it later from their computer.
   - Proposed change:
-    - Add a managed gitignore section (e.g., `# OAT core` / `# END OAT core`) to `oat init --scope project` that writes the standard OAT infrastructure entries.
-    - Make it idempotent — re-running `oat init` updates the section without duplicating entries.
-    - Coexist with the `oat local apply` managed section (`# OAT local paths`), which handles user-configured `localPaths`.
-    - Allow users to remove manually-maintained duplicates once the managed section is in place.
+    - Add an `oat-project-capture` skill that creates a full project from an already-completed (or in-progress) branch:
+      - **Step 1: Name inference** — Propose a project name based on conversation context (what was accomplished), not the branch name (which is often just a slug of the first message). Let the user accept or rename.
+      - **Step 2: Branch analysis** — Detect current branch, infer base branch, run `git diff` and `git log` to understand scope of changes (files, commits, test results).
+      - **Step 3: Project scaffold** — Create project via `oat project new --mode quick` (or direct scaffold call).
+      - **Step 4: Discovery synthesis** — Populate `discovery.md` from conversation context: problem statement, requirements discussed, decisions made, alternatives considered. Ask user to confirm or clarify anything unclear.
+      - **Step 5: Implementation capture** — Populate `implementation.md` with commit-derived task list, files changed, tests added, issues encountered and how they were resolved.
+      - **Step 6: Lifecycle state** — Ask user: "Is this ready for review, or still in progress?" Default to `awaiting-review`. Set `oat_lifecycle` accordingly.
+    - Skill-only (no CLI command needed) — requires conversation context that only the agent has. The commit analysis is supplementary; the real value is capturing *intent* from the conversation.
+    - Should ask the user for details whenever anything is unclear rather than guessing.
   - Success criteria:
-    - `oat init --scope project` creates/updates a `# OAT core` managed section in `.gitignore`.
-    - Section includes: `.oat/config.local.json`, `.oat/state.md`, `.oat/projects/local/**`, `.oat/projects/archived/**`, `!.oat/projects/local/.gitkeep`, `!.oat/projects/archived/.gitkeep`.
-    - Idempotent on re-run; does not duplicate entries.
-    - Does not conflict with the `# OAT local paths` section from `oat local apply`.
+    - Agent can invoke `oat-project-capture` at end of a session to create a tracked project from untracked work.
+    - `discovery.md` captures the "why" from conversation context, not just the "what" from commits.
+    - `implementation.md` reflects actual work done with commit references.
+    - Project is set to `awaiting-review` (or user-chosen state) and is ready for `oat-project-review-provide` / `oat-project-pr-final`.
+    - Works naturally in the mobile/cloud session flow: brainstorm → implement → capture → PR → review at desk.
   - Links:
-    - Related: `oat local apply` managed section in `packages/cli/src/commands/local/apply.ts`
-    - Current manual entries: `.gitignore` lines 43-56
-  - Created: 2026-03-08
-
-- [ ] **(P1) [tooling] Single source of truth for bundled skill lists**
-  - Context: When adding a new skill to the CLI bundle, three independent arrays must be updated manually: (1) `packages/cli/scripts/bundle-assets.sh` `SKILLS` array (build-time asset generation), (2) `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` `WORKFLOW_SKILLS` (runtime installer), (3) `packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts` local `WORKFLOW_SKILLS` copy (test seeding). A consistency test (`bundle-consistency.test.ts`) now catches drift at CI time, but the root cause — three independent copies — remains.
-  - Proposed change:
-    - Extract a single manifest file (JSON or `.ts` constant) that defines all bundled skills per pack (workflows, ideas, utility).
-    - Have `bundle-assets.sh` read from this manifest (e.g., parse a JSON file or source a generated list) instead of maintaining its own bash array.
-    - Have `install-workflows.test.ts` import the canonical `WORKFLOW_SKILLS` from the source module instead of maintaining a local duplicate. The test's `seedAssets()` helper uses this array to create mock directories, so it must match the source.
-    - Eliminate the need for `bundle-consistency.test.ts` once all three consumers read from the same source (or keep it as a belt-and-suspenders check).
-  - Success criteria:
-    - Adding a new skill to any pack requires updating exactly one file.
-    - Build (`bundle-assets.sh`) and runtime (`install-*.ts`) always agree on which skills are bundled.
-    - Test files seed from the canonical source, not local copies.
-    - `bundle-consistency.test.ts` passes trivially (or is removed as redundant).
-  - Links:
-    - Guard test: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
-    - Build script: `packages/cli/scripts/bundle-assets.sh`
-    - Runtime source: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts`
-    - Test duplicate: `packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts` (lines 15-52)
-    - Prior incident: `oat-project-document` was added to `install-workflows.ts` but missed in `bundle-assets.sh`, causing the bundled asset to be deleted on every build
-  - Created: 2026-03-08
-
-- [ ] **(P2) [skills] Rename `create-skill` to `create-agnostic-skill` and add to utility pack**
-  - Context: The `create-skill` skill creates provider-agnostic skills but its name doesn't communicate that. It also isn't part of any installable pack — it's only available if manually present in `.agents/skills/`.
-  - Proposed change:
-    - Rename `.agents/skills/create-skill/` to `.agents/skills/create-agnostic-skill/`.
-    - Update all internal references (skill name frontmatter, any cross-references from other skills).
-    - Add `create-agnostic-skill` to the utility pack in `oat tools init` so it's installable via `oat tools init --pack utility` (or included when installing all packs).
-    - Update `bundle-assets.sh` and any pack manifests accordingly.
-  - Success criteria:
-    - Skill is renamed and all references updated.
-    - Available via `oat tools init` as part of the utility pack.
-    - Name clearly communicates provider-agnostic skill creation purpose.
-  - Links:
-    - Current skill: `.agents/skills/create-skill/SKILL.md`
-    - Pack installer: `packages/cli/src/commands/init/tools/`
-    - Build script: `packages/cli/scripts/bundle-assets.sh`
-  - Created: 2026-03-08
+    - Related: `oat-project-reconcile` (bridges gaps in *existing* projects; capture creates from scratch)
+    - Related: `oat-project-quick-start` (forward-looking quick scaffold; capture is retroactive)
+    - Related: `oat-project-pr-final` (downstream consumer of captured project)
+  - Created: 2026-03-09
 
 - [ ] **(P1) [tooling] Add timestamp frontmatter to project state documents**
   - Context: Project `state.md` files currently lack machine-readable timestamps. Tooling that wants to find projects by most recently updated or created date has no structured field to query. Skills that scan archived projects for documentation gaps (e.g., `oat-docs-analyze`) also benefit from knowing when a project was created, completed, or last updated.
@@ -158,43 +128,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related: current manual skills section in `AGENTS.md`
     - Related: skill sync tooling (`oat sync`)
   - Created: 2026-03-08
-
-- [ ] **(P2) [tooling] Scaffold `.oat/projects/{shared,local,archived}` during `oat init`**
-  - Context: `oat init --scope project` scaffolds `.agents/` and `.oat/sync/` but does not create the projects directory tree. The `shared/`, `local/`, and `archived/` directories are created on-demand by individual skills/commands, which means new repos don't have the expected structure until the first project is created.
-  - Proposed change:
-    - Add `.oat/projects/{shared,local,archived}` creation to `oat init --scope project`.
-    - Create `.gitkeep` files in `local/` and `archived/` so the directories are tracked despite gitignore rules.
-    - Scaffold gitignored local workspace files if they don't exist:
-      - `.oat/config.local.json` (empty `{"version": 1}`)
-      - `.oat/state.md` (empty or minimal template)
-      - `.oat/active-idea` (empty)
-    - Respect `projects.root` config if already set (scaffold under the configured root instead of the default).
-    - Ensure `.gitignore` entries for `local/**`, `archived/**` (with `!.gitkeep` exceptions), and local workspace files are present.
-  - Success criteria:
-    - After `oat init --scope project`, the full `.oat/` workspace is ready for use — projects tree, local config, and state files all exist.
-    - Idempotent — re-running init does not error or overwrite existing directories/files.
-    - Gitignore rules cover all local-only files.
-  - Links:
-    - Related: `packages/cli/src/commands/init/index.ts`
-  - Created: 2026-02-23
-
-- [ ] **(P2) [tooling] Migrate active-idea pointers to config-local state**
-  - Context:
-    - `activeProject` / `lastPausedProject` have moved to `.oat/config.local.json`, but idea context still relies on pointer files (`.oat/active-idea` and `~/.oat/active-idea`).
-    - This split keeps lifecycle semantics consistent but leaves idea context on a separate storage/read model.
-  - Proposed change:
-    - Move active-idea state to config-local surfaces with explicit dual-level precedence (repo-local + user-level), preserving existing behavior where needed.
-    - Update idea skills/commands and worktree propagation logic to use config-based reads/writes instead of direct pointer-file access.
-    - Keep a bounded compatibility window for legacy pointer reads before removal.
-  - Success criteria:
-    - Idea commands/skills resolve active idea from config-backed sources with deterministic precedence.
-    - Worktree bootstrap/copy behavior preserves active-idea context without pointer-file special cases.
-    - Legacy pointer-file fallback can be removed after migration validation.
-  - Links:
-    - `.oat/repo/reference/external-plans/b15-b02-project-lifecycle-config-consolidation.md`
-    - `packages/cli/src/config/oat-config.ts`
-    - `.agents/skills/oat-worktree-bootstrap/SKILL.md`
-  - Created: 2026-02-22
 
 
 - [ ] **(P2) [workflow] Backlog Refinement Flow (Jira ticket generation)**
@@ -279,30 +212,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - Source discussion: OAT feature ideas (dependency intelligence)
   - Created: 2026-02-14
-
-- [ ] **(P1) [tooling] Add configurable VCS policy + worktree sync behavior for OAT artifact directories**
-  - Target milestone/phase: Worktree ergonomics + artifact signal/noise control
-  - Notes:
-    - Add explicit configuration for whether high-churn artifact directories should be gitignored, including:
-      - `.oat/repo/reviews/`
-      - `.oat/repo/reference/external-plans/`
-    - Keep this user-configurable per repo (opt-in/opt-out), not hard-coded.
-    - Add config for worktree artifact propagation so context can still be available even when directories are ignored:
-      - copy selected directories/files from source branch -> new worktree during bootstrap
-      - optionally sync/copy generated artifacts back from worktree -> primary branch workspace before/after merge
-    - Ensure behavior is deterministic and explicit (dry-run/apply modes), with clear reporting of what was copied/skipped.
-    - Keep compatibility with current `.oat/config.json` phase-A direction; avoid introducing new one-off pointer files.
-    - **Note:** `active-project` and `active-idea` propagation is already handled by `oat-worktree-bootstrap` Step 2.5 (quick fix added 2026-02-17). Remaining scope is the configurable policy for artifact directories.
-  - Success criteria:
-    - Users can choose whether these artifact directories are tracked in git.
-    - Worktrees can still receive required context artifacts when gitignored policy is enabled.
-    - Generated worktree artifacts can be copied back to primary workspace via explicit policy.
-    - CLI output is audit-friendly and safe by default (no silent destructive overwrite).
-  - Links:
-    - Related directories: `.oat/repo/reviews/`, `.oat/repo/reference/external-plans/`
-    - Related config direction: `.oat/config.json`
-    - Related plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
-  - Created: 2026-02-17
 
 - [ ] **(P2) [skills] Add idea promotion and auto-discovery flow to `oat-project-new`**
   - Target milestone/phase: Ideas → Projects integration

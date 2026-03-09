@@ -8,6 +8,7 @@ import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createInitToolsUtilityCommand } from './index';
+import { UTILITY_SKILLS } from './install-utility';
 
 interface HarnessOptions {
   scope?: Scope;
@@ -134,16 +135,7 @@ describe('createInitToolsUtilityCommand', () => {
     expect(selectManyWithAbort).not.toHaveBeenCalled();
     expect(installUtility).toHaveBeenCalledWith(
       expect.objectContaining({
-        skills: [
-          'oat-agent-instructions-analyze',
-          'oat-agent-instructions-apply',
-          'oat-docs-analyze',
-          'oat-docs-apply',
-          'oat-repo-maintainability-review',
-          'oat-review-provide',
-          'oat-review-receive',
-          'oat-review-receive-remote',
-        ],
+        skills: [...UTILITY_SKILLS],
       }),
     );
   });

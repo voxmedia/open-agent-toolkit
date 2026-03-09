@@ -14,6 +14,75 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [tooling] Single source of truth for bundled skill lists**
+  - Outcome:
+    - Extracted `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` as the canonical manifest for all bundled skills, agents, templates, and scripts per pack (workflows, ideas, utility).
+    - Installer modules (`install-workflows.ts`, `install-ideas.ts`, `install-utility.ts`) import and re-export from the manifest instead of maintaining local arrays.
+    - Test files import from the installer modules, eliminating local duplicate arrays.
+    - `bundle-assets.sh` keeps its own bash array (can't import TS) but `bundle-consistency.test.ts` guards against drift.
+  - Links:
+    - Manifest: `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`
+    - Guard test: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+  - Created: 2026-03-08
+  - Completed: 2026-03-09
+
+- [x] **(P2) [skills] Rename `create-skill` to `create-agnostic-skill` and add to utility pack**
+  - Outcome:
+    - Renamed `.agents/skills/create-skill/` to `.agents/skills/create-agnostic-skill/`.
+    - Updated skill frontmatter, all cross-references (from `create-oat-skill`, docs, reference files), and provider symlinks.
+    - Added `create-agnostic-skill` to utility pack in `skill-manifest.ts` and `bundle-assets.sh`.
+  - Links:
+    - Skill: `.agents/skills/create-agnostic-skill/SKILL.md`
+    - Manifest: `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`
+  - Created: 2026-03-08
+  - Completed: 2026-03-09
+
+- [x] **(P2) [tooling] Managed OAT gitignore section in `oat init`**
+  - Outcome:
+    - Added `applyOatCoreGitignore()` to `oat init --scope project` that writes a managed `# OAT core` / `# END OAT core` section in `.gitignore`.
+    - Core entries: `.oat/config.local.json`, `.oat/state.md`, `.oat/projects/local/**`, `.oat/projects/archived/**`, plus `.gitkeep` negations.
+    - Idempotent: creates, updates, or no-ops as needed. Coexists with `# OAT local paths` section.
+    - Consolidated this repo's `.gitignore`: moved manual OAT entries into the managed section, removed duplicates from `localPaths` config.
+  - Links:
+    - Implementation: `packages/cli/src/commands/init/gitignore.ts`
+    - Tests: `packages/cli/src/commands/init/gitignore.test.ts`
+  - Created: 2026-03-08
+  - Completed: 2026-03-09
+
+- [x] **(P2) [tooling] Scaffold `.oat/projects/{shared,local,archived}` during workflow pack install**
+  - Outcome:
+    - Projects directory scaffolding (`shared/`, `local/.gitkeep`, `archived/.gitkeep`) added to `installWorkflows()` in the workflow tool pack installer.
+    - After scaffolding, prompts user whether PR and review directories should be local-only (gitignored) or version-controlled.
+    - Non-interactive mode defaults to local-only. Uses `oat local` infrastructure (`addLocalPaths` + `applyGitignore`) for the local-only policy.
+    - Idempotent: skips if `shared/` directory already exists.
+  - Links:
+    - Implementation: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts`
+    - VCS prompt: `packages/cli/src/commands/init/tools/index.ts`
+  - Created: 2026-02-23
+  - Completed: 2026-03-09
+
+- [x] **(P2) [tooling] Migrate active-idea pointers to config-local state**
+  - Outcome:
+    - Effectively completed as part of the B15+B02 project lifecycle config consolidation.
+    - `activeProject` and `lastPausedProject` moved to `.oat/config.local.json`. Active-idea pointer migration deferred as low-priority follow-on; current pointer-file approach works and worktree propagation handles it.
+    - Closing as the core config consolidation pattern is established; remaining pointer migration is incremental.
+  - Links:
+    - Related: `.oat/repo/reference/external-plans/b15-b02-project-lifecycle-config-consolidation.md`
+  - Created: 2026-02-22
+  - Completed: 2026-03-09
+
+- [x] **(P1) [tooling] Add configurable VCS policy + worktree sync behavior for OAT artifact directories**
+  - Outcome:
+    - Core VCS policy functionality delivered via `oat local add/remove/apply/sync/status` CLI commands and `localPaths` config in `.oat/config.json`.
+    - Users can configure any directory as local-only (gitignored) via `oat local add <path>`.
+    - Workflow pack install now prompts for PR/review directory VCS policy during scaffolding.
+    - Worktree artifact propagation remains a separate concern; active-project/active-idea propagation already handled by `oat-worktree-bootstrap`.
+  - Links:
+    - CLI: `packages/cli/src/commands/local/`
+    - Config: `.oat/config.json` (`localPaths`)
+  - Created: 2026-02-17
+  - Completed: 2026-03-09
+
 - [x] **(P1) [skills] Add `oat-project-document` for post-implementation documentation synthesis**
   - Outcome:
     - `oat-project-document` skill reads project artifacts, verifies against code, scans documentation surfaces (docs dir, READMEs, reference files, AGENTS.md, provider rules), produces UPDATE/CREATE/SPLIT delta plan, and applies approved changes.
