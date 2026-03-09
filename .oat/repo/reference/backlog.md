@@ -61,6 +61,87 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Prior incident: `oat-project-document` was added to `install-workflows.ts` but missed in `bundle-assets.sh`, causing the bundled asset to be deleted on every build
   - Created: 2026-03-08
 
+- [ ] **(P1) [tooling] Add timestamp frontmatter to project state documents**
+  - Context: Project `state.md` files currently lack machine-readable timestamps. Tooling that wants to find projects by most recently updated or created date has no structured field to query. Skills that scan archived projects for documentation gaps (e.g., `oat-docs-analyze`) also benefit from knowing when a project was created, completed, or last updated.
+  - Proposed change:
+    - Add three frontmatter fields to `state.md`: `oat_project_created`, `oat_project_completed`, `oat_project_state_updated`.
+    - Use full ISO 8601 UTC timestamps (e.g., `2026-03-08T14:30:00Z`).
+    - `oat_project_created` is set once during `oat-project-new` / `oat-project-quick-start`.
+    - `oat_project_state_updated` is updated by any skill/command that modifies `state.md`.
+    - `oat_project_completed` is set during `oat-project-complete`.
+    - Update project lifecycle skills (`oat-project-new`, `oat-project-quick-start`, `oat-project-complete`, `oat-project-reconcile`, etc.) to read/write these fields.
+  - Success criteria:
+    - All new projects get `oat_project_created` and `oat_project_state_updated` timestamps on creation.
+    - `oat_project_state_updated` is refreshed on every state mutation.
+    - `oat_project_completed` is set when a project is completed/archived.
+    - Tooling can sort/filter projects by any of these timestamps.
+    - Existing projects without timestamps continue to work (fields are optional for backwards compat).
+  - Links:
+    - Related skills: `oat-project-new`, `oat-project-quick-start`, `oat-project-complete`, `oat-project-reconcile`
+    - State template: `.agents/skills/oat-project-new/SKILL.md`
+  - Created: 2026-03-08
+
+- [ ] **(P2) [tooling] Optional S3 archival in `oat-project-complete` workflow**
+  - Context: Completed projects are currently archived to `.oat/projects/archived/` on the local filesystem. For teams that want durable off-repo storage or centralized project history across multiple repositories, there's no built-in integration with cloud storage.
+  - Proposed change:
+    - Add optional S3 bucket configuration to `.oat/config.json` (e.g., `archive.s3Bucket`, `archive.s3Prefix`).
+    - During `oat-project-complete`, if S3 is configured and AWS credentials are available (environment variables or AWS CLI profile), upload the project directory to S3 in addition to the local archive.
+    - Detect credentials via standard AWS SDK credential chain (env vars, `~/.aws/credentials`, instance profile, etc.).
+    - Upload preserves the project directory structure under a configurable S3 prefix (e.g., `s3://<bucket>/oat-archive/<repo-name>/<project-name>/`).
+    - If S3 is configured but credentials are missing or upload fails, warn but do not block the local archive operation.
+    - Add `--skip-s3` flag to `oat-project-complete` CLI command to bypass S3 upload when configured.
+  - Success criteria:
+    - Users can configure an S3 bucket in `.oat/config.json` and completed projects are uploaded automatically.
+    - Local archive always succeeds regardless of S3 status.
+    - S3 upload failure produces a clear warning, not a hard error.
+    - Credentials are detected via standard AWS SDK chain — no custom auth config needed.
+    - `--skip-s3` flag allows bypassing S3 for individual completions.
+  - Links:
+    - Related skill: `.agents/skills/oat-project-complete/SKILL.md`
+    - Config: `.oat/config.json`
+  - Created: 2026-03-08
+
+- [ ] **(P1) [docs] Update AGENTS.md with documentation surface info during `oat docs init`**
+  - Context: When `oat docs init` sets up a documentation surface in a project, agents have no way to know where project documentation lives, where the index file is, or how the docs system is structured — unless they happen to discover it by exploring the filesystem. Adding this context to `AGENTS.md` would make agents immediately aware of the documentation surface.
+  - Proposed change:
+    - During `oat docs init`, append a section to `AGENTS.md` describing the documentation surface:
+      - Path to the docs root directory (e.g., `docs/`)
+      - Path to the documentation index file (e.g., `docs/index.md` or `mkdocs.yml`)
+      - Documentation framework in use (e.g., MkDocs, Docusaurus)
+      - Any relevant conventions (nav structure, asset paths, etc.)
+    - Use a managed section pattern (e.g., `<!-- OAT docs -->` / `<!-- END OAT docs -->`) so re-running `oat docs init` updates rather than duplicates.
+    - Respect existing `AGENTS.md` content — append, don't overwrite.
+  - Success criteria:
+    - After `oat docs init`, `AGENTS.md` contains a section that tells agents where docs live and how they're structured.
+    - Re-running `oat docs init` updates the section idempotently.
+    - Agents can find docs paths without filesystem exploration.
+  - Links:
+    - Related: `packages/cli/src/commands/docs/init.ts`
+    - Related: current manual docs section in `AGENTS.md`
+  - Created: 2026-03-08
+
+- [ ] **(P1) [tooling] Update AGENTS.md with workflow system details during `oat tools init`**
+  - Context: When `oat tools init` installs workflow packs (skills, personas, etc.), there's no automatic update to `AGENTS.md` to inform agents about the workflow system — what skills are available, how they're organized, or how to discover them. Currently this information is manually maintained (as in this repo's `AGENTS.md` skills section). Automating this would keep `AGENTS.md` in sync with installed tooling.
+  - Proposed change:
+    - During `oat tools init`, append/update a managed section in `AGENTS.md` describing the installed workflow system:
+      - Skills directory location (`.agents/skills/`)
+      - Installed packs and their purpose (workflows, ideas, utility)
+      - How to discover available skills (scan `.agents/skills/*/SKILL.md`)
+      - Key workflow conventions (skill invocation, project lifecycle, etc.)
+    - Use a managed section pattern (e.g., `<!-- OAT workflows -->` / `<!-- END OAT workflows -->`) for idempotent updates.
+    - Update the section when packs are added or removed.
+    - Optionally list the installed skill names grouped by pack.
+  - Success criteria:
+    - After `oat tools init`, `AGENTS.md` contains a section describing the workflow system and installed skills.
+    - Re-running `oat tools init` or adding packs updates the section without duplication.
+    - Agents can understand the workflow system from `AGENTS.md` without manual documentation.
+    - Section coexists with the docs section from `oat docs init` and any manually written content.
+  - Links:
+    - Related: `packages/cli/src/commands/init/tools/`
+    - Related: current manual skills section in `AGENTS.md`
+    - Related: skill sync tooling (`oat sync`)
+  - Created: 2026-03-08
+
 - [ ] **(P2) [tooling] Scaffold `.oat/projects/{shared,local,archived}` during `oat init`**
   - Context: `oat init --scope project` scaffolds `.agents/` and `.oat/sync/` but does not create the projects directory tree. The `shared/`, `local/`, and `archived/` directories are created on-demand by individual skills/commands, which means new repos don't have the expected structure until the first project is created.
   - Proposed change:
