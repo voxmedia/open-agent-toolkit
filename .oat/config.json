@@ -6,6 +6,12 @@
   "projects": {
     "root": ".oat/projects/shared"
   },
+  "documentation": {
+    "root": "apps/oat-docs/docs",
+    "tooling": "mkdocs",
+    "config": "apps/oat-docs/mkdocs.yml",
+    "requireForProjectCompletion": false
+  },
   "localPaths": [
     ".oat/ideas",
     ".oat/projects/**/pr",
