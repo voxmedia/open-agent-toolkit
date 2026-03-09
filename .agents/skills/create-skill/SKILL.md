@@ -1,6 +1,6 @@
 ---
 name: create-skill
-version: 1.2.0
+version: 1.2.1
 description: Use when adding a reusable workflow skill for AI coding agents. Scaffolds a new .agents/skills skill using the Agent Skills open standard.
 argument-hint: "[skill-name]"
 disable-model-invocation: true
@@ -392,7 +392,6 @@ Successful skill creation:
 - ✅ Skill created at `.agents/skills/{name}/SKILL.md`
 - ✅ `oat sync` run successfully
 - ✅ For `oat-*` skills, `pnpm oat:validate-skills` passes
-- ✅ Skill appears in AGENTS.md
 - ✅ Frontmatter valid
 - ✅ Workflow uses "Step" naming
 - ✅ Both example styles included
