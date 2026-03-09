@@ -10,7 +10,7 @@
     "root": "apps/oat-docs/docs",
     "tooling": "mkdocs",
     "config": "apps/oat-docs/mkdocs.yml",
-    "requireForProjectCompletion": false
+    "requireForProjectCompletion": true
   },
   "localPaths": [
     ".oat/ideas",
