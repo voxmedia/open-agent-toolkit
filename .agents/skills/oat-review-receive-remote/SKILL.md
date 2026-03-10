@@ -25,9 +25,9 @@ Process unresolved GitHub PR review feedback into normalized findings and standa
 
 **BLOCKED Activities:**
 
-- No implementation/code changes.
 - No `plan.md`, `state.md`, or `implementation.md` lifecycle mutations.
 - No auto-replies on GitHub without explicit user confirmation.
+- No implementing fixes without explicit user confirmation.
 
 **ALLOWED Activities:**
 
@@ -35,6 +35,7 @@ Process unresolved GitHub PR review feedback into normalized findings and standa
 - Fetch unresolved PR comments via `agent-reviews`.
 - Normalize and classify findings.
 - Interactive triage and task-list generation.
+- Implementing fixes, committing, and pushing (only with explicit user confirmation).
 - Optional explicit replies to processed comments.
 
 **Self-Correction Protocol:**
@@ -43,6 +44,7 @@ If you catch yourself:
 - Replying on GitHub without explicit user confirmation -> STOP and present reply content for approval first.
 - Editing project lifecycle artifacts (`plan.md`, `state.md`, `implementation.md`) in ad-hoc mode -> STOP and revert to task-list output only.
 - Skipping the findings overview before triage prompts -> STOP and show overview first.
+- Implementing fixes without user confirmation -> STOP and ask first.
 
 ## Progress Indicators (User-Facing)
 
@@ -54,12 +56,13 @@ OAT ▸ REMOTE REVIEW RECEIVE
 
 Use step indicators:
 
-- `[1/6] Resolving PR...`
-- `[2/6] Fetching comments...`
-- `[3/6] Classifying findings...`
-- `[4/6] Triaging findings...`
-- `[5/6] Generating task list...`
-- `[6/6] Posting replies (optional)...`
+- `[1/7] Resolving PR...`
+- `[2/7] Fetching comments...`
+- `[3/7] Classifying findings...`
+- `[4/7] Triaging findings...`
+- `[5/7] Generating task list...`
+- `[6/7] Applying fixes (optional)...`
+- `[7/7] Posting replies (optional)...`
 
 ## Findings Model
 
@@ -166,13 +169,51 @@ Output modes:
 
 Also output deferred and dismissed lists with reasons.
 
-### Step 6: Optional GitHub Reply Posting
+### Step 6: Optional Fix Implementation
 
-After task generation, ask:
+After the task list is confirmed, ask:
+
+`Would you like me to address these fixes, commit, and push the changes? [yes/no]`
+
+If yes:
+
+1. Implement each converted task in the order listed.
+2. After all fixes are applied, run verification (lint, type-check, tests as appropriate).
+3. Stage and commit with a descriptive message referencing the PR:
+
+   ```bash
+   git add {changed-files}
+   git commit -m "fix: address PR #<N> review feedback
+
+   Resolved findings: {list of finding IDs and titles}"
+   ```
+
+4. Push to the current branch:
+   ```bash
+   git push
+   ```
+5. Capture the commit hash for use in Step 7 replies:
+   ```bash
+   FIX_COMMIT=$(git rev-parse --short HEAD)
+   ```
+
+If no: skip to Step 7.
+
+### Step 7: Optional GitHub Reply Posting
+
+After fix implementation (or after task generation if fixes were skipped), ask:
 
 `Reply to processed comments on GitHub? [yes/no]`
 
 If yes, reply per finding disposition:
+
+**When fixes were applied (Step 6 completed):**
+
+- Convert: `npx agent-reviews --reply <id> "Fixed in <FIX_COMMIT>"`
+- Defer: `npx agent-reviews --reply <id> "Deferred: <reason>"`
+- Dismiss: `npx agent-reviews --reply <id> "Won't fix: <reason>"`
+
+**When fixes were not applied:**
 
 - Convert: `npx agent-reviews --reply <id> "Acknowledged - tracking as task"`
 - Defer: `npx agent-reviews --reply <id> "Deferred: <reason>"`
@@ -195,6 +236,7 @@ At completion, report:
 - Severity counts
 - Converted/deferred/dismissed counts
 - Task list output location (`inline` or file path)
+- Whether fixes were applied (and commit hash if so)
 - Whether replies were posted
 
 ## Success Criteria
@@ -204,4 +246,5 @@ At completion, report:
 - Findings normalized with consistent 4-tier severities.
 - Triage completed with explicit rationale capture for deferred/dismissed findings.
 - Standalone task list generated.
-- Optional replies posted only with user approval.
+- Fixes applied, committed, and pushed only with user approval.
+- Optional replies posted only with user approval (with commit hash when fixes were applied).

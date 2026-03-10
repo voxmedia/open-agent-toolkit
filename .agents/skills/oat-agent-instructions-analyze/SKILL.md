@@ -155,11 +155,15 @@ These checks are mandatory even when the missing file does not appear in the dis
 
 Provider baseline examples:
 
-- **Claude**: if a directory has `AGENTS.md` and the claude provider is active but the matching `CLAUDE.md` shim is missing, record an explicit recommendation to create `CLAUDE.md` with the canonical `@AGENTS.md` import.
+- **Claude**: if a directory has `AGENTS.md` and the claude provider is active but the matching `CLAUDE.md` shim is missing, record an explicit recommendation to create `CLAUDE.md` with the canonical `@AGENTS.md` import. This applies to **every** directory with an `AGENTS.md` — root and nested alike (e.g., `packages/cli/AGENTS.md` → `packages/cli/CLAUDE.md`).
 - **Copilot**: if the copilot provider is active but `.github/copilot-instructions.md` is missing, record an explicit recommendation to create the minimal Copilot shim.
 - **agents_md / codex**: no extra always-on shim beyond `AGENTS.md`.
 
 Do not leave these as implied apply-time behavior. They must appear in the analysis artifact as explicit provider-baseline recommendations.
+
+**Chained recommendations for new AGENTS.md files:**
+
+When a coverage-gap recommendation proposes creating a **new** `AGENTS.md` in a subdirectory, also emit the corresponding provider-baseline recommendations for that directory in the same artifact. For example, if the analysis recommends creating `packages/cli/AGENTS.md` and the claude provider is active, it must also recommend creating `packages/cli/CLAUDE.md` with `@AGENTS.md`. Do not defer these to a follow-up analysis — they belong in the same artifact so `oat-agent-instructions-apply` can generate both files in one pass.
 
 **In delta mode:** Only assess directories that contain files changed since the last tracked commit. Skip unchanged directories.
 

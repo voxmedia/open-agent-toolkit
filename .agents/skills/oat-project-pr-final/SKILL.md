@@ -196,6 +196,12 @@ Reference links policy:
 - Build links from `origin` + current branch when possible.
 - If remote URL cannot be resolved into a web URL, fall back to plain relative paths.
 
+Local path exclusion:
+
+- Read `.oat/config.json` and extract `localPaths` (glob patterns for gitignored directories).
+- Do **not** include References links to any path that matches a `localPaths` pattern — those paths are gitignored and will not exist on the remote.
+- Common matches: `.oat/projects/**/reviews`, `.oat/projects/**/pr`. If a reference target (e.g., `{PROJECT_REL}/reviews/`) falls under a localPath pattern, omit it entirely from the References section.
+
 Example link context:
 
 ```bash
@@ -254,7 +260,7 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 - Implementation: `[implementation.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/implementation.md)` (fallback: `{PROJECT_PATH}/implementation.md`)
 - Discovery: `[discovery.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/discovery.md)`
 - Imported Source: `[references/imported-plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/references/imported-plan.md)`
-- Reviews: `[reviews/]({REPO_WEB}/tree/{BRANCH}/{PROJECT_REL}/reviews)` (fallback: `{PROJECT_PATH}/reviews/`)
+- Reviews: `[reviews/]({REPO_WEB}/tree/{BRANCH}/{PROJECT_REL}/reviews)` (fallback: `{PROJECT_PATH}/reviews/`) — **omit if path matches a localPaths pattern**
 ```
 
 ### Step 5: Optional - Open PR
