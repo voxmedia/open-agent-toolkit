@@ -4,6 +4,10 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import {
+  type UpsertSectionResult,
+  upsertAgentsMdSection,
+} from '@commands/shared/agents-md';
+import {
   inputWithDefault,
   type PromptContext,
   type SelectChoice,
@@ -54,6 +58,11 @@ interface DocsInitDependencies {
     options: DocsInitResolvedOptions,
     assetsRoot: string,
   ) => Promise<void>;
+  upsertAgentsMdSection: (
+    repoRoot: string,
+    key: string,
+    body: string,
+  ) => Promise<UpsertSectionResult>;
 }
 
 const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
@@ -93,7 +102,29 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
     context.logger.info(`  Lint: ${options.lint}`);
     context.logger.info(`  Format: ${options.format}`);
   },
+  upsertAgentsMdSection,
 };
+
+const FRAMEWORK_LABELS: Record<DocsFramework, string> = {
+  fumadocs: 'Fumadocs (Next.js + MDX)',
+  mkdocs: 'MkDocs (Python)',
+};
+
+export function buildDocsSectionBody(options: DocsInitResolvedOptions): string {
+  const lines = [
+    '## Documentation',
+    '',
+    `- **Docs root:** \`${options.targetDir}\``,
+    `- **Framework:** ${FRAMEWORK_LABELS[options.framework]}`,
+    `- **Index file:** \`${options.targetDir}/docs/index.md\``,
+  ];
+
+  if (options.framework === 'mkdocs') {
+    lines.push(`- **Config:** \`${options.targetDir}/mkdocs.yml\``);
+  }
+
+  return lines.join('\n');
+}
 
 async function runDocsInitCommand(
   context: CommandContext,
@@ -127,6 +158,17 @@ async function runDocsInitCommand(
 
     const assetsRoot = await dependencies.resolveAssetsRoot();
     await dependencies.runDocsInit(context, resolved, assetsRoot);
+
+    const sectionBody = buildDocsSectionBody(resolved);
+    const sectionResult = await dependencies.upsertAgentsMdSection(
+      context.cwd,
+      'docs',
+      sectionBody,
+    );
+    if (!context.json && sectionResult.action !== 'no-change') {
+      context.logger.info(`AGENTS.md docs section ${sectionResult.action}.`);
+    }
+
     process.exitCode = 0;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

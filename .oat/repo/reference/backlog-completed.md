@@ -14,6 +14,32 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [docs] Update AGENTS.md with documentation surface info during `oat docs init`**
+  - Outcome:
+    - Added shared `upsertAgentsMdSection()` utility (`packages/cli/src/commands/shared/agents-md.ts`) using HTML-comment-delimited managed sections (`<!-- OAT <key> -->` / `<!-- END OAT <key> -->`).
+    - Utility is idempotent: creates AGENTS.md if missing, appends new sections, replaces existing sections, and detects no-change.
+    - `oat docs init` now calls `upsertAgentsMdSection(repoRoot, 'docs', body)` after scaffolding, writing docs root path, framework type, index file path, and config file path (MkDocs).
+    - Comprehensive test coverage: 112 lines for the shared utility, 197 lines for the docs init integration.
+  - Links:
+    - Shared utility: `packages/cli/src/commands/shared/agents-md.ts`
+    - Docs init: `packages/cli/src/commands/docs/init/index.ts`
+    - Tests: `packages/cli/src/commands/shared/agents-md.test.ts`, `packages/cli/src/commands/docs/init/index.test.ts`
+  - Created: 2026-03-08
+  - Completed: 2026-03-10
+
+- [x] **(P1) [tooling] Update AGENTS.md with workflow system details during `oat tools init`**
+  - Outcome:
+    - `oat tools init` now calls `upsertAgentsMdSection(repoRoot, 'workflows', body)` after pack selection.
+    - Generated section includes skills directory reference, discovery instructions, sync command guidance, and list of installed packs with descriptions.
+    - Pack descriptions map: workflows (project lifecycle), ideas (idea capture/refinement), utility (standalone utilities).
+    - Section coexists with the docs section and any manually written AGENTS.md content.
+    - Test coverage: 75 lines covering section creation, logging, no-op on empty selection, and pack filtering.
+  - Links:
+    - Tools init: `packages/cli/src/commands/init/tools/index.ts`
+    - Tests: `packages/cli/src/commands/init/tools/index.test.ts`
+  - Created: 2026-03-08
+  - Completed: 2026-03-10
+
 - [x] **(P1) [tooling] Single source of truth for bundled skill lists**
   - Outcome:
     - Extracted `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` as the canonical manifest for all bundled skills, agents, templates, and scripts per pack (workflows, ideas, utility).

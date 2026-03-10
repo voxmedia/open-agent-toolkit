@@ -9,6 +9,10 @@ import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 import { applyGitignore } from '@commands/local/apply';
 import { addLocalPaths } from '@commands/local/manage';
 import {
+  type UpsertSectionResult,
+  upsertAgentsMdSection,
+} from '@commands/shared/agents-md';
+import {
   type MultiSelectChoice,
   type PromptContext,
   type SelectChoice,
@@ -85,6 +89,11 @@ interface InitToolsDependencies {
   ) => Promise<{ action: string }>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
   resolveLocalPaths: (config: OatConfig) => string[];
+  upsertAgentsMdSection: (
+    repoRoot: string,
+    key: string,
+    body: string,
+  ) => Promise<UpsertSectionResult>;
 }
 
 interface OutdatedSkillRecord {
@@ -119,6 +128,7 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   applyGitignore,
   readOatConfig,
   resolveLocalPaths,
+  upsertAgentsMdSection,
 };
 
 function isUserEligibleSelection(selections: ToolPack[]): boolean {
@@ -211,6 +221,45 @@ async function updateOutdatedSkills(
   }
 
   return updatedNames;
+}
+
+const PACK_DESCRIPTIONS: Record<ToolPack, string> = {
+  workflows:
+    'Project lifecycle (create, discover, plan, implement, review, complete)',
+  ideas: 'Idea capture and refinement',
+  utility: 'Standalone utilities (reviews, docs analysis, agent instructions)',
+};
+
+interface PackScopeInfo {
+  pack: ToolPack;
+  scope: InstallScope;
+}
+
+export function buildWorkflowsSectionBody(packs: PackScopeInfo[]): string {
+  const userPacks = packs.filter((p) => p.scope === 'user');
+
+  const lines = [
+    '## Workflow System',
+    '',
+    '- **Skills directory:** `.agents/skills/`',
+    '- **Discover available skills:** scan `.agents/skills/*/SKILL.md`',
+    '- **Refresh provider views:** `oat sync --scope all`',
+  ];
+
+  if (userPacks.length > 0) {
+    lines.push(
+      '- **User-scoped skills:** `~/.agents/skills/` (ideas and utility packs installed at user scope)',
+    );
+  }
+
+  lines.push('', '### Installed Packs', '');
+
+  for (const { pack, scope } of packs) {
+    const suffix = scope === 'user' ? ' _(user scope)_' : '';
+    lines.push(`- **${pack}** — ${PACK_DESCRIPTIONS[pack]}${suffix}`);
+  }
+
+  return lines.join('\n');
 }
 
 async function runInitTools(
@@ -371,6 +420,22 @@ async function runInitTools(
         );
         context.logger.info('Use --force to update installed skills.');
       }
+    }
+
+    const packScopeInfo: PackScopeInfo[] = selectedPacks.map((pack) => ({
+      pack,
+      scope: pack === 'workflows' ? 'project' : userEligibleScope,
+    }));
+    const sectionBody = buildWorkflowsSectionBody(packScopeInfo);
+    const sectionResult = await dependencies.upsertAgentsMdSection(
+      projectRoot,
+      'workflows',
+      sectionBody,
+    );
+    if (!context.json && sectionResult.action !== 'no-change') {
+      context.logger.info(
+        `AGENTS.md workflows section ${sectionResult.action}.`,
+      );
     }
 
     reportSuccess(context, selectedPacks, userEligibleScope);
