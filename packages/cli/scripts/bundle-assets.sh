@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-ASSETS="${REPO_ROOT}/packages/cli/assets"
+ASSETS="${OAT_ASSETS_DIR:-${REPO_ROOT}/packages/cli/assets}"
 
 rm -rf "${ASSETS}"
 mkdir -p "${ASSETS}/skills" "${ASSETS}/agents" "${ASSETS}/templates" "${ASSETS}/scripts"
@@ -58,7 +58,8 @@ for template in state.md discovery.md spec.md design.md plan.md implementation.m
   cp "${REPO_ROOT}/.oat/templates/${template}" "${ASSETS}/templates/"
 done
 cp -R "${REPO_ROOT}/.oat/templates/ideas" "${ASSETS}/templates/"
-cp -R "${REPO_ROOT}/.oat/templates/docs-app" "${ASSETS}/templates/"
+cp -R "${REPO_ROOT}/.oat/templates/docs-app-mkdocs" "${ASSETS}/templates/"
+cp -R "${REPO_ROOT}/.oat/templates/docs-app-fuma" "${ASSETS}/templates/"
 
 for script in generate-oat-state.sh generate-thin-index.sh; do
   SOURCE_SCRIPT="${REPO_ROOT}/.oat/scripts/${script}"

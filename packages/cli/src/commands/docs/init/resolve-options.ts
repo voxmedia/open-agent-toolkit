@@ -6,14 +6,17 @@ import type {
 import { dirExists, fileExists } from '@fs/io';
 
 export type DocsRepoShape = 'monorepo' | 'single-package';
+export type DocsFramework = 'fumadocs' | 'mkdocs';
 export type DocsLintMode = 'markdownlint' | 'none';
 export type DocsFormatMode = 'prettier' | 'none';
 
 export interface DocsInitResolvedOptions {
   repoRoot: string;
   repoShape: DocsRepoShape;
+  framework: DocsFramework;
   appName: string;
   targetDir: string;
+  siteDescription: string;
   lint: DocsLintMode;
   format: DocsFormatMode;
 }
@@ -23,8 +26,10 @@ export interface ResolveDocsInitOptionsInput {
   repoShape: DocsRepoShape;
   interactive: boolean;
   acceptDefaults: boolean;
+  providedFramework?: DocsFramework;
   providedAppName?: string;
   providedTargetDir?: string;
+  providedSiteDescription?: string;
   providedLint?: DocsLintMode;
   providedFormat?: DocsFormatMode;
   inputWithDefault: (
@@ -44,6 +49,11 @@ export interface DocsRepoShapeDependencies {
   dirExists: (path: string) => Promise<boolean>;
   readFile: (path: string, encoding: BufferEncoding) => Promise<string>;
 }
+
+const FRAMEWORK_CHOICES: SelectChoice<DocsFramework>[] = [
+  { label: 'Fumadocs (Next.js + MDX, static export)', value: 'fumadocs' },
+  { label: 'MkDocs (Python, Material theme)', value: 'mkdocs' },
+];
 
 const LINT_CHOICES: SelectChoice<DocsLintMode>[] = [
   { label: 'markdownlint', value: 'markdownlint' },
@@ -121,10 +131,29 @@ export async function detectDocsRepoShape(
   return 'single-package';
 }
 
+export function getTemplateDir(framework: DocsFramework): string {
+  return framework === 'fumadocs' ? 'docs-app-fuma' : 'docs-app-mkdocs';
+}
+
 export async function resolveDocsInitOptions(
   input: ResolveDocsInitOptionsInput,
 ): Promise<DocsInitResolvedOptions | null> {
   const ctx = { interactive: input.interactive };
+
+  const framework =
+    input.providedFramework ||
+    (input.interactive && !input.acceptDefaults
+      ? await input.selectWithAbort(
+          'Documentation framework',
+          FRAMEWORK_CHOICES,
+          ctx,
+        )
+      : 'fumadocs');
+
+  if (!framework) {
+    return null;
+  }
+
   const defaultAppName = getDefaultDocsAppName(input.repoRoot, input.repoShape);
   const appName =
     input.providedAppName?.trim() ||
@@ -151,6 +180,12 @@ export async function resolveDocsInitOptions(
     return null;
   }
 
+  const siteDescription =
+    input.providedSiteDescription ??
+    (input.interactive && !input.acceptDefaults
+      ? ((await input.inputWithDefault('Site description', '', ctx)) ?? '')
+      : '');
+
   const lint =
     input.providedLint ||
     (input.interactive && !input.acceptDefaults
@@ -174,8 +209,10 @@ export async function resolveDocsInitOptions(
   return {
     repoRoot: input.repoRoot,
     repoShape: input.repoShape,
+    framework,
     appName,
     targetDir,
+    siteDescription,
     lint,
     format,
   };

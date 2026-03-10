@@ -43,7 +43,7 @@ Project scope is used for project workflows and repo-local sync state. User scop
 | `.oat/projects/`         | OAT project artifacts                            | `shared`, `local`, `archived` scopes                      |
 | `.oat/ideas/`            | Project-level ideas store                        | Often gitignored                                          |
 | `.oat/sync/`             | Interop sync state/config                        | See details below                                         |
-| `.oat/templates/`        | Artifact templates used by OAT skills            | Source for scaffolding                                    |
+| `.oat/templates/`        | Artifact templates used by OAT skills            | Source for scaffolding. Includes `docs-app-fuma/` (Fumadocs) and `docs-app-mkdocs/` (MkDocs) templates. |
 | `.oat/repo/`             | Repo-level knowledge/reference/review artifacts  | Durable operational records                               |
 
 ## `.oat/sync/` details
@@ -87,8 +87,9 @@ Current schema keys:
 | `projects.root`  | `string` | `".oat/projects/shared"` | Default root directory for OAT projects                      |
 | `localPaths`     | `string[]` | -                      | Gitignored directories to sync between main repo and worktrees. Supports glob patterns. Managed via `oat local add/remove`. |
 | `documentation.root` | `string` | -                   | Root directory containing documentation source files (e.g., `apps/docs/docs`) |
-| `documentation.tooling` | `string` | -                | Documentation framework identifier (e.g., `mkdocs`, `fumadocs`) |
+| `documentation.tooling` | `string` | -                | Documentation framework identifier (`mkdocs` or `fumadocs`) |
 | `documentation.config` | `string` | -                 | Path to the documentation framework config file (e.g., `mkdocs.yml`, `next.config.js`) |
+| `documentation.index` | `string` | -                  | Path to the docs surface entry point (e.g., `index.md` for Fumadocs, `mkdocs.yml` for MkDocs). Set by `oat docs init` and updated by `oat docs generate-index`. |
 | `documentation.requireForProjectCompletion` | `boolean` | `false` | When `true`, OAT project completion gates require documentation to be updated |
 
 All `documentation.*` keys are managed via `oat config get/set` and are set automatically by `oat docs init`.

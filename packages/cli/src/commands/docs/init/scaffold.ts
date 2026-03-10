@@ -1,13 +1,21 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
+import type { OatDocumentationConfig } from '@config/oat-config';
 import { dirExists, ensureDir, fileExists } from '@fs/io';
 import type {
   DocsFormatMode,
+  DocsFramework,
   DocsInitResolvedOptions,
   DocsLintMode,
 } from './resolve-options';
+import { getTemplateDir } from './resolve-options';
 
-const TEMPLATE_FILES = [
+interface TemplateFile {
+  source: string;
+  destination: string;
+}
+
+const MKDOCS_TEMPLATE_FILES: TemplateFile[] = [
   {
     source: '.markdownlint-cli2.jsonc',
     destination: '.markdownlint-cli2.jsonc',
@@ -25,7 +33,55 @@ const TEMPLATE_FILES = [
     source: join('docs', 'contributing.md'),
     destination: join('docs', 'contributing.md'),
   },
-] as const;
+];
+
+const FUMA_TEMPLATE_FILES: TemplateFile[] = [
+  { source: 'next.config.js', destination: 'next.config.js' },
+  { source: 'source.config.ts', destination: 'source.config.ts' },
+  { source: 'tsconfig.json', destination: 'tsconfig.json' },
+  { source: 'package.json.template', destination: 'package.json' },
+  {
+    source: join('lib', 'source.ts'),
+    destination: join('lib', 'source.ts'),
+  },
+  {
+    source: join('app', 'layout.tsx'),
+    destination: join('app', 'layout.tsx'),
+  },
+  {
+    source: join('app', '[[...slug]]', 'page.tsx'),
+    destination: join('app', '[[...slug]]', 'page.tsx'),
+  },
+  {
+    source: join('app', 'api', 'search', 'route.ts'),
+    destination: join('app', 'api', 'search', 'route.ts'),
+  },
+  { source: join('docs', 'index.md'), destination: join('docs', 'index.md') },
+  {
+    source: join('docs', 'getting-started.md'),
+    destination: join('docs', 'getting-started.md'),
+  },
+  {
+    source: join('docs', 'contributing.md'),
+    destination: join('docs', 'contributing.md'),
+  },
+];
+
+interface FrameworkConfig {
+  templateFiles: TemplateFile[];
+  sentinelFile: string;
+}
+
+const FRAMEWORK_CONFIGS: Record<DocsFramework, FrameworkConfig> = {
+  mkdocs: {
+    templateFiles: MKDOCS_TEMPLATE_FILES,
+    sentinelFile: 'mkdocs.yml',
+  },
+  fumadocs: {
+    templateFiles: FUMA_TEMPLATE_FILES,
+    sentinelFile: 'next.config.js',
+  },
+};
 
 export interface ScaffoldDocsAppOptions extends DocsInitResolvedOptions {
   assetsRoot: string;
@@ -34,6 +90,7 @@ export interface ScaffoldDocsAppOptions extends DocsInitResolvedOptions {
 export interface ScaffoldDocsAppResult {
   appRoot: string;
   createdFiles: string[];
+  documentationConfig: OatDocumentationConfig;
 }
 
 function humanizeAppName(appName: string): string {
@@ -61,6 +118,27 @@ function buildDevDependencies(
   return entries.join(',\n');
 }
 
+function buildFumaDevDependencies(
+  lint: DocsLintMode,
+  format: DocsFormatMode,
+): string {
+  const entries: string[] = [];
+
+  if (lint === 'markdownlint') {
+    entries.push('    "markdownlint-cli2": "^0.13.0"');
+  }
+
+  if (format === 'prettier') {
+    entries.push('    "prettier": "^3.4.2"');
+  }
+
+  if (entries.length === 0) {
+    return '';
+  }
+
+  return `,\n${entries.join(',\n')}`;
+}
+
 function renderTemplate(
   template: string,
   options: DocsInitResolvedOptions,
@@ -71,6 +149,7 @@ function renderTemplate(
     '{{APP_NAME}}': options.appName,
     '{{PACKAGE_NAME}}': options.appName,
     '{{SITE_NAME}}': siteName,
+    '{{SITE_DESCRIPTION}}': options.siteDescription,
     '{{DOCS_LINT_SCRIPT}}':
       options.lint === 'markdownlint'
         ? "markdownlint-cli2 'docs/**/*.md'"
@@ -84,6 +163,10 @@ function renderTemplate(
         ? "prettier --check 'docs/**/*.md'"
         : "echo 'docs format check disabled'",
     '{{DEV_DEPENDENCIES}}': buildDevDependencies(options.lint, options.format),
+    '{{FUMA_DEV_DEPENDENCIES}}': buildFumaDevDependencies(
+      options.lint,
+      options.format,
+    ),
     '{{REPO_NAME}}': repoName,
   };
 
@@ -91,6 +174,26 @@ function renderTemplate(
     (content, [token, value]) => content.replaceAll(token, value),
     template,
   );
+}
+
+function buildDocumentationConfig(
+  framework: DocsFramework,
+  targetDir: string,
+): OatDocumentationConfig {
+  if (framework === 'fumadocs') {
+    return {
+      root: targetDir,
+      tooling: 'fumadocs',
+      index: join(targetDir, 'index.md'),
+    };
+  }
+
+  return {
+    root: targetDir,
+    tooling: 'mkdocs',
+    config: join(targetDir, 'mkdocs.yml'),
+    index: join(targetDir, 'mkdocs.yml'),
+  };
 }
 
 async function ensureTargetWritable(appRoot: string): Promise<void> {
@@ -108,17 +211,19 @@ export async function scaffoldDocsApp(
   options: ScaffoldDocsAppOptions,
 ): Promise<ScaffoldDocsAppResult> {
   const appRoot = join(options.repoRoot, options.targetDir);
-  const templateRoot = join(options.assetsRoot, 'templates', 'docs-app');
+  const templateDir = getTemplateDir(options.framework);
+  const templateRoot = join(options.assetsRoot, 'templates', templateDir);
+  const frameworkConfig = FRAMEWORK_CONFIGS[options.framework];
   const createdFiles: string[] = [];
 
-  if (!(await fileExists(join(templateRoot, 'mkdocs.yml')))) {
+  if (!(await fileExists(join(templateRoot, frameworkConfig.sentinelFile)))) {
     throw new Error(`Docs app templates not found under ${templateRoot}`);
   }
 
   await ensureTargetWritable(appRoot);
   await ensureDir(appRoot);
 
-  for (const templateFile of TEMPLATE_FILES) {
+  for (const templateFile of frameworkConfig.templateFiles) {
     const source = join(templateRoot, templateFile.source);
     const destination = join(appRoot, templateFile.destination);
     const template = await readFile(source, 'utf8');
@@ -131,5 +236,9 @@ export async function scaffoldDocsApp(
   return {
     appRoot,
     createdFiles,
+    documentationConfig: buildDocumentationConfig(
+      options.framework,
+      options.targetDir,
+    ),
   };
 }

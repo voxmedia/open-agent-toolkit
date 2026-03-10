@@ -63,6 +63,11 @@ Config ownership note:
 - `packages/cli/src/commands/cleanup/`
 - `packages/cli/src/commands/cleanup/project/`
 - `packages/cli/src/commands/cleanup/artifacts/`
+- `packages/cli/src/commands/docs/` — `oat docs` command family
+- `packages/cli/src/commands/docs/init/` — scaffold a docs app (Fumadocs or MkDocs)
+- `packages/cli/src/commands/docs/migrate/` — convert MkDocs admonitions to GFM callouts
+- `packages/cli/src/commands/docs/index-generate/` — generate a docs index from markdown files
+- `packages/cli/src/commands/docs/nav/` — regenerate mkdocs.yml nav from index.md sections
 - `packages/cli/src/commands/instructions/`
 - `packages/cli/src/commands/project/`
 - `packages/cli/src/commands/internal/`
@@ -70,3 +75,14 @@ Config ownership note:
 - `packages/cli/src/providers/`
 - `packages/cli/src/manifest/`
 - `packages/cli/src/drift/`
+
+## Docs shared packages
+
+- `packages/docs-config/` — config factories for Fumadocs (`createDocsConfig`, `createSourceConfig`, `createSearchConfig`)
+- `packages/docs-theme/` — shared React components for Fumadocs apps (`DocsLayout`, `DocsPage`, `Mermaid`)
+- `packages/docs-transforms/` — remark plugins for docs processing (`remarkTabs`, `remarkMermaid`)
+
+## Docs scaffold templates
+
+- `.oat/templates/docs-app-fuma/` — Fumadocs (Next.js) scaffold template
+- `.oat/templates/docs-app-mkdocs/` — MkDocs Material scaffold template

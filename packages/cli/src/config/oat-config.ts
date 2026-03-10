@@ -7,6 +7,7 @@ export interface OatDocumentationConfig {
   root?: string;
   tooling?: string;
   config?: string;
+  index?: string;
   requireForProjectCompletion?: boolean;
 }
 
@@ -145,6 +146,12 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
       parsed.documentation.config.trim()
     ) {
       doc.config = parsed.documentation.config.trim();
+    }
+    if (
+      typeof parsed.documentation.index === 'string' &&
+      parsed.documentation.index.trim()
+    ) {
+      doc.index = parsed.documentation.index.trim();
     }
     if (typeof parsed.documentation.requireForProjectCompletion === 'boolean') {
       doc.requireForProjectCompletion =

@@ -3,6 +3,7 @@ import {
   detectDocsRepoShape,
   getDefaultDocsAppName,
   getDefaultDocsTargetDir,
+  getTemplateDir,
   resolveDocsInitOptions,
 } from './resolve-options';
 
@@ -69,9 +70,11 @@ describe('docs init option resolution', () => {
     const inputWithDefault = vi
       .fn()
       .mockResolvedValueOnce('oat-docs')
-      .mockResolvedValueOnce('apps/oat-docs');
+      .mockResolvedValueOnce('apps/oat-docs')
+      .mockResolvedValueOnce('Project documentation');
     const selectWithAbort = vi
       .fn()
+      .mockResolvedValueOnce('fumadocs')
       .mockResolvedValueOnce('markdownlint')
       .mockResolvedValueOnce('prettier');
 
@@ -87,13 +90,15 @@ describe('docs init option resolution', () => {
     expect(result).toEqual({
       repoRoot: '/tmp/open-agent-toolkit',
       repoShape: 'monorepo',
+      framework: 'fumadocs',
       appName: 'oat-docs',
       targetDir: 'apps/oat-docs',
+      siteDescription: 'Project documentation',
       lint: 'markdownlint',
       format: 'prettier',
     });
-    expect(inputWithDefault).toHaveBeenCalledTimes(2);
-    expect(selectWithAbort).toHaveBeenCalledTimes(2);
+    expect(inputWithDefault).toHaveBeenCalledTimes(3);
+    expect(selectWithAbort).toHaveBeenCalledTimes(3);
   });
 
   it('uses defaults without prompts in non-interactive mode', async () => {
@@ -112,8 +117,10 @@ describe('docs init option resolution', () => {
     expect(result).toEqual({
       repoRoot: '/tmp/widget-service',
       repoShape: 'single-package',
+      framework: 'fumadocs',
       appName: 'docs',
       targetDir: 'docs',
+      siteDescription: '',
       lint: 'markdownlint',
       format: 'prettier',
     });
@@ -130,8 +137,10 @@ describe('docs init option resolution', () => {
       repoShape: 'monorepo',
       interactive: true,
       acceptDefaults: false,
+      providedFramework: 'mkdocs',
       providedAppName: 'oat-docs',
       providedTargetDir: 'apps/oat-docs',
+      providedSiteDescription: 'My docs',
       providedLint: 'none',
       providedFormat: 'prettier',
       inputWithDefault,
@@ -141,12 +150,19 @@ describe('docs init option resolution', () => {
     expect(result).toEqual({
       repoRoot: '/tmp/open-agent-toolkit',
       repoShape: 'monorepo',
+      framework: 'mkdocs',
       appName: 'oat-docs',
       targetDir: 'apps/oat-docs',
+      siteDescription: 'My docs',
       lint: 'none',
       format: 'prettier',
     });
     expect(inputWithDefault).not.toHaveBeenCalled();
     expect(selectWithAbort).not.toHaveBeenCalled();
+  });
+
+  it('maps framework to template directory', () => {
+    expect(getTemplateDir('fumadocs')).toBe('docs-app-fuma');
+    expect(getTemplateDir('mkdocs')).toBe('docs-app-mkdocs');
   });
 });

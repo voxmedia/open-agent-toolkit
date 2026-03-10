@@ -332,14 +332,17 @@ describe('help output snapshots', () => {
       OAT documentation bootstrap and maintenance commands
 
       Options:
-        -h, --help      display help for command
+        -h, --help                display help for command
 
       Commands:
-        analyze         Run the docs analysis workflow
-        apply           Run the docs apply workflow
-        init [options]  Scaffold an OAT docs app
-        nav             Docs navigation commands
-        help [command]  display help for command
+        analyze                   Run the docs analysis workflow
+        apply                     Run the docs apply workflow
+        generate-index [options]  Generate a docs index from markdown files
+        init [options]            Scaffold an OAT docs app
+        migrate [options]         Migrate MkDocs markdown to Fumadocs format
+                                  (admonitions, frontmatter)
+        nav                       Docs navigation commands
+        help [command]            display help for command
       "
     `);
   });
@@ -384,12 +387,15 @@ describe('help output snapshots', () => {
       Scaffold an OAT docs app
 
       Options:
-        --app-name <name>    Docs app name
-        --target-dir <path>  Target directory for the docs app
-        --lint <mode>        Markdown lint mode (choices: "markdownlint", "none")
-        --format <mode>      Markdown format mode (choices: "prettier", "none")
-        --yes                Accept defaults without prompting
-        -h, --help           display help for command
+        --framework <framework>  Documentation framework (choices: "fumadocs",
+                                 "mkdocs")
+        --app-name <name>        Docs app name
+        --target-dir <path>      Target directory for the docs app
+        --description <text>     Site description
+        --lint <mode>            Markdown lint mode (choices: "markdownlint", "none")
+        --format <mode>          Markdown format mode (choices: "prettier", "none")
+        --yes                    Accept defaults without prompting
+        -h, --help               display help for command
       "
     `);
   });
