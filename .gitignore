@@ -61,7 +61,8 @@ yarn-error.log*
 # END OAT core
 
 # OAT local paths
+.oat/**/analysis/
+.oat/**/pr/
+.oat/**/reviews/
 .oat/ideas/
-.oat/projects/**/pr/
-.oat/projects/**/reviews/
 # END OAT local paths
