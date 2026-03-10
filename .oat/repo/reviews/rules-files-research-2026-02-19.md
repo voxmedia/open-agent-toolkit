@@ -26,67 +26,67 @@
 
 ### Claude Code
 
-| Aspect | Detail |
-|--------|--------|
-| Primary file | `CLAUDE.md` (project root) |
-| Local overrides | `CLAUDE.local.md` (.gitignored) |
-| Global | `~/.claude/CLAUDE.md` |
-| Rules | `.claude/rules/*.md` with glob-scoped activation |
-| Skills | `.claude/skills/<name>/SKILL.md` (Agent Skills standard) |
-| Commands | `.claude/commands/<name>.md` (legacy, still works) |
-| Subagents | `.claude/agents/<name>.md` |
-| Loading | Eager from root up to CWD; lazy for child directories |
-| Imports | `@path/to/file` syntax within CLAUDE.md |
+| Aspect          | Detail                                                   |
+| --------------- | -------------------------------------------------------- |
+| Primary file    | `CLAUDE.md` (project root)                               |
+| Local overrides | `CLAUDE.local.md` (.gitignored)                          |
+| Global          | `~/.claude/CLAUDE.md`                                    |
+| Rules           | `.claude/rules/*.md` with glob-scoped activation         |
+| Skills          | `.claude/skills/<name>/SKILL.md` (Agent Skills standard) |
+| Commands        | `.claude/commands/<name>.md` (legacy, still works)       |
+| Subagents       | `.claude/agents/<name>.md`                               |
+| Loading         | Eager from root up to CWD; lazy for child directories    |
+| Imports         | `@path/to/file` syntax within CLAUDE.md                  |
 
 **Source**: [Claude Code Official Docs](https://code.claude.com/docs) (Official, High Reliability)
 
 ### Cursor
 
-| Aspect | Detail |
-|--------|--------|
-| Primary file | `.cursor/rules/*.mdc` (Modular Markdown) |
-| Legacy | `.cursorrules` (deprecated, single file) |
-| Rule types | Always, Auto Attached (glob), Agent Requested, Manual |
-| Team rules | Dashboard-configured, applied to all team members |
-| User rules | Global via Cursor Settings |
-| Format | YAML frontmatter + pseudo-XML body |
+| Aspect       | Detail                                                |
+| ------------ | ----------------------------------------------------- |
+| Primary file | `.cursor/rules/*.mdc` (Modular Markdown)              |
+| Legacy       | `.cursorrules` (deprecated, single file)              |
+| Rule types   | Always, Auto Attached (glob), Agent Requested, Manual |
+| Team rules   | Dashboard-configured, applied to all team members     |
+| User rules   | Global via Cursor Settings                            |
+| Format       | YAML frontmatter + pseudo-XML body                    |
 
 **Source**: [Trigger.dev Cursor Rules Guide](https://trigger.dev/blog/cursor-rules), [Elementor Engineers](https://medium.com/elementor-engineers/cursor-rules-best-practices-for-developers-16a438a4935c) (Reputable Engineering Blogs)
 
 ### GitHub Copilot
 
-| Aspect | Detail |
-|--------|--------|
-| Primary file | `.github/copilot-instructions.md` |
-| Type-specific | `.github/instructions/*.instructions.md` (glob-scoped) |
-| Organization | Organization-level instructions via admin settings |
-| Agent Skills | `.github/skills/<name>/` (Agent Skills standard) |
-| Format | Plain Markdown, natural language |
-| File references | `[name](relative/path)` or `#file:relative/path` |
+| Aspect          | Detail                                                 |
+| --------------- | ------------------------------------------------------ |
+| Primary file    | `.github/copilot-instructions.md`                      |
+| Type-specific   | `.github/instructions/*.instructions.md` (glob-scoped) |
+| Organization    | Organization-level instructions via admin settings     |
+| Agent Skills    | `.github/skills/<name>/` (Agent Skills standard)       |
+| Format          | Plain Markdown, natural language                       |
+| File references | `[name](relative/path)` or `#file:relative/path`       |
 
 **Source**: [GitHub Docs](https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot) (Official, High Reliability)
 
 ### OpenAI Codex
 
-| Aspect | Detail |
-|--------|--------|
-| Primary file | `AGENTS.md` (project root) |
-| Global | `~/.codex/AGENTS.md` |
-| Overrides | `AGENTS.override.md` (takes precedence at any level) |
+| Aspect         | Detail                                                                      |
+| -------------- | --------------------------------------------------------------------------- |
+| Primary file   | `AGENTS.md` (project root)                                                  |
+| Global         | `~/.codex/AGENTS.md`                                                        |
+| Overrides      | `AGENTS.override.md` (takes precedence at any level)                        |
 | Fallback names | Configurable via `project_doc_fallback_filenames` in `~/.codex/config.toml` |
-| Discovery | Root to CWD, concatenated; later files override earlier |
-| Max size | **32 KiB combined** (configurable via `project_doc_max_bytes`) |
+| Discovery      | Root to CWD, concatenated; later files override earlier                     |
+| Max size       | **32 KiB combined** (configurable via `project_doc_max_bytes`)              |
 
 **Source**: [OpenAI Codex Docs](https://developers.openai.com/codex/guides/agents-md/) (Official, High Reliability)
 
 ### JetBrains Junie
 
-| Aspect | Detail |
-|--------|--------|
-| Primary file | `.junie/guidelines.md` |
-| Format | Plain Markdown |
+| Aspect            | Detail                                                                        |
+| ----------------- | ----------------------------------------------------------------------------- |
+| Primary file      | `.junie/guidelines.md`                                                        |
+| Format            | Plain Markdown                                                                |
 | Community catalog | [junie-guidelines GitHub repo](https://github.com/JetBrains/junie-guidelines) |
-| Auto-generation | Can analyze existing codebase to generate initial guidelines |
+| Auto-generation   | Can analyze existing codebase to generate initial guidelines                  |
 
 **Source**: [JetBrains Blog](https://blog.jetbrains.com/idea/2025/05/coding-guidelines-for-your-ai-agents/) (Official, High Reliability)
 
@@ -96,24 +96,24 @@
 
 ### Hard Limits (Documented)
 
-| Provider | Limit | Source |
-|----------|-------|--------|
-| Codex | 32 KiB combined instruction files | OpenAI Codex docs (Official) |
-| Copilot | ~1,000 lines max per file; "no longer than 2 pages" recommended | GitHub Community Discussion, VS Code docs |
-| Claude Code | Skill descriptions budget: 2% of context window, fallback 16,000 chars | Claude Code docs (Official) |
-| Cursor | Individual .mdc files ideally under 50 lines | Community consensus |
+| Provider    | Limit                                                                  | Source                                    |
+| ----------- | ---------------------------------------------------------------------- | ----------------------------------------- |
+| Codex       | 32 KiB combined instruction files                                      | OpenAI Codex docs (Official)              |
+| Copilot     | ~1,000 lines max per file; "no longer than 2 pages" recommended        | GitHub Community Discussion, VS Code docs |
+| Claude Code | Skill descriptions budget: 2% of context window, fallback 16,000 chars | Claude Code docs (Official)               |
+| Cursor      | Individual .mdc files ideally under 50 lines                           | Community consensus                       |
 
 ### Practical Sizing Guidance
 
-| Metric | Recommendation | Source |
-|--------|---------------|--------|
-| CLAUDE.md length | Under 500 lines, ideally under 300 lines | HumanLayer blog, Claude Code best practices |
-| CLAUDE.md in practice | 13KB professional monorepo (potential to grow to 25KB) | [Shrivu Shankar blog](https://blog.sshh.io/p/how-i-use-every-claude-code-feature) (Practitioner) |
-| HumanLayer root file | Under 60 lines | [HumanLayer](https://www.humanlayer.dev/blog/writing-a-good-claude-md) |
-| Instruction count | ~100 max for CLAUDE.md (system prompt already contains ~50) | HumanLayer blog |
-| LLM instruction following | 150-200 instructions with reasonable consistency | [Builder.io](https://www.builder.io/c/docs/ai-instruction-best-practices) |
-| Fresh monorepo session | ~20k tokens (10% of 200k budget) | Shrivu Shankar blog |
-| SKILL.md files | Under 500 lines, move reference to supporting files | Claude Code docs (Official) |
+| Metric                    | Recommendation                                              | Source                                                                                           |
+| ------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| CLAUDE.md length          | Under 500 lines, ideally under 300 lines                    | HumanLayer blog, Claude Code best practices                                                      |
+| CLAUDE.md in practice     | 13KB professional monorepo (potential to grow to 25KB)      | [Shrivu Shankar blog](https://blog.sshh.io/p/how-i-use-every-claude-code-feature) (Practitioner) |
+| HumanLayer root file      | Under 60 lines                                              | [HumanLayer](https://www.humanlayer.dev/blog/writing-a-good-claude-md)                           |
+| Instruction count         | ~100 max for CLAUDE.md (system prompt already contains ~50) | HumanLayer blog                                                                                  |
+| LLM instruction following | 150-200 instructions with reasonable consistency            | [Builder.io](https://www.builder.io/c/docs/ai-instruction-best-practices)                        |
+| Fresh monorepo session    | ~20k tokens (10% of 200k budget)                            | Shrivu Shankar blog                                                                              |
+| SKILL.md files            | Under 500 lines, move reference to supporting files         | Claude Code docs (Official)                                                                      |
 
 ### Token Budget Economics
 
@@ -203,12 +203,12 @@ Context loading strategies fall into three decision patterns:
 
 ### Builder.io Framework
 
-| Aspect | Rules | Commands | Skills |
-|--------|-------|----------|--------|
-| Triggering | Always active | User-initiated | Agent-determined |
-| Purpose | Repository requirements, safety constraints | Repeatable workflows | Task-specific playbooks |
-| Context cost | Perpetual (loaded every request) | Only when invoked | Only when relevant |
-| Best use | Naming conventions, testing requirements | Workflow shortcuts | Domain-specific procedures |
+| Aspect       | Rules                                       | Commands             | Skills                     |
+| ------------ | ------------------------------------------- | -------------------- | -------------------------- |
+| Triggering   | Always active                               | User-initiated       | Agent-determined           |
+| Purpose      | Repository requirements, safety constraints | Repeatable workflows | Task-specific playbooks    |
+| Context cost | Perpetual (loaded every request)            | Only when invoked    | Only when relevant         |
+| Best use     | Naming conventions, testing requirements    | Workflow shortcuts   | Domain-specific procedures |
 
 **Key insight**: "Larger context is not smarter context." Skills solve the attention-budget problem by surfacing relevant information only when needed.
 
@@ -231,6 +231,7 @@ Context loading strategies fall into three decision patterns:
 ### Content Strategy (Cross-Provider Consensus)
 
 **Include**:
+
 - Build, test, lint commands that cannot be guessed
 - Code style rules that differ from language defaults
 - Repository etiquette (branch naming, PR conventions)
@@ -242,6 +243,7 @@ Context loading strategies fall into three decision patterns:
 - Three-tier boundaries: Always / Ask First / Never
 
 **Exclude**:
+
 - Anything the agent can figure out by reading code
 - Standard language conventions the agent already knows
 - Detailed API documentation (link instead)
@@ -323,18 +325,21 @@ These practices are converged across: [Claude Code Best Practices](https://code.
 ### Hierarchical File Placement
 
 **Claude Code pattern**:
+
 - Root `CLAUDE.md`: Repository-wide conventions, coding standards, common patterns
 - Package-level `CLAUDE.md`: Framework-specific patterns, component architecture
 - Loading: Eager from root up to CWD; lazy for child directories below CWD
 - Conflict resolution: Deeper files take priority when instructions conflict
 
 **Codex pattern**:
+
 - Root `AGENTS.md`: Repository norms (linting, documentation)
 - Nested `AGENTS.override.md`: Team-specific rules for specialized services
 - Files concatenated root-down; later files override earlier
 - Discovery stops at CWD
 
 **Cursor pattern**:
+
 - Multiple `.mdc` files in `.cursor/rules/` with glob scoping
 - Auto Attached rules activate based on file pattern matching
 - Splitting bloated `.cursorrules` into scoped `.mdc` files reduces token waste
@@ -361,17 +366,18 @@ These practices are converged across: [Claude Code Best Practices](https://code.
 
 ### Team-Level Configuration
 
-| Provider | Team mechanism |
-|----------|---------------|
+| Provider    | Team mechanism                                                               |
+| ----------- | ---------------------------------------------------------------------------- |
 | Claude Code | Enterprise managed settings; plugins for distributing skills/hooks/subagents |
-| Cursor | Team rules set in dashboard, available for all members |
-| Copilot | Organization-level instructions via admin settings |
-| Codex | Shared `AGENTS.md` in version control |
-| JetBrains | Community-driven guidelines catalog via GitHub |
+| Cursor      | Team rules set in dashboard, available for all members                       |
+| Copilot     | Organization-level instructions via admin settings                           |
+| Codex       | Shared `AGENTS.md` in version control                                        |
+| JetBrains   | Community-driven guidelines catalog via GitHub                               |
 
 ### Version Control as Foundation
 
 All providers converge on: instruction files should be checked into version control as the team's shared source of truth. This enables:
+
 - PR-based review of instruction changes
 - History tracking of what worked vs. what did not
 - Onboarding (new engineers get the accumulated knowledge)
@@ -385,6 +391,7 @@ All providers converge on: instruction files should be checked into version cont
 ### Safety Permissions
 
 Explicitly distinguish what agents can execute autonomously vs. what requires approval:
+
 - Allowed: file reading, single-file linting
 - Restricted: package installations, git operations, full builds
 - This is cross-provider advice, but implementation varies per tool
@@ -398,6 +405,7 @@ Explicitly distinguish what agents can execute autonomously vs. what requires ap
 ### Current State of Fragmentation
 
 Each tool has its own file format:
+
 - Claude Code: `CLAUDE.md` + `.claude/`
 - Cursor: `.cursor/rules/*.mdc`
 - Copilot: `.github/copilot-instructions.md` + `.github/instructions/`
@@ -416,6 +424,7 @@ This creates maintenance burden: content drift between files, duplicated instruc
 ### Adapter / Sync Strategy
 
 The approach of maintaining a canonical set of rules and syncing to provider-specific formats addresses the fragmentation:
+
 - Keep canonical content in one place (e.g., AGENTS.md or a shared rules directory)
 - Generate/sync provider-specific files from the canonical source
 - Each tool gets its native format, but content stays DRY
@@ -430,6 +439,7 @@ The approach of maintaining a canonical set of rules and syncing to provider-spe
 ### Three-Tier File Discovery (Cross-Provider Pattern)
 
 All providers implement some version of:
+
 1. **Global** (user-level): Applied to all projects
 2. **Project root**: Shared team conventions
 3. **Nested/scoped**: Directory or file-type specific overrides
@@ -444,43 +454,43 @@ This pattern is consistent enough to design a portable hierarchy around it.
 
 ### Official Documentation (Highest Reliability)
 
-| Source | URL | Key Contributions |
-|--------|-----|-------------------|
-| Claude Code Docs | https://code.claude.com/docs | CLAUDE.md format, skills, best practices, quantitative guidance |
-| Claude Code Best Practices | https://code.claude.com/docs/en/best-practices | Token management, anti-patterns, CLAUDE.md include/exclude tables |
-| Anthropic Context Engineering | https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents | Fundamental principles, altitude framework, minimalist approach |
-| OpenAI Codex AGENTS.md Guide | https://developers.openai.com/codex/guides/agents-md/ | File hierarchy, 32KiB limit, override mechanism |
-| GitHub Copilot Docs | https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot | File format, referencing, organization instructions |
-| AGENTS.md Specification | https://agents.md/ | Cross-tool standard, governance, adoption data |
-| JetBrains Blog | https://blog.jetbrains.com/idea/2025/05/coding-guidelines-for-your-ai-agents/ | Junie format, community guidelines catalog |
+| Source                        | URL                                                                                               | Key Contributions                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Claude Code Docs              | https://code.claude.com/docs                                                                      | CLAUDE.md format, skills, best practices, quantitative guidance   |
+| Claude Code Best Practices    | https://code.claude.com/docs/en/best-practices                                                    | Token management, anti-patterns, CLAUDE.md include/exclude tables |
+| Anthropic Context Engineering | https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents                 | Fundamental principles, altitude framework, minimalist approach   |
+| OpenAI Codex AGENTS.md Guide  | https://developers.openai.com/codex/guides/agents-md/                                             | File hierarchy, 32KiB limit, override mechanism                   |
+| GitHub Copilot Docs           | https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot | File format, referencing, organization instructions               |
+| AGENTS.md Specification       | https://agents.md/                                                                                | Cross-tool standard, governance, adoption data                    |
+| JetBrains Blog                | https://blog.jetbrains.com/idea/2025/05/coding-guidelines-for-your-ai-agents/                     | Junie format, community guidelines catalog                        |
 
 ### Reputable Engineering Blogs (High Reliability)
 
-| Source | URL | Key Contributions |
-|--------|-----|-------------------|
-| Martin Fowler / ThoughtWorks | https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html | Context loading strategies taxonomy, probabilistic caution |
-| Addy Osmani | https://addyosmani.com/blog/good-spec/ | PRD-like spec structure, boundary tiers, iterative approach |
-| Builder.io Skills/Rules/Commands | https://www.builder.io/blog/agent-skills-rules-commands | Taxonomy of instruction types, progressive disclosure pattern |
-| Builder.io AGENTS.md Guide | https://www.builder.io/blog/agents-md | File-scoped commands, safety permissions, practical tips |
-| Trigger.dev Cursor Rules | https://trigger.dev/blog/cursor-rules | .mdc format best practices, 10 essential tips |
-| Elementor Engineers | https://medium.com/elementor-engineers/cursor-rules-best-practices-for-developers-16a438a4935c | Rule organization, team setup patterns |
+| Source                           | URL                                                                                            | Key Contributions                                             |
+| -------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Martin Fowler / ThoughtWorks     | https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html      | Context loading strategies taxonomy, probabilistic caution    |
+| Addy Osmani                      | https://addyosmani.com/blog/good-spec/                                                         | PRD-like spec structure, boundary tiers, iterative approach   |
+| Builder.io Skills/Rules/Commands | https://www.builder.io/blog/agent-skills-rules-commands                                        | Taxonomy of instruction types, progressive disclosure pattern |
+| Builder.io AGENTS.md Guide       | https://www.builder.io/blog/agents-md                                                          | File-scoped commands, safety permissions, practical tips      |
+| Trigger.dev Cursor Rules         | https://trigger.dev/blog/cursor-rules                                                          | .mdc format best practices, 10 essential tips                 |
+| Elementor Engineers              | https://medium.com/elementor-engineers/cursor-rules-best-practices-for-developers-16a438a4935c | Rule organization, team setup patterns                        |
 
 ### Practitioner Experience Reports (Medium-High Reliability)
 
-| Source | URL | Key Contributions |
-|--------|-----|-------------------|
-| Shrivu Shankar (sshh.io) | https://blog.sshh.io/p/how-i-use-every-claude-code-feature | 13KB CLAUDE.md in practice, 20k token startup cost, avoid /compact |
-| HumanLayer | https://www.humanlayer.dev/blog/writing-a-good-claude-md | 300-line / 60-line targets, 100 instruction max, progressive disclosure |
-| Arun Iyer | https://aruniyer.github.io/blog/agents-md-instruction-files.html | Cross-tool file comparison table, hierarchy patterns |
-| Builder.io AI Instruction Best Practices | https://www.builder.io/c/docs/ai-instruction-best-practices | 150-200 instruction limit finding |
+| Source                                   | URL                                                              | Key Contributions                                                       |
+| ---------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Shrivu Shankar (sshh.io)                 | https://blog.sshh.io/p/how-i-use-every-claude-code-feature       | 13KB CLAUDE.md in practice, 20k token startup cost, avoid /compact      |
+| HumanLayer                               | https://www.humanlayer.dev/blog/writing-a-good-claude-md         | 300-line / 60-line targets, 100 instruction max, progressive disclosure |
+| Arun Iyer                                | https://aruniyer.github.io/blog/agents-md-instruction-files.html | Cross-tool file comparison table, hierarchy patterns                    |
+| Builder.io AI Instruction Best Practices | https://www.builder.io/c/docs/ai-instruction-best-practices      | 150-200 instruction limit finding                                       |
 
 ### Community Content (Medium Reliability -- verify claims independently)
 
-| Source | URL | Key Contributions |
-|--------|-----|-------------------|
-| 0xdevalias GitHub Gist | https://gist.github.com/0xdevalias/f40bc5a6f84c4c5ad862e314894b2fa6 | Comprehensive cross-tool notes |
-| Cursor Directory | https://cursor.directory/rules/best-practices | Community rules catalog |
-| Various Medium articles | Various | Practitioner experience, some unverified claims |
+| Source                  | URL                                                                 | Key Contributions                               |
+| ----------------------- | ------------------------------------------------------------------- | ----------------------------------------------- |
+| 0xdevalias GitHub Gist  | https://gist.github.com/0xdevalias/f40bc5a6f84c4c5ad862e314894b2fa6 | Comprehensive cross-tool notes                  |
+| Cursor Directory        | https://cursor.directory/rules/best-practices                       | Community rules catalog                         |
+| Various Medium articles | Various                                                             | Practitioner experience, some unverified claims |
 
 ### Claims Requiring Verification
 

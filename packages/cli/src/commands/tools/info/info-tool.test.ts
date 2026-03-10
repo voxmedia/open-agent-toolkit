@@ -2,6 +2,7 @@ import type { CommandContext } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import type { ToolInfo } from '@commands/tools/shared/types';
 import { describe, expect, it } from 'vitest';
+
 import {
   type InfoToolDependencies,
   runInfoTool,

@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
+
 import { fileExists } from '@fs/io';
 
 export interface GitOperations {
@@ -45,7 +46,8 @@ const CONFIG_FILES = [
   'yarn.lock',
   'package-lock.json',
   'tsconfig.json',
-  'biome.json',
+  '.oxlintrc.json',
+  '.oxfmtrc.jsonc',
   'eslint.config.js',
   'eslint.config.mjs',
   '.eslintrc.js',

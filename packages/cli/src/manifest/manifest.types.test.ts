@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { ManifestSchema } from './manifest.types';
 
 const validManifest = {

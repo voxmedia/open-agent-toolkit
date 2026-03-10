@@ -12,20 +12,20 @@ The backlog has **two items that are already completed** but still listed as Pla
 
 ### Items to move to Completed Archive
 
-| Backlog Item | Evidence | PR |
-|---|---|---|
-| **(P1) Migrate `new-oat-project.ts` to CLI** | `oat project new` exists in `packages/cli/src/commands/project/new/`. Script removed from `.oat/scripts/`. | PR #12 |
+| Backlog Item                                     | Evidence                                                                                                                 | PR     |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------ |
+| **(P1) Migrate `new-oat-project.ts` to CLI**     | `oat project new` exists in `packages/cli/src/commands/project/new/`. Script removed from `.oat/scripts/`.               | PR #12 |
 | **(P1) Migrate `validate-oat-skills.ts` to CLI** | `oat internal validate-oat-skills` exists in `packages/cli/src/commands/internal/`. Script removed from `.oat/scripts/`. | PR #12 |
 
 ### Work completed but never tracked in backlog
 
-| Work | Evidence | PR |
-|---|---|---|
+| Work                                                        | Evidence                                                                | PR     |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------- | ------ |
 | Plan writing unification (`oat-project-plan-writing` skill) | Canonical plan writing contract shared across all plan-producing skills | PR #13 |
-| File-based agent sync (`.md` files in `.agents/`) | `isFile` support in sync pipeline | PR #11 |
-| Repo records consolidation (`.oat/repo/` layout) | `.oat/repo/{reference,reviews,archive,knowledge}` established | PR #10 |
-| CLI import convention enforcement | Alias-only imports, command module restructuring | PR #9 |
-| Ideas workflow (`oat-idea-*` skills) | Four idea skills live in `.agents/skills/` | PR #5 |
+| File-based agent sync (`.md` files in `.agents/`)           | `isFile` support in sync pipeline                                       | PR #11 |
+| Repo records consolidation (`.oat/repo/` layout)            | `.oat/repo/{reference,reviews,archive,knowledge}` established           | PR #10 |
+| CLI import convention enforcement                           | Alias-only imports, command module restructuring                        | PR #9  |
+| Ideas workflow (`oat-idea-*` skills)                        | Four idea skills live in `.agents/skills/`                              | PR #5  |
 
 ---
 
@@ -35,32 +35,32 @@ After removing completed items, **19 items remain** (1 Inbox, 18 Planned):
 
 ### New items since last review (2026-02-15)
 
-| Item | Priority | Area | Notes |
-|---|---|---|---|
-| `oat-project-document` (post-implementation docs synthesis) | P1 | skills | Fills a real gap in the closeout flow |
-| Mode-aware reviewer for quick/import projects | P1 | skills | Prevents reviewer failures on missing artifacts |
-| Git worktree workflow skill | P1 | skills | Onboarding reliability |
-| Subagent orchestration skills | P1 | skills | Phase 6 readiness |
-| `--help` parsing bug | P1 | tooling | Creates side effects — scaffolds a `--help` project |
-| Web-research convention (`markdown.new`) | P2 | docs | Docs-only guidance |
+| Item                                                        | Priority | Area    | Notes                                               |
+| ----------------------------------------------------------- | -------- | ------- | --------------------------------------------------- |
+| `oat-project-document` (post-implementation docs synthesis) | P1       | skills  | Fills a real gap in the closeout flow               |
+| Mode-aware reviewer for quick/import projects               | P1       | skills  | Prevents reviewer failures on missing artifacts     |
+| Git worktree workflow skill                                 | P1       | skills  | Onboarding reliability                              |
+| Subagent orchestration skills                               | P1       | skills  | Phase 6 readiness                                   |
+| `--help` parsing bug                                        | P1       | tooling | Creates side effects — scaffolds a `--help` project |
+| Web-research convention (`markdown.new`)                    | P2       | docs    | Docs-only guidance                                  |
 
 ### Carried forward from last review (still open)
 
-| Item | Priority | Area | Status |
-|---|---|---|---|
-| Migrate `generate-oat-state.sh` (B14) | P1 | tooling | Not started — script still in `.oat/scripts/` |
-| Migrate `generate-thin-index.sh` (B15) | P1 | tooling | Not started — script still in `.oat/scripts/` |
-| Remove `.oat/scripts/` directory (B16) | P2 | tooling | Blocked on B14+B15 (2 of 4 scripts remain) |
-| Context management commands (B04) | P1 | tooling | Not started |
-| `oat init ideas` (B07) | P1 | tooling | Not started |
-| `oat init workflows` (B10) | P1 | tooling | Not started |
-| Review receive + PR-review intake | P1 | skills | Partial — `oat-project-review-receive` exists; standalone `oat-review-receive` and `oat-review-pr-receive` do not |
-| Codex prompt-wrapper generation | P2 | tooling | Not started |
-| PR review follow-on skill set | P2 | skills | Not started; blocked on review receive |
-| Dependency intelligence | P2 | skills | Not started |
-| Skill uninstall command | P2 | tooling | Not started |
-| Idea promotion flow | P2 | skills | Not started |
-| Backlog Refinement Flow / Jira (Inbox) | P2 | workflow | Needs scoping |
+| Item                                   | Priority | Area     | Status                                                                                                            |
+| -------------------------------------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| Migrate `generate-oat-state.sh` (B14)  | P1       | tooling  | Not started — script still in `.oat/scripts/`                                                                     |
+| Migrate `generate-thin-index.sh` (B15) | P1       | tooling  | Not started — script still in `.oat/scripts/`                                                                     |
+| Remove `.oat/scripts/` directory (B16) | P2       | tooling  | Blocked on B14+B15 (2 of 4 scripts remain)                                                                        |
+| Context management commands (B04)      | P1       | tooling  | Not started                                                                                                       |
+| `oat init ideas` (B07)                 | P1       | tooling  | Not started                                                                                                       |
+| `oat init workflows` (B10)             | P1       | tooling  | Not started                                                                                                       |
+| Review receive + PR-review intake      | P1       | skills   | Partial — `oat-project-review-receive` exists; standalone `oat-review-receive` and `oat-review-pr-receive` do not |
+| Codex prompt-wrapper generation        | P2       | tooling  | Not started                                                                                                       |
+| PR review follow-on skill set          | P2       | skills   | Not started; blocked on review receive                                                                            |
+| Dependency intelligence                | P2       | skills   | Not started                                                                                                       |
+| Skill uninstall command                | P2       | tooling  | Not started                                                                                                       |
+| Idea promotion flow                    | P2       | skills   | Not started                                                                                                       |
+| Backlog Refinement Flow / Jira (Inbox) | P2       | workflow | Needs scoping                                                                                                     |
 
 ---
 
@@ -81,6 +81,7 @@ The remaining two shell scripts (B14, B15) are the last pieces of infrastructure
 ### Theme C: Workflow quality (fills real gaps in daily use)
 
 Several new P1 items address real friction points encountered during dogfooding:
+
 - The `--help` bug creates side effects every time someone asks for help
 - The mode-aware reviewer fails or degrades on quick/import projects
 - `oat-project-document` fills the gap between implementation and closeout
@@ -92,59 +93,59 @@ Several new P1 items address real friction points encountered during dogfooding:
 
 ### Wave 1: Quick wins + bug fix
 
-| Item | Effort | Rationale |
-|---|---|---|
-| **Fix `--help` parsing bug** | Low | Bug that creates side effects. Fix before it bites someone. |
-| **Mode-aware reviewer** | Low–Medium | Skill update (not a new skill). Prevents reviewer failures on quick/import projects that are already shipping. |
+| Item                         | Effort     | Rationale                                                                                                      |
+| ---------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------- |
+| **Fix `--help` parsing bug** | Low        | Bug that creates side effects. Fix before it bites someone.                                                    |
+| **Mode-aware reviewer**      | Low–Medium | Skill update (not a new skill). Prevents reviewer failures on quick/import projects that are already shipping. |
 
 **Why first:** These are quality-of-existing-work items. The `--help` bug is embarrassing; the reviewer gap affects every quick/import project review.
 
 ### Wave 2: Finish script migrations
 
-| Item | Effort | Rationale |
-|---|---|---|
-| **Migrate `generate-oat-state.sh` (B14)** | Medium | Largest script (419 lines shell). Rewrite in TypeScript for testability. |
-| **Migrate `generate-thin-index.sh` (B15)** | Medium | 200-line shell script. Same rationale. |
-| **Remove `.oat/scripts/` (B16)** | Trivial | Cleanup after B14+B15. |
+| Item                                       | Effort  | Rationale                                                                |
+| ------------------------------------------ | ------- | ------------------------------------------------------------------------ |
+| **Migrate `generate-oat-state.sh` (B14)**  | Medium  | Largest script (419 lines shell). Rewrite in TypeScript for testability. |
+| **Migrate `generate-thin-index.sh` (B15)** | Medium  | 200-line shell script. Same rationale.                                   |
+| **Remove `.oat/scripts/` (B16)**           | Trivial | Cleanup after B14+B15.                                                   |
 
 **Why second:** These are parallelizable, independent of everything else, and eliminate the last infrastructure debt. After this, no more shell scripts.
 
 ### Wave 3: Distribution
 
-| Item | Effort | Rationale |
-|---|---|---|
-| **`oat init ideas` (B07)** | Medium | Simpler version of the pattern. Do first to establish the template. |
-| **`oat init workflows` (B10)** | Medium | The primary onboarding path for new repos. Same pattern as B07 but larger scope. |
+| Item                                  | Effort | Rationale                                                                                         |
+| ------------------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| **`oat init ideas` (B07)**            | Medium | Simpler version of the pattern. Do first to establish the template.                               |
+| **`oat init workflows` (B10)**        | Medium | The primary onboarding path for new repos. Same pattern as B07 but larger scope.                  |
 | **Context management commands (B04)** | Medium | `oat context sync/validate` prevents the `CLAUDE.md ↔ AGENTS.md` drift failure mode. Good for CI. |
 
 **Why third:** With the CLI consolidated and scripts migrated, `oat init` subcommands become the natural next step. They're the distribution story — how OAT goes from "works in this repo" to "works in any repo."
 
 ### Wave 4: Workflow depth
 
-| Item | Effort | Rationale |
-|---|---|---|
-| **`oat-project-document`** | Medium | Fills the docs-before-closeout gap. Natural extension of the existing review/complete flow. |
-| **Review receive + PR-review intake** | High | Completes the review feedback loop. `oat-review-receive` (standalone) + `oat-review-pr-receive` (GitHub PR comments). |
-| **Git worktree workflow skill** | Medium | Codifies worktree setup that's currently ad-hoc. Important as multi-worktree usage grows. |
+| Item                                  | Effort | Rationale                                                                                                             |
+| ------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------- |
+| **`oat-project-document`**            | Medium | Fills the docs-before-closeout gap. Natural extension of the existing review/complete flow.                           |
+| **Review receive + PR-review intake** | High   | Completes the review feedback loop. `oat-review-receive` (standalone) + `oat-review-pr-receive` (GitHub PR comments). |
+| **Git worktree workflow skill**       | Medium | Codifies worktree setup that's currently ad-hoc. Important as multi-worktree usage grows.                             |
 
 **Why fourth:** These add real workflow capability but don't unblock other items. Better to ship distribution first, then deepen the workflow.
 
 ### Wave 5: Extensions + fill-ins
 
-| Item | Effort | Rationale |
-|---|---|---|
+| Item                          | Effort      | Rationale                                                                           |
+| ----------------------------- | ----------- | ----------------------------------------------------------------------------------- |
 | Subagent orchestration skills | Medium–High | Phase 6 readiness. Important but not urgent until parallel execution is a priority. |
-| Idea promotion flow | Medium | Completes ideas-to-projects pipeline. Nice but not blocking. |
-| Skill uninstall command | Medium | Lifecycle completeness. |
-| PR review follow-on skills | Medium | Extension of review receive. Wait until base is stable. |
-| Codex prompt wrappers | Low | Fill-in. Wait until Codex usage is active. |
-| Dependency intelligence | Medium | Not core to OAT value proposition. |
-| Web-research convention | Low | Docs-only. Slot into a gap. |
+| Idea promotion flow           | Medium      | Completes ideas-to-projects pipeline. Nice but not blocking.                        |
+| Skill uninstall command       | Medium      | Lifecycle completeness.                                                             |
+| PR review follow-on skills    | Medium      | Extension of review receive. Wait until base is stable.                             |
+| Codex prompt wrappers         | Low         | Fill-in. Wait until Codex usage is active.                                          |
+| Dependency intelligence       | Medium      | Not core to OAT value proposition.                                                  |
+| Web-research convention       | Low         | Docs-only. Slot into a gap.                                                         |
 
 ### Deferred
 
-| Item | Rationale |
-|---|---|
+| Item                           | Rationale                                                             |
+| ------------------------------ | --------------------------------------------------------------------- |
 | Backlog Refinement Flow / Jira | Still in Inbox. Not core to OAT. Revisit when Jira demand is clearer. |
 
 ---
@@ -175,29 +176,33 @@ Key observation: Most remaining items are **independent**. The tight dependency 
 ## 6. Parallel Lanes
 
 ### Lane A: Script migrations (B14 + B15 → B16)
+
 Fully independent of all other work. Can run in parallel with everything.
 
 ### Lane B: Distribution (B07 → B10 + B04)
+
 B07 first to establish the `init` subcommand pattern, then B10 follows the same pattern at larger scale. B04 is standalone but thematically related.
 
 ### Lane C: Workflow quality (bug fix + reviewer + document skill)
+
 Three independent items that improve daily workflow. Can be interleaved with Lane A or B.
 
 ### Lane D: Later capabilities (review receive, worktree, subagents, etc.)
+
 Held for after Waves 1–3 complete.
 
 ---
 
 ## 7. Changes from Previous Review
 
-| Previous Recommendation | Current Status |
-|---|---|
-| "Start with B01 (skills table CLI)" | Done — retired in favor of provider sync |
-| "B02 (invocation standardization) in parallel" | Done — PR #7 |
-| "B08 (naming normalization) is the biggest risk" | Done — PR #7, clean execution |
-| "Script migrations as a parallel lane" | Half done — B12+B13 complete (PR #12), B14+B15 remain |
-| "Defer review family until naming done" | Naming is done. Partial review work shipped (ad-hoc review provide). Remaining review receive work is now unblocked. |
-| "Keep new workflow capabilities for later wave" | Several new P1 skills added (document, mode-aware reviewer). These reflect real dogfooding gaps, not speculative scope. |
+| Previous Recommendation                          | Current Status                                                                                                          |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| "Start with B01 (skills table CLI)"              | Done — retired in favor of provider sync                                                                                |
+| "B02 (invocation standardization) in parallel"   | Done — PR #7                                                                                                            |
+| "B08 (naming normalization) is the biggest risk" | Done — PR #7, clean execution                                                                                           |
+| "Script migrations as a parallel lane"           | Half done — B12+B13 complete (PR #12), B14+B15 remain                                                                   |
+| "Defer review family until naming done"          | Naming is done. Partial review work shipped (ad-hoc review provide). Remaining review receive work is now unblocked.    |
+| "Keep new workflow capabilities for later wave"  | Several new P1 skills added (document, mode-aware reviewer). These reflect real dogfooding gaps, not speculative scope. |
 
 ### Net assessment
 

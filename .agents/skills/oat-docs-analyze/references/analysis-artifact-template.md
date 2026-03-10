@@ -1,10 +1,10 @@
 ---
 oat_generated: true
-oat_generated_at: {YYYY-MM-DD}
+oat_generated_at: { YYYY-MM-DD }
 oat_analysis_type: docs
-oat_analysis_mode: {full|delta}
-oat_docs_target: {docs-target-path}
-oat_analysis_commit: {commitHash}
+oat_analysis_mode: { full|delta }
+oat_docs_target: { docs-target-path }
+oat_analysis_commit: { commitHash }
 ---
 
 # Docs Analysis: {repo-name}
@@ -29,12 +29,12 @@ oat_analysis_commit: {commitHash}
 
 ## Docs Inventory
 
-| # | Type | Path | Status | Notes |
-|---|------|------|--------|-------|
-| 1 | index | `docs/index.md` | pass | Root index present |
-| 2 | page | `docs/getting-started.md` | pass | Linked from root index |
-| 3 | directory | `docs/reference/` | issues | Missing `index.md` |
-| ... | | | | |
+| #   | Type      | Path                      | Status | Notes                  |
+| --- | --------- | ------------------------- | ------ | ---------------------- |
+| 1   | index     | `docs/index.md`           | pass   | Root index present     |
+| 2   | page      | `docs/getting-started.md` | pass   | Linked from root index |
+| 3   | directory | `docs/reference/`         | issues | Missing `index.md`     |
+| ... |           |                           |        |                        |
 
 ## Findings
 
@@ -100,11 +100,11 @@ None | {numbered list}
 
 ## Directory Contract Gaps
 
-| # | Directory | Gap | Evidence | Disclosure | Link Target | Severity | Recommended Fix |
-|---|-----------|-----|----------|------------|-------------|----------|-----------------|
-| 1 | `docs/api/` | Missing `index.md` | {exact refs} | {inline/link_only/omit/ask_user} | {path or URL / N/A} | High | Add `index.md` with `## Contents` |
-| 2 | `docs/cli/` | `overview.md` still present | {exact refs} | {inline/link_only/omit/ask_user} | {path or URL / N/A} | Medium | Convert to `index.md` or linked topic page |
-| ... | | | | | | | |
+| #   | Directory   | Gap                         | Evidence     | Disclosure                       | Link Target         | Severity | Recommended Fix                            |
+| --- | ----------- | --------------------------- | ------------ | -------------------------------- | ------------------- | -------- | ------------------------------------------ |
+| 1   | `docs/api/` | Missing `index.md`          | {exact refs} | {inline/link_only/omit/ask_user} | {path or URL / N/A} | High     | Add `index.md` with `## Contents`          |
+| 2   | `docs/cli/` | `overview.md` still present | {exact refs} | {inline/link_only/omit/ask_user} | {path or URL / N/A} | Medium   | Convert to `index.md` or linked topic page |
+| ... |             |                             |              |                                  |                     |          |                                            |
 
 {Or: "No directory contract gaps identified."}
 
@@ -114,11 +114,11 @@ Check only claims that are verifiable from repo sources such as code, config, sc
 scripts, route definitions, and checked-in setup files. Do not include external URLs or
 runtime-only behavior here.
 
-| # | Docs Claim | Docs Ref | Canonical Source Ref | Verdict | Severity | Notes |
-|---|------------|----------|----------------------|---------|----------|-------|
-| 1 | `{claim text}` | `{docs/path.md:line}` | `{src/path.ts:line}` | {verified \| unverified \| contradicted} | {Critical \| High \| Medium \| Low \| N/A} | {why it was judged this way} |
-| 2 | `{claim text}` | `{docs/path.md:line}` | `{config/file:line}` | {verified \| unverified \| contradicted} | {Critical \| High \| Medium \| Low \| N/A} | {source missing, ambiguous, or contradicts docs} |
-| ... | | | | | | |
+| #   | Docs Claim     | Docs Ref              | Canonical Source Ref | Verdict                                  | Severity                                   | Notes                                            |
+| --- | -------------- | --------------------- | -------------------- | ---------------------------------------- | ------------------------------------------ | ------------------------------------------------ |
+| 1   | `{claim text}` | `{docs/path.md:line}` | `{src/path.ts:line}` | {verified \| unverified \| contradicted} | {Critical \| High \| Medium \| Low \| N/A} | {why it was judged this way}                     |
+| 2   | `{claim text}` | `{docs/path.md:line}` | `{config/file:line}` | {verified \| unverified \| contradicted} | {Critical \| High \| Medium \| Low \| N/A} | {source missing, ambiguous, or contradicts docs} |
+| ... |                |                       |                      |                                          |                                            |                                                  |
 
 {Or: "No repo-checkable substantive claims required accuracy verification."}
 
@@ -128,21 +128,21 @@ Surface only repo-checkable coverage gaps based on routers, services, models, sc
 config, and application entrypoints. Do not speculate about roadmap items or external
 integrations that are not represented in the repository.
 
-| # | Capability Area | Coverage State | Codebase Evidence | Suggested Docs Location | Severity | Subtopics To Cover |
-|---|------------------|----------------|-------------------|-------------------------|----------|--------------------|
-| 1 | `{feature or capability area}` | {no coverage \| thin coverage} | `{router/service/model refs and key signatures}` | `{new page / existing page / section}` | {High \| Medium \| Low} | `{specific subtopics implied by the code}` |
-| 2 | `{feature or capability area}` | {no coverage \| thin coverage} | `{router/service/model refs and key signatures}` | `{new page / existing page / section}` | {High \| Medium \| Low} | `{specific subtopics implied by the code}` |
-| ... | | | | | | |
+| #   | Capability Area                | Coverage State                 | Codebase Evidence                                | Suggested Docs Location                | Severity                | Subtopics To Cover                         |
+| --- | ------------------------------ | ------------------------------ | ------------------------------------------------ | -------------------------------------- | ----------------------- | ------------------------------------------ |
+| 1   | `{feature or capability area}` | {no coverage \| thin coverage} | `{router/service/model refs and key signatures}` | `{new page / existing page / section}` | {High \| Medium \| Low} | `{specific subtopics implied by the code}` |
+| 2   | `{feature or capability area}` | {no coverage \| thin coverage} | `{router/service/model refs and key signatures}` | `{new page / existing page / section}` | {High \| Medium \| Low} | `{specific subtopics implied by the code}` |
+| ... |                                |                                |                                                  |                                        |                         |                                            |
 
 {Or: "No significant repo-backed content opportunities identified."}
 
 ## Navigation and Drift
 
-| # | Surface | Issue | Evidence | Disclosure | Link Target | Severity | Notes |
-|---|---------|-------|----------|------------|-------------|----------|-------|
-| 1 | `mkdocs.yml` | Nav points to missing page | {exact refs} | {inline/link_only/omit/ask_user} | {path or URL / N/A} | High | `reference/troubleshooting.md` removed |
-| 2 | `docs/index.md` | `## Contents` missing subtree mapping | {exact refs} | {inline/link_only/omit/ask_user} | {path or URL / N/A} | Medium | Child directory not described |
-| ... | | | | | | | |
+| #   | Surface         | Issue                                 | Evidence     | Disclosure                       | Link Target         | Severity | Notes                                  |
+| --- | --------------- | ------------------------------------- | ------------ | -------------------------------- | ------------------- | -------- | -------------------------------------- |
+| 1   | `mkdocs.yml`    | Nav points to missing page            | {exact refs} | {inline/link_only/omit/ask_user} | {path or URL / N/A} | High     | `reference/troubleshooting.md` removed |
+| 2   | `docs/index.md` | `## Contents` missing subtree mapping | {exact refs} | {inline/link_only/omit/ask_user} | {path or URL / N/A} | Medium   | Child directory not described          |
+| ... |                 |                                       |              |                                  |                     |          |                                        |
 
 {Or: "No navigation or drift issues identified."}
 
@@ -151,10 +151,10 @@ integrations that are not represented in the repository.
 Capture which details should stay inline in docs indexes/contributor pages versus link to
 canonical docs/config/examples.
 
-| Topic | Decision | Keep Inline In | Link Target | Evidence |
-|-------|----------|----------------|-------------|----------|
+| Topic     | Decision                         | Keep Inline In                        | Link Target     | Evidence     |
+| --------- | -------------------------------- | ------------------------------------- | --------------- | ------------ |
 | `{topic}` | {inline/link_only/omit/ask_user} | `{index.md / contributing.md / page}` | `{path or URL}` | {exact refs} |
-| ... | | | | |
+| ...       |                                  |                                       |                 |              |
 
 {Or: "No additional progressive disclosure decisions beyond the findings/recommendations below."}
 

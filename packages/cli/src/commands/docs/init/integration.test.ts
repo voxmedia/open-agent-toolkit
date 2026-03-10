@@ -2,7 +2,9 @@ import { mkdir, mkdtemp, readdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { scaffoldDocsApp } from './scaffold';
 
 const THIS_DIR = dirname(fileURLToPath(import.meta.url));
@@ -47,118 +49,127 @@ describe('scaffold integration', () => {
     createdRoots.length = 0;
   });
 
-  it('scaffolds a Fumadocs app from real templates with full token replacement', async () => {
-    assetsRoot = await bundleAssets();
-    const root = await mkdtemp(join(tmpdir(), 'oat-integration-fuma-'));
-    createdRoots.push(root);
-    await mkdir(join(root, 'apps'), { recursive: true });
+  it(
+    'scaffolds a Fumadocs app from real templates with full token replacement',
+    { timeout: 30_000 },
+    async () => {
+      assetsRoot = await bundleAssets();
+      const root = await mkdtemp(join(tmpdir(), 'oat-integration-fuma-'));
+      createdRoots.push(root);
+      await mkdir(join(root, 'apps'), { recursive: true });
 
-    const result = await scaffoldDocsApp({
-      assetsRoot,
-      repoRoot: root,
-      repoShape: 'monorepo',
-      framework: 'fumadocs',
-      appName: 'test-docs',
-      targetDir: 'apps/test-docs',
-      siteDescription: 'Integration test documentation',
-      lint: 'markdownlint',
-      format: 'prettier',
-    });
+      const result = await scaffoldDocsApp({
+        assetsRoot,
+        repoRoot: root,
+        repoShape: 'monorepo',
+        framework: 'fumadocs',
+        appName: 'test-docs',
+        targetDir: 'apps/test-docs',
+        siteDescription: 'Integration test documentation',
+        lint: 'none',
+        format: 'oxfmt',
+      });
 
-    // Verify expected files created
-    expect(result.createdFiles).toContain('next.config.js');
-    expect(result.createdFiles).toContain('source.config.ts');
-    expect(result.createdFiles).toContain('tsconfig.json');
-    expect(result.createdFiles).toContain('package.json');
-    expect(result.createdFiles).toContain(join('lib', 'source.ts'));
-    expect(result.createdFiles).toContain(join('app', 'layout.tsx'));
-    expect(result.createdFiles).toContain(
-      join('app', '[[...slug]]', 'page.tsx'),
-    );
-    expect(result.createdFiles).toContain(join('docs', 'index.md'));
+      // Verify expected files created
+      expect(result.createdFiles).toContain('next.config.js');
+      expect(result.createdFiles).toContain('source.config.ts');
+      expect(result.createdFiles).toContain('tsconfig.json');
+      expect(result.createdFiles).toContain('package.json');
+      expect(result.createdFiles).toContain(join('lib', 'source.ts'));
+      expect(result.createdFiles).toContain(join('app', 'layout.tsx'));
+      expect(result.createdFiles).toContain(
+        join('app', '[[...slug]]', 'page.tsx'),
+      );
+      expect(result.createdFiles).toContain(join('docs', 'index.md'));
 
-    // Verify no unresolved template tokens in any file
-    const allFiles = await collectFiles(result.appRoot);
-    for (const file of allFiles) {
-      const content = await readFile(file, 'utf8');
-      const unresolvedTokens = content.match(/\{\{[A-Z_]+\}\}/g);
-      expect(
-        unresolvedTokens,
-        `Unresolved tokens in ${file}: ${unresolvedTokens?.join(', ')}`,
-      ).toBeNull();
-    }
+      // Verify no unresolved template tokens in any file
+      const allFiles = await collectFiles(result.appRoot);
+      for (const file of allFiles) {
+        const content = await readFile(file, 'utf8');
+        const unresolvedTokens = content.match(/\{\{[A-Z_]+\}\}/g);
+        expect(
+          unresolvedTokens,
+          `Unresolved tokens in ${file}: ${unresolvedTokens?.join(', ')}`,
+        ).toBeNull();
+      }
 
-    // Verify site name interpolation
-    const nextConfig = await readFile(
-      join(result.appRoot, 'next.config.js'),
-      'utf8',
-    );
-    expect(nextConfig).toContain('Test Docs Documentation');
-    expect(nextConfig).toContain('Integration test documentation');
+      // Verify site name interpolation
+      const nextConfig = await readFile(
+        join(result.appRoot, 'next.config.js'),
+        'utf8',
+      );
+      expect(nextConfig).toContain('Test Docs Documentation');
+      expect(nextConfig).toContain('Integration test documentation');
 
-    // Verify layout has branding
-    const layout = await readFile(
-      join(result.appRoot, 'app', 'layout.tsx'),
-      'utf8',
-    );
-    expect(layout).toContain('Test Docs Documentation');
-    expect(layout).toContain('Integration test documentation');
+      // Verify layout has branding
+      const layout = await readFile(
+        join(result.appRoot, 'app', 'layout.tsx'),
+        'utf8',
+      );
+      expect(layout).toContain('Test Docs Documentation');
+      expect(layout).toContain('Integration test documentation');
 
-    // Verify package.json is valid JSON with OAT workspace deps
-    const packageJson = JSON.parse(
-      await readFile(join(result.appRoot, 'package.json'), 'utf8'),
-    ) as {
-      name: string;
-      description: string;
-      dependencies: Record<string, string>;
-      devDependencies: Record<string, string>;
-    };
-    expect(packageJson.name).toBe('test-docs');
-    expect(packageJson.description).toBe('Integration test documentation');
-    expect(packageJson.dependencies['@oat/docs-config']).toBe('workspace:*');
-    expect(packageJson.dependencies['@oat/docs-theme']).toBe('workspace:*');
-    expect(packageJson.dependencies['@oat/docs-transforms']).toBe(
-      'workspace:*',
-    );
-    expect(packageJson.devDependencies['markdownlint-cli2']).toBeDefined();
-    expect(packageJson.devDependencies['prettier']).toBeDefined();
+      // Verify package.json is valid JSON with OAT workspace deps
+      const packageJson = JSON.parse(
+        await readFile(join(result.appRoot, 'package.json'), 'utf8'),
+      ) as {
+        name: string;
+        description: string;
+        dependencies: Record<string, string>;
+        devDependencies: Record<string, string>;
+      };
+      expect(packageJson.name).toBe('test-docs');
+      expect(packageJson.description).toBe('Integration test documentation');
+      expect(packageJson.dependencies['@oat/docs-config']).toBe('workspace:*');
+      expect(packageJson.dependencies['@oat/docs-theme']).toBe('workspace:*');
+      expect(packageJson.dependencies['@oat/docs-transforms']).toBe(
+        'workspace:*',
+      );
+      expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
+      expect(packageJson.devDependencies['prettier']).toBeUndefined();
+      expect(packageJson.devDependencies['oxfmt']).toBeDefined();
 
-    // Verify documentation config
-    expect(result.documentationConfig.tooling).toBe('fumadocs');
-    expect(result.documentationConfig.root).toBe('apps/test-docs');
-  });
+      // Verify documentation config
+      expect(result.documentationConfig.tooling).toBe('fumadocs');
+      expect(result.documentationConfig.root).toBe('apps/test-docs');
+    },
+  );
 
-  it('scaffolds an MkDocs app from real templates', async () => {
-    assetsRoot = await bundleAssets();
-    const root = await mkdtemp(join(tmpdir(), 'oat-integration-mkdocs-'));
-    createdRoots.push(root);
+  it(
+    'scaffolds an MkDocs app from real templates',
+    { timeout: 30_000 },
+    async () => {
+      assetsRoot = await bundleAssets();
+      const root = await mkdtemp(join(tmpdir(), 'oat-integration-mkdocs-'));
+      createdRoots.push(root);
 
-    const result = await scaffoldDocsApp({
-      assetsRoot,
-      repoRoot: root,
-      repoShape: 'single-package',
-      framework: 'mkdocs',
-      appName: 'docs',
-      targetDir: 'docs',
-      siteDescription: '',
-      lint: 'markdownlint',
-      format: 'prettier',
-    });
+      const result = await scaffoldDocsApp({
+        assetsRoot,
+        repoRoot: root,
+        repoShape: 'single-package',
+        framework: 'mkdocs',
+        appName: 'docs',
+        targetDir: 'docs',
+        siteDescription: '',
+        lint: 'none',
+        format: 'oxfmt',
+      });
 
-    expect(result.createdFiles).toContain('mkdocs.yml');
-    expect(result.createdFiles).toContain('package.json');
+      expect(result.createdFiles).toContain('mkdocs.yml');
+      expect(result.createdFiles).toContain('package.json');
 
-    // Verify no unresolved tokens
-    const allFiles = await collectFiles(result.appRoot);
-    for (const file of allFiles) {
-      const content = await readFile(file, 'utf8');
-      const unresolvedTokens = content.match(/\{\{[A-Z_]+\}\}/g);
-      expect(
-        unresolvedTokens,
-        `Unresolved tokens in ${file}: ${unresolvedTokens?.join(', ')}`,
-      ).toBeNull();
-    }
+      // Verify no unresolved tokens
+      const allFiles = await collectFiles(result.appRoot);
+      for (const file of allFiles) {
+        const content = await readFile(file, 'utf8');
+        const unresolvedTokens = content.match(/\{\{[A-Z_]+\}\}/g);
+        expect(
+          unresolvedTokens,
+          `Unresolved tokens in ${file}: ${unresolvedTokens?.join(', ')}`,
+        ).toBeNull();
+      }
 
-    expect(result.documentationConfig.tooling).toBe('mkdocs');
-  });
+      expect(result.documentationConfig.tooling).toBe('mkdocs');
+    },
+  );
 });

@@ -18,8 +18,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ CREATE REPO KNOWLEDGE INDEX
+  OAT ▸ CREATE REPO KNOWLEDGE INDEX
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work (thin index generation, spawning mappers, writing outputs), print 2–5 short step indicators, e.g.:
   - `[1/4] Checking existing knowledge…`
   - `[2/4] Generating thin index…`
@@ -38,12 +39,14 @@ EXISTING_MD=$(find .oat/repo/knowledge -name "*.md" -type f 2>/dev/null | head -
 ```
 
 **If `$EXISTING_MD` is non-empty (actual content exists):**
+
 - List current files: `ls -la .oat/repo/knowledge/*.md 2>/dev/null`
 - Ask: "Refresh (delete + regenerate) or Skip?"
 - If Refresh: `rm -rf .oat/repo/knowledge/*.md && mkdir -p .oat/repo/knowledge`
 - If Skip: Exit
 
 **If `$EXISTING_MD` is empty (no content or only .gitkeep):**
+
 - Continue to Step 2
 
 ### Step 2: Create Knowledge Directory
@@ -73,11 +76,13 @@ oat index init --head-sha "$HEAD_SHA" --merge-base-sha "$MERGE_BASE_SHA"
 ```
 
 This script:
+
 - Detects repo name from package.json or directory
 - Extracts package manager, scripts, entry points, and config files
 - Generates `.oat/repo/knowledge/project-index.md` with thin metadata
 
 **Why thin first:**
+
 - Other skills can immediately load project-index.md for orientation
 - Mappers can run in parallel without blocking on index generation
 - Index gets enriched with full details after mappers complete
@@ -110,6 +115,7 @@ prompt: |
 ```
 
 **Check result:**
+
 ```bash
 if [ -f .oat/repo/knowledge/.preflight/test.txt ]; then
   echo "✓ Write works in background agents - using direct-write approach"
@@ -128,9 +134,11 @@ Store `$WRITE_MODE` for use in Step 5.
 Use the approach determined by Step 4b pre-flight check.
 
 **If `$WRITE_MODE="direct"` (Write works in background):**
+
 - Use Step 5a - Direct Write Approach (recommended)
 
 **If `$WRITE_MODE="readonly"` (Write blocked in background):**
+
 - Use Step 5b - Read-Only Fallback Approach
 
 ---
@@ -140,6 +148,7 @@ Use the approach determined by Step 4b pre-flight check.
 Use Task tool with `subagent_type="oat-codebase-mapper"` and `run_in_background=true`.
 
 **Approach:**
+
 - Mapper agents write documents directly to `.oat/repo/knowledge/` using the Write tool
 - Each agent returns only a brief confirmation (not document contents)
 - This reduces context transfer and improves performance
@@ -154,6 +163,7 @@ description: "Map codebase tech stack"
 ```
 
 Prompt:
+
 ```
 Focus: tech
 
@@ -192,6 +202,7 @@ description: "Map codebase architecture"
 ```
 
 Prompt:
+
 ```
 Focus: arch
 
@@ -230,6 +241,7 @@ description: "Map codebase conventions"
 ```
 
 Prompt:
+
 ```
 Focus: quality
 
@@ -268,6 +280,7 @@ description: "Map codebase concerns"
 ```
 
 Prompt:
+
 ```
 Focus: concerns
 
@@ -302,6 +315,7 @@ Instructions:
 Use Task tool with `subagent_type="Explore"` and `run_in_background=true`.
 
 **Approach:**
+
 - Agents do NOT use Write or Bash tools
 - Agents return complete markdown contents in their response
 - Orchestrator extracts markdown and writes files
@@ -309,7 +323,7 @@ Use Task tool with `subagent_type="Explore"` and `run_in_background=true`.
 
 **Agent 1: Tech Focus**
 
-```
+````
 subagent_type: "Explore"
 model: "haiku"
 run_in_background: true
@@ -343,17 +357,20 @@ Constraints:
 --- stack.md ---
 ```markdown
 <content here>
-```
+````
 
 --- integrations.md ---
+
 ```markdown
 <content here>
 ```
+
 ```
 
 **Agent 2: Architecture Focus**
 
 ```
+
 subagent_type: "Explore"
 model: "haiku"
 run_in_background: true
@@ -365,39 +382,46 @@ Focus: arch
 Analyze this codebase architecture and directory structure.
 
 Produce these documents:
+
 - architecture.md - Pattern, layers, data flow, abstractions, entry points
 - structure.md - Directory layout, key locations, naming conventions
 
 Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 
-Include frontmatter:
----
+## Include frontmatter:
+
 oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
+
 ---
 
 Constraints:
+
 - Do NOT use Write or Bash tools.
 - Return the complete markdown contents in your final response.
 - Format as:
 
 --- architecture.md ---
+
 ```markdown
 <content here>
 ```
 
 --- structure.md ---
+
 ```markdown
 <content here>
 ```
+
 ```
 
 **Agent 3: Quality Focus**
 
 ```
+
 subagent_type: "Explore"
 model: "haiku"
 run_in_background: true
@@ -409,39 +433,46 @@ Focus: quality
 Analyze this codebase for coding conventions and testing patterns.
 
 Produce these documents:
+
 - conventions.md - Code style, naming, patterns, error handling
 - testing.md - Framework, structure, mocking, coverage
 
 Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 
-Include frontmatter:
----
+## Include frontmatter:
+
 oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
+
 ---
 
 Constraints:
+
 - Do NOT use Write or Bash tools.
 - Return the complete markdown contents in your final response.
 - Format as:
 
 --- conventions.md ---
+
 ```markdown
 <content here>
 ```
 
 --- testing.md ---
+
 ```markdown
 <content here>
 ```
+
 ```
 
 **Agent 4: Concerns Focus**
 
 ```
+
 subagent_type: "Explore"
 model: "haiku"
 run_in_background: true
@@ -453,29 +484,34 @@ Focus: concerns
 Analyze this codebase for technical debt, known issues, and areas of concern.
 
 Produce this document:
+
 - concerns.md - Tech debt, bugs, security, performance, fragile areas
 
 Use template from .agents/skills/oat-repo-knowledge-index/references/templates/
 
-Include frontmatter:
----
+## Include frontmatter:
+
 oat_generated: true
 oat_generated_at: {today}
 oat_source_head_sha: {HEAD_SHA}
 oat_source_main_merge_base_sha: {MERGE_BASE_SHA}
 oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
+
 ---
 
 Constraints:
+
 - Do NOT use Write or Bash tools.
 - Return the complete markdown contents in your final response.
 - Format as:
 
 --- concerns.md ---
+
 ```markdown
 <content here>
 ```
-```
+
+````
 
 ---
 
@@ -540,7 +576,7 @@ for agent in agents:
                         print(f"✓ Wrote {filename}")
 
                     break
-```
+````
 
 This extracts markdown and writes all 7 knowledge files.
 
@@ -552,6 +588,7 @@ wc -l .oat/repo/knowledge/*.md
 ```
 
 **Checklist:**
+
 - All 7 documents exist
 - No empty documents (each >20 lines)
 - All have frontmatter with oat_generated: true
@@ -561,6 +598,7 @@ wc -l .oat/repo/knowledge/*.md
 Now that all 7 detailed knowledge files exist, enrich the thin project-index.md with full details.
 
 Read all 7 knowledge files to extract key information:
+
 - `stack.md` - Technologies, runtime, key dependencies
 - `architecture.md` - Overall pattern, key abstractions
 - `structure.md` - Directory layout, file organization
@@ -587,13 +625,16 @@ Replace placeholder sections with full details:
 10. **Known Issues**: Link to concerns.md with 1-2 line summary
 
 Update frontmatter:
+
 - Change `oat_index_type: thin` → `oat_index_type: full`
 - Keep same SHAs (already set in Step 4)
 - Update warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
 
 Update links at bottom to show files are available (not "pending"):
+
 ```markdown
 **Generated Knowledge Base Files:**
+
 - [stack.md](stack.md) - Technologies and dependencies
 - [architecture.md](architecture.md) - System design and patterns
 - [structure.md](structure.md) - Directory layout

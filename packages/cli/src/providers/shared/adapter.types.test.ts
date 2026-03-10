@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import type { PathMapping, ProviderAdapter } from './adapter.types';
 import {
   getActiveAdapters,

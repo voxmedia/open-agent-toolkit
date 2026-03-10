@@ -1,6 +1,8 @@
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import { copyDirectory, dirExists, fileExists } from '@fs/io';
+
 import { expandLocalPaths } from './expand';
 
 export type SyncStatus = 'copied' | 'skipped' | 'missing';

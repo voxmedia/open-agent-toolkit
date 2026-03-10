@@ -9,9 +9,11 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { createProgram } from '@app/create-program';
 import { EXPECTED_CLAUDE_CONTENT } from '@commands/instructions/instructions.utils';
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { registerCommands } from '../index';
 
 interface CliResult {

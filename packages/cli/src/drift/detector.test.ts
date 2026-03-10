@@ -1,9 +1,11 @@
 import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { computeDirectoryHash } from '@manifest/hash';
 import type { ManifestEntry } from '@manifest/manifest.types';
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { detectDrift } from './detector';
 
 function createManifestEntry(

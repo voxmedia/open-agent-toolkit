@@ -30,6 +30,7 @@ oat_analysis_commit: <sha>
 ## Finding Schema
 
 Each finding entry should include:
+
 - `id`
 - `title`
 - `category`

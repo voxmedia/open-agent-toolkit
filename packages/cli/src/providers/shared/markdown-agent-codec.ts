@@ -3,6 +3,7 @@ import {
   parseCanonicalAgentMarkdown,
   renderCanonicalAgentMarkdown,
 } from '@agents/canonical';
+
 import type { ProviderAgentRecord } from './agent-codec.types';
 
 export function importMarkdownAgentRecord(

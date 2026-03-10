@@ -1,5 +1,6 @@
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { describe, expect, it } from 'vitest';
+
 import { type AutoSyncDependencies, autoSync } from './auto-sync';
 
 describe('autoSync', () => {

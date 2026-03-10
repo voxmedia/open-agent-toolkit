@@ -3,7 +3,7 @@ oat_generated: true
 oat_generated_at: 2026-02-16
 oat_source_head_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
 oat_source_main_merge_base_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
+oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
 # Testing Patterns
@@ -13,15 +13,18 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ## Test Framework
 
 **Runner:**
+
 - Vitest 4.0.18
 - Config: `packages/cli/vitest.config.ts`
 - ESM-native with TypeScript support
 
 **Assertion Library:**
+
 - Vitest's built-in `expect()` assertions (Chai-style)
 - No additional assertion library needed
 
 **Run Commands:**
+
 ```bash
 pnpm test              # Run all tests (from repo root)
 pnpm test:watch       # Watch mode (re-run on changes)
@@ -33,16 +36,19 @@ vitest                # Watch mode from package directory
 ## Test File Organization
 
 **Location:**
+
 - Co-located with source files in same directory
 - Convention: `<module>.test.ts` pairs with `<module>.ts`
 - Example: `src/ui/logger.ts` paired with `src/ui/logger.test.ts`
 
 **Naming:**
+
 - Test files use `.test.ts` suffix (e.g., `logger.test.ts`, `manifest.test.ts`)
 - Vitest configuration includes glob: `src/**/*.test.ts`
 - Test files excluded from TypeScript compilation (tsconfig)
 
 **Structure:**
+
 ```
 packages/cli/src/
 ├── ui/
@@ -63,6 +69,7 @@ packages/cli/src/
 ## Test Structure
 
 **Suite Organization:**
+
 ```typescript
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 
@@ -87,13 +94,18 @@ describe('CliLogger', () => {
 
   // Grouped sub-suites
   describe('loadManifest', () => {
-    it('loads valid manifest from disk', async () => { /* ... */ });
-    it('returns empty manifest when file does not exist', async () => { /* ... */ });
+    it('loads valid manifest from disk', async () => {
+      /* ... */
+    });
+    it('returns empty manifest when file does not exist', async () => {
+      /* ... */
+    });
   });
 });
 ```
 
 **Patterns:**
+
 - Setup: Use `beforeEach()` to initialize shared state (temp directories, mocks)
 - Teardown: Use `afterEach()` to clean up resources; always restore mocks with `vi.restoreAllMocks()`
 - Assertion pattern: Assert on direct observable behavior, not implementation
@@ -106,6 +118,7 @@ describe('CliLogger', () => {
 **Patterns:**
 
 1. **Module mocking with vi.mock():**
+
 ```typescript
 const { oraMock } = vi.hoisted(() => ({
   oraMock: vi.fn(),
@@ -125,13 +138,17 @@ describe('createSpinner', () => {
   it('returns ora instance in TTY mode', () => {
     const oraInstance = { start: vi.fn(), stop: vi.fn() };
     oraMock.mockReturnValue(oraInstance);
-    const spinner = createSpinner('Loading', { json: false, interactive: true });
+    const spinner = createSpinner('Loading', {
+      json: false,
+      interactive: true,
+    });
     expect(spinner).toBe(oraInstance);
   });
 });
 ```
 
 2. **Spy pattern (spyOn):**
+
 ```typescript
 import { vi } from 'vitest';
 
@@ -145,6 +162,7 @@ it('info() writes to stdout', () => {
 ```
 
 3. **Mock function creation:**
+
 ```typescript
 const detect = vi.fn(async () => true);
 const adapter: ProviderAdapter = {
@@ -155,12 +173,14 @@ const adapter: ProviderAdapter = {
 ```
 
 **What to Mock:**
+
 - External modules (e.g., `ora`, file system when not testing filesystem)
 - Third-party library dependencies
 - Global objects/processes (e.g., `process.stdout`, `process.stderr`)
 - Functions whose behavior is non-deterministic or slow
 
 **What NOT to Mock:**
+
 - Internal application code being tested
 - Schemas/validators (test real validation)
 - Zod types (they're lightweight)
@@ -172,6 +192,7 @@ const adapter: ProviderAdapter = {
 **Test Data:**
 
 1. **Factory function pattern:**
+
 ```typescript
 function createManifestEntry(
   overrides: Partial<ManifestEntry> = {},
@@ -190,6 +211,7 @@ function createManifestEntry(
 ```
 
 2. **Hardcoded fixtures:**
+
 ```typescript
 const validManifest = {
   version: 1,
@@ -210,6 +232,7 @@ const validManifest = {
 ```
 
 3. **Async test data generation (filesystem):**
+
 ```typescript
 async function seedSkill(root: string, relativePath: string): Promise<void> {
   const skillDir = join(root, relativePath);
@@ -219,6 +242,7 @@ async function seedSkill(root: string, relativePath: string): Promise<void> {
 ```
 
 **Location:**
+
 - Inline factories defined at test file scope (not shared across files)
 - Temporary directories created per-test with `mkdtemp()` from `node:os`
 - Cleaned up in `afterEach()` with `rm(dir, { recursive: true, force: true })`
@@ -228,33 +252,39 @@ async function seedSkill(root: string, relativePath: string): Promise<void> {
 **Requirements:** None enforced (no coverage thresholds configured)
 
 **View Coverage:**
+
 ```bash
 pnpm test:coverage
 ```
+
 - Generates coverage reports in project's coverage directory
-- Biome linting ensures code quality (preferred over pure coverage metrics)
+- oxlint linting ensures code quality (preferred over pure coverage metrics)
 
 ## Test Types
 
 **Unit Tests:**
+
 - Scope: Single function/module in isolation
 - Approach: Test observable behavior, use mocks for dependencies
 - Example: `logger.test.ts` tests `createLogger()` by mocking stdout/stderr
 - Assertions: Verify return values, side effects (spied calls), error behavior
 
 **Integration Tests:**
+
 - Scope: Multiple modules working together
 - Approach: Test real file system, schemas, error propagation
 - Example: `manifest/manager.test.ts` tests loading/saving to temp directories
 - No mocking of core system modules; test real behavior
 
 **E2E Tests:**
+
 - Framework: Not used (CLI tested via command integration)
 - Alternative: Commands tested through API surface (see `commands/*.test.ts`)
 
 ## Common Patterns
 
 **Async Testing:**
+
 ```typescript
 it('returns defaults when no config file exists', async () => {
   const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
@@ -274,6 +304,7 @@ it('rejects invalid config with CliError', async () => {
 ```
 
 **Error Testing:**
+
 ```typescript
 it('throws CliError on corrupt JSON', async () => {
   await mkdir(join(workDir, '.agents'), { recursive: true });
@@ -301,6 +332,7 @@ it('handles error during file operations', () => {
 ```
 
 **Temp Directory Management:**
+
 ```typescript
 describe('test suite', () => {
   const tempDirs: string[] = [];
@@ -324,4 +356,4 @@ describe('test suite', () => {
 
 ---
 
-*Testing analysis: 2026-02-16*
+_Testing analysis: 2026-02-16_

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { parseCanonicalAgentMarkdown } from './parse';
 import { renderCanonicalAgentMarkdown } from './render';
 

@@ -1,9 +1,9 @@
 ---
 oat_generated: true
-oat_generated_at: {YYYY-MM-DD}
+oat_generated_at: { YYYY-MM-DD }
 oat_apply_type: docs
-oat_source_analysis: {analysis-artifact-path}
-oat_docs_target: {docs-target-path}
+oat_source_analysis: { analysis-artifact-path }
+oat_docs_target: { docs-target-path }
 ---
 
 # Docs Apply Plan
@@ -34,17 +34,17 @@ blocked pending a fresh analysis rather than guessed.
 
 ### {N}. {Action}: `{target-path}`
 
-| Field | Value |
-|---|---|
-| Action | {create / update / move / scaffold / sync-nav} |
-| Target | `{target-path}` |
-| Rationale | {why this recommendation exists} |
-| Source | {finding # / contract gap / nav issue} |
-| Evidence | {exact file refs / config / docs that justify the recommendation} |
-| Confidence | {high / medium / low} |
-| Disclosure | {inline / link_only / omit / ask_user} |
-| Link Targets | {path or URL when link_only; otherwise N/A} |
-| Helper | `{oat docs nav sync | oat docs init | manual edit}` |
+| Field        | Value                                                             |
+| ------------ | ----------------------------------------------------------------- | ------------- | ------------- |
+| Action       | {create / update / move / scaffold / sync-nav}                    |
+| Target       | `{target-path}`                                                   |
+| Rationale    | {why this recommendation exists}                                  |
+| Source       | {finding # / contract gap / nav issue}                            |
+| Evidence     | {exact file refs / config / docs that justify the recommendation} |
+| Confidence   | {high / medium / low}                                             |
+| Disclosure   | {inline / link_only / omit / ask_user}                            |
+| Link Targets | {path or URL when link_only; otherwise N/A}                       |
+| Helper       | `{oat docs nav sync                                               | oat docs init | manual edit}` |
 
 **Context:** {1-2 sentences}
 
@@ -57,10 +57,10 @@ blocked pending a fresh analysis rather than guessed.
 
 ## Summary of Actions
 
-| # | Action | Target | Disclosure | Decision |
-|---|--------|--------|------------|----------|
+| #   | Action                                 | Target   | Disclosure                       | Decision                                                 |
+| --- | -------------------------------------- | -------- | -------------------------------- | -------------------------------------------------------- |
 | {N} | {create/update/move/scaffold/sync-nav} | `{path}` | {inline/link_only/omit/ask_user} | {approved_via_apply_all/approved/modified/skip/deferred} |
-| ... | | | | |
+| ... |                                        |          |                                  |                                                          |
 
 **Total:** {N} approved, {N} modified, {N} skipped
 

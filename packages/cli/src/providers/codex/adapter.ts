@@ -1,6 +1,8 @@
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
+
 import { CODEX_PROJECT_MAPPINGS, CODEX_USER_MAPPINGS } from './paths';
 
 async function detectCodex(scopeRoot: string): Promise<boolean> {

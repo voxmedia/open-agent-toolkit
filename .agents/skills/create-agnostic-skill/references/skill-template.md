@@ -21,7 +21,7 @@ Adjust based on complexity—not all sections are required:
 
 ## Annotated Template
 
-```markdown
+````markdown
 ---
 # === Portable fields (work across all providers) ===
 name: skill-name
@@ -42,7 +42,7 @@ description: Use when [trigger condition]. [What it does as disambiguation keywo
 #   version: "1.0"
 
 # === Claude Code / Cursor extension fields (ignored by Codex, safe to include) ===
-argument-hint: "[required-arg] [--optional-flag]"
+argument-hint: '[required-arg] [--optional-flag]'
 # Claude Code only: Shows in autocomplete after /skill-name
 
 disable-model-invocation: true
@@ -96,6 +96,7 @@ Include code blocks for commands:
 ```bash
 example command
 ```
+````
 
 ### Step 2: Second Step Title
 
@@ -153,6 +154,7 @@ Successful completion means:
 - ✅ Second condition is met
 - ✅ Artifacts created or modified as expected
 - ✅ Skill can be invoked with /skill-name
+
 ```
 
 ## Detail Level Guidelines
@@ -190,3 +192,4 @@ Successful completion means:
 **Shared references:** If multiple skills need the same document, place it in `.agents/docs/` and reference via relative path (`../../docs/my-guide.md`). Don't duplicate into each skill's `references/` directory.
 
 For the full compatibility matrix and resolved research questions, see `.agents/docs/skills-guide.md`.
+```

@@ -1,5 +1,6 @@
 import { readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
@@ -12,6 +13,7 @@ import { CliError } from '@errors/cli-error';
 import { ensureDir, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
+
 import type { CleanupActionRecord, CleanupJsonPayload } from '../cleanup.types';
 import { createCleanupPayload, toRepoRelativePath } from '../cleanup.utils';
 import {

@@ -8,6 +8,7 @@ import { WORKFLOW_SKILLS } from '@commands/init/tools/workflows/install-workflow
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createDefaultRemoveSkillDependencies } from '../skill/remove-skill';
 import { createRemoveSkillsCommand } from './remove-skills';
 

@@ -5,6 +5,7 @@ import {
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { Command, Option } from 'commander';
+
 import {
   scaffoldProject as defaultScaffoldProject,
   type ProjectScaffoldMode,

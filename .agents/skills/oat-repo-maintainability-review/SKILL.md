@@ -2,7 +2,7 @@
 name: oat-repo-maintainability-review
 version: 1.2.0
 description: Use when you need a structured maintainability analysis for a repository or directory target with actionable findings.
-argument-hint: "[--scope repo|directory] [--target <path>] [--mode auto|tracked|local|inline] [--output <path>] [--focus <areas>] [--analysis-mode full] [--fan-out]"
+argument-hint: '[--scope repo|directory] [--target <path>] [--mode auto|tracked|local|inline] [--output <path>] [--focus <areas>] [--analysis-mode full] [--fan-out]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -25,10 +25,12 @@ Analyze repository maintainability and developer experience using a deterministi
 **Purpose:** Produce evidence-backed maintainability findings and a prioritized execution plan.
 
 **BLOCKED Activities:**
+
 - No code modification tasks.
 - No issue/ticket automation.
 
 **ALLOWED Activities:**
+
 - Repository evidence collection.
 - Structured scoring and synthesis.
 - Artifact generation in tracked/local/inline modes.
@@ -66,6 +68,7 @@ bash .agents/skills/oat-repo-maintainability-review/scripts/resolve-analysis-out
 ```
 
 Rules:
+
 - `--output` takes precedence over mode-derived destination.
 - `inline` emits no file artifact.
 - Tracked naming contract: `.oat/repo/analysis/<YYYY-MM-DD>-repo-review-analysis.md`.
@@ -136,6 +139,7 @@ Every run must cover all required dimensions:
 - If delegation is unavailable, run the same tracks sequentially without behavior loss.
 
 Provider notes:
+
 - Claude Code: use Task/subagent dispatch when available.
 - Codex: spawn a worker per track (generic multi-agent worker), wait for all, then merge.
 - Cursor: invoke available subagent capability (`/name` or natural mention) per track when supported.

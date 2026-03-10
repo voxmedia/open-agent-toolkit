@@ -13,6 +13,7 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { Command, Option } from 'commander';
+
 import {
   DEFAULT_DOCS_REPO_SHAPE_DEPENDENCIES,
   type DocsFormatMode,
@@ -160,14 +161,8 @@ export function createDocsInitCommand(
     )
     .addOption(new Option('--description <text>', 'Site description'))
     .addOption(
-      new Option('--lint <mode>', 'Markdown lint mode').choices([
-        'markdownlint',
-        'none',
-      ]),
-    )
-    .addOption(
       new Option('--format <mode>', 'Markdown format mode').choices([
-        'prettier',
+        'oxfmt',
         'none',
       ]),
     )

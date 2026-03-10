@@ -38,8 +38,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ PLAN
+  OAT ▸ PLAN
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work (drafting/finalizing/committing), print 2–5 short step indicators, e.g.:
   - `[1/4] Reading design + context…`
   - `[2/4] Drafting phases + tasks…`
@@ -49,11 +50,13 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**
+
 - No implementation code
 - No changing design decisions
 - No scope expansion
 
 **ALLOWED Activities:**
+
 - Breaking design into phases
 - Creating bite-sized tasks (2-5 minutes each)
 - Specifying exact files and interface signatures
@@ -62,12 +65,14 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Writing actual implementation → STOP
 - Changing architecture decisions → STOP (send back to design)
 - Adding new features → STOP (flag for next cycle)
 - Needing implementation details that aren't covered by the design → STOP (ask the user whether to update the design, then re-run the `oat-project-plan` skill)
 
 **Recovery:**
+
 1. Acknowledge the deviation
 2. Return to planning language ("Task N will...")
 3. Keep implementation details at pseudocode/interface level
@@ -86,6 +91,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 **If `PROJECT_PATH` is missing/invalid:**
+
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
 - Write it for future phases:
@@ -104,16 +110,19 @@ WORKFLOW_MODE="${WORKFLOW_MODE:-spec-driven}"
 ```
 
 **Mode: `quick`** — **STOP.** Print:
+
 ```
 ⚠️  This project uses quick mode. Plan is produced by the quick workflow.
     Run the `oat-project-implement` skill to begin execution.
 ```
+
 Exit skill.
 
 **Mode: `import`** — **STOP.** Check if `"$PROJECT_PATH/plan.md"` exists:
+
 - If yes: Print: "Imported plan is ready. Run `oat-project-implement` to begin execution."
 - If no: Print: "Run `oat-project-import-plan` to import and normalize the external plan first."
-Exit skill.
+  Exit skill.
 
 **Mode: `spec-driven`** — Continue to Step 2.
 
@@ -129,6 +138,7 @@ If not complete: Block and ask user to finish design first.
 ### Step 3: Read Design Document
 
 Read `"$PROJECT_PATH/design.md"` completely to understand:
+
 - Architecture overview and components
 - Data models and schemas
 - API designs and interfaces
@@ -139,6 +149,7 @@ Read `"$PROJECT_PATH/design.md"` completely to understand:
 ### Step 4: Read Knowledge Base for Context
 
 Read for implementation context:
+
 - `.oat/repo/knowledge/conventions.md` - Code patterns to follow
 - `.oat/repo/knowledge/testing.md` - Testing patterns
 - `.oat/repo/knowledge/stack.md` - Available tools and dependencies
@@ -148,6 +159,7 @@ Read for implementation context:
 Check whether a plan already exists at `"$PROJECT_PATH/plan.md"`.
 
 **If `"$PROJECT_PATH/plan.md"` exists:**
+
 - Read it first (treat it as a draft).
 - Ask the user:
   - **Resume** (default): continue editing the existing plan in place
@@ -156,15 +168,17 @@ Check whether a plan already exists at `"$PROJECT_PATH/plan.md"`.
 - If resuming: ensure the document contains the required sections from the template (at minimum: `## Reviews`, `## Implementation Complete`, `## References`). If any are missing, add them using the template headings (do not delete existing content).
 
 **If `"$PROJECT_PATH/plan.md"` does not exist:**
+
 - Copy template: `.oat/templates/plan.md` → `"$PROJECT_PATH/plan.md"`
 
 Update frontmatter:
+
 ```yaml
 ---
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: {today}
+oat_last_updated: { today }
 oat_phase: plan
 oat_phase_status: in_progress
 oat_generated: false
@@ -177,6 +191,7 @@ oat_template: false
 Break design implementation phases into plan phases.
 
 **Phase structure:**
+
 - Each phase delivers a complete, testable milestone
 - Phases should be 1-3 days of work
 - Later phases can depend on earlier phases
@@ -187,12 +202,14 @@ Break design implementation phases into plan phases.
 For each phase, create bite-sized tasks.
 
 **Task characteristics:**
+
 - 2-5 minutes to complete
 - Single responsibility
 - Clear verification
 - Atomic commit
 
 **No implementation code (important):**
+
 - Prefer **pseudocode**, **interfaces**, and **bullet steps** over full implementations.
 - If the task is a shell script, include **function names + responsibilities** and only minimal “shape” snippets (aim for <10 lines per code block).
 - If a longer snippet would be useful, replace internals with `{...}` placeholders and document behavior/edge cases in prose.
@@ -200,10 +217,12 @@ For each phase, create bite-sized tasks.
 **Task IDs:** Use stable IDs in format `p{phase}-t{task}` (e.g., `p01-t03`).
 
 **Task template:**
-```markdown
+
+````markdown
 ### Task p{NN}-t{NN}: {Task Name}
 
 **Files:**
+
 - Create: `{path/to/new.ts}`
 - Modify: `{path/to/existing.ts}`
 
@@ -221,11 +240,14 @@ Run: `{command}`
 Expected: {output}
 
 **Step 5: Commit**
+
 ```bash
 git add {files}
 git commit -m "feat(p{NN}-t{NN}): {description}"
 ```
-```
+````
+
+````
 
 ### Step 8: Apply TDD Discipline
 
@@ -321,13 +343,14 @@ oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: {today}
 ---
-```
+````
 
 ### Step 14: Update Project State
 
 Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
+
 - `oat_current_task: null`
 - `oat_last_commit: {commit_sha_from_step_15}`
 - `oat_blockers: []`
@@ -338,6 +361,7 @@ Update `"$PROJECT_PATH/state.md"`:
 **Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
 
 Update content:
+
 ```markdown
 ## Current Phase
 

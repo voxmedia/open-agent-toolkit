@@ -22,8 +22,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ DESIGN
+  OAT ▸ DESIGN
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work, print step indicators, e.g.:
   - `[1/5] Validating spec + reading context…`
   - `[2/5] Drafting architecture overview…`
@@ -44,6 +45,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 **If `PROJECT_PATH` is missing/invalid:**
+
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
 - Write it for future phases:
@@ -61,6 +63,7 @@ cat "$PROJECT_PATH/spec.md" | head -10 | grep "oat_status:"
 ```
 
 **Required frontmatter:**
+
 - `oat_status: complete`
 - `oat_ready_for: oat-project-design`
 
@@ -69,6 +72,7 @@ cat "$PROJECT_PATH/spec.md" | head -10 | grep "oat_status:"
 ### Step 2: Read Specification Document
 
 Read `"$PROJECT_PATH/spec.md"` completely to understand:
+
 - Problem statement and goals
 - All functional requirements (FR)
 - All non-functional requirements (NFR)
@@ -79,6 +83,7 @@ Read `"$PROJECT_PATH/spec.md"` completely to understand:
 ### Step 3: Read Knowledge Base for Design Context
 
 Read for architectural context and conventions:
+
 - `.oat/repo/knowledge/project-index.md` - Overview
 - `.oat/repo/knowledge/architecture.md` - Existing patterns
 - `.oat/repo/knowledge/stack.md` - Technologies available
@@ -93,12 +98,13 @@ Read for architectural context and conventions:
 Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
 
 Update frontmatter:
+
 ```yaml
 ---
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: {today}
+oat_last_updated: { today }
 oat_generated: false
 oat_template: false
 ---
@@ -109,16 +115,19 @@ oat_template: false
 Based on spec's high-level design + knowledge base architecture:
 
 **System Context:**
+
 - How this fits into existing architecture
 - What components it interacts with
 - Boundaries of this change
 
 **Key Components:**
+
 - List main components needed
 - Define responsibilities
 - Show relationships
 
 **Data Flow:**
+
 - How data moves through the system
 - Entry points and exit points
 - Transformation steps
@@ -130,12 +139,14 @@ Update design.md Architecture section.
 For each component identified:
 
 **Component Details:**
+
 ```markdown
 ### {Component Name}
 
 **Purpose:** {Single responsibility}
 
 **Responsibilities:**
+
 - {Specific task 1}
 - {Specific task 2}
 
@@ -143,9 +154,11 @@ For each component identified:
 {Code signatures following conventions.md patterns}
 
 **Dependencies:**
+
 - {What it depends on}
 
 **Design Decisions:**
+
 - {Why this approach}
 ```
 
@@ -156,11 +169,13 @@ Follow patterns from conventions.md. Use stack.md technologies.
 For each entity/model needed:
 
 **Model Schema:**
+
 - Define fields and types
 - Validation rules
 - Storage approach (from architecture.md patterns)
 
 **Considerations:**
+
 - Align with existing models (from architecture.md)
 - Follow naming conventions (from conventions.md)
 - Address NFR requirements (performance, security)
@@ -170,12 +185,14 @@ For each entity/model needed:
 For each API endpoint or interface:
 
 **Specification:**
+
 - Method and path
 - Request/response schemas
 - Error handling approach
 - Authorization requirements
 
 **Considerations:**
+
 - Follow API patterns from architecture.md
 - Align with integrations.md external API patterns
 - Address security NFRs
@@ -185,6 +202,7 @@ For each API endpoint or interface:
 Based on NFRs + concerns.md:
 
 **Required sections:**
+
 - Authentication approach
 - Authorization model
 - Data protection (encryption, PII)
@@ -198,6 +216,7 @@ Reference security patterns from conventions.md and concerns.md.
 Based on NFRs + concerns.md:
 
 **Required sections:**
+
 - Scalability approach
 - Caching strategy
 - Database optimization
@@ -208,6 +227,7 @@ Reference performance patterns from concerns.md.
 ### Step 11: Define Error Handling
 
 **Error Strategy:**
+
 - Error categories and handling
 - Retry logic
 - Logging approach (follow conventions.md patterns)
@@ -220,11 +240,12 @@ Based on spec success metrics + testing.md:
 
 Pull from spec.md Requirement Index and expand:
 
-| ID | Verification | Key Scenarios |
-|----|--------------|---------------|
+| ID          | Verification       | Key Scenarios                            |
+| ----------- | ------------------ | ---------------------------------------- |
 | {from spec} | {method from spec} | {scenarios seeded from pointer + design} |
 
 For each requirement:
+
 1. Copy the ID from spec.md
 2. Copy the **method** (left side of `method: pointer`) into Verification
 3. Use the **pointer** (right side) to seed Key Scenarios
@@ -240,6 +261,7 @@ For each requirement:
 Follow testing patterns from testing.md.
 
 **Why mapping matters:**
+
 - Ensures every requirement has a verification plan
 - Feeds directly into `oat-project-plan` task breakdown
 - Prevents "untested requirements" gaps
@@ -247,6 +269,7 @@ Follow testing patterns from testing.md.
 ### Step 13: Plan Deployment
 
 **Deployment Strategy:**
+
 - Build process (from stack.md)
 - Deployment steps
 - Rollback plan
@@ -258,6 +281,7 @@ Follow testing patterns from testing.md.
 If changes require migrations:
 
 **Migration Plan:**
+
 - Database migrations
 - Data migrations
 - Breaking changes handling
@@ -268,12 +292,14 @@ If changes require migrations:
 Break work into phases:
 
 **Phase Structure:**
+
 ```markdown
 ### Phase 1: {Phase Name}
 
 **Goal:** {What this achieves}
 
 **Tasks:**
+
 - {High-level task 1}
 - {High-level task 2}
 
@@ -285,6 +311,7 @@ Keep phases manageable (1-3 days of work each).
 ### Step 16: Document Open Questions
 
 Track unresolved design questions:
+
 - Decisions needing user input
 - Technical uncertainties
 - Performance unknowns
@@ -294,6 +321,7 @@ Track unresolved design questions:
 For each significant risk:
 
 **Risk Assessment:**
+
 ```markdown
 - **{Risk Name}:** {Probability} | {Impact}
   - **Mitigation:** {How to reduce}
@@ -303,6 +331,7 @@ For each significant risk:
 ### Step 18: Review Design with User
 
 **Review Points:**
+
 1. Architecture aligns with requirements
 2. Component responsibilities clear
 3. Data models cover all entities
@@ -317,19 +346,23 @@ For each significant risk:
 ### Step 19: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)
 
 Read `"$PROJECT_PATH/state.md"` frontmatter:
+
 - `oat_hill_checkpoints`
 - `oat_hill_completed`
 
 If `"design"` is in `oat_hill_checkpoints`, require explicit user approval before advancing.
 
 **Approval prompt (required):**
+
 - "Design artifact is ready. Approve design and unlock `oat-project-plan`?"
 
 **Optional independent review path:**
+
 - If user wants fresh-context artifact review first, run:
   - `oat-project-review-provide artifact design`
 
 **If user does not approve yet:**
+
 - Keep design frontmatter as:
   - `oat_status: in_progress`
   - `oat_ready_for: null`
@@ -342,12 +375,13 @@ If design is not configured as a HiLL checkpoint, or user explicitly approves, c
 ### Step 20: Mark Design Complete
 
 Update frontmatter:
+
 ```yaml
 ---
 oat_status: complete
 oat_ready_for: oat-project-plan
 oat_blockers: []
-oat_last_updated: {today}
+oat_last_updated: { today }
 ---
 ```
 
@@ -356,6 +390,7 @@ oat_last_updated: {today}
 Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
+
 - `oat_current_task: null`
 - `oat_last_commit: {commit_sha_from_step_22}`
 - `oat_blockers: []`
@@ -366,6 +401,7 @@ Update `"$PROJECT_PATH/state.md"`:
 **Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
 
 Update content:
+
 ```markdown
 ## Current Phase
 

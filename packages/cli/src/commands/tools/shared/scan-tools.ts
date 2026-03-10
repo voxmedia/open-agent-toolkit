@@ -1,5 +1,6 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import { IDEA_SKILLS } from '@commands/init/tools/ideas/install-ideas';
 import { compareVersions } from '@commands/init/tools/shared/version';
 import { UTILITY_SKILLS } from '@commands/init/tools/utility/install-utility';
@@ -10,6 +11,7 @@ import {
 import { getAgentVersion, getSkillVersion } from '@commands/shared/frontmatter';
 import { dirExists, fileExists } from '@fs/io';
 import type { ConcreteScope } from '@shared/types';
+
 import type { PackName, ToolInfo } from './types';
 
 export interface ScanToolsDependencies {

@@ -37,6 +37,7 @@
 ### Content
 
 This file should contain information about the project such as:
+
 - How to build and test the project
 - Coding standards or conventions to follow
 - Technology stack declarations
@@ -85,8 +86,8 @@ In VS Code, the `/init` command can "analyze your workspace and generate" a tail
 
 ```yaml
 ---
-applyTo: "**/*.ts,**/*.tsx"
-excludeAgent: "code-review"
+applyTo: '**/*.ts,**/*.tsx'
+excludeAgent: 'code-review'
 ---
 ```
 
@@ -94,32 +95,32 @@ In VS Code, additional fields are recognized:
 
 ```yaml
 ---
-name: "Display Name"
-description: "Short description shown on hover in the Chat view."
-applyTo: "**/*.ts"
+name: 'Display Name'
+description: 'Short description shown on hover in the Chat view.'
+applyTo: '**/*.ts'
 ---
 ```
 
 #### Field Reference
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `applyTo` | No | Glob pattern defining which files the instructions apply to automatically, relative to workspace root. Use `**` to apply to all files. |
-| `description` | No | Short description shown on hover in the Chat view (VS Code). In GitHub's awesome-copilot repo, this is listed as required for contributions. |
-| `name` | No | Display name shown in the UI. Defaults to the file name if omitted. (VS Code) |
-| `excludeAgent` | No | Prevents the file from being used by a specific agent. Values: `"code-review"` or `"coding-agent"`. |
+| Field          | Required | Description                                                                                                                                  |
+| -------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `applyTo`      | No       | Glob pattern defining which files the instructions apply to automatically, relative to workspace root. Use `**` to apply to all files.       |
+| `description`  | No       | Short description shown on hover in the Chat view (VS Code). In GitHub's awesome-copilot repo, this is listed as required for contributions. |
+| `name`         | No       | Display name shown in the UI. Defaults to the file name if omitted. (VS Code)                                                                |
+| `excludeAgent` | No       | Prevents the file from being used by a specific agent. Values: `"code-review"` or `"coding-agent"`.                                          |
 
 #### applyTo Glob Pattern Examples
 
-| Pattern | Matches |
-|---------|---------|
-| `*` | Files in current directory |
-| `**` or `**/*` | All files in all directories recursively |
-| `**/*.py` | All `.py` files recursively |
-| `src/**/*.py` | All `.py` files under `src/` recursively |
-| `**/*.ts,**/*.tsx` | Multiple patterns separated by commas |
-| `app/models/**/*.rb` | Ruby files under `app/models/` |
-| `**/tests/*.spec.ts` | Playwright test files |
+| Pattern              | Matches                                  |
+| -------------------- | ---------------------------------------- |
+| `*`                  | Files in current directory               |
+| `**` or `**/*`       | All files in all directories recursively |
+| `**/*.py`            | All `.py` files recursively              |
+| `src/**/*.py`        | All `.py` files under `src/` recursively |
+| `**/*.ts,**/*.tsx`   | Multiple patterns separated by commas    |
+| `app/models/**/*.rb` | Ruby files under `app/models/`           |
+| `**/tests/*.spec.ts` | Playwright test files                    |
 
 ### How Scoped Instructions Are Activated
 
@@ -134,6 +135,7 @@ In VS Code, there is also semantic/description-based matching: if a `description
 ### Interaction with copilot-instructions.md
 
 Both files contribute instructions simultaneously. When a scoped instruction file matches the current context:
+
 1. The repository-wide `.github/copilot-instructions.md` instructions are included
 2. The matching `.github/instructions/*.instructions.md` instructions are also included
 3. Both sets are combined and sent to Copilot
@@ -170,25 +172,25 @@ Instructions define **rules and standards** (always-on or pattern-matched). Prom
 
 ```yaml
 ---
-name: "Display Name"
-description: "A short description of the prompt"
-argument-hint: "Hint text shown in the chat input field"
-agent: "agent"
-model: "GPT-4o"
-tools: ["githubRepo", "search/codebase"]
+name: 'Display Name'
+description: 'A short description of the prompt'
+argument-hint: 'Hint text shown in the chat input field'
+agent: 'agent'
+model: 'GPT-4o'
+tools: ['githubRepo', 'search/codebase']
 ---
 ```
 
 #### All Frontmatter Fields
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | No | Display name after typing `/` in chat; defaults to filename |
-| `description` | No | A short description of the prompt |
-| `argument-hint` | No | Hint text shown in the chat input field |
-| `agent` | No | Agent type: `ask`, `edit`, `agent`, `plan`, or a custom agent name |
-| `model` | No | Language model selection; uses current picker selection if unspecified |
-| `tools` | No | List of tool or tool set names available; supports MCP format `<server name>/*` |
+| Field           | Required | Description                                                                     |
+| --------------- | -------- | ------------------------------------------------------------------------------- |
+| `name`          | No       | Display name after typing `/` in chat; defaults to filename                     |
+| `description`   | No       | A short description of the prompt                                               |
+| `argument-hint` | No       | Hint text shown in the chat input field                                         |
+| `agent`         | No       | Agent type: `ask`, `edit`, `agent`, `plan`, or a custom agent name              |
+| `model`         | No       | Language model selection; uses current picker selection if unspecified          |
+| `tools`         | No       | List of tool or tool set names available; supports MCP format `<server name>/*` |
 
 ### Body Content and References
 
@@ -232,32 +234,32 @@ Custom agents use Markdown files with `.md` or `.agent.md` extensions. The filen
 
 ```yaml
 ---
-name: "Agent Display Name"
+name: 'Agent Display Name'
 description: "Description of the custom agent's purpose and capabilities"
-target: "vscode"
-tools: ["read", "edit", "search"]
+target: 'vscode'
+tools: ['read', 'edit', 'search']
 infer: true
 mcp-servers:
   server-name:
     type: stdio
     command: npx
-    args: ["-y", "@some/mcp-server"]
+    args: ['-y', '@some/mcp-server']
 metadata:
-  category: "testing"
+  category: 'testing'
 ---
 ```
 
 #### All Frontmatter Properties
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `description` | **Yes** | Description of the custom agent's purpose and capabilities |
-| `name` | No | Display name for the agent |
-| `target` | No | Environment context: `vscode` or `github-copilot`; defaults to both |
-| `tools` | No | List of tool names available; defaults to all tools if unset |
-| `infer` | No | Controls automatic agent selection based on task context; defaults to `true` |
-| `mcp-servers` | No | Additional MCP servers and tools for the agent |
-| `metadata` | No | Key-value pairs for agent annotation |
+| Field         | Required | Description                                                                  |
+| ------------- | -------- | ---------------------------------------------------------------------------- |
+| `description` | **Yes**  | Description of the custom agent's purpose and capabilities                   |
+| `name`        | No       | Display name for the agent                                                   |
+| `target`      | No       | Environment context: `vscode` or `github-copilot`; defaults to both          |
+| `tools`       | No       | List of tool names available; defaults to all tools if unset                 |
+| `infer`       | No       | Controls automatic agent selection based on task context; defaults to `true` |
+| `mcp-servers` | No       | Additional MCP servers and tools for the agent                               |
+| `metadata`    | No       | Key-value pairs for agent annotation                                         |
 
 ### Body Content
 
@@ -285,6 +287,7 @@ Repository-level agents access tools from MCP servers configured in repository s
 ### Supported Instruction File Types for the Coding Agent
 
 The full list of instruction files Copilot supports:
+
 - `/.github/copilot-instructions.md`
 - `/.github/instructions/**/*.instructions.md`
 - `**/AGENTS.md`
@@ -306,6 +309,7 @@ The coding agent reads AGENTS.md files placed anywhere in the repository. The **
 ### Format
 
 AGENTS.md uses plain Markdown format. There is no required frontmatter. It serves as a comprehensive guide to the repository, including:
+
 - Project structure and components
 - Development workflow and commands
 - Coding standards and conventions
@@ -339,6 +343,7 @@ VS Code supports settings-based instructions (noted as a **deprecated** approach
 ### Supported Properties
 
 Each instruction entry supports two properties:
+
 - `text` -- Inline text instruction
 - `file` -- Reference to an external Markdown file
 
@@ -349,6 +354,7 @@ Settings-based instructions and file-based instructions are combined. The recomm
 ### Additional CLAUDE.md Support
 
 VS Code also searches for CLAUDE.md files in:
+
 - Workspace root
 - `.claude` folder in workspace
 - User home directory (`~/.claude/CLAUDE.md`)
@@ -358,15 +364,15 @@ Enable via `chat.useClaudeMdFile` setting. Note: uses a `paths` property (array 
 
 ### Relevant VS Code Settings Summary
 
-| Setting | Purpose |
-|---------|---------|
-| `chat.instructionsFilesLocations` | Configure where VS Code looks for instruction files |
-| `chat.promptFilesLocations` | Configure where VS Code looks for prompt files |
-| `chat.includeApplyingInstructions` | Enable pattern-based instruction matching |
-| `chat.includeReferencedInstructions` | Enable Markdown-linked instructions |
-| `chat.useAgentsMdFile` | Enable AGENTS.md detection |
-| `chat.useNestedAgentsMdFiles` | Enable nested AGENTS.md in subfolders (experimental) |
-| `chat.useClaudeMdFile` | Enable CLAUDE.md detection |
+| Setting                              | Purpose                                              |
+| ------------------------------------ | ---------------------------------------------------- |
+| `chat.instructionsFilesLocations`    | Configure where VS Code looks for instruction files  |
+| `chat.promptFilesLocations`          | Configure where VS Code looks for prompt files       |
+| `chat.includeApplyingInstructions`   | Enable pattern-based instruction matching            |
+| `chat.includeReferencedInstructions` | Enable Markdown-linked instructions                  |
+| `chat.useAgentsMdFile`               | Enable AGENTS.md detection                           |
+| `chat.useNestedAgentsMdFiles`        | Enable nested AGENTS.md in subfolders (experimental) |
+| `chat.useClaudeMdFile`               | Enable CLAUDE.md detection                           |
 
 ### Diagnostics
 
@@ -381,6 +387,7 @@ Users can access **Configure Chat (gear icon) > Diagnostics** to view "all loade
 ### How to Set
 
 Personal instructions are configured through the GitHub.com interface:
+
 1. Navigate to github.com/copilot
 2. Click profile picture in bottom left
 3. Select "Personal instructions"
@@ -411,6 +418,7 @@ Requires a **GitHub Copilot Business or GitHub Copilot Enterprise plan**.
 ### Where They Are Stored
 
 Instructions are configured through organization settings on GitHub.com:
+
 1. Profile picture > Organizations > Settings
 2. Navigate to the Copilot section in left sidebar
 3. Select "Custom instructions"
@@ -447,6 +455,7 @@ This feature is "currently in public preview and is subject to change."
 > "Personal instructions take the highest priority. Repository instructions come next, and then organization instructions are prioritized last. However, all sets of relevant instructions are provided to Copilot."
 
 **Order (highest to lowest):**
+
 1. **Personal instructions** -- User-specific preferences
 2. **Repository instructions** -- `.github/copilot-instructions.md` + matching `.instructions.md` files
 3. **Organization instructions** -- Org-wide settings
@@ -516,6 +525,7 @@ Variables are configured through GitHub Actions environment secrets and variable
 ### Agent Access Restrictions
 
 The coding agent has:
+
 - **Read-only access** to the repository
 - Can only create and push to branches beginning with `copilot/`
 
@@ -525,15 +535,15 @@ The coding agent has:
 
 **Source:** [GitHub Docs -- Adding repository custom instructions](https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot)
 
-| Feature | copilot-instructions.md | *.instructions.md | AGENTS.md | Organization |
-|---------|------------------------|--------------------|-----------|-------------|
-| Chat (GitHub.com) | Yes | Yes | -- | Yes |
-| Chat (VS Code) | Yes | Yes | Yes | No |
-| Chat (Visual Studio) | Yes | Yes | -- | No |
-| Chat (JetBrains) | Yes | Yes | -- | No |
-| Code review | Yes | Yes (configurable) | -- | Yes |
-| Coding agent | Yes | Yes | Yes | Yes |
-| Code completions | **No** | **No** | **No** | **No** |
+| Feature              | copilot-instructions.md | \*.instructions.md | AGENTS.md | Organization |
+| -------------------- | ----------------------- | ------------------ | --------- | ------------ |
+| Chat (GitHub.com)    | Yes                     | Yes                | --        | Yes          |
+| Chat (VS Code)       | Yes                     | Yes                | Yes       | No           |
+| Chat (Visual Studio) | Yes                     | Yes                | --        | No           |
+| Chat (JetBrains)     | Yes                     | Yes                | --        | No           |
+| Code review          | Yes                     | Yes (configurable) | --        | Yes          |
+| Coding agent         | Yes                     | Yes                | Yes       | Yes          |
+| Code completions     | **No**                  | **No**             | **No**    | **No**       |
 
 **Critical limitation:**
 

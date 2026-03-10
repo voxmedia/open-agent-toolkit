@@ -1,8 +1,10 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { readOatConfig } from '@config/oat-config';
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { addLocalPaths, removeLocalPaths } from './manage';
 
 describe('oat local add/remove', () => {

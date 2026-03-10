@@ -1,11 +1,12 @@
 # OAT Roadmap (Dogfood-First)
 
 This file is the canonical OAT roadmap for this repo. It combines:
+
 - the dogfood workflow direction (`.oat/repo/archive/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`)
 - the early "product" vision (interop + CLI) (`.oat/repo/archive/past-artifacts/agentic_development_framework_v_1_plan.md`)
 - the review/subagent direction (`.oat/projects/archived/workflow-research/analysis/subagents/refined-subagent-proposal.md`)
 
-For a birdseye snapshot of what exists *right now*, see `.oat/repo/reference/current-state.md`.
+For a birdseye snapshot of what exists _right now_, see `.oat/repo/reference/current-state.md`.
 
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
@@ -13,22 +14,23 @@ As of `2026-03-07` on `main`, dogfood workflow baseline and provider-interop CLI
 
 ## Status Summary
 
-| Area / Phase | Status | Notes |
-|---|---|---|
-| Dogfood workflow baseline | Completed | `oat-repo-knowledge-index`, `oat-project-new`, phases (`discover → implement`), router, review loop, PR skills |
-| Phase 3: Reviews + PR loop | Completed | Implemented + dogfooded |
-| Phase 4: Active project lifecycle state + Repo State Dashboard | Completed (polish remaining) | Config-backed lifecycle state + `oat project open/pause` + generated `.oat/state.md`; continue dashboard contract polish |
-| Phase 5: Staleness + knowledge drift | Planned | Improve/enforce freshness beyond warn-only |
-| Phase 6: Parallel execution + reconcile | Deferred (groundwork expanded) | `oat-worktree-bootstrap` + subagent orchestration skills (PR #21, refined in PR #26) exist; parallel fan-out + reconcile tooling still pending |
-| Phase 7: Quick mode + template rendering helper | In Progress | Quick/import lanes + canonical plan writing contract implemented; template rendering helper still planned |
-| Phase 8: Provider interop CLI + sync manifest | In Progress | Core command surface + config-aware provider sync + Codex TOML sync + instructions validate/sync shipped; lifecycle polish remains |
-| Phase 9: Multi-project switching + branch awareness | Later | Full `.oat/projects/(shared|local)/...` + hooks |
-| Phase 10: Memory system + provider enhancements | Later | Longer-term durability features |
-| Cross-cutting: skill invocation normalization | Completed (guardrails ongoing) | Skill-first wording adopted; continue preventing regressions |
+| Area / Phase                                                   | Status                         | Notes                                                                                                                                          |
+| -------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Dogfood workflow baseline                                      | Completed                      | `oat-repo-knowledge-index`, `oat-project-new`, phases (`discover → implement`), router, review loop, PR skills                                 |
+| Phase 3: Reviews + PR loop                                     | Completed                      | Implemented + dogfooded                                                                                                                        |
+| Phase 4: Active project lifecycle state + Repo State Dashboard | Completed (polish remaining)   | Config-backed lifecycle state + `oat project open/pause` + generated `.oat/state.md`; continue dashboard contract polish                       |
+| Phase 5: Staleness + knowledge drift                           | Planned                        | Improve/enforce freshness beyond warn-only                                                                                                     |
+| Phase 6: Parallel execution + reconcile                        | Deferred (groundwork expanded) | `oat-worktree-bootstrap` + subagent orchestration skills (PR #21, refined in PR #26) exist; parallel fan-out + reconcile tooling still pending |
+| Phase 7: Quick mode + template rendering helper                | In Progress                    | Quick/import lanes + canonical plan writing contract implemented; template rendering helper still planned                                      |
+| Phase 8: Provider interop CLI + sync manifest                  | In Progress                    | Core command surface + config-aware provider sync + Codex TOML sync + instructions validate/sync shipped; lifecycle polish remains             |
+| Phase 9: Multi-project switching + branch awareness            | Later                          | Full `.oat/projects/(shared                                                                                                                    | local)/...` + hooks |
+| Phase 10: Memory system + provider enhancements                | Later                          | Longer-term durability features                                                                                                                |
+| Cross-cutting: skill invocation normalization                  | Completed (guardrails ongoing) | Skill-first wording adopted; continue preventing regressions                                                                                   |
 
 ## Current State (Implemented)
 
 Dogfood workflow baseline is implemented and has been exercised end-to-end:
+
 - Knowledge: `oat-repo-knowledge-index` + `.oat/repo/knowledge/**` (thin->full project index, mapper outputs under `.oat/repo/knowledge/`)
 - Projects:
   - `oat-project-new` scaffolds `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`
@@ -119,14 +121,17 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Goal:** Make review and PR creation first-class and workflow-native (no dependency on superpowers being installed).
 
 **Status:** Completed
+
 - Done: review loop (review-provide, review-receive, reviewer prompt, plan Reviews table, implement final gate)
 - Done: PR skills (pr-progress + pr-final) (PR description generation; optional `gh pr create`)
 
 **When to do it:**
+
 - After we successfully dogfood at least one end-to-end feature using the baseline workflow (index -> implement), or
 - When we see repeated missed requirements / quality regressions that would be caught by a fresh-context review.
 
 **Deliverables:**
+
 - Skills:
   - `oat-project-review-provide` (supports both code review and artifact review)
   - `oat-project-review-receive` (plan-driven gap closure: findings -> new plan tasks -> rerun implement)
@@ -150,6 +155,7 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
   - After final review findings are resolved: always ask "Open PR now?"
 
 **Exit criteria:**
+
 - A full "implement -> request-review -> receive-review -> implement (fixes) -> request-review (scoped) -> done" loop works.
 - If PR skills are implemented: progress PR and project PR skills generate usable PR descriptions from OAT artifacts.
 - Otherwise: manual PR creation path is clearly documented and usable.
@@ -161,29 +167,33 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Goal:** Make project selection deterministic without committing to the full `.oat/projects/**` product model yet.
 
 **Status:** Completed (polish remaining)
+
 - Done: config-backed lifecycle state (`.oat/config.json`, `.oat/config.local.json`) + `oat config get/set/list`
 - Done: `oat project open` / `oat project pause` lifecycle commands and dashboard integration
 - Done: generated Repo State Dashboard (`.oat/state.md`) via `oat state refresh` CLI command
 - Remaining: tighten the "first-class" contract (who regenerates it, what fields it includes, and how it stays in sync with skills)
 
 **When to do it:**
+
 - As soon as we have >1 project under `.oat/projects/shared/<name>/`, or
 - When we see the wrong project being used / repeated prompts for project name.
 
 **Deliverables:**
+
 - `.oat/config.json` + `.oat/config.local.json` for shared/local OAT runtime state (`projects.root`, `worktrees.root`, `activeProject`, `lastPausedProject`)
 - `oat config get/set/list` command surface for config reads/writes in skills and scripts
 - `oat project open` / `oat project pause` commands with dashboard refresh integration
 - Optional Repo State Dashboard (`.oat/state.md`) derived from the active project's `state.md` + knowledge freshness summary
 - Update all workflow skills to resolve project via:
-  1) `oat config get activeProject` / `.oat/config.local.json` (preferred)
-  2) fallback prompts (if missing)
+  1. `oat config get activeProject` / `.oat/config.local.json` (preferred)
+  2. fallback prompts (if missing)
 - Update OAT docs/templates/skills to use skill-first invocation guidance:
   - Canonical: `oat-project-implement` (skill name)
   - Alias: slash prompts only "where slash prompts are supported"
 - Optional follow-on enhancement: add opt-in generation of thin `.codex/prompts/oat-*.md` wrappers during Codex skill sync
 
 **Exit criteria:**
+
 - All skills run against the intended project with no ambiguity and minimal prompting.
 - The active project can be switched/paused explicitly via CLI commands without manual file edits.
 
@@ -194,10 +204,12 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Goal:** Improve staleness detection and enforcement beyond warn-only.
 
 **When to do it:**
+
 - After 1-2 dogfood projects where staleness signals feel noisy, or
 - Before using OAT on high-risk changes where stale context would be costly.
 
 **Deliverables:**
+
 - Optional full diff-based staleness detection (in addition to age + scoped file/line counts)
 - Strict staleness mode that can block downstream phases when knowledge is stale/missing
 - Clear documentation for fallback behavior (non-git dirs, shallow clones, detached HEAD, etc.)
@@ -209,15 +221,18 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Goal:** Support parallel phase/task execution (worktrees/stacked PRs/subagents) with reconciliation back into canonical artifacts.
 
 **Status:** Deferred (groundwork expanded)
+
 - Done: manual-safe worktree bootstrap skill (`oat-worktree-bootstrap`) with deterministic root precedence + baseline checks
 - Done: subagent orchestration skill contracts (`oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto`) with execution mode persistence, dispatch, review gate, and fix-loop retry (PR #21, refined in PR #26)
 - Remaining: parallel fan-out execution contracts and reconcile tooling
 
 **When to do it:**
+
 - When we want to run phases in parallel (or keep multiple worktrees moving), and
 - The single-file `implementation.md` log becomes a bottleneck.
 
 **Deliverables:**
+
 - Parallel-friendly logging (per-phase logs and/or phase summaries)
 - `oat-reconcile` skill to merge parallel updates into the main plan/implementation/state artifacts
 - Explicit "phases that can run in parallel" semantics in `plan.md`
@@ -229,6 +244,7 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Goal:** Make small feature / quick fix workflows faster by safely skipping heavy steps (with guardrails).
 
 **Status:** In Progress
+
 - Done: quick lane starter (`oat-project-quick-start`)
 - Done: import lane starter (`oat-project-import-plan`)
 - Done: in-place promotion skill (`oat-project-promote-spec-driven`)
@@ -237,10 +253,12 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 - Remaining: template rendering helper (`oat template render ...`)
 
 **When to do it:**
+
 - After we have a stable "spec-driven mode", and
 - We find ourselves repeatedly doing small changes where spec-driven discovery/spec/design overhead isn't worth it.
 
 **Deliverables:**
+
 - Quick/import mode lanes: reduced ceremony with canonical `plan.md` execution contract
 - Template rendering helper (`oat template render ...`) to avoid copy/paste and ensure consistent frontmatter
 
@@ -251,6 +269,7 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Goal:** Deliver the original interop value: provider adapters, sync, drift detection, and safe apply.
 
 **Status:** In Progress
+
 - Done: core command surface (`oat init/status/sync/providers/doctor/instructions`)
 - Done: config-aware provider activation and `oat providers set` for explicit enable/disable management
 - Done: Codex TOML sync (canonical agent parser/renderer + codec for `.codex/agents/*.toml` and `.codex/config.toml` generation)
@@ -261,9 +280,11 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 - Remaining: expanded capability matrix and additional UX hardening
 
 **When to do it:**
+
 - Continue hardening current CLI behavior while expanding remaining lifecycle features.
 
 **Deliverables:**
+
 - P0: Validate provider assumptions (paths + precedence) in fixture repos
   - Claude Code: `.claude/{skills,agents,commands,hooks}` load/precedence
   - Codex CLI: `.codex/agents` (confirm)
@@ -293,10 +314,12 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Goal:** The full `.oat/projects/(shared|local)/...` project model and branch-aware auto-switching.
 
 **When to do it:**
+
 - When we want multiple concurrent OAT projects per repo (and/or shared/local modes), or
 - When branch-based project switching becomes important for daily use.
 
 **Deliverables:**
+
 - `.oat/projects/(shared|local)/<name>/state.md` (or a migration plan from `.oat/projects/shared/`)
 - `.oat/projects/state.json` + optional `.oat/state.md` derivation
 - `oat project new/open/auto/close` with optional git hook integration (post-checkout/post-merge)
@@ -308,8 +331,10 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Goal:** Longer-term improvements once workflow + interop are stable.
 
 **When to do it:**
+
 - After Phase 8-9 are proven in real usage.
 
 **Deliverables:**
+
 - `.oat/memory/` (cross-session context; patterns; "what we learned")
 - More complete provider capability matrix and provider-specific enhancements (hooks, subagent limitations, etc.)

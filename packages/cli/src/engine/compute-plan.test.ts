@@ -1,10 +1,12 @@
 import { mkdir, mkdtemp, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
 import { createEmptyManifest } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { computeSyncPlan } from './compute-plan';
 import type { CanonicalEntry } from './scanner';
 import { createTestAdapter } from './test-helpers';

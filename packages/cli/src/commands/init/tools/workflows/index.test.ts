@@ -3,6 +3,7 @@ import { createLoggerCapture } from '@commands/__tests__/helpers';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createInitToolsWorkflowsCommand } from './index';
 
 interface HarnessOptions {

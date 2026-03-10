@@ -15,9 +15,9 @@ Defines the canonical `plan.md` format that all OAT plan-producing and plan-muta
 
 When a skill invokes this contract during plan authoring, it should print a sub-banner:
 
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ PLAN WRITING
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OAT ▸ PLAN WRITING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 This is a sub-phase indicator; the calling skill owns the top-level banner.
 
@@ -31,14 +31,15 @@ Every `plan.md` produced or edited by any OAT skill **must** satisfy these invar
 
 ```yaml
 ---
-oat_plan_source: spec-driven | quick | imported   # origin workflow mode
-oat_plan_hill_phases: []                     # phases to pause AFTER completing (empty = every phase)
-oat_status: in_progress | complete          # plan lifecycle status
+oat_plan_source: spec-driven | quick | imported # origin workflow mode
+oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_status: in_progress | complete # plan lifecycle status
 oat_ready_for: null | oat-project-implement # downstream consumer
 ---
 ```
 
 Runtime routing note:
+
 - Keep `oat_ready_for` canonical as `oat-project-implement`.
 - Use `oat_execution_mode` in `state.md` (`single-thread` or `subagent-driven`) to choose sequential vs subagent implementation flow at runtime.
 
@@ -79,11 +80,11 @@ If any required section is missing when a skill edits `plan.md`, it must be rest
 
 Required inputs vary by workflow mode. The calling skill reads `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`).
 
-| Mode     | Required Inputs                                      | Design Gate |
-|----------|------------------------------------------------------|-------------|
-| `spec-driven` | Complete `design.md` (`oat_status: complete`)   | Yes         |
-| `quick`  | `discovery.md` + repo knowledge context              | No          |
-| `import` | Preserved external source + normalized `plan.md`     | No          |
+| Mode          | Required Inputs                                  | Design Gate |
+| ------------- | ------------------------------------------------ | ----------- |
+| `spec-driven` | Complete `design.md` (`oat_status: complete`)    | Yes         |
+| `quick`       | `discovery.md` + repo knowledge context          | No          |
+| `import`      | Preserved external source + normalized `plan.md` | No          |
 
 - **`spec-driven`**: Plan is derived from a complete design document. All design components must be covered by tasks.
 - **`quick`**: Plan is generated directly from discovery decisions and repo knowledge. No design artifact is required.
@@ -96,6 +97,7 @@ When a calling skill encounters an existing `plan.md`:
 ### Resume Options
 
 Offer the user three choices:
+
 - **Resume** (default): continue editing the existing plan in place.
 - **View**: show the existing plan and stop.
 - **Overwrite**: replace with a fresh copy of the template (warn about losing draft edits).

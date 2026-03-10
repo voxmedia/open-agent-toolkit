@@ -17,6 +17,7 @@ import type {
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createSyncCommand } from './index';
 
 interface HarnessOptions {

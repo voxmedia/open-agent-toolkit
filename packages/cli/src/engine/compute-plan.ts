@@ -1,5 +1,6 @@
 import { access, lstat, readlink } from 'node:fs/promises';
 import { basename, dirname, join, normalize, resolve } from 'node:path';
+
 import type { SyncConfig } from '@config/sync-config';
 import { computeContentHash } from '@manifest/hash';
 import { findEntry } from '@manifest/manager';
@@ -7,6 +8,7 @@ import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import { getSyncMappings } from '@providers/shared/adapter.utils';
 import type { ContentType } from '@shared/types';
+
 import type {
   EngineScope,
   RemovalSyncPlanEntry,

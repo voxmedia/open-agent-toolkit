@@ -34,7 +34,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
       - **Step 4: Discovery synthesis** — Populate `discovery.md` from conversation context: problem statement, requirements discussed, decisions made, alternatives considered. Ask user to confirm or clarify anything unclear.
       - **Step 5: Implementation capture** — Populate `implementation.md` with commit-derived task list, files changed, tests added, issues encountered and how they were resolved.
       - **Step 6: Lifecycle state** — Ask user: "Is this ready for review, or still in progress?" Default to `awaiting-review`. Set `oat_lifecycle` accordingly.
-    - Skill-only (no CLI command needed) — requires conversation context that only the agent has. The commit analysis is supplementary; the real value is capturing *intent* from the conversation.
+    - Skill-only (no CLI command needed) — requires conversation context that only the agent has. The commit analysis is supplementary; the real value is capturing _intent_ from the conversation.
     - Should ask the user for details whenever anything is unclear rather than guessing.
   - Success criteria:
     - Agent can invoke `oat-project-capture` at end of a session to create a tracked project from untracked work.
@@ -43,7 +43,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Project is set to `awaiting-review` (or user-chosen state) and is ready for `oat-project-review-provide` / `oat-project-pr-final`.
     - Works naturally in the mobile/cloud session flow: brainstorm → implement → capture → PR → review at desk.
   - Links:
-    - Related: `oat-project-reconcile` (bridges gaps in *existing* projects; capture creates from scratch)
+    - Related: `oat-project-reconcile` (bridges gaps in _existing_ projects; capture creates from scratch)
     - Related: `oat-project-quick-start` (forward-looking quick scaffold; capture is retroactive)
     - Related: `oat-project-pr-final` (downstream consumer of captured project)
   - Created: 2026-03-09
@@ -129,7 +129,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related: skill sync tooling (`oat sync`)
   - Created: 2026-03-08
 
-
 - [ ] **(P2) [workflow] Backlog Refinement Flow (Jira ticket generation)**
   - Context: Need a structured, conversational way to break large initiatives into epics/stories/tasks during planning, then create them in Jira with minimal manual effort.
   - Proposed change:
@@ -169,7 +168,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Related backlog area: artifact cleanup and stale review/external-plan management
   - Created: 2026-02-18
 
-
 - [ ] **(P2) [tooling] Optional Codex prompt-wrapper generation for synced OAT skills**
   - Target milestone/phase: Post-standardization enhancement
   - Notes:
@@ -179,7 +177,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
   - Links:
     - Related to invocation compatibility standardization item above
   - Created: 2026-02-14
-
 
 - [ ] **(P2) [skills] Add PR review follow-on skill set (remaining: `provide-remote`, `respond-remote`, `summarize-remote`)**
   - Target milestone/phase: Post review receive skill family
@@ -237,7 +234,6 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
     - Promotion contract: `.agents/skills/oat-idea-summarize/SKILL.md` (Step 7)
     - Discovery skill: `.agents/skills/oat-project-discover/SKILL.md`
   - Created: 2026-02-14
-
 
 ## In Progress
 

@@ -7,6 +7,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { basename, dirname, relative, resolve } from 'node:path';
+
 import { renderCanonicalAgentMarkdown } from '@agents/canonical';
 import { CliError } from '@errors/index';
 import { createSymlink, ensureDir } from '@fs/io';

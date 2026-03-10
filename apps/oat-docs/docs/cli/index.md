@@ -45,26 +45,26 @@ See [`docs-apps.md`](docs-apps.md) for details.
 
 ### Tool Management (`oat tools`)
 
-| Command                | Purpose                                                                                           |
-| ---------------------- | ------------------------------------------------------------------------------------------------- |
-| `oat tools list`       | List installed tools with version, pack, scope, and update status.                                |
-| `oat tools outdated`   | Show only tools with available updates.                                                           |
-| `oat tools info`       | Detailed view of a single tool (version, pack, scope, update availability).                       |
-| `oat tools install`    | Install tool packs (`ideas`, `workflows`, `utility`) with auto-sync.                              |
-| `oat tools update`     | Update installed tools to bundled versions (`--pack`, `--all`, `--dry-run`, `--no-sync`).         |
-| `oat tools remove`     | Remove installed tools (`--pack`, `--all`, `--dry-run`, `--no-sync`).                             |
+| Command              | Purpose                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| `oat tools list`     | List installed tools with version, pack, scope, and update status.                        |
+| `oat tools outdated` | Show only tools with available updates.                                                   |
+| `oat tools info`     | Detailed view of a single tool (version, pack, scope, update availability).               |
+| `oat tools install`  | Install tool packs (`ideas`, `workflows`, `utility`) with auto-sync.                      |
+| `oat tools update`   | Update installed tools to bundled versions (`--pack`, `--all`, `--dry-run`, `--no-sync`). |
+| `oat tools remove`   | Remove installed tools (`--pack`, `--all`, `--dry-run`, `--no-sync`).                     |
 
 See [`tool-packs-and-assets.md`](tool-packs-and-assets.md) for details.
 
 ### Local Path Management (`oat local`)
 
-| Command              | Purpose                                                                                                   |
-| -------------------- | --------------------------------------------------------------------------------------------------------- |
-| `oat local status`   | List configured `localPaths` with existence and `.gitignore` membership status.                            |
-| `oat local apply`    | Write a managed `.gitignore` section for configured `localPaths`. Use `--dry-run` to preview.              |
-| `oat local sync`     | Copy `localPaths` between main repo and a worktree (`--from` for reverse, `--force` to overwrite).        |
-| `oat local add`      | Add paths to `localPaths` config with validation.                                                         |
-| `oat local remove`   | Remove paths from `localPaths` config.                                                                    |
+| Command            | Purpose                                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------------------- |
+| `oat local status` | List configured `localPaths` with existence and `.gitignore` membership status.                    |
+| `oat local apply`  | Write a managed `.gitignore` section for configured `localPaths`. Use `--dry-run` to preview.      |
+| `oat local sync`   | Copy `localPaths` between main repo and a worktree (`--from` for reverse, `--force` to overwrite). |
+| `oat local add`    | Add paths to `localPaths` config with validation.                                                  |
+| `oat local remove` | Remove paths from `localPaths` config.                                                             |
 
 See [`local-paths.md`](local-paths.md) for details.
 
@@ -91,8 +91,8 @@ See [`provider-interop/`](provider-interop/index.md) for detailed provider-inter
 
 ### Diagnostics
 
-| Command      | Purpose                                                                                                                                    |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Command      | Purpose                                                                                                                                      |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `oat doctor` | Run environment and setup diagnostics, including bundled-vs-installed OAT skill version checks with `oat tools update` remediation guidance. |
 
 See [`diagnostics.md`](diagnostics.md) for details.

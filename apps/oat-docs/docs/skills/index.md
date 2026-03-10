@@ -51,6 +51,7 @@ Project skills are stored in `.agents/skills`.
 - `oat-docs-apply` — Apply approved, evidence-backed docs recommendations from a docs analysis artifact
 
 ## Utility and maintenance skills
+
 - `oat-worktree-bootstrap`
 - `oat-worktree-bootstrap-auto`
 - `oat-repo-knowledge-index`

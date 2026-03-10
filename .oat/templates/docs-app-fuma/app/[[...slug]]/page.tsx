@@ -1,5 +1,6 @@
 import { DocsPage, Mermaid } from '@oat/docs-theme';
 import { notFound } from 'next/navigation';
+
 import { source } from '@/lib/source';
 
 const mdxComponents = { Mermaid };

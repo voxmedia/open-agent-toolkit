@@ -11,11 +11,11 @@
 
 **{N} gaps** identified across **{N} completed projects**, affecting **{N} documentation files**.
 
-| Priority | Count | Description |
-|----------|-------|-------------|
-| **P0 (Critical)** | {N} | Stale references or entirely undocumented core features |
-| **P1 (Important)** | {N} | Shipped capabilities not yet mentioned in docs |
-| **P2 (Minor)** | {N} | Incomplete coverage, outdated wording, missing cross-references |
+| Priority           | Count | Description                                                     |
+| ------------------ | ----- | --------------------------------------------------------------- |
+| **P0 (Critical)**  | {N}   | Stale references or entirely undocumented core features         |
+| **P1 (Important)** | {N}   | Shipped capabilities not yet mentioned in docs                  |
+| **P2 (Minor)**     | {N}   | Incomplete coverage, outdated wording, missing cross-references |
 
 **Top-line recommendations:**
 
@@ -29,10 +29,10 @@
 
 Projects reviewed and their shipped capabilities.
 
-| Project | Completed | Key Capabilities | Skills Changed | CLI Changes |
-|---------|-----------|-----------------|----------------|-------------|
-| {project-name} | {date} | {brief list} | {list or "none"} | {list or "none"} |
-| ... | ... | ... | ... | ... |
+| Project        | Completed | Key Capabilities | Skills Changed   | CLI Changes      |
+| -------------- | --------- | ---------------- | ---------------- | ---------------- |
+| {project-name} | {date}    | {brief list}     | {list or "none"} | {list or "none"} |
+| ...            | ...       | ...              | ...              | ...              |
 
 ---
 
@@ -40,11 +40,11 @@ Projects reviewed and their shipped capabilities.
 
 ### Priority Key
 
-| Priority | Criteria |
-|----------|----------|
-| **P0 (Critical)** | Docs reference something that no longer exists, or a core command/skill is entirely undocumented |
-| **P1 (Important)** | New capability is shipped but not mentioned in relevant docs |
-| **P2 (Minor)** | Docs exist but are incomplete, outdated wording, or missing cross-references |
+| Priority           | Criteria                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| **P0 (Critical)**  | Docs reference something that no longer exists, or a core command/skill is entirely undocumented |
+| **P1 (Important)** | New capability is shipped but not mentioned in relevant docs                                     |
+| **P2 (Minor)**     | Docs exist but are incomplete, outdated wording, or missing cross-references                     |
 
 ---
 
@@ -54,12 +54,12 @@ Projects reviewed and their shipped capabilities.
 
 > {One-line description of the gap}
 
-| Field | Value |
-|-------|-------|
-| **Priority** | **{P0/P1/P2}** |
-| **Affected file(s)** | `{path}`, `{path}` |
-| **Source project** | {project-name} |
-| **Category** | {stale-reference / missing-docs / incomplete-coverage / missing-cross-ref} |
+| Field                | Value                                                                      |
+| -------------------- | -------------------------------------------------------------------------- |
+| **Priority**         | **{P0/P1/P2}**                                                             |
+| **Affected file(s)** | `{path}`, `{path}`                                                         |
+| **Source project**   | {project-name}                                                             |
+| **Category**         | {stale-reference / missing-docs / incomplete-coverage / missing-cross-ref} |
 
 **Current state:** {What the docs currently say or don't say}
 
@@ -75,28 +75,28 @@ Projects reviewed and their shipped capabilities.
 
 ### Wave 1: P0 — Critical Fixes
 
-| Order | Gap | Affected File(s) | Suggested Fix | Effort |
-|-------|-----|-------------------|---------------|--------|
-| 1a | **{GNN}** | `{path}` | {fix} | {Low/Med/High} |
-| ... | ... | ... | ... | ... |
+| Order | Gap       | Affected File(s) | Suggested Fix | Effort         |
+| ----- | --------- | ---------------- | ------------- | -------------- |
+| 1a    | **{GNN}** | `{path}`         | {fix}         | {Low/Med/High} |
+| ...   | ...       | ...              | ...           | ...            |
 
 **Estimated total effort:** {Low/Medium/High}
 
 ### Wave 2: P1 — Important Additions
 
-| Order | Gap | Affected File(s) | Suggested Fix | Effort |
-|-------|-----|-------------------|---------------|--------|
-| 2a | **{GNN}** | `{path}` | {fix} | {Low/Med/High} |
-| ... | ... | ... | ... | ... |
+| Order | Gap       | Affected File(s) | Suggested Fix | Effort         |
+| ----- | --------- | ---------------- | ------------- | -------------- |
+| 2a    | **{GNN}** | `{path}`         | {fix}         | {Low/Med/High} |
+| ...   | ...       | ...              | ...           | ...            |
 
 **Estimated total effort:** {Low/Medium/High}
 
 ### Wave 3: P2 — Minor Improvements
 
-| Order | Gap | Affected File(s) | Suggested Fix | Effort |
-|-------|-----|-------------------|---------------|--------|
-| 3a | **{GNN}** | `{path}` | {fix} | {Low/Med/High} |
-| ... | ... | ... | ... | ... |
+| Order | Gap       | Affected File(s) | Suggested Fix | Effort         |
+| ----- | --------- | ---------------- | ------------- | -------------- |
+| 3a    | **{GNN}** | `{path}`         | {fix}         | {Low/Med/High} |
+| ...   | ...       | ...              | ...           | ...            |
 
 **Estimated total effort:** {Low/Medium/High}
 
@@ -106,10 +106,10 @@ Projects reviewed and their shipped capabilities.
 
 Documentation references that point to removed or renamed content.
 
-| Doc File | Line/Section | Stale Reference | Current State | Fix |
-|----------|-------------|-----------------|---------------|-----|
+| Doc File | Line/Section      | Stale Reference      | Current State           | Fix             |
+| -------- | ----------------- | -------------------- | ----------------------- | --------------- |
 | `{path}` | {section or line} | {what it references} | {removed/renamed/moved} | {suggested fix} |
-| ... | ... | ... | ... | ... |
+| ...      | ...               | ...                  | ...                     | ...             |
 
 ---
 
@@ -119,17 +119,17 @@ Cross-reference of skills and CLI commands against documentation coverage.
 
 ### Skills
 
-| Skill | SKILL.md Exists | In Skills Index | Description Accurate | Notes |
-|-------|----------------|-----------------|---------------------|-------|
-| {skill-name} | {yes/no} | {yes/no} | {yes/no/partial} | {notes} |
-| ... | ... | ... | ... | ... |
+| Skill        | SKILL.md Exists | In Skills Index | Description Accurate | Notes   |
+| ------------ | --------------- | --------------- | -------------------- | ------- |
+| {skill-name} | {yes/no}        | {yes/no}        | {yes/no/partial}     | {notes} |
+| ...          | ...             | ...             | ...                  | ...     |
 
 ### CLI Commands
 
-| Command | In CLI Index | In Commands.md | Description Accurate | Notes |
-|---------|-------------|----------------|---------------------|-------|
-| {command} | {yes/no} | {yes/no} | {yes/no/partial} | {notes} |
-| ... | ... | ... | ... | ... |
+| Command   | In CLI Index | In Commands.md | Description Accurate | Notes   |
+| --------- | ------------ | -------------- | -------------------- | ------- |
+| {command} | {yes/no}     | {yes/no}       | {yes/no/partial}     | {notes} |
+| ...       | ...          | ...            | ...                  | ...     |
 
 ---
 
@@ -147,6 +147,6 @@ Cross-reference of skills and CLI commands against documentation coverage.
 
 ### Risks
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
+| Risk               | Impact   | Mitigation        |
+| ------------------ | -------- | ----------------- |
 | {risk description} | {impact} | {how to mitigate} |

@@ -1,10 +1,12 @@
 import { createHash } from 'node:crypto';
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
+
 import { parseCanonicalAgentFile } from '@agents/canonical';
 import type { CanonicalEntry } from '@engine/index';
 import { ensureDir, fileExists } from '@fs/io';
 import TOML from '@iarna/toml';
+
 import { type CodexManagedRoleConfig, mergeCodexConfig } from './config-merge';
 import { exportCanonicalAgentToCodexRole } from './export-to-codex';
 import { isOatManagedCodexRoleFile } from './shared';

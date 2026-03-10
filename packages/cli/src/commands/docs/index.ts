@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+
 import { createDocsAnalyzeCommand } from './analyze';
 import { createDocsApplyCommand } from './apply';
 import { createDocsGenerateIndexCommand } from './index-generate';

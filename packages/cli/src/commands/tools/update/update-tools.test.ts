@@ -1,6 +1,7 @@
 import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
 import type { ToolInfo } from '@commands/tools/shared/types';
 import { describe, expect, it } from 'vitest';
+
 import {
   type UpdateTarget,
   type UpdateToolsDependencies,

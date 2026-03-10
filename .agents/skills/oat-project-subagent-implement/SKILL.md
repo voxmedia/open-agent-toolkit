@@ -2,7 +2,7 @@
 name: oat-project-subagent-implement
 version: 1.2.0
 description: Use when you need parallel execution across eligible plan phases/tasks using autonomous worktrees, review gates, and deterministic merge-back.
-argument-hint: "[--dry-run] [--merge-strategy <merge|cherry-pick>] [--retry-limit <N>]"
+argument-hint: '[--dry-run] [--merge-strategy <merge|cherry-pick>] [--retry-limit <N>]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, Task
@@ -15,6 +15,7 @@ Drive parallel, worktree-isolated execution of plan tasks with autonomous review
 ## Purpose
 
 Enable an orchestrator agent to:
+
 1. Identify parallelizable units from a project plan.
 2. Bootstrap isolated worktrees per unit via `oat-worktree-bootstrap-auto`.
 3. Dispatch subagents with scoped objectives and file boundaries.
@@ -31,12 +32,12 @@ All execution is non-interactive between configured HiLL checkpoints.
 
 ## Relationship to Existing Skills
 
-| Skill | Role in Orchestration |
-|-------|----------------------|
-| `oat-worktree-bootstrap-auto` | Creates isolated worktrees per unit |
-| `oat-project-implement` | Single-thread fallback; not used during orchestration |
-| `oat-project-review-provide` | Manual review skill; autonomous gate is a parallel concept |
-| `oat-project-review-receive` | Processes review findings; autonomous gate produces compatible artifacts |
+| Skill                         | Role in Orchestration                                                    |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| `oat-worktree-bootstrap-auto` | Creates isolated worktrees per unit                                      |
+| `oat-project-implement`       | Single-thread fallback; not used during orchestration                    |
+| `oat-project-review-provide`  | Manual review skill; autonomous gate is a parallel concept               |
+| `oat-project-review-receive`  | Processes review findings; autonomous gate produces compatible artifacts |
 
 ## Progress Indicators (User-Facing)
 
@@ -45,7 +46,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ SUBAGENT IMPLEMENT
+  OAT ▸ SUBAGENT IMPLEMENT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print concise indicators, for example:
@@ -117,6 +118,7 @@ plan.md
 Resolve active project via `oat config get activeProject` (stored in `.oat/config.local.json`) and read `state.md`.
 
 Persist required runtime defaults in `state.md` frontmatter:
+
 - `oat_execution_mode: subagent-driven`
 - Write orchestration defaults only when keys are missing (never overwrite existing values):
   - `oat_orchestration_merge_strategy: merge`
@@ -129,15 +131,18 @@ Persist required runtime defaults in `state.md` frontmatter:
 Read `plan.md` and classify each phase/task:
 
 **Parallelization eligibility:**
+
 - Only tasks/phases explicitly marked `parallel-safe` (or determined by orchestrator to have no file-level dependencies) are fanned out.
 - Default: sequential execution (same as `oat-project-implement`).
 - Orchestrator must verify no overlapping file modifications between parallel units.
 
 **Unit granularity:**
+
 - Default: phase-level (all tasks within a phase run in one unit).
 - Optional: task-level (individual tasks as separate units).
 
 **HiLL checkpoint gating:**
+
 - Read `oat_plan_hill_phases` from `plan.md` frontmatter.
 - Listed phases are where the orchestrator pauses **after completing them**, not before.
 - Example: if `oat_plan_hill_phases: ["p04"]`, phases p01-p04 all execute, then orchestrator pauses after p04 completes. Phases p01-p03 have no checkpoint pause.
@@ -148,9 +153,11 @@ Read `plan.md` and classify each phase/task:
 For each eligible unit, invoke `oat-worktree-bootstrap-auto`:
 
 **Branch naming convention:**
+
 ```
 {project-name}/{unit-id}
 ```
+
 Example: `autonomous-orchestration/p02-t01`
 
 **Base ref:** The orchestration branch (the branch from which the orchestrator runs).
@@ -164,20 +171,24 @@ If any bootstrap fails under `strict` policy, exclude that unit and report the f
 For each bootstrapped unit, dispatch a subagent via the `Task` tool with:
 
 **Scoped objective:**
+
 - The specific plan task(s) assigned to this unit.
 - Full task text from `plan.md` including steps, files, and verification commands.
 
 **File boundaries:**
+
 - Explicit list of files the subagent may create/modify (from plan task `Files:` section).
 - Subagent must not modify files outside its boundary.
 
 **Context provided to subagent:**
+
 - Project name and path.
 - Task specification from plan.
 - Relevant design/spec context (if available).
 - Commit convention from plan.
 
 **Expected deliverables from subagent:**
+
 - Implementation summary (what changed, behavior-level).
 - Test results (pass/fail, coverage).
 - Changed files inventory.
@@ -189,6 +200,7 @@ For each bootstrapped unit, dispatch a subagent via the `Task` tool with:
 After each implementer subagent completes, run a mandatory reviewer gate as a **peer subagent** and record the verdict map entry before any merge decision.
 
 **Reviewer dispatch mechanism (required):**
+
 1. Dispatch `oat-reviewer` as a peer subagent (`subagent_type: "oat-reviewer"`) against the same unit worktree.
 2. Provide reviewer context:
    - Unit scope (files changed in unit branch/worktree).
@@ -199,20 +211,24 @@ After each implementer subagent completes, run a mandatory reviewer gate as a **
 4. Orchestrator reads the artifact and extracts stage verdict + finding severities.
 
 **Stage 1: Spec compliance**
+
 - Verify implementation matches plan task specification.
 - Check: all planned files created/modified, verification commands pass, no scope creep.
 - Anchor findings to code locations (file:line).
 
 **Stage 2: Code quality**
+
 - Only runs if spec compliance passes.
 - Check: tests passing, lint clean, type-check clean, no Critical/Important findings.
 - Severity classification: Critical, Important, Medium, Minor (4-tier, consistent with receive skills).
 
 **Pass criteria:**
+
 - No Critical or Important findings across both stages.
 - All verification commands from plan pass.
 
 **Fail handling — fix-loop dispatch (required):**
+
 1. On review failure, dispatch a fix implementer subagent in the same worktree.
 2. Provide fix input:
    - Review artifact path (`reviews/{unit-id}-gate-review.md`)
@@ -226,12 +242,13 @@ After each implementer subagent completes, run a mandatory reviewer gate as a **
    - record unresolved findings in orchestration log
 
 **Verdict map (source of truth for Step 5):**
+
 ```yaml
-unit_id: "{unit-id}"
+unit_id: '{unit-id}'
 reviewer_stage: spec | quality
 verdict: pass | fail
 retry_count: N
-review_artifact: "reviews/{unit-id}-gate-review.md"
+review_artifact: 'reviews/{unit-id}-gate-review.md'
 findings:
   critical: []
   important: []
@@ -257,6 +274,7 @@ Only units with `verdict == pass` in the verdict map enter the merge loop below.
 **Merge ordering:** Deterministic by task ID (ascending). Example: p02-t01 before p02-t02.
 
 **Default strategy: merge**
+
 ```bash
 git checkout {orchestration-branch}
 git merge --no-ff {unit-branch} -m "merge({unit-id}): {summary}"
@@ -264,11 +282,13 @@ git merge --no-ff {unit-branch} -m "merge({unit-id}): {summary}"
 
 **Fallback strategy: cherry-pick**
 If merge produces conflicts:
+
 1. Abort the merge.
 2. Attempt cherry-pick of individual unit commits.
 3. If cherry-pick also conflicts: classify and report for manual resolution.
 
 **Integration verification (after each merge):**
+
 ```bash
 pnpm test
 pnpm lint
@@ -276,11 +296,13 @@ pnpm type-check
 ```
 
 If integration verification fails after a merge:
+
 1. Revert the merge.
 2. Mark the unit as `conflict` and report.
 3. Continue with remaining units.
 
 **Conflict classification:**
+
 - `file-level`: Same file modified by multiple units.
 - `semantic`: Different files but conflicting behavior.
 - `integration`: Individual units pass but combined result fails.
@@ -302,14 +324,15 @@ If integration verification fails after a merge:
 
 #### Unit Outcomes
 
-| Unit | Status | Commits | Tests | Review | Disposition |
-|------|--------|---------|-------|--------|-------------|
-| {id} | pass | {sha} | pass | pass | merged |
-| {id} | fail | {sha} | pass | fail (quality, retry 2/2) | excluded |
+| Unit | Status | Commits | Tests | Review                    | Disposition |
+| ---- | ------ | ------- | ----- | ------------------------- | ----------- |
+| {id} | pass   | {sha}   | pass  | pass                      | merged      |
+| {id} | fail   | {sha}   | pass  | fail (quality, retry 2/2) | excluded    |
 
 #### Review Interaction Log
 
 **{unit-id}:**
+
 - **Reviewer dispatch:** peer subagent (`oat-reviewer`)
 - **Review artifact:** `reviews/{unit-id}-gate-review.md`
 - **review_gate_executed:** true
@@ -321,27 +344,31 @@ If integration verification fails after a merge:
 
 #### Merge Outcomes
 
-| Order | Unit | Strategy | Result | Integration |
-|-------|------|----------|--------|-------------|
-| 1 | {id} | merge | clean | tests pass |
-| 2 | {id} | cherry-pick | clean | tests pass |
+| Order | Unit | Strategy    | Result | Integration |
+| ----- | ---- | ----------- | ------ | ----------- |
+| 1     | {id} | merge       | clean  | tests pass  |
+| 2     | {id} | cherry-pick | clean  | tests pass  |
 
 #### Outstanding Items
+
 - {conflict descriptions or manual follow-ups, or "None"}
 ```
 
 **Dispatch manifest logging:** The dispatch script outputs a `log_path` field pointing to `implementation.md` so the orchestrator knows where to append run results. This field is informational — the orchestrator reads it and handles the actual write.
 
 **Update `plan.md` review table:**
+
 - Autonomous review results map to the plan's review rows.
 - Status follows existing lifecycle: `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.
 - Autonomous reviews that pass set status to `passed` with date and artifact reference.
 
 **Update `state.md`:**
+
 - Advance `oat_current_task` to the next unprocessed task.
 - Update `oat_last_commit` to the final merge commit.
 
 **HiLL checkpoint pause:**
+
 - If the phase that just completed is a configured HiLL checkpoint, pause execution.
 - Report: what completed, what's next, and prompt for user approval to continue.
 
@@ -351,29 +378,29 @@ All policies have sensible defaults. Override per-run via CLI flags or persist i
 
 ### Policy Table
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--merge-strategy` | `merge` \| `cherry-pick` | `merge` | Default merge strategy for fan-in reconciliation. |
-| `--retry-limit` | integer (0-5) | `2` | Max fix-loop retries per unit before marking failed. |
-| `--baseline-policy` | `strict` \| `allow-failing` | `strict` | Passed to `oat-worktree-bootstrap-auto` for baseline checks. |
-| `--dry-run` | boolean | `false` | Run plan analysis and unit identification without execution. |
-| `--unit-granularity` | `phase` \| `task` | `phase` | Fan-out granularity: phase-level or task-level units. |
+| Flag                 | Type                        | Default  | Description                                                  |
+| -------------------- | --------------------------- | -------- | ------------------------------------------------------------ |
+| `--merge-strategy`   | `merge` \| `cherry-pick`    | `merge`  | Default merge strategy for fan-in reconciliation.            |
+| `--retry-limit`      | integer (0-5)               | `2`      | Max fix-loop retries per unit before marking failed.         |
+| `--baseline-policy`  | `strict` \| `allow-failing` | `strict` | Passed to `oat-worktree-bootstrap-auto` for baseline checks. |
+| `--dry-run`          | boolean                     | `false`  | Run plan analysis and unit identification without execution. |
+| `--unit-granularity` | `phase` \| `task`           | `phase`  | Fan-out granularity: phase-level or task-level units.        |
 
 ### Merge Strategy Policy
 
-| Strategy | Behavior | When to Use |
-|----------|----------|-------------|
-| `merge` | `git merge --no-ff` per unit in task-ID order | Default; clean parallel branches with no overlapping files |
-| `cherry-pick` | Cherry-pick individual commits per unit | Fallback when merge conflicts; finer-grained conflict isolation |
+| Strategy      | Behavior                                      | When to Use                                                     |
+| ------------- | --------------------------------------------- | --------------------------------------------------------------- |
+| `merge`       | `git merge --no-ff` per unit in task-ID order | Default; clean parallel branches with no overlapping files      |
+| `cherry-pick` | Cherry-pick individual commits per unit       | Fallback when merge conflicts; finer-grained conflict isolation |
 
 **Interaction:** If `merge` fails for a unit, automatically falls back to `cherry-pick` regardless of the configured strategy. If `cherry-pick` also fails, the unit is classified as `conflict` and reported for manual resolution.
 
 ### Retry Policy
 
-| Retry Limit | Behavior |
-|-------------|----------|
-| `0` | No retries; first review failure marks unit as failed |
-| `1-5` | Dispatch implementer to fix, re-run failed review stage, up to N times |
+| Retry Limit | Behavior                                                               |
+| ----------- | ---------------------------------------------------------------------- |
+| `0`         | No retries; first review failure marks unit as failed                  |
+| `1-5`       | Dispatch implementer to fix, re-run failed review stage, up to N times |
 
 **Interaction with review gate:** Each retry dispatches a fresh implementer subagent with the review findings. The same review stage (spec or quality) re-runs. If the stage that previously passed is invalidated by fixes, both stages re-run.
 
@@ -381,9 +408,9 @@ All policies have sensible defaults. Override per-run via CLI flags or persist i
 
 Passed through to `oat-worktree-bootstrap-auto`. See that skill's policy documentation for details.
 
-| Policy | Orchestration Behavior |
-|--------|----------------------|
-| `strict` | Failed bootstrap excludes unit from dispatch |
+| Policy          | Orchestration Behavior                                |
+| --------------- | ----------------------------------------------------- |
+| `strict`        | Failed bootstrap excludes unit from dispatch          |
 | `allow-failing` | Failed bootstrap emits warning; unit still dispatched |
 
 ### HiLL Checkpoint Mapping
@@ -391,6 +418,7 @@ Passed through to `oat-worktree-bootstrap-auto`. See that skill's policy documen
 **Source of truth:** `oat_plan_hill_phases` in `plan.md` frontmatter.
 
 **Behavior:**
+
 1. Orchestrator reads `oat_plan_hill_phases` at the start of each run.
 2. After completing all tasks in a listed checkpoint phase, orchestrator pauses.
 3. Pause means: complete all in-flight units (including the checkpoint phase itself), reconcile, report, then wait for user approval.
@@ -399,9 +427,11 @@ Passed through to `oat-worktree-bootstrap-auto`. See that skill's policy documen
 **Key semantic: listed phases are where you stop AFTER completing them, not before.** `["p03"]` means "complete p03, then pause" — not "pause before starting p03."
 
 **Example:**
+
 ```yaml
-oat_plan_hill_phases: ["p03"]
+oat_plan_hill_phases: ['p03']
 ```
+
 - p01, p02, and p03: orchestrator may fan out and reconcile without pausing between them.
 - After p03 completes: orchestrator pauses, reports progress, waits for user.
 - If there are phases after p03, they resume after approval.
@@ -426,6 +456,7 @@ CLI flags override persisted values for that run and also update the persisted v
 ## Dry-Run Mode
 
 When `--dry-run` is specified:
+
 - Execute Steps 1-2 (plan read + unit identification) fully.
 - Skip Steps 3-5 (no subagent dispatch, no merge).
 - Report: identified units, worktree plan, estimated parallelism.
@@ -437,11 +468,11 @@ The autonomous review gate (Step 4) operates alongside — not in place of — t
 
 ### Scope Separation
 
-| Review Skill | Scope | Trigger |
-|-------------|-------|---------|
-| Autonomous gate (Step 4) | Per-unit (phase or task level) | Automatic after subagent completion |
-| `oat-project-review-provide` | Per-phase, final, or range | User-invoked or `oat-project-implement` final gate |
-| `oat-project-review-receive` | Processes review findings into plan tasks | User-invoked after review artifact exists |
+| Review Skill                 | Scope                                     | Trigger                                            |
+| ---------------------------- | ----------------------------------------- | -------------------------------------------------- |
+| Autonomous gate (Step 4)     | Per-unit (phase or task level)            | Automatic after subagent completion                |
+| `oat-project-review-provide` | Per-phase, final, or range                | User-invoked or `oat-project-implement` final gate |
+| `oat-project-review-receive` | Processes review findings into plan tasks | User-invoked after review artifact exists          |
 
 ### Autonomous Gate vs Manual Review
 
@@ -455,13 +486,14 @@ The autonomous gate is a **fast, binary quality check** (pass/fail per unit). It
 
 Autonomous review results update the `plan.md` Reviews table using the same status lifecycle:
 
-| Autonomous Outcome | plan.md Status |
-|-------------------|---------------|
-| All units in scope pass gate | `passed` (with date and artifact reference) |
-| Some units fail, fixes dispatched | `fixes_added` |
-| Fix loop exhausted, units excluded | `fixes_completed` (excluded units noted) |
+| Autonomous Outcome                 | plan.md Status                              |
+| ---------------------------------- | ------------------------------------------- |
+| All units in scope pass gate       | `passed` (with date and artifact reference) |
+| Some units fail, fixes dispatched  | `fixes_added`                               |
+| Fix loop exhausted, units excluded | `fixes_completed` (excluded units noted)    |
 
 **Rules:**
+
 - Autonomous reviews write to phase-level rows (e.g., `p01`, `p02`) — not per-task rows.
 - The `final` review row is **never** set by the autonomous gate. The `final` row is reserved for the project-wide final review gate managed by `oat-project-implement` Step 14 or manual invocation of `oat-project-review-provide code final`.
 - If a manual review is requested after orchestration (e.g., `oat-project-review-provide code p02`), it may update the same row — the manual review takes precedence.
@@ -469,6 +501,7 @@ Autonomous review results update the `plan.md` Reviews table using the same stat
 ### Final Gate Preservation
 
 After orchestration completes all phases:
+
 1. Orchestrator updates `implementation.md` and `state.md` with completion status.
 2. The `final` review in `plan.md` remains `pending`.
 3. The user (or `oat-project-implement` Step 14) must invoke `oat-project-review-provide code final` separately.
@@ -477,6 +510,7 @@ After orchestration completes all phases:
 ### Artifact Compatibility
 
 Autonomous review verdicts are logged in `implementation.md` `## Orchestration Runs` sections (not as standalone review artifacts in `reviews/`). If manual follow-up review is needed:
+
 - `oat-project-review-provide` writes its artifact to `reviews/` as usual.
 - `oat-project-review-receive` processes that artifact into plan tasks as usual.
 - The orchestration log in `implementation.md` provides context but does not interfere.
@@ -496,10 +530,10 @@ Autonomous review verdicts are logged in `implementation.md` `## Orchestration R
 
 See `examples/` for detailed walkthroughs with plan excerpts and expected artifact output:
 
-| Pattern | File | Description |
-|---------|------|-------------|
-| Simple Parallel | `examples/pattern-parallel-phases.md` | Two independent phases run in parallel and merge cleanly |
-| HiLL Checkpoint | `examples/pattern-hil-checkpoint.md` | Phases run through a checkpoint phase, user reviews after it completes, then continues |
+| Pattern         | File                                  | Description                                                                            |
+| --------------- | ------------------------------------- | -------------------------------------------------------------------------------------- |
+| Simple Parallel | `examples/pattern-parallel-phases.md` | Two independent phases run in parallel and merge cleanly                               |
+| HiLL Checkpoint | `examples/pattern-hil-checkpoint.md`  | Phases run through a checkpoint phase, user reviews after it completes, then continues |
 
 ## Success Criteria
 

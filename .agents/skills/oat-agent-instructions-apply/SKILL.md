@@ -25,11 +25,13 @@ Generate or update agent instruction files based on an analysis artifact, with u
 **Purpose:** Generate and update instruction files based on analysis findings, with user approval at each step.
 
 **BLOCKED Activities:**
+
 - No generating files the user hasn't approved.
 - No pushing to remote without user confirmation.
 - No modifying files outside the instruction file scope.
 
 **ALLOWED Activities:**
+
 - Reading analysis artifacts, instruction files, and project configuration.
 - Running helper scripts for provider resolution and tracking.
 - Creating/updating instruction files per approved plan.
@@ -39,6 +41,7 @@ Generate or update agent instruction files based on an analysis artifact, with u
 ## Question Handling Across Hosts
 
 When this skill needs a user decision:
+
 1. Use `AskUserQuestion` when running in Claude Code with tool availability.
 2. Use Codex structured user-input tooling when available in the current Codex host/runtime.
 3. Otherwise ask the same question in plain conversational text.
@@ -50,11 +53,13 @@ Keep the question content consistent across hosts so the workflow remains portab
 Treat the analysis artifact as the source of truth for what should be generated and why.
 
 Apply may:
+
 - read the exact evidence sources cited by the artifact
 - verify that cited files still exist
 - translate approved recommendations into concrete instruction text
 
 Apply must **not**:
+
 - invent unsupported conventions
 - infer formatting/style rules from defaults or a small sample
 - create new recommendations that are not present in the artifact
@@ -65,7 +70,7 @@ Apply must **not**:
 - Print a phase banner once at start:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ AGENT INSTRUCTIONS APPLY
+  OAT ▸ AGENT INSTRUCTIONS APPLY
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Step indicators:
@@ -92,17 +97,21 @@ ls -t .oat/repo/analysis/agent-instructions-*.md 2>/dev/null | head -1
 Validate that the artifact includes evidence, confidence, and progressive disclosure decisions for each recommendation.
 Also validate that every `link_only` recommendation includes at least one concrete link target to a canonical doc, config, or example.
 If the artifact is missing that detail, treat it as incomplete:
+
 ```
 Analysis artifact is missing evidence-backed recommendation detail.
 Re-run oat-agent-instructions-analyze before applying changes.
 ```
+
 Then stop.
 
 **If not found:** Tell the user:
+
 ```
 No analysis artifact found in .oat/repo/analysis/.
 Run oat-agent-instructions-analyze first to scan the codebase.
 ```
+
 Then stop.
 
 ### Step 1: Resolve Providers
@@ -121,6 +130,7 @@ The artifact should already specify the rationale, evidence, confidence, and dis
 Do not rediscover conventions from scratch during this step.
 
 **For provider baseline gaps (always-on provider files):**
+
 - Treat them as first-class recommendations from the artifact, not as implied apply-time behavior
 - Examples include missing Claude `CLAUDE.md` import shims and missing `.github/copilot-instructions.md` shims
 - Carry forward the artifact's evidence refs, confidence, and disclosure mode into the plan
@@ -128,6 +138,7 @@ Do not rediscover conventions from scratch during this step.
 - If the artifact marks a provider-baseline recommendation `ask_user`, include it with the evidence and require explicit user approval
 
 **For coverage gaps (new files):**
+
 - Determine the target file path based on the directory and provider
 - Select the appropriate template from `references/instruction-file-templates/`
 - For AGENTS.md files: use `agents-md-root.md` or `agents-md-scoped.md`
@@ -138,6 +149,7 @@ Do not rediscover conventions from scratch during this step.
 - If a `link_only` coverage-gap recommendation has no link target, stop and ask for a fresh analysis instead of guessing
 
 **For quality findings (updates to existing files):**
+
 - Identify the specific issue and the fix
 - Preserve existing manual customizations — only modify the problematic section
 - If the artifact marks a recommendation `omit`, do not include it in the apply plan
@@ -145,6 +157,7 @@ Do not rediscover conventions from scratch during this step.
 - If evidence is missing or stale, stop and ask for a fresh analysis instead of guessing
 
 **Multi-format composition order:**
+
 1. **AGENTS.md first** — the canonical, provider-agnostic file
 2. **CLAUDE.md** — if claude provider is active, ensure `@AGENTS.md` import exists
 3. **Glob-scoped rules** — identical body content, stamped with per-provider frontmatter:
@@ -160,12 +173,14 @@ Persist the exact markdown plan shown to the user as `APPLY_PLAN_MARKDOWN` (incl
 ### Step 3: User Reviews Plan
 
 Present the full recommendation plan to the user first, then ask which review mode they want:
+
 - **apply all** — approve the full set as presented
 - **apply interactively** — switch to recommendation-by-recommendation review
 - **discuss** — pause for questions, adjustments, or scope changes before approval
 - **cancel** — stop without applying anything
 
 For the review-mode choice:
+
 - Claude Code: use `AskUserQuestion`
 - Codex: use structured user-input tooling when available in the current host/runtime
 - Fallback: ask in plain text
@@ -175,11 +190,13 @@ The prompt should ask for exactly one of: `apply all`, `apply interactively`, `d
 If the user chooses **cancel**, output "No actions approved. Exiting." and stop.
 
 If the user chooses **apply all**:
+
 - confirm that the full plan is approved
 - capture any global notes that apply across the whole plan
 - treat all non-blocked recommendations as approved unless the user names exceptions
 
 If the user chooses **apply interactively**:
+
 - for each recommendation, ask:
   - **approve** — proceed with generation
   - **modify** — approve with user-specified changes
@@ -188,12 +205,14 @@ If the user chooses **apply interactively**:
 - wait for user decisions on all recommendations before proceeding
 
 If the user chooses **discuss**:
+
 - answer questions and revise the plan if needed
 - re-present the updated plan and ask again: `apply all`, `apply interactively`, `discuss`, or `cancel`
 
 If all recommendations are skipped, output "No actions approved. Exiting." and stop.
 
 Build an `APPLIED_PLAN_DETAILS` block from approved/modified recommendations with:
+
 - Recommendation ID
 - Action (create/update)
 - Target path
@@ -246,12 +265,14 @@ For each approved recommendation, in the order from Step 2:
 4. Do not rewrite the entire file unless the user explicitly approves.
 
 **Negative rules:**
+
 - Do not add tabs-vs-spaces, quote style, import sorting, naming, or similar formatting rules unless the artifact cites repo evidence for them.
 - Do not upgrade a repeated code pattern into a hard instruction unless the artifact already approved it.
 - If formatter/linter config exists, prefer `run formatter/lint` or a link to the config/doc over prose restatement of the same rule.
 - If a cited source no longer exists, stop that recommendation and ask for a fresh analysis or user guidance.
 
 **Required context — read these docs before generating:**
+
 - `.agents/docs/agent-instruction.md` — quality criteria and best practices
 - `.agents/docs/rules-files.md` — cross-provider format reference
 - `.agents/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format (if cursor provider is active)
@@ -271,6 +292,7 @@ Files: {count} created, {count} updated."
 **Ask user about PR:**
 
 Use host-specific question handling here as well:
+
 - Claude Code: use `AskUserQuestion`
 - Codex: use structured user-input tooling when available in the current host/runtime
 - Fallback: ask in plain text
@@ -287,6 +309,7 @@ Choose:
 **If creating PR:**
 
 The PR body must include both:
+
 1. **Overview** — why this PR exists, source analysis artifact, and provider scope.
 2. **Applied Plan Details** — the exact plan markdown presented in terminal (tables included), filtered to approved/modified recommendations.
 

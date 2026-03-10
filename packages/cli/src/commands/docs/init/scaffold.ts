@@ -1,7 +1,9 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
+
 import type { OatDocumentationConfig } from '@config/oat-config';
 import { dirExists, ensureDir, fileExists } from '@fs/io';
+
 import type {
   DocsFormatMode,
   DocsFramework,
@@ -16,10 +18,6 @@ interface TemplateFile {
 }
 
 const MKDOCS_TEMPLATE_FILES: TemplateFile[] = [
-  {
-    source: '.markdownlint-cli2.jsonc',
-    destination: '.markdownlint-cli2.jsonc',
-  },
   { source: 'mkdocs.yml', destination: 'mkdocs.yml' },
   { source: 'package.json.template', destination: 'package.json' },
   { source: 'requirements.txt', destination: 'requirements.txt' },
@@ -107,12 +105,8 @@ function buildDevDependencies(
 ): string {
   const entries: string[] = [];
 
-  if (lint === 'markdownlint') {
-    entries.push('    "markdownlint-cli2": "^0.13.0"');
-  }
-
-  if (format === 'prettier') {
-    entries.push('    "prettier": "^3.4.2"');
+  if (format === 'oxfmt') {
+    entries.push('    "oxfmt": "^0.36.0"');
   }
 
   return entries.join(',\n');
@@ -124,12 +118,8 @@ function buildFumaDevDependencies(
 ): string {
   const entries: string[] = [];
 
-  if (lint === 'markdownlint') {
-    entries.push('    "markdownlint-cli2": "^0.13.0"');
-  }
-
-  if (format === 'prettier') {
-    entries.push('    "prettier": "^3.4.2"');
+  if (format === 'oxfmt') {
+    entries.push('    "oxfmt": "^0.36.0"');
   }
 
   if (entries.length === 0) {
@@ -150,17 +140,14 @@ function renderTemplate(
     '{{PACKAGE_NAME}}': options.appName,
     '{{SITE_NAME}}': siteName,
     '{{SITE_DESCRIPTION}}': options.siteDescription,
-    '{{DOCS_LINT_SCRIPT}}':
-      options.lint === 'markdownlint'
-        ? "markdownlint-cli2 'docs/**/*.md'"
-        : "echo 'docs lint disabled'",
+    '{{DOCS_LINT_SCRIPT}}': "echo 'docs lint disabled'",
     '{{DOCS_FORMAT_SCRIPT}}':
-      options.format === 'prettier'
-        ? "prettier --write 'docs/**/*.md'"
+      options.format === 'oxfmt'
+        ? "oxfmt 'docs/**/*.md'"
         : "echo 'docs formatting disabled'",
     '{{DOCS_FORMAT_CHECK_SCRIPT}}':
-      options.format === 'prettier'
-        ? "prettier --check 'docs/**/*.md'"
+      options.format === 'oxfmt'
+        ? "oxfmt --check 'docs/**/*.md'"
         : "echo 'docs format check disabled'",
     '{{DEV_DEPENDENCIES}}': buildDevDependencies(options.lint, options.format),
     '{{FUMA_DEV_DEPENDENCIES}}': buildFumaDevDependencies(

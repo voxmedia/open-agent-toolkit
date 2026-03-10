@@ -14,6 +14,7 @@ Create a progress PR description (typically at a plan phase boundary) and write 
 ## Purpose
 
 Generate a PR-ready summary that is:
+
 - grounded in OAT artifacts (mode-aware: spec-driven uses spec/design; quick/import may use discovery/import reference)
 - scoped to a specific phase (pNN) or an explicit git range
 - easy to paste into GitHub (or used with `gh pr create` if desired)
@@ -21,10 +22,12 @@ Generate a PR-ready summary that is:
 ## Prerequisites
 
 **Required:**
+
 - `activeProject` in `.oat/config.local.json` points at an active project directory (or you can provide project name when prompted)
 - `{PROJECT_PATH}/plan.md` exists
 
 **Recommended:**
+
 - Phase code review is `passed` in `plan.md` `## Reviews` before opening a progress PR.
 
 ## Mode Assertion
@@ -40,8 +43,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ PR PROGRESS
+  OAT ▸ PR PROGRESS
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work (scoping, reading artifacts, writing output), print 2–5 short step indicators, e.g.:
   - `[1/4] Resolving scope…`
   - `[2/4] Reading OAT artifacts…`
@@ -51,10 +55,12 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**
+
 - No implementation work
 - No changing requirements/design/plan
 
 **ALLOWED Activities:**
+
 - Reading artifacts and git history
 - Writing PR description file
 - Running `gh pr create` (optional, user-confirmed)
@@ -72,6 +78,7 @@ oat-project-pr-progress base_sha=abc123     # progress PR for abc123..HEAD
 ### Without arguments
 
 Run the `oat-project-pr-progress` skill and it will ask:
+
 - which phase (pNN) or range to scope to
 - PR title + base branch (defaults to main)
 
@@ -88,6 +95,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 If missing/invalid:
+
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
 - Write it:
@@ -99,23 +107,27 @@ If missing/invalid:
 ### Step 1: Determine Scope (Phase or Range)
 
 Parse args if provided (otherwise prompt):
+
 - `pNN` (preferred for progress PRs)
 - `range=<sha1>..<sha2>`
 - `base_sha=<sha>` (meaning `<sha>..HEAD`)
 
 If scope is `pNN`, gather commits via commit convention grep:
+
 ```bash
 PHASE="p02" # example
 git log --oneline --grep="\\(${PHASE}-" HEAD~500..HEAD
 ```
 
 If the grep returns no commits:
+
 - Tell user commit conventions are missing/inconsistent for this phase
 - Ask user to provide:
   - `base_sha=<sha>` or `range=<sha1>..<sha2>`
   - or confirm a broad range (merge-base..HEAD)
 
 If scope is `range`/`base_sha`, set:
+
 - `SCOPE_RANGE` to the range string (e.g., `abc..HEAD`)
 
 ### Step 2: Load Artifacts (Mode-Aware)
@@ -128,6 +140,7 @@ WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
 ```
 
 Read (as available):
+
 - `{PROJECT_PATH}/spec.md`
 - `{PROJECT_PATH}/design.md`
 - `{PROJECT_PATH}/plan.md`
@@ -136,12 +149,14 @@ Read (as available):
 - `{PROJECT_PATH}/references/imported-plan.md` (recommended for import mode)
 
 If `WORKFLOW_MODE != spec-driven` and spec/design are missing:
+
 - continue (do not block)
 - include an explicit note in PR summary that spec-driven requirements/design artifacts are absent for this scope
 
 ### Step 3: Check Review Status (Recommended)
 
 If scope is `pNN`, check `plan.md` `## Reviews` table row:
+
 - If `| pNN | code | passed | ...` exists: good
 - Otherwise: warn that review has not been marked `passed` for this phase (e.g., it may be `received`, `fixes_added`, or `fixes_completed` pending re-review)
 
@@ -150,10 +165,12 @@ Do not block PR generation; this is a progress PR.
 ### Step 4: Collect Scope Data
 
 Produce:
+
 - commit list (for `pNN` grep or `SCOPE_RANGE`)
 - changed files (best-effort)
 
 For `SCOPE_RANGE`:
+
 ```bash
 git log --oneline "$SCOPE_RANGE"
 git diff --name-only "$SCOPE_RANGE"
@@ -161,12 +178,14 @@ git diff --shortstat "$SCOPE_RANGE"
 ```
 
 For `pNN` (no reliable contiguous range):
+
 - include the commit list from grep
 - optionally include file lists per commit (only if needed; can be large)
 
 ### Step 5: Write PR Description Artifact
 
 Write to:
+
 - `{PROJECT_PATH}/pr/progress-{scope}-YYYY-MM-DD.md`
 
 ```bash
@@ -174,15 +193,18 @@ mkdir -p "$PROJECT_PATH/pr"
 ```
 
 Frontmatter policy:
+
 - Keep YAML frontmatter in the local artifact file for OAT metadata and traceability.
 - Do **not** include YAML frontmatter in the PR body submitted to GitHub.
 
 Reference links policy:
+
 - Prefer clickable blob links to the current branch for References.
 - Build links from `origin` + current branch when possible.
 - If remote URL cannot be resolved into a web URL, fall back to plain relative paths.
 
 Example link context:
+
 ```bash
 ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -197,13 +219,14 @@ REPO_WEB="${REPO_WEB%.git}"
 ```
 
 Recommended template:
+
 ```markdown
 ---
 oat_generated: true
 oat_generated_at: YYYY-MM-DD
 oat_pr_type: progress
-oat_pr_scope: {pNN|range}
-oat_project: {PROJECT_PATH}
+oat_pr_scope: { pNN|range }
+oat_project: { PROJECT_PATH }
 ---
 
 # {project-name} ({scope})
@@ -221,7 +244,7 @@ oat_project: {PROJECT_PATH}
 - Project: `{PROJECT_PATH}`
 - Scope: `{scope}`
 - Commits:
-{bulleted list}
+  {bulleted list}
 
 ## Verification
 
@@ -248,6 +271,7 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 ### Step 6: Optional - Open PR
 
 Ask the user:
+
 ```
 PR description written to {path}.
 
@@ -257,6 +281,7 @@ Do you want to open a PR now?
 ```
 
 If user chooses (1), provide best-effort guidance:
+
 - Strip YAML frontmatter from the local artifact into a temporary body file:
   ```bash
   BODY_FILE="{path}"
@@ -264,10 +289,12 @@ If user chooses (1), provide best-effort guidance:
   awk 'NR==1 && $0=="---" {infm=1; next} infm && $0=="---" {infm=0; next} !infm {print}' "$BODY_FILE" > "$TMP_BODY"
   ```
 - Use the stripped body file with `gh`:
+
 ```bash
 git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
 gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 ```
+
 - Optionally clean up temp file:
   ```bash
   rm -f "$TMP_BODY"

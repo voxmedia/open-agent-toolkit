@@ -11,13 +11,13 @@
 
 The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes:
 
-| Theme | Count | Key Observation |
-|---|---|---|
-| Tooling/lifecycle hardening | 9 | Most actionable value is here; several items can ship independently in parallel |
-| Skills/workflow depth | 7 | High-value roadmap-aligned work, but some is large and should be sequenced |
-| Distribution/adoption | 2 | `oat init ideas/workflows` is still a major growth lever |
-| Terminology/docs polish | 1 | One item (`markdown.new`) appears largely implemented and should be cleaned up in backlog |
-| Workflow/Jira extension | 1 | Valuable but not core to OAT’s near-term roadmap |
+| Theme                       | Count | Key Observation                                                                           |
+| --------------------------- | ----- | ----------------------------------------------------------------------------------------- |
+| Tooling/lifecycle hardening | 9     | Most actionable value is here; several items can ship independently in parallel           |
+| Skills/workflow depth       | 7     | High-value roadmap-aligned work, but some is large and should be sequenced                |
+| Distribution/adoption       | 2     | `oat init ideas/workflows` is still a major growth lever                                  |
+| Terminology/docs polish     | 1     | One item (`markdown.new`) appears largely implemented and should be cleaned up in backlog |
+| Workflow/Jira extension     | 1     | Valuable but not core to OAT’s near-term roadmap                                          |
 
 **Top-line recommendations:**
 
@@ -31,11 +31,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 ### Rating Key
 
-| Rating | Value | Effort |
-|---|---|---|
-| **High** | Unblocks other items, daily workflow impact, or product milestone prerequisite | > 3 days, high complexity, or touches many files |
-| **Medium** | Improves quality/consistency but not blocking | 1-3 days, moderate complexity |
-| **Low** | Nice-to-have or future-facing | < 1 day, straightforward, isolated change |
+| Rating     | Value                                                                          | Effort                                           |
+| ---------- | ------------------------------------------------------------------------------ | ------------------------------------------------ |
+| **High**   | Unblocks other items, daily workflow impact, or product milestone prerequisite | > 3 days, high complexity, or touches many files |
+| **Medium** | Improves quality/consistency but not blocking                                  | 1-3 days, moderate complexity                    |
+| **Low**    | Nice-to-have or future-facing                                                  | < 1 day, straightforward, isolated change        |
 
 ### Priority Quadrants
 
@@ -59,11 +59,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Conversational backlog decomposition + optional Jira ticket creation.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Low** | Useful for process productivity, but not tied to current roadmap bottlenecks |
-| **Effort** | **High** | Requires workflow design, templates, Jira integration, and iterative UX |
-| **Quadrant** | **Avoid / Defer** | |
+| Dimension    | Rating            | Rationale                                                                    |
+| ------------ | ----------------- | ---------------------------------------------------------------------------- |
+| **Value**    | **Low**           | Useful for process productivity, but not tied to current roadmap bottlenecks |
+| **Effort**   | **High**          | Requires workflow design, templates, Jira integration, and iterative UX      |
+| **Quadrant** | **Avoid / Defer** |                                                                              |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -75,11 +75,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Continue migration of legacy pointers/settings into `.oat/config.json` with compatibility.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Medium** | Reduces long-term config fragmentation and maintenance burden |
-| **Effort** | **Medium** | Requires compatibility reads/migration handling across skills/CLI |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                                         |
+| ------------ | ------------- | ----------------------------------------------------------------- |
+| **Value**    | **Medium**    | Reduces long-term config fragmentation and maintenance burden     |
+| **Effort**   | **Medium**    | Requires compatibility reads/migration handling across skills/CLI |
+| **Quadrant** | **Strategic** |                                                                   |
 
 - **Dependencies:** None (soft dependency on cleanup/normalization work)
 - **Blocked by:** Nothing
@@ -91,11 +91,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Add sequential + parallel orchestration contracts with autonomous worktree flow.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **High** | Core roadmap Phase 6 capability; major leverage for parallel delivery |
-| **Effort** | **High** | Large contract design across orchestration, review gates, merge/reconcile, and state |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                                                            |
+| ------------ | ------------- | ------------------------------------------------------------------------------------ |
+| **Value**    | **High**      | Core roadmap Phase 6 capability; major leverage for parallel delivery                |
+| **Effort**   | **High**      | Large contract design across orchestration, review gates, merge/reconcile, and state |
+| **Quadrant** | **Strategic** |                                                                                      |
 
 - **Dependencies:** Soft: B09, B10 (review contracts harden orchestration quality gates)
 - **Blocked by:** Nothing
@@ -107,11 +107,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Terminology and possibly key-name migration for checkpoint semantics.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Low** | Mostly naming consistency, not capability |
-| **Effort** | **Medium** | Cross-cutting docs/skills/frontmatter compatibility risk |
-| **Quadrant** | **Fill-in** | |
+| Dimension    | Rating      | Rationale                                                |
+| ------------ | ----------- | -------------------------------------------------------- |
+| **Value**    | **Low**     | Mostly naming consistency, not capability                |
+| **Effort**   | **Medium**  | Cross-cutting docs/skills/frontmatter compatibility risk |
+| **Quadrant** | **Fill-in** |                                                          |
 
 - **Dependencies:** Soft: B03
 - **Blocked by:** Nothing
@@ -123,11 +123,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Post-implementation documentation synthesis/update workflow.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **High** | Directly improves closeout quality and prevents docs drift |
-| **Effort** | **Medium** | New skill with moderate artifact/diff synthesis logic |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                                  |
+| ------------ | ------------- | ---------------------------------------------------------- |
+| **Value**    | **High**      | Directly improves closeout quality and prevents docs drift |
+| **Effort**   | **Medium**    | New skill with moderate artifact/diff synthesis logic      |
+| **Quadrant** | **Strategic** |                                                            |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -139,11 +139,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Prefer markdown conversion URL prefix for web fetches where viable.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Low** | Nice workflow optimization |
-| **Effort** | **Low** | Docs/instruction update |
-| **Quadrant** | **Fill-in** | |
+| Dimension    | Rating      | Rationale                  |
+| ------------ | ----------- | -------------------------- |
+| **Value**    | **Low**     | Nice workflow optimization |
+| **Effort**   | **Low**     | Docs/instruction update    |
+| **Quadrant** | **Fill-in** |                            |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -155,11 +155,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Opt-in generation of thin `.codex/prompts` wrappers for synced OAT skills.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Low** | Optional enhancement with limited immediate product impact |
-| **Effort** | **Low** | Straightforward generation toggle and docs |
-| **Quadrant** | **Fill-in** | |
+| Dimension    | Rating      | Rationale                                                  |
+| ------------ | ----------- | ---------------------------------------------------------- |
+| **Value**    | **Low**     | Optional enhancement with limited immediate product impact |
+| **Effort**   | **Low**     | Straightforward generation toggle and docs                 |
+| **Quadrant** | **Fill-in** |                                                            |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -171,11 +171,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Ensure `AGENTS.md` ↔ `CLAUDE.md` integrity and add validation/reporting.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Medium** | Prevents drift and enables CI guardrails for instruction integrity |
-| **Effort** | **Medium** | Recursive scanning + conflict-resolution UX + reporting |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                                          |
+| ------------ | ------------- | ------------------------------------------------------------------ |
+| **Value**    | **Medium**    | Prevents drift and enables CI guardrails for instruction integrity |
+| **Effort**   | **Medium**    | Recursive scanning + conflict-resolution UX + reporting            |
+| **Quadrant** | **Strategic** |                                                                    |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -187,11 +187,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Ensure reviewer contracts handle missing `spec.md`/`design.md` in non-full lanes.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **High** | Directly affects correctness of active quick/import workflows |
-| **Effort** | **Low** | Prompt/contract updates + routing tests |
-| **Quadrant** | **Quick Win** | |
+| Dimension    | Rating        | Rationale                                                     |
+| ------------ | ------------- | ------------------------------------------------------------- |
+| **Value**    | **High**      | Directly affects correctness of active quick/import workflows |
+| **Effort**   | **Low**       | Prompt/contract updates + routing tests                       |
+| **Quadrant** | **Quick Win** |                                                               |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -203,11 +203,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Add standalone `oat-review-receive` and `oat-review-pr-receive`.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Medium** | Completes ingestion side for review workflows |
-| **Effort** | **High** | New flows, contracts, and likely provider/PR API handling |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                                 |
+| ------------ | ------------- | --------------------------------------------------------- |
+| **Value**    | **Medium**    | Completes ingestion side for review workflows             |
+| **Effort**   | **High**      | New flows, contracts, and likely provider/PR API handling |
+| **Quadrant** | **Strategic** |                                                           |
 
 - **Dependencies:** Soft: B09
 - **Blocked by:** Nothing
@@ -219,11 +219,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Optional extension set after PR review intake foundation.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Low** | Incremental extension, not core to near-term gaps |
-| **Effort** | **Medium** | Multiple skills and contract boundaries |
-| **Quadrant** | **Fill-in** | |
+| Dimension    | Rating      | Rationale                                         |
+| ------------ | ----------- | ------------------------------------------------- |
+| **Value**    | **Low**     | Incremental extension, not core to near-term gaps |
+| **Effort**   | **Medium**  | Multiple skills and contract boundaries           |
+| **Quadrant** | **Fill-in** |                                                   |
 
 - **Dependencies:** Hard: B10
 - **Blocked by:** B10
@@ -235,11 +235,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Analyze dependency upgrades and impact/risk guidance.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Low** | Useful, but not directly tied to current roadmap milestones |
-| **Effort** | **Medium** | Needs package/changelog/risk analysis design |
-| **Quadrant** | **Fill-in** | |
+| Dimension    | Rating      | Rationale                                                   |
+| ------------ | ----------- | ----------------------------------------------------------- |
+| **Value**    | **Low**     | Useful, but not directly tied to current roadmap milestones |
+| **Effort**   | **Medium**  | Needs package/changelog/risk analysis design                |
+| **Quadrant** | **Fill-in** |                                                             |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -251,11 +251,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Scaffold ideas workflow + copy idea skills.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **High** | Distribution/onboarding path for idea workflow |
-| **Effort** | **Medium** | Command scaffolding + templates + idempotency tests |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                           |
+| ------------ | ------------- | --------------------------------------------------- |
+| **Value**    | **High**      | Distribution/onboarding path for idea workflow      |
+| **Effort**   | **Medium**    | Command scaffolding + templates + idempotency tests |
+| **Quadrant** | **Strategic** |                                                     |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -267,11 +267,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Scaffold full project workflow and copy workflow skills.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **High** | Primary adoption path for workflow mode in new repos |
-| **Effort** | **High** | Larger scaffold footprint, idempotency, and docs surface |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                                |
+| ------------ | ------------- | -------------------------------------------------------- |
+| **Value**    | **High**      | Primary adoption path for workflow mode in new repos     |
+| **Effort**   | **High**      | Larger scaffold footprint, idempotency, and docs surface |
+| **Quadrant** | **Strategic** |                                                          |
 
 - **Dependencies:** Soft: B13
 - **Blocked by:** Nothing
@@ -283,11 +283,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > First-class command to remove skills and clean provider views.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Medium** | Lifecycle completeness for existing sync/install workflows |
-| **Effort** | **Medium** | Requires managed/unmanaged handling and safe prompts |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                                  |
+| ------------ | ------------- | ---------------------------------------------------------- |
+| **Value**    | **Medium**    | Lifecycle completeness for existing sync/install workflows |
+| **Effort**   | **Medium**    | Requires managed/unmanaged handling and safe prompts       |
+| **Quadrant** | **Strategic** |                                                            |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -299,11 +299,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Detect/fix stale active pointer and project state normalization drift.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **High** | Addresses recurring lifecycle reliability issues and drift recovery |
-| **Effort** | **Medium** | Well-scoped command with deterministic remediation paths |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                                           |
+| ------------ | ------------- | ------------------------------------------------------------------- |
+| **Value**    | **High**      | Addresses recurring lifecycle reliability issues and drift recovery |
+| **Effort**   | **Medium**    | Well-scoped command with deterministic remediation paths            |
+| **Quadrant** | **Strategic** |                                                                     |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -315,11 +315,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Clean duplicate/stale review/external-plan artifacts with safe guardrails.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **High** | Reduces repo noise and manual cleanup burden significantly |
-| **Effort** | **Medium** | Candidate detection, guardrails, interactive triage, audit output |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                                         |
+| ------------ | ------------- | ----------------------------------------------------------------- |
+| **Value**    | **High**      | Reduces repo noise and manual cleanup burden significantly        |
+| **Effort**   | **Medium**    | Candidate detection, guardrails, interactive triage, audit output |
+| **Quadrant** | **Strategic** |                                                                   |
 
 - **Dependencies:** None
 - **Blocked by:** Nothing
@@ -331,11 +331,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Policy controls for gitignored artifact dirs and worktree copy-back behavior.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Medium** | High flexibility value for advanced usage; less urgent than baseline cleanup |
-| **Effort** | **High** | Config model + worktree propagation + safety semantics |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                                                    |
+| ------------ | ------------- | ---------------------------------------------------------------------------- |
+| **Value**    | **Medium**    | High flexibility value for advanced usage; less urgent than baseline cleanup |
+| **Effort**   | **High**      | Config model + worktree propagation + safety semantics                       |
+| **Quadrant** | **Strategic** |                                                                              |
 
 - **Dependencies:** Soft: B02, B16, B17
 - **Blocked by:** Nothing
@@ -347,11 +347,11 @@ The backlog contains **19 active items** (1 Inbox, 18 Planned) spanning 5 themes
 
 > Promote summarized ideas into projects and optionally auto-start discovery.
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **Medium** | Strong UX bridge between ideas and projects |
-| **Effort** | **Medium** | Multiple prompt flows and backlog synchronization logic |
-| **Quadrant** | **Strategic** | |
+| Dimension    | Rating        | Rationale                                               |
+| ------------ | ------------- | ------------------------------------------------------- |
+| **Value**    | **Medium**    | Strong UX bridge between ideas and projects             |
+| **Effort**   | **Medium**    | Multiple prompt flows and backlog synchronization logic |
+| **Quadrant** | **Strategic** |                                                         |
 
 - **Dependencies:** Soft: B13
 - **Blocked by:** Nothing
@@ -445,53 +445,53 @@ B06, B07, B12, B19, B01
 
 ### Wave 1: Correctness + Hygiene Quick Start
 
-| Order | Item | Effort | Rationale |
-|---|---|---|---|
-| 1 | **B09** - Mode-aware reviewer | Low | High-impact quick win on active quick/import paths |
-| 2 | **B16** - Project cleanup command | Medium | Stabilizes project-state drift and pointer hygiene |
-| 3 | **B17** - Artifact cleanup command | Medium | Removes recurring manual cleanup overhead; now fully planned |
+| Order | Item                               | Effort | Rationale                                                    |
+| ----- | ---------------------------------- | ------ | ------------------------------------------------------------ |
+| 1     | **B09** - Mode-aware reviewer      | Low    | High-impact quick win on active quick/import paths           |
+| 2     | **B16** - Project cleanup command  | Medium | Stabilizes project-state drift and pointer hygiene           |
+| 3     | **B17** - Artifact cleanup command | Medium | Removes recurring manual cleanup overhead; now fully planned |
 
 **Parallelism:** B16 and B17 can run in parallel after B09 starts.
 
 ### Wave 2: Distribution Commands
 
-| Order | Item | Effort | Rationale |
-|---|---|---|---|
-| 1 | **B13** - `oat init ideas` | Medium | Establishes init command pattern for distribution |
-| 2 | **B14** - `oat init workflows` | High | Primary onboarding path; can reuse B13 pattern |
-| 3 | **B15** - Skill uninstall | Medium | Lifecycle completeness for interop CLI |
-| 4 | **B08** - Context sync/validate commands | Medium | Adds CI-friendly instruction integrity controls |
+| Order | Item                                     | Effort | Rationale                                         |
+| ----- | ---------------------------------------- | ------ | ------------------------------------------------- |
+| 1     | **B13** - `oat init ideas`               | Medium | Establishes init command pattern for distribution |
+| 2     | **B14** - `oat init workflows`           | High   | Primary onboarding path; can reuse B13 pattern    |
+| 3     | **B15** - Skill uninstall                | Medium | Lifecycle completeness for interop CLI            |
+| 4     | **B08** - Context sync/validate commands | Medium | Adds CI-friendly instruction integrity controls   |
 
 **Parallelism:** B15 and B08 can run in parallel with B13/B14.
 
 ### Wave 3: Review Workflow Depth + Documentation Closeout
 
-| Order | Item | Effort | Rationale |
-|---|---|---|---|
-| 1 | **B10** - Review receive + PR intake | High | Completes the receive side of review pipeline |
-| 2 | **B05** - `oat-project-document` | Medium | Closes post-implementation docs gap |
-| 3 | **B11** - PR follow-on set | Medium | Optional extension once B10 stabilizes |
+| Order | Item                                 | Effort | Rationale                                     |
+| ----- | ------------------------------------ | ------ | --------------------------------------------- |
+| 1     | **B10** - Review receive + PR intake | High   | Completes the receive side of review pipeline |
+| 2     | **B05** - `oat-project-document`     | Medium | Closes post-implementation docs gap           |
+| 3     | **B11** - PR follow-on set           | Medium | Optional extension once B10 stabilizes        |
 
 **Parallelism:** B05 can run in parallel with B10.
 
 ### Wave 4: Configuration & Strategic Parallel Execution
 
-| Order | Item | Effort | Rationale |
-|---|---|---|---|
-| 1 | **B02** - Config consolidation Phase B/C | Medium | Reduces long-term `.oat` fragmentation |
-| 2 | **B18** - VCS policy + worktree artifact sync | High | Depends on cleanup/config groundwork |
-| 3 | **B03** - Subagent orchestration skills | High | Major roadmap capability requiring concentrated effort |
-| 4 | **B04** - HiL -> HiLL terminology | Medium | Safer after orchestration semantics settle |
+| Order | Item                                          | Effort | Rationale                                              |
+| ----- | --------------------------------------------- | ------ | ------------------------------------------------------ |
+| 1     | **B02** - Config consolidation Phase B/C      | Medium | Reduces long-term `.oat` fragmentation                 |
+| 2     | **B18** - VCS policy + worktree artifact sync | High   | Depends on cleanup/config groundwork                   |
+| 3     | **B03** - Subagent orchestration skills       | High   | Major roadmap capability requiring concentrated effort |
+| 4     | **B04** - HiL -> HiLL terminology             | Medium | Safer after orchestration semantics settle             |
 
 **Parallelism:** B02 and B03 can run in parallel; B18 should follow cleanup/config confidence.
 
 ### Deferred
 
-| Item | Rationale |
-|---|---|
-| **B01** - Backlog refinement flow/Jira | Useful but not core to current roadmap execution |
+| Item                                    | Rationale                                           |
+| --------------------------------------- | --------------------------------------------------- |
+| **B01** - Backlog refinement flow/Jira  | Useful but not core to current roadmap execution    |
 | **B12** - Dependency intelligence skill | Nice-to-have extension, not blocking roadmap phases |
-| **B07** - Codex prompt wrappers | Optional enhancement; low urgency |
+| **B07** - Codex prompt wrappers         | Optional enhancement; low urgency                   |
 
 ---
 
@@ -499,30 +499,30 @@ B06, B07, B12, B19, B01
 
 ### How backlog items map to roadmap phases
 
-| Roadmap Phase | Status | Backlog Items | Notes |
-|---|---|---|---|
-| Phase 5: Staleness + knowledge drift | Planned | B16, B17, B18 | Strong alignment with lifecycle hygiene and drift governance |
-| Phase 6: Parallel execution + reconcile | Deferred (groundwork started) | B03, B04 | B03 is the main delivery vehicle |
-| Phase 7: Quick mode + template rendering helper | In Progress | B09, B05, B10 | Quality hardening of quick/import review/closeout flow |
-| Phase 8: Provider interop CLI + lifecycle completeness | In Progress | B13, B14, B15, B08 | Distribution + lifecycle command expansion |
-| Phase 9: Multi-project switching + branch awareness | Later | B02, B19 | Related foundational improvements |
+| Roadmap Phase                                          | Status                        | Backlog Items      | Notes                                                        |
+| ------------------------------------------------------ | ----------------------------- | ------------------ | ------------------------------------------------------------ |
+| Phase 5: Staleness + knowledge drift                   | Planned                       | B16, B17, B18      | Strong alignment with lifecycle hygiene and drift governance |
+| Phase 6: Parallel execution + reconcile                | Deferred (groundwork started) | B03, B04           | B03 is the main delivery vehicle                             |
+| Phase 7: Quick mode + template rendering helper        | In Progress                   | B09, B05, B10      | Quality hardening of quick/import review/closeout flow       |
+| Phase 8: Provider interop CLI + lifecycle completeness | In Progress                   | B13, B14, B15, B08 | Distribution + lifecycle command expansion                   |
+| Phase 9: Multi-project switching + branch awareness    | Later                         | B02, B19           | Related foundational improvements                            |
 
 ### Gaps: Roadmap items without backlog coverage
 
-| Roadmap Item | Phase | Recommendation |
-|---|---|---|
-| `oat template render ...` helper | Phase 7 | Add explicit backlog item; currently called out in roadmap but absent in backlog |
-| Capability matrix expansion and provider behavior docs hardening | Phase 8 | Add explicit backlog item for provider capability matrix deliverable |
-| Strict staleness mode/full diff-based drift enforcement | Phase 5 | Add backlog item if still intended beyond cleanup commands |
+| Roadmap Item                                                     | Phase   | Recommendation                                                                   |
+| ---------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `oat template render ...` helper                                 | Phase 7 | Add explicit backlog item; currently called out in roadmap but absent in backlog |
+| Capability matrix expansion and provider behavior docs hardening | Phase 8 | Add explicit backlog item for provider capability matrix deliverable             |
+| Strict staleness mode/full diff-based drift enforcement          | Phase 5 | Add backlog item if still intended beyond cleanup commands                       |
 
 ### Orphans: Backlog items not clearly represented on the roadmap
 
-| Backlog Item | Recommendation |
-|---|---|
-| **B01** - Backlog refinement + Jira | Keep as deferred workflow extension |
-| **B06** - markdown.new convention | Move to completed/archive (appears substantially implemented in AGENTS) |
-| **B07** - Codex prompt wrappers | Keep as optional enhancement in Phase 8 tail work |
-| **B12** - Dependency intelligence | Keep as standalone optional skill family |
+| Backlog Item                        | Recommendation                                                          |
+| ----------------------------------- | ----------------------------------------------------------------------- |
+| **B01** - Backlog refinement + Jira | Keep as deferred workflow extension                                     |
+| **B06** - markdown.new convention   | Move to completed/archive (appears substantially implemented in AGENTS) |
+| **B07** - Codex prompt wrappers     | Keep as optional enhancement in Phase 8 tail work                       |
+| **B12** - Dependency intelligence   | Keep as standalone optional skill family                                |
 
 ---
 
@@ -536,11 +536,11 @@ B06, B07, B12, B19, B01
 
 ### Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                          | Mitigation                                                                             |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Backlog drift (items completed but not archived, stale links) | Add a lightweight recurring backlog hygiene pass; update links when plans are archived |
-| Overscoping in orchestration work (B03) | Split into staged deliverables with strict contracts and acceptance gates |
-| Cleanup commands accidentally removing referenced artifacts | Keep conservative reference guards + dry-run default + explicit apply confirmations |
+| Overscoping in orchestration work (B03)                       | Split into staged deliverables with strict contracts and acceptance gates              |
+| Cleanup commands accidentally removing referenced artifacts   | Keep conservative reference guards + dry-run default + explicit apply confirmations    |
 
 ### Quick wins to tackle immediately
 

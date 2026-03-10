@@ -13,29 +13,34 @@
 ## Development Commands
 
 ### Essential Commands
+
 - `pnpm build` - Build all packages and applications
-- `pnpm lint` - Lint code using Biome
-- `pnpm format` - Format code using Biome
+- `pnpm lint` - Lint code using oxlint
+- `pnpm format` - Check formatting (oxfmt --check); use `pnpm format:fix` to auto-fix
 - `pnpm type-check` - TypeScript type checking across all packages
 - `pnpm test` - Run tests across the workspace
 
 ### Development Workflow
+
 - `pnpm dev` - Run workspace development tasks
 - `pnpm run cli -- help` - Run the OAT CLI help from repo root
 - `pnpm run cli -- <command> [options]` - Execute specific OAT CLI commands during local testing
 - After creating or switching to a worktree, run `pnpm run worktree:init` before using the CLI workflow.
 
 ### Web Retrieval Convention
+
 - For web content fetches, prefer `https://markdown.new/<original-url>` when viable (docs/blog/reference pages) to reduce HTML parsing overhead.
 - Example: `https://markdown.new/developers.openai.com/codex/skills/`
 - If markdown conversion is unavailable or loses required structure, fall back to the original URL.
 
 ### Import Path Convention
+
 - Prefer same-directory imports (`./...`) for local modules.
 - For anything outside the current directory, use explicit TypeScript aliases configured by the package.
 - Avoid parent-relative imports (`../...`), `src/...` imports, and catch-all aliases like `@/*`.
 
 ### Package Management
+
 - Uses pnpm workspaces with Turborepo for efficient monorepo management
 - All packages use `workspace:*` for internal dependencies
 - Build dependencies are automatically handled by Turborepo (`^build` dependency)
@@ -43,17 +48,20 @@
 ## Architecture Overview
 
 ### Monorepo Structure
+
 - **Turborepo-based** with pnpm workspaces for efficient builds and caching
 - **TypeScript ESM** - All packages use `"type": "module"` with ES modules
-- **Shared configurations** - TypeScript, Biome, and build configs in packages/
+- **Shared configurations** - TypeScript and build configs in packages/
 
 ### Technology Stack
+
 - **Runtime**: Node.js 22.17.0 with TypeScript 5.8.3
 - **Development**: tsx for direct TypeScript execution with hot reloading
 - **Build**: Turborepo 2.7.6 with TypeScript compilation to `dist/`
-- **Linting**: Biome 2.3.11  (extends from packages/biome-config)
+- **Linting/Formatting**: oxlint + oxfmt (configured via .oxlintrc.json and .oxfmtrc.jsonc)
 
 ### Build System
+
 - Turborepo handles dependency ordering and parallel builds
 - TypeScript compilation to `dist/` directories
 - Watch mode available for both packages (`pnpm dev`) and applications (`tsx watch`)
@@ -102,6 +110,7 @@ The distinguishing factor is **requirements clarity and design risk**, not task 
 Once a workflow is selected (or explicitly declined), do NOT produce ad-hoc planning artifacts outside the chosen workflow. All planning output must flow through the selected workflow's artifacts (`discovery.md`, `spec.md`, `design.md`, `plan.md`, etc.) or, if no workflow was selected, proceed directly to implementation.
 
 If the user declines all workflows, confirm once:
+
 > "Got it — I'll proceed without project tracking. If this grows in scope, I can set up a project workflow at any point."
 
 ## Agent Workflow
@@ -109,7 +118,9 @@ If the user declines all workflows, confirm once:
 For multi-session or complex development tasks, use the structured agent project workflow:
 
 ### Project Structure
+
 Projects live in `.oat/projects/<scope>/<project>/` with:
+
 - Core files: `state.md`, `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`
 - Optional: `reviews/`, `pr/`
 

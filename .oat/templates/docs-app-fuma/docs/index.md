@@ -1,6 +1,6 @@
 ---
-title: {{SITE_NAME}}
-description: {{SITE_DESCRIPTION}}
+title: { { SITE_NAME } }
+description: { { SITE_DESCRIPTION } }
 ---
 
 # {{SITE_NAME}}

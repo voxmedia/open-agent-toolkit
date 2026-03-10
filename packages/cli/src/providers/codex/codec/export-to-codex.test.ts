@@ -1,6 +1,7 @@
 import { parseCanonicalAgentMarkdown } from '@agents/canonical';
 import TOML from '@iarna/toml';
 import { describe, expect, it } from 'vitest';
+
 import { exportCanonicalAgentToCodexRole } from './export-to-codex';
 import {
   OAT_MANAGED_ROLE_HEADER,

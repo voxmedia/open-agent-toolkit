@@ -56,17 +56,19 @@ When does a directory need its own instruction file? Use these criteria to ident
 
 For each directory meeting 1+ primary indicators:
 
-| Directory | Indicators | Severity | Recommendation |
-|-----------|-----------|----------|----------------|
+| Directory | Indicators       | Severity    | Recommendation                                     |
+| --------- | ---------------- | ----------- | -------------------------------------------------- |
 | `{path/}` | {which criteria} | High/Medium | Create scoped AGENTS.md / Create rules for {topic} |
 
 **Severity mapping:**
+
 - **High:** Primary indicators 1-3 (own build, different stack, public API) — these are clear gaps
 - **Medium:** Primary indicators 4-5 (domain boundary, large codebase) — beneficial but not urgent
 
 ## Exclusions
 
 Do NOT flag these as needing instructions:
+
 - `node_modules/`, `dist/`, `build/`, `.git/` — generated/external
 - Directories with <5 source files and no build config — too small to warrant overhead
 - Test directories that follow the same patterns as their parent — covered by parent instructions

@@ -1,5 +1,6 @@
 import type { SyncConfig } from '@config/sync-config';
 import type { Scope } from '@shared/types';
+
 import type { PathMapping, ProviderAdapter } from './adapter.types';
 
 export async function getActiveAdapters(

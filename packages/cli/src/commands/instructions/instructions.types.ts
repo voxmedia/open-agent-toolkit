@@ -1,4 +1,5 @@
 import type { Dirent, Stats } from 'node:fs';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 
 export type InstructionStatus = 'ok' | 'missing' | 'content_mismatch';
@@ -62,7 +63,6 @@ export interface InstructionsValidateCommandDependencies {
   ) => Promise<InstructionEntry[]>;
 }
 
-export interface InstructionsSyncCommandDependencies
-  extends InstructionsValidateCommandDependencies {
+export interface InstructionsSyncCommandDependencies extends InstructionsValidateCommandDependencies {
   writeFile: (path: string, content: string, encoding: 'utf8') => Promise<void>;
 }

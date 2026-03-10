@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
+
 import { IDEA_SKILLS } from '../ideas/install-ideas';
 import { UTILITY_SKILLS } from '../utility/install-utility';
 import { WORKFLOW_SKILLS } from '../workflows/install-workflows';

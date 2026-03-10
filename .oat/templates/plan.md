@@ -5,11 +5,11 @@ oat_blockers: []
 oat_last_updated: YYYY-MM-DD
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: []  # phases to pause AFTER completing (empty = every phase)
-oat_plan_source: spec-driven  # spec-driven | quick | imported
-oat_import_reference: null  # e.g., references/imported-plan.md
-oat_import_source_path: null  # original source path provided by user
-oat_import_provider: null  # codex | cursor | claude | null
+oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_plan_source: spec-driven # spec-driven | quick | imported
+oat_import_reference: null # e.g., references/imported-plan.md
+oat_import_source_path: null # original source path provided by user
+oat_import_provider: null # codex | cursor | claude | null
 oat_generated: false
 oat_template: true
 oat_template_name: plan
@@ -39,6 +39,7 @@ oat_template_name: plan
 ### Task p01-t01: {Task Name}
 
 **Files:**
+
 - Create: `{path/to/file.ts}`
 - Modify: `{path/to/existing.ts}`
 
@@ -87,6 +88,7 @@ git commit -m "feat(p01-t01): {description}"
 ### Task p01-t02: {Task Name}
 
 **Files:**
+
 - {File list}
 
 **Step 1: Write test (RED)**
@@ -129,17 +131,18 @@ git commit -m "feat(p01-t02): {description}"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope | Type | Status | Date | Artifact |
-|-------|------|--------|------|----------|
-| p01 | code | pending | - | - |
-| p02 | code | pending | - | - |
-| final | code | pending | - | - |
-| spec | artifact | pending | - | - |
-| design | artifact | pending | - | - |
+| Scope  | Type     | Status  | Date | Artifact |
+| ------ | -------- | ------- | ---- | -------- |
+| p01    | code     | pending | -    | -        |
+| p02    | code     | pending | -    | -        |
+| final  | code     | pending | -    | -        |
+| spec   | artifact | pending | -    | -        |
+| design | artifact | pending | -    | -        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 **Meaning:**
+
 - `received`: review artifact exists (not yet converted into fix tasks)
 - `fixes_added`: fix tasks were added to the plan (work queued)
 - `fixes_completed`: fix tasks implemented, awaiting re-review
@@ -150,6 +153,7 @@ git commit -m "feat(p01-t02): {description}"
 ## Implementation Complete
 
 **Summary:**
+
 - Phase 1: {N} tasks - {Description}
 - Phase 2: {N} tasks - {Description}
 

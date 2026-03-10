@@ -1,6 +1,6 @@
 ---
 title: Contributing
-description: ""
+description: ''
 ---
 
 # Contributing to {{SITE_NAME}}

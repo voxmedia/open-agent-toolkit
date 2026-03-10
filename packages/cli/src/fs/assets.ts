@@ -1,6 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { CliError } from '@errors/index';
 
 export async function resolveAssetsRoot(): Promise<string> {

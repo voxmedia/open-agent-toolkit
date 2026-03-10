@@ -2,7 +2,7 @@
 name: docs-completed-projects-gap-review
 version: 1.2.0
 description: Audit documentation for gaps left by completed OAT projects. Cross-references shipped work against the docs surface and produces a prioritized fix plan.
-argument-hint: "[--since=<date>] [--output=<path>] [--scope=<area>] [--dry-run]"
+argument-hint: '[--since=<date>] [--output=<path>] [--scope=<area>] [--dry-run]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash(git:*), AskUserQuestion, Task
 user-invocable: true
@@ -22,6 +22,7 @@ Audit the documentation surface for gaps left by completed OAT projects. Builds 
 ## Arguments
 
 Parse from `$ARGUMENTS`:
+
 - **--since=\<date\>**: (optional) ISO date (`YYYY-MM-DD`). Only consider projects completed after this date. If omitted, review all completed projects.
 - **--output=\<path\>**: (optional) Path to write the gap report. Defaults to `.oat/repo/reviews/docs-gap-report-{date}.md`.
 - **--scope=\<area\>**: (optional) Limit review to a specific documentation area. Values: `cli`, `skills`, `reference`, `quickstart`, `all`. Defaults to `all`.
@@ -67,6 +68,7 @@ Catalog the current documentation surface:
 6. **Skill SKILL.md files:** `.agents/skills/*/SKILL.md` (as authoritative source for skill descriptions)
 
 For each doc file, extract:
+
 - Topics/commands/skills covered
 - Last modified date (via `git log -1 --format=%ci`)
 - Section headings (as a proxy for coverage)
@@ -108,6 +110,7 @@ Within each wave, group by affected file to minimize context switching.
 Use the template at `.agents/skills/docs-completed-projects-gap-review/references/docs-gap-report-template.md`.
 
 Fill in all sections:
+
 - Executive Summary (total gaps, breakdown by priority)
 - Completed Work Inventory (projects reviewed)
 - Gap Catalog (per-gap detail with priority, affected files, suggested fix)
@@ -121,6 +124,7 @@ If `--dry-run` is set, print the gap catalog to console instead of writing a fil
 ### Step 8: Summarize for User
 
 After writing the report, provide:
+
 - Total gaps found (by priority)
 - Top 3 most impactful gaps
 - Estimated effort for each wave

@@ -25,11 +25,13 @@ Generate or update documentation files from a docs analysis artifact, with expli
 **Purpose:** Apply approved documentation changes derived from a docs analysis artifact.
 
 **BLOCKED Activities:**
+
 - No unapproved documentation changes.
 - No branch creation before the recommendation plan is reviewed.
 - No changes outside the documentation scope except deterministic nav sync and tracking updates.
 
 **ALLOWED Activities:**
+
 - Reading analysis artifacts and the current docs surface.
 - Creating or updating docs files and `mkdocs.yml` when approved.
 - Running `oat docs nav sync` after approved structural changes.
@@ -54,10 +56,12 @@ Apply must **not**:
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Editing docs outside approved recommendations -> STOP and remove the extra change from the work plan.
 - Applying manual nav changes when `oat docs nav sync` should be used -> STOP and switch to the CLI helper.
 
 **Recovery:**
+
 1. Return to the approved recommendation list.
 2. Re-apply only approved docs changes and deterministic nav sync.
 
@@ -68,7 +72,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ DOCS APPLY
+  OAT ▸ DOCS APPLY
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Use step indicators:
@@ -212,7 +216,7 @@ Negative rules:
 Run the smallest relevant verification set based on what changed:
 
 - `oat docs nav sync`
-- `pnpm --dir <docs-app> docs:lint`
+- `pnpm --dir <docs-app> docs:lint` (no-op when no linter is configured)
 - `pnpm --dir <docs-app> docs:format:check`
 - `pnpm --dir <docs-app> docs:build`
 

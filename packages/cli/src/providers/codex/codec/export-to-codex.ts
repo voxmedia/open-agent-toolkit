@@ -1,5 +1,6 @@
 import type { CanonicalAgentDocument } from '@agents/canonical';
 import { CliError } from '@errors/index';
+
 import {
   sanitizeCodexRoleName,
   stringifyToml,

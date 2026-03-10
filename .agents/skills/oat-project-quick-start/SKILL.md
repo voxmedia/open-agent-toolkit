@@ -2,7 +2,7 @@
 name: oat-project-quick-start
 version: 1.3.0
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
-argument-hint: "<project-name>"
+argument-hint: '<project-name>'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -24,10 +24,12 @@ Create or resume a project in **quick mode** and produce a runnable `plan.md` wi
 **Purpose:** Capture intent quickly (`discovery.md`) and generate an execution-ready `plan.md` for `oat-project-implement`.
 
 **BLOCKED Activities:**
+
 - No spec-driven spec/design authoring unless user explicitly asks to promote to the spec-driven workflow.
 - No implementation code changes.
 
 **ALLOWED Activities:**
+
 - Project scaffolding and project pointer updates.
 - Discovery conversation with adaptive depth (including brainstorming when appropriate).
 - Optional lightweight design artifact (`design.md`) when user chooses it at the decision point.
@@ -35,10 +37,12 @@ Create or resume a project in **quick mode** and produce a runnable `plan.md` wi
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Expanding into spec-driven lifecycle documentation → STOP and keep scope to quick workflow artifacts.
 - Writing implementation code → STOP and return to plan authoring.
 
 **Recovery:**
+
 1. Re-focus on quick workflow outcome (`discovery.md` + `plan.md`).
 2. Route implementation to `oat-project-implement`.
 
@@ -49,7 +53,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ QUICK START
+  OAT ▸ QUICK START
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
@@ -72,6 +76,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 If no valid active project exists:
+
 - Read `{project-name}` from `$ARGUMENTS`, or ask user.
 - Create project via the same scaffolding path used by `oat-project-new`:
 
@@ -80,6 +85,7 @@ oat project new "{project-name}" --mode quick
 ```
 
 This guarantees:
+
 - standard artifact scaffolding from `.oat/templates/`
 - `activeProject` update in `.oat/config.local.json`
 - repo dashboard refresh (`.oat/state.md`) via existing scaffolder behavior
@@ -87,6 +93,7 @@ This guarantees:
 ### Step 1: Set Quick Workflow Metadata
 
 Update `"$PROJECT_PATH/state.md"` frontmatter:
+
 - `oat_workflow_mode: quick`
 - `oat_workflow_origin: native`
 - `oat_phase: discovery`
@@ -114,7 +121,7 @@ For exploratory requests, spend time in divergent thinking before converging on 
 
 1. **Propose 2-3 distinct approaches** — not minor variations, but genuinely different strategies. For each:
    - Describe the approach concretely
-   - List tradeoffs (not just pros/cons — explain *when* each approach is the better choice)
+   - List tradeoffs (not just pros/cons — explain _when_ each approach is the better choice)
    - **Lead with your recommendation and explain why**
 
 2. **One question at a time** — ask focused clarifying questions sequentially, not as a batch. After each answer, update your understanding and let the next question be informed by the response.
@@ -126,6 +133,7 @@ Document the exploration in the `## Solution Space` section of `discovery.md`.
 #### 2c: Capture Decisions
 
 Whether well-understood or exploratory, backfill `discovery.md` with the discussion, Q&A, and decisions from the session:
+
 - initial request
 - solution space exploration (if applicable)
 - clarifying Q&A that materially shaped the project
@@ -144,6 +152,7 @@ Keep this concise and outcome-oriented.
 **Otherwise**, present the user with a choice about how to proceed:
 
 > "Discovery is complete. How would you like to proceed?"
+>
 > 1. **Straight to plan** — scope is clear, ready to generate tasks
 > 2. **Lightweight design first** — draft architecture and components before planning _(produces design.md)_
 > 3. **Promote to spec-driven** — this needs formal requirements and full design
@@ -151,6 +160,7 @@ Keep this concise and outcome-oriented.
 Use `AskUserQuestion` to present this choice.
 
 **Recommendation heuristic** — lead with a recommendation based on discovery findings:
+
 - If discovery revealed clear scope with no significant architecture decisions → recommend "Straight to plan"
 - If discovery surfaced architecture choices, component boundaries, or data model questions → recommend "Lightweight design first"
 - If discovery revealed the scope is larger or more complex than initially expected → recommend "Promote to spec-driven"
@@ -160,6 +170,7 @@ Use `AskUserQuestion` to present this choice.
 **If user chooses "Lightweight design first":** execute Step 2.75 before continuing to Step 3.
 
 **If user chooses "Promote to spec-driven":**
+
 - Update `discovery.md` frontmatter:
   - `oat_status: complete`
   - `oat_ready_for: oat-project-spec`
@@ -179,17 +190,20 @@ Produce a focused `design.md` covering only what's needed for a quality plan. Th
 Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
 
 **Required sections (always fill these):**
+
 1. **Overview** — 2-3 paragraph summary of the technical approach
 2. **Architecture** — system context, key components, and data flow
 3. **Component Design** — for each component: purpose, responsibilities, interfaces
 4. **Testing Strategy** — key test levels and scenarios (no requirement-to-test mapping needed in quick mode)
 
 **Optional sections (include only when relevant to the feature):**
+
 - Data Models — if new models or schema changes are involved
 - API Design — if new endpoints or interfaces are introduced
 - Error Handling — if non-obvious error scenarios exist
 
 **Skip these sections in quick mode** (they belong to spec-driven design):
+
 - Security Considerations (unless the feature is security-related)
 - Performance Considerations (unless the feature has specific performance requirements)
 - Deployment Strategy
@@ -198,6 +212,7 @@ Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
 - Risks and Mitigation (captured in discovery instead)
 
 **Present design incrementally for validation:**
+
 1. Draft architecture overview → present to user for validation
 2. Draft component design → present to user for validation
 3. Draft data flow + testing approach → present to user for validation
@@ -206,11 +221,12 @@ Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
 After each chunk, ask: "Does this look right, or should we adjust before continuing?"
 
 Update `design.md` frontmatter:
+
 ```yaml
 ---
 oat_status: complete
 oat_ready_for: null
-oat_last_updated: {today}
+oat_last_updated: { today }
 oat_generated: false
 oat_template: false
 ---
@@ -221,6 +237,7 @@ oat_template: false
 Create/update `"$PROJECT_PATH/plan.md"` from `.oat/templates/plan.md`.
 
 Required frontmatter updates:
+
 - `oat_status: complete`
 - `oat_ready_for: oat-project-implement`
 - `oat_phase: plan`
@@ -231,6 +248,7 @@ Required frontmatter updates:
 - `oat_import_provider: null`
 
 Plan requirements — apply `oat-project-plan-writing` canonical format invariants:
+
 - Stable task IDs (`pNN-tNN`)
 - Verification step per task
 - Atomic commit message per task
@@ -240,18 +258,21 @@ Plan requirements — apply `oat-project-plan-writing` canonical format invarian
 ### Step 4: Sync Project State
 
 Update `"$PROJECT_PATH/state.md"`:
+
 - `oat_phase: plan`
 - `oat_phase_status: complete`
 - `oat_current_task: null`
 - set `oat_hill_checkpoints: []` for quick mode to avoid spec/design gate confusion
 
 Recommended quick-mode gate defaults:
+
 - keep implementation phase checkpoints via `oat_plan_hill_phases`
 - do not require discovery/spec/design artifact review rows to be passed before implementation
 
 ### Step 5: Initialize Implementation Tracking
 
 Ensure `"$PROJECT_PATH/implementation.md"` exists and frontmatter is resumable:
+
 - `oat_status: in_progress`
 - `oat_current_task_id: p01-t01` (or first task in plan)
 
@@ -266,6 +287,7 @@ oat state refresh
 ### Step 7: Output Next Action
 
 Report:
+
 - workflow mode (`quick`)
 - total phases/tasks generated
 - first task ID

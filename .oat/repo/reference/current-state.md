@@ -1,6 +1,6 @@
 # OAT Current State (This Repo)
 
-This document is a birdseye view of where OAT is *right now* in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
+This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
 **Last Updated:** 2026-03-08
 
@@ -187,10 +187,12 @@ This document is a birdseye view of where OAT is *right now* in `open-agent-tool
    - `oat-project-pr-final` (final PR)
 
 Non-project review path:
+
 - If no active project/state exists, use `oat-review-provide` (commit range, branch range, staged/unstaged, or explicit file list).
 - To receive/triage review findings outside project context: `oat-review-receive` (local artifacts) or `oat-review-receive-remote` (GitHub PR comments).
 
 Interop quickstart:
+
 1. Initialize canonical/provider sync scaffolding:
    - `oat init --scope project`
 2. Set explicit supported providers (optional, deterministic):

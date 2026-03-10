@@ -6,7 +6,7 @@ See `frontmatter/` for provider-specific frontmatter examples.
 
 ## Template
 
-```markdown
+````markdown
 # {Rule Title}
 
 {1-2 sentences describing what this rule covers and when it applies.}
@@ -37,12 +37,14 @@ See `frontmatter/` for provider-specific frontmatter examples.
 ```{lang}
 {example}
 ```
+````
 
 ### Incorrect
 
 ```{lang}
 {counter-example}
 ```
+
 ```
 
 ## Guidance
@@ -54,3 +56,4 @@ See `frontmatter/` for provider-specific frontmatter examples.
 - Only the frontmatter wrapper changes per provider (see `frontmatter/` directory)
 - Use progressive disclosure: keep the rule short and link to deeper docs/examples when needed
 - Do not encode style trivia unless it is backed by repo evidence and genuinely helps the matching files
+```

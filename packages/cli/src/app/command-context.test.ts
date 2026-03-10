@@ -1,6 +1,8 @@
 import { homedir } from 'node:os';
 import * as path from 'node:path';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { buildCommandContext } from './command-context';
 
 describe('buildCommandContext', () => {

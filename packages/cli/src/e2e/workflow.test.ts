@@ -8,6 +8,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { createProgram } from '@app/create-program';
 import { registerCommands } from '@commands/index';
 import type { SyncConfig } from '@config/index';

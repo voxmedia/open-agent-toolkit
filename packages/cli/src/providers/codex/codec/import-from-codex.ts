@@ -5,6 +5,7 @@ import {
 import { CliError } from '@errors/index';
 import TOML from '@iarna/toml';
 import YAML from 'yaml';
+
 import { sanitizeCodexRoleName } from './shared';
 
 const DEFAULT_CANONICAL_TOOLS = 'Read, Grep, Glob, Bash';

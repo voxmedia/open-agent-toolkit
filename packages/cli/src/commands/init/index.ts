@@ -1,5 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { basename, join } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
@@ -68,6 +69,7 @@ import {
 } from '@providers/shared';
 import type { ConcreteScope, Scope } from '@shared/types';
 import { Command } from 'commander';
+
 import { createInitToolsCommand } from './tools';
 
 const ADOPT_REMEDIATION =

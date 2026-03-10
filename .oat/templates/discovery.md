@@ -62,10 +62,12 @@ _Include this section only when the request is exploratory or multiple viable ap
 **Description:** {What this option involves}
 
 **Pros:**
+
 - {Benefit 1}
 - {Benefit 2}
 
 **Cons:**
+
 - {Drawback 1}
 - {Drawback 2}
 

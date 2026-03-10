@@ -14,6 +14,7 @@ Bridge the gap between human implementation and OAT's artifact-driven workflow. 
 ## Prerequisites
 
 **Required:**
+
 - Active OAT project with a `plan.md` containing task definitions
 - Project must be in `implement` phase (or `plan` phase with `oat_phase_status: complete`)
 - At least one commit exists that is not tracked in `implementation.md`
@@ -29,7 +30,7 @@ Bridge the gap between human implementation and OAT's artifact-driven workflow. 
 - Print a phase banner once at start:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ RECONCILE
+  OAT ▸ RECONCILE
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - For each step, announce a compact header:
@@ -39,12 +40,14 @@ Bridge the gap between human implementation and OAT's artifact-driven workflow. 
 - Keep it concise; don't print a line for every shell command.
 
 **BLOCKED Activities:**
+
 - No modifying code files
 - No rewriting git history
 - No deleting or overwriting existing implementation.md entries
 - No silent assumptions on uncertain mappings
 
 **ALLOWED Activities:**
+
 - Reading git log, diffs, and file lists
 - Reading plan.md, implementation.md, state.md
 - Appending new entries to implementation.md
@@ -54,11 +57,13 @@ Bridge the gap between human implementation and OAT's artifact-driven workflow. 
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Modifying code files → STOP (reconciliation is tracking-only)
 - Assuming a mapping without user confirmation → STOP (present options)
 - Overwriting existing entries → STOP (append only)
 
 **Recovery:**
+
 1. Acknowledge the deviation
 2. Return to current step
 3. Ask user for guidance
@@ -76,6 +81,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 **If `PROJECT_PATH` is missing/invalid:**
+
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
 - Write it for future phases:
@@ -91,15 +97,18 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 Verify the project is ready for reconciliation:
 
 1. **Check `plan.md` exists:**
+
    ```bash
    test -f "$PROJECT_PATH/plan.md" || { echo "ERROR: plan.md not found. Run oat-project-plan first."; exit 1; }
    ```
 
 2. **Check project phase:**
+
    ```bash
    PHASE=$(grep "^oat_phase:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
    PHASE_STATUS=$(grep "^oat_phase_status:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
    ```
+
    - If `PHASE` is `implement`: proceed
    - If `PHASE` is `plan` and `PHASE_STATUS` is `complete`: proceed (plan just finished, implementation starting)
    - Otherwise: STOP — tell user the project is not in implementation phase
@@ -157,6 +166,7 @@ CHECKPOINT=$(git merge-base HEAD "$DEFAULT_BRANCH" 2>/dev/null)
 ```
 
 If merge-base also fails (e.g., orphan branch), use the first commit on the branch:
+
 ```bash
 CHECKPOINT=$(git rev-list --max-parents=0 HEAD | tail -1)
 ```
@@ -174,6 +184,7 @@ Commits since checkpoint: {count}
 ```
 
 Count commits in range:
+
 ```bash
 COMMIT_COUNT=$(git rev-list --count "$CHECKPOINT"..HEAD)
 ```
@@ -183,6 +194,7 @@ COMMIT_COUNT=$(git rev-list --count "$CHECKPOINT"..HEAD)
 Ask user: "Use this as the checkpoint? Or provide a different commit SHA."
 
 If user provides an alternative SHA, validate it:
+
 ```bash
 git cat-file -t "$USER_SHA" 2>/dev/null | grep -q commit
 ```
@@ -206,6 +218,7 @@ This gives oldest-first ordering (matches plan execution order). Parse each line
 For each commit SHA, collect:
 
 1. Changed files:
+
    ```bash
    git diff-tree --no-commit-id -r --name-only "$SHA"
    ```
@@ -221,9 +234,11 @@ For each commit SHA, collect:
 Remove from the analysis set:
 
 1. **Merge commits:**
+
    ```bash
    git rev-list --merges "$CHECKPOINT"..HEAD
    ```
+
    Any SHA in this list is excluded.
 
 2. **Bookkeeping-only commits** — commits where ALL changed files match OAT tracking patterns:
@@ -260,6 +275,7 @@ Read `plan.md` and extract all tasks:
 4. Note which tasks already have `completed` status in `implementation.md` (skip these during mapping)
 
 Store as a structured list:
+
 ```
 TASKS = [
   { id: "p01-t01", name: "...", files: ["path/a.ts", "path/b.ts"], keywords: ["auth", "endpoint"] },
@@ -484,6 +500,7 @@ Apply the confirmed mappings to OAT tracking artifacts. This is the only step th
 **5a. Read existing `implementation.md`:**
 
 Read the full file. Identify:
+
 - Existing task entries (preserve all — never overwrite or delete)
 - The insertion point for each task entry (find the `### Task pNN-tNN:` section)
 - Current progress table values
@@ -505,17 +522,21 @@ For each confirmed task mapping, check whether a `### Task {task_id}:` section a
 **Commit:** {representative_sha} (reconciled)
 
 **Outcome (reconciled from manual implementation):**
+
 - {2-5 bullets derived from commit messages and diff summary}
 - {Use git show --stat and commit messages to infer what changed}
 
 **Files changed:**
+
 - `{path}` - {inferred purpose from diff context}
 
 **Verification:**
+
 - Run: `{verification command from plan task, if available}`
 - Result: not verified — reconciled entry
 
 **Notes / Decisions:**
+
 - Reconciled from manual implementation on {today's date}
 - Original commits: {comma-separated SHA list}
 - Mapping confidence: {high|medium|low}
@@ -526,6 +547,7 @@ For each confirmed task mapping, check whether a `### Task {task_id}:` section a
 
 ```markdown
 **Reconciliation Update ({today's date}):**
+
 - Additional commits mapped: {comma-separated SHA list}
 - Mapping confidence: {high|medium|low}
 - Mapping signal: {task ID in message | file overlap N% | keyword match}
@@ -536,11 +558,13 @@ For each confirmed task mapping, check whether a `### Task {task_id}:` section a
 **Important:** Never delete, replace, or overwrite existing task entry content. Existing notes, decisions, and outcomes represent logged history that must be preserved.
 
 To generate the **Outcome** bullets:
+
 1. Read each commit's message and diff stats
 2. Summarize what changed at a behavior level (not "edited file X" but "added validation for user input")
 3. Use `git show --stat {sha}` and `git log --format='%s' {sha} -1` as source material
 
 To generate **Files changed**:
+
 1. Use the combined file list from all grouped commits
 2. For each file, infer purpose from the file path and diff context
 
@@ -555,12 +579,15 @@ For each commit the user chose to log as unplanned work, append after the last t
 **Commit:** {sha} (unplanned)
 
 **Outcome:**
+
 - {1-3 bullets derived from commit message and diff}
 
 **Files changed:**
+
 - `{path}` - {inferred from diff}
 
 **Notes:**
+
 - Not part of original plan. Logged during reconciliation on {today's date}.
 ```
 
@@ -575,7 +602,8 @@ Recalculate the `## Progress Overview` table dynamically from the project's actu
 
 ```markdown
 | Phase | Status | Tasks | Completed |
-|-------|--------|-------|-----------|
+| ----- | ------ | ----- | --------- |
+
 {for each phase from plan.md:}
 | Phase {N} | {status} | {task_count} | {completed_count}/{task_count} |
 
@@ -589,17 +617,19 @@ Do not hardcode phase counts or task totals — always derive them from the curr
 **5e. Update frontmatter:**
 
 In `implementation.md`:
+
 ```yaml
-oat_current_task_id: {next_pending_task_id}  # or null if all complete
-oat_last_updated: {today}
+oat_current_task_id: { next_pending_task_id } # or null if all complete
+oat_last_updated: { today }
 ```
 
 Find the next pending task by scanning plan order: first task with status not `completed`.
 
 In `state.md`:
+
 ```yaml
-oat_current_task: {same as oat_current_task_id above}
-oat_last_commit: {most recent reconciled commit SHA}
+oat_current_task: { same as oat_current_task_id above }
+oat_last_commit: { most recent reconciled commit SHA }
 oat_phase: implement
 oat_phase_status: in_progress
 # Always in_progress after reconciliation — only oat-project-review-receive
@@ -616,16 +646,20 @@ Add a reconciliation session entry to the `## Implementation Log` section:
 **Session Start:** reconciliation
 
 {For each reconciled task:}
+
 - [x] {task_id}: {task_name} - {sha} (reconciled, confidence: {level})
 
 {For each unplanned entry:}
+
 - [x] unplanned: {summary} - {sha}
 
 **What changed (high level):**
+
 - Reconciled {N} manually-implemented tasks from {M} commits
 - Logged {K} unplanned work entries
 
 **Decisions:**
+
 - Mapping confidence breakdown: {high_count} high, {medium_count} medium, {low_count} low
 - Skipped commits: {skip_count}
 

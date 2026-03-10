@@ -10,7 +10,9 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import {
   atomicWriteJson,
   copyDirectory,

@@ -1,8 +1,10 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import type { CanonicalEntry } from '@engine/index';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import {
   detectCodexRoleStrays,
   regenerateCodexAfterAdoption,

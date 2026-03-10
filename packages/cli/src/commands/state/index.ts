@@ -5,6 +5,7 @@ import {
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { Command } from 'commander';
+
 import {
   generateStateDashboard as defaultGenerateStateDashboard,
   type GenerateStateOptions,

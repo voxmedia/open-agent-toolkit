@@ -6,14 +6,14 @@ and **MkDocs Material**.
 
 ## Command surface
 
-| Command                    | Purpose                                                                              |
-| -------------------------- | ------------------------------------------------------------------------------------ |
-| `oat docs init`            | Scaffold a new docs app (Fumadocs or MkDocs).                                        |
-| `oat docs migrate`         | Convert MkDocs admonitions to GFM callouts and inject frontmatter.                   |
-| `oat docs generate-index`  | Generate a docs index from the markdown file tree.                                   |
-| `oat docs nav sync`        | Regenerate `mkdocs.yml` navigation from directory `index.md` `## Contents` sections. |
-| `oat docs analyze`         | CLI entrypoint that points users to the `oat-docs-analyze` skill.                    |
-| `oat docs apply`           | CLI entrypoint that points users to the `oat-docs-apply` skill.                      |
+| Command                   | Purpose                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------ |
+| `oat docs init`           | Scaffold a new docs app (Fumadocs or MkDocs).                                        |
+| `oat docs migrate`        | Convert MkDocs admonitions to GFM callouts and inject frontmatter.                   |
+| `oat docs generate-index` | Generate a docs index from the markdown file tree.                                   |
+| `oat docs nav sync`       | Regenerate `mkdocs.yml` navigation from directory `index.md` `## Contents` sections. |
+| `oat docs analyze`        | CLI entrypoint that points users to the `oat-docs-analyze` skill.                    |
+| `oat docs apply`          | CLI entrypoint that points users to the `oat-docs-apply` skill.                      |
 
 ## `oat docs init`
 
@@ -45,8 +45,7 @@ Supported flags:
 - `--target-dir <path>`
 - `--framework <fumadocs|mkdocs>` (default: `fumadocs` in non-interactive mode)
 - `--description <text>` (site description, optional)
-- `--lint <markdownlint|none>`
-- `--format <prettier|none>`
+- `--format <oxfmt|none>`
 - `--yes`
 
 Examples:

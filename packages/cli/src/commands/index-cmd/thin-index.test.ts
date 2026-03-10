@@ -1,7 +1,9 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { type GitOperations, generateThinIndex } from './thin-index';
 
 async function createTestRepo(): Promise<string> {
@@ -10,13 +12,18 @@ async function createTestRepo(): Promise<string> {
     join(root, 'package.json'),
     JSON.stringify({
       name: 'my-test-repo',
-      scripts: { test: 'vitest', build: 'tsc', lint: 'biome check' },
+      scripts: {
+        test: 'vitest',
+        build: 'tsc',
+        lint: 'oxlint . && oxfmt --check .',
+      },
     }),
     'utf8',
   );
   await writeFile(join(root, 'pnpm-lock.yaml'), '', 'utf8');
   await writeFile(join(root, 'tsconfig.json'), '{}', 'utf8');
-  await writeFile(join(root, 'biome.json'), '{}', 'utf8');
+  await writeFile(join(root, '.oxlintrc.json'), '{}', 'utf8');
+  await writeFile(join(root, '.oxfmtrc.jsonc'), '{}', 'utf8');
   await mkdir(join(root, 'src'), { recursive: true });
   await writeFile(join(root, 'src', 'index.ts'), '', 'utf8');
   await writeFile(join(root, 'src', 'app.ts'), '', 'utf8');
@@ -213,7 +220,8 @@ describe('generateThinIndex', () => {
     );
     expect(content).toContain('`package.json`');
     expect(content).toContain('`tsconfig.json`');
-    expect(content).toContain('`biome.json`');
+    expect(content).toContain('`.oxlintrc.json`');
+    expect(content).toContain('`.oxfmtrc.jsonc`');
     expect(content).toContain('`pnpm-lock.yaml`');
   });
 

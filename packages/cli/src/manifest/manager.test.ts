@@ -1,8 +1,10 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { CliError } from '@errors/index';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import {
   addEntry,
   createEmptyManifest,

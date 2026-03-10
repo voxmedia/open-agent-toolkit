@@ -1,6 +1,7 @@
 import * as fsp from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { detectStrays } from '@drift/index';
 import { CliError } from '@errors/index';
 import {
@@ -11,6 +12,7 @@ import {
   saveManifest,
 } from '@manifest/index';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { scanCanonical } from './scanner';
 
 const { mkdir, mkdtemp, rm, writeFile } = fsp;

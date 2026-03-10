@@ -150,7 +150,7 @@ find . -type f \\( -name "*.ts" -o -name "*.tsx" \\) \\
 **For quality focus:**
 ```bash
 # Linting/formatting config
-ls .eslintrc* .prettierrc* eslint.config.* biome.json 2>/dev/null
+ls .eslintrc* .prettierrc* eslint.config.* biome.json .oxlintrc.json .oxfmtrc.jsonc 2>/dev/null
 cat .prettierrc 2>/dev/null
 
 # Test files and config

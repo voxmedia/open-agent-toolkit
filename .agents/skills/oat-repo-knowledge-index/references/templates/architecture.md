@@ -20,6 +20,7 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 **Overall:** [Pattern name]
 
 **Key Characteristics:**
+
 - [Characteristic 1]
 - [Characteristic 2]
 - [Characteristic 3]
@@ -27,6 +28,7 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 ## Layers
 
 **[Layer Name]:**
+
 - Purpose: [What this layer does]
 - Location: `[path]`
 - Contains: [Types of code]
@@ -42,11 +44,13 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 3. [Step 3]
 
 **State Management:**
+
 - [How state is handled]
 
 ## Key Abstractions
 
 **[Abstraction Name]:**
+
 - Purpose: [What it represents]
 - Examples: `[file paths]`
 - Pattern: [Pattern used]
@@ -54,6 +58,7 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 ## Entry Points
 
 **[Entry Point]:**
+
 - Location: `[path]`
 - Triggers: [What invokes it]
 - Responsibilities: [What it does]
@@ -63,6 +68,7 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 **Strategy:** [Approach]
 
 **Patterns:**
+
 - [Pattern 1]
 - [Pattern 2]
 
@@ -74,4 +80,4 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 
 ---
 
-*Architecture analysis: [date]*
+_Architecture analysis: [date]_

@@ -32,8 +32,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ PROVIDE REVIEW
+  OAT ▸ PROVIDE REVIEW
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work (scope resolution, file gathering, writing artifact), print 2–5 short step indicators, e.g.:
   - `[1/5] Resolving scope + range…`
   - `[2/5] Collecting files + context…`
@@ -44,10 +45,12 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**
+
 - No code changes during review
 - No fixing issues found (that comes in receive-review)
 
 **ALLOWED Activities:**
+
 - Reading artifacts and code
 - Running verification commands
 - Writing review artifact
@@ -69,6 +72,7 @@ oat-project-review-provide artifact design   # Artifact review of design.md
 ### Without arguments
 
 Run the `oat-project-review-provide` skill and it will:
+
 1. Ask review type (code or artifact)
 2. Ask scope (task/phase/final/range)
 3. Confirm before running
@@ -86,12 +90,14 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 Validation rules:
+
 - `PROJECT_PATH` must be set and point to an existing directory.
 - `"$PROJECT_PATH/state.md"` must exist for mode-aware review validation.
 
 If either check fails, **stop and route**. Do not create/guess project pointers in this skill.
 
 Tell user:
+
 - This is a project-scoped skill and needs an initialized OAT project (`activeProject` in `.oat/config.local.json` + project `state.md`).
 - Without project state, review can still proceed via non-project skill: `oat-review-provide`.
 - To continue with project workflow instead, run one of:
@@ -104,10 +110,12 @@ If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`.
 ### Step 1: Parse Arguments or Ask
 
 **If arguments provided:**
+
 - Parse `$ARGUMENTS[0]` as review type: `code` or `artifact`
 - Parse `$ARGUMENTS[1]` as scope token
 
 **If no arguments:**
+
 - Ask: "What type of review? (code / artifact)"
 - Ask: "What scope?"
   - For code: `pNN-tNN` task / `pNN` phase / `final` / `base_sha=SHA` / `SHA..HEAD` range
@@ -118,11 +126,13 @@ If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`.
 Before validating artifacts or gathering files, verify that the review will run and write artifacts against the correct branch and working directory. This step must run before Step 2 so that `PROJECT_PATH` points to the correct checkout for all downstream operations.
 
 **Detect current state:**
+
 ```bash
 CURRENT_BRANCH=$(git branch --show-current)
 ```
 
 **Handle detached HEAD:** If `CURRENT_BRANCH` is empty (detached HEAD), resolve the branch from the current worktree entry:
+
 ```bash
 if [[ -z "$CURRENT_BRANCH" ]]; then
   REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -132,6 +142,7 @@ if [[ -z "$CURRENT_BRANCH" ]]; then
   ')
 fi
 ```
+
 If still empty after worktree lookup, ask user: "Unable to detect current branch (detached HEAD). Which branch should the review target?"
 
 ```bash
@@ -143,6 +154,7 @@ TARGET_BRANCH="${TARGET_BRANCH:-$CURRENT_BRANCH}"  # from user scope, worktree c
 **If target branch differs from current branch:**
 
 1. Check if the target branch has a worktree:
+
    ```bash
    WORKTREE_PATH=$(git worktree list --porcelain | awk -v branch="$TARGET_BRANCH" '
      /^worktree / { wt=$2 }
@@ -160,6 +172,7 @@ TARGET_BRANCH="${TARGET_BRANCH:-$CURRENT_BRANCH}"  # from user scope, worktree c
 3. **If no worktree exists (regular branch on main worktree):**
    - **Stop and notify the user.** Do not silently write to the wrong branch.
    - Print:
+
      ```
      ⚠️  Target branch "{TARGET_BRANCH}" differs from current branch "{CURRENT_BRANCH}".
      No worktree found for "{TARGET_BRANCH}".
@@ -171,6 +184,7 @@ TARGET_BRANCH="${TARGET_BRANCH:-$CURRENT_BRANCH}"  # from user scope, worktree c
 
      Choose:
      ```
+
    - If user chooses option 1: run `git checkout {TARGET_BRANCH}`, then proceed.
    - If user chooses option 2: set `INLINE_ONLY=true` — skip artifact write (Step 7/8) and output review findings directly in the session. The user can manually save the output.
    - If user chooses option 3: stop and suggest `oat-worktree-bootstrap-auto`.
@@ -185,11 +199,13 @@ WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
 ```
 
 **Required for code review (by mode):**
+
 - `spec-driven`: `spec.md`, `design.md`, `plan.md`
 - `quick`: `discovery.md`, `plan.md` (`spec.md`/`design.md` optional if present)
 - `import`: `plan.md` (`references/imported-plan.md` recommended, `spec.md`/`design.md` optional)
 
 **Required for artifact review:**
+
 - The artifact being reviewed must exist.
 - Upstream dependencies are required only when relevant to that artifact:
   - reviewing `spec` requires `discovery.md`
@@ -202,6 +218,7 @@ WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
 ### Step 3: Determine Scope and Commits
 
 If review type is `artifact`:
+
 - Interpret the scope token as the artifact name (`discovery`, `spec`, `design`, or `plan`)
 - Set `SCOPE_RANGE=""` (no git range required)
 - Proceed to Step 5 (metadata); Step 4 uses artifact files, not git diff
@@ -215,12 +232,14 @@ Before resolving scope, check if this is a re-review of fixes from a prior revie
 1. Scan `plan.md` for tasks tagged with `(review)` in the scope being reviewed (e.g., `(p02-review)` fix tasks for a `p02` phase review).
 2. If `(review)` fix tasks exist **and** their status is `completed`:
    - This is a re-review. Offer the user a narrowed scope:
+
      ```
      Detected completed review fix tasks for this scope:
      - {task IDs and descriptions}
 
      Scope to fix task commits only? (Y/n)
      ```
+
    - **If yes (default):** gather only the commits associated with those fix tasks using commit convention grep (e.g., `git log --oneline --grep="\(pNN-tNN\)" HEAD~50..HEAD` for each fix task ID). Set `SCOPE_RANGE` to cover only those commits.
    - **If no:** proceed with full scope resolution below (re-review everything).
 
@@ -238,6 +257,7 @@ Before resolving scope, check if this is a re-review of fixes from a prior revie
 2. **Automatic phase detection (if invoked at phase boundary):**
    - Derive current phase from plan.md + implementation.md
    - Use commit convention grep to find commits:
+
      ```bash
      # Task commits: grep for (pNN-tNN)
      git log --oneline --grep="\(p${PHASE}-t" HEAD~50..HEAD
@@ -253,6 +273,7 @@ Before resolving scope, check if this is a re-review of fixes from a prior revie
      - Confirm "review merge-base..HEAD" (all changes on branch)
 
    **Merge-base approach:**
+
    ```bash
    MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null)
    SCOPE_RANGE="$MERGE_BASE..HEAD"
@@ -288,6 +309,7 @@ FILE_COUNT=$(echo "$FILES_CHANGED" | wc -l | tr -d ' ')
 ```
 
 Display to user:
+
 ```
 Review scope: {scope}
 Range: {SCOPE_RANGE} (code reviews only; artifact reviews have no git range)
@@ -303,15 +325,18 @@ Proceed with review?
 If `review type == code` and `scope == final`, gather unresolved deferred findings from prior review cycles.
 
 Preferred sources:
+
 - `implementation.md` sections titled `Deferred Findings (...)`
 - prior review artifacts under `reviews/` when implementation notes are incomplete
 
 Build:
+
 - `DEFERRED_MEDIUM_COUNT`
 - `DEFERRED_MINOR_COUNT`
 - `DEFERRED_LEDGER` (one-line summary per finding with source artifact)
 
 Rules:
+
 - Include this ledger in review metadata so final review explicitly re-evaluates carry-forward debt.
 - Final review should call out whether each deferred Medium remains acceptable or should now be fixed.
 
@@ -328,6 +353,7 @@ Build the "Review Scope" metadata for the reviewer:
 **Date:** {today}
 
 **Artifact Paths:**
+
 - Spec: {PROJECT_PATH}/spec.md (required in spec-driven mode; optional in quick/import)
 - Design: {PROJECT_PATH}/design.md (required in spec-driven mode; optional in quick/import)
 - Plan: {PROJECT_PATH}/plan.md
@@ -344,9 +370,10 @@ Build the "Review Scope" metadata for the reviewer:
 {git log --oneline for SCOPE_RANGE}
 
 **Deferred Findings Ledger (final scope only):**
+
 - Deferred Medium count: {DEFERRED_MEDIUM_COUNT}
 - Deferred Minor count: {DEFERRED_MINOR_COUNT}
-{DEFERRED_LEDGER}
+  {DEFERRED_LEDGER}
 ```
 
 ### Step 6: Execute Review (3-Tier Capability Model)
@@ -362,6 +389,7 @@ Before selecting a tier, announce the probe and its result so the user can see w
 ```
 
 Detection logic:
+
 - If the host is Claude Code, use Task-style subagent dispatch with `subagent_type: "oat-reviewer"` and resolve from `.claude/agents/oat-reviewer.md`.
 - If the host is Cursor, invoke `oat-reviewer` using Cursor-native explicit invocation (`/oat-reviewer`) or natural mention, and resolve from `.cursor/agents/oat-reviewer.md` (or `.claude/agents/oat-reviewer.md` compatibility path).
 - If the host is Codex multi-agent, verify Codex requirements first:
@@ -377,6 +405,7 @@ Detection logic:
 First, pre-compute the review artifact path using Step 7 naming conventions so it can be passed to the subagent.
 
 Then spawn the reviewer:
+
 - Use provider-appropriate dispatch:
   - Claude Code: Task tool with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`).
   - Cursor: explicit invocation `/oat-reviewer` (or natural mention) with agent resolved from `.cursor/agents/oat-reviewer.md` or `.claude/agents/oat-reviewer.md` compatibility path.
@@ -389,16 +418,19 @@ Then spawn the reviewer:
 The `oat-reviewer` agent definition contains the full review process, mode contract, severity categories, artifact template, and critical rules. No additional instructions need to be injected.
 
 After the subagent completes:
+
 - Verify the review artifact was written to the expected path
 - Continue with Step 9 (plan update) and Step 9.5 (commit)
 
 **Step 6c: Tier 2 — Fresh Session (recommended fallback)**
 
 If subagent not available:
+
 - If user is already in a fresh session (confirmed), proceed to Tier 3.
 - If user prefers fresh session: provide instructions and exit.
 
 Instructions for fresh session:
+
 ```
 To run review in a fresh session:
 1. Open a new terminal/session
@@ -410,6 +442,7 @@ To run review in a fresh session:
 **Step 6d: Tier 3 — Inline Reset (fallback)**
 
 If user insists on inline review in current session:
+
 - Run "reset protocol":
   1. Re-read required artifacts for current workflow mode from scratch
   2. Read all files in FILES_CHANGED
@@ -421,6 +454,7 @@ If user insists on inline review in current session:
 **If `INLINE_ONLY=true`** (user chose inline-only in Step 1.5): skip this step — no artifact path needed.
 
 **Naming convention:**
+
 - Phase review: `{PROJECT_PATH}/reviews/pNN-review-YYYY-MM-DD.md`
 - Task review: `{PROJECT_PATH}/reviews/pNN-tNN-review-YYYY-MM-DD.md`
 - Final review: `{PROJECT_PATH}/reviews/final-review-YYYY-MM-DD.md`
@@ -440,6 +474,7 @@ mkdir -p "$PROJECT_PATH/reviews"
 If running inline (Tier 3), execute the review and write artifact.
 
 **Review checklist (from oat-reviewer):**
+
 1. Verify scope (don't review out-of-scope changes)
 2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import)
 3. If code review: verify code quality (correctness, tests, security, maintainability)
@@ -451,15 +486,16 @@ If running inline (Tier 3), execute the review and write artifact.
 **Review artifact template:** (see `.agents/agents/oat-reviewer.md` for full format)
 
 Shared ad-hoc companion reference (non-project mode):
+
 - `.agents/skills/oat-review-provide/references/review-artifact-template.md`
 
 ```markdown
 ---
 oat_generated: true
-oat_generated_at: {today}
-oat_review_scope: {scope}
-oat_review_type: {code|artifact}
-oat_project: {PROJECT_PATH}
+oat_generated_at: { today }
+oat_review_scope: { scope }
+oat_review_type: { code|artifact }
+oat_project: { PROJECT_PATH }
 ---
 
 # {Code|Artifact} Review: {scope}
@@ -476,25 +512,31 @@ oat_project: {PROJECT_PATH}
 ## Findings
 
 ### Critical
+
 {findings or "None"}
 
 ### Important
+
 {findings or "None"}
 
 ### Medium
+
 {findings or "None"}
 
 ### Minor
+
 {findings or "None"}
 
 ## Spec/Design Alignment
 
 ### Requirements Coverage
-| Requirement | Status | Notes |
-|-------------|--------|-------|
-| {ID} | implemented / missing / partial | {notes} |
+
+| Requirement | Status                          | Notes   |
+| ----------- | ------------------------------- | ------- |
+| {ID}        | implemented / missing / partial | {notes} |
 
 ### Extra Work (not in requirements)
+
 {list or "None"}
 
 ## Verification Commands
@@ -508,9 +550,10 @@ Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 
 ### Step 9: Update Plan Reviews Section
 
-After review artifact is written, update `plan.md` `## Reviews` table *if plan.md exists*.
+After review artifact is written, update `plan.md` `## Reviews` table _if plan.md exists_.
 
 Update or add a row matching `{scope}`:
+
 - `Scope`: `{scope}` (examples: `p02`, `final`, `spec`, `design`)
 - `Type`: `code` or `artifact`
 - `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; `passed` now requires no unresolved Critical/Important/Medium and final deferred-medium disposition when applicable)
@@ -528,14 +571,17 @@ After writing the review artifact and applying the Step 9 Reviews-table update, 
 **If a worktree was resolved in Step 1.5:** run git commands scoped to the worktree (`git -C "$WORKTREE_PATH" ...`) so the commit lands on the worktree branch, not the current session's branch.
 
 **Commit scope:**
+
 - Always include the review artifact file: `reviews/{filename}.md`
 - Include `plan.md` when Step 9 updated the Reviews table
 - Do not include unrelated implementation/code files in this commit
 
 **Commit message:**
+
 - `chore(oat): record {scope} review artifact`
 
 **If the user asks to defer commit:**
+
 - Require explicit user confirmation to proceed without commit
 - Warn that uncommitted review bookkeeping can desync workflow routing/restart behavior
 - In the summary, clearly state: "bookkeeping not committed (user-approved defer)"
@@ -543,6 +589,7 @@ After writing the review artifact and applying the Step 9 Reviews-table update, 
 ### Step 10: Output Summary
 
 **If subagent used (Tier 1):**
+
 ```
 Review requested via subagent.
 
@@ -550,6 +597,7 @@ When the reviewer finishes, run the oat-project-review-receive skill to process 
 ```
 
 **If fresh session recommended (Tier 2):**
+
 ```
 For best review quality, run in a fresh session:
 
@@ -561,6 +609,7 @@ Or say "inline" to run review in current session (less reliable).
 ```
 
 **If inline review completed (Tier 3):**
+
 ```
 Review complete for {project-name}.
 

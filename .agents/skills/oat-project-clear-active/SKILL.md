@@ -18,8 +18,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ CLEAR ACTIVE PROJECT
+  OAT ▸ CLEAR ACTIVE PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work, print step indicators, e.g.:
   - `[1/3] Checking current active project…`
   - `[2/3] Pausing active project…`

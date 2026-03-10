@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
+
 import { CliError } from '@errors/index';
 
 async function collectFiles(

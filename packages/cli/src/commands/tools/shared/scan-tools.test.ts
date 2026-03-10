@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import type { ScanToolsDependencies } from './scan-tools';
 import { scanTools } from './scan-tools';
 

@@ -6,7 +6,7 @@ Two independent phases execute in parallel, then merge cleanly.
 
 ```yaml
 ---
-oat_plan_hill_phases: ["p03"]
+oat_plan_hill_phases: ['p03']
 ---
 ```
 
@@ -14,31 +14,41 @@ oat_plan_hill_phases: ["p03"]
 ## Phase 1: API Endpoints
 
 ### Task p01-t01: Create user endpoint
+
 **Files:**
+
 - Create: `src/routes/user.ts`
 - Create: `src/routes/user.test.ts`
 
 ### Task p01-t02: Create settings endpoint
+
 **Files:**
+
 - Create: `src/routes/settings.ts`
 - Create: `src/routes/settings.test.ts`
 
 ## Phase 2: UI Components
 
 ### Task p02-t01: Create user profile component
+
 **Files:**
+
 - Create: `src/components/UserProfile.tsx`
 - Create: `src/components/UserProfile.test.tsx`
 
 ### Task p02-t02: Create settings panel component
+
 **Files:**
+
 - Create: `src/components/SettingsPanel.tsx`
 - Create: `src/components/SettingsPanel.test.tsx`
 
 ## Phase 3: Integration
 
 ### Task p03-t01: Wire API to UI
+
 **Files:**
+
 - Modify: `src/routes/user.ts`
 - Modify: `src/components/UserProfile.tsx`
 ```
@@ -75,19 +85,21 @@ In `implementation.md` under `## Orchestration Runs`:
 #### Unit Outcomes
 
 | Unit | Status | Commits | Tests | Review | Disposition |
-|------|--------|---------|-------|--------|-------------|
-| p01 | pass | abc1234 | pass | pass | merged |
-| p02 | pass | def5678 | pass | pass | merged |
+| ---- | ------ | ------- | ----- | ------ | ----------- |
+| p01  | pass   | abc1234 | pass  | pass   | merged      |
+| p02  | pass   | def5678 | pass  | pass   | merged      |
 
 #### Review Interaction Log
 
 **p01:**
+
 - **Spec compliance:** pass (0 findings)
 - **Code quality:** pass (0 findings)
 - **Verdict:** pass
 - **Disposition:** merged
 
 **p02:**
+
 - **Spec compliance:** pass (0 findings)
 - **Code quality:** pass (0 findings)
 - **Verdict:** pass
@@ -96,10 +108,11 @@ In `implementation.md` under `## Orchestration Runs`:
 #### Merge Outcomes
 
 | Order | Unit | Strategy | Result | Integration |
-|-------|------|----------|--------|-------------|
-| 1 | p01 | merge | clean | tests pass |
-| 2 | p02 | merge | clean | tests pass |
+| ----- | ---- | -------- | ------ | ----------- |
+| 1     | p01  | merge    | clean  | tests pass  |
+| 2     | p02  | merge    | clean  | tests pass  |
 
 #### Outstanding Items
+
 - None
 ```

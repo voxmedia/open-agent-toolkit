@@ -2,7 +2,7 @@
 name: oat-idea-summarize
 version: 1.2.0
 description: Use when an idea is mature enough to move from brainstorming into the backlog. Generates a summary document and adds the idea to the backlog.
-argument-hint: "[--global]"
+argument-hint: '[--global]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Grep, AskUserQuestion
@@ -21,7 +21,7 @@ Read the brainstorming discovery document, synthesize a clean summary, and updat
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ SUMMARIZE IDEA [project]
+  OAT ▸ SUMMARIZE IDEA [project]
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Replace `[project]` with `[global]` when operating at user level.
@@ -52,9 +52,9 @@ Determine whether to operate at project level or user (global) level.
 
 **Set variables:**
 
-| Variable | Project Level | User Level |
-|----------|--------------|------------|
-| `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| Variable         | Project Level          | User Level               |
+| ---------------- | ---------------------- | ------------------------ |
+| `IDEAS_ROOT`     | `.oat/ideas`           | `~/.oat/ideas`           |
 | `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
 
 ### Step 1: Resolve Active Idea
@@ -62,6 +62,7 @@ Determine whether to operate at project level or user (global) level.
 Read `activeIdea` from config (`oat config get activeIdea`) to get `IDEA_PATH`.
 
 **If missing or invalid:**
+
 - Use the Glob tool to list idea directories: `{IDEAS_ROOT}/*/discovery.md`
 - Ask the user to pick one
 - Run `oat config set activeIdea "{chosen-idea-path}"`
@@ -73,20 +74,24 @@ Derive `IDEA_NAME` from the directory basename.
 Read `{IDEAS_ROOT}/$IDEA_NAME/discovery.md`.
 
 **Validate content:** Check that the document has meaningful content beyond the template placeholders. Look for:
+
 - "What's the Idea?" section has real content (not just `{Brief description...}`)
 - At least one session in "Notes & Discussion"
 
 **If mostly empty:**
+
 - Warn: "This idea hasn't been explored much yet. Consider running the `oat-idea-ideate` skill first to flesh it out."
 - Ask: continue with summarization anyway, or brainstorm more? If user chooses to brainstorm, read the **`oat-idea-ideate`** skill (`.agents/skills/oat-idea-ideate/SKILL.md`) and follow its process from Step 4.
 
 ### Step 3: Generate Summary
 
 Copy the summary template and synthesize content from the discovery document:
+
 - Source: `{TEMPLATES_ROOT}/idea-summary.md`
 - Target: `{IDEAS_ROOT}/$IDEA_NAME/summary.md`
 
 **Synthesis guidelines:**
+
 - **Overview:** 2-4 sentence synthesis drawn from "What's the Idea?" and "Why Is It Interesting?"
 - **Key Points:** 3-5 bullets capturing the most important insights from the entire discovery
 - **Why This Matters:** Value proposition from "Why Is It Interesting?" and session discussions
@@ -96,6 +101,7 @@ Copy the summary template and synthesize content from the discovery document:
 - **References:** Carry over from "Related Ideas"
 
 Apply replacements:
+
 - `{Idea Name}` → actual idea name
 - `oat_idea_created` → original creation date from discovery frontmatter
 - `oat_idea_summarized` → today's date
@@ -103,6 +109,7 @@ Apply replacements:
 ### Step 4: Show Summary for Review
 
 Display the generated summary to the user. Ask:
+
 - **Accept** — finalize and update backlog
 - **Refine** — edit the summary (make changes, then re-confirm)
 - **Continue brainstorming** — discard summary and resume brainstorming
@@ -126,7 +133,7 @@ In `{IDEAS_ROOT}/backlog.md`:
 2. **Add** an entry to the **Captured Ideas** section with the overview from the summary:
 
 ```markdown
-- **{idea-name}** — {1-2 sentence overview from summary} *(Created: YYYY-MM-DD, Summarized: YYYY-MM-DD)*
+- **{idea-name}** — {1-2 sentence overview from summary} _(Created: YYYY-MM-DD, Summarized: YYYY-MM-DD)_
 ```
 
 ### Step 7: Confirm Completion
@@ -149,6 +156,7 @@ Next steps (suggest to the user — do not auto-invoke):
 ```
 
 **Promotion contract (v1):** To promote an idea to a full OAT project:
+
 1. Run `oat-project-new {idea-name}` to scaffold the project
 2. Run `oat-project-discover` — use the idea's `summary.md` as the initial request input
 3. The idea's discovery and summary documents remain in `{IDEAS_ROOT}/` as reference

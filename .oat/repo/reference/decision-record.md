@@ -4,22 +4,22 @@ Track notable decisions made while evolving OAT in this repo, so future sessions
 
 ## Decision Index
 
-| ID | Date | Status | Title |
-|----|------|--------|-------|
-| ADR-001 | 2026-01-30 | accepted | Keep `.oat/active-project` path-based for dogfood v1; defer name-only migration |
-| ADR-002 | 2026-01-31 | accepted | Standardize user-facing progress indicators in OAT skills |
-| ADR-003 | 2026-01-31 | accepted | Add `create-oat-skill` to keep OAT skill conventions consistent |
-| ADR-004 | 2026-01-31 | accepted | Defer active-project name-only migration until CLI owns project commands |
-| ADR-005 | 2026-02-14 | accepted | Use skill-first invocation language; treat `/oat:*` as optional host alias |
-| ADR-006 | 2026-02-16 | accepted | Add quick/import workflow lanes with canonical plan normalization and mode-aware routing |
+| ID      | Date       | Status   | Title                                                                                                  |
+| ------- | ---------- | -------- | ------------------------------------------------------------------------------------------------------ |
+| ADR-001 | 2026-01-30 | accepted | Keep `.oat/active-project` path-based for dogfood v1; defer name-only migration                        |
+| ADR-002 | 2026-01-31 | accepted | Standardize user-facing progress indicators in OAT skills                                              |
+| ADR-003 | 2026-01-31 | accepted | Add `create-oat-skill` to keep OAT skill conventions consistent                                        |
+| ADR-004 | 2026-01-31 | accepted | Defer active-project name-only migration until CLI owns project commands                               |
+| ADR-005 | 2026-02-14 | accepted | Use skill-first invocation language; treat `/oat:*` as optional host alias                             |
+| ADR-006 | 2026-02-16 | accepted | Add quick/import workflow lanes with canonical plan normalization and mode-aware routing               |
 | ADR-007 | 2026-02-16 | accepted | Split project-scoped review from ad-hoc review and default non-project artifacts to local-only storage |
-| ADR-008 | 2026-02-16 | accepted | Use explicit provider config with config-aware sync remediation for worktree-safe interop |
-| ADR-009 | 2026-02-16 | accepted | Centralize spec-driven/quick/import plan semantics in `oat-project-plan-writing` |
-| ADR-010 | 2026-02-17 | accepted | Introduce `.oat/config.json` for new non-sync settings and phase broader consolidation |
-| ADR-011 | 2026-02-17 | accepted | Make worktree-root resolution deterministic and default `worktrees.root` to repo-local `.worktrees` |
-| ADR-012 | 2026-02-22 | accepted | Adopt config-local lifecycle state for active/paused project context |
-| ADR-013 | 2026-02-22 | accepted | Standardize `oat project open/pause` lifecycle semantics |
-| ADR-014 | 2026-03-07 | accepted | New CLI commands use `--dry-run` convention; defer CLI-wide flip |
+| ADR-008 | 2026-02-16 | accepted | Use explicit provider config with config-aware sync remediation for worktree-safe interop              |
+| ADR-009 | 2026-02-16 | accepted | Centralize spec-driven/quick/import plan semantics in `oat-project-plan-writing`                       |
+| ADR-010 | 2026-02-17 | accepted | Introduce `.oat/config.json` for new non-sync settings and phase broader consolidation                 |
+| ADR-011 | 2026-02-17 | accepted | Make worktree-root resolution deterministic and default `worktrees.root` to repo-local `.worktrees`    |
+| ADR-012 | 2026-02-22 | accepted | Adopt config-local lifecycle state for active/paused project context                                   |
+| ADR-013 | 2026-02-22 | accepted | Standardize `oat project open/pause` lifecycle semantics                                               |
+| ADR-014 | 2026-03-07 | accepted | New CLI commands use `--dry-run` convention; defer CLI-wide flip                                       |
 
 ## Decisions
 
@@ -46,6 +46,7 @@ However, existing `oat-*` skills currently read `.oat/active-project` as a path.
 #### Decision
 
 For dogfood v1:
+
 - **Canonical write format:** `.oat/active-project` stores a **full path** to the active project directory.
 - **Read behavior (new tooling):** May accept either:
   - Legacy full path (canonical for v1)
@@ -82,6 +83,7 @@ For dogfood v1:
 #### Decision
 
 OAT skills should provide lightweight, consistent progress feedback:
+
 - A prominent **separator banner** at the start of the skill: `OAT ▸ {LABEL}`
 - A small number of **step indicators** (2–5) for multi-step work (finalize/commit paths)
 - For **long-running operations** (tests, builds, large diffs, subagents), print a brief “starting…” line and a matching “done” line (duration optional)
@@ -108,6 +110,7 @@ OAT skills should provide lightweight, consistent progress feedback:
 #### Decision
 
 Add a `create-oat-skill` skill as a specialization of `create-agnostic-skill`:
+
 - `create-oat-skill` explicitly references baseline guidance from `create-agnostic-skill`.
 - It adds OAT-specific requirements via a template (banner separators, progress indicators, `{PROJECTS_ROOT}` + `.oat/active-project` resolution, and safe bash patterns).
 
@@ -134,6 +137,7 @@ Add a `create-oat-skill` skill as a specialization of `create-agnostic-skill`:
 #### Decision
 
 For dogfood v1 (until CLI project commands exist):
+
 - **Write format remains path-based:** `.oat/active-project` stores a full path.
 - **Read behavior stays flexible for new tooling:** where safe, tooling may accept either:
   - full path (current canonical)
@@ -175,6 +179,7 @@ OAT documentation and skill guidance frequently used slash command text as if un
 #### Decision
 
 Adopt option 2:
+
 - **Canonical invocation contract:** skill names (for example, `oat-project-implement`).
 - **Slash commands:** treated as optional host-specific aliases, documented only as "where slash prompts are supported."
 - **Optional enhancement (not required):** support generation of thin Codex prompt wrappers (`.codex/prompts`) for users who explicitly opt in during skill sync.
@@ -222,6 +227,7 @@ OAT's spec-driven lifecycle (`discover -> spec -> design -> plan -> implement`) 
 #### Decision
 
 Adopt option 2:
+
 - Add `oat-project-quick-start` for quick lane projects.
 - Add `oat-project-import-plan` for external markdown plan ingestion.
 - Preserve imported source at `references/imported-plan.md`; canonical execution artifact remains `plan.md`.
@@ -274,6 +280,7 @@ Adopt option 2:
 #### Decision
 
 Adopt option 2:
+
 - Keep `oat-project-review-provide` project-scoped and require valid project state.
 - Add `oat-review-provide` for ad-hoc/non-project review scopes.
 - For ad-hoc artifacts, default storage to local-only `.oat/projects/local/orphan-reviews/`.
@@ -321,6 +328,7 @@ When provider directories did not yet exist in a new worktree, sync behavior dep
 #### Decision
 
 Adopt option 2:
+
 - Persist project provider intent in `.oat/sync/config.json` (`providers.<name>.enabled`).
 - Prompt for supported providers during `oat init --scope project` (interactive path).
 - Add `oat providers set --scope project` for explicit enable/disable management.
@@ -371,6 +379,7 @@ Spec-driven planning, quick-mode planning, and imported-plan normalization all t
 #### Decision
 
 Adopt option 2:
+
 - Add `oat-project-plan-writing` as the canonical plan contract for `spec-driven|quick|import` modes.
 - Update dependent skills to route through/shared-reference this contract.
 - Standardize plan status transitions and mode-aware guardrails (including resume behavior and stop-and-route semantics).
@@ -418,6 +427,7 @@ At the same time, existing skill contracts depend on current pointer/sync files,
 #### Decision
 
 Adopt option 2:
+
 - Introduce `.oat/config.json` as the canonical home for **new non-sync** repo-level settings.
 - First key: `worktrees.root` (phase A).
 - Do **not** add `.oat/worktrees-root`.
@@ -471,6 +481,7 @@ We also needed a stable default for `worktrees.root` after introducing `.oat/con
 #### Decision
 
 Adopt option 2:
+
 - Define strict precedence for worktree root resolution in `oat-worktree-bootstrap`:
   1. `--path`
   2. `OAT_WORKTREES_ROOT`
@@ -522,6 +533,7 @@ Earlier ADRs intentionally kept `.oat/active-project` path-based while deferring
 #### Decision
 
 Adopt option 3:
+
 - Canonical per-developer lifecycle state is now `.oat/config.local.json`:
   - `activeProject`
   - `lastPausedProject`
@@ -572,6 +584,7 @@ Lifecycle interactions previously depended on direct pointer edits and ambiguous
 #### Decision
 
 Adopt option 2:
+
 - `oat project open <name>` handles:
   - fresh activation
   - switching from another active project
@@ -607,6 +620,7 @@ Adopt option 2:
 #### Context
 
 The OAT CLI has two mutability conventions in use:
+
 - **Old:** dry-run by default, `--apply` to mutate (`oat sync`, `oat instructions sync`)
 - **New:** mutate by default, `--dry-run` to preview (`oat tools update`, `oat tools remove`)
 
@@ -621,6 +635,7 @@ The `--dry-run` pattern is more intuitive and aligns with common CLI tooling (np
 #### Decision
 
 Adopt option 3:
+
 - New `oat tools` commands use `--dry-run` (mutate by default).
 - Existing commands keep `--apply` (dry-run by default) unchanged.
 - A separate follow-up PR will flip the convention CLI-wide (purely mechanical).

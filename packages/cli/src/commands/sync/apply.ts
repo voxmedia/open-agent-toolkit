@@ -1,4 +1,5 @@
 import type { CommandContext } from '@app/command-context';
+
 import type {
   ScopeSyncPlan,
   SyncCommandDependencies,

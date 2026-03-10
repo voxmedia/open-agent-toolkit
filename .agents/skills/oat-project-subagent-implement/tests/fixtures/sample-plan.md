@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-02-17
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ["p04"]
+oat_plan_hill_phases: ['p04']
 oat_plan_source: test
 oat_generated: false
 ---
@@ -30,6 +30,7 @@ oat_generated: false
 ### Task p01-t01: Create user model
 
 **Files:**
+
 - Create: `src/models/user.ts`
 - Create: `src/models/user.test.ts`
 
@@ -59,6 +60,7 @@ git commit -m "feat(p01-t01): create user model"
 ### Task p01-t02: Create settings model
 
 **Files:**
+
 - Create: `src/models/settings.ts`
 - Create: `src/models/settings.test.ts`
 
@@ -90,6 +92,7 @@ git commit -m "feat(p01-t02): create settings model"
 ### Task p02-t01: Create user API endpoint
 
 **Files:**
+
 - Create: `src/routes/user.ts`
 - Create: `src/routes/user.test.ts`
 
@@ -119,6 +122,7 @@ git commit -m "feat(p02-t01): create user API endpoint"
 ### Task p02-t02: Create settings API endpoint
 
 **Files:**
+
 - Create: `src/routes/settings.ts`
 - Create: `src/routes/settings.test.ts`
 
@@ -150,6 +154,7 @@ git commit -m "feat(p02-t02): create settings API endpoint"
 ### Task p03-t01: Implement user validation rules
 
 **Files:**
+
 - Create: `src/validation/user.ts`
 - Create: `src/validation/user.test.ts`
 
@@ -176,6 +181,7 @@ git commit -m "feat(p03-t01): implement user validation rules"
 ### Task p04-t01: Wire models to routes with validation
 
 **Files:**
+
 - Modify: `src/routes/user.ts`
 - Modify: `src/models/user.ts`
 - Modify: `src/validation/user.ts`
@@ -200,19 +206,20 @@ git commit -m "feat(p04-t01): wire models to routes with validation"
 
 ## Reviews
 
-| Scope | Type | Status | Date | Artifact |
-|-------|------|--------|------|----------|
-| p01 | code | pending | - | - |
-| p02 | code | pending | - | - |
-| p03 | code | pending | - | - |
-| p04 | code | pending | - | - |
-| final | code | pending | - | - |
+| Scope | Type | Status  | Date | Artifact |
+| ----- | ---- | ------- | ---- | -------- |
+| p01   | code | pending | -    | -        |
+| p02   | code | pending | -    | -        |
+| p03   | code | pending | -    | -        |
+| p04   | code | pending | -    | -        |
+| final | code | pending | -    | -        |
 
 ---
 
 ## Implementation Complete
 
 **Summary:**
+
 - Phase 1: 2 tasks - Data models
 - Phase 2: 2 tasks - API routes
 - Phase 3: 1 task - Business logic

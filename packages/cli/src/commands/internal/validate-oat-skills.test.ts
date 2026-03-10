@@ -5,6 +5,7 @@ import {
 } from '@commands/__tests__/helpers';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createValidateOatSkillsCommand } from './validate-oat-skills';
 
 interface HarnessOptions {

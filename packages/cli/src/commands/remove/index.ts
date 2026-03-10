@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+
 import { createRemoveSkillCommand } from './skill';
 import { createRemoveSkillsCommand } from './skills';
 

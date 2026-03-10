@@ -1,9 +1,9 @@
 ---
 oat_generated: true
-oat_generated_at: {YYYY-MM-DD}
+oat_generated_at: { YYYY-MM-DD }
 oat_apply_type: agent-instructions
-oat_source_analysis: {analysis-artifact-path}
-oat_providers: [{providers}]
+oat_source_analysis: { analysis-artifact-path }
+oat_providers: [{ providers }]
 ---
 
 # Agent Instructions Apply Plan
@@ -15,6 +15,7 @@ oat_providers: [{providers}]
 ## Instructions
 
 Review the full recommendation set first, then choose a review mode:
+
 - **apply all** — approve the full set as presented
 - **apply interactively** — review recommendation by recommendation
 - **discuss** — pause to talk through the plan before approving
@@ -32,18 +33,18 @@ If a recommendation lacks that detail, it should be blocked pending a fresh anal
 
 ### {N}. {Action}: `{target-file-path}`
 
-| Field | Value |
-|---|---|
-| Action | {create / update} |
-| Provider | {agents_md / claude / cursor / copilot} |
-| Format | {AGENTS.md / Claude rule / Cursor rule / Copilot instruction / Copilot shim} |
-| Target | `{target-file-path}` |
-| Rationale | {Why — references analysis finding #N or coverage gap #N} |
-| Evidence | {exact file refs / config / docs that justify the recommendation} |
-| Confidence | {high / medium / low} |
-| Disclosure | {inline / link_only / omit / ask_user} |
+| Field        | Value                                                                                                             |
+| ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Action       | {create / update}                                                                                                 |
+| Provider     | {agents_md / claude / cursor / copilot}                                                                           |
+| Format       | {AGENTS.md / Claude rule / Cursor rule / Copilot instruction / Copilot shim}                                      |
+| Target       | `{target-file-path}`                                                                                              |
+| Rationale    | {Why — references analysis finding #N or coverage gap #N}                                                         |
+| Evidence     | {exact file refs / config / docs that justify the recommendation}                                                 |
+| Confidence   | {high / medium / low}                                                                                             |
+| Disclosure   | {inline / link_only / omit / ask_user}                                                                            |
 | Link Targets | {canonical docs/config/examples to reference instead of duplicating inline; required for `link_only`, else `N/A`} |
-| Template | `{template-file-path}` |
+| Template     | `{template-file-path}`                                                                                            |
 
 **Context:** {1-2 sentences describing what this file will contain and why it's needed.}
 
@@ -56,10 +57,10 @@ If a recommendation lacks that detail, it should be blocked pending a fresh anal
 
 ## Summary of Actions
 
-| # | Action | Target | Provider | Final Disclosure |
-|---|--------|--------|----------|------------------|
+| #   | Action          | Target   | Provider   | Final Disclosure   |
+| --- | --------------- | -------- | ---------- | ------------------ |
 | {N} | {create/update} | `{path}` | {provider} | {inline/link_only} |
-| ... | | | |
+| ... |                 |          |            |
 
 Only approved recommendations with a resolved disclosure mode should appear here. `omit` items are excluded, and `ask_user` items must be resolved before summary.
 

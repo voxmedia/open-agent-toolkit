@@ -2,7 +2,7 @@
 
 Agent subagent ecosystem research and notes across providers.
 
-*Last updated: February 2026*
+_Last updated: February 2026_
 
 ---
 
@@ -36,6 +36,7 @@ Subagents are the agent equivalent of functions: they accept a task, execute ind
 **SDK docs:** https://platform.claude.com/docs/en/agent-sdk/sub-agents
 
 **Locations:**
+
 - Project: `.claude/agents/<name>.md`
 - Personal: `~/.claude/agents/<name>.md`
 - Plugin: bundled in plugin `agents/` directory
@@ -44,14 +45,15 @@ Subagents are the agent equivalent of functions: they accept a task, execute ind
 **Priority:** Project > Plugin > User > CLI-defined
 
 **File format:**
+
 ```markdown
 ---
-name: agent-name                    # Required — unique identifier, lowercase + hyphens
+name: agent-name # Required — unique identifier, lowercase + hyphens
 description: When to use this agent # Required — natural language, drives auto-delegation
-tools: Read, Grep, Glob, Bash      # Optional — comma-separated; inherits all if omitted
-model: sonnet                       # Optional — alias (sonnet/opus/haiku) or 'inherit'
-permissionMode: default             # Optional — default|acceptEdits|bypassPermissions|plan|ignore
-skills: skill-1, skill-2           # Optional — auto-load skills into subagent context
+tools: Read, Grep, Glob, Bash # Optional — comma-separated; inherits all if omitted
+model: sonnet # Optional — alias (sonnet/opus/haiku) or 'inherit'
+permissionMode: default # Optional — default|acceptEdits|bypassPermissions|plan|ignore
+skills: skill-1, skill-2 # Optional — auto-load skills into subagent context
 ---
 
 System prompt body goes here. Multiple paragraphs.
@@ -59,6 +61,7 @@ Define role, approach, constraints.
 ```
 
 **Key features:**
+
 - **`skills` field:** Auto-loads named skills into the subagent's context. Powerful for composing skills + agents.
 - **`permissionMode`:** Controls how the subagent handles permission requests. `acceptEdits` auto-approves file edits; `bypassPermissions` auto-approves everything; `plan` for read-only research.
 - **`model` selection:** Can specify model alias or `inherit` from main conversation.
@@ -68,18 +71,20 @@ Define role, approach, constraints.
 
 **Built-in subagents:**
 
-| Name | Model | Tools | Purpose |
-|------|-------|-------|---------|
-| **General-purpose** | Sonnet | All | Complex multi-step tasks, code modifications |
-| **Plan** | Sonnet | Read, Glob, Grep, Bash | Research-only; used in plan mode |
-| **Explore** | Haiku | Read, Glob, Grep, limited Bash | Fast, lightweight, read-only codebase search |
+| Name                | Model  | Tools                          | Purpose                                      |
+| ------------------- | ------ | ------------------------------ | -------------------------------------------- |
+| **General-purpose** | Sonnet | All                            | Complex multi-step tasks, code modifications |
+| **Plan**            | Sonnet | Read, Glob, Grep, Bash         | Research-only; used in plan mode             |
+| **Explore**         | Haiku  | Read, Glob, Grep, limited Bash | Fast, lightweight, read-only codebase search |
 
 **Delegation behavior:**
+
 - **Automatic:** Claude delegates based on task description + subagent `description` field
 - **Explicit:** User says "Use the X subagent to..."
 - **Proactive tips:** Include "use PROACTIVELY" or "MUST BE USED" in description for more aggressive auto-delegation
 
 **Management:**
+
 - `/agents` command: Interactive create/edit/delete/view interface
 - Direct file management: Create `.md` files in agents directory
 - Files created manually load on next session start; `/agents` command loads immediately
@@ -89,24 +94,27 @@ Define role, approach, constraints.
 **Docs:** https://cursor.com/docs/context/subagents
 
 **Locations:**
+
 - Project: `.cursor/agents/<name>.md`
 
 **File format:**
+
 ```markdown
 ---
 name: agent-name
 description: When to use this agent
-model: claude-3-sonnet-20240229    # Model specification
+model: claude-3-sonnet-20240229 # Model specification
 tools:
   - code_search
   - git_history
-readonly: false                     # Prevent modifications
+readonly: false # Prevent modifications
 ---
 
 System prompt body.
 ```
 
 **Key differences from Claude Code:**
+
 - `model` takes full model identifiers, not aliases
 - `tools` is a YAML list (not comma-separated string)
 - `readonly` field (boolean) — not present in Claude Code
@@ -116,15 +124,18 @@ System prompt body.
 - Less documented overall; much of the community knowledge comes from experimentation
 
 **Delegation behavior:**
+
 - **Automatic:** Cursor Agent delegates based on task + subagent `description`
 - **Explicit:** Use `/name` (for example `/oat-reviewer`) or mention the subagent naturally
 - **Invocation model note:** Cursor docs describe explicit invocation via prompts, not a user-facing `subagent_type` parameter
 
 **Cursor CLI subagents:**
 Cursor CLI (`cursor-agent`) can spawn subagents in headless mode via shell commands:
+
 ```
 cursor-agent -p [task] --output-format=text --force --model [model]
 ```
+
 This enables fan-out/fan-in patterns with dynamic model selection. Community-discovered; not formally documented.
 
 ### GitHub Copilot
@@ -132,6 +143,7 @@ This enables fan-out/fan-in patterns with dynamic model selection. Community-dis
 **Docs:** https://code.visualstudio.com/docs/copilot/customization/custom-agents
 
 **Locations:**
+
 - Project: `.github/agents/<name>.md` or `.github/agents/<name>.agent.md` (both accepted)
 - Project (cross-compat): `.claude/agents/<name>.md` (Claude format auto-detected, tool names auto-mapped)
 - Personal: `~/.copilot/agents/<name>.md` (Copilot CLI)
@@ -139,33 +151,34 @@ This enables fan-out/fan-in patterns with dynamic model selection. Community-dis
 - Organization/Enterprise: `/agents/<name>.md` in `.github-private` repo
 
 **File format (`.agent.md`):**
+
 ```markdown
 ---
-name: agent-name                        # Optional — defaults to filename
-description: When to use this agent     # Optional — placeholder text in chat input
-tools:                                  # Optional — available tools (built-in, MCP, or extension)
+name: agent-name # Optional — defaults to filename
+description: When to use this agent # Optional — placeholder text in chat input
+tools: # Optional — available tools (built-in, MCP, or extension)
   - codebase
   - editFiles
   - fetch
   - terminalLastCommand
-agents:                                 # Optional — subagents this agent can invoke (* = all, [] = none)
+agents: # Optional — subagents this agent can invoke (* = all, [] = none)
   - code-reviewer
   - test-writer
-model:                                  # Optional — model or prioritized list
+model: # Optional — model or prioritized list
   - copilot-4o
   - gpt-4o
-user-invokable: true                    # Optional — show in dropdown (default true)
-disable-model-invocation: false         # Optional — prevent subagent delegation (default false)
-target: vscode                          # Optional — "vscode" or "github-copilot"
-argument-hint: "[files or description]" # Optional — guidance text for user
-mcp-servers:                            # Optional — inline MCP server configs
+user-invokable: true # Optional — show in dropdown (default true)
+disable-model-invocation: false # Optional — prevent subagent delegation (default false)
+target: vscode # Optional — "vscode" or "github-copilot"
+argument-hint: '[files or description]' # Optional — guidance text for user
+mcp-servers: # Optional — inline MCP server configs
   - type: stdio
     command: npx
-    args: ["-y", "@example/mcp-server"]
-handoffs:                               # Optional — guided workflow transitions
-  - label: "Review code"
+    args: ['-y', '@example/mcp-server']
+handoffs: # Optional — guided workflow transitions
+  - label: 'Review code'
     agent: code-reviewer
-    prompt: "Review the changes"
+    prompt: 'Review the changes'
     send: false
     model: gpt-4o
 ---
@@ -174,6 +187,7 @@ System prompt body goes here.
 ```
 
 **Key features:**
+
 - **`agents` field:** Controls which subagents this agent can delegate to. Set `*` for all, `[]` for none. Requires `agent` tool in `tools` list.
 - **`model` as prioritized list:** Unique to Copilot — specifies multiple models tried in order (failover chain).
 - **`handoffs`:** Guided workflow transitions with buttons that chain agents sequentially (e.g., Plan → Implement → Review). Preserves context across handoffs.
@@ -182,6 +196,7 @@ System prompt body goes here.
 - **Claude format compatibility:** Files in `.claude/agents/` use comma-separated tool strings; VS Code auto-maps Claude tool names to VS Code equivalents.
 
 **Key differences from Claude Code:**
+
 - Uses `.agent.md` extension (not plain `.md`)
 - `agents` field for subagent access control (Claude Code doesn't restrict which subagents can call which)
 - `model` accepts prioritized list for failover (Claude Code uses single alias)
@@ -194,6 +209,7 @@ System prompt body goes here.
 - `user-invokable` (note spelling) instead of Claude's `user-invocable` on skills
 
 **Delegation behavior:**
+
 - **Automatic:** Copilot delegates based on task + agent `description` (unless `disable-model-invocation: true`)
 - **Explicit:** User selects agent from dropdown or mentions by name
 - **Subagent scoping:** The `agents` field explicitly controls which agents can be invoked as subagents — more granular than Claude Code's approach
@@ -201,16 +217,19 @@ System prompt body goes here.
 ### Codex CLI (OpenAI)
 
 **Locations and config:**
+
 - Runtime role config (required): `~/.codex/config.toml` and/or project `.codex/config.toml`
 - Role config files (required for per-role overrides): `.codex/agents/<role>.toml`
 
 **Current model:**
+
 - Enable multi-agent with `[features] multi_agent = true`
 - Declare roles in `[agents.<name>]`
 - Dispatch by role name using `agent_type`
 - Use `config_file = "agents/<role>.toml"` when role-specific model/sandbox/instructions are needed
 
 See:
+
 - https://developers.openai.com/codex/multi-agent
 - https://developers.openai.com/codex/local-config
 
@@ -219,6 +238,7 @@ See:
 **Docs:** https://geminicli.com/docs/core/subagents/
 
 **Status:** Experimental — requires opt-in via `settings.json`:
+
 ```json
 {
   "experimental": { "enableAgents": true }
@@ -226,28 +246,31 @@ See:
 ```
 
 **Locations:**
+
 - Project: `.gemini/agents/<name>.md`
 - Personal: `~/.gemini/agents/<name>.md`
 
 **File format:**
+
 ```markdown
 ---
-name: agent-name                    # Required — lowercase, numbers, hyphens, underscores
+name: agent-name # Required — lowercase, numbers, hyphens, underscores
 description: When to use this agent # Required — drives auto-delegation
-tools:                              # Optional — defaults to standard set if omitted
+tools: # Optional — defaults to standard set if omitted
   - read_file
   - run_shell_command
-model: gemini-2.5-pro              # Optional — defaults to main session model
-temperature: 0.7                    # Optional — 0.0–2.0
-max_turns: 15                       # Optional — conversation turn limit (default 15)
-timeout_mins: 5                     # Optional — execution timeout in minutes (default 5)
-kind: local                         # Optional — "local" (default) or "remote"
+model: gemini-2.5-pro # Optional — defaults to main session model
+temperature: 0.7 # Optional — 0.0–2.0
+max_turns: 15 # Optional — conversation turn limit (default 15)
+timeout_mins: 5 # Optional — execution timeout in minutes (default 5)
+kind: local # Optional — "local" (default) or "remote"
 ---
 
 System prompt body goes here.
 ```
 
 **Key features:**
+
 - **`tools` as YAML list:** Same pattern as Cursor (not comma-separated like Claude Code)
 - **`temperature` field:** Unique to Gemini — not available in Claude Code or Cursor subagents
 - **`max_turns` / `timeout_mins`:** Explicit resource limits; prevents runaway subagents
@@ -256,17 +279,19 @@ System prompt body goes here.
 
 **Built-in subagents:**
 
-| Name | Purpose |
-|------|---------|
-| **codebase_investigator** | Deep code analysis and dependency mapping |
-| **cli_help** | Gemini CLI documentation and configuration queries |
-| **generalist_agent** | Routes tasks to specialized subagents |
+| Name                      | Purpose                                            |
+| ------------------------- | -------------------------------------------------- |
+| **codebase_investigator** | Deep code analysis and dependency mapping          |
+| **cli_help**              | Gemini CLI documentation and configuration queries |
+| **generalist_agent**      | Routes tasks to specialized subagents              |
 
 **Delegation behavior:**
+
 - **Automatic:** Main agent sees subagents as tools with matching names and delegates based on task + `description`
 - **Explicit:** User can mention the subagent by name in the prompt
 
 **Key differences from Claude Code:**
+
 - `tools` is a YAML list (not comma-separated string)
 - Has `temperature`, `max_turns`, `timeout_mins` fields (not in Claude Code)
 - No `skills` field — can't auto-load skills into subagent context
@@ -281,6 +306,7 @@ System prompt body goes here.
 An MCP server that makes subagent workflows portable across tools. Defines agents in Markdown, executes them via whichever CLI is available (cursor-agent, claude, gemini, codex).
 
 **Key characteristics:**
+
 - Fresh context per subagent invocation (no carryover state)
 - Configurable execution engine (Cursor CLI, Claude Code, Gemini CLI, Codex)
 - Timeout and permission management
@@ -377,14 +403,15 @@ Validator subagent → reviews/tests the implementation
 
 A concrete example of a four-subagent architecture for AGENTS.md management:
 
-| Subagent | Purpose | Used By | Model |
-|----------|---------|---------|-------|
-| `repo-scanner` | Deep repository discovery | Generate, Analyze, Audit | Sonnet |
-| `command-validator` | Execute and verify commands | All four skills | Sonnet |
-| `convention-drift-detector` | Compare docs vs. code | Analyze, Audit | Sonnet |
-| `structural-consistency-checker` | Evaluate AGENTS.md quality | Audit | Sonnet |
+| Subagent                         | Purpose                     | Used By                  | Model  |
+| -------------------------------- | --------------------------- | ------------------------ | ------ |
+| `repo-scanner`                   | Deep repository discovery   | Generate, Analyze, Audit | Sonnet |
+| `command-validator`              | Execute and verify commands | All four skills          | Sonnet |
+| `convention-drift-detector`      | Compare docs vs. code       | Analyze, Audit           | Sonnet |
+| `structural-consistency-checker` | Evaluate AGENTS.md quality  | Audit                    | Sonnet |
 
 **Key design decisions:**
+
 - `repo-scanner` is reusable across 3 of 4 skills (amortizes discovery cost)
 - Audit runs 3 subagents in parallel (command-validator + drift-detector + consistency-checker)
 - `command-validator` is isolated because command execution can fail/hang

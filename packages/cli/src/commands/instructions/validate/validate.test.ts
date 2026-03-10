@@ -7,6 +7,7 @@ import type { InstructionEntry } from '@commands/instructions/instructions.types
 import { CliError } from '@errors/cli-error';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createInstructionsValidateCommand } from './validate';
 
 interface HarnessOptions {

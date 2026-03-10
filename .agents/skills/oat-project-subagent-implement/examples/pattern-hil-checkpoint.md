@@ -6,7 +6,7 @@ Phases run up to and including a checkpoint phase, then user reviews before cont
 
 ```yaml
 ---
-oat_plan_hill_phases: ["p02"]
+oat_plan_hill_phases: ['p02']
 ---
 ```
 
@@ -14,21 +14,27 @@ oat_plan_hill_phases: ["p02"]
 ## Phase 1: Data Layer
 
 ### Task p01-t01: Create database schema
+
 **Files:**
+
 - Create: `src/db/schema.ts`
 - Create: `src/db/migrations/001.sql`
 
 ## Phase 2: Business Logic (HiLL checkpoint)
 
 ### Task p02-t01: Create validation rules
+
 **Files:**
+
 - Create: `src/validation/rules.ts`
 - Create: `src/validation/rules.test.ts`
 
 ## Phase 3: API Layer
 
 ### Task p03-t01: Create REST endpoints using schema + validation
+
 **Files:**
+
 - Create: `src/api/endpoints.ts`
 - Modify: `src/db/schema.ts` (import types)
 - Modify: `src/validation/rules.ts` (wire to endpoints)
@@ -79,6 +85,7 @@ In `implementation.md`, the orchestration run shows completion up to the checkpo
 ... (unit outcomes as in simple pattern) ...
 
 #### Outstanding Items
+
 - HiLL checkpoint reached: Phase 3 awaiting user approval
 ```
 
@@ -94,9 +101,10 @@ After user approves and p03 executes:
 #### Unit Outcomes
 
 | Unit | Status | Commits | Tests | Review | Disposition |
-|------|--------|---------|-------|--------|-------------|
-| p03 | pass | ghi9012 | pass | pass | merged |
+| ---- | ------ | ------- | ----- | ------ | ----------- |
+| p03  | pass   | ghi9012 | pass  | pass   | merged      |
 
 #### Outstanding Items
+
 - None
 ```

@@ -2,7 +2,7 @@
 name: oat-review-provide
 version: 1.2.0
 description: Use when you need an ad-hoc review outside an active OAT project lifecycle. Reviews code or artifacts without project phase state, unlike oat-project-review-provide.
-argument-hint: "[unstaged|staged|base_branch=<branch>|base_sha=<sha>|<sha1>..<sha2>|--files <path1,path2,...>] [--output <path>] [--mode auto|local|tracked|inline]"
+argument-hint: '[unstaged|staged|base_branch=<branch>|base_sha=<sha>|<sha1>..<sha2>|--files <path1,path2,...>] [--output <path>] [--mode auto|local|tracked|inline]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -24,20 +24,24 @@ Request and execute a code/file review that is not tied to an OAT project lifecy
 **Purpose:** Review commit ranges, working-tree diffs, or explicit files and write an optional review artifact even when no project state exists.
 
 **BLOCKED Activities:**
+
 - No implementation/code changes.
 - No project state mutations unless user explicitly requests conversion into an OAT project flow.
 
 **ALLOWED Activities:**
+
 - Range-based code review.
 - Optional review artifact generation (tracked or local-only).
 - Inline review output when requested.
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Expecting project artifacts (`state.md`, `plan.md`) for this review → STOP and continue in ad-hoc mode.
 - Auto-committing tracked artifacts without user approval → STOP and ask.
 
 **Recovery:**
+
 1. Re-resolve review range directly from git.
 2. Re-resolve artifact destination policy (local-only, tracked, or inline).
 
@@ -48,7 +52,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ PROVIDE AD-HOC REVIEW
+  OAT ▸ PROVIDE AD-HOC REVIEW
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
@@ -89,6 +93,7 @@ SCOPE_RANGE="$MERGE_BASE..HEAD"
 ### Step 1: Gather Scope Evidence (Mode-Aware)
 
 For `--files` mode:
+
 - Split comma-separated list
 - Validate each file exists
 - Set `FILES_CHANGED` to explicit files
@@ -131,11 +136,13 @@ bash .agents/skills/oat-review-provide/scripts/resolve-review-output.sh --mode a
 ```
 
 Policy:
+
 - If `.oat/repo/reviews` exists and is not gitignored, assume user wants tracked artifacts there.
 - Otherwise default to local-only `.oat/projects/local/orphan-reviews`.
 - If user preference is unclear, ask and recommend local-only.
 
 If user asks for tracked `.oat/repo/reviews` and it is gitignored, warn and ask whether to:
+
 - choose a different tracked destination, or
 - use local-only/inline.
 
@@ -143,14 +150,14 @@ If user asks for tracked `.oat/repo/reviews` and it is gitignored, warn and ask 
 
 Derive a **scope slug** from the resolved scope mode so that the filename indicates what was reviewed:
 
-| Scope mode | Slug derivation | Example filename |
-|---|---|---|
-| `base_branch=<branch>` | Current branch name | `ad-hoc-review-2026-02-16-oat-repo.md` |
-| `unstaged` | Literal `unstaged` | `ad-hoc-review-2026-02-16-unstaged.md` |
-| `staged` | Literal `staged` | `ad-hoc-review-2026-02-16-staged.md` |
-| `--files <paths>` | First 2–3 basenames, joined with `-` | `ad-hoc-review-2026-02-16-auth-login.md` |
-| `base_sha=<sha>` | Short SHA (7 chars) | `ad-hoc-review-2026-02-16-abc1234.md` |
-| `<sha1>..<sha2>` | Both short SHAs joined with `-` | `ad-hoc-review-2026-02-16-abc1234-def5678.md` |
+| Scope mode             | Slug derivation                      | Example filename                              |
+| ---------------------- | ------------------------------------ | --------------------------------------------- |
+| `base_branch=<branch>` | Current branch name                  | `ad-hoc-review-2026-02-16-oat-repo.md`        |
+| `unstaged`             | Literal `unstaged`                   | `ad-hoc-review-2026-02-16-unstaged.md`        |
+| `staged`               | Literal `staged`                     | `ad-hoc-review-2026-02-16-staged.md`          |
+| `--files <paths>`      | First 2–3 basenames, joined with `-` | `ad-hoc-review-2026-02-16-auth-login.md`      |
+| `base_sha=<sha>`       | Short SHA (7 chars)                  | `ad-hoc-review-2026-02-16-abc1234.md`         |
+| `<sha1>..<sha2>`       | Both short SHAs joined with `-`      | `ad-hoc-review-2026-02-16-abc1234-def5678.md` |
 
 ```bash
 mkdir -p "$OUTPUT_DIR"
@@ -174,12 +181,14 @@ If the file already exists (same scope reviewed twice in one day), suffix with `
 ### Step 4: Run Review
 
 Use the same severity model and checklist as project reviews:
+
 - Critical / Important / Minor findings
 - file:line references
 - actionable fix guidance
 - verification commands
 
 Template source of truth:
+
 - `.agents/skills/oat-review-provide/references/review-artifact-template.md`
 
 ### Step 5: Write Artifact or Return Inline
@@ -203,6 +212,7 @@ For local-only or inline modes, do not commit unless user explicitly requests.
 ### Step 7: Output Summary
 
 Report (required):
+
 - scope/range reviewed
 - files reviewed
 - findings counts by severity

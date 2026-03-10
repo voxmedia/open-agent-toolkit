@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, relative, resolve } from 'node:path';
+
 import { dirExists, fileExists } from '@fs/io';
 
 export interface DocsContentsEntry {

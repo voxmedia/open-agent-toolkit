@@ -2,7 +2,7 @@
 name: oat-idea-scratchpad
 version: 1.2.0
 description: Use when you need quick idea capture or want to review scratchpad entries. Manages lightweight idea seeds and optional notes.
-argument-hint: "[review | capture] [--global]"
+argument-hint: '[review | capture] [--global]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, AskUserQuestion
@@ -17,7 +17,7 @@ Review your ideas scratchpad or quick-capture a new idea seed.
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ SCRATCHPAD [project]
+  OAT ▸ SCRATCHPAD [project]
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Replace `[project]` with `[global]` when operating at user level.
@@ -46,9 +46,9 @@ Determine whether to operate at project level or user (global) level. The scratc
 
 **Set variables:**
 
-| Variable | Project Level | User Level |
-|----------|--------------|------------|
-| `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| Variable         | Project Level          | User Level               |
+| ---------------- | ---------------------- | ------------------------ |
+| `IDEAS_ROOT`     | `.oat/ideas`           | `~/.oat/ideas`           |
 | `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
 
 ### Step 1: Determine Mode
@@ -86,7 +86,7 @@ Otherwise, ask the user: "Would you like to **review** what's on the scratchpad,
 5. Append entry to `{IDEAS_ROOT}/scratchpad.md` under the `## Ideas` section:
 
    ```markdown
-   - [ ] **{idea-name}** - {one-liner summary} *(YYYY-MM-DD)*
+   - [ ] **{idea-name}** - {one-liner summary} _(YYYY-MM-DD)_
      - {note 1}
      - {note 2}
    ```

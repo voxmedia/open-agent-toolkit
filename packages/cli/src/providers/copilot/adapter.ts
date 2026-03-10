@@ -1,6 +1,8 @@
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
+
 import { COPILOT_PROJECT_MAPPINGS, COPILOT_USER_MAPPINGS } from './paths';
 
 async function detectCopilot(scopeRoot: string): Promise<boolean> {

@@ -18,8 +18,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ OPEN PROJECT
+  OAT ▸ OPEN PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work, print step indicators, e.g.:
   - `[1/3] Resolving project selection…`
   - `[2/3] Running oat project open…`
@@ -41,5 +42,6 @@ oat project open "{project-name}"
 ### Step 3: Confirm to User
 
 Show user:
+
 - Active project: {project-name}
 - State dashboard refreshed by the command

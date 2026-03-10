@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import { fileExists } from '@fs/io';
 
 const SECTION_START = '# OAT local paths';

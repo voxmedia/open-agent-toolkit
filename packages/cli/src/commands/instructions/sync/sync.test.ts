@@ -11,6 +11,7 @@ import { EXPECTED_CLAUDE_CONTENT } from '@commands/instructions/instructions.uti
 import { CliError } from '@errors/cli-error';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createInstructionsSyncCommand } from './sync';
 
 interface HarnessOptions {

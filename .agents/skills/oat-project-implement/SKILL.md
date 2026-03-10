@@ -28,8 +28,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ IMPLEMENT
+  OAT ▸ IMPLEMENT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - For each task, announce a compact header before doing work:
   - `OAT ▸ IMPLEMENT {task_id}: {task_name}`
 - Before multi-step “bookkeeping” work (updating artifacts/state, verification, committing, dashboard refresh), print 2–5 short step indicators, e.g.:
@@ -41,11 +42,13 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**
+
 - No skipping tasks
 - No changing plan structure
 - No scope expansion
 
 **ALLOWED Activities:**
+
 - Executing tasks in order
 - Making minor adaptations within task scope
 - Logging decisions and issues
@@ -53,11 +56,13 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Skipping ahead in tasks → STOP (execute in order)
 - Expanding scope → STOP (log as "deferred")
 - Changing plan structure → STOP (update plan.md first)
 
 **Recovery:**
+
 1. Acknowledge the deviation
 2. Return to current task
 3. Document in implementation.md
@@ -75,6 +80,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 **If `PROJECT_PATH` is missing/invalid:**
+
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
 - Write it for future phases:
@@ -95,6 +101,7 @@ EXEC_MODE="${EXEC_MODE:-single-thread}"
 ```
 
 If `EXEC_MODE` is `subagent-driven`:
+
 - Tell the user: `Execution mode is subagent-driven. Use oat-project-subagent-implement instead.`
 - STOP (do not proceed with sequential implementation)
 
@@ -105,6 +112,7 @@ cat "$PROJECT_PATH/plan.md" | head -10 | grep "oat_status:"
 ```
 
 **Required frontmatter:**
+
 - `oat_status: complete`
 - `oat_ready_for: oat-project-implement`
 
@@ -113,6 +121,7 @@ cat "$PROJECT_PATH/plan.md" | head -10 | grep "oat_status:"
 ### Step 2: Read Plan Document
 
 Read `"$PROJECT_PATH/plan.md"` completely to understand:
+
 - All phases and tasks
 - File changes per task
 - Verification commands
@@ -126,15 +135,18 @@ Read `oat_plan_hill_phases` from `"$PROJECT_PATH/plan.md"` frontmatter and valid
 - **Invalid format examples:** scalar string, malformed array, unknown phase IDs
 
 Determine whether this is a first implementation run:
+
 - If `"$PROJECT_PATH/implementation.md"` does not exist, treat as first run.
 - If it exists but still has template placeholders and no completed task evidence, treat as first run.
 
 Prompt behavior:
+
 - **If `oat_plan_hill_phases` is missing/empty/invalid:** ask user to confirm checkpoint phases before any task execution.
 - **If first run and `oat_plan_hill_phases` is valid:** ask user to confirm keep/change.
 - **If resuming and `oat_plan_hill_phases` is valid:** do not re-ask; print active checkpoint config and continue.
 
 When user confirms/changes:
+
 - Update `"$PROJECT_PATH/plan.md"` frontmatter `oat_plan_hill_phases` to the confirmed value before executing tasks.
 - Keep the value stable for the rest of the run unless the user explicitly requests a change.
 
@@ -147,6 +159,7 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 ```
 
 **If exists and has progress:**
+
 - Read `oat_current_task_id` from frontmatter (e.g., "p01-t03")
 - Validate the task pointer:
   - If `oat_current_task_id` points at a task already marked `completed` in the body, advance to the **next incomplete** task (first `pending` / `in_progress` / `blocked` entry).
@@ -155,6 +168,7 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 - Ask user: "Resume from {task_id}, or start fresh (overwrite implementation.md)?"
 
 **Stale-state reconciliation (approval required):**
+
 - Before executing tasks, cross-check `plan.md` Reviews status with `implementation.md` + `state.md`.
 - If `plan.md` shows a scope as `passed` but `implementation.md` / `state.md` still says "awaiting re-review" (or leaves `oat_current_task_id` / `oat_current_task` as `null` while future plan tasks are still incomplete), treat this as bookkeeping drift.
 - Resolve the next task from plan order (first incomplete non-review task after the passed scope), then ask:
@@ -167,6 +181,7 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
   - Do not auto-edit bookkeeping; pause and ask whether to proceed manually or stop.
 
 **If doesn't exist:**
+
 - Initialize from template (Step 4)
 
 **Important:** Never overwrite an existing `implementation.md` without explicit user confirmation (and warn that draft logs will be lost).
@@ -176,17 +191,19 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 Copy template: `.oat/templates/implementation.md` → `"$PROJECT_PATH/implementation.md"`
 
 Update frontmatter:
+
 ```yaml
 ---
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: {today}
-oat_current_task_id: p01-t01  # Stable task ID from plan
+oat_last_updated: { today }
+oat_current_task_id: p01-t01 # Stable task ID from plan
 ---
 ```
 
 Initialize project state so other skills (e.g., `oat-project-progress`) reflect that implementation has started:
+
 - In `"$PROJECT_PATH/state.md"` frontmatter:
   - `oat_phase: implement`
   - `oat_phase_status: in_progress`
@@ -197,17 +214,20 @@ Initialize project state so other skills (e.g., `oat-project-progress`) reflect 
 For the current task in plan.md:
 
 **5a. Announce task:**
+
 ```
 Starting {task_id}: {Task Name}
 Files: {file list}
 ```
 
 **5b. Follow steps exactly:**
+
 - Read each step from plan
 - Execute as specified
 - Run verification commands
 
 **5c. Apply TDD discipline:**
+
 1. Write test first (if applicable)
 2. Run tests → expect red
 3. Write implementation
@@ -215,6 +235,7 @@ Files: {file list}
 5. Refactor if needed
 
 **5d. Handle issues:**
+
 - If step unclear → ask user
 - If verification fails → debug and retry
 - If blocked → mark task as blocked, note reason
@@ -235,12 +256,14 @@ Store commit SHA for implementation.md.
 After each task:
 
 **Update frontmatter:**
+
 ```yaml
-oat_current_task_id: {next_task_id}  # e.g., p01-t02
-oat_last_updated: {today}
+oat_current_task_id: { next_task_id } # e.g., p01-t02
+oat_last_updated: { today }
 ```
 
 **Update task entry:**
+
 ```markdown
 ### Task {task_id}: {Task Name}
 
@@ -248,22 +271,27 @@ oat_last_updated: {today}
 **Commit:** {sha}
 
 **Outcome (required):**
+
 - {2-5 bullets describing what materially changed}
 
 **Files changed:**
+
 - `{path}` - {why}
 
 **Verification:**
+
 - Run: `{command(s)}`
 - Result: {pass/fail + notes}
 
 **Notes / Decisions:**
+
 - {gotchas, trade-offs, design deltas}
 ```
 
 **Update progress overview table.**
 
 Keep project state in sync after each task (recommended source of truth for “where are we?” across sessions):
+
 - Update `"$PROJECT_PATH/state.md"` frontmatter:
   - `oat_phase: implement`
   - `oat_phase_status: in_progress`
@@ -272,13 +300,16 @@ Keep project state in sync after each task (recommended source of truth for “w
 
 **Bookkeeping commit (required):**
 After the code commit (Step 6) and state updates above, commit all modified OAT tracking files:
+
 ```bash
 git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
 git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for {task_id}"
 ```
+
 Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
 
 **If executing review-generated tasks** (task title prefixed with `(review)`):
+
 - Ensure `implementation.md` stays accurate:
   - The “Review Received” section reflects whether findings were deferred vs converted to tasks
   - The “Next” line is updated once review fix tasks are complete (don’t leave “Next: execute fix tasks” after they’re done)
@@ -290,6 +321,7 @@ Do not use `git add -A` or glob patterns. Only commit the three OAT project file
   - Only set `passed` after a re-review is run and processed via `oat-project-review-receive` with no Critical/Important findings.
 
 **Review-fix completion bookkeeping (required):**
+
 - When you complete the last outstanding review-fix task:
   1. Update the relevant `plan.md` `## Reviews` row from `fixes_added` → `fixes_completed` and set Date to `{today}`.
      - If multiple rows are `fixes_added`, ask the user which scope you just addressed (or choose the matching phase if obvious).
@@ -304,19 +336,22 @@ Do not use `git add -A` or glob patterns. Only commit the three OAT project file
 
   **Bookkeeping commit (required):**
   After completing the review-fix checklist above, commit all modified OAT tracking files:
+
   ```bash
   git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
   git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for {task_id}"
   ```
+
   Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
 
 ### Step 8: Check Plan Phase Completion
 
-When all tasks in current plan phase complete (e.g., all p01-* tasks done):
+When all tasks in current plan phase complete (e.g., all p01-\* tasks done):
 
 **Update frontmatter:**
+
 ```yaml
-oat_current_task_id: {first_task_of_next_phase}  # e.g., p02-t01
+oat_current_task_id: { first_task_of_next_phase } # e.g., p02-t01
 ```
 
 **Plan phase checkpoint:**
@@ -330,17 +365,20 @@ At the end of each plan phase (p01, p02, etc.), check `oat_plan_hill_phases` in 
 **Key semantic: listed phases are where you stop AFTER completing them, not before.** `["p03"]` means "complete p03, then pause" — not "pause before starting p03."
 
 When pausing:
+
 - Output phase summary (tasks completed, commits made)
 - Ask user: "Phase {N} ({phase_name}) complete. Continue to next phase?"
 - Wait for user approval before proceeding to next plan phase
 
 **Restart safety (required):**
+
 - At the end of each task and at each phase boundary, ensure `implementation.md` is persisted and internally consistent:
   - `oat_current_task_id` points at the next task to do (or `null` when complete)
   - Phase status sections match the progress overview table
   - The implementation log reflects what was actually completed
 
 **Phase summaries (required):**
+
 - When a plan phase completes (p01, p02, etc.), update the “Phase Summary” section in `implementation.md` for that phase:
   - Outcome (behavior-level)
   - Key files touched (paths)
@@ -349,13 +387,16 @@ When pausing:
 
 **Bookkeeping commit (required):**
 After phase summary and task pointer advancement, commit all modified OAT tracking files:
+
 ```bash
 git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
 git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for {phase} completion"
 ```
+
 Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
 
 **Note on HiLL types:**
+
 - **Workflow HiLL** (`oat_hill_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-project-progress router.
 - **Plan phase checkpoints** (`oat_plan_hill_phases` in plan.md): Gates at plan phase boundaries during implementation. Default: pause after every phase. Configure to pause only after specific phases. Listed phases are where you stop AFTER completing them.
 
@@ -364,6 +405,7 @@ Do not use `git add -A` or glob patterns. Only commit the three OAT project file
 Continue Steps 5-8 until all plan phases complete.
 
 **Batch execution:**
+
 - Default: Execute tasks one at a time
 - If user requests: Execute N tasks before checking in
 - Stop at configured plan phase boundaries for review
@@ -373,14 +415,16 @@ Continue Steps 5-8 until all plan phases complete.
 If a task cannot be completed:
 
 **Mark as blocked:**
+
 ```yaml
 oat_blockers:
-  - task_id: {task_id}  # e.g., p01-t03
-    reason: "{description}"
-    since: {date}
+  - task_id: { task_id } # e.g., p01-t03
+    reason: '{description}'
+    since: { date }
 ```
 
 **Update task status:**
+
 ```markdown
 ### Task {task_id}: {Task Name}
 
@@ -389,6 +433,7 @@ oat_blockers:
 ```
 
 **Notify user:**
+
 ```
 Task {task_id} blocked: {reason}
 
@@ -403,6 +448,7 @@ Options:
 When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` task):
 
 **Update “Final Summary” (required):**
+
 - Before requesting final review / running `oat-project-pr-final`, update the `## Final Summary (for PR/docs)` section in `"$PROJECT_PATH/implementation.md"`:
   - What shipped (capabilities, behavior-level)
   - Key files/modules touched
@@ -411,12 +457,13 @@ When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` ta
 - This should reflect **what was actually implemented**, including any deviations from design and any review-fix work.
 
 Update frontmatter:
+
 ```yaml
 ---
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: {today}
+oat_last_updated: { today }
 oat_current_task_id: null
 ---
 ```
@@ -428,6 +475,7 @@ oat_current_task_id: null
 Update `"$PROJECT_PATH/state.md"` so other skills reflect task completion and review gating:
 
 **Frontmatter updates:**
+
 - `oat_current_task: null`
 - `oat_last_commit: {final_commit_sha}`
 - `oat_blockers: []`
@@ -438,6 +486,7 @@ Update `"$PROJECT_PATH/state.md"` so other skills reflect task completion and re
 **Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
 
 Update content:
+
 ```markdown
 ## Current Phase
 
@@ -455,10 +504,12 @@ Implementation - Tasks complete; awaiting final review.
 
 **Bookkeeping commit (required):**
 After updating state.md to reflect implementation completion, commit all modified OAT tracking files:
+
 ```bash
 git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
 git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for implementation complete"
 ```
+
 Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
 
 ### Step 13: Final Verification
@@ -486,12 +537,14 @@ All must pass before proceeding.
 **At the final plan phase boundary, a code review is required before PR.**
 
 Check if final review already completed (preferred source of truth: plan.md Reviews table):
+
 ```bash
 FINAL_ROW=$(grep -E "^\\|\\s*final\\s*\\|" "$PROJECT_PATH/plan.md" 2>/dev/null | head -1)
 echo "$FINAL_ROW"
 ```
 
 **If final review row exists and status is `passed`:**
+
 - Example row:
   - `| final | code | passed | 2026-01-28 | reviews/final-review-2026-01-28.md |`
 - Check:
@@ -501,6 +554,7 @@ echo "$FINAL_ROW"
 - Skip to Step 15 (PR prompt)
 
 **If final review is not marked `passed`:**
+
 - Tell user: "All tasks complete. Final review required before PR."
 - Offer review options (3-tier capability model):
 
@@ -516,6 +570,7 @@ To run in a separate session use: oat-project-review-provide code final
 ```
 
 **After user chooses:**
+
 - If subagent (option 1): Agent spawns the review via Task tool — no command needed from user
 - If fresh session (option 2): User runs `oat-project-review-provide code final` in a separate session, then returns here
 - If inline (option 3): Agent executes the review directly per oat-project-review-provide skill
@@ -524,6 +579,7 @@ To run in a separate session use: oat-project-review-provide code final
 - Loop until final review passes (max 3 cycles per oat-project-review-receive)
 
 **After final review is marked `passed`:**
+
 - Update `"$PROJECT_PATH/state.md"` frontmatter:
   - `oat_phase: implement`
   - `oat_phase_status: complete`
@@ -553,6 +609,7 @@ Choose:
 ```
 
 **If user chooses to open PR:**
+
 - Prefer using the `oat-project-pr-final` skill to generate a final PR description from OAT artifacts:
   ```
   oat-project-pr-final

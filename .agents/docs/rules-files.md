@@ -40,23 +40,25 @@ Source: [code.claude.com/docs/en/memory](https://code.claude.com/docs/en/memory)
 
 Claude Code loads instruction files from a 6-level hierarchy:
 
-| Memory Type | Location | Purpose | Shared With |
-|---|---|---|---|
+| Memory Type        | Location                                                                                        | Purpose                                             | Shared With      |
+| ------------------ | ----------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------- |
 | **Managed policy** | macOS: `/Library/Application Support/ClaudeCode/CLAUDE.md`; Linux: `/etc/claude-code/CLAUDE.md` | Organization-wide instructions managed by IT/DevOps | All users in org |
-| **Project memory** | `./CLAUDE.md` **or** `./.claude/CLAUDE.md` | Team-shared instructions for the project | Team (git) |
-| **Project rules** | `./.claude/rules/*.md` | Modular, topic-specific project instructions | Team (git) |
-| **User memory** | `~/.claude/CLAUDE.md` | Personal preferences for all projects | Just you |
-| **Project local** | `./CLAUDE.local.md` | Personal project-specific preferences | Just you |
-| **Auto memory** | `~/.claude/projects/<project>/memory/` | Claude's automatic notes and learnings | Just you |
+| **Project memory** | `./CLAUDE.md` **or** `./.claude/CLAUDE.md`                                                      | Team-shared instructions for the project            | Team (git)       |
+| **Project rules**  | `./.claude/rules/*.md`                                                                          | Modular, topic-specific project instructions        | Team (git)       |
+| **User memory**    | `~/.claude/CLAUDE.md`                                                                           | Personal preferences for all projects               | Just you         |
+| **Project local**  | `./CLAUDE.local.md`                                                                             | Personal project-specific preferences               | Just you         |
+| **Auto memory**    | `~/.claude/projects/<project>/memory/`                                                          | Claude's automatic notes and learnings              | Just you         |
 
 Both `./CLAUDE.md` and `./.claude/CLAUDE.md` are valid project memory locations. `CLAUDE.local.md` is automatically gitignored.
 
 ### 2.2 Discovery and Loading
 
 **Upward recursion at launch:**
+
 > "Claude Code reads memories recursively: starting in the cwd, Claude Code recurses up to (but not including) the root directory `/` and reads any CLAUDE.md or CLAUDE.local.md files it finds."
 
 **Downward discovery on demand:**
+
 > "Claude will also discover CLAUDE.md nested in subtrees under your current working directory. Instead of loading them at launch, they are only included when Claude reads files in those subtrees."
 
 - **Loaded at launch:** All CLAUDE.md files in the directory hierarchy **above** the working directory
@@ -76,6 +78,7 @@ CLAUDE.md files can import additional files using `@path/to/import`:
 ```
 
 Key behaviors:
+
 - Relative paths resolve **relative to the file containing the import**, not the working directory
 - Absolute and `@~/` home paths supported
 - Recursive imports supported, **max depth of 5 hops**
@@ -88,6 +91,7 @@ Key behaviors:
 > "More specific instructions take precedence over broader ones."
 
 Precedence (highest to lowest):
+
 1. **Managed policy** (cannot be overridden)
 2. **Project rules** (`.claude/rules/*.md`) — same priority as `.claude/CLAUDE.md`
 3. **Project memory** (`./CLAUDE.md`)
@@ -110,10 +114,9 @@ All `.md` files in `.claude/rules/` are automatically loaded as project memory. 
 ```yaml
 ---
 paths:
-  - "src/api/**/*.ts"
-  - "src/**/*.{ts,tsx}"
+  - 'src/api/**/*.ts'
+  - 'src/**/*.{ts,tsx}'
 ---
-
 # API Development Rules
 - All API endpoints must include input validation
 ```
@@ -134,13 +137,13 @@ This leverages @-import. Alternative: symlink `ln -s AGENTS.md CLAUDE.md`.
 
 Source: [code.claude.com/docs/en/best-practices](https://code.claude.com/docs/en/best-practices) (official)
 
-| Mechanism | Always loaded | On-demand | Best for |
-|---|---|---|---|
-| **CLAUDE.md** | Yes | No | Broad project conventions loaded every session |
-| **Rules (no paths)** | Yes | No | Focused topic files always relevant to project |
-| **Rules (w/ paths)** | No | Yes | File-type-specific conventions |
-| **Skills** | Description only | Full content | Domain knowledge, reusable workflows, tasks |
-| **Auto memory** | 200 lines | Rest | Claude's own learnings and project patterns |
+| Mechanism            | Always loaded    | On-demand    | Best for                                       |
+| -------------------- | ---------------- | ------------ | ---------------------------------------------- |
+| **CLAUDE.md**        | Yes              | No           | Broad project conventions loaded every session |
+| **Rules (no paths)** | Yes              | No           | Focused topic files always relevant to project |
+| **Rules (w/ paths)** | No               | Yes          | File-type-specific conventions                 |
+| **Skills**           | Description only | Full content | Domain knowledge, reusable workflows, tasks    |
+| **Auto memory**      | 200 lines        | Rest         | Claude's own learnings and project patterns    |
 
 > "CLAUDE.md is loaded every session, so only include things that apply broadly. For domain knowledge or workflows that are only relevant sometimes, use skills instead."
 
@@ -166,11 +169,10 @@ Cursor supports `.md` and `.mdc` extensions:
 
 ```yaml
 ---
-description: "Python coding guidelines for backend services"
+description: 'Python coding guidelines for backend services'
 alwaysApply: false
-globs: ["src/**/*.ts", "lib/**/*.ts"]
+globs: ['src/**/*.ts', 'lib/**/*.ts']
 ---
-
 # Rule Title
 Rule content in markdown format.
 ```
@@ -181,20 +183,20 @@ Rules support `@filename.ts` syntax to reference files without duplicating conte
 
 The official documentation defines **three** frontmatter fields:
 
-| Field | Type | Purpose |
-|---|---|---|
-| `description` | string | Concise explanation; used by Agent to decide relevance |
-| `alwaysApply` | boolean | When `true`, rule included in every session |
-| `globs` | string or string[] | File patterns for auto-attachment |
+| Field         | Type               | Purpose                                                |
+| ------------- | ------------------ | ------------------------------------------------------ |
+| `description` | string             | Concise explanation; used by Agent to decide relevance |
+| `alwaysApply` | boolean            | When `true`, rule included in every session            |
+| `globs`       | string or string[] | File patterns for auto-attachment                      |
 
 **Activation mode is derived from the combination:**
 
-| Configuration | Resulting Mode |
-|---|---|
-| `alwaysApply: true` | **Always** — included in every session |
-| `alwaysApply: false` + `globs` set | **Auto Attached** — included when matching files appear |
+| Configuration                                   | Resulting Mode                                           |
+| ----------------------------------------------- | -------------------------------------------------------- |
+| `alwaysApply: true`                             | **Always** — included in every session                   |
+| `alwaysApply: false` + `globs` set              | **Auto Attached** — included when matching files appear  |
 | `alwaysApply: false` + `description` (no globs) | **Agent Requested** — Agent decides based on description |
-| No frontmatter / none set | **Manual** — user must @-mention the rule |
+| No frontmatter / none set                       | **Manual** — user must @-mention the rule                |
 
 > **Note:** `agentRequested` and `manual` are NOT official frontmatter fields — those behaviors are achieved through combinations of the three real fields above.
 
@@ -214,12 +216,12 @@ Cursor natively reads AGENTS.md:
 
 Nested AGENTS.md in subdirectories is supported with hierarchical precedence (more specific wins).
 
-| Aspect | AGENTS.md | .cursor/rules |
-|---|---|---|
-| Format | Plain markdown | .mdc with frontmatter |
-| Activation control | Always on | Four activation modes |
-| Glob targeting | No | Yes |
-| Cross-tool compat | Yes (Claude, Codex, etc.) | Cursor-specific |
+| Aspect             | AGENTS.md                 | .cursor/rules         |
+| ------------------ | ------------------------- | --------------------- |
+| Format             | Plain markdown            | .mdc with frontmatter |
+| Activation control | Always on                 | Four activation modes |
+| Glob targeting     | No                        | Yes                   |
+| Cross-tool compat  | Yes (Claude, Codex, etc.) | Cursor-specific       |
 
 ### 3.6 Precedence
 
@@ -233,23 +235,24 @@ Nested AGENTS.md in subdirectories is supported with hierarchical precedence (mo
 
 Source: community references (not confirmed in primary official docs)
 
-As of Cursor 2.2, new rules are created as folders: `.cursor/rules/<name>/RULE.md`. Legacy `.mdc` files continue to work. This is the Cursor UI's default for *new* rules, not a change to how rules are read.
+As of Cursor 2.2, new rules are created as folders: `.cursor/rules/<name>/RULE.md`. Legacy `.mdc` files continue to work. This is the Cursor UI's default for _new_ rules, not a change to how rules are read.
 
 ### 3.9 Notepads vs Rules
 
-| Aspect | Rules | Notepads |
-|---|---|---|
-| Activation | Automatic (various modes) | Manual (@-reference only) |
-| Storage | File system (`.cursor/rules/`) | Cursor UI (Explorer sidebar) |
-| Version control | Yes (project rules) | No — local to Cursor instance |
-| Team sharing | Via repo (project) or dashboard (team) | Not shareable |
-| Token usage | Always-on rules consume tokens every session | Only when referenced |
+| Aspect          | Rules                                        | Notepads                      |
+| --------------- | -------------------------------------------- | ----------------------------- |
+| Activation      | Automatic (various modes)                    | Manual (@-reference only)     |
+| Storage         | File system (`.cursor/rules/`)               | Cursor UI (Explorer sidebar)  |
+| Version control | Yes (project rules)                          | No — local to Cursor instance |
+| Team sharing    | Via repo (project) or dashboard (team)       | Not shareable                 |
+| Token usage     | Always-on rules consume tokens every session | Only when referenced          |
 
 Use rules for standards that should apply automatically. Use notepads for on-demand reference material.
 
 ### 3.10 Limitations
 
 Rules only apply to **Agent (Chat)**. They do NOT affect:
+
 - Cursor Tab (autocomplete suggestions)
 - Inline Edit (Cmd/Ctrl+K) — for user rules specifically
 - Other AI features beyond Agent
@@ -274,19 +277,18 @@ Format: plain Markdown. Whitespace between instructions is ignored. VS Code `/in
 
 **Frontmatter — all supported fields:**
 
-| Field | Required | Description |
-|---|---|---|
-| `applyTo` | No | Glob pattern(s), comma-separated. Relative to workspace root. |
-| `description` | No | Short description shown on hover (VS Code). Enables semantic matching when no `applyTo`. |
-| `name` | No | Display name in UI (VS Code). Defaults to filename. |
-| `excludeAgent` | No | Prevents use by a specific agent. Values: `"code-review"` or `"coding-agent"`. |
+| Field          | Required | Description                                                                              |
+| -------------- | -------- | ---------------------------------------------------------------------------------------- |
+| `applyTo`      | No       | Glob pattern(s), comma-separated. Relative to workspace root.                            |
+| `description`  | No       | Short description shown on hover (VS Code). Enables semantic matching when no `applyTo`. |
+| `name`         | No       | Display name in UI (VS Code). Defaults to filename.                                      |
+| `excludeAgent` | No       | Prevents use by a specific agent. Values: `"code-review"` or `"coding-agent"`.           |
 
 ```yaml
 ---
-applyTo: "**/*.ts,**/*.tsx"
-excludeAgent: "code-review"
+applyTo: '**/*.ts,**/*.tsx'
+excludeAgent: 'code-review'
 ---
-
 When writing TypeScript code in this repository...
 ```
 
@@ -311,15 +313,15 @@ Body supports file references (`[name](path)` or `#file:path`), tool references 
 
 **Pattern:** `*.agent.md` — custom agents with rich frontmatter.
 
-| Field | Required | Description |
-|---|---|---|
-| `description` | **Yes** | Agent purpose and capabilities |
-| `name` | No | Display name |
-| `target` | No | `vscode` or `github-copilot` (defaults to both) |
-| `tools` | No | List of tool names; defaults to all |
-| `infer` | No | Auto-selection based on task context (default: `true`) |
-| `mcp-servers` | No | Additional MCP servers (org/enterprise only for direct config) |
-| `metadata` | No | Key-value annotation |
+| Field         | Required | Description                                                    |
+| ------------- | -------- | -------------------------------------------------------------- |
+| `description` | **Yes**  | Agent purpose and capabilities                                 |
+| `name`        | No       | Display name                                                   |
+| `target`      | No       | `vscode` or `github-copilot` (defaults to both)                |
+| `tools`       | No       | List of tool names; defaults to all                            |
+| `infer`       | No       | Auto-selection based on task context (default: `true`)         |
+| `mcp-servers` | No       | Additional MCP servers (org/enterprise only for direct config) |
+| `metadata`    | No       | Key-value annotation                                           |
 
 Body max: **30,000 characters.**
 
@@ -355,26 +357,26 @@ Must be on the default branch. Timeout capped at 59 minutes. The coding agent ha
 
 ### 4.8 Feature Support Matrix
 
-| Feature | copilot-instructions.md | *.instructions.md | AGENTS.md | Organization |
-|---|---|---|---|---|
-| Chat (GitHub.com) | Yes | Yes | — | Yes |
-| Chat (VS Code) | Yes | Yes | Yes | No |
-| Code review | Yes | Yes (configurable) | — | Yes |
-| Coding agent | Yes | Yes | Yes | Yes |
-| **Code completions** | **No** | **No** | **No** | **No** |
+| Feature              | copilot-instructions.md | \*.instructions.md | AGENTS.md | Organization |
+| -------------------- | ----------------------- | ------------------ | --------- | ------------ |
+| Chat (GitHub.com)    | Yes                     | Yes                | —         | Yes          |
+| Chat (VS Code)       | Yes                     | Yes                | Yes       | No           |
+| Code review          | Yes                     | Yes (configurable) | —         | Yes          |
+| Coding agent         | Yes                     | Yes                | Yes       | Yes          |
+| **Code completions** | **No**                  | **No**             | **No**    | **No**       |
 
 > Custom instructions "are not taken into account for inline suggestions as you type in the editor."
 
 ### 4.9 VS Code Settings
 
-| Setting | Purpose |
-|---|---|
-| `chat.instructionsFilesLocations` | Where to find instruction files |
-| `chat.promptFilesLocations` | Where to find prompt files |
-| `chat.includeApplyingInstructions` | Enable pattern-based matching |
-| `chat.useAgentsMdFile` | Enable AGENTS.md detection |
-| `chat.useNestedAgentsMdFiles` | Enable nested AGENTS.md (experimental) |
-| `chat.useClaudeMdFile` | Enable CLAUDE.md detection |
+| Setting                            | Purpose                                |
+| ---------------------------------- | -------------------------------------- |
+| `chat.instructionsFilesLocations`  | Where to find instruction files        |
+| `chat.promptFilesLocations`        | Where to find prompt files             |
+| `chat.includeApplyingInstructions` | Enable pattern-based matching          |
+| `chat.useAgentsMdFile`             | Enable AGENTS.md detection             |
+| `chat.useNestedAgentsMdFiles`      | Enable nested AGENTS.md (experimental) |
+| `chat.useClaudeMdFile`             | Enable CLAUDE.md detection             |
 
 ---
 
@@ -384,37 +386,37 @@ Must be on the default branch. Timeout capped at 59 minutes. The coding agent ha
 
 All three providers support file-pattern-based activation — this is the unifying "rules" concept:
 
-| Provider | Mechanism | Frontmatter field | Pattern syntax |
-|---|---|---|---|
-| Claude Code | `.claude/rules/*.md` | `paths` (array) | Glob: `**/*.ts`, `{src,lib}/**/*.ts` |
-| Cursor | `.cursor/rules/*.mdc` | `globs` (string or array) | Glob: `*.tsx`, `src/**/*.ts` |
-| Copilot | `.github/instructions/*.instructions.md` | `applyTo` (comma-separated) | Glob: `**/*.ts,**/*.tsx` |
+| Provider    | Mechanism                                | Frontmatter field           | Pattern syntax                       |
+| ----------- | ---------------------------------------- | --------------------------- | ------------------------------------ |
+| Claude Code | `.claude/rules/*.md`                     | `paths` (array)             | Glob: `**/*.ts`, `{src,lib}/**/*.ts` |
+| Cursor      | `.cursor/rules/*.mdc`                    | `globs` (string or array)   | Glob: `*.tsx`, `src/**/*.ts`         |
+| Copilot     | `.github/instructions/*.instructions.md` | `applyTo` (comma-separated) | Glob: `**/*.ts,**/*.tsx`             |
 
 ### 5.2 Activation Modes
 
-| Mode | Claude Code | Cursor | Copilot |
-|---|---|---|---|
-| Always on | Rules without `paths` / CLAUDE.md | `alwaysApply: true` | copilot-instructions.md |
-| File-pattern scoped | Rules with `paths` | `globs` set | `applyTo` globs |
-| Agent-determined | Skills (via description) | Agent Requested (via description) | N/A (description enables semantic matching in VS Code) |
-| Manual invocation | Skills with `disable-model-invocation` | Manual @-mention | Prompt files (`/name`) |
+| Mode                | Claude Code                            | Cursor                            | Copilot                                                |
+| ------------------- | -------------------------------------- | --------------------------------- | ------------------------------------------------------ |
+| Always on           | Rules without `paths` / CLAUDE.md      | `alwaysApply: true`               | copilot-instructions.md                                |
+| File-pattern scoped | Rules with `paths`                     | `globs` set                       | `applyTo` globs                                        |
+| Agent-determined    | Skills (via description)               | Agent Requested (via description) | N/A (description enables semantic matching in VS Code) |
+| Manual invocation   | Skills with `disable-model-invocation` | Manual @-mention                  | Prompt files (`/name`)                                 |
 
 ### 5.3 Precedence Comparison
 
-| Provider | Precedence (highest → lowest) |
-|---|---|
+| Provider    | Precedence (highest → lowest)                                                        |
+| ----------- | ------------------------------------------------------------------------------------ |
 | Claude Code | Managed > Project rules ≈ Project memory > User memory > Project local > Auto memory |
-| Cursor | Team > Project > User |
-| Copilot | Personal > Repository > Organization |
+| Cursor      | Team > Project > User                                                                |
+| Copilot     | Personal > Repository > Organization                                                 |
 
 ### 5.4 AGENTS.md Support
 
-| Provider | Native support | Nested | Import mechanism |
-|---|---|---|---|
-| Claude Code | **No** (use `@AGENTS.md` import) | N/A | `@path` in CLAUDE.md |
-| Cursor | **Yes** (first-class) | Yes (hierarchical) | N/A — read directly |
-| Copilot | **Yes** (`**/AGENTS.md`) | Yes (nearest wins) | N/A — read directly |
-| Codex | **Yes** (primary format) | Yes (override pattern) | N/A — native |
+| Provider    | Native support                   | Nested                 | Import mechanism     |
+| ----------- | -------------------------------- | ---------------------- | -------------------- |
+| Claude Code | **No** (use `@AGENTS.md` import) | N/A                    | `@path` in CLAUDE.md |
+| Cursor      | **Yes** (first-class)            | Yes (hierarchical)     | N/A — read directly  |
+| Copilot     | **Yes** (`**/AGENTS.md`)         | Yes (nearest wins)     | N/A — read directly  |
+| Codex       | **Yes** (primary format)         | Yes (override pattern) | N/A — native         |
 
 ---
 
@@ -422,24 +424,24 @@ All three providers support file-pattern-based activation — this is the unifyi
 
 ### Hard Limits (Documented)
 
-| Provider | Limit | Source |
-|---|---|---|
-| Codex | 32 KiB combined instruction files | OpenAI Codex docs (official) |
-| Copilot | ~1,000 lines max per file | GitHub docs (official) |
-| Copilot agents | 30,000 chars per agent body | GitHub docs (official) |
-| Claude Code | Skill descriptions: 2% of context window (~16,000 chars fallback) | Claude Code docs (official) |
-| Cursor | No documented hard limit; 500 lines recommended | Cursor docs (official) |
+| Provider       | Limit                                                             | Source                       |
+| -------------- | ----------------------------------------------------------------- | ---------------------------- |
+| Codex          | 32 KiB combined instruction files                                 | OpenAI Codex docs (official) |
+| Copilot        | ~1,000 lines max per file                                         | GitHub docs (official)       |
+| Copilot agents | 30,000 chars per agent body                                       | GitHub docs (official)       |
+| Claude Code    | Skill descriptions: 2% of context window (~16,000 chars fallback) | Claude Code docs (official)  |
+| Cursor         | No documented hard limit; 500 lines recommended                   | Cursor docs (official)       |
 
 ### Practical Sizing
 
-| Metric | Target | Source type |
-|---|---|---|
-| Root instruction file | 60–500 lines (300 good target) | Practitioner consensus |
-| Scoped rules / .mdc files | Under 50–80 lines each | Community consensus |
-| SKILL.md / prompt files | Under 500 lines; move reference to supporting files | Official (Claude) |
-| Total instruction budget | Under 32 KiB as safe cross-provider ceiling | Official (Codex) |
-| Fresh monorepo session cost | ~20k tokens (10% of 200k budget) | Practitioner ([Shrivu Shankar](https://blog.sshh.io/p/how-i-use-every-claude-code-feature)) |
-| LLM instruction adherence | Degrades significantly above 150–200 instructions | [Builder.io](https://www.builder.io/c/docs/ai-instruction-best-practices) (non-official) |
+| Metric                      | Target                                              | Source type                                                                                 |
+| --------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Root instruction file       | 60–500 lines (300 good target)                      | Practitioner consensus                                                                      |
+| Scoped rules / .mdc files   | Under 50–80 lines each                              | Community consensus                                                                         |
+| SKILL.md / prompt files     | Under 500 lines; move reference to supporting files | Official (Claude)                                                                           |
+| Total instruction budget    | Under 32 KiB as safe cross-provider ceiling         | Official (Codex)                                                                            |
+| Fresh monorepo session cost | ~20k tokens (10% of 200k budget)                    | Practitioner ([Shrivu Shankar](https://blog.sshh.io/p/how-i-use-every-claude-code-feature)) |
+| LLM instruction adherence   | Degrades significantly above 150–200 instructions   | [Builder.io](https://www.builder.io/c/docs/ai-instruction-best-practices) (non-official)    |
 
 ---
 
@@ -460,6 +462,7 @@ Source: [Anthropic Engineering](https://www.anthropic.com/engineering/effective-
 Source: [Martin Fowler](https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html) (reputable engineering source)
 
 Context loading strategies:
+
 - **LLM-controlled**: Agent decides when context is needed (skills, agent-requested rules)
 - **Human-triggered**: Explicit activation via commands (manual rules, prompt files)
 - **Deterministic**: Tool-driven events (hooks, auto-attached rules)

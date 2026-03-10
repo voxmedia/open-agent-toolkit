@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { join, matchesGlob } from 'node:path';
+
 import { dirExists, fileExists } from '@fs/io';
+
 import { expandLocalPaths } from './expand';
 
 export interface LocalPathStatus {

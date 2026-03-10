@@ -4,14 +4,14 @@ oat_generated_at: 2026-02-18
 oat_source_head_sha: ecad67d19c241e4d03621cb11b31b86d131cbeb8
 oat_source_main_merge_base_sha: 77496d562d030ebe35186d8f3421176cf61308b3
 oat_index_type: thin
-oat_warning: "GENERATED FILE - Thin index, will be enriched after mapper completion"
+oat_warning: 'GENERATED FILE - Thin index, will be enriched after mapper completion'
 ---
 
 # open-agent-toolkit
 
 ## Overview
 
-*Overview will be enriched after codebase analysis completes.*
+_Overview will be enriched after codebase analysis completes._
 
 ## Quick Orientation
 
@@ -20,6 +20,7 @@ oat_warning: "GENERATED FILE - Thin index, will be enriched after mapper complet
 **Key Scripts:** oat:validate-skills, build, check, check:fix, clean, cli, dev, format, format:fix, hooks:disable-all, hooks:enable-all, hooks:status, hooks, lint, lint:fix, prepare, test, type-check, worktree:init
 
 **Entry Points:**
+
 - `docs/oat/cli/index.md`
 - `docs/oat/cli/provider-interop/index.md`
 - `docs/oat/ideas/index.md`

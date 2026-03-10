@@ -1,5 +1,6 @@
 import { access } from 'node:fs/promises';
 import { dirname, posix, resolve, sep } from 'node:path';
+
 import { CliError } from '@errors/index';
 import type { Scope } from '@shared/types';
 

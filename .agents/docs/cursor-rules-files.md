@@ -125,12 +125,12 @@ The official documentation defines **three** frontmatter fields. No additional f
 
 The activation mode is determined by the **combination** of frontmatter fields:
 
-| Configuration | Resulting Mode |
-|---|---|
-| `alwaysApply: true` | **Always** -- included in every session |
-| `alwaysApply: false` + `globs` set | **Auto Attached** -- included when matching files appear |
+| Configuration                                       | Resulting Mode                                            |
+| --------------------------------------------------- | --------------------------------------------------------- |
+| `alwaysApply: true`                                 | **Always** -- included in every session                   |
+| `alwaysApply: false` + `globs` set                  | **Auto Attached** -- included when matching files appear  |
 | `alwaysApply: false` + `description` set (no globs) | **Agent Requested** -- Agent decides based on description |
-| No frontmatter / none of the above | **Manual** -- user must @-mention the rule |
+| No frontmatter / none of the above                  | **Manual** -- user must @-mention the rule                |
 
 ### Fields NOT in Official Documentation
 
@@ -255,14 +255,14 @@ project/
 
 ### AGENTS.md vs .cursor/rules
 
-| Aspect | AGENTS.md | .cursor/rules |
-|---|---|---|
-| Format | Plain markdown | .mdc with frontmatter |
-| Activation control | Always on | Four activation modes |
-| Glob targeting | No | Yes |
-| Agent-requested | No | Yes |
-| Complexity | Simple | More configurable |
-| Cross-tool compatibility | Works with Claude Code, Windsurf, etc. | Cursor-specific |
+| Aspect                   | AGENTS.md                              | .cursor/rules         |
+| ------------------------ | -------------------------------------- | --------------------- |
+| Format                   | Plain markdown                         | .mdc with frontmatter |
+| Activation control       | Always on                              | Four activation modes |
+| Glob targeting           | No                                     | Yes                   |
+| Agent-requested          | No                                     | Yes                   |
+| Complexity               | Simple                                 | More configurable     |
+| Cross-tool compatibility | Works with Claude Code, Windsurf, etc. | Cursor-specific       |
 
 AGENTS.md is positioned as "a simple alternative" for projects that do not need fine-grained activation control. It is also the recommended format for cross-tool compatibility since Claude Code, Windsurf, and other AI coding tools also read AGENTS.md.
 
@@ -381,24 +381,26 @@ Unlike temporary chat sessions where context vanishes:
 
 ### Key Differences from Rules
 
-| Aspect | Rules | Notepads |
-|---|---|---|
-| Activation | Automatic (various modes) | Manual (@-reference only) |
-| Storage | File system (`.cursor/rules/`) or Settings | Cursor UI (Explorer sidebar) |
-| Version control | Yes (project rules) | No -- local to Cursor instance |
-| Sharing | Via repo (project) or dashboard (team) | Not shareable across team members |
-| Scope | System-level instructions | Reference material and context |
-| Token usage | Always-on rules consume tokens every session | Only when explicitly referenced |
+| Aspect          | Rules                                        | Notepads                          |
+| --------------- | -------------------------------------------- | --------------------------------- |
+| Activation      | Automatic (various modes)                    | Manual (@-reference only)         |
+| Storage         | File system (`.cursor/rules/`) or Settings   | Cursor UI (Explorer sidebar)      |
+| Version control | Yes (project rules)                          | No -- local to Cursor instance    |
+| Sharing         | Via repo (project) or dashboard (team)       | Not shareable across team members |
+| Scope           | System-level instructions                    | Reference material and context    |
+| Token usage     | Always-on rules consume tokens every session | Only when explicitly referenced   |
 
 ### When to Use Each
 
 **Use Rules when:**
+
 - Standards should apply automatically.
 - Instructions should be version-controlled.
 - Team-wide enforcement is needed.
 - Behavior should be consistent across all sessions.
 
 **Use Notepads when:**
+
 - Context is needed only on demand.
 - Content is personal or not team-wide.
 - You want to minimize token usage.
@@ -463,6 +465,7 @@ The official documentation explicitly warns against:
 ### Feature Scope
 
 Rules do NOT apply to:
+
 - **Cursor Tab** (autocomplete suggestions).
 - **Other AI features** beyond Agent (Chat).
 
@@ -473,6 +476,7 @@ Rules do NOT apply to:
 ### Context Window
 
 Rules consume context window space. Always-on rules with large content reduce the available context for actual code and conversation. This is a practical reason to:
+
 - Keep rules concise.
 - Use targeted activation modes (globs, agent-requested) instead of always-on.
 - Split large rule sets into composable pieces.

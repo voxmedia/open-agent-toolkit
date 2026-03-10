@@ -1,9 +1,9 @@
 ---
-name: {skill-name}
+name: { skill-name }
 version: 1.0.0
 # Required: semver. Start new skills at 1.0.0; bump patch/minor/major for fixes, backward-compatible additions, and breaking changes.
 description: Use when {trigger condition}. {What this skill does for disambiguation.}
-argument-hint: "[args]"
+argument-hint: '[args]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep
 user-invocable: true
@@ -24,16 +24,20 @@ user-invocable: true
 **Purpose:** {What this phase accomplishes}
 
 **BLOCKED Activities:**
+
 - {Explicitly forbidden behaviors}
 
 **ALLOWED Activities:**
+
 - {Explicitly allowed behaviors}
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - {Deviation} → STOP ({what to do})
 
 **Recovery:**
+
 1. {Step}
 2. {Step}
 
@@ -44,7 +48,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ {LABEL}
+  OAT ▸ {LABEL}
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators with the `[N/N]` format, e.g.:
@@ -66,6 +70,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 If `PROJECT_PATH` is missing/invalid:
+
 - Ask for `{project-name}`
 - Set `PROJECT_PATH="${PROJECTS_ROOT}/{project-name}"`
 - Persist with `oat config set activeProject "$PROJECT_PATH"`.

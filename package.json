@@ -1,9 +1,9 @@
 {
   "name": "open-agent-toolkit",
   "version": "0.0.1",
+  "private": true,
   "description": "Open standards, open source tooling for interoperable agent development across providers",
   "type": "module",
-  "private": true,
   "scripts": {
     "oat:validate-skills": "pnpm run cli -- internal validate-oat-skills",
     "build": "turbo run build",
@@ -27,19 +27,20 @@
     "worktree:init": "pnpm install && pnpm run build && pnpm run cli -- sync --scope project"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.11",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@types/node": "^22.10.0",
     "lint-staged": "^15.2.11",
+    "oxfmt": "^0.36.0",
+    "oxlint": "^1.51.0",
     "tsc-alias": "^1.8.10",
     "tsx": "^4.21.0",
     "turbo": "^2.7.6",
     "typescript": "^5.8.3"
   },
-  "packageManager": "pnpm@10.13.1",
   "engines": {
     "node": ">=22.17.0",
     "pnpm": ">=10.13.1"
-  }
+  },
+  "packageManager": "pnpm@10.13.1"
 }

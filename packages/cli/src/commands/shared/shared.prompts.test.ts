@@ -1,6 +1,7 @@
 import { CliError } from '@errors/index';
 import { checkbox, confirm, input, select } from '@inquirer/prompts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   confirmAction,
   inputRequired,

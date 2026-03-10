@@ -1,4 +1,5 @@
 import { rm } from 'node:fs/promises';
+
 import { compareVersions } from '@commands/init/tools/shared/version';
 import { getSkillVersion } from '@commands/shared/frontmatter';
 import { copyDirectory, copySingleFile, dirExists, fileExists } from '@fs/io';

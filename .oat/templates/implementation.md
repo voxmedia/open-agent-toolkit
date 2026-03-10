@@ -17,6 +17,7 @@ oat_template_name: implementation
 > This document is used to resume interrupted implementation sessions.
 >
 > Conventions:
+>
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
 > - When all plan tasks are complete, set `oat_current_task_id: null`.
 > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
@@ -25,10 +26,10 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase | Status | Tasks | Completed |
-|-------|--------|-------|-----------|
-| Phase 1 | in_progress | N | 0/N |
-| Phase 2 | pending | N | 0/N |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | N     | 0/N       |
+| Phase 2 | pending     | N     | 0/N       |
 
 **Total:** 0/{N} tasks completed
 
@@ -42,16 +43,20 @@ oat_template_name: implementation
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
+
 - {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
 
 **Key files touched:**
+
 - `{path}` - {why}
 
 **Verification:**
+
 - Run: `{command(s)}`
 - Result: {pass/fail + notes}
 
 **Notes / Decisions:**
+
 - {trade-offs or deviations discovered during implementation}
 
 ### Task p01-t01: {Task Name}
@@ -60,19 +65,24 @@ oat_template_name: implementation
 **Commit:** {sha} (if completed)
 
 **Outcome (required when completed):**
+
 - {what materially changed (not “did task”, but “system now does X”)}
 
 **Files changed:**
+
 - `{path}` - {why}
 
 **Verification:**
+
 - Run: `{command(s)}`
 - Result: {pass/fail + notes}
 
 **Notes / Decisions:**
+
 - {gotchas, trade-offs, design deltas, important context for future sessions}
 
 **Issues Encountered:**
+
 - {Issue and resolution}
 
 ---
@@ -83,6 +93,7 @@ oat_template_name: implementation
 **Commit:** -
 
 **Notes:**
+
 - {Notes will be added during implementation}
 
 ---
@@ -122,15 +133,19 @@ Chronological log of implementation progress.
 - [ ] p01-t02: {Task name} - in progress
 
 **What changed (high level):**
+
 - {short bullets suitable for PR/docs}
 
 **Decisions:**
+
 - {Decision made and rationale}
 
 **Follow-ups / TODO:**
+
 - {anything discovered during implementation that should be captured for later}
 
 **Blockers:**
+
 - {Blocker description} - {status: resolved/pending}
 
 **Session End:** {time}
@@ -150,34 +165,39 @@ Chronological log of implementation progress.
 Document any deviations from the original plan.
 
 | Task | Planned | Actual | Reason |
-|------|---------|--------|--------|
-| - | - | - | - |
+| ---- | ------- | ------ | ------ |
+| -    | -       | -      | -      |
 
 ## Test Results
 
 Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
-|-------|-----------|--------|--------|----------|
-| 1 | - | - | - | - |
-| 2 | - | - | - | - |
+| ----- | --------- | ------ | ------ | -------- |
+| 1     | -         | -      | -      | -        |
+| 2     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
+
 - {capability 1}
 - {capability 2}
 
 **Behavioral changes (user-facing):**
+
 - {bullet}
 
 **Key files / modules:**
+
 - `{path}` - {purpose}
 
 **Verification performed:**
+
 - {tests/lint/typecheck/build/manual steps}
 
 **Design deltas (if any):**
+
 - {what changed vs design.md and why}
 
 ## References

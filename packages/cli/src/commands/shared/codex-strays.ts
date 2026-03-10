@@ -1,5 +1,6 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import type { CanonicalEntry } from '@engine/index';
 import TOML from '@iarna/toml';
 import type { CodexExtensionPlan } from '@providers/codex/codec/sync-extension';

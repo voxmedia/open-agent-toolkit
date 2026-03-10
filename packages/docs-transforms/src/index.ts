@@ -1,5 +1,6 @@
 import type { Root } from 'mdast';
 import type { Plugin } from 'unified';
+
 import { remarkMermaid } from './remark-mermaid.js';
 import { remarkTabs } from './remark-tabs.js';
 

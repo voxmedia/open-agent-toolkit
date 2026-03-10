@@ -23,10 +23,12 @@ Scan, evaluate, and report on agent instruction file coverage, quality, and drif
 **Purpose:** Evaluate instruction file quality and coverage, produce an actionable analysis artifact.
 
 **BLOCKED Activities:**
+
 - No modifying or creating instruction files (that's the apply skill's job).
 - No changing repo configuration.
 
 **ALLOWED Activities:**
+
 - Reading all instruction files and project configuration.
 - Running helper scripts for discovery.
 - Writing analysis artifact to `.oat/repo/analysis/`.
@@ -47,7 +49,7 @@ or fill in missing evidence gaps on its own.
 - Print a phase banner once at start:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ AGENT INSTRUCTIONS ANALYSIS
+  OAT ▸ AGENT INSTRUCTIONS ANALYSIS
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Step indicators:
@@ -89,9 +91,11 @@ TRACKING=$(bash "$SCRIPT_DIR/resolve-tracking.sh" read agentInstructions)
 - **If unresolvable or empty:** use full mode. Log: "Previous tracking commit not found — running full analysis."
 
 Delta mode scoping:
+
 ```bash
 git diff --name-only "$STORED_HASH"..HEAD
 ```
+
 Use the changed file list to limit coverage gap assessment (Step 4) and drift detection (Step 5) to affected directories. Quality evaluation (Step 3) always runs on ALL instruction files regardless of mode.
 
 ### Step 1: Discover Instruction Files
@@ -109,13 +113,15 @@ If no instruction files are found at all (not even a root AGENTS.md), report thi
 For each discovered instruction file, evaluate against the quality checklist at `references/quality-checklist.md`.
 
 **Required context — read these docs before evaluating:**
+
 - `.agents/docs/agent-instruction.md` — full quality criteria and best practices
 - `.agents/docs/rules-files.md` — cross-provider rules file format reference
 - `.agents/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format reference (if cursor provider is active)
 
 **Evidence standard:**
+
 - Every non-obvious convention, drift claim, or proposed rule must be backed by concrete evidence captured in the artifact.
-- Preferred evidence sources: formatter/linter/editor config (`.editorconfig`, Biome, ESLint, Prettier, Ruff, etc.),
+- Preferred evidence sources: formatter/linter/editor config (`.editorconfig`, oxlint, oxfmt, ESLint, Prettier, Ruff, etc.),
   `package.json` scripts, existing checked-in instruction files, repo documentation, and repeated codebase patterns
   with exact file references.
 - Do **not** infer formatting or linting conventions from ecosystem defaults or a small code sample.
@@ -123,6 +129,7 @@ For each discovered instruction file, evaluate against the quality checklist at 
   than restating tabs/spaces, quote style, import ordering, or similar trivia as prose instructions.
 
 **For each file:**
+
 1. Read the file content.
 2. Read the local evidence sources needed to validate the file's claims.
 3. Check each applicable criterion from the quality checklist.
@@ -131,6 +138,7 @@ For each discovered instruction file, evaluate against the quality checklist at 
 6. Record line count and quality assessment (pass / minor issues / significant issues / major issues).
 
 **Provider-specific validation:**
+
 - **AGENTS.md**: Check section structure, command accuracy, size budget.
 - **CLAUDE.md**: Verify `@AGENTS.md` import if present, check for content duplication with AGENTS.md.
 - **Claude rules** (`.claude/rules/*.md`): Validate `paths` frontmatter if conditional.
@@ -146,6 +154,7 @@ Before general coverage-gap analysis, assess **provider baseline gaps** for ever
 These checks are mandatory even when the missing file does not appear in the discovered inventory.
 
 Provider baseline examples:
+
 - **Claude**: if a directory has `AGENTS.md` and the claude provider is active but the matching `CLAUDE.md` shim is missing, record an explicit recommendation to create `CLAUDE.md` with the canonical `@AGENTS.md` import.
 - **Copilot**: if the copilot provider is active but `.github/copilot-instructions.md` is missing, record an explicit recommendation to create the minimal Copilot shim.
 - **agents_md / codex**: no extra always-on shim beyond `AGENTS.md`.
@@ -157,6 +166,7 @@ Do not leave these as implied apply-time behavior. They must appear in the analy
 **In full mode:** Assess all directories (excluding `node_modules/`, `dist/`, `.git/`, `.oat/`, etc.).
 
 For each directory meeting 1+ primary indicators from the criteria doc:
+
 - Check if it's covered by an existing instruction file (either a direct AGENTS.md or a parent's scoped rule with matching globs).
 - If uncovered, add to the coverage gaps list with severity, evidence, and a recommendation.
 - For each recommendation, decide what belongs inline vs what should link to deeper documentation or config files.
@@ -166,11 +176,13 @@ For each directory meeting 1+ primary indicators from the criteria doc:
 **Skip this step entirely in full mode.**
 
 For files changed since the last tracked commit:
+
 1. Identify the nearest parent instruction file for each changed file.
 2. Check if the instruction file references the changed file's patterns, conventions, or commands.
 3. Flag instruction files that may be stale due to the changes.
 
 Common drift signals:
+
 - Changed file is in a directory whose AGENTS.md references removed/renamed paths.
 - New package.json scripts not reflected in instruction file commands.
 - New dependencies or framework changes not reflected in tech stack documentation.
@@ -181,6 +193,7 @@ Common drift signals:
 **Skip if only one provider (agents_md) is active.**
 
 For glob-scoped rules that target the same file patterns across providers:
+
 1. Extract the body content (below frontmatter) from each provider's version.
 2. Compare bodies — they should be identical.
 3. Flag divergence as a Medium finding.
@@ -197,6 +210,7 @@ ARTIFACT_PATH=".oat/repo/analysis/agent-instructions-${TIMESTAMP}.md"
 Fill in all template sections with findings from Steps 2-5.
 
 The artifact is the contract for apply. It must contain:
+
 - exact evidence references for each finding and recommendation
 - confidence for each recommendation
 - progressive disclosure decisions (`inline`, `link_only`, `omit`, `ask_user`)

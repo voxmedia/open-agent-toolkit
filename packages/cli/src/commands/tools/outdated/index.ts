@@ -4,6 +4,7 @@ import { scanTools } from '@commands/tools/shared/scan-tools';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
+
 import {
   type OutdatedToolsDependencies,
   runOutdatedTools,

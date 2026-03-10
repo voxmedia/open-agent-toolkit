@@ -73,16 +73,6 @@
       "lastSynced": "2026-02-21T19:45:11.269Z"
     },
     {
-      "canonicalPath": ".agents/skills/create-skill",
-      "providerPath": ".claude/skills/create-skill",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.269Z"
-    },
-    {
       "canonicalPath": ".agents/skills/create-ticket",
       "providerPath": ".claude/skills/create-ticket",
       "provider": "claude",
@@ -425,16 +415,6 @@
     {
       "canonicalPath": ".agents/skills/create-pr-description",
       "providerPath": ".cursor/skills/create-pr-description",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.273Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/create-skill",
-      "providerPath": ".cursor/skills/create-skill",
       "provider": "cursor",
       "contentType": "skill",
       "strategy": "symlink",
@@ -941,7 +921,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-03-08T03:00:46.988Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/create-agnostic-skill",
+      "providerPath": ".claude/skills/create-agnostic-skill",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-09T17:44:45.667Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/create-agnostic-skill",
+      "providerPath": ".cursor/skills/create-agnostic-skill",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-09T17:44:45.669Z"
     }
   ],
-  "lastUpdated": "2026-03-08T03:00:46.988Z"
+  "lastUpdated": "2026-03-09T17:44:45.671Z"
 }

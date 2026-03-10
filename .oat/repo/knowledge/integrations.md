@@ -3,7 +3,7 @@ oat_generated: true
 oat_generated_at: 2026-02-16
 oat_source_head_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
 oat_source_main_merge_base_sha: a80661894616fc9323542a4bcbcc22c08917e440
-oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index"
+oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
 # External Integrations
@@ -13,11 +13,13 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ## APIs & External Services
 
 **No External API Integrations:**
+
 - OAT is self-contained with no outbound API calls to external services
 - No third-party cloud services, SaaS APIs, or microservice dependencies
 - Communication is limited to local filesystem operations and command execution
 
 **Provider Integrations (Local):**
+
 - Claude Code - File-based detection via `.claude` directory
   - SDK/Client: Direct filesystem access
   - Auth: None (local configuration only)
@@ -31,10 +33,12 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ## Data Storage
 
 **Databases:**
+
 - None - OAT uses no database systems
 - All data is persisted in local JSON files
 
 **File Storage:**
+
 - Local filesystem only
 - No cloud storage integration
 - Manifest files: JSON format stored alongside skills/agents
@@ -45,6 +49,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
   - Project artifacts: `.oat/projects/<scope>/<project>/`
 
 **Caching:**
+
 - pnpm store (`.pnpm-store/`) for dependency caching during development
 - Turbo cache (`.turbo/`) for build task caching
 - No application-level caching service; all caching is local
@@ -52,6 +57,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ## Authentication & Identity
 
 **Auth Provider:**
+
 - None - OAT does not require external authentication
 - Local user detection based on machine configuration
 - Provider-specific auth is managed by each AI tool (Claude Code, Cursor, Codex)
@@ -60,11 +66,13 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ## Monitoring & Observability
 
 **Error Tracking:**
+
 - None - No external error tracking or monitoring services
 - Local error handling via `CliError` class
 - Errors reported to stderr/stdout and exit codes
 
 **Logs:**
+
 - Approach: Console-based logging with optional JSON output
 - Logger implementation: `ui/logger.ts` with chalk-based colored output
 - Verbose mode available via `--verbose` flag
@@ -74,12 +82,14 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ## CI/CD & Deployment
 
 **Hosting:**
+
 - Deployed as local CLI tool via npm/pnpm
 - Execution: Direct Node.js invocation or via npm scripts
 - Package: `@oat/cli` (currently private, not on npm registry)
 - No cloud deployment or hosting required
 
 **CI Pipeline:**
+
 - Platform: GitHub Actions
 - Workflow file: `.github/workflows/ci.yml`
 - Triggers: Push to main, pull requests to main
@@ -89,12 +99,13 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
   2. Setup pnpm with cache
   3. Setup Node.js from `.nvmrc`
   4. Install frozen dependencies (`pnpm install --frozen-lockfile`)
-  5. Run checks (`pnpm check` - Biome linting)
+  5. Run checks (`pnpm check` - oxlint + oxfmt)
   6. Type checking (`pnpm type-check`)
   7. Run tests (`pnpm test` - Vitest)
   8. Build (`pnpm build` - TypeScript compilation via Turbo)
 
 **Deployment Model:**
+
 - No automated deployment pipeline
 - Manual: Users install from source or npm (when public)
 - CLI used locally within projects or via global npm link
@@ -103,11 +114,13 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ## Environment Configuration
 
 **Required env vars:**
+
 - None - No environment variables required for operation
 - Optional: `GIT_HOOKS` environment variable (controls git hook setup in `prepare` script)
 - CLI overrides: `--cwd <path>` for working directory, `--scope <scope>` for limiting operations
 
 **Secrets location:**
+
 - No secrets management required
 - No API keys, tokens, or credentials needed
 - Provider-specific secrets (if any) are managed by each AI tool independently
@@ -115,14 +128,17 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ## Webhooks & Callbacks
 
 **Incoming:**
+
 - None - OAT does not expose HTTP endpoints or receive webhooks
 
 **Outgoing:**
+
 - None - OAT does not send webhooks or outbound HTTP requests
 
 ## Data Flow & Interactions
 
 **Provider Sync Flow:**
+
 1. User runs `oat sync --scope <scope>`
 2. CLI scans `.agents/` for canonical assets
 3. Detects installed providers (Claude, Cursor, Codex) via directory presence
@@ -132,16 +148,18 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 7. Generates/updates `.sync.json` manifest with content hashes and timestamps
 
 **Manifest Management:**
+
 - Zod-validated JSON schemas for all file structures
 - Content hashing (SHA for copy strategy validation)
 - Datetime tracking for sync operations
 - No external validation or verification services
 
 **Build Dependency Graph:**
+
 - Turbo orchestrates task execution across workspace packages
 - All packages use `workspace:*` for internal dependencies
 - No external package registry calls during CI (frozen lockfile)
 
 ---
 
-*Integration audit: 2026-02-16*
+_Integration audit: 2026-02-16_

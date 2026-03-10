@@ -12,18 +12,18 @@
 
 The following items have been implemented and should be moved to `backlog-completed.md`:
 
-| ID | Title | Status |
-|----|-------|--------|
-| B05 | Switch `pnpm run cli` to direct `oat` CLI | Completed (backlog-completed.md) |
-| B07 | Codex markdown→TOML subagent adapter | Completed (backlog-completed.md) |
-| B08 | Context management commands (`AGENTS.md` ↔ `CLAUDE.md`) | Completed (backlog-completed.md) |
-| B09 | Review receive + PR-review intake skill family | Completed (backlog-completed.md) |
+| ID  | Title                                                                           | Status                           |
+| --- | ------------------------------------------------------------------------------- | -------------------------------- |
+| B05 | Switch `pnpm run cli` to direct `oat` CLI                                       | Completed (backlog-completed.md) |
+| B07 | Codex markdown→TOML subagent adapter                                            | Completed (backlog-completed.md) |
+| B08 | Context management commands (`AGENTS.md` ↔ `CLAUDE.md`)                         | Completed (backlog-completed.md) |
+| B09 | Review receive + PR-review intake skill family                                  | Completed (backlog-completed.md) |
 | B15 | Project lifecycle config consolidation (`oat config`, `oat project open/pause`) | Completed (backlog-completed.md) |
 
 ### Stale Inbox item
 
-| Item | Status | Notes |
-|------|--------|-------|
+| Item                                                 | Status                  | Notes                                                                                                                                                                                                            |
+| ---------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Skill versioning (`oat init tools` update detection) | **Already implemented** | `copyDirWithVersionCheck()` exists in copy-helpers.ts; all 43 skills have `version:` frontmatter; `oat init tools` already detects outdated skills and offers interactive updates. Should be moved to completed. |
 
 ---
@@ -32,31 +32,31 @@ The following items have been implemented and should be moved to `backlog-comple
 
 ### Tier 1: High value, actionable now
 
-| Item | Priority | Area | Value | Effort |
-|------|----------|------|-------|--------|
-| **Reconcile manual implementation** | P1 | skills | High | Medium |
-| **oat-project-document** (post-impl docs synthesis) | P1 | skills | High | Medium |
-| **Documentation analysis skill family** | P1 | skills | High | High |
+| Item                                                | Priority | Area   | Value | Effort |
+| --------------------------------------------------- | -------- | ------ | ----- | ------ |
+| **Reconcile manual implementation**                 | P1       | skills | High  | Medium |
+| **oat-project-document** (post-impl docs synthesis) | P1       | skills | High  | Medium |
+| **Documentation analysis skill family**             | P1       | skills | High  | High   |
 
 ### Tier 2: Strategic, higher effort
 
-| Item | Priority | Area | Value | Effort |
-|------|----------|------|-------|--------|
-| PM workflow family (`oat-pjm-*`) | P1 | workflow | High | High |
-| VCS policy + worktree sync behavior | P1 | tooling | Medium | High |
+| Item                                | Priority | Area     | Value  | Effort |
+| ----------------------------------- | -------- | -------- | ------ | ------ |
+| PM workflow family (`oat-pjm-*`)    | P1       | workflow | High   | High   |
+| VCS policy + worktree sync behavior | P1       | tooling  | Medium | High   |
 
 ### Tier 3: Fill-in / Defer
 
-| Item | Priority | Area | Value | Effort |
-|------|----------|------|-------|--------|
-| Scaffold `.oat/projects/` during `oat init` | P2 | tooling | Low | Low |
-| Migrate active-idea pointers to config-local | P2 | tooling | Medium | Medium |
-| Codex prompt-wrapper generation | P2 | tooling | Low | Low |
-| PR review follow-on skills | P2 | skills | Low | Medium |
-| Dependency intelligence skill family | P2 | skills | Low | Medium |
-| Skill uninstall command | P2 | tooling | Medium | Medium |
-| Idea promotion in `oat-project-new` | P2 | skills | Low | Medium |
-| Backlog Refinement Flow (Jira) | P2 | workflow | Low | High |
+| Item                                         | Priority | Area     | Value  | Effort |
+| -------------------------------------------- | -------- | -------- | ------ | ------ |
+| Scaffold `.oat/projects/` during `oat init`  | P2       | tooling  | Low    | Low    |
+| Migrate active-idea pointers to config-local | P2       | tooling  | Medium | Medium |
+| Codex prompt-wrapper generation              | P2       | tooling  | Low    | Low    |
+| PR review follow-on skills                   | P2       | skills   | Low    | Medium |
+| Dependency intelligence skill family         | P2       | skills   | Low    | Medium |
+| Skill uninstall command                      | P2       | tooling  | Medium | Medium |
+| Idea promotion in `oat-project-new`          | P2       | skills   | Low    | Medium |
+| Backlog Refinement Flow (Jira)               | P2       | workflow | Low    | High   |
 
 ---
 

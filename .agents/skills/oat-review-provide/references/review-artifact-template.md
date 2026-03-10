@@ -2,13 +2,13 @@
 
 Use this template for non-project commit-range reviews.
 
-```markdown
+````markdown
 ---
 oat_generated: true
 oat_generated_at: YYYY-MM-DD
 oat_review_type: code
-oat_review_scope: {scope}
-oat_review_scope_mode: {files|unstaged|staged|range}
+oat_review_scope: { scope }
+oat_review_scope_mode: { files|unstaged|staged|range }
 oat_project: null
 oat_review_mode: ad_hoc
 ---
@@ -43,9 +43,13 @@ oat_review_mode: ad_hoc
 {command 1}
 {command 2}
 ```
+````
 
 ## Next Step
 
 - If this review should feed an OAT project lifecycle, import/attach it to that project and run `oat-project-review-receive`.
 - Otherwise, apply fixes directly and re-run `oat-review-provide` for a follow-up pass.
+
+```
+
 ```

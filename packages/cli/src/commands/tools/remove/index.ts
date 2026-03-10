@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
 import { rm, unlink } from 'node:fs/promises';
+
 import { buildCommandContext } from '@app/command-context';
 import {
   readGlobalOptions,
@@ -14,6 +15,7 @@ import type { PackName } from '@commands/tools/shared/types';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
+
 import {
   type RemoveTarget,
   type RemoveToolsDependencies,

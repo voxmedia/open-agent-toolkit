@@ -18,8 +18,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ COMPLETE PROJECT
+  OAT ▸ COMPLETE PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work, print step indicators, e.g.:
   - `[1/4] Checking completion gates…`
   - `[2/4] Marking lifecycle complete…`
@@ -115,12 +116,14 @@ fi
 ```
 
 If `oat_docs_updated` is `null` or empty:
+
 - **If `requireForProjectCompletion` is `true`:** Hard gate — ask user to run `oat-project-document` or explicitly skip. If user chooses to skip, update `state.md` frontmatter to set `oat_docs_updated: skipped`.
 - **If `requireForProjectCompletion` is `false` (default):** Soft suggestion — inform user about `oat-project-document` and allow proceeding. If user wants to skip, set `oat_docs_updated: skipped`.
 
 If `oat_docs_updated` is `skipped` or `complete`: proceed normally.
 
 After Step 3, 3.5, and 3.6 warnings:
+
 - Ask user for explicit confirmation to continue if final review is not `passed` OR unresolved deferred Medium findings are present OR documentation gate is blocking.
 - Suggested prompt: "Completion gates are not fully satisfied. Continue marking lifecycle complete anyway?"
 
@@ -253,6 +256,7 @@ MAIN_REPO_ARCHIVE="${MAIN_WORKTREE_PATH}/.oat/projects/archived"
 ```
 
 Guidance:
+
 - In a worktree, prefer moving directly to `MAIN_REPO_ARCHIVE` instead of archiving locally and copying later.
 - Do not treat the worktree-local archive as durable.
 - If forced to use a local-only archive, warn and require explicit user confirmation.
@@ -263,6 +267,7 @@ Guidance:
 Ask user: "Would you like to clear the active project pointer?"
 
 If yes:
+
 ```bash
 oat config set activeProject ""
 echo "Active project cleared."
@@ -279,6 +284,7 @@ oat state refresh
 Completion is not done until bookkeeping changes are committed and pushed. This prevents local-only `state.md` updates that leave project status stale for later sessions/reviews.
 
 Expected changes may include:
+
 - `{PROJECT_PATH}/state.md`
 - `{PROJECT_PATH}/implementation.md` (if touched earlier in the lifecycle closeout)
 - `{PROJECT_PATH}/plan.md` (if review receive just ran)
@@ -295,6 +301,7 @@ git push
 ```
 
 Rules:
+
 - If there are unrelated unstaged/staged changes, stage and commit only the completion/bookkeeping files (do not sweep unrelated work into this commit).
 - If there is nothing to commit, state that explicitly and verify whether the completion bookkeeping was already committed in a prior commit.
 - If push fails, report the failure and do not claim completion is fully recorded.
@@ -302,6 +309,7 @@ Rules:
 ### Step 10: Confirm to User
 
 Show user:
+
 - "Project **{PROJECT_NAME}** marked as complete."
 - If archived: "Archived location: **{PROJECT_PATH}**"
 - Include commit hash and push result for the bookkeeping changes.

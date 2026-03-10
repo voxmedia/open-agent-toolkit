@@ -1,10 +1,10 @@
 ---
 oat_generated: true
-oat_generated_at: {YYYY-MM-DD}
+oat_generated_at: { YYYY-MM-DD }
 oat_analysis_type: agent-instructions
-oat_analysis_mode: {full|delta}
-oat_analysis_providers: [{providers}]
-oat_analysis_commit: {commitHash}
+oat_analysis_mode: { full|delta }
+oat_analysis_providers: [{ providers }]
+oat_analysis_commit: { commitHash }
 ---
 
 # Agent Instructions Analysis: {repo-name}
@@ -25,12 +25,12 @@ oat_analysis_commit: {commitHash}
 
 ## Instruction File Inventory
 
-| # | Provider | Format | Path | Lines | Quality |
-|---|----------|--------|------|-------|---------|
-| 1 | agents_md | AGENTS.md | `AGENTS.md` | {N} | {pass/issues} |
-| 2 | agents_md | AGENTS.md | `packages/cli/AGENTS.md` | {N} | {pass/issues} |
-| 3 | claude | CLAUDE.md | `CLAUDE.md` | {N} | {pass/issues} |
-| ... | | | | | |
+| #   | Provider  | Format    | Path                     | Lines | Quality       |
+| --- | --------- | --------- | ------------------------ | ----- | ------------- |
+| 1   | agents_md | AGENTS.md | `AGENTS.md`              | {N}   | {pass/issues} |
+| 2   | agents_md | AGENTS.md | `packages/cli/AGENTS.md` | {N}   | {pass/issues} |
+| 3   | claude    | CLAUDE.md | `CLAUDE.md`              | {N}   | {pass/issues} |
+| ... |           |           |                          |       |               |
 
 ## Findings
 
@@ -70,11 +70,11 @@ None | {numbered list}
 
 Missing always-on provider compatibility files that should exist even when no corresponding file was discovered during inventory.
 
-| # | Provider | Required Path | Format | Reason | Evidence | Severity |
-|---|----------|---------------|--------|--------|----------|----------|
-| 1 | `claude` | `CLAUDE.md` | Claude import shim | {claude active + AGENTS.md present + shim missing} | {exact refs} | {High/Medium} |
-| 2 | `copilot` | `.github/copilot-instructions.md` | Copilot shim | {copilot active + shim missing} | {exact refs} | {High/Medium} |
-| ... | | | | | | |
+| #   | Provider  | Required Path                     | Format             | Reason                                             | Evidence     | Severity      |
+| --- | --------- | --------------------------------- | ------------------ | -------------------------------------------------- | ------------ | ------------- |
+| 1   | `claude`  | `CLAUDE.md`                       | Claude import shim | {claude active + AGENTS.md present + shim missing} | {exact refs} | {High/Medium} |
+| 2   | `copilot` | `.github/copilot-instructions.md` | Copilot shim       | {copilot active + shim missing}                    | {exact refs} | {High/Medium} |
+| ... |           |                                   |                    |                                                    |              |               |
 
 {Or: "No provider baseline gaps identified."}
 
@@ -84,10 +84,10 @@ Missing always-on provider compatibility files that should exist even when no co
 
 Directories assessed as needing instruction files but currently uncovered.
 
-| # | Directory | Reason | Evidence | Disclosure | Link Target | Severity |
-|---|-----------|--------|----------|------------|-------------|----------|
-| 1 | `{path/}` | {Has own package.json / distinct domain / ...} | {exact refs} | {inline/link_only/omit/ask_user} | {path/URL or N/A} | {High/Medium} |
-| ... | | | | | | |
+| #   | Directory | Reason                                         | Evidence     | Disclosure                       | Link Target       | Severity      |
+| --- | --------- | ---------------------------------------------- | ------------ | -------------------------------- | ----------------- | ------------- |
+| 1   | `{path/}` | {Has own package.json / distinct domain / ...} | {exact refs} | {inline/link_only/omit/ask_user} | {path/URL or N/A} | {High/Medium} |
+| ... |           |                                                |              |                                  |                   |               |
 
 {Or: "No directory coverage gaps identified."}
 
@@ -95,10 +95,10 @@ Directories assessed as needing instruction files but currently uncovered.
 
 File-type patterns with recurring conventions that would benefit from targeted rules files. These are cross-cutting concerns that span multiple directories — best addressed with glob-scoped rules rather than directory-level AGENTS.md files.
 
-| # | Pattern | Count | Convention Summary | Evidence | Disclosure | Severity |
-|---|---------|-------|--------------------|----------|------------|----------|
-| 1 | `{glob}` | {N} | {brief description of conventions agents should follow} | {exact refs} | {inline/link_only/omit/ask_user} | {Medium/Low} |
-| ... | | | | | | |
+| #   | Pattern  | Count | Convention Summary                                      | Evidence     | Disclosure                       | Severity     |
+| --- | -------- | ----- | ------------------------------------------------------- | ------------ | -------------------------------- | ------------ |
+| 1   | `{glob}` | {N}   | {brief description of conventions agents should follow} | {exact refs} | {inline/link_only/omit/ask_user} | {Medium/Low} |
+| ... |          |       |                                                         |              |                                  |              |
 
 {Or: "No glob-scoped rule opportunities identified."}
 
@@ -106,9 +106,9 @@ File-type patterns with recurring conventions that would benefit from targeted r
 
 {For repos with multiple providers: body divergence between glob-scoped rules targeting the same paths.}
 
-| Rule Target | Claude Body Hash | Cursor Body Hash | Copilot Body Hash | Status |
-|-------------|-----------------|-----------------|-------------------|--------|
-| `{glob}` | {hash/N/A} | {hash/N/A} | {hash/N/A} | {match/diverged} |
+| Rule Target | Claude Body Hash | Cursor Body Hash | Copilot Body Hash | Status           |
+| ----------- | ---------------- | ---------------- | ----------------- | ---------------- |
+| `{glob}`    | {hash/N/A}       | {hash/N/A}       | {hash/N/A}        | {match/diverged} |
 
 {Or: "Single provider — cross-format check not applicable."}
 
@@ -116,10 +116,10 @@ File-type patterns with recurring conventions that would benefit from targeted r
 
 Capture which details should live in always-on instructions versus linked documentation/config.
 
-| Topic | Decision | Keep Inline In | Link Target | Evidence |
-|-------|----------|----------------|-------------|----------|
+| Topic     | Decision                         | Keep Inline In                     | Link Target     | Evidence     |
+| --------- | -------------------------------- | ---------------------------------- | --------------- | ------------ |
 | `{topic}` | {inline/link_only/omit/ask_user} | `{AGENTS.md / scoped file / rule}` | `{path or URL}` | {exact refs} |
-| ... | | | | |
+| ...       |                                  |                                    |                 |              |
 
 {Or: "No additional progressive disclosure decisions beyond the findings/recommendations below."}
 

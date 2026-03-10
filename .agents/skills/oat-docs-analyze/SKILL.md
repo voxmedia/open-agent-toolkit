@@ -23,11 +23,13 @@ Scan a repository's documentation surface, evaluate it against the OAT docs cont
 **Purpose:** Evaluate documentation quality, coverage, navigation, and `index.md` contract conformance.
 
 **BLOCKED Activities:**
+
 - No editing documentation files.
 - No scaffolding new docs apps.
 - No modifying `mkdocs.yml` or navigation.
 
 **ALLOWED Activities:**
+
 - Reading docs trees, MkDocs config, and related repository metadata.
 - Writing a docs analysis artifact to `.oat/repo/analysis/`.
 - Updating docs analysis tracking metadata.
@@ -44,10 +46,12 @@ create new recommendations, or fill in missing evidence gaps on its own.
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Editing docs content directly -> STOP and move that recommendation to the artifact.
 - Rewriting navigation while analyzing -> STOP and record the required fix instead.
 
 **Recovery:**
+
 1. Return to read-only analysis.
 2. Capture the needed change as a finding or recommendation.
 
@@ -58,7 +62,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ DOCS ANALYSIS
+  OAT ▸ DOCS ANALYSIS
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Use step indicators:

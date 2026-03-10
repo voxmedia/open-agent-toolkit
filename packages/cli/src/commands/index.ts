@@ -1,4 +1,5 @@
 import type { Command } from 'commander';
+
 import { createCleanupCommand } from './cleanup';
 import { createConfigCommand } from './config';
 import { createDocsCommand } from './docs';

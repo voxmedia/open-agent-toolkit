@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import {
   detectDocsRepoShape,
   getDefaultDocsAppName,
@@ -75,8 +76,8 @@ describe('docs init option resolution', () => {
     const selectWithAbort = vi
       .fn()
       .mockResolvedValueOnce('fumadocs')
-      .mockResolvedValueOnce('markdownlint')
-      .mockResolvedValueOnce('prettier');
+      .mockResolvedValueOnce('none')
+      .mockResolvedValueOnce('oxfmt');
 
     const result = await resolveDocsInitOptions({
       repoRoot: '/tmp/open-agent-toolkit',
@@ -94,8 +95,8 @@ describe('docs init option resolution', () => {
       appName: 'oat-docs',
       targetDir: 'apps/oat-docs',
       siteDescription: 'Project documentation',
-      lint: 'markdownlint',
-      format: 'prettier',
+      lint: 'none',
+      format: 'oxfmt',
     });
     expect(inputWithDefault).toHaveBeenCalledTimes(3);
     expect(selectWithAbort).toHaveBeenCalledTimes(3);
@@ -121,8 +122,8 @@ describe('docs init option resolution', () => {
       appName: 'docs',
       targetDir: 'docs',
       siteDescription: '',
-      lint: 'markdownlint',
-      format: 'prettier',
+      lint: 'none',
+      format: 'oxfmt',
     });
     expect(inputWithDefault).not.toHaveBeenCalled();
     expect(selectWithAbort).not.toHaveBeenCalled();
@@ -142,7 +143,7 @@ describe('docs init option resolution', () => {
       providedTargetDir: 'apps/oat-docs',
       providedSiteDescription: 'My docs',
       providedLint: 'none',
-      providedFormat: 'prettier',
+      providedFormat: 'oxfmt',
       inputWithDefault,
       selectWithAbort,
     });
@@ -155,7 +156,7 @@ describe('docs init option resolution', () => {
       targetDir: 'apps/oat-docs',
       siteDescription: 'My docs',
       lint: 'none',
-      format: 'prettier',
+      format: 'oxfmt',
     });
     expect(inputWithDefault).not.toHaveBeenCalled();
     expect(selectWithAbort).not.toHaveBeenCalled();

@@ -3,6 +3,7 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { readOatConfig, resolveLocalPaths } from '@config/oat-config';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
+
 import { applyGitignore } from './apply';
 import { addLocalPaths, removeLocalPaths } from './manage';
 import { checkLocalPathsStatus } from './status';

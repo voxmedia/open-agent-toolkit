@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
@@ -8,6 +9,7 @@ import {
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { Command, Option } from 'commander';
 import YAML from 'yaml';
+
 import { buildDocsNavTree, type DocsNavTree } from './contents';
 
 interface DocsNavSyncCommandOptions {

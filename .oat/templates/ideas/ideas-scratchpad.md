@@ -6,5 +6,5 @@ Each entry has a name, one-liner summary, and optional nested bullets for quick 
 
 ## Ideas
 
-- [ ] **{idea name}** - {brief summary} *(YYYY-MM-DD)*
+- [ ] **{idea name}** - {brief summary} _(YYYY-MM-DD)_
   - {quick note}

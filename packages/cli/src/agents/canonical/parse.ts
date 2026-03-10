@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
+
 import { CliError } from '@errors/index';
 import YAML from 'yaml';
+
 import type {
   CanonicalAgentDocument,
   CanonicalAgentFrontmatter,

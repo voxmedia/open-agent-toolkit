@@ -2,7 +2,7 @@
 name: oat-worktree-bootstrap
 version: 1.2.0
 description: Use when creating or resuming a git worktree for OAT implementation. Creates or validates a worktree and runs OAT bootstrap checks.
-argument-hint: "<branch-name> [--base <ref>] [--path <root>] [--existing]"
+argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--existing]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -25,10 +25,12 @@ Create or resume a git worktree and prepare it for OAT development.
 **Purpose:** Establish an isolated workspace and run standard OAT readiness checks before implementation work.
 
 **BLOCKED Activities:**
+
 - No implementation code changes unrelated to worktree setup.
 - No destructive rewrite of existing project artifacts.
 
 **ALLOWED Activities:**
+
 - Create/reuse worktree paths.
 - Run bootstrap and readiness checks.
 - Update related state/docs for workspace readiness.
@@ -38,7 +40,7 @@ Create or resume a git worktree and prepare it for OAT development.
 - Print a phase banner once at start:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ WORKTREE BOOTSTRAP
+  OAT ▸ WORKTREE BOOTSTRAP
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step operations, print step indicators, e.g.:
@@ -73,6 +75,7 @@ ACTIVE_PROJECT=$(oat config get activeProject 2>/dev/null || true)
 ```
 
 If `ACTIVE_PROJECT` is set:
+
 - verify the pointed path exists and contains `state.md`
 - if invalid, do **not** silently rewrite it
 - prompt user to run one of:
@@ -81,12 +84,14 @@ If `ACTIVE_PROJECT` is set:
 - require explicit confirmation before continuing with worktree bootstrap
 
 If `ACTIVE_PROJECT` is missing:
+
 - continue (active project is optional for worktree bootstrap)
 - use console-only baseline-failure logging in Step 3 if needed
 
 ### Step 1: Resolve Target Worktree Context
 
 If `--existing`:
+
 - validate the current directory appears in `git worktree list --porcelain`
 - set `TARGET_WORKTREE` to the current directory
 - set `WORKTREE_ROOT` to the parent directory of `TARGET_WORKTREE` (informational)
@@ -143,6 +148,7 @@ fi
 ```
 
 Rules:
+
 - Only copy if the source file exists **and** the destination does not (never overwrite).
 - `config.local.json` uses repo-relative paths, so copied values remain valid across sibling worktrees.
 - `activeIdea` is stored in `config.local.json`, so it propagates automatically with the config copy.
@@ -172,6 +178,7 @@ git status --porcelain
 ```
 
 Required behavior:
+
 - Stop immediately if `worktree:init` or `status` fails.
 - If `pnpm test` fails:
   - show a concise failure summary
@@ -184,6 +191,7 @@ Required behavior:
 ### Step 4: Output Ready State
 
 Report:
+
 - resolved worktree path
 - active branch
 - bootstrap/verification status

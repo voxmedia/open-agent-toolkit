@@ -1,6 +1,7 @@
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { describe, expect, it } from 'vitest';
+
 import { remarkTabs } from './remark-tabs.js';
 
 interface MdxJsxAttribute {

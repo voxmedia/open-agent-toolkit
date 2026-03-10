@@ -1,5 +1,6 @@
 import { createProgram } from '@app/create-program';
 import { describe, expect, it } from 'vitest';
+
 import { registerCommands } from './index';
 
 describe('command registration', () => {

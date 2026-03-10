@@ -2,7 +2,7 @@
 name: oat-idea-ideate
 version: 1.2.0
 description: Use when continuing brainstorming for an existing idea or starting from a scratchpad entry. Guides conversational ideation and refinement.
-argument-hint: "[--global]"
+argument-hint: '[--global]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, AskUserQuestion
@@ -19,6 +19,7 @@ Resume brainstorming on an existing idea, or pick one from the scratchpad to sta
 **Purpose:** Lightweight brainstorming through natural, exploratory conversation. Capture the essence of an idea without formal structure or implementation detail.
 
 **BLOCKED Activities:**
+
 - No code writing or implementation details
 - No formal requirements or specifications
 - No technical designs or architecture
@@ -26,6 +27,7 @@ Resume brainstorming on an existing idea, or pick one from the scratchpad to sta
 - No forced structure — let the idea breathe
 
 **ALLOWED Activities:**
+
 - Free-form discussion and exploration
 - Asking open-ended questions
 - Capturing thoughts and observations
@@ -35,11 +37,13 @@ Resume brainstorming on an existing idea, or pick one from the scratchpad to sta
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Writing implementation details → STOP (capture as an Open Question instead)
 - Formalizing requirements → STOP (keep it conversational)
 - Creating structured deliverables → STOP (save for project workflow)
 
 **Recovery:**
+
 1. Acknowledge the deviation
 2. Return to exploratory questioning
 3. Capture the insight as a note or open question
@@ -49,7 +53,7 @@ If you catch yourself:
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ IDEATE [project]
+  OAT ▸ IDEATE [project]
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Replace `[project]` with `[global]` when operating at user level.
@@ -79,9 +83,9 @@ Determine whether to operate at project level or user (global) level.
 
 **Set variables:**
 
-| Variable | Project Level | User Level |
-|----------|--------------|------------|
-| `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| Variable         | Project Level          | User Level               |
+| ---------------- | ---------------------- | ------------------------ |
+| `IDEAS_ROOT`     | `.oat/ideas`           | `~/.oat/ideas`           |
 | `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
 
 ### Step 1: Resolve Active Idea
@@ -93,11 +97,13 @@ IDEA_PATH=$(oat config get activeIdea 2>/dev/null || true)
 ```
 
 **If valid (directory exists with discovery.md):**
+
 - Show the idea name and current state to the user
 - Ask: "Continue with **{idea-name}**, or switch to a different idea?"
 - If continuing, proceed to Step 2
 
 **If missing or invalid:**
+
 - List existing idea directories:
   ```bash
   ls -d {IDEAS_ROOT}/*/  2>/dev/null
@@ -115,6 +121,7 @@ IDEA_PATH=$(oat config get activeIdea 2>/dev/null || true)
 Read `{IDEAS_ROOT}/{idea-name}/discovery.md`.
 
 Show the user a brief summary of the current state:
+
 - Idea name
 - State (brainstorming/summarized)
 - Last updated date
@@ -123,6 +130,7 @@ Show the user a brief summary of the current state:
 ### Step 3: Handle Summarized State
 
 If `oat_idea_state: summarized`:
+
 - Warn: "This idea has already been summarized."
 - Offer options:
   - **Reopen brainstorming** — set state back to `brainstorming`, continue to Step 4
@@ -135,7 +143,6 @@ Add a new session header to the **Notes & Discussion** section:
 
 ```markdown
 ### Session: YYYY-MM-DD
-
 ```
 
 Update frontmatter: `oat_idea_last_updated: YYYY-MM-DD`

@@ -1,5 +1,6 @@
 import { rm } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
+
 import { copyDirectory, copySingleFile, createSymlink } from '@fs/io';
 import { computeContentHash } from '@manifest/hash';
 import {
@@ -9,6 +10,7 @@ import {
   saveManifest,
 } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
+
 import type { SyncPlan, SyncPlanEntry, SyncResult } from './engine.types';
 import { insertMarker, writeDirectorySentinel } from './markers';
 

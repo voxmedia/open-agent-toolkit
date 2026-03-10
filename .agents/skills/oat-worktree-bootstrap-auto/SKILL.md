@@ -2,7 +2,7 @@
 name: oat-worktree-bootstrap-auto
 version: 1.2.0
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
-argument-hint: "<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]"
+argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Bash, Glob, Grep
@@ -16,13 +16,13 @@ Non-interactive worktree bootstrap for orchestrator and subagent execution flows
 
 This skill is the **autonomous companion** to `oat-worktree-bootstrap`. Key differences:
 
-| Concern | oat-worktree-bootstrap (manual) | oat-worktree-bootstrap-auto (autonomous) |
-|---------|--------------------------------|------------------------------------------|
-| Invocation | User-invocable, interactive | Agent-only, non-interactive |
-| Prompts | Uses `AskUserQuestion` for decisions | Never uses `AskUserQuestion` |
-| Failure handling | Asks user to abort/proceed | Policy-driven (strict or allow-failing) |
-| Status output | Human-readable banners | Structured machine-parseable output |
-| Logging | Console + optional artifact | Artifact-first, console fallback |
+| Concern          | oat-worktree-bootstrap (manual)      | oat-worktree-bootstrap-auto (autonomous) |
+| ---------------- | ------------------------------------ | ---------------------------------------- |
+| Invocation       | User-invocable, interactive          | Agent-only, non-interactive              |
+| Prompts          | Uses `AskUserQuestion` for decisions | Never uses `AskUserQuestion`             |
+| Failure handling | Asks user to abort/proceed           | Policy-driven (strict or allow-failing)  |
+| Status output    | Human-readable banners               | Structured machine-parseable output      |
+| Logging          | Console + optional artifact          | Artifact-first, console fallback         |
 
 Both skills share the same worktree root resolution precedence and branch naming conventions.
 
@@ -33,7 +33,7 @@ When this skill is executed, provide concise status updates:
 - Print a phase banner once at start:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ WORKTREE BOOTSTRAP AUTO
+  OAT ▸ WORKTREE BOOTSTRAP AUTO
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before major phases, print compact indicators, for example:
@@ -51,17 +51,17 @@ When this skill is executed, provide concise status updates:
 
 ### Optional
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `--base <ref>` | `origin/main` | Base ref to branch from |
-| `--path <root>` | Resolved via precedence | Explicit worktree root override |
-| `--baseline-policy <policy>` | `strict` | Baseline check failure policy |
+| Parameter                    | Default                 | Description                     |
+| ---------------------------- | ----------------------- | ------------------------------- |
+| `--base <ref>`               | `origin/main`           | Base ref to branch from         |
+| `--path <root>`              | Resolved via precedence | Explicit worktree root override |
+| `--baseline-policy <policy>` | `strict`                | Baseline check failure policy   |
 
 ### Baseline Policy
 
-| Policy | Behavior |
-|--------|----------|
-| `strict` | Fail fast on any baseline check failure. Return error status immediately. |
+| Policy          | Behavior                                                                                                   |
+| --------------- | ---------------------------------------------------------------------------------------------------------- |
+| `strict`        | Fail fast on any baseline check failure. Return error status immediately.                                  |
 | `allow-failing` | Continue on baseline failures. Emit structured warnings. Log failures to project artifacts when available. |
 
 ## Process
@@ -131,9 +131,11 @@ git status --porcelain
 Check behavior per baseline policy:
 
 **strict mode:**
+
 - Any check failure → immediately return error status with failure details.
 
 **allow-failing mode:**
+
 - Check failure → emit structured warning, continue to next check.
 - Collect all warnings and include in final status output.
 - Log failure context:
@@ -161,35 +163,36 @@ Return a structured status object (for orchestrator consumption):
 
 ```yaml
 status: success | error | warning
-worktree_path: "{absolute-path}"
-branch: "{branch-name}"
-base_ref: "{base-ref}"
+worktree_path: '{absolute-path}'
+branch: '{branch-name}'
+base_ref: '{base-ref}'
 checks:
   worktree_init: pass | fail | skip
   project_status: pass | fail | skip
   tests: pass | fail | skip
   git_clean: pass | fail | skip
   provider_sync: pass | fail | skip
-warnings: []          # List of warning messages (allow-failing mode)
-error: null           # Error message (strict mode failure)
+warnings: [] # List of warning messages (allow-failing mode)
+error: null # Error message (strict mode failure)
 baseline_policy: strict | allow-failing
 ```
 
 **Status determination:**
+
 - `success`: All checks passed.
 - `warning`: Some checks failed under `allow-failing` policy.
 - `error`: A check failed under `strict` policy, or worktree creation failed.
 
 ## Error Handling
 
-| Scenario | Behavior |
-|----------|----------|
-| Worktree creation fails | Return error status with git error message |
-| Branch already checked out elsewhere | Return error with worktree location info |
-| Baseline check fails (strict) | Return error with check name and failure output |
-| Baseline check fails (allow-failing) | Add to warnings, continue, log to artifacts |
-| No active project | Skip artifact logging, use console only |
-| Invalid branch name | Return error before attempting creation |
+| Scenario                             | Behavior                                        |
+| ------------------------------------ | ----------------------------------------------- |
+| Worktree creation fails              | Return error status with git error message      |
+| Branch already checked out elsewhere | Return error with worktree location info        |
+| Baseline check fails (strict)        | Return error with check name and failure output |
+| Baseline check fails (allow-failing) | Add to warnings, continue, log to artifacts     |
+| No active project                    | Skip artifact logging, use console only         |
+| Invalid branch name                  | Return error before attempting creation         |
 
 ## Artifact Logging
 
@@ -204,23 +207,25 @@ Append to `implementation.md` under `## Implementation Log`:
 **Branch:** {branch-name}
 **Policy:** allow-failing
 **Failures:**
+
 - {check_name}: {failure summary}
 ```
 
 ## Policy Flags
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
+| Flag                | Type                        | Default  | Description                                  |
+| ------------------- | --------------------------- | -------- | -------------------------------------------- |
 | `--baseline-policy` | `strict` \| `allow-failing` | `strict` | Controls behavior when baseline checks fail. |
 
 **Policy details:**
 
-| Policy | On Failure | Logging | Status Output |
-|--------|-----------|---------|---------------|
-| `strict` | Fail fast, return error immediately | Error in status output | `status: error` |
-| `allow-failing` | Continue, collect warnings | Append to `implementation.md` (or console) | `status: warning` |
+| Policy          | On Failure                          | Logging                                    | Status Output     |
+| --------------- | ----------------------------------- | ------------------------------------------ | ----------------- |
+| `strict`        | Fail fast, return error immediately | Error in status output                     | `status: error`   |
+| `allow-failing` | Continue, collect warnings          | Append to `implementation.md` (or console) | `status: warning` |
 
 **Orchestrator integration:**
+
 - When invoked by `oat-project-subagent-implement`, the baseline policy is passed through from the orchestration run policy.
 - The orchestrator may set `--baseline-policy allow-failing` for exploratory runs and `strict` for production-quality execution.
 - The bootstrap skill does not interpret HiLL checkpoints — that responsibility belongs to the orchestrator.

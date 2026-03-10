@@ -1,8 +1,10 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { createEmptyManifest } from '@manifest/manager';
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { adoptStrayToCanonical } from './adopt-stray';
 
 describe('adoptStrayToCanonical', () => {

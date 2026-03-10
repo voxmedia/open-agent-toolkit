@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+  "env": {
+    "node": true,
+    "es2024": true
+  },
+  "rules": {
+    "eslint/dot-notation": "off",
+    "eslint/prefer-const": "error",
+    "eslint/prefer-template": "error",
+    "eslint/eqeqeq": ["error", "smart"],
+    "eslint/no-empty": "error",
+    "eslint/no-shadow": "off",
+    "typescript/no-explicit-any": "warn",
+    "typescript/no-non-null-assertion": "off",
+    "typescript/no-extra-non-null-assertion": "off",
+    "typescript/no-unnecessary-type-constraint": "error"
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx"
+      ],
+      "rules": {
+        "typescript/no-explicit-any": "off",
+        "eslint/no-unsafe-optional-chaining": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["dist/", "node_modules/", ".turbo/", "build/", "coverage/"]
+}

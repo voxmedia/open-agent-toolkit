@@ -2,7 +2,7 @@
 
 Agent Skills ecosystem research and notes across providers.
 
-*Last updated: February 2026*
+_Last updated: February 2026_
 
 ---
 
@@ -28,6 +28,7 @@ my-skill/
 ```
 
 **Progressive disclosure** is the core design principle:
+
 1. **Metadata (always loaded):** `name` and `description` from YAML frontmatter — agents pre-load this at startup to decide relevance
 2. **Instructions (loaded on activation):** Full SKILL.md Markdown body — loaded when the agent determines the skill is relevant to the current task
 3. **Resources (loaded on demand):** Files in `scripts/`, `references/`, `assets/` — loaded only when SKILL.md references them via relative paths
@@ -35,26 +36,29 @@ my-skill/
 ### SKILL.md Frontmatter
 
 **Required fields:**
+
 ```yaml
 ---
-name: skill-name          # Max 64 chars, lowercase letters/numbers/hyphens, no leading/trailing hyphen
-description: |            # Max 1024 chars, non-empty
+name: skill-name # Max 64 chars, lowercase letters/numbers/hyphens, no leading/trailing hyphen
+description: | # Max 1024 chars, non-empty
   What this skill does and when to use it.
 ---
 ```
 
 **Optional fields (spec-level):**
+
 ```yaml
 ---
 name: skill-name
 description: What it does
-license: MIT                    # License name or reference to bundled file
-compatibility: |                # Max 500 chars — intended product, system packages, network needs
+license: MIT # License name or reference to bundled file
+compatibility:
+  | # Max 500 chars — intended product, system packages, network needs
   Requires Node.js 18+
-allowed-tools: Read Grep Glob   # Space-delimited tool list (experimental)
-metadata:                       # Arbitrary key-value pairs
+allowed-tools: Read Grep Glob # Space-delimited tool list (experimental)
+metadata: # Arbitrary key-value pairs
   author: my-org
-  version: "1.0"
+  version: '1.0'
 ---
 ```
 
@@ -75,7 +79,7 @@ If you want a skill to work across Claude Code, Cursor, Codex CLI, and Gemini CL
 1. Follow the Agent Skills spec folder layout and constraints
 2. Keep frontmatter minimal and conservative:
    - `name`: lowercase letters + numbers + hyphens, max 64 chars, must match folder name, no leading/trailing hyphen
-   - `description`: **single line**, ≤ 500 chars (Codex enforces this), describes *when to use* + *what*
+   - `description`: **single line**, ≤ 500 chars (Codex enforces this), describes _when to use_ + _what_
 3. Put detailed instructions in the Markdown body (and/or `references/`), not in `description`
 4. Treat extra frontmatter keys as **best-effort extensions**:
    - Claude Code supports many optional frontmatter keys
@@ -92,15 +96,17 @@ license: Apache-2.0
 compatibility: Requires git and jq; intended for CLI-based coding agents.
 metadata:
   author: my-org
-  version: "1.0"
+  version: '1.0'
 ---
 
 # My Skill
 
 ## When to use
+
 - ...
 
 ## Instructions
+
 - ...
 ```
 
@@ -125,21 +131,21 @@ Provider-specific fields can be layered on top but should be treated as non-port
 
 Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignored (documented) | ❓ not documented / unknown
 
-| Field | Agent Skills Spec | Cursor | Claude Code | Codex CLI | Copilot | Gemini CLI |
-|-------|-------------------|--------|-------------|-----------|---------|------------|
-| `name` | ✅ required | ✅ required | ✅ optional¹ | ✅ required | ✅ required | ✅ documented |
-| `description` | ✅ required | ✅ required | ✅ recommended² | ✅ required | ✅ required | ✅ documented |
-| `license` | ✅ optional | ✅ optional | ❓ | 💤 ignored | ⚠️ may be required³ | ❓ |
-| `compatibility` | ✅ optional | ✅ optional | ❓ | 💤 ignored | ❓ | ❓ |
-| `metadata` | ✅ optional | ✅ optional | ❓ | 💤 ignored | ❓ | ❓ |
-| `allowed-tools` | ⚠️ experimental | ❓ | ✅ | 💤 ignored | ❓ | ❓ |
-| `disable-model-invocation` | ❌ | ✅ | ✅ | 💤 ignored | ❓ | ❓ |
-| `user-invocable` | ❌ | ❓ | ✅ | 💤 ignored | ❌ | ❓ |
-| `argument-hint` | ❌ | ❓ | ✅ | 💤 ignored | ❌ | ❓ |
-| `model` | ❌ | ❓ | ✅ | 💤 ignored | ❌ | ❓ |
-| `context` / `agent` (subagent) | ❌ | ❓ | ✅ | 💤 ignored | ❌ | ❓ |
-| `hooks` (skill-scoped) | ❌ | ❓ | ✅ | 💤 ignored | ❌ | ❓ |
-| `short-description` | ❌ | ❓ | ❓ | ⚠️ example-only | ❓ | ❓ |
+| Field                          | Agent Skills Spec | Cursor      | Claude Code     | Codex CLI       | Copilot             | Gemini CLI    |
+| ------------------------------ | ----------------- | ----------- | --------------- | --------------- | ------------------- | ------------- |
+| `name`                         | ✅ required       | ✅ required | ✅ optional¹    | ✅ required     | ✅ required         | ✅ documented |
+| `description`                  | ✅ required       | ✅ required | ✅ recommended² | ✅ required     | ✅ required         | ✅ documented |
+| `license`                      | ✅ optional       | ✅ optional | ❓              | 💤 ignored      | ⚠️ may be required³ | ❓            |
+| `compatibility`                | ✅ optional       | ✅ optional | ❓              | 💤 ignored      | ❓                  | ❓            |
+| `metadata`                     | ✅ optional       | ✅ optional | ❓              | 💤 ignored      | ❓                  | ❓            |
+| `allowed-tools`                | ⚠️ experimental   | ❓          | ✅              | 💤 ignored      | ❓                  | ❓            |
+| `disable-model-invocation`     | ❌                | ✅          | ✅              | 💤 ignored      | ❓                  | ❓            |
+| `user-invocable`               | ❌                | ❓          | ✅              | 💤 ignored      | ❌                  | ❓            |
+| `argument-hint`                | ❌                | ❓          | ✅              | 💤 ignored      | ❌                  | ❓            |
+| `model`                        | ❌                | ❓          | ✅              | 💤 ignored      | ❌                  | ❓            |
+| `context` / `agent` (subagent) | ❌                | ❓          | ✅              | 💤 ignored      | ❌                  | ❓            |
+| `hooks` (skill-scoped)         | ❌                | ❓          | ✅              | 💤 ignored      | ❌                  | ❓            |
+| `short-description`            | ❌                | ❓          | ❓              | ⚠️ example-only | ❓                  | ❓            |
 
 ¹ Claude Code uses directory name if `name` omitted
 ² Claude Code uses first paragraph of body if `description` omitted
@@ -156,12 +162,14 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 **Docs:** https://code.claude.com/docs/en/skills
 
 **Skill locations (by precedence):**
+
 1. Enterprise-managed skills
 2. Personal: `~/.claude/skills/<skill-name>/SKILL.md`
 3. Project: `.claude/skills/<skill-name>/SKILL.md`
 4. Plugin skills: bundled with installed plugins (namespaced as `plugin-name:skill-name`)
 
 **Claude Code-specific features:**
+
 - `allowed-tools`: Restricts tools the agent can use without asking permission when skill is active. **Only meaningful in Claude Code.**
 - `context: fork`: Runs the skill in a forked subagent context (separate context window). **Only supported in Claude Code.**
 - `agent`: Specifies which subagent type to use when `context: fork` is set.
@@ -172,6 +180,7 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 - **Skills subsume legacy commands:** A file at `.claude/commands/review.md` and a skill at `.claude/skills/review/SKILL.md` both create `/review`. Skills take precedence.
 
 **Invocation:**
+
 - Default: Model-invoked (Claude autonomously decides based on task + description)
 - `disable-model-invocation: true`: User must explicitly invoke via `/` command
 - Can also be referenced directly in prompts
@@ -183,6 +192,7 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 **Docs:** https://cursor.com/docs/context/skills
 
 **Skill locations:**
+
 - Project:
   - `.cursor/skills/<skill-name>/SKILL.md`
   - `.claude/skills/<skill-name>/SKILL.md` (**Claude compatibility**)
@@ -195,6 +205,7 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 **Notable:** Cursor explicitly reads from `.claude/skills/` and `.codex/skills/` for cross-tool compatibility. This means skills authored in `.claude/skills/` are automatically available in Cursor without symlinking.
 
 **Documented frontmatter fields:**
+
 - `name` (required; must match parent folder)
 - `description` (required)
 - `license`, `compatibility`, `metadata` (optional, per spec)
@@ -209,6 +220,7 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 **Docs:** https://developers.openai.com/codex/skills
 
 **Skill locations (by precedence, high → low):**
+
 1. `$CWD/.agents/skills` (repo — working directory)
 2. `$CWD/../.agents/skills` (repo — parent folder)
 3. `$REPO_ROOT/.agents/skills` (repo — root)
@@ -219,6 +231,7 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 > **Note (Feb 2026):** Codex has migrated from `.codex/skills` to `.agents/skills` at all repo and user scopes.
 
 **Codex-specific behaviors:**
+
 - **Uses `.agents/skills/` natively at all scopes** — Codex scans `.agents/skills/` from CWD up to repo root, plus `$HOME/.agents/skills` for user-level
 - **Ignores unknown frontmatter keys** — you can include Claude/Cursor-specific fields without breaking Codex, but they won't affect behavior
 - **Does NOT deduplicate** same-named skills — multiple can appear in selectors
@@ -235,6 +248,7 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 **Docs:** https://geminicli.com/docs/cli/skills/
 
 **Skill locations:**
+
 - Workspace:
   - `.gemini/skills/<skill-name>/SKILL.md`
   - `.agents/skills/<skill-name>/SKILL.md` (**tool-agnostic alias**)
@@ -246,6 +260,7 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 **Notable:** Gemini reads from `.agents/skills/` natively at both workspace and user scopes, making it zero-sync like Codex for projects that use the canonical `.agents/skills/` layout.
 
 **Gemini-specific behaviors:**
+
 - Uses **explicit user consent** on activation — shows a confirmation prompt with directory path
 - On approval: SKILL.md body + folder structure are added to conversation history, and the directory is added to allowed file paths
 - Only `name` and `description` are documented as supported frontmatter; other spec fields (license, compatibility, etc.) are untested
@@ -257,6 +272,7 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 **Docs:** https://code.visualstudio.com/docs/copilot/customization/agent-skills
 
 **Skill locations:**
+
 - Project:
   - `.github/skills/<skill-name>/SKILL.md`
   - `.claude/skills/<skill-name>/SKILL.md` (**Claude compatibility**)
@@ -274,13 +290,13 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 
 When multiple skills share the same name, providers differ:
 
-| Provider | Collision Behavior |
-|----------|-------------------|
-| Claude Code | Enterprise > personal > project; plugin skills namespaced (`plugin-name:skill-name`) |
-| Cursor | Not clearly documented; validate empirically |
-| Codex CLI | Does **not** deduplicate — multiple same-named skills can appear in selectors |
-| GitHub Copilot | Not clearly documented; org/enterprise skills coming soon |
-| Gemini CLI | Workspace > User > Extension |
+| Provider       | Collision Behavior                                                                   |
+| -------------- | ------------------------------------------------------------------------------------ |
+| Claude Code    | Enterprise > personal > project; plugin skills namespaced (`plugin-name:skill-name`) |
+| Cursor         | Not clearly documented; validate empirically                                         |
+| Codex CLI      | Does **not** deduplicate — multiple same-named skills can appear in selectors        |
+| GitHub Copilot | Not clearly documented; org/enterprise skills coming soon                            |
+| Gemini CLI     | Workspace > User > Extension                                                         |
 
 ---
 
@@ -288,11 +304,11 @@ When multiple skills share the same name, providers differ:
 
 ### Who Can Invoke?
 
-| Control | Spec | Cursor | Claude Code | Codex | Copilot | Gemini |
-|---------|------|--------|-------------|-------|---------|--------|
-| Agent auto-invokes | Default | Default | Default | Implicit | Default | Via `activate_skill` |
-| User explicit only | ❌ | `disable-model-invocation: true` | `disable-model-invocation: true` | Explicit `$` / `/skills` | ❓ | Confirmation prompt |
-| Hide from user, agent-only | ❌ | ❓ | `user-invocable: false` | ❌ | ❌ | ❌ |
+| Control                    | Spec    | Cursor                           | Claude Code                      | Codex                    | Copilot | Gemini               |
+| -------------------------- | ------- | -------------------------------- | -------------------------------- | ------------------------ | ------- | -------------------- |
+| Agent auto-invokes         | Default | Default                          | Default                          | Implicit                 | Default | Via `activate_skill` |
+| User explicit only         | ❌      | `disable-model-invocation: true` | `disable-model-invocation: true` | Explicit `$` / `/skills` | ❓      | Confirmation prompt  |
+| Hide from user, agent-only | ❌      | ❓                               | `user-invocable: false`          | ❌                       | ❌      | ❌                   |
 
 **Guidance for workflow-heavy skills:** Default to `disable-model-invocation: true` for skills that edit files, run commands, or have side effects — prevents accidental triggers.
 
@@ -308,10 +324,12 @@ When multiple skills share the same name, providers differ:
 Installs skills from GitHub repos, local paths, or GitLab URLs to any supported agent's native location.
 
 **Installation methods:**
+
 - **Symlink (recommended):** Single canonical copy, symlinked to each agent's path
 - **Copy:** Independent copies for each agent (when symlinks aren't supported)
 
 **Scopes:**
+
 - Project (default): `./<agent>/skills/`
 - Global (`-g`): `~/<agent>/skills/`
 
@@ -352,12 +370,12 @@ npx skills add github-user/skill-repo -a claude-code -a github-copilot
 
 From the `npx skills` CLI compatibility matrix:
 
-| Feature | Claude Code | Codex | Cursor | Copilot | Gemini CLI | Amp | Roo | OpenCode | Cline |
-|---------|-------------|-------|--------|---------|------------|-----|-----|----------|-------|
-| Basic skills | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `allowed-tools` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `context: fork` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Hooks | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Feature         | Claude Code | Codex | Cursor | Copilot | Gemini CLI | Amp | Roo | OpenCode | Cline |
+| --------------- | ----------- | ----- | ------ | ------- | ---------- | --- | --- | -------- | ----- |
+| Basic skills    | ✅          | ✅    | ✅     | ✅      | ✅         | ✅  | ✅  | ✅       | ✅    |
+| `allowed-tools` | ✅          | ✅    | ✅     | ✅      | ✅         | ✅  | ✅  | ✅       | ✅    |
+| `context: fork` | ✅          | ❌    | ❌     | ❌      | ❌         | ❌  | ❌  | ❌       | ❌    |
+| Hooks           | ✅          | ❌    | ❌     | ❌      | ❌         | ❌  | ❌  | ❌       | ✅    |
 
 Source: https://github.com/vercel-labs/skills#compatibility
 
@@ -379,7 +397,7 @@ Would let skills declare dependencies on other skills. Relevant for skill chains
 
 The `description` is your **primary routing mechanism** — it is "for routing, not reading" (Builder.io). Google's Antigravity docs call it "the most important field" and describe it as a "trigger phrase." The agentskills.io spec's own example is simply `description: When to use this skill`.
 
-At startup, agents load *only* `name` + `description` across potentially 100+ skills, then semantic-match against the user's prompt. The body of SKILL.md already covers "what it does" once loaded. **The description's job is to win the routing decision.**
+At startup, agents load _only_ `name` + `description` across potentially 100+ skills, then semantic-match against the user's prompt. The body of SKILL.md already covers "what it does" once loaded. **The description's job is to win the routing decision.**
 
 **Lead with "when", include "what" as disambiguation keywords:**
 
@@ -389,6 +407,7 @@ At startup, agents load *only* `name` + `description` across potentially 100+ sk
 4. **Don't summarize the workflow**: providers route on description without reading the body
 
 Examples:
+
 - Bad: "Reviews code by checking spec compliance, then code quality, then creates PR"
 - Bad: "Analyzes and audits AGENTS.md files for correctness and completeness"
 - Good: "Use when you need to ensure AGENTS.md files accurately reflect the codebase. Validates commands, checks for stale paths, and identifies gaps."
@@ -437,10 +456,10 @@ Examples:
 
 **Answer:** Yes. Codex walks the directory tree from CWD up to repo root and loads skills from `.agents/skills/` at each level. The skill table shows explicit scoping:
 
-| Scope | Location | Monorepo Use |
-|-------|----------|-------------|
-| CWD | `$CWD/.agents/skills` | Skills specific to a microservice or module |
-| Parent | `$CWD/../.agents/skills` | Skills for a shared area in a parent folder |
+| Scope     | Location                    | Monorepo Use                                                    |
+| --------- | --------------------------- | --------------------------------------------------------------- |
+| CWD       | `$CWD/.agents/skills`       | Skills specific to a microservice or module                     |
+| Parent    | `$CWD/../.agents/skills`    | Skills for a shared area in a parent folder                     |
 | Repo Root | `$REPO_ROOT/.agents/skills` | Organization-wide skills; can be overridden by subfolder skills |
 
 Same-named skills at a more specific scope overwrite those from a less specific scope. This mirrors the AGENTS.md "nearest file wins" pattern and is well-suited for monorepos where packages need different conventions.
@@ -476,6 +495,7 @@ MCP server schemas do load at startup and consume context whether used or not �
 ### Q: Will `prerequisite-skills` make it into the spec? Timeline?
 
 **Answer:** Unclear. Issue #90 was opened January 16, 2026 and remains open. It proposes two optional fields:
+
 - `prerequisite-skills`: Skills that should ideally run before this skill
 - `related-skills`: Complementary skills that work well together
 
@@ -500,13 +520,13 @@ The proposal has community interest but no official timeline or maintainer respo
 
 **Answer:** No. While Cursor reading `.claude/skills/` is convenient, it only covers two of four required tools:
 
-| Tool | Native Path | Reads `.claude/skills/`? | Reads `.agents/skills/`? |
-|------|-------------|--------------------------|--------------------------|
-| Claude Code | `.claude/skills/` | ✅ (native) | ❌ |
-| Cursor | `.cursor/skills/` | ✅ (cross-compat) | ❌ |
-| Codex CLI | `.agents/skills/` | ❌ | ✅ (native) |
-| GitHub Copilot | `.github/skills/` | ✅ (cross-compat) | ❌ |
-| Gemini CLI | `.gemini/skills/` | ❌ | ✅ (native alias) |
+| Tool           | Native Path       | Reads `.claude/skills/`? | Reads `.agents/skills/`? |
+| -------------- | ----------------- | ------------------------ | ------------------------ |
+| Claude Code    | `.claude/skills/` | ✅ (native)              | ❌                       |
+| Cursor         | `.cursor/skills/` | ✅ (cross-compat)        | ❌                       |
+| Codex CLI      | `.agents/skills/` | ❌                       | ✅ (native)              |
+| GitHub Copilot | `.github/skills/` | ✅ (cross-compat)        | ❌                       |
+| Gemini CLI     | `.gemini/skills/` | ❌                       | ✅ (native alias)        |
 
 **Recommended approach:** Author skills in `.agents/skills/` (tool-agnostic canonical source), then symlink only where needed:
 
@@ -535,6 +555,7 @@ ln -s ../../.agents/skills/my-skill .github/skills/my-skill    # GitHub Copilot 
 - **Override:** Set `SLASH_COMMAND_TOOL_CHAR_BUDGET` environment variable to increase the limit.
 
 **Practical guidelines for description length based on skill count:**
+
 - 60+ skills: Keep descriptions ≤ 130 characters
 - 40-60 skills: Keep descriptions ≤ 150 characters
 - <40 skills: Standard ≤ 500 character limit is fine

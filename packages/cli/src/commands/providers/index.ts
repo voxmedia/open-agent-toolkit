@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+
 import { createProvidersInspectCommand } from './inspect/inspect';
 import { createProvidersListCommand } from './list/list';
 import type {

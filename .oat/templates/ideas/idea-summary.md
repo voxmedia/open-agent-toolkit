@@ -2,7 +2,7 @@
 oat_idea_state: summarized
 oat_idea_created: YYYY-MM-DD
 oat_idea_summarized: YYYY-MM-DD
-oat_idea_name: "{Idea Name}"
+oat_idea_name: '{Idea Name}'
 ---
 
 # Summary: {Idea Name}

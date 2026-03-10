@@ -11,10 +11,10 @@
 
 The backlog contains **{N} items** ({breakdown by section}) spanning {N} themes:
 
-| Theme | Count | Key Observation |
-|---|---|---|
-| {Theme name} | {N} | {Brief observation} |
-| ... | ... | ... |
+| Theme        | Count | Key Observation     |
+| ------------ | ----- | ------------------- |
+| {Theme name} | {N}   | {Brief observation} |
+| ...          | ...   | ...                 |
 
 **Top-line recommendations:**
 
@@ -28,11 +28,11 @@ The backlog contains **{N} items** ({breakdown by section}) spanning {N} themes:
 
 ### Rating Key
 
-| Rating | Value | Effort |
-|---|---|---|
-| **High** | Unblocks other items, daily workflow impact, or product milestone prerequisite | > 3 days, high complexity, or touches many files |
-| **Medium** | Improves quality/consistency but not blocking | 1-3 days, moderate complexity |
-| **Low** | Nice-to-have or future-facing | < 1 day, straightforward, isolated change |
+| Rating     | Value                                                                          | Effort                                           |
+| ---------- | ------------------------------------------------------------------------------ | ------------------------------------------------ |
+| **High**   | Unblocks other items, daily workflow impact, or product milestone prerequisite | > 3 days, high complexity, or touches many files |
+| **Medium** | Improves quality/consistency but not blocking                                  | 1-3 days, moderate complexity                    |
+| **Low**    | Nice-to-have or future-facing                                                  | < 1 day, straightforward, isolated change        |
 
 ### Priority Quadrants
 
@@ -58,11 +58,11 @@ The backlog contains **{N} items** ({breakdown by section}) spanning {N} themes:
 
 > {One-line description of the item}
 
-| Dimension | Rating | Rationale |
-|---|---|---|
-| **Value** | **{High/Medium/Low}** | {Why this value rating} |
-| **Effort** | **{High/Medium/Low}** | {Why this effort rating} |
-| **Quadrant** | **{Quick Win / Strategic / Fill-in / Avoid}** | |
+| Dimension    | Rating                                        | Rationale                |
+| ------------ | --------------------------------------------- | ------------------------ |
+| **Value**    | **{High/Medium/Low}**                         | {Why this value rating}  |
+| **Effort**   | **{High/Medium/Low}**                         | {Why this effort rating} |
+| **Quadrant** | **{Quick Win / Strategic / Fill-in / Avoid}** |                          |
 
 - **Dependencies:** {What this item depends on, or "None"}
 - **Blocked by:** {Item IDs, or "Nothing"}
@@ -109,10 +109,10 @@ These are independent work streams that can be tackled concurrently without conf
 
 ### Wave {N}: {Wave Name}
 
-| Order | Item | Effort | Rationale |
-|---|---|---|---|
-| {Na} | **{BNN}** - {Title} | {Low/Med/High} | {Why now} |
-| ... | ... | ... | ... |
+| Order | Item                | Effort         | Rationale |
+| ----- | ------------------- | -------------- | --------- |
+| {Na}  | **{BNN}** - {Title} | {Low/Med/High} | {Why now} |
+| ...   | ...                 | ...            | ...       |
 
 **Parallelism:** {Which items in this wave can run in parallel}
 
@@ -120,8 +120,8 @@ These are independent work streams that can be tackled concurrently without conf
 
 ### Deferred
 
-| Item | Rationale |
-|---|---|
+| Item                | Rationale      |
+| ------------------- | -------------- |
 | **{BNN}** - {Title} | {Why deferred} |
 
 ---
@@ -132,21 +132,21 @@ These are independent work streams that can be tackled concurrently without conf
 
 ### How backlog items map to roadmap phases
 
-| Roadmap Phase | Status | Backlog Items | Notes |
-|---|---|---|---|
-| {Phase name} | {Status} | {BNN, BNN, ...} | {Notes} |
-| ... | ... | ... | ... |
+| Roadmap Phase | Status   | Backlog Items   | Notes   |
+| ------------- | -------- | --------------- | ------- |
+| {Phase name}  | {Status} | {BNN, BNN, ...} | {Notes} |
+| ...           | ...      | ...             | ...     |
 
 ### Gaps: Roadmap items without backlog coverage
 
-| Roadmap Item | Phase | Recommendation |
-|---|---|---|
-| {Item} | {Phase} | {Add backlog item? Defer? Already covered?} |
+| Roadmap Item | Phase   | Recommendation                              |
+| ------------ | ------- | ------------------------------------------- |
+| {Item}       | {Phase} | {Add backlog item? Defer? Already covered?} |
 
 ### Orphans: Backlog items not on the roadmap
 
-| Backlog Item | Recommendation |
-|---|---|
+| Backlog Item        | Recommendation                               |
+| ------------------- | -------------------------------------------- |
 | **{BNN}** - {Title} | {Add to roadmap? Keep as standalone? Defer?} |
 
 ---
@@ -161,8 +161,8 @@ These are independent work streams that can be tackled concurrently without conf
 
 ### Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk               | Mitigation        |
+| ------------------ | ----------------- |
 | {Risk description} | {How to mitigate} |
 
 ### Quick wins to tackle immediately

@@ -2,7 +2,7 @@
 name: oat-project-new
 version: 1.2.0
 description: Use when starting a spec-driven OAT project from scratch. Scaffolds a new project under PROJECTS_ROOT and sets it active.
-argument-hint: "<project-name> [--force]"
+argument-hint: '<project-name> [--force]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(pnpm:*), Glob, Grep, AskUserQuestion
@@ -17,7 +17,7 @@ Create a new OAT project directory, scaffold standard artifacts from `.oat/templ
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ NEW PROJECT
+  OAT ▸ NEW PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
@@ -49,6 +49,7 @@ oat project new "{project-name}" --mode spec-driven
 ```
 
 Optional flags:
+
 - `--force` (non-destructive; only fills missing files/dirs, does not overwrite)
 - `--no-set-active`
 - `--no-dashboard`
@@ -56,11 +57,13 @@ Optional flags:
 ### Step 3: Confirm + Next Step
 
 Confirm to the user:
+
 - Project path created: `{PROJECTS_ROOT}/{project-name}`
 - Active project set in local config: `.oat/config.local.json` (`activeProject`)
 - Repo State Dashboard refreshed: `.oat/state.md` (if enabled)
 
 Then explicitly instruct the user to run discovery next:
+
 - Next command: `oat-project-discover`
 
 ## Success Criteria

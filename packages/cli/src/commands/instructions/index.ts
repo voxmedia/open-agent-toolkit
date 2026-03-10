@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+
 import { createInstructionsSyncCommand } from './sync/sync';
 import { createInstructionsValidateCommand } from './validate/validate';
 

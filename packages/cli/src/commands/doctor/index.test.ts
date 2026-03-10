@@ -7,6 +7,7 @@ import type { Manifest } from '@manifest/index';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createDoctorCommand } from './index';
 
 interface HarnessOptions {

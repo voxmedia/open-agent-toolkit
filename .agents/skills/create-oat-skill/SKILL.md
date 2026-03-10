@@ -2,7 +2,7 @@
 name: create-oat-skill
 version: 1.2.0
 description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
-argument-hint: "[skill-name]"
+argument-hint: '[skill-name]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
@@ -23,6 +23,7 @@ This skill is a specialization of the general skill-creation workflow.
 ## When to Use
 
 Use when:
+
 - Adding a new `oat-*` workflow skill
 - Adding a new workflow phase or lifecycle action
 - Standardizing a “one-off” workflow into a reusable OAT skill
@@ -30,12 +31,14 @@ Use when:
 ## When NOT to Use
 
 Don’t use when:
+
 - You only need to update an existing skill
 - The workflow is still exploratory and may change daily
 
 ## Arguments
 
 Parse from `$ARGUMENTS`:
+
 - **skill-name**: (required) kebab-case name (e.g., `oat-backlog-refine`, `oat-archive-project`)
 
 ## Workflow
@@ -43,6 +46,7 @@ Parse from `$ARGUMENTS`:
 ### Step 1: Collect Inputs
 
 If not provided, ask the user for:
+
 - Skill name (kebab-case)
 - Description using the create-agnostic-skill formula: `Use when [trigger condition]. [What it does for disambiguation].`
 - Whether this is `oat-*` (should be for this skill)
@@ -53,16 +57,19 @@ If not provided, ask the user for:
 Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the base.
 
 **Required sections (don’t omit):**
+
 - `## Mode Assertion`
 - `## Progress Indicators (User-Facing)` (with separator banner)
 - `### Step 0: Resolve Active Project` (if project-scoped)
 - `## Success Criteria`
 
 **Required frontmatter metadata:**
+
 - Include `version: 1.0.0` for new skills.
 - On later edits, bump patch for fixes/clarifications, minor for backward-compatible behavior additions, major for breaking workflow/interface changes.
 
 **Progress indicators (required):**
+
 - Start-of-skill banner with horizontal separators:
   - `OAT ▸ {LABEL}` (uppercase label)
 - A few short step indicators for multi-step work (2–5 lines)
@@ -71,6 +78,7 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 ### Step 3: Apply OAT Conventions
 
 **Project root resolution (required for project-scoped skills):**
+
 - Always resolve `{PROJECTS_ROOT}` via:
   - `$OAT_PROJECTS_ROOT` env var
   - `oat config get projects.root`
@@ -78,14 +86,17 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 - Never hardcode `.oat/projects/shared` directly except as the fallback.
 
 **Active project (required for project-scoped skills):**
+
 - Prefer `activeProject` in `.oat/config.local.json` as the pointer.
 - If missing/invalid: prompt for `{project-name}`, derive `PROJECT_PATH="${PROJECTS_ROOT}/{project-name}"`, then persist with `oat config set activeProject "$PROJECT_PATH"`.
 
 **Bash safety (recommended):**
+
 - Prefer portable bash (`set -eu`, avoid `pipefail` unless explicitly handled).
 - Quote variables; validate user-provided names; prevent path traversal.
 
 **Question handling (required when the skill needs user decisions):**
+
 - Write the workflow prose so it stays portable across hosts.
 - If structured prompts help, document the runtime split explicitly:
   - Claude Code: use `AskUserQuestion` when available
@@ -96,9 +107,11 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 ### Step 4: Create Files
 
 Create:
+
 - `.agents/skills/{skill-name}/SKILL.md`
 
 If the skill needs templates/scripts, add:
+
 - `.agents/skills/{skill-name}/references/…`
 - `.agents/skills/{skill-name}/scripts/…`
 
@@ -123,6 +136,7 @@ New OAT skills must be registered in two places so `oat init tools` can install 
 **Ask the user:** "Should this skill be distributed via `oat init tools`? If so, which category: **ideas**, **workflows**, or **utility**?"
 
 Category guidance:
+
 - **ideas** — `oat-idea-*` skills for brainstorming and capture
 - **workflows** — `oat-project-*`, `oat-repo-*`, `oat-worktree-*` skills for project lifecycle and codebase operations
 - **utility** — cross-cutting tools that don't fit the above (e.g., `oat-review-provide`, `oat-agent-*`)
@@ -142,11 +156,11 @@ SKILLS=(
 
 **2. Add to the corresponding TypeScript constant**
 
-| Category | File | Constant |
-|----------|------|----------|
-| ideas | `packages/cli/src/commands/init/tools/ideas/install-ideas.ts` | `IDEA_SKILLS` |
+| Category  | File                                                                  | Constant          |
+| --------- | --------------------------------------------------------------------- | ----------------- |
+| ideas     | `packages/cli/src/commands/init/tools/ideas/install-ideas.ts`         | `IDEA_SKILLS`     |
 | workflows | `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` | `WORKFLOW_SKILLS` |
-| utility | `packages/cli/src/commands/init/tools/utility/install-utility.ts` | `UTILITY_SKILLS` |
+| utility   | `packages/cli/src/commands/init/tools/utility/install-utility.ts`     | `UTILITY_SKILLS`  |
 
 Add the skill name to the array.
 

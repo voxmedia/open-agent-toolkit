@@ -19,10 +19,12 @@ Use this template when generating an AGENTS.md for a subdirectory (package, serv
 {2-3 sentences describing this module's purpose, boundaries, and how it fits into the larger project.}
 
 ### Key Files
+
 - `{file}` - {purpose}
 - `{file}` - {purpose}
 
 ### Technology Stack
+
 - **Runtime:** {e.g., Node.js 22, Python 3.12}
 - **Framework:** {e.g., Express, FastAPI}
 - **Testing:** {e.g., Vitest, pytest}
@@ -30,9 +32,11 @@ Use this template when generating an AGENTS.md for a subdirectory (package, serv
 ## Conventions
 
 ### Patterns
+
 - {Key patterns specific to this directory — e.g., "all handlers follow the Controller pattern"}
 
 ### Non-Negotiables
+
 - {Security or data handling rules specific to this module}
 - {Error handling conventions that differ from root}
 

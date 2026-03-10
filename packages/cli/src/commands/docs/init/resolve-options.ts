@@ -1,4 +1,5 @@
 import { basename, join } from 'node:path';
+
 import type {
   PromptContext,
   SelectChoice,
@@ -7,8 +8,8 @@ import { dirExists, fileExists } from '@fs/io';
 
 export type DocsRepoShape = 'monorepo' | 'single-package';
 export type DocsFramework = 'fumadocs' | 'mkdocs';
-export type DocsLintMode = 'markdownlint' | 'none';
-export type DocsFormatMode = 'prettier' | 'none';
+export type DocsLintMode = 'none';
+export type DocsFormatMode = 'oxfmt' | 'none';
 
 export interface DocsInitResolvedOptions {
   repoRoot: string;
@@ -56,12 +57,11 @@ const FRAMEWORK_CHOICES: SelectChoice<DocsFramework>[] = [
 ];
 
 const LINT_CHOICES: SelectChoice<DocsLintMode>[] = [
-  { label: 'markdownlint', value: 'markdownlint' },
   { label: 'none', value: 'none' },
 ];
 
 const FORMAT_CHOICES: SelectChoice<DocsFormatMode>[] = [
-  { label: 'prettier', value: 'prettier' },
+  { label: 'oxfmt', value: 'oxfmt' },
   { label: 'none', value: 'none' },
 ];
 
@@ -190,7 +190,7 @@ export async function resolveDocsInitOptions(
     input.providedLint ||
     (input.interactive && !input.acceptDefaults
       ? await input.selectWithAbort('Markdown lint mode', LINT_CHOICES, ctx)
-      : 'markdownlint');
+      : 'none');
 
   if (!lint) {
     return null;
@@ -200,7 +200,7 @@ export async function resolveDocsInitOptions(
     input.providedFormat ||
     (input.interactive && !input.acceptDefaults
       ? await input.selectWithAbort('Markdown format mode', FORMAT_CHOICES, ctx)
-      : 'prettier');
+      : 'oxfmt');
 
   if (!format) {
     return null;

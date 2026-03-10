@@ -1,6 +1,7 @@
 import { createProgram } from '@app/create-program';
 import type { Command } from 'commander';
 import { describe, expect, it } from 'vitest';
+
 import { registerCommands } from './index';
 
 function createRegisteredProgram(): Command {
@@ -392,8 +393,7 @@ describe('help output snapshots', () => {
         --app-name <name>        Docs app name
         --target-dir <path>      Target directory for the docs app
         --description <text>     Site description
-        --lint <mode>            Markdown lint mode (choices: "markdownlint", "none")
-        --format <mode>          Markdown format mode (choices: "prettier", "none")
+        --format <mode>          Markdown format mode (choices: "oxfmt", "none")
         --yes                    Accept defaults without prompting
         -h, --help               display help for command
       "

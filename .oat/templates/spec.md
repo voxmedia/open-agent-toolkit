@@ -25,10 +25,12 @@ Specification is for requirements and acceptance criteria, not design/implementa
 ## Goals
 
 ### Primary Goals
+
 - {Goal 1}
 - {Goal 2}
 
 ### Secondary Goals
+
 - {Nice-to-have 1}
 
 ## Non-Goals
@@ -41,6 +43,7 @@ Specification is for requirements and acceptance criteria, not design/implementa
 ### Functional Requirements
 
 **FR1: {Requirement Name}**
+
 - **Description:** {What the system must do}
 - **Acceptance Criteria:**
   - {Criterion 1}
@@ -50,6 +53,7 @@ Specification is for requirements and acceptance criteria, not design/implementa
 ### Non-Functional Requirements
 
 **NFR1: {Requirement Name}**
+
 - **Description:** {Performance, security, usability requirement}
 - **Acceptance Criteria:**
   - {Measurable criterion}
@@ -70,12 +74,14 @@ Specification is for requirements and acceptance criteria, not design/implementa
 {Brief proposed approach - 2-3 paragraphs}
 
 **Key Components:**
+
 - {Component 1} - {Brief description}
 
 **Alternatives Considered:**
+
 - {Alternative 1} - {Why rejected}
 
-*Design-related open questions are tracked in the [Open Questions](#open-questions) section below.*
+_Design-related open questions are tracked in the [Open Questions](#open-questions) section below._
 
 ## Success Metrics
 
@@ -86,13 +92,14 @@ Specification is for requirements and acceptance criteria, not design/implementa
 
 {Traceability matrix for tracking requirements through implementation}
 
-| ID | Description | Priority | Verification | Planned Tasks |
-|----|-------------|----------|--------------|---------------|
-| FR1 | {Brief description} | P0 | {method: pointer} | {To be filled by oat-project-plan} |
-| FR2 | {Brief description} | P1 | {method: pointer} | {To be filled by oat-project-plan} |
-| NFR1 | {Brief description} | P0 | {method: pointer} | {To be filled by oat-project-plan} |
+| ID   | Description         | Priority | Verification      | Planned Tasks                      |
+| ---- | ------------------- | -------- | ----------------- | ---------------------------------- |
+| FR1  | {Brief description} | P0       | {method: pointer} | {To be filled by oat-project-plan} |
+| FR2  | {Brief description} | P1       | {method: pointer} | {To be filled by oat-project-plan} |
+| NFR1 | {Brief description} | P0       | {method: pointer} | {To be filled by oat-project-plan} |
 
 **Notes:**
+
 - ID: Unique requirement identifier (FR# for functional, NFR# for non-functional)
 - Description: Brief 1-sentence summary of the requirement
 - Priority: P0 (must have) / P1 (should have) / P2 (nice to have)

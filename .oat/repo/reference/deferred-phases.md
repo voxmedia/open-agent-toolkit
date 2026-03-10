@@ -3,6 +3,7 @@
 This document lists the next phases of work that are explicitly deferred beyond the current dogfood workflow baseline, plus concrete "when to do it" triggers.
 
 Primary references:
+
 - `.oat/repo/archive/past-artifacts/2026-01-27-oat-dogfood-workflow-design-v2.md`
 - `.oat/repo/archive/past-artifacts/agentic_development_framework_v_1_plan.md`
 - `.oat/projects/archived/workflow-research/analysis/subagents/refined-subagent-proposal.md`
@@ -11,6 +12,7 @@ Primary references:
 ## Baseline (Already In Scope)
 
 Dogfood v1 baseline is:
+
 - `oat-repo-knowledge-index` + `.oat/repo/knowledge/**`
 - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
 - `oat-project-progress` router
@@ -59,10 +61,12 @@ Dogfood v1 baseline is:
 The CLI now owns project lifecycle commands and config-backed active project state (`activeProject` in `.oat/config.local.json`, repo-relative path). Earlier deferred pointer-file migration concerns have been resolved by ADR-012/ADR-013 and the B15+B02 implementation.
 
 What remains deferred is a narrower follow-on question:
+
 - whether `activeProject` should continue storing a repo-relative path (current canonical), or
 - move to a name-only value resolved via `projects.root`.
 
 Current canonical behavior:
+
 - **Write:** repo-relative path in `.oat/config.local.json` (`activeProject`)
 - **Read:** via `oat config get activeProject` (skills/scripts should not parse pointer files directly)
 - **Compatibility:** legacy `.oat/active-project` files may remain inert; they are not canonical in migrated flows
@@ -74,10 +78,12 @@ Current canonical behavior:
 **What:** Improve staleness detection and enforcement beyond "warn-only".
 
 **When to start:**
+
 - After 1-2 dogfood projects where staleness signals felt noisy (false positives/negatives), or
 - Before using OAT on high-risk changes where stale context would be costly.
 
 **Deliverables:**
+
 - "Full diff-based staleness detection" option (in addition to age + scoped file/line counts)
 - Strict staleness mode that can block downstream phases when knowledge is stale/missing
 - Clear docs for thresholds and fallback behavior (non-git dirs, shallow clones, detached HEAD, etc.)
@@ -91,10 +97,12 @@ Current canonical behavior:
 **Current status:** Deferred, but groundwork expanded. `oat-worktree-bootstrap` is implemented for manual-safe worktree setup, and subagent orchestration skills (`oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto`) provide execution mode selection, dispatch contracts, and autonomous bootstrap with review gate and fix-loop retry (PR #21, refined in PR #26).
 
 **When to start:**
+
 - When we actively want to run phases in parallel (or keep multiple worktrees moving), and
 - The single-file `implementation.md` log becomes a bottleneck.
 
 **Deliverables:**
+
 - A parallel-friendly log structure (e.g., per-phase logs) and/or phase summaries
 - `oat-reconcile` skill to merge parallel updates into the main plan/implementation/state artifacts
 - Explicit "phases that can run in parallel" semantics in `plan.md`
@@ -106,10 +114,12 @@ Current canonical behavior:
 **What:** Make "small feature / quick fix" workflows faster by safely skipping heavy steps (with guardrails).
 
 **When to start:**
+
 - After we have a stable "spec-driven mode", and
 - We find ourselves repeatedly doing small changes where spec-driven discovery/spec/design overhead isn't worth it.
 
 **Deliverables:**
+
 - Done: quick/import mode lanes with canonical `plan.md` execution contract
 - Done: shared plan-writing guidance (`oat-project-plan-writing`) with mode-aware plan contracts
 - Remaining: template rendering helper (`oat template render ...`) to avoid copy/paste and ensure consistent frontmatter
@@ -121,13 +131,16 @@ Current canonical behavior:
 **What:** Turn the dogfood workflow into a broader toolkit: provider adapters, sync, drift detection, and safe apply.
 
 **Status:** In Progress
+
 - Done: core command surface, sync manifest/config model, provider config commands, Codex TOML sync, instructions validate/sync, Copilot/Gemini provider support, `oat tools` lifecycle commands (list/outdated/info/install/update/remove)
 - Remaining: expanded provider capability matrix and UX hardening
 
 **When to start:**
+
 - Now that dogfood v1 has been exercised end-to-end, we can start building the CLI in parallel with smaller workflow polish.
 
 **Deliverables (remaining from early plan direction):**
+
 - `oat init`, `oat status`, `oat sync`, `oat doctor`
 - Provider adapters + capability matrix
 - `.oat/sync/manifest.json`-based management (diff-first, reversible)
@@ -140,10 +153,12 @@ Current canonical behavior:
 **What:** The full `.oat/projects/(shared|local)/...` project model and branch-aware auto-switching.
 
 **When to start:**
+
 - When we want multiple concurrent OAT projects per repo (and/or shared/local modes), or
 - When branch-based project switching becomes important for daily use.
 
 **Deliverables:**
+
 - `.oat/projects/(shared|local)/<name>/state.md` (or a migration plan from `.oat/projects/shared/`)
 - `.oat/projects/state.json` + optional `.oat/state.md` derivation
 - `oat project new/open/auto/close` with optional git hook integration (post-checkout/post-merge)
@@ -155,8 +170,10 @@ Current canonical behavior:
 **What:** Longer-term improvements once workflow + sync are stable.
 
 **When to start:**
+
 - After Phase 8-9 (interop + multi-project) are proven in real usage.
 
 **Deliverables:**
+
 - `.oat/memory/` (cross-session context; patterns; "what we learned")
 - More complete provider capability matrix and provider-specific features (e.g., hook mirroring policies, subagent limitations)

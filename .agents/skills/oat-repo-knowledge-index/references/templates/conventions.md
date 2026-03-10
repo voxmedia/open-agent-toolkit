@@ -18,40 +18,49 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 ## Naming Patterns
 
 **Files:**
+
 - [Pattern observed]
 
 **Functions:**
+
 - [Pattern observed]
 
 **Variables:**
+
 - [Pattern observed]
 
 **Types:**
+
 - [Pattern observed]
 
 ## Code Style
 
 **Formatting:**
+
 - [Tool used]
 - [Key settings]
 
 **Linting:**
+
 - [Tool used]
 - [Key rules]
 
 ## Import Organization
 
 **Order:**
+
 1. [First group]
 2. [Second group]
 3. [Third group]
 
 **Path Aliases:**
+
 - [Aliases used]
 
 ## Error Handling
 
 **Patterns:**
+
 - [How errors are handled]
 
 ## Logging
@@ -59,14 +68,17 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 **Framework:** [Tool or "console"]
 
 **Patterns:**
+
 - [When/how to log]
 
 ## Comments
 
 **When to Comment:**
+
 - [Guidelines observed]
 
 **JSDoc/TSDoc:**
+
 - [Usage pattern]
 
 ## Function Design
@@ -85,4 +97,4 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 
 ---
 
-*Convention analysis: [date]*
+_Convention analysis: [date]_

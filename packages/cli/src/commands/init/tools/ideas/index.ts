@@ -11,6 +11,7 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
+
 import {
   installIdeas as defaultInstallIdeas,
   type InstallIdeasOptions,

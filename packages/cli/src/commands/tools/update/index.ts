@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+
 import { buildCommandContext } from '@app/command-context';
 import {
   copyDirWithStatus,
@@ -17,6 +18,7 @@ import type { PackName } from '@commands/tools/shared/types';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
+
 import {
   type UpdateTarget,
   type UpdateToolsDependencies,

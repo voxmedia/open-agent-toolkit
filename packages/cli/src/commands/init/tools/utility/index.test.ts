@@ -7,6 +7,7 @@ import type { MultiSelectChoice } from '@commands/shared/shared.prompts';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createInitToolsUtilityCommand } from './index';
 import { UTILITY_SKILLS } from './install-utility';
 

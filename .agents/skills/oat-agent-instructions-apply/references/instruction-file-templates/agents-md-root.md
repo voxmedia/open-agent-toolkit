@@ -10,6 +10,7 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 ## Development Commands
 
 ### Essential Commands
+
 - `{install-command}` - Install dependencies
 - `{dev-command}` - Start development server
 - `{build-command}` - Build for production
@@ -17,6 +18,7 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 - `{lint-command}` - Lint code
 
 ### Additional Commands
+
 - {Any project-specific commands}
 
 ## Architecture Overview
@@ -24,10 +26,12 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 {2-4 sentences describing the project structure, key modules, and how they relate.}
 
 ### Key Directories
+
 - `{dir/}` - {purpose}
 - `{dir/}` - {purpose}
 
 ### Technology Stack
+
 - **Runtime:** {e.g., Node.js 22, Python 3.12}
 - **Framework:** {e.g., Next.js 15, FastAPI}
 - **Build:** {e.g., Turborepo, Webpack}
@@ -36,13 +40,16 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 ## Code Conventions
 
 ### Style
+
 - {Only repo-specific, evidence-backed rules that are NOT already reliably enforced by formatter/linter}
 - {Prefer links to canonical docs/config when the detail is too deep for always-on instructions}
 
 ### Patterns
+
 - {Key architectural patterns — e.g., "prefer composition over inheritance"}
 
 ### Non-Negotiables
+
 - {Security rules, access control patterns}
 - {Data handling requirements}
 - {Error handling conventions}

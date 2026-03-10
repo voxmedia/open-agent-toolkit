@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { runInteractiveStaleTriage } from './artifacts';
 
 describe('interactive stale triage', () => {

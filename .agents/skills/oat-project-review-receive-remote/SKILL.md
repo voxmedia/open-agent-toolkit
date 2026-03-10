@@ -24,11 +24,13 @@ Fetch unresolved GitHub PR feedback and convert it into review-fix tasks inside 
 **Purpose:** In project scope, ingest remote PR feedback, triage findings, create executable plan tasks, and update implementation state for resumable fix execution.
 
 **BLOCKED Activities:**
+
 - No direct code implementation in this mode.
 - No silent finding deferrals/dismissals.
 - No plan task ID reuse or re-numbering.
 
 **ALLOWED Activities:**
+
 - Active project resolution.
 - Remote PR comment ingestion/classification.
 - Findings triage.
@@ -37,6 +39,7 @@ Fetch unresolved GitHub PR feedback and convert it into review-fix tasks inside 
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Making code changes in receive mode -> STOP and return to triage/bookkeeping only.
 - Reusing existing task IDs instead of generating next sequential `pNN-tNN` -> STOP and recalculate the next available ID.
 - Posting GitHub replies without explicit user approval -> STOP and present reply content for confirmation first.
@@ -46,10 +49,11 @@ If you catch yourself:
 Print this banner once at start:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- OAT ▸ PROJECT REMOTE REVIEW RECEIVE
+OAT ▸ PROJECT REMOTE REVIEW RECEIVE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Use step indicators:
+
 - `[1/8] Resolving project...`
 - `[2/8] Resolving PR...`
 - `[3/8] Fetching comments...`
@@ -88,6 +92,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 Validation:
+
 - `PROJECT_PATH` exists
 - `plan.md` exists
 - `implementation.md` exists
@@ -98,6 +103,7 @@ If missing, ask user to choose/fix active project before continuing.
 ### Step 1: Resolve PR Number
 
 Resolution order:
+
 1. `--pr <N>` from `$ARGUMENTS`
 2. auto-detect via `agent-reviews`
 
@@ -110,6 +116,7 @@ npx agent-reviews --json --unresolved --pr <N>
 ```
 
 If no unresolved comments:
+
 - Report clean status.
 - Update `plan.md` review row for scoped entry to `passed` when applicable.
 - Stop.
@@ -117,6 +124,7 @@ If no unresolved comments:
 ### Step 3: Classify and Normalize Findings
 
 For each comment:
+
 - capture `type`, `path`, `line`, `url`, and comment body.
 - classify severity using 4-tier model.
 - use review state (e.g., `CHANGES_REQUESTED`) as a hint, not a hard override.
@@ -125,10 +133,12 @@ For each comment:
 ### Step 4: Present Findings Overview and Triage
 
 Before prompting dispositions, print:
+
 - counts per severity
 - compact register (`id`, `title`, `file:line`, `source_ref`)
 
 Disposition options:
+
 - `convert` (default for critical/important/medium)
 - `defer` (default for minor)
 - `dismiss`
@@ -138,6 +148,7 @@ Require rationale for `defer`/`dismiss`.
 ### Step 5: Convert Findings to Plan Tasks
 
 For each converted finding:
+
 - Determine next stable `pNN-tNN` IDs from current plan.
 - Create tasks using heading format:
   - `### Task pNN-tNN: (review) <title>`
@@ -152,6 +163,7 @@ For each converted finding:
 ### Step 6: Update Project Artifacts
 
 Update `plan.md`:
+
 - Append inserted review-fix task sections in correct phase order.
 - Update `## Reviews` row for remote scope:
   - status `fixes_added` when tasks were added
@@ -161,6 +173,7 @@ Update `plan.md`:
 - Update `## Implementation Complete` totals.
 
 Update `implementation.md`:
+
 - Add "Remote Review Received" section with:
   - date
   - PR number
@@ -171,6 +184,7 @@ Update `implementation.md`:
 - If no new tasks: keep current task pointer unchanged or set `null` if all work is complete.
 
 Update `state.md`:
+
 - `oat_phase: implement`
 - `oat_phase_status: in_progress`
 - `oat_current_task: <first-new-task-id|null>`
@@ -178,10 +192,12 @@ Update `state.md`:
 ### Step 7: Enforce Review Cycle Limit and Route Next Action
 
 Track review cycles for the same scope.
+
 - Maximum: 3 receive cycles.
 - If limit reached, block and ask user whether to escalate scope or resolve manually.
 
 Route next action:
+
 - If tasks added: `oat-project-implement`
 - If no tasks and review passed: continue toward finalization/PR flow
 
@@ -189,6 +205,7 @@ Route next action:
 
 Ask user whether to reply to processed comments.
 If yes:
+
 - Convert: `npx agent-reviews --reply <id> "Tracking as task pNN-tNN"`
 - Defer: `npx agent-reviews --reply <id> "Deferred: <reason>"`
 - Dismiss: `npx agent-reviews --reply <id> "Won't fix: <reason>"`
@@ -198,6 +215,7 @@ Never post replies without explicit user approval.
 ## Output Contract
 
 At completion, report:
+
 - project path
 - PR number
 - findings by severity

@@ -2,7 +2,7 @@
 oat_idea_state: brainstorming
 oat_idea_created: YYYY-MM-DD
 oat_idea_last_updated: YYYY-MM-DD
-oat_idea_name: "{Idea Name}"
+oat_idea_name: '{Idea Name}'
 ---
 
 # Idea: {Idea Name}

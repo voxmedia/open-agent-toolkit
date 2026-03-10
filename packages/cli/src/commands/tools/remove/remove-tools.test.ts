@@ -1,5 +1,6 @@
 import type { ToolInfo } from '@commands/tools/shared/types';
 import { describe, expect, it } from 'vitest';
+
 import {
   type RemoveTarget,
   type RemoveToolsDependencies,

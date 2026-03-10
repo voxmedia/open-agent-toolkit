@@ -2,7 +2,7 @@
 name: oat-project-import-plan
 version: 1.2.0
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
-argument-hint: "<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]"
+argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -24,20 +24,24 @@ Import a markdown plan from an external coding provider and normalize it into OA
 **Purpose:** Preserve the original plan and generate a runnable canonical `plan.md` for OAT execution.
 
 **BLOCKED Activities:**
+
 - No destructive edits to the imported source file.
 - No implementation code changes.
 
 **ALLOWED Activities:**
+
 - Creating/updating project artifacts.
 - Plan normalization into OAT task structure.
 - Updating project state metadata for import mode.
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Mutating source plan content in-place → STOP; copy source first.
 - Producing prose-only plan without runnable tasks → STOP and normalize to `pNN-tNN` tasks.
 
 **Recovery:**
+
 1. Preserve source in `references/imported-plan.md`.
 2. Regenerate canonical `plan.md` in OAT structure.
 
@@ -48,7 +52,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ IMPORT PLAN
+  OAT ▸ IMPORT PLAN
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
@@ -69,6 +73,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 If no valid active project exists:
+
 - Use `--project` if provided, else ask user.
 - Resolve `TARGET_PROJECT_PATH="${PROJECTS_ROOT}/{project-name}"`.
 - If `TARGET_PROJECT_PATH/state.md` exists, set:
@@ -85,10 +90,12 @@ If no valid active project exists:
 ### Step 1: Resolve and Validate Source Plan Path
 
 Inputs:
+
 - source path from `$ARGUMENTS`
 - optional provider hint from `--provider`
 
 If source path is not provided, discover likely recent plans first. The discovery script checks both provider plan directories and this repository's external plan directory by default:
+
 - `.oat/repo/reference/external-plans/`
 
 ```bash
@@ -102,10 +109,12 @@ export OAT_PROVIDER_PLAN_DIRS="$HOME/custom-plans:$HOME/tmp/provider-plans"
 ```
 
 Then ask user to either:
+
 - choose one of the listed files (by number), or
 - provide a manual file path.
 
 Validation rules:
+
 - File must exist.
 - File extension must be `.md` (or user explicitly confirms nonstandard markdown extension).
 - File must contain non-empty content.
@@ -121,11 +130,13 @@ cp "{source-path}" "$PROJECT_PATH/references/imported-plan.md"
 
 Never overwrite an existing source snapshot without user confirmation.
 If already present, write timestamped copy:
+
 - `references/imported-plan-YYYY-MM-DD-HHMM.md`
 
 ### Step 3: Normalize Into Canonical OAT plan.md
 
 Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map imported content into the canonical structure. Apply `oat-project-plan-writing` invariants after mapping:
+
 - `## Phase N`
 - `### Task pNN-tNN` (stable task IDs)
 - Step structure (RED/GREEN/Refactor/Verify/Commit)
@@ -133,6 +144,7 @@ Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map i
 - Review table preservation rules (never delete existing rows)
 
 Normalization rules:
+
 - Preserve original intent and ordering from source.
 - Generate stable task IDs per `oat-project-plan-writing` format (`pNN-tNN`).
 - Where source lacks test/verify details, add explicit TODO-style placeholders with clear expected output.
@@ -141,6 +153,7 @@ Normalization rules:
 ### Step 4: Update Plan Metadata
 
 Set frontmatter in `"$PROJECT_PATH/plan.md"`:
+
 - `oat_status: complete`
 - `oat_ready_for: oat-project-implement`
 - `oat_phase: plan`
@@ -153,6 +166,7 @@ Set frontmatter in `"$PROJECT_PATH/plan.md"`:
 ### Step 5: Update Project State
 
 Set `"$PROJECT_PATH/state.md"` frontmatter:
+
 - `oat_workflow_mode: import`
 - `oat_workflow_origin: imported`
 - `oat_phase: plan`
@@ -182,6 +196,7 @@ If `activeProject` in local config already exists with a different path, treat t
 ### Step 6: Ensure Implementation Artifact Exists
 
 If missing, scaffold from template:
+
 - `.oat/templates/implementation.md` → `"$PROJECT_PATH/implementation.md"`
 
 Initialize pointer to first plan task ID.
@@ -189,6 +204,7 @@ Initialize pointer to first plan task ID.
 ### Step 7: Output Next Action
 
 Report:
+
 - source imported path
 - normalized phases/tasks count
 - first task ID

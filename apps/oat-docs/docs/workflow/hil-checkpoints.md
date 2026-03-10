@@ -15,8 +15,8 @@ Frontmatter keys:
 Example:
 
 ```yaml
-oat_hill_checkpoints: ["discovery", "spec", "design"]
-oat_hill_completed: ["discovery"]
+oat_hill_checkpoints: ['discovery', 'spec', 'design']
+oat_hill_completed: ['discovery']
 ```
 
 ## Plan phase checkpoints (`plan.md`)

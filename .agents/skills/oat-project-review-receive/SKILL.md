@@ -32,8 +32,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ RECEIVE REVIEW
+  OAT ▸ RECEIVE REVIEW
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work (parsing findings, updating artifacts, committing), print 2–5 short step indicators, e.g.:
   - `[1/4] Reading review artifact…`
   - `[2/4] Converting findings → plan tasks…`
@@ -43,6 +44,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**
+
 - No fixing issues directly (convert to tasks first)
 - No skipping findings
 - No re-reviewing
@@ -50,6 +52,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - For `artifact` reviews: no deferring findings by default
 
 **ALLOWED Activities:**
+
 - Reading review artifacts
 - Updating plan.md with new tasks
 - Updating implementation.md
@@ -69,6 +72,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 **If `PROJECT_PATH` is missing/invalid:**
+
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
 - Write it for future use:
@@ -88,6 +92,7 @@ ls -t "$PROJECT_PATH/reviews/"*.md 2>/dev/null | head -10
 **If no review files:** Block and ask user to run the `oat-project-review-provide` skill first.
 
 **If multiple candidates:**
+
 - Show list sorted by date (newest first)
 - Ask user to choose which review to process
 - Default to most recent if user confirms
@@ -99,27 +104,32 @@ ls -t "$PROJECT_PATH/reviews/"*.md 2>/dev/null | head -10
 Extract findings from the review artifact and categorize:
 
 **Critical (must fix before merge):**
+
 - Missing P0 requirements
 - Security vulnerabilities
 - Broken functionality
 - Missing tests for critical paths
 
 **Important (should fix before merge):**
+
 - Missing P1 requirements
 - Missing error handling
 - Significant maintainability issues
 
 **Medium (default fix before pass):**
+
 - P2 requirements with meaningful behavior/quality impact
 - Moderate maintainability/testability issues
 - Contract gaps that can cause future regressions
 
 **Minor (fix if time permits):**
+
 - Cosmetic/non-behavioral polish
 - Style issues
 - Documentation gaps
 
 **Count findings:**
+
 ```
 Critical: {N}
 Important: {N}
@@ -128,12 +138,14 @@ Minor: {N}
 ```
 
 Assign stable finding IDs for this receive run and keep them consistent in all prompts:
+
 - Critical: `C1`, `C2`, ...
 - Important: `I1`, `I2`, ...
 - Medium: `M1`, `M2`, ...
 - Minor: `m1`, `m2`, ...
 
 For each finding, build a structured register entry:
+
 - ID, severity, title, file/line (if available)
 - Reviewer finding (issue + suggested fix)
 - Agent analysis (agree/disagree + why)
@@ -145,6 +157,7 @@ For each finding, build a structured register entry:
   - `needs_user_direction` (unclear or disagreement)
 
 **If Critical + Important + Medium == 0:**
+
 - For non-final scopes:
   - Mark the review as `passed` in the plan.md Reviews table (if plan.md exists)
   - No fix tasks are added
@@ -165,13 +178,15 @@ Required output structure:
 
 ```markdown
 Findings Overview:
+
 - Critical: {N}
 - Important: {N}
 - Medium: {N}
 - Minor: {N}
 
 Critical Findings:
-{for each C* finding}
+{for each C\* finding}
+
 - `{ID}` `{title}` (`{file}:{line}` if known)
   - Reviewer finding: {issue + reviewer fix guidance}
   - Finding analysis: {why you agree/disagree; practical risk if not fixed}
@@ -189,6 +204,7 @@ Minor Findings:
 ```
 
 Rules:
+
 - Include all non-empty severities; if a severity has zero findings, state `None`.
 - Keep each analysis concise and decision-oriented.
 - Use finding IDs in every section and in every later user choice prompt.
@@ -233,6 +249,7 @@ grep -E "^### Task ${TARGET_PHASE}-t[0-9]+:" "$PROJECT_PATH/plan.md" | tail -5
 ```
 
 **Numbering convention:**
+
 - Find highest task number in target phase (e.g., `p03-t08`)
 - New tasks continue sequentially: `p03-t09`, `p03-t10`, etc.
 
@@ -242,10 +259,11 @@ grep -E "^### Task ${TARGET_PHASE}-t[0-9]+:" "$PROJECT_PATH/plan.md" | tail -5
 
 Create a plan task entry:
 
-```markdown
+````markdown
 ### Task {task_id}: (review) {Finding title}
 
 **Files:**
+
 - Modify: `{file from finding}`
 
 **Step 1: Understand the issue**
@@ -268,7 +286,9 @@ Expected: {expected outcome}
 git add {files}
 git commit -m "fix({task_id}): {description}"
 ```
-```
+````
+
+````
 
 **Task naming:**
 - Prefix with `(review)` to indicate review-generated task
@@ -301,9 +321,10 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
   - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important/Medium and no unresolved final-scope gates)
   - Date: `{today}`
   - Artifact: `reviews/{filename}.md`
-```
+````
 
 **Status semantics (v1):**
+
 - `fixes_added`: fix tasks were created and added to the plan
 - `fixes_completed`: fix tasks implemented, awaiting re-review
 - `passed`: re-review completed and recorded as passing (no unresolved Critical/Important/Medium, and all final-scope gates satisfied: deferred-medium + minor disposition)
@@ -319,6 +340,7 @@ Add a note to implementation.md:
 **Review artifact:** reviews/{filename}.md
 
 **Findings:**
+
 - Critical: {N}
 - Important: {N}
 - Medium: {N}
@@ -329,11 +351,13 @@ Add a note to implementation.md:
 **Next:** Execute fix tasks via the `oat-project-implement` skill.
 
 After the fix tasks are complete:
+
 - Update the review row status to `fixes_completed`
 - Re-run `oat-project-review-provide {type} {scope}` then `oat-project-review-receive` to reach `passed`
 ```
 
 **Restart safety (required):**
+
 - If `{PROJECT_PATH}/implementation.md` exists, ensure it will resume correctly after this skill:
   - If `oat_current_task_id` is `null` (or points at already-completed work), set it to the **first newly-added review-fix task ID** (or the next incomplete task in plan order).
   - Update the Progress Overview table totals (tasks + completed) if they are present and depend on task counts.
@@ -353,6 +377,7 @@ ls "$PROJECT_PATH/reviews/"*"$SCOPE_TOKEN"*.md 2>/dev/null | wc -l
 ```
 
 **If 3 or more cycles:**
+
 ```
 ⚠️  Review cycle limit reached (3 cycles).
 
@@ -376,10 +401,12 @@ If `scope == final`, resurface previously deferred Medium findings from prior re
 - Build a "Deferred Medium Ledger" with each item and current disposition state.
 
 Ask user to decide each deferred Medium:
+
 1. Convert to fix task now
 2. Explicitly accept defer to post-release with rationale
 
 Rules:
+
 - Do not silently keep deferred Mediums in final scope.
 - If any deferred Medium remains undecided, final review cannot be marked `passed`.
 - Record user decisions + rationale in `implementation.md` under the final review notes.
@@ -391,6 +418,7 @@ Medium findings are converted to tasks by default.
 Only propose Medium deferral when there is a concrete reason (duplicate, blocked dependency, explicit out-of-scope follow-up, or high-risk churn now).
 
 If any Medium is proposed for deferral:
+
 - Ask user explicitly for approval per finding.
 - If user declines deferral, convert that Medium to a fix task now.
 - If user approves deferral, record rationale in `implementation.md` under "Deferred Findings (Medium)".
@@ -410,6 +438,7 @@ Minor findings handling is scope-aware:
     - why fixing now vs deferring is reasonable.
   - Keep explanations concise (1-3 sentences per minor) and include file/line when available.
   - Ask user explicitly:
+
     ```
     {N} minor findings pending final disposition:
     - {m1}: {summary} — {brief explanation}
@@ -423,6 +452,7 @@ Minor findings handling is scope-aware:
 
     Choose:
     ```
+
   - If option 2 is chosen, echo back selected IDs and the corresponding finding titles before proceeding.
   - If deferred, record rationale in implementation.md under "Deferred Findings".
   - Hard guard: do not mark final review `passed` until this explicit choice is recorded.
@@ -430,6 +460,7 @@ Minor findings handling is scope-aware:
 ### Step 10: Route to Next Action
 
 **Ask user:**
+
 ```
 Review processed for {project-name}.
 
@@ -447,14 +478,17 @@ Choose:
 ```
 
 **If execute now:**
+
 - Update state.md: `oat_phase_status: in_progress`
 - Tell user: "Run the `oat-project-implement` skill to execute fix tasks starting from {first_fix_task_id}"
 - Or directly invoke `oat-project-implement` if environment supports skill chaining
 
 **If review first:**
+
 - Tell user: "Review `plan.md`, then run the `oat-project-implement` skill when ready"
 
 **If exit:**
+
 - Tell user: "Fix tasks added to plan. Run the `oat-project-implement` skill when ready."
 
 ### Step 10A: Route to Next Action for Artifact Reviews
@@ -513,6 +547,7 @@ After fix tasks are executed, if another review is requested:
 This prevents reviewing already-approved code and focuses the reviewer on just the fixes.
 
 **How it works:**
+
 1. When `oat-project-review-provide` is called after fix tasks exist
 2. It detects `(review)` tasks in plan.md for the scope
 3. It offers: "Scope to fix tasks only? (Y/n)"

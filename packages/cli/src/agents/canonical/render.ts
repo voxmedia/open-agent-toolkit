@@ -1,4 +1,5 @@
 import YAML from 'yaml';
+
 import type { CanonicalAgentDocument } from './types';
 
 function buildFrontmatter(

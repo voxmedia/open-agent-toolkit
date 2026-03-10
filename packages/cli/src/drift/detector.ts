@@ -1,7 +1,9 @@
 import { lstat, readlink, stat } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
+
 import { computeContentHash } from '@manifest/hash';
 import type { ManifestEntry } from '@manifest/manifest.types';
+
 import type { DriftReport } from './drift.types';
 
 function createReport(

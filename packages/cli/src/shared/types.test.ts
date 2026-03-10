@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   ContentTypeSchema,
   SCOPE_CONTENT_TYPES,

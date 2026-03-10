@@ -1,5 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
@@ -8,6 +9,7 @@ import {
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { Command, Option } from 'commander';
+
 import { generateIndex, renderIndex } from './generator';
 
 interface IndexGenerateOptions {

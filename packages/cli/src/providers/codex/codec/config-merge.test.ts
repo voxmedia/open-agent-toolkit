@@ -1,5 +1,6 @@
 import TOML from '@iarna/toml';
 import { describe, expect, it } from 'vitest';
+
 import { mergeCodexConfig } from './config-merge';
 
 describe('mergeCodexConfig', () => {

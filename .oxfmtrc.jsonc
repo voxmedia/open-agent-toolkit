@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "jsxSingleQuote": true,
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "always",
+  "quoteProps": "as-needed",
+  "endOfLine": "lf",
+  "proseWrap": "preserve",
+  "sortImports": {},
+  "sortPackageJson": {},
+  "ignorePatterns": [
+    "packages/cli/assets/templates/**/*.yml",
+    ".oat/templates/**/*.yml",
+    "packages/cli/src/commands/docs/migrate/fixtures/**",
+  ],
+}

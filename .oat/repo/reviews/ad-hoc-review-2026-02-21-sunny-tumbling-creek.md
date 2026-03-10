@@ -51,7 +51,7 @@ None.
 1. **Bundled skill count in plan appears stale**  
    Reference: `/Users/thomas.stang/.claude/plans/sunny-tumbling-creek.md:44`  
    The plan says “all 29 bundled OAT skills,” but the current bundle manifest lists 27 (`packages/cli/scripts/bundle-assets.sh:11`). This can create checklist drift during rollout.  
-   **Fix guidance:** Replace hardcoded count with either the current count (27) or “all bundled oat-* skills from bundle-assets.sh list.”
+   **Fix guidance:** Replace hardcoded count with either the current count (27) or “all bundled oat-\* skills from bundle-assets.sh list.”
 
 ## Verification Commands
 

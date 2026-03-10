@@ -21,6 +21,7 @@ oat_template_name: design
 {How this fits into the broader system architecture}
 
 **Key Components:**
+
 - **{Component 1}:** {Purpose and responsibilities}
 - **{Component 2}:** {Purpose and responsibilities}
 
@@ -45,19 +46,23 @@ oat_template_name: design
 **Purpose:** {What this component does}
 
 **Responsibilities:**
+
 - {Responsibility 1}
 - {Responsibility 2}
 
 **Interfaces:**
+
 ```typescript
 // Key interfaces, classes, or function signatures
 ```
 
 **Dependencies:**
+
 - {Internal dependency 1}
 - {External dependency 1}
 
 **Design Decisions:**
+
 - {Decision 1 and rationale}
 
 ## Data Models
@@ -67,6 +72,7 @@ oat_template_name: design
 **Purpose:** {What this represents}
 
 **Schema:**
+
 ```typescript
 interface ModelName {
   // Field definitions with types
@@ -74,10 +80,12 @@ interface ModelName {
 ```
 
 **Validation Rules:**
+
 - {Rule 1}
 - {Rule 2}
 
 **Storage:**
+
 - **Location:** {Database, file system, memory}
 - **Persistence:** {How/when data is persisted}
 
@@ -89,6 +97,7 @@ interface ModelName {
 **Path:** `/api/v1/{resource}`
 
 **Request:**
+
 ```typescript
 interface Request {
   // Request schema
@@ -96,6 +105,7 @@ interface Request {
 ```
 
 **Response:**
+
 ```typescript
 interface Response {
   // Response schema
@@ -103,6 +113,7 @@ interface Response {
 ```
 
 **Error Handling:**
+
 - {Error code}: {Description}
 
 **Authorization:** {Auth requirements}
@@ -175,13 +186,14 @@ interface Response {
 
 {Maps spec requirements to test levels and key scenarios — ensures every requirement has a verification plan}
 
-| ID | Verification | Key Scenarios |
-|----|--------------|---------------|
-| FR1 | {unit/integration/e2e/manual/perf} | {Scenario 1}, {Scenario 2} |
-| FR2 | {unit/integration/e2e/manual/perf} | {Scenario 1} |
-| NFR1 | {unit/integration/e2e/manual/perf} | {Scenario 1} |
+| ID   | Verification                       | Key Scenarios              |
+| ---- | ---------------------------------- | -------------------------- |
+| FR1  | {unit/integration/e2e/manual/perf} | {Scenario 1}, {Scenario 2} |
+| FR2  | {unit/integration/e2e/manual/perf} | {Scenario 1}               |
+| NFR1 | {unit/integration/e2e/manual/perf} | {Scenario 1}               |
 
 **Notes:**
+
 - Pull ID from spec.md Requirement Index
 - Copy the **method** (left side of `method: pointer`) into Verification
 - Use the **pointer** (right side) to seed Key Scenarios, then expand based on design
@@ -265,6 +277,7 @@ interface Response {
 **Goal:** {What this phase achieves}
 
 **Tasks:**
+
 - {Task 1}
 - {Task 2}
 

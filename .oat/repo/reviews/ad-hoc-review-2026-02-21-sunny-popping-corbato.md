@@ -29,13 +29,13 @@ None.
 1. **Symlink traversal can create escape/cycle risk in scanner and sync writes**  
    Reference: `/Users/thomas.stang/.claude/plans/sunny-popping-corbato.md:49`, `/Users/thomas.stang/.claude/plans/sunny-popping-corbato.md:129`  
    The plan explicitly says the scanner follows directory symlinks. In a BFS walk this can recurse indefinitely (symlink cycles) or traverse outside repo boundaries, and `sync --apply` could then write `CLAUDE.md` outside the intended workspace. This should be constrained before implementation.
-   
+
    **Fix guidance:** Skip directory symlinks by default (use `lstat`/`Dirent.isSymbolicLink()`), or require `realpath` + visited inode tracking + repo-root boundary enforcement before descending.
 
 2. **Strict CRLF mismatch policy will produce false failures on Windows checkouts**  
    Reference: `/Users/thomas.stang/.claude/plans/sunny-popping-corbato.md:54`, `/Users/thomas.stang/.claude/plans/sunny-popping-corbato.md:126`  
    The plan requires exact equality with `@AGENTS.md\n` and explicitly forbids CRLF normalization. On repos with CRLF conversion, valid pointer files (`@AGENTS.md\r\n`) will be reported as mismatched, causing repeated non-actionable drift.
-   
+
    **Fix guidance:** Normalize line endings for comparison only (e.g., `content.replace(/\r\n/g, '\n')`) or explicitly accept both newline variants while still writing canonical `\n` on apply.
 
 ### Minor
@@ -43,7 +43,7 @@ None.
 1. **Integration test matrix misses sync skip/json outcome assertions**  
    Reference: `/Users/thomas.stang/.claude/plans/sunny-popping-corbato.md:98`, `/Users/thomas.stang/.claude/plans/sunny-popping-corbato.md:116`  
    The plan specifies exit code behavior when skipped mismatches remain, but the listed integration tests do not explicitly assert dry-run/apply exit status for "mismatch without `--force`" and do not verify `sync --json` payload shape.
-   
+
    **Fix guidance:** Add integration coverage for `sync` with mismatched `CLAUDE.md` (without `--force`) asserting exit code 1 and stable JSON payload fields in both dry-run and apply modes.
 
 ## Verification Commands

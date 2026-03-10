@@ -27,6 +27,7 @@ When OAT implementation changes (new skills/templates/scripts, changed behavior,
 ### Step 1: Identify What Changed
 
 Write down a 1-3 bullet summary of the change:
+
 - New/updated skill(s)
 - New/updated template(s)
 - New/updated agent prompt(s)
@@ -50,6 +51,7 @@ For each recently completed or in-progress project (check recent commits for pro
    - Non-requirements or explicitly deferred requirements → backlog items
 
 For each finding, determine whether it should become:
+
 - A **backlog item** (deferred work to track)
 - A **decision record entry** (convention or contract worth preserving)
 - A **roadmap update** (phase status change or new deliverable)
@@ -83,26 +85,31 @@ Update these files (as applicable):
    - Include rationale and consequences so future sessions don’t re-litigate decisions
 
 Optional:
+
 - `.oat/repo/archive/` for historical notes we intentionally keep out of active reference flow.
 
 ### Step 3: Sanity Checks (Fast)
 
 1. Search for stale “pending/planned” references:
+
 ```bash
 rg -n "pending\\)|planned\\)|not yet implemented|Remaining:" .oat/repo/reference
 ```
 
 2. Search for outdated paths (common offenders):
+
 ```bash
 rg -n "\\.oat/repo/reference/(current-state|roadmap|deferred-phases|decision-record|backlog|backlog-completed)\\.md" .oat/repo/reference docs/oat .agents/skills AGENTS.md
 ```
 
 3. Search for hardcoded project-root assumptions (prefer `oat config get projects.root` + `oat config get activeProject`):
+
 ```bash
 rg -n "\\.oat/projects/shared/|\\.oat/projects-root|\\.oat/active-project" .agents/skills/oat-*/SKILL.md .oat/templates .oat/repo/reference -S
 ```
 
 4. Ensure new skills are registered in `AGENTS.md` (if meant to be discoverable):
+
 ```bash
 rg -n "<name>update-repo-reference</name>" AGENTS.md || true
 ```
@@ -110,6 +117,7 @@ rg -n "<name>update-repo-reference</name>" AGENTS.md || true
 ### Step 4: Output
 
 Provide:
+
 - The list of files updated
 - A brief note of what was changed in each
 - Any remaining inconsistencies you intentionally deferred

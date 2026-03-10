@@ -194,9 +194,11 @@ Example (Claude Code):
 
 ```markdown
 # CLAUDE.md
+
 @AGENTS.md
 
 # Claude-specific additions
+
 - Use .claude/rules for topic-specific rules.
 ```
 
@@ -248,13 +250,13 @@ Modular rules:
 
 ### Provider Hard Limits
 
-| Provider | Limit | Source |
-|----------|-------|--------|
-| Codex | 32 KiB combined instruction files | OpenAI Codex docs (official) |
-| Copilot | ~1,000 lines max per instruction file | GitHub docs (official) |
-| Copilot agents | 30,000 chars per agent body | GitHub docs (official) |
-| Claude Code | Skill descriptions: 2% of context window (~16,000 chars fallback) | Claude Code docs (official) |
-| Cursor | No documented hard limit; 500 lines recommended | Cursor docs (official) |
+| Provider       | Limit                                                             | Source                       |
+| -------------- | ----------------------------------------------------------------- | ---------------------------- |
+| Codex          | 32 KiB combined instruction files                                 | OpenAI Codex docs (official) |
+| Copilot        | ~1,000 lines max per instruction file                             | GitHub docs (official)       |
+| Copilot agents | 30,000 chars per agent body                                       | GitHub docs (official)       |
+| Claude Code    | Skill descriptions: 2% of context window (~16,000 chars fallback) | Claude Code docs (official)  |
+| Cursor         | No documented hard limit; 500 lines recommended                   | Cursor docs (official)       |
 
 Use 32 KiB as a safe cross-provider ceiling for total combined instruction content.
 
@@ -476,11 +478,11 @@ Copilot's scoped instruction files function like rules — they activate conditi
 
 Frontmatter fields:
 
-| Field | Description |
-|-------|-------------|
-| `applyTo` | Glob pattern(s), comma-separated. Relative to workspace root. |
-| `description` | Short description; enables semantic matching when no `applyTo`. |
-| `name` | Display name in VS Code UI. Defaults to filename. |
+| Field          | Description                                                             |
+| -------------- | ----------------------------------------------------------------------- |
+| `applyTo`      | Glob pattern(s), comma-separated. Relative to workspace root.           |
+| `description`  | Short description; enables semantic matching when no `applyTo`.         |
+| `name`         | Display name in VS Code UI. Defaults to filename.                       |
 | `excludeAgent` | Prevents use by a specific agent (`"code-review"` or `"coding-agent"`). |
 
 Guidelines:
@@ -496,13 +498,13 @@ Guidelines:
 
 ## 15.1 Instruction Types
 
-| Type | Location | Activation | Purpose |
-|------|----------|------------|---------|
-| **Repository instructions** | `.github/copilot-instructions.md` | Always-on | Repo-wide conventions |
-| **Scoped instructions** | `.github/instructions/*.instructions.md` | `applyTo` glob match | File-type or area-specific rules |
-| **Prompt files** | `.github/prompts/*.prompt.md` | Manual (`/name` in chat) | Reusable task templates |
-| **Agent files** | `*.agent.md` | Auto or manual | Custom agent definitions |
-| **AGENTS.md** | `**/AGENTS.md` | Always-on | Cross-tool instructions |
+| Type                        | Location                                 | Activation               | Purpose                          |
+| --------------------------- | ---------------------------------------- | ------------------------ | -------------------------------- |
+| **Repository instructions** | `.github/copilot-instructions.md`        | Always-on                | Repo-wide conventions            |
+| **Scoped instructions**     | `.github/instructions/*.instructions.md` | `applyTo` glob match     | File-type or area-specific rules |
+| **Prompt files**            | `.github/prompts/*.prompt.md`            | Manual (`/name` in chat) | Reusable task templates          |
+| **Agent files**             | `*.agent.md`                             | Auto or manual           | Custom agent definitions         |
+| **AGENTS.md**               | `**/AGENTS.md`                           | Always-on                | Cross-tool instructions          |
 
 Instructions = rules/standards (always-on or pattern-matched). Prompt files = tasks/workflows (manually invoked). Keep this distinction clear.
 
@@ -524,7 +526,7 @@ Instructions = rules/standards (always-on or pattern-matched). Prompt files = ta
 
 Avoid:
 
-- >500 lines
+- > 500 lines
 - Burying non-negotiables mid-file
 - README duplication
 - Copy/pasting root content into scoped files

@@ -3,17 +3,20 @@
 ## Scoring Labels
 
 ### Concern
+
 - `Critical`: Immediate risk; likely production, security, or severe delivery impact.
 - `High`: Significant quality or delivery risk that should be addressed soon.
 - `Medium`: Meaningful issue with moderate impact.
 - `Low`: Minor issue with limited near-term impact.
 
 ### Value
+
 - `High`: Fix unlocks major reliability, velocity, or clarity gains.
 - `Medium`: Fix delivers noticeable but bounded improvement.
 - `Low`: Fix is incremental.
 
 ### Scope
+
 - `XS`: Single-file or very small localized change.
 - `S`: Small bounded change with minimal coordination.
 - `M`: Multi-file change in one subsystem.
@@ -21,6 +24,7 @@
 - `XL`: Program-level initiative across teams/modules.
 
 ### Confidence
+
 - `High`: Strong evidence from multiple direct signals.
 - `Medium`: Good evidence with some assumptions.
 - `Low`: Limited evidence; requires targeted validation.

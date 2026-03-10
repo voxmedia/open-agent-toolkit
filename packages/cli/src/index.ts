@@ -2,6 +2,7 @@
 
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+
 import { createProgram } from './app/create-program';
 import { registerCommands } from './commands';
 import { CliError } from './errors';

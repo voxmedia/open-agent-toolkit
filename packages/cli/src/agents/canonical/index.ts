@@ -1,7 +1,4 @@
-export {
-  parseCanonicalAgentFile,
-  parseCanonicalAgentMarkdown,
-} from './parse';
+export { parseCanonicalAgentFile, parseCanonicalAgentMarkdown } from './parse';
 export { renderCanonicalAgentMarkdown } from './render';
 export type {
   CanonicalAgentDocument,

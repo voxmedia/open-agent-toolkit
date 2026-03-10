@@ -8,6 +8,7 @@ import {
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { Command } from 'commander';
+
 import {
   createDefaultRemoveSkillDependencies,
   type RemoveSkillDependencies,

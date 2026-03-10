@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import { buildCommandContext } from '@app/command-context';
 import {
   getFrontmatterBlock,
@@ -13,6 +14,7 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { fileExists } from '@fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
+
 import {
   type InfoToolDependencies,
   runInfoTool,

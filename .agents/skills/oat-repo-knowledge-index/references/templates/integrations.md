@@ -18,6 +18,7 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 ## APIs & External Services
 
 **[Category]:**
+
 - [Service] - [What it's used for]
   - SDK/Client: [package]
   - Auth: [env var name]
@@ -25,54 +26,66 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 ## Data Storage
 
 **Databases:**
+
 - [Type/Provider]
   - Connection: [env var]
   - Client: [ORM/client]
 
 **File Storage:**
+
 - [Service or "Local filesystem only"]
 
 **Caching:**
+
 - [Service or "None"]
 
 ## Authentication & Identity
 
 **Auth Provider:**
+
 - [Service or "Custom"]
   - Implementation: [approach]
 
 ## Monitoring & Observability
 
 **Error Tracking:**
+
 - [Service or "None"]
 
 **Logs:**
+
 - [Approach]
 
 ## CI/CD & Deployment
 
 **Hosting:**
+
 - [Platform]
 
 **CI Pipeline:**
+
 - [Service or "None"]
 
 ## Environment Configuration
 
 **Required env vars:**
+
 - [List critical vars]
 
 **Secrets location:**
+
 - [Where secrets are stored]
 
 ## Webhooks & Callbacks
 
 **Incoming:**
+
 - [Endpoints or "None"]
 
 **Outgoing:**
+
 - [Endpoints or "None"]
 
 ---
 
-*Integration audit: [date]*
+_Integration audit: [date]_

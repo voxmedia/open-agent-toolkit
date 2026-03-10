@@ -2,7 +2,7 @@
 name: oat-idea-new
 version: 1.2.0
 description: Use when starting ideation for a new concept or problem. Creates an idea directory for lightweight capture and handoff to ongoing ideation.
-argument-hint: "<idea-name> [--global]"
+argument-hint: '<idea-name> [--global]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, AskUserQuestion
@@ -17,7 +17,7 @@ Create a new idea directory, scaffold a discovery document, verify setup, and ha
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ NEW IDEA [project]
+  OAT ▸ NEW IDEA [project]
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Replace `[project]` with `[global]` when operating at user level.
@@ -48,9 +48,9 @@ Determine whether to operate at project level or user (global) level.
 
 **Set variables:**
 
-| Variable | Project Level | User Level |
-|----------|--------------|------------|
-| `IDEAS_ROOT` | `.oat/ideas` | `~/.oat/ideas` |
+| Variable         | Project Level          | User Level               |
+| ---------------- | ---------------------- | ------------------------ |
+| `IDEAS_ROOT`     | `.oat/ideas`           | `~/.oat/ideas`           |
 | `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
 
 ### Step 1: Get Idea Name
@@ -76,20 +76,24 @@ mkdir -p "{IDEAS_ROOT}/$IDEA_NAME"
 ```
 
 If `{IDEAS_ROOT}/backlog.md` doesn't exist, copy from template:
+
 - Source: `{TEMPLATES_ROOT}/ideas-backlog.md`
 - Target: `{IDEAS_ROOT}/backlog.md`
 
 If `{IDEAS_ROOT}/scratchpad.md` doesn't exist, copy from template:
+
 - Source: `{TEMPLATES_ROOT}/ideas-scratchpad.md`
 - Target: `{IDEAS_ROOT}/scratchpad.md`
 
 ### Step 4: Scaffold Discovery Document
 
 Copy template and apply replacements:
+
 - Source: `{TEMPLATES_ROOT}/idea-discovery.md`
 - Target: `{IDEAS_ROOT}/$IDEA_NAME/discovery.md`
 
 Replacements:
+
 - `{Idea Name}` → actual idea name (title case from slug)
 - `YYYY-MM-DD` → today's date (ISO format)
 
@@ -98,7 +102,7 @@ Replacements:
 Add an entry to `{IDEAS_ROOT}/backlog.md` under the **Active Brainstorming** section:
 
 ```markdown
-- **{idea-name}** — {placeholder: to be filled during brainstorming} *(Created: YYYY-MM-DD)*
+- **{idea-name}** — {placeholder: to be filled during brainstorming} _(Created: YYYY-MM-DD)_
 ```
 
 ### Step 6: Check Scratchpad
@@ -108,7 +112,7 @@ Read `{IDEAS_ROOT}/scratchpad.md` and look for an unchecked entry matching the i
 If found, check it off and append a note. Preserve any nested bullet notes beneath the entry:
 
 ```markdown
-- [x] **{idea-name}** - {original note} *(YYYY-MM-DD)* → started (`{IDEAS_ROOT}/{idea-name}/`)
+- [x] **{idea-name}** - {original note} _(YYYY-MM-DD)_ → started (`{IDEAS_ROOT}/{idea-name}/`)
   - {preserved quick note 1}
   - {preserved quick note 2}
 ```

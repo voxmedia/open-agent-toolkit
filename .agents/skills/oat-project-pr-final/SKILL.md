@@ -14,6 +14,7 @@ Create a final PR description for the entire project (typically merging the feat
 ## Purpose
 
 Generate a PR-ready summary grounded in canonical OAT artifacts, including:
+
 - what shipped (from plan + implementation)
 - why/how (from mode-appropriate requirements/design artifacts)
 - what was reviewed (from plan Reviews table + review artifacts)
@@ -21,12 +22,14 @@ Generate a PR-ready summary grounded in canonical OAT artifacts, including:
 ## Prerequisites
 
 **Required:**
+
 - `activeProject` in `.oat/config.local.json` points at an active project directory (or you can provide project name when prompted)
 - `{PROJECT_PATH}/plan.md` exists
 - In `spec-driven` mode: `{PROJECT_PATH}/spec.md` and `{PROJECT_PATH}/design.md` are required
 - In `quick`/`import` mode: `spec.md`/`design.md` are optional
 
 **Required (recommended to proceed):**
+
 - Final code review status is `passed` in `{PROJECT_PATH}/plan.md` `## Reviews` table.
 
 ## Mode Assertion
@@ -42,8 +45,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ PR PROJECT
+  OAT ▸ PR PROJECT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work (validating review status, reading artifacts, writing output), print 2–5 short step indicators, e.g.:
   - `[1/4] Validating artifacts + review status…`
   - `[2/4] Reading OAT artifacts…`
@@ -53,10 +57,12 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Keep it concise; don’t print a line for every shell command.
 
 **BLOCKED Activities:**
+
 - No implementation work
 - No changing requirements/design/plan
 
 **ALLOWED Activities:**
+
 - Reading artifacts and git history
 - Writing PR description file
 - Running `gh pr create` (optional, user-confirmed)
@@ -74,6 +80,7 @@ oat-project-pr-final title="feat: add review loop"
 ### Without arguments
 
 Run the `oat-project-pr-final` skill and it will ask for:
+
 - PR title (default: `{project-name}: final PR`)
 - base branch (default: `main`)
 
@@ -90,6 +97,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 If missing/invalid:
+
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
 - Write it:
@@ -131,6 +139,7 @@ echo "$FINAL_ROW"
 ```
 
 If `FINAL_ROW` is missing or does not contain `passed`:
+
 - Tell user: "Final review is not marked passed. Run the `oat-project-review-provide` skill with `code final` then the `oat-project-review-receive` skill."
 - Ask whether to proceed anyway (allowed, but discouraged).
   - If the status is `fixes_completed`: fixes were implemented but the re-review hasn't been run/recorded yet; re-run the `oat-project-review-provide` skill with `code final` then the `oat-project-review-receive` skill to reach `passed`.
@@ -138,6 +147,7 @@ If `FINAL_ROW` is missing or does not contain `passed`:
 ### Step 3: Collect Project Summary
 
 Read:
+
 - `{PROJECT_PATH}/spec.md` (goals, priorities, verification; optional in quick/import)
 - `{PROJECT_PATH}/design.md` (architecture + testing strategy; optional in quick/import)
 - `{PROJECT_PATH}/plan.md` (phases/tasks + reviews table)
@@ -146,17 +156,20 @@ Read:
 - `{PROJECT_PATH}/references/imported-plan.md` (recommended for import mode)
 
 If `implementation.md` exists, check for a filled `## Final Summary (for PR/docs)` section:
+
 - If missing or obviously empty, warn the user that PR/docs quality will suffer and recommend:
   - Run the `oat-project-implement` skill to finalize the summary (if implementation just completed), or
   - Manually fill in the Final Summary section before proceeding.
 
 Collect git context:
+
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || echo "")
 ```
 
 If merge-base is available, collect:
+
 ```bash
 git log --oneline "${MERGE_BASE}..HEAD"
 git diff --shortstat "${MERGE_BASE}..HEAD"
@@ -165,6 +178,7 @@ git diff --shortstat "${MERGE_BASE}..HEAD"
 ### Step 4: Write PR Description Artifact
 
 Write to:
+
 - `{PROJECT_PATH}/pr/project-pr-YYYY-MM-DD.md`
 
 ```bash
@@ -172,15 +186,18 @@ mkdir -p "$PROJECT_PATH/pr"
 ```
 
 Frontmatter policy:
+
 - Keep YAML frontmatter in the local artifact file for OAT metadata and traceability.
 - Do **not** include YAML frontmatter in the PR body submitted to GitHub.
 
 Reference links policy:
+
 - Prefer clickable blob links to the current branch for References.
 - Build links from `origin` + current branch when possible.
 - If remote URL cannot be resolved into a web URL, fall back to plain relative paths.
 
 Example link context:
+
 ```bash
 ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -195,13 +212,14 @@ REPO_WEB="${REPO_WEB%.git}"
 ```
 
 Recommended template:
+
 ```markdown
 ---
 oat_generated: true
 oat_generated_at: YYYY-MM-DD
 oat_pr_type: project
 oat_pr_scope: final
-oat_project: {PROJECT_PATH}
+oat_project: { PROJECT_PATH }
 ---
 
 # {project-name}
@@ -242,6 +260,7 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 ### Step 5: Optional - Open PR
 
 Ask the user:
+
 ```
 PR description written to {path}.
 
@@ -256,13 +275,16 @@ If user chooses (1):
 The local artifact file contains YAML frontmatter (`---` delimited block at the top) for OAT metadata. This frontmatter MUST NOT appear in the GitHub PR body. Before passing the file to `gh pr create`, strip everything from the start of the file through and including the closing `---` line. Verify the resulting body starts with the markdown heading (e.g., `# feat: ...`), not YAML keys.
 
 Steps:
+
 1. Write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
 2. Verify the temp file does not start with YAML frontmatter keys.
 3. Push and create the PR:
+
 ```bash
 git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
 gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 ```
+
 4. Clean up the temp file.
 
 Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
@@ -272,6 +294,7 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 After writing the PR artifact (and after optional PR creation), update `"$PROJECT_PATH/state.md"` so project routing reflects the next lifecycle step.
 
 Required update:
+
 - In the `## Next Milestone` section, set:
   - `Run \`oat-project-complete\`.`
 

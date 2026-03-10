@@ -6,52 +6,49 @@ Cursor rules live at `.cursor/rules/*.mdc` (or `.md`). They use three frontmatte
 
 ```yaml
 ---
-description: "{Brief purpose — used by agent for relevance decisions}"
+description: '{Brief purpose — used by agent for relevance decisions}'
 alwaysApply: true
 ---
-
 # {Rule Title}
 
-{Rule body — identical to glob-scoped-rule.md template body}
+{ Rule body — identical to glob-scoped-rule.md template body }
 ```
 
 ## Glob-Scoped (Auto Attached)
 
 ```yaml
 ---
-description: "{Brief purpose}"
+description: '{Brief purpose}'
 alwaysApply: false
 globs:
-  - "{glob-pattern-1}"
-  - "{glob-pattern-2}"
+  - '{glob-pattern-1}'
+  - '{glob-pattern-2}'
 ---
-
 # {Rule Title}
 
-{Rule body — identical to glob-scoped-rule.md template body}
+{ Rule body — identical to glob-scoped-rule.md template body }
 ```
 
 ## Agent Requested (No Globs)
 
 ```yaml
 ---
-description: "{Descriptive purpose — agent decides when to apply based on this}"
+description: '{Descriptive purpose — agent decides when to apply based on this}'
 alwaysApply: false
 ---
-
 # {Rule Title}
 
-{Rule body — identical to glob-scoped-rule.md template body}
+{ Rule body — identical to glob-scoped-rule.md template body }
 ```
 
 ## Activation Mode Matrix
 
-| Configuration | Mode |
-|---|---|
-| `alwaysApply: true` | Always — included in every session |
-| `alwaysApply: false` + `globs` set | Auto Attached — included when matching files appear |
+| Configuration                                   | Mode                                                 |
+| ----------------------------------------------- | ---------------------------------------------------- |
+| `alwaysApply: true`                             | Always — included in every session                   |
+| `alwaysApply: false` + `globs` set              | Auto Attached — included when matching files appear  |
 | `alwaysApply: false` + `description` (no globs) | Agent Requested — agent decides based on description |
-| No frontmatter | Manual — user must @-mention the rule |
+| No frontmatter                                  | Manual — user must @-mention the rule                |
 
 ## Examples
 
@@ -59,10 +56,10 @@ alwaysApply: false
 
 ```yaml
 ---
-description: "React component conventions for the frontend"
+description: 'React component conventions for the frontend'
 alwaysApply: false
 globs:
-  - "src/components/**/*.tsx"
+  - 'src/components/**/*.tsx'
 ---
 ```
 
@@ -70,11 +67,11 @@ globs:
 
 ```yaml
 ---
-description: "Testing conventions and patterns"
+description: 'Testing conventions and patterns'
 alwaysApply: false
 globs:
-  - "**/*.test.ts"
-  - "**/*.spec.ts"
+  - '**/*.test.ts'
+  - '**/*.spec.ts'
 ---
 ```
 

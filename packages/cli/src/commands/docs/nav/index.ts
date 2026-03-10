@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+
 import { createDocsNavSyncCommand } from './sync';
 
 export function createDocsNavCommand(): Command {

@@ -1,9 +1,11 @@
 import { readdir } from 'node:fs/promises';
 import { basename, join, relative, resolve } from 'node:path';
+
 import type { CanonicalEntry } from '@engine/scanner';
 import { CliError } from '@errors/index';
 import { toPosixPath } from '@fs/paths';
 import type { Manifest } from '@manifest/manifest.types';
+
 import type { DriftReport } from './drift.types';
 
 function inferContentType(providerDir: string): CanonicalEntry['type'] | null {

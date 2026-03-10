@@ -21,10 +21,11 @@ my-skill/
 ```
 
 **SKILL.md frontmatter (required fields):**
+
 ```yaml
 ---
-name: skill-name          # Max 64 chars, lowercase, hyphens only
-description: |            # Max 1024 chars — what it does and when to use it
+name: skill-name # Max 64 chars, lowercase, hyphens only
+description: | # Max 1024 chars — what it does and when to use it
   Extract text and tables from PDF files.
 ---
 ```
@@ -32,11 +33,13 @@ description: |            # Max 1024 chars — what it does and when to use it
 **Optional frontmatter fields:** `license`, `metadata` (arbitrary key-value), `allowed-tools` (experimental), `environment`.
 
 **Progressive disclosure pattern:**
+
 1. **Metadata (always loaded):** Name and description from frontmatter — agents pre-load this to decide relevance
 2. **Instructions (loaded on activation):** Full SKILL.md body — loaded when the agent determines the skill is relevant
 3. **Resources (loaded on demand):** Files in `scripts/`, `references/`, `assets/` — loaded only when SKILL.md references them
 
 **Key constraints from the spec:**
+
 - Keep SKILL.md under 500 lines / ~5,000 tokens
 - Use relative paths from skill root: `See [guide](references/REFERENCE.md)`
 - Keep file references one level deep from SKILL.md
@@ -52,25 +55,25 @@ The [`npx skills`](https://github.com/vercel-labs/skills) CLI is the emerging **
 
 The `npx skills` CLI documents two installation scopes:
 
-| Scope | Flag | Location Pattern | Use Case |
-|-------|------|-----------------|----------|
+| Scope       | Flag      | Location Pattern    | Use Case                                 |
+| ----------- | --------- | ------------------- | ---------------------------------------- |
 | **Project** | (default) | `./<agent>/skills/` | Committed with project, shared with team |
-| **Global** | `-g` | `~/<agent>/skills/` | Available across all projects |
+| **Global**  | `-g`      | `~/<agent>/skills/` | Available across all projects            |
 
 Here's where **each tool** expects project-level skills:
 
-| Agent | `--agent` flag | Project Path | Global Path |
-|-------|---------------|-------------|-------------|
-| **Claude Code** | `claude-code` | `.claude/skills/` | `~/.claude/skills/` |
-| **Cursor** | `cursor` | `.cursor/skills/` | `~/.cursor/skills/` |
-| **Codex** | `codex` | `.agents/skills/` | `~/.agents/skills/` |
-| **GitHub Copilot** | `github-copilot` | `.github/skills/` | `~/.copilot/skills/` |
-| **Gemini CLI** | `gemini-cli` | `.gemini/skills/` | `~/.gemini/skills/` |
-| **OpenCode** | `opencode` | `.opencode/skills/` | `~/.config/opencode/skills/` |
-| **Windsurf** | `windsurf` | `.windsurf/skills/` | `~/.codeium/windsurf/skills/` |
-| **Amp** | `amp` | `.agents/skills/` | `~/.config/agents/skills/` |
-| **Roo Code** | `roo` | `.roo/skills/` | `~/.roo/skills/` |
-| *(25+ more)* | | | |
+| Agent              | `--agent` flag   | Project Path        | Global Path                   |
+| ------------------ | ---------------- | ------------------- | ----------------------------- |
+| **Claude Code**    | `claude-code`    | `.claude/skills/`   | `~/.claude/skills/`           |
+| **Cursor**         | `cursor`         | `.cursor/skills/`   | `~/.cursor/skills/`           |
+| **Codex**          | `codex`          | `.agents/skills/`   | `~/.agents/skills/`           |
+| **GitHub Copilot** | `github-copilot` | `.github/skills/`   | `~/.copilot/skills/`          |
+| **Gemini CLI**     | `gemini-cli`     | `.gemini/skills/`   | `~/.gemini/skills/`           |
+| **OpenCode**       | `opencode`       | `.opencode/skills/` | `~/.config/opencode/skills/`  |
+| **Windsurf**       | `windsurf`       | `.windsurf/skills/` | `~/.codeium/windsurf/skills/` |
+| **Amp**            | `amp`            | `.agents/skills/`   | `~/.config/agents/skills/`    |
+| **Roo Code**       | `roo`            | `.roo/skills/`      | `~/.roo/skills/`              |
+| _(25+ more)_       |                  |                     |                               |
 
 **Critical observation:** `.agents/skills/` is already a recognized path in this ecosystem (used by Amp natively, listed as a skill discovery path by the CLI). The `npx skills` CLI also searches `.agents/skills/` when discovering skills in a repository.
 
@@ -78,11 +81,11 @@ Here's where **each tool** expects project-level skills:
 
 Subagents are a **converging but still tool-specific** concept:
 
-| Tool | Subagent Location | File Format |
-|------|------------------|-------------|
-| Claude Code | `.claude/agents/` | Markdown + YAML frontmatter (`name`, `description`, `tools`, `model`, `skills`, `permissionMode`) |
-| Cursor | `.cursor/agents/` | Markdown + YAML frontmatter (`name`, `description`, `model`, `tools`) |
-| Codex | `.codex/config.toml` + `.codex/agents/*.toml` | Role-based multi-agent dispatch via `[agents.<name>]` + `agent_type`; role config files referenced with `config_file` |
+| Tool        | Subagent Location                             | File Format                                                                                                           |
+| ----------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Claude Code | `.claude/agents/`                             | Markdown + YAML frontmatter (`name`, `description`, `tools`, `model`, `skills`, `permissionMode`)                     |
+| Cursor      | `.cursor/agents/`                             | Markdown + YAML frontmatter (`name`, `description`, `model`, `tools`)                                                 |
+| Codex       | `.codex/config.toml` + `.codex/agents/*.toml` | Role-based multi-agent dispatch via `[agents.<name>]` + `agent_type`; role config files referenced with `config_file` |
 
 Unlike skills, there is **no open standard for subagents yet**, and no equivalent of `npx skills` for cross-tool agent distribution. Each tool's frontmatter schema differs slightly.
 
@@ -101,6 +104,7 @@ The Agent Skills spec defines `references/` as a **per-skill** directory for sup
 The spec recommendation is to keep file references one level deep from SKILL.md. Duplicating a shared document into each skill's `references/` directory would create exactly the drift problem standards are meant to prevent.
 
 **A shared location for reference documents** should:
+
 - Be referenceable by multiple skills
 - Be referenceable by subagents
 - Be tool-agnostic (not locked inside `.claude/` or `.cursor/`)
@@ -125,12 +129,14 @@ Place shared reference documents in `.agents/docs/` at the repository root.
 `.agents/docs/` is for **agent-operational guidance** — standards and references that agents consume to do their work better. It is **not** a location for general project documentation.
 
 **Belongs in `.agents/docs/`:**
+
 - Quality standards agents reference when generating or auditing artifacts
 - Review expectations agents reference when performing code review
 - Agent-specific conventions, checklists, or evaluation criteria
 - Cross-provider compatibility references
 
 **Does NOT belong in `.agents/docs/`:**
+
 - General engineering documentation (→ `docs/`, MkDocs, wiki)
 - API documentation (→ `docs/api/`, OpenAPI specs)
 - Architecture decision records (→ `docs/adr/`)
@@ -195,6 +201,7 @@ my-repo/
 ```
 
 **Key points:**
+
 - Skills are authored once in `.agents/skills/` (canonical source)
 - Codex reads `.agents/skills/` natively at both project and user level — no symlink needed
 - Cursor reads `.claude/skills/` natively — symlink `.agents/skills/` → `.claude/skills/` covers both Claude Code and Cursor
@@ -205,14 +212,14 @@ my-repo/
 
 ### What Lives Where
 
-| Content Type | Location | Rationale |
-|-------------|----------|-----------|
-| Agent instructions (all tools) | `AGENTS.md` (hierarchical) | Open standard — 60k+ repos, 60+ tools |
-| Shared reference documents | **`.agents/docs/`** | Tool-agnostic, agent-operational guidance |
-| Skills (per tool) | `.<tool>/skills/` | Native per Agent Skills spec + tool conventions |
-| Skills (cross-tool canonical) | `.agents/skills/` | Recognized by ecosystem; symlinked to tool paths |
-| Subagents (per tool) | `.<tool>/agents/` | Native per tool (no cross-tool standard yet) |
-| Skill-specific references | `.<tool>/skills/<n>/references/` | Per Agent Skills spec — one level deep from SKILL.md |
+| Content Type                   | Location                         | Rationale                                            |
+| ------------------------------ | -------------------------------- | ---------------------------------------------------- |
+| Agent instructions (all tools) | `AGENTS.md` (hierarchical)       | Open standard — 60k+ repos, 60+ tools                |
+| Shared reference documents     | **`.agents/docs/`**              | Tool-agnostic, agent-operational guidance            |
+| Skills (per tool)              | `.<tool>/skills/`                | Native per Agent Skills spec + tool conventions      |
+| Skills (cross-tool canonical)  | `.agents/skills/`                | Recognized by ecosystem; symlinked to tool paths     |
+| Subagents (per tool)           | `.<tool>/agents/`                | Native per tool (no cross-tool standard yet)         |
+| Skill-specific references      | `.<tool>/skills/<n>/references/` | Per Agent Skills spec — one level deep from SKILL.md |
 
 ---
 
@@ -236,6 +243,7 @@ Before generating any content, read the quality standard:
 in full before proceeding.
 
 ## Workflow
+
 ...
 ```
 
@@ -258,6 +266,7 @@ model: sonnet
 You evaluate artifacts against the internal quality standard.
 
 Before beginning any evaluation, read:
+
 - .agents/docs/quality-standard.md
 
 Evaluate against the completeness checklist and anti-pattern definitions.
@@ -271,6 +280,7 @@ The root AGENTS.md can direct any agent to shared docs:
 ## Agent Reference Standards
 
 Agent-operational guidance lives in `.agents/docs/`:
+
 - `skills-guide.md` — cross-provider skills research and best practices
 - `subagents-guide.md` — subagent patterns and provider differences
 ```
@@ -281,9 +291,12 @@ Any tool that can read Markdown files can point to `.agents/docs/`:
 
 ```markdown
 # .cursor/rules/quality-review.mdc
+
 ---
+
 alwaysApply: false
 globs: ["AGENTS.md", "**/AGENTS.md"]
+
 ---
 
 When reviewing or generating AGENTS.md files, consult:
@@ -298,10 +311,10 @@ Follow the cross-provider safe defaults and description best practices.
 
 Both exist and serve different purposes:
 
-| Type | Location | Scope | Example |
-|------|----------|-------|---------|
-| **Shared docs** | `.agents/docs/` | Cross-tool, cross-skill, cross-agent | `skills-guide.md` (agent-operational guidance) |
-| **Skill references** | `.<tool>/skills/<n>/references/` | Single skill | `sample-output.md` |
+| Type                 | Location                         | Scope                                | Example                                        |
+| -------------------- | -------------------------------- | ------------------------------------ | ---------------------------------------------- |
+| **Shared docs**      | `.agents/docs/`                  | Cross-tool, cross-skill, cross-agent | `skills-guide.md` (agent-operational guidance) |
+| **Skill references** | `.<tool>/skills/<n>/references/` | Single skill                         | `sample-output.md`                             |
 
 **Rule of thumb:** If multiple skills or agents need the same document, it belongs in `.agents/docs/`. If only one skill uses it, it belongs in that skill's `references/` directory per the Agent Skills spec.
 
@@ -357,11 +370,11 @@ All skills reference `.agents/docs/` via relative path for shared standards.
 
 Subagents remain **tool-specific** — there is no cross-tool subagent standard yet:
 
-| Tool | Location | Example |
-|------|----------|---------|
-| Claude Code | `.claude/agents/repo-scanner.md` | Native — supports `name`, `description`, `tools`, `model`, `skills`, `permissionMode` |
-| Cursor | `.cursor/agents/repo-scanner.md` | Native — supports `name`, `description`, `model`, `tools` |
-| Codex | `.codex/agents/repo-scanner.toml` + role in `.codex/config.toml` | Runtime dispatch is config-role based (`agent_type`); role behavior comes from TOML config layers |
+| Tool        | Location                                                         | Example                                                                                           |
+| ----------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Claude Code | `.claude/agents/repo-scanner.md`                                 | Native — supports `name`, `description`, `tools`, `model`, `skills`, `permissionMode`             |
+| Cursor      | `.cursor/agents/repo-scanner.md`                                 | Native — supports `name`, `description`, `model`, `tools`                                         |
+| Codex       | `.codex/agents/repo-scanner.toml` + role in `.codex/config.toml` | Runtime dispatch is config-role based (`agent_type`); role behavior comes from TOML config layers |
 
 The system prompt body can be largely shared across tools, but frontmatter schemas differ. If maintaining multiple copies becomes overhead, consider a shared source with build-time distribution.
 
@@ -398,13 +411,13 @@ The system prompt body can be largely shared across tools, but frontmatter schem
 
 ## Summary
 
-| Question | Answer |
-|----------|--------|
-| What's the open standard for skills? | **Agent Skills spec** at [agentskills.io](https://agentskills.io) — SKILL.md with YAML frontmatter, `references/`, `scripts/`, `assets/` |
-| Where do shared reference docs live? | **`.agents/docs/`** — tool-agnostic, agent-operational guidance only |
-| Where do skills live? | **`.<tool>/skills/`** natively; **`.agents/skills/`** for cross-tool canonical source |
-| Where do subagents live? | **`.<tool>/agents/`** — native per tool (no cross-tool standard yet) |
-| Where do skill-specific references live? | **`.<tool>/skills/<n>/references/`** — per Agent Skills spec |
+| Question                                    | Answer                                                                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| What's the open standard for skills?        | **Agent Skills spec** at [agentskills.io](https://agentskills.io) — SKILL.md with YAML frontmatter, `references/`, `scripts/`, `assets/`                     |
+| Where do shared reference docs live?        | **`.agents/docs/`** — tool-agnostic, agent-operational guidance only                                                                                         |
+| Where do skills live?                       | **`.<tool>/skills/`** natively; **`.agents/skills/`** for cross-tool canonical source                                                                        |
+| Where do subagents live?                    | **`.<tool>/agents/`** — native per tool (no cross-tool standard yet)                                                                                         |
+| Where do skill-specific references live?    | **`.<tool>/skills/<n>/references/`** — per Agent Skills spec                                                                                                 |
 | How do skills get distributed across tools? | **OAT sync** for local/internal skills; **`npx skills`** CLI for remote/community skills — both create symlinks from canonical source to tool-specific paths |
-| Is `.agents/docs/` a standard? | **No** — it's a convention. `.agents/skills/` is recognized; `.agents/docs/` fills a gap for shared non-skill references. |
-| What's native vs. custom? | Skills spec, tool paths, `references/` = **standard**. `.agents/docs/` = **convention**. |
+| Is `.agents/docs/` a standard?              | **No** — it's a convention. `.agents/skills/` is recognized; `.agents/docs/` fills a gap for shared non-skill references.                                    |
+| What's native vs. custom?                   | Skills spec, tool paths, `references/` = **standard**. `.agents/docs/` = **convention**.                                                                     |

@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+
 import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';

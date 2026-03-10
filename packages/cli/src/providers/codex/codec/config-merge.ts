@@ -1,5 +1,6 @@
 import { CliError } from '@errors/index';
 import TOML from '@iarna/toml';
+
 import { stringifyToml } from './shared';
 
 export interface CodexManagedRoleConfig {

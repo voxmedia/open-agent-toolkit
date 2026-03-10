@@ -24,11 +24,13 @@ Process unresolved GitHub PR review feedback into normalized findings and standa
 **Purpose:** Fetch unresolved PR comments, classify findings into standard severities, triage dispositions, and produce standalone tasks.
 
 **BLOCKED Activities:**
+
 - No implementation/code changes.
 - No `plan.md`, `state.md`, or `implementation.md` lifecycle mutations.
 - No auto-replies on GitHub without explicit user confirmation.
 
 **ALLOWED Activities:**
+
 - Resolve PR scope.
 - Fetch unresolved PR comments via `agent-reviews`.
 - Normalize and classify findings.
@@ -37,6 +39,7 @@ Process unresolved GitHub PR review feedback into normalized findings and standa
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Replying on GitHub without explicit user confirmation -> STOP and present reply content for approval first.
 - Editing project lifecycle artifacts (`plan.md`, `state.md`, `implementation.md`) in ad-hoc mode -> STOP and revert to task-list output only.
 - Skipping the findings overview before triage prompts -> STOP and show overview first.
@@ -46,10 +49,11 @@ If you catch yourself:
 Print this banner once at start:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- OAT ▸ REMOTE REVIEW RECEIVE
+OAT ▸ REMOTE REVIEW RECEIVE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Use step indicators:
+
 - `[1/6] Resolving PR...`
 - `[2/6] Fetching comments...`
 - `[3/6] Classifying findings...`
@@ -76,6 +80,7 @@ finding:
 ```
 
 Severity conventions:
+
 - `critical`: Broken behavior, security risk, or missing P0 requirement.
 - `important`: Missing P1 requirement, major robustness issue.
 - `medium`: Meaningful but non-blocking quality/maintainability issue.
@@ -86,6 +91,7 @@ Severity conventions:
 ### Step 1: Resolve PR Number
 
 PR resolution order:
+
 1. `--pr <N>` from `$ARGUMENTS`
 2. Auto-detect via `agent-reviews` current-branch resolution
 
@@ -102,15 +108,18 @@ npx agent-reviews --json --unresolved --pr <N>
 Expected: JSON payload with unresolved review comments and metadata.
 
 If command fails:
+
 - Capture error details.
 - Route user through troubleshooting (auth, network, permissions, invalid PR).
 
 If no unresolved comments are returned:
+
 - Report clean status and stop.
 
 ### Step 3: Classify and Normalize Findings
 
 For each item in JSON:
+
 - Capture `type` (`review_comment`, `issue_comment`, `review`).
 - Map location fields (`path`, `line`) when present.
 - Use comment body + context to assign severity (`critical`, `important`, `medium`, `minor`).
@@ -118,6 +127,7 @@ For each item in JSON:
 - Normalize into the shared findings model.
 
 ID assignment per severity bucket:
+
 - Critical: `C1`, `C2`, ...
 - Important: `I1`, `I2`, ...
 - Medium: `M1`, `M2`, ...
@@ -126,15 +136,18 @@ ID assignment per severity bucket:
 ### Step 4: Present Findings Overview and Triage
 
 Before triage prompts, output:
+
 - Counts per severity
 - Compact register: `id`, `title`, `file:line`, `source_ref`
 
 Disposition options per finding:
+
 - `convert` (default for critical/important/medium)
 - `defer` (default for minor)
 - `dismiss`
 
 Rules:
+
 - Require rationale for `defer`/`dismiss`.
 - For medium deferral, require concrete rationale (duplicate, dependency, explicit out-of-scope follow-up, risky churn).
 
@@ -147,6 +160,7 @@ Task entry format:
 ```
 
 Output modes:
+
 - Inline (default)
 - File output path (if user requests)
 
@@ -159,6 +173,7 @@ After task generation, ask:
 `Reply to processed comments on GitHub? [yes/no]`
 
 If yes, reply per finding disposition:
+
 - Convert: `npx agent-reviews --reply <id> "Acknowledged - tracking as task"`
 - Defer: `npx agent-reviews --reply <id> "Deferred: <reason>"`
 - Dismiss: `npx agent-reviews --reply <id> "Won't fix: <reason>"`
@@ -175,6 +190,7 @@ Never send replies without explicit user approval.
 ## Output Contract
 
 At completion, report:
+
 - PR number
 - Severity counts
 - Converted/deferred/dismissed counts

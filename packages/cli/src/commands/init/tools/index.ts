@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
@@ -23,6 +24,7 @@ import {
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
+
 import { createInitToolsIdeasCommand } from './ideas';
 import {
   installIdeas as defaultInstallIdeas,

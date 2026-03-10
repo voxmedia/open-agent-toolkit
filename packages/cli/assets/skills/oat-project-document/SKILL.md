@@ -2,7 +2,7 @@
 name: oat-project-document
 version: 1.0.0
 description: Analyze project artifacts and implementation to produce documentation update recommendations, then apply approved changes. Run after implementation/review cycles and before project completion.
-argument-hint: "[project-path] [--auto]"
+argument-hint: '[project-path] [--auto]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Glob, Grep, AskUserQuestion
@@ -15,6 +15,7 @@ Read project artifacts and implementation code to identify documentation surface
 ## Prerequisites
 
 **Required:**
+
 - Active OAT project (or explicit project path) with at least `plan.md` or `implementation.md`
 - Project should have completed some implementation work (artifacts describe what was built)
 
@@ -29,7 +30,7 @@ Read project artifacts and implementation code to identify documentation surface
 - Print a phase banner once at start:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ PROJECT DOCUMENT
+  OAT ▸ PROJECT DOCUMENT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - For each step, announce a compact header:
@@ -39,12 +40,14 @@ Read project artifacts and implementation code to identify documentation surface
 - Keep it concise; don't print a line for every shell command.
 
 **BLOCKED Activities:**
+
 - No modifying implementation source code
 - No modifying project phase state (except `oat_docs_updated` in state.md)
 - No deleting or restructuring existing documentation without user approval
 - No creating documentation content that contradicts source code
 
 **ALLOWED Activities:**
+
 - Reading all project artifacts (discovery.md, spec.md, design.md, plan.md, implementation.md)
 - Reading source code referenced in artifacts
 - Scanning all documentation and instruction surfaces
@@ -55,11 +58,13 @@ Read project artifacts and implementation code to identify documentation surface
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Modifying source code → STOP (this skill only writes documentation)
 - Inventing documentation without evidence → STOP (every recommendation needs artifact/code evidence)
 - Changing project phase or task state → STOP (only `oat_docs_updated` is allowed)
 
 **Recovery:**
+
 1. Acknowledge the deviation
 2. Return to current step
 3. Ask user for guidance
@@ -69,6 +74,7 @@ If you catch yourself:
 Parse `$ARGUMENTS` for:
 
 1. **`--auto` flag:** If present, skip user approval and apply all recommendations directly.
+
    ```
    AUTO_MODE=false
    if echo "$ARGUMENTS" | grep -q '\-\-auto'; then
@@ -100,6 +106,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 3. If neither available, use `AskUserQuestion` to ask: "No active project found. Please provide the path to the project directory (e.g., `.oat/projects/shared/my-project`)."
 
 **Validation:**
+
 - Verify `$PROJECT_PATH/state.md` exists
 - Verify at least one of `plan.md` or `implementation.md` exists (need to know what was built)
 - If validation fails, report the error and STOP
@@ -125,6 +132,7 @@ If `$DOCS_ROOT` is empty, attempt auto-detection:
 5. If nothing found, `DOCS_ROOT` remains empty (docs directory scanning will be skipped)
 
 For auto-detection, use Glob to scan from repo root:
+
 ```
 Glob: **/mkdocs.yml (exclude node_modules, .oat, dist)
 Glob: **/docusaurus.config.{js,ts}
@@ -158,6 +166,7 @@ From the artifacts, extract and organize:
 **Note source file references:**
 
 While reading artifacts, collect all source file paths mentioned in:
+
 - Plan task `**Files:**` sections (Create/Modify entries)
 - Implementation.md `**Files changed:**` entries
 - Design component interfaces and data models
@@ -165,6 +174,7 @@ While reading artifacts, collect all source file paths mentioned in:
 These will be verified against actual code in Step 2.
 
 **Handle missing artifacts gracefully:**
+
 - Quick-mode projects may lack spec.md and design.md — extract what's available
 - If only plan.md exists (no implementation.md), the project may not have started implementation yet — still proceed, but note that documentation recommendations will be based on planned work rather than verified implementation
 
@@ -233,6 +243,7 @@ Scan the repository for all documentation and instruction surfaces.
    - Read existing rules files that may need updating
 
 **Store surface inventory** for use in Step 4. For each surface, record:
+
 - File path (existing or potential)
 - Surface type (docs | readme | reference | agents | provider-rules)
 - Current content summary (for existing files)
@@ -267,13 +278,13 @@ For each documentation surface relevant to the project, determine one of:
 
 Only recommend instruction changes when there is a clear trigger:
 
-| Signal | Example | Recommendation |
-|--------|---------|----------------|
-| New test framework | vitest added to devDependencies | Create test rules for enabled providers |
-| New styling/component library | tailwind, storybook added | Create styling rules for enabled providers |
-| New build tooling | different bundler, new build step | Update AGENTS.md development commands |
-| New directory with complex patterns | new package with unique conventions | Create subdirectory AGENTS.md |
-| New dev commands | new CLI commands, scripts | Update root AGENTS.md |
+| Signal                              | Example                             | Recommendation                             |
+| ----------------------------------- | ----------------------------------- | ------------------------------------------ |
+| New test framework                  | vitest added to devDependencies     | Create test rules for enabled providers    |
+| New styling/component library       | tailwind, storybook added           | Create styling rules for enabled providers |
+| New build tooling                   | different bundler, new build step   | Update AGENTS.md development commands      |
+| New directory with complex patterns | new package with unique conventions | Create subdirectory AGENTS.md              |
+| New dev commands                    | new CLI commands, scripts           | Update root AGENTS.md                      |
 
 If no strong signal is present for an instruction surface, skip it.
 
@@ -361,6 +372,7 @@ Execute the approved documentation updates.
 **Nav structure updates:**
 
 If `$DOCS_CONFIG` exists and new files were created in the docs directory:
+
 - Read the tooling config (e.g., mkdocs.yml)
 - Add new entries to the nav structure in the appropriate location
 - Preserve existing nav order
@@ -384,6 +396,7 @@ Only stage files that were actually changed or created in Step 6. Do not use `gi
 **7b. Update project state:**
 
 Update `$PROJECT_PATH/state.md` frontmatter based on apply outcome:
+
 - If `$ALL_SUCCEEDED` is true: set `oat_docs_updated: complete`
 - If `$ALL_SUCCEEDED` is false: do **not** set `oat_docs_updated: complete` — leave the field as `null` so the skill can be re-run. Surface the failures clearly in the summary report (Step 7d) so the user knows which updates failed and why.
 

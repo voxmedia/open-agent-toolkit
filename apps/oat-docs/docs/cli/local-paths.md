@@ -15,10 +15,7 @@ Local paths are declared in `.oat/config.json` under the `localPaths` key:
 ```json
 {
   "version": 1,
-  "localPaths": [
-    ".oat/ideas",
-    ".oat/projects/**/reviews"
-  ]
+  "localPaths": [".oat/ideas", ".oat/projects/**/reviews"]
 }
 ```
 
@@ -73,11 +70,11 @@ Copy `localPaths` between the main repo and a worktree.
 oat local sync <worktree-path> [--from] [--force] [--json]
 ```
 
-| Option    | Description                              |
-| --------- | ---------------------------------------- |
-| (default) | Copy from main repo **to** the worktree  |
-| `--from`  | Copy **from** the worktree back to main  |
-| `--force` | Overwrite existing paths at destination  |
+| Option    | Description                             |
+| --------- | --------------------------------------- |
+| (default) | Copy from main repo **to** the worktree |
+| `--from`  | Copy **from** the worktree back to main |
+| `--force` | Overwrite existing paths at destination |
 
 Glob patterns in `localPaths` are expanded against the source root before copying. Each expanded path is copied recursively.
 

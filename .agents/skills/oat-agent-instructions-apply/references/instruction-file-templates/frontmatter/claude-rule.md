@@ -19,13 +19,12 @@ Uses `paths` frontmatter — an array of glob patterns.
 ```yaml
 ---
 paths:
-  - "{glob-pattern-1}"
-  - "{glob-pattern-2}"
+  - '{glob-pattern-1}'
+  - '{glob-pattern-2}'
 ---
-
 # {Rule Title}
 
-{Rule body — identical to glob-scoped-rule.md template body}
+{ Rule body — identical to glob-scoped-rule.md template body }
 ```
 
 ## Examples
@@ -35,7 +34,7 @@ paths:
 ```yaml
 ---
 paths:
-  - "src/api/**/*.ts"
+  - 'src/api/**/*.ts'
 ---
 ```
 
@@ -44,8 +43,8 @@ paths:
 ```yaml
 ---
 paths:
-  - "src/**/*.test.ts"
-  - "tests/**/*.ts"
+  - 'src/**/*.test.ts'
+  - 'tests/**/*.ts'
 ---
 ```
 
@@ -54,7 +53,7 @@ paths:
 ```yaml
 ---
 paths:
-  - "src/**/*.{ts,tsx}"
+  - 'src/**/*.{ts,tsx}'
 ---
 ```
 

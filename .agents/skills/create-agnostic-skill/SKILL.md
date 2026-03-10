@@ -2,7 +2,7 @@
 name: create-agnostic-skill
 version: 1.2.1
 description: Use when adding a reusable workflow skill for AI coding agents. Scaffolds a new .agents/skills skill using the Agent Skills open standard.
-argument-hint: "[skill-name]"
+argument-hint: '[skill-name]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
@@ -24,6 +24,7 @@ Use when:
 - Extending AI assistant capabilities for the repository
 
 **If you are creating a new `oat-*` skill:**
+
 - Prefer `/create-oat-skill` (it references this baseline guidance and adds OAT-specific conventions like `{PROJECTS_ROOT}` resolution and separator progress banners).
 
 ## When NOT to Use
@@ -70,6 +71,7 @@ If not provided in arguments, ask for:
 3. **Bundled resources**: Files in `references/`, `scripts/`, `assets/` loaded as-needed
 
 **Writing principles:**
+
 - Challenge each piece of information—does the agent truly need this? Does this paragraph justify its token cost?
 - Description is the primary trigger mechanism—include "when to use" there, not just in the body
 - Prefer concise examples over verbose explanations
@@ -97,7 +99,7 @@ For detailed guidance, see `references/skill-template.md`.
 name: skill-name
 version: 1.0.0
 description: Use when [trigger condition]. [What it does for disambiguation].
-argument-hint: "[arg1] [--flag]"
+argument-hint: '[arg1] [--flag]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep
 user-invocable: true
@@ -110,18 +112,21 @@ Brief description of what this skill does.
 ## When to Use
 
 Use when:
+
 - Condition 1
 - Condition 2
 
 ## When NOT to Use
 
 Don't use when:
+
 - Condition 1
 - Condition 2
 
 ## Arguments
 
 Parse from `$ARGUMENTS`:
+
 - **required-arg**: (required) Description
 - **--optional-flag**: (optional) Description with default
 
@@ -152,6 +157,7 @@ Natural language request that triggers this skill
 ## Troubleshooting
 
 **Common issue:**
+
 - Solution
 
 ## Success Criteria
@@ -161,6 +167,7 @@ Natural language request that triggers this skill
 ```
 
 **Frontmatter notes:**
+
 - `argument-hint`, `allowed-tools`, `user-invocable`, `context`, `hooks` are Claude Code specific
 - Other agents ignore unknown frontmatter fields, so it's safe to include Claude-specific fields everywhere
 - `name`: max 64 chars for cross-provider portability (Codex allows 100, but 64 is the spec limit)
@@ -179,6 +186,7 @@ The description is your **primary routing mechanism** — agents load only `name
 5. **Use this default pattern**: `Use when [trigger condition]. [What it does for disambiguation].` `Run when` and `Trigger when` are also valid trigger stems when wording is clearer.
 
 Examples:
+
 - Bad: "Reviews code by checking spec compliance, then code quality, then creates PR"
 - Good: "Use when reviewing code or checking PRs. Systematic quality and security analysis."
 
@@ -211,11 +219,11 @@ Skills can include supporting files in subdirectories:
     └── template.md
 ```
 
-| Directory    | Purpose                                       |
-| ------------ | --------------------------------------------- |
-| `scripts/`   | Executable code that agents can run           |
-| `references/`| Additional documentation loaded on demand     |
-| `assets/`    | Static resources like templates or data files |
+| Directory     | Purpose                                       |
+| ------------- | --------------------------------------------- |
+| `scripts/`    | Executable code that agents can run           |
+| `references/` | Additional documentation loaded on demand     |
+| `assets/`     | Static resources like templates or data files |
 
 ### Step 5: Sync and Verify
 
@@ -270,6 +278,7 @@ Skills that need user decisions (parameter choices, confirmations, disambiguatio
 **Write instructions portably:** Use natural language like "Ask the user which approach they prefer" in workflow prose. All providers can handle this conversationally.
 
 **Host-specific structured input guidance:** If the skill benefits from structured prompts, document the host split explicitly in the workflow:
+
 - Claude Code: use `AskUserQuestion` when available
 - Codex: use structured user-input tooling when available in the current Codex host/runtime
 - Fallback: ask the same question in plain conversational text
@@ -279,11 +288,13 @@ Do **not** hard-code a specific Codex question tool name in skill prose unless t
 **Claude Code enhancement:** Add `AskUserQuestion` to `allowed-tools` in frontmatter. Claude Code renders these as structured UI prompts with selectable options, headers, and multi-select support. Other providers ignore the field and handle the same instructions as conversational questions.
 
 **When to include interactive input:**
+
 - Decisions with 2–4 discrete options (approach, config, scope)
 - Confirmation gates before destructive or high-impact actions
 - Collecting required parameters not provided in arguments
 
 **When NOT to:**
+
 - Autonomous/subagent skills — use argument defaults or flags to drive decisions instead of prompting mid-execution
 - Questions with open-ended answers — just ask conversationally in the skill prose
 
@@ -305,30 +316,30 @@ For multi-step skills, print brief progress updates so the user knows what's hap
 
 Legend: ✅ supported | ⚠️ provider-specific | 💤 ignored | ❓ unknown
 
-| Field | Spec | Claude Code | Cursor | Codex CLI | Gemini CLI |
-|-------|------|-------------|--------|-----------|------------|
-| `name` | ✅ required | ✅ | ✅ | ✅ required | ✅ |
-| `description` | ✅ required | ✅ | ✅ | ✅ required | ✅ |
-| `license` | ✅ optional | ❓ | ✅ | 💤 | ❓ |
-| `compatibility` | ✅ optional | ❓ | ✅ | 💤 | ❓ |
-| `metadata` | ✅ optional | ❓ | ✅ | 💤 | ❓ |
-| `allowed-tools` | ⚠️ experimental | ✅ | ❓ | 💤 | ❓ |
-| `disable-model-invocation` | ❌ | ✅ | ✅ | 💤 | ❓ |
-| `user-invocable` | ❌ | ✅ | ❓ | 💤 | ❓ |
-| `argument-hint` | ❌ | ✅ | ❓ | 💤 | ❓ |
-| `context` / `agent` | ❌ | ✅ | ❌ | 💤 | ❓ |
-| `hooks` | ❌ | ✅ | ❌ | 💤 | ❓ |
+| Field                      | Spec            | Claude Code | Cursor | Codex CLI   | Gemini CLI |
+| -------------------------- | --------------- | ----------- | ------ | ----------- | ---------- |
+| `name`                     | ✅ required     | ✅          | ✅     | ✅ required | ✅         |
+| `description`              | ✅ required     | ✅          | ✅     | ✅ required | ✅         |
+| `license`                  | ✅ optional     | ❓          | ✅     | 💤          | ❓         |
+| `compatibility`            | ✅ optional     | ❓          | ✅     | 💤          | ❓         |
+| `metadata`                 | ✅ optional     | ❓          | ✅     | 💤          | ❓         |
+| `allowed-tools`            | ⚠️ experimental | ✅          | ❓     | 💤          | ❓         |
+| `disable-model-invocation` | ❌              | ✅          | ✅     | 💤          | ❓         |
+| `user-invocable`           | ❌              | ✅          | ❓     | 💤          | ❓         |
+| `argument-hint`            | ❌              | ✅          | ❓     | 💤          | ❓         |
+| `context` / `agent`        | ❌              | ✅          | ❌     | 💤          | ❓         |
+| `hooks`                    | ❌              | ✅          | ❌     | 💤          | ❓         |
 
 **Key takeaway:** `name` + `description` are the only truly portable interface. Codex ignores unknown keys (safe to include Claude fields), so layer tool-specific fields on top of a portable baseline. For the full matrix, see `.agents/docs/skills-guide.md`.
 
 ### Detail Level
 
-| Skill Type               | Detail Level | Examples                            |
-| ------------------------ | ------------ | ----------------------------------- |
-| Complex workflows        | Detailed     | docs-new, docs-review               |
-| Simple command-like      | Concise      | update-doc-refs, create-ticket      |
-| Reference/standards      | Detailed     | repo-documentation                  |
-| Helper (auto-invoked)    | Moderate     | read-relevant-docs                  |
+| Skill Type            | Detail Level | Examples                       |
+| --------------------- | ------------ | ------------------------------ |
+| Complex workflows     | Detailed     | docs-new, docs-review          |
+| Simple command-like   | Concise      | update-doc-refs, create-ticket |
+| Reference/standards   | Detailed     | repo-documentation             |
+| Helper (auto-invoked) | Moderate     | read-relevant-docs             |
 
 ## Examples
 

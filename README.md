@@ -32,11 +32,11 @@ flowchart TD
   Q2 -->|Yes| C["Workflow mode"]
 ```
 
-| Mode | Best for | Primary entry points |
-|---|---|---|
-| Interop-only | Canonical skill/agent sync + drift diagnostics + tool-pack lifecycle | `oat init`, `oat tools ...`, `oat status`, `oat sync`, `oat instructions ...`, `oat providers ...`, `oat cleanup ...`, `oat doctor` |
-| Provider-agnostic tooling | Reusing skills/utilities without spec-driven lifecycle overhead | `apps/oat-docs/docs/skills/index.md`, `apps/oat-docs/docs/skills/docs-workflows.md`, `apps/oat-docs/docs/cli/docs-apps.md`, selected `oat-*` skills |
-| Workflow | Structured execution with durable artifacts and review gates | `oat-project-new`/`oat-project-open`, then lane-specific skills |
+| Mode                      | Best for                                                             | Primary entry points                                                                                                                                |
+| ------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Interop-only              | Canonical skill/agent sync + drift diagnostics + tool-pack lifecycle | `oat init`, `oat tools ...`, `oat status`, `oat sync`, `oat instructions ...`, `oat providers ...`, `oat cleanup ...`, `oat doctor`                 |
+| Provider-agnostic tooling | Reusing skills/utilities without spec-driven lifecycle overhead      | `apps/oat-docs/docs/skills/index.md`, `apps/oat-docs/docs/skills/docs-workflows.md`, `apps/oat-docs/docs/cli/docs-apps.md`, selected `oat-*` skills |
+| Workflow                  | Structured execution with durable artifacts and review gates         | `oat-project-new`/`oat-project-open`, then lane-specific skills                                                                                     |
 
 ### A) Interop-only mode (CLI only)
 
@@ -51,6 +51,7 @@ Use OAT only for cross-provider asset management:
 - Run diagnostics
 
 Primary commands:
+
 - `oat init`
 - `oat status`
 - `oat sync`
@@ -81,6 +82,7 @@ Use reusable skills and tooling without adopting the spec-driven project lifecyc
 - Adopt only the pieces you need for your team’s workflow
 
 Start points:
+
 - [Skills overview](apps/oat-docs/docs/skills/index.md)
 - [Docs workflows](apps/oat-docs/docs/skills/docs-workflows.md)
 - [Docs app commands](apps/oat-docs/docs/cli/docs-apps.md)
@@ -92,19 +94,21 @@ Start points:
 Use OAT lifecycle skills when you want explicit checkpoints and durable project artifacts.
 
 Recommended when:
+
 - You want traceable artifacts (`state/spec/design/plan/implementation`) for handoffs and audits.
 - You want review/fix loops and PR artifacts driven by a consistent workflow contract.
 - You want the option to start fast (quick/import) and promote to spec-driven lifecycle later.
 
 Lane options (all converge on implementation + project review workflows):
 
-| Lane | Typical sequence | Best fit |
-|---|---|---|
-| Spec-Driven | Discovery -> Spec -> Design -> Plan -> Implement -> Project review loop -> Docs sync (optional) | New initiatives or higher-risk changes that need strong artifact rigor |
-| Quick | Quick start (adaptive discovery + [optional lightweight design] + plan) -> Implement -> Project review loop | Bounded features with clear requirements; can promote to spec-driven if complexity grows |
-| Imported-plan | Plan with provider -> Import to OAT project -> Implement -> Project review loop | External/provider-authored plans you want normalized into OAT artifacts |
+| Lane          | Typical sequence                                                                                            | Best fit                                                                                 |
+| ------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Spec-Driven   | Discovery -> Spec -> Design -> Plan -> Implement -> Project review loop -> Docs sync (optional)             | New initiatives or higher-risk changes that need strong artifact rigor                   |
+| Quick         | Quick start (adaptive discovery + [optional lightweight design] + plan) -> Implement -> Project review loop | Bounded features with clear requirements; can promote to spec-driven if complexity grows |
+| Imported-plan | Plan with provider -> Import to OAT project -> Implement -> Project review loop                             | External/provider-authored plans you want normalized into OAT artifacts                  |
 
 Shared across lanes:
+
 - Review/fix loops (`oat-project-review-provide` + `oat-project-review-receive` for local, `oat-project-review-receive-remote` for GitHub PR feedback)
 - Ad-hoc reviews (`oat-review-provide` + `oat-review-receive` for local, `oat-review-receive-remote` for GitHub PR feedback)
 - PR artifacts (`oat-project-pr-progress`, `oat-project-pr-final`)
@@ -151,6 +155,7 @@ pnpm run cli -- sync --scope all
 ```
 
 Notes:
+
 - `sync` mutates by default; use `--dry-run` to preview changes without writing.
 - Project provider support is configured in `.oat/sync/config.json` (set via `oat init` interactive prompt or `oat providers set`).
 - Canonical subagents in `.agents/agents/*.md` are the source of truth. For Codex project scope, `sync` generates `.codex/agents/*.toml` and merges `.codex/config.toml`.
@@ -167,6 +172,7 @@ pnpm run cli -- tools update --all
 ```
 
 Notes:
+
 - `tools install` installs OAT skills/agents/templates/scripts by pack (`ideas`, `workflows`, `utility`) and auto-syncs provider views.
 - `tools outdated` shows which installed tools have available updates.
 - `tools update --all` updates all outdated tools to bundled versions.
@@ -180,6 +186,7 @@ pnpm run cli -- docs nav sync --target-dir apps/my-docs
 ```
 
 Notes:
+
 - `docs init` scaffolds an MkDocs Material docs app with OAT defaults.
 - `docs nav sync` regenerates `mkdocs.yml` navigation from directory `index.md` `## Contents` sections.
 - `docs analyze` and `docs apply` expose the docs workflow entrypoints and pair with the `oat-docs-analyze` / `oat-docs-apply` skills.
@@ -193,6 +200,7 @@ pnpm run cli -- instructions sync
 ```
 
 Notes:
+
 - `instructions validate` is read-only.
 - `instructions sync` mutates by default; use `--dry-run` to preview changes.
 - Use `instructions sync --force` to overwrite mismatched `CLAUDE.md` files.
@@ -205,6 +213,7 @@ pnpm run cli -- cleanup artifacts
 ```
 
 Notes:
+
 - Cleanup commands mutate by default; use `--dry-run` to preview changes.
 - `cleanup artifacts` uses interactive triage in TTY contexts by default.
 - In non-interactive contexts, use `--all-candidates --yes` to allow stale-candidate mutation.
@@ -219,6 +228,7 @@ This installs dependencies, builds packages, and applies project-scope sync link
 For a guided OAT-aware setup flow (create/reuse worktree + readiness checks), use the `oat-worktree-bootstrap` skill.
 
 Maintenance note:
+
 - `pnpm oat:validate-skills` routes to `oat internal validate-oat-skills` and validates required `oat-*` skill structure.
 
 ## Consumer CLI Usage (Without pnpm)
@@ -226,6 +236,7 @@ Maintenance note:
 If you are using OAT CLI as a consumer, prefer the `oat` executable interface rather than repo scripts.
 
 Current state:
+
 - `@oat/cli` is currently private in this repository (`packages/cli/package.json` has `"private": true`), so registry `npx` usage is not available yet.
 
 Run from source with npm:

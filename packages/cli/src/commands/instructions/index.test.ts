@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { createInstructionsCommand } from './index';
 
 describe('instructions command', () => {

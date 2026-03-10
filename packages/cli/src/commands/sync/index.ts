@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
 import {
@@ -35,6 +36,7 @@ import {
 } from '@providers/shared';
 import { formatSyncPlan } from '@ui/output';
 import { Command } from 'commander';
+
 import { runSyncApply } from './apply';
 import { runSyncDryRun } from './dry-run';
 import type {

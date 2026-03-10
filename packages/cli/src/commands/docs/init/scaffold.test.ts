@@ -1,11 +1,12 @@
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { scaffoldDocsApp } from './scaffold';
 
 const MKDOCS_TEMPLATE_FILES: Record<string, string> = {
-  '.markdownlint-cli2.jsonc': '{ "config": { "MD013": false } }\n',
   'mkdocs.yml': 'site_name: {{SITE_NAME}}\n',
   'package.json.template': `{
   "name": "{{PACKAGE_NAME}}",
@@ -111,8 +112,8 @@ describe('scaffoldDocsApp', () => {
       appName: 'oat-docs',
       targetDir: 'apps/oat-docs',
       siteDescription: '',
-      lint: 'markdownlint',
-      format: 'prettier',
+      lint: 'none',
+      format: 'oxfmt',
     });
 
     expect(result.appRoot).toBe(join(root, 'apps/oat-docs'));
@@ -122,13 +123,11 @@ describe('scaffoldDocsApp', () => {
     ).resolves.toContain('Installed plugins');
     await expect(
       readFile(join(result.appRoot, 'package.json'), 'utf8'),
-    ).resolves.toContain('markdownlint-cli2');
+    ).resolves.toContain('oxfmt');
     const packageJson = JSON.parse(
       await readFile(join(result.appRoot, 'package.json'), 'utf8'),
     ) as { scripts: Record<string, string> };
-    expect(packageJson.scripts['docs:lint']).toBe(
-      "markdownlint-cli2 'docs/**/*.md'",
-    );
+    expect(packageJson.scripts['docs:format']).toBe("oxfmt 'docs/**/*.md'");
     expect(result.documentationConfig).toEqual({
       root: 'apps/oat-docs',
       tooling: 'mkdocs',
@@ -160,7 +159,7 @@ describe('scaffoldDocsApp', () => {
       targetDir: 'docs',
       siteDescription: '',
       lint: 'none',
-      format: 'prettier',
+      format: 'oxfmt',
     });
 
     expect(result.appRoot).toBe(join(root, 'docs'));
@@ -195,8 +194,8 @@ describe('scaffoldDocsApp', () => {
       appName: 'my-docs',
       targetDir: 'apps/my-docs',
       siteDescription: 'Project documentation site',
-      lint: 'markdownlint',
-      format: 'prettier',
+      lint: 'none',
+      format: 'oxfmt',
     });
 
     expect(result.appRoot).toBe(join(root, 'apps/my-docs'));
@@ -229,8 +228,8 @@ describe('scaffoldDocsApp', () => {
     expect(packageJson.scripts['prebuild']).toContain(
       'oat docs generate-index',
     );
-    expect(packageJson.devDependencies['markdownlint-cli2']).toBeDefined();
-    expect(packageJson.devDependencies['prettier']).toBeDefined();
+    expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
+    expect(packageJson.devDependencies['prettier']).toBeUndefined();
 
     const searchRoute = await readFile(
       join(result.appRoot, 'app', 'api', 'search', 'route.ts'),

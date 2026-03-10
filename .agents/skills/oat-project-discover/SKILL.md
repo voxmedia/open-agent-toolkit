@@ -28,8 +28,9 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Print a phase banner once at start using horizontal separators, e.g.:
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   OAT ▸ DISCOVERY
+  OAT ▸ DISCOVERY
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Before multi-step work, print step indicators, e.g.:
   - `[1/5] Resolving project + checking knowledge base…`
   - `[2/5] Initializing discovery document…`
@@ -38,6 +39,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[5/5] Updating state + committing…`
 
 **BLOCKED Activities:**
+
 - ❌ No code writing
 - ❌ No design documents
 - ❌ No implementation plans
@@ -45,6 +47,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - ❌ No concrete deliverables list (specific scripts, file paths, function names)
 
 **ALLOWED Activities:**
+
 - ✅ Asking clarifying questions
 - ✅ Exploring approaches and trade-offs
 - ✅ Documenting decisions and constraints
@@ -52,11 +55,13 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 **Self-Correction Protocol:**
 If you catch yourself:
+
 - Writing code or implementation details → STOP
 - Drafting technical designs → STOP
 - Creating detailed plans → STOP
 
 **Recovery:**
+
 1. Acknowledge the deviation
 2. Return to asking questions about requirements
 3. Document the insight in discovery.md without implementation details (use "Open Questions" for design if needed)
@@ -76,6 +81,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 **If `PROJECT_PATH` is set and valid (directory exists):**
+
 - Derive `project-name` from the directory name (basename of the path)
 - Read `{PROJECT_PATH}/state.md` (if it exists) and show current status
 - Ask user:
@@ -86,6 +92,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
   - Stop here until the user has selected/created the intended project.
 
 **If `PROJECT_PATH` is missing/invalid:**
+
 - Tell the user an active project is required for discovery.
 - Offer:
   - New project: run the `oat-project-new` skill with `{project-name}`
@@ -118,6 +125,7 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 **Enhanced staleness check:**
 
 1. **Age check:** Compare `$GENERATED_AT` vs today (warn if >7 days)
+
    ```bash
    # Skip age check if GENERATED_AT is missing or invalid
    if [ -n "$GENERATED_AT" ] && echo "$GENERATED_AT" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
@@ -152,16 +160,19 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
    ```
 
 **Staleness thresholds:**
+
 - Age: >7 days old
 - Changes: >20 files changed
 
 **If stale (age or changes exceed thresholds):**
+
 - Display prominent warning with specifics (days old, files changed)
 - Show `$CHANGES_SUMMARY` if available
 - Recommend the `oat-repo-knowledge-index` skill to refresh
 - Ask user: "Continue with stale knowledge or refresh first?"
 
 **If unable to determine staleness (missing SHAs/dates):**
+
 - Warn that staleness could not be verified
 - Recommend refreshing knowledge base to ensure accuracy
 
@@ -170,6 +181,7 @@ CURRENT_MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git rev-pars
 Copy template: `.oat/templates/state.md` → `"$PROJECT_PATH/state.md"`
 
 Update frontmatter:
+
 ```yaml
 ---
 oat_phase: discovery
@@ -178,6 +190,7 @@ oat_phase_status: in_progress
 ```
 
 Update content:
+
 - Replace `{Project Name}` with actual project name
 - Set **Started:** to today's date
 - Update **Artifacts** section with actual project path
@@ -191,6 +204,7 @@ Update with user's initial request.
 ### Step 6: Read Relevant Knowledge
 
 Read for context:
+
 - `.oat/repo/knowledge/project-index.md`
 - `.oat/repo/knowledge/architecture.md`
 - `.oat/repo/knowledge/conventions.md`
@@ -201,6 +215,7 @@ Read for context:
 Based on the initial request and knowledge base context, infer 3-5 "gray areas" - topics that need clarification.
 
 **Examples of gray areas:**
+
 - **Scope:** What features are in/out of scope?
 - **Integration:** How does this interact with existing systems?
 - **Data:** What data needs to be stored/accessed?
@@ -210,6 +225,7 @@ Based on the initial request and knowledge base context, infer 3-5 "gray areas" 
 - **Testing:** What testing approach is needed?
 
 Present as multi-select question using AskUserQuestion tool:
+
 ```
 Which areas should we explore during discovery?
 (Select all that apply)
@@ -226,6 +242,7 @@ This focuses the conversation on what matters most to the user.
 ### Step 8: Ask Clarifying Questions
 
 **For each selected gray area:**
+
 - Ask targeted questions **one at a time** — let each answer inform the next question
 - Prefer **multiple choice** questions when feasible to reduce cognitive load, with an "Other" escape hatch
 - After each answer:
@@ -234,6 +251,7 @@ This focuses the conversation on what matters most to the user.
   3. Briefly acknowledge what the answer means for the project before asking the next question
 
 **Question quality:**
+
 - Open-ended where possible
 - Domain-aware (reference knowledge base context)
 - Focused on decisions, not implementation details
@@ -246,8 +264,9 @@ Before converging on an approach, invest in genuine divergent exploration. Simpl
 **Step 9a: Propose Approaches**
 
 Propose 2-3 **genuinely distinct** approaches (not minor variations). For each:
+
 - Describe the approach concretely
-- Explain tradeoffs — not just pros/cons, but *when* each approach is the better choice
+- Explain tradeoffs — not just pros/cons, but _when_ each approach is the better choice
 - **Lead with your recommendation and explain why**
 
 Document in discovery.md `## Solution Space` section.
@@ -255,6 +274,7 @@ Document in discovery.md `## Solution Space` section.
 **Step 9b: Validate Before Converging**
 
 Present the approaches to the user and get explicit buy-in on the chosen direction before moving to decisions and boundaries. Summarize:
+
 - The recommended approach
 - Why it's preferred over the alternatives
 - Any tradeoffs the user should be aware of
@@ -262,6 +282,7 @@ Present the approaches to the user and get explicit buy-in on the chosen directi
 When an approach is selected, document it in `## Options Considered` with a "Summary" line explaining the choice.
 
 **Step 9c: Handle Scope Creep**
+
 - If user suggests additional features during discussion → add to "Deferred Ideas"
 - If uncertainty arises → add to "Open Questions"
 - Keep discovery focused on the core problem
@@ -271,37 +292,44 @@ When an approach is selected, document it in `## Options Considered` with a "Sum
 Update discovery.md sections:
 
 **Required:**
+
 - **Key Decisions:** What was decided and why
 - **Constraints:** Technical, business, timeline limits
 - **Success Criteria:** How we'll know it's done
 - **Out of Scope:** What we're explicitly not doing
 
 **Capture during conversation:**
+
 - **Deferred Ideas:** Features/improvements for later (prevents scope creep)
 - **Open Questions:** Unresolved questions (flag for spec phase)
 - **Assumptions:** What we're assuming is true (needs validation)
 - **Risks:** Potential problems identified (helps planning)
 
 **Keep it outcome-level:**
+
 - Avoid naming specific scripts/files/commands as deliverables in discovery.
 - If you need to preserve an implementation thought, record it as an Open Question for design.
 
 ### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)
 
 Read `"$PROJECT_PATH/state.md"` frontmatter:
+
 - `oat_hill_checkpoints`
 - `oat_hill_completed`
 
 If `"discovery"` is in `oat_hill_checkpoints`, require explicit user approval before advancing.
 
 **Approval prompt (required):**
+
 - "Discovery artifact is ready. Approve discovery and unlock `oat-project-spec`?"
 
 **Optional independent review path:**
+
 - If user wants fresh-context artifact review first, run:
   - `oat-project-review-provide artifact discovery`
 
 **If user does not approve yet:**
+
 - Keep discovery frontmatter as:
   - `oat_status: in_progress`
   - `oat_ready_for: null`
@@ -314,6 +342,7 @@ If discovery is not configured as a HiLL checkpoint, or user explicitly approves
 ### Step 12: Mark Discovery Complete
 
 Update frontmatter:
+
 ```yaml
 ---
 oat_status: complete
@@ -326,6 +355,7 @@ oat_ready_for: oat-project-spec
 Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
+
 - `oat_phase: discovery`
 - `oat_phase_status: complete`
 - **If** `"discovery"` is in `oat_hill_checkpoints`: append `"discovery"` to `oat_hill_completed` array
@@ -333,6 +363,7 @@ Update `"$PROJECT_PATH/state.md"`:
 **Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate. This keeps `oat_hill_completed` meaning "HiLL gates passed" rather than "phases completed" (which is tracked by `oat_phase` and `oat_phase_status`).
 
 **Content updates:**
+
 - Set **Last Updated:** to today
 - Update **Artifacts** section: Discovery status to "complete"
 - Update **Progress** section

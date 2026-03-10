@@ -18,13 +18,16 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 ## Test Framework
 
 **Runner:**
+
 - [Framework] [Version]
 - Config: `[config file]`
 
 **Assertion Library:**
+
 - [Library]
 
 **Run Commands:**
+
 ```bash
 [command]              # Run all tests
 [command]              # Watch mode
@@ -34,12 +37,15 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 ## Test File Organization
 
 **Location:**
+
 - [Pattern: co-located or separate]
 
 **Naming:**
+
 - [Pattern]
 
 **Structure:**
+
 ```
 [Directory pattern]
 ```
@@ -47,11 +53,13 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 ## Test Structure
 
 **Suite Organization:**
+
 ```typescript
 [Show actual pattern from codebase]
 ```
 
 **Patterns:**
+
 - [Setup pattern]
 - [Teardown pattern]
 - [Assertion pattern]
@@ -61,24 +69,29 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 **Framework:** [Tool]
 
 **Patterns:**
+
 ```typescript
 [Show actual mocking pattern from codebase]
 ```
 
 **What to Mock:**
+
 - [Guidelines]
 
 **What NOT to Mock:**
+
 - [Guidelines]
 
 ## Fixtures and Factories
 
 **Test Data:**
+
 ```typescript
 [Show pattern from codebase]
 ```
 
 **Location:**
+
 - [Where fixtures live]
 
 ## Coverage
@@ -86,6 +99,7 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 **Requirements:** [Target or "None enforced"]
 
 **View Coverage:**
+
 ```bash
 [command]
 ```
@@ -93,26 +107,31 @@ Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
 ## Test Types
 
 **Unit Tests:**
+
 - [Scope and approach]
 
 **Integration Tests:**
+
 - [Scope and approach]
 
 **E2E Tests:**
+
 - [Framework or "Not used"]
 
 ## Common Patterns
 
 **Async Testing:**
+
 ```typescript
-[Pattern]
+[Pattern];
 ```
 
 **Error Testing:**
+
 ```typescript
-[Pattern]
+[Pattern];
 ```
 
 ---
 
-*Testing analysis: [date]*
+_Testing analysis: [date]_
