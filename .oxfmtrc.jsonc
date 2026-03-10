@@ -16,6 +16,7 @@
   "sortImports": {},
   "sortPackageJson": {},
   "ignorePatterns": [
+    "dist/",
     "packages/cli/assets/templates/**/*.yml",
     ".oat/templates/**/*.yml",
     "packages/cli/src/commands/docs/migrate/fixtures/**",

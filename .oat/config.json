@@ -14,9 +14,9 @@
     "requireForProjectCompletion": true
   },
   "localPaths": [
-    ".oat/ideas",
     ".oat/**/analysis",
     ".oat/**/pr",
-    ".oat/**/reviews"
+    ".oat/**/reviews",
+    ".oat/ideas"
   ]
 }
