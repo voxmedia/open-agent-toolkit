@@ -1,3 +1,8 @@
+---
+title: CLI Docs
+description: ""
+---
+
 # CLI Docs
 
 This section documents the OAT CLI.

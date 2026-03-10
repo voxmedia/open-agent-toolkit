@@ -1,3 +1,8 @@
+---
+title: "Sync Config (.oat/sync/config.json)"
+description: ""
+---
+
 # Sync Config (`.oat/sync/config.json`)
 
 This document defines the project sync config used by provider-interop commands.

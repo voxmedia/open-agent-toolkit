@@ -1,3 +1,8 @@
+---
+title: Execution Contracts
+description: ""
+---
+
 # Execution Contracts
 
 Skill contracts are defined by frontmatter + process sections in each `SKILL.md`.

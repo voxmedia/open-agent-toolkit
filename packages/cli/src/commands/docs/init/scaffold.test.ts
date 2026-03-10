@@ -7,6 +7,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { scaffoldDocsApp } from './scaffold';
 
 const MKDOCS_TEMPLATE_FILES: Record<string, string> = {
+  '.gitignore':
+    '# Dependencies\nnode_modules/\n\n# MkDocs build output\nsite/\n\n# Python virtual environment\n.venv/\n',
   'mkdocs.yml': 'site_name: {{SITE_NAME}}\n',
   'package.json.template': `{
   "name": "{{PACKAGE_NAME}}",
@@ -30,8 +32,12 @@ const MKDOCS_TEMPLATE_FILES: Record<string, string> = {
 };
 
 const FUMA_TEMPLATE_FILES: Record<string, string> = {
+  '.gitignore':
+    '# Dependencies\nnode_modules/\n\n# Next.js build output\n.next/\nout/\n\n# fumadocs-mdx generated source\n.source/\n\n# Next.js generated types\nnext-env.d.ts\n',
   'next.config.js':
     "import { createDocsConfig } from '@oat/docs-config';\nexport default createDocsConfig({ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' });\n",
+  'postcss.config.mjs':
+    "const config = {\n  plugins: {\n    '@tailwindcss/postcss': {},\n  },\n};\n\nexport default config;\n",
   'source.config.ts':
     "import { defineConfig } from 'fumadocs-mdx/config';\nexport default defineConfig({});\n",
   'tsconfig.json': '{ "extends": "next/core-js" }\n',
@@ -39,9 +45,9 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
   "name": "{{PACKAGE_NAME}}",
   "description": "{{SITE_DESCRIPTION}}",
   "scripts": {
-    "predev": "npx oat docs generate-index",
+    "predev": "pnpm -w run cli -- docs generate-index --docs-dir {{APP_DIR}}/docs --output {{APP_DIR}}/index.md",
     "dev": "next dev",
-    "prebuild": "npx oat docs generate-index",
+    "prebuild": "pnpm -w run cli -- docs generate-index --docs-dir {{APP_DIR}}/docs --output {{APP_DIR}}/index.md",
     "build": "next build",
     "docs:lint": "{{DOCS_LINT_SCRIPT}}",
     "docs:format": "{{DOCS_FORMAT_SCRIPT}}",
@@ -53,10 +59,12 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
 }
 `,
   'lib/source.ts': 'export const source = {};\n',
+  'app/globals.css':
+    "@import 'tailwindcss';\n@import 'fumadocs-ui/css/black.css';\n@import 'fumadocs-ui/css/preset.css';\n\n@source '../node_modules/fumadocs-ui/dist/**/*.js';\n",
   'app/layout.tsx':
     "import { DocsLayout } from '@oat/docs-theme';\nexport default function Layout({ children }) { return <DocsLayout branding={{ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' }} tree={{}}>{children}</DocsLayout>; }\n",
   'app/[[...slug]]/page.tsx':
-    "import { Mermaid } from '@oat/docs-theme';\nexport default function Page() { return <div />; }\n",
+    "import { DocsPage, Mermaid, Tab, Tabs } from '@oat/docs-theme';\nimport defaultComponents from 'fumadocs-ui/mdx';\nexport default function Page() { return <div />; }\n",
   'app/api/search/route.ts':
     "import { createFromSource } from 'fumadocs-core/search/server';\nimport { source } from '@/lib/source';\nconst search = createFromSource(source);\nexport const revalidate = false;\nexport const { staticGET: GET } = search;\n",
   'docs/index.md': '# {{SITE_NAME}}\n\n{{SITE_DESCRIPTION}}\n',
@@ -224,10 +232,8 @@ describe('scaffoldDocsApp', () => {
       devDependencies: Record<string, string>;
     };
     expect(packageJson.description).toBe('Project documentation site');
-    expect(packageJson.scripts['predev']).toContain('oat docs generate-index');
-    expect(packageJson.scripts['prebuild']).toContain(
-      'oat docs generate-index',
-    );
+    expect(packageJson.scripts['predev']).toContain('docs generate-index');
+    expect(packageJson.scripts['prebuild']).toContain('docs generate-index');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
     expect(packageJson.devDependencies['prettier']).toBeUndefined();
 

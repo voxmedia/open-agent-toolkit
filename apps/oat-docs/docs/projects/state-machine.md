@@ -1,3 +1,8 @@
+---
+title: State Machine
+description: ""
+---
+
 # State Machine
 
 ## Lifecycle progression

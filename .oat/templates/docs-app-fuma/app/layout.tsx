@@ -1,15 +1,15 @@
 import { DocsLayout } from '@oat/docs-theme';
-import { RootProvider } from 'fumadocs-ui/provider';
+import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { ReactNode } from 'react';
 
-import 'fumadocs-ui/style.css';
+import './globals.css';
 import { source } from '@/lib/source';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang='en' suppressHydrationWarning>
       <body>
-        <RootProvider>
+        <RootProvider search={{ options: { type: 'static' as const } }}>
           <DocsLayout
             branding={{
               title: '{{SITE_NAME}}',

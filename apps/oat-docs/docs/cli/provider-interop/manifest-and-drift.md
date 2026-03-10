@@ -1,3 +1,8 @@
+---
+title: Manifest and Drift
+description: ""
+---
+
 # Manifest and Drift
 
 ## Manifest locations

@@ -1,3 +1,8 @@
+---
+title: Troubleshooting
+description: ""
+---
+
 # Troubleshooting
 
 ## Skills not visible in host UI

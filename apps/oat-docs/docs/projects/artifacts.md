@@ -1,3 +1,8 @@
+---
+title: Project Artifacts
+description: ""
+---
+
 # Project Artifacts
 
 Project artifacts live under `.oat/projects/<scope>/<project>/`.

@@ -1,3 +1,8 @@
+---
+title: Skills Index
+description: ""
+---
+
 # Skills Index
 
 Project skills are stored in `.agents/skills`.

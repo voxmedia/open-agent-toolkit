@@ -1,3 +1,8 @@
+---
+title: ".oat Directory Structure"
+description: ""
+---
+
 # `.oat` Directory Structure
 
 This document is the canonical reference for what lives under `.oat/`, what each file or directory does, and which parts are source-of-truth vs generated runtime state.

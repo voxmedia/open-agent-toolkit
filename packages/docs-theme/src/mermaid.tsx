@@ -52,7 +52,7 @@ export function Mermaid({ chart }: MermaidProps) {
     <div
       ref={containerRef}
       className='mermaid'
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: mermaid renders SVG from trusted chart definitions
+      // oxlint-disable-next-line react/no-danger -- mermaid renders SVG from trusted chart definitions
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );

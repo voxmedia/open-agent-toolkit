@@ -1,3 +1,8 @@
+---
+title: Docs Index Contract
+description: ""
+---
+
 # Docs Index Contract
 
 OAT docs navigation is generated from each directory `index.md`, not from hand-maintained `mkdocs.yml` trees.

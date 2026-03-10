@@ -12,6 +12,7 @@
     "clean": "turbo run clean",
     "cli": "tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts",
     "dev": "turbo run dev",
+    "dev:docs": "pnpm --filter oat-docs dev",
     "format": "turbo run format",
     "format:fix": "turbo run format:fix",
     "hooks:disable-all": "node tools/git-hooks/manage-hooks.js disable-all",

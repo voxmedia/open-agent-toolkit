@@ -1,3 +1,8 @@
+---
+title: CLI Design Principles
+description: ""
+---
+
 # CLI Design Principles
 
 This page captures cross-cutting design and implementation principles for OAT CLI features.

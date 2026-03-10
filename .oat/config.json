@@ -7,9 +7,10 @@
     "root": ".oat/projects/shared"
   },
   "documentation": {
-    "root": "apps/oat-docs/docs",
-    "tooling": "mkdocs",
-    "config": "apps/oat-docs/mkdocs.yml",
+    "root": "apps/oat-docs",
+    "tooling": "fumadocs",
+    "config": "apps/oat-docs/next.config.js",
+    "index": "apps/oat-docs/index.md",
     "requireForProjectCompletion": true
   },
   "localPaths": [

@@ -1,0 +1,8 @@
+# Dependencies
+node_modules/
+
+# MkDocs build output
+site/
+
+# Python virtual environment
+.venv/

@@ -1,3 +1,8 @@
+---
+title: Tool Packs and Installed Assets
+description: ""
+---
+
 # Tool Packs and Installed Assets
 
 This page covers CLI commands that manage bundled OAT tool packs and installed OAT skill/agent assets in canonical directories.

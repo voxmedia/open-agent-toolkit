@@ -1,3 +1,8 @@
+---
+title: Workflow Docs
+description: ""
+---
+
 # Workflow Docs
 
 This section documents the OAT workflow lifecycle and quality gates.

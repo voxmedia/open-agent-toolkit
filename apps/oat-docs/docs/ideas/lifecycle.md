@@ -1,3 +1,8 @@
+---
+title: Ideas Lifecycle
+description: ""
+---
+
 # Ideas Lifecycle
 
 The ideas lifecycle is intentionally lightweight compared to the project workflow.

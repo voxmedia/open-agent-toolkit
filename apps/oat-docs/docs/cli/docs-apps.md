@@ -1,3 +1,8 @@
+---
+title: Docs App Commands
+description: ""
+---
+
 # Docs App Commands
 
 OAT includes a dedicated docs command family for bootstrapping and maintaining

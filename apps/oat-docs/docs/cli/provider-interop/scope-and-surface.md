@@ -1,3 +1,8 @@
+---
+title: Provider Interop CLI Scope and Surface
+description: ""
+---
+
 # Provider Interop CLI Scope and Surface
 
 The provider interop CLI in `packages/cli` manages canonical agent assets under `.agents/` and reconciles provider-specific views.

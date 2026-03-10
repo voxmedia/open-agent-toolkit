@@ -1,3 +1,8 @@
+---
+title: Diagnostics
+description: ""
+---
+
 # Diagnostics
 
 This page covers cross-cutting CLI diagnostics that validate environment setup, canonical structures, and operational health.

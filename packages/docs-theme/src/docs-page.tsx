@@ -1,4 +1,4 @@
-import type { TableOfContents } from 'fumadocs-core/server';
+import type { TableOfContents } from 'fumadocs-core/toc';
 import { DocsBody, DocsPage as FumaDocsPage } from 'fumadocs-ui/page';
 import type { ReactNode } from 'react';
 

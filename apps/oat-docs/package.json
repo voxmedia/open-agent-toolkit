@@ -1,18 +1,37 @@
 {
   "name": "oat-docs",
   "version": "0.1.0",
-  "private": true,
-  "description": "MkDocs Material documentation for Open Agent Toolkit.",
-  "type": "module",
+  "description": "Documentation for Open Agent Toolkit",
   "scripts": {
-    "docs:dev": "mkdocs serve",
-    "docs:build": "mkdocs build",
-    "docs:setup": "sh ./setup-docs.sh",
-    "docs:lint": "echo 'docs lint disabled'",
-    "docs:format": "oxfmt 'docs/**/*.md'",
-    "docs:format:check": "oxfmt --check 'docs/**/*.md'"
+    "predev": "fumadocs-mdx && pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md",
+    "dev": "next dev",
+    "prebuild": "fumadocs-mdx && pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md",
+    "build": "next build",
+    "start": "next start",
+    "docs:lint": "markdownlint-cli2 'docs/**/*.md'",
+    "docs:format": "prettier --write 'docs/**/*.md'",
+    "docs:format:check": "prettier --check 'docs/**/*.md'"
+  },
+  "dependencies": {
+    "@oat/docs-config": "workspace:*",
+    "@oat/docs-theme": "workspace:*",
+    "@oat/docs-transforms": "workspace:*",
+    "fumadocs-core": "^16.6.13",
+    "fumadocs-mdx": "^14.2.9",
+    "fumadocs-ui": "^16.6.13",
+    "next": "^16.1.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "oxfmt": "^0.36.0"
+    "@oat/cli": "workspace:*",
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/mdx": "^2.0.13",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "markdownlint-cli2": "^0.13.0",
+    "prettier": "^3.4.2",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.8.3"
   }
 }

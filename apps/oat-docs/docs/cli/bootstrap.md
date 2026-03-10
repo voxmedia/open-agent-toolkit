@@ -1,3 +1,8 @@
+---
+title: CLI Bootstrap
+description: ""
+---
+
 # CLI Bootstrap
 
 This page covers foundational CLI setup commands that prepare OAT structures and configuration before provider sync or tool-pack workflows.

@@ -1,3 +1,8 @@
+---
+title: Add Docs to a New Repo
+description: ""
+---
+
 # Add Docs to a New Repo
 
 Use this path when you want to add an OAT-managed docs app and the docs

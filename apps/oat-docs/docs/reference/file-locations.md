@@ -1,3 +1,8 @@
+---
+title: File Locations
+description: ""
+---
+
 # File Locations
 
 For detailed `.oat/` tree semantics, see:

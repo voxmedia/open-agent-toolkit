@@ -1,11 +1,11 @@
-import { remarkMermaid, remarkTabs } from '@oat/docs-transforms';
+import { remarkLinks, remarkMermaid, remarkTabs } from '@oat/docs-transforms';
 import type { Root } from 'mdast';
 import { remarkAlert } from 'remark-github-blockquote-alert';
 import type { Plugin } from 'unified';
 
 import { createSearchConfig, type SearchConfig } from './search-config.js';
 
-// biome-ignore lint/suspicious/noExplicitAny: unified Plugin generics are covariant but typed invariantly
+// oxlint-disable-next-line typescript-eslint/no-explicit-any -- unified Plugin generics are covariant but typed invariantly
 type RemarkPlugin = Plugin<any[], Root>;
 
 export interface SourceConfigResult {
@@ -16,7 +16,7 @@ export interface SourceConfigResult {
 
 export function createSourceConfig(): SourceConfigResult {
   return {
-    remarkPlugins: [remarkTabs, remarkAlert, remarkMermaid],
+    remarkPlugins: [remarkLinks, remarkTabs, remarkAlert, remarkMermaid],
     contentDir: './docs',
     search: createSearchConfig(),
   };

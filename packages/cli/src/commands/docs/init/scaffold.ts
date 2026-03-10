@@ -18,6 +18,7 @@ interface TemplateFile {
 }
 
 const MKDOCS_TEMPLATE_FILES: TemplateFile[] = [
+  { source: '.gitignore', destination: '.gitignore' },
   { source: 'mkdocs.yml', destination: 'mkdocs.yml' },
   { source: 'package.json.template', destination: 'package.json' },
   { source: 'requirements.txt', destination: 'requirements.txt' },
@@ -34,13 +35,19 @@ const MKDOCS_TEMPLATE_FILES: TemplateFile[] = [
 ];
 
 const FUMA_TEMPLATE_FILES: TemplateFile[] = [
+  { source: '.gitignore', destination: '.gitignore' },
   { source: 'next.config.js', destination: 'next.config.js' },
+  { source: 'postcss.config.mjs', destination: 'postcss.config.mjs' },
   { source: 'source.config.ts', destination: 'source.config.ts' },
   { source: 'tsconfig.json', destination: 'tsconfig.json' },
   { source: 'package.json.template', destination: 'package.json' },
   {
     source: join('lib', 'source.ts'),
     destination: join('lib', 'source.ts'),
+  },
+  {
+    source: join('app', 'globals.css'),
+    destination: join('app', 'globals.css'),
   },
   {
     source: join('app', 'layout.tsx'),
@@ -155,6 +162,7 @@ function renderTemplate(
       options.format,
     ),
     '{{REPO_NAME}}': repoName,
+    '{{APP_DIR}}': options.targetDir,
   };
 
   return Object.entries(replacements).reduce(

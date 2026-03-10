@@ -1,3 +1,8 @@
+---
+title: Lifecycle
+description: ""
+---
+
 # Lifecycle
 
 This lifecycle is an optional OAT layer. Interop-only users can skip it.

@@ -1,3 +1,8 @@
+---
+title: Hooks and Safety
+description: ""
+---
+
 # Hooks and Safety
 
 ## Optional pre-commit drift warning hook

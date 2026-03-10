@@ -1,3 +1,8 @@
+---
+title: Local Path Management
+description: ""
+---
+
 # Local Path Management
 
 The `oat local` command group manages **local-only paths** — directories that are gitignored but need to be copied between the main repo and worktrees.

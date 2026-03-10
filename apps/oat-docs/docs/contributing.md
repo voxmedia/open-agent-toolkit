@@ -1,3 +1,8 @@
+---
+title: Contributing to OAT Docs
+description: ""
+---
+
 # Contributing to OAT Docs
 
 Documentation should ship with the code it explains. This docs app is scaffolded to give contributors and agents a shared contract for navigation, Markdown features, and local tooling.
@@ -7,114 +12,136 @@ Documentation should ship with the code it explains. This docs app is scaffolded
 - Every documentation directory must contain an `index.md`.
 - Each `index.md` must include a `## Contents` section.
 - The `## Contents` section is the machine-readable local map for sibling pages and child directories.
-- `overview.md` is deprecated. Replace it with `index.md` or a descriptive leaf page when the directory already has an `index.md`.
 
 ## Local workflow
 
-1. Install Python dependencies:
+1. Start the dev server from the repo root:
 
    ```bash
-   pnpm docs:setup
+   pnpm dev:docs
    ```
 
-2. Run the live preview:
+2. Run Markdown linting:
 
    ```bash
-   pnpm docs:dev
+   pnpm --filter oat-docs docs:lint
    ```
 
-3. Run Markdown formatting and linting as configured for this docs app.
+3. Run Markdown formatting:
 
-## Installed plugins
+   ```bash
+   pnpm --filter oat-docs docs:format
+   ```
 
-### `search`
+## Supported Markdown features
 
-Adds full-text search to the generated docs site so readers can discover content without browsing the full tree.
+### Frontmatter
 
-### `git-revision-date`
+Every page should have `title` and `description` fields in YAML frontmatter. The `title` is used for sidebar navigation and page headings.
 
-Shows file revision dates using Git history, which helps surface stale pages during maintenance reviews.
+**Syntax:**
 
-### `macros`
-
-Enables variable-style content reuse and small computed fragments inside MkDocs pages.
-
-### `glightbox`
-
-Adds lightbox behavior for linked images so diagrams and screenshots can be expanded in-place.
-
-### `callouts`
-
-Supports GitHub-style callout blocks in Markdown for note, warning, and tip content.
-
-## Enabled Markdown extensions
-
-### `admonition`
-
-Supports MkDocs callout syntax:
-
-```markdown
-!!! note
-Useful supporting context.
+```yaml
+---
+title: Page Title
+description: A short summary of the page.
+---
 ```
 
-### `attr_list`
+### Callouts
 
-Lets you attach attributes such as classes or IDs to Markdown elements.
+GitHub-style callout blocks are supported.
 
-### `md_in_html`
+**Syntax:**
 
-Allows Markdown content inside raw HTML blocks when layout needs extra structure.
+```text
+> [!NOTE]
+> Useful supporting context.
 
-### `nl2br`
+> [!WARNING]
+> Important caution for the reader.
+```
 
-Treats single newlines as line breaks in rendered output.
+**Rendered:**
 
-### `pymdownx.caret`, `pymdownx.mark`, `pymdownx.tilde`
+> [!NOTE]
+> Useful supporting context.
 
-Adds inline formatting helpers for insertions, highlights, and strikethrough-like syntax.
+> [!WARNING]
+> Important caution for the reader.
 
-### `pymdownx.details`
+### Mermaid diagrams
 
-Supports collapsible details blocks for optional reference content.
+Fenced code blocks with `mermaid` language are rendered as diagrams.
 
-### `pymdownx.emoji`
+**Syntax:**
 
-Enables emoji shortcodes and richer emoji rendering.
-
-### `pymdownx.inlinehilite`
-
-Adds inline code highlighting helpers for short syntax examples.
-
-### `pymdownx.highlight`
-
-Provides fenced code block highlighting.
-
-### `pymdownx.snippets`
-
-Supports file and snippet inclusion patterns for reusable documentation fragments.
-
-### `pymdownx.superfences`
-
-Extends fenced code support and enables custom fences such as Mermaid:
-
-````markdown
+````text
 ```mermaid
 flowchart LR
   A[Read index.md] --> B[Generate nav]
 ```
 ````
 
-### `pymdownx.tabbed`
+**Rendered:**
 
-Supports tabbed content blocks for related workflows or platform variants.
+```mermaid
+flowchart LR
+  A[Read index.md] --> B[Generate nav]
+```
 
-### `toc`
+### Tabs
 
-Adds table-of-contents anchors and permalinks for headings.
+Tab groups use MkDocs-style tab markers. Each `=== "Title"` followed by an indented code block creates a tab.
+
+**Syntax:**
+
+```text
+=== "pnpm"
+
+    pnpm install
+
+=== "npm"
+
+    npm install
+```
+
+**Rendered:**
+
+=== "pnpm"
+
+    pnpm install
+
+=== "npm"
+
+    npm install
+
+=== "yarn"
+
+    yarn install
+
+### Code blocks
+
+Standard fenced code blocks with syntax highlighting are supported for all common languages. Add a `title` to the meta string to display a filename header.
+
+**Syntax:**
+
+````text
+```typescript title="src/example.ts"
+const greeting = 'hello world';
+console.log(greeting);
+```
+````
+
+**Rendered:**
+
+```typescript title="src/example.ts"
+const greeting = 'hello world';
+console.log(greeting);
+```
 
 ## Agent guidance
 
 - Treat `index.md` plus its `## Contents` section as the local discovery source of truth.
 - Prefer linking to source files and commands explicitly when documenting behavior.
-- When adding a new plugin or extension, update this guide with what it does and how to use it.
+- Run `pnpm exec oat docs generate-index` to regenerate the docs surface index after adding or removing pages.

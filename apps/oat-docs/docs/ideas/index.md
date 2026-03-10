@@ -1,3 +1,8 @@
+---
+title: Ideas Workflow
+description: ""
+---
+
 # Ideas Workflow
 
 The Ideas workflow is a lightweight alternative to the Spec-Driven project lifecycle for personal brainstorming and idea capture. It provides a space to explore ideas conversationally with an agent before deciding whether to promote them to Spec-Driven projects.

@@ -1,3 +1,8 @@
+---
+title: Project Docs
+description: ""
+---
+
 # Project Docs
 
 This section defines OAT project artifact structure and lifecycle state handling.

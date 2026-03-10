@@ -40,6 +40,7 @@ yarn-error.log*
 .mcp.json
 
 .conductor
+.playwright-mcp/
 
 # Git worktrees (local dev only)
 .worktrees/
