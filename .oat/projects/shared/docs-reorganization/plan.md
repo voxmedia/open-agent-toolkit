@@ -93,6 +93,7 @@ docs/
 ### Task p01-t01: Scaffold New Directory Structure
 
 **Files:**
+
 - Create: `docs/guide/index.md` (placeholder)
 - Create: `docs/guide/provider-sync/` (directory)
 - Create: `docs/guide/documentation/` (directory)
@@ -121,6 +122,7 @@ git commit -m "docs(p01-t01): scaffold new audience-driven directory structure"
 ### Task p01-t02: Move Provider Interop Files to guide/provider-sync/
 
 **Files:**
+
 - Move: `docs/cli/provider-interop/index.md` → `docs/guide/provider-sync/index.md`
 - Move: `docs/cli/provider-interop/scope-and-surface.md` → `docs/guide/provider-sync/scope-and-surface.md`
 - Move: `docs/cli/provider-interop/commands.md` → `docs/guide/provider-sync/commands.md`
@@ -148,6 +150,7 @@ git commit -m "docs(p01-t02): elevate provider interop to guide/provider-sync"
 ### Task p01-t03: Move Workflow and Projects Files to guide/workflow/
 
 **Files:**
+
 - Move: `docs/workflow/lifecycle.md` → `docs/guide/workflow/lifecycle.md`
 - Move: `docs/workflow/hil-checkpoints.md` → `docs/guide/workflow/hil-checkpoints.md`
 - Move: `docs/workflow/reviews.md` → `docs/guide/workflow/reviews.md`
@@ -178,6 +181,7 @@ git commit -m "docs(p01-t03): merge workflow and projects into guide/workflow"
 ### Task p01-t04: Move Documentation Files to guide/documentation/
 
 **Files:**
+
 - Move: `docs/cli/docs-consumer-quickstart.md` → `docs/guide/documentation/quickstart.md`
 - Move: `docs/cli/docs-apps.md` → `docs/guide/documentation/commands.md`
 - Move: `docs/skills/docs-workflows.md` → `docs/guide/documentation/workflows.md`
@@ -197,6 +201,7 @@ git commit -m "docs(p01-t04): consolidate docs pages into guide/documentation"
 ### Task p01-t05: Move Remaining Files to New Locations
 
 **Files:**
+
 - Move: `docs/cli/bootstrap.md` → `docs/guide/getting-started.md`
 - Move: `docs/cli/tool-packs-and-assets.md` → `docs/guide/tool-packs.md`
 - Move: `docs/skills/index.md` → `docs/guide/skills/index.md`
@@ -236,6 +241,7 @@ Write all new and rewritten `index.md` files, the new `mkdocs.yml` nav, and any 
 ### Task p02-t01: Write Homepage (index.md)
 
 **Files:**
+
 - Modify: `docs/index.md`
 
 **Step 1: Rewrite**
@@ -261,6 +267,7 @@ git commit -m "docs(p02-t01): rewrite homepage for audience-driven nav"
 ### Task p02-t02: Write User Guide Index (guide/index.md)
 
 **Files:**
+
 - Modify: `docs/guide/index.md`
 
 **Step 1: Write**
@@ -278,11 +285,13 @@ git commit -m "docs(p02-t02): write user guide index page"
 ### Task p02-t03: Write Core Concepts Page (guide/concepts.md)
 
 **Files:**
+
 - Create: `docs/guide/concepts.md`
 
 **Step 1: Write**
 
 Synthesize the key mental model concepts from existing content (not net-new):
+
 - **Canonical assets and provider views** — what they are, how the source-of-truth works
 - **Sync and drift** — conceptual explanation of the sync model
 - **Scopes** — project vs. user
@@ -303,6 +312,7 @@ git commit -m "docs(p02-t03): add core concepts page"
 ### Task p02-t04: Write Contributing Section Index and Sub-Pages
 
 **Files:**
+
 - Modify: `docs/contributing/index.md`
 - Create: `docs/contributing/code.md`
 - Modify: `docs/contributing/documentation.md` (reframe, remove plugin inventory)
@@ -340,6 +350,7 @@ git commit -m "docs(p02-t04): write contributing section with sub-pages"
 ### Task p02-t05: Write CLI Reference Page (guide/cli-reference.md)
 
 **Files:**
+
 - Create: `docs/guide/cli-reference.md`
 
 **Step 1: Write**
@@ -359,6 +370,7 @@ git commit -m "docs(p02-t05): add lean CLI reference page"
 ### Task p02-t06: Write Section Index Pages
 
 **Files:**
+
 - Modify: `docs/guide/provider-sync/index.md` (reframe intro, update Contents links)
 - Modify: `docs/guide/workflow/index.md` (unified intro merging workflow + projects intros)
 - Modify: `docs/guide/documentation/index.md` (hub page linking the three docs sub-pages)
@@ -389,6 +401,7 @@ git commit -m "docs(p02-t06): write section index pages with Contents contract"
 ### Task p02-t07: Update mkdocs.yml Navigation
 
 **Files:**
+
 - Modify: `apps/oat-docs/mkdocs.yml`
 
 **Step 1: Write new nav**
@@ -464,11 +477,13 @@ Fix all internal links broken by file moves. Update the quickstart to trim workf
 ### Task p03-t01: Audit and Fix Cross-References
 
 **Files:**
+
 - Modify: all moved files that contain relative links to other docs pages
 
 **Step 1: Find broken links**
 
 Search all `.md` files under `docs/` for markdown links `](...)` and verify each target exists at the referenced path. Pay special attention to:
+
 - Relative links in moved files (paths changed)
 - Links from non-moved files pointing to old locations
 - `reference/` pages linking to content now in `contributing/`
@@ -492,6 +507,7 @@ git commit -m "docs(p03-t01): fix cross-references after file moves"
 ### Task p03-t02: Trim Quickstart Page
 
 **Files:**
+
 - Modify: `docs/quickstart.md`
 
 **Step 1: Trim**
@@ -512,6 +528,7 @@ git commit -m "docs(p03-t02): trim quickstart, link to workflow section for deta
 ### Task p03-t03: Add Audience Cross-Links
 
 **Files:**
+
 - Modify: `docs/guide/skills/index.md` — add "Want to create a skill? See [Writing Skills](../../contributing/skills.md)"
 - Modify: `docs/guide/provider-sync/index.md` — add link to `contributing/hooks-and-safety.md` for implementation-level safety details
 - Modify: `docs/contributing/documentation.md` — add link to `guide/documentation/index.md` for user-facing docs overview
@@ -536,6 +553,7 @@ Add Mermaid diagrams and tabbed content to key pages.
 ### Task p04-t01: Add Mermaid Diagrams
 
 **Files:**
+
 - Modify: `docs/guide/workflow/lifecycle.md` — workflow lifecycle flowchart
 - Modify: `docs/guide/workflow/state-machine.md` — state transition diagram
 - Modify: `docs/guide/provider-sync/index.md` — canonical → manifest → provider view sync flow
@@ -543,7 +561,7 @@ Add Mermaid diagrams and tabbed content to key pages.
 
 **Step 1: Write diagrams**
 
-For each page, add a Mermaid diagram using ```` ```mermaid ```` fencing. Diagrams should supplement, not replace, the existing prose.
+For each page, add a Mermaid diagram using ` ```mermaid ` fencing. Diagrams should supplement, not replace, the existing prose.
 
 - **Workflow lifecycle:** flowchart showing discovery → spec → design → plan → implement → review → PR → complete, with quick lane shortcut
 - **State machine:** stateDiagram-v2 showing project states and transitions
@@ -565,6 +583,7 @@ git commit -m "docs(p04-t01): add Mermaid diagrams for key flows"
 ### Task p04-t02: Add Tabbed Content
 
 **Files:**
+
 - Modify: `docs/guide/provider-sync/providers.md` — tab per provider
 - Modify: `docs/guide/skills/index.md` — tab per skill family
 - Modify: `docs/contributing/markdown-features.md` — tabbed examples showing syntax + rendered output
@@ -604,6 +623,7 @@ git commit -m "docs(p04-t02): add tabbed content for providers, skills, and mark
 ### Task p05-t01: Full Link Audit and Nav Sync
 
 **Files:**
+
 - Verify: all `docs/**/*.md` files
 - Verify: `apps/oat-docs/mkdocs.yml`
 
@@ -651,18 +671,20 @@ git commit -m "docs(p05-t02): fix build errors from strict mkdocs build"
 
 ## Reviews
 
-| Scope | Type | Status | Date | Artifact |
-|-------|------|--------|------|----------|
-| p01 | code | pending | - | - |
-| p02 | code | pending | - | - |
-| p03 | code | pending | - | - |
-| p04 | code | pending | - | - |
-| p05 | code | pending | - | - |
-| final | code | pending | - | - |
+| Scope | Type     | Status   | Date       | Artifact                                     |
+| ----- | -------- | -------- | ---------- | -------------------------------------------- |
+| plan  | artifact | received | 2026-03-10 | `reviews/artifact-plan-review-2026-03-10.md` |
+| p01   | code     | pending  | -          | -                                            |
+| p02   | code     | pending  | -          | -                                            |
+| p03   | code     | pending  | -          | -                                            |
+| p04   | code     | pending  | -          | -                                            |
+| p05   | code     | pending  | -          | -                                            |
+| final | code     | pending  | -          | -                                            |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 **Meaning:**
+
 - `received`: review artifact exists (not yet converted into fix tasks)
 - `fixes_added`: fix tasks were added to the plan (work queued)
 - `fixes_completed`: fix tasks implemented, awaiting re-review
@@ -673,6 +695,7 @@ git commit -m "docs(p05-t02): fix build errors from strict mkdocs build"
 ## Implementation Complete
 
 **Summary:**
+
 - Phase 1: 5 tasks - Directory structure and file moves
 - Phase 2: 7 tasks - Index pages, new pages, and navigation
 - Phase 3: 3 tasks - Cross-reference fixes and content trimming
