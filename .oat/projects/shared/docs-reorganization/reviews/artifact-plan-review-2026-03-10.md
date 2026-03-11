@@ -15,7 +15,7 @@ oat_project: /Users/thomas.stang/Code/open-agent-toolkit/.oat/projects/shared/do
 
 ## Summary
 
-The plan is directionally aligned with discovery, but it is not execution-ready as written. The main blocker is that it targets a MkDocs config/build workflow that does not exist in the current docs app, and a few move tasks leave required landing pages and legacy entry points undefined.
+The plan is directionally aligned with discovery, but it is not execution-ready as written. The main blocker is that it targets a MkDocs config/build workflow that does not exist in the current docs app, and a few move tasks leave required landing pages and old-path cleanup criteria undefined.
 
 ## Findings
 
@@ -35,9 +35,9 @@ The plan is directionally aligned with discovery, but it is not execution-ready 
   - Issue: `p01-t05` says to remove `docs/cli/` once empty, but there is no task to move, preserve, or rewrite `docs/cli/index.md`. `p02-t05` still depends on that file as the source for the new CLI reference (`plan.md:347`), so the old section cannot be cleanly retired as planned.
   - Fix: Add an explicit task for `docs/cli/index.md`: either keep it as a discoverability stub, move/rewrite it into the new structure, or mark it as the retained canonical source for CLI reference extraction.
 
-- **The plan removes old paths without implementing the discovery requirement for redirects/discoverability** (`plan.md:162`)
-  - Issue: Discovery requires existing URLs to have redirects or remain discoverable after the reorganization, but the plan removes `docs/workflow/`, `docs/projects/`, and `docs/cli/` without any task that defines or verifies that fallback behavior. That leaves a stated constraint unplanned and makes URL breakage likely.
-  - Fix: Add a dedicated task before old directories are removed to decide the redirect/discoverability mechanism for moved pages, implement it, and verify legacy entry points still resolve or are clearly discoverable.
+- **The plan removes old paths without explicit stale-link cleanup criteria** (`plan.md:162`)
+  - Issue: User clarification established that there is no live docs site yet, so redirects are not required. However, the plan still removes `docs/workflow/`, `docs/projects/`, and `docs/cli/` without a task that explicitly proves repo docs, nav, and code references no longer point to those old paths. A markdown link audit alone is too narrow unless the plan says old directories can be deleted only after broader stale-reference checks pass.
+  - Fix: Replace the redirect/discoverability expectation with a dedicated cleanup task or acceptance criteria before old directories are removed: update all internal references to moved pages, verify nav and generated docs inputs no longer point at removed paths, and confirm with repo-wide searches that no stale old-path references remain.
 
 ### Minor
 
@@ -45,19 +45,19 @@ None
 
 ## Requirements/Design Alignment
 
-**Evidence sources used:** `discovery.md`, `plan.md`, `implementation.md`
+**Evidence sources used:** `discovery.md`, `plan.md`, `implementation.md`, user clarification on 2026-03-11
 
 ### Requirements Coverage
 
-| Requirement                                                        | Status      | Notes                                                                                                                                     |
-| ------------------------------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Audience separation into User Guide and Developer Guide            | implemented | Reflected in target structure and phase breakdown.                                                                                        |
-| Provider Interop elevation to a top-level user-facing section      | implemented | Covered by `p01-t02` and related index/nav tasks.                                                                                         |
-| Workflow + Projects merge                                          | implemented | Covered by `p01-t03` and `p02-t06`.                                                                                                       |
-| Contributing decomposition into focused sub-pages                  | implemented | Covered by `p02-t04`.                                                                                                                     |
-| No content deletion during reorganization                          | partial     | Legacy entry-point handling is incomplete because `docs/cli/index.md` and old-path discoverability are not planned cleanly.               |
-| Existing URLs/anchors should have redirects or remain discoverable | missing     | No task defines the mechanism before old directories are removed.                                                                         |
-| Maintain docs index contract / generated nav workflow              | partial     | Index-page work is present, but the plan incorrectly switches to manual `mkdocs.yml` authoring instead of the documented generation flow. |
+| Requirement                                                        | Status      | Notes                                                                                                                                                              |
+| ------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Audience separation into User Guide and Developer Guide            | implemented | Reflected in target structure and phase breakdown.                                                                                                                 |
+| Provider Interop elevation to a top-level user-facing section      | implemented | Covered by `p01-t02` and related index/nav tasks.                                                                                                                  |
+| Workflow + Projects merge                                          | implemented | Covered by `p01-t03` and `p02-t06`.                                                                                                                                |
+| Contributing decomposition into focused sub-pages                  | implemented | Covered by `p02-t04`.                                                                                                                                              |
+| No content deletion during reorganization                          | partial     | Legacy entry-point handling is incomplete because `docs/cli/index.md` and old-path cleanup/removal criteria are not planned cleanly.                               |
+| Existing URLs/anchors should have redirects or remain discoverable | partial     | User clarified there is no live docs site, so redirects are not required now. The plan still needs explicit stale-link cleanup before old directories are removed. |
+| Maintain docs index contract / generated nav workflow              | partial     | Index-page work is present, but the plan incorrectly switches to manual `mkdocs.yml` authoring instead of the documented generation flow.                          |
 
 ### Extra Work (not in declared requirements)
 
