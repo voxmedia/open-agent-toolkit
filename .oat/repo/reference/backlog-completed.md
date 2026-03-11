@@ -37,6 +37,18 @@ Historical record of completed backlog items moved out of the active backlog for
   - Links:
     - Tools init: `packages/cli/src/commands/init/tools/index.ts`
     - Tests: `packages/cli/src/commands/init/tools/index.test.ts`
+
+- [x] **(P1) [tooling] Add timestamp frontmatter to project state documents**
+  - Outcome:
+    - Added three ISO 8601 UTC timestamp fields to `state.md` template: `oat_project_created`, `oat_project_completed`, `oat_project_state_updated`.
+    - CLI scaffolder (`scaffold.ts`) sets `oat_project_created` and `oat_project_state_updated` at project creation time.
+    - Updated 14 skills across all state.md write points to maintain `oat_project_state_updated` on every mutation.
+    - `oat-project-complete` sets both `oat_project_completed` and `oat_project_state_updated` via shell script.
+    - Existing projects without timestamps continue to work (fields default to `null`).
+  - Links:
+    - Templates: `.oat/templates/state.md`, `packages/cli/assets/templates/state.md`
+    - Scaffolder: `packages/cli/src/commands/project/new/scaffold.ts`
+    - Test: `packages/cli/src/commands/project/new/scaffold.test.ts`
   - Created: 2026-03-08
   - Completed: 2026-03-10
 

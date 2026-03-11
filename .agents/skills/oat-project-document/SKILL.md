@@ -343,7 +343,7 @@ Approve recommendations?
 
 - **Yes:** mark all recommendations as approved
 - **Individual:** present each recommendation one at a time with approve/reject
-- **Skip:** set `oat_docs_updated: skipped` in `$PROJECT_PATH/state.md` frontmatter, commit the state change, and exit without applying documentation changes
+- **Skip:** set `oat_docs_updated: skipped` and `oat_project_state_updated: "{ISO 8601 UTC timestamp}"` in `$PROJECT_PATH/state.md` frontmatter, commit the state change, and exit without applying documentation changes
 
 Track which recommendations were approved for Step 6.
 
@@ -397,8 +397,8 @@ Only stage files that were actually changed or created in Step 6. Do not use `gi
 
 Update `$PROJECT_PATH/state.md` frontmatter based on apply outcome:
 
-- If `$ALL_SUCCEEDED` is true: set `oat_docs_updated: complete`
-- If `$ALL_SUCCEEDED` is false: do **not** set `oat_docs_updated: complete` — leave the field as `null` so the skill can be re-run. Surface the failures clearly in the summary report (Step 7d) so the user knows which updates failed and why.
+- If `$ALL_SUCCEEDED` is true: set `oat_docs_updated: complete` and `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+- If `$ALL_SUCCEEDED` is false: do **not** set `oat_docs_updated: complete` — leave the field as `null` so the skill can be re-run. Still set `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`. Surface the failures clearly in the summary report (Step 7d) so the user knows which updates failed and why.
 
 ```bash
 git add "$PROJECT_PATH/state.md"

@@ -128,6 +128,7 @@ If user requests regeneration:
 Update `"$PROJECT_PATH/state.md"` frontmatter:
 
 - `oat_workflow_mode: spec-driven`
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - keep `oat_workflow_origin` as-is (`native` or `imported`)
 - align `oat_phase` and `oat_phase_status` with current actual progress
 

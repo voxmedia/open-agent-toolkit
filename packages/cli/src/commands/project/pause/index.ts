@@ -121,10 +121,17 @@ async function runProjectPause(
       'paused',
       true,
     ).nextBlock;
+    const nowIso = dependencies.now().toISOString();
     nextBlock = upsertFrontmatterField(
       nextBlock,
       'oat_pause_timestamp',
-      dependencies.now().toISOString(),
+      nowIso,
+      true,
+    ).nextBlock;
+    nextBlock = upsertFrontmatterField(
+      nextBlock,
+      'oat_project_state_updated',
+      nowIso,
       true,
     ).nextBlock;
 

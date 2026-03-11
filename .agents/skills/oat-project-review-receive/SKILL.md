@@ -365,6 +365,7 @@ After the fix tasks are complete:
     - `oat_phase: implement`
     - `oat_phase_status: in_progress`
     - `oat_current_task: {first_fix_task_id}` (or next incomplete)
+    - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
 ### Step 8: Check Review Cycle Count
 
@@ -479,7 +480,7 @@ Choose:
 
 **If execute now:**
 
-- Update state.md: `oat_phase_status: in_progress`
+- Update state.md: `oat_phase_status: in_progress`, `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - Tell user: "Run the `oat-project-implement` skill to execute fix tasks starting from {first_fix_task_id}"
 - Or directly invoke `oat-project-implement` if environment supports skill chaining
 

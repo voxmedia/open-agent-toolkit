@@ -141,10 +141,11 @@ fi
 
 ### Step 5: Set Lifecycle Complete
 
-Update state.md frontmatter to add/update `oat_lifecycle: complete`:
+Update state.md frontmatter to add/update `oat_lifecycle: complete` and set completion timestamp:
 
 ```bash
 STATE_FILE="${PROJECT_PATH}/state.md"
+NOW_UTC=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Check if oat_lifecycle already exists
 if grep -q "^oat_lifecycle:" "$STATE_FILE"; then
@@ -156,6 +157,12 @@ else
   awk '/^oat_phase_status:/ {print; print "oat_lifecycle: complete"; next} 1' "$STATE_FILE" > "$STATE_FILE.tmp"
   mv "$STATE_FILE.tmp" "$STATE_FILE"
 fi
+
+# Set completion and state-updated timestamps
+sed -E "s/^oat_project_completed:.*/oat_project_completed: \"$NOW_UTC\"/" "$STATE_FILE" > "$STATE_FILE.tmp"
+mv "$STATE_FILE.tmp" "$STATE_FILE"
+sed -E "s/^oat_project_state_updated:.*/oat_project_state_updated: \"$NOW_UTC\"/" "$STATE_FILE" > "$STATE_FILE.tmp"
+mv "$STATE_FILE.tmp" "$STATE_FILE"
 ```
 
 ### Step 6: Offer Archive for Shared Projects

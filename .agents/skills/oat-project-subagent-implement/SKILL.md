@@ -120,6 +120,7 @@ Resolve active project via `oat config get activeProject` (stored in `.oat/confi
 Persist required runtime defaults in `state.md` frontmatter:
 
 - `oat_execution_mode: subagent-driven`
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - Write orchestration defaults only when keys are missing (never overwrite existing values):
   - `oat_orchestration_merge_strategy: merge`
   - `oat_orchestration_retry_limit: 2`
@@ -366,6 +367,7 @@ If integration verification fails after a merge:
 
 - Advance `oat_current_task` to the next unprocessed task.
 - Update `oat_last_commit` to the final merge commit.
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
 **HiLL checkpoint pause:**
 

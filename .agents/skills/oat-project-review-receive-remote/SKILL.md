@@ -188,6 +188,7 @@ Update `state.md`:
 - `oat_phase: implement`
 - `oat_phase_status: in_progress`
 - `oat_current_task: <first-new-task-id|null>`
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
 ### Step 7: Enforce Review Cycle Limit and Route Next Action
 

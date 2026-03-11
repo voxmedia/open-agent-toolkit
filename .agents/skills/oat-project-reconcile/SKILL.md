@@ -632,6 +632,7 @@ oat_current_task: { same as oat_current_task_id above }
 oat_last_commit: { most recent reconciled commit SHA }
 oat_phase: implement
 oat_phase_status: in_progress
+oat_project_state_updated: '{ISO 8601 UTC timestamp}'
 # Always in_progress after reconciliation — only oat-project-review-receive
 # may advance to complete after the final review passes.
 ```

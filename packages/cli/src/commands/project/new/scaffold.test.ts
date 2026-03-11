@@ -420,6 +420,49 @@ describe('scaffoldProject', () => {
     expect(refreshDashboard).toHaveBeenCalledWith(repoRoot);
   });
 
+  it('sets oat_project_created and oat_project_state_updated timestamps on scaffolded state.md', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+
+    // Overwrite state.md template with timestamp fields
+    await writeFile(
+      join(repoRoot, '.oat', 'templates', 'state.md'),
+      [
+        '---',
+        'oat_template: true',
+        'oat_template_name: state',
+        'oat_project_created: null',
+        'oat_project_completed: null',
+        'oat_project_state_updated: null',
+        '---',
+        '',
+        '# {Project Name} state.md',
+        'Date: YYYY-MM-DD',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await scaffoldProject({
+      repoRoot,
+      projectName: 'ts-demo',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-03-10',
+      nowUtc: '2026-03-10T12:00:00.000Z',
+    });
+
+    const state = await readFile(
+      join(repoRoot, '.oat', 'projects', 'shared', 'ts-demo', 'state.md'),
+      'utf8',
+    );
+    expect(state).toContain('oat_project_created: "2026-03-10T12:00:00.000Z"');
+    expect(state).toContain(
+      'oat_project_state_updated: "2026-03-10T12:00:00.000Z"',
+    );
+    expect(state).toContain('oat_project_completed: null');
+    expect(state).not.toContain('oat_template');
+  });
+
   it('keeps the repo discovery template workflow-safe for quick projects', async () => {
     const repoRoot = join(process.cwd(), '..', '..');
     const discoveryTemplate = await readFile(

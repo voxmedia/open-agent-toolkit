@@ -27,6 +27,7 @@ interface SetModeDependencies {
   resolveProjectRoot: (cwd: string) => Promise<string>;
   readFile: typeof defaultReadFile;
   writeFile: typeof defaultWriteFile;
+  now: () => Date;
 }
 
 const ORCHESTRATION_DEFAULTS = [
@@ -41,6 +42,7 @@ const DEFAULT_DEPENDENCIES: SetModeDependencies = {
   resolveProjectRoot,
   readFile: defaultReadFile,
   writeFile: defaultWriteFile,
+  now: () => new Date(),
 };
 
 function isExecutionMode(value: string): value is ExecutionMode {
@@ -113,6 +115,13 @@ async function runSetMode(
         }
       }
     }
+
+    currentBlock = upsertFrontmatterField(
+      currentBlock,
+      'oat_project_state_updated',
+      dependencies.now().toISOString(),
+      true,
+    ).nextBlock;
 
     const updatedState = replaceFrontmatter(stateContent, currentBlock);
     await dependencies.writeFile(statePath, updatedState, 'utf8');

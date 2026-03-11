@@ -57,6 +57,7 @@ interface ProjectOpenDependencies {
   dirExists: typeof dirExists;
   fileExists: typeof fileExists;
   processEnv: NodeJS.ProcessEnv;
+  now: () => Date;
 }
 
 const DEFAULT_DEPENDENCIES: ProjectOpenDependencies = {
@@ -72,6 +73,7 @@ const DEFAULT_DEPENDENCIES: ProjectOpenDependencies = {
   dirExists,
   fileExists,
   processEnv: process.env,
+  now: () => new Date(),
 };
 
 async function maybeResumePausedProject(
@@ -96,6 +98,12 @@ async function maybeResumePausedProject(
   ).nextBlock;
   nextBlock = removeFrontmatterField(nextBlock, 'oat_pause_timestamp');
   nextBlock = removeFrontmatterField(nextBlock, 'oat_pause_reason');
+  nextBlock = upsertFrontmatterField(
+    nextBlock,
+    'oat_project_state_updated',
+    dependencies.now().toISOString(),
+    true,
+  ).nextBlock;
 
   if (nextBlock !== frontmatter) {
     await dependencies.writeFile(

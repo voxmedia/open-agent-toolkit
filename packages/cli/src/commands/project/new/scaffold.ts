@@ -17,6 +17,7 @@ export interface ScaffoldProjectOptions {
   refreshDashboard?: boolean;
   env?: NodeJS.ProcessEnv;
   today?: string;
+  nowUtc?: string;
   refreshDashboardCallback?: (repoRoot: string) => void | Promise<void>;
 }
 
@@ -60,10 +61,19 @@ function applyTemplateReplacements(
   template: string,
   projectName: string,
   today: string,
+  nowUtc: string,
 ): string {
   return template
     .replaceAll('{Project Name}', projectName)
     .replaceAll('YYYY-MM-DD', today)
+    .replaceAll(
+      /oat_project_created:\s*null/gi,
+      `oat_project_created: "${nowUtc}"`,
+    )
+    .replaceAll(
+      /oat_project_state_updated:\s*null/gi,
+      `oat_project_state_updated: "${nowUtc}"`,
+    )
     .replaceAll(/\n?oat_template:\s*true\s*\n/gi, '\n')
     .replaceAll(/\n?oat_template_name:\s*[^\n]*\n/gi, '\n');
 }
@@ -78,6 +88,7 @@ async function scaffoldModeTemplates(
   projectName: string,
   mode: ProjectScaffoldMode,
   today: string,
+  nowUtc: string,
 ): Promise<{ createdFiles: string[]; skippedFiles: string[] }> {
   const templatesDir = join(repoRoot, '.oat', 'templates');
   const createdFiles: string[] = [];
@@ -93,7 +104,12 @@ async function scaffoldModeTemplates(
     }
 
     const template = await readFile(src, 'utf8');
-    const rendered = applyTemplateReplacements(template, projectName, today);
+    const rendered = applyTemplateReplacements(
+      template,
+      projectName,
+      today,
+      nowUtc,
+    );
     await writeFile(dest, rendered, 'utf8');
     createdFiles.push(templateFile);
   }
@@ -128,7 +144,9 @@ export async function scaffoldProject(
   const setActive = options.setActive ?? true;
   const refreshDashboard = options.refreshDashboard ?? true;
   const env = options.env ?? process.env;
-  const today = options.today ?? new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = options.today ?? now.toISOString().slice(0, 10);
+  const nowUtc = options.nowUtc ?? now.toISOString();
 
   validateProjectName(options.projectName);
   const projectsRoot = await resolveProjectsRoot(options.repoRoot, env);
@@ -144,6 +162,7 @@ export async function scaffoldProject(
     options.projectName,
     mode,
     today,
+    nowUtc,
   );
 
   if (setActive) {

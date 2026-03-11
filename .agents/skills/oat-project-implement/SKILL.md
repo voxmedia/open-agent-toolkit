@@ -208,6 +208,7 @@ Initialize project state so other skills (e.g., `oat-project-progress`) reflect 
   - `oat_phase: implement`
   - `oat_phase_status: in_progress`
   - `oat_current_task: p01-t01`
+  - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
 ### Step 5: Execute Current Task
 
@@ -297,6 +298,7 @@ Keep project state in sync after each task (recommended source of truth for “w
   - `oat_phase_status: in_progress`
   - `oat_current_task: {next_task_id}`
   - `oat_last_commit: {sha}`
+  - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
 **Bookkeeping commit (required):**
 After the code commit (Step 6) and state updates above, commit all modified OAT tracking files:
@@ -333,6 +335,7 @@ Do not use `git add -A` or glob patterns. Only commit the three OAT project file
      - `oat_phase: implement`
      - `oat_phase_status: in_progress` (until the re-review passes)
      - `oat_current_task: null`
+     - `oat_project_state_updated: “{ISO 8601 UTC timestamp}”`
 
   **Bookkeeping commit (required):**
   After completing the review-fix checklist above, commit all modified OAT tracking files:
@@ -481,6 +484,7 @@ Update `"$PROJECT_PATH/state.md"` so other skills reflect task completion and re
 - `oat_blockers: []`
 - `oat_phase: implement`
 - `oat_phase_status: in_progress` (until final review passes)
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - **If** `"implement"` is in `oat_hill_checkpoints`: append `"implement"` to `oat_hill_completed` array
 
 **Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
@@ -583,6 +587,7 @@ To run in a separate session use: oat-project-review-provide code final
 - Update `"$PROJECT_PATH/state.md"` frontmatter:
   - `oat_phase: implement`
   - `oat_phase_status: complete`
+  - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
   - Append `"implement"` to `oat_hill_completed` (only if configured as a HiLL gate)
 - Update state content to “Implementation complete”.
 - Update `"$PROJECT_PATH/plan.md"`:

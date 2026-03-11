@@ -412,6 +412,7 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_blockers: []`
 - `oat_phase: spec`
 - `oat_phase_status: complete`
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - **If** `"spec"` is in `oat_hill_checkpoints`: append `"spec"` to `oat_hill_completed` array
 
 **Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.

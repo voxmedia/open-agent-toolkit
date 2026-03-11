@@ -172,6 +172,7 @@ Set `"$PROJECT_PATH/state.md"` frontmatter:
 - `oat_phase: plan`
 - `oat_phase_status: complete`
 - `oat_current_task: null`
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp, e.g. 2026-03-10T14:30:00Z}"`
 
 ### Step 5.5: Ensure Active Project Pointer
 

@@ -303,6 +303,7 @@ Required update:
 
 - In the `## Next Milestone` section, set:
   - `Run \`oat-project-complete\`.`
+- Update frontmatter: `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
 If `state.md` is missing, skip with a warning.
 
