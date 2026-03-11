@@ -322,16 +322,16 @@ export async function runInitTools(
       const resolvedRoot =
         workflowsResult.resolvedProjectsRoot || '.oat/projects/shared';
       const projectsBase = resolvedRoot.replace(/\/[^/]+$/, '');
-      const PR_REVIEW_LOCAL_PATHS = [
+      const PR_ARCHIVE_LOCAL_PATHS = [
         `${projectsBase}/**/pr`,
-        `${projectsBase}/**/reviews`,
+        `${projectsBase}/**/reviews/archived`,
       ];
 
       const existingConfig = await dependencies.readOatConfig(projectRoot);
       const existingLocalPaths = new Set(
         dependencies.resolveLocalPaths(existingConfig),
       );
-      const alreadyConfigured = PR_REVIEW_LOCAL_PATHS.every((p) =>
+      const alreadyConfigured = PR_ARCHIVE_LOCAL_PATHS.every((p) =>
         existingLocalPaths.has(p),
       );
 
@@ -339,19 +339,19 @@ export async function runInitTools(
         let makeLocal = true;
         if (context.interactive) {
           const selected = await dependencies.selectWithAbort(
-            'Should PR and review directories for shared projects be local-only (gitignored) or version-controlled?',
+            'Should shared-project PR directories and archived review history be local-only (gitignored) or version-controlled?',
             [
               {
                 label: 'Local only (recommended)',
                 value: 'local',
                 description:
-                  'PR and review artifacts stay local, synced via oat local sync',
+                  'PR artifacts and archived reviews stay local; active reviews remain tracked until received',
               },
               {
                 label: 'Version controlled',
                 value: 'tracked',
                 description:
-                  'PR and review artifacts are committed to the repo',
+                  'PR artifacts and archived reviews are committed to the repo too',
               },
             ],
             { interactive: context.interactive },
@@ -362,7 +362,7 @@ export async function runInitTools(
         if (makeLocal) {
           const addResult = await dependencies.addLocalPaths(
             projectRoot,
-            PR_REVIEW_LOCAL_PATHS,
+            PR_ARCHIVE_LOCAL_PATHS,
           );
           if (addResult.added.length > 0) {
             const config = await dependencies.readOatConfig(projectRoot);

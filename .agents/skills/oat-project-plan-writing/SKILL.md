@@ -32,11 +32,17 @@ Every `plan.md` produced or edited by any OAT skill **must** satisfy these invar
 ```yaml
 ---
 oat_plan_source: spec-driven | quick | imported # origin workflow mode
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
 oat_status: in_progress | complete # plan lifecycle status
 oat_ready_for: null | oat-project-implement # downstream consumer
+# Optional after implementation confirmation:
+# oat_plan_hill_phases: [] | ["p02"] # phases to pause AFTER completing ([] = every phase)
 ---
 ```
+
+Planning-time default:
+
+- Plan-producing skills should leave `oat_plan_hill_phases` unset during planning/import unless a user explicitly provided a confirmed value in the source artifact.
+- The actual checkpoint choice is confirmed when `oat-project-implement` starts execution and then written into `plan.md`.
 
 Runtime routing note:
 

@@ -56,25 +56,45 @@ describe('oat local status', () => {
     ]);
   });
 
-  it('should detect gitignored status for glob-expanded paths', async () => {
+  it('should detect gitignored status for archived review paths while active reviews remain tracked', async () => {
     const repoRoot = await createRepoRoot();
     await mkdir(
-      join(repoRoot, '.oat', 'projects', 'shared', 'alpha', 'reviews'),
+      join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'shared',
+        'alpha',
+        'reviews',
+        'archived',
+      ),
       { recursive: true },
     );
     await mkdir(
-      join(repoRoot, '.oat', 'projects', 'shared', 'beta', 'reviews'),
+      join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'shared',
+        'beta',
+        'reviews',
+        'archived',
+      ),
+      { recursive: true },
+    );
+    await mkdir(
+      join(repoRoot, '.oat', 'projects', 'shared', 'alpha', 'reviews'),
       { recursive: true },
     );
     // .gitignore has the raw glob pattern (as applyGitignore writes it)
     await writeFile(
       join(repoRoot, '.gitignore'),
-      '.oat/projects/**/reviews/\n',
+      '.oat/projects/**/reviews/archived/\n',
       'utf8',
     );
 
     const results = await checkLocalPathsStatus(repoRoot, [
-      '.oat/projects/**/reviews',
+      '.oat/projects/**/reviews/archived',
     ]);
 
     // Should expand glob and report each match as gitignored
@@ -82,17 +102,54 @@ describe('oat local status', () => {
     expect(results).toEqual(
       expect.arrayContaining([
         {
-          path: '.oat/projects/shared/alpha/reviews',
+          path: '.oat/projects/shared/alpha/reviews/archived',
           exists: true,
           gitignored: true,
         },
         {
-          path: '.oat/projects/shared/beta/reviews',
+          path: '.oat/projects/shared/beta/reviews/archived',
           exists: true,
           gitignored: true,
         },
       ]),
     );
+  });
+
+  it('should report active review directories as tracked when only archived subdirectories are gitignored', async () => {
+    const repoRoot = await createRepoRoot();
+    await mkdir(
+      join(repoRoot, '.oat', 'projects', 'shared', 'alpha', 'reviews'),
+      { recursive: true },
+    );
+    await mkdir(
+      join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'shared',
+        'alpha',
+        'reviews',
+        'archived',
+      ),
+      { recursive: true },
+    );
+    await writeFile(
+      join(repoRoot, '.gitignore'),
+      '.oat/projects/**/reviews/archived/\n',
+      'utf8',
+    );
+
+    const results = await checkLocalPathsStatus(repoRoot, [
+      '.oat/projects/shared/alpha/reviews',
+    ]);
+
+    expect(results).toEqual([
+      {
+        path: '.oat/projects/shared/alpha/reviews',
+        exists: true,
+        gitignored: false,
+      },
+    ]);
   });
 
   it('should return empty array for no localPaths', async () => {

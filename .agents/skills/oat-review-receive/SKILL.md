@@ -97,19 +97,25 @@ ID conventions:
 
 ## Process
 
-### Step 1: Locate Review Artifact
+### Step 1: Locate Active Review Artifact
 
 Artifact source priority:
 
 1. Explicit path from `$ARGUMENTS`
-2. Most recent file under `.oat/repo/reviews/`
-3. Most recent file under `.oat/projects/local/orphan-reviews/`
+2. Most recent top-level file under `.oat/repo/reviews/`
+3. Most recent top-level file under `.oat/projects/local/orphan-reviews/`
 
 Discovery command example:
 
 ```bash
 ls -t .oat/repo/reviews/*.md .oat/projects/local/orphan-reviews/*.md 2>/dev/null | head -20
 ```
+
+Selection rules:
+
+- Ignore `.oat/repo/reviews/archived/` and `.oat/projects/local/orphan-reviews/archived/`.
+- Treat archived review artifacts as history; do not re-triage them by default.
+- If an explicit path points into an `archived/` directory, stop and ask for an active review artifact instead.
 
 If multiple candidates are plausible, present a numbered list and ask the user to pick one.
 
@@ -198,11 +204,25 @@ Output modes:
 
 Also output deferred and dismissed findings with reasons.
 
+### Step 6: Archive the Consumed Review Artifact
+
+After triage is complete, move the processed review artifact into a sibling `archived/` directory and report the archived path:
+
+- `.oat/repo/reviews/{file}.md` -> `.oat/repo/reviews/archived/{file}.md`
+- `.oat/projects/local/orphan-reviews/{file}.md` -> `.oat/projects/local/orphan-reviews/archived/{file}.md`
+
+Rules:
+
+- Create the `archived/` directory if needed.
+- If the archive target already exists, append a timestamp suffix before moving so prior history is not overwritten.
+- Keep the archived path in the final output contract.
+
 ## Output Contract
 
 At completion, report:
 
 - Artifact path used
+- Archived artifact path
 - Counts by severity
 - Number converted/deferred/dismissed
 - Task list location (`inline` or file path)
@@ -214,4 +234,5 @@ At completion, report:
 - Findings overview displayed before triage.
 - Every finding dispositioned with rationale where needed.
 - Standalone task list generated in requested output mode.
+- Consumed review artifact archived in the matching `archived/` directory.
 - Skill remains within content budget (`<=500` lines).

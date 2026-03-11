@@ -12,6 +12,13 @@ Review loop:
 3. Implement fixes (`oat-project-implement`)
 4. Re-review until passing status
 
+## Storage contract
+
+- New project review artifacts are written to tracked `reviews/` directories.
+- `oat-project-review-receive` consumes the active top-level review artifact, updates project bookkeeping, then archives that artifact to `reviews/archived/`.
+- `reviews/archived/` is the local-only historical surface. Active `reviews/` content is not gitignored by default.
+- Ad-hoc review artifacts still default to local-only orphan storage under `.oat/projects/local/orphan-reviews/`.
+
 ## Project vs ad-hoc
 
 **Provide** (request a review):
@@ -70,7 +77,8 @@ Final review `passed` gate requires:
 ## Reference artifacts
 
 - `.oat/projects/<scope>/<project>/plan.md` (`## Reviews`)
-- `.oat/projects/<scope>/<project>/reviews/`
+- `.oat/projects/<scope>/<project>/reviews/` (active tracked review artifacts)
+- `.oat/projects/<scope>/<project>/reviews/archived/` (local-only historical review artifacts)
 - `.oat/projects/local/orphan-reviews/` (default local-only storage for ad-hoc review artifacts)
 - `.oat/repo/reviews/` (tracked storage convention when explicitly desired)
 - `.agents/skills/oat-review-provide/SKILL.md`

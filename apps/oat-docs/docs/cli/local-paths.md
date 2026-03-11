@@ -10,8 +10,10 @@ The `oat local` command group manages **local-only paths** — directories that 
 Common use cases:
 
 - `.oat/ideas/` — project-level idea brainstorming (gitignored)
-- `.oat/projects/**/reviews` — review artifacts scoped to specific projects
+- `.oat/**/reviews/archived` — archived review history copied between the main repo and worktrees while staying local-only
 - Any directory that should persist locally but not be committed
+
+Active project review artifacts live in tracked `reviews/` directories until they are consumed by a receive step. Only `reviews/archived/` is part of the default local-only policy.
 
 ## Config
 
@@ -20,7 +22,7 @@ Local paths are declared in `.oat/config.json` under the `localPaths` key:
 ```json
 {
   "version": 1,
-  "localPaths": [".oat/ideas", ".oat/projects/**/reviews"]
+  "localPaths": [".oat/ideas", ".oat/**/reviews/archived"]
 }
 ```
 
@@ -58,7 +60,7 @@ Manages a fenced section in `.gitignore` between marker comments:
 ```text
 # OAT local paths
 .oat/ideas/
-.oat/projects/**/reviews/
+.oat/**/reviews/archived/
 # END OAT local paths
 ```
 
@@ -109,6 +111,6 @@ oat local remove <paths...> [--json]
 
 ## Worktree Integration
 
-The worktree bootstrap skills (`oat-worktree-bootstrap`, `oat-worktree-bootstrap-auto`) automatically run `oat local sync` after creating a new worktree. This copies all configured `localPaths` from the main repo into the new worktree so that gitignored working state (ideas, reviews, etc.) is available immediately.
+The worktree bootstrap skills (`oat-worktree-bootstrap`, `oat-worktree-bootstrap-auto`) automatically run `oat local sync` after creating a new worktree. This copies all configured `localPaths` from the main repo into the new worktree so that gitignored working state (ideas, archived review history, etc.) is available immediately.
 
 The autonomous bootstrap script also copies `.oat/config.local.json` to propagate active project context.

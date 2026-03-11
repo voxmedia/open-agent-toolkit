@@ -14,7 +14,8 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - Backlog: `.oat/repo/reference/backlog.md`
 - Backlog completed archive: `.oat/repo/reference/backlog-completed.md`
 - Decision record: `.oat/repo/reference/decision-record.md`
-- Repo reviews: `.oat/repo/reviews/`
+- Repo reviews (active tracked): `.oat/repo/reviews/`
+- Repo review archive (local-only history): `.oat/repo/reviews/archived/`
 - Repo archive: `.oat/repo/archive/`
 
 ## What’s Implemented
@@ -163,6 +164,9 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - Templates: `.oat/templates/*.md`
 - Knowledge: `.oat/repo/knowledge/*.md`
 - Project artifacts (default checked-in layout): `.oat/projects/shared/<project>/` (configurable via `oat config get projects.root`; stored in `.oat/config.json`)
+- Project review contract:
+  - Active review artifacts live in `.oat/projects/shared/<project>/reviews/` while they are awaiting receive/triage.
+  - Consumed review artifacts move to `.oat/projects/shared/<project>/reviews/archived/` for local-only historical storage.
 - Tracking manifest: `.oat/tracking.json` (delta mode support for skill families)
 - Provider sync state:
   - `.oat/sync/config.json` (provider enablement/strategy config)
@@ -226,5 +230,6 @@ Interop quickstart:
 - `.oat/config.json` holds shared non-sync repo settings, including `worktrees.root` (default `.worktrees`), `projects.root` (default `.oat/projects/shared`), and `documentation.*` (root, tooling, config, requireForProjectCompletion).
 - `.oat/config.local.json` is gitignored and holds per-developer lifecycle state (`activeProject`, `lastPausedProject`).
 - `.oat/projects/local/**` and `.oat/projects/archived/**` are gitignored (local-only).
+- `.oat/**/reviews/archived/**` is the local-only historical review storage path; active `reviews/` directories remain tracked unless a repo explicitly overrides that policy.
 - `.oat/projects/shared/**` is tracked by default in this repo unless a local override is added.
 - Legacy `.oat/active-project` pointer files may exist but are no longer the canonical active-project source in migrated flows.

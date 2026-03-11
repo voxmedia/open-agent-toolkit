@@ -49,10 +49,11 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work (validating review status, reading artifacts, writing output), print 2–5 short step indicators, e.g.:
-  - `[1/4] Validating artifacts + review status…`
-  - `[2/4] Reading OAT artifacts…`
-  - `[3/4] Collecting git context…`
-  - `[4/4] Writing PR description…`
+  - `[1/5] Preflighting review artifacts…`
+  - `[2/5] Validating artifacts + review status…`
+  - `[3/5] Reading OAT artifacts…`
+  - `[4/5] Collecting git context…`
+  - `[5/5] Writing PR description…`
 - For long-running operations (git logs/diffs on large ranges), print a start line and a completion line (duration optional).
 - Keep it concise; don’t print a line for every shell command.
 
@@ -105,6 +106,26 @@ If missing/invalid:
   mkdir -p .oat
   oat config set activeProject "$PROJECT_PATH"
   ```
+
+### Step 0.5: Archive Residual Active Review Artifacts
+
+Before generating the final PR, detect any leftover active review artifacts in the top level of `"$PROJECT_PATH/reviews/"`:
+
+```bash
+find "$PROJECT_PATH/reviews" -maxdepth 1 -type f -name "*.md" 2>/dev/null
+```
+
+If any active review artifacts exist:
+
+1. Create `"$PROJECT_PATH/reviews/archived"` if needed.
+2. Rewrite any plan/implementation/state references touched during this preflight from `reviews/{filename}.md` to `reviews/archived/{filename}.md`.
+3. Move each review artifact into `reviews/archived/`, adding a timestamp suffix when needed to avoid collisions.
+4. Report the archived paths before continuing.
+
+Rules:
+
+- Only archive top-level active review artifacts. Leave `reviews/archived/` untouched.
+- Keep archive destinations inside the project so worktree runs do not depend on the shared-project archive flow.
 
 ### Step 1: Validate Required Artifacts (Mode-Aware)
 
@@ -200,7 +221,7 @@ Local path exclusion:
 
 - Read `.oat/config.json` and extract `localPaths` (glob patterns for gitignored directories).
 - Do **not** include References links to any path that matches a `localPaths` pattern — those paths are gitignored and will not exist on the remote.
-- Common matches: `.oat/projects/**/reviews`, `.oat/projects/**/pr`. If a reference target (e.g., `{PROJECT_REL}/reviews/`) falls under a localPath pattern, omit it entirely from the References section.
+- Common matches: `.oat/projects/**/reviews/archived`, `.oat/projects/**/pr`. Active `reviews/` paths remain eligible for References when they are tracked; only archived review paths should be treated as local-only by default.
 
 Example link context:
 
@@ -260,7 +281,7 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 - Implementation: `[implementation.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/implementation.md)` (fallback: `{PROJECT_PATH}/implementation.md`)
 - Discovery: `[discovery.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/discovery.md)`
 - Imported Source: `[references/imported-plan.md]({REPO_WEB}/blob/{BRANCH}/{PROJECT_REL}/references/imported-plan.md)`
-- Reviews: `[reviews/]({REPO_WEB}/tree/{BRANCH}/{PROJECT_REL}/reviews)` (fallback: `{PROJECT_PATH}/reviews/`) — **omit if path matches a localPaths pattern**
+- Reviews: `[reviews/]({REPO_WEB}/tree/{BRANCH}/{PROJECT_REL}/reviews)` (fallback: `{PROJECT_PATH}/reviews/`) — include when active `reviews/` is tracked; omit archived review paths and any target that still matches a `localPaths` pattern
 ```
 
 ### Step 5: Optional - Open PR
@@ -309,6 +330,7 @@ If `state.md` is missing, skip with a warning.
 
 ## Success Criteria
 
+- Residual active review artifacts are archived before final PR generation continues
 - Final PR description artifact written to `{PROJECT_PATH}/pr/`
 - Final review status checked and referenced
 - User has clear next step to open PR (manual or gh)

@@ -420,8 +420,8 @@ const LOCAL_PATH_CHOICES: MultiSelectChoice[] = [
     checked: true,
   },
   {
-    label: '.oat/**/reviews — Review artifacts',
-    value: '.oat/**/reviews',
+    label: '.oat/**/reviews/archived — Archived review artifacts',
+    value: '.oat/**/reviews/archived',
     checked: true,
   },
   {

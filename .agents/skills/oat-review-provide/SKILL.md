@@ -31,7 +31,7 @@ Request and execute a code/file review that is not tied to an OAT project lifecy
 **ALLOWED Activities:**
 
 - Range-based code review.
-- Optional review artifact generation (tracked or local-only).
+- Optional review artifact generation (tracked active, local active, or inline).
 - Inline review output when requested.
 
 **Self-Correction Protocol:**
@@ -43,7 +43,7 @@ If you catch yourself:
 **Recovery:**
 
 1. Re-resolve review range directly from git.
-2. Re-resolve artifact destination policy (local-only, tracked, or inline).
+2. Re-resolve artifact destination policy (tracked active, local active, or inline).
 
 ## Progress Indicators (User-Facing)
 
@@ -137,8 +137,9 @@ bash .agents/skills/oat-review-provide/scripts/resolve-review-output.sh --mode a
 
 Policy:
 
-- If `.oat/repo/reviews` exists and is not gitignored, assume user wants tracked artifacts there.
-- Otherwise default to local-only `.oat/projects/local/orphan-reviews`.
+- If `.oat/repo/reviews` exists and is not gitignored, assume user wants tracked active artifacts there.
+- Otherwise default to active local `.oat/projects/local/orphan-reviews`.
+- Do **not** write new review artifacts directly into any `archived/` directory; those are historical locations used after `oat-review-receive` processes a review.
 - If user preference is unclear, ask and recommend local-only.
 
 If user asks for tracked `.oat/repo/reviews` and it is gitignored, warn and ask whether to:
@@ -207,7 +208,7 @@ git add "{artifact-path}"
 git commit -m "chore(oat): record ad-hoc review artifact"
 ```
 
-For local-only or inline modes, do not commit unless user explicitly requests.
+For local-active or inline modes, do not commit unless user explicitly requests.
 
 ### Step 7: Output Summary
 

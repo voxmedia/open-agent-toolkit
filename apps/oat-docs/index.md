@@ -37,7 +37,7 @@
   - [Execution Contracts](skills/execution-contracts.md) — Skill runtime contracts: frontmatter fields, mode assertions, preconditions, and governance.
 - Workflow
   - [Workflow Docs](workflow/index.md) — Workflow lifecycle overview, phases, quality gates, and optional HiLL checkpoints.
-  - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflow/hil-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
+  - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflow/hill-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
   - [Lifecycle](workflow/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.
   - [PR Flow](workflow/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.
   - [Reviews](workflow/reviews.md) — Review request/receive loop, status progression, severity policy, and quality gates.

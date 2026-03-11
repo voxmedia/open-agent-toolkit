@@ -17,7 +17,7 @@ Turn review output into plan changes and a clear next action. This closes the fe
 
 ## Prerequisites
 
-**Required:** A review artifact exists in `{PROJECT_PATH}/reviews/`.
+**Required:** An active review artifact exists in the top level of `{PROJECT_PATH}/reviews/` (not in `reviews/archived/`).
 
 ## Mode Assertion
 
@@ -83,13 +83,19 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
 
-### Step 1: Locate Review Artifact
+### Step 1: Locate Active Review Artifact
 
 ```bash
 ls -t "$PROJECT_PATH/reviews/"*.md 2>/dev/null | head -10
 ```
 
-**If no review files:** Block and ask user to run the `oat-project-review-provide` skill first.
+Selection rules:
+
+- Only process active review artifacts in the top level of `"$PROJECT_PATH/reviews/"`.
+- Ignore anything already under `"$PROJECT_PATH/reviews/archived/"`.
+- Treat archived artifacts as history only; do not offer them as receive candidates.
+
+**If no active review files:** Block and ask user to run the `oat-project-review-provide` skill first.
 
 **If multiple candidates:**
 
@@ -98,6 +104,14 @@ ls -t "$PROJECT_PATH/reviews/"*.md 2>/dev/null | head -10
 - Default to most recent if user confirms
 
 **Read the selected review file completely.**
+
+Derive archive bookkeeping before making lifecycle edits:
+
+```bash
+REVIEW_FILENAME=$(basename "$REVIEW_PATH")
+ARCHIVED_REVIEW_DIR="$PROJECT_PATH/reviews/archived"
+ARCHIVED_REVIEW_PATH="$ARCHIVED_REVIEW_DIR/$REVIEW_FILENAME"
+```
 
 ### Step 2: Parse Findings into Buckets
 
@@ -320,7 +334,7 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 - Update or add a row for `{scope}` in the Reviews table:
   - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important/Medium and no unresolved final-scope gates)
   - Date: `{today}`
-  - Artifact: `reviews/{filename}.md`
+  - Artifact: `reviews/archived/{filename}.md`
 ````
 
 **Status semantics (v1):**
@@ -337,7 +351,7 @@ Add a note to implementation.md:
 ### Review Received: {scope}
 
 **Date:** {today}
-**Review artifact:** reviews/{filename}.md
+**Review artifact:** reviews/archived/{filename}.md
 
 **Findings:**
 
@@ -367,6 +381,21 @@ After the fix tasks are complete:
     - `oat_current_task: {first_fix_task_id}` (or next incomplete)
     - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
+### Step 7.5: Archive the Consumed Review Artifact
+
+After plan/implementation/state updates reference the archived location, move the processed review artifact into the local-only history directory:
+
+```bash
+mkdir -p "$ARCHIVED_REVIEW_DIR"
+mv "$REVIEW_PATH" "$ARCHIVED_REVIEW_PATH"
+```
+
+Rules:
+
+- Perform the move only after all written references have been updated to `reviews/archived/{filename}.md`.
+- If `"$ARCHIVED_REVIEW_PATH"` already exists, append a timestamp suffix before moving so history is preserved.
+- Report the archived location in the final summary.
+
 ### Step 8: Check Review Cycle Count
 
 **Bounded loop protection:**
@@ -374,7 +403,10 @@ After the fix tasks are complete:
 Count how many review cycles have occurred for this scope:
 
 ```bash
-ls "$PROJECT_PATH/reviews/"*"$SCOPE_TOKEN"*.md 2>/dev/null | wc -l
+{
+  find "$PROJECT_PATH/reviews" -maxdepth 1 -type f -name "*$SCOPE_TOKEN*.md" 2>/dev/null
+  find "$PROJECT_PATH/reviews/archived" -maxdepth 1 -type f -name "*$SCOPE_TOKEN*.md" 2>/dev/null
+} | wc -l
 ```
 
 **If 3 or more cycles:**
@@ -398,7 +430,7 @@ Choose an option:
 
 If `scope == final`, resurface previously deferred Medium findings from prior review cycles before marking final as `passed`.
 
-- Source of truth: `implementation.md` review notes ("Deferred Findings"), plus prior review artifacts in `reviews/`.
+- Source of truth: `implementation.md` review notes ("Deferred Findings"), plus prior review artifacts in `reviews/archived/` (and any still-active top-level `reviews/` file for the current cycle).
 - Build a "Deferred Medium Ledger" with each item and current disposition state.
 
 Ask user to decide each deferred Medium:
@@ -513,6 +545,7 @@ Findings: {N} critical, {N} important, {N} medium, {N} minor
 Actions taken:
 - Added {N} fix tasks to plan.md ({task_ids})
 - Updated implementation.md with review notes
+- Archived review artifact to `reviews/archived/{filename}.md`
 - Deferred/accepted Medium findings: {N}
 - Deferred {N} minor findings (auto for non-final, explicit decision for final)
 - Finding disposition map: {ID -> converted|deferred|accepted + rationale summary}
@@ -533,6 +566,7 @@ Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 Actions taken:
 - Applied {N} artifact edits
+- Archived review artifact to `reviews/archived/{filename}.md`
 - No plan tasks created
 - Finding disposition map: {ID -> resolved_in_artifact|rejected_with_rationale|needs_user_direction}
 
@@ -557,12 +591,13 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 ## Success Criteria
 
 - Active project resolved
-- Review artifact located and read
+- Active review artifact located and read
 - Findings parsed and categorized
 - Findings overview + per-finding analysis presented to user before disposition choices
 - Fix tasks created for Critical/Important/Medium findings by default
 - Plan.md updated with new tasks
 - Implementation.md updated with review notes
+- Consumed review artifact archived under `reviews/archived/`
 - Review cycle count checked (cap at 3)
 - Final-scope deferred Medium findings resurfaced and explicitly dispositioned
 - User routed to next action

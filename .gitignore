@@ -63,6 +63,6 @@ yarn-error.log*
 # OAT local paths
 .oat/**/analysis/
 .oat/**/pr/
-.oat/**/reviews/
+.oat/**/reviews/archived/
 .oat/ideas/
 # END OAT local paths

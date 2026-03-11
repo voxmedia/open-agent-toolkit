@@ -159,17 +159,18 @@ Typical contents:
 
 ### Core artifact roles
 
-| File                | Purpose                                                              |
-| ------------------- | -------------------------------------------------------------------- |
-| `state.md`          | Lifecycle routing state (`oat_phase`, status, current task pointers) |
-| `discovery.md`      | Problem framing and requirements discovery notes                     |
-| `spec.md`           | Formalized requirements                                              |
-| `design.md`         | Technical architecture/design decisions                              |
-| `plan.md`           | Executable task/phase plan and review table                          |
-| `implementation.md` | Execution log, progress table, outcomes, verification history        |
-| `reviews/*.md`      | Review artifacts from review skills                                  |
-| `pr/*.md`           | PR description artifacts                                             |
-| `references/*`      | Imported or supporting source material                               |
+| File                    | Purpose                                                              |
+| ----------------------- | -------------------------------------------------------------------- |
+| `state.md`              | Lifecycle routing state (`oat_phase`, status, current task pointers) |
+| `discovery.md`          | Problem framing and requirements discovery notes                     |
+| `spec.md`               | Formalized requirements                                              |
+| `design.md`             | Technical architecture/design decisions                              |
+| `plan.md`               | Executable task/phase plan and review table                          |
+| `implementation.md`     | Execution log, progress table, outcomes, verification history        |
+| `reviews/*.md`          | Active tracked review artifacts awaiting receive/closeout            |
+| `reviews/archived/*.md` | Local-only historical review artifacts after receive/closeout        |
+| `pr/*.md`               | PR description artifacts                                             |
+| `references/*`          | Imported or supporting source material                               |
 
 Not all workflow modes require every artifact:
 

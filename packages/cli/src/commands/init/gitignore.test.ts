@@ -82,6 +82,7 @@ describe('applyOatCoreGitignore', () => {
       '# OAT local paths',
       '.oat/ideas/',
       '.oat/projects/**/pr/',
+      '.oat/projects/**/reviews/archived/',
       '# END OAT local paths',
       '',
     ].join('\n');

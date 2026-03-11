@@ -145,7 +145,12 @@ describe('guided setup integration', () => {
           true, // provider sync
         ],
         selectResponses: [
-          ['.oat/**/analysis', '.oat/**/pr', '.oat/**/reviews', '.oat/ideas'],
+          [
+            '.oat/**/analysis',
+            '.oat/**/pr',
+            '.oat/**/reviews/archived',
+            '.oat/ideas',
+          ],
         ],
       });
 
@@ -155,7 +160,7 @@ describe('guided setup integration', () => {
     expect(addLocalPaths).toHaveBeenCalledWith('/tmp/workspace', [
       '.oat/**/analysis',
       '.oat/**/pr',
-      '.oat/**/reviews',
+      '.oat/**/reviews/archived',
       '.oat/ideas',
     ]);
     expect(runProviderSync).toHaveBeenCalledTimes(1);
@@ -220,7 +225,7 @@ describe('guided setup integration', () => {
           false, // tool packs — skip
           false, // provider sync — skip
         ],
-        selectResponses: [['.oat/**/reviews']],
+        selectResponses: [['.oat/**/reviews/archived']],
       });
 
     await runInit(command, {
@@ -230,7 +235,7 @@ describe('guided setup integration', () => {
 
     expect(runToolPacks).not.toHaveBeenCalled();
     expect(addLocalPaths).toHaveBeenCalledWith('/tmp/workspace', [
-      '.oat/**/reviews',
+      '.oat/**/reviews/archived',
     ]);
     expect(runProviderSync).not.toHaveBeenCalled();
     expect(

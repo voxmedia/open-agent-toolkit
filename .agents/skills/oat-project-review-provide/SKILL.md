@@ -327,7 +327,7 @@ If `review type == code` and `scope == final`, gather unresolved deferred findin
 Preferred sources:
 
 - `implementation.md` sections titled `Deferred Findings (...)`
-- prior review artifacts under `reviews/` when implementation notes are incomplete
+- prior review artifacts under `reviews/archived/` when implementation notes are incomplete (plus the current active review file in `reviews/`, if one exists for the in-flight cycle)
 
 Build:
 
@@ -453,6 +453,12 @@ If user insists on inline review in current session:
 
 **If `INLINE_ONLY=true`** (user chose inline-only in Step 1.5): skip this step — no artifact path needed.
 
+Review storage contract:
+
+- Write new review artifacts to the active tracked directory: `{PROJECT_PATH}/reviews/`
+- Do **not** write new artifacts directly into `{PROJECT_PATH}/reviews/archived/`
+- After `oat-project-review-receive` consumes a review, that skill moves it into `reviews/archived/` for local-only historical storage
+
 **Naming convention:**
 
 - Phase review: `{PROJECT_PATH}/reviews/pNN-review-YYYY-MM-DD.md`
@@ -572,8 +578,9 @@ After writing the review artifact and applying the Step 9 Reviews-table update, 
 
 **Commit scope:**
 
-- Always include the review artifact file: `reviews/{filename}.md`
+- Always include the active review artifact file: `reviews/{filename}.md`
 - Include `plan.md` when Step 9 updated the Reviews table
+- Do not write or commit new review artifacts directly into `reviews/archived/`
 - Do not include unrelated implementation/code files in this commit
 
 **Commit message:**

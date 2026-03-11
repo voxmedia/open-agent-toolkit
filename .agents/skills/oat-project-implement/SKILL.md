@@ -129,9 +129,10 @@ Read `"$PROJECT_PATH/plan.md"` completely to understand:
 
 ### Step 2.5: Confirm Plan HiLL Checkpoints
 
-Read `oat_plan_hill_phases` from `"$PROJECT_PATH/plan.md"` frontmatter and validate it.
+Read `oat_plan_hill_phases` from `"$PROJECT_PATH/plan.md"` frontmatter when present and validate it.
 
 - **Valid format:** JSON-like array of phase IDs (e.g., `["p01","p03"]`)
+- **Allowed pre-confirmation state:** field missing entirely on the first implementation run
 - **Invalid format examples:** scalar string, malformed array, unknown phase IDs
 
 Determine whether this is a first implementation run:
@@ -141,9 +142,22 @@ Determine whether this is a first implementation run:
 
 Prompt behavior:
 
-- **If `oat_plan_hill_phases` is missing/empty/invalid:** ask user to confirm checkpoint phases before any task execution.
-- **If first run and `oat_plan_hill_phases` is valid:** ask user to confirm keep/change.
+- **If first run:** always present a brief phase summary and confirm checkpoint phases before any task execution. A missing `oat_plan_hill_phases` value is the normal unconfirmed state; if a value is already present, treat it as a provisional value to confirm rather than as final.
 - **If resuming and `oat_plan_hill_phases` is valid:** do not re-ask; print active checkpoint config and continue.
+- **If resuming and `oat_plan_hill_phases` is missing/invalid:** treat this as bookkeeping drift, because implementation should already have written the confirmed value before prior task execution. Ask the user to repair the checkpoint configuration before continuing.
+
+Required prompt shape for first-run confirmation:
+
+1. Briefly summarize each plan phase:
+   - `p01 — {short phase summary}`
+   - `p02 — {short phase summary}`
+   - ...
+2. Ask a simple checkpoint question:
+   - `Which checkpoints do you want: every phase, or specific checkpoints?`
+3. Offer concrete examples:
+   - `Every phase` -> `[]`
+   - `Final phase only` -> `["p07"]` (replace `p07` with the actual final phase ID for this plan)
+   - `Specific checkpoints` -> `["p02","p05"]`
 
 When user confirms/changes:
 
@@ -360,10 +374,11 @@ oat_current_task_id: { first_task_of_next_phase } # e.g., p02-t01
 **Plan phase checkpoint:**
 At the end of each plan phase (p01, p02, etc.), check `oat_plan_hill_phases` in plan.md to decide whether to pause:
 
-- **If `oat_plan_hill_phases` is empty or missing:** Pause after every phase (default behavior).
+- **If `oat_plan_hill_phases` is empty (`[]`):** Pause after every phase (default behavior after confirmation).
 - **If `oat_plan_hill_phases` has values:** Pause only after completing a listed phase.
   - Example: `["p01", "p04"]` → pause after p01 completes and after p04 completes; skip p02, p03.
   - Example: `["p03"]` where p03 is the last phase → run all phases without pausing, then pause after p03 (end of implementation).
+- **If `oat_plan_hill_phases` is missing at a phase boundary:** treat this as bookkeeping drift and stop to repair it before continuing, because the confirmation should already have been written during the first implementation run.
 
 **Key semantic: listed phases are where you stop AFTER completing them, not before.** `["p03"]` means "complete p03, then pause" — not "pause before starting p03."
 
@@ -401,7 +416,7 @@ Do not use `git add -A` or glob patterns. Only commit the three OAT project file
 **Note on HiLL types:**
 
 - **Workflow HiLL** (`oat_hill_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-project-progress router.
-- **Plan phase checkpoints** (`oat_plan_hill_phases` in plan.md): Gates at plan phase boundaries during implementation. Default: pause after every phase. Configure to pause only after specific phases. Listed phases are where you stop AFTER completing them.
+- **Plan phase checkpoints** (`oat_plan_hill_phases` in plan.md): Gates at plan phase boundaries during implementation. `[]` means pause after every phase; a populated array pauses only after listed phases. The field may be absent only before the first implementation-run confirmation. Listed phases are where you stop AFTER completing them.
 
 ### Step 9: Repeat Until Complete
 

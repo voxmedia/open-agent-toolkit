@@ -88,12 +88,16 @@ describe('oat local apply', () => {
     const repoRoot = await createRepoRoot();
     await writeFile(join(repoRoot, '.gitignore'), '', 'utf8');
 
-    await applyGitignore(repoRoot, ['.oat/ideas/', '.oat/projects/local']);
+    await applyGitignore(repoRoot, [
+      '.oat/ideas/',
+      '.oat/projects/**/reviews/archived',
+    ]);
 
     const content = await readFile(join(repoRoot, '.gitignore'), 'utf8');
     // Both should have trailing slash, no duplicates
     expect(content).toContain('.oat/ideas/');
-    expect(content).toContain('.oat/projects/local/');
+    expect(content).toContain('.oat/projects/**/reviews/archived/');
+    expect(content.split('\n')).not.toContain('.oat/projects/**/reviews/');
   });
 
   it('should create .gitignore if it does not exist', async () => {

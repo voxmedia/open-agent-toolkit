@@ -1093,7 +1093,12 @@ config_file = "agents/reviewer.toml"
         providerSelectResponses: [['claude']],
         confirmResponses: [false],
         selectResponses: [
-          ['.oat/**/analysis', '.oat/**/pr', '.oat/**/reviews', '.oat/ideas'],
+          [
+            '.oat/**/analysis',
+            '.oat/**/pr',
+            '.oat/**/reviews/archived',
+            '.oat/ideas',
+          ],
         ],
       });
 
@@ -1128,7 +1133,7 @@ config_file = "agents/reviewer.toml"
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
         confirmResponses: [false],
-        selectResponses: [['.oat/**/analysis', '.oat/**/reviews']],
+        selectResponses: [['.oat/**/analysis', '.oat/**/reviews/archived']],
       });
 
       await runInitCommand(command, {
@@ -1138,7 +1143,7 @@ config_file = "agents/reviewer.toml"
 
       expect(addLocalPathsMock).toHaveBeenCalledWith('/tmp/workspace', [
         '.oat/**/analysis',
-        '.oat/**/reviews',
+        '.oat/**/reviews/archived',
       ]);
       expect(applyGitignore).toHaveBeenCalledTimes(1);
     });
@@ -1325,7 +1330,7 @@ config_file = "agents/reviewer.toml"
           'custom/path2',
         ],
         confirmResponses: [false, false],
-        selectResponses: [['.oat/**/reviews']],
+        selectResponses: [['.oat/**/reviews/archived']],
       });
 
       await runInitCommand(command, {

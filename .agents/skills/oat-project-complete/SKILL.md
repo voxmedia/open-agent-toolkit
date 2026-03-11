@@ -23,8 +23,8 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 - Before multi-step work, print step indicators, e.g.:
   - `[1/4] Checking completion gates…`
-  - `[2/4] Marking lifecycle complete…`
-  - `[3/4] Archiving project (if approved)…`
+  - `[2/4] Archiving residual review artifacts…`
+  - `[3/4] Marking lifecycle complete / archiving project…`
   - `[4/4] Refreshing dashboard + committing bookkeeping…`
 
 ## Process
@@ -65,6 +65,29 @@ else
   echo "Warning: plan.md not found, unable to verify final review status."
 fi
 ```
+
+### Step 3.2: Archive Residual Active Review Artifacts
+
+Before lifecycle completion continues, detect any leftover active review artifacts in the top level of `"$PROJECT_PATH/reviews/"`:
+
+```bash
+find "$PROJECT_PATH/reviews" -maxdepth 1 -type f -name "*.md" 2>/dev/null
+```
+
+If any active review artifacts exist:
+
+1. Create `"$PROJECT_PATH/reviews/archived"` if needed.
+2. Rewrite any references touched during this preflight from `reviews/{filename}.md` to `reviews/archived/{filename}.md` in:
+   - `"$PROJECT_PATH/plan.md"`
+   - `"$PROJECT_PATH/implementation.md"`
+   - `"$PROJECT_PATH/state.md"`
+3. Move each active review artifact into `reviews/archived/`, adding a timestamp suffix if needed to avoid overwriting prior history.
+4. Report the archived paths before continuing.
+
+Rules:
+
+- Only archive top-level active review artifacts. Leave `reviews/archived/` untouched.
+- Keep these archive moves inside the project at `reviews/archived/`; do not route them through the shared-project archive destination logic in Step 6.
 
 ### Step 3.5: Check Deferred Medium Findings (Warning + Confirmation)
 
