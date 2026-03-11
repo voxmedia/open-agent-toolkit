@@ -4,6 +4,12 @@ import { relative, resolve } from 'node:path';
 
 import { CliError } from '@errors/index';
 
+export function computeStringHash(content: string): string {
+  const hash = createHash('sha256');
+  hash.update(content);
+  return hash.digest('hex');
+}
+
 async function collectFiles(
   root: string,
   current: string,

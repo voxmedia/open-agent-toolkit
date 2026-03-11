@@ -1,8 +1,8 @@
-import { rm } from 'node:fs/promises';
-import { join, relative, resolve } from 'node:path';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { dirname, join, relative, resolve } from 'node:path';
 
 import { copyDirectory, copySingleFile, createSymlink } from '@fs/io';
-import { computeContentHash } from '@manifest/hash';
+import { computeContentHash, computeStringHash } from '@manifest/hash';
 import {
   addEntry,
   findEntry,
@@ -46,10 +46,12 @@ async function toManifestEntry(
   const { canonicalPath, providerPath } = resolveManifestPaths(entry);
   const contentHash =
     strategy === 'copy'
-      ? await computeContentHash(
-          resolve(entry.canonical.canonicalPath),
-          entry.canonical.isFile,
-        )
+      ? entry.renderedContent !== undefined
+        ? computeStringHash(entry.renderedContent)
+        : await computeContentHash(
+            resolve(entry.canonical.canonicalPath),
+            entry.canonical.isFile,
+          )
       : null;
 
   return {
@@ -65,6 +67,13 @@ async function toManifestEntry(
 }
 
 function markerFileNameForEntry(entry: SyncPlanEntry): string {
+  if (entry.canonical.isFile) {
+    throw new Error(
+      'Directory marker filenames are only valid for copied directory entries.',
+    );
+  }
+
+  // Rules are file-based, so only agent and skill directory copies reach here.
   return entry.canonical.type === 'agent' ? 'AGENT.md' : 'SKILL.md';
 }
 
@@ -115,7 +124,17 @@ async function applyEntry(
       if (planEntry.operation === 'update_copy') {
         await rm(planEntry.providerPath, { recursive: true, force: true });
       }
-      if (planEntry.canonical.isFile) {
+      if (
+        planEntry.canonical.isFile &&
+        planEntry.renderedContent !== undefined
+      ) {
+        await mkdir(dirname(planEntry.providerPath), { recursive: true });
+        await writeFile(
+          planEntry.providerPath,
+          planEntry.renderedContent,
+          'utf8',
+        );
+      } else if (planEntry.canonical.isFile) {
         await copySingleFile(
           planEntry.canonical.canonicalPath,
           planEntry.providerPath,

@@ -11,6 +11,7 @@ async function detectCopilot(scopeRoot: string): Promise<boolean> {
     join(scopeRoot, '.github', 'copilot-instructions.md'),
     join(scopeRoot, '.github', 'agents'),
     join(scopeRoot, '.github', 'skills'),
+    join(scopeRoot, '.github', 'instructions'),
   ];
 
   for (const marker of markers) {

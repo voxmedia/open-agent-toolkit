@@ -5,6 +5,8 @@ import type { CanonicalEntry } from '@engine/scanner';
 import { CliError } from '@errors/index';
 import { toPosixPath } from '@fs/paths';
 import type { Manifest } from '@manifest/manifest.types';
+import type { PathMapping } from '@providers/shared/adapter.types';
+import { canonicalRuleNameForProviderEntry } from '@rules/canonical';
 
 import type { DriftReport } from './drift.types';
 
@@ -15,6 +17,9 @@ function inferContentType(providerDir: string): CanonicalEntry['type'] | null {
   }
   if (dirName === 'agents') {
     return 'agent';
+  }
+  if (dirName === 'rules' || dirName === 'instructions') {
+    return 'rule';
   }
   return null;
 }
@@ -28,7 +33,10 @@ export function inferScopeRoot(providerDir: string): string {
     const nextSegment = segments[index + 1];
     if (
       segment?.startsWith('.') &&
-      (nextSegment === 'skills' || nextSegment === 'agents')
+      (nextSegment === 'skills' ||
+        nextSegment === 'agents' ||
+        nextSegment === 'rules' ||
+        nextSegment === 'instructions')
     ) {
       const rootPath = `/${segments.slice(0, index).join('/')}`;
       return rootPath === '' ? '/' : rootPath;
@@ -67,6 +75,21 @@ function isCanonicalEntry(
   });
 }
 
+function isManagedRuleFile(
+  name: string,
+  mapping?: Pick<PathMapping, 'contentType' | 'providerExtension'>,
+): boolean {
+  if (mapping?.contentType === 'rule' && mapping.providerExtension) {
+    return name.endsWith(mapping.providerExtension);
+  }
+
+  return (
+    name.endsWith('.md') ||
+    name.endsWith('.mdc') ||
+    name.endsWith('.instructions.md')
+  );
+}
+
 async function readProviderEntries(resolvedProviderDir: string) {
   try {
     return await readdir(resolvedProviderDir, {
@@ -102,8 +125,9 @@ export async function detectStrays(
   providerDir: string,
   manifest: Manifest,
   canonicalEntries: CanonicalEntry[],
+  mapping?: Pick<PathMapping, 'contentType' | 'providerExtension'>,
 ): Promise<DriftReport[]> {
-  const contentType = inferContentType(providerDir);
+  const contentType = mapping?.contentType ?? inferContentType(providerDir);
   const scopeRoot = inferScopeRoot(providerDir);
   const reports: DriftReport[] = [];
   const resolvedProviderDir = resolve(providerDir);
@@ -113,7 +137,12 @@ export async function detectStrays(
     if (!entry.isDirectory() && !entry.isSymbolicLink() && !entry.isFile()) {
       continue;
     }
-    if (entry.isFile() && !entry.name.endsWith('.md')) {
+    if (
+      entry.isFile() &&
+      !(contentType === 'rule'
+        ? isManagedRuleFile(entry.name, mapping)
+        : entry.name.endsWith('.md'))
+    ) {
       continue;
     }
 
@@ -123,7 +152,12 @@ export async function detectStrays(
       continue;
     }
 
-    if (isCanonicalEntry(entry.name, contentType, canonicalEntries)) {
+    const canonicalName =
+      contentType === 'rule'
+        ? canonicalRuleNameForProviderEntry(entry.name, mapping)
+        : entry.name;
+
+    if (isCanonicalEntry(canonicalName, contentType, canonicalEntries)) {
       continue;
     }
 

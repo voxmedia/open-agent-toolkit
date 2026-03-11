@@ -30,6 +30,7 @@ interface HarnessOptions {
   loadedSyncConfig?: SyncConfig;
   configAwareResults?: ConfigAwareAdaptersResult[];
   providerSelectResponses?: Array<string[] | null>;
+  canonicalEntries?: CanonicalEntry[];
 }
 
 interface RunSyncArgs {
@@ -98,6 +99,17 @@ function createCanonicalEntry(name = 'skill-one'): CanonicalEntry {
   };
 }
 
+function createRuleCanonicalEntry(
+  name = 'react-components.md',
+): CanonicalEntry {
+  return {
+    name,
+    type: 'rule',
+    canonicalPath: `/tmp/workspace/.agents/rules/${name}`,
+    isFile: true,
+  };
+}
+
 function createPlan(
   operation: SyncPlan['entries'][number]['operation'],
   scope: SyncPlan['scope'] = 'project',
@@ -123,6 +135,28 @@ function createEmptyPlan(scope: SyncPlan['scope'] = 'project'): SyncPlan {
   return {
     scope,
     entries: [],
+    removals: [],
+  };
+}
+
+function createRulePlan(
+  operation: SyncPlan['entries'][number]['operation'] = 'create_copy',
+  scope: SyncPlan['scope'] = 'project',
+): SyncPlan {
+  const canonical = createRuleCanonicalEntry();
+  return {
+    scope,
+    entries: [
+      {
+        canonical,
+        provider: 'cursor',
+        providerPath: '/tmp/workspace/.cursor/rules/react-components.mdc',
+        operation,
+        strategy: 'copy',
+        reason: operation,
+        renderedContent: '# rendered rule\n',
+      },
+    ],
     removals: [],
   };
 }
@@ -219,7 +253,9 @@ function createHarness(options: HarnessOptions = {}): {
         options.loadedSyncConfig ?? (DEFAULT_SYNC_CONFIG as SyncConfig),
     ),
     saveSyncConfig,
-    scanCanonical: vi.fn(async () => [createCanonicalEntry()]),
+    scanCanonical: vi.fn(
+      async () => options.canonicalEntries ?? [createCanonicalEntry()],
+    ),
     getAdapters: () => adapters,
     getConfigAwareAdapters,
     selectProvidersWithAbort,
@@ -330,6 +366,39 @@ describe('createSyncCommand', () => {
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
     expect(capture.success).toContain('\nSync applied successfully.');
+  });
+
+  it('apply (default): executes transformed rule copy plans', async () => {
+    const { command, executeSyncPlan } = createHarness({
+      adapters: [createAdapter('cursor')],
+      canonicalEntries: [createRuleCanonicalEntry()],
+      plans: [createRulePlan()],
+      executeResults: [{ applied: 1, failed: 0, skipped: 0 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(executeSyncPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entries: [
+          expect.objectContaining({
+            provider: 'cursor',
+            providerPath: '/tmp/workspace/.cursor/rules/react-components.mdc',
+            strategy: 'copy',
+            operation: 'create_copy',
+            canonical: expect.objectContaining({
+              name: 'react-components.md',
+              type: 'rule',
+              isFile: true,
+            }),
+          }),
+        ],
+      }),
+      expect.any(Object),
+      '/tmp/workspace/.oat/sync/manifest.json',
+    );
   });
 
   it('apply idempotent: second run reports nothing to do', async () => {

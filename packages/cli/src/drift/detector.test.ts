@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { computeDirectoryHash } from '@manifest/hash';
+import { computeDirectoryHash, computeFileHash } from '@manifest/hash';
 import type { ManifestEntry } from '@manifest/manifest.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -155,5 +155,38 @@ describe('detectDrift', () => {
       status: 'drifted',
       reason: 'modified',
     });
+  });
+
+  it('returns in_sync when transformed rule file hash matches', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await mkdir(join(root, '.cursor', 'rules'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'rules', 'react-components.md'),
+      '# canonical source\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.cursor', 'rules', 'react-components.mdc'),
+      '# rendered rule\n',
+      'utf8',
+    );
+
+    const providerPath = join(root, '.cursor', 'rules', 'react-components.mdc');
+    const report = await detectDrift(
+      createManifestEntry({
+        canonicalPath: '.agents/rules/react-components.md',
+        providerPath: '.cursor/rules/react-components.mdc',
+        provider: 'cursor',
+        contentType: 'rule',
+        strategy: 'copy',
+        contentHash: await computeFileHash(providerPath),
+        isFile: true,
+      }),
+      root,
+    );
+
+    expect(report.state).toEqual({ status: 'in_sync' });
   });
 });

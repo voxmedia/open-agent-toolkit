@@ -23,6 +23,7 @@ Key behavior:
 - Interactive adoption in TTY mode
 - JSON/non-TTY contract support
 - Establishes the base structure used by `oat status`, `oat sync`, `oat init tools`, and `oat doctor`
+- For project scope, creates canonical `.agents/skills/`, `.agents/agents/`, and `.agents/rules/` directories
 
 ### Guided setup
 

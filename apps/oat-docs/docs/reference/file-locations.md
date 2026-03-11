@@ -13,6 +13,7 @@ For detailed `.oat/` tree semantics, see:
 
 - Skills: `.agents/skills/`
 - Agents/subagents: `.agents/agents/`
+- Rules: `.agents/rules/`
 
 ## OAT runtime/state
 

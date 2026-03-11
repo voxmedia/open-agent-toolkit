@@ -24,13 +24,15 @@ function assertMappingsValid(
   options: { allowAgent: boolean },
 ): void {
   for (const mapping of mappings) {
-    const allowedTypes = options.allowAgent ? ['skill', 'agent'] : ['skill'];
+    const allowedTypes = options.allowAgent
+      ? ['skill', 'agent', 'rule']
+      : ['skill'];
     expect(allowedTypes).toContain(mapping.contentType);
     expect(mapping.canonicalDir.startsWith('.')).toBe(true);
     expect(mapping.providerDir.startsWith('.')).toBe(true);
     expect(mapping.canonicalDir).not.toContain('..');
     expect(mapping.providerDir).not.toContain('..');
-    expect(mapping.canonicalDir).toMatch(/^\.agents\/(skills|agents)$/);
+    expect(mapping.canonicalDir).toMatch(/^\.agents\/(skills|agents|rules)$/);
     if (mapping.nativeRead) {
       expect(mapping.providerDir).toBe(mapping.canonicalDir);
     }
@@ -67,6 +69,18 @@ describe('adapter contract', () => {
         assertMappingsValid(adapter.projectMappings, { allowAgent: true });
       });
 
+      it('rule projectMappings declare transform hooks and provider extensions', () => {
+        const ruleMappings = adapter.projectMappings.filter(
+          (mapping) => mapping.contentType === 'rule',
+        );
+
+        for (const mapping of ruleMappings) {
+          expect(mapping.providerExtension).toBeTruthy();
+          expect(mapping.transformCanonical).toEqual(expect.any(Function));
+          expect(mapping.parseToCanonical).toEqual(expect.any(Function));
+        }
+      });
+
       it('userMappings have valid contentType and paths', () => {
         assertMappingsValid(adapter.userMappings, { allowAgent: true });
       });
@@ -83,7 +97,10 @@ describe('adapter contract', () => {
         const root = await mkdtemp(join(tmpdir(), 'oat-adapter-contract-'));
         tempDirs.push(root);
 
-        const providerRoot = `.${adapter.name}`;
+        const providerRoot =
+          adapter.name === 'copilot'
+            ? '.github/instructions'
+            : `.${adapter.name}`;
         await mkdir(join(root, providerRoot), { recursive: true });
 
         const detected = await adapter.detect(root);

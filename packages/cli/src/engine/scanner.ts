@@ -8,9 +8,21 @@ type ConcreteScope = Exclude<Scope, 'all'>;
 
 export interface CanonicalEntry {
   name: string;
-  type: 'skill' | 'agent';
+  type: 'skill' | 'agent' | 'rule';
   canonicalPath: string;
   isFile: boolean;
+}
+
+function canonicalDirectoryName(
+  contentType: CanonicalEntry['type'],
+): 'skills' | 'agents' | 'rules' {
+  if (contentType === 'skill') {
+    return 'skills';
+  }
+  if (contentType === 'agent') {
+    return 'agents';
+  }
+  return 'rules';
 }
 
 interface ScannedEntry {
@@ -68,9 +80,9 @@ export async function scanCanonical(
     const contentDir = join(
       scopeRoot,
       '.agents',
-      contentType === 'skill' ? 'skills' : 'agents',
+      canonicalDirectoryName(contentType),
     );
-    const includeFiles = contentType === 'agent';
+    const includeFiles = contentType === 'agent' || contentType === 'rule';
     const scanned = await readEntries(contentDir);
 
     for (const scannedEntry of scanned) {

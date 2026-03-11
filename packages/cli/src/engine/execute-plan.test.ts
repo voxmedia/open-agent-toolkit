@@ -11,6 +11,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+import { computeFileHash } from '@manifest/hash';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -24,19 +25,16 @@ import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
 
 function createCanonicalEntry(
   root: string,
-  type: 'skill' | 'agent',
+  type: 'skill' | 'agent' | 'rule',
   name: string,
 ) {
+  const canonicalDir =
+    type === 'skill' ? 'skills' : type === 'agent' ? 'agents' : 'rules';
   return {
     name,
     type,
-    canonicalPath: join(
-      root,
-      '.agents',
-      type === 'skill' ? 'skills' : 'agents',
-      name,
-    ),
-    isFile: false,
+    canonicalPath: join(root, '.agents', canonicalDir, name),
+    isFile: type === 'rule',
   };
 }
 
@@ -55,6 +53,22 @@ function createEntry(
     operation,
     strategy,
     reason: operation,
+  };
+}
+
+function createRenderedRuleEntry(
+  root: string,
+  operation: SyncPlanEntry['operation'],
+  renderedContent: string,
+): SyncPlanEntry {
+  return {
+    canonical: createCanonicalEntry(root, 'rule', 'react-components.md'),
+    provider: 'cursor',
+    providerPath: join(root, '.cursor', 'rules', 'react-components.mdc'),
+    operation,
+    strategy: 'copy',
+    reason: operation,
+    renderedContent,
   };
 }
 
@@ -199,6 +213,47 @@ describe('executeSyncPlan', () => {
     expect(content.startsWith(OAT_MARKER_PREFIX)).toBe(true);
     expect(content).toContain('fresh');
     expect(sentinel).toContain('Source:');
+  });
+
+  it('writes rendered file content for transformed rule copies and stores provider hash', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'rules', 'react-components.md'),
+      '# canonical source\n',
+      'utf8',
+    );
+
+    const renderedContent = `---
+description: React components
+---
+
+# React Components
+
+<!-- OAT-managed: do not edit directly. Source: .agents/rules/react-components.md -->
+`;
+
+    const plan = createPlan([
+      createRenderedRuleEntry(root, 'create_copy', renderedContent),
+    ]);
+    await executeSyncPlan(plan, createEmptyManifest(), manifestPath);
+
+    const providerPath = join(root, '.cursor', 'rules', 'react-components.mdc');
+    const written = await readFile(providerPath, 'utf8');
+    const manifest = await loadManifest(manifestPath);
+
+    expect(written).toBe(renderedContent);
+    expect(manifest.entries[0]).toMatchObject({
+      provider: 'cursor',
+      contentType: 'rule',
+      strategy: 'copy',
+      providerPath: '.cursor/rules/react-components.mdc',
+      canonicalPath: '.agents/rules/react-components.md',
+      contentHash: await computeFileHash(providerPath),
+      isFile: true,
+    });
   });
 
   it('removes provider path for remove entries', async () => {

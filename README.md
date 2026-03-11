@@ -32,11 +32,11 @@ flowchart TD
   Q2 -->|Yes| C["Workflow mode"]
 ```
 
-| Mode                      | Best for                                                             | Primary entry points                                                                                                                                |
-| ------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Interop-only              | Canonical skill/agent sync + drift diagnostics + tool-pack lifecycle | `oat init`, `oat tools ...`, `oat status`, `oat sync`, `oat instructions ...`, `oat providers ...`, `oat cleanup ...`, `oat doctor`                 |
-| Provider-agnostic tooling | Reusing skills/utilities without spec-driven lifecycle overhead      | `apps/oat-docs/docs/skills/index.md`, `apps/oat-docs/docs/skills/docs-workflows.md`, `apps/oat-docs/docs/cli/docs-apps.md`, selected `oat-*` skills |
-| Workflow                  | Structured execution with durable artifacts and review gates         | `oat-project-new`/`oat-project-open`, then lane-specific skills                                                                                     |
+| Mode                      | Best for                                                                  | Primary entry points                                                                                                                                |
+| ------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Interop-only              | Canonical skill/agent/rule sync + drift diagnostics + tool-pack lifecycle | `oat init`, `oat tools ...`, `oat status`, `oat sync`, `oat instructions ...`, `oat providers ...`, `oat cleanup ...`, `oat doctor`                 |
+| Provider-agnostic tooling | Reusing skills/utilities without spec-driven lifecycle overhead           | `apps/oat-docs/docs/skills/index.md`, `apps/oat-docs/docs/skills/docs-workflows.md`, `apps/oat-docs/docs/cli/docs-apps.md`, selected `oat-*` skills |
+| Workflow                  | Structured execution with durable artifacts and review gates              | `oat-project-new`/`oat-project-open`, then lane-specific skills                                                                                     |
 
 ### A) Interop-only mode (CLI only)
 
@@ -123,6 +123,7 @@ OAT centers on canonical agent assets and explicit workflow artifacts.
 - Canonical assets:
   - `.agents/skills/`
   - `.agents/agents/`
+  - `.agents/rules/`
 - Workflow artifacts:
   - `.oat/projects/<scope>/<project>/state.md`
   - `.oat/projects/<scope>/<project>/{discovery,spec,design,plan,implementation}.md`
@@ -159,6 +160,7 @@ Notes:
 - `sync` mutates by default; use `--dry-run` to preview changes without writing.
 - Project provider support is configured in `.oat/sync/config.json` (set via `oat init` interactive prompt or `oat providers set`).
 - Canonical subagents in `.agents/agents/*.md` are the source of truth. For Codex project scope, `sync` generates `.codex/agents/*.toml` and merges `.codex/config.toml`.
+- Canonical rules in `.agents/rules/*.md` are the source of truth. `sync` renders provider-specific rule files such as `.claude/rules/*.md`, `.cursor/rules/*.mdc`, and `.github/instructions/*.instructions.md`.
 - Stray adoption in `oat init` / `oat status` reconciles canonical plus the adopted provider first; run `oat sync --scope all` for cross-provider fanout.
 - In non-interactive contexts, set provider intent explicitly:
   - `pnpm run cli -- providers set --scope project --enabled claude,codex --disabled cursor`

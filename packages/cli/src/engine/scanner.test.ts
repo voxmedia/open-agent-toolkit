@@ -126,6 +126,41 @@ describe('scanCanonical', () => {
     });
   });
 
+  it('discovers .md rule files with isFile: true for project scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-scan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'rules', 'react-components.md'),
+      '# React Components\n',
+      'utf8',
+    );
+
+    const entries = await scanCanonical(root, 'project');
+
+    expect(entries).toContainEqual({
+      name: 'react-components.md',
+      type: 'rule',
+      isFile: true,
+      canonicalPath: join(root, '.agents', 'rules', 'react-components.md'),
+    });
+  });
+
+  it('skips rules for user scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-scan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'rules', 'react-components.md'),
+      '# React Components\n',
+      'utf8',
+    );
+
+    const entries = await scanCanonical(root, 'user');
+
+    expect(entries.some((entry) => entry.type === 'rule')).toBe(false);
+  });
+
   it('returns mixed directory and file entries', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-scan-'));
     tempDirs.push(root);

@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, symlink } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -13,19 +13,16 @@ import { createTestAdapter } from './test-helpers';
 
 function createCanonicalEntry(
   root: string,
-  type: 'skill' | 'agent',
+  type: 'skill' | 'agent' | 'rule',
   name: string,
 ): CanonicalEntry {
+  const canonicalDir =
+    type === 'skill' ? 'skills' : type === 'agent' ? 'agents' : 'rules';
   return {
     name,
     type,
-    canonicalPath: join(
-      root,
-      '.agents',
-      type === 'skill' ? 'skills' : 'agents',
-      name,
-    ),
-    isFile: false,
+    canonicalPath: join(root, '.agents', canonicalDir, name),
+    isFile: type === 'rule',
   };
 }
 
@@ -216,6 +213,96 @@ describe('computeSyncPlan', () => {
     });
 
     expect(plan.entries).toEqual([]);
+  });
+
+  it('forces copy strategy for transformed rule mappings and applies provider extensions', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const canonicalFile = join(root, '.agents', 'rules', 'react-components.md');
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await writeFile(canonicalFile, '# canonical rule\n', 'utf8');
+
+    const adapter = createTestAdapter({
+      name: 'cursor',
+      defaultStrategy: 'symlink',
+      projectMappings: [
+        {
+          contentType: 'rule',
+          canonicalDir: '.agents/rules',
+          providerDir: '.cursor/rules',
+          nativeRead: false,
+          providerExtension: '.mdc',
+          transformCanonical: () => '# rendered rule\n',
+        },
+      ],
+      userMappings: [],
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'rule', 'react-components.md')],
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries).toHaveLength(1);
+    expect(plan.entries[0]).toMatchObject({
+      provider: 'cursor',
+      strategy: 'copy',
+      operation: 'create_copy',
+      providerPath: join(root, '.cursor', 'rules', 'react-components.mdc'),
+      renderedContent: '# rendered rule\n',
+    });
+  });
+
+  it('skips transformed rule copies when rendered provider output already matches', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'rules', 'react-components.md'),
+      '# canonical rule\n',
+      'utf8',
+    );
+    await mkdir(join(root, '.cursor', 'rules'), { recursive: true });
+    await writeFile(
+      join(root, '.cursor', 'rules', 'react-components.mdc'),
+      '# rendered rule\n',
+      'utf8',
+    );
+
+    const adapter = createTestAdapter({
+      name: 'cursor',
+      defaultStrategy: 'symlink',
+      projectMappings: [
+        {
+          contentType: 'rule',
+          canonicalDir: '.agents/rules',
+          providerDir: '.cursor/rules',
+          nativeRead: false,
+          providerExtension: '.mdc',
+          transformCanonical: () => '# rendered rule\n',
+        },
+      ],
+      userMappings: [],
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'rule', 'react-components.md')],
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries).toHaveLength(1);
+    expect(plan.entries[0]).toMatchObject({
+      operation: 'skip',
+      strategy: 'copy',
+    });
   });
 
   it('respects scope content types (user scope: skills only)', async () => {

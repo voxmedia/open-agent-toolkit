@@ -18,6 +18,7 @@ export default defineConfig({
       '@manifest': resolvePath('./src/manifest'),
       '@providers': resolvePath('./src/providers'),
       '@agents': resolvePath('./src/agents'),
+      '@rules': resolvePath('./src/rules'),
       '@shared': resolvePath('./src/shared'),
       '@ui': resolvePath('./src/ui'),
       '@validation': resolvePath('./src/validation'),

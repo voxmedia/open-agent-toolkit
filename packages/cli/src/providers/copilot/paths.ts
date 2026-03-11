@@ -1,5 +1,10 @@
 import type { PathMapping } from '@providers/shared/adapter.types';
 
+import {
+  parseCopilotRuleToCanonical,
+  transformCanonicalToCopilotRule,
+} from './rule-transform';
+
 export const COPILOT_PROJECT_MAPPINGS: PathMapping[] = [
   {
     contentType: 'skill',
@@ -12,6 +17,15 @@ export const COPILOT_PROJECT_MAPPINGS: PathMapping[] = [
     canonicalDir: '.agents/agents',
     providerDir: '.github/agents',
     nativeRead: false,
+  },
+  {
+    contentType: 'rule',
+    canonicalDir: '.agents/rules',
+    providerDir: '.github/instructions',
+    nativeRead: false,
+    providerExtension: '.instructions.md',
+    transformCanonical: transformCanonicalToCopilotRule,
+    parseToCanonical: parseCopilotRuleToCanonical,
   },
 ];
 

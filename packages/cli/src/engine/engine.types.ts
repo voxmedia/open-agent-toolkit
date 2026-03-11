@@ -22,6 +22,7 @@ export interface SyncPlanEntry {
   operation: SyncOperationType;
   strategy: 'symlink' | 'copy';
   reason: string;
+  renderedContent?: string;
 }
 
 export type RemovalSyncPlanEntry = SyncPlanEntry & { operation: 'remove' };

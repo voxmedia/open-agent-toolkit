@@ -11,10 +11,12 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 
 ## Scope
 
-- Canonical directories: `.agents/skills`, `.agents/agents`
+- Canonical directories: `.agents/skills`, `.agents/agents`, `.agents/rules`
 - Managed provider views: `.claude/*`, `.cursor/*`, `.github/*`, `.copilot/*`, `.codex/*` (where applicable)
 - Native-read providers may use canonical `.agents/*` directly without mirrored provider directories (for example, Gemini and Codex canonical mappings)
 - Manifest tracking: `.oat/sync/manifest.json` (project) and `~/.oat/sync/manifest.json` (user)
+
+Rules are currently project-scoped canonical content. Unlike skills and agents, synced rule files for Claude, Cursor, and Copilot are rendered copies with provider-specific frontmatter and filename extensions.
 
 ## Design principles
 
@@ -23,6 +25,7 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 - Scoped destructive actions only for manifest-tracked entries
 - Cross-provider compatibility via adapters
 - Canonical `.agents/agents` is source of truth for subagents; provider views are derived
+- Canonical `.agents/rules` is source of truth for rules; provider rule files are derived rendered copies
 
 ## Implemented command surface
 

@@ -1,8 +1,8 @@
-import { access, lstat, readlink } from 'node:fs/promises';
+import { access, lstat, readFile, readlink } from 'node:fs/promises';
 import { basename, dirname, join, normalize, resolve } from 'node:path';
 
 import type { SyncConfig } from '@config/sync-config';
-import { computeContentHash } from '@manifest/hash';
+import { computeContentHash, computeStringHash } from '@manifest/hash';
 import { findEntry } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
@@ -35,12 +35,29 @@ function segmentDepth(relativePath: string): number {
   return normalized.split('/').filter(Boolean).length;
 }
 
+function canonicalDirectoryName(contentType: CanonicalEntry['type']): string {
+  if (contentType === 'skill') {
+    return 'skills';
+  }
+  if (contentType === 'agent') {
+    return 'agents';
+  }
+  return 'rules';
+}
+
 function canonicalRelativePath(entry: CanonicalEntry): string {
-  return join(
-    '.agents',
-    entry.type === 'skill' ? 'skills' : 'agents',
-    entry.name,
-  );
+  return join('.agents', canonicalDirectoryName(entry.type), entry.name);
+}
+
+function providerEntryName(
+  entry: CanonicalEntry,
+  providerExtension?: string,
+): string {
+  if (!providerExtension || !entry.isFile) {
+    return entry.name;
+  }
+
+  return entry.name.replace(/\.md$/, providerExtension);
 }
 
 function resolveScopeRootFromCanonical(
@@ -72,10 +89,15 @@ function entryInsideMapping(
 function resolveStrategy(
   adapter: ProviderAdapter,
   config: SyncConfig,
+  transformCanonical?: boolean,
 ): 'symlink' | 'copy' | null {
   const providerConfig = config.providers[adapter.name];
   if (providerConfig?.enabled === false) {
     return null;
+  }
+
+  if (transformCanonical) {
+    return 'copy';
   }
 
   const configuredStrategy =
@@ -134,6 +156,7 @@ async function classifyOperation(
   canonicalEntry: CanonicalEntry,
   providerPath: string,
   strategy: 'symlink' | 'copy',
+  renderedContent?: string,
 ): Promise<Pick<SyncPlanEntry, 'operation' | 'reason'>> {
   if (strategy === 'symlink') {
     let stat: Awaited<ReturnType<typeof lstat>>;
@@ -194,10 +217,13 @@ async function classifyOperation(
     };
   }
 
-  const canonicalHash = await computeContentHash(
-    canonicalEntry.canonicalPath,
-    canonicalEntry.isFile,
-  );
+  const canonicalHash =
+    renderedContent !== undefined
+      ? computeStringHash(renderedContent)
+      : await computeContentHash(
+          canonicalEntry.canonicalPath,
+          canonicalEntry.isFile,
+        );
   const providerHash = await computeContentHash(
     providerPath,
     canonicalEntry.isFile,
@@ -257,14 +283,18 @@ export async function computeSyncPlan({
   const activeProviderNames = new Set<string>();
 
   for (const adapter of adapters) {
-    const strategy = resolveStrategy(adapter, config);
-    if (!strategy) {
-      continue;
-    }
-
-    activeProviderNames.add(adapter.name);
-
     for (const mapping of getSyncMappings(adapter, scope)) {
+      const mappingStrategy = resolveStrategy(
+        adapter,
+        config,
+        Boolean(mapping.transformCanonical),
+      );
+      if (!mappingStrategy) {
+        continue;
+      }
+
+      activeProviderNames.add(adapter.name);
+
       for (const canonicalEntry of canonical) {
         if (!entryContentTypeMatches(canonicalEntry, mapping.contentType)) {
           continue;
@@ -275,6 +305,14 @@ export async function computeSyncPlan({
           continue;
         }
 
+        const renderedContent =
+          mapping.transformCanonical && canonicalEntry.isFile
+            ? mapping.transformCanonical(
+                await readFile(canonicalEntry.canonicalPath, 'utf8'),
+                relativeCanonicalPath.replaceAll('\\', '/'),
+              )
+            : undefined;
+
         const entryScopeRoot = scopeRoot
           ? scopeRoot
           : resolveScopeRootFromCanonical(
@@ -284,7 +322,7 @@ export async function computeSyncPlan({
         const providerPath = resolve(
           entryScopeRoot,
           mapping.providerDir,
-          canonicalEntry.name,
+          providerEntryName(canonicalEntry, mapping.providerExtension),
         );
 
         const manifestEntry = findEntry(
@@ -292,11 +330,15 @@ export async function computeSyncPlan({
           normalize(relativeCanonicalPath),
           adapter.name,
         );
+        const entryStrategy = mapping.transformCanonical
+          ? 'copy'
+          : (manifestEntry?.strategy ?? mappingStrategy);
 
         const operation = await classifyOperation(
           canonicalEntry,
           providerPath,
-          manifestEntry?.strategy ?? strategy,
+          entryStrategy,
+          renderedContent,
         );
 
         entries.push({
@@ -304,8 +346,9 @@ export async function computeSyncPlan({
           provider: adapter.name,
           providerPath,
           operation: operation.operation,
-          strategy: manifestEntry?.strategy ?? strategy,
+          strategy: entryStrategy,
           reason: operation.reason,
+          renderedContent,
         });
 
         seenCanonicalKeys.add(

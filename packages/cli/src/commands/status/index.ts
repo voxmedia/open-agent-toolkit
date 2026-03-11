@@ -102,6 +102,7 @@ interface StatusDependencies {
     providerDir: string,
     manifest: Manifest,
     canonicalEntries: CanonicalEntry[],
+    mapping?: Pick<PathMapping, 'contentType' | 'providerExtension'>,
   ) => Promise<DriftReport[]>;
   detectCodexRoleStrays: (
     scopeRoot: string,
@@ -365,6 +366,7 @@ async function collectScopeReports(
         providerDir,
         manifest,
         canonicalEntries,
+        mapping,
       );
       reports.push(...strays);
       for (const stray of strays) {

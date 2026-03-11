@@ -37,6 +37,7 @@ interface HarnessOptions {
   hookInstalled?: boolean;
   useDefaultAdopt?: boolean;
   useDefaultCollectStrays?: boolean;
+  useDefaultEnsureCanonicalDirs?: boolean;
   adapters?: ProviderAdapter[];
   configAwareActiveAdapterNames?: string[];
   loadedSyncConfig?: SyncConfig;
@@ -189,7 +190,6 @@ function createHarness(options: HarnessOptions = {}): {
       logger: capture.logger,
     }),
     resolveScopeRoot,
-    ensureCanonicalDirs,
     loadManifest: vi.fn(async () => createEmptyManifest()),
     saveManifest,
     scanCanonical: vi.fn(async () => createCanonicalEntries()),
@@ -235,6 +235,9 @@ function createHarness(options: HarnessOptions = {}): {
   }
   if (!options.useDefaultCollectStrays) {
     dependencyOverrides.collectStrays = collectStrays;
+  }
+  if (!options.useDefaultEnsureCanonicalDirs) {
+    dependencyOverrides.ensureCanonicalDirs = ensureCanonicalDirs;
   }
 
   const command = createInitCommand(dependencyOverrides);
@@ -721,6 +724,30 @@ config_file = "agents/reviewer.toml"
     expect(canonicalStat.isDirectory()).toBe(true);
     expect(claudeStat.isSymbolicLink()).toBe(true);
     expect(cursorStat.isSymbolicLink()).toBe(true);
+  });
+
+  it('creates canonical rules directory for project scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-init-command-'));
+    tempDirs.push(root);
+
+    const { command } = createHarness({
+      interactive: false,
+      hookInstalled: true,
+      scopeRootByScope: { project: root },
+      useDefaultEnsureCanonicalDirs: true,
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect((await lstat(join(root, '.agents', 'skills'))).isDirectory()).toBe(
+      true,
+    );
+    expect((await lstat(join(root, '.agents', 'agents'))).isDirectory()).toBe(
+      true,
+    );
+    expect((await lstat(join(root, '.agents', 'rules'))).isDirectory()).toBe(
+      true,
+    );
   });
 
   it('is idempotent when re-run on an initialized scope', async () => {

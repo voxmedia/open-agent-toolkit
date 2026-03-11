@@ -1,5 +1,10 @@
 import type { PathMapping } from '@providers/shared/adapter.types';
 
+import {
+  parseCursorRuleToCanonical,
+  transformCanonicalToCursorRule,
+} from './rule-transform';
+
 export const CURSOR_PROJECT_MAPPINGS: PathMapping[] = [
   {
     contentType: 'skill',
@@ -12,6 +17,15 @@ export const CURSOR_PROJECT_MAPPINGS: PathMapping[] = [
     canonicalDir: '.agents/agents',
     providerDir: '.cursor/agents',
     nativeRead: false,
+  },
+  {
+    contentType: 'rule',
+    canonicalDir: '.agents/rules',
+    providerDir: '.cursor/rules',
+    nativeRead: false,
+    providerExtension: '.mdc',
+    transformCanonical: transformCanonicalToCursorRule,
+    parseToCanonical: parseCursorRuleToCanonical,
   },
 ];
 

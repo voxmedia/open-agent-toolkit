@@ -7,19 +7,23 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
 
 ## Claude
 
-- Project: `.agents/skills` -> `.claude/skills`, `.agents/agents` -> `.claude/agents`
+- Project: `.agents/skills` -> `.claude/skills`, `.agents/agents` -> `.claude/agents`, `.agents/rules` -> `.claude/rules`
 - User: `~/.agents/skills` -> `~/.claude/skills`, `~/.agents/agents` -> `~/.claude/agents`
+- Rule files stay `.md` and are rendered with Claude-compatible frontmatter when needed
 
 ## Cursor
 
-- Project: `.agents/skills` -> `.cursor/skills`, `.agents/agents` -> `.cursor/agents`
+- Project: `.agents/skills` -> `.cursor/skills`, `.agents/agents` -> `.cursor/agents`, `.agents/rules` -> `.cursor/rules`
 - User: `~/.agents/skills` -> `~/.cursor/skills`, `~/.agents/agents` -> `~/.cursor/agents`
 - Subagent invocation in Cursor is prompt-driven (`/name` or natural mention), not `subagent_type`
+- Rule files render as `.cursor/rules/*.mdc`
 
 ## Copilot
 
-- Project: `.agents/skills` -> `.github/skills`, `.agents/agents` -> `.github/agents`
+- Project: `.agents/skills` -> `.github/skills`, `.agents/agents` -> `.github/agents`, `.agents/rules` -> `.github/instructions`
 - User: `~/.agents/skills` -> `~/.copilot/skills`, `~/.agents/agents` -> `~/.copilot/agents`
+- Rule files render as `.github/instructions/*.instructions.md`
+- Comma-containing globs are not supported for Copilot rule sync because Copilot uses a comma-separated `applyTo` field
 
 ## Gemini
 
@@ -42,14 +46,16 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
 
 ## Scope rules
 
-- Project scope: skills + agents
+- Project scope: skills + agents + rules
 - User scope: skills + agents (provider mappings vary by adapter)
+- Rules are project-scoped only in this release
 - Codex user-scope role generation under `~/.codex` remains deferred in this release
 
 ## Adoption model
 
 - Stray adoption is available in `oat init` and `oat status`.
 - Adoption reconciles canonical plus the adopted provider first.
+- Rule adoption normalizes provider filenames back to canonical `.agents/rules/*.md` entries before cross-provider fanout.
 - Cross-provider fanout is explicit via `oat sync --scope all`.
 
 ## Reference artifacts

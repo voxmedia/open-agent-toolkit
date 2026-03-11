@@ -16,16 +16,15 @@ import { computeContentHash } from '@manifest/hash';
 import { addEntry } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 import { importCanonicalAgentFromCodexRole } from '@providers/codex/codec/import-from-codex';
+import type { PathMapping } from '@providers/shared/adapter.types';
+import { canonicalRuleNameForProviderEntry } from '@rules/canonical';
 
 interface StrayAdoptionCandidate {
   provider: string;
   report: {
     providerPath: string;
   };
-  mapping: {
-    canonicalDir: string;
-    contentType: ManifestEntry['contentType'];
-  };
+  mapping: PathMapping;
   adoption?: {
     kind: 'codex_role';
     roleName: string;
@@ -65,6 +64,11 @@ export async function adoptStrayToCanonical<
   const providerAbsolutePath = resolve(scopeRoot, stray.report.providerPath);
   const providerStat = await stat(providerAbsolutePath);
   const isFile = providerStat.isFile();
+
+  if (isFile && stray.mapping.contentType === 'rule') {
+    return adoptRuleStrayToCanonical(scopeRoot, stray, manifest, options);
+  }
+
   const entryName = basename(stray.report.providerPath);
   const canonicalAbsolutePath = resolve(
     scopeRoot,
@@ -122,6 +126,70 @@ export async function adoptStrayToCanonical<
         ? await computeContentHash(canonicalAbsolutePath, isFile)
         : null,
     isFile,
+    lastSynced: new Date().toISOString(),
+  };
+
+  return addEntry(manifest, manifestEntry);
+}
+
+async function adoptRuleStrayToCanonical<
+  TCandidate extends StrayAdoptionCandidate,
+>(
+  scopeRoot: string,
+  stray: TCandidate,
+  manifest: Manifest,
+  options: AdoptStrayOptions,
+): Promise<Manifest> {
+  const providerAbsolutePath = resolve(scopeRoot, stray.report.providerPath);
+  const providerContent = await readFile(providerAbsolutePath, 'utf8');
+  const canonicalEntryName = canonicalRuleNameForProviderEntry(
+    basename(stray.report.providerPath),
+    stray.mapping,
+  );
+  const canonicalAbsolutePath = resolve(
+    scopeRoot,
+    stray.mapping.canonicalDir,
+    canonicalEntryName,
+  );
+  const canonicalRelativePath = toPosixPath(
+    relative(scopeRoot, canonicalAbsolutePath),
+  );
+  const canonicalContent = stray.mapping.parseToCanonical
+    ? stray.mapping.parseToCanonical(providerContent, stray.report.providerPath)
+    : providerContent;
+
+  await ensureDir(dirname(canonicalAbsolutePath));
+  const canonicalAlreadyExists = await pathExists(canonicalAbsolutePath);
+  if (canonicalAlreadyExists) {
+    const existing = await readFile(canonicalAbsolutePath, 'utf8');
+    if (existing.trimEnd() !== canonicalContent.trimEnd()) {
+      if (!options.replaceCanonical) {
+        throw new CliError(
+          `Cannot adopt ${toPosixPath(
+            relative(scopeRoot, providerAbsolutePath),
+          )}: canonical path ${toPosixPath(
+            relative(scopeRoot, canonicalAbsolutePath),
+          )} already exists with different content.`,
+        );
+      }
+    }
+  }
+
+  await writeFile(canonicalAbsolutePath, canonicalContent, 'utf8');
+
+  const renderedProviderContent = stray.mapping.transformCanonical
+    ? stray.mapping.transformCanonical(canonicalContent, canonicalRelativePath)
+    : providerContent;
+  await writeFile(providerAbsolutePath, renderedProviderContent, 'utf8');
+
+  const manifestEntry: ManifestEntry = {
+    canonicalPath: canonicalRelativePath,
+    providerPath: toPosixPath(relative(scopeRoot, providerAbsolutePath)),
+    provider: stray.provider,
+    contentType: stray.mapping.contentType,
+    strategy: 'copy',
+    contentHash: await computeContentHash(providerAbsolutePath, true),
+    isFile: true,
     lastSynced: new Date().toISOString(),
   };
 

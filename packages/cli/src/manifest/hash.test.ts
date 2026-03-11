@@ -9,7 +9,22 @@ import {
   computeContentHash,
   computeDirectoryHash,
   computeFileHash,
+  computeStringHash,
 } from './hash';
+
+describe('computeStringHash', () => {
+  it('produces deterministic SHA-256 for a string', () => {
+    const first = computeStringHash('rendered provider content');
+    const second = computeStringHash('rendered provider content');
+
+    expect(first).toMatch(/^[a-f0-9]{64}$/);
+    expect(first).toBe(second);
+  });
+
+  it('hash changes when string content changes', () => {
+    expect(computeStringHash('one')).not.toBe(computeStringHash('two'));
+  });
+});
 
 describe('computeDirectoryHash', () => {
   const tempDirs: string[] = [];

@@ -209,6 +209,7 @@ async function ensureCanonicalDirectories(
   await mkdir(join(scopeRoot, '.agents', 'skills'), { recursive: true });
   if (scope === 'project') {
     await mkdir(join(scopeRoot, '.agents', 'agents'), { recursive: true });
+    await mkdir(join(scopeRoot, '.agents', 'rules'), { recursive: true });
   }
 }
 
@@ -233,6 +234,7 @@ async function collectStraysDefault(
         providerDir,
         manifest,
         canonicalEntries,
+        mapping,
       );
       for (const report of strays) {
         if (report.state.status !== 'stray') {

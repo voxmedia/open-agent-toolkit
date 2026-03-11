@@ -77,4 +77,24 @@ describe('manifest schema', () => {
 
     expect(ManifestSchema.safeParse(candidate).success).toBe(true);
   });
+
+  it('accepts copy-mode rule file entries with content hashes', () => {
+    const candidate = {
+      ...validManifest,
+      entries: [
+        {
+          canonicalPath: '.agents/rules/react-components.md',
+          providerPath: '.cursor/rules/react-components.mdc',
+          provider: 'cursor',
+          contentType: 'rule',
+          strategy: 'copy',
+          contentHash: 'abcd1234',
+          isFile: true,
+          lastSynced: '2026-02-13T00:00:00.000Z',
+        },
+      ],
+    };
+
+    expect(ManifestSchema.safeParse(candidate).success).toBe(true);
+  });
 });

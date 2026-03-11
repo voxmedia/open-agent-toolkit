@@ -4,6 +4,7 @@ import { join, relative } from 'node:path';
 
 import type { CanonicalEntry } from '@engine/scanner';
 import { createEmptyManifest } from '@manifest/manager';
+import type { PathMapping } from '@providers/shared/adapter.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { detectStrays, inferScopeRoot } from './strays';
@@ -14,6 +15,28 @@ async function seedProviderEntry(
 ): Promise<void> {
   await mkdir(join(providerDir, name), { recursive: true });
   await writeFile(join(providerDir, name, 'SKILL.md'), '# provider\n', 'utf8');
+}
+
+async function seedProviderFile(
+  providerDir: string,
+  name: string,
+  content = '# provider\n',
+): Promise<void> {
+  await mkdir(providerDir, { recursive: true });
+  await writeFile(join(providerDir, name), content, 'utf8');
+}
+
+function createRuleMapping(
+  providerDir: string,
+  providerExtension: string,
+): PathMapping {
+  return {
+    contentType: 'rule',
+    canonicalDir: '.agents/rules',
+    providerDir,
+    nativeRead: false,
+    providerExtension,
+  };
 }
 
 describe('detectStrays', () => {
@@ -203,5 +226,104 @@ describe('detectStrays', () => {
   it('inferScopeRoot falls back to two-level parent when no provider root marker exists', () => {
     const providerDir = '/tmp/work/providers/skills';
     expect(inferScopeRoot(providerDir)).toBe('/tmp/work');
+  });
+
+  it('returns stray rule files in cursor rules directories', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    const providerDir = join(root, '.cursor', 'rules');
+    await seedProviderFile(providerDir, 'stray-rule.mdc');
+
+    const reports = await detectStrays(
+      'cursor',
+      providerDir,
+      createEmptyManifest(),
+      [],
+      createRuleMapping('.cursor/rules', '.mdc'),
+    );
+
+    expect(reports).toHaveLength(1);
+    expect(reports[0]).toMatchObject({
+      canonical: null,
+      provider: 'cursor',
+      providerPath: '.cursor/rules/stray-rule.mdc',
+      state: { status: 'stray' },
+    });
+  });
+
+  it('does not flag cursor rule files when the canonical markdown exists', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    const providerDir = join(root, '.cursor', 'rules');
+    await seedProviderFile(providerDir, 'react-components.mdc');
+
+    const canonicalEntries: CanonicalEntry[] = [
+      {
+        name: 'react-components.md',
+        type: 'rule',
+        canonicalPath: join(root, '.agents', 'rules', 'react-components.md'),
+        isFile: true,
+      },
+    ];
+
+    const reports = await detectStrays(
+      'cursor',
+      providerDir,
+      createEmptyManifest(),
+      canonicalEntries,
+      createRuleMapping('.cursor/rules', '.mdc'),
+    );
+
+    expect(reports).toEqual([]);
+  });
+
+  it('detects copilot instruction files as project-scoped rule strays', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    const providerDir = join(root, '.github', 'instructions');
+    await seedProviderFile(providerDir, 'react-components.instructions.md');
+
+    const reports = await detectStrays(
+      'copilot',
+      providerDir,
+      createEmptyManifest(),
+      [],
+      createRuleMapping('.github/instructions', '.instructions.md'),
+    );
+
+    expect(inferScopeRoot(providerDir)).toBe(root);
+    expect(reports).toHaveLength(1);
+    expect(reports[0]).toMatchObject({
+      canonical: null,
+      provider: 'copilot',
+      providerPath: '.github/instructions/react-components.instructions.md',
+      state: { status: 'stray' },
+    });
+  });
+
+  it('does not flag copilot instruction files when the canonical markdown exists', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    const providerDir = join(root, '.github', 'instructions');
+    await seedProviderFile(providerDir, 'react-components.instructions.md');
+
+    const canonicalEntries: CanonicalEntry[] = [
+      {
+        name: 'react-components.md',
+        type: 'rule',
+        canonicalPath: join(root, '.agents', 'rules', 'react-components.md'),
+        isFile: true,
+      },
+    ];
+
+    const reports = await detectStrays(
+      'copilot',
+      providerDir,
+      createEmptyManifest(),
+      canonicalEntries,
+      createRuleMapping('.github/instructions', '.instructions.md'),
+    );
+
+    expect(reports).toEqual([]);
   });
 });

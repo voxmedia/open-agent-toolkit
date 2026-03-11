@@ -23,21 +23,33 @@ describe('copilotAdapter', () => {
     expect(copilotAdapter.displayName).toBe('GitHub Copilot');
   });
 
-  it('project mappings: skills → .github/skills, agents → .github/agents', () => {
-    expect(copilotAdapter.projectMappings).toEqual([
-      {
-        contentType: 'skill',
-        canonicalDir: '.agents/skills',
-        providerDir: '.github/skills',
-        nativeRead: false,
-      },
-      {
-        contentType: 'agent',
-        canonicalDir: '.agents/agents',
-        providerDir: '.github/agents',
-        nativeRead: false,
-      },
-    ]);
+  it('project mappings include rules under .github/instructions', () => {
+    expect(copilotAdapter.projectMappings).toHaveLength(3);
+    expect(copilotAdapter.projectMappings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          contentType: 'skill',
+          canonicalDir: '.agents/skills',
+          providerDir: '.github/skills',
+          nativeRead: false,
+        }),
+        expect.objectContaining({
+          contentType: 'agent',
+          canonicalDir: '.agents/agents',
+          providerDir: '.github/agents',
+          nativeRead: false,
+        }),
+        expect.objectContaining({
+          contentType: 'rule',
+          canonicalDir: '.agents/rules',
+          providerDir: '.github/instructions',
+          nativeRead: false,
+          providerExtension: '.instructions.md',
+          transformCanonical: expect.any(Function),
+          parseToCanonical: expect.any(Function),
+        }),
+      ]),
+    );
   });
 
   it('user mappings: skills → .copilot/skills, agents → .copilot/agents', () => {
@@ -102,6 +114,16 @@ describe('copilotAdapter', () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-copilot-'));
     tempDirs.push(root);
     await mkdir(join(root, '.github', 'skills'), { recursive: true });
+
+    const detected = await copilotAdapter.detect(root);
+
+    expect(detected).toBe(true);
+  });
+
+  it('detect returns true when .github/instructions/ exists', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-copilot-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.github', 'instructions'), { recursive: true });
 
     const detected = await copilotAdapter.detect(root);
 

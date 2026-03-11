@@ -22,6 +22,24 @@ describe('ProviderAdapter types', () => {
     expect(mapping.nativeRead).toBe(false);
   });
 
+  it('PathMapping supports optional transform hooks for rendered content', () => {
+    const mapping: PathMapping = {
+      contentType: 'rule',
+      canonicalDir: '.agents/rules',
+      providerDir: '.cursor/rules',
+      nativeRead: false,
+      providerExtension: '.mdc',
+      transformCanonical: (content, canonicalPath) =>
+        `${canonicalPath ?? ''}\n${content}`,
+      parseToCanonical: (content) => content,
+    };
+
+    expect(mapping.providerExtension).toBe('.mdc');
+    expect(
+      mapping.transformCanonical?.('# rule', '.agents/rules/demo.md'),
+    ).toContain('.agents/rules/demo.md');
+  });
+
   it('ProviderAdapter has required fields', () => {
     const adapter: ProviderAdapter = {
       name: 'claude',

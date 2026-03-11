@@ -39,6 +39,14 @@ describe('cursorAdapter', () => {
     expect(agentMapping?.providerDir).toBe('.cursor/agents');
   });
 
+  it('project rules map to .cursor/rules', () => {
+    const ruleMapping = cursorAdapter.projectMappings.find(
+      (mapping) => mapping.contentType === 'rule',
+    );
+
+    expect(ruleMapping?.providerDir).toBe('.cursor/rules');
+  });
+
   it('user mappings: skills → .cursor/skills, agents → .cursor/agents', () => {
     expect(cursorAdapter.userMappings).toEqual([
       {

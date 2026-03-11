@@ -8,9 +8,10 @@ import {
 } from './types';
 
 describe('shared types', () => {
-  it('ContentType allows skill and agent', () => {
+  it('ContentType allows skill, agent, and rule', () => {
     expect(ContentTypeSchema.safeParse('skill').success).toBe(true);
     expect(ContentTypeSchema.safeParse('agent').success).toBe(true);
+    expect(ContentTypeSchema.safeParse('rule').success).toBe(true);
     expect(ContentTypeSchema.safeParse('other').success).toBe(false);
   });
 
@@ -29,9 +30,9 @@ describe('shared types', () => {
   });
 
   it('SCOPE_CONTENT_TYPES maps scope to valid content types', () => {
-    expect(SCOPE_CONTENT_TYPES.project).toEqual(['skill', 'agent']);
+    expect(SCOPE_CONTENT_TYPES.project).toEqual(['skill', 'agent', 'rule']);
     expect(SCOPE_CONTENT_TYPES.user).toEqual(['skill']);
-    expect(SCOPE_CONTENT_TYPES.all).toEqual(['skill', 'agent']);
+    expect(SCOPE_CONTENT_TYPES.all).toEqual(['skill', 'agent', 'rule']);
   });
 
   it('SCOPE_CONTENT_TYPES.all matches union of project and user scopes', () => {
