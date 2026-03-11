@@ -1,6 +1,6 @@
 ---
 title: CLI Bootstrap
-description: ""
+description: 'Foundational setup via oat init for canonical directories, provider adoption, and configuration.'
 ---
 
 # CLI Bootstrap

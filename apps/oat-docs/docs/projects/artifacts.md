@@ -1,6 +1,6 @@
 ---
 title: Project Artifacts
-description: ""
+description: 'Project artifact contracts: state.md, spec.md, design.md, plan.md, and implementation.md.'
 ---
 
 # Project Artifacts

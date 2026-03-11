@@ -1,6 +1,6 @@
 ---
 title: State Machine
-description: ""
+description: 'Workflow and review state transitions across lifecycle phases and checkpoints.'
 ---
 
 # State Machine

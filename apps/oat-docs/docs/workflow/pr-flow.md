@@ -1,6 +1,6 @@
 ---
 title: PR Flow
-description: ""
+description: 'PR generation inputs, outputs, artifact expectations, and frontmatter handling.'
 ---
 
 # PR Flow

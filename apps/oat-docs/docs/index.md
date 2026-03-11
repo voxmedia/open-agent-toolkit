@@ -1,6 +1,6 @@
 ---
 title: OAT Documentation
-description: ""
+description: 'Canonical reference for the Open Agent Toolkit covering CLI, provider interop, workflow, projects, and skills.'
 ---
 
 # OAT Documentation

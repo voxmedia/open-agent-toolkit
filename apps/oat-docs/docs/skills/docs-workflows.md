@@ -1,6 +1,6 @@
 ---
 title: Docs Workflows
-description: ""
+description: 'Docs CLI helpers and skills for analysis and controlled documentation updates.'
 ---
 
 # Docs Workflows

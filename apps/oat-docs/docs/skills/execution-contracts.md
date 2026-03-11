@@ -1,6 +1,6 @@
 ---
 title: Execution Contracts
-description: ""
+description: 'Skill runtime contracts: frontmatter fields, mode assertions, preconditions, and governance.'
 ---
 
 # Execution Contracts

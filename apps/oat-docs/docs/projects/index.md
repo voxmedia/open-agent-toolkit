@@ -1,6 +1,6 @@
 ---
 title: Project Docs
-description: ""
+description: 'Project artifact structure and lifecycle state handling overview.'
 ---
 
 # Project Docs

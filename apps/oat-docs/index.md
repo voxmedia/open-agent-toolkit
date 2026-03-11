@@ -1,44 +1,44 @@
-- [OAT Documentation](index.md)
+- [OAT Documentation](index.md) — Canonical reference for the Open Agent Toolkit covering CLI, provider interop, workflow, projects, and skills.
 - Cli
-  - [CLI Docs](cli/index.md)
+  - [CLI Docs](cli/index.md) — Overview of the OAT CLI with command groups, subcommands, and global options.
   - Provider Interop
-    - [Provider Interop CLI Docs](provider-interop/index.md)
-    - [Provider Interop Commands](provider-interop/commands.md)
-    - [Sync Config (`.oat/sync/config.json`)](provider-interop/config.md)
-    - [Hooks and Safety](provider-interop/hooks-and-safety.md)
-    - [Manifest and Drift](provider-interop/manifest-and-drift.md)
-    - [Providers](provider-interop/providers.md)
-    - [Provider Interop CLI Scope and Surface](provider-interop/scope-and-surface.md)
-  - [CLI Bootstrap](cli/bootstrap.md)
-  - [CLI Design Principles](cli/design-principles.md)
-  - [Diagnostics](cli/diagnostics.md)
-  - [Docs App Commands](cli/docs-apps.md)
-  - [Add Docs to a New Repo](cli/docs-consumer-quickstart.md)
-  - [Local Path Management](cli/local-paths.md)
-  - [Tool Packs and Installed Assets](cli/tool-packs-and-assets.md)
+    - [Provider Interop CLI Docs](provider-interop/index.md) — Provider interoperability overview with scope, command surface, and adapter behavior.
+    - [Provider Interop Commands](provider-interop/commands.md) — CLI commands for provider status, sync, and drift management.
+    - [Sync Config (`.oat/sync/config.json`)](provider-interop/config.md) — Configuration schema and behavior for provider sync in .oat/sync/config.json.
+    - [Hooks and Safety](provider-interop/hooks-and-safety.md) — Pre-commit hooks and safety contracts for provider sync mutations.
+    - [Manifest and Drift](provider-interop/manifest-and-drift.md) — Manifest tracking, drift states, and stray adoption for canonical-to-provider reconciliation.
+    - [Providers](provider-interop/providers.md) — Provider-specific path mappings for Claude, Cursor, Copilot, Gemini, and Codex adapters.
+    - [Provider Interop CLI Scope and Surface](provider-interop/scope-and-surface.md) — Scope boundaries and design principles for canonical-to-provider asset management.
+  - [CLI Bootstrap](cli/bootstrap.md) — Foundational setup via oat init for canonical directories, provider adoption, and configuration.
+  - [CLI Design Principles](cli/design-principles.md) — Cross-cutting design rules for CLI commands, UX, logging, safety, and verification.
+  - [Diagnostics](cli/diagnostics.md) — Environment and setup diagnostics via oat doctor for health checks and skill validation.
+  - [Docs App Commands](cli/docs-apps.md) — Docs scaffolding CLI surface for Fumadocs/MkDocs, migration, index generation, and nav sync.
+  - [Add Docs to a New Repo](cli/docs-consumer-quickstart.md) — Step-by-step guide for adding an OAT-managed docs app to a repository.
+  - [Local Path Management](cli/local-paths.md) — Managing gitignored local directories synced between main repo and worktrees via oat local.
+  - [Tool Packs and Installed Assets](cli/tool-packs-and-assets.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
 - Ideas
-  - [Ideas Workflow](ideas/index.md)
-  - [Ideas Lifecycle](ideas/lifecycle.md)
+  - [Ideas Workflow](ideas/index.md) — Lightweight brainstorming workflow for personal idea capture and exploration.
+  - [Ideas Lifecycle](ideas/lifecycle.md) — Ideas directory structure, state model, scratchpad flow, and promotion to projects.
 - Projects
-  - [Project Docs](projects/index.md)
-  - [Project Artifacts](projects/artifacts.md)
-  - [State Machine](projects/state-machine.md)
+  - [Project Docs](projects/index.md) — Project artifact structure and lifecycle state handling overview.
+  - [Project Artifacts](projects/artifacts.md) — Project artifact contracts: state.md, spec.md, design.md, plan.md, and implementation.md.
+  - [State Machine](projects/state-machine.md) — Workflow and review state transitions across lifecycle phases and checkpoints.
 - Reference
-  - [Reference Docs](reference/index.md)
-  - [Commit Conventions](reference/commit-conventions.md)
-  - [Docs Index Contract](reference/docs-index-contract.md)
-  - [File Locations](reference/file-locations.md)
-  - [`.oat` Directory Structure](reference/oat-directory-structure.md)
-  - [Troubleshooting](reference/troubleshooting.md)
+  - [Reference Docs](reference/index.md) — Durable reference material for operating and maintaining OAT.
+  - [Commit Conventions](reference/commit-conventions.md) — Commit message patterns and traceability rules for cross-artifact linkage.
+  - [Docs Index Contract](reference/docs-index-contract.md) — Navigation generation contract: index.md format and authoring guidance.
+  - [File Locations](reference/file-locations.md) — Canonical locations for agent assets, OAT config, projects, ideas, and templates.
+  - [`.oat` Directory Structure](reference/oat-directory-structure.md) — Canonical .oat/ tree reference: config, projects, sync state, templates, and per-file purpose.
+  - [Troubleshooting](reference/troubleshooting.md) — Common issues and fixes for skills visibility, worktrees, sync, and manifest problems.
 - Skills
-  - [Skills Index](skills/index.md)
-  - [Docs Workflows](skills/docs-workflows.md)
-  - [Execution Contracts](skills/execution-contracts.md)
+  - [Skills Index](skills/index.md) — Catalog of lifecycle, ideas, review, documentation, and utility skills.
+  - [Docs Workflows](skills/docs-workflows.md) — Docs CLI helpers and skills for analysis and controlled documentation updates.
+  - [Execution Contracts](skills/execution-contracts.md) — Skill runtime contracts: frontmatter fields, mode assertions, preconditions, and governance.
 - Workflow
-  - [Workflow Docs](workflow/index.md)
-  - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflow/hil-checkpoints.md)
-  - [Lifecycle](workflow/lifecycle.md)
-  - [PR Flow](workflow/pr-flow.md)
-  - [Reviews](workflow/reviews.md)
-- [Contributing to OAT Docs](contributing.md)
-- [Quickstart](quickstart.md)
+  - [Workflow Docs](workflow/index.md) — Workflow lifecycle overview, phases, quality gates, and optional HiLL checkpoints.
+  - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflow/hil-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
+  - [Lifecycle](workflow/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.
+  - [PR Flow](workflow/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.
+  - [Reviews](workflow/reviews.md) — Review request/receive loop, status progression, severity policy, and quality gates.
+- [Contributing to OAT Docs](contributing.md) — Authoring conventions for OAT docs: frontmatter, index.md navigation contracts, and Markdown features.
+- [Quickstart](quickstart.md) — Quick-start guides for interop-only, provider-agnostic tooling, and optional workflow adoption.

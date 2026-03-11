@@ -1,6 +1,6 @@
 ---
 title: File Locations
-description: ""
+description: 'Canonical locations for agent assets, OAT config, projects, ideas, and templates.'
 ---
 
 # File Locations

@@ -1,6 +1,6 @@
 ---
 title: Skills Index
-description: ""
+description: 'Catalog of lifecycle, ideas, review, documentation, and utility skills.'
 ---
 
 # Skills Index

@@ -1,6 +1,6 @@
 ---
 title: Contributing to OAT Docs
-description: ""
+description: 'Authoring conventions for OAT docs: frontmatter, index.md navigation contracts, and Markdown features.'
 ---
 
 # Contributing to OAT Docs

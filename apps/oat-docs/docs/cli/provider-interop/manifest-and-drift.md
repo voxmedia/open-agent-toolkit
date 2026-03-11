@@ -1,6 +1,6 @@
 ---
 title: Manifest and Drift
-description: ""
+description: 'Manifest tracking, drift states, and stray adoption for canonical-to-provider reconciliation.'
 ---
 
 # Manifest and Drift

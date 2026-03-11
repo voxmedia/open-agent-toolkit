@@ -1,6 +1,6 @@
 ---
 title: Docs Index Contract
-description: ""
+description: 'Navigation generation contract: index.md format and authoring guidance.'
 ---
 
 # Docs Index Contract

@@ -1,6 +1,6 @@
 ---
 title: Ideas Lifecycle
-description: ""
+description: 'Ideas directory structure, state model, scratchpad flow, and promotion to projects.'
 ---
 
 # Ideas Lifecycle

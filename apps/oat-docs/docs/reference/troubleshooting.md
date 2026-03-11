@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: ""
+description: 'Common issues and fixes for skills visibility, worktrees, sync, and manifest problems.'
 ---
 
 # Troubleshooting

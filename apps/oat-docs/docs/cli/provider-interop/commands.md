@@ -1,6 +1,6 @@
 ---
 title: Provider Interop Commands
-description: ""
+description: 'CLI commands for provider status, sync, and drift management.'
 ---
 
 # Provider Interop Commands

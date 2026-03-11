@@ -1,6 +1,6 @@
 ---
-title: ".oat Directory Structure"
-description: ""
+title: '`.oat` Directory Structure'
+description: 'Canonical .oat/ tree reference: config, projects, sync state, templates, and per-file purpose.'
 ---
 
 # `.oat` Directory Structure

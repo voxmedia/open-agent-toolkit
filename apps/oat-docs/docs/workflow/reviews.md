@@ -1,6 +1,6 @@
 ---
 title: Reviews
-description: ""
+description: 'Review request/receive loop, status progression, severity policy, and quality gates.'
 ---
 
 # Reviews

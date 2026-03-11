@@ -1,6 +1,6 @@
 ---
 title: Docs App Commands
-description: ""
+description: 'Docs scaffolding CLI surface for Fumadocs/MkDocs, migration, index generation, and nav sync.'
 ---
 
 # Docs App Commands

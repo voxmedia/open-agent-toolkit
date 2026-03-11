@@ -1,6 +1,6 @@
 ---
 title: Ideas Workflow
-description: ""
+description: 'Lightweight brainstorming workflow for personal idea capture and exploration.'
 ---
 
 # Ideas Workflow

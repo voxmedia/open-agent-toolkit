@@ -1,4 +1,4 @@
-# Run workspace quality gates before pushing
-pnpm run check
+# Fast quality gate before pushing — CI handles tests and full builds
 pnpm run type-check
-pnpm run test
+pnpm run lint
+pnpm run format

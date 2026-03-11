@@ -1,6 +1,6 @@
 ---
 title: CLI Docs
-description: ""
+description: 'Overview of the OAT CLI with command groups, subcommands, and global options.'
 ---
 
 # CLI Docs

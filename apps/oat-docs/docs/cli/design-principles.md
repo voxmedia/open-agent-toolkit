@@ -1,6 +1,6 @@
 ---
 title: CLI Design Principles
-description: ""
+description: 'Cross-cutting design rules for CLI commands, UX, logging, safety, and verification.'
 ---
 
 # CLI Design Principles

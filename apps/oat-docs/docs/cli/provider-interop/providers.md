@@ -1,6 +1,6 @@
 ---
 title: Providers
-description: ""
+description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemini, and Codex adapters.'
 ---
 
 # Providers

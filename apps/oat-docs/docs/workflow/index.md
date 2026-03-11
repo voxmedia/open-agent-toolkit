@@ -1,6 +1,6 @@
 ---
 title: Workflow Docs
-description: ""
+description: 'Workflow lifecycle overview, phases, quality gates, and optional HiLL checkpoints.'
 ---
 
 # Workflow Docs

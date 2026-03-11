@@ -1,6 +1,6 @@
 ---
 title: Hooks and Safety
-description: ""
+description: 'Pre-commit hooks and safety contracts for provider sync mutations.'
 ---
 
 # Hooks and Safety

@@ -1,6 +1,6 @@
 ---
 title: Add Docs to a New Repo
-description: ""
+description: 'Step-by-step guide for adding an OAT-managed docs app to a repository.'
 ---
 
 # Add Docs to a New Repo

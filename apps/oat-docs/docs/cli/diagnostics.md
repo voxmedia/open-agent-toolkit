@@ -1,6 +1,6 @@
 ---
 title: Diagnostics
-description: ""
+description: 'Environment and setup diagnostics via oat doctor for health checks and skill validation.'
 ---
 
 # Diagnostics

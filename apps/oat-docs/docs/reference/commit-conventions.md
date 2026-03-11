@@ -1,6 +1,6 @@
 ---
 title: Commit Conventions
-description: ""
+description: 'Commit message patterns and traceability rules for cross-artifact linkage.'
 ---
 
 # Commit Conventions

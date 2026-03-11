@@ -1,6 +1,6 @@
 ---
 title: Provider Interop CLI Scope and Surface
-description: ""
+description: 'Scope boundaries and design principles for canonical-to-provider asset management.'
 ---
 
 # Provider Interop CLI Scope and Surface

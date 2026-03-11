@@ -1,6 +1,6 @@
 ---
 title: Tool Packs and Installed Assets
-description: ""
+description: 'Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.'
 ---
 
 # Tool Packs and Installed Assets

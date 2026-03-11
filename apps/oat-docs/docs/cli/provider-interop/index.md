@@ -1,6 +1,6 @@
 ---
 title: Provider Interop CLI Docs
-description: ""
+description: 'Provider interoperability overview with scope, command surface, and adapter behavior.'
 ---
 
 # Provider Interop CLI Docs

@@ -1,6 +1,6 @@
 ---
 title: Local Path Management
-description: ""
+description: 'Managing gitignored local directories synced between main repo and worktrees via oat local.'
 ---
 
 # Local Path Management

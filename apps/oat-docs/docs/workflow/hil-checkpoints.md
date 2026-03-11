@@ -1,6 +1,6 @@
 ---
 title: Human-in-the-Loop Lifecycle (HiLL) Checkpoints
-description: ""
+description: 'Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.'
 ---
 
 # Human-in-the-Loop Lifecycle (HiLL) Checkpoints

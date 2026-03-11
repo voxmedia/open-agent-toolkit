@@ -1,6 +1,6 @@
 ---
-title: "Sync Config (.oat/sync/config.json)"
-description: ""
+title: 'Sync Config (`.oat/sync/config.json`)'
+description: 'Configuration schema and behavior for provider sync in .oat/sync/config.json.'
 ---
 
 # Sync Config (`.oat/sync/config.json`)

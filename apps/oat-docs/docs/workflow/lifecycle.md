@@ -1,6 +1,6 @@
 ---
 title: Lifecycle
-description: ""
+description: 'End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.'
 ---
 
 # Lifecycle
