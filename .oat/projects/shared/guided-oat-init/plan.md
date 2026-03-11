@@ -258,13 +258,161 @@ git commit -m "test(p01-t05): add integration tests for guided setup flow"
 
 ---
 
+### Task p01-t06: (review) Fix provider sync to use installed CLI binary
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `runProviderSync` executes `pnpm run cli -- sync --scope project` which only works inside the OAT monorepo workspace. In normal repos there is no `cli` script, so it fails.
+Location: `packages/cli/src/commands/init/index.ts:331`
+
+**Step 2: Implement fix**
+
+Change the default `runProviderSync` implementation from:
+
+```typescript
+execSync('pnpm run cli -- sync --scope project', {
+  cwd: projectRoot,
+  stdio: 'inherit',
+});
+```
+
+to:
+
+```typescript
+execSync('oat sync --scope project', { cwd: projectRoot, stdio: 'inherit' });
+```
+
+This uses the installed `oat` binary which is the intended v1 approach per discovery.md.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @oat/cli test && pnpm lint && pnpm type-check`
+Expected: All pass (tests mock `runProviderSync` so the change is safe)
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/index.ts
+git commit -m "fix(p01-t06): use installed oat binary for provider sync"
+```
+
+---
+
+### Task p01-t07: (review) Enrich guided setup summary with provider list and local path counts
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/init/index.test.ts`
+- Modify: `packages/cli/src/commands/init/guided-setup.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Plan requires summary to show `Providers: {list or "skipped"}` and `Local paths: {count added, count existing}`. Current implementation only shows `Tool packs: installed/skipped`, `Local paths: N configured/skipped`, `Provider sync: done/skipped`.
+Location: `packages/cli/src/commands/init/index.ts:492`
+
+**Step 2: Implement fix**
+
+In `runGuidedSetupImpl`:
+
+- Track the count of newly added paths vs already-existing paths through the local paths step
+- Add a `Providers` line to the summary using the adapters from the init context (detected providers)
+- Change local paths line from `N configured` to `N added, M existing`
+
+Update summary output to match plan:
+
+```
+  Providers:      Claude Code (or "skipped" if none detected)
+  Tool packs:     installed / skipped
+  Local paths:    N added, M existing (or "skipped")
+  Provider sync:  done / skipped
+```
+
+**Step 3: Update tests**
+
+- Update summary assertions in `index.test.ts` to check for the enriched output fields
+- Update summary assertions in `guided-setup.test.ts` to check for provider and local path detail
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @oat/cli test && pnpm lint && pnpm type-check`
+Expected: All pass
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/init/
+git commit -m "fix(p01-t07): enrich guided setup summary with provider and path detail"
+```
+
+### Task p01-t08: (review) Use configured providers and scoped local-path counts in summary
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: `packages/cli/src/commands/init/index.test.ts`
+- Modify: `packages/cli/src/commands/init/guided-setup.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: The guided summary populates `Providers` from `adapter.detect()` (all detectable providers) instead of from the sync config (user-enabled providers). The `Local paths` existing-count uses `resolveLocalPaths(config)` which includes all stored local paths (including custom ones), not just the guided choice set that was already present.
+Location: `packages/cli/src/commands/init/index.ts:505`
+
+**Step 2: Fix provider line**
+
+In `runGuidedSetupImpl`, replace the `adapter.detect()` loop with config-aware detection:
+
+- Load sync config via `dependencies.loadSyncConfig(join(projectRoot, '.oat', 'sync', 'config.json'))`
+- Call `dependencies.getConfigAwareAdapters(adapters, projectRoot, syncConfig)`
+- Use `resolution.activeAdapters` display names for the summary
+
+**Step 3: Fix local paths existing count**
+
+Change `existingCount` from `existingPaths.size` (all config local paths) to the count of existing paths that are in the guided choice set:
+
+```typescript
+const guidedPathValues = new Set(LOCAL_PATH_CHOICES.map((c) => c.value));
+const existingGuidedCount = [...existingPaths].filter((p) =>
+  guidedPathValues.has(p),
+).length;
+```
+
+**Step 4: Add test coverage**
+
+In `index.test.ts`:
+
+- Add test: detectable provider that user disabled → should NOT appear in summary Providers line
+- Add test: config has custom local paths beyond the guided set → existing count should only reflect guided paths
+
+In `guided-setup.test.ts`:
+
+- Verify provider summary uses config-aware adapters, not raw detection
+
+**Step 5: Verify**
+
+Run: `pnpm --filter @oat/cli test && pnpm lint && pnpm type-check`
+Expected: All pass
+
+**Step 6: Commit**
+
+```bash
+git add packages/cli/src/commands/init/
+git commit -m "fix(p01-t08): use configured providers and scoped path counts in summary"
+```
+
+---
+
 ## Reviews
 
 | Scope | Type     | Status  | Date       | Artifact                                   |
 | ----- | -------- | ------- | ---------- | ------------------------------------------ |
 | plan  | artifact | passed  | 2026-03-10 | reviews/artifact-plan-review-2026-03-10.md |
 | p01   | code     | pending | -          | -                                          |
-| final | code     | pending | -          | -                                          |
+| final | code     | passed  | 2026-03-11 | reviews/final-review-2026-03-11.md         |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -281,9 +429,9 @@ git commit -m "test(p01-t05): add integration tests for guided setup flow"
 
 **Summary:**
 
-- Phase 1: 5 tasks — Add `--setup` flag, tool packs step, local paths multi-select, provider sync + summary, integration tests
+- Phase 1: 8 tasks — 5 feature + 3 review fixes
 
-**Total: 5 tasks**
+**Total: 8 tasks**
 
 Ready for code review and merge.
 

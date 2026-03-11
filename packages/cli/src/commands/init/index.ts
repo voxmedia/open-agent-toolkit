@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
@@ -10,6 +11,8 @@ import {
   type ApplyOatCoreResult,
   applyOatCoreGitignore,
 } from '@commands/init/gitignore';
+import { applyGitignore } from '@commands/local/apply';
+import { addLocalPaths } from '@commands/local/manage';
 import {
   adoptStrayToCanonical,
   isAdoptionConflictError,
@@ -35,6 +38,11 @@ import {
   type SyncConfig,
   saveSyncConfig,
 } from '@config/index';
+import {
+  type OatConfig,
+  readOatConfig,
+  resolveLocalPaths,
+} from '@config/oat-config';
 import { type DriftReport, detectStrays } from '@drift/index';
 import {
   type CanonicalEntry,
@@ -43,6 +51,7 @@ import {
   scanCanonical,
   uninstallHook,
 } from '@engine/index';
+import { dirExists } from '@fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import {
   createEmptyManifest,
@@ -70,7 +79,7 @@ import {
 import type { ConcreteScope, Scope } from '@shared/types';
 import { Command } from 'commander';
 
-import { createInitToolsCommand } from './tools';
+import { createInitToolsCommand, runInitToolsWithDefaults } from './tools';
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
@@ -90,6 +99,7 @@ function getDefaultAdapters(): ProviderAdapter[] {
 
 interface InitOptions extends GlobalOptions {
   hook?: boolean;
+  setup?: boolean;
 }
 
 export interface InitStrayCandidate {
@@ -158,6 +168,23 @@ interface InitDependencies {
     config: SyncConfig,
   ) => Promise<ConfigAwareAdaptersResult>;
   applyOatCoreGitignore: (repoRoot: string) => Promise<ApplyOatCoreResult>;
+  dirExists: (dirPath: string) => Promise<boolean>;
+  readOatConfig: (repoRoot: string) => Promise<OatConfig>;
+  resolveLocalPaths: (config: OatConfig) => string[];
+  addLocalPaths: (
+    repoRoot: string,
+    paths: string[],
+  ) => Promise<{ added: string[]; all: string[] }>;
+  applyGitignore: (
+    repoRoot: string,
+    localPaths: string[],
+  ) => Promise<{ action: string }>;
+  runGuidedSetup: (
+    context: CommandContext,
+    dependencies: InitDependencies,
+  ) => Promise<void>;
+  runToolPacks: (context: CommandContext) => Promise<void>;
+  runProviderSync: (projectRoot: string) => Promise<void>;
 }
 
 interface InitScopeSummary {
@@ -294,6 +321,19 @@ function createDependencies(): InitDependencies {
     saveSyncConfig,
     getConfigAwareAdapters,
     applyOatCoreGitignore,
+    dirExists,
+    readOatConfig,
+    resolveLocalPaths,
+    addLocalPaths,
+    applyGitignore,
+    runGuidedSetup: runGuidedSetupImpl,
+    runToolPacks: runInitToolsWithDefaults,
+    async runProviderSync(projectRoot: string) {
+      execSync('oat sync --scope project', {
+        cwd: projectRoot,
+        stdio: 'inherit',
+      });
+    },
   };
 }
 
@@ -366,13 +406,143 @@ async function maybeHandleHook(
   return installed || shouldInstall;
 }
 
+const LOCAL_PATH_CHOICES: MultiSelectChoice[] = [
+  {
+    label: '.oat/**/analysis — Analysis artifacts',
+    value: '.oat/**/analysis',
+    checked: true,
+  },
+  {
+    label: '.oat/**/pr — PR description files',
+    value: '.oat/**/pr',
+    checked: true,
+  },
+  {
+    label: '.oat/**/reviews — Review artifacts',
+    value: '.oat/**/reviews',
+    checked: true,
+  },
+  {
+    label: '.oat/ideas — Ideas and brainstorms',
+    value: '.oat/ideas',
+    checked: true,
+  },
+];
+
+async function runGuidedSetupImpl(
+  context: CommandContext,
+  dependencies: InitDependencies,
+): Promise<void> {
+  const projectRoot = await dependencies.resolveScopeRoot('project', context);
+  const adapters = dependencies.getAdapters();
+  const configPath = join(projectRoot, '.oat', 'sync', 'config.json');
+  const syncConfig = await dependencies.loadSyncConfig(configPath);
+  const resolution = await dependencies.getConfigAwareAdapters(
+    adapters,
+    projectRoot,
+    syncConfig,
+  );
+  const activeProviderNames = resolution.activeAdapters.map(
+    (a) => a.displayName,
+  );
+
+  context.logger.info('[1/4] Tool packs…');
+  const installTools = await dependencies.confirmAction(
+    'Install tool packs (skills for workflows, ideas, utilities)?',
+    { interactive: context.interactive },
+  );
+  if (installTools) {
+    const guidedContext: CommandContext = { ...context, scope: 'project' };
+    await dependencies.runToolPacks(guidedContext);
+  }
+
+  context.logger.info('[2/4] Local paths (gitignored artifacts)…');
+  const config = await dependencies.readOatConfig(projectRoot);
+  const existingPaths = new Set(dependencies.resolveLocalPaths(config));
+
+  const choices = LOCAL_PATH_CHOICES.map((c) => ({
+    ...c,
+    checked: existingPaths.has(c.value) || c.checked,
+  }));
+
+  const selectedPaths =
+    (await dependencies.selectManyWithAbort(
+      'Select local paths to add',
+      choices,
+      {
+        interactive: context.interactive,
+      },
+    )) ?? [];
+
+  let addedCount = 0;
+  const guidedPathValues = new Set(LOCAL_PATH_CHOICES.map((c) => c.value));
+  const existingGuidedCount = [...existingPaths].filter((p) =>
+    guidedPathValues.has(p),
+  ).length;
+
+  if (selectedPaths.length > 0) {
+    const delta = selectedPaths.filter((p) => !existingPaths.has(p));
+    if (delta.length > 0) {
+      const addResult = await dependencies.addLocalPaths(projectRoot, delta);
+      addedCount = addResult.added.length;
+      await dependencies.applyGitignore(projectRoot, addResult.all);
+      context.logger.info(`Added ${addResult.added.length} local path(s).`);
+    } else {
+      context.logger.info('All selected paths already configured.');
+    }
+  }
+  context.logger.info(
+    'Add custom local paths anytime with `oat local add <path>`',
+  );
+
+  context.logger.info('[3/4] Provider sync…');
+  const syncProviders = await dependencies.confirmAction(
+    'Sync provider project views now?',
+    { interactive: context.interactive },
+  );
+  if (syncProviders) {
+    await dependencies.runProviderSync(projectRoot);
+  }
+
+  context.logger.info('[4/4] Setup complete');
+  context.logger.info('');
+  context.logger.info('Guided setup complete.');
+  context.logger.info('');
+  context.logger.info(
+    `  Providers:      ${activeProviderNames.length > 0 ? activeProviderNames.join(', ') : 'none detected'}`,
+  );
+  context.logger.info(
+    `  Tool packs:     ${installTools ? 'installed' : 'skipped'}`,
+  );
+  context.logger.info(
+    `  Local paths:    ${selectedPaths.length > 0 ? `${addedCount} added, ${existingGuidedCount} existing` : 'skipped'}`,
+  );
+  context.logger.info(
+    `  Provider sync:  ${syncProviders ? 'done' : 'skipped'}`,
+  );
+  context.logger.info('');
+  context.logger.info('Next steps:');
+  context.logger.info(
+    '  - Run `oat init tools` to customize tool pack selection',
+  );
+  context.logger.info(
+    '  - Run `oat local add <path>` to add custom local paths',
+  );
+  context.logger.info('  - Run `oat local status` to verify gitignore state');
+  context.logger.info(
+    '  - Start a project: `oat-project-quick-start` or `oat-project-new`',
+  );
+}
+
 async function runInitCommand(
   context: CommandContext,
   dependencies: InitDependencies,
   hookFlag: boolean | undefined,
+  setupFlag: boolean | undefined,
 ): Promise<void> {
   const scopes = resolveConcreteScopes(context.scope);
   let projectRoot: string | null = null;
+  let oatDirExistedBefore = true;
   const scopeSummaries: InitScopeSummary[] = [];
 
   for (const scope of scopes) {
@@ -380,6 +550,9 @@ async function runInitCommand(
     let activeAdaptersForStrays: ProviderAdapter[] | undefined;
     if (scope === 'project') {
       projectRoot = scopeRoot;
+      oatDirExistedBefore = await dependencies.dirExists(
+        join(scopeRoot, '.oat'),
+      );
       const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');
       const adapters = dependencies.getAdapters();
       let config = await dependencies.loadSyncConfig(configPath);
@@ -570,6 +743,20 @@ async function runInitCommand(
   }
 
   process.exitCode = 0;
+
+  const freshInit = projectRoot !== null && !oatDirExistedBefore;
+  if (context.interactive && (setupFlag || freshInit)) {
+    let shouldRunSetup = !!setupFlag;
+    if (!shouldRunSetup && freshInit) {
+      shouldRunSetup = await dependencies.confirmAction(
+        'Would you like to run guided setup?',
+        { interactive: context.interactive },
+      );
+    }
+    if (shouldRunSetup) {
+      await dependencies.runGuidedSetup(context, dependencies);
+    }
+  }
 }
 
 export function createInitCommand(
@@ -584,10 +771,11 @@ export function createInitCommand(
     .description('Initialize canonical directories, manifest, and tool packs')
     .option('--hook', 'Install optional pre-commit hook')
     .option('--no-hook', 'Skip optional pre-commit hook install')
+    .option('--setup', 'Run guided setup after initialization')
     .addCommand(createInitToolsCommand())
     .action(async (_options, command: Command) => {
       const options = readGlobalOptions(command) as InitOptions;
       const context = dependencies.buildCommandContext(options);
-      await runInitCommand(context, dependencies, options.hook);
+      await runInitCommand(context, dependencies, options.hook, options.setup);
     });
 }

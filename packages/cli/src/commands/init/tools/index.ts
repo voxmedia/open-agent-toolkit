@@ -262,7 +262,7 @@ export function buildWorkflowsSectionBody(packs: PackScopeInfo[]): string {
   return lines.join('\n');
 }
 
-async function runInitTools(
+export async function runInitTools(
   context: CommandContext,
   dependencies: InitToolsDependencies,
 ): Promise<void> {
@@ -449,6 +449,12 @@ async function runInitTools(
     }
     process.exitCode = 1;
   }
+}
+
+export async function runInitToolsWithDefaults(
+  context: CommandContext,
+): Promise<void> {
+  await runInitTools(context, { ...DEFAULT_DEPENDENCIES });
 }
 
 export function createInitToolsCommand(

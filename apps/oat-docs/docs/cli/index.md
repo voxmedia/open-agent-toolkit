@@ -24,9 +24,9 @@ The CLI is a standalone value path: you can use it without adopting OAT workflow
 
 ### Bootstrap Commands
 
-| Command    | Purpose                                                                                                                       |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `oat init` | Initialize canonical directories, sync config/manifest, and optional setup hooks. Sets up the base OAT structure for a scope. |
+| Command    | Purpose                                                                                                                                                                                                        |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `oat init` | Initialize canonical directories, sync config/manifest, and optional setup hooks. Includes interactive guided setup (`--setup` or auto-prompted on fresh init) for tool packs, local paths, and provider sync. |
 
 See [`bootstrap.md`](bootstrap.md) for details.
 

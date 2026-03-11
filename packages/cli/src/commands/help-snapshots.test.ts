@@ -72,6 +72,7 @@ describe('help output snapshots', () => {
       Options:
         --hook      Install optional pre-commit hook
         --no-hook   Skip optional pre-commit hook install
+        --setup     Run guided setup after initialization
         -h, --help  display help for command
 
       Commands:
