@@ -16,6 +16,7 @@
   - [Add Docs to a New Repo](cli/docs-consumer-quickstart.md) — Step-by-step guide for adding an OAT-managed docs app to a repository.
   - [Local Path Management](cli/local-paths.md) — Managing gitignored local directories synced between main repo and worktrees via oat local.
   - [Tool Packs and Installed Assets](cli/tool-packs-and-assets.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
+  - [Repository Analysis](cli/repo-analysis.md) — Repository-level analysis commands for collecting and triaging PR review comments.
 - Ideas
   - [Ideas Workflow](ideas/index.md) — Lightweight brainstorming workflow for personal idea capture and exploration.
   - [Ideas Lifecycle](ideas/lifecycle.md) — Ideas directory structure, state model, scratchpad flow, and promotion to projects.

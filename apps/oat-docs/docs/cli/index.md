@@ -19,6 +19,7 @@ The CLI is a standalone value path: you can use it without adopting OAT workflow
 - [Diagnostics](diagnostics.md) — Cross-cutting diagnostics (`oat doctor`).
 - [Local Path Management](local-paths.md) — Manage gitignored, worktree-synced local paths.
 - [Provider Interop](provider-interop/index.md) — Provider-interop command surface and behavior.
+- [Repository Analysis](repo-analysis.md) — Repository-level analysis commands (`oat repo`).
 
 ## Command Groups
 
@@ -93,6 +94,15 @@ See [`local-paths.md`](local-paths.md) for details.
 | `oat providers list`    | List all registered providers with their enabled/disabled status.                                                  |
 
 See [`provider-interop/`](provider-interop/index.md) for detailed provider-interop documentation.
+
+### Repository Analysis (`oat repo`)
+
+| Command                                  | Purpose                                                              |
+| ---------------------------------------- | -------------------------------------------------------------------- |
+| `oat repo pr-comments collect`           | Collect PR review comments from merged PRs via GitHub GraphQL API.   |
+| `oat repo pr-comments triage-collection` | Interactively triage collected comments with keep/discard decisions. |
+
+See [`repo-analysis.md`](repo-analysis.md) for details.
 
 ### Diagnostics
 

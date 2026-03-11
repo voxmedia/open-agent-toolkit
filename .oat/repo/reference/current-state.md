@@ -86,6 +86,13 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - `create-agnostic-skill` (scaffold new provider-agnostic skills using the Agent Skills open standard; bundled in the utility pack)
 - `create-oat-skill` (scaffold new OAT skills using the standard OAT sections + banner conventions; references baseline guidance from `create-agnostic-skill`)
 
+### Repository Analysis CLI
+
+- Commands:
+  - `oat repo pr-comments collect` — GraphQL-based PR review comment collection from merged PRs with bot/trivial filtering, stable IDs (`RC-NNN`), and monthly JSON + Markdown output
+  - `oat repo pr-comments triage-collection` — interactive keep/discard triage of collected comment chunks
+- Source: `packages/cli/src/commands/repo/pr-comments/`
+
 ### Provider Interop CLI (Implemented Surface)
 
 - Commands:

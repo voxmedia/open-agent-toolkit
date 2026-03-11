@@ -12,6 +12,7 @@ import { createLocalCommand } from './local';
 import { createProjectCommand } from './project';
 import { createProvidersCommand } from './providers';
 import { createRemoveCommand } from './remove';
+import { createRepoCommand } from './repo';
 import { createStateCommand } from './state';
 import { createStatusCommand } from './status';
 import { createSyncCommand } from './sync';
@@ -25,6 +26,7 @@ export function registerCommands(program: Command): void {
   program.addCommand(createLocalCommand());
   program.addCommand(createProvidersCommand());
   program.addCommand(createRemoveCommand());
+  program.addCommand(createRepoCommand());
   program.addCommand(createDoctorCommand());
   program.addCommand(createCleanupCommand());
   program.addCommand(createDocsCommand());

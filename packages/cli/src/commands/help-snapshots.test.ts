@@ -47,6 +47,7 @@ describe('help output snapshots', () => {
         local            Manage local-only paths (gitignored, worktree-synced)
         providers        Inspect provider capabilities and paths
         remove           Remove installed skills and managed provider views
+        repo             Repository-level analysis and insight tools
         doctor           Run environment and setup diagnostics
         cleanup          Cleanup OAT project and artifact hygiene issues
         docs             OAT documentation bootstrap and maintenance commands
