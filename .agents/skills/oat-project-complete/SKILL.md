@@ -26,8 +26,8 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[2/6] Checking completion gates…`
   - `[3/6] Completing lifecycle…`
   - `[4/6] Generating PR description + archiving…`
-  - `[5/6] Committing + pushing…`
-  - `[6/6] Refreshing dashboard…`
+  - `[5/6] Refreshing dashboard + committing…`
+  - `[6/6] Opening PR…`
 
 ## Process
 
@@ -340,7 +340,15 @@ Guidance:
 - If forced to use a local-only archive, warn and require explicit user confirmation.
 - Do not hardcode user-specific absolute paths.
 
-### Step 9: Commit + Push Bookkeeping (Required)
+### Step 9: Regenerate Dashboard
+
+Regenerate the repo state dashboard so the completion status is reflected before committing.
+
+```bash
+oat state refresh
+```
+
+### Step 10: Commit + Push Bookkeeping (Required)
 
 Completion is not done until bookkeeping changes are committed and pushed. This prevents local-only `state.md` updates that leave project status stale for later sessions/reviews.
 
@@ -350,6 +358,7 @@ Expected changes may include:
 - `{PROJECT_PATH}/implementation.md` (if touched earlier in the lifecycle closeout)
 - `{PROJECT_PATH}/plan.md` (if review receive just ran)
 - `{PROJECT_PATH}/pr/project-pr-*.md` (PR description artifact)
+- `.oat/state.md` (dashboard regenerated in Step 9)
 - `.oat/config.local.json` (if `activeProject` cleared)
 - Shared-project deletions under `{PROJECTS_ROOT}/{PROJECT_NAME}` (if archived)
 
@@ -368,7 +377,7 @@ Rules:
 - If there is nothing to commit, state that explicitly and verify whether the completion bookkeeping was already committed in a prior commit.
 - If push fails, report the failure and do not claim completion is fully recorded.
 
-### Step 10: Open PR in GitHub (Conditional)
+### Step 11: Open PR in GitHub (Conditional)
 
 **Skip if `SHOULD_OPEN_PR` is false.**
 
@@ -390,12 +399,6 @@ gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 5. Clean up the temp file.
 
 Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
-
-### Step 11: Regenerate Dashboard
-
-```bash
-oat state refresh
-```
 
 ### Step 12: Confirm to User
 
