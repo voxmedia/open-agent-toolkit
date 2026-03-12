@@ -24,8 +24,8 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Before multi-step work, print step indicators, e.g.:
   - `[1/6] Resolving project + collecting user choices…`
   - `[2/6] Checking completion gates…`
-  - `[3/6] Completing lifecycle + archiving…`
-  - `[4/6] Generating PR description…`
+  - `[3/6] Completing lifecycle…`
+  - `[4/6] Generating PR description + archiving…`
   - `[5/6] Committing + pushing…`
   - `[6/6] Refreshing dashboard…`
 
@@ -225,9 +225,36 @@ oat config set activeProject ""
 echo "Active project pointer cleared."
 ```
 
-### Step 7: Archive Project (Conditional)
+### Step 7: Generate PR Description
+
+PR description generation is automatic — it always runs as part of project completion. This must happen **before** archiving so that project artifacts are still at their tracked paths and blob links resolve correctly.
+
+Follow the `oat-project-pr-final` skill's process (Steps 0.5 through 4) inline:
+
+1. **Archive residual review artifacts** — already handled in Step 4.
+2. **Validate required artifacts** — read available project artifacts (`plan.md`, `implementation.md`, `spec.md`, `design.md`, `discovery.md`) based on workflow mode from `state.md`.
+3. **Check final review status** — already checked in Step 3.1. Use the result, don't re-check.
+4. **Collect project summary** — read artifacts and collect git context:
+
+```bash
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || echo "")
+
+if [[ -n "$MERGE_BASE" ]]; then
+  git log --oneline "${MERGE_BASE}..HEAD"
+  git diff --shortstat "${MERGE_BASE}..HEAD"
+fi
+```
+
+5. **Write PR description artifact** — write to `{PROJECT_PATH}/pr/project-pr-YYYY-MM-DD.md` following the template and policies from `oat-project-pr-final` Step 4 (frontmatter policy, reference links policy, local path exclusion).
+
+If a PR description artifact already exists at `{PROJECT_PATH}/pr/project-pr-*.md`, skip generation and use the existing one instead.
+
+### Step 8: Archive Project (Conditional)
 
 **Skip if `SHOULD_ARCHIVE` is false or `IS_SHARED_PROJECT` is false.**
+
+Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).
 
 ```bash
 ARCHIVED_ROOT=".oat/projects/archived"
@@ -312,31 +339,6 @@ Guidance:
 - Do not treat the worktree-local archive as durable.
 - If forced to use a local-only archive, warn and require explicit user confirmation.
 - Do not hardcode user-specific absolute paths.
-
-### Step 8: Generate PR Description
-
-PR description generation is automatic — it always runs as part of project completion.
-
-Follow the `oat-project-pr-final` skill's process (Steps 0.5 through 4) inline:
-
-1. **Archive residual review artifacts** — already handled in Step 4.
-2. **Validate required artifacts** — read available project artifacts (`plan.md`, `implementation.md`, `spec.md`, `design.md`, `discovery.md`) based on workflow mode from `state.md`.
-3. **Check final review status** — already checked in Step 3.1. Use the result, don't re-check.
-4. **Collect project summary** — read artifacts and collect git context:
-
-```bash
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
-MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || echo "")
-
-if [[ -n "$MERGE_BASE" ]]; then
-  git log --oneline "${MERGE_BASE}..HEAD"
-  git diff --shortstat "${MERGE_BASE}..HEAD"
-fi
-```
-
-5. **Write PR description artifact** — write to `{PROJECT_PATH}/pr/project-pr-YYYY-MM-DD.md` following the template and policies from `oat-project-pr-final` Step 4 (frontmatter policy, reference links policy, local path exclusion).
-
-If a PR description artifact already exists at `{PROJECT_PATH}/pr/project-pr-*.md`, skip generation and use the existing one instead.
 
 ### Step 9: Commit + Push Bookkeeping (Required)
 
