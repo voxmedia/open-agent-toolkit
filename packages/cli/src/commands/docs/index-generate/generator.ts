@@ -74,6 +74,14 @@ function sortEntries(entries: IndexEntry[]): IndexEntry[] {
   });
 }
 
+function prefixEntryPath(entry: IndexEntry, prefix: string): IndexEntry {
+  return {
+    ...entry,
+    path: join(prefix, entry.path),
+    children: entry.children?.map((child) => prefixEntryPath(child, prefix)),
+  };
+}
+
 export async function generateIndex(docsDir: string): Promise<IndexEntry[]> {
   const entries: IndexEntry[] = [];
   const subdirs: string[] = [];
@@ -101,10 +109,7 @@ export async function generateIndex(docsDir: string): Promise<IndexEntry[]> {
       entries.push({
         title: fileNameToTitle(subdir),
         path: subdir,
-        children: children.map((child) => ({
-          ...child,
-          path: join(subdir, child.path),
-        })),
+        children: children.map((child) => prefixEntryPath(child, subdir)),
       });
     }
   }

@@ -46,3 +46,8 @@ Generated behavior:
 - Use `index.md` as the local discovery surface for humans and agents.
 - Add a short topic description next to each link so agents can choose the right file without opening every page.
 - Update `## Contents` whenever you add, remove, or rename docs files in a directory.
+
+## If You Are Trying To...
+
+- learn the docs workflow or docs commands as a user, start with [Documentation](../guide/documentation/index.md)
+- contribute or restructure docs in this repo, pair this contract with [Contributing to OAT Docs](../contributing/documentation.md)

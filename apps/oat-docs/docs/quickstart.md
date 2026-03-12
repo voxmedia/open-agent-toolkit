@@ -116,60 +116,37 @@ This is also the right path for plan-first ideation that can later be synced/imp
 
 Start here:
 
-- [`skills/index.md`](skills/index.md)
-- [`skills/docs-workflows.md`](skills/docs-workflows.md)
-- [`cli/docs-apps.md`](cli/docs-apps.md)
-- [`cli/docs-consumer-quickstart.md`](cli/docs-consumer-quickstart.md)
+- [`guide/skills/index.md`](guide/skills/index.md)
+- [`guide/documentation/workflows.md`](guide/documentation/workflows.md)
+- [`guide/documentation/commands.md`](guide/documentation/commands.md)
+- [`guide/documentation/quickstart.md`](guide/documentation/quickstart.md)
 - [`reference/index.md`](reference/index.md)
 
 ## Path C: Workflow layer (optional)
 
-The workflow layer can be adopted when you want structured project execution and review gates.
+Adopt the workflow layer when you want tracked project artifacts, explicit review gates, and resumable execution state.
 
-### Typical OAT workflow (skills)
+Start with:
 
-#### Spec-Driven workflow lane
+- [`guide/workflow/index.md`](guide/workflow/index.md)
+- [`guide/workflow/lifecycle.md`](guide/workflow/lifecycle.md)
+- [`guide/workflow/artifacts.md`](guide/workflow/artifacts.md)
 
-1. `oat-project-new` / `oat-project-open`
-2. `oat-project-discover`
-3. `oat-project-spec`
-4. `oat-project-design`
-5. `oat-project-plan`
-6. Implementation mode:
-   - `oat-project-implement` (sequential, default)
-   - `oat-project-subagent-implement` (parallel/subagent-driven)
-7. `oat-project-review-provide` + `oat-project-review-receive`
-8. `oat-project-pr-final`
-9. `oat-project-document` (optional — sync documentation surfaces)
-10. `oat-project-complete`
+Typical entry points:
 
-#### Quick lane (adaptive discovery -> [optional design] -> plan -> implement)
+- Spec-driven work: `oat-project-new` or `oat-project-open`, then discovery → spec → design → plan → implement
+- Quick work: `oat-project-quick-start`, then plan or lightweight design as needed before implementation
+- Imported plans: `oat-project-import-plan`, then tracked implementation and review
 
-1. `oat-project-quick-start` (adaptive discovery — minimal ceremony for well-understood requests, solution space exploration for exploratory ones)
-2. Decision point: straight to plan, optional lightweight `design.md`, or promote to spec-driven
-3. Implementation mode:
-   - `oat-project-implement` (sequential, default)
-   - `oat-project-subagent-implement` (parallel/subagent-driven)
-4. `oat-project-review-provide` / `oat-project-pr-final`
-5. `oat-project-document` (optional — sync documentation surfaces)
-6. Optional: `oat-project-promote-spec-driven`
+Implementation modes:
 
-#### Imported plan lane
+- `oat-project-implement` for sequential execution
+- `oat-project-subagent-implement` for parallel/subagent-driven execution
 
-1. `oat-project-import-plan` (source markdown path required)
-2. Implementation mode:
-   - `oat-project-implement` (sequential, default)
-   - `oat-project-subagent-implement` (parallel/subagent-driven)
-3. `oat-project-review-provide` / `oat-project-pr-final`
-4. `oat-project-document` (optional — sync documentation surfaces)
-5. Optional: `oat-project-promote-spec-driven`
+Review and close-out:
 
-Import discovery note:
+- `oat-project-review-provide` / `oat-project-review-receive`
+- `oat-project-pr-progress` or `oat-project-pr-final`
+- `oat-project-document` and `oat-project-complete` when the work is ready to close
 
-- To include extra provider-plan folders in recent-file discovery, set `OAT_PROVIDER_PLAN_DIRS` as a colon-separated list before running `oat-project-import-plan`.
-
-### Workflow artifacts (if using workflow mode)
-
-- `.oat/projects/<scope>/<project>/implementation.md` (final summary + verification)
-- `.oat/projects/<scope>/<project>/plan.md` (phases and review table)
-- `.oat/projects/<scope>/<project>/references/imported-plan.md` (when using import lane)
+If you are importing plans from external provider plan folders, set `OAT_PROVIDER_PLAN_DIRS` before running `oat-project-import-plan`.

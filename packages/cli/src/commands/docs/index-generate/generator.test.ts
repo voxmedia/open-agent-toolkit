@@ -51,19 +51,44 @@ describe('generateIndex', () => {
     const dir = await mkdtemp(join(tmpdir(), 'oat-index-nested-'));
     createdDirs.push(dir);
     await writeFile(join(dir, 'index.md'), '---\ntitle: Docs\n---\n', 'utf8');
-    await mkdir(join(dir, 'api'), { recursive: true });
+    await mkdir(join(dir, 'api', 'nested'), { recursive: true });
     await writeFile(
       join(dir, 'api', 'auth.md'),
       '---\ntitle: Authentication\ndescription: Auth API\n---\n',
+      'utf8',
+    );
+    await writeFile(
+      join(dir, 'api', 'nested', 'index.md'),
+      '---\ntitle: Nested API\n---\n',
+      'utf8',
+    );
+    await writeFile(
+      join(dir, 'api', 'nested', 'tokens.md'),
+      '---\ntitle: Tokens\n---\n',
       'utf8',
     );
 
     const entries = await generateIndex(dir);
     expect(entries).toHaveLength(2);
     expect(entries[1]!.title).toBe('Api');
-    expect(entries[1]!.children).toHaveLength(1);
-    expect(entries[1]!.children![0]!.title).toBe('Authentication');
-    expect(entries[1]!.children![0]!.path).toBe(join('api', 'auth.md'));
+    expect(entries[1]!.children).toHaveLength(2);
+    const authEntry = entries[1]!.children!.find(
+      (child) => child.title === 'Authentication',
+    );
+    expect(authEntry).toBeDefined();
+    expect(authEntry!.path).toBe(join('api', 'auth.md'));
+    const nestedEntry = entries[1]!.children!.find(
+      (child) => child.title === 'Nested',
+    );
+    expect(nestedEntry).toBeDefined();
+    expect(nestedEntry!.path).toBe(join('api', 'nested'));
+    expect(nestedEntry!.children).toHaveLength(2);
+    expect(nestedEntry!.children![0]!.path).toBe(
+      join('api', 'nested', 'index.md'),
+    );
+    expect(nestedEntry!.children![1]!.path).toBe(
+      join('api', 'nested', 'tokens.md'),
+    );
   });
 
   it('falls back to heading then filename for title', async () => {

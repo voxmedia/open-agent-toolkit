@@ -1,6 +1,6 @@
 ---
 title: OAT Documentation
-description: 'Canonical reference for the Open Agent Toolkit covering CLI, provider interop, workflow, projects, and skills.'
+description: 'Canonical guide to OAT covering provider sync, workflow execution, docs tooling, and contributor guidance.'
 ---
 
 # OAT Documentation
@@ -15,44 +15,27 @@ OAT is organized as three distinct capabilities that can be used together or ind
 
 ## Contents
 
-- [Quickstart](quickstart.md) - Core setup and repo development paths.
-- [CLI](cli/index.md) - Bootstrap, diagnostics, tool packs, and provider interop commands.
-- [Workflow](workflow/index.md) - Lifecycle phases, HiLL checkpoints, reviews, and PR flow.
-- [Projects](projects/index.md) - Project artifact structure and state handling.
-- [Skills](skills/index.md) - Skill families and execution contracts.
-- [Ideas](ideas/index.md) - Lightweight brainstorming and summarization workflow.
+- [Quickstart](quickstart.md) - Shared entry point for interop-only, tooling, and workflow adoption.
+- [User Guide](guide/index.md) - User-facing guide for provider sync, docs tooling, workflow execution, skills, and ideas.
+- [Contributing](contributing/index.md) - Contributor-facing guide for code, docs, markdown features, and skill authoring.
 - [Reference](reference/index.md) - Durable reference material for operating and maintaining OAT.
-- [Contributing](contributing.md) - Authoring conventions and plugin inventory for this docs app.
 
 ## Choose a usage path
 
-- Interop-only users:
+- Provider sync and CLI users:
   - Start with [`quickstart.md`](quickstart.md)
-  - Then [`cli/index.md`](cli/index.md) and [`cli/provider-interop/index.md`](cli/provider-interop/index.md)
-- Provider-agnostic tooling users:
-  - Start with [`skills/index.md`](skills/index.md)
-  - Then [`reference/index.md`](reference/index.md)
+  - Then [`guide/provider-sync/index.md`](guide/provider-sync/index.md) and [`guide/cli-reference.md`](guide/cli-reference.md)
+- Docs-tooling users:
+  - Start with [`guide/documentation/index.md`](guide/documentation/index.md)
+  - Then [`guide/documentation/commands.md`](guide/documentation/commands.md)
 - Workflow users:
   - Start with [`quickstart.md`](quickstart.md)
-  - Then [`workflow/index.md`](workflow/index.md), [`projects/index.md`](projects/index.md), and [`skills/index.md`](skills/index.md)
-- Ideas/brainstorming users:
-  - Start with [`ideas/index.md`](ideas/index.md)
-
-## Navigation
-
-- Quickstart: [`quickstart.md`](quickstart.md)
-- CLI docs index: [`cli/index.md`](cli/index.md)
-- CLI design principles: [`cli/design-principles.md`](cli/design-principles.md)
-- CLI bootstrap docs: [`cli/bootstrap.md`](cli/bootstrap.md)
-- CLI tool-pack docs: [`cli/tool-packs-and-assets.md`](cli/tool-packs-and-assets.md)
-- CLI diagnostics docs: [`cli/diagnostics.md`](cli/diagnostics.md)
-- Provider interop docs index: [`cli/provider-interop/index.md`](cli/provider-interop/index.md)
-- Workflow docs index: [`workflow/index.md`](workflow/index.md)
-- Skills map: [`skills/index.md`](skills/index.md)
-- Skills contracts: [`skills/execution-contracts.md`](skills/execution-contracts.md)
-- Project docs index: [`projects/index.md`](projects/index.md)
-- Ideas docs index: [`ideas/index.md`](ideas/index.md)
-- Reference docs index: [`reference/index.md`](reference/index.md)
+  - Then [`guide/workflow/index.md`](guide/workflow/index.md), [`guide/skills/index.md`](guide/skills/index.md), and [`reference/index.md`](reference/index.md)
+- Contributors:
+  - Start with [`contributing/index.md`](contributing/index.md)
+  - Then route into code, docs, markdown features, or skill authoring guidance
+- Idea and backlog users:
+  - Start with [`guide/ideas/index.md`](guide/ideas/index.md)
 
 ## Source-of-truth hierarchy
 

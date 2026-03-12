@@ -1,0 +1,14 @@
+{
+  // Docs pages intentionally keep long narrative lines and wide tables.
+  "MD013": false,
+  // Repeated subsection labels are allowed when they live under different command sections.
+  "MD024": {
+    "siblings_only": true
+  },
+  // The docs app convention uses frontmatter titles and explicit H1 headings together.
+  "MD025": false,
+  // Example headings sometimes include trailing punctuation for syntax fidelity.
+  "MD026": false,
+  // Indented code blocks are required by the tab transform syntax used in these docs.
+  "MD046": false
+}

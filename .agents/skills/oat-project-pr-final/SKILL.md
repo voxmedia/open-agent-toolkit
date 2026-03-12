@@ -82,7 +82,9 @@ oat-project-pr-final title="feat: add review loop"
 
 Run the `oat-project-pr-final` skill and it will ask for:
 
-- PR title (default: `{project-name}: final PR`)
+- PR title
+  - default when a known ticket is associated: `[{TICKET-NUM}] {Descriptive Project Title}`
+  - otherwise default: `{type}: {project description}` using conventional-commit style (for example `feat: add review loop` or `docs: reorganize documentation for discoverability`)
 - base branch (default: `main`)
 
 ## Process
@@ -196,6 +198,23 @@ git log --oneline "${MERGE_BASE}..HEAD"
 git diff --shortstat "${MERGE_BASE}..HEAD"
 ```
 
+Resolve the default PR title before writing the artifact or opening the PR:
+
+- First, look for a clearly associated ticket ID in project artifacts and nearby context. Accept common ticket formats like `ABC-1234`.
+- Check, in order:
+  - explicit user-provided title or ticket (if supplied)
+  - `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`, `references/imported-plan.md`
+  - current branch name, if it contains a clear ticket token
+- If a ticket is found, default to:
+  - `[{TICKET-NUM}] {Descriptive Project Title}`
+- If no ticket is found, default to a conventional-commit title:
+  - Prefer a domain-specific type when obvious from the project (`docs:`, `feat:`, `fix:`, `refactor:`)
+  - Fall back to `feat:` when no stronger type is clear
+  - Use a concise description derived from the project goal or shipped change, not the literal project directory name when a clearer phrase is available
+- Examples:
+  - `[JIRA-1234] Documentation Reorganization`
+  - `docs: reorganize documentation for discoverability`
+
 ### Step 4: Write PR Description Artifact
 
 Write to:
@@ -249,7 +268,7 @@ oat_pr_scope: final
 oat_project: { PROJECT_PATH }
 ---
 
-# {project-name}
+# {title}
 
 ## Summary
 
