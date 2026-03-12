@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.2.0
+version: 1.3.0
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -13,7 +13,7 @@ Mark the active OAT project lifecycle as complete.
 
 ## Progress Indicators (User-Facing)
 
-When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+When executing this skill, provide lightweight progress feedback so the user can tell what's happening after they confirm.
 
 - Print a phase banner once at start using horizontal separators, e.g.:
 
@@ -22,14 +22,16 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
-  - `[1/4] Checking completion gates…`
-  - `[2/4] Archiving residual review artifacts…`
-  - `[3/4] Marking lifecycle complete / archiving project…`
-  - `[4/4] Refreshing dashboard + committing bookkeeping…`
+  - `[1/6] Resolving project + collecting user choices…`
+  - `[2/6] Checking completion gates…`
+  - `[3/6] Completing lifecycle + archiving…`
+  - `[4/6] Generating PR description…`
+  - `[5/6] Committing + pushing…`
+  - `[6/6] Refreshing dashboard…`
 
 ## Process
 
-### Step 1: Resolve Active Project
+### Step 1: Resolve Active Project + Detect Shared Status
 
 ```bash
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
@@ -40,15 +42,50 @@ if [[ -z "$PROJECT_PATH" ]]; then
 fi
 
 PROJECT_NAME=$(basename "$PROJECT_PATH")
+
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+IS_SHARED_PROJECT="false"
+
+case "$PROJECT_PATH" in
+  "${PROJECTS_ROOT}/"*) IS_SHARED_PROJECT="true" ;;
+esac
 ```
 
-### Step 2: Confirm with User
+### Step 2: Upfront User Questions (Batched)
 
-Ask user: "Are you sure you want to mark **{PROJECT_NAME}** as complete?"
+Ask all user questions at once so the user can answer them in a single interaction, then the rest of the skill runs without further prompts.
 
-If user declines, exit gracefully.
+**Host-specific structured input guidance:**
 
-### Step 3: Check for Final Review (Warning + Confirmation)
+- Claude Code: use `AskUserQuestion` when available
+- Codex: use structured user-input tooling when available in the current Codex host/runtime
+- Fallback: present as a plain-text conversational prompt
+
+**Questions to ask (in a single prompt):**
+
+1. **Confirm completion:** "Ready to mark **{PROJECT_NAME}** as complete?"
+2. **Archive** (only if `IS_SHARED_PROJECT` is `true`): "Archive the project after completion?"
+3. **Open PR:** "Open a PR in GitHub after generating the PR description?"
+
+Present all applicable questions together. Example combined prompt:
+
+```
+Ready to complete project **{PROJECT_NAME}**?
+
+1. Archive the project after completion? (yes/no)
+2. Open a PR in GitHub? (yes/no)
+```
+
+If the user declines the completion confirmation, exit gracefully.
+
+Store the answers as `SHOULD_ARCHIVE` and `SHOULD_OPEN_PR` for use in later steps.
+
+### Step 3: Check Completion Gates
+
+Run all gate checks and collect warnings. These are informational — they don't require individual user answers.
+
+#### 3.1: Final Review Status
 
 ```bash
 PLAN_FILE="${PROJECT_PATH}/plan.md"
@@ -66,30 +103,7 @@ else
 fi
 ```
 
-### Step 3.2: Archive Residual Active Review Artifacts
-
-Before lifecycle completion continues, detect any leftover active review artifacts in the top level of `"$PROJECT_PATH/reviews/"`:
-
-```bash
-find "$PROJECT_PATH/reviews" -maxdepth 1 -type f -name "*.md" 2>/dev/null
-```
-
-If any active review artifacts exist:
-
-1. Create `"$PROJECT_PATH/reviews/archived"` if needed.
-2. Rewrite any references touched during this preflight from `reviews/{filename}.md` to `reviews/archived/{filename}.md` in:
-   - `"$PROJECT_PATH/plan.md"`
-   - `"$PROJECT_PATH/implementation.md"`
-   - `"$PROJECT_PATH/state.md"`
-3. Move each active review artifact into `reviews/archived/`, adding a timestamp suffix if needed to avoid overwriting prior history.
-4. Report the archived paths before continuing.
-
-Rules:
-
-- Only archive top-level active review artifacts. Leave `reviews/archived/` untouched.
-- Keep these archive moves inside the project at `reviews/archived/`; do not route them through the shared-project archive destination logic in Step 6.
-
-### Step 3.5: Check Deferred Medium Findings (Warning + Confirmation)
+#### 3.2: Deferred Medium Findings
 
 ```bash
 IMPL_FILE="${PROJECT_PATH}/implementation.md"
@@ -119,7 +133,7 @@ if [[ -f "$IMPL_FILE" ]]; then
 fi
 ```
 
-### Step 3.6: Check Documentation Sync Status
+#### 3.3: Documentation Sync Status
 
 ```bash
 STATE_FILE="${PROJECT_PATH}/state.md"
@@ -145,22 +159,36 @@ If `oat_docs_updated` is `null` or empty:
 
 If `oat_docs_updated` is `skipped` or `complete`: proceed normally.
 
-After Step 3, 3.5, and 3.6 warnings:
+#### Gate Confirmation
 
-- Ask user for explicit confirmation to continue if final review is not `passed` OR unresolved deferred Medium findings are present OR documentation gate is blocking.
-- Suggested prompt: "Completion gates are not fully satisfied. Continue marking lifecycle complete anyway?"
+After collecting all warnings from 3.1, 3.2, and 3.3:
 
-### Step 4: Check for PR Description (Warning Only)
+- If any gate is unsatisfied (final review not `passed`, unresolved deferred Medium findings, or documentation gate blocking), present all warnings together and ask one confirmation:
+  - "Completion gates are not fully satisfied. Continue marking lifecycle complete anyway?"
+- If all gates pass, proceed without asking.
+
+### Step 4: Archive Residual Active Review Artifacts
+
+Detect any leftover active review artifacts in the top level of `"$PROJECT_PATH/reviews/"`:
 
 ```bash
-PR_LEGACY="${PROJECT_PATH}/pr-description.md"
-PR_FINAL=$(ls -1 "${PROJECT_PATH}"/pr/project-pr-*.md 2>/dev/null | head -1 || true)
-
-if [[ ! -f "$PR_LEGACY" && -z "$PR_FINAL" ]]; then
-  echo "Warning: No PR description artifact found (checked pr-description.md and pr/project-pr-*.md)."
-  echo "Recommendation: run the oat-project-pr-final skill before completing."
-fi
+find "$PROJECT_PATH/reviews" -maxdepth 1 -type f -name "*.md" 2>/dev/null
 ```
+
+If any active review artifacts exist:
+
+1. Create `"$PROJECT_PATH/reviews/archived"` if needed.
+2. Rewrite any references touched during this preflight from `reviews/{filename}.md` to `reviews/archived/{filename}.md` in:
+   - `"$PROJECT_PATH/plan.md"`
+   - `"$PROJECT_PATH/implementation.md"`
+   - `"$PROJECT_PATH/state.md"`
+3. Move each active review artifact into `reviews/archived/`, adding a timestamp suffix if needed to avoid overwriting prior history.
+4. Report the archived paths before continuing.
+
+Rules:
+
+- Only archive top-level active review artifacts. Leave `reviews/archived/` untouched.
+- Keep these archive moves inside the project at `reviews/archived/`; do not route them through the shared-project archive destination logic in Step 6.
 
 ### Step 5: Set Lifecycle Complete
 
@@ -188,28 +216,21 @@ sed -E "s/^oat_project_state_updated:.*/oat_project_state_updated: \"$NOW_UTC\"/
 mv "$STATE_FILE.tmp" "$STATE_FILE"
 ```
 
-### Step 6: Offer Archive for Shared Projects
+### Step 6: Clear Active Project Pointer
 
-Detect whether the active project is under shared projects root:
+Clear the active project pointer immediately. If the user is completing a project, clearing the pointer is implicit — no confirmation needed.
 
 ```bash
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
-PROJECTS_ROOT="${PROJECTS_ROOT%/}"
-ARCHIVED_ROOT=".oat/projects/archived"
-IS_SHARED_PROJECT="false"
-
-case "$PROJECT_PATH" in
-  "${PROJECTS_ROOT}/"*) IS_SHARED_PROJECT="true" ;;
-esac
+oat config set activeProject ""
+echo "Active project pointer cleared."
 ```
 
-If `IS_SHARED_PROJECT` is `true`, ask user:
+### Step 7: Archive Project (Conditional)
 
-"This is a shared project. Archive it now?"
-
-If user approves:
+**Skip if `SHOULD_ARCHIVE` is false or `IS_SHARED_PROJECT` is false.**
 
 ```bash
+ARCHIVED_ROOT=".oat/projects/archived"
 MAIN_WORKTREE_PATH=$(git worktree list --porcelain 2>/dev/null | awk '
   /^worktree / { wt=$2 }
   /^branch refs\\/heads\\/main$/ { print wt; exit }
@@ -292,22 +313,30 @@ Guidance:
 - If forced to use a local-only archive, warn and require explicit user confirmation.
 - Do not hardcode user-specific absolute paths.
 
-### Step 7: Offer to Clear Active Project
+### Step 8: Generate PR Description
 
-Ask user: "Would you like to clear the active project pointer?"
+PR description generation is automatic — it always runs as part of project completion.
 
-If yes:
+Follow the `oat-project-pr-final` skill's process (Steps 0.5 through 4) inline:
 
-```bash
-oat config set activeProject ""
-echo "Active project cleared."
-```
-
-### Step 8: Regenerate Dashboard
+1. **Archive residual review artifacts** — already handled in Step 4.
+2. **Validate required artifacts** — read available project artifacts (`plan.md`, `implementation.md`, `spec.md`, `design.md`, `discovery.md`) based on workflow mode from `state.md`.
+3. **Check final review status** — already checked in Step 3.1. Use the result, don't re-check.
+4. **Collect project summary** — read artifacts and collect git context:
 
 ```bash
-oat state refresh
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || echo "")
+
+if [[ -n "$MERGE_BASE" ]]; then
+  git log --oneline "${MERGE_BASE}..HEAD"
+  git diff --shortstat "${MERGE_BASE}..HEAD"
+fi
 ```
+
+5. **Write PR description artifact** — write to `{PROJECT_PATH}/pr/project-pr-YYYY-MM-DD.md` following the template and policies from `oat-project-pr-final` Step 4 (frontmatter policy, reference links policy, local path exclusion).
+
+If a PR description artifact already exists at `{PROJECT_PATH}/pr/project-pr-*.md`, skip generation and use the existing one instead.
 
 ### Step 9: Commit + Push Bookkeeping (Required)
 
@@ -318,6 +347,7 @@ Expected changes may include:
 - `{PROJECT_PATH}/state.md`
 - `{PROJECT_PATH}/implementation.md` (if touched earlier in the lifecycle closeout)
 - `{PROJECT_PATH}/plan.md` (if review receive just ran)
+- `{PROJECT_PATH}/pr/project-pr-*.md` (PR description artifact)
 - `.oat/config.local.json` (if `activeProject` cleared)
 - Shared-project deletions under `{PROJECTS_ROOT}/{PROJECT_NAME}` (if archived)
 
@@ -336,10 +366,40 @@ Rules:
 - If there is nothing to commit, state that explicitly and verify whether the completion bookkeeping was already committed in a prior commit.
 - If push fails, report the failure and do not claim completion is fully recorded.
 
-### Step 10: Confirm to User
+### Step 10: Open PR in GitHub (Conditional)
+
+**Skip if `SHOULD_OPEN_PR` is false.**
+
+**CRITICAL — Strip YAML frontmatter before submitting to GitHub.**
+The local artifact file contains YAML frontmatter (`---` delimited block at the top) for OAT metadata. This frontmatter MUST NOT appear in the GitHub PR body. Before passing the file to `gh pr create`, strip everything from the start of the file through and including the closing `---` line. Verify the resulting body starts with the markdown heading (e.g., `# feat: ...`), not YAML keys.
+
+Steps:
+
+1. Locate the PR description artifact at `{PROJECT_PATH}/pr/project-pr-*.md`.
+2. Write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
+3. Verify the temp file does not start with YAML frontmatter keys.
+4. Push and create the PR:
+
+```bash
+git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
+gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
+```
+
+5. Clean up the temp file.
+
+Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
+
+### Step 11: Regenerate Dashboard
+
+```bash
+oat state refresh
+```
+
+### Step 12: Confirm to User
 
 Show user:
 
 - "Project **{PROJECT_NAME}** marked as complete."
 - If archived: "Archived location: **{PROJECT_PATH}**"
 - Include commit hash and push result for the bookkeeping changes.
+- If PR was opened: include the PR URL.
