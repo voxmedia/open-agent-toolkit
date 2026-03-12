@@ -19,6 +19,7 @@ function createGuidedSetupHarness(options: {
   confirmResponses?: boolean[];
   selectResponses?: Array<string[] | null>;
   providerSelectResponses?: Array<string[] | null>;
+  toolPacksResult?: string[];
 }): {
   capture: LoggerCapture;
   command: Command;
@@ -32,7 +33,10 @@ function createGuidedSetupHarness(options: {
   const selectResponses = [...(options.selectResponses ?? [])];
   const providerSelectResponses = [...(options.providerSelectResponses ?? [])];
 
-  const runToolPacks = vi.fn(async () => undefined);
+  const toolPacksResult = [
+    ...(options.toolPacksResult ?? ['ideas', 'workflows', 'utility']),
+  ];
+  const runToolPacks = vi.fn(async () => toolPacksResult);
   const addLocalPaths = vi.fn(
     async (_root: string, paths: string[]) =>
       ({ added: paths, all: paths }) as { added: string[]; all: string[] },
@@ -141,7 +145,6 @@ describe('guided setup integration', () => {
         providerSelectResponses: [['claude']],
         confirmResponses: [
           true, // guided setup prompt
-          true, // tool packs
           true, // provider sync
         ],
         selectResponses: [
@@ -197,8 +200,7 @@ describe('guided setup integration', () => {
       oatDirExists: true,
       providerSelectResponses: [['claude']],
       confirmResponses: [
-        true, // tool packs (no guided setup prompt because --setup)
-        false, // provider sync
+        false, // provider sync (no guided setup prompt because --setup)
       ],
       selectResponses: [['.oat/**/analysis']],
     });
@@ -221,8 +223,8 @@ describe('guided setup integration', () => {
         hookInstalled: true,
         oatDirExists: true,
         providerSelectResponses: [['claude']],
+        toolPacksResult: [], // no packs selected
         confirmResponses: [
-          false, // tool packs — skip
           false, // provider sync — skip
         ],
         selectResponses: [['.oat/**/reviews/archived']],
@@ -233,7 +235,7 @@ describe('guided setup integration', () => {
       commandArgs: ['--setup'],
     });
 
-    expect(runToolPacks).not.toHaveBeenCalled();
+    expect(runToolPacks).toHaveBeenCalledTimes(1);
     expect(addLocalPaths).toHaveBeenCalledWith('/tmp/workspace', [
       '.oat/**/reviews/archived',
     ]);

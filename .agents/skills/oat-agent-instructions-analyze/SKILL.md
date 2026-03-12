@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.2.0
+version: 1.3.0
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true
@@ -53,13 +53,15 @@ or fill in missing evidence gaps on its own.
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Step indicators:
-  - `[1/7] Resolving providers + mode…`
-  - `[2/7] Discovering instruction files…`
-  - `[3/7] Evaluating quality…`
-  - `[4/7] Assessing coverage gaps…`
-  - `[5/7] Checking for drift…`
-  - `[6/7] Writing analysis artifact…`
-  - `[7/7] Updating tracking + summary…`
+  - `[1/9] Resolving providers + mode…`
+  - `[2/9] Discovering instruction files…`
+  - `[3/9] Evaluating quality…`
+  - `[4/9] Assessing directory coverage gaps…`
+  - `[5/9] Discovering file-type patterns…`
+  - `[6/9] Checking for drift…`
+  - `[7/9] Checking cross-format consistency…`
+  - `[8/9] Writing analysis artifact…`
+  - `[9/9] Updating tracking + summary…`
 
 ## Process
 
@@ -175,7 +177,62 @@ For each directory meeting 1+ primary indicators from the criteria doc:
 - If uncovered, add to the coverage gaps list with severity, evidence, and a recommendation.
 - For each recommendation, decide what belongs inline vs what should link to deeper documentation or config files.
 
-### Step 4: Drift Detection (Delta Mode Only)
+### Step 4: File-Type Pattern Discovery
+
+Discover cross-cutting file-type patterns that warrant glob-scoped rules. This step runs independently of directory coverage assessment — it identifies patterns that span multiple directories and are best addressed with targeted rules rather than directory-level instruction files.
+
+Follow the systematic process in `references/file-type-discovery-checklist.md`.
+
+**1. Scan for file-type patterns:**
+
+Search the repo for files matching common naming conventions (test files, story files, style files, config files, schema files, etc.). For each pattern with 5+ matching files, proceed to sampling.
+
+```bash
+# Example discovery commands
+find . -name '*.stories.tsx' -not -path '*/node_modules/*' | wc -l
+find . -name '*.test.tsx' -not -path '*/node_modules/*' | wc -l
+find . -name 'styles.ts' -not -path '*/node_modules/*' | wc -l
+```
+
+**2. Sample and assess consistency:**
+
+For each pattern with 5+ files, sample 3–5 representative files from different directories. Check for:
+
+- Structural consistency (shared imports, exports, boilerplate)
+- Required wrapping or providers
+- Naming conventions beyond the file extension
+
+Quantify: `N/M files follow pattern`. Patterns with >80% consistency are strong candidates.
+
+**3. Check for exception patterns (highest priority):**
+
+Identify file-type patterns that require an **exception** to a project-wide rule. These are the most valuable rules because agents will follow the general rule and produce incorrect code without guidance. Examples:
+
+- Story files needing `export default` when the project bans default exports
+- Test files needing specific providers/wrappers not obvious from the framework
+- Config files using CommonJS in an ESM project
+- Generated files that agents should never hand-edit
+
+**4. Assess correctness impact:**
+
+For each pattern, determine what breaks when an agent writes a new file without the rule:
+
+- **Crashes/breaks:** Code won't compile, tests won't run, app crashes
+- **Visual/behavioral bugs:** Code runs but produces wrong results
+- **Lint/CI failures:** Code works but fails automated checks
+- **Style inconsistency:** Code works but doesn't match conventions
+
+**5. Assign severity using calibrated scale:**
+
+- **High:** Exception to project-wide rule AND code breaks/fails lint; OR >20 files AND correctness impact
+- **Medium:** >20 files AND lint/CI failures; OR 5–20 files with correctness impact
+- **Low:** Style consistency only, no correctness impact
+
+**In delta mode:** Still run the full file-type scan. File-type patterns are repo-wide concerns that may not intersect with recently-changed directories but are still high-value for agent correctness.
+
+Record all discovered patterns in the artifact's Glob-Scoped Rule Opportunities table with consistency counts, correctness impact, and exception-to-rule flags.
+
+### Step 5: Drift Detection (Delta Mode Only)
 
 **Skip this step entirely in full mode.**
 
@@ -192,7 +249,7 @@ Common drift signals:
 - New dependencies or framework changes not reflected in tech stack documentation.
 - Existing instructions claim formatting/style conventions that are not backed by current repo evidence.
 
-### Step 5: Cross-Format Consistency (Multi-Provider Only)
+### Step 6: Cross-Format Consistency (Multi-Provider Only)
 
 **Skip if only one provider (agents_md) is active.**
 
@@ -202,7 +259,7 @@ For glob-scoped rules that target the same file patterns across providers:
 2. Compare bodies — they should be identical.
 3. Flag divergence as a Medium finding.
 
-### Step 6: Write Analysis Artifact
+### Step 7: Write Analysis Artifact
 
 Generate the analysis artifact using the template at `references/analysis-artifact-template.md`.
 
@@ -211,7 +268,7 @@ TIMESTAMP=$(date -u +"%Y-%m-%d-%H%M")
 ARTIFACT_PATH=".oat/repo/analysis/agent-instructions-${TIMESTAMP}.md"
 ```
 
-Fill in all template sections with findings from Steps 2-5.
+Fill in all template sections with findings from Steps 2-6.
 
 The artifact is the contract for apply. It must contain:
 
@@ -222,7 +279,7 @@ The artifact is the contract for apply. It must contain:
 
 Write the artifact to `$ARTIFACT_PATH`.
 
-### Step 7: Update Tracking and Output Summary
+### Step 8: Update Tracking and Output Summary
 
 **Update tracking:**
 
@@ -275,6 +332,7 @@ Next step: Run oat-agent-instructions-apply to act on these findings.
 - Copilot instruction system: `.oat/repo/reviews/github-copilot-instructions-research-2026-02-19.md`
 - Quality checklist: `references/quality-checklist.md`
 - Directory criteria: `references/directory-assessment-criteria.md`
+- File-type discovery: `references/file-type-discovery-checklist.md`
 - Artifact template: `references/analysis-artifact-template.md`
 - Tracking script: `scripts/resolve-tracking.sh`
 - Provider resolution: `scripts/resolve-providers.sh`

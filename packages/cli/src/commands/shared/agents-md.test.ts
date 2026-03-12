@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { upsertAgentsMdSection } from './agents-md';
+import { removeAgentsMdSection, upsertAgentsMdSection } from './agents-md';
 
 describe('upsertAgentsMdSection', () => {
   let root: string;
@@ -110,5 +110,65 @@ describe('upsertAgentsMdSection', () => {
     expect(content).toBe(
       '# Header\n\n<!-- OAT docs -->\ncontent\n<!-- END OAT docs -->\n',
     );
+  });
+});
+
+describe('removeAgentsMdSection', () => {
+  let root: string;
+
+  afterEach(async () => {
+    if (root) {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  async function setup(existingContent?: string): Promise<string> {
+    root = await mkdtemp(join(tmpdir(), 'agents-md-rm-test-'));
+    if (existingContent !== undefined) {
+      await writeFile(join(root, 'AGENTS.md'), existingContent, 'utf8');
+    }
+    return root;
+  }
+
+  async function readAgentsMd(): Promise<string> {
+    return readFile(join(root, 'AGENTS.md'), 'utf8');
+  }
+
+  it('returns false when file does not exist', async () => {
+    await setup();
+    expect(await removeAgentsMdSection(root, 'workflows')).toBe(false);
+  });
+
+  it('returns false when section markers are not present', async () => {
+    await setup('# Header\n\nSome content.\n');
+    expect(await removeAgentsMdSection(root, 'workflows')).toBe(false);
+  });
+
+  it('removes section and collapses extra blank lines', async () => {
+    await setup(
+      '# Header\n\n<!-- OAT workflows -->\nold content\n<!-- END OAT workflows -->\n\n# Footer\n',
+    );
+
+    const removed = await removeAgentsMdSection(root, 'workflows');
+
+    expect(removed).toBe(true);
+    const content = await readAgentsMd();
+    expect(content).not.toContain('OAT workflows');
+    expect(content).not.toContain('old content');
+    expect(content).toContain('# Header');
+    expect(content).toContain('# Footer');
+  });
+
+  it('preserves other sections when removing one', async () => {
+    await setup(
+      '<!-- OAT tools -->\nnew content\n<!-- END OAT tools -->\n\n<!-- OAT workflows -->\nlegacy\n<!-- END OAT workflows -->\n',
+    );
+
+    await removeAgentsMdSection(root, 'workflows');
+
+    const content = await readAgentsMd();
+    expect(content).toContain('<!-- OAT tools -->');
+    expect(content).toContain('new content');
+    expect(content).not.toContain('<!-- OAT workflows -->');
   });
 });

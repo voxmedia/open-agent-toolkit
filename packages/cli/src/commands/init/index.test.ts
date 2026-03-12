@@ -44,6 +44,7 @@ interface HarnessOptions {
   oatDirExists?: boolean;
   useDefaultGuidedSetup?: boolean;
   resolvedLocalPaths?: string[];
+  toolPacksResult?: string[];
 }
 
 interface RunInitArgs {
@@ -131,7 +132,9 @@ function createHarness(options: HarnessOptions = {}): {
   const uninstallHook = vi.fn(async () => undefined);
   const dirExistsFn = vi.fn(async () => options.oatDirExists ?? true);
   const runGuidedSetup = vi.fn(async () => undefined);
-  const runToolPacks = vi.fn(async () => undefined);
+  const runToolPacks = vi.fn(
+    async () => options.toolPacksResult ?? ['ideas', 'workflows', 'utility'],
+  );
   const addLocalPathsFn = vi.fn(
     async (_root: string, paths: string[]) =>
       ({
@@ -1048,14 +1051,14 @@ config_file = "agents/reviewer.toml"
       expect(runGuidedSetup).not.toHaveBeenCalled();
     });
 
-    it('guided setup calls tool packs installation when user confirms', async () => {
+    it('guided setup always calls tool packs multi-select', async () => {
       const { command, runToolPacks } = createHarness({
         interactive: true,
         hookInstalled: true,
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        confirmResponses: [true],
+        selectResponses: [[]],
       });
 
       await runInitCommand(command, {
@@ -1066,14 +1069,15 @@ config_file = "agents/reviewer.toml"
       expect(runToolPacks).toHaveBeenCalledTimes(1);
     });
 
-    it('guided setup skips tool packs when user declines', async () => {
-      const { command, runToolPacks } = createHarness({
+    it('guided setup reports skipped when no tool packs selected', async () => {
+      const { command, capture } = createHarness({
         interactive: true,
         hookInstalled: true,
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        confirmResponses: [false],
+        toolPacksResult: [],
+        selectResponses: [[]],
       });
 
       await runInitCommand(command, {
@@ -1081,7 +1085,11 @@ config_file = "agents/reviewer.toml"
         commandArgs: ['--setup'],
       });
 
-      expect(runToolPacks).not.toHaveBeenCalled();
+      expect(
+        capture.info.some(
+          (msg) => msg.includes('Tool packs') && msg.includes('skipped'),
+        ),
+      ).toBe(true);
     });
 
     it('local paths multi-select is presented with default choices', async () => {
@@ -1091,7 +1099,6 @@ config_file = "agents/reviewer.toml"
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        confirmResponses: [false],
         selectResponses: [
           [
             '.oat/**/analysis',
@@ -1121,6 +1128,35 @@ config_file = "agents/reviewer.toml"
       expect(choices.every((c) => c.checked)).toBe(true);
     });
 
+    it('local paths exclude .oat/ideas when ideas pack is not installed', async () => {
+      const { command, selectManyWithAbort } = createHarness({
+        interactive: true,
+        hookInstalled: true,
+        oatDirExists: true,
+        useDefaultGuidedSetup: true,
+        providerSelectResponses: [['claude']],
+        toolPacksResult: ['workflows', 'utility'],
+        selectResponses: [['.oat/**/analysis']],
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--setup'],
+      });
+
+      const guidedSelectCall = selectManyWithAbort.mock.calls.find(
+        (call: unknown[]) =>
+          typeof call[0] === 'string' &&
+          (call[0] as string).includes('local path'),
+      );
+      expect(guidedSelectCall).toBeDefined();
+      const choices = guidedSelectCall?.[1] as Array<{
+        value: string;
+      }>;
+      expect(choices).toHaveLength(3);
+      expect(choices.some((c) => c.value === '.oat/ideas')).toBe(false);
+    });
+
     it('selected local paths are added and gitignore is updated', async () => {
       const {
         command,
@@ -1132,7 +1168,6 @@ config_file = "agents/reviewer.toml"
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        confirmResponses: [false],
         selectResponses: [['.oat/**/analysis', '.oat/**/reviews/archived']],
       });
 
@@ -1155,7 +1190,7 @@ config_file = "agents/reviewer.toml"
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        confirmResponses: [false, true],
+        confirmResponses: [true],
         selectResponses: [[]],
       });
 
@@ -1175,7 +1210,7 @@ config_file = "agents/reviewer.toml"
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        confirmResponses: [true, false],
+        confirmResponses: [false],
         selectResponses: [['.oat/**/analysis']],
       });
 
@@ -1217,7 +1252,8 @@ config_file = "agents/reviewer.toml"
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        confirmResponses: [false, false],
+        toolPacksResult: [],
+        confirmResponses: [false],
         selectResponses: [[]],
       });
 
@@ -1258,7 +1294,6 @@ config_file = "agents/reviewer.toml"
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        confirmResponses: [false],
         selectResponses: [[]],
       });
 
@@ -1296,7 +1331,7 @@ config_file = "agents/reviewer.toml"
         ],
         configAwareActiveAdapterNames: ['claude'],
         providerSelectResponses: [['claude']],
-        confirmResponses: [false, false],
+        confirmResponses: [false],
         selectResponses: [[]],
       });
 
@@ -1329,7 +1364,7 @@ config_file = "agents/reviewer.toml"
           'custom/path1',
           'custom/path2',
         ],
-        confirmResponses: [false, false],
+        confirmResponses: [false],
         selectResponses: [['.oat/**/reviews/archived']],
       });
 

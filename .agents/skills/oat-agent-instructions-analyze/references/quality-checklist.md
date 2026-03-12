@@ -86,6 +86,16 @@ Per-file evaluation criteria for agent instruction files. Use this checklist to 
 - [ ] The file clearly distinguishes inline essentials from optional deeper reading
 - **Severity if failing:** Medium
 
+### 13. File-Type Conventions Covered
+
+This criterion applies to the **overall instruction set**, not to individual files. Evaluate once per analysis.
+
+- [ ] Common file-type patterns (tests, stories, styles, configs) with 5+ files have been evaluated for rule opportunities
+- [ ] Patterns with >80% consistency and correctness impact are flagged as glob-scoped rule opportunities
+- [ ] Patterns that are exceptions to project-wide rules are explicitly called out (these are highest-value)
+- [ ] Existing glob-scoped rules cover the identified patterns, or coverage gaps are recorded
+- **Severity if failing:** Medium (missed pattern) or High (missed exception-to-rule pattern)
+
 ## Scoring
 
 For each file, count passing criteria out of the applicable set (some criteria only apply to certain file types).

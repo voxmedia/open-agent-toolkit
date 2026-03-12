@@ -79,7 +79,11 @@ import {
 import type { ConcreteScope, Scope } from '@shared/types';
 import { Command } from 'commander';
 
-import { createInitToolsCommand, runInitToolsWithDefaults } from './tools';
+import {
+  type ToolPack,
+  createInitToolsCommand,
+  runInitToolsWithDefaults,
+} from './tools';
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
@@ -183,7 +187,7 @@ interface InitDependencies {
     context: CommandContext,
     dependencies: InitDependencies,
   ) => Promise<void>;
-  runToolPacks: (context: CommandContext) => Promise<void>;
+  runToolPacks: (context: CommandContext) => Promise<ToolPack[]>;
   runProviderSync: (projectRoot: string) => Promise<void>;
 }
 
@@ -449,20 +453,19 @@ async function runGuidedSetupImpl(
   );
 
   context.logger.info('[1/4] Tool packs…');
-  const installTools = await dependencies.confirmAction(
-    'Install tool packs (skills for workflows, ideas, utilities)?',
-    { interactive: context.interactive },
-  );
-  if (installTools) {
-    const guidedContext: CommandContext = { ...context, scope: 'project' };
-    await dependencies.runToolPacks(guidedContext);
-  }
+  const guidedContext: CommandContext = { ...context, scope: 'project' };
+  const installedPacks = await dependencies.runToolPacks(guidedContext);
+  const installedPackSet = new Set(installedPacks);
 
   context.logger.info('[2/4] Local paths (gitignored artifacts)…');
   const config = await dependencies.readOatConfig(projectRoot);
   const existingPaths = new Set(dependencies.resolveLocalPaths(config));
 
-  const choices = LOCAL_PATH_CHOICES.map((c) => ({
+  const applicableChoices = LOCAL_PATH_CHOICES.filter(
+    (c) => c.value !== '.oat/ideas' || installedPackSet.has('ideas'),
+  );
+
+  const choices = applicableChoices.map((c) => ({
     ...c,
     checked: existingPaths.has(c.value) || c.checked,
   }));
@@ -477,7 +480,7 @@ async function runGuidedSetupImpl(
     )) ?? [];
 
   let addedCount = 0;
-  const guidedPathValues = new Set(LOCAL_PATH_CHOICES.map((c) => c.value));
+  const guidedPathValues = new Set(applicableChoices.map((c) => c.value));
   const existingGuidedCount = [...existingPaths].filter((p) =>
     guidedPathValues.has(p),
   ).length;
@@ -514,7 +517,7 @@ async function runGuidedSetupImpl(
     `  Providers:      ${activeProviderNames.length > 0 ? activeProviderNames.join(', ') : 'none detected'}`,
   );
   context.logger.info(
-    `  Tool packs:     ${installTools ? 'installed' : 'skipped'}`,
+    `  Tool packs:     ${installedPacks.length > 0 ? 'installed' : 'skipped'}`,
   );
   context.logger.info(
     `  Local paths:    ${selectedPaths.length > 0 ? `${addedCount} added, ${existingGuidedCount} existing` : 'skipped'}`,

@@ -10,6 +10,7 @@ import { applyGitignore } from '@commands/local/apply';
 import { addLocalPaths } from '@commands/local/manage';
 import {
   type UpsertSectionResult,
+  removeAgentsMdSection,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
 import {
@@ -50,7 +51,7 @@ import {
 } from './workflows/install-workflows';
 
 type InstallScope = 'project' | 'user';
-type ToolPack = 'ideas' | 'workflows' | 'utility';
+export type ToolPack = 'ideas' | 'workflows' | 'utility';
 
 interface InitToolsDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -94,6 +95,7 @@ interface InitToolsDependencies {
     key: string,
     body: string,
   ) => Promise<UpsertSectionResult>;
+  removeAgentsMdSection: (repoRoot: string, key: string) => Promise<boolean>;
 }
 
 interface OutdatedSkillRecord {
@@ -129,6 +131,7 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   readOatConfig,
   resolveLocalPaths,
   upsertAgentsMdSection,
+  removeAgentsMdSection,
 };
 
 function isUserEligibleSelection(selections: ToolPack[]): boolean {
@@ -235,11 +238,11 @@ interface PackScopeInfo {
   scope: InstallScope;
 }
 
-export function buildWorkflowsSectionBody(packs: PackScopeInfo[]): string {
+export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
   const userPacks = packs.filter((p) => p.scope === 'user');
 
   const lines = [
-    '## Workflow System',
+    '## Tool Packs',
     '',
     '- **Skills directory:** `.agents/skills/`',
     '- **Discover available skills:** scan `.agents/skills/*/SKILL.md`',
@@ -265,7 +268,7 @@ export function buildWorkflowsSectionBody(packs: PackScopeInfo[]): string {
 export async function runInitTools(
   context: CommandContext,
   dependencies: InitToolsDependencies,
-): Promise<void> {
+): Promise<ToolPack[]> {
   try {
     const selectedPacks: ToolPack[] = context.interactive
       ? ((await dependencies.selectManyWithAbort(
@@ -280,7 +283,7 @@ export async function runInitTools(
         context.logger.info('No tool packs selected.');
       }
       process.exitCode = 0;
-      return;
+      return [];
     }
 
     const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
@@ -426,20 +429,24 @@ export async function runInitTools(
       pack,
       scope: pack === 'workflows' ? 'project' : userEligibleScope,
     }));
-    const sectionBody = buildWorkflowsSectionBody(packScopeInfo);
+    const sectionBody = buildToolPacksSectionBody(packScopeInfo);
     const sectionResult = await dependencies.upsertAgentsMdSection(
       projectRoot,
-      'workflows',
+      'tools',
       sectionBody,
     );
+    // Migrate: remove legacy <!-- OAT workflows --> section if present
+    await dependencies.removeAgentsMdSection(projectRoot, 'workflows');
+
     if (!context.json && sectionResult.action !== 'no-change') {
       context.logger.info(
-        `AGENTS.md workflows section ${sectionResult.action}.`,
+        `AGENTS.md tool packs section ${sectionResult.action}.`,
       );
     }
 
     reportSuccess(context, selectedPacks, userEligibleScope);
     process.exitCode = 0;
+    return selectedPacks;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
@@ -448,13 +455,14 @@ export async function runInitTools(
       context.logger.error(message);
     }
     process.exitCode = 1;
+    return [];
   }
 }
 
 export async function runInitToolsWithDefaults(
   context: CommandContext,
-): Promise<void> {
-  await runInitTools(context, { ...DEFAULT_DEPENDENCIES });
+): Promise<ToolPack[]> {
+  return runInitTools(context, { ...DEFAULT_DEPENDENCIES });
 }
 
 export function createInitToolsCommand(

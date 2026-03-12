@@ -222,7 +222,7 @@ Run the smallest relevant verification set based on what changed:
 
 If no docs app exists yet, use file-level verification and confirm the structural contract manually in the summary.
 
-### Step 6: Commit and Optional PR
+### Step 6: Commit and PR
 
 Commit the approved changes:
 
@@ -231,21 +231,70 @@ git add {approved-files}
 git commit -m "docs: apply approved docs recommendations"
 ```
 
-If the user wants a PR:
+**Offer to open a PR:**
 
-1. Push the branch.
-2. Create a PR.
-3. Include:
-   - source analysis artifact
-   - `APPLY_PLAN_MARKDOWN`
-   - applied action summary
-   - verification performed
+After committing, proactively ask the user if they'd like to open a pull request. Frame this as the recommended next step:
 
-For the PR-choice prompt, use the same host-aware prompting guidance:
+```
+Changes committed. Would you like me to push and open a pull request?
+The PR will include the applied plan summary and the full analysis artifact for reference.
+```
+
+For the PR-choice prompt, use host-aware prompting:
 
 - Claude Code: `AskUserQuestion`
 - Codex: structured user-input tooling when available in the current host/runtime
 - Fallback: plain-text questions
+
+**If creating PR:**
+
+1. Push the branch.
+2. Create a PR with the structure below.
+3. The PR body must include the full analysis artifact in a collapsible section at the bottom so reviewers can see the evidence behind every change.
+
+```bash
+git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
+gh pr create --base main \
+  --title "docs: apply approved docs recommendations" \
+  --body "$(cat <<'PRBODY'
+## Summary
+
+- Applied docs recommendations from analysis artifact
+- Source: {analysis-artifact-path}
+- Result: {N} created, {N} updated, {N} skipped
+
+## Applied Plan
+
+{APPLY_PLAN_MARKDOWN}
+
+## Verification
+
+- {commands run and results}
+
+---
+
+## Full Analysis Artifact
+
+The complete analysis that produced these recommendations is included below for reviewer reference.
+
+<details>
+<summary>Click to expand full analysis</summary>
+
+{full contents of the analysis artifact markdown file}
+
+</details>
+PRBODY
+)"
+```
+
+**If `gh` is not available or fails:**
+
+```
+PR creation failed. To create manually:
+1. Push: git push -u origin {branch}
+2. Open PR at your repository's web interface
+3. Use the structure above in the PR body, including the full analysis in a collapsible section
+```
 
 ### Step 7: Update Tracking and Output Summary
 

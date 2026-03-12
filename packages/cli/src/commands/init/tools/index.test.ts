@@ -8,7 +8,7 @@ import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildWorkflowsSectionBody, createInitToolsCommand } from './index';
+import { buildToolPacksSectionBody, createInitToolsCommand } from './index';
 
 interface HarnessOptions {
   scope?: Scope;
@@ -90,6 +90,7 @@ function createHarness(options: HarnessOptions = {}) {
   const upsertAgentsMdSection = vi.fn(async () => ({
     action: 'updated' as const,
   }));
+  const removeAgentsMdSection = vi.fn(async () => false);
 
   const command = createInitToolsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -116,6 +117,7 @@ function createHarness(options: HarnessOptions = {}) {
     readOatConfig,
     resolveLocalPaths,
     upsertAgentsMdSection,
+    removeAgentsMdSection,
   });
 
   return {
@@ -376,18 +378,18 @@ describe('createInitToolsCommand', () => {
     expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
     expect(upsertAgentsMdSection).toHaveBeenCalledWith(
       '/tmp/workspace',
-      'workflows',
-      expect.stringContaining('Workflow System'),
+      'tools',
+      expect.stringContaining('Tool Packs'),
     );
   });
 
-  it('logs AGENTS.md workflows section update', async () => {
+  it('logs AGENTS.md tool packs section update', async () => {
     const { command, capture } = createHarness({ interactive: false });
 
     await runCommand(command, [], ['--scope', 'all']);
 
     expect(capture.info.join('\n')).toContain(
-      'AGENTS.md workflows section updated.',
+      'AGENTS.md tool packs section updated.',
     );
   });
 
@@ -428,15 +430,15 @@ describe('createInitToolsCommand', () => {
   });
 });
 
-describe('buildWorkflowsSectionBody', () => {
+describe('buildToolPacksSectionBody', () => {
   it('includes all selected packs', () => {
-    const body = buildWorkflowsSectionBody([
+    const body = buildToolPacksSectionBody([
       { pack: 'ideas', scope: 'project' },
       { pack: 'workflows', scope: 'project' },
       { pack: 'utility', scope: 'project' },
     ]);
 
-    expect(body).toContain('## Workflow System');
+    expect(body).toContain('## Tool Packs');
     expect(body).toContain('`.agents/skills/`');
     expect(body).toContain('**ideas**');
     expect(body).toContain('**workflows**');
@@ -445,7 +447,7 @@ describe('buildWorkflowsSectionBody', () => {
   });
 
   it('only includes selected packs', () => {
-    const body = buildWorkflowsSectionBody([
+    const body = buildToolPacksSectionBody([
       { pack: 'workflows', scope: 'project' },
     ]);
 
@@ -455,7 +457,7 @@ describe('buildWorkflowsSectionBody', () => {
   });
 
   it('marks user-scoped packs and adds user skills directory note', () => {
-    const body = buildWorkflowsSectionBody([
+    const body = buildToolPacksSectionBody([
       { pack: 'ideas', scope: 'user' },
       { pack: 'workflows', scope: 'project' },
       { pack: 'utility', scope: 'user' },

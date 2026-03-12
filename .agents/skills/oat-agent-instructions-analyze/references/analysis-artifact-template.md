@@ -95,10 +95,18 @@ Directories assessed as needing instruction files but currently uncovered.
 
 File-type patterns with recurring conventions that would benefit from targeted rules files. These are cross-cutting concerns that span multiple directories — best addressed with glob-scoped rules rather than directory-level AGENTS.md files.
 
-| #   | Pattern  | Count | Convention Summary                                      | Evidence     | Disclosure                       | Severity     |
-| --- | -------- | ----- | ------------------------------------------------------- | ------------ | -------------------------------- | ------------ |
-| 1   | `{glob}` | {N}   | {brief description of conventions agents should follow} | {exact refs} | {inline/link_only/omit/ask_user} | {Medium/Low} |
-| ... |          |       |                                                         |              |                                  |              |
+Discovered using the systematic file-type pattern discovery process from `references/file-type-discovery-checklist.md`.
+
+| #   | Pattern  | Count | Consistency | Convention Summary                                      | Correctness Impact               | Exception to Project Rule? | Evidence     | Disclosure                       | Severity          |
+| --- | -------- | ----- | ----------- | ------------------------------------------------------- | -------------------------------- | -------------------------- | ------------ | -------------------------------- | ----------------- |
+| 1   | `{glob}` | {N}   | {N/M files} | {brief description of conventions agents should follow} | {crashes/visual bugs/lint/style} | {yes: which rule / no}     | {exact refs} | {inline/link_only/omit/ask_user} | {High/Medium/Low} |
+| ... |          |       |             |                                                         |                                  |                            |              |                                  |                   |
+
+**Severity calibration:**
+
+- **High:** Exception to project-wide rule AND code breaks/fails lint; OR >20 files AND correctness impact (crashes, visual bugs)
+- **Medium:** >20 files AND lint/CI failures; OR 5–20 files with correctness impact
+- **Low:** Style consistency only, no correctness impact
 
 {Or: "No glob-scoped rule opportunities identified."}
 

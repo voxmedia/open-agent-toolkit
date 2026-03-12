@@ -72,3 +72,37 @@ export async function upsertAgentsMdSection(
   await writeFile(agentsMdPath, `${content}${separator}${section}\n`, 'utf8');
   return { action: 'updated' };
 }
+
+/**
+ * Remove a managed section from AGENTS.md if it exists.
+ *
+ * Returns true if the section was found and removed, false otherwise.
+ */
+export async function removeAgentsMdSection(
+  repoRoot: string,
+  key: string,
+): Promise<boolean> {
+  const agentsMdPath = join(repoRoot, 'AGENTS.md');
+  const exists = await fileExists(agentsMdPath);
+
+  if (!exists) {
+    return false;
+  }
+
+  const content = await readFile(agentsMdPath, 'utf8');
+  const start = sectionStart(key);
+  const end = sectionEnd(key);
+  const startIdx = content.indexOf(start);
+  const endIdx = content.indexOf(end);
+
+  if (startIdx === -1 || endIdx === -1) {
+    return false;
+  }
+
+  const before = content.slice(0, startIdx);
+  const after = content.slice(endIdx + end.length);
+  // Collapse extra blank lines left by removal
+  const cleaned = (before + after).replace(/\n{3,}/g, '\n\n');
+  await writeFile(agentsMdPath, cleaned, 'utf8');
+  return true;
+}
