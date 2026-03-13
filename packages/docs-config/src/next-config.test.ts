@@ -11,6 +11,7 @@ describe('createDocsConfig', () => {
     const config = createDocsConfig({ title: 'Test Docs' });
 
     expect(config.output).toBe('export');
+    expect(config.trailingSlash).toBe(true);
     expect(config.images).toEqual({ unoptimized: true });
     expect(config.reactStrictMode).toBe(true);
   });

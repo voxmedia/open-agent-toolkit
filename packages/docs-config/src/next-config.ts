@@ -11,6 +11,7 @@ export interface DocsConfigOptions {
 export function createDocsConfig(options: DocsConfigOptions): NextConfig {
   const baseConfig: NextConfig = {
     output: 'export',
+    trailingSlash: true,
     images: { unoptimized: true },
     reactStrictMode: true,
     ...(options.basePath ? { basePath: options.basePath } : {}),
