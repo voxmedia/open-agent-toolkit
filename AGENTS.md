@@ -7,6 +7,7 @@
 - Canonical skills live in `.agents/skills`.
 - Provider-linked views are managed by sync tooling; do not duplicate full skill inventories in this file.
 - Refresh provider views with `oat sync --scope all`.
+- Update installed skills to latest bundled versions with `oat tools update`.
 
 </skills_system>
 

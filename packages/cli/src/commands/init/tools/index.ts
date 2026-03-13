@@ -248,6 +248,7 @@ export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
     '- **Skills directory:** `.agents/skills/`',
     '- **Discover available skills:** scan `.agents/skills/*/SKILL.md`',
     '- **Refresh provider views:** `oat sync --scope all`',
+    '- **Update skills to latest versions:** `oat tools update`',
   ];
 
   if (userPacks.length > 0) {
