@@ -277,6 +277,35 @@ describe('detectStrays', () => {
     expect(reports).toEqual([]);
   });
 
+  it('does not flag generated cursor rule files as strays when they carry an OAT source marker', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    const providerDir = join(root, '.cursor', 'rules');
+    await seedProviderFile(
+      providerDir,
+      'react-components.mdc',
+      `---
+description: React components
+alwaysApply: false
+---
+
+# React Components
+
+<!-- OAT-managed: do not edit directly. Source: .agents/rules/react-components.md -->
+`,
+    );
+
+    const reports = await detectStrays(
+      'cursor',
+      providerDir,
+      createEmptyManifest(),
+      [],
+      createRuleMapping('.cursor/rules', '.mdc'),
+    );
+
+    expect(reports).toEqual([]);
+  });
+
   it('detects copilot instruction files as project-scoped rule strays', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
     tempDirs.push(root);
@@ -321,6 +350,35 @@ describe('detectStrays', () => {
       providerDir,
       createEmptyManifest(),
       canonicalEntries,
+      createRuleMapping('.github/instructions', '.instructions.md'),
+    );
+
+    expect(reports).toEqual([]);
+  });
+
+  it('does not flag generated copilot instruction files as strays when they carry an OAT source marker', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    const providerDir = join(root, '.github', 'instructions');
+    await seedProviderFile(
+      providerDir,
+      'react-components.instructions.md',
+      `---
+description: React components
+applyTo: src/**/*.tsx
+---
+
+# React Components
+
+<!-- OAT-managed: do not edit directly. Source: .agents/rules/react-components.md -->
+`,
+    );
+
+    const reports = await detectStrays(
+      'copilot',
+      providerDir,
+      createEmptyManifest(),
+      [],
       createRuleMapping('.github/instructions', '.instructions.md'),
     );
 

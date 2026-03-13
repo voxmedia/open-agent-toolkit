@@ -1,6 +1,7 @@
-import { readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { basename, join, relative, resolve } from 'node:path';
 
+import { OAT_MARKER_PREFIX } from '@engine/markers';
 import type { CanonicalEntry } from '@engine/scanner';
 import { CliError } from '@errors/index';
 import { toPosixPath } from '@fs/paths';
@@ -90,6 +91,46 @@ function isManagedRuleFile(
   );
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+const GENERATED_RULE_SOURCE_PATTERN = new RegExp(
+  `${escapeRegExp(OAT_MARKER_PREFIX)} Source: ([^\\n]+?) -->\\s*$`,
+);
+
+function extractGeneratedRuleSource(content: string): string | null {
+  const match = content.match(GENERATED_RULE_SOURCE_PATTERN);
+  const sourcePath = match?.[1]?.trim();
+  return sourcePath ? toPosixPath(sourcePath) : null;
+}
+
+async function isGeneratedAdaptedRule(
+  providerPath: string,
+  mapping?: Pick<PathMapping, 'contentType'>,
+): Promise<boolean> {
+  if (mapping?.contentType !== 'rule') {
+    return false;
+  }
+
+  let content: string;
+  try {
+    content = await readFile(providerPath, 'utf8');
+  } catch {
+    return false;
+  }
+
+  const sourcePath = extractGeneratedRuleSource(content);
+  if (!sourcePath) {
+    return false;
+  }
+
+  const canonicalDir = '.agents/rules';
+  return (
+    sourcePath === canonicalDir || sourcePath.startsWith(`${canonicalDir}/`)
+  );
+}
+
 async function readProviderEntries(resolvedProviderDir: string) {
   try {
     return await readdir(resolvedProviderDir, {
@@ -149,6 +190,13 @@ export async function detectStrays(
     const providerPath = join(resolvedProviderDir, entry.name);
     const providerPathRelative = toScopeRelative(providerPath, scopeRoot);
     if (isManifestTracked(providerPathRelative, manifest)) {
+      continue;
+    }
+
+    if (
+      entry.isFile() &&
+      (await isGeneratedAdaptedRule(providerPath, mapping))
+    ) {
       continue;
     }
 
