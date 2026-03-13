@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "oat:validate-skills": "pnpm run cli -- internal validate-oat-skills",
-    "build": "turbo run build",
+    "build": "turbo run build --filter='!oat-docs'",
+    "build:docs": "turbo run build --filter=oat-docs...",
     "check": "turbo run check",
     "check:fix": "turbo run check:fix",
     "clean": "turbo run clean",

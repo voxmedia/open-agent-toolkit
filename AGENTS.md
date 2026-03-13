@@ -14,7 +14,8 @@
 
 ### Essential Commands
 
-- `pnpm build` - Build all packages and applications
+- `pnpm build` - Build all packages and applications (excludes docs for speed)
+- `pnpm build:docs` - Build the docs site and its dependencies
 - `pnpm lint` - Lint code using oxlint
 - `pnpm format` - Check formatting (oxfmt --check); use `pnpm format:fix` to auto-fix
 - `pnpm type-check` - TypeScript type checking across all packages

@@ -42,7 +42,8 @@ pnpm test
 pnpm lint
 pnpm format
 pnpm type-check
-pnpm build
+pnpm build          # excludes docs for speed
+pnpm build:docs     # builds docs site and its dependencies
 ```
 
 For narrower changes, use package-specific checks when possible, but do not merge without passing the relevant workspace gates.
@@ -56,7 +57,7 @@ pnpm --filter @oat/cli test
 pnpm --filter @oat/cli lint
 pnpm --filter @oat/cli type-check
 pnpm --filter oat-docs docs:lint
-pnpm --filter oat-docs build
+pnpm build:docs
 ```
 
 ## Implementation Expectations

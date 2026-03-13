@@ -21,13 +21,19 @@ Documentation should ship with the code it explains. This page covers the core d
    pnpm dev:docs
    ```
 
-2. Run Markdown linting:
+2. Build the docs site locally (verifies the static export succeeds):
+
+   ```bash
+   pnpm build:docs
+   ```
+
+3. Run Markdown linting:
 
    ```bash
    pnpm --filter oat-docs docs:lint
    ```
 
-3. Run Markdown formatting:
+4. Run Markdown formatting:
 
    ```bash
    pnpm --filter oat-docs docs:format
