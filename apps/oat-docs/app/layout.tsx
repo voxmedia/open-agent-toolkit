@@ -1,8 +1,9 @@
 import { DocsLayout } from '@oat/docs-theme';
 import { RootProvider } from 'fumadocs-ui/provider/next';
-import { source } from '@/lib/source';
-import './globals.css';
 import type { ReactNode } from 'react';
+
+import './globals.css';
+import { source } from '@/lib/source';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
@@ -11,7 +12,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <RootProvider search={{ options: { type: 'static' as const } }}>
           <DocsLayout
             branding={{
-              title: 'Oat Docs Documentation',
+              title: 'Open Agent Toolkit',
               description: 'Documentation for Open Agent Toolkit',
             }}
             tree={source.getPageTree()}

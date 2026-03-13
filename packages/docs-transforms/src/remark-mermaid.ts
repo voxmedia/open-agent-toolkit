@@ -6,6 +6,9 @@ import { visit } from 'unist-util-visit';
  * Remark plugin that transforms fenced code blocks with `lang: "mermaid"`
  * into `<Mermaid chart="...">` MDX JSX elements.
  *
+ * Replaces literal `\n` sequences with `<br/>` since mermaid flowcharts
+ * use HTML break tags for line breaks within node labels.
+ *
  * Paired with the `Mermaid` component from `@oat/docs-theme` for client-side rendering.
  */
 export const remarkMermaid: Plugin<[], Root> = function remarkMermaid() {
@@ -15,6 +18,8 @@ export const remarkMermaid: Plugin<[], Root> = function remarkMermaid() {
         return;
       }
 
+      const chart = node.value.replace(/\\n/g, '<br/>');
+
       const jsxNode = {
         type: 'mdxJsxFlowElement' as const,
         name: 'Mermaid',
@@ -22,7 +27,7 @@ export const remarkMermaid: Plugin<[], Root> = function remarkMermaid() {
           {
             type: 'mdxJsxAttribute' as const,
             name: 'chart',
-            value: node.value,
+            value: chart,
           },
         ],
         children: [],
