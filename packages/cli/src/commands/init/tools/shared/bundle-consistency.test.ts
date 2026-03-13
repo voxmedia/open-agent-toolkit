@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -30,8 +30,35 @@ function parseBundleSkills(): string[] {
     .filter((line) => line.length > 0 && !line.startsWith('#'));
 }
 
+function isUserInvocableSkill(skillName: string): boolean {
+  const skillPath = join(
+    import.meta.dirname,
+    '../../../../../../../.agents/skills',
+    skillName,
+    'SKILL.md',
+  );
+  const content = readFileSync(skillPath, 'utf8');
+  return /^user-invocable:\s*true$/m.test(content);
+}
+
 describe('bundle-assets.sh consistency', () => {
   const bundleSkills = parseBundleSkills();
+  const repoSkillsRoot = join(
+    import.meta.dirname,
+    '../../../../../../../.agents/skills',
+  );
+  const workflowLifecycleSkills = readdirSync(repoSkillsRoot, {
+    withFileTypes: true,
+  })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter(
+      (name) =>
+        (name.startsWith('oat-project-') ||
+          name.startsWith('oat-worktree-bootstrap')) &&
+        isUserInvocableSkill(name),
+    )
+    .sort();
 
   it('bundles every workflow skill', () => {
     const missing = WORKFLOW_SKILLS.filter(
@@ -74,5 +101,14 @@ describe('bundle-assets.sh consistency', () => {
       orphans,
       `Bundled but not in any pack: ${orphans.join(', ')}`,
     ).toEqual([]);
+  });
+
+  it('covers every user-facing workflow lifecycle skill in the workflow pack', () => {
+    expect(
+      [...WORKFLOW_SKILLS].sort(),
+      `Workflow pack is missing lifecycle skills: ${workflowLifecycleSkills
+        .filter((skill) => !WORKFLOW_SKILLS.includes(skill))
+        .join(', ')}`,
+    ).toEqual(expect.arrayContaining(workflowLifecycleSkills));
   });
 });

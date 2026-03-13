@@ -10,7 +10,7 @@
     "check": "turbo run check",
     "check:fix": "turbo run check:fix",
     "clean": "turbo run clean",
-    "cli": "tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts",
+    "cli": "bash packages/cli/scripts/bundle-assets.sh && tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts",
     "dev": "turbo run dev",
     "dev:docs": "pnpm --filter oat-docs dev",
     "format": "turbo run format",
