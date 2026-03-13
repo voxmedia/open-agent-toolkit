@@ -96,6 +96,16 @@ This criterion applies to the **overall instruction set**, not to individual fil
 - [ ] Existing glob-scoped rules cover the identified patterns, or coverage gaps are recorded
 - **Severity if failing:** Medium (missed pattern) or High (missed exception-to-rule pattern)
 
+### 14. Available Documentation Is Referenced
+
+This criterion uses the documentation inventory from Step 2 (Discover Documentation Surfaces).
+
+- [ ] Instruction files reference relevant available documentation (READMEs, docs pages, architecture docs) in their References section
+- [ ] Scoped instruction files reference docs topically relevant to their directory scope (e.g., a package AGENTS.md references the package's README or docs subtree)
+- [ ] References point to existing, current documentation (not stale or removed)
+- [ ] Content duplicated from available docs is flagged for `link_only` disclosure instead of inline repetition
+- **Severity if failing:** Low (missing references) or Medium (duplicates content that exists in available docs)
+
 ## Scoring
 
 For each file, count passing criteria out of the applicable set (some criteria only apply to certain file types).

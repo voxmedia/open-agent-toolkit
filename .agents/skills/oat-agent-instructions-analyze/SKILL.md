@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.3.0
+version: 1.4.0
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true
@@ -53,15 +53,16 @@ or fill in missing evidence gaps on its own.
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Step indicators:
-  - `[1/9] Resolving providers + mode…`
-  - `[2/9] Discovering instruction files…`
-  - `[3/9] Evaluating quality…`
-  - `[4/9] Assessing directory coverage gaps…`
-  - `[5/9] Discovering file-type patterns…`
-  - `[6/9] Checking for drift…`
-  - `[7/9] Checking cross-format consistency…`
-  - `[8/9] Writing analysis artifact…`
-  - `[9/9] Updating tracking + summary…`
+  - `[1/10] Resolving providers + mode…`
+  - `[2/10] Discovering instruction files…`
+  - `[3/10] Discovering documentation surfaces…`
+  - `[4/10] Evaluating quality…`
+  - `[5/10] Assessing directory coverage gaps…`
+  - `[6/10] Discovering file-type patterns…`
+  - `[7/10] Checking for drift…`
+  - `[8/10] Checking cross-format consistency…`
+  - `[9/10] Writing analysis artifact…`
+  - `[10/10] Updating tracking + summary…`
 
 ## Process
 
@@ -98,7 +99,7 @@ Delta mode scoping:
 git diff --name-only "$STORED_HASH"..HEAD
 ```
 
-Use the changed file list to limit coverage gap assessment (Step 4) and drift detection (Step 5) to affected directories. Quality evaluation (Step 3) always runs on ALL instruction files regardless of mode.
+Use the changed file list to limit coverage gap assessment (Step 5) and drift detection (Step 7) to affected directories. Quality evaluation (Step 4) always runs on ALL instruction files regardless of mode.
 
 ### Step 1: Discover Instruction Files
 
@@ -110,7 +111,95 @@ This outputs tab-separated `provider\tpath` lines. Parse into an inventory for e
 
 If no instruction files are found at all (not even a root AGENTS.md), report this as a Critical finding and recommend creating one via `oat-agent-instructions-apply`.
 
-### Step 2: Evaluate Quality
+### Step 2: Discover Documentation Surfaces
+
+Scan the repository for documentation surfaces that instruction files could reference. This inventory feeds into
+quality evaluation (Criterion 14) and provides concrete link targets for `link_only` disclosure decisions.
+
+**Discovery sources (check all; none are required — this must work with or without OAT configuration):**
+
+**1. OAT docs config (if available):**
+
+```bash
+# Only if .oat/config.json exists
+cat .oat/config.json 2>/dev/null | jq -r '.documentation // empty'
+```
+
+If present, extract `root` and `index` paths. Use these as the primary docs surface, but do not skip other sources.
+
+**2. Docs directories:**
+
+Scan for directories named `docs/`, `doc/`, and `apps/*/docs/`. For each found directory:
+
+- Check for `index.md` files
+- If an `index.md` contains a `## Contents` section, parse the topic-to-path map (these follow the OAT docs index contract)
+- Record each docs directory with its topic coverage
+
+```bash
+# Example discovery
+find . -maxdepth 3 -type d -name 'docs' -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/.oat/*' -not -path '*/dist/*'
+```
+
+**3. READMEs:**
+
+Find `README.md` files at the root and in key subdirectories (packages, apps, modules, services).
+READMEs are often the only documentation for a package and are valuable link targets for scoped instruction files.
+
+```bash
+find . -maxdepth 3 -name 'README.md' -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*'
+```
+
+**4. Knowledge base (only if current):**
+
+Check if `.oat/repo/knowledge/` exists and contains files. If so:
+
+- Read `project-index.md` frontmatter for `oat_generated_at` and `oat_source_main_merge_base_sha`
+- Compare merge-base SHA against current HEAD to assess staleness:
+  ```bash
+  KNOWLEDGE_SHA=$(grep 'oat_source_main_merge_base_sha' .oat/repo/knowledge/project-index.md 2>/dev/null | awk '{print $2}')
+  if [ -n "$KNOWLEDGE_SHA" ]; then
+    FILES_CHANGED=$(git diff --name-only "$KNOWLEDGE_SHA"..HEAD 2>/dev/null | wc -l)
+    GENERATED_AT=$(grep 'oat_generated_at' .oat/repo/knowledge/project-index.md | awk '{print $2}')
+  fi
+  ```
+- **Include in inventory only if reasonably current** (≤20 files changed since merge-base AND ≤7 days old)
+- If stale, record as `stale` in the inventory but **do not recommend linking to stale knowledge files**
+- Available knowledge files: `architecture.md`, `conventions.md`, `stack.md`, `structure.md`, `testing.md`, `integrations.md`, `concerns.md`
+
+**5. Standalone documentation files:**
+
+Scan for common standalone docs:
+
+- `ARCHITECTURE.md`, `DESIGN.md`, `CONTRIBUTING.md` at repo root
+- `ADR/` or `decisions/` directories (architectural decision records)
+- `.github/*.md` files (excluding templates like `PULL_REQUEST_TEMPLATE.md`)
+
+```bash
+# Example discovery
+ls ARCHITECTURE.md DESIGN.md CONTRIBUTING.md 2>/dev/null
+find . -maxdepth 1 -type d \( -name 'ADR' -o -name 'decisions' \) 2>/dev/null
+find .github -maxdepth 1 -name '*.md' -not -name 'PULL_REQUEST_TEMPLATE*' -not -name 'ISSUE_TEMPLATE*' 2>/dev/null
+```
+
+**Output:**
+
+Build a Documentation Inventory for the analysis artifact. Each entry records:
+
+| Field        | Description                                                                 |
+| ------------ | --------------------------------------------------------------------------- |
+| Type         | `docs-app`, `readme`, `knowledge`, `standalone`                             |
+| Path         | Relative path from repo root                                                |
+| Topics/Scope | What the doc covers (e.g., "CLI usage", "architecture, conventions")        |
+| Current?     | `current`, `stale`, or `N/A` (for non-versioned docs like READMEs)          |
+| Notes        | Additional context (e.g., "OAT config root", "package-level", "thin index") |
+
+This inventory is used by:
+
+- **Step 3 (Evaluate Quality):** When checking Criterion 12 (Progressive Disclosure) and Criterion 14 (Available Documentation Is Referenced), use the inventory to identify whether instruction files reference available docs and whether content is duplicated that could use `link_only`.
+- **Step 4 (Coverage Gaps):** When recommending new AGENTS.md files, populate the `Link Targets` field with docs from this inventory that are topically relevant to the directory scope. Prefer scope-specific docs over project-wide docs.
+- **Step 8 (Write Artifact):** Include the full Documentation Inventory table in the artifact. Use inventory paths as link targets in the Progressive Disclosure Decisions table.
+
+### Step 3: Evaluate Quality
 
 For each discovered instruction file, evaluate against the quality checklist at `references/quality-checklist.md`.
 
@@ -130,6 +219,16 @@ For each discovered instruction file, evaluate against the quality checklist at 
 - If a formatter or linter already enforces a rule, prefer recording the command and linking to the config/doc rather
   than restating tabs/spaces, quote style, import ordering, or similar trivia as prose instructions.
 
+**Documentation inventory integration:**
+
+When evaluating Criterion 12 (Progressive Disclosure) and Criterion 14 (Available Documentation Is Referenced), use the
+documentation inventory from Step 2 to:
+
+- Check whether instruction files reference available project documentation in their References section
+- Check whether scoped instruction files reference docs topically relevant to their directory scope
+- Identify content in instruction files that duplicates information available in docs — recommend `link_only` with the specific doc path
+- Verify that any doc links in instruction files point to docs that still exist
+
 **For each file:**
 
 1. Read the file content.
@@ -148,7 +247,7 @@ For each discovered instruction file, evaluate against the quality checklist at 
 - **Copilot instructions** (`.github/instructions/*.instructions.md`): Validate `applyTo` frontmatter.
 - **Copilot shim** (`.github/copilot-instructions.md`): Verify it's a minimal pointer, not content duplication.
 
-### Step 3: Assess Coverage Gaps
+### Step 4: Assess Coverage Gaps
 
 Walk the directory tree and evaluate each directory against `references/directory-assessment-criteria.md`.
 
@@ -176,8 +275,12 @@ For each directory meeting 1+ primary indicators from the criteria doc:
 - Check if it's covered by an existing instruction file (either a direct AGENTS.md or a parent's scoped rule with matching globs).
 - If uncovered, add to the coverage gaps list with severity, evidence, and a recommendation.
 - For each recommendation, decide what belongs inline vs what should link to deeper documentation or config files.
+- When recommending new AGENTS.md files, use the documentation inventory from Step 2 to populate the `Link Targets`
+  field with docs topically relevant to the directory scope. Prefer scope-specific docs (e.g., a package README or
+  package-level docs directory) over project-wide docs. If the directory has a `README.md` or a nearby `docs/` tree,
+  include those paths as link targets for the new file's References section.
 
-### Step 4: File-Type Pattern Discovery
+### Step 5: File-Type Pattern Discovery
 
 Discover cross-cutting file-type patterns that warrant glob-scoped rules. This step runs independently of directory coverage assessment — it identifies patterns that span multiple directories and are best addressed with targeted rules rather than directory-level instruction files.
 
@@ -232,7 +335,7 @@ For each pattern, determine what breaks when an agent writes a new file without 
 
 Record all discovered patterns in the artifact's Glob-Scoped Rule Opportunities table with consistency counts, correctness impact, and exception-to-rule flags.
 
-### Step 5: Drift Detection (Delta Mode Only)
+### Step 6: Drift Detection (Delta Mode Only)
 
 **Skip this step entirely in full mode.**
 
@@ -249,7 +352,7 @@ Common drift signals:
 - New dependencies or framework changes not reflected in tech stack documentation.
 - Existing instructions claim formatting/style conventions that are not backed by current repo evidence.
 
-### Step 6: Cross-Format Consistency (Multi-Provider Only)
+### Step 7: Cross-Format Consistency (Multi-Provider Only)
 
 **Skip if only one provider (agents_md) is active.**
 
@@ -259,7 +362,7 @@ For glob-scoped rules that target the same file patterns across providers:
 2. Compare bodies — they should be identical.
 3. Flag divergence as a Medium finding.
 
-### Step 7: Write Analysis Artifact
+### Step 8: Write Analysis Artifact
 
 Generate the analysis artifact using the template at `references/analysis-artifact-template.md`.
 
@@ -268,7 +371,7 @@ TIMESTAMP=$(date -u +"%Y-%m-%d-%H%M")
 ARTIFACT_PATH=".oat/repo/analysis/agent-instructions-${TIMESTAMP}.md"
 ```
 
-Fill in all template sections with findings from Steps 2-6.
+Fill in all template sections with findings from Steps 2-7.
 
 The artifact is the contract for apply. It must contain:
 
@@ -279,7 +382,7 @@ The artifact is the contract for apply. It must contain:
 
 Write the artifact to `$ARTIFACT_PATH`.
 
-### Step 8: Update Tracking and Output Summary
+### Step 9: Update Tracking and Output Summary
 
 **Update tracking:**
 

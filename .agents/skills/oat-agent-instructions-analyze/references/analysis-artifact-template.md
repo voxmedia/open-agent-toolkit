@@ -23,6 +23,17 @@ oat_analysis_commit: { commitHash }
 - **Evidence-backed recommendations:** {N}
 - **Open questions / ask-user items:** {N}
 
+## Documentation Inventory
+
+Available documentation surfaces discovered in this repository. Used to populate link targets for `link_only` disclosure decisions and to evaluate Criterion 14 (Available Documentation Is Referenced).
+
+| #   | Type                                   | Path     | Topics/Scope     | Current?            | Notes                                              |
+| --- | -------------------------------------- | -------- | ---------------- | ------------------- | -------------------------------------------------- |
+| 1   | {docs-app/readme/knowledge/standalone} | `{path}` | {topics covered} | {current/stale/N/A} | {e.g., OAT config root, package-level, thin index} |
+| ... |                                        |          |                  |                     |                                                    |
+
+{Or: "No documentation surfaces discovered."}
+
 ## Instruction File Inventory
 
 | #   | Provider  | Format    | Path                     | Lines | Quality       |
