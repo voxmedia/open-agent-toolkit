@@ -244,7 +244,7 @@ Read `oat_review_type` from review artifact frontmatter:
 
 ### Step 3: Determine Task Scope
 
-Applies to `code` reviews only. (`artifact` reviews are handled via Step 2.6, Step 10A, and the artifact summary path in Step 11.)
+Applies to `code` reviews only. (`artifact` reviews are handled via Step 2.6, the archive + routing in Step 10A, and the artifact summary path in Step 11.)
 
 **Which phase should receive fix tasks?**
 
@@ -527,6 +527,18 @@ Choose:
 ### Step 10A: Route to Next Action for Artifact Reviews
 
 For `artifact` reviews, do not route to implementation tasks. After user-approved artifact edits are applied:
+
+**Archive the consumed review artifact (same as Step 7.5):**
+
+```bash
+mkdir -p "$ARCHIVED_REVIEW_DIR"
+mv "$REVIEW_PATH" "$ARCHIVED_REVIEW_PATH"
+```
+
+- Perform the move only after all artifact edits are applied and any written references point to `reviews/archived/{filename}.md`.
+- If `"$ARCHIVED_REVIEW_PATH"` already exists, append a timestamp suffix before moving so history is preserved.
+
+**Then route:**
 
 - If any finding is `needs_user_direction`, ask targeted follow-up question(s) and wait for decision.
 - If all findings are `resolve_in_artifact` or `rejected_with_rationale`, ask user:
