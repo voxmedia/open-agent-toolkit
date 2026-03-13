@@ -5,9 +5,9 @@
   "version": "0.1.0",
   "description": "{{SITE_DESCRIPTION}}",
   "scripts": {
-    "predev": "fumadocs-mdx && pnpm -w run cli -- docs generate-index --docs-dir {{APP_DIR}}/docs --output {{APP_DIR}}/index.md",
+    "predev": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "dev": "next dev",
-    "prebuild": "fumadocs-mdx && pnpm -w run cli -- docs generate-index --docs-dir {{APP_DIR}}/docs --output {{APP_DIR}}/index.md",
+    "prebuild": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "build": "next build",
     "start": "next start",
     "docs:lint": "{{DOCS_LINT_SCRIPT}}",
@@ -15,9 +15,9 @@
     "docs:format:check": "{{DOCS_FORMAT_CHECK_SCRIPT}}"
   },
   "dependencies": {
-    "@oat/docs-config": "workspace:*",
-    "@oat/docs-theme": "workspace:*",
-    "@oat/docs-transforms": "workspace:*",
+    "@oat/docs-config": "{{OAT_DOCS_CONFIG_DEP}}",
+    "@oat/docs-theme": "{{OAT_DOCS_THEME_DEP}}",
+    "@oat/docs-transforms": "{{OAT_DOCS_TRANSFORMS_DEP}}",
     "fumadocs-core": "^16.6.13",
     "fumadocs-mdx": "^14.2.9",
     "fumadocs-ui": "^16.6.13",

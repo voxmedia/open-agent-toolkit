@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readdir, readFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -57,6 +57,17 @@ describe('scaffold integration', () => {
       const root = await mkdtemp(join(tmpdir(), 'oat-integration-fuma-'));
       createdRoots.push(root);
       await mkdir(join(root, 'apps'), { recursive: true });
+
+      // Seed OAT package dirs so detectIsOatRepo returns true
+      for (const pkg of ['docs-config', 'docs-theme', 'docs-transforms']) {
+        const pkgDir = join(root, 'packages', pkg);
+        await mkdir(pkgDir, { recursive: true });
+        await writeFile(
+          join(pkgDir, 'package.json'),
+          JSON.stringify({ name: `@oat/${pkg}`, version: '0.0.1' }),
+          'utf8',
+        );
+      }
 
       const result = await scaffoldDocsApp({
         assetsRoot,
@@ -132,6 +143,65 @@ describe('scaffold integration', () => {
       // Verify documentation config
       expect(result.documentationConfig.tooling).toBe('fumadocs');
       expect(result.documentationConfig.root).toBe('apps/test-docs');
+    },
+  );
+
+  it(
+    'scaffolds a Fumadocs app with versioned deps for consuming repos',
+    { timeout: 30_000 },
+    async () => {
+      assetsRoot = await bundleAssets();
+      const root = await mkdtemp(join(tmpdir(), 'oat-integration-consuming-'));
+      createdRoots.push(root);
+
+      // Seed a CLI package.json adjacent to assetsRoot for version resolution
+      await writeFile(
+        join(dirname(assetsRoot), 'package.json'),
+        JSON.stringify({ name: '@oat/cli', version: '2.0.0' }),
+        'utf8',
+      );
+
+      const result = await scaffoldDocsApp({
+        assetsRoot,
+        repoRoot: root,
+        repoShape: 'single-package',
+        framework: 'fumadocs',
+        appName: 'docs',
+        targetDir: 'docs',
+        siteDescription: 'Consuming repo docs',
+        lint: 'none',
+        format: 'none',
+      });
+
+      // Verify no unresolved template tokens
+      const allFiles = await collectFiles(result.appRoot);
+      for (const file of allFiles) {
+        const content = await readFile(file, 'utf8');
+        const unresolvedTokens = content.match(/\{\{[A-Z_]+\}\}/g);
+        expect(
+          unresolvedTokens,
+          `Unresolved tokens in ${file}: ${unresolvedTokens?.join(', ')}`,
+        ).toBeNull();
+      }
+
+      // Verify versioned deps (not workspace:*)
+      const packageJson = JSON.parse(
+        await readFile(join(result.appRoot, 'package.json'), 'utf8'),
+      ) as {
+        scripts: Record<string, string>;
+        dependencies: Record<string, string>;
+      };
+      expect(packageJson.dependencies['@oat/docs-config']).toBe('^2.0.0');
+      expect(packageJson.dependencies['@oat/docs-theme']).toBe('^2.0.0');
+      expect(packageJson.dependencies['@oat/docs-transforms']).toBe('^2.0.0');
+
+      // Verify oat CLI with app-relative paths
+      expect(packageJson.scripts['predev']).toBe(
+        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+      );
+      expect(packageJson.scripts['prebuild']).toBe(
+        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+      );
     },
   );
 

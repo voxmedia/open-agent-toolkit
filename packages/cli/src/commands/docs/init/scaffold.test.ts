@@ -45,13 +45,18 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
   "name": "{{PACKAGE_NAME}}",
   "description": "{{SITE_DESCRIPTION}}",
   "scripts": {
-    "predev": "pnpm -w run cli -- docs generate-index --docs-dir {{APP_DIR}}/docs --output {{APP_DIR}}/index.md",
+    "predev": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "dev": "next dev",
-    "prebuild": "pnpm -w run cli -- docs generate-index --docs-dir {{APP_DIR}}/docs --output {{APP_DIR}}/index.md",
+    "prebuild": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "build": "next build",
     "docs:lint": "{{DOCS_LINT_SCRIPT}}",
     "docs:format": "{{DOCS_FORMAT_SCRIPT}}",
     "docs:format:check": "{{DOCS_FORMAT_CHECK_SCRIPT}}"
+  },
+  "dependencies": {
+    "@oat/docs-config": "{{OAT_DOCS_CONFIG_DEP}}",
+    "@oat/docs-theme": "{{OAT_DOCS_THEME_DEP}}",
+    "@oat/docs-transforms": "{{OAT_DOCS_TRANSFORMS_DEP}}"
   },
   "devDependencies": {
     "typescript": "^5.8.3"{{FUMA_DEV_DEPENDENCIES}}
@@ -281,5 +286,110 @@ describe('scaffoldDocsApp', () => {
     ) as { devDependencies: Record<string, string> };
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
     expect(packageJson.devDependencies['prettier']).toBeUndefined();
+  });
+
+  it('uses versioned deps and oat CLI for consuming repos', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-consuming-'));
+    createdRoots.push(root);
+    const assetsRoot = await seedAssets(
+      root,
+      'docs-app-fuma',
+      FUMA_TEMPLATE_FILES,
+    );
+
+    // Seed a CLI package.json so version resolution finds it
+    await writeFile(
+      join(root, 'package.json'),
+      JSON.stringify({ name: '@oat/cli', version: '1.2.3' }),
+      'utf8',
+    );
+
+    const result = await scaffoldDocsApp({
+      assetsRoot,
+      repoRoot: root,
+      repoShape: 'single-package',
+      framework: 'fumadocs',
+      appName: 'docs',
+      targetDir: 'docs',
+      siteDescription: 'My project docs',
+      lint: 'none',
+      format: 'none',
+    });
+
+    const packageJson = JSON.parse(
+      await readFile(join(result.appRoot, 'package.json'), 'utf8'),
+    ) as {
+      scripts: Record<string, string>;
+      dependencies: Record<string, string>;
+    };
+
+    // Should use versioned deps, not workspace:*
+    expect(packageJson.dependencies['@oat/docs-config']).toBe('^1.2.3');
+    expect(packageJson.dependencies['@oat/docs-theme']).toBe('^1.2.3');
+    expect(packageJson.dependencies['@oat/docs-transforms']).toBe('^1.2.3');
+
+    // Should use oat CLI directly with paths relative to docs app
+    expect(packageJson.scripts['predev']).toBe(
+      'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+    );
+    expect(packageJson.scripts['prebuild']).toBe(
+      'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+    );
+  });
+
+  it('uses workspace:* deps and pnpm -w run cli for OAT repo', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-oatrepo-'));
+    createdRoots.push(root);
+    const assetsRoot = await seedAssets(
+      root,
+      'docs-app-fuma',
+      FUMA_TEMPLATE_FILES,
+    );
+
+    // Seed the OAT package directories so detectIsOatRepo returns true
+    for (const pkg of ['docs-config', 'docs-theme', 'docs-transforms']) {
+      const pkgDir = join(root, 'packages', pkg);
+      await mkdir(pkgDir, { recursive: true });
+      await writeFile(
+        join(pkgDir, 'package.json'),
+        JSON.stringify({ name: `@oat/${pkg}`, version: '0.0.1' }),
+        'utf8',
+      );
+    }
+    await mkdir(join(root, 'apps'), { recursive: true });
+
+    const result = await scaffoldDocsApp({
+      assetsRoot,
+      repoRoot: root,
+      repoShape: 'monorepo',
+      framework: 'fumadocs',
+      appName: 'oat-docs',
+      targetDir: 'apps/oat-docs',
+      siteDescription: 'OAT documentation',
+      lint: 'none',
+      format: 'none',
+    });
+
+    const packageJson = JSON.parse(
+      await readFile(join(result.appRoot, 'package.json'), 'utf8'),
+    ) as {
+      scripts: Record<string, string>;
+      dependencies: Record<string, string>;
+    };
+
+    // Should use workspace:* for OAT packages
+    expect(packageJson.dependencies['@oat/docs-config']).toBe('workspace:*');
+    expect(packageJson.dependencies['@oat/docs-theme']).toBe('workspace:*');
+    expect(packageJson.dependencies['@oat/docs-transforms']).toBe(
+      'workspace:*',
+    );
+
+    // Should use pnpm -w run cli with full paths from workspace root
+    expect(packageJson.scripts['predev']).toBe(
+      'fumadocs-mdx && pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md',
+    );
+    expect(packageJson.scripts['prebuild']).toBe(
+      'fumadocs-mdx && pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md',
+    );
   });
 });

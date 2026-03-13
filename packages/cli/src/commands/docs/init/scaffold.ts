@@ -98,6 +98,56 @@ export interface ScaffoldDocsAppResult {
   documentationConfig: OatDocumentationConfig;
 }
 
+export interface OatDepContext {
+  isOatRepo: boolean;
+  oatPackageVersions: Record<string, string>;
+}
+
+// Assumes lockstep versioning: all @oat/* packages are published at the same
+// version as @oat/cli. If packages are ever versioned independently, version
+// resolution here will need per-package lookups.
+const OAT_DEP_PACKAGES = [
+  'docs-config',
+  'docs-theme',
+  'docs-transforms',
+] as const;
+
+export async function detectIsOatRepo(repoRoot: string): Promise<boolean> {
+  for (const pkg of OAT_DEP_PACKAGES) {
+    if (!(await fileExists(join(repoRoot, 'packages', pkg, 'package.json')))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+async function readCliVersion(assetsRoot: string): Promise<string> {
+  const cliRoot = dirname(assetsRoot);
+  try {
+    const content = await readFile(join(cliRoot, 'package.json'), 'utf8');
+    const pkg = JSON.parse(content) as { version?: string };
+    return pkg.version ?? '0.0.1';
+  } catch {
+    return '0.0.1';
+  }
+}
+
+export async function resolveOatDepContext(
+  repoRoot: string,
+  assetsRoot: string,
+): Promise<OatDepContext> {
+  const isOatRepo = await detectIsOatRepo(repoRoot);
+  if (isOatRepo) {
+    return { isOatRepo, oatPackageVersions: {} };
+  }
+
+  const version = await readCliVersion(assetsRoot);
+  const oatPackageVersions = Object.fromEntries(
+    OAT_DEP_PACKAGES.map((name) => [name, version]),
+  );
+  return { isOatRepo, oatPackageVersions };
+}
+
 function humanizeAppName(appName: string): string {
   return appName
     .split(/[-_]/g)
@@ -136,9 +186,24 @@ function buildFumaDevDependencies(
   return `,\n${entries.join(',\n')}`;
 }
 
+function buildGenerateIndexCmd(isOatRepo: boolean, targetDir: string): string {
+  if (isOatRepo) {
+    return `pnpm -w run cli -- docs generate-index --docs-dir ${targetDir}/docs --output ${targetDir}/index.md`;
+  }
+  return 'oat docs generate-index --docs-dir docs --output index.md';
+}
+
+function oatDepVersion(depContext: OatDepContext, packageName: string): string {
+  if (depContext.isOatRepo) {
+    return 'workspace:*';
+  }
+  return `^${depContext.oatPackageVersions[packageName] ?? '0.0.1'}`;
+}
+
 function renderTemplate(
   template: string,
   options: DocsInitResolvedOptions,
+  depContext: OatDepContext,
 ): string {
   const repoName = basename(options.repoRoot);
   const siteName = `${humanizeAppName(options.appName)} Documentation`;
@@ -163,6 +228,13 @@ function renderTemplate(
     ),
     '{{REPO_NAME}}': repoName,
     '{{APP_DIR}}': options.targetDir,
+    '{{GENERATE_INDEX_CMD}}': buildGenerateIndexCmd(
+      depContext.isOatRepo,
+      options.targetDir,
+    ),
+    '{{OAT_DOCS_CONFIG_DEP}}': oatDepVersion(depContext, 'docs-config'),
+    '{{OAT_DOCS_THEME_DEP}}': oatDepVersion(depContext, 'docs-theme'),
+    '{{OAT_DOCS_TRANSFORMS_DEP}}': oatDepVersion(depContext, 'docs-transforms'),
   };
 
   return Object.entries(replacements).reduce(
@@ -210,6 +282,10 @@ export async function scaffoldDocsApp(
   const templateRoot = join(options.assetsRoot, 'templates', templateDir);
   const frameworkConfig = FRAMEWORK_CONFIGS[options.framework];
   const createdFiles: string[] = [];
+  const depContext = await resolveOatDepContext(
+    options.repoRoot,
+    options.assetsRoot,
+  );
 
   if (!(await fileExists(join(templateRoot, frameworkConfig.sentinelFile)))) {
     throw new Error(`Docs app templates not found under ${templateRoot}`);
@@ -222,7 +298,7 @@ export async function scaffoldDocsApp(
     const source = join(templateRoot, templateFile.source);
     const destination = join(appRoot, templateFile.destination);
     const template = await readFile(source, 'utf8');
-    const rendered = renderTemplate(template, options);
+    const rendered = renderTemplate(template, options, depContext);
     await ensureDir(dirname(destination));
     await writeFile(destination, rendered, 'utf8');
     createdFiles.push(templateFile.destination);
