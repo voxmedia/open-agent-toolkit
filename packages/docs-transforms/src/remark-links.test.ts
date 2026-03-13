@@ -42,9 +42,9 @@ describe('remarkLinks — URL rewriting', () => {
     expect(urls(links)).toEqual(['./cli']);
   });
 
-  it('handles parent-relative index links', async () => {
+  it('handles parent-relative index links with trailing-slash adjustment', async () => {
     const links = await transformLinks('[Back](../reference/index.md)');
-    expect(urls(links)).toEqual(['../reference']);
+    expect(urls(links)).toEqual(['../../reference']);
   });
 
   it('preserves anchor fragments', async () => {
@@ -70,6 +70,13 @@ describe('remarkLinks — URL rewriting', () => {
   it('handles nested paths without index', async () => {
     const links = await transformLinks('[Design](cli/design-principles.md)');
     expect(urls(links)).toEqual(['./cli/design-principles']);
+  });
+
+  it('adds extra ../ for deep parent-relative links (trailing-slash compensation)', async () => {
+    const links = await transformLinks(
+      '[Contract](../../reference/docs-index-contract.md)',
+    );
+    expect(urls(links)).toEqual(['../../../reference/docs-index-contract']);
   });
 
   it('leaves non-.md links unchanged', async () => {

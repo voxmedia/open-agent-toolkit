@@ -55,10 +55,15 @@ export const remarkLinks: Plugin<[], Root> = function remarkLinks() {
       const cleaned = cleanMdPath(path);
       if (cleaned === null) return;
 
+      // With trailingSlash enabled, each page URL has an extra directory level
+      // (e.g., /guide/commands/ instead of /guide/commands), so ../ links need
+      // one additional ../ to reach the correct parent.
+      const adjusted = cleaned.startsWith('..') ? `../${cleaned}` : cleaned;
+
       // Rewrite URL
       const prefix =
-        cleaned.startsWith('.') || cleaned.startsWith('/') ? '' : './';
-      node.url = prefix + cleaned + fragment;
+        adjusted.startsWith('.') || adjusted.startsWith('/') ? '' : './';
+      node.url = prefix + adjusted + fragment;
 
       // Clean display text when it's a single inlineCode child with a .md path
       const firstChild = node.children[0];
