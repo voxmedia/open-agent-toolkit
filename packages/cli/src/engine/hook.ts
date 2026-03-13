@@ -78,13 +78,41 @@ async function resolveGitDirectory(projectRoot: string): Promise<string> {
   return gitPath;
 }
 
+async function resolveConfiguredHooksPath(
+  projectRoot: string,
+): Promise<string | null> {
+  try {
+    const { stdout } = await execFileAsync(
+      'git',
+      ['config', '--get', 'core.hooksPath'],
+      { cwd: projectRoot },
+    );
+    const configured = stdout.trim();
+    if (configured) {
+      return resolve(projectRoot, configured);
+    }
+  } catch {
+    // Not set or git not available — fall through to default resolution.
+  }
+  return null;
+}
+
 async function resolveHooksDirectory(
   projectRoot: string,
   options: { createIfMissing?: boolean } = {},
 ): Promise<string> {
+  const shouldCreate = options.createIfMissing ?? false;
+
+  const configuredPath = await resolveConfiguredHooksPath(projectRoot);
+  if (configuredPath) {
+    if (shouldCreate) {
+      await ensureDir(configuredPath);
+    }
+    return configuredPath;
+  }
+
   const gitDir = await resolveGitDirectory(projectRoot);
   const hooksDir = join(gitDir, 'hooks');
-  const shouldCreate = options.createIfMissing ?? false;
 
   try {
     const hooksStat = await lstat(hooksDir);
@@ -215,7 +243,14 @@ export async function uninstallHook(projectRoot: string): Promise<void> {
 
   const next = removeHookSnippet(current);
   if (next.trim().length === 0) {
-    await rm(hookPath, { force: true });
+    const hookStat = await lstat(hookPath);
+    if (hookStat.isSymbolicLink()) {
+      // Preserve the symlink — write empty content through it instead of
+      // deleting the link itself (which would break managed hook setups).
+      await writeFile(hookPath, '', 'utf8');
+    } else {
+      await rm(hookPath, { force: true });
+    }
     return;
   }
   await writeFile(hookPath, next, 'utf8');
