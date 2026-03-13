@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "description": "Open standards, open source tooling for interoperable agent development across providers",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "oat:validate-skills": "pnpm run cli -- internal validate-oat-skills",
