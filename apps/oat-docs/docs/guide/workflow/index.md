@@ -19,14 +19,6 @@ OAT workflow is optional. The CLI remains useful on its own, but projects add ex
 - [PR Flow](pr-flow.md) - Progress and final PR generation expectations.
 - [Repository Analysis](repo-analysis.md) - Repo-wide PR comment collection and triage workflows.
 
-## What Changed in the Reorg
-
-This section now combines the old workflow and project landings in one place:
-
-- workflow pages explain the execution flow and quality gates
-- project pages explain the artifact contracts and resumable state model
-- repo-analysis docs stay nearby because they feed the same review and planning loops
-
 ## Choose the Right Workflow Layer
 
 - Use the CLI only when you want direct commands without tracked artifacts.

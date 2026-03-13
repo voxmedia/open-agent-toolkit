@@ -19,6 +19,18 @@ flowchart TD
 
 OAT keeps canonical assets in repo-controlled locations and projects provider-specific views from that source of truth. The canonical form is what you edit and review directly; provider views are synchronized outputs that let Claude Code, Cursor, Copilot, Gemini, and Codex consume the same intent in their native layouts.
 
+```mermaid
+flowchart LR
+  SKILLS[".agents/skills/"] --> OAT["oat sync"]
+  AGENTS[".agents/agents/"] --> OAT
+  RULES[".agents/rules/"] --> OAT
+  OAT --> CLAUDE[".claude/"]
+  OAT --> CURSOR[".cursor/"]
+  OAT --> COPILOT[".github/"]
+  OAT --> GEMINI[".gemini/"]
+  OAT --> CODEX[".codex/"]
+```
+
 Use these docs next:
 
 - [Provider Sync](provider-sync/index.md)
