@@ -25,4 +25,19 @@ describe('createDocsConfig', () => {
     expect(config.output).toBe('export');
     expect(config.reactStrictMode).toBe(true);
   });
+
+  it('should set basePath when provided', () => {
+    const config = createDocsConfig({
+      title: 'Test Docs',
+      basePath: '/my-project',
+    });
+
+    expect(config.basePath).toBe('/my-project');
+  });
+
+  it('should not set basePath when omitted', () => {
+    const config = createDocsConfig({ title: 'Test Docs' });
+
+    expect(config.basePath).toBeUndefined();
+  });
 });

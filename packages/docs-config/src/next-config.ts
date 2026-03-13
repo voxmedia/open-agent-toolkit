@@ -5,13 +5,15 @@ export interface DocsConfigOptions {
   title: string;
   description?: string;
   logo?: string;
+  basePath?: string;
 }
 
-export function createDocsConfig(_options: DocsConfigOptions): NextConfig {
+export function createDocsConfig(options: DocsConfigOptions): NextConfig {
   const baseConfig: NextConfig = {
     output: 'export',
     images: { unoptimized: true },
     reactStrictMode: true,
+    ...(options.basePath ? { basePath: options.basePath } : {}),
   };
 
   const withMDX = createMDX();
