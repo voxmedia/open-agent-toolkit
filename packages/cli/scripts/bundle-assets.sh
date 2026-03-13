@@ -19,6 +19,7 @@ SKILLS=(
   oat-idea-new
   oat-idea-scratchpad
   oat-idea-summarize
+  oat-project-capture
   oat-project-clear-active
   oat-project-complete
   oat-project-design

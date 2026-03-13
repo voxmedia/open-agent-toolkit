@@ -111,7 +111,7 @@ If `"$PROJECT_PATH/discovery.md"` is missing, create it from `.oat/templates/dis
 Before asking questions, classify the request:
 
 - **Well-understood** — the user has a clear mental model, requirements are specific, approach is obvious. Examples: "add a CLI flag for verbose output", "rename X to Y across the codebase."
-  → Synthesize `discovery.md` from available session context quickly. Ask only the minimum additional questions needed to remove blockers for a quality plan.
+  → Synthesize `discovery.md` from available session context quickly when enough detail is already available. Ask only the minimum additional questions needed to remove blockers for a quality plan.
 
 - **Exploratory** — the user is thinking out loud, requirements have gaps, multiple approaches are viable. Signals: "I'm considering...", "what do you think about...", "how should we approach...", "I want to add X but I'm not sure how."
   → Invest in solution space exploration before converging.
@@ -133,7 +133,7 @@ Document the exploration in the `## Solution Space` section of `discovery.md`.
 
 #### 2c: Capture Decisions
 
-Whether well-understood or exploratory, backfill `discovery.md` with the discussion, Q&A, and decisions from the session:
+Whether well-understood or exploratory, backfill `discovery.md` with the discussion, Q&A, and decisions from the session before planning:
 
 - initial request
 - solution space exploration (if applicable)

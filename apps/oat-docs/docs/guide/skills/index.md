@@ -18,6 +18,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Resume an existing project: `oat-project-open` and `oat-project-progress`
 - Execute a ready plan: `oat-project-implement`
 - Import an existing plan: `oat-project-import-plan`
+- Retroactively capture existing work: `oat-project-capture`
 - Run or receive reviews: `oat-project-review-provide`, `oat-project-review-receive`, or the non-project review variants
 - Work on docs surfaces: `oat-docs-analyze`, `oat-docs-apply`, and `oat-project-document`
 - Capture or refine ideas: `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
@@ -46,6 +47,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `oat-project-implement`
     - `oat-project-subagent-implement`
     - `oat-project-progress`
+    - `oat-project-capture`
     - `oat-project-reconcile`
     - `oat-project-review-provide`
     - `oat-project-review-receive`

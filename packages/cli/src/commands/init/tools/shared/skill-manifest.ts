@@ -9,6 +9,7 @@
 // ── Workflow pack ──────────────────────────────────────────────────
 
 export const WORKFLOW_SKILLS = [
+  'oat-project-capture',
   'oat-project-clear-active',
   'oat-project-complete',
   'oat-project-design',

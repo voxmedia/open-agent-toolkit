@@ -105,6 +105,25 @@ flowchart LR
   II2 --> IR
 ```
 
+### Capture lane
+
+Retroactive project creation for work done outside the OAT project workflow. Common scenario: mobile/cloud sessions where you brainstorm and implement with an agent, then want to open a PR and review from your desktop.
+
+```mermaid
+flowchart LR
+  W["Work on branch\n(no project)"] --> Cap["oat-project-capture"]
+  Cap --> R["Review / PR"]
+```
+
+Entry point: `/oat-project-capture` (skill-only, no CLI command — requires agent conversation context).
+
+Key differences from other lanes:
+
+- **No plan generation** — the work is already done; the scaffold-created `plan.md` template is kept but not authored
+- **Discovery from conversation** — `discovery.md` captures intent and decisions from the agent's conversation context, not from requirements analysis
+- **Implementation from commits** — `implementation.md` is populated from commit history with SHAs, not from executing plan tasks
+- **Lifecycle state is user-chosen** — user decides whether the project is ready for review or still in progress
+
 ## Artifact progression
 
 `discovery.md` -> `spec.md` -> `design.md` -> `plan.md` -> `implementation.md`
@@ -116,6 +135,10 @@ Quick lane progression:
 Import lane progression:
 
 `references/imported-plan.md` -> `plan.md` -> `implementation.md` (`spec.md`/`design.md` optional)
+
+Capture lane progression:
+
+`discovery.md` (from conversation) + `implementation.md` (from commits) — no forward-looking artifacts
 
 ## Operational rules
 
