@@ -166,7 +166,7 @@ For each finding, build a structured register entry:
 - Recommendation (convert to task now vs defer with rationale)
 - Task Scope (`Large` | `Moderate` | `Minor` | `Negligible`)
 - For `artifact` reviews, use dispositions:
-  - `resolved_in_artifact`
+  - `resolve_in_artifact`
   - `rejected_with_rationale` (invalid/not applicable)
   - `needs_user_direction` (unclear or disagreement)
 
@@ -529,7 +529,7 @@ Choose:
 For `artifact` reviews, do not route to implementation tasks. After user-approved artifact edits are applied:
 
 - If any finding is `needs_user_direction`, ask targeted follow-up question(s) and wait for decision.
-- If all findings are `resolved_in_artifact` or `rejected_with_rationale`, ask user:
+- If all findings are `resolve_in_artifact` or `rejected_with_rationale`, ask user:
   1. Re-run `oat-project-review-provide artifact {scope}`
   2. Continue phase flow (approve artifact / proceed to next phase skill)
 
@@ -568,7 +568,7 @@ Actions taken:
 - Applied {N} artifact edits
 - Archived review artifact to `reviews/archived/{filename}.md`
 - No plan tasks created
-- Finding disposition map: {ID -> resolved_in_artifact|rejected_with_rationale|needs_user_direction}
+- Finding disposition map: {ID -> resolve_in_artifact|rejected_with_rationale|needs_user_direction}
 
 Next: {re-review artifact or continue phase, per user choice}
 ```
