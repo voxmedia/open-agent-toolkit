@@ -240,6 +240,7 @@ interface PackScopeInfo {
 
 export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
   const userPacks = packs.filter((p) => p.scope === 'user');
+  const hasWorkflows = packs.some((p) => p.pack === 'workflows');
 
   const lines = [
     '## Tool Packs',
@@ -260,6 +261,17 @@ export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
   for (const { pack, scope } of packs) {
     const suffix = scope === 'user' ? ' _(user scope)_' : '';
     lines.push(`- **${pack}** — ${PACK_DESCRIPTIONS[pack]}${suffix}`);
+  }
+
+  if (hasWorkflows) {
+    lines.push(
+      '',
+      '### Workflow Execution Continuation',
+      '',
+      '- This guidance applies only to OAT project lifecycle execution, such as `oat-project-implement`, `oat-project-subagent-implement`, and OAT project review/receive flows. It does not apply to non-OAT tasks or ad-hoc work outside the OAT project workflow.',
+      '- When executing an OAT project implementation or OAT project review workflow, do not stop at task boundaries, phase boundaries, or other clean checkpoints unless the configured HiLL checkpoint has been reached, a real blocker exists, or explicit user input is required.',
+      '- Status summaries, completed bookkeeping, and "clean boundary" pauses are not valid stop reasons. After updating tracking artifacts, continue execution until an allowed stop condition applies.',
+    );
   }
 
   return lines.join('\n');
