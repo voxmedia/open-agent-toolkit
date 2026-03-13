@@ -117,7 +117,7 @@ Selection rules:
 - Treat archived review artifacts as history; do not re-triage them by default.
 - If an explicit path points into an `archived/` directory, stop and ask for an active review artifact instead.
 
-If multiple candidates are plausible, present a numbered list and ask the user to pick one.
+If multiple candidates exist, auto-select the most recent by `oat_generated_at` frontmatter date (not filesystem mtime, which is unreliable across branches). Inform the user which artifact was selected and list any others for awareness. Do not prompt for selection.
 
 Validation:
 

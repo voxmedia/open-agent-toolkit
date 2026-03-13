@@ -99,9 +99,9 @@ Selection rules:
 
 **If multiple candidates:**
 
-- Show list sorted by date (newest first)
-- Ask user to choose which review to process
-- Default to most recent if user confirms
+- Auto-select the most recent review artifact by `oat_generated_at` frontmatter date (not filesystem mtime, which is unreliable across branches).
+- Inform the user which artifact was selected and list any other active artifacts for awareness.
+- Do not prompt for selection; proceed immediately with the most recent.
 
 **Read the selected review file completely.**
 
