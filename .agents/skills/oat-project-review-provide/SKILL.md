@@ -209,7 +209,8 @@ WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
 - The artifact being reviewed must exist.
 - Upstream dependencies are required only when relevant to that artifact:
   - reviewing `spec` requires `discovery.md`
-  - reviewing `design` requires `spec.md`
+  - reviewing `design` in `spec-driven` mode requires `spec.md`
+  - reviewing `design` in `quick/import` mode requires only `discovery.md` (spec is skipped in these modes)
   - reviewing `plan` in `spec-driven` mode requires `spec.md` + `design.md`
   - reviewing `plan` in `quick/import` mode may use `discovery.md` and/or `references/imported-plan.md` instead
 
@@ -294,7 +295,13 @@ If review type is `artifact`, the "files in scope" are the artifact(s):
 case "$SCOPE_TOKEN" in
   discovery) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/discovery.md") ;;
   spec) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/discovery.md") ;;
-  design) FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/design.md" "$PROJECT_PATH/spec.md") ;;
+  design)
+    if [[ "$WORKFLOW_MODE" == "spec-driven" ]]; then
+      FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/design.md" "$PROJECT_PATH/spec.md")
+    else
+      FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/design.md" "$PROJECT_PATH/discovery.md")
+    fi
+    ;;
   plan)
     if [[ "$WORKFLOW_MODE" == "spec-driven" ]]; then
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md")

@@ -234,6 +234,12 @@ oat_template: false
 ---
 ```
 
+Update `"$PROJECT_PATH/state.md"` to reflect the design phase:
+
+- `oat_phase: design`
+- `oat_phase_status: complete`
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
 ### Step 3: Generate Plan Directly
 
 Create/update `"$PROJECT_PATH/plan.md"` from `.oat/templates/plan.md`.
