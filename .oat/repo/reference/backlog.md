@@ -152,10 +152,7 @@ Capture tasks and ideas that come up while dogfooding but aren’t ready to impl
 
 ## In Progress
 
-- [ ] **(P1) [skills] Add retroactive project capture skill (`oat-project-capture`)**
-  - Project: `.oat/projects/shared/retroactive-project-capture/`
-  - Status: Implementation complete, review fixes in progress
-  - Created: 2026-03-09 | Started: 2026-03-12
+_(No items currently in progress.)_
 
 ## Deferred
 

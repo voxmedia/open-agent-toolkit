@@ -10,7 +10,7 @@ For a birdseye snapshot of what exists _right now_, see `.oat/repo/reference/cur
 
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
-As of `2026-03-07` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor/instructions/tools`, config-aware sync, Codex TOML sync, worktree bootstrap, `oat config`, `oat project open/pause`). Project lifecycle state is config-backed (`.oat/config.json` + `.oat/config.local.json`) with final review/PR loops dogfooded through completion. Review receive skill family (local + remote) is implemented for both project and ad-hoc contexts. `oat tools` command group provides full skill lifecycle management (list, outdated, info, install, update, remove). `oat-project-reconcile` bridges manual/human implementation back into OAT tracking. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
+As of `2026-03-15` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor/instructions/tools`, config-aware sync, Codex TOML sync, worktree bootstrap, `oat config`, `oat project open/pause`). Project lifecycle state is config-backed (`.oat/config.json` + `.oat/config.local.json`) with final review/PR loops dogfooded through completion. Review receive skill family (local + remote) is implemented for both project and ad-hoc contexts. `oat tools` command group provides full skill lifecycle management (list, outdated, info, install, update, remove). `oat-project-reconcile` bridges manual/human implementation back into OAT tracking. Research skill suite (`deep-research`, `analyze`, `compare`, `skeptic`, `synthesize`) shipped as installable tool pack. `oat-project-capture` enables retroactive project creation from untracked work. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
 
 ## Status Summary
 
@@ -73,9 +73,15 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
   - `oat instructions validate` / `oat instructions sync` (AGENTS.md ↔ CLAUDE.md integrity checking and repair)
   - `.oat/tracking.json` shared tracking manifest for delta mode operations
 - Subagent orchestration:
-  - `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-project-subagent-implement`, `oat-worktree-bootstrap-auto` (execution mode selection, dispatch, parallel plan execution, and autonomous bootstrap)
+  - `oat-project-subagent-implement`, `oat-worktree-bootstrap-auto` (parallel plan execution with review gates and autonomous bootstrap)
+- Retroactive capture:
+  - `oat-project-capture` (create full OAT project from untracked work on an existing branch)
 - Reconciliation:
   - `oat-project-reconcile` (map manual/human commits to planned tasks and update tracking artifacts)
+- Research skills:
+  - `deep-research` (comprehensive research orchestrator), `analyze` (multi-angle analysis), `compare` (domain-aware comparison), `skeptic` (adversarial claim verification), `synthesize` (multi-artifact merge)
+  - Sub-agent: `skeptical-evaluator`; shared schemas under `.agents/skills/deep-research/references/`
+  - CLI tool pack: `research` (installable via `oat tools install research`)
 - Documentation analysis:
   - `oat-docs-analyze`, `oat-docs-apply` (docs structure/coverage analysis and apply flow)
 - Repo maintainability:
@@ -223,7 +229,7 @@ Core workflow + interop foundations are now in place. Remaining gaps are mostly 
 **Status:** Deferred (groundwork expanded)
 
 - Done: manual-safe worktree bootstrap skill (`oat-worktree-bootstrap`) with deterministic root precedence + baseline checks
-- Done: subagent orchestration skill contracts (`oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto`) with execution mode persistence, dispatch, review gate, and fix-loop retry (PR #21, refined in PR #26)
+- Done: subagent orchestration skill contracts (`oat-project-subagent-implement`, `oat-worktree-bootstrap-auto`) with execution mode persistence, dispatch, review gate, and fix-loop retry (PR #21, refined in PR #26; `oat-execution-mode-select` and `oat-subagent-orchestrate` consolidated into `oat-project-subagent-implement`)
 - Remaining: parallel fan-out execution contracts and reconcile tooling
 
 **When to do it:**

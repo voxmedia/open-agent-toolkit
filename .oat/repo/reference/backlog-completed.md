@@ -14,6 +14,48 @@ Historical record of completed backlog items moved out of the active backlog for
   - Outcome:
   - Links:
 
+- [x] **(P1) [skills] Add retroactive project capture skill (`oat-project-capture`)**
+  - Outcome:
+    - `oat-project-capture` creates a full OAT project from untracked work on an existing branch using conversation context + commit history.
+    - Uses `oat project new --mode quick` scaffold, populates `discovery.md` from conversation context and `implementation.md` from commit analysis.
+    - Lifecycle state defaults to `awaiting-review` but user chooses based on whether work is complete or in progress.
+    - Skill-only architecture (no CLI command) because it requires conversation context only the agent has.
+  - Links:
+    - Skill: `.agents/skills/oat-project-capture/SKILL.md`
+    - Project: `.oat/projects/archived/retroactive-project-capture/`
+    - PR: #68
+  - Created: 2026-03-09
+  - Completed: 2026-03-14
+
+- [x] **(P1) [skills] Add research, analysis, verification, and synthesis skill suite**
+  - Outcome:
+    - Five new skills: `deep-research` (comprehensive research orchestrator with parallel sub-agent dispatch), `analyze` (multi-angle analysis of artifacts/codebases/systems), `compare` (domain-aware comparative analysis with clear recommendations), `skeptic` (adversarial claim verification with cited evidence), `synthesize` (merge multiple analysis artifacts into single report with provenance tracking).
+    - Sub-agent: `skeptical-evaluator` (adversarial evidence gatherer for `/skeptic`).
+    - Shared schema templates: 6 schemas under `.agents/skills/deep-research/references/schema-*.md` (base, technical, comparative, conceptual, architectural, analysis).
+    - Three-tier execution system with graceful provider degradation.
+    - Model-tagged filenames for multi-agent coordination.
+    - Artifact frontmatter contract (`oat_skill`, `oat_schema`, `oat_topic`, `oat_model`, `oat_generated_at`) for cross-skill discovery.
+    - CLI tool pack: `research` (installable via `oat tools install research`).
+  - Links:
+    - Skills: `.agents/skills/deep-research/`, `.agents/skills/analyze/`, `.agents/skills/compare/`, `.agents/skills/skeptic/`, `.agents/skills/synthesize/`
+    - Sub-agent: `.agents/agents/skeptical-evaluator.md`
+    - Project: `.oat/projects/archived/deep-research/`
+    - PR: #75
+  - Created: 2026-03-12
+  - Completed: 2026-03-15
+
+- [x] **(P1) [tooling] Add guided setup flow to `oat init` with documentation detection**
+  - Outcome:
+    - Enhanced `oat init` with guided setup flow: auto-triggers on fresh repos (no `.oat/`), supports `--setup` flag for re-run on existing repos.
+    - Sequential step flow with opt-in per step: provider selection, local paths multi-select, tools pack installation, sync, documentation detection.
+    - Documentation detection and configuration added to guided setup (#74) and `oat-agent-instructions-analyze` (#73).
+    - Workflow continuation guidance added (#69).
+  - Links:
+    - Project: `.oat/projects/archived/guided-oat-init/`
+    - PRs: #61, #69, #73, #74
+  - Created: 2026-03-09
+  - Completed: 2026-03-14
+
 - [x] **(P1) [docs] Update AGENTS.md with documentation surface info during `oat docs init`**
   - Outcome:
     - Added shared `upsertAgentsMdSection()` utility (`packages/cli/src/commands/shared/agents-md.ts`) using HTML-comment-delimited managed sections (`<!-- OAT <key> -->` / `<!-- END OAT <key> -->`).

@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-03-08
+**Last Updated:** 2026-03-15
 
 ## Canonical References
 
@@ -46,6 +46,8 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - PR skills:
   - `oat-project-pr-progress`
   - `oat-project-pr-final`
+- Retroactive capture:
+  - `oat-project-capture` (create full OAT project from untracked work on an existing branch using conversation context + commit history)
 - Reconciliation:
   - `oat-project-reconcile` (map manual/human commits to planned tasks and update tracking artifacts after confirmation)
 - Documentation sync:
@@ -86,12 +88,14 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 
 ### Subagent Orchestration
 
-- `oat-execution-mode-select` (select and persist execution mode: `single-thread` | `sequential-subagent` | `parallel-subagent`)
-- `oat-subagent-orchestrate` (dispatch subagents with fan-out, review gate, and fix-loop retry)
-- `oat-project-subagent-implement` (parallel execution across eligible plan phases/tasks using autonomous worktrees, review gates, and deterministic merge-back)
+- `oat-project-subagent-implement` (parallel execution across eligible plan phases/tasks using autonomous worktrees, review gates, and deterministic merge-back; incorporates execution mode selection and dispatch)
 - `oat-worktree-bootstrap-auto` (autonomous worktree bootstrap with rollback safety)
 - `oat_execution_mode` field in `state.md` template; orchestration status fields in `implementation.md` template
 - HiLL checkpoint governance integrated into orchestration policy
+
+### Backlog Review (Utility)
+
+- `review-backlog` (analyze a backlog document to produce value/effort ratings, dependency mapping, parallel work lanes, and recommended execution sequence; optionally cross-references a roadmap)
 
 ### Skill Authoring (Meta)
 
@@ -129,7 +133,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 
 ### Tool Metadata
 
-- 45 skills total; all `oat-*` skills versioned at 1.2.0+ with `version:` frontmatter.
+- 51 skills total; all `oat-*` skills versioned at 1.2.0+ with `version:` frontmatter (research skills at 1.0.0).
 - Most skills define `allowed-tools` in frontmatter as an advisory tool scope (provider-dependent).
   - Read-only skills (e.g., `oat-project-progress`, `oat-project-review-provide`) omit `Write`/`Edit`.
   - Write skills (e.g., `oat-project-discover` → `oat-project-implement`, `oat-project-review-receive`, PR skills) include `Write` and `Bash(git:*)`.

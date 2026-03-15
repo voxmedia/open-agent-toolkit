@@ -42,9 +42,14 @@ Dogfood v1 baseline is:
   - `oat instructions validate` / `oat instructions sync` (AGENTS.md ↔ CLAUDE.md integrity)
   - `.oat/tracking.json` shared tracking manifest for delta mode operations
 - Subagent orchestration:
-  - `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto` (execution mode, dispatch, autonomous bootstrap)
+  - `oat-project-subagent-implement`, `oat-worktree-bootstrap-auto` (parallel plan execution with review gates and autonomous bootstrap)
+- Retroactive capture:
+  - `oat-project-capture` (create OAT project from untracked work on an existing branch)
 - Reconciliation:
   - `oat-project-reconcile` (map manual/human commits to planned tasks and update tracking artifacts)
+- Research skills:
+  - `deep-research`, `analyze`, `compare`, `skeptic`, `synthesize` + `skeptical-evaluator` sub-agent
+  - CLI tool pack: `research` (installable via `oat tools install research`)
 - Documentation analysis:
   - `oat-docs-analyze`, `oat-docs-apply` (docs structure/coverage analysis and apply flow)
 - Repo maintainability:
@@ -94,7 +99,7 @@ Current canonical behavior:
 
 **What:** Support parallel phase/task execution (worktrees/stacked PRs/subagents) with reconciliation back into canonical artifacts.
 
-**Current status:** Deferred, but groundwork expanded. `oat-worktree-bootstrap` is implemented for manual-safe worktree setup, and subagent orchestration skills (`oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto`) provide execution mode selection, dispatch contracts, and autonomous bootstrap with review gate and fix-loop retry (PR #21, refined in PR #26).
+**Current status:** Deferred, but groundwork expanded. `oat-worktree-bootstrap` is implemented for manual-safe worktree setup, and subagent orchestration skills (`oat-project-subagent-implement`, `oat-worktree-bootstrap-auto`) provide execution mode selection, dispatch contracts, and autonomous bootstrap with review gate and fix-loop retry (PR #21, refined in PR #26; earlier `oat-execution-mode-select` and `oat-subagent-orchestrate` skills consolidated into `oat-project-subagent-implement`).
 
 **When to start:**
 
