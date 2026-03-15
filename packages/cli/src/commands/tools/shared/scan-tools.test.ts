@@ -266,4 +266,57 @@ describe('scanTools', () => {
 
     expect(result[0]!.pack).toBe('utility');
   });
+
+  it('detects research skills pack membership', async () => {
+    const deps = createMockDeps({
+      readdir: async (path: string) => {
+        if (path.includes('.agents/skills')) return ['analyze'];
+        return [];
+      },
+      dirExists: async (path: string) => {
+        if (path.includes('assets/skills/analyze')) return true;
+        return false;
+      },
+      getSkillVersion: async () => '1.0.0',
+    });
+
+    const result = await scanTools({
+      scope: 'user',
+      scopeRoot: '/home/user',
+      assetsRoot: '/assets',
+      dependencies: deps,
+    });
+
+    expect(result[0]!.pack).toBe('research');
+  });
+
+  it('detects research agents pack membership', async () => {
+    const deps = createMockDeps({
+      dirExists: async (path: string) => {
+        if (path.includes('.agents/agents')) return true;
+        if (path.includes('assets/agents/skeptical-evaluator.md')) return true;
+        return false;
+      },
+      readdirFiles: async (path: string) => {
+        if (path.includes('.agents/agents')) return ['skeptical-evaluator.md'];
+        return [];
+      },
+      fileExists: async (path: string) => {
+        if (path.includes('assets/agents/skeptical-evaluator.md')) return true;
+        return false;
+      },
+      getAgentVersion: async () => '1.0.0',
+    });
+
+    const result = await scanTools({
+      scope: 'project',
+      scopeRoot: '/scope-root',
+      assetsRoot: '/assets',
+      dependencies: deps,
+    });
+
+    const agents = result.filter((t) => t.type === 'agent');
+    expect(agents).toHaveLength(1);
+    expect(agents[0]!.pack).toBe('research');
+  });
 });

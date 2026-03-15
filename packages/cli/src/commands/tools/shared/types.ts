@@ -1,6 +1,6 @@
 import type { ConcreteScope } from '@shared/types';
 
-export type PackName = 'ideas' | 'workflows' | 'utility';
+export type PackName = 'ideas' | 'workflows' | 'utility' | 'research';
 
 export interface ToolInfo {
   name: string;

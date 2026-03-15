@@ -114,7 +114,37 @@ If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`.
 - Parse `$ARGUMENTS[0]` as review type: `code` or `artifact`
 - Parse `$ARGUMENTS[1]` as scope token
 
-**If no arguments:**
+**If no arguments — infer from project state:**
+
+Read `state.md` frontmatter to propose the most likely review type and scope:
+
+```bash
+PHASE=$(grep "^oat_phase:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
+PHASE_STATUS=$(grep "^oat_phase_status:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
+WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
+```
+
+Inference rules (first match wins):
+
+| Phase       | Status        | Inferred review                                                                |
+| ----------- | ------------- | ------------------------------------------------------------------------------ |
+| `discovery` | `complete`    | `artifact discovery`                                                           |
+| `spec`      | `complete`    | `artifact spec`                                                                |
+| `design`    | `complete`    | `artifact design`                                                              |
+| `plan`      | `complete`    | `artifact plan`                                                                |
+| `implement` | `in_progress` | `code` with current phase scope (derive from `implementation.md` current task) |
+| `implement` | `complete`    | `code final`                                                                   |
+
+If inference produces a result, propose it and proceed unless the user overrides:
+
+```
+Based on project state ({phase}, {phase_status}), I'd run: {type} {scope}
+Proceed? (Y / or specify different type scope)
+```
+
+If the user confirms (or just presses enter), use the inferred type and scope. If the user provides an alternative, use that instead.
+
+**If state.md is missing or phase is unrecognized:** fall back to asking:
 
 - Ask: "What type of review? (code / artifact)"
 - Ask: "What scope?"

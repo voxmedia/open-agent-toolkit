@@ -78,3 +78,15 @@ export const UTILITY_SKILLS = [
   'oat-review-receive',
   'oat-review-receive-remote',
 ] as const;
+
+// ── Research pack ─────────────────────────────────────────────────
+
+export const RESEARCH_SKILLS = [
+  'analyze',
+  'compare',
+  'deep-research',
+  'skeptic',
+  'synthesize',
+] as const;
+
+export const RESEARCH_AGENTS = ['skeptical-evaluator.md'] as const;

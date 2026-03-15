@@ -36,6 +36,13 @@ import {
   type InstallIdeasOptions,
   type InstallIdeasResult,
 } from './ideas/install-ideas';
+import { createInitToolsResearchCommand } from './research';
+import {
+  installResearch as defaultInstallResearch,
+  type InstallResearchOptions,
+  type InstallResearchResult,
+  RESEARCH_SKILLS,
+} from './research/install-research';
 import { createInitToolsUtilityCommand } from './utility';
 import {
   installUtility as defaultInstallUtility,
@@ -51,7 +58,7 @@ import {
 } from './workflows/install-workflows';
 
 type InstallScope = 'project' | 'user';
-export type ToolPack = 'ideas' | 'workflows' | 'utility';
+export type ToolPack = 'ideas' | 'workflows' | 'utility' | 'research';
 
 interface InitToolsDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -75,6 +82,9 @@ interface InitToolsDependencies {
   installUtility: (
     options: InstallUtilityOptions,
   ) => Promise<InstallUtilityResult>;
+  installResearch: (
+    options: InstallResearchOptions,
+  ) => Promise<InstallResearchResult>;
   copyDirWithStatus: (
     source: string,
     destination: string,
@@ -113,6 +123,7 @@ const PACK_CHOICES: MultiSelectChoice<ToolPack>[] = [
   { label: 'Ideas [project|user]', value: 'ideas', checked: true },
   { label: 'Workflows [project]', value: 'workflows', checked: true },
   { label: 'Utility [project|user]', value: 'utility', checked: true },
+  { label: 'Research [project|user]', value: 'research', checked: true },
 ];
 
 const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
@@ -125,6 +136,7 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   installIdeas: defaultInstallIdeas,
   installWorkflows: defaultInstallWorkflows,
   installUtility: defaultInstallUtility,
+  installResearch: defaultInstallResearch,
   copyDirWithStatus,
   addLocalPaths,
   applyGitignore,
@@ -134,41 +146,77 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   removeAgentsMdSection,
 };
 
-function isUserEligibleSelection(selections: ToolPack[]): boolean {
-  return selections.includes('ideas') || selections.includes('utility');
-}
+const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
+  'ideas',
+  'utility',
+  'research',
+]);
 
-async function resolveUserEligibleScope(
+type PackScopeMap = Record<ToolPack, InstallScope>;
+
+async function resolvePackScopes(
   context: CommandContext,
   selections: ToolPack[],
   dependencies: InitToolsDependencies,
-): Promise<InstallScope> {
-  if (!isUserEligibleSelection(selections)) {
-    return 'project';
+): Promise<PackScopeMap> {
+  const scopes: Partial<PackScopeMap> = {};
+
+  // Workflows is always project-only
+  for (const pack of selections) {
+    if (!USER_ELIGIBLE_PACKS.has(pack)) {
+      scopes[pack] = 'project';
+    }
   }
 
+  const eligiblePacks = selections.filter((pack) =>
+    USER_ELIGIBLE_PACKS.has(pack),
+  );
+
+  if (eligiblePacks.length === 0) {
+    return scopes as PackScopeMap;
+  }
+
+  // Explicit --scope overrides per-pack selection
   if (context.scope === 'project') {
-    return 'project';
+    for (const pack of eligiblePacks) {
+      scopes[pack] = 'project';
+    }
+    return scopes as PackScopeMap;
   }
 
   if (context.scope === 'user') {
-    return 'user';
+    for (const pack of eligiblePacks) {
+      scopes[pack] = 'user';
+    }
+    return scopes as PackScopeMap;
   }
 
+  // Non-interactive defaults all to project
   if (!context.interactive) {
-    return 'project';
+    for (const pack of eligiblePacks) {
+      scopes[pack] = 'project';
+    }
+    return scopes as PackScopeMap;
   }
 
-  const selected = await dependencies.selectWithAbort(
-    'Install user-eligible packs in project scope or user scope?',
-    [
-      { label: 'Project scope', value: 'project' },
-      { label: 'User scope', value: 'user' },
-    ],
-    { interactive: context.interactive },
-  );
+  // Interactive: let user pick which packs go to user scope
+  const userScopePacks =
+    (await dependencies.selectManyWithAbort(
+      'Which packs should install at user scope? (unselected go to project scope)',
+      eligiblePacks.map((pack) => ({
+        label: pack,
+        value: pack,
+        checked: false,
+      })),
+      { interactive: context.interactive },
+    )) ?? [];
 
-  return selected ?? 'project';
+  const userScopeSet = new Set(userScopePacks);
+  for (const pack of eligiblePacks) {
+    scopes[pack] = userScopeSet.has(pack) ? 'user' : 'project';
+  }
+
+  return scopes as PackScopeMap;
 }
 
 function reportSuccess(
@@ -231,6 +279,7 @@ const PACK_DESCRIPTIONS: Record<ToolPack, string> = {
     'Project lifecycle (create, discover, plan, implement, review, complete)',
   ideas: 'Idea capture and refinement',
   utility: 'Standalone utilities (reviews, docs analysis, agent instructions)',
+  research: 'Research, analysis, verification, and synthesis',
 };
 
 interface PackScopeInfo {
@@ -253,7 +302,7 @@ export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
 
   if (userPacks.length > 0) {
     lines.push(
-      '- **User-scoped skills:** `~/.agents/skills/` (ideas and utility packs installed at user scope)',
+      '- **User-scoped skills:** `~/.agents/skills/` (ideas, utility, and research packs installed at user scope)',
     );
   }
 
@@ -289,7 +338,7 @@ export async function runInitTools(
           PACK_CHOICES,
           { interactive: context.interactive },
         )) ?? [])
-      : ['ideas', 'workflows', 'utility'];
+      : ['ideas', 'workflows', 'utility', 'research'];
 
     if (selectedPacks.length === 0) {
       if (!context.json) {
@@ -305,24 +354,27 @@ export async function runInitTools(
       context.cwd,
       context.home,
     );
-    const userEligibleScope = await resolveUserEligibleScope(
+    const packScopes = await resolvePackScopes(
       context,
       selectedPacks,
       dependencies,
     );
 
-    const userEligibleRoot =
-      userEligibleScope === 'user' ? userRoot : projectRoot;
+    function packRoot(pack: ToolPack): string {
+      return packScopes[pack] === 'user' ? userRoot : projectRoot;
+    }
+
     const assetsRoot = await dependencies.resolveAssetsRoot();
     const outdatedSkills: OutdatedSkillRecord[] = [];
 
     if (selectedPacks.includes('ideas')) {
+      const targetRoot = packRoot('ideas');
       const ideasResult = await dependencies.installIdeas({
         assetsRoot,
-        targetRoot: userEligibleRoot,
+        targetRoot,
       });
       for (const skill of ideasResult.outdatedSkills) {
-        outdatedSkills.push({ ...skill, targetRoot: userEligibleRoot });
+        outdatedSkills.push({ ...skill, targetRoot });
       }
     }
 
@@ -390,13 +442,26 @@ export async function runInitTools(
     }
 
     if (selectedPacks.includes('utility')) {
+      const targetRoot = packRoot('utility');
       const utilityResult = await dependencies.installUtility({
         assetsRoot,
-        targetRoot: userEligibleRoot,
+        targetRoot,
         skills: [...UTILITY_SKILLS],
       });
       for (const skill of utilityResult.outdatedSkills) {
-        outdatedSkills.push({ ...skill, targetRoot: userEligibleRoot });
+        outdatedSkills.push({ ...skill, targetRoot });
+      }
+    }
+
+    if (selectedPacks.includes('research')) {
+      const targetRoot = packRoot('research');
+      const researchResult = await dependencies.installResearch({
+        assetsRoot,
+        targetRoot,
+        skills: [...RESEARCH_SKILLS],
+      });
+      for (const skill of researchResult.outdatedSkills) {
+        outdatedSkills.push({ ...skill, targetRoot });
       }
     }
 
@@ -440,7 +505,7 @@ export async function runInitTools(
 
     const packScopeInfo: PackScopeInfo[] = selectedPacks.map((pack) => ({
       pack,
-      scope: pack === 'workflows' ? 'project' : userEligibleScope,
+      scope: packScopes[pack],
     }));
     const sectionBody = buildToolPacksSectionBody(packScopeInfo);
     const sectionResult = await dependencies.upsertAgentsMdSection(
@@ -457,7 +522,10 @@ export async function runInitTools(
       );
     }
 
-    reportSuccess(context, selectedPacks, userEligibleScope);
+    const hasUserScope = selectedPacks.some(
+      (pack) => packScopes[pack] === 'user',
+    );
+    reportSuccess(context, selectedPacks, hasUserScope ? 'user' : 'project');
     process.exitCode = 0;
     return selectedPacks;
   } catch (error) {
@@ -487,10 +555,11 @@ export function createInitToolsCommand(
   };
 
   return new Command('tools')
-    .description('Install OAT tool packs (ideas, workflows, utility)')
+    .description('Install OAT tool packs (ideas, workflows, utility, research)')
     .addCommand(createInitToolsIdeasCommand())
     .addCommand(createInitToolsWorkflowsCommand())
     .addCommand(createInitToolsUtilityCommand())
+    .addCommand(createInitToolsResearchCommand())
     .action(async (_options: unknown, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),

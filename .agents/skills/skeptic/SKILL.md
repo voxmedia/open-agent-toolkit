@@ -1,6 +1,6 @@
 ---
 name: skeptic
-version: 0.1.0
+version: 0.2.0
 description: Use when the user questions or suspects an agent claim is wrong. Adversarially gathers evidence to verify or refute the claim using the best sources available in the current environment.
 argument-hint: '[claim to question — optional, defaults to most recent agent assertion]'
 user-invocable: true
@@ -107,22 +107,22 @@ Classify the claim type to determine evidence priority:
 ```
 [3/5] Checking sub-agent availability…
   → skeptical-evaluator: {available | not resolved} ({reason})
-  → Selected: Tier {1|2|3} — {Sub-agent | Self-evaluation (recommended) | Inline evaluation}
+  → Selected: Execution Tier {1|2|3} — {Sub-agent | Self-evaluation (recommended) | Inline evaluation}
 ```
 
 **Detection logic:**
 
-- **Tier 1 — Sub-agent dispatch (preferred):**
-  - **Claude Code**: `Agent` tool is available → dispatch with `subagent_type: "skeptical-evaluator"`, resolved from `.agents/agents/skeptical-evaluator.md` (synced to `.claude/agents/` via OAT sync)
+- **Execution Tier 1 — Sub-agent dispatch (preferred):**
+  - **Claude Code**: `Agent` tool is available → dispatch with `subagent_type: "skeptical-evaluator"`, resolved from `.agents/agents/skeptical-evaluator.md` (synced to `.claude/agents/`)
   - **Cursor**: invoke via `/skeptical-evaluator` or natural mention, resolved from `.cursor/agents/skeptical-evaluator.md` (synced from `.agents/agents/`)
   - **Codex multi-agent**: verify `[features] multi_agent = true` is enabled in active Codex config. Codex may also auto-select and spawn agents without explicit role pinning.
 
-- **Tier 2 — Self-evaluation (recommended fallback):**
+- **Execution Tier 2 — Self-evaluation (recommended fallback):**
   - Sub-agent dispatch not available or agent definition not resolved
   - Orchestrator performs adversarial evaluation directly with same logic and output format
-  - Log: `→ skeptical-evaluator: not resolved — falling back to Tier 2 self-evaluation`
+  - Log: `→ skeptical-evaluator: not resolved — falling back to Execution Tier 2 self-evaluation`
 
-- **Tier 3 — Inline evaluation:**
+- **Execution Tier 3 — Inline evaluation:**
   - User explicitly requests inline, or confirms they are already in a fresh session
 
 ---
@@ -131,16 +131,14 @@ Classify the claim type to determine evidence priority:
 
 `[4/5] Gathering evidence…`
 
-The evaluator (or orchestrator in Tier 2/3) receives this context package:
+The evaluator (or orchestrator in Execution Tier 2/3) receives this context package:
 
 ```
-CLAIM: [The exact claim being evaluated]
-BASIS: [Why the agent made this claim — its reasoning, sources, assumptions]
+CLAIM: [exact claim]
+BASIS: [original reasoning/sources/assumptions]
 CLAIM_TYPE: [code_behavior | library_specific | documentation | factual | architectural]
-AVAILABLE_SOURCES: [Evidence sources available in current environment]
-INSTRUCTION: Your job is adversarial. Attempt to disprove this claim first.
-             Only after exhausting contradicting evidence should you note supporting evidence.
-             Return findings with a confidence score and specific citations.
+AVAILABLE_SOURCES: [what's accessible]
+INSTRUCTION: Adversarial. Disprove first, then note supporting evidence.
 ```
 
 Evidence priority by claim type:
@@ -246,7 +244,7 @@ That doesn't sound right — can you check?
 
 **Sub-agent dispatch fails:**
 
-- Log: `→ skeptical-evaluator: not resolved (dispatch failed) — falling back to Tier 2`
+- Log: `→ skeptical-evaluator: not resolved (dispatch failed) — falling back to Execution Tier 2`
 - Proceed with self-evaluation; output format is identical
 
 ## Success Criteria

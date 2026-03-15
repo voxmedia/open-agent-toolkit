@@ -77,7 +77,7 @@ describe('help output snapshots', () => {
         -h, --help  display help for command
 
       Commands:
-        tools       Install OAT tool packs (ideas, workflows, utility)
+        tools       Install OAT tool packs (ideas, workflows, utility, research)
       "
     `);
   });
@@ -263,7 +263,7 @@ describe('help output snapshots', () => {
       Remove installed skills by pack
 
       Options:
-        --pack <pack>  Skill pack to remove (ideas|workflows|utility)
+        --pack <pack>  Skill pack to remove (ideas|workflows|utility|research)
         --dry-run      Preview removal without applying
         -h, --help     display help for command
       "
@@ -573,7 +573,8 @@ describe('help output snapshots', () => {
         info <name>              Show details for an installed tool
         update [options] [name]  Update installed tools to bundled versions
         remove [options] [name]  Remove installed tools
-        install [options]        Install OAT tool packs (ideas, workflows, utility)
+        install [options]        Install OAT tool packs (ideas, workflows, utility,
+                                 research)
         help [command]           display help for command
       "
     `);
@@ -619,7 +620,7 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat tools install [options] [command]
 
-      Install OAT tool packs (ideas, workflows, utility)
+      Install OAT tool packs (ideas, workflows, utility, research)
 
       Options:
         --no-sync            Skip auto-sync after install
@@ -631,6 +632,7 @@ describe('help output snapshots', () => {
         workflows [options]  Install OAT workflows skills, agents, templates, and
                              scripts
         utility [options]    Install OAT utility skills
+        research [options]   Install OAT research skills
       "
     `);
   });
@@ -650,7 +652,7 @@ describe('help output snapshots', () => {
         name           Tool name to remove
 
       Options:
-        --pack <pack>  Remove all tools in a pack (ideas|workflows|utility)
+        --pack <pack>  Remove all tools in a pack (ideas|workflows|utility|research)
         --all          Remove all installed tools
         --dry-run      Preview removals without applying
         --no-sync      Skip auto-sync after removal
@@ -674,7 +676,7 @@ describe('help output snapshots', () => {
         name           Tool name to update
 
       Options:
-        --pack <pack>  Update all tools in a pack (ideas|workflows|utility)
+        --pack <pack>  Update all tools in a pack (ideas|workflows|utility|research)
         --all          Update all outdated tools
         --dry-run      Preview updates without applying
         --no-sync      Skip auto-sync after update

@@ -8,3 +8,7 @@ config_file = "agents/oat-codebase-mapper.toml"
 [agents.oat-reviewer]
 description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes review artifact to disk."
 config_file = "agents/oat-reviewer.toml"
+
+[agents.skeptical-evaluator]
+description = "Adversarial claim evaluator — receives a context package and gathers evidence to disprove then support a claim. Returns structured findings with citations."
+config_file = "agents/skeptical-evaluator.toml"

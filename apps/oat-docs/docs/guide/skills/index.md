@@ -21,6 +21,11 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Retroactively capture existing work: `oat-project-capture`
 - Run or receive reviews: `oat-project-review-provide`, `oat-project-review-receive`, or the non-project review variants
 - Work on docs surfaces: `oat-docs-analyze`, `oat-docs-apply`, and `oat-project-document`
+- Research a topic in depth: `deep-research`
+- Analyze an artifact, codebase, or document: `analyze`
+- Compare options with domain-aware dimensions: `compare`
+- Verify a claim adversarially: `skeptic`
+- Merge multiple analysis artifacts: `synthesize`
 - Capture or refine ideas: `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 
 ## If You Are Trying To...
@@ -81,6 +86,14 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `review-backlog`
     - `docs-completed-projects-gap-review`
     - `update-repo-reference`
+
+=== "Research"
+
+    - `deep-research`
+    - `analyze`
+    - `compare`
+    - `skeptic`
+    - `synthesize`
 
 === "Scaffolding and utility"
 

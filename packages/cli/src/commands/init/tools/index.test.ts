@@ -20,14 +20,18 @@ interface HarnessOptions {
 function createHarness(options: HarnessOptions = {}) {
   const capture = createLoggerCapture();
   const packSelection = [
-    ...(options.packSelection ?? [['ideas', 'workflows', 'utility']]),
+    ...(options.packSelection ?? [
+      ['ideas', 'workflows', 'utility', 'research'],
+    ]),
   ];
   const scopeSelection = [...(options.scopeSelection ?? ['project'])];
 
   const selectManyWithAbort = vi.fn(
     async (_message: string, _choices: MultiSelectChoice<string>[]) => {
       const next = packSelection.shift();
-      return next === undefined ? ['ideas', 'workflows', 'utility'] : next;
+      return next === undefined
+        ? ['ideas', 'workflows', 'utility', 'research']
+        : next;
     },
   );
   const selectWithAbort = vi.fn(
@@ -72,6 +76,15 @@ function createHarness(options: HarnessOptions = {}) {
     skippedSkills: [],
     outdatedSkills: [],
   }));
+  const installResearch = vi.fn(async () => ({
+    copiedSkills: ['analyze'],
+    updatedSkills: [],
+    skippedSkills: [],
+    outdatedSkills: [],
+    copiedAgents: ['skeptical-evaluator.md'],
+    updatedAgents: [],
+    skippedAgents: [],
+  }));
   const copyDirWithStatus = vi.fn(async () => 'updated' as const);
   const addLocalPaths = vi.fn(async (_repoRoot: string, paths: string[]) => ({
     added: paths,
@@ -111,6 +124,7 @@ function createHarness(options: HarnessOptions = {}) {
     installIdeas,
     installWorkflows,
     installUtility,
+    installResearch,
     copyDirWithStatus,
     addLocalPaths,
     applyGitignore,
@@ -128,6 +142,7 @@ function createHarness(options: HarnessOptions = {}) {
     installIdeas,
     installWorkflows,
     installUtility,
+    installResearch,
     copyDirWithStatus,
     addLocalPaths,
     applyGitignore,
@@ -171,12 +186,13 @@ describe('createInitToolsCommand', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('registers ideas, workflows, and utility subcommands', () => {
+  it('registers ideas, workflows, utility, and research subcommands', () => {
     const { command } = createHarness();
     const subcommands = command.commands.map((subcommand) => subcommand.name());
     expect(subcommands).toContain('ideas');
     expect(subcommands).toContain('workflows');
     expect(subcommands).toContain('utility');
+    expect(subcommands).toContain('research');
   });
 
   it('bare oat init tools in interactive mode shows grouped pack list', async () => {
@@ -186,7 +202,8 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command);
 
-    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
+    // First call is pack selection, second is per-pack scope selection
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(2);
     const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
       value: string;
       checked?: boolean;
@@ -199,8 +216,13 @@ describe('createInitToolsCommand', () => {
   });
 
   it('non-interactive installs everything to project scope', async () => {
-    const { command, installIdeas, installWorkflows, installUtility } =
-      createHarness({ interactive: false });
+    const {
+      command,
+      installIdeas,
+      installWorkflows,
+      installUtility,
+      installResearch,
+    } = createHarness({ interactive: false });
 
     await runCommand(command, [], ['--scope', 'all']);
 
@@ -211,6 +233,9 @@ describe('createInitToolsCommand', () => {
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
     expect(installUtility).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installResearch).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
   });
@@ -218,19 +243,29 @@ describe('createInitToolsCommand', () => {
   it('handles scope conflicts for mixed project-only and user-eligible packs', async () => {
     const {
       command,
+      selectManyWithAbort,
       selectWithAbort,
       installIdeas,
       installWorkflows,
       installUtility,
+      installResearch,
     } = createHarness({
       interactive: true,
-      packSelection: [['ideas', 'workflows', 'utility']],
-      scopeSelection: ['user', 'local'],
+      // 1st call: pack selection, 2nd call: which packs go to user scope
+      packSelection: [
+        ['ideas', 'workflows', 'utility', 'research'],
+        ['ideas', 'utility', 'research'],
+      ],
+      // Only the workflows local-paths prompt remains on selectWithAbort
+      scopeSelection: ['local'],
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(selectWithAbort).toHaveBeenCalledTimes(2);
+    // 2 selectManyWithAbort calls: pack selection + per-pack scope
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(2);
+    // 1 selectWithAbort call: workflows local-paths prompt
+    expect(selectWithAbort).toHaveBeenCalledTimes(1);
     expect(installWorkflows).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
@@ -240,20 +275,57 @@ describe('createInitToolsCommand', () => {
     expect(installUtility).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+  });
+
+  it('supports mixed per-pack scope selection', async () => {
+    const {
+      command,
+      selectManyWithAbort,
+      installIdeas,
+      installUtility,
+      installResearch,
+    } = createHarness({
+      interactive: true,
+      // 1st call: pack selection, 2nd call: only ideas goes to user scope
+      packSelection: [['ideas', 'utility', 'research'], ['ideas']],
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(2);
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(installUtility).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
   });
 
   it('bare oat init tools cancellation exits without installing packs', async () => {
-    const { command, capture, installIdeas, installWorkflows, installUtility } =
-      createHarness({
-        interactive: true,
-        packSelection: [null],
-      });
+    const {
+      command,
+      capture,
+      installIdeas,
+      installWorkflows,
+      installUtility,
+      installResearch,
+    } = createHarness({
+      interactive: true,
+      packSelection: [null],
+    });
 
     await runCommand(command, [], ['--scope', 'all']);
 
     expect(installIdeas).not.toHaveBeenCalled();
     expect(installWorkflows).not.toHaveBeenCalled();
     expect(installUtility).not.toHaveBeenCalled();
+    expect(installResearch).not.toHaveBeenCalled();
     expect(capture.info).toContain('No tool packs selected.');
     expect(process.exitCode).toBe(0);
   });

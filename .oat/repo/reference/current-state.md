@@ -53,6 +53,17 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - Worktree/bootstrap:
   - `oat-worktree-bootstrap` (create/reuse worktree + baseline checks with deterministic root precedence)
 
+### Research Skills
+
+- `deep-research` (comprehensive research orchestrator producing structured artifacts with parallel sub-agent dispatch)
+- `analyze` (multi-angle analysis of existing artifacts, codebases, documents, or systems)
+- `compare` (domain-aware comparative analysis with clear recommendations; inline or artifact output)
+- `skeptic` (adversarial claim verification with cited evidence and confidence scores)
+- `synthesize` (merge multiple analysis artifacts into a single report with provenance tracking)
+- Sub-agent: `skeptical-evaluator` (adversarial evidence gatherer for /skeptic)
+- Shared schemas: `.agents/skills/deep-research/references/schema-*.md` (6 templates)
+- CLI tool pack: `research` (installable via `oat tools install research`)
+
 ### Documentation Analysis (Utility)
 
 - `oat-docs-analyze` (evaluate documentation structure, navigation, and coverage against the OAT docs app contract; severity-rated analysis artifacts)

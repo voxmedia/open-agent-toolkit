@@ -20,7 +20,7 @@ Purpose:
 Key behavior:
 
 - Scans installed skills and agents across project and user scopes
-- Displays version, pack (`ideas`, `workflows`, `utility`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
+- Displays version, pack (`ideas`, `workflows`, `utility`, `research`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
 - Supports `--scope` filtering and `--json` output
 
 ### `oat tools outdated`
@@ -51,12 +51,12 @@ Key behavior:
 
 Purpose:
 
-- Install bundled OAT tool packs (`ideas`, `workflows`, `utility`)
+- Install bundled OAT tool packs (`ideas`, `workflows`, `utility`, `research`)
 
 Key behavior:
 
 - Same pack selection and install flow as `oat init tools`
-- Pack-oriented install subcommands: `ideas`, `workflows`, `utility`
+- Pack-oriented install subcommands: `ideas`, `workflows`, `utility`, `research`
 - Tracks installed vs bundled skill versions and reports outdated skills
 - Interactive runs can prompt to update selected outdated skills
 - Auto-sync runs automatically after successful install (provider views are updated)

@@ -48,13 +48,18 @@ SKILLS=(
   oat-review-receive-remote
   oat-worktree-bootstrap
   oat-worktree-bootstrap-auto
+  analyze
+  compare
+  deep-research
+  skeptic
+  synthesize
 )
 
 for skill in "${SKILLS[@]}"; do
   cp -RL "${REPO_ROOT}/.agents/skills/${skill}" "${ASSETS}/skills/"
 done
 
-for agent in oat-codebase-mapper.md oat-reviewer.md; do
+for agent in oat-codebase-mapper.md oat-reviewer.md skeptical-evaluator.md; do
   cp "${REPO_ROOT}/.agents/agents/${agent}" "${ASSETS}/agents/"
 done
 

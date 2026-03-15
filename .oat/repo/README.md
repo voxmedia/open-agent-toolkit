@@ -20,8 +20,14 @@ Tracked, repo-wide OAT records live under `.oat/repo/`.
   - Generated analysis artifacts produced by OAT analyze skills.
   - Current artifact types:
     - `agent-instructions-YYYY-MM-DD-HHmm.md` — instruction file coverage, quality, and drift reports (from `oat-agent-instructions-analyze`)
-  - These artifacts are consumed by apply skills (e.g., `oat-agent-instructions-apply`) to generate or update files.
-  - Naming uses timestamp suffixes to prevent same-day collisions.
+    - `{topic}-analysis-{model-id}.md` — multi-angle analysis artifacts (from `/analyze`)
+    - `{topic}-{model-id}.md` — comparative analysis artifacts (from `/compare --save`)
+    - `{topic}-synthesis-{model-id}.md` — multi-source synthesis artifacts (from `/synthesize`)
+  - These artifacts are consumed by apply skills (e.g., `oat-agent-instructions-apply`) or `/synthesize` for cross-source merging.
+  - Naming uses timestamp suffixes or model-tagged filenames to prevent same-day collisions.
+- `research/`
+  - Generated research artifacts produced by `/deep-research`.
+  - Naming: `{topic}-{model-id}.md` with model-tagged filenames.
 - `archive/`
   - Historical dogfood-era docs and superseded artifacts kept for context.
   - Typical subdirectories:

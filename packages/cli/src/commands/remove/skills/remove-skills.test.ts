@@ -3,6 +3,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { RESEARCH_SKILLS } from '@commands/init/tools/research/install-research';
 import { UTILITY_SKILLS } from '@commands/init/tools/utility/install-utility';
 import { WORKFLOW_SKILLS } from '@commands/init/tools/workflows/install-workflows';
 import type { Scope } from '@shared/types';
@@ -145,6 +146,14 @@ describe('createRemoveSkillsCommand', () => {
     expect(capture.info.join('\n')).toContain(
       "Pack 'ideas' processed. Removed: 2. Skipped: 2.",
     );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('runs remove-skill workflow for research pack members', async () => {
+    const { command, runRemoveSkill } = createHarness({ interactive: false });
+    await runCommand(command, [], ['--pack', 'research']);
+
+    expect(runRemoveSkill).toHaveBeenCalledTimes(RESEARCH_SKILLS.length);
     expect(process.exitCode).toBe(0);
   });
 

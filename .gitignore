@@ -60,6 +60,9 @@ yarn-error.log*
 !.oat/projects/archived/.gitkeep
 # END OAT core
 
+# Superpowers brainstorming artifacts
+.superpowers/
+
 # OAT local paths
 .oat/**/analysis/
 .oat/**/pr/

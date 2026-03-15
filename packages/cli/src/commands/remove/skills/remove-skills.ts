@@ -1,5 +1,6 @@
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { IDEA_SKILLS } from '@commands/init/tools/ideas/install-ideas';
+import { RESEARCH_SKILLS } from '@commands/init/tools/research/install-research';
 import { UTILITY_SKILLS } from '@commands/init/tools/utility/install-utility';
 import { WORKFLOW_SKILLS } from '@commands/init/tools/workflows/install-workflows';
 import {
@@ -20,12 +21,13 @@ interface RemoveSkillsOptions {
   dryRun?: boolean;
 }
 
-type PackName = 'ideas' | 'workflows' | 'utility';
+type PackName = 'ideas' | 'workflows' | 'utility' | 'research';
 
 const PACK_SKILLS: Record<PackName, readonly string[]> = {
   ideas: IDEA_SKILLS,
   workflows: WORKFLOW_SKILLS,
   utility: UTILITY_SKILLS,
+  research: RESEARCH_SKILLS,
 };
 
 interface RemoveSkillsDependencies {
@@ -52,7 +54,12 @@ function createDependencies(): RemoveSkillsDependencies {
 }
 
 function isPackName(value: string): value is PackName {
-  return value === 'ideas' || value === 'workflows' || value === 'utility';
+  return (
+    value === 'ideas' ||
+    value === 'workflows' ||
+    value === 'utility' ||
+    value === 'research'
+  );
 }
 
 export function createRemoveSkillsCommand(
@@ -67,7 +74,7 @@ export function createRemoveSkillsCommand(
     .description('Remove installed skills by pack')
     .requiredOption(
       '--pack <pack>',
-      'Skill pack to remove (ideas|workflows|utility)',
+      'Skill pack to remove (ideas|workflows|utility|research)',
     )
     .option('--dry-run', 'Preview removal without applying')
     .action(async (options: RemoveSkillsOptions, command: Command) => {
@@ -79,7 +86,7 @@ export function createRemoveSkillsCommand(
         const rawPack = (options.pack ?? '').toLowerCase();
         if (!isPackName(rawPack)) {
           throw new Error(
-            `Invalid pack: ${options.pack}. Expected one of: ideas, workflows, utility.`,
+            `Invalid pack: ${options.pack}. Expected one of: ideas, workflows, utility, research.`,
           );
         }
 

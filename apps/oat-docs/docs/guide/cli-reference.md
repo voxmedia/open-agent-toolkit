@@ -54,7 +54,7 @@ Use the `oat tools` group to manage bundled OAT assets:
 - `oat tools list` - list installed tools, versions, pack membership, and update state
 - `oat tools info <name>` - inspect one installed skill or agent
 - `oat tools outdated` - show only assets with available updates
-- `oat tools install` - install bundled packs such as `ideas`, `workflows`, or `utility`
+- `oat tools install` - install bundled packs such as `ideas`, `workflows`, `utility`, or `research`
 - `oat tools update` - update a named tool, a whole pack, or everything
 - `oat tools remove` - remove installed assets
 

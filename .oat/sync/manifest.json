@@ -961,7 +961,127 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-03-12T02:27:09.096Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/skeptic",
+      "providerPath": ".claude/skills/skeptic",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-14T00:19:54.688Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/skeptic",
+      "providerPath": ".cursor/skills/skeptic",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-14T00:19:54.689Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/analyze",
+      "providerPath": ".claude/skills/analyze",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-14T20:01:51.129Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/compare",
+      "providerPath": ".claude/skills/compare",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-14T20:01:51.130Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/deep-research",
+      "providerPath": ".claude/skills/deep-research",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-14T20:01:51.130Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/synthesize",
+      "providerPath": ".claude/skills/synthesize",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-14T20:01:51.130Z"
+    },
+    {
+      "canonicalPath": ".agents/agents/skeptical-evaluator.md",
+      "providerPath": ".claude/agents/skeptical-evaluator.md",
+      "provider": "claude",
+      "contentType": "agent",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": true,
+      "lastSynced": "2026-03-14T20:01:51.130Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/analyze",
+      "providerPath": ".cursor/skills/analyze",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-14T20:01:51.131Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/compare",
+      "providerPath": ".cursor/skills/compare",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-14T20:01:51.131Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/deep-research",
+      "providerPath": ".cursor/skills/deep-research",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-14T20:01:51.131Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/synthesize",
+      "providerPath": ".cursor/skills/synthesize",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-14T20:01:51.132Z"
+    },
+    {
+      "canonicalPath": ".agents/agents/skeptical-evaluator.md",
+      "providerPath": ".cursor/agents/skeptical-evaluator.md",
+      "provider": "cursor",
+      "contentType": "agent",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": true,
+      "lastSynced": "2026-03-14T20:01:51.132Z"
     }
   ],
-  "lastUpdated": "2026-03-12T02:27:09.096Z"
+  "lastUpdated": "2026-03-14T20:01:51.132Z"
 }

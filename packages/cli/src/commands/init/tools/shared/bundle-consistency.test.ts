@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { IDEA_SKILLS } from '../ideas/install-ideas';
+import { RESEARCH_SKILLS } from '../research/install-research';
 import { UTILITY_SKILLS } from '../utility/install-utility';
 import { WORKFLOW_SKILLS } from '../workflows/install-workflows';
 
@@ -90,11 +91,22 @@ describe('bundle-assets.sh consistency', () => {
     ).toEqual([]);
   });
 
+  it('bundles every research skill', () => {
+    const missing = RESEARCH_SKILLS.filter(
+      (skill) => !bundleSkills.includes(skill),
+    );
+    expect(
+      missing,
+      `Missing from bundle-assets.sh SKILLS array: ${missing.join(', ')}`,
+    ).toEqual([]);
+  });
+
   it('does not bundle skills that belong to no pack', () => {
     const allPackSkills = new Set<string>([
       ...WORKFLOW_SKILLS,
       ...IDEA_SKILLS,
       ...UTILITY_SKILLS,
+      ...RESEARCH_SKILLS,
     ]);
     const orphans = bundleSkills.filter((skill) => !allPackSkills.has(skill));
     expect(
