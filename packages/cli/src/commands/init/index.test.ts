@@ -1190,7 +1190,10 @@ config_file = "agents/reviewer.toml"
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        confirmResponses: [true],
+        confirmResponses: [
+          false, // "Do you have documentation?" — no
+          true, // provider sync — yes
+        ],
         selectResponses: [[]],
       });
 
@@ -1199,8 +1202,8 @@ config_file = "agents/reviewer.toml"
         commandArgs: ['--setup'],
       });
 
-      expect(capture.info.some((msg) => msg.includes('[3/4]'))).toBe(true);
-      expect(capture.info.some((msg) => msg.includes('[4/4]'))).toBe(true);
+      expect(capture.info.some((msg) => msg.includes('[4/5]'))).toBe(true);
+      expect(capture.info.some((msg) => msg.includes('[5/5]'))).toBe(true);
     });
 
     it('summary output includes all configured items', async () => {
@@ -1210,7 +1213,10 @@ config_file = "agents/reviewer.toml"
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        confirmResponses: [false],
+        confirmResponses: [
+          false, // "Do you have documentation?" — no
+          false, // provider sync — skip
+        ],
         selectResponses: [['.oat/**/analysis']],
       });
 
@@ -1240,6 +1246,11 @@ config_file = "agents/reviewer.toml"
       ).toBe(true);
       expect(
         capture.info.some(
+          (msg) => msg.includes('Documentation') && msg.includes('skipped'),
+        ),
+      ).toBe(true);
+      expect(
+        capture.info.some(
           (msg) => msg.includes('Provider sync') && msg.includes('skipped'),
         ),
       ).toBe(true);
@@ -1253,7 +1264,10 @@ config_file = "agents/reviewer.toml"
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
         toolPacksResult: [],
-        confirmResponses: [false],
+        confirmResponses: [
+          false, // "Do you have documentation?" — no
+          false, // provider sync — skip
+        ],
         selectResponses: [[]],
       });
 
@@ -1331,7 +1345,10 @@ config_file = "agents/reviewer.toml"
         ],
         configAwareActiveAdapterNames: ['claude'],
         providerSelectResponses: [['claude']],
-        confirmResponses: [false],
+        confirmResponses: [
+          false, // "Do you have documentation?" — no
+          false, // provider sync — skip
+        ],
         selectResponses: [[]],
       });
 
@@ -1364,7 +1381,10 @@ config_file = "agents/reviewer.toml"
           'custom/path1',
           'custom/path2',
         ],
-        confirmResponses: [false],
+        confirmResponses: [
+          false, // "Do you have documentation?" — no
+          false, // provider sync — skip
+        ],
         selectResponses: [['.oat/**/reviews/archived']],
       });
 

@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import {
   buildCommandContext,
@@ -24,9 +24,12 @@ import {
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
 import {
   confirmAction,
+  inputWithDefault,
   type MultiSelectChoice,
   type PromptContext,
+  type SelectChoice,
   selectManyWithAbort,
+  selectWithAbort,
 } from '@commands/shared/shared.prompts';
 import {
   readGlobalOptions,
@@ -40,8 +43,10 @@ import {
 } from '@config/index';
 import {
   type OatConfig,
+  type OatDocumentationConfig,
   readOatConfig,
   resolveLocalPaths,
+  writeOatConfig,
 } from '@config/oat-config';
 import { type DriftReport, detectStrays } from '@drift/index';
 import {
@@ -51,8 +56,9 @@ import {
   scanCanonical,
   uninstallHook,
 } from '@engine/index';
-import { dirExists } from '@fs/io';
+import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import { normalizeToPosixPath } from '@fs/paths';
 import {
   createEmptyManifest,
   loadManifest,
@@ -79,6 +85,11 @@ import {
 import type { ConcreteScope, Scope } from '@shared/types';
 import { Command } from 'commander';
 
+import {
+  type DetectedDocs,
+  type DetectDocsDependencies,
+  detectExistingDocs,
+} from './detect-docs';
 import {
   type ToolPack,
   createInitToolsCommand,
@@ -183,6 +194,22 @@ interface InitDependencies {
     repoRoot: string,
     localPaths: string[],
   ) => Promise<{ action: string }>;
+  writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
+  detectExistingDocs: (
+    repoRoot: string,
+    deps: DetectDocsDependencies,
+  ) => Promise<DetectedDocs | null>;
+  fileExists: (path: string) => Promise<boolean>;
+  inputWithDefault: (
+    message: string,
+    defaultValue: string,
+    ctx: PromptContext,
+  ) => Promise<string | null>;
+  selectWithAbort: <T extends string>(
+    message: string,
+    choices: SelectChoice<T>[],
+    ctx: PromptContext,
+  ) => Promise<T | null>;
   runGuidedSetup: (
     context: CommandContext,
     dependencies: InitDependencies,
@@ -332,6 +359,11 @@ function createDependencies(): InitDependencies {
     resolveLocalPaths,
     addLocalPaths,
     applyGitignore,
+    writeOatConfig,
+    detectExistingDocs,
+    fileExists,
+    inputWithDefault,
+    selectWithAbort,
     runGuidedSetup: runGuidedSetupImpl,
     runToolPacks: runInitToolsWithDefaults,
     async runProviderSync(projectRoot: string) {
@@ -435,6 +467,103 @@ const LOCAL_PATH_CHOICES: MultiSelectChoice[] = [
   },
 ];
 
+const DOCS_TOOLING_CHOICES: SelectChoice<string>[] = [
+  { label: 'Fumadocs (Next.js + MDX)', value: 'fumadocs' },
+  { label: 'MkDocs (Python, Material theme)', value: 'mkdocs' },
+  { label: 'Docusaurus', value: 'docusaurus' },
+  { label: 'VitePress', value: 'vitepress' },
+  { label: 'Nextra', value: 'nextra' },
+];
+
+function trimDocsRoot(pathValue: string): string {
+  return pathValue.replace(/\/+$/, '').replace(/^\.\//, '').trim();
+}
+
+function normalizeDocumentationRoot(
+  repoRoot: string,
+  pathValue: string,
+): string | null {
+  const trimmed = pathValue.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (!isAbsolute(trimmed)) {
+    const normalizedRelative = trimDocsRoot(normalizeToPosixPath(trimmed));
+    if (!normalizedRelative || normalizedRelative === '.') {
+      return '.';
+    }
+    if (normalizedRelative === '..' || normalizedRelative.startsWith('../')) {
+      return null;
+    }
+  }
+
+  const repoRootResolved = resolve(repoRoot);
+  const absoluteResolved = isAbsolute(trimmed)
+    ? resolve(trimmed)
+    : resolve(repoRoot, trimmed);
+  const isInsideRepo =
+    absoluteResolved === repoRootResolved ||
+    absoluteResolved.startsWith(`${repoRootResolved}${sep}`);
+
+  if (!isInsideRepo) {
+    return null;
+  }
+
+  const relativePath = normalizeToPosixPath(
+    relative(repoRootResolved, absoluteResolved),
+  );
+  const normalizedRelative = trimDocsRoot(relativePath);
+  return !normalizedRelative || normalizedRelative === '.'
+    ? '.'
+    : normalizedRelative;
+}
+
+async function promptForManualDocsConfig(
+  projectRoot: string,
+  context: CommandContext,
+  dependencies: InitDependencies,
+  promptMessage: string,
+  defaultRoot = 'docs',
+): Promise<OatDocumentationConfig | null> {
+  const hasDocs = await dependencies.confirmAction(promptMessage, {
+    interactive: context.interactive,
+  });
+
+  if (!hasDocs) {
+    return null;
+  }
+
+  const tooling = await dependencies.selectWithAbort(
+    'Documentation framework',
+    DOCS_TOOLING_CHOICES,
+    { interactive: context.interactive },
+  );
+  if (!tooling) {
+    return null;
+  }
+
+  while (true) {
+    const rootInput = await dependencies.inputWithDefault(
+      'Docs root path (relative to repo root)',
+      defaultRoot,
+      { interactive: context.interactive },
+    );
+    if (rootInput === null) {
+      return null;
+    }
+
+    const root = normalizeDocumentationRoot(projectRoot, rootInput);
+    if (root) {
+      return { tooling, root };
+    }
+
+    context.logger.info(
+      'Docs root must be repo-relative or inside the repository.',
+    );
+  }
+}
+
 async function runGuidedSetupImpl(
   context: CommandContext,
   dependencies: InitDependencies,
@@ -452,12 +581,12 @@ async function runGuidedSetupImpl(
     (a) => a.displayName,
   );
 
-  context.logger.info('[1/4] Tool packs…');
+  context.logger.info('[1/5] Tool packs…');
   const guidedContext: CommandContext = { ...context, scope: 'project' };
   const installedPacks = await dependencies.runToolPacks(guidedContext);
   const installedPackSet = new Set(installedPacks);
 
-  context.logger.info('[2/4] Local paths (gitignored artifacts)…');
+  context.logger.info('[2/5] Local paths (gitignored artifacts)…');
   const config = await dependencies.readOatConfig(projectRoot);
   const existingPaths = new Set(dependencies.resolveLocalPaths(config));
 
@@ -500,7 +629,67 @@ async function runGuidedSetupImpl(
     'Add custom local paths anytime with `oat local add <path>`',
   );
 
-  context.logger.info('[3/4] Provider sync…');
+  context.logger.info('[3/5] Documentation…');
+  let docsSummary = 'skipped';
+  const existingDocsConfig = config.documentation;
+
+  if (existingDocsConfig?.tooling) {
+    context.logger.info(
+      `Documentation already configured: ${existingDocsConfig.tooling} at ${existingDocsConfig.root ?? '.'}`,
+    );
+    docsSummary = `${existingDocsConfig.tooling} (already configured)`;
+  } else {
+    const detected = await dependencies.detectExistingDocs(projectRoot, {
+      fileExists: dependencies.fileExists,
+      dirExists: dependencies.dirExists,
+    });
+
+    let docsConfig: OatDocumentationConfig | null = null;
+
+    if (detected) {
+      const confirmDetected = await dependencies.confirmAction(
+        `Detected ${detected.tooling} docs at ${detected.root === '.' ? 'repo root' : detected.root}. Store in config?`,
+        { interactive: context.interactive },
+      );
+      if (confirmDetected) {
+        docsConfig = {
+          tooling: detected.tooling,
+          root: detected.root,
+          ...(detected.config ? { config: detected.config } : {}),
+        };
+      } else {
+        docsConfig = await promptForManualDocsConfig(
+          projectRoot,
+          context,
+          dependencies,
+          'Would you like to enter docs config manually instead?',
+          detected.root,
+        );
+      }
+    } else {
+      docsConfig = await promptForManualDocsConfig(
+        projectRoot,
+        context,
+        dependencies,
+        'Do you have documentation in this repo?',
+      );
+    }
+
+    if (docsConfig) {
+      const updatedConfig = await dependencies.readOatConfig(projectRoot);
+      updatedConfig.documentation = {
+        ...updatedConfig.documentation,
+        ...docsConfig,
+      };
+      await dependencies.writeOatConfig(projectRoot, updatedConfig);
+      context.logger.info(
+        `Stored docs config: ${docsConfig.tooling} at ${docsConfig.root}`,
+      );
+      docsSummary = `${docsConfig.tooling} at ${docsConfig.root}`;
+    }
+  }
+
+  context.logger.info('[4/5] Provider sync…');
   const syncProviders = await dependencies.confirmAction(
     'Sync provider project views now?',
     { interactive: context.interactive },
@@ -509,7 +698,7 @@ async function runGuidedSetupImpl(
     await dependencies.runProviderSync(projectRoot);
   }
 
-  context.logger.info('[4/4] Setup complete');
+  context.logger.info('[5/5] Setup complete');
   context.logger.info('');
   context.logger.info('Guided setup complete.');
   context.logger.info('');
@@ -522,6 +711,7 @@ async function runGuidedSetupImpl(
   context.logger.info(
     `  Local paths:    ${selectedPaths.length > 0 ? `${addedCount} added, ${existingGuidedCount} existing` : 'skipped'}`,
   );
+  context.logger.info(`  Documentation:  ${docsSummary}`);
   context.logger.info(
     `  Provider sync:  ${syncProviders ? 'done' : 'skipped'}`,
   );
