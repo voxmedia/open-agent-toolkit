@@ -152,6 +152,28 @@ describe('oat local status', () => {
     ]);
   });
 
+  it('should report gitignored=true for unmatched glob patterns present in gitignore', async () => {
+    const repoRoot = await createRepoRoot();
+    // No directories matching the glob exist, but the pattern IS in .gitignore
+    await writeFile(
+      join(repoRoot, '.gitignore'),
+      '.oat/**/analysis/\n.oat/**/pr/\n.oat/**/reviews/archived/\n',
+      'utf8',
+    );
+
+    const results = await checkLocalPathsStatus(repoRoot, [
+      '.oat/**/analysis',
+      '.oat/**/pr',
+      '.oat/**/reviews/archived',
+    ]);
+
+    expect(results).toEqual([
+      { path: '.oat/**/analysis', exists: false, gitignored: true },
+      { path: '.oat/**/pr', exists: false, gitignored: true },
+      { path: '.oat/**/reviews/archived', exists: false, gitignored: true },
+    ]);
+  });
+
   it('should return empty array for no localPaths', async () => {
     const repoRoot = await createRepoRoot();
     const results = await checkLocalPathsStatus(repoRoot, []);

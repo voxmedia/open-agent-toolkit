@@ -58,7 +58,8 @@ export async function checkLocalPathsStatus(
   );
 
   for (const pattern of missingGlobs) {
-    results.push({ path: pattern, exists: false, gitignored: false });
+    const gitignored = await isPathGitignored(repoRoot, pattern);
+    results.push({ path: pattern, exists: false, gitignored });
   }
 
   for (const localPath of resolved) {
