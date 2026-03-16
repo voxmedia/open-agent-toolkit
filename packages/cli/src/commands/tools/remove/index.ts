@@ -53,7 +53,13 @@ const defaultSyncDependencies: AutoSyncDependencies = {
   },
 };
 
-const VALID_PACKS = ['ideas', 'workflows', 'utility', 'research'] as const;
+const VALID_PACKS = [
+  'core',
+  'ideas',
+  'workflows',
+  'utility',
+  'research',
+] as const;
 
 export function createToolsRemoveCommand(
   dependencies: RemoveToolsDependencies = defaultDependencies,
@@ -64,7 +70,7 @@ export function createToolsRemoveCommand(
     .argument('[name]', 'Tool name to remove')
     .option(
       '--pack <pack>',
-      'Remove all tools in a pack (ideas|workflows|utility|research)',
+      'Remove all tools in a pack (core|ideas|workflows|utility|research)',
     )
     .option('--all', 'Remove all installed tools')
     .option('--dry-run', 'Preview removals without applying')

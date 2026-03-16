@@ -30,6 +30,12 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
 
+import { createInitToolsCoreCommand } from './core';
+import {
+  installCore as defaultInstallCore,
+  type InstallCoreOptions,
+  type InstallCoreResult,
+} from './core/install-core';
 import { createInitToolsIdeasCommand } from './ideas';
 import {
   installIdeas as defaultInstallIdeas,
@@ -58,7 +64,7 @@ import {
 } from './workflows/install-workflows';
 
 type InstallScope = 'project' | 'user';
-export type ToolPack = 'ideas' | 'workflows' | 'utility' | 'research';
+export type ToolPack = 'core' | 'ideas' | 'workflows' | 'utility' | 'research';
 
 interface InitToolsDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -75,6 +81,7 @@ interface InitToolsDependencies {
     choices: SelectChoice<T>[],
     ctx: PromptContext,
   ) => Promise<T | null>;
+  installCore: (options: InstallCoreOptions) => Promise<InstallCoreResult>;
   installIdeas: (options: InstallIdeasOptions) => Promise<InstallIdeasResult>;
   installWorkflows: (
     options: InstallWorkflowsOptions,
@@ -120,6 +127,7 @@ function formatVersionForDisplay(version: string | null): string {
 }
 
 const PACK_CHOICES: MultiSelectChoice<ToolPack>[] = [
+  { label: 'Core [user]', value: 'core', checked: true },
   { label: 'Ideas [project|user]', value: 'ideas', checked: true },
   { label: 'Workflows [project]', value: 'workflows', checked: true },
   { label: 'Utility [project|user]', value: 'utility', checked: true },
@@ -133,6 +141,7 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   resolveAssetsRoot,
   selectManyWithAbort,
   selectWithAbort,
+  installCore: defaultInstallCore,
   installIdeas: defaultInstallIdeas,
   installWorkflows: defaultInstallWorkflows,
   installUtility: defaultInstallUtility,
@@ -166,6 +175,11 @@ async function resolvePackScopes(
     if (!USER_ELIGIBLE_PACKS.has(pack)) {
       scopes[pack] = 'project';
     }
+  }
+
+  // Core pack is always user-scoped, regardless of user-eligible selection
+  if (selections.includes('core')) {
+    scopes.core = 'user';
   }
 
   const eligiblePacks = selections.filter((pack) =>
@@ -275,6 +289,7 @@ async function updateOutdatedSkills(
 }
 
 const PACK_DESCRIPTIONS: Record<ToolPack, string> = {
+  core: 'Diagnostics and documentation (oat-doctor, oat-docs)',
   workflows:
     'Project lifecycle (create, discover, plan, implement, review, complete)',
   ideas: 'Idea capture and refinement',
@@ -301,8 +316,9 @@ export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
   ];
 
   if (userPacks.length > 0) {
+    const userPackNames = userPacks.map((p) => p.pack).join(', ');
     lines.push(
-      '- **User-scoped skills:** `~/.agents/skills/` (ideas, utility, and research packs installed at user scope)',
+      `- **User-scoped skills:** \`~/.agents/skills/\` (${userPackNames} packs installed at user scope)`,
     );
   }
 
@@ -338,7 +354,7 @@ export async function runInitTools(
           PACK_CHOICES,
           { interactive: context.interactive },
         )) ?? [])
-      : ['ideas', 'workflows', 'utility', 'research'];
+      : ['core', 'ideas', 'workflows', 'utility', 'research'];
 
     if (selectedPacks.length === 0) {
       if (!context.json) {
@@ -366,6 +382,17 @@ export async function runInitTools(
 
     const assetsRoot = await dependencies.resolveAssetsRoot();
     const outdatedSkills: OutdatedSkillRecord[] = [];
+
+    if (selectedPacks.includes('core')) {
+      // Core pack always installs at user scope, regardless of userEligibleScope
+      const coreResult = await dependencies.installCore({
+        assetsRoot,
+        targetRoot: userRoot,
+      });
+      for (const skill of coreResult.outdatedSkills) {
+        outdatedSkills.push({ ...skill, targetRoot: userRoot });
+      }
+    }
 
     if (selectedPacks.includes('ideas')) {
       const targetRoot = packRoot('ideas');
@@ -555,7 +582,10 @@ export function createInitToolsCommand(
   };
 
   return new Command('tools')
-    .description('Install OAT tool packs (ideas, workflows, utility, research)')
+    .description(
+      'Install OAT tool packs (core, ideas, workflows, utility, research)',
+    )
+    .addCommand(createInitToolsCoreCommand())
     .addCommand(createInitToolsIdeasCommand())
     .addCommand(createInitToolsWorkflowsCommand())
     .addCommand(createInitToolsUtilityCommand())

@@ -20,7 +20,7 @@ Purpose:
 Key behavior:
 
 - Scans installed skills and agents across project and user scopes
-- Displays version, pack (`ideas`, `workflows`, `utility`, `research`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
+- Displays version, pack (`core`, `ideas`, `workflows`, `utility`, `research`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
 - Supports `--scope` filtering and `--json` output
 
 ### `oat tools outdated`
@@ -51,12 +51,12 @@ Key behavior:
 
 Purpose:
 
-- Install bundled OAT tool packs (`ideas`, `workflows`, `utility`, `research`)
+- Install bundled OAT tool packs (`core`, `ideas`, `workflows`, `utility`, `research`)
 
 Key behavior:
 
 - Same pack selection and install flow as `oat init tools`
-- Pack-oriented install subcommands: `ideas`, `workflows`, `utility`, `research`
+- Pack-oriented install subcommands: `core`, `ideas`, `workflows`, `utility`, `research`
 - Tracks installed vs bundled skill versions and reports outdated skills
 - Interactive runs can prompt to update selected outdated skills
 - Auto-sync runs automatically after successful install (provider views are updated)
@@ -88,6 +88,20 @@ Key behavior:
 - Removes skill directories and agent `.md` files from canonical locations
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
+
+## Core pack
+
+The `core` pack contains foundational diagnostic and documentation skills:
+
+- **oat-doctor** — Setup diagnostics with two modes: check mode (terse `brew doctor`-style warnings with fix commands) and summary mode (full dashboard of installed packs, config values, and sync status).
+- **oat-docs** — Interactive Q&A skill backed by locally-bundled OAT documentation at `~/.oat/docs/`.
+
+Key behavior:
+
+- Core pack always installs at **user scope** (`~/.agents/skills/`), regardless of the `--scope` flag. This ensures core skills are available in any directory.
+- Core is checked by default in the `oat init tools` guided setup.
+- Installation also bundles OAT documentation to `~/.oat/docs/` for the oat-docs skill.
+- `oat tools update --pack core` refreshes both skills and `~/.oat/docs/` documentation.
 
 ### Auto-sync behavior
 

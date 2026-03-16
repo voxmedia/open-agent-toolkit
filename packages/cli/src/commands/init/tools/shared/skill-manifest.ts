@@ -65,6 +65,10 @@ export const IDEA_SKILLS = [
   'oat-idea-scratchpad',
 ] as const;
 
+// ── Core pack (always user-level) ─────────────────────────────────
+
+export const CORE_SKILLS = ['oat-docs', 'oat-doctor'] as const;
+
 // ── Utility pack ───────────────────────────────────────────────────
 
 export const UTILITY_SKILLS = [

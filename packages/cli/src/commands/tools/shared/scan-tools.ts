@@ -1,6 +1,7 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { CORE_SKILLS } from '@commands/init/tools/core/install-core';
 import { IDEA_SKILLS } from '@commands/init/tools/ideas/install-ideas';
 import {
   RESEARCH_AGENTS,
@@ -55,6 +56,7 @@ const defaultDependencies: ScanToolsDependencies = {
 };
 
 function resolveSkillPack(name: string): PackName | 'custom' {
+  if ((CORE_SKILLS as readonly string[]).includes(name)) return 'core';
   if ((IDEA_SKILLS as readonly string[]).includes(name)) return 'ideas';
   if ((WORKFLOW_SKILLS as readonly string[]).includes(name)) return 'workflows';
   if ((UTILITY_SKILLS as readonly string[]).includes(name)) return 'utility';

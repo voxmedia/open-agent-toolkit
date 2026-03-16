@@ -21,7 +21,7 @@ function createHarness(options: HarnessOptions = {}) {
   const capture = createLoggerCapture();
   const packSelection = [
     ...(options.packSelection ?? [
-      ['ideas', 'workflows', 'utility', 'research'],
+      ['core', 'ideas', 'workflows', 'utility', 'research'],
     ]),
   ];
   const scopeSelection = [...(options.scopeSelection ?? ['project'])];
@@ -30,7 +30,7 @@ function createHarness(options: HarnessOptions = {}) {
     async (_message: string, _choices: MultiSelectChoice<string>[]) => {
       const next = packSelection.shift();
       return next === undefined
-        ? ['ideas', 'workflows', 'utility', 'research']
+        ? ['core', 'ideas', 'workflows', 'utility', 'research']
         : next;
     },
   );
@@ -41,6 +41,13 @@ function createHarness(options: HarnessOptions = {}) {
     },
   );
 
+  const installCore = vi.fn(async () => ({
+    copiedSkills: ['oat-docs', 'oat-doctor'],
+    updatedSkills: [],
+    skippedSkills: [],
+    outdatedSkills: [],
+    docsStatus: 'copied' as const,
+  }));
   const installIdeas = vi.fn(async () => ({
     copiedSkills: ['oat-idea-new'],
     updatedSkills: [],
@@ -121,6 +128,7 @@ function createHarness(options: HarnessOptions = {}) {
     resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
     selectManyWithAbort,
     selectWithAbort,
+    installCore,
     installIdeas,
     installWorkflows,
     installUtility,
@@ -139,6 +147,7 @@ function createHarness(options: HarnessOptions = {}) {
     command,
     selectManyWithAbort,
     selectWithAbort,
+    installCore,
     installIdeas,
     installWorkflows,
     installUtility,
@@ -186,9 +195,10 @@ describe('createInitToolsCommand', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('registers ideas, workflows, utility, and research subcommands', () => {
+  it('registers core, ideas, workflows, utility, and research subcommands', () => {
     const { command } = createHarness();
     const subcommands = command.commands.map((subcommand) => subcommand.name());
+    expect(subcommands).toContain('core');
     expect(subcommands).toContain('ideas');
     expect(subcommands).toContain('workflows');
     expect(subcommands).toContain('utility');
@@ -215,9 +225,10 @@ describe('createInitToolsCommand', () => {
     expect(choices.every((choice) => choice.checked === true)).toBe(true);
   });
 
-  it('non-interactive installs everything to project scope', async () => {
+  it('non-interactive installs everything to project scope (core always user)', async () => {
     const {
       command,
+      installCore,
       installIdeas,
       installWorkflows,
       installUtility,
@@ -226,6 +237,10 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
+    // Core always installs to user root
+    expect(installCore).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
     expect(installIdeas).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
@@ -311,6 +326,7 @@ describe('createInitToolsCommand', () => {
     const {
       command,
       capture,
+      installCore,
       installIdeas,
       installWorkflows,
       installUtility,
@@ -322,6 +338,7 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
+    expect(installCore).not.toHaveBeenCalled();
     expect(installIdeas).not.toHaveBeenCalled();
     expect(installWorkflows).not.toHaveBeenCalled();
     expect(installUtility).not.toHaveBeenCalled();
@@ -490,6 +507,22 @@ describe('createInitToolsCommand', () => {
     expect(body).toContain('`~/.agents/skills/`');
   });
 
+  it('marks core as user-scoped in AGENTS section and includes user sync instruction', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: true,
+      packSelection: [['core']],
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
+    expect(body).toMatch(/\*\*core\*\*.*_\(user scope\)_/);
+    expect(body).toContain('`~/.agents/skills/`');
+    expect(capture.info.join('\n')).toContain(
+      'Also run: oat sync --scope user',
+    );
+  });
+
   it('does not call upsertAgentsMdSection when no packs are selected', async () => {
     const { command, upsertAgentsMdSection } = createHarness({
       interactive: true,
@@ -562,5 +595,16 @@ describe('buildToolPacksSectionBody', () => {
 
     expect(body).not.toContain('### Workflow Execution Continuation');
     expect(body).not.toContain('configured HiLL checkpoint');
+  });
+
+  it('marks core pack as user-scoped in AGENTS section', () => {
+    const body = buildToolPacksSectionBody([
+      { pack: 'core', scope: 'user' },
+      { pack: 'workflows', scope: 'project' },
+    ]);
+
+    expect(body).toMatch(/\*\*core\*\*.*_\(user scope\)_/);
+    expect(body).toContain('`~/.agents/skills/`');
+    expect(body).not.toMatch(/\*\*workflows\*\*.*user scope/);
   });
 });

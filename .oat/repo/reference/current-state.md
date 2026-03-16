@@ -66,6 +66,14 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - Shared schemas: `.agents/skills/deep-research/references/schema-*.md` (6 templates)
 - CLI tool pack: `research` (installable via `oat tools install research`)
 
+### Core Pack (Diagnostics & Docs)
+
+- `oat-doctor` (setup diagnostics: check mode with actionable warnings, summary mode with full dashboard including installed packs, config values from `~/.oat/docs/`, and sync status)
+- `oat-docs` (interactive Q&A backed by locally-bundled OAT documentation at `~/.oat/docs/`)
+- CLI infrastructure: `oat init tools core` subcommand (always user scope), core pack in `oat init tools` guided setup (checked by default)
+- Docs bundling: `apps/oat-docs/docs/` → `assets/docs/` (build time) → `~/.oat/docs/` (install/update time)
+- `oat tools update --pack core` refreshes both skills and bundled docs
+
 ### Documentation Analysis (Utility)
 
 - `oat-docs-analyze` (evaluate documentation structure, navigation, and coverage against the OAT docs app contract; severity-rated analysis artifacts)
@@ -116,7 +124,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat providers list`, `oat providers inspect`, `oat providers set`
   - `oat cleanup project`, `oat cleanup artifacts`
   - `oat instructions validate`, `oat instructions sync`
-  - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install`
+  - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install` (packs: core, ideas, workflows, utility, research)
 - Provider config model:
   - Project provider enablement lives in `.oat/sync/config.json` (`providers.<name>.enabled`).
   - `oat init --scope project` prompts for provider selection in interactive mode.

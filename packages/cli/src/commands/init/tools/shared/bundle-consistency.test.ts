@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { CORE_SKILLS } from '../core/install-core';
 import { IDEA_SKILLS } from '../ideas/install-ideas';
 import { RESEARCH_SKILLS } from '../research/install-research';
 import { UTILITY_SKILLS } from '../utility/install-utility';
@@ -91,6 +92,16 @@ describe('bundle-assets.sh consistency', () => {
     ).toEqual([]);
   });
 
+  it('bundles every core skill', () => {
+    const missing = CORE_SKILLS.filter(
+      (skill) => !bundleSkills.includes(skill),
+    );
+    expect(
+      missing,
+      `Missing from bundle-assets.sh SKILLS array: ${missing.join(', ')}`,
+    ).toEqual([]);
+  });
+
   it('bundles every research skill', () => {
     const missing = RESEARCH_SKILLS.filter(
       (skill) => !bundleSkills.includes(skill),
@@ -103,6 +114,7 @@ describe('bundle-assets.sh consistency', () => {
 
   it('does not bundle skills that belong to no pack', () => {
     const allPackSkills = new Set<string>([
+      ...CORE_SKILLS,
       ...WORKFLOW_SKILLS,
       ...IDEA_SKILLS,
       ...UTILITY_SKILLS,

@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { join } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
 import {
@@ -52,7 +53,13 @@ const defaultSyncDependencies: AutoSyncDependencies = {
   },
 };
 
-const VALID_PACKS = ['ideas', 'workflows', 'utility', 'research'] as const;
+const VALID_PACKS = [
+  'core',
+  'ideas',
+  'workflows',
+  'utility',
+  'research',
+] as const;
 
 export function createToolsUpdateCommand(
   dependencies: UpdateToolsDependencies = defaultDependencies,
@@ -63,7 +70,7 @@ export function createToolsUpdateCommand(
     .argument('[name]', 'Tool name to update')
     .option(
       '--pack <pack>',
-      'Update all tools in a pack (ideas|workflows|utility|research)',
+      'Update all tools in a pack (core|ideas|workflows|utility|research)',
     )
     .option('--all', 'Update all outdated tools')
     .option('--dry-run', 'Preview updates without applying')
@@ -90,6 +97,19 @@ export function createToolsUpdateCommand(
         dryRun,
         dependencies,
       );
+
+      // Refresh ~/.oat/docs/ when updating the core pack (D3 requirement)
+      if (target.kind === 'pack' && target.pack === 'core' && !dryRun) {
+        const assetsRoot = await dependencies.resolveAssetsRoot();
+        const userRoot = await dependencies.resolveScopeRoot(
+          'user',
+          context.cwd,
+          context.home,
+        );
+        const docsSource = join(assetsRoot, 'docs');
+        const docsDestination = join(userRoot, '.oat', 'docs');
+        await dependencies.copyDirWithStatus(docsSource, docsDestination, true);
+      }
 
       if (result.notInstalled.length > 0) {
         if (context.json) {
