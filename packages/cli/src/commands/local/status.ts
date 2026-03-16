@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
-import { join, matchesGlob } from 'node:path';
+import { join } from 'node:path';
 
 import { dirExists, fileExists } from '@fs/io';
 
-import { expandLocalPaths } from './expand';
+import { expandLocalPaths, matchesPathPattern } from './expand';
 
 export interface LocalPathStatus {
   path: string;
@@ -21,7 +21,7 @@ function matchesGitignoreLine(localPath: string, line: string): boolean {
 
   // Glob match (for patterns containing *, ?, or [)
   if (/[*?[]/.test(normalizedLine)) {
-    return matchesGlob(normalizedPath, normalizedLine);
+    return matchesPathPattern(normalizedPath, normalizedLine);
   }
 
   return false;
