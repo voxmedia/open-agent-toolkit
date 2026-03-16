@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-apply
-version: 1.3.1
+version: 1.3.2
 description: Run when you have an agent instructions analysis artifact and want to generate or update instruction files. Creates a branch, generates files from templates, and optionally opens a PR.
 disable-model-invocation: true
 user-invocable: true
@@ -155,6 +155,13 @@ Do not rediscover conventions from scratch during this step.
 - If the artifact marks a recommendation `omit`, do not include it in the apply plan
 - If the artifact marks a recommendation `ask_user`, include it with the evidence and require explicit user approval
 - If evidence is missing or stale, stop and ask for a fresh analysis instead of guessing
+
+**For competing sub-patterns in glob-scoped rules:**
+
+- Treat the artifact's recommendation as authoritative about which pattern new files should follow
+- If both patterns remain valid, document both and explicitly call out the recommended default for new files
+- If the artifact reports a split but does not identify the preferred direction for new files, stop and ask for a
+  refreshed analysis instead of guessing
 
 **Multi-format composition order:**
 

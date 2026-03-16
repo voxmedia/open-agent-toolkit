@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.6.0
+version: 1.6.1
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true
@@ -292,116 +292,23 @@ agents need a repeatable template for that file type.
 Follow the systematic process in `references/file-type-discovery-checklist.md`.
 
 The checklist is the canonical source for the detailed substeps in this phase. The summary below is intentionally
-redundant for emphasis, but if wording ever diverges, follow the checklist.
+shorter than the checklist on purpose. If wording ever diverges, follow the checklist.
 
 **Core principle:** The goal is not to prove consistency from file counts. The goal is to find non-obvious
 conventions, competing sub-patterns, and failure modes that would cause an agent to generate the wrong file.
 
-**1. Inventory primary extensions, compound suffixes, and co-located directory conventions:**
+Emphasis points:
 
-Start with a repo-wide inventory of both primary file extensions and repeated compound suffixes. Use the inventory to
-discover plain extensions like `.tsx`, `.css`, `.graphql`, and `.sql`, plus repo-specific compound suffixes that are
-not in the predefined list. Also scan for directory-level co-location conventions where the meaningful pattern is a
-set of files that appear together in a repeated structure. Do not limit analysis to known suffixes.
-
-```bash
-# Primary extension inventory
-find . -type f \
-  -not -path '*/node_modules/*' \
-  -not -path '*/.git/*' \
-  -not -path '*/dist/*' \
-  -not -path '*/__generated__/*' \
-  | sed -E 's|^.*/||' \
-  | awk -F. 'NF >= 2 { print "." $NF }' \
-  | sort | uniq -c | sort -rn | head -20
-
-# Compound suffix inventory
-find . -type f \
-  -not -path '*/node_modules/*' \
-  -not -path '*/.git/*' \
-  -not -path '*/dist/*' \
-  -not -path '*/__generated__/*' \
-  | sed -E 's|^.*/||' \
-  | awk -F. 'NF >= 3 { print "." $(NF-1) "." $NF }' \
-  | sort | uniq -c | sort -rn | head -20
-
-# Example targeted follow-up counts
-find . -name '*.tsx' -not -path '*/node_modules/*' | wc -l
-find . -name '*.css' -not -path '*/node_modules/*' | wc -l
-find . -name '*.stories.tsx' -not -path '*/node_modules/*' | wc -l
-find . -name '*.test.tsx' -not -path '*/node_modules/*' | wc -l
-```
-
-For any significant primary extension, repeated suffix, or repeated co-located directory pattern, proceed to
-sampling and deep-read investigation.
-
-**2. Calibrate sample size to detect splits, not just consistency:**
-
-Reading sampled files is mandatory. Use these minimums:
-
-- 5–10 matching files: read **all** of them
-- 11–30 files: sample **8–12** files across different directories and different git ages
-- 30+ files: sample **12–15** files across directories; if any inconsistency appears, expand sampling enough to confirm the split ratio
-
-Do not take all samples from one directory or one generation of files. Mix older and newer files because convention splits often correlate with time.
-
-```bash
-# Count
-find . -name '*.ts' -path '*/resolvers/*' -not -path '*/node_modules/*' | wc -l
-
-# Sample — read these files
-find . -name '*.ts' -path '*/resolvers/*' -not -path '*/node_modules/*' | shuf | head -3
-```
-
-**3. Deep-read the sample and keep glob-scoped rules separate from directory coverage gaps:**
-
-Do not dismiss a file-type pattern because "the directory's `AGENTS.md` will cover it." Directory instructions and
-glob-scoped rules serve different purposes:
-
-- Directory `AGENTS.md` files cover architecture, commands, workflows, and local context.
-- Glob-scoped rules cover the structural template that should fire when an agent creates or edits a specific file type.
-
-A rule opportunity still qualifies even if all matching files are in one directory.
-
-For each sampled pattern, extract and quantify:
-
-- shared imports, wrappers, providers, helper classes, or generated markers
-- structural template (class vs function, export pattern, required boilerplate)
-- framework-specific conventions such as typed signatures, injected dependencies, required context, schema/API version,
-  or registration flow
-- sibling-file or co-location assumptions
-- what would break if an agent copied the wrong example: compile/test/runtime failure, incorrect behavior, security
-  issue, or CI failure
-
-Quantify the discovered behavior, not just the filename suffix. Record `N/M files follow pattern A` and, if relevant,
-`X/Y directories follow structure B`. A pattern without a concrete convention summary from sampled files is not
-actionable.
-
-**4. Prioritize competing sub-patterns and exception cases:**
-
-Treat these as the highest-priority rule opportunities:
-
-- **Competing sub-patterns**, especially roughly `40–60%` or `50–50%` splits. These are more valuable than perfect consistency because agents are likely to guess wrong.
-- **File-type-specific deviations from project-wide rules**, not just export style. Check for any file-type-specific exception such as different imports, instantiation style, security handling, lint suppressions, schema/API versions, or registration mechanisms.
-- **Security-sensitive patterns**, especially in templates and rendering code. For PHP/WordPress, inspect `template.php`-style files for escaping, sanitization, and `phpcs:ignore` usage. For React/JS, inspect `dangerouslySetInnerHTML`, raw HTML rendering, and similar exception patterns. Also watch for raw SQL, shell execution, or other sensitive sinks when relevant to the stack.
-
-Patterns with >80% consistency are still useful, but unresolved splits are often the most important because they represent active ambiguity in production code.
-
-**5. Assess correctness impact and assign severity:**
-
-For each pattern, determine what breaks when an agent writes a new file without the rule:
-
-- **Crashes/breaks:** Code won't compile, tests won't run, app crashes
-- **Visual/behavioral bugs:** Code runs but produces wrong results
-- **Security vulnerability:** Wrong escaping/sanitization, unsafe HTML, raw query/command usage
-- **Lint/CI failures:** Code works but fails automated checks
-- **Style inconsistency:** Code works but doesn't match conventions
-
-Assign severity using the calibrated scale in the checklist. Give extra weight to:
-
-- security-sensitive patterns
-- competing sub-patterns with a meaningful split ratio
-- file-type-specific exceptions to general project conventions
+- Start with repo-wide inventory, not just known suffixes. Primary extensions, repeated compound suffixes, and
+  co-located directory structures all count.
+- Reading sampled files is mandatory. Do not stop at counts; extract structural conventions, behavioral rules, and
+  what breaks when an agent copies the wrong example.
+- If many patterns qualify, prioritize by correctness impact, exception-to-rule risk, competing sub-patterns, and
+  security sensitivity before spending context on lower-value patterns.
+- Do not dismiss a pattern because it lives in one directory or because a directory `AGENTS.md` might also mention it.
+  Glob-scoped rules and directory instructions serve different purposes.
+- Splits matter. Patterns in the `40–60%` range are often more valuable than perfectly consistent patterns because
+  they represent active ambiguity in production code.
 
 **In delta mode:** Still run the full file-type scan. File-type patterns are repo-wide concerns that may not intersect with recently-changed directories but are still high-value for agent correctness.
 

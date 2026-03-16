@@ -92,6 +92,8 @@ This criterion applies to the **overall instruction set**, not to individual fil
 
 - [ ] Common file-type patterns (tests, stories, styles, configs) with 5+ files have been evaluated for rule opportunities
 - [ ] Patterns with >80% consistency and correctness impact are flagged as glob-scoped rule opportunities
+- [ ] Patterns with competing sub-patterns (especially `40–60%` splits) are explicitly evaluated and flagged when agents are likely to guess wrong
+- [ ] Security-sensitive file-type patterns are explicitly evaluated for rule opportunities and severity
 - [ ] Patterns that are exceptions to project-wide rules are explicitly called out (these are highest-value)
 - [ ] Existing glob-scoped rules cover the identified patterns, or coverage gaps are recorded
 - **Severity if failing:** Medium (missed pattern) or High (missed exception-to-rule pattern)

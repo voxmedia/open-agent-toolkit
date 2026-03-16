@@ -86,7 +86,9 @@ Proceed to sampling for:
 - Component directories: `Component.tsx` + `styles.ts` + `Component.stories.tsx` + `Component.test.tsx`
 - Feature modules: `index.ts` + `types.ts` + `utils.ts` + `*.test.ts`
 - Domain bundles: repeated directory structures containing metadata + implementation + template/rendering files
+  Example: `feature.json` + `handler.ts` + `template.tsx`
 - Schema bundles: repeated directories where one file implies required siblings (schema + loader + tests + fixtures)
+  Example: `schema.graphql` + `loader.ts` + `schema.test.ts` + `fixtures/`
 
 Treat directory-level co-location as a first-class investigation target. Some of the highest-value rules are not "all `*.x` files look the same" but "every directory matching this pattern must contain these files and use one of two competing structures."
 
@@ -111,6 +113,13 @@ When sampling:
 - Mix older and newer files when possible; convention changes often correlate with time
 - If the first sample looks perfectly consistent, still pressure-test it with files from other directories before
   concluding
+
+If many patterns qualify, prioritize sampling in this order before spending context on lower-value patterns:
+
+1. security-sensitive patterns or exception-to-project-rule patterns
+2. competing sub-patterns or known migration-era splits
+3. patterns with high suspected correctness impact
+4. lower-risk consistency-only patterns
 
 ### 3. Deep-Read Investigation
 
