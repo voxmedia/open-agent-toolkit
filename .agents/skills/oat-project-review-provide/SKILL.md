@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.2.0
+version: 1.2.1
 description: Use when completed work in an active OAT project needs a quality gate before merge. Performs a lifecycle-scoped review after a task, phase, or full implementation, unlike oat-review-provide.
 disable-model-invocation: true
 user-invocable: true
@@ -241,6 +241,7 @@ WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
   - reviewing `spec` requires `discovery.md`
   - reviewing `design` in `spec-driven` mode requires `spec.md`
   - reviewing `design` in `quick/import` mode requires only `discovery.md` (spec is skipped in these modes)
+  - in `quick/import` mode, missing `spec.md` must not be treated as a project review gate failure for `artifact design`; proceed with normal project-scoped review flow, artifact writing, and bookkeeping
   - reviewing `plan` in `spec-driven` mode requires `spec.md` + `design.md`
   - reviewing `plan` in `quick/import` mode may use `discovery.md` and/or `references/imported-plan.md` instead
 
