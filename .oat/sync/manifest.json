@@ -1081,7 +1081,47 @@
       "contentHash": null,
       "isFile": true,
       "lastSynced": "2026-03-14T20:01:51.132Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-docs",
+      "providerPath": ".claude/skills/oat-docs",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-16T17:37:53.290Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-doctor",
+      "providerPath": ".claude/skills/oat-doctor",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-16T17:37:53.296Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-docs",
+      "providerPath": ".cursor/skills/oat-docs",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-16T17:37:53.299Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-doctor",
+      "providerPath": ".cursor/skills/oat-doctor",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-16T17:37:53.299Z"
     }
   ],
-  "lastUpdated": "2026-03-14T20:01:51.132Z"
+  "lastUpdated": "2026-03-16T17:37:53.299Z"
 }
