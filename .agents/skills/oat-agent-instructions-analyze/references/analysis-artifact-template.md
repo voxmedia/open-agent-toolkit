@@ -108,15 +108,15 @@ File-type patterns with recurring conventions that would benefit from targeted r
 
 Discovered using the systematic file-type pattern discovery process from `references/file-type-discovery-checklist.md`.
 
-| #   | Pattern  | Count | Consistency | Convention Summary                                      | Correctness Impact               | Exception to Project Rule? | Evidence     | Disclosure                       | Severity          |
-| --- | -------- | ----- | ----------- | ------------------------------------------------------- | -------------------------------- | -------------------------- | ------------ | -------------------------------- | ----------------- |
-| 1   | `{glob}` | {N}   | {N/M files} | {brief description of conventions agents should follow} | {crashes/visual bugs/lint/style} | {yes: which rule / no}     | {exact refs} | {inline/link_only/omit/ask_user} | {High/Medium/Low} |
-| ... |          |       |             |                                                         |                                  |                            |              |                                  |                   |
+| #   | Pattern  | Count | Consistency | Competing Sub-Patterns                                        | Convention Summary                                      | Correctness Impact                        | Exception to Project Rule? | Evidence     | Disclosure                       | Severity          |
+| --- | -------- | ----- | ----------- | ------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------- | -------------------------- | ------------ | -------------------------------- | ----------------- |
+| 1   | `{glob}` | {N}   | {N/M files} | {none / `A: 9/18, B: 9/18` / version split / directory split} | {brief description of conventions agents should follow} | {crashes/visual bugs/security/lint/style} | {yes: which rule / no}     | {exact refs} | {inline/link_only/omit/ask_user} | {High/Medium/Low} |
+| ... |          |       |             |                                                               |                                                         |                                           |                            |              |                                  |
 
 **Severity calibration:**
 
-- **High:** Exception to project-wide rule AND code breaks/fails lint; OR >20 files AND correctness impact (crashes, visual bugs)
-- **Medium:** >20 files AND lint/CI failures; OR 5–20 files with correctness impact
+- **High:** `40–60%` split with correctness/security impact; OR security-sensitive exception pattern; OR exception to project-wide rule AND code breaks/fails lint; OR >20 files AND correctness impact (crashes, visual bugs)
+- **Medium:** `40–60%` split with lint/behavioral differences only; OR >20 files AND lint/CI failures; OR 5–20 files with correctness impact
 - **Low:** Style consistency only, no correctness impact
 
 {Or: "No glob-scoped rule opportunities identified."}

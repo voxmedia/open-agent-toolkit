@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.4.0
+version: 1.5.2
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true
@@ -203,11 +203,14 @@ This inventory is used by:
 
 For each discovered instruction file, evaluate against the quality checklist at `references/quality-checklist.md`.
 
-**Required context — read these docs before evaluating:**
+**Required context — read these bundled skill docs before evaluating:**
 
-- `.agents/docs/agent-instruction.md` — full quality criteria and best practices
-- `.agents/docs/rules-files.md` — cross-provider rules file format reference
-- `.agents/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format reference (if cursor provider is active)
+These docs are bundled with this skill under `references/docs/` and should be read from that location,
+not from repo-root `.agents/docs/`.
+
+- `references/docs/agent-instruction.md` — full quality criteria and best practices
+- `references/docs/rules-files.md` — cross-provider rules file format reference
+- `references/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format reference (if cursor provider is active)
 
 **Evidence standard:**
 
@@ -286,9 +289,13 @@ Discover cross-cutting file-type patterns that warrant glob-scoped rules. This s
 
 Follow the systematic process in `references/file-type-discovery-checklist.md`.
 
-**1. Scan for file-type patterns:**
+**Core principle:** The goal is not to prove consistency from file counts. The goal is to find non-obvious conventions, competing sub-patterns, and failure modes that would cause an agent to generate the wrong file.
 
-Search the repo for files matching common naming conventions (test files, story files, style files, config files, schema files, etc.). For each pattern with 5+ matching files, proceed to sampling.
+**1. Scan for file-type patterns and co-located directory conventions:**
+
+Search the repo for files matching common naming conventions (test files, story files, style files, config files, schema files, etc.). Also scan for directory-level co-location conventions where the meaningful pattern is a set of files that appear together in a repeated structure.
+
+For each file or directory pattern with 5+ occurrences, proceed to calibrated sampling and deep-read investigation.
 
 ```bash
 # Example discovery commands
@@ -297,43 +304,56 @@ find . -name '*.test.tsx' -not -path '*/node_modules/*' | wc -l
 find . -name 'styles.ts' -not -path '*/node_modules/*' | wc -l
 ```
 
-**2. Sample and assess consistency:**
+**2. Calibrate sample size to detect splits, not just consistency:**
 
-For each pattern with 5+ files, sample 3–5 representative files from different directories. Check for:
+Use these minimums:
 
-- Structural consistency (shared imports, exports, boilerplate)
-- Required wrapping or providers
-- Naming conventions beyond the file extension
+- 5–10 matching files: read **all** of them
+- 11–30 files: sample **8–12** files across different directories and different git ages
+- 30+ files: sample **12–15** files across directories; if any inconsistency appears, expand sampling enough to confirm the split ratio
 
-Quantify: `N/M files follow pattern`. Patterns with >80% consistency are strong candidates.
+Do not take all samples from one directory or one generation of files. Mix older and newer files because convention splits often correlate with time.
 
-**3. Check for exception patterns (highest priority):**
+**3. Deep-read the sample and investigate behavioral consistency:**
 
-Identify file-type patterns that require an **exception** to a project-wide rule. These are the most valuable rules because agents will follow the general rule and produce incorrect code without guidance. Examples:
+For every pattern with 5+ files, read the sampled files and answer:
 
-- Story files needing `export default` when the project bans default exports
-- Test files needing specific providers/wrappers not obvious from the framework
-- Config files using CommonJS in an ESM project
-- Generated files that agents should never hand-edit
+- What non-obvious setup is required: shared imports, wrappers, providers, helper classes, framework extensions, generated markers, or required boilerplate?
+- What behavioral conventions exist inside the files: registration patterns, instantiation style, setup/teardown style, schema/API versions, escaping/sanitization patterns?
+- What co-located files or directory structure are assumed: sibling templates, configs, PHP/JS pairs, block metadata, fixtures, shared helpers?
+- What would break if an agent copied the wrong example: compile failure, runtime/test failure, incorrect registration, XSS/security issue, CI failure?
 
-**4. Assess correctness impact:**
+**4. Prioritize competing sub-patterns and exception cases:**
+
+Quantify the discovered behavior, not just the filename suffix. Record `N/M files follow pattern A` and, if relevant, `X/Y directories follow structure B`.
+
+Treat these as the highest-priority rule opportunities:
+
+- **Competing sub-patterns**, especially roughly `40–60%` or `50–50%` splits. These are more valuable than perfect consistency because agents are likely to guess wrong.
+- **File-type-specific deviations from project-wide rules**, not just export style. Check for any file-type-specific exception such as different imports, instantiation style, security handling, lint suppressions, schema/API versions, or registration mechanisms.
+- **Security-sensitive patterns**, especially in templates and rendering code. For PHP/WordPress, inspect `template.php`-style files for escaping, sanitization, and `phpcs:ignore` usage. For React/JS, inspect `dangerouslySetInnerHTML`, raw HTML rendering, and similar exception patterns. Also watch for raw SQL, shell execution, or other sensitive sinks when relevant to the stack.
+
+Patterns with >80% consistency are still useful, but unresolved splits are often the most important because they represent active ambiguity in production code.
+
+**5. Assess correctness impact and assign severity:**
 
 For each pattern, determine what breaks when an agent writes a new file without the rule:
 
 - **Crashes/breaks:** Code won't compile, tests won't run, app crashes
 - **Visual/behavioral bugs:** Code runs but produces wrong results
+- **Security vulnerability:** Wrong escaping/sanitization, unsafe HTML, raw query/command usage
 - **Lint/CI failures:** Code works but fails automated checks
 - **Style inconsistency:** Code works but doesn't match conventions
 
-**5. Assign severity using calibrated scale:**
+Assign severity using the calibrated scale in the checklist. Give extra weight to:
 
-- **High:** Exception to project-wide rule AND code breaks/fails lint; OR >20 files AND correctness impact
-- **Medium:** >20 files AND lint/CI failures; OR 5–20 files with correctness impact
-- **Low:** Style consistency only, no correctness impact
+- security-sensitive patterns
+- competing sub-patterns with a meaningful split ratio
+- file-type-specific exceptions to general project conventions
 
 **In delta mode:** Still run the full file-type scan. File-type patterns are repo-wide concerns that may not intersect with recently-changed directories but are still high-value for agent correctness.
 
-Record all discovered patterns in the artifact's Glob-Scoped Rule Opportunities table with consistency counts, correctness impact, and exception-to-rule flags.
+Record all discovered patterns in the artifact's Glob-Scoped Rule Opportunities table with consistency counts, competing sub-pattern notes, correctness impact, and exception-to-rule flags.
 
 ### Step 6: Drift Detection (Delta Mode Only)
 
@@ -429,9 +449,9 @@ Next step: Run oat-agent-instructions-apply to act on these findings.
 
 ## References
 
-- Quality criteria source: `.agents/docs/agent-instruction.md`
-- Cross-provider rules reference: `.agents/docs/rules-files.md`
-- Cursor-specific format: `.agents/docs/cursor-rules-files.md`
+- Bundled quality criteria source: `references/docs/agent-instruction.md`
+- Bundled cross-provider rules reference: `references/docs/rules-files.md`
+- Bundled Cursor-specific format reference: `references/docs/cursor-rules-files.md`
 - Copilot instruction system: `.oat/repo/reviews/github-copilot-instructions-research-2026-02-19.md`
 - Quality checklist: `references/quality-checklist.md`
 - Directory criteria: `references/directory-assessment-criteria.md`

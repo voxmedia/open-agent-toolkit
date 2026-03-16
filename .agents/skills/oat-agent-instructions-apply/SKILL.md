@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-apply
-version: 1.2.0
+version: 1.3.1
 description: Run when you have an agent instructions analysis artifact and want to generate or update instruction files. Creates a branch, generates files from templates, and optionally opens a PR.
 disable-model-invocation: true
 user-invocable: true
@@ -271,11 +271,14 @@ For each approved recommendation, in the order from Step 2:
 - If formatter/linter config exists, prefer `run formatter/lint` or a link to the config/doc over prose restatement of the same rule.
 - If a cited source no longer exists, stop that recommendation and ask for a fresh analysis or user guidance.
 
-**Required context — read these docs before generating:**
+**Required context — read these bundled skill docs before generating:**
 
-- `.agents/docs/agent-instruction.md` — quality criteria and best practices
-- `.agents/docs/rules-files.md` — cross-provider format reference
-- `.agents/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format (if cursor provider is active)
+These docs are bundled with this skill under `references/docs/` and should be read from that location,
+not from repo-root `.agents/docs/`.
+
+- `references/docs/agent-instruction.md` — quality criteria and best practices
+- `references/docs/rules-files.md` — cross-provider format reference
+- `references/docs/cursor-rules-files.md` — Cursor-specific `.mdc` format (if cursor provider is active)
 
 ### Step 6: Commit and PR
 
@@ -424,9 +427,9 @@ Apply complete.
 
 ## References
 
-- Quality criteria: `.agents/docs/agent-instruction.md`
-- Cross-provider rules: `.agents/docs/rules-files.md`
-- Cursor-specific format: `.agents/docs/cursor-rules-files.md`
+- Bundled quality criteria: `references/docs/agent-instruction.md`
+- Bundled cross-provider rules reference: `references/docs/rules-files.md`
+- Bundled Cursor-specific format reference: `references/docs/cursor-rules-files.md`
 - Analysis artifact: `.oat/repo/analysis/agent-instructions-*.md`
 - Templates: `references/instruction-file-templates/`
 - Apply plan template: `references/apply-plan-template.md`
