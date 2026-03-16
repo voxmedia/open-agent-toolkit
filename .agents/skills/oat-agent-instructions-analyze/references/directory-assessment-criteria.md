@@ -35,6 +35,24 @@ When does a directory need its own instruction file? Use these criteria to ident
 - Has patterns or conventions that differ from the rest of the repo
 - **Signal strength:** Moderate — larger directories benefit more from explicit guidance
 
+## Large Directory Decomposition
+
+When a directory meets 1+ primary indicators and contains **more than 50 source files**, assess its major
+subdirectories starting at depth 1-2 before writing a single broad recommendation.
+
+If the first pass still leaves a sub-area that is large or clearly heterogeneous, keep decomposing deeper until the
+distinct conventions are visible or the analysis stops yielding materially different guidance.
+
+Check whether subdirectories differ by:
+
+- tech stack or runtime (for example, embedded React client vs Node server code)
+- dominant file-type patterns (for example, resolvers vs repositories vs jobs)
+- build or tooling configuration (separate tsconfigs, bundlers, framework configs)
+- domain boundary or API surface
+
+Record distinct sub-areas in the coverage gap assessment. A scoped `AGENTS.md` recommendation for a large directory
+should enumerate the major sub-areas and their conventions, not just report the total file count.
+
 ## Secondary Indicators (strengthen the case but not sufficient alone)
 
 ### 6. Has Specialized Testing Patterns

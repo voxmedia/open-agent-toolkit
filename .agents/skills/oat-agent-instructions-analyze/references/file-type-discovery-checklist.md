@@ -1,18 +1,74 @@
 # File-Type Pattern Discovery Checklist
 
-Systematic methodology for identifying glob-scoped rule opportunities. These are cross-cutting file-type patterns that span multiple directories and are best addressed with glob-scoped rules rather than directory-level AGENTS.md files.
+Systematic methodology for identifying glob-scoped rule opportunities. These are structural file-type patterns that
+agents need when creating or editing files. They often span multiple directories, but they can still justify a
+glob-scoped rule even when concentrated in a single architectural area.
 
-File-type patterns are often the **highest-value** glob-scoped rules because they directly prevent agents from producing broken code across many files.
+File-type patterns are often the **highest-value** glob-scoped rules because they directly prevent agents from
+producing broken code across many files.
 
-The goal of this checklist is to **find ambiguity and hidden conventions**, not just to confirm that filenames look consistent. File counts are only the starting point. The actual signal comes from reading files and identifying semantic patterns, split conventions, and failure modes.
+A file-type pattern is a rule candidate even if all matching files live in one directory. The question is whether
+agents need a repeatable template for that file type, not whether the files are distributed widely.
+
+The goal of this checklist is to **find ambiguity and hidden conventions**, not just to confirm that filenames look
+consistent. File counts are only the starting point. The actual signal comes from reading files and identifying
+semantic patterns, split conventions, and failure modes.
 
 ## Discovery Process
 
-### 1. Scan for Common File-Type Suffixes and Directory Conventions
+### 1. Build a Baseline Inventory
 
-Search the repo for files matching common naming patterns. For each pattern with **5+ files**, proceed to sampling.
+Start with a two-phase inventory so discovery is not limited to today's known naming conventions.
 
-**Naming patterns to check:**
+**1a. Inventory primary file extensions**
+
+Use a repo-wide count to identify common authored file types such as `.tsx`, `.css`, `.graphql`, or `.sql`.
+Exclude generated and external directories so the inventory reflects source patterns rather than build output.
+
+```bash
+find . -type f \
+  -not -path '*/node_modules/*' \
+  -not -path '*/.git/*' \
+  -not -path '*/dist/*' \
+  -not -path '*/__generated__/*' \
+  | sed -E 's|^.*/||' \
+  | awk -F. 'NF >= 2 { print "." $NF }' \
+  | sort | uniq -c | sort -rn | head -20
+```
+
+**1b. Inventory repeated compound suffixes**
+
+Use a repo-wide count to identify common multi-part suffixes such as `.stories.tsx`, `.test.ts`, `.resolver.ts`,
+or `.repository.ts`. Do not limit analysis to the pre-listed patterns below.
+
+```bash
+find . -type f \
+  -not -path '*/node_modules/*' \
+  -not -path '*/.git/*' \
+  -not -path '*/dist/*' \
+  -not -path '*/__generated__/*' \
+  | sed -E 's|^.*/||' \
+  | awk -F. 'NF >= 3 { print "." $(NF-1) "." $NF }' \
+  | sort | uniq -c | sort -rn | head -20
+```
+
+**1c. Select candidates for sampling**
+
+Proceed to sampling for:
+
+- any primary extension with **5+** non-generated source files
+- any compound suffix with **5+** files
+- any smaller pattern that clearly overrides a project-wide rule or has high correctness impact
+- any repeated compound suffix discovered from the inventory, even if it is not listed in the known patterns below
+
+**Primary extensions to pay attention to when counts are significant:**
+
+- Component/client files: `*.tsx`, `*.jsx`
+- Style files: `*.css`, `*.scss`, `*.less`
+- Schema/query files: `*.graphql`, `*.gql`, `*.sql`
+- Source/config/content files: `*.ts`, `*.js`, `*.json`, `*.yaml`, `*.yml`, `*.mdx`
+
+**Known compound naming patterns to check:**
 
 - Test files: `*.test.ts`, `*.test.tsx`, `*.spec.ts`, `*.spec.tsx`, `*.test.js`, `*.test.jsx`
 - Story files: `*.stories.tsx`, `*.stories.ts`, `*.stories.jsx`, `*.stories.js`
@@ -36,23 +92,27 @@ Treat directory-level co-location as a first-class investigation target. Some of
 
 ### 2. Calibrate Sample Size to Detect Inconsistency
 
+For every selected pattern with **5+ files**, reading the sampled files is mandatory. Do not stop at naming
+consistency.
+
 Use these minimum sample sizes:
 
 - **5–10 matching files:** Read **all** files
 - **11–30 files:** Sample **8–12** files across different directories and different git ages
-- **30+ files:** Sample **12–15** files across directories; if any inconsistency appears, expand the sample until you can describe the split ratio with confidence
+- **30+ files:** Sample **12–15** files across directories; if any inconsistency appears, expand the sample until you
+  can describe the split ratio with confidence
 
-The goal is not to confirm a pattern with the smallest possible sample. The goal is to discover whether the repo contains a meaningful split that would cause an agent to guess wrong.
+The goal is not to confirm a pattern with the smallest possible sample. The goal is to discover whether the repo
+contains a meaningful split that would cause an agent to guess wrong.
 
 When sampling:
 
 - Mix directories; do not sample from a single subtree
 - Mix older and newer files when possible; convention changes often correlate with time
-- If the first sample looks perfectly consistent, still pressure-test it with files from other directories before concluding
+- If the first sample looks perfectly consistent, still pressure-test it with files from other directories before
+  concluding
 
 ### 3. Deep-Read Investigation
-
-For every pattern with **5+ files**, reading the sampled files is mandatory. Do not stop at naming consistency.
 
 Inspect the sample for:
 
@@ -69,7 +129,17 @@ For each pattern, explicitly answer:
 3. Are there competing sub-patterns inside the same suffix or directory structure?
 4. Are there version splits or old/new style splits that matter for new files?
 
-### 4. Quantify the Real Pattern, Including Splits
+### 4. Keep Glob Rules Separate from Directory Coverage
+
+Do **not** dismiss a file-type pattern because it may also be covered by a directory-level `AGENTS.md`.
+
+- Directory `AGENTS.md` files cover commands, architecture, workflows, and local context.
+- Glob-scoped rules cover the structural template that should fire when an agent creates or edits a specific file type.
+
+A directory note like "resolvers use GraphContext" is weaker than a glob-scoped rule that fires for resolver files
+and shows the expected imports, signature, and delegation pattern.
+
+### 5. Quantify the Real Pattern, Including Splits
 
 Quantify the behavior you found, not just the filename suffix:
 
@@ -84,7 +154,7 @@ Interpret the result this way:
 - `40–60%` consistency = **highest-priority ambiguity**; agents are likely to choose wrong without guidance
 - `<40%` consistency = may still matter if the split tracks security, framework version, or generation age; do not automatically discard without checking impact
 
-### 5. Check for Exception Patterns
+### 6. Check for Exception Patterns
 
 **This is the highest-value check.** Look for file-type or directory-level patterns that require an **exception** to a project-wide rule:
 
@@ -100,7 +170,7 @@ Exception-to-rule patterns are the most important to capture because agents will
 
 Do not reduce this check to "default export exception." Investigate any deviation from general project norms that is scoped to a particular file or directory pattern.
 
-### 6. Assess Correctness and Security Impact
+### 7. Assess Correctness and Security Impact
 
 For each pattern, determine what happens when an agent writes a new file of this type **without** the rule:
 
@@ -118,17 +188,17 @@ Security-sensitive file types deserve explicit scrutiny. In PHP/WordPress repos,
 
 For each discovered pattern, record:
 
-| Field                          | Description                                      |
-| ------------------------------ | ------------------------------------------------ |
-| **Pattern**                    | Glob pattern (e.g., `**/*.stories.tsx`)          |
-| **File count**                 | Total files matching                             |
-| **Consistency**                | `N/M files follow pattern` (e.g., `72/72`)       |
-| **Competing sub-patterns**     | Split details when multiple valid patterns exist |
-| **Convention summary**         | Brief description of what agents must do         |
-| **Correctness impact**         | What breaks without the rule                     |
-| **Exception to project rule?** | Yes/No — if yes, which rule is overridden        |
-| **Evidence**                   | 2–3 representative file paths                    |
-| **Severity**                   | See calibration below                            |
+| Field                          | Description                                                            |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| **Pattern**                    | Extension or glob pattern (e.g., `**/*.stories.tsx`, `**/*.css`)       |
+| **File count**                 | Total files matching                                                   |
+| **Consistency**                | `N/M files follow pattern` (e.g., `72/72`)                             |
+| **Competing sub-patterns**     | Split details when multiple valid patterns exist                       |
+| **Convention summary**         | Specific shared import/export/template requirements from sampled files |
+| **Correctness impact**         | What breaks without the rule                                           |
+| **Exception to project rule?** | Yes/No — if yes, which rule is overridden                              |
+| **Evidence**                   | 3–5 sampled file paths                                                 |
+| **Severity**                   | See calibration below                                                  |
 
 ## Severity Calibration
 

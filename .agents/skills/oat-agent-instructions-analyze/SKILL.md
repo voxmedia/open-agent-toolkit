@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.5.2
+version: 1.6.0
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true
@@ -285,28 +285,59 @@ For each directory meeting 1+ primary indicators from the criteria doc:
 
 ### Step 5: File-Type Pattern Discovery
 
-Discover cross-cutting file-type patterns that warrant glob-scoped rules. This step runs independently of directory coverage assessment — it identifies patterns that span multiple directories and are best addressed with targeted rules rather than directory-level instruction files.
+Discover cross-cutting file-type patterns that warrant glob-scoped rules. These patterns often span multiple
+directories, but a concentrated pattern inside a single architectural area can still justify a glob-scoped rule when
+agents need a repeatable template for that file type.
 
 Follow the systematic process in `references/file-type-discovery-checklist.md`.
 
-**Core principle:** The goal is not to prove consistency from file counts. The goal is to find non-obvious conventions, competing sub-patterns, and failure modes that would cause an agent to generate the wrong file.
+The checklist is the canonical source for the detailed substeps in this phase. The summary below is intentionally
+redundant for emphasis, but if wording ever diverges, follow the checklist.
 
-**1. Scan for file-type patterns and co-located directory conventions:**
+**Core principle:** The goal is not to prove consistency from file counts. The goal is to find non-obvious
+conventions, competing sub-patterns, and failure modes that would cause an agent to generate the wrong file.
 
-Search the repo for files matching common naming conventions (test files, story files, style files, config files, schema files, etc.). Also scan for directory-level co-location conventions where the meaningful pattern is a set of files that appear together in a repeated structure.
+**1. Inventory primary extensions, compound suffixes, and co-located directory conventions:**
 
-For each file or directory pattern with 5+ occurrences, proceed to calibrated sampling and deep-read investigation.
+Start with a repo-wide inventory of both primary file extensions and repeated compound suffixes. Use the inventory to
+discover plain extensions like `.tsx`, `.css`, `.graphql`, and `.sql`, plus repo-specific compound suffixes that are
+not in the predefined list. Also scan for directory-level co-location conventions where the meaningful pattern is a
+set of files that appear together in a repeated structure. Do not limit analysis to known suffixes.
 
 ```bash
-# Example discovery commands
+# Primary extension inventory
+find . -type f \
+  -not -path '*/node_modules/*' \
+  -not -path '*/.git/*' \
+  -not -path '*/dist/*' \
+  -not -path '*/__generated__/*' \
+  | sed -E 's|^.*/||' \
+  | awk -F. 'NF >= 2 { print "." $NF }' \
+  | sort | uniq -c | sort -rn | head -20
+
+# Compound suffix inventory
+find . -type f \
+  -not -path '*/node_modules/*' \
+  -not -path '*/.git/*' \
+  -not -path '*/dist/*' \
+  -not -path '*/__generated__/*' \
+  | sed -E 's|^.*/||' \
+  | awk -F. 'NF >= 3 { print "." $(NF-1) "." $NF }' \
+  | sort | uniq -c | sort -rn | head -20
+
+# Example targeted follow-up counts
+find . -name '*.tsx' -not -path '*/node_modules/*' | wc -l
+find . -name '*.css' -not -path '*/node_modules/*' | wc -l
 find . -name '*.stories.tsx' -not -path '*/node_modules/*' | wc -l
 find . -name '*.test.tsx' -not -path '*/node_modules/*' | wc -l
-find . -name 'styles.ts' -not -path '*/node_modules/*' | wc -l
 ```
+
+For any significant primary extension, repeated suffix, or repeated co-located directory pattern, proceed to
+sampling and deep-read investigation.
 
 **2. Calibrate sample size to detect splits, not just consistency:**
 
-Use these minimums:
+Reading sampled files is mandatory. Use these minimums:
 
 - 5–10 matching files: read **all** of them
 - 11–30 files: sample **8–12** files across different directories and different git ages
@@ -314,18 +345,39 @@ Use these minimums:
 
 Do not take all samples from one directory or one generation of files. Mix older and newer files because convention splits often correlate with time.
 
-**3. Deep-read the sample and investigate behavioral consistency:**
+```bash
+# Count
+find . -name '*.ts' -path '*/resolvers/*' -not -path '*/node_modules/*' | wc -l
 
-For every pattern with 5+ files, read the sampled files and answer:
+# Sample — read these files
+find . -name '*.ts' -path '*/resolvers/*' -not -path '*/node_modules/*' | shuf | head -3
+```
 
-- What non-obvious setup is required: shared imports, wrappers, providers, helper classes, framework extensions, generated markers, or required boilerplate?
-- What behavioral conventions exist inside the files: registration patterns, instantiation style, setup/teardown style, schema/API versions, escaping/sanitization patterns?
-- What co-located files or directory structure are assumed: sibling templates, configs, PHP/JS pairs, block metadata, fixtures, shared helpers?
-- What would break if an agent copied the wrong example: compile failure, runtime/test failure, incorrect registration, XSS/security issue, CI failure?
+**3. Deep-read the sample and keep glob-scoped rules separate from directory coverage gaps:**
+
+Do not dismiss a file-type pattern because "the directory's `AGENTS.md` will cover it." Directory instructions and
+glob-scoped rules serve different purposes:
+
+- Directory `AGENTS.md` files cover architecture, commands, workflows, and local context.
+- Glob-scoped rules cover the structural template that should fire when an agent creates or edits a specific file type.
+
+A rule opportunity still qualifies even if all matching files are in one directory.
+
+For each sampled pattern, extract and quantify:
+
+- shared imports, wrappers, providers, helper classes, or generated markers
+- structural template (class vs function, export pattern, required boilerplate)
+- framework-specific conventions such as typed signatures, injected dependencies, required context, schema/API version,
+  or registration flow
+- sibling-file or co-location assumptions
+- what would break if an agent copied the wrong example: compile/test/runtime failure, incorrect behavior, security
+  issue, or CI failure
+
+Quantify the discovered behavior, not just the filename suffix. Record `N/M files follow pattern A` and, if relevant,
+`X/Y directories follow structure B`. A pattern without a concrete convention summary from sampled files is not
+actionable.
 
 **4. Prioritize competing sub-patterns and exception cases:**
-
-Quantify the discovered behavior, not just the filename suffix. Record `N/M files follow pattern A` and, if relevant, `X/Y directories follow structure B`.
 
 Treat these as the highest-priority rule opportunities:
 
