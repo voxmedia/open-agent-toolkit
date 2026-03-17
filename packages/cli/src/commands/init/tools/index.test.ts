@@ -83,6 +83,15 @@ function createHarness(options: HarnessOptions = {}) {
     skippedSkills: [],
     outdatedSkills: [],
   }));
+  const installProjectManagement = vi.fn(async () => ({
+    copiedSkills: ['oat-pjm-add-backlog-item'],
+    updatedSkills: [],
+    skippedSkills: [],
+    outdatedSkills: [],
+    copiedTemplates: ['backlog-item.md'],
+    updatedTemplates: [],
+    skippedTemplates: [],
+  }));
   const installResearch = vi.fn(async () => ({
     copiedSkills: ['analyze'],
     updatedSkills: [],
@@ -132,6 +141,7 @@ function createHarness(options: HarnessOptions = {}) {
     installIdeas,
     installWorkflows,
     installUtility,
+    installProjectManagement,
     installResearch,
     copyDirWithStatus,
     addLocalPaths,
@@ -151,6 +161,7 @@ function createHarness(options: HarnessOptions = {}) {
     installIdeas,
     installWorkflows,
     installUtility,
+    installProjectManagement,
     installResearch,
     copyDirWithStatus,
     addLocalPaths,
@@ -195,11 +206,12 @@ describe('createInitToolsCommand', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('registers core, ideas, workflows, utility, and research subcommands', () => {
+  it('registers core, ideas, project-management, workflows, utility, and research subcommands', () => {
     const { command } = createHarness();
     const subcommands = command.commands.map((subcommand) => subcommand.name());
     expect(subcommands).toContain('core');
     expect(subcommands).toContain('ideas');
+    expect(subcommands).toContain('project-management');
     expect(subcommands).toContain('workflows');
     expect(subcommands).toContain('utility');
     expect(subcommands).toContain('research');
@@ -222,7 +234,14 @@ describe('createInitToolsCommand', () => {
     expect(
       choices.some((choice) => choice.label.includes('[project|user]')),
     ).toBe(true);
-    expect(choices.every((choice) => choice.checked === true)).toBe(true);
+    expect(
+      choices.find((choice) => choice.value === 'project-management')?.checked,
+    ).toBe(false);
+    expect(
+      choices
+        .filter((choice) => choice.value !== 'project-management')
+        .every((choice) => choice.checked === true),
+    ).toBe(true);
   });
 
   it('non-interactive installs everything to project scope (core always user)', async () => {
@@ -232,6 +251,7 @@ describe('createInitToolsCommand', () => {
       installIdeas,
       installWorkflows,
       installUtility,
+      installProjectManagement,
       installResearch,
     } = createHarness({ interactive: false });
 
@@ -248,6 +268,9 @@ describe('createInitToolsCommand', () => {
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
     expect(installUtility).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installProjectManagement).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
     expect(installResearch).toHaveBeenCalledWith(

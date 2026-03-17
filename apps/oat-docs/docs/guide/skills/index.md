@@ -20,6 +20,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Import an existing plan: `oat-project-import-plan`
 - Retroactively capture existing work: `oat-project-capture`
 - Run or receive reviews: `oat-project-review-provide`, `oat-project-review-receive`, or the non-project review variants
+- Manage the repo backlog and reference docs: `oat-pjm-add-backlog-item`, `oat-pjm-update-repo-reference`, `oat-pjm-review-backlog`
 - Work on docs surfaces: `oat-docs-analyze`, `oat-docs-apply`, and `oat-project-document`
 - Research a topic in depth: `deep-research`
 - Analyze an artifact, codebase, or document: `analyze`
@@ -76,16 +77,17 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `oat-agent-instructions-analyze`
     - `oat-agent-instructions-apply`
 
-=== "Review and maintenance"
+=== "Review, backlog, and maintenance"
 
     - `oat-review-provide`
     - `oat-review-receive`
     - `oat-review-receive-remote`
     - `oat-repo-knowledge-index`
     - `oat-repo-maintainability-review`
-    - `review-backlog`
+    - `oat-pjm-add-backlog-item`
+    - `oat-pjm-update-repo-reference`
+    - `oat-pjm-review-backlog`
     - `docs-completed-projects-gap-review`
-    - `update-repo-reference`
 
 === "Research"
 
@@ -108,3 +110,5 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 ## Discovery Source
 
 `AGENTS.md` is the session-facing registry. It should stay aligned with skill frontmatter and the canonical skill directories under `.agents/skills/`.
+
+Legacy compatibility note: `review-backlog` and `update-repo-reference` may still exist in some environments, but prefer the `oat-pjm-*` family for the current file-backed backlog/reference workflow.

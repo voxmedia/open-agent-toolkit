@@ -1,6 +1,12 @@
 import type { ConcreteScope } from '@shared/types';
 
-export type PackName = 'core' | 'ideas' | 'workflows' | 'utility' | 'research';
+export type PackName =
+  | 'core'
+  | 'ideas'
+  | 'workflows'
+  | 'utility'
+  | 'project-management'
+  | 'research';
 
 export interface ToolInfo {
   name: string;

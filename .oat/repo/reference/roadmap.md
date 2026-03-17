@@ -1,3 +1,5 @@
+<!-- Structure guidance: .oat/templates/roadmap.md -->
+
 # OAT Roadmap (Dogfood-First)
 
 This file is the canonical OAT roadmap for this repo. It combines:
@@ -11,6 +13,50 @@ For a birdseye snapshot of what exists _right now_, see `.oat/repo/reference/cur
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
 As of `2026-03-15` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor/instructions/tools`, config-aware sync, Codex TOML sync, worktree bootstrap, `oat config`, `oat project open/pause`). Project lifecycle state is config-backed (`.oat/config.json` + `.oat/config.local.json`) with final review/PR loops dogfooded through completion. Review receive skill family (local + remote) is implemented for both project and ad-hoc contexts. `oat tools` command group provides full skill lifecycle management (list, outdated, info, install, update, remove). `oat-project-reconcile` bridges manual/human implementation back into OAT tracking. Research skill suite (`deep-research`, `analyze`, `compare`, `skeptic`, `synthesize`) shipped as installable tool pack. `oat-project-capture` enables retroactive project creation from untracked work. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
+
+## Now (Active / Committed)
+
+### Phase 7: Quick mode + template rendering helper
+
+- Status: In Progress
+- Focus: quick/import lanes, promotion paths, and plan-writing contracts are in place; the remaining work is the template rendering helper and follow-on UX integration.
+- Related backlog: `bl-b3f7` (idea promotion and auto-discovery flow to `oat-project-new`)
+
+### Phase 8: Provider interop CLI + sync manifest
+
+- Status: In Progress
+- Focus: core provider CLI, config-aware sync, Codex TOML sync, and instruction integrity tooling are shipped; remaining work is lifecycle polish, deeper diagnostics, and provider-specific ergonomics.
+- Related backlog: `bl-cbdd` (optional Codex prompt-wrapper generation for synced OAT skills)
+
+## Next (Planned)
+
+### Phase 4 polish: Active project lifecycle state + Repo State Dashboard
+
+- Status: Completed (polish remaining)
+- Focus: tighten the repo-dashboard contract, clarify regeneration ownership, and keep active-project state/reporting friction low.
+- Related backlog: `bl-42f9` (first-class OAT project/repo management workflow family)
+
+### Phase 5: Staleness + knowledge drift upgrades
+
+- Status: Planned
+- Focus: improve freshness detection, optional strict blocking modes, and clearer fallback behavior when repo state is stale or incomplete.
+
+### Phase 6: Parallel execution + reconcile
+
+- Status: Deferred (groundwork expanded)
+- Focus: turn the current worktree/subagent groundwork into first-class parallel fan-out execution and reconciliation flows.
+
+## Later (Directional Intent)
+
+### Phase 9: Multi-project switching + branch awareness
+
+- Status: Later
+- Focus: branch-aware multi-project coordination and smoother automation across `.oat/projects/shared`, `.oat/projects/local`, and archived history.
+
+### Phase 10: Memory system + provider enhancements
+
+- Status: Later
+- Focus: longer-term memory, durability, and provider enhancement work beyond the current dogfood workflow baseline.
 
 ## Status Summary
 

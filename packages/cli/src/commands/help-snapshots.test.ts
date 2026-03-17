@@ -40,6 +40,7 @@ describe('help output snapshots', () => {
         -h, --help       display help for command
 
       Commands:
+        backlog          Manage file-backed backlog items and indexes
         init [options]   Initialize canonical directories, manifest, and tool packs
         status           Report provider sync and drift status
         sync [options]   Sync canonical content to provider views
@@ -78,7 +79,29 @@ describe('help output snapshots', () => {
 
       Commands:
         tools       Install OAT tool packs (core, ideas, workflows, utility,
-                    research)
+                    project-management, research)
+      "
+    `);
+  });
+
+  it('backlog generate-id --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'backlog',
+      'generate-id',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat backlog generate-id [options] <filename>
+
+      Generate a backlog item identifier from a filename seed
+
+      Arguments:
+        filename                  Filename or slug seed for the backlog item
+
+      Options:
+        --created-at <timestamp>  Creation timestamp seed for reproducible ID
+                                  generation
+        -h, --help                display help for command
       "
     `);
   });
@@ -575,7 +598,7 @@ describe('help output snapshots', () => {
         update [options] [name]  Update installed tools to bundled versions
         remove [options] [name]  Remove installed tools
         install [options]        Install OAT tool packs (core, ideas, workflows,
-                                 utility, research)
+                                 utility, project-management, research)
         help [command]           display help for command
       "
     `);
@@ -621,20 +644,23 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat tools install [options] [command]
 
-      Install OAT tool packs (core, ideas, workflows, utility, research)
+      Install OAT tool packs (core, ideas, workflows, utility, project-management,
+      research)
 
       Options:
-        --no-sync            Skip auto-sync after install
-        -h, --help           display help for command
+        --no-sync                     Skip auto-sync after install
+        -h, --help                    display help for command
 
       Commands:
-        core [options]       Install OAT core skills (diagnostics, docs)
-        ideas [options]      Install OAT ideas skills, templates, and idea workflow
-                             files
-        workflows [options]  Install OAT workflows skills, agents, templates, and
-                             scripts
-        utility [options]    Install OAT utility skills
-        research [options]   Install OAT research skills
+        core [options]                Install OAT core skills (diagnostics, docs)
+        ideas [options]               Install OAT ideas skills, templates, and idea
+                                      workflow files
+        project-management [options]  Install OAT project-management skills and
+                                      templates
+        workflows [options]           Install OAT workflows skills, agents,
+                                      templates, and scripts
+        utility [options]             Install OAT utility skills
+        research [options]            Install OAT research skills
       "
     `);
   });
@@ -655,7 +681,7 @@ describe('help output snapshots', () => {
 
       Options:
         --pack <pack>  Remove all tools in a pack
-                       (core|ideas|workflows|utility|research)
+                       (core|ideas|workflows|utility|project-management|research)
         --all          Remove all installed tools
         --dry-run      Preview removals without applying
         --no-sync      Skip auto-sync after removal
@@ -680,7 +706,7 @@ describe('help output snapshots', () => {
 
       Options:
         --pack <pack>  Update all tools in a pack
-                       (core|ideas|workflows|utility|research)
+                       (core|ideas|workflows|utility|project-management|research)
         --all          Update all outdated tools
         --dry-run      Preview updates without applying
         --no-sync      Skip auto-sync after update

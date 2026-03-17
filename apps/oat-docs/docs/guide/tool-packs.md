@@ -7,6 +7,15 @@ description: 'Tool-pack lifecycle commands (oat tools) for installing, updating,
 
 This page covers CLI commands that manage bundled OAT tool packs and installed OAT skill/agent assets in canonical directories.
 
+## Bundled packs at a glance
+
+- `core` - foundational diagnostics and docs access (`oat-doctor`, `oat-docs`)
+- `workflows` - project lifecycle skills, reviewer agents, and core project templates
+- `ideas` - lightweight ideation and promotion flows
+- `utility` - standalone docs, review, and repo-maintenance helpers
+- `project-management` - file-backed backlog/reference skills plus backlog and roadmap templates
+- `research` - research, analysis, comparison, and synthesis skills
+
 ## `oat tools` command group
 
 The `oat tools` command group provides a unified interface for managing installed tools (skills and agents) across scopes.
@@ -20,7 +29,7 @@ Purpose:
 Key behavior:
 
 - Scans installed skills and agents across project and user scopes
-- Displays version, pack (`core`, `ideas`, `workflows`, `utility`, `research`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
+- Displays version, pack (`core`, `ideas`, `workflows`, `utility`, `project-management`, `research`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
 - Supports `--scope` filtering and `--json` output
 
 ### `oat tools outdated`
@@ -51,12 +60,12 @@ Key behavior:
 
 Purpose:
 
-- Install bundled OAT tool packs (`core`, `ideas`, `workflows`, `utility`, `research`)
+- Install bundled OAT tool packs (`core`, `ideas`, `workflows`, `utility`, `project-management`, `research`)
 
 Key behavior:
 
 - Same pack selection and install flow as `oat init tools`
-- Pack-oriented install subcommands: `core`, `ideas`, `workflows`, `utility`, `research`
+- Pack-oriented install subcommands: `core`, `ideas`, `workflows`, `utility`, `project-management`, `research`
 - Tracks installed vs bundled skill versions and reports outdated skills
 - Interactive runs can prompt to update selected outdated skills
 - Auto-sync runs automatically after successful install (provider views are updated)

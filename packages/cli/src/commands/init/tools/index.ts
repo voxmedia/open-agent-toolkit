@@ -42,6 +42,12 @@ import {
   type InstallIdeasOptions,
   type InstallIdeasResult,
 } from './ideas/install-ideas';
+import { createInitToolsProjectManagementCommand } from './project-management';
+import {
+  installProjectManagement as defaultInstallProjectManagement,
+  type InstallProjectManagementOptions,
+  type InstallProjectManagementResult,
+} from './project-management/install-project-management';
 import { createInitToolsResearchCommand } from './research';
 import {
   installResearch as defaultInstallResearch,
@@ -64,7 +70,13 @@ import {
 } from './workflows/install-workflows';
 
 type InstallScope = 'project' | 'user';
-export type ToolPack = 'core' | 'ideas' | 'workflows' | 'utility' | 'research';
+export type ToolPack =
+  | 'core'
+  | 'ideas'
+  | 'workflows'
+  | 'utility'
+  | 'project-management'
+  | 'research';
 
 interface InitToolsDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -89,6 +101,9 @@ interface InitToolsDependencies {
   installUtility: (
     options: InstallUtilityOptions,
   ) => Promise<InstallUtilityResult>;
+  installProjectManagement: (
+    options: InstallProjectManagementOptions,
+  ) => Promise<InstallProjectManagementResult>;
   installResearch: (
     options: InstallResearchOptions,
   ) => Promise<InstallResearchResult>;
@@ -129,6 +144,11 @@ function formatVersionForDisplay(version: string | null): string {
 const PACK_CHOICES: MultiSelectChoice<ToolPack>[] = [
   { label: 'Core [user]', value: 'core', checked: true },
   { label: 'Ideas [project|user]', value: 'ideas', checked: true },
+  {
+    label: 'Project Management [project]',
+    value: 'project-management',
+    checked: false,
+  },
   { label: 'Workflows [project]', value: 'workflows', checked: true },
   { label: 'Utility [project|user]', value: 'utility', checked: true },
   { label: 'Research [project|user]', value: 'research', checked: true },
@@ -145,6 +165,7 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   installIdeas: defaultInstallIdeas,
   installWorkflows: defaultInstallWorkflows,
   installUtility: defaultInstallUtility,
+  installProjectManagement: defaultInstallProjectManagement,
   installResearch: defaultInstallResearch,
   copyDirWithStatus,
   addLocalPaths,
@@ -293,6 +314,8 @@ const PACK_DESCRIPTIONS: Record<ToolPack, string> = {
   workflows:
     'Project lifecycle (create, discover, plan, implement, review, complete)',
   ideas: 'Idea capture and refinement',
+  'project-management':
+    'Local backlog, roadmap, and reference doc management (oat-pjm-* skills)',
   utility: 'Standalone utilities (reviews, docs analysis, agent instructions)',
   research: 'Research, analysis, verification, and synthesis',
 };
@@ -356,6 +379,9 @@ export async function runInitTools(
         )) ?? [])
       : ['core', 'ideas', 'workflows', 'utility', 'research'];
 
+    if (!context.interactive) {
+      selectedPacks.push('project-management');
+    }
     if (selectedPacks.length === 0) {
       if (!context.json) {
         context.logger.info('No tool packs selected.');
@@ -480,6 +506,18 @@ export async function runInitTools(
       }
     }
 
+    if (selectedPacks.includes('project-management')) {
+      const targetRoot = projectRoot;
+      const projectManagementResult =
+        await dependencies.installProjectManagement({
+          assetsRoot,
+          targetRoot,
+        });
+      for (const skill of projectManagementResult.outdatedSkills) {
+        outdatedSkills.push({ ...skill, targetRoot });
+      }
+    }
+
     if (selectedPacks.includes('research')) {
       const targetRoot = packRoot('research');
       const researchResult = await dependencies.installResearch({
@@ -583,10 +621,11 @@ export function createInitToolsCommand(
 
   return new Command('tools')
     .description(
-      'Install OAT tool packs (core, ideas, workflows, utility, research)',
+      'Install OAT tool packs (core, ideas, workflows, utility, project-management, research)',
     )
     .addCommand(createInitToolsCoreCommand())
     .addCommand(createInitToolsIdeasCommand())
+    .addCommand(createInitToolsProjectManagementCommand())
     .addCommand(createInitToolsWorkflowsCommand())
     .addCommand(createInitToolsUtilityCommand())
     .addCommand(createInitToolsResearchCommand())

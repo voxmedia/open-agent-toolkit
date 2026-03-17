@@ -2,17 +2,18 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 
 ## Canonical References
 
-- Workflow lifecycle: `apps/oat-docs/docs/workflow/lifecycle.md`
-- Workflow reviews: `apps/oat-docs/docs/workflow/reviews.md`
-- Workflow PR flow: `apps/oat-docs/docs/workflow/pr-flow.md`
+- Workflow lifecycle: `apps/oat-docs/docs/guide/workflow/lifecycle.md`
+- Workflow reviews: `apps/oat-docs/docs/guide/workflow/reviews.md`
+- Workflow PR flow: `apps/oat-docs/docs/guide/workflow/pr-flow.md`
 - Roadmap: `.oat/repo/reference/roadmap.md`
-- Deferred phases: `.oat/repo/reference/deferred-phases.md`
-- Backlog: `.oat/repo/reference/backlog.md`
-- Backlog completed archive: `.oat/repo/reference/backlog-completed.md`
+- Backlog index: `.oat/repo/reference/backlog/index.md`
+- Backlog completed summary: `.oat/repo/reference/backlog/completed.md`
+- Backlog item files: `.oat/repo/reference/backlog/items/`
+- Backlog archived item files: `.oat/repo/reference/backlog/archived/`
 - Decision record: `.oat/repo/reference/decision-record.md`
 - Repo reviews (active tracked): `.oat/repo/reviews/`
 - Repo review archive (local-only history): `.oat/repo/reviews/archived/`
@@ -79,6 +80,13 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - `oat-docs-analyze` (evaluate documentation structure, navigation, and coverage against the OAT docs app contract; severity-rated analysis artifacts)
 - `oat-docs-apply` (apply approved docs analysis findings: branch, update docs, optionally open PR)
 
+### Project Management (Utility)
+
+- `oat-pjm-add-backlog-item` (create a file-backed backlog item from the backlog template, regenerate the managed index, and prompt for curated-overview updates)
+- `oat-pjm-update-repo-reference` (sync repo backlog, roadmap, and current-state/reference documents with the file-backed backlog structure)
+- `oat-pjm-review-backlog` (analyze the file-backed backlog, completed summary, and roadmap to recommend priorities and next work)
+- CLI tool pack: `project-management` (installs the `oat-pjm-*` skills and the backlog/roadmap templates)
+
 ### Repo Maintainability (Utility)
 
 - `oat-repo-maintainability-review` (structured maintainability analysis for a repository or directory target with actionable findings)
@@ -101,10 +109,6 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - `oat_execution_mode` field in `state.md` template; orchestration status fields in `implementation.md` template
 - HiLL checkpoint governance integrated into orchestration policy
 
-### Backlog Review (Utility)
-
-- `review-backlog` (analyze a backlog document to produce value/effort ratings, dependency mapping, parallel work lanes, and recommended execution sequence; optionally cross-references a roadmap)
-
 ### Skill Authoring (Meta)
 
 - `create-agnostic-skill` (scaffold new provider-agnostic skills using the Agent Skills open standard; bundled in the utility pack)
@@ -124,7 +128,8 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat providers list`, `oat providers inspect`, `oat providers set`
   - `oat cleanup project`, `oat cleanup artifacts`
   - `oat instructions validate`, `oat instructions sync`
-  - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install` (packs: core, ideas, workflows, utility, research)
+  - `oat backlog generate-id`, `oat backlog regenerate-index`
+  - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install` (packs: core, ideas, workflows, utility, project-management, research)
 - Provider config model:
   - Project provider enablement lives in `.oat/sync/config.json` (`providers.<name>.enabled`).
   - `oat init --scope project` prompts for provider selection in interactive mode.
@@ -156,6 +161,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 
 - Templates: `.oat/templates/`
   - `state.md`, `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`
+  - `backlog-item.md`, `roadmap.md`
   - Ideas templates: `ideas/idea-discovery.md`, `ideas/idea-summary.md`, `ideas/ideas-backlog.md`, `ideas/ideas-scratchpad.md`
 - Thin index generation: `oat index init` CLI command
 - Knowledge project index output: `.oat/repo/knowledge/project-index.md`
@@ -219,6 +225,18 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 6. PR description generation:
    - `oat-project-pr-progress pNN` (optional progress PR)
    - `oat-project-pr-final` (final PR)
+
+Backlog/reference workflow quickstart:
+
+1. Create or update backlog items:
+   - `oat-pjm-add-backlog-item`
+2. Regenerate managed backlog metadata directly when needed:
+   - `oat backlog generate-id <filename>`
+   - `oat backlog regenerate-index`
+3. Refresh repo references:
+   - `oat-pjm-update-repo-reference`
+4. Review backlog priorities:
+   - `oat-pjm-review-backlog`
 
 Non-project review path:
 

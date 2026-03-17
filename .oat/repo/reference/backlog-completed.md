@@ -1,5 +1,7 @@
 # OAT Backlog Completed Archive (Internal / Dogfood)
 
+> Migrated: This file is superseded by `.oat/repo/reference/backlog/completed.md` for summary history and `.oat/repo/reference/backlog/archived/` for file-backed archived items.
+
 Historical record of completed backlog items moved out of the active backlog for easier triage.
 
 ## How to Use

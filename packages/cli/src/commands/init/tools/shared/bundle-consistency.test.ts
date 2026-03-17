@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CORE_SKILLS } from '../core/install-core';
 import { IDEA_SKILLS } from '../ideas/install-ideas';
+import { PROJECT_MANAGEMENT_SKILLS } from '../project-management/install-project-management';
 import { RESEARCH_SKILLS } from '../research/install-research';
 import { UTILITY_SKILLS } from '../utility/install-utility';
 import { WORKFLOW_SKILLS } from '../workflows/install-workflows';
@@ -102,6 +103,16 @@ describe('bundle-assets.sh consistency', () => {
     ).toEqual([]);
   });
 
+  it('bundles every project-management skill', () => {
+    const missing = PROJECT_MANAGEMENT_SKILLS.filter(
+      (skill) => !bundleSkills.includes(skill),
+    );
+    expect(
+      missing,
+      `Missing from bundle-assets.sh SKILLS array: ${missing.join(', ')}`,
+    ).toEqual([]);
+  });
+
   it('bundles every research skill', () => {
     const missing = RESEARCH_SKILLS.filter(
       (skill) => !bundleSkills.includes(skill),
@@ -118,6 +129,7 @@ describe('bundle-assets.sh consistency', () => {
       ...WORKFLOW_SKILLS,
       ...IDEA_SKILLS,
       ...UTILITY_SKILLS,
+      ...PROJECT_MANAGEMENT_SKILLS,
       ...RESEARCH_SKILLS,
     ]);
     const orphans = bundleSkills.filter((skill) => !allPackSkills.has(skill));

@@ -7,6 +7,7 @@ import {
   RESEARCH_AGENTS,
   RESEARCH_SKILLS,
 } from '@commands/init/tools/research/install-research';
+import { PROJECT_MANAGEMENT_SKILLS } from '@commands/init/tools/shared/skill-manifest';
 import { compareVersions } from '@commands/init/tools/shared/version';
 import { UTILITY_SKILLS } from '@commands/init/tools/utility/install-utility';
 import {
@@ -60,6 +61,8 @@ function resolveSkillPack(name: string): PackName | 'custom' {
   if ((IDEA_SKILLS as readonly string[]).includes(name)) return 'ideas';
   if ((WORKFLOW_SKILLS as readonly string[]).includes(name)) return 'workflows';
   if ((UTILITY_SKILLS as readonly string[]).includes(name)) return 'utility';
+  if ((PROJECT_MANAGEMENT_SKILLS as readonly string[]).includes(name))
+    return 'project-management';
   if ((RESEARCH_SKILLS as readonly string[]).includes(name)) return 'research';
   return 'custom';
 }

@@ -1,5 +1,6 @@
 import type { Command } from 'commander';
 
+import { createBacklogCommand } from './backlog';
 import { createCleanupCommand } from './cleanup';
 import { createConfigCommand } from './config';
 import { createDocsCommand } from './docs';
@@ -19,6 +20,7 @@ import { createSyncCommand } from './sync';
 import { createToolsCommand } from './tools';
 
 export function registerCommands(program: Command): void {
+  program.addCommand(createBacklogCommand());
   program.addCommand(createInitCommand());
   program.addCommand(createStatusCommand());
   program.addCommand(createSyncCommand());

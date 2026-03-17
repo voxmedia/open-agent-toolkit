@@ -58,6 +58,7 @@ const VALID_PACKS = [
   'ideas',
   'workflows',
   'utility',
+  'project-management',
   'research',
 ] as const;
 
@@ -70,7 +71,7 @@ export function createToolsUpdateCommand(
     .argument('[name]', 'Tool name to update')
     .option(
       '--pack <pack>',
-      'Update all tools in a pack (core|ideas|workflows|utility|research)',
+      'Update all tools in a pack (core|ideas|workflows|utility|project-management|research)',
     )
     .option('--all', 'Update all outdated tools')
     .option('--dry-run', 'Preview updates without applying')

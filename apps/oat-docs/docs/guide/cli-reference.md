@@ -24,6 +24,7 @@ The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oa
 | ------------------------------------------------------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------- |
 | `oat init`                                             | Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.       | [Getting Started](getting-started.md)               |
 | `oat tools ...`                                        | Install, inspect, update, and remove bundled OAT tool packs and assets.                   | [Tool Packs](tool-packs.md)                         |
+| `oat backlog ...`                                      | Generate backlog IDs and rebuild the managed file-backed backlog index.                   | See sections below                                  |
 | `oat docs ...`                                         | Docs app bootstrap, migration, index generation, nav sync, and docs workflow entrypoints. | [Documentation Commands](documentation/commands.md) |
 | `oat status` / `oat sync` / `oat providers ...`        | Provider sync, drift inspection, provider configuration, and adoption behavior.           | [Provider Sync](provider-sync/index.md)             |
 | `oat project ...` / `oat cleanup ...`                  | Project scaffolding, execution mode, and project/artifact cleanup commands.               | [Workflow & Projects](workflow/index.md)            |
@@ -54,13 +55,23 @@ Use the `oat tools` group to manage bundled OAT assets:
 - `oat tools list` - list installed tools, versions, pack membership, and update state
 - `oat tools info <name>` - inspect one installed skill or agent
 - `oat tools outdated` - show only assets with available updates
-- `oat tools install` - install bundled packs such as `core`, `ideas`, `workflows`, `utility`, or `research`
+- `oat tools install` - install bundled packs such as `core`, `ideas`, `workflows`, `utility`, `project-management`, or `research`
 - `oat tools update` - update a named tool, a whole pack, or everything
 - `oat tools remove` - remove installed assets
 
 Mutation commands auto-run provider sync unless you pass `--no-sync`.
 
 See [Tool Packs](tool-packs.md) for the pack lifecycle and compatibility notes.
+
+### `oat backlog ...`
+
+Use the `oat backlog` group when you want direct CLI support for the file-backed backlog under `.oat/repo/reference/backlog/`.
+
+- `oat backlog generate-id <filename>` - generate a unique backlog ID from a filename seed
+- `oat backlog generate-id <filename> --created-at <timestamp>` - generate a reproducible ID for a known creation timestamp
+- `oat backlog regenerate-index` - rebuild the managed backlog index table from item frontmatter
+
+This command group is primarily used by the `oat-pjm-*` project-management skills, but it is also available directly when you need to inspect or repair backlog metadata by hand.
 
 ### `oat local ...`
 

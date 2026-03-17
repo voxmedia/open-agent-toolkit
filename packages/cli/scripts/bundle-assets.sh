@@ -21,6 +21,9 @@ SKILLS=(
   oat-idea-new
   oat-idea-scratchpad
   oat-idea-summarize
+  oat-pjm-add-backlog-item
+  oat-pjm-review-backlog
+  oat-pjm-update-repo-reference
   oat-project-capture
   oat-project-clear-active
   oat-project-complete
@@ -65,7 +68,7 @@ for agent in oat-codebase-mapper.md oat-reviewer.md skeptical-evaluator.md; do
   cp "${REPO_ROOT}/.agents/agents/${agent}" "${ASSETS}/agents/"
 done
 
-for template in state.md discovery.md spec.md design.md plan.md implementation.md; do
+for template in backlog-item.md roadmap.md state.md discovery.md spec.md design.md plan.md implementation.md; do
   cp "${REPO_ROOT}/.oat/templates/${template}" "${ASSETS}/templates/"
 done
 cp -R "${REPO_ROOT}/.oat/templates/ideas" "${ASSETS}/templates/"

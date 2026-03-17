@@ -1,5 +1,7 @@
 # OAT Backlog (Internal / Dogfood)
 
+> Migrated: This file is superseded by `.oat/repo/reference/backlog/`. See `.oat/repo/reference/backlog/index.md` for the current backlog.
+
 Capture tasks and ideas that come up while dogfooding but aren’t ready to implement yet.
 
 ## How to Use

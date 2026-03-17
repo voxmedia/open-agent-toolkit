@@ -83,6 +83,21 @@ export const UTILITY_SKILLS = [
   'oat-review-receive-remote',
 ] as const;
 
+// ── Project management pack ───────────────────────────────────────
+
+export const PROJECT_MANAGEMENT_SKILLS = [
+  'oat-pjm-add-backlog-item',
+  'oat-pjm-update-repo-reference',
+  'oat-pjm-review-backlog',
+] as const;
+
+export const PROJECT_MANAGEMENT_TEMPLATES = [
+  'backlog-item.md',
+  'roadmap.md',
+] as const;
+
+export const PROJECT_MANAGEMENT_SCRIPTS = [] as const;
+
 // ── Research pack ─────────────────────────────────────────────────
 
 export const RESEARCH_SKILLS = [

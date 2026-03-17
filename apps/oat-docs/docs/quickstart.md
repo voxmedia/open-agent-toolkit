@@ -39,12 +39,15 @@ Notes:
 ### Install or update OAT tool packs (optional)
 
 ```bash
-pnpm run cli -- init tools
+pnpm run cli -- tools install
+# or install just the project-management pack
+pnpm run cli -- tools install project-management
 ```
 
 Notes:
 
-- Installs OAT tool packs (`ideas`, `workflows`, `utility`) into canonical directories.
+- Installs OAT tool packs (`ideas`, `workflows`, `utility`, `project-management`, `research`) into canonical directories.
+- `oat init tools` remains available as a backward-compatible install path.
 - If installed OAT skills are older than bundled versions, interactive runs prompt for selective updates.
 - Non-interactive runs report outdated skills without updating them.
 
@@ -83,6 +86,10 @@ pnpm run cli -- project new my-project --mode quick
 pnpm run cli -- docs init --app-name my-docs
 pnpm run cli -- docs nav sync --target-dir apps/my-docs
 
+# Manage the file-backed backlog directly
+pnpm run cli -- backlog generate-id add-webhook-support --created-at 2026-03-15T14:30:00Z
+pnpm run cli -- backlog regenerate-index
+
 # Internal oat-* skill validation (primary path)
 pnpm oat:validate-skills
 ```
@@ -98,7 +105,7 @@ When `@oat/cli` is consumed as a built package or linked binary, use `oat` direc
 ```bash
 oat --help
 oat init --scope project
-oat init tools
+oat tools install
 oat status --scope all
 oat sync --scope all
 oat instructions validate
@@ -106,6 +113,7 @@ oat instructions sync
 oat remove skills --pack utility
 oat doctor --scope all
 oat project new my-project --mode spec-driven
+oat backlog regenerate-index
 ```
 
 ## Path B: Provider-agnostic tooling (skills + utilities)

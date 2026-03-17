@@ -8,6 +8,8 @@ user-invocable: true
 
 # Update OAT Repo Reference
 
+> Deprecated: Use `oat-pjm-update-repo-reference` instead.
+
 Keep this repo's OAT reference documentation consistent as implementation evolves.
 
 ## Purpose

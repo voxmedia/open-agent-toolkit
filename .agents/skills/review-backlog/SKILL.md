@@ -10,6 +10,8 @@ user-invocable: true
 
 # Review Backlog
 
+> Deprecated: Use `oat-pjm-review-backlog` instead.
+
 Analyze a backlog document to produce a structured review with value/effort ratings, dependency graph, parallel work lanes, and a recommended execution sequence. Optionally cross-references a roadmap to identify alignment gaps.
 
 ## When to Use
