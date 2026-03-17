@@ -20,7 +20,8 @@ Review the full recommendation set first, then choose a review mode:
 - **apply interactively** — review recommendation by recommendation
 - **discuss** — pause to talk through the plan before approving
 
-Recommendations should already carry evidence, confidence, and disclosure guidance from the analysis artifact.
+Recommendations should already carry evidence, confidence, disclosure guidance, and any structured content guidance
+from the analysis artifact.
 If a recommendation lacks that detail, it should be blocked pending a fresh analysis rather than guessed.
 
 ## Review Mode
@@ -33,18 +34,23 @@ If a recommendation lacks that detail, it should be blocked pending a fresh anal
 
 ### {N}. {Action}: `{target-file-path}`
 
-| Field        | Value                                                                                                             |
-| ------------ | ----------------------------------------------------------------------------------------------------------------- |
-| Action       | {create / update}                                                                                                 |
-| Provider     | {agents_md / claude / cursor / copilot}                                                                           |
-| Format       | {AGENTS.md / Claude rule / Cursor rule / Copilot instruction / Copilot shim}                                      |
-| Target       | `{target-file-path}`                                                                                              |
-| Rationale    | {Why — references analysis finding #N or coverage gap #N}                                                         |
-| Evidence     | {exact file refs / config / docs that justify the recommendation}                                                 |
-| Confidence   | {high / medium / low}                                                                                             |
-| Disclosure   | {inline / link_only / omit / ask_user}                                                                            |
-| Link Targets | {canonical docs/config/examples to reference instead of duplicating inline; required for `link_only`, else `N/A`} |
-| Template     | `{template-file-path}`                                                                                            |
+| Field                           | Value                                                                                                             |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Action                          | {create / update}                                                                                                 |
+| Provider                        | {agents_md / claude / cursor / copilot}                                                                           |
+| Format                          | {AGENTS.md / Claude rule / Cursor rule / Copilot instruction / Copilot shim}                                      |
+| Target                          | `{target-file-path}`                                                                                              |
+| Rationale                       | {Why — references analysis finding #N or coverage gap #N}                                                         |
+| Evidence                        | {exact file refs / config / docs that justify the recommendation}                                                 |
+| Confidence                      | {high / medium / low}                                                                                             |
+| Disclosure                      | {inline / link_only / omit / ask_user}                                                                            |
+| Link Targets                    | {canonical docs/config/examples to reference instead of duplicating inline; required for `link_only`, else `N/A`} |
+| Content Guidance                | {high-level generation guidance}                                                                                  |
+| Must Include                    | {claims, commands, references, examples, or corrections that must survive generation}                             |
+| Must Not Include                | {unsupported or stale content that must stay out}                                                                 |
+| Preferred Default For New Files | {pattern A / pattern B / N/A}                                                                                     |
+| Claim Corrections               | {`old claim -> verified replacement` or `none`}                                                                   |
+| Template                        | `{template-file-path}`                                                                                            |
 
 **Context:** {1-2 sentences describing what this file will contain and why it's needed.}
 

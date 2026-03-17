@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-apply
-version: 1.3.2
+version: 1.4.0
 description: Run when you have an agent instructions analysis artifact and want to generate or update instruction files. Creates a branch, generates files from templates, and optionally opens a PR.
 disable-model-invocation: true
 user-invocable: true
@@ -96,6 +96,11 @@ ls -t .oat/repo/analysis/agent-instructions-*.md 2>/dev/null | head -1
 
 Validate that the artifact includes evidence, confidence, and progressive disclosure decisions for each recommendation.
 Also validate that every `link_only` recommendation includes at least one concrete link target to a canonical doc, config, or example.
+If a recommendation updates or contradicts an existing rule, validate that it also includes `Content Guidance`,
+`Must Include`, `Must Not Include`, `Preferred Default for New Files`, and `Claim Corrections`.
+If the artifact records a High/Medium glob-scoped opportunity with a recommended action to create, update, or split a
+rule, validate that a matching explicit recommendation exists. Apply should not infer missing rule work from the
+opportunities table.
 If the artifact is missing that detail, treat it as incomplete:
 
 ```
@@ -125,9 +130,12 @@ The provider list determines which file formats to generate. If running interact
 
 ### Step 2: Build Recommendation Plan
 
-For each finding, provider baseline gap, and coverage gap in the analysis artifact, determine the action.
+For each recommendation in the analysis artifact, determine the action.
+Recommendations may originate from findings, provider baseline gaps, directory coverage gaps, or promoted glob-rule opportunities.
 The artifact should already specify the rationale, evidence, confidence, and disclosure decision.
 Do not rediscover conventions from scratch during this step.
+Carry forward the artifact's structured handoff fields (`Content Guidance`, `Must Include`, `Must Not Include`,
+`Preferred Default for New Files`, `Claim Corrections`) into the plan wherever they are present.
 
 **For provider baseline gaps (always-on provider files):**
 
@@ -154,6 +162,8 @@ Do not rediscover conventions from scratch during this step.
 - Preserve existing manual customizations — only modify the problematic section
 - If the artifact marks a recommendation `omit`, do not include it in the apply plan
 - If the artifact marks a recommendation `ask_user`, include it with the evidence and require explicit user approval
+- If the change corrects an existing rule claim, treat the artifact's `Claim Corrections` and `Must Not Include`
+  fields as mandatory constraints rather than optional hints
 - If evidence is missing or stale, stop and ask for a fresh analysis instead of guessing
 
 **For competing sub-patterns in glob-scoped rules:**
@@ -258,11 +268,19 @@ For each approved recommendation, in the order from Step 2:
    - `link_only` → add a concise pointer to the canonical doc/config/example
    - `omit` → do not encode the item in the instruction file
    - `ask_user` → require explicit user confirmation before writing
-5. For glob-scoped rules:
+5. Follow the recommendation's structured handoff fields during generation:
+   - `Content Guidance` shapes emphasis and phrasing
+   - `Must Include` is mandatory content
+   - `Must Not Include` is prohibited content
+   - `Preferred Default for New Files` determines which sub-pattern new files should follow
+   - `Claim Corrections` replaces stale claims in updated files
+6. For glob-scoped rules:
    - Write the canonical markdown once to `.agents/rules/{name}.md`
    - Include canonical rule frontmatter (`description`, `globs`, `activation`) instead of provider-specific wrappers
    - After writing canonical rules, run `oat sync --scope project` to generate provider-specific rule files
    - Verify the generated provider files exist for each active provider instead of maintaining them by hand
+   - Verify each generated provider file is trackable with `git check-ignore`; if any generated file is ignored,
+     stop and surface the exact paths before committing
 
 **Updating existing files:**
 
@@ -276,6 +294,8 @@ For each approved recommendation, in the order from Step 2:
 - Do not add tabs-vs-spaces, quote style, import sorting, naming, or similar formatting rules unless the artifact cites repo evidence for them.
 - Do not upgrade a repeated code pattern into a hard instruction unless the artifact already approved it.
 - If formatter/linter config exists, prefer `run formatter/lint` or a link to the config/doc over prose restatement of the same rule.
+- Do not soften specific runtime versions, infrastructure notes, commit conventions, or rule corrections into vague prose
+  when the artifact or cited evidence is explicit.
 - If a cited source no longer exists, stop that recommendation and ask for a fresh analysis or user guidance.
 
 **Required context — read these bundled skill docs before generating:**

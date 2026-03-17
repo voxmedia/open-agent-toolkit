@@ -30,7 +30,10 @@ Per-file evaluation criteria for agent instruction files. Use this checklist to 
 - [ ] Root files (AGENTS.md, CLAUDE.md): <300 lines (hard max 500)
 - [ ] Scoped/package files: 40–150 lines
 - [ ] Individual rules files: <80 lines
-- [ ] Total across all formats: <32 KiB
+- [ ] Always-on baseline load is estimated and kept comfortably below the task budget
+- [ ] Typical task load (root + one realistic scoped file + matching rules) is estimated and fits within the 32 KiB task budget
+- [ ] Worst-case task load is estimated and explicitly called out if it is likely to strain the budget
+- [ ] Aggregate repo total is reported separately for awareness, not treated as the operative task budget by itself
 - **Severity if failing:** Medium (over budget) or Low (close to limit)
 
 ### 5. Scoped Only for Real Divergence
@@ -75,6 +78,8 @@ Per-file evaluation criteria for agent instruction files. Use this checklist to 
 ### 11. Claims Are Evidence-Backed
 
 - [ ] Every non-obvious convention is backed by a concrete repo source (config, docs, existing instructions, or representative code samples)
+- [ ] Numeric claims (`N files`, split ratios, "only X uses Y") are backed by exhaustive repo-wide counts, not samples
+- [ ] Recommendations that remove or contradict an existing rule cite the verification evidence that justifies the correction
 - [ ] Formatting/style claims are omitted unless supported by repo evidence
 - [ ] If a formatter or linter enforces the rule, the file prefers commands/links over prose restatement
 - **Severity if failing:** High (actively misleading) or Medium (unsupported claim)
@@ -93,6 +98,7 @@ This criterion applies to the **overall instruction set**, not to individual fil
 - [ ] Common file-type patterns (tests, stories, styles, configs) with 5+ files have been evaluated for rule opportunities
 - [ ] Patterns with >80% consistency and correctness impact are flagged as glob-scoped rule opportunities
 - [ ] Patterns with competing sub-patterns (especially `40–60%` splits) are explicitly evaluated and flagged when agents are likely to guess wrong
+- [ ] Materially different activation targets are split into separate rule recommendations when that improves precision
 - [ ] Security-sensitive file-type patterns are explicitly evaluated for rule opportunities and severity
 - [ ] Patterns that are exceptions to project-wide rules are explicitly called out (these are highest-value)
 - [ ] Existing glob-scoped rules cover the identified patterns, or coverage gaps are recorded

@@ -20,6 +20,7 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 ### Additional Commands
 
 - {Any project-specific commands}
+- {Point to `package.json`/`composer.json`/task runner config as the canonical command source of truth when applicable}
 
 ## Architecture Overview
 
@@ -32,10 +33,12 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 
 ### Technology Stack
 
-- **Runtime:** {e.g., Node.js 22, Python 3.12}
+- **Runtime:** {e.g., Node.js 22, Python 3.12 — include concrete versions when the repo evidence provides them}
 - **Framework:** {e.g., Next.js 15, FastAPI}
+- **Infrastructure:** {e.g., Docker Compose, local DB, cloud/service environment, wrapper scripts}
 - **Build:** {e.g., Turborepo, Webpack}
 - **Testing:** {e.g., Vitest, pytest}
+- **Commit Format:** {e.g., Conventional Commits with commitlint — only if the repo enforces one}
 
 ## Code Conventions
 
@@ -70,6 +73,10 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 
 - Target: <300 lines (hard max 500)
 - Canonical commands should appear in the first screenful
+- When version numbers are available in repo evidence, include them instead of generic stack names
+- Call out local infrastructure or wrapper scripts when they materially affect how the project runs
+- If commit format is enforced by repo config, mention it explicitly
+- Prefer noting the canonical command source of truth (`package.json`, `composer.json`, Makefile, etc.) so static command lists do not drift
 - Non-negotiables (security, data handling) should be near the top
 - Don't duplicate content that belongs in scoped files
 - This file is read by ALL providers — keep it provider-agnostic

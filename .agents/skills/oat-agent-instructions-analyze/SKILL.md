@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.6.1
+version: 1.7.0
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true
@@ -56,7 +56,7 @@ or fill in missing evidence gaps on its own.
   - `[1/10] Resolving providers + mode…`
   - `[2/10] Discovering instruction files…`
   - `[3/10] Discovering documentation surfaces…`
-  - `[4/10] Evaluating quality…`
+  - `[4/10] Evaluating quality + validating existing rules…`
   - `[5/10] Assessing directory coverage gaps…`
   - `[6/10] Discovering file-type patterns…`
   - `[7/10] Checking for drift…`
@@ -218,9 +218,13 @@ not from repo-root `.agents/docs/`.
 - Preferred evidence sources: formatter/linter/editor config (`.editorconfig`, oxlint, oxfmt, ESLint, Prettier, Ruff, etc.),
   `package.json` scripts, existing checked-in instruction files, repo documentation, and repeated codebase patterns
   with exact file references.
+- When config files contain file-type-specific overrides or scoped sections, read the relevant override blocks before
+  making claims about that file type.
 - Do **not** infer formatting or linting conventions from ecosystem defaults or a small code sample.
 - If a formatter or linter already enforces a rule, prefer recording the command and linking to the config/doc rather
   than restating tabs/spaces, quote style, import ordering, or similar trivia as prose instructions.
+- Numeric claims are held to a higher bar: any count, ratio, "only N files", or named split that appears in the
+  artifact or a generated rule must be backed by an exhaustive repo-wide count, not just a sample.
 
 **Documentation inventory integration:**
 
@@ -249,6 +253,38 @@ documentation inventory from Step 2 to:
 - **Cursor rules** (`.cursor/rules/*.mdc`): Validate frontmatter fields (`alwaysApply`, `globs`, `description`).
 - **Copilot instructions** (`.github/instructions/*.instructions.md`): Validate `applyTo` frontmatter.
 - **Copilot shim** (`.github/copilot-instructions.md`): Verify it's a minimal pointer, not content duplication.
+
+**Instruction load budget assessment:**
+
+When checking Criterion 4 (Size Within Budget), compute and record:
+
+- **Always-on baseline load** — the files likely loaded at task start (typically root always-on files)
+- **Typical task load** — root always-on files + one realistic scoped file + matching rules
+- **Worst-case task load** — the heaviest realistic scoped file/rule combination an agent may load in one task
+- **Aggregate repo total** — report for awareness only; do not treat it as the operative session budget by itself
+
+Use these scenarios in the artifact's load-budget section so reviewers can distinguish normal operating cost from
+repo-wide totals.
+
+### Step 3.5: Validate Existing Rule Accuracy
+
+Existing instruction files are not pre-validated truth. For each existing glob-scoped rule:
+
+1. Read the rule body and list its factual claims.
+2. Verify each numeric claim with an exhaustive repo-wide count.
+3. Verify each named-file claim, import claim, or split-ratio claim against the matching files.
+4. If the analysis recommends removing or contradicting an existing rule claim, include the exhaustive verification
+   evidence that justifies the change.
+
+At minimum, validate:
+
+- file counts claimed in the rule body
+- split ratios such as "older vs newer" or "pattern A vs pattern B"
+- named examples like "only 3 files use X"
+- claims about which imports, wrappers, helpers, or setup APIs are preferred
+
+Record the outcome in the artifact's existing-rule validation section.
+Any discrepancy that would cause agents to follow the wrong pattern should be flagged as a High finding or higher.
 
 ### Step 4: Assess Coverage Gaps
 
@@ -309,10 +345,16 @@ Emphasis points:
   Glob-scoped rules and directory instructions serve different purposes.
 - Splits matter. Patterns in the `40–60%` range are often more valuable than perfectly consistent patterns because
   they represent active ambiguity in production code.
+- Prefer narrower rules when materially different activation targets or setup paths exist. If `*.spec.ts` and
+  `*.page.ts` need different guidance, they should usually be separate recommendations rather than one umbrella rule.
 
 **In delta mode:** Still run the full file-type scan. File-type patterns are repo-wide concerns that may not intersect with recently-changed directories but are still high-value for agent correctness.
 
-Record all discovered patterns in the artifact's Glob-Scoped Rule Opportunities table with consistency counts, competing sub-pattern notes, correctness impact, and exception-to-rule flags.
+Record all discovered patterns in the artifact's Glob-Scoped Rule Opportunities table with consistency counts,
+competing sub-pattern notes, correctness impact, recommended action, and exception-to-rule flags.
+
+If a High/Medium glob opportunity warrants creating, updating, or splitting a rule, also emit it as an explicit item
+in Recommendations. Do not leave actionable rule work only in the opportunities table.
 
 ### Step 6: Drift Detection (Delta Mode Only)
 
@@ -358,6 +400,9 @@ The artifact is the contract for apply. It must contain:
 - confidence for each recommendation
 - progressive disclosure decisions (`inline`, `link_only`, `omit`, `ask_user`)
 - canonical documentation/config links when deeper detail should stay out of always-on instructions
+- claim-correction details when updating or contradicting existing rules
+- content-guidance fields (`Must Include`, `Must Not Include`, `Preferred Default for New Files`) for any
+  recommendation that requires judgment during generation
 
 Write the artifact to `$ARTIFACT_PATH`.
 

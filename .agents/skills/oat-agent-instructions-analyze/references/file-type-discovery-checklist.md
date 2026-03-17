@@ -110,6 +110,8 @@ contains a meaningful split that would cause an agent to guess wrong.
 When sampling:
 
 - Mix directories; do not sample from a single subtree
+- If the pattern appears under multiple top-level subdirectories or architectural buckets, sample each bucket rather
+  than letting one subtree dominate the sample
 - Mix older and newer files when possible; convention changes often correlate with time
 - If the first sample looks perfectly consistent, still pressure-test it with files from other directories before
   concluding
@@ -150,6 +152,19 @@ and shows the expected imports, signature, and delegation pattern.
 
 ### 5. Quantify the Real Pattern, Including Splits
 
+Sampling discovers candidate patterns. It does **not** justify numeric claims on its own.
+
+Before writing any numeric claim into the artifact or a generated rule, verify it with an exhaustive repo-wide count.
+This applies to:
+
+- file counts and split ratios
+- "only N files use X" statements
+- claims that a pattern is unused or obsolete
+- any recommendation that removes or contradicts an existing rule
+
+If a sample suggests "Pattern A is gone" or "only 3 files still use Pattern B", stop and verify across the whole repo
+before writing the claim.
+
 Quantify the behavior you found, not just the filename suffix:
 
 - `12/14 files use Pages utility wrapper`
@@ -162,6 +177,19 @@ Interpret the result this way:
 - `60–80%` consistency = pattern with notable exceptions; capture both dominant pattern and exceptions
 - `40–60%` consistency = **highest-priority ambiguity**; agents are likely to choose wrong without guidance
 - `<40%` consistency = may still matter if the split tracks security, framework version, or generation age; do not automatically discard without checking impact
+
+### 5a. Decide Whether to Split into Separate Rules
+
+Do not assume one discovered pattern should become one umbrella rule.
+
+Prefer **separate** rules when:
+
+- activation targets differ materially (for example `*.spec.ts` vs `*.page.ts`)
+- the required setup, helper imports, or wrappers differ
+- the failure mode differs enough that irrelevant guidance would distract or mislead
+- the split tracks distinct directory buckets that agents enter independently
+
+Prefer a **single** rule only when the same concise guidance is genuinely helpful across all matching targets.
 
 ### 6. Check for Exception Patterns
 

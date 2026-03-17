@@ -43,6 +43,30 @@ Available documentation surfaces discovered in this repository. Used to populate
 | 3   | claude    | CLAUDE.md | `CLAUDE.md`              | {N}   | {pass/issues} |
 | ... |           |           |                          |       |               |
 
+## Instruction Load Budget
+
+Computed task-load scenarios used to evaluate instruction size in practice.
+
+| Scenario                | Includes                                            | Size  | Assessment              | Notes                                      |
+| ----------------------- | --------------------------------------------------- | ----- | ----------------------- | ------------------------------------------ |
+| Always-on baseline load | {e.g., root `AGENTS.md` + root compatibility shim}  | {N} B | {healthy / high / over} | {what loads at task start}                 |
+| Typical task load       | {root + one realistic scoped file + matching rules} | {N} B | {healthy / high / over} | {most common working set}                  |
+| Worst-case task load    | {heaviest realistic scope + matching rules}         | {N} B | {healthy / high / over} | {deepest realistic working set}            |
+| Aggregate repo total    | {all instruction files across all formats}          | {N} B | {awareness only}        | {report separately; not the operative cap} |
+
+{Or: "Load budget not computed."}
+
+## Existing Rule Validation
+
+Validation status for already-checked-in glob-scoped rules. Every numeric or named-file claim should be exhaustively verified here before the analysis recommends a correction.
+
+| #   | Rule Path | Target Globs | Validation Status                     | Claim Corrections                     | Evidence     | Severity          |
+| --- | --------- | ------------ | ------------------------------------- | ------------------------------------- | ------------ | ----------------- |
+| 1   | `{path}`  | `{glob}`     | {verified / needs update / conflicts} | {`old claim -> verified replacement`} | {exact refs} | {High/Medium/Low} |
+| ... |           |              |                                       |                                       |              |                   |
+
+{Or: "No existing glob-scoped rules to validate."}
+
 ## Findings
 
 ### Critical
@@ -104,14 +128,16 @@ Directories assessed as needing instruction files but currently uncovered.
 
 ### Glob-Scoped Rule Opportunities
 
-File-type patterns with recurring conventions that would benefit from targeted rules files. These are cross-cutting concerns that span multiple directories — best addressed with glob-scoped rules rather than directory-level AGENTS.md files.
+File-type patterns with recurring conventions that would benefit from targeted rules files. These are cross-cutting structural concerns that often span multiple directories, but they can also be concentrated in one architectural area and still justify glob-scoped rules.
 
 Discovered using the systematic file-type pattern discovery process from `references/file-type-discovery-checklist.md`.
 
-| #   | Pattern  | Count | Consistency | Competing Sub-Patterns                                        | Convention Summary                                      | Correctness Impact                        | Exception to Project Rule? | Evidence     | Disclosure                       | Severity          |
-| --- | -------- | ----- | ----------- | ------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------- | -------------------------- | ------------ | -------------------------------- | ----------------- |
-| 1   | `{glob}` | {N}   | {N/M files} | {none / `A: 9/18, B: 9/18` / version split / directory split} | {brief description of conventions agents should follow} | {crashes/visual bugs/security/lint/style} | {yes: which rule / no}     | {exact refs} | {inline/link_only/omit/ask_user} | {High/Medium/Low} |
-| ... |          |       |             |                                                               |                                                         |                                           |                            |              |                                  |
+High/Medium opportunities that warrant creating, updating, or splitting a rule should also appear as explicit entries in **Recommendations** below. Do not rely on this table alone as the apply contract.
+
+| #   | Pattern  | Count | Consistency | Competing Sub-Patterns                                        | Convention Summary                                      | Correctness Impact                        | Exception to Project Rule? | Recommended Action                          | Evidence     | Disclosure                       | Severity          |
+| --- | -------- | ----- | ----------- | ------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------- | -------------------------- | ------------------------------------------- | ------------ | -------------------------------- | ----------------- |
+| 1   | `{glob}` | {N}   | {N/M files} | {none / `A: 9/18, B: 9/18` / version split / directory split} | {brief description of conventions agents should follow} | {crashes/visual bugs/security/lint/style} | {yes: which rule / no}     | {create rule / update rule / split / watch} | {exact refs} | {inline/link_only/omit/ask_user} | {High/Medium/Low} |
+| ... |          |       |             |                                                               |                                                         |                                           |                            |                                             |              |
 
 **Severity calibration:**
 
@@ -153,6 +179,11 @@ Prioritized actions based on findings above.
    - Confidence: {high | medium | low}
    - Disclosure: {inline | link_only | omit | ask_user}
    - Link Targets: {path/URL or N/A}
+   - Content Guidance: {high-level generation guidance}
+   - Must Include: {claims, commands, references, or examples that must survive generation}
+   - Must Not Include: {unsupported claims or stale guidance to avoid}
+   - Preferred Default for New Files: {pattern A / pattern B / N/A}
+   - Claim Corrections: {`old claim -> verified replacement` or `none`}
 2. **{Action}** — {rationale} (addresses provider baseline gap #{N})
    - Target: `{path}`
    - Provider/Format: {provider / format}
@@ -160,6 +191,11 @@ Prioritized actions based on findings above.
    - Confidence: {high | medium | low}
    - Disclosure: {inline | link_only | omit | ask_user}
    - Link Targets: {path/URL or N/A}
+   - Content Guidance: {high-level generation guidance}
+   - Must Include: {claims, commands, references, or examples that must survive generation}
+   - Must Not Include: {unsupported claims or stale guidance to avoid}
+   - Preferred Default for New Files: {pattern A / pattern B / N/A}
+   - Claim Corrections: {`old claim -> verified replacement` or `none`}
 3. **{Action}** — {rationale} (addresses gap #{N})
    - Target: `{path}`
    - Provider/Format: {provider / format}
@@ -167,6 +203,11 @@ Prioritized actions based on findings above.
    - Confidence: {high | medium | low}
    - Disclosure: {inline | link_only | omit | ask_user}
    - Link Targets: {path/URL or N/A}
+   - Content Guidance: {high-level generation guidance}
+   - Must Include: {claims, commands, references, or examples that must survive generation}
+   - Must Not Include: {unsupported claims or stale guidance to avoid}
+   - Preferred Default for New Files: {pattern A / pattern B / N/A}
+   - Claim Corrections: {`old claim -> verified replacement` or `none`}
 4. ...
 
 ## Apply Contract
@@ -176,6 +217,8 @@ Prioritized actions based on findings above.
 - Recommendations marked `ask_user` require explicit user confirmation before generation.
 - If cited config/docs/files are missing at apply time, stop and re-run analyze or ask the user rather than inventing a replacement rule.
 - If formatter/linter config already enforces a style rule, generated instructions should prefer commands and links over prose restatement.
+- If a recommendation updates or contradicts an existing rule, apply should follow the `Claim Corrections`,
+  `Must Include`, `Must Not Include`, and `Preferred Default for New Files` fields rather than improvising.
 
 ## Next Step
 
