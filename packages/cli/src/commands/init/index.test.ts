@@ -45,6 +45,11 @@ interface HarnessOptions {
   useDefaultGuidedSetup?: boolean;
   resolvedLocalPaths?: string[];
   toolPacksResult?: string[];
+  hookInstallInfo?: {
+    hookPath: string;
+    suggestedHooksPath: string | null;
+    suggestedHookPath: string | null;
+  };
 }
 
 interface RunInitArgs {
@@ -96,6 +101,8 @@ function createHarness(options: HarnessOptions = {}): {
   loadSyncConfig: ReturnType<typeof vi.fn>;
   saveSyncConfig: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
+  getHookInstallInfo: ReturnType<typeof vi.fn>;
+  configureLocalHooksPath: ReturnType<typeof vi.fn>;
   installHook: ReturnType<typeof vi.fn>;
   uninstallHook: ReturnType<typeof vi.fn>;
   runGuidedSetup: ReturnType<typeof vi.fn>;
@@ -128,7 +135,14 @@ function createHarness(options: HarnessOptions = {}): {
       return manifest;
     },
   );
-  const installHook = vi.fn(async () => undefined);
+  const getHookInstallInfo = vi.fn(async () => ({
+    hookPath: '/tmp/workspace/.git/hooks/pre-commit',
+    suggestedHooksPath: null,
+    suggestedHookPath: null,
+    ...(options.hookInstallInfo ?? {}),
+  }));
+  const configureLocalHooksPath = vi.fn(async () => undefined);
+  const installHook = vi.fn(async () => '/tmp/workspace/.git/hooks/pre-commit');
   const uninstallHook = vi.fn(async () => undefined);
   const dirExistsFn = vi.fn(async () => options.oatDirExists ?? true);
   const runGuidedSetup = vi.fn(async () => undefined);
@@ -212,6 +226,8 @@ function createHarness(options: HarnessOptions = {}): {
       detectedDisabled: [],
     })),
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
+    getHookInstallInfo,
+    configureLocalHooksPath,
     installHook,
     uninstallHook,
     applyOatCoreGitignore: vi.fn(async () => ({
@@ -258,6 +274,8 @@ function createHarness(options: HarnessOptions = {}): {
     loadSyncConfig,
     saveSyncConfig,
     adoptStray,
+    getHookInstallInfo,
+    configureLocalHooksPath,
     installHook,
     uninstallHook,
     runGuidedSetup,
@@ -816,7 +834,7 @@ config_file = "agents/reviewer.toml"
   });
 
   it('installs hook when user consents', async () => {
-    const { command, installHook } = createHarness({
+    const { command, installHook, capture } = createHarness({
       interactive: true,
       hookInstalled: false,
       confirmResponses: [true],
@@ -825,6 +843,58 @@ config_file = "agents/reviewer.toml"
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
 
     expect(installHook).toHaveBeenCalledWith('/tmp/workspace');
+    expect(capture.success).toContain(
+      'Installed optional pre-commit hook at /tmp/workspace/.git/hooks/pre-commit.',
+    );
+  });
+
+  it('warns when repo-managed .githooks exists without core.hooksPath', async () => {
+    const { command, capture, confirmAction, configureLocalHooksPath } =
+      createHarness({
+        interactive: true,
+        hookInstalled: false,
+        confirmResponses: [true, false],
+        hookInstallInfo: {
+          hookPath: '/tmp/workspace/.git/hooks/pre-commit',
+          suggestedHooksPath: '.githooks',
+          suggestedHookPath: '/tmp/workspace/.githooks/pre-commit',
+        },
+      });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(capture.warn).toContain(
+      'Detected existing repo hook file at /tmp/workspace/.githooks/pre-commit, but Git is not configured to use .githooks. OAT will install into /tmp/workspace/.git/hooks/pre-commit unless you configure Git first.',
+    );
+    expect(confirmAction.mock.calls[1]?.[0]).toContain(
+      'Configure Git hooks to use .githooks before installing the OAT hook?',
+    );
+    expect(configureLocalHooksPath).not.toHaveBeenCalled();
+  });
+
+  it('can configure .githooks before installing the hook', async () => {
+    const { command, configureLocalHooksPath, installHook, capture } =
+      createHarness({
+        interactive: true,
+        hookInstalled: false,
+        confirmResponses: [true, true],
+        hookInstallInfo: {
+          hookPath: '/tmp/workspace/.git/hooks/pre-commit',
+          suggestedHooksPath: '.githooks',
+          suggestedHookPath: '/tmp/workspace/.githooks/pre-commit',
+        },
+      });
+    installHook.mockResolvedValue('/tmp/workspace/.githooks/pre-commit');
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(configureLocalHooksPath).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      '.githooks',
+    );
+    expect(capture.success).toContain(
+      'Installed optional pre-commit hook at /tmp/workspace/.githooks/pre-commit.',
+    );
   });
 
   it('installs executable hook script with shebang when creating a new hook file', async () => {

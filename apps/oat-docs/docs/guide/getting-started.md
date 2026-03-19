@@ -41,6 +41,11 @@ After core initialization completes, `oat init` can enter an interactive guided 
 3. **Provider sync** — sync provider project views via `oat sync --scope project`.
 4. **Summary** — reports what was configured: active providers, tool packs status, local paths added/existing, and provider sync status. Includes suggested next steps.
 
+Hook install note:
+
+- The optional OAT pre-commit hook installs into Git's active hook directory.
+- If a repo uses a managed hook folder such as `.githooks/`, that path must already be configured in Git, or OAT must configure it during the prompt flow before hook install.
+
 **Non-interactive mode:** Guided setup is never triggered in non-interactive mode (`--json`, piped input, or non-TTY), even if `--setup` is passed.
 
 ```bash

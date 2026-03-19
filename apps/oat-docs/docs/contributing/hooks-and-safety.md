@@ -9,6 +9,8 @@ description: 'Pre-commit hooks and safety contracts for provider sync mutations.
 
 `oat init` can install a pre-commit hook that warns when project provider views appear out of sync.
 
+OAT installs that hook into Git's currently active hook directory. When a consumer repo keeps hooks in a repo-managed folder such as `.githooks/`, Git must be configured to use that path before install, or OAT must configure it during the hook prompt flow.
+
 ## Safety contracts
 
 - `sync` mutates by default; use `--dry-run` to preview.

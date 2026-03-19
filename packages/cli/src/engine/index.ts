@@ -10,14 +10,18 @@ export {
 } from './engine.types';
 export { executeSyncPlan } from './execute-plan';
 export {
+  configureLocalHooksPath,
+  getHookInstallInfo,
   HOOK_DRIFT_WARNING,
   HOOK_MARKER_END,
   HOOK_MARKER_START,
   installHook,
   isHookInstalled,
+  REPO_GITHOOKS_PATH,
   runHookCheck,
   uninstallHook,
 } from './hook';
+export type { HookInstallInfo } from './hook';
 export {
   hasMarker,
   insertMarker,

@@ -50,7 +50,10 @@ import {
 } from '@config/oat-config';
 import { type DriftReport, detectStrays } from '@drift/index';
 import {
+  configureLocalHooksPath,
   type CanonicalEntry,
+  getHookInstallInfo,
+  type HookInstallInfo,
   installHook,
   isHookInstalled,
   scanCanonical,
@@ -99,6 +102,8 @@ import {
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
 const HOOK_PROMPT = 'Install optional pre-commit hook for drift warnings?';
+const HOOK_CONFIGURE_PROMPT = (hooksPath: string): string =>
+  `Configure Git hooks to use ${hooksPath} before installing the OAT hook?`;
 const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';
 
@@ -169,7 +174,12 @@ interface InitDependencies {
     options?: { replaceCanonical?: boolean },
   ) => Promise<Manifest>;
   isHookInstalled: (projectRoot: string) => Promise<boolean>;
-  installHook: (projectRoot: string) => Promise<void>;
+  getHookInstallInfo: (projectRoot: string) => Promise<HookInstallInfo>;
+  configureLocalHooksPath: (
+    projectRoot: string,
+    hooksPath: string,
+  ) => Promise<void>;
+  installHook: (projectRoot: string) => Promise<string>;
   uninstallHook: (projectRoot: string) => Promise<void>;
   getAdapters: () => ProviderAdapter[];
   loadSyncConfig: (configPath: string) => Promise<SyncConfig>;
@@ -343,6 +353,8 @@ function createDependencies(): InitDependencies {
     selectProvidersWithAbort: selectManyWithAbort,
     adoptStray: adoptStrayDefault,
     isHookInstalled,
+    getHookInstallInfo,
+    configureLocalHooksPath,
     installHook,
     uninstallHook,
     getAdapters() {
@@ -436,8 +448,32 @@ async function maybeHandleHook(
   }
 
   if (shouldInstall && !installed) {
-    await dependencies.installHook(projectRoot);
-    context.logger.success('Installed optional pre-commit hook.');
+    const hookInstallInfo = await dependencies.getHookInstallInfo(projectRoot);
+    if (hookInstallInfo.suggestedHooksPath) {
+      context.logger.warn(
+        `Detected existing repo hook file at ${hookInstallInfo.suggestedHookPath}, but Git is not configured to use ${hookInstallInfo.suggestedHooksPath}. OAT will install into ${hookInstallInfo.hookPath} unless you configure Git first.`,
+      );
+
+      if (context.interactive) {
+        const shouldConfigureHooksPath = await dependencies.confirmAction(
+          HOOK_CONFIGURE_PROMPT(hookInstallInfo.suggestedHooksPath),
+          {
+            interactive: context.interactive,
+          },
+        );
+        if (shouldConfigureHooksPath) {
+          await dependencies.configureLocalHooksPath(
+            projectRoot,
+            hookInstallInfo.suggestedHooksPath,
+          );
+        }
+      }
+    }
+
+    const hookPath = await dependencies.installHook(projectRoot);
+    context.logger.success(
+      `Installed optional pre-commit hook at ${hookPath}.`,
+    );
     return true;
   }
 

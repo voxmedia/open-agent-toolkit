@@ -13,6 +13,8 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  configureLocalHooksPath,
+  getHookInstallInfo,
   HOOK_DRIFT_WARNING,
   HOOK_MARKER_END,
   HOOK_MARKER_START,
@@ -44,9 +46,8 @@ describe('git hook', () => {
   it('installHook creates hook file in .git/hooks/', async () => {
     const root = await createProjectRoot('oat-hook-install-');
 
-    await installHook(root);
+    const hookPath = await installHook(root);
 
-    const hookPath = join(root, '.git', 'hooks', 'pre-commit');
     const content = await readFile(hookPath, 'utf8');
     expect(content).toContain(HOOK_MARKER_START);
     expect(content).toContain(HOOK_MARKER_END);
@@ -206,6 +207,55 @@ describe('git hook', () => {
       expect(await isHookInstalled(root)).toBe(false);
       await installHook(root);
       expect(await isHookInstalled(root)).toBe(true);
+    });
+
+    it('getHookInstallInfo returns .githooks suggestion when repo hook exists and core.hooksPath is unset', async () => {
+      const root = await createGitRepoRoot('oat-hook-githooks-suggest-');
+      await mkdir(join(root, '.githooks'), { recursive: true });
+      await writeFile(
+        join(root, '.githooks', 'pre-commit'),
+        '#!/bin/sh\n',
+        'utf8',
+      );
+
+      const info = await getHookInstallInfo(root);
+
+      expect(info.hookPath).toBe(join(root, '.git', 'hooks', 'pre-commit'));
+      expect(info.suggestedHooksPath).toBe('.githooks');
+      expect(info.suggestedHookPath).toBe(
+        join(root, '.githooks', 'pre-commit'),
+      );
+    });
+
+    it('getHookInstallInfo does not suggest .githooks when core.hooksPath is already configured', async () => {
+      const root = await createGitRepoRoot('oat-hook-githooks-configured-');
+      await mkdir(join(root, '.githooks'), { recursive: true });
+      await writeFile(
+        join(root, '.githooks', 'pre-commit'),
+        '#!/bin/sh\n',
+        'utf8',
+      );
+      const { execSync } = await import('node:child_process');
+      execSync('git config core.hooksPath .githooks', {
+        cwd: root,
+        stdio: 'ignore',
+      });
+
+      const info = await getHookInstallInfo(root);
+
+      expect(info.hookPath).toBe(join(root, '.githooks', 'pre-commit'));
+      expect(info.suggestedHooksPath).toBeNull();
+      expect(info.suggestedHookPath).toBeNull();
+    });
+
+    it('configureLocalHooksPath updates git config for repo-managed hooks', async () => {
+      const root = await createGitRepoRoot('oat-hook-githooks-set-');
+
+      await configureLocalHooksPath(root, '.githooks');
+
+      const info = await getHookInstallInfo(root);
+      expect(info.hookPath).toBe(join(root, '.githooks', 'pre-commit'));
+      expect(info.suggestedHooksPath).toBeNull();
     });
 
     it('uninstallHook removes from core.hooksPath directory', async () => {

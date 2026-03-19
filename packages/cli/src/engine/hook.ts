@@ -18,6 +18,13 @@ export const HOOK_MARKER_START = '# >>> oat pre-commit hook >>>';
 export const HOOK_MARKER_END = '# <<< oat pre-commit hook <<<';
 export const HOOK_DRIFT_WARNING =
   "oat: project provider views are out of sync - run 'oat status --scope project' or 'oat sync --scope project'";
+export const REPO_GITHOOKS_PATH = '.githooks';
+
+export interface HookInstallInfo {
+  hookPath: string;
+  suggestedHooksPath: string | null;
+  suggestedHookPath: string | null;
+}
 
 interface RunHookCheckOptions {
   runStatusCommand?: (cwd: string) => Promise<boolean>;
@@ -142,9 +149,53 @@ async function resolveHooksDirectory(
   }
 }
 
-export async function isHookInstalled(projectRoot: string): Promise<boolean> {
+export async function getHookInstallInfo(
+  projectRoot: string,
+): Promise<HookInstallInfo> {
   const hooksDir = await resolveHooksDirectory(projectRoot);
   const hookPath = join(hooksDir, 'pre-commit');
+
+  const suggestedHookPath = join(projectRoot, REPO_GITHOOKS_PATH, 'pre-commit');
+  let suggestedHooksPath: string | null = null;
+
+  if (!(await resolveConfiguredHooksPath(projectRoot))) {
+    try {
+      await lstat(suggestedHookPath);
+      suggestedHooksPath = REPO_GITHOOKS_PATH;
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code !== 'ENOENT'
+      ) {
+        throw error;
+      }
+    }
+  }
+
+  return {
+    hookPath,
+    suggestedHooksPath,
+    suggestedHookPath: suggestedHooksPath ? suggestedHookPath : null,
+  };
+}
+
+export async function configureLocalHooksPath(
+  projectRoot: string,
+  hooksPath: string,
+): Promise<void> {
+  await execFileAsync(
+    'git',
+    ['config', '--local', 'core.hooksPath', hooksPath],
+    {
+      cwd: projectRoot,
+    },
+  );
+}
+
+export async function isHookInstalled(projectRoot: string): Promise<boolean> {
+  const { hookPath } = await getHookInstallInfo(projectRoot);
   try {
     const content = await readFile(hookPath, 'utf8');
     return content.includes(HOOK_MARKER_START);
@@ -161,11 +212,8 @@ export async function isHookInstalled(projectRoot: string): Promise<boolean> {
   }
 }
 
-export async function installHook(projectRoot: string): Promise<void> {
-  const hooksDir = await resolveHooksDirectory(projectRoot, {
-    createIfMissing: true,
-  });
-  const hookPath = join(hooksDir, 'pre-commit');
+export async function installHook(projectRoot: string): Promise<string> {
+  const hookPath = (await getHookInstallInfo(projectRoot)).hookPath;
 
   let current = '';
   try {
@@ -183,7 +231,7 @@ export async function installHook(projectRoot: string): Promise<void> {
 
   if (current.includes(HOOK_MARKER_START)) {
     await chmod(hookPath, 0o755);
-    return;
+    return hookPath;
   }
 
   const includeShebang = current.trim().length === 0;
@@ -195,6 +243,7 @@ export async function installHook(projectRoot: string): Promise<void> {
       : `${snippet}\n`;
   await writeFile(hookPath, next, 'utf8');
   await chmod(hookPath, 0o755);
+  return hookPath;
 }
 
 function removeHookSnippet(content: string): string {
