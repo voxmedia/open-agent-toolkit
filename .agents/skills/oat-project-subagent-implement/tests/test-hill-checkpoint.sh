@@ -9,7 +9,7 @@
 # 2. Plan with HiLL at p02 — p01-p02 run, pause after p02 completes
 # 3. Plan with no HiLL — default behavior (pause after every phase)
 #
-# Usage: bash tests/test-hil-checkpoint.sh
+# Usage: bash tests/test-hill-checkpoint.sh
 
 set -euo pipefail
 
@@ -39,7 +39,7 @@ OUTPUT_1=$(bash "$SKILL_DIR/scripts/dispatch.sh" "$FIXTURES_DIR/sample-plan.md" 
 # Extract HiLL checkpoints line
 HIL_LINE_1=$(echo "$OUTPUT_1" | grep "hill_checkpoints:")
 assert_contains "extracts hill_checkpoints" "$HIL_LINE_1" "hill_checkpoints:"
-# The sample-plan.md has oat_plan_hill_phases: ["p04"]
+# The sample-plan.md has oat_plan_hill_phases: ['p04']
 assert_contains "contains p04 checkpoint" "$HIL_LINE_1" "p04"
 
 echo ""
@@ -52,7 +52,7 @@ echo ""
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
-sed 's/oat_plan_hill_phases: \["p04"\]/oat_plan_hill_phases: ["p02"]/' "$FIXTURES_DIR/sample-plan.md" > "$TMPDIR/plan-hil-p02.md"
+sed -E "s|oat_plan_hill_phases: \[[^]]*\]|oat_plan_hill_phases: ['p02']|" "$FIXTURES_DIR/sample-plan.md" > "$TMPDIR/plan-hil-p02.md"
 
 OUTPUT_2=$(bash "$SKILL_DIR/scripts/dispatch.sh" "$TMPDIR/plan-hil-p02.md" "$TMPDIR" "test-branch" 2>&1)
 
@@ -65,7 +65,7 @@ echo ""
 echo "=== Test 3: No HiLL phases (empty array) ==="
 echo ""
 
-sed 's/oat_plan_hill_phases: \["p04"\]/oat_plan_hill_phases: []/' "$FIXTURES_DIR/sample-plan.md" > "$TMPDIR/plan-no-hil.md"
+sed -E "s|oat_plan_hill_phases: \[[^]]*\]|oat_plan_hill_phases: []|" "$FIXTURES_DIR/sample-plan.md" > "$TMPDIR/plan-no-hil.md"
 
 OUTPUT_3=$(bash "$SKILL_DIR/scripts/dispatch.sh" "$TMPDIR/plan-no-hil.md" "$TMPDIR" "test-branch" 2>&1)
 
@@ -106,7 +106,7 @@ echo ""
 echo "=== Test 5: Multiple HiLL checkpoints ==="
 echo ""
 
-sed 's/oat_plan_hill_phases: \["p04"\]/oat_plan_hill_phases: ["p02", "p04"]/' "$FIXTURES_DIR/sample-plan.md" > "$TMPDIR/plan-multi-hil.md"
+sed -E "s|oat_plan_hill_phases: \[[^]]*\]|oat_plan_hill_phases: ['p02', 'p04']|" "$FIXTURES_DIR/sample-plan.md" > "$TMPDIR/plan-multi-hil.md"
 
 OUTPUT_5=$(bash "$SKILL_DIR/scripts/dispatch.sh" "$TMPDIR/plan-multi-hil.md" "$TMPDIR" "test-branch" 2>&1)
 

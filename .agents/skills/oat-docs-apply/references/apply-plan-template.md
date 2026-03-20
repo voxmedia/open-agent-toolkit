@@ -35,7 +35,7 @@ blocked pending a fresh analysis rather than guessed.
 ### {N}. {Action}: `{target-path}`
 
 | Field        | Value                                                             |
-| ------------ | ----------------------------------------------------------------- | ------------- | ------------- |
+| ------------ | ----------------------------------------------------------------- |
 | Action       | {create / update / move / scaffold / sync-nav}                    |
 | Target       | `{target-path}`                                                   |
 | Rationale    | {why this recommendation exists}                                  |
@@ -44,7 +44,7 @@ blocked pending a fresh analysis rather than guessed.
 | Confidence   | {high / medium / low}                                             |
 | Disclosure   | {inline / link_only / omit / ask_user}                            |
 | Link Targets | {path or URL when link_only; otherwise N/A}                       |
-| Helper       | `{oat docs nav sync                                               | oat docs init | manual edit}` |
+| Helper       | `oat docs nav sync` / `oat docs init` / `manual edit`             |
 
 **Context:** {1-2 sentences}
 

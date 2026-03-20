@@ -535,7 +535,7 @@ See `examples/` for detailed walkthroughs with plan excerpts and expected artifa
 | Pattern         | File                                  | Description                                                                            |
 | --------------- | ------------------------------------- | -------------------------------------------------------------------------------------- |
 | Simple Parallel | `examples/pattern-parallel-phases.md` | Two independent phases run in parallel and merge cleanly                               |
-| HiLL Checkpoint | `examples/pattern-hil-checkpoint.md`  | Phases run through a checkpoint phase, user reviews after it completes, then continues |
+| HiLL Checkpoint | `examples/pattern-hill-checkpoint.md` | Phases run through a checkpoint phase, user reviews after it completes, then continues |
 
 ## Success Criteria
 

@@ -55,6 +55,7 @@ MERGE_ORDER=0
 TOTAL_MERGED=0
 TOTAL_CONFLICTS=0
 TOTAL_REVERTED=0
+TOTAL_NO_COMMITS=0
 
 for UNIT_BRANCH in "${SORTED_BRANCHES[@]}"; do
   MERGE_ORDER=$((MERGE_ORDER + 1))
@@ -154,7 +155,11 @@ for UNIT_BRANCH in "${SORTED_BRANCHES[@]}"; do
     echo "      verdict: $INTEGRATION"
   else
     echo "    result: $MERGE_RESULT"
-    TOTAL_CONFLICTS=$((TOTAL_CONFLICTS + 1))
+    if [[ "$MERGE_RESULT" == "conflict" ]]; then
+      TOTAL_CONFLICTS=$((TOTAL_CONFLICTS + 1))
+    elif [[ "$MERGE_RESULT" == "no_commits" ]]; then
+      TOTAL_NO_COMMITS=$((TOTAL_NO_COMMITS + 1))
+    fi
     echo "    integration: skipped (merge not clean)"
 
     # Classify conflict
@@ -171,6 +176,7 @@ echo "  total_units: ${#SORTED_BRANCHES[@]}"
 echo "  merged: $TOTAL_MERGED"
 echo "  conflicts: $TOTAL_CONFLICTS"
 echo "  reverted: $TOTAL_REVERTED"
+echo "  no_commits: $TOTAL_NO_COMMITS"
 echo "  final_branch: $ORCHESTRATION_BRANCH"
 echo "  final_commit: $(git rev-parse HEAD 2>/dev/null || echo 'unknown')"
 echo "---"

@@ -19,16 +19,17 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
-# Exclusion: prune directories named node_modules, .worktrees, .git, .oat
-# that are direct children of REPO_ROOT (not ancestors in the path to REPO_ROOT).
-# This prevents false exclusion when the worktree itself lives under a .worktrees/ directory.
+# Exclusion: prune repo-root node_modules, .worktrees, .git, and .oat directories,
+# plus nested node_modules anywhere below REPO_ROOT. Using -prune avoids traversing
+# excluded trees while preserving worktrees whose absolute path contains ".worktrees".
 find_exclude() {
-  find "$REPO_ROOT" "$@" \
-    -not -path "${REPO_ROOT}/node_modules/*" \
-    -not -path "${REPO_ROOT}/.worktrees/*" \
-    -not -path "${REPO_ROOT}/.git/*" \
-    -not -path "${REPO_ROOT}/.oat/*" \
-    -not -path "*/node_modules/*" \
+  find "$REPO_ROOT" \
+    \( -path "${REPO_ROOT}/node_modules" \
+      -o -path "${REPO_ROOT}/.worktrees" \
+      -o -path "${REPO_ROOT}/.git" \
+      -o -path "${REPO_ROOT}/.oat" \
+      -o -path '*/node_modules' \) -prune -o \
+    \( "$@" \) -print \
     2>/dev/null || true
 }
 
