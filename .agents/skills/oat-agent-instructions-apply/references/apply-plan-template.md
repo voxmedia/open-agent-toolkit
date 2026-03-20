@@ -10,6 +10,7 @@ oat_providers: [{ providers }]
 
 **Date:** {YYYY-MM-DD}
 **Source Analysis:** `{analysis-artifact-path}`
+**Source Bundle:** `{bundle-path or legacy-markdown-only}`
 **Providers:** {agents_md, claude, cursor, ...}
 
 ## Instructions
@@ -36,10 +37,12 @@ If a recommendation lacks that detail, it should be blocked pending a fresh anal
 
 | Field                           | Value                                                                                                             |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Recommendation ID               | `rec-001`                                                                                                         |
 | Action                          | {create / update}                                                                                                 |
 | Provider                        | {agents_md / claude / cursor / copilot}                                                                           |
 | Format                          | {AGENTS.md / Claude rule / Cursor rule / Copilot instruction / Copilot shim}                                      |
 | Target                          | `{target-file-path}`                                                                                              |
+| Bundle Pack                     | `{bundle-dir}/packs/rec-001.md` or `legacy-markdown-only`                                                         |
 | Rationale                       | {Why — references analysis finding #N or coverage gap #N}                                                         |
 | Evidence                        | {exact file refs / config / docs that justify the recommendation}                                                 |
 | Confidence                      | {high / medium / low}                                                                                             |

@@ -14,6 +14,20 @@ oat_analysis_commit: { commitHash }
 **Providers:** {agents_md, claude, cursor, ...}
 **Commit:** {short-hash}
 
+## Bundle Outputs
+
+The companion bundle for this analysis lives beside the markdown artifact and is the primary generation contract for
+`oat-agent-instructions-apply` when present.
+
+| Path                                | Purpose                                       |
+| ----------------------------------- | --------------------------------------------- |
+| `{artifact-path}`                   | Human-readable review artifact                |
+| `{bundle-dir}/summary.md`           | Compact bridge summary for apply-time context |
+| `{bundle-dir}/recommendations.yaml` | Manifest of executable recommendations        |
+| `{bundle-dir}/packs/`               | Recommendation-scoped packs                   |
+
+Every recommendation below should include a stable `Recommendation ID` that maps to exactly one pack file.
+
 ## Summary
 
 - **Files evaluated:** {N}
@@ -173,8 +187,10 @@ Capture which details should live in always-on instructions versus linked docume
 Prioritized actions based on findings above.
 
 1. **{Action}** — {rationale} (addresses finding #{N})
+   - Recommendation ID: `rec-001`
    - Target: `{path}`
    - Provider/Format: {provider / format}
+   - Bundle Pack: `{bundle-dir}/packs/rec-001.md`
    - Evidence: {exact refs}
    - Confidence: {high | medium | low}
    - Disclosure: {inline | link_only | omit | ask_user}
@@ -185,8 +201,10 @@ Prioritized actions based on findings above.
    - Preferred Default for New Files: {pattern A / pattern B / N/A}
    - Claim Corrections: {`old claim -> verified replacement` or `none`}
 2. **{Action}** — {rationale} (addresses provider baseline gap #{N})
+   - Recommendation ID: `rec-002`
    - Target: `{path}`
    - Provider/Format: {provider / format}
+   - Bundle Pack: `{bundle-dir}/packs/rec-002.md`
    - Evidence: {exact refs}
    - Confidence: {high | medium | low}
    - Disclosure: {inline | link_only | omit | ask_user}
@@ -197,8 +215,10 @@ Prioritized actions based on findings above.
    - Preferred Default for New Files: {pattern A / pattern B / N/A}
    - Claim Corrections: {`old claim -> verified replacement` or `none`}
 3. **{Action}** — {rationale} (addresses gap #{N})
+   - Recommendation ID: `rec-003`
    - Target: `{path}`
    - Provider/Format: {provider / format}
+   - Bundle Pack: `{bundle-dir}/packs/rec-003.md`
    - Evidence: {exact refs}
    - Confidence: {high | medium | low}
    - Disclosure: {inline | link_only | omit | ask_user}
@@ -212,7 +232,10 @@ Prioritized actions based on findings above.
 
 ## Apply Contract
 
-- `oat-agent-instructions-apply` may only implement recommendations backed by evidence in this artifact.
+- `oat-agent-instructions-apply` may only implement recommendations backed by evidence in this artifact and its
+  companion bundle.
+- When the companion bundle exists, apply should treat `recommendations.yaml` plus `packs/*.md` as the primary
+  generation contract and use this markdown artifact as reviewer context.
 - Recommendations marked `omit` must stay out of generated instructions.
 - Recommendations marked `ask_user` require explicit user confirmation before generation.
 - If cited config/docs/files are missing at apply time, stop and re-run analyze or ask the user rather than inventing a replacement rule.

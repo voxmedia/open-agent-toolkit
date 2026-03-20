@@ -1,0 +1,27 @@
+bundleVersion: 1
+analysisArtifact: { artifact-path }
+summary: summary.md
+recommendations:
+  - id: rec-001
+    action: create
+    target: path/to/file
+    provider: agents_md
+    format: AGENTS.md
+    severity: high
+    confidence: high
+    disclosure: inline
+    pack: packs/rec-001.md
+  - id: rec-002
+    action: update
+    target: path/to/existing-file
+    provider: cursor
+    format: glob-rule
+    severity: medium
+    confidence: medium
+    disclosure: link_only
+    pack: packs/rec-002.md
+
+# Rules:
+# - Every recommendation referenced here must also exist in the markdown analysis artifact.
+# - `pack` must be a relative path under this bundle directory.
+# - The manifest is the primary index used by oat-agent-instructions-apply when the bundle exists.

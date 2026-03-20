@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.7.0
+version: 1.9.0
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true
@@ -37,8 +37,13 @@ Scan, evaluate, and report on agent instruction file coverage, quality, and drif
 ## Analyze vs Apply Boundary
 
 `oat-agent-instructions-analyze` owns discovery, evaluation, evidence gathering, and recommendation shaping.
-The analysis artifact must be detailed enough that `oat-agent-instructions-apply` can execute approved
-recommendations without rediscovering repo conventions from scratch.
+Its output now has two layers:
+
+- a human-readable review artifact (`agent-instructions-<timestamp>.md`)
+- a machine-oriented companion bundle (`agent-instructions-<timestamp>.bundle/`)
+
+The markdown artifact is for reviewers. The bundle is the generation contract that `oat-agent-instructions-apply`
+should consume when it exists.
 
 `oat-agent-instructions-apply` may verify that cited files still exist and may read those same cited
 sources while generating output, but it must not invent unsupported conventions, create new recommendations,
@@ -390,11 +395,35 @@ Generate the analysis artifact using the template at `references/analysis-artifa
 ```bash
 TIMESTAMP=$(date -u +"%Y-%m-%d-%H%M")
 ARTIFACT_PATH=".oat/repo/analysis/agent-instructions-${TIMESTAMP}.md"
+BUNDLE_DIR="${ARTIFACT_PATH%.md}.bundle"
+SUMMARY_PATH="${BUNDLE_DIR}/summary.md"
+MANIFEST_PATH="${BUNDLE_DIR}/recommendations.yaml"
+PACKS_DIR="${BUNDLE_DIR}/packs"
+mkdir -p "$PACKS_DIR"
 ```
 
 Fill in all template sections with findings from Steps 2-7.
 
-The artifact is the contract for apply. It must contain:
+Write the human-readable markdown artifact to `$ARTIFACT_PATH`.
+
+Also write the companion bundle to `$BUNDLE_DIR` with this layout:
+
+- `summary.md` — rendered from `references/bundle-summary-template.md`
+- `recommendations.yaml` — rendered from `references/recommendations-manifest-template.yaml`
+- `packs/<recommendation-id>.md` — rendered from `references/recommendation-pack-template.md`
+
+Bundle contract requirements:
+
+- every recommendation gets a stable `Recommendation ID` (for example, `rec-001`)
+- the markdown artifact, manifest, and pack filenames must agree on that ID
+- `recommendations.yaml` must include each recommendation's ID, target, action, disclosure, severity/confidence, and
+  relative `pack` path
+- each pack must preserve the recommendation's evidence refs, structural conventions, behavioral conventions,
+  counter-examples, new-file workflow, preferred default, and claim corrections
+- if the markdown artifact and bundle ever diverge, the bundle is the apply contract and the markdown artifact is the
+  review summary
+
+The markdown artifact and companion bundle together are the contract for apply. They must contain:
 
 - exact evidence references for each finding and recommendation
 - confidence for each recommendation
@@ -403,8 +432,7 @@ The artifact is the contract for apply. It must contain:
 - claim-correction details when updating or contradicting existing rules
 - content-guidance fields (`Must Include`, `Must Not Include`, `Preferred Default for New Files`) for any
   recommendation that requires judgment during generation
-
-Write the artifact to `$ARTIFACT_PATH`.
+- stable recommendation IDs and pack references for any recommendation that apply may execute
 
 ### Step 9: Update Tracking and Output Summary
 
@@ -441,6 +469,7 @@ Analysis complete.
     Low:       {N}
 
   Artifact: {artifact_path}
+  Bundle:   {bundle_dir}
 
 Next step: Run oat-agent-instructions-apply to act on these findings.
 ```
@@ -461,6 +490,9 @@ Next step: Run oat-agent-instructions-apply to act on these findings.
 - Directory criteria: `references/directory-assessment-criteria.md`
 - File-type discovery: `references/file-type-discovery-checklist.md`
 - Artifact template: `references/analysis-artifact-template.md`
+- Bundle summary template: `references/bundle-summary-template.md`
+- Bundle manifest template: `references/recommendations-manifest-template.yaml`
+- Recommendation pack template: `references/recommendation-pack-template.md`
 - Tracking script: `scripts/resolve-tracking.sh`
 - Provider resolution: `scripts/resolve-providers.sh`
 - File discovery: `scripts/resolve-instruction-files.sh`

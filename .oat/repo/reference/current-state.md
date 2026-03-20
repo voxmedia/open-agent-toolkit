@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-20
 
 ## Canonical References
 
@@ -93,13 +93,15 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 
 ### Agent Instructions (Utility)
 
-- `oat-agent-instructions-analyze` (scan codebase for instruction file coverage, quality, and drift; severity-rated analysis artifacts)
-- `oat-agent-instructions-apply` (interactive generation/update of instruction files with multi-provider support: AGENTS.md, Claude rules, Cursor rules, Copilot instructions)
+- `oat-agent-instructions-analyze` (scan codebase for instruction file coverage, quality, and drift; writes a reviewer-facing markdown analysis artifact plus a companion artifact bundle with `summary.md`, `recommendations.yaml`, and per-recommendation packs)
+- `oat-agent-instructions-apply` (interactive generation/update of instruction files with multi-provider support: AGENTS.md, Claude rules, Cursor rules, Copilot instructions; consumes the companion bundle as the primary generation contract and treats the markdown artifact as review context)
 - CLI integrity commands:
   - `oat instructions validate` (report missing/mismatched AGENTS.md ↔ CLAUDE.md context pointers)
   - `oat instructions sync` (repair missing/invalid context pointers; mutates by default, `--dry-run` to preview)
 - Shared tracking manifest: `.oat/tracking.json` (delta mode support via `resolve-tracking.sh`)
-- 7 instruction file templates, 3 helper scripts (tracking, providers, file discovery), quality checklist and directory assessment criteria
+- Bundle contract templates: analysis artifact template, bundle summary template, recommendations manifest template, and recommendation-pack template
+- Apply planning contract includes stable recommendation IDs plus bundle-pack references
+- 7 instruction file templates, 3 helper scripts (tracking, providers, file discovery), quality checklist, directory assessment criteria, and bundle-contract regression coverage
 - Reference docs bundled as symlinks (dereferenced during CLI distribution)
 
 ### Subagent Orchestration

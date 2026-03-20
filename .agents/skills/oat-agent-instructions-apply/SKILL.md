@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-apply
-version: 1.4.0
+version: 1.6.1
 description: Run when you have an agent instructions analysis artifact and want to generate or update instruction files. Creates a branch, generates files from templates, and optionally opens a PR.
 disable-model-invocation: true
 user-invocable: true
@@ -50,7 +50,14 @@ Keep the question content consistent across hosts so the workflow remains portab
 
 ## Analyze vs Apply Boundary
 
-Treat the analysis artifact as the source of truth for what should be generated and why.
+Treat the analysis output as the source of truth for what should be generated and why.
+
+When a companion bundle exists beside the markdown artifact, the bundle is the primary generation contract:
+
+- `agent-instructions-<timestamp>.bundle/recommendations.yaml`
+- `agent-instructions-<timestamp>.bundle/packs/*.md`
+
+The markdown artifact remains the human-readable review summary.
 
 Apply may:
 
@@ -92,7 +99,26 @@ Search for the most recent analysis artifact:
 ls -t .oat/repo/analysis/agent-instructions-*.md 2>/dev/null | head -1
 ```
 
-**If found:** Read the artifact, extract findings and recommendations.
+If found, derive the companion bundle path:
+
+```bash
+BUNDLE_DIR="${ARTIFACT_PATH%.md}.bundle"
+MANIFEST_PATH="${BUNDLE_DIR}/recommendations.yaml"
+```
+
+**If found:** Read the artifact, then check for the companion bundle.
+
+**Bundle-first behavior:**
+
+- If `"$BUNDLE_DIR"` exists, validate `summary.md`, `recommendations.yaml`, and every referenced pack file.
+- Treat the bundle as the primary generation contract and the markdown artifact as review context.
+- If the bundle exists but is incomplete, stop and require a refreshed analysis rather than falling back silently to the
+  markdown artifact.
+
+**Legacy fallback:**
+
+- If no companion bundle exists, continue using the markdown artifact alone.
+- This keeps apply backward compatible with older analysis artifacts until the bundle contract is fully adopted.
 
 Validate that the artifact includes evidence, confidence, and progressive disclosure decisions for each recommendation.
 Also validate that every `link_only` recommendation includes at least one concrete link target to a canonical doc, config, or example.
@@ -101,6 +127,13 @@ If a recommendation updates or contradicts an existing rule, validate that it al
 If the artifact records a High/Medium glob-scoped opportunity with a recommended action to create, update, or split a
 rule, validate that a matching explicit recommendation exists. Apply should not infer missing rule work from the
 opportunities table.
+If the companion bundle exists, validate that:
+
+- every recommendation has a stable ID
+- every manifest entry points to an existing pack file
+- each pack preserves the executable fields apply relies on (`Evidence`, `Content Guidance`, `Must Include`,
+  `Must Not Include`, `Counter-Examples`, `New-File Workflow`, `Preferred Default for New Files`, `Claim Corrections`)
+
 If the artifact is missing that detail, treat it as incomplete:
 
 ```
@@ -134,8 +167,13 @@ For each recommendation in the analysis artifact, determine the action.
 Recommendations may originate from findings, provider baseline gaps, directory coverage gaps, or promoted glob-rule opportunities.
 The artifact should already specify the rationale, evidence, confidence, and disclosure decision.
 Do not rediscover conventions from scratch during this step.
+When the companion bundle exists, build the plan from the bundle manifest and recommendation packs first, then use the
+markdown artifact only to confirm reviewer-facing rationale and summary wording.
 Carry forward the artifact's structured handoff fields (`Content Guidance`, `Must Include`, `Must Not Include`,
-`Preferred Default for New Files`, `Claim Corrections`) into the plan wherever they are present.
+`Counter-Examples`, `New-File Workflow`, `Preferred Default for New Files`, `Claim Corrections`) into the plan wherever
+they are present.
+When the companion bundle exists, also carry forward the stable `Recommendation ID` and `Bundle Pack` path for each
+recommendation so plan review and generation stay aligned to the same pack file.
 
 **For provider baseline gaps (always-on provider files):**
 
@@ -254,10 +292,15 @@ If branch creation fails (e.g., uncommitted changes), ask the user to resolve an
 
 For each approved recommendation, in the order from Step 2:
 
+- When the companion bundle exists, load the approved recommendation's manifest entry and matching pack before
+  reading repo evidence or generating content.
+- Treat that pack as the executable contract for the recommendation. Do not generate from the markdown summary alone.
+
 **Creating new files:**
 
 1. Read the appropriate template from `references/instruction-file-templates/`.
 2. Read only the project context needed to fill the approved recommendation:
+   - the matching recommendation pack when the companion bundle exists
    - the evidence files cited in the artifact
    - `package.json` for commands and dependencies
    - directory structure for architecture section
@@ -284,7 +327,7 @@ For each approved recommendation, in the order from Step 2:
 
 **Updating existing files:**
 
-1. Read the existing file.
+1. Read the existing file and the matching recommendation pack when the companion bundle exists.
 2. Identify the section(s) that need updating based on the finding.
 3. Make targeted edits using only the approved recommendation and its cited evidence.
 4. Do not rewrite the entire file unless the user explicitly approves.
