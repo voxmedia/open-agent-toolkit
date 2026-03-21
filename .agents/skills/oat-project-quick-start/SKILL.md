@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 1.3.0
+version: 1.3.1
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name>'
 disable-model-invocation: true
@@ -64,6 +64,12 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[5/6] Initializing implementation tracker…`
   - `[6/6] Refreshing dashboard…`
   - _(If lightweight design is chosen, insert design steps between 3 and 4)_
+
+## Artifact Persistence (Required)
+
+- After any write to `discovery.md`, `design.md`, `plan.md`, `implementation.md`, or project `state.md`, ensure the artifact is saved immediately and remains tracked in git.
+- If the skill is about to pause for user input or stop after mutating artifacts, commit the changed artifacts before waiting. Do not leave discovery/design updates only in the working tree.
+- Quick-start handoff is not complete until the changed project artifacts and regenerated `.oat/state.md` dashboard have been committed.
 
 ## Process
 
@@ -146,6 +152,15 @@ Whether well-understood or exploratory, backfill `discovery.md` with the discuss
 
 Keep this concise and outcome-oriented.
 
+### Step 2d: Persist Discovery Before Any Decision Pause
+
+If discovery/state artifacts were updated and the skill is about to pause for the Step 2.5 design-depth decision, commit those artifact changes first so the project can be resumed cleanly.
+
+```bash
+git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
+git diff --cached --quiet || git commit -m "chore(oat): capture quick-start discovery for {project-name}"
+```
+
 ### Step 2.5: Decision Point — Design Depth
 
 **Auto-advance rule:** If the request was classified as **well-understood** in Step 2a and discovery surfaced no architecture decisions, component boundary questions, or unexpected complexity, skip this decision point entirely and continue directly to Step 3. This preserves the minimal-ceremony contract for straightforward requests.
@@ -182,6 +197,13 @@ Use `AskUserQuestion` to present this choice.
   - `oat_phase_status: complete`
   - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - Refresh repo dashboard: `oat state refresh`
+- Commit the promoted discovery/state artifacts before stopping:
+
+```bash
+git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md" ".oat/state.md"
+git diff --cached --quiet || git commit -m "chore(oat): promote quick-start discovery for {project-name}"
+```
+
 - Inform the user: "Discovery is complete. Run `oat-project-spec` next to formalize requirements."
 - Stop here. Do not generate a plan.
 
@@ -222,6 +244,8 @@ Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
 
 After each chunk, ask: "Does this look right, or should we adjust before continuing?"
 
+If `design.md` or `state.md` was updated before one of these validation pauses, commit those artifact changes before waiting for the user response.
+
 Update `design.md` frontmatter:
 
 ```yaml
@@ -239,6 +263,13 @@ Update `"$PROJECT_PATH/state.md"` to reflect the design phase:
 - `oat_phase: design`
 - `oat_phase_status: complete`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+Before proceeding to plan generation or pausing for validation, persist the design bookkeeping:
+
+```bash
+git add "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
+git diff --cached --quiet || git commit -m "chore(oat): capture quick-start design for {project-name}"
+```
 
 ### Step 3: Generate Plan Directly
 
@@ -293,6 +324,23 @@ Always regenerate the repo dashboard after quick-start updates (including resume
 oat state refresh
 ```
 
+### Step 6.5: Commit Quick-Start Artifacts
+
+After dashboard refresh, stage and commit the changed quick-start artifacts before handing off to implementation or stopping.
+
+```bash
+for path in \
+  "$PROJECT_PATH/discovery.md" \
+  "$PROJECT_PATH/design.md" \
+  "$PROJECT_PATH/plan.md" \
+  "$PROJECT_PATH/implementation.md" \
+  "$PROJECT_PATH/state.md" \
+  ".oat/state.md"; do
+  [ -e "$path" ] && git add "$path"
+done
+git diff --cached --quiet || git commit -m "chore(oat): update quick-start artifacts for {project-name}"
+```
+
 ### Step 7: Output Next Action
 
 Report:
@@ -312,3 +360,4 @@ Report:
 - ✅ `discovery.md` contains synthesized or backfilled quick discovery decisions from the session context.
 - ✅ `plan.md` is complete and executable (`oat_ready_for: oat-project-implement`).
 - ✅ `implementation.md` is initialized for resumable execution.
+- ✅ Changed quick-start artifacts and refreshed `.oat/state.md` are committed before handoff or pause.

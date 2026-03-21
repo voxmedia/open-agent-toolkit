@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 1.2.0
+version: 1.2.1
 description: Use when plan.md is ready for execution. Implements plan tasks sequentially with TDD discipline and state tracking.
 disable-model-invocation: true
 user-invocable: true
@@ -142,22 +142,29 @@ Determine whether this is a first implementation run:
 
 Prompt behavior:
 
-- **If first run:** always present a brief phase summary and confirm checkpoint phases before any task execution. A missing `oat_plan_hill_phases` value is the normal unconfirmed state; if a value is already present, treat it as a provisional value to confirm rather than as final.
+- **If first run:** always present a complete phase-by-phase summary and confirm checkpoint phases before any task execution. A missing `oat_plan_hill_phases` value is the normal unconfirmed state; if a value is already present, treat it as a provisional value to confirm rather than as final.
 - **If resuming and `oat_plan_hill_phases` is valid:** do not re-ask; print active checkpoint config and continue.
 - **If resuming and `oat_plan_hill_phases` is missing/invalid:** treat this as bookkeeping drift, because implementation should already have written the confirmed value before prior task execution. Ask the user to repair the checkpoint configuration before continuing.
 
 Required prompt shape for first-run confirmation:
 
-1. Briefly summarize each plan phase:
+1. Open with plan framing:
+   - `This plan has {phase_count} phases. Final phase: {final_phase_id}.`
+2. Briefly summarize every plan phase in order:
    - `p01 — {short phase summary}`
    - `p02 — {short phase summary}`
    - ...
-2. Ask a simple checkpoint question:
-   - `Which checkpoints do you want: every phase, or specific checkpoints?`
-3. Offer concrete examples:
-   - `Every phase` -> `[]`
-   - `Final phase only` -> `["p07"]` (replace `p07` with the actual final phase ID for this plan)
-   - `Specific checkpoints` -> `["p02","p05"]`
+   - Never omit this summary, even if the plan has only one phase or `oat_plan_hill_phases` already contains a provisional value.
+3. Ask the checkpoint question using exactly three options:
+   - `Which checkpoint behavior do you want?`
+   - `1. Stop after each phase (default)`
+   - `2. Stop after specific phases, e.g. p02, p05`
+   - `3. Stop only after the final phase is completed`
+4. Map the options to stored values:
+   - `1` -> `[]`
+   - `2` -> user-specified array such as `["p02","p05"]`
+   - `3` -> `["p07"]` (replace `p07` with the actual final phase ID for this plan)
+5. If a provisional `oat_plan_hill_phases` value already exists, mention it after presenting the three options, but still require the user to choose or confirm one of them.
 
 When user confirms/changes:
 

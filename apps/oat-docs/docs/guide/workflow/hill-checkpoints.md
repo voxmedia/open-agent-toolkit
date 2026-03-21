@@ -36,7 +36,13 @@ Semantics:
 - Empty list: checkpoint after every phase boundary, but only after implementation has confirmed the choice and written `oat_plan_hill_phases: []` into `plan.md`.
 - Explicit list: checkpoint only after completing the named phases (`p01`, `p04`, etc).
 
-On the first implementation run, `oat-project-implement` presents a brief phase summary and asks a simple checkpoint question such as "every phase or specific checkpoints?" It then writes the confirmed value into `plan.md`. If the field is later missing during a resumed implementation run, treat that as bookkeeping drift rather than as an implicit default.
+On the first implementation run, `oat-project-implement` must summarize every plan phase, state the total phase count and final phase ID, and then ask an explicit three-option checkpoint question:
+
+- Stop after each phase
+- Stop after specific phases
+- Stop only after the final phase is completed
+
+It then writes the confirmed value into `plan.md`. If the field is later missing during a resumed implementation run, treat that as bookkeeping drift rather than as an implicit default.
 
 Listed phases are where you stop **after completing them**, not before. `["p03"]` means "complete p03, then pause" — not "pause before starting p03." Setting the last phase ID (e.g., `["p03"]` when p03 is final) means "stop only at the end of implementation."
 

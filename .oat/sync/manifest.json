@@ -1121,7 +1121,67 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-03-16T17:37:53.299Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-pjm-add-backlog-item",
+      "providerPath": ".claude/skills/oat-pjm-add-backlog-item",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-21T14:51:12.220Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-pjm-review-backlog",
+      "providerPath": ".claude/skills/oat-pjm-review-backlog",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-21T14:51:12.221Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-pjm-update-repo-reference",
+      "providerPath": ".claude/skills/oat-pjm-update-repo-reference",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-21T14:51:12.221Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-pjm-add-backlog-item",
+      "providerPath": ".cursor/skills/oat-pjm-add-backlog-item",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-21T14:51:12.221Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-pjm-review-backlog",
+      "providerPath": ".cursor/skills/oat-pjm-review-backlog",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-21T14:51:12.222Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-pjm-update-repo-reference",
+      "providerPath": ".cursor/skills/oat-pjm-update-repo-reference",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-21T14:51:12.222Z"
     }
   ],
-  "lastUpdated": "2026-03-16T17:37:53.299Z"
+  "lastUpdated": "2026-03-21T14:51:12.222Z"
 }

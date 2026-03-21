@@ -607,7 +607,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.1');
   });
 
   it('reports missing quick-start-specific discovery guidance', async () => {
