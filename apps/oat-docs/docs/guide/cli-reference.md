@@ -67,11 +67,12 @@ See [Tool Packs](tool-packs.md) for the pack lifecycle and compatibility notes.
 
 Use the `oat backlog` group when you want direct CLI support for the file-backed backlog under `.oat/repo/reference/backlog/`.
 
+- `oat backlog init` - scaffold `.oat/repo/reference/backlog/` with starter files and directories for a fresh repo
 - `oat backlog generate-id <filename>` - generate a unique backlog ID from a filename seed
 - `oat backlog generate-id <filename> --created-at <timestamp>` - generate a reproducible ID for a known creation timestamp
 - `oat backlog regenerate-index` - rebuild the managed backlog index table from item frontmatter
 
-This command group is primarily used by the `oat-pjm-*` project-management skills, but it is also available directly when you need to inspect or repair backlog metadata by hand.
+Run `oat backlog init` first when the local backlog scaffold does not exist yet in a fresh repo. This command group is primarily used by the `oat-pjm-*` project-management skills, but it is also available directly when you need to inspect or repair backlog metadata by hand.
 
 ### `oat local ...`
 

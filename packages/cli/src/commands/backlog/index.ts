@@ -5,11 +5,16 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
+import { initializeBacklog } from './init';
 import { regenerateBacklogIndex } from './regenerate-index';
 import {
   generateUniqueBacklogId,
   readExistingBacklogIds,
 } from './shared/generate-id';
+
+interface InitOptions {
+  backlogRoot?: string;
+}
 
 interface RegenerateIndexOptions {
   backlogRoot?: string;
@@ -22,12 +27,14 @@ interface GenerateIdOptions {
 interface BacklogCommandDependencies {
   buildCommandContext: typeof buildCommandContext;
   resolveProjectRoot: typeof resolveProjectRoot;
+  initializeBacklog: typeof initializeBacklog;
   regenerateBacklogIndex: typeof regenerateBacklogIndex;
 }
 
 const DEFAULT_DEPENDENCIES: BacklogCommandDependencies = {
   buildCommandContext,
   resolveProjectRoot,
+  initializeBacklog,
   regenerateBacklogIndex,
 };
 
@@ -55,6 +62,34 @@ export function createBacklogCommand(
   const cmd = new Command('backlog').description(
     'Manage file-backed backlog items and indexes',
   );
+
+  cmd
+    .command('init')
+    .description(
+      'Scaffold the canonical backlog directory structure and starter files',
+    )
+    .option(
+      '--backlog-root <path>',
+      'Backlog root directory (defaults to .oat/repo/reference/backlog)',
+    )
+    .action(async (options: InitOptions, command: Command) => {
+      const context = dependencies.buildCommandContext(
+        readGlobalOptions(command),
+      );
+      const backlogRoot = await resolveBacklogRoot(
+        context,
+        options.backlogRoot,
+        dependencies,
+      );
+      await dependencies.initializeBacklog(backlogRoot);
+
+      if (context.json) {
+        context.logger.json({ status: 'ok', backlogRoot });
+      } else {
+        context.logger.info(`Initialized backlog scaffold at ${backlogRoot}`);
+      }
+      process.exitCode = 0;
+    });
 
   cmd
     .command('regenerate-index')

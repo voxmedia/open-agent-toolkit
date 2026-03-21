@@ -87,6 +87,7 @@ pnpm run cli -- docs init --app-name my-docs
 pnpm run cli -- docs nav sync --target-dir apps/my-docs
 
 # Manage the file-backed backlog directly
+pnpm run cli -- backlog init
 pnpm run cli -- backlog generate-id add-webhook-support --created-at 2026-03-15T14:30:00Z
 pnpm run cli -- backlog regenerate-index
 
@@ -113,6 +114,7 @@ oat instructions sync
 oat remove skills --pack utility
 oat doctor --scope all
 oat project new my-project --mode spec-driven
+oat backlog init
 oat backlog regenerate-index
 ```
 

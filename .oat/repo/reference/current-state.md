@@ -130,7 +130,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat providers list`, `oat providers inspect`, `oat providers set`
   - `oat cleanup project`, `oat cleanup artifacts`
   - `oat instructions validate`, `oat instructions sync`
-  - `oat backlog generate-id`, `oat backlog regenerate-index`
+  - `oat backlog init`, `oat backlog generate-id`, `oat backlog regenerate-index`
   - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install` (packs: core, ideas, workflows, utility, project-management, research)
 - Provider config model:
   - Project provider enablement lives in `.oat/sync/config.json` (`providers.<name>.enabled`).
@@ -232,7 +232,8 @@ Backlog/reference workflow quickstart:
 
 1. Create or update backlog items:
    - `oat-pjm-add-backlog-item`
-2. Regenerate managed backlog metadata directly when needed:
+2. Scaffold or regenerate managed backlog metadata directly when needed:
+   - `oat backlog init`
    - `oat backlog generate-id <filename>`
    - `oat backlog regenerate-index`
 3. Refresh repo references:

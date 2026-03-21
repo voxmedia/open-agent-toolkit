@@ -1,9 +1,11 @@
+import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { initializeBacklog } from './init';
 import { regenerateBacklogIndex } from './regenerate-index';
 
 const INDEX_START = '<!-- OAT BACKLOG-INDEX -->';
@@ -139,5 +141,82 @@ describe('regenerateBacklogIndex', () => {
     const index = await readFile(join(backlogRoot, 'index.md'), 'utf8');
 
     expect(index).toContain('| _No backlog items yet_ | - | - | - | - | - |');
+  });
+
+  it('works with a freshly scaffolded backlog root and preserves curated overview content', async () => {
+    const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-seeded-'));
+    tempDirs.push(backlogRoot);
+
+    await initializeBacklog(backlogRoot);
+
+    const itemsDir = join(backlogRoot, 'items');
+    await writeBacklogItem(itemsDir, 'alpha.md', {
+      id: 'bl-aaaa',
+      title: '"Alpha"',
+      status: 'open',
+      priority: 'high',
+      scope: 'feature',
+      scope_estimate: 'M',
+    });
+
+    const indexPath = join(backlogRoot, 'index.md');
+    const originalIndex = await readFile(indexPath, 'utf8');
+    await writeFile(
+      indexPath,
+      originalIndex.replace(
+        '- Add brief narrative summaries here as backlog items are created and reprioritized.',
+        '- Keep this curated summary.',
+      ),
+      'utf8',
+    );
+
+    await regenerateBacklogIndex(backlogRoot);
+
+    const index = await readFile(indexPath, 'utf8');
+    expect(index).toContain('- Keep this curated summary.');
+    expect(index).toContain('| bl-aaaa | Alpha | open | high | feature | M |');
+    expect(index).not.toContain(
+      '| _No backlog items yet_ | - | - | - | - | - |',
+    );
+  });
+
+  it('works after a git commit and clone round-trip without rerunning init', async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-git-'));
+    tempDirs.push(tempRoot);
+
+    const repoRoot = join(tempRoot, 'repo');
+    const cloneRoot = join(tempRoot, 'clone');
+    const backlogRoot = join(repoRoot, '.oat', 'repo', 'reference', 'backlog');
+
+    await mkdir(repoRoot, { recursive: true });
+    await initializeBacklog(backlogRoot);
+
+    execFileSync('git', ['init', '-q'], { cwd: repoRoot });
+    execFileSync('git', ['config', 'user.email', 'review@example.com'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.name', 'reviewer'], { cwd: repoRoot });
+    execFileSync('git', ['add', '.'], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-qm', 'init backlog scaffold'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['clone', '-q', repoRoot, cloneRoot], {
+      cwd: tempRoot,
+    });
+
+    const clonedBacklogRoot = join(
+      cloneRoot,
+      '.oat',
+      'repo',
+      'reference',
+      'backlog',
+    );
+
+    await expect(
+      readFile(join(clonedBacklogRoot, 'items', '.gitkeep'), 'utf8'),
+    ).resolves.toBe('');
+    await expect(
+      regenerateBacklogIndex(clonedBacklogRoot),
+    ).resolves.toBeUndefined();
   });
 });

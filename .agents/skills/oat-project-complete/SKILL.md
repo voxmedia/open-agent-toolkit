@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.3.0
+version: 1.3.1
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -192,7 +192,7 @@ Rules:
 
 ### Step 5: Set Lifecycle Complete
 
-Update state.md frontmatter to add/update `oat_lifecycle: complete` and set completion timestamp:
+Update `state.md` frontmatter to add/update `oat_lifecycle: complete` and set completion timestamps:
 
 ```bash
 STATE_FILE="${PROJECT_PATH}/state.md"
@@ -215,6 +215,18 @@ mv "$STATE_FILE.tmp" "$STATE_FILE"
 sed -E "s/^oat_project_state_updated:.*/oat_project_state_updated: \"$NOW_UTC\"/" "$STATE_FILE" > "$STATE_FILE.tmp"
 mv "$STATE_FILE.tmp" "$STATE_FILE"
 ```
+
+Then update the markdown body in `state.md` so the completion state is explicit and does not rely on reference lookups:
+
+- Set `**Status:** Complete`
+- Set `**Last Updated:**` to the completion date in `YYYY-MM-DD`
+- In `## Current Phase`, replace the body with:
+  - `Lifecycle complete; archived locally` when the project is archived in Step 8
+  - `Lifecycle complete` when the project is completed without archive
+- In `## Progress`, preserve the existing completed workflow/review bullets and add `- ✓ Project lifecycle complete` if it is not already present
+- In `## Next Milestone`, replace the body with `None. Project complete.`
+
+Do not infer these body mutations from other archived projects. Apply them directly as part of this skill.
 
 ### Step 6: Clear Active Project Pointer
 

@@ -5,7 +5,7 @@
 ## Curated Overview
 
 - `bl-42f9` tracks the only in-progress backlog item and is currently being delivered through the active `local-project-management` project.
-- Inbox work is concentrated on workflow operations: optional S3 archival for project completion and a Jira-oriented backlog refinement flow.
+- Inbox work is concentrated on workflow operations: project-completion hardening (`bl-0ace`, `bl-ea64`) and a Jira-oriented backlog refinement flow.
 - Planned follow-on investments cluster around provider ergonomics (`bl-cbdd`), review collaboration (`bl-9fb8`), dependency analysis (`bl-3327`), and ideas-to-project promotion (`bl-b3f7`).
 - Longer-horizon backlog work now includes explicit entries for freshness hardening (`bl-f9bd`) and memory/provider-enhancement work (`bl-71a1`).
 
@@ -18,6 +18,7 @@
 | bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new                                   | open        | medium   | feature    | L        |
 | bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote)            | open        | medium   | feature    | L        |
 | bl-ff5d | Backlog Refinement Flow (Jira ticket generation)                                                | open        | medium   | feature    | L        |
+| bl-0ace | Move oat-project-complete state mutations into a CLI helper                                     | open        | medium   | feature    | M        |
 | bl-cbdd | Optional Codex prompt-wrapper generation for synced OAT skills                                  | open        | medium   | feature    | M        |
 | bl-ea64 | Optional S3 archival in oat-project-complete workflow                                           | open        | medium   | feature    | L        |
 | bl-f9bd | Staleness + knowledge drift upgrades                                                            | open        | medium   | feature    | L        |

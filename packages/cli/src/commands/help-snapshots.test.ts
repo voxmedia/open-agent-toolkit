@@ -106,6 +106,47 @@ describe('help output snapshots', () => {
     `);
   });
 
+  it('backlog --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['backlog']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat backlog [options] [command]
+
+      Manage file-backed backlog items and indexes
+
+      Options:
+        -h, --help                        display help for command
+
+      Commands:
+        init [options]                    Scaffold the canonical backlog directory
+                                          structure and starter files
+        regenerate-index [options]        Regenerate the managed backlog index table
+        generate-id [options] <filename>  Generate a backlog item identifier from a
+                                          filename seed
+        help [command]                    display help for command
+      "
+    `);
+  });
+
+  it('backlog init --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'backlog',
+      'init',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat backlog init [options]
+
+      Scaffold the canonical backlog directory structure and starter files
+
+      Options:
+        --backlog-root <path>  Backlog root directory (defaults to
+                               .oat/repo/reference/backlog)
+        -h, --help             display help for command
+      "
+    `);
+  });
+
   it('status --help matches snapshot', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, ['status']).helpInformation();
