@@ -15,7 +15,7 @@ If you are developing inside the OAT repo itself, replace `oat ...` with
 
 - a docs app scaffolded with OAT defaults (Fumadocs or MkDocs)
 - `index.md`-driven navigation
-- docs analysis and apply skills installed via the utility pack
+- docs analysis and apply skills installed via the docs pack
 - a repeatable workflow for finding gaps, verifying claims, and applying docs changes
 
 ## 1. Initialize OAT in the repo
@@ -28,19 +28,27 @@ This sets up the base OAT structure used by the CLI and installed tool packs.
 
 ## 2. Install the docs workflow skills
 
-Fastest direct path:
+Preferred direct path:
 
 ```bash
-oat init tools utility
+oat tools install docs
 ```
 
 Interactive path:
 
 ```bash
-oat init tools
+oat tools install
 ```
 
-The utility pack installs `oat-docs-analyze` and `oat-docs-apply`.
+Legacy pack-specific path:
+
+```bash
+oat init tools docs
+```
+
+The docs pack installs `oat-docs-analyze`, `oat-docs-apply`,
+`oat-agent-instructions-analyze`, and `oat-agent-instructions-apply`. For this
+quickstart, the docs pair is the part you need immediately.
 
 ## 3. Scaffold the docs app
 
@@ -140,7 +148,7 @@ Important:
 ## Typical loop
 
 1. `oat init --scope project`
-2. `oat init tools utility`
+2. `oat tools install docs`
 3. `oat docs init --app-name my-docs`
 4. (optional) `oat docs migrate --docs-dir docs --config mkdocs.yml --apply`
 5. Author docs with `index.md` + `## Contents`

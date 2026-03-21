@@ -78,7 +78,7 @@ describe('installWorkflows', () => {
     tempDirs.length = 0;
   });
 
-  it('copies all workflow skills, 2 agents, 6 templates, and 2 scripts on fresh install', async () => {
+  it('copies all workflow skills, 2 agents, 6 templates, and 3 scripts on fresh install', async () => {
     const root = await makeTempDir();
     const assetsRoot = join(root, 'assets');
     const targetRoot = join(root, 'target');
@@ -90,7 +90,7 @@ describe('installWorkflows', () => {
     expect(result.outdatedSkills).toEqual([]);
     expect(result.copiedAgents).toHaveLength(2);
     expect(result.copiedTemplates).toHaveLength(6);
-    expect(result.copiedScripts).toHaveLength(2);
+    expect(result.copiedScripts).toHaveLength(3);
     expect(result.projectsRootInitialized).toBe(true);
   });
 
@@ -250,7 +250,7 @@ describe('installWorkflows', () => {
     const result = await installWorkflows({ assetsRoot, targetRoot });
 
     expect(result.copiedScripts).toEqual([]);
-    expect(result.skippedScripts).toHaveLength(2);
+    expect(result.skippedScripts).toHaveLength(3);
   });
 
   it('skips all items on idempotent re-run', async () => {
@@ -270,7 +270,7 @@ describe('installWorkflows', () => {
     expect(second.outdatedSkills).toEqual([]);
     expect(second.skippedAgents).toHaveLength(2);
     expect(second.skippedTemplates).toHaveLength(6);
-    expect(second.skippedScripts).toHaveLength(2);
+    expect(second.skippedScripts).toHaveLength(3);
   });
 
   it('overwrites with force=true, tracking updated arrays', async () => {
@@ -296,7 +296,7 @@ describe('installWorkflows', () => {
     expect(result.outdatedSkills).toEqual([]);
     expect(result.updatedAgents).toHaveLength(2);
     expect(result.updatedTemplates).toHaveLength(6);
-    expect(result.updatedScripts).toHaveLength(2);
+    expect(result.updatedScripts).toHaveLength(3);
   });
 
   it('tracks outdated skills without overwriting when not forced', async () => {

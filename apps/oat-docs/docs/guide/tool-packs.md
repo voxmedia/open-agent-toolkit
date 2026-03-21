@@ -10,9 +10,10 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 ## Bundled packs at a glance
 
 - `core` - foundational diagnostics and docs access (`oat-doctor`, `oat-docs`)
+- `docs` - docs and agent-instructions governance workflows
 - `workflows` - project lifecycle skills, reviewer agents, and core project templates
 - `ideas` - lightweight ideation and promotion flows
-- `utility` - standalone docs, review, and repo-maintenance helpers
+- `utility` - review and repo-maintenance helpers
 - `project-management` - file-backed backlog/reference skills plus backlog and roadmap templates
 - `research` - research, analysis, comparison, and synthesis skills
 
@@ -29,7 +30,7 @@ Purpose:
 Key behavior:
 
 - Scans installed skills and agents across project and user scopes
-- Displays version, pack (`core`, `ideas`, `workflows`, `utility`, `project-management`, `research`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
+- Displays version, pack (`core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
 - Supports `--scope` filtering and `--json` output
 
 ### `oat tools outdated`
@@ -60,12 +61,12 @@ Key behavior:
 
 Purpose:
 
-- Install bundled OAT tool packs (`core`, `ideas`, `workflows`, `utility`, `project-management`, `research`)
+- Install bundled OAT tool packs (`core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`)
 
 Key behavior:
 
 - Same pack selection and install flow as `oat init tools`
-- Pack-oriented install subcommands: `core`, `ideas`, `workflows`, `utility`, `project-management`, `research`
+- Pack-oriented install subcommands: `core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`
 - Tracks installed vs bundled skill versions and reports outdated skills
 - Interactive runs can prompt to update selected outdated skills
 - Auto-sync runs automatically after successful install (provider views are updated)
@@ -111,6 +112,30 @@ Key behavior:
 - Core is checked by default in the `oat init tools` guided setup.
 - Installation also bundles OAT documentation to `~/.oat/docs/` for the oat-docs skill.
 - `oat tools update --pack core` refreshes both skills and `~/.oat/docs/` documentation.
+
+## Docs pack
+
+The `docs` pack contains active documentation and instruction-governance
+workflows:
+
+- **oat-docs-analyze** — Analyze a docs surface for contract coverage, nav
+  drift, stale claims, and coverage gaps.
+- **oat-docs-apply** — Apply only approved, evidence-backed docs-analysis
+  recommendations.
+- **oat-agent-instructions-analyze** — Evaluate `AGENTS.md` and provider
+  instruction coverage, quality, and drift.
+- **oat-agent-instructions-apply** — Generate or update approved instruction
+  files from an analysis artifact.
+
+Key behavior:
+
+- Docs pack installs at the selected scope, typically `project`.
+- It complements the `core` pack: `oat-docs` answers questions from bundled
+  docs, while the `docs` pack adds analyze/apply workflows.
+- `oat tools install docs` is the preferred install path; `oat init tools docs`
+  remains available for backward compatibility.
+- `oat tools update --pack docs` and `oat tools remove --pack docs` manage the
+  workflow skills as a unit.
 
 ### Auto-sync behavior
 

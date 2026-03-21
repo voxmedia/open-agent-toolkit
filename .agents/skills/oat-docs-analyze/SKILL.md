@@ -92,7 +92,7 @@ Prefer the OAT docs app when multiple MkDocs apps exist and one is clearly the a
 Resolve tracking and analysis mode using the shared helper:
 
 ```bash
-TRACKING_SCRIPT=".agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh"
+TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
 TRACKING=$(bash "$TRACKING_SCRIPT" read docs 2>/dev/null || true)
 ```
 
@@ -307,7 +307,7 @@ Populate the artifact with:
 Update docs tracking using the shared helper:
 
 ```bash
-TRACKING_SCRIPT=".agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh"
+TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
 ROOT_TARGET=$(bash "$TRACKING_SCRIPT" root)
 ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
 ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
@@ -352,4 +352,4 @@ Next step: Run oat-docs-apply to act on these findings.
 - Analysis artifact template: `references/analysis-artifact-template.md`
 - Quality checklist: `references/quality-checklist.md`
 - Directory criteria: `references/directory-assessment-criteria.md`
-- Shared tracking helper: `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh`
+- Shared tracking helper: `.oat/scripts/resolve-tracking.sh`

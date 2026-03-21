@@ -3,6 +3,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { DOCS_SKILLS } from '@commands/init/tools/docs/install-docs';
 import { RESEARCH_SKILLS } from '@commands/init/tools/research/install-research';
 import { UTILITY_SKILLS } from '@commands/init/tools/utility/install-utility';
 import { WORKFLOW_SKILLS } from '@commands/init/tools/workflows/install-workflows';
@@ -100,6 +101,14 @@ describe('createRemoveSkillsCommand', () => {
     await runCommand(command, [], ['--pack', 'utility']);
 
     expect(runRemoveSkill).toHaveBeenCalledTimes(UTILITY_SKILLS.length);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('runs remove-skill workflow for docs pack members', async () => {
+    const { command, runRemoveSkill } = createHarness({ interactive: false });
+    await runCommand(command, [], ['--pack', 'docs']);
+
+    expect(runRemoveSkill).toHaveBeenCalledTimes(DOCS_SKILLS.length);
     expect(process.exitCode).toBe(0);
   });
 

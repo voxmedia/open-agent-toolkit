@@ -36,7 +36,7 @@ After core initialization completes, `oat init` can enter an interactive guided 
 
 **Steps (each independently skippable):**
 
-1. **Tool packs** — install OAT tool packs. The core pack (diagnostics, docs) is checked by default and always installs at user scope. Other packs (ideas, workflows, utility, research) install at project scope.
+1. **Tool packs** — install OAT tool packs. The core pack (diagnostics, passive docs access) is checked by default and always installs at user scope. Other packs (`docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`) install at project scope.
 2. **Local paths** — multi-select from default gitignored artifact paths (analysis, PR, reviews, ideas). Pre-existing paths are pre-checked; only new paths are added.
 3. **Provider sync** — sync provider project views via `oat sync --scope project`.
 4. **Summary** — reports what was configured: active providers, tool packs status, local paths added/existing, and provider sync status. Includes suggested next steps.

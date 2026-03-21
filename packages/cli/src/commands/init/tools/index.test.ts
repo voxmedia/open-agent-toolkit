@@ -21,7 +21,7 @@ function createHarness(options: HarnessOptions = {}) {
   const capture = createLoggerCapture();
   const packSelection = [
     ...(options.packSelection ?? [
-      ['core', 'ideas', 'workflows', 'utility', 'research'],
+      ['core', 'ideas', 'docs', 'workflows', 'utility', 'research'],
     ]),
   ];
   const scopeSelection = [...(options.scopeSelection ?? ['project'])];
@@ -30,7 +30,7 @@ function createHarness(options: HarnessOptions = {}) {
     async (_message: string, _choices: MultiSelectChoice<string>[]) => {
       const next = packSelection.shift();
       return next === undefined
-        ? ['core', 'ideas', 'workflows', 'utility', 'research']
+        ? ['core', 'ideas', 'docs', 'workflows', 'utility', 'research']
         : next;
     },
   );
@@ -47,6 +47,12 @@ function createHarness(options: HarnessOptions = {}) {
     skippedSkills: [],
     outdatedSkills: [],
     docsStatus: 'copied' as const,
+  }));
+  const installDocs = vi.fn(async () => ({
+    copiedSkills: ['oat-docs-analyze'],
+    updatedSkills: [],
+    skippedSkills: [],
+    outdatedSkills: [],
   }));
   const installIdeas = vi.fn(async () => ({
     copiedSkills: ['oat-idea-new'],
@@ -138,6 +144,7 @@ function createHarness(options: HarnessOptions = {}) {
     selectManyWithAbort,
     selectWithAbort,
     installCore,
+    installDocs,
     installIdeas,
     installWorkflows,
     installUtility,
@@ -158,6 +165,7 @@ function createHarness(options: HarnessOptions = {}) {
     selectManyWithAbort,
     selectWithAbort,
     installCore,
+    installDocs,
     installIdeas,
     installWorkflows,
     installUtility,
@@ -206,11 +214,12 @@ describe('createInitToolsCommand', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('registers core, ideas, project-management, workflows, utility, and research subcommands', () => {
+  it('registers core, ideas, docs, project-management, workflows, utility, and research subcommands', () => {
     const { command } = createHarness();
     const subcommands = command.commands.map((subcommand) => subcommand.name());
     expect(subcommands).toContain('core');
     expect(subcommands).toContain('ideas');
+    expect(subcommands).toContain('docs');
     expect(subcommands).toContain('project-management');
     expect(subcommands).toContain('workflows');
     expect(subcommands).toContain('utility');
@@ -234,6 +243,9 @@ describe('createInitToolsCommand', () => {
     expect(
       choices.some((choice) => choice.label.includes('[project|user]')),
     ).toBe(true);
+    expect(choices.find((choice) => choice.value === 'docs')?.checked).toBe(
+      true,
+    );
     expect(
       choices.find((choice) => choice.value === 'project-management')?.checked,
     ).toBe(false);
@@ -248,6 +260,7 @@ describe('createInitToolsCommand', () => {
     const {
       command,
       installCore,
+      installDocs,
       installIdeas,
       installWorkflows,
       installUtility,
@@ -262,6 +275,9 @@ describe('createInitToolsCommand', () => {
       expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
     expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installDocs).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
     expect(installWorkflows).toHaveBeenCalledWith(

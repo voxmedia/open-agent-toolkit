@@ -54,6 +54,7 @@ export const WORKFLOW_TEMPLATES = [
 export const WORKFLOW_SCRIPTS = [
   'generate-oat-state.sh',
   'generate-thin-index.sh',
+  'resolve-tracking.sh',
 ] as const;
 
 // ── Ideas pack ─────────────────────────────────────────────────────
@@ -69,14 +70,21 @@ export const IDEA_SKILLS = [
 
 export const CORE_SKILLS = ['oat-docs', 'oat-doctor'] as const;
 
-// ── Utility pack ───────────────────────────────────────────────────
+// ── Docs pack ─────────────────────────────────────────────────────
 
-export const UTILITY_SKILLS = [
-  'create-agnostic-skill',
+export const DOCS_SKILLS = [
   'oat-agent-instructions-analyze',
   'oat-agent-instructions-apply',
   'oat-docs-analyze',
   'oat-docs-apply',
+] as const;
+
+export const DOCS_SCRIPTS = ['resolve-tracking.sh'] as const;
+
+// ── Utility pack ───────────────────────────────────────────────────
+
+export const UTILITY_SKILLS = [
+  'create-agnostic-skill',
   'oat-repo-maintainability-review',
   'oat-review-provide',
   'oat-review-receive',

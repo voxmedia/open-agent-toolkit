@@ -80,7 +80,7 @@ if [ -d "${REPO_ROOT}/apps/oat-docs/docs" ]; then
   cp -R "${REPO_ROOT}/apps/oat-docs/docs/." "${ASSETS}/docs/"
 fi
 
-for script in generate-oat-state.sh generate-thin-index.sh; do
+for script in generate-oat-state.sh generate-thin-index.sh resolve-tracking.sh; do
   SOURCE_SCRIPT="${REPO_ROOT}/.oat/scripts/${script}"
   if [ -f "${SOURCE_SCRIPT}" ]; then
     cp "${SOURCE_SCRIPT}" "${ASSETS}/scripts/"

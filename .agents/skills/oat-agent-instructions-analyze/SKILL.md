@@ -77,6 +77,7 @@ or fill in missing evidence gaps on its own.
 
 ```bash
 SCRIPT_DIR=".agents/skills/oat-agent-instructions-analyze/scripts"
+TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
 PROVIDERS=$(bash "$SCRIPT_DIR/resolve-providers.sh" --non-interactive)
 # Or with explicit override:
 # PROVIDERS=$(bash "$SCRIPT_DIR/resolve-providers.sh" --providers claude,cursor)
@@ -87,7 +88,7 @@ If running interactively (user invoked the skill directly), omit `--non-interact
 **Resolve analysis mode (delta vs full):**
 
 ```bash
-TRACKING=$(bash "$SCRIPT_DIR/resolve-tracking.sh" read agentInstructions)
+TRACKING=$(bash "$TRACKING_SCRIPT" read agentInstructions)
 ```
 
 - If `TRACKING` is non-empty, extract `commitHash` from the JSON.
@@ -439,11 +440,12 @@ The markdown artifact and companion bundle together are the contract for apply. 
 **Update tracking:**
 
 ```bash
-ROOT_TARGET=$(bash "$SCRIPT_DIR/resolve-tracking.sh" root)
+TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
+ROOT_TARGET=$(bash "$TRACKING_SCRIPT" root)
 ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
 ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
 
-bash "$SCRIPT_DIR/resolve-tracking.sh" write \
+bash "$TRACKING_SCRIPT" write \
   agentInstructions \
   "$ROOT_HASH" \
   "$ROOT_BRANCH" \
@@ -493,6 +495,6 @@ Next step: Run oat-agent-instructions-apply to act on these findings.
 - Bundle summary template: `references/bundle-summary-template.md`
 - Bundle manifest template: `references/recommendations-manifest-template.yaml`
 - Recommendation pack template: `references/recommendation-pack-template.md`
-- Tracking script: `scripts/resolve-tracking.sh`
+- Tracking script: `.oat/scripts/resolve-tracking.sh`
 - Provider resolution: `scripts/resolve-providers.sh`
 - File discovery: `scripts/resolve-instruction-files.sh`

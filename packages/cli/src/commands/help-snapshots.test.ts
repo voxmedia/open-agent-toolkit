@@ -78,7 +78,7 @@ describe('help output snapshots', () => {
         -h, --help  display help for command
 
       Commands:
-        tools       Install OAT tool packs (core, ideas, workflows, utility,
+        tools       Install OAT tool packs (core, ideas, docs, workflows, utility,
                     project-management, research)
       "
     `);
@@ -287,7 +287,7 @@ describe('help output snapshots', () => {
       Remove installed skills by pack
 
       Options:
-        --pack <pack>  Skill pack to remove (ideas|workflows|utility|research)
+        --pack <pack>  Skill pack to remove (ideas|docs|workflows|utility|research)
         --dry-run      Preview removal without applying
         -h, --help     display help for command
       "
@@ -597,8 +597,8 @@ describe('help output snapshots', () => {
         info <name>              Show details for an installed tool
         update [options] [name]  Update installed tools to bundled versions
         remove [options] [name]  Remove installed tools
-        install [options]        Install OAT tool packs (core, ideas, workflows,
-                                 utility, project-management, research)
+        install [options]        Install OAT tool packs (core, ideas, docs,
+                                 workflows, utility, project-management, research)
         help [command]           display help for command
       "
     `);
@@ -644,8 +644,8 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat tools install [options] [command]
 
-      Install OAT tool packs (core, ideas, workflows, utility, project-management,
-      research)
+      Install OAT tool packs (core, ideas, docs, workflows, utility,
+      project-management, research)
 
       Options:
         --no-sync                     Skip auto-sync after install
@@ -655,6 +655,7 @@ describe('help output snapshots', () => {
         core [options]                Install OAT core skills (diagnostics, docs)
         ideas [options]               Install OAT ideas skills, templates, and idea
                                       workflow files
+        docs [options]                Install OAT docs workflow skills
         project-management [options]  Install OAT project-management skills and
                                       templates
         workflows [options]           Install OAT workflows skills, agents,
@@ -681,7 +682,7 @@ describe('help output snapshots', () => {
 
       Options:
         --pack <pack>  Remove all tools in a pack
-                       (core|ideas|workflows|utility|project-management|research)
+                       (core|ideas|docs|workflows|utility|project-management|research)
         --all          Remove all installed tools
         --dry-run      Preview removals without applying
         --no-sync      Skip auto-sync after removal
@@ -706,7 +707,7 @@ describe('help output snapshots', () => {
 
       Options:
         --pack <pack>  Update all tools in a pack
-                       (core|ideas|workflows|utility|project-management|research)
+                       (core|ideas|docs|workflows|utility|project-management|research)
         --all          Update all outdated tools
         --dry-run      Preview updates without applying
         --no-sync      Skip auto-sync after update

@@ -29,11 +29,9 @@
 
 set -euo pipefail
 
-# Resolve repo root and tracking file path
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TRACKING_FILE="${REPO_ROOT}/.oat/tracking.json"
 
-# Ensure jq is available
 if ! command -v jq &>/dev/null; then
   echo "Error: jq is required but not found in PATH" >&2
   exit 1
@@ -139,7 +137,6 @@ cmd_write() {
   local mode="${4:?Missing mode}"
   shift 4
 
-  # Parse optional --artifact-path flag before variadic formats
   local artifact_path=""
   if [[ "${1:-}" == "--artifact-path" ]]; then
     artifact_path="${2:?Missing artifact path value after --artifact-path}"
@@ -148,7 +145,6 @@ cmd_write() {
 
   local formats=("$@")
 
-  # Normalize tracking target to root branch tip to keep commitHash resolvable.
   local normalized_branch normalized_hash
   normalized_branch="$(detect_root_branch)"
   normalized_hash="$(resolve_root_commit_hash "$normalized_branch")"
@@ -160,7 +156,6 @@ cmd_write() {
   base_branch="$normalized_branch"
   commit_hash="$normalized_hash"
 
-  # Build formats JSON array
   local formats_json="[]"
   if [[ ${#formats[@]} -gt 0 ]]; then
     formats_json=$(printf '%s\n' "${formats[@]}" | jq -R . | jq -s .)
@@ -169,7 +164,6 @@ cmd_write() {
   local timestamp
   timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-  # Read existing or initialize
   local existing
   if [[ -f "$TRACKING_FILE" ]] && jq empty "$TRACKING_FILE" 2>/dev/null; then
     existing="$(cat "$TRACKING_FILE")"
@@ -178,7 +172,6 @@ cmd_write() {
     existing='{"version":1}'
   fi
 
-  # Merge operation entry (include artifactPath only if provided)
   if [[ -n "$artifact_path" ]]; then
     echo "$existing" | jq \
       --arg op "$operation" \
@@ -216,17 +209,18 @@ cmd_write() {
   echo "Updated $TRACKING_FILE [$operation]"
 }
 
-# Dispatch subcommand
 case "${1:-}" in
   init)
-    cmd_init
+    shift
+    cmd_init "$@"
     ;;
   read)
     shift
     cmd_read "$@"
     ;;
   root)
-    cmd_root
+    shift
+    cmd_root "$@"
     ;;
   write)
     shift
@@ -234,12 +228,6 @@ case "${1:-}" in
     ;;
   *)
     echo "Usage: resolve-tracking.sh {init|read|root|write} [args...]" >&2
-    echo "" >&2
-    echo "Commands:" >&2
-    echo "  init                                              Create tracking.json if missing" >&2
-    echo "  read <operation>                                  Read operation entry" >&2
-    echo "  root                                              Print root branch + commit as JSON" >&2
-    echo "  write <op> <hash> <branch> <mode> [--artifact-path <p>] [fmts]" >&2
-    exit 1
+    exit 2
     ;;
 esac

@@ -8,6 +8,9 @@ description: 'Docs CLI helpers and skills for analysis and controlled documentat
 OAT’s docs workflow combines deterministic CLI helpers with higher-judgment
 skills for analysis and controlled updates.
 
+Install the workflow skills with `oat tools install docs` (preferred) or
+`oat init tools docs` before using the analyze/apply flow in a new repo.
+
 ## Docs workflow pieces
 
 ### CLI helpers

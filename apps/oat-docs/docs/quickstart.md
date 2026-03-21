@@ -46,7 +46,7 @@ pnpm run cli -- tools install project-management
 
 Notes:
 
-- Installs OAT tool packs (`ideas`, `workflows`, `utility`, `project-management`, `research`) into canonical directories.
+- Installs OAT tool packs (`docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`) into canonical directories. The `core` pack is always installed at user scope for diagnostics and passive docs access.
 - `oat init tools` remains available as a backward-compatible install path.
 - If installed OAT skills are older than bundled versions, interactive runs prompt for selective updates.
 - Non-interactive runs report outdated skills without updating them.

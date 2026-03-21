@@ -56,6 +56,7 @@ const defaultSyncDependencies: AutoSyncDependencies = {
 const VALID_PACKS = [
   'core',
   'ideas',
+  'docs',
   'workflows',
   'utility',
   'project-management',
@@ -71,7 +72,7 @@ export function createToolsUpdateCommand(
     .argument('[name]', 'Tool name to update')
     .option(
       '--pack <pack>',
-      'Update all tools in a pack (core|ideas|workflows|utility|project-management|research)',
+      'Update all tools in a pack (core|ideas|docs|workflows|utility|project-management|research)',
     )
     .option('--all', 'Update all outdated tools')
     .option('--dry-run', 'Preview updates without applying')

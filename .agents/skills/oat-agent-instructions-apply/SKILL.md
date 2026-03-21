@@ -156,6 +156,7 @@ Then stop.
 
 ```bash
 SCRIPT_DIR=".agents/skills/oat-agent-instructions-analyze/scripts"
+TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
 PROVIDERS=$(bash "$SCRIPT_DIR/resolve-providers.sh" --non-interactive)
 ```
 
@@ -460,12 +461,12 @@ PR creation failed. To create manually:
 **Update tracking:**
 
 ```bash
-SCRIPT_DIR=".agents/skills/oat-agent-instructions-analyze/scripts"
-ROOT_TARGET=$(bash "$SCRIPT_DIR/resolve-tracking.sh" root)
+TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
+ROOT_TARGET=$(bash "$TRACKING_SCRIPT" root)
 ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
 ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
 
-bash "$SCRIPT_DIR/resolve-tracking.sh" write \
+bash "$TRACKING_SCRIPT" write \
   agentInstructionsApply \
   "$ROOT_HASH" \
   "$ROOT_BRANCH" \
@@ -503,4 +504,4 @@ Apply complete.
 - Analysis artifact: `.oat/repo/analysis/agent-instructions-*.md`
 - Templates: `references/instruction-file-templates/`
 - Apply plan template: `references/apply-plan-template.md`
-- Tracking script: `scripts/resolve-tracking.sh` (symlink to analyze skill)
+- Tracking script: `.oat/scripts/resolve-tracking.sh`

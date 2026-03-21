@@ -54,7 +54,7 @@ describe('runListTools', () => {
           ...sampleTool,
           name: 'oat-docs-analyze',
           scope: 'user',
-          pack: 'utility',
+          pack: 'docs',
         },
       ],
     });

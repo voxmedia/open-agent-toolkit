@@ -175,7 +175,7 @@ pnpm run cli -- tools update --all
 
 Notes:
 
-- `tools install` installs OAT skills/agents/templates/scripts by pack (`core`, `ideas`, `workflows`, `utility`, `research`) and auto-syncs provider views. The core pack (diagnostics, docs) always installs at user scope.
+- `tools install` installs OAT skills/agents/templates/scripts by pack (`core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`) and auto-syncs provider views. The core pack (diagnostics, passive docs access) always installs at user scope.
 - `tools outdated` shows which installed tools have available updates.
 - `tools update --all` updates all outdated tools to bundled versions.
 - Use `--no-sync` on any mutation command to skip auto-sync.

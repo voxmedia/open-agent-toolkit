@@ -86,7 +86,7 @@ Read `$ARGUMENTS`:
 TOOLS_JSON=$(oat tools list --json --scope all 2>/dev/null || echo '{"tools":[]}')
 ```
 
-Parse the JSON output. Each tool has: `name`, `type` (skill/agent), `scope` (project/user), `version`, `bundledVersion`, `pack` (core/ideas/workflows/utility/custom), `status` (current/outdated/newer/not-bundled).
+Parse the JSON output. Each tool has: `name`, `type` (skill/agent), `scope` (project/user), `version`, `bundledVersion`, `pack` (core/docs/ideas/workflows/utility/project-management/research/custom), `status` (current/outdated/newer/not-bundled).
 
 ### Step 2: Check for Outdated Skills
 
@@ -167,12 +167,26 @@ Ideas pack skills:
 
 - oat-idea-new, oat-idea-ideate, oat-idea-summarize, oat-idea-scratchpad
 
+Docs pack skills:
+
+- oat-agent-instructions-analyze, oat-agent-instructions-apply
+- oat-docs-analyze, oat-docs-apply
+
 Utility pack skills:
 
-- create-agnostic-skill, oat-agent-instructions-analyze, oat-agent-instructions-apply
-- oat-docs-analyze, oat-docs-apply
+- create-agnostic-skill
 - oat-repo-maintainability-review, oat-review-provide
 - oat-review-receive, oat-review-receive-remote
+
+Project management pack skills:
+
+- oat-pjm-add-backlog-item, oat-pjm-update-repo-reference
+- oat-pjm-review-backlog
+
+Research pack skills:
+
+- analyze, compare, deep-research
+- skeptic, synthesize
 
 For each pack, determine:
 
@@ -205,9 +219,12 @@ OAT ▸ DOCTOR SUMMARY
 | Pack      | Scope   | Skills | Status   |
 | --------- | ------- | ------ | -------- |
 | core      | user    | 2/2    | current  |
+| docs      | project | 4/4    | current  |
 | workflows | project | 26/26  | current  |
 | ideas     | user    | 4/4    | current  |
-| utility   | project | 9/9    | outdated |
+| project-management | project | 3/3 | current |
+| research  | project | 5/5    | current  |
+| utility   | project | 5/5    | outdated |
 
 ## Outdated Skills
 
@@ -217,8 +234,12 @@ OAT ▸ DOCTOR SUMMARY
 
 ## Available But Not Installed
 
-- **utility** pack: oat-docs-analyze, oat-docs-apply (2 skills available)
-  → Run: oat tools update --scope {scope}
+- **docs** pack: oat-docs-analyze, oat-docs-apply, oat-agent-instructions-analyze, oat-agent-instructions-apply (4 skills available)
+  → Run: oat tools install docs --scope {scope}
+- **project-management** pack: oat-pjm-add-backlog-item, oat-pjm-update-repo-reference, oat-pjm-review-backlog (3 skills available)
+  → Run: oat tools install project-management --scope {scope}
+- **research** pack: analyze, compare, deep-research, skeptic, synthesize (5 skills available)
+  → Run: oat tools install research --scope {scope}
 
 ## Configuration
 

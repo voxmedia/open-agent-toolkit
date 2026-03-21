@@ -301,7 +301,7 @@ PR creation failed. To create manually:
 Update shared tracking:
 
 ```bash
-TRACKING_SCRIPT=".agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh"
+TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
 ROOT_TARGET=$(bash "$TRACKING_SCRIPT" root)
 ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
 ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
@@ -336,4 +336,4 @@ Next step: Re-run oat-docs-analyze if you want a post-apply verification artifac
 ## References
 
 - Apply plan template: `references/apply-plan-template.md`
-- Shared tracking helper: `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh`
+- Shared tracking helper: `.oat/scripts/resolve-tracking.sh`

@@ -675,11 +675,11 @@ Generated from commit: {MERGE_BASE_SHA}"
 Record the knowledge index run in the shared tracking manifest:
 
 ```bash
-ROOT_TARGET=$(bash .agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh root)
+ROOT_TARGET=$(bash .oat/scripts/resolve-tracking.sh root)
 ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
 ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
 
-bash .agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh \
+bash .oat/scripts/resolve-tracking.sh \
   write knowledgeIndex "$ROOT_HASH" "$ROOT_BRANCH" full \
   --artifact-path ".oat/repo/knowledge/"
 ```

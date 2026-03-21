@@ -1,4 +1,5 @@
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { DOCS_SKILLS } from '@commands/init/tools/docs/install-docs';
 import { IDEA_SKILLS } from '@commands/init/tools/ideas/install-ideas';
 import { RESEARCH_SKILLS } from '@commands/init/tools/research/install-research';
 import { UTILITY_SKILLS } from '@commands/init/tools/utility/install-utility';
@@ -21,10 +22,11 @@ interface RemoveSkillsOptions {
   dryRun?: boolean;
 }
 
-type PackName = 'ideas' | 'workflows' | 'utility' | 'research';
+type PackName = 'ideas' | 'docs' | 'workflows' | 'utility' | 'research';
 
 const PACK_SKILLS: Record<PackName, readonly string[]> = {
   ideas: IDEA_SKILLS,
+  docs: DOCS_SKILLS,
   workflows: WORKFLOW_SKILLS,
   utility: UTILITY_SKILLS,
   research: RESEARCH_SKILLS,
@@ -56,6 +58,7 @@ function createDependencies(): RemoveSkillsDependencies {
 function isPackName(value: string): value is PackName {
   return (
     value === 'ideas' ||
+    value === 'docs' ||
     value === 'workflows' ||
     value === 'utility' ||
     value === 'research'
@@ -74,7 +77,7 @@ export function createRemoveSkillsCommand(
     .description('Remove installed skills by pack')
     .requiredOption(
       '--pack <pack>',
-      'Skill pack to remove (ideas|workflows|utility|research)',
+      'Skill pack to remove (ideas|docs|workflows|utility|research)',
     )
     .option('--dry-run', 'Preview removal without applying')
     .action(async (options: RemoveSkillsOptions, command: Command) => {
@@ -86,7 +89,7 @@ export function createRemoveSkillsCommand(
         const rawPack = (options.pack ?? '').toLowerCase();
         if (!isPackName(rawPack)) {
           throw new Error(
-            `Invalid pack: ${options.pack}. Expected one of: ideas, workflows, utility, research.`,
+            `Invalid pack: ${options.pack}. Expected one of: ideas, docs, workflows, utility, research.`,
           );
         }
 

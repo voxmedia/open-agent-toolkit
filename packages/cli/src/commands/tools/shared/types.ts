@@ -3,6 +3,7 @@ import type { ConcreteScope } from '@shared/types';
 export type PackName =
   | 'core'
   | 'ideas'
+  | 'docs'
   | 'workflows'
   | 'utility'
   | 'project-management'

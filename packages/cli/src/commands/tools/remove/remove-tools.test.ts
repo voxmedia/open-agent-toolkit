@@ -120,7 +120,7 @@ describe('removeTools', () => {
         type: 'agent',
         pack: 'workflows',
       }),
-      createTool({ name: 'oat-docs-analyze', pack: 'utility' }),
+      createTool({ name: 'oat-docs-analyze', pack: 'docs' }),
     ];
     const deps = createDeps({ project: tools });
 

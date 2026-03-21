@@ -244,7 +244,7 @@ describe('scanTools', () => {
     expect(result[0]!.pack).toBe('workflows');
   });
 
-  it('detects utility skills pack membership', async () => {
+  it('detects docs skills pack membership', async () => {
     const deps = createMockDeps({
       readdir: async (path: string) => {
         if (path.includes('.agents/skills')) return ['oat-docs-analyze'];
@@ -252,6 +252,29 @@ describe('scanTools', () => {
       },
       dirExists: async (path: string) => {
         if (path.includes('assets/skills/oat-docs-analyze')) return true;
+        return false;
+      },
+      getSkillVersion: async () => '1.0.0',
+    });
+
+    const result = await scanTools({
+      scope: 'user',
+      scopeRoot: '/home/user',
+      assetsRoot: '/assets',
+      dependencies: deps,
+    });
+
+    expect(result[0]!.pack).toBe('docs');
+  });
+
+  it('detects utility skills pack membership', async () => {
+    const deps = createMockDeps({
+      readdir: async (path: string) => {
+        if (path.includes('.agents/skills')) return ['create-agnostic-skill'];
+        return [];
+      },
+      dirExists: async (path: string) => {
+        if (path.includes('assets/skills/create-agnostic-skill')) return true;
         return false;
       },
       getSkillVersion: async () => '1.0.0',

@@ -175,7 +175,7 @@ describe('updateTools', () => {
       createTool({ name: 'oat-project-new', pack: 'workflows' }),
       createTool({
         name: 'oat-docs-analyze',
-        pack: 'utility',
+        pack: 'docs',
         status: 'current',
       }),
     ];
