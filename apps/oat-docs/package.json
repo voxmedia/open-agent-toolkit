@@ -1,7 +1,7 @@
 {
   "name": "oat-docs",
   "version": "0.1.0",
-  "description": "Documentation for Open Agent Toolkit",
+  "description": "An open-source toolkit for portable, provider-agnostic agent tooling and workflows.",
   "scripts": {
     "predev": "fumadocs-mdx && pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md",
     "dev": "next dev",

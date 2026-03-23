@@ -1,4 +1,4 @@
-- [OAT Documentation](index.md) — Canonical guide to OAT covering provider sync, workflow execution, docs tooling, and contributor guidance.
+- [OAT Documentation](index.md) — An open-source toolkit for portable, provider-agnostic agent tooling and workflows.
 - Contributing
   - [Contributing](contributing/index.md) — Contributor-facing guide for working on OAT code, docs, markdown patterns, and skill authoring.
   - [Contributing Code](contributing/code.md) — Contributor setup, repo structure, quality gates, and pull request expectations for OAT changes.

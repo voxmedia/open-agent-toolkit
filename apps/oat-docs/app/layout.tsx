@@ -13,7 +13,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           <DocsLayout
             branding={{
               title: 'Open Agent Toolkit',
-              description: 'Documentation for Open Agent Toolkit',
+              description:
+                'An open-source toolkit for portable, provider-agnostic agent tooling and workflows.',
             }}
             tree={source.getPageTree()}
           >

@@ -1,11 +1,11 @@
 ---
 title: OAT Documentation
-description: 'Canonical guide to OAT covering provider sync, workflow execution, docs tooling, and contributor guidance.'
+description: 'An open-source toolkit for portable, provider-agnostic agent tooling and workflows.'
 ---
 
 # OAT Documentation
 
-Open Agent Toolkit (OAT) is an open-source toolkit built on open standards for defining and managing agent skills, subagents, and hooks across multiple AI coding providers (Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex CLI). It provides a provider-agnostic interoperability layer first, with optional, Human-in-the-Loop Lifecycle (HiLL) workflow scaffolding layered on top.
+Open Agent Toolkit (OAT) is an open-source toolkit for portable, provider-agnostic agent tooling and workflows. It lets teams define canonical agent capabilities once, sync them across providers, and optionally run tracked human-in-the-loop workflows on top.
 
 OAT is organized as three distinct capabilities that can be used together or independently:
 

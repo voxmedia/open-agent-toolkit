@@ -2,7 +2,7 @@
   "name": "open-agent-toolkit",
   "version": "0.0.1",
   "private": true,
-  "description": "Open standards, open source tooling for interoperable agent development across providers",
+  "description": "An open-source toolkit for portable, provider-agnostic agent tooling and workflows.",
   "license": "MIT",
   "type": "module",
   "scripts": {
