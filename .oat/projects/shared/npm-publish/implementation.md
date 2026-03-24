@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-24
-oat_current_task_id: p04-t04
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | completed   | 4     | 4/4       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 3     | 3/3       |
-| Phase 4 | in_progress | 6     | 3/6       |
+| Phase 4 | in_progress | 6     | 4/6       |
 
-**Total:** 13/16 tasks completed
+**Total:** 14/16 tasks completed
 
 ---
 
@@ -635,6 +635,27 @@ oat_generated: false
   the root branch SHA, so `.oat/tracking.json` records the refreshed run while
   the regenerated markdown files themselves carry the current branch snapshot.
 
+### Task p04-t04: (review) Update CLI contributor instructions to renamed package filters
+
+**Status:** completed
+**Commit:** d06d3cd
+
+**Outcome (required when completed):**
+
+- Updated the CLI package contributor instructions to use the public package
+  name in all `pnpm --filter` examples.
+- Removed the remaining stale `@oat/cli` references from the CLI package's
+  local instruction file.
+
+**Files changed:**
+
+- `packages/cli/AGENTS.md`
+
+**Verification:**
+
+- Run: `rg -n '@oat/cli|@voxmedia/oat-cli' packages/cli/AGENTS.md`
+- Result: pass (`@voxmedia/oat-cli` only)
+
 ---
 
 ## Orchestration Runs
@@ -669,6 +690,7 @@ Chronological log of implementation progress.
 - [x] p04-t01: Add package-level READMEs for all four public packages - `f61b39c`
 - [x] p04-t02: Update root and docs-site consumer guidance to the public package names - `5909304`
 - [x] p04-t03: (review) Regenerate knowledge artifacts for renamed public packages - `e83c506`
+- [x] p04-t04: (review) Update CLI contributor instructions to renamed package filters - `d06d3cd`
 
 **What changed (high level):**
 
