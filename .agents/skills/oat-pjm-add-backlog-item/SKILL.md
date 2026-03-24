@@ -47,7 +47,24 @@ Collect the item details from the user or surrounding context:
 If the title is missing, ask the user.
 If the description is missing, ask for 1-3 sentences of context.
 
-### Step 2: Prepare Paths and Filename
+### Step 2: Ensure Backlog Scaffold
+
+Before generating IDs or editing backlog files, run:
+
+```bash
+oat backlog init
+```
+
+This command is idempotent. Use it even in existing repos so the canonical backlog scaffold and exact managed index markers are present before `oat backlog regenerate-index` runs.
+
+Do not hand-create the managed marker block in `backlog/index.md`. The scaffold writes the exact markers required by the CLI:
+
+```md
+<!-- OAT BACKLOG-INDEX -->
+<!-- END OAT BACKLOG-INDEX -->
+```
+
+### Step 3: Prepare Paths and Filename
 
 1. Derive a kebab-case slug from the title.
 2. Set the output path:
@@ -58,7 +75,7 @@ ITEM_PATH=".oat/repo/reference/backlog/items/{slug}.md"
 
 3. If the file already exists, ask the user whether to overwrite it or pick a different slug.
 
-### Step 3: Generate ID
+### Step 4: Generate ID
 
 Run:
 
@@ -70,7 +87,7 @@ Use the returned `bl-XXXX` value as the backlog item ID.
 
 If the initial hash collides with an existing backlog item ID, the CLI should retry with a disambiguated seed until it returns an unused ID. If the command reports a duplicate or collision issue, do not continue writing the item until the generated ID is unique across `backlog/items/*.md`.
 
-### Step 4: Copy Template and Fill Frontmatter
+### Step 5: Copy Template and Fill Frontmatter
 
 1. Use `.oat/templates/backlog-item.md` as the source template.
 2. Fill:
@@ -89,7 +106,7 @@ If the initial hash collides with an existing backlog item ID, the CLI should re
    - `## Description`
    - `## Acceptance Criteria`
 
-### Step 5: Write the Backlog Item
+### Step 6: Write the Backlog Item
 
 Write the completed file to:
 
@@ -99,7 +116,7 @@ Write the completed file to:
 
 Use the template field order from `.oat/templates/backlog-item.md`.
 
-### Step 6: Regenerate Managed Index
+### Step 7: Regenerate Managed Index
 
 Run:
 
@@ -109,7 +126,7 @@ oat backlog regenerate-index
 
 This refreshes the managed table inside `.oat/repo/reference/backlog/index.md`.
 
-### Step 7: Update Curated Overview
+### Step 8: Update Curated Overview
 
 Read `.oat/repo/reference/backlog/index.md` and update the `## Curated Overview` section with a brief human-written note when helpful, for example:
 
@@ -119,7 +136,7 @@ Read `.oat/repo/reference/backlog/index.md` and update the `## Curated Overview`
 
 Do not edit inside the managed marker section.
 
-### Step 8: Summarize to the User
+### Step 9: Summarize to the User
 
 Report:
 
