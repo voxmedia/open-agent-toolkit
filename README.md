@@ -237,9 +237,32 @@ Maintenance note:
 
 If you are using OAT CLI as a consumer, prefer the `oat` executable interface rather than repo scripts.
 
-Current state:
+Public package names for release automation in this repo:
 
-- `@oat/cli` is currently private in this repository (`packages/cli/package.json` has `"private": true`), so registry `npx` usage is not available yet.
+- `@voxmedia/oat-cli`
+- `@voxmedia/oat-docs-config`
+- `@voxmedia/oat-docs-theme`
+- `@voxmedia/oat-docs-transforms`
+
+Once published, install the CLI with npm:
+
+```bash
+npm install -g @voxmedia/oat-cli
+oat --help
+```
+
+Or run it without a global install:
+
+```bash
+npx @voxmedia/oat-cli --help
+pnpm dlx @voxmedia/oat-cli --help
+```
+
+Fumadocs helper packages are published separately:
+
+```bash
+pnpm add @voxmedia/oat-docs-config @voxmedia/oat-docs-theme @voxmedia/oat-docs-transforms
+```
 
 Run from source with npm:
 

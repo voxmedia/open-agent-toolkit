@@ -34,7 +34,7 @@ Key behavior:
 
 Fumadocs scaffold:
 
-- thin Next.js app importing from `@oat/docs-config`, `@oat/docs-theme`, `@oat/docs-transforms`
+- thin Next.js app importing from `@voxmedia/oat-docs-config`, `@voxmedia/oat-docs-theme`, `@voxmedia/oat-docs-transforms`
 - static export (`output: 'export'`) with FlexSearch, Mermaid diagrams, dark/light mode
 - `predev`/`prebuild` hooks run `oat docs generate-index` automatically
 - starter docs: `docs/index.md`, `docs/getting-started.md`, `docs/contributing.md`
