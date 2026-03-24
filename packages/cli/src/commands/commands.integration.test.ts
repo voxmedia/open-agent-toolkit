@@ -137,19 +137,50 @@ async function seedProjectTemplates(root: string): Promise<void> {
     'implementation.md',
     'project-index.md',
   ]) {
-    await writeFile(
-      join(root, '.oat', 'templates', template),
-      [
-        '---',
-        'oat_template: true',
-        `oat_template_name: ${template.replace('.md', '')}`,
-        '---',
-        '',
-        `# {Project Name} ${template}`,
-        'Date: YYYY-MM-DD',
-      ].join('\n'),
-      'utf8',
-    );
+    const content =
+      template === 'state.md'
+        ? [
+            '---',
+            'oat_template: true',
+            'oat_template_name: state',
+            'oat_hill_checkpoints: {OAT_HILL_CHECKPOINTS}',
+            'oat_phase: {OAT_PHASE}',
+            'oat_phase_status: in_progress',
+            'oat_workflow_mode: {OAT_WORKFLOW_MODE}',
+            '---',
+            '',
+            '# Project State: {Project Name}',
+            '',
+            '**Status:** {OAT_STATUS}',
+            '**Started:** YYYY-MM-DD',
+            '**Last Updated:** YYYY-MM-DD',
+            '',
+            '## Current Phase',
+            '',
+            '{OAT_CURRENT_PHASE}',
+            '',
+            '## Artifacts',
+            '',
+            '{OAT_ARTIFACTS}',
+            '',
+            '## Progress',
+            '',
+            '{OAT_PROGRESS}',
+            '',
+            '## Next Milestone',
+            '',
+            '{OAT_NEXT_MILESTONE}',
+          ].join('\n')
+        : [
+            '---',
+            'oat_template: true',
+            `oat_template_name: ${template.replace('.md', '')}`,
+            '---',
+            '',
+            `# {Project Name} ${template}`,
+            'Date: YYYY-MM-DD',
+          ].join('\n');
+    await writeFile(join(root, '.oat', 'templates', template), content, 'utf8');
   }
 }
 
@@ -371,6 +402,16 @@ describe('CLI command integration', () => {
         ),
       ).rejects.toThrow();
     }
+
+    const state = await readFile(
+      join(root, '.oat', 'projects', 'shared', 'quick-smoke', 'state.md'),
+      'utf8',
+    );
+    expect(state).toContain('oat_workflow_mode: quick');
+    expect(state).toContain('- **Spec:** N/A (quick mode)');
+    expect(state).toContain(
+      'Complete discovery and generate a quick implementation plan',
+    );
   });
 
   it('cleanup subcommands parse successfully', async () => {

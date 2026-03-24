@@ -21,19 +21,53 @@ async function seedTemplates(repoRoot: string): Promise<void> {
   ];
 
   for (const name of templateNames) {
-    await writeFile(
-      join(templatesDir, name),
-      [
-        '---',
-        'oat_template: true',
-        `oat_template_name: ${name.replace('.md', '')}`,
-        '---',
-        '',
-        `# {Project Name} ${name}`,
-        'Date: YYYY-MM-DD',
-      ].join('\n'),
-      'utf8',
-    );
+    const content =
+      name === 'state.md'
+        ? [
+            '---',
+            'oat_template: true',
+            'oat_template_name: state',
+            'oat_hill_checkpoints: {OAT_HILL_CHECKPOINTS}',
+            'oat_phase: {OAT_PHASE}',
+            'oat_phase_status: in_progress',
+            'oat_workflow_mode: {OAT_WORKFLOW_MODE}',
+            'oat_project_created: null',
+            'oat_project_completed: null',
+            'oat_project_state_updated: null',
+            '---',
+            '',
+            '# Project State: {Project Name}',
+            '',
+            '**Status:** {OAT_STATUS}',
+            '**Started:** YYYY-MM-DD',
+            '**Last Updated:** YYYY-MM-DD',
+            '',
+            '## Current Phase',
+            '',
+            '{OAT_CURRENT_PHASE}',
+            '',
+            '## Artifacts',
+            '',
+            '{OAT_ARTIFACTS}',
+            '',
+            '## Progress',
+            '',
+            '{OAT_PROGRESS}',
+            '',
+            '## Next Milestone',
+            '',
+            '{OAT_NEXT_MILESTONE}',
+          ].join('\n')
+        : [
+            '---',
+            'oat_template: true',
+            `oat_template_name: ${name.replace('.md', '')}`,
+            '---',
+            '',
+            `# {Project Name} ${name}`,
+            'Date: YYYY-MM-DD',
+          ].join('\n');
+    await writeFile(join(templatesDir, name), content, 'utf8');
   }
 }
 
@@ -261,7 +295,6 @@ describe('scaffoldProject', () => {
     });
 
     for (const file of [
-      'state.md',
       'discovery.md',
       'spec.md',
       'design.md',
@@ -291,11 +324,45 @@ describe('scaffoldProject', () => {
           'projects',
           'shared',
           'spec-driven-mode',
+          'state.md',
+        ),
+        'utf8',
+      ),
+    ).resolves.toContain('# Project State: spec-driven-mode');
+
+    await expect(
+      readFile(
+        join(
+          repoRoot,
+          '.oat',
+          'projects',
+          'shared',
+          'spec-driven-mode',
           'project-index.md',
         ),
         'utf8',
       ),
     ).rejects.toThrow();
+
+    const state = await readFile(
+      join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'shared',
+        'spec-driven-mode',
+        'state.md',
+      ),
+      'utf8',
+    );
+    expect(state).toContain('oat_workflow_mode: spec-driven');
+    expect(state).toContain('oat_phase: discovery');
+    expect(state).toContain(
+      '- **Spec:** `spec.md` (scaffolded template — not started)',
+    );
+    expect(state).toContain(
+      '- **Implementation:** `implementation.md` (scaffolded template — not started)',
+    );
   });
 
   it('creates quick mode artifacts only', async () => {
@@ -333,6 +400,21 @@ describe('scaffoldProject', () => {
         ),
       ).rejects.toThrow();
     }
+
+    const state = await readFile(
+      join(repoRoot, '.oat', 'projects', 'shared', 'quick-mode', 'state.md'),
+      'utf8',
+    );
+    expect(state).toContain('oat_workflow_mode: quick');
+    expect(state).toContain('oat_hill_checkpoints: []');
+    expect(state).toContain('**Status:** Discovery');
+    expect(state).toContain('- **Spec:** N/A (quick mode)');
+    expect(state).toContain(
+      '- **Design:** N/A (quick mode unless lightweight design is needed)',
+    );
+    expect(state).toContain(
+      'Complete discovery and generate a quick implementation plan',
+    );
   });
 
   it('creates import mode artifacts only and sets references dir', async () => {
@@ -380,6 +462,22 @@ describe('scaffoldProject', () => {
         'utf8',
       ),
     ).resolves.toBe('');
+
+    const state = await readFile(
+      join(repoRoot, '.oat', 'projects', 'shared', 'import-mode', 'state.md'),
+      'utf8',
+    );
+    expect(state).toContain('oat_workflow_mode: import');
+    expect(state).toContain('oat_hill_checkpoints: []');
+    expect(state).toContain('oat_phase: plan');
+    expect(state).toContain('**Status:** Plan Import');
+    expect(state).toContain('- **Discovery:** N/A (import mode)');
+    expect(state).toContain(
+      '- **Plan:** `plan.md` (scaffolded template — awaiting imported content)',
+    );
+    expect(state).toContain(
+      'Run `oat-project-import-plan` to normalize the external plan',
+    );
   });
 
   it('does not reject when refreshDashboardCallback throws', async () => {
