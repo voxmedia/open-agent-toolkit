@@ -1,7 +1,7 @@
 ---
 oat_generated: true
 oat_generated_at: 2026-03-24
-oat_source_head_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
+oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
 oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
@@ -25,9 +25,9 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 
 ```bash
 pnpm test                           # Run workspace tests
-pnpm --filter @oat/cli test         # Run CLI package tests
-pnpm --filter @oat/docs-config test # Run docs-config tests
-pnpm --filter @oat/docs-transforms test
+pnpm --filter @voxmedia/oat-cli test              # Run CLI package tests
+pnpm --filter @voxmedia/oat-docs-config test      # Run docs-config tests
+pnpm --filter @voxmedia/oat-docs-transforms test
 ```
 
 ## Test File Organization
@@ -107,7 +107,7 @@ vi.mock('fumadocs-mdx/next', () => ({
 **View Coverage:**
 
 ```bash
-pnpm --filter @oat/cli test:coverage
+pnpm --filter @voxmedia/oat-cli test:coverage
 ```
 
 ## Test Types

@@ -1,7 +1,7 @@
 ---
 oat_generated: true
 oat_generated_at: 2026-03-24
-oat_source_head_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
+oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
 oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
@@ -47,7 +47,7 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 - Symptoms: a fresh `pnpm install` can warn that the `oat` binary cannot be linked for `apps/oat-docs` before `packages/cli/dist/index.js` exists.
 - Files: `apps/oat-docs/package.json`, `packages/cli/package.json`
 - Trigger: install in a clean checkout before building the CLI.
-- Workaround: build `@oat/cli` after install or adjust workspace/bin expectations.
+- Workaround: build `@voxmedia/oat-cli` after install or adjust workspace/bin expectations.
 
 ## Security Considerations
 

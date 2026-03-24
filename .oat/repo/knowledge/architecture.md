@@ -1,7 +1,7 @@
 ---
 oat_generated: true
 oat_generated_at: 2026-03-24
-oat_source_head_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
+oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
 oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
@@ -90,9 +90,9 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 **Docs App Build:**
 
 1. `apps/oat-docs` prebuild/predev runs `fumadocs-mdx` and `oat docs generate-index`.
-2. `@oat/docs-config` supplies source and search config.
-3. `@oat/docs-transforms` rewrites markdown features like tabs, Mermaid, and internal links.
-4. `@oat/docs-theme` wraps Fumadocs layout/page primitives for site rendering.
+2. `@voxmedia/oat-docs-config` supplies source and search config.
+3. `@voxmedia/oat-docs-transforms` rewrites markdown features like tabs, Mermaid, and internal links.
+4. `@voxmedia/oat-docs-theme` wraps Fumadocs layout/page primitives for site rendering.
 5. Next statically exports the site for GitHub Pages deployment.
 
 ## Key Abstractions
