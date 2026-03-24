@@ -5,7 +5,7 @@
 ## Curated Overview
 
 - `bl-42f9` tracks the only in-progress backlog item and is currently being delivered through the active `local-project-management` project.
-- Inbox work is concentrated on workflow operations: project-completion hardening (`bl-0ace`, `bl-ea64`) and a Jira-oriented backlog refinement flow.
+- Inbox work is concentrated on workflow operations: project-completion hardening (`bl-0ace`, `bl-ea64`), configurable lifecycle follow-through (`bl-fb3f`), and a Jira-oriented backlog refinement flow.
 - Planned follow-on investments cluster around provider ergonomics (`bl-cbdd`), review collaboration (`bl-9fb8`), dependency analysis (`bl-3327`), and ideas-to-project promotion (`bl-b3f7`).
 - Longer-horizon backlog work now includes explicit entries for freshness hardening (`bl-f9bd`) and memory/provider-enhancement work (`bl-71a1`).
 
@@ -14,6 +14,7 @@
 | ID      | Title                                                                                           | Status      | Priority | Scope      | Estimate |
 | ------- | ----------------------------------------------------------------------------------------------- | ----------- | -------- | ---------- | -------- |
 | bl-42f9 | Add first-class OAT project/repo management workflow family (oat-pjm-_ or oat-repo-reference-_) | in_progress | high     | initiative | XL       |
+| bl-fb3f | Add configurable autonomous project lifecycle follow-through                                    | open        | medium   | feature    | L        |
 | bl-3327 | Add dependency intelligence skill family                                                        | open        | medium   | feature    | L        |
 | bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new                                   | open        | medium   | feature    | L        |
 | bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote)            | open        | medium   | feature    | L        |
