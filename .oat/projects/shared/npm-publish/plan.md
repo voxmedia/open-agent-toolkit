@@ -619,17 +619,142 @@ git commit -m "docs(p04-t02): update public install guidance for @voxmedia/oat-*
 
 ---
 
+### Task p04-t03: (review) Regenerate knowledge artifacts for renamed public packages
+
+**Files:**
+
+- Modify: `.oat/repo/knowledge/project-index.md`
+- Modify: `.oat/repo/knowledge/architecture.md`
+- Modify: `.oat/repo/knowledge/concerns.md`
+- Modify: `.oat/repo/knowledge/conventions.md`
+- Modify: `.oat/repo/knowledge/integrations.md`
+- Modify: `.oat/repo/knowledge/stack.md`
+- Modify: `.oat/repo/knowledge/structure.md`
+- Modify: `.oat/repo/knowledge/testing.md`
+- Modify: `.oat/state.md`
+- Modify: `.oat/tracking.json`
+
+**Step 1: Understand the issue**
+
+Review finding: committed generated knowledge artifacts still describe the pre-rename `@oat/*` package surface.
+Location: `.oat/repo/knowledge/testing.md:28`
+
+**Step 2: Implement fix**
+
+Regenerate the repo knowledge base from the current branch state so generated architecture, testing, and concern snapshots match the `@voxmedia/oat-*` public package contract.
+
+**Step 3: Verify**
+
+Run: `rg -n '@oat/(cli|docs-config|docs-theme|docs-transforms)' .oat/repo/knowledge`
+Expected: No stale `@oat/*` references remain in the regenerated knowledge artifacts.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/repo/knowledge .oat/state.md .oat/tracking.json
+git commit -m "docs(p04-t03): refresh knowledge artifacts for public package names"
+```
+
+---
+
+### Task p04-t04: (review) Update CLI contributor instructions to renamed package filters
+
+**Files:**
+
+- Modify: `packages/cli/AGENTS.md`
+
+**Step 1: Understand the issue**
+
+Review finding: contributor instructions in the CLI package still show `@oat/cli` in `pnpm --filter` examples after the public rename.
+Location: `packages/cli/AGENTS.md:16`
+
+**Step 2: Implement fix**
+
+Replace stale package-name references in the CLI package instructions so contributor commands consistently point to `@voxmedia/oat-cli`.
+
+**Step 3: Verify**
+
+Run: `rg -n '@oat/cli|@voxmedia/oat-cli' packages/cli/AGENTS.md`
+Expected: Only `@voxmedia/oat-cli` remains in the file.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/AGENTS.md
+git commit -m "docs(p04-t04): align cli contributor instructions"
+```
+
+---
+
+### Task p04-t05: (review) Scope release dry-run workflow to relevant package changes
+
+**Files:**
+
+- Modify: `.github/workflows/release-dry-run.yml`
+
+**Step 1: Understand the issue**
+
+Review finding: the release dry-run workflow currently runs on every pull request to `main`, including changes that cannot affect release readiness.
+Location: `.github/workflows/release-dry-run.yml:4`
+
+**Step 2: Implement fix**
+
+Add pull-request path filters so the dry-run workflow runs when release-relevant files change, while skipping docs-only and `.oat/`-only pull requests.
+
+**Step 3: Verify**
+
+Run: `sed -n '1,40p' .github/workflows/release-dry-run.yml`
+Expected: The workflow includes pull-request path filters covering packages, release tooling, lockfiles, and workflow definitions.
+
+**Step 4: Commit**
+
+```bash
+git add .github/workflows/release-dry-run.yml
+git commit -m "ci(p04-t05): scope release dry-run triggers"
+```
+
+---
+
+### Task p04-t06: (review) Align dry-run publish order with the real release workflow
+
+**Files:**
+
+- Modify: `.github/workflows/release-dry-run.yml`
+
+**Step 1: Understand the issue**
+
+Review finding: the dry-run workflow publishes packages in a different order than the real release workflow, so it does not fully mirror the dependency-ordered release path.
+Location: `.github/workflows/release-dry-run.yml`
+
+**Step 2: Implement fix**
+
+Update the dry-run publish loop to match the real release workflow order: transforms, docs-config, docs-theme, then CLI.
+
+**Step 3: Verify**
+
+Run: `rg -n '@voxmedia/oat-(docs-transforms|docs-config|docs-theme|cli)' .github/workflows/release-dry-run.yml .github/workflows/release.yml`
+Expected: The dry-run and release workflows list the packages in the same order.
+
+**Step 4: Commit**
+
+```bash
+git add .github/workflows/release-dry-run.yml
+git commit -m "ci(p04-t06): align dry-run publish order"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                              |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                     |
-| p02    | code     | pending  | -          | -                                                     |
-| p03    | code     | pending  | -          | -                                                     |
-| p04    | code     | pending  | -          | -                                                     |
-| final  | code     | received | 2026-03-23 | reviews/final-review-2026-03-23.md                    |
-| spec   | artifact | pending  | -          | -                                                     |
-| design | artifact | passed   | 2026-03-24 | reviews/archived/artifact-design-review-2026-03-23.md |
+| Scope  | Type     | Status      | Date       | Artifact                                              |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                     |
+| p02    | code     | pending     | -          | -                                                     |
+| p03    | code     | pending     | -          | -                                                     |
+| p04    | code     | pending     | -          | -                                                     |
+| final  | code     | fixes_added | 2026-03-24 | reviews/archived/final-review-2026-03-23.md           |
+| spec   | artifact | pending     | -          | -                                                     |
+| design | artifact | passed      | 2026-03-24 | reviews/archived/artifact-design-review-2026-03-23.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -649,9 +774,9 @@ git commit -m "docs(p04-t02): update public install guidance for @voxmedia/oat-*
 - Phase 1: 4 tasks - define the public package contract and align workspace manifests
 - Phase 2: 3 tasks - align code imports, generated templates, and docs/scaffold tests
 - Phase 3: 3 tasks - add reusable release validation and GitHub publish automation
-- Phase 4: 2 tasks - ship npm-facing package docs and update public consumer guidance
+- Phase 4: 6 tasks - ship npm-facing package docs, update public consumer guidance, and close final review fixes
 
-**Total: 12 tasks**
+**Total: 16 tasks**
 
 Ready for implementation after plan approval.
 

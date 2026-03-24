@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-24
-oat_current_task_id: null
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 4     | 4/4       |
-| Phase 2 | completed | 3     | 3/3       |
-| Phase 3 | completed | 3     | 3/3       |
-| Phase 4 | completed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 4     | 4/4       |
+| Phase 2 | completed   | 3     | 3/3       |
+| Phase 3 | completed   | 3     | 3/3       |
+| Phase 4 | in_progress | 6     | 2/6       |
 
-**Total:** 12/12 tasks completed
+**Total:** 12/16 tasks completed
 
 ---
 
@@ -665,6 +665,61 @@ Chronological log of implementation progress.
 - None.
 
 **Session End:** implementation complete
+
+---
+
+### Review Received: final
+
+**Date:** 2026-03-24
+**Review artifact:** `reviews/archived/final-review-2026-03-23.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 3
+
+**New tasks added:** `p04-t03`, `p04-t04`, `p04-t05`, `p04-t06`
+
+**Deferred Findings:**
+
+- `I1` Partial publish risk in release workflow
+  - Decision: deferred by explicit user direction during final review receive.
+  - Rationale: acknowledged first-release operational risk already called out in the design; no implementation change is required before merge to satisfy the approved release model.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update the review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+
+### 2026-03-24
+
+**Session Start:** 02:22 UTC
+
+- [ ] p04-t03: (review) Regenerate knowledge artifacts for renamed public packages
+- [ ] p04-t04: (review) Update CLI contributor instructions to renamed package filters
+- [ ] p04-t05: (review) Scope release dry-run workflow to relevant package changes
+- [ ] p04-t06: (review) Align dry-run publish order with the real release workflow
+
+**What changed (high level):**
+
+- Processed the final code review and converted accepted findings into four review-fix tasks in Phase 4.
+- Deferred the partial-publish operational risk by explicit user decision and recorded the rationale for the final review trail.
+- Reopened implementation state so execution resumes from `p04-t03`.
+
+**Follow-ups / TODO:**
+
+- Execute `p04-t03` through `p04-t06`.
+- Re-run final code review after the review-fix tasks are complete.
+
+**Blockers:**
+
+- None.
+
+**Session End:** review received; fix tasks queued
 
 ---
 
