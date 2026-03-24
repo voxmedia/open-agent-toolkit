@@ -38,5 +38,8 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Release validate
+        run: pnpm release:validate
+
       - name: Build docs
         run: pnpm build:docs

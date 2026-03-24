@@ -1,0 +1,65 @@
+name: Release Dry Run
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-dry-run-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-dry-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Dry-run workflow contract:
+      # - install dependencies
+      # - build the publishable workspace packages
+      # - run pnpm release:validate
+      # - run pnpm publish --dry-run for each public package against npmjs
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure npmjs registry
+        run: |
+          cat > .npmrc.publish <<'EOF'
+          registry=https://registry.npmjs.org/
+          @voxmedia:registry=https://registry.npmjs.org/
+          EOF
+
+      - name: Build
+        run: pnpm build
+
+      - name: Release validate
+        run: pnpm release:validate
+
+      - name: Publish dry run
+        env:
+          NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
+        run: |
+          for pkg in \
+            @voxmedia/oat-cli \
+            @voxmedia/oat-docs-config \
+            @voxmedia/oat-docs-theme \
+            @voxmedia/oat-docs-transforms
+          do
+            pnpm --filter "$pkg" publish --dry-run --access public --no-git-checks
+          done
