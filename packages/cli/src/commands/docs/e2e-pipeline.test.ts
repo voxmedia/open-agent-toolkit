@@ -44,7 +44,7 @@ describe('docs pipeline e2e', () => {
         '## Installation',
         '',
         '```bash',
-        'npm install @oat/cli',
+        'npm install @voxmedia/oat-cli',
         '```',
         '',
         '!!! tip',
