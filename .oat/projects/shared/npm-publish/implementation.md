@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-24
-oat_current_task_id: p04-t03
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | completed   | 4     | 4/4       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 3     | 3/3       |
-| Phase 4 | in_progress | 6     | 2/6       |
+| Phase 4 | in_progress | 6     | 3/6       |
 
-**Total:** 12/16 tasks completed
+**Total:** 13/16 tasks completed
 
 ---
 
@@ -596,6 +596,45 @@ oat_generated: false
 - Run: `pnpm build:docs`
 - Result: pass
 
+### Task p04-t03: (review) Regenerate knowledge artifacts for renamed public packages
+
+**Status:** completed
+**Commit:** e83c506
+
+**Outcome (required when completed):**
+
+- Refreshed the generated knowledge artifacts so they no longer describe the old
+  `@oat/*` public package names.
+- Updated the generated knowledge snapshot metadata to point at the current
+  review-receive branch state instead of the pre-implementation SHA.
+- Refreshed the `knowledgeIndex` tracking timestamp and regenerated the repo
+  dashboard so the repo state reflects the active implementation phase again.
+
+**Files changed:**
+
+- `.oat/repo/knowledge/project-index.md`
+- `.oat/repo/knowledge/architecture.md`
+- `.oat/repo/knowledge/concerns.md`
+- `.oat/repo/knowledge/conventions.md`
+- `.oat/repo/knowledge/integrations.md`
+- `.oat/repo/knowledge/stack.md`
+- `.oat/repo/knowledge/structure.md`
+- `.oat/repo/knowledge/testing.md`
+- `.oat/tracking.json`
+
+**Verification:**
+
+- Run: `rg -n '@oat/(cli|docs-config|docs-theme|docs-transforms)' .oat/repo/knowledge`
+- Result: pass (no matches)
+- Run: `pnpm run cli -- state refresh`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The shared `resolve-tracking.sh` helper normalizes knowledge-index tracking to
+  the root branch SHA, so `.oat/tracking.json` records the refreshed run while
+  the regenerated markdown files themselves carry the current branch snapshot.
+
 ---
 
 ## Orchestration Runs
@@ -629,6 +668,7 @@ Chronological log of implementation progress.
 - [x] p03-t03: Add the coordinated publish workflow for lockstep releases - `72bb9cf`
 - [x] p04-t01: Add package-level READMEs for all four public packages - `f61b39c`
 - [x] p04-t02: Update root and docs-site consumer guidance to the public package names - `5909304`
+- [x] p04-t03: (review) Regenerate knowledge artifacts for renamed public packages - `e83c506`
 
 **What changed (high level):**
 
