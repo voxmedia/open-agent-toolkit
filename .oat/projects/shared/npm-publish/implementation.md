@@ -815,6 +815,42 @@ After the re-review passes:
 - Update the review row status to `passed`
 - Proceed to PR creation/finalization
 
+### Review Passed: final
+
+**Date:** 2026-03-24
+**Review artifact:** `reviews/archived/final-review-2026-03-24.md`
+
+**Result:**
+
+- Re-review of fix tasks `p04-t03` through `p04-t06` found no new Critical,
+  Important, Medium, or Minor findings.
+- Deferred finding `I1` remains accepted by explicit user direction and does not
+  block the final pass.
+
+**Next:** Generate the final PR via `oat-project-pr-final`.
+
+### 2026-03-24
+
+**Session Start:** 02:45 UTC
+
+- [x] final re-review receive: no new fix tasks added
+
+**What changed (high level):**
+
+- Processed the final re-review for the review-fix task set.
+- Marked the `final` review row as `passed`.
+- Moved the project from "awaiting re-review" to PR-ready.
+
+**Follow-ups / TODO:**
+
+- Generate the final PR via `oat-project-pr-final`.
+
+**Blockers:**
+
+- None.
+
+**Session End:** final review passed; project ready for PR
+
 ### 2026-03-24
 
 **Session Start:** 02:22 UTC
