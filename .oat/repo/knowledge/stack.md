@@ -1,150 +1,105 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-02-16
-oat_source_head_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
-oat_source_main_merge_base_sha: a80661894616fc9323542a4bcbcc22c08917e440
+oat_generated_at: 2026-03-24
+oat_source_head_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
+oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
 # Technology Stack
 
-**Analysis Date:** 2026-02-16
+**Analysis Date:** 2026-03-24
 
 ## Languages
 
 **Primary:**
 
-- TypeScript 5.8.3 - Core application code across all packages
-- JavaScript (ES modules) - Configuration and build tooling
-- Shell/Bash - Git hooks and utility scripts
+- TypeScript 5.8.x/5.9.x workspace-wide for CLI, libraries, and docs app
+- Markdown for docs content, workflow artifacts, and skill definitions
 
 **Secondary:**
 
-- YAML - GitHub Actions workflows, configuration files
-- JSON - Configuration, package manifests, lockfiles
-- Markdown - Documentation
+- Shell scripts for asset bundling and OAT tracking utilities
+- JSON/TOML/YAML for package metadata, provider config, and workflow state
 
 ## Runtime
 
 **Environment:**
 
-- Node.js 22.17.0 (minimum required, specified in `.nvmrc` and `package.json`)
-- Runtime type: ES modules (`"type": "module"` across all packages)
+- Node.js `>=22.17.0`
 
 **Package Manager:**
 
-- pnpm 10.13.1 (workspace manager)
-- Lockfile: pnpm-lock.yaml (present)
+- pnpm `10.13.1`
+- Lockfile: `pnpm-lock.yaml` present
 
 ## Frameworks
 
-**Core CLI:**
+**Core:**
 
-- Commander 12.1.0 - CLI framework for command structure and option parsing
-- Zod 3.25.76 - Schema validation and runtime type-checking for configs and manifests
-
-**UI/Output:**
-
-- Chalk 5.6.2 - Terminal string styling and colors
-- Ora 9.0.0 - Elegant terminal spinner/loader
-- @inquirer/prompts 8.2.0 - Interactive command-line prompts
-
-**Build/Dev:**
-
-- Turbo 2.7.6 - Monorepo task orchestration and caching
-- tsx 4.21.0 - Direct TypeScript execution with hot reload support
-- tsc-alias 1.8.10 - TypeScript path alias resolution for compiled output
+- Turborepo `^2.7.6` - workspace task orchestration
+- Commander `^12.1.0` - CLI command parsing
+- Zod `^3.25.x` - runtime validation
+- Next `^16.1.6` - docs application
+- React `^19.1.0` - docs UI
+- Fumadocs `^16.x` / `^14.x` - docs framework and MDX integration
 
 **Testing:**
 
-- Vitest 4.0.18 - Unit test framework with TypeScript support
+- Vitest `^4.0.18` across CLI and library packages
 
-**Linting/Formatting:**
+**Build/Dev:**
 
-- oxlint - High-performance JavaScript/TypeScript linter (Rust-based, ESLint-compatible)
-  - Configured via `.oxlintrc.json` in repository root
-- oxfmt - High-performance code formatter (Rust-based, Prettier-compatible)
-  - Configured via `.oxfmtrc.jsonc` in repository root
-
-**Commit/Git:**
-
-- commitlint 19.8.1 - Git commit message linting
-- lint-staged 15.2.11 - Pre-commit hook file linting
+- TypeScript compiler + `tsc-alias`
+- `tsx` for direct TypeScript execution in development
+- `oxlint` and `oxfmt` for linting/formatting
 
 ## Key Dependencies
 
 **Critical:**
 
-- zod 3.25.76 - Runtime validation for manifest schemas, sync configs, and provider adapters
-- commander 12.1.0 - CLI command parsing and execution
-- @inquirer/prompts 8.2.0 - Interactive setup and configuration flows
-- chalk 5.6.2 - Colored console output for user feedback
-- ora 9.0.0 - Visual progress indication during sync and build operations
+- `commander`, `chalk`, `ora`, `yaml`, `@iarna/toml`, `@inquirer/prompts` in the CLI
+- `fumadocs-*`, `next`, `react`, `react-dom` in the docs system
+- `unified`, `remark-parse`, `unist-util-visit`, `remark-github-blockquote-alert` in docs processing
 
 **Infrastructure:**
 
-- Turbo 2.7.6 - Enables parallel package builds, caching, and dependency graph computation
-- tsx 4.21.0 - TypeScript execution without manual compilation steps
-- tsc-alias 1.8.10 - Rewrites TypeScript path aliases in compiled JavaScript
-
-**Development:**
-
-- oxlint - Fast linter with 690+ rules, ESLint-compatible
-- oxfmt - Fast formatter, Prettier-compatible (beta)
-- @types/node 22.10.0 - Node.js type definitions
-- Vitest 4.0.18 - Fast unit testing with zero-config TypeScript support
+- `mermaid` for docs diagrams
+- `flexsearch` for static docs search
+- GitHub Actions for CI and docs deployment
 
 ## Configuration
 
 **Environment:**
 
-- Configuration loaded from JSON files (sync config, manifests)
-- No .env files used; configuration is file-based
-- CLI supports `--json`, `--verbose`, `--scope <scope>`, and `--cwd <path>` flags
-- Interactive prompts via @inquirer/prompts for user input during `init` and `adopt` commands
+- Root package scripts drive most workflows.
+- Repo behavior is configured through `package.json`, `turbo.json`, `tsconfig.json`, `.oxlintrc.json`, `.oxfmtrc.jsonc`, `.oat/**`, and provider config files.
 
 **Build:**
 
-- `tsconfig.json` - Strict TypeScript compilation settings
-  - Target: ES2022
-  - Module resolution: bundler
-  - ESNext modules with strict null checks
-- `vitest.config.ts` - Test framework aliases
-- `turbo.json` - Task definitions and caching configuration
-- `.oxlintrc.json` - Linting rules (oxlint)
-- `.oxfmtrc.jsonc` - Formatting settings (oxfmt)
-- `pnpm-workspace.yaml` - Workspace root configuration
-
-**Key TypeScript Compilation Options:**
-
-- `strict: true` - Enable strict type checking
-- `noEmit: false` - Emit compiled `.js` and `.d.ts` files to `dist/`
-- `verbatimModuleSyntax: true` - Preserve import/export syntax exactly
-- `isolatedModules: true` - Each file is independently transpilable
-- Output directory: `dist/` (relative to each package)
+- Root `build` excludes `oat-docs`; `build:docs` handles the docs app and its dependencies.
+- `packages/cli` build includes an asset-bundling shell step before TypeScript compilation.
 
 ## Platform Requirements
 
 **Development:**
 
-- Operating System: Linux, macOS, Windows (via Git Bash)
-- Node.js version: >=22.17.0
-- pnpm version: >=10.13.1
-- Workspace dependencies: Uses `workspace:*` for internal package linking
+- Modern Node 22 environment
+- pnpm workspace support
+- git available in PATH for many OAT commands and scripts
 
 **Production:**
 
-- Deployment target: Node.js 22.17.0+
-- Output: Compiled JavaScript in `dist/` directories
-- CLI executable: `packages/cli/dist/index.js` (configured as `bin.oat` in package.json)
-- Architecture: Cross-platform (tested on Darwin/macOS, Linux for CI)
+- CLI: Node runtime with local filesystem access
+- Docs app: static export suitable for GitHub Pages
 
-**CI/CD:**
+## Repo Shape
 
-- Platform: GitHub Actions (Ubuntu latest for CI workflow)
-- Build steps: check → type-check → test → build
-- Caching: pnpm cache leveraged in CI pipeline
+- Private root workspace package
+- One executable CLI package: `packages/cli`
+- Three reusable docs packages: `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms`
+- One reference docs app: `apps/oat-docs`
 
 ---
 
-_Stack analysis: 2026-02-16_
+_Stack analysis: 2026-03-24_
