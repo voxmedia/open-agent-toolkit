@@ -41,13 +41,13 @@ importers:
 
   apps/oat-docs:
     dependencies:
-      '@oat/docs-config':
+      '@voxmedia/oat-docs-config':
         specifier: workspace:*
         version: link:../../packages/docs-config
-      '@oat/docs-theme':
+      '@voxmedia/oat-docs-theme':
         specifier: workspace:*
         version: link:../../packages/docs-theme
-      '@oat/docs-transforms':
+      '@voxmedia/oat-docs-transforms':
         specifier: workspace:*
         version: link:../../packages/docs-transforms
       fumadocs-core:
@@ -69,9 +69,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.4(react@19.2.4)
     devDependencies:
-      '@oat/cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
       '@tailwindcss/postcss':
         specifier: ^4.2.1
         version: 4.2.1
@@ -84,6 +81,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.0
         version: 19.2.3(@types/react@19.2.14)
+      '@voxmedia/oat-cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       markdownlint-cli2:
         specifier: ^0.13.0
         version: 0.13.0
@@ -139,7 +139,7 @@ importers:
 
   packages/docs-config:
     dependencies:
-      '@oat/docs-transforms':
+      '@voxmedia/oat-docs-transforms':
         specifier: workspace:*
         version: link:../docs-transforms
       flexsearch:

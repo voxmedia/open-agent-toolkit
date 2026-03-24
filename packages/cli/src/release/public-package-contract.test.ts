@@ -17,6 +17,12 @@ const docsThemePackageJsonPath = fileURLToPath(
 const docsTransformsPackageJsonPath = fileURLToPath(
   new URL('../../../docs-transforms/package.json', import.meta.url),
 );
+const docsAppPackageJsonPath = fileURLToPath(
+  new URL('../../../../apps/oat-docs/package.json', import.meta.url),
+);
+const workspaceRootPackageJsonPath = fileURLToPath(
+  new URL('../../../../package.json', import.meta.url),
+);
 
 async function readJson(path: string): Promise<Record<string, unknown>> {
   return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
@@ -161,6 +167,26 @@ describe('getPublicPackageContracts', () => {
 
     expect(manifests[0].dependencies).toMatchObject({
       '@voxmedia/oat-docs-transforms': 'workspace:*',
+    });
+  });
+
+  it('keeps workspace consumers aligned to the renamed package identities', async () => {
+    const docsAppPackageJson = await readJson(docsAppPackageJsonPath);
+    const workspaceRootPackageJson = await readJson(
+      workspaceRootPackageJsonPath,
+    );
+
+    expect(docsAppPackageJson.dependencies).toMatchObject({
+      '@voxmedia/oat-docs-config': 'workspace:*',
+      '@voxmedia/oat-docs-theme': 'workspace:*',
+      '@voxmedia/oat-docs-transforms': 'workspace:*',
+    });
+    expect(docsAppPackageJson.devDependencies).toMatchObject({
+      '@voxmedia/oat-cli': 'workspace:*',
+    });
+    expect(workspaceRootPackageJson.scripts).toMatchObject({
+      'cli:link':
+        'pnpm run build --filter=@voxmedia/oat-cli && cd packages/cli && pnpm link --global',
     });
   });
 });

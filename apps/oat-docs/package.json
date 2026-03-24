@@ -13,9 +13,9 @@
     "docs:format:check": "prettier --check 'docs/**/*.md'"
   },
   "dependencies": {
-    "@oat/docs-config": "workspace:*",
-    "@oat/docs-theme": "workspace:*",
-    "@oat/docs-transforms": "workspace:*",
+    "@voxmedia/oat-docs-config": "workspace:*",
+    "@voxmedia/oat-docs-theme": "workspace:*",
+    "@voxmedia/oat-docs-transforms": "workspace:*",
     "fumadocs-core": "^16.6.13",
     "fumadocs-mdx": "^14.2.9",
     "fumadocs-ui": "^16.6.13",
@@ -24,11 +24,11 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@oat/cli": "workspace:*",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/mdx": "^2.0.13",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "@voxmedia/oat-cli": "workspace:*",
     "markdownlint-cli2": "^0.13.0",
     "prettier": "^3.4.2",
     "tailwindcss": "^4.2.1",
