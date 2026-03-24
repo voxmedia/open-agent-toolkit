@@ -3,6 +3,16 @@ name: Release Dry Run
 on:
   pull_request:
     branches: [main]
+    paths:
+      - 'packages/**'
+      - 'tools/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - '.nvmrc'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/release*.yml'
   workflow_dispatch:
 
 permissions:
