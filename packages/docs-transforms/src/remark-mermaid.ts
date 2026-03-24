@@ -9,7 +9,7 @@ import { visit } from 'unist-util-visit';
  * Replaces literal `\n` sequences with `<br/>` since mermaid flowcharts
  * use HTML break tags for line breaks within node labels.
  *
- * Paired with the `Mermaid` component from `@oat/docs-theme` for client-side rendering.
+ * Paired with the `Mermaid` component from `@voxmedia/oat-docs-theme` for client-side rendering.
  */
 export const remarkMermaid: Plugin<[], Root> = function remarkMermaid() {
   return (tree: Root) => {

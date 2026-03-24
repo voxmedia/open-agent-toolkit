@@ -1,6 +1,7 @@
-import { DocsPage, Mermaid, Tab, Tabs } from '@oat/docs-theme';
+import { DocsPage, Mermaid, Tab, Tabs } from '@voxmedia/oat-docs-theme';
 import defaultComponents from 'fumadocs-ui/mdx';
 import { notFound } from 'next/navigation';
+
 import { source } from '@/lib/source';
 
 const mdxComponents = { ...defaultComponents, Mermaid, Tab, Tabs };
