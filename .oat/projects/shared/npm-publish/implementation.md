@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-24
-oat_current_task_id: p04-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 4     | 4/4       |
-| Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | completed   | 3     | 3/3       |
-| Phase 4 | in_progress | 6     | 5/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 4     | 4/4       |
+| Phase 2 | completed | 3     | 3/3       |
+| Phase 3 | completed | 3     | 3/3       |
+| Phase 4 | completed | 6     | 6/6       |
 
-**Total:** 15/16 tasks completed
+**Total:** 16/16 tasks completed
 
 ---
 
@@ -522,6 +522,10 @@ oat_generated: false
 - The repo README and docs-site consumer guidance now refer to
   `@voxmedia/oat-*` instead of the old private `@oat/*` package names.
 - The publish validator now enforces README presence in public tarballs.
+- Final review fixes refreshed stale generated knowledge artifacts, aligned the
+  CLI package's contributor instructions with the public package name, and made
+  the dry-run release workflow both more targeted and behaviorally consistent
+  with the real publish workflow.
 
 **Key files touched:**
 
@@ -530,6 +534,9 @@ oat_generated: false
 - `apps/oat-docs/docs/*` - docs-site guidance aligned to public package names
 - `packages/cli/src/release/public-package-contract.ts` - README required in tarballs
 - `packages/cli/src/release/public-package-contract.test.ts` - README contract coverage
+- `.oat/repo/knowledge/*.md` - generated knowledge artifacts refreshed for the public package rename
+- `packages/cli/AGENTS.md` - CLI contributor instructions aligned to `@voxmedia/oat-cli`
+- `.github/workflows/release-dry-run.yml` - trigger filters and publish order aligned to release behavior
 
 **Verification:**
 
@@ -541,6 +548,8 @@ oat_generated: false
 - Result: no matches
 - Run: `pnpm build:docs`
 - Result: pass
+- Run: `pnpm test && pnpm lint && pnpm type-check && pnpm build && pnpm release:validate`
+- Result: pass (run sequentially; parallel verification raced on the mutating CLI asset bundle step)
 
 ### Task p04-t01: Add package-level READMEs for all four public packages
 
@@ -683,6 +692,27 @@ oat_generated: false
   tooling files in addition to `packages/**` so release-contract changes still
   exercise the dry-run workflow.
 
+### Task p04-t06: (review) Align dry-run publish order with the real release workflow
+
+**Status:** completed
+**Commit:** b12375a
+
+**Outcome (required when completed):**
+
+- Reordered the dry-run publish loop to match the dependency-aware order used by
+  the real release workflow.
+- The release dry-run now exercises the same package sequence as real
+  publication: transforms, docs-config, docs-theme, then CLI.
+
+**Files changed:**
+
+- `.github/workflows/release-dry-run.yml`
+
+**Verification:**
+
+- Run: `rg -n '@voxmedia/oat-(docs-transforms|docs-config|docs-theme|cli)' .github/workflows/release-dry-run.yml .github/workflows/release.yml`
+- Result: pass
+
 ---
 
 ## Orchestration Runs
@@ -778,38 +808,37 @@ Chronological log of implementation progress.
   - Decision: deferred by explicit user direction during final review receive.
   - Rationale: acknowledged first-release operational risk already called out in the design; no implementation change is required before merge to satisfy the approved release model.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
+**Next:** Re-run final code review via `oat-project-review-provide code final`, then process the result with `oat-project-review-receive`.
 
-After the fix tasks are complete:
+After the re-review passes:
 
-- Update the review row status to `fixes_completed`
-- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+- Update the review row status to `passed`
+- Proceed to PR creation/finalization
 
 ### 2026-03-24
 
 **Session Start:** 02:22 UTC
 
-- [ ] p04-t03: (review) Regenerate knowledge artifacts for renamed public packages
-- [ ] p04-t04: (review) Update CLI contributor instructions to renamed package filters
-- [ ] p04-t05: (review) Scope release dry-run workflow to relevant package changes
-- [ ] p04-t06: (review) Align dry-run publish order with the real release workflow
+- [x] p04-t03: (review) Regenerate knowledge artifacts for renamed public packages - `e83c506`
+- [x] p04-t04: (review) Update CLI contributor instructions to renamed package filters - `d06d3cd`
+- [x] p04-t05: (review) Scope release dry-run workflow to relevant package changes - `48e1871`
+- [x] p04-t06: (review) Align dry-run publish order with the real release workflow - `b12375a`
 
 **What changed (high level):**
 
 - Processed the final code review and converted accepted findings into four review-fix tasks in Phase 4.
 - Deferred the partial-publish operational risk by explicit user decision and recorded the rationale for the final review trail.
-- Reopened implementation state so execution resumes from `p04-t03`.
+- Completed all four review-fix tasks and reran the verification suite successfully.
 
 **Follow-ups / TODO:**
 
-- Execute `p04-t03` through `p04-t06`.
-- Re-run final code review after the review-fix tasks are complete.
+- Re-run final code review now that the review-fix tasks are complete.
 
 **Blockers:**
 
 - None.
 
-**Session End:** review received; fix tasks queued
+**Session End:** review-fix tasks complete; awaiting re-review
 
 ---
 
@@ -833,12 +862,12 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                | Passed | Failed | Coverage |
-| ----- | ------------------------------------------------------------------------ | ------ | ------ | -------- |
-| 1     | Contract tests, package builds, frozen install                           | pass   | 0      | -        |
-| 2     | Docs init tests, integration tests, docs app build                       | pass   | 0      | -        |
-| 3     | Release contract tests, release validate, publish dry-run command checks | pass   | 0      | -        |
-| 4     | Release contract tests, docs grep check, docs build                      | pass   | 0      | -        |
+| Phase | Tests Run                                                                                            | Passed | Failed | Coverage |
+| ----- | ---------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | Contract tests, package builds, frozen install                                                       | pass   | 0      | -        |
+| 2     | Docs init tests, integration tests, docs app build                                                   | pass   | 0      | -        |
+| 3     | Release contract tests, release validate, publish dry-run command checks                             | pass   | 0      | -        |
+| 4     | Release contract tests, docs grep check, docs build, test, lint, type-check, build, release validate | pass   | 0      | -        |
 
 ## Final Summary (for PR/docs)
 
@@ -847,11 +876,13 @@ Track test execution during implementation.
 - Public npm package identities and metadata for the CLI plus three docs libraries
 - Lockstep release validation and GitHub Actions automation for dry-run and real publish
 - Npm-facing package READMEs and public install guidance aligned to `@voxmedia/oat-*`
+- Final review cleanup for knowledge artifacts, contributor guidance, and release dry-run workflow behavior
 
 **Behavioral changes (user-facing):**
 
 - Consumers can install the CLI as `@voxmedia/oat-cli` and the docs libraries as separate `@voxmedia/oat-*` packages.
 - Release readiness is now enforced by `pnpm release:validate` and mirrored in CI/release workflows.
+- The dry-run publish workflow now triggers only for release-relevant pull requests and mirrors the real publish order.
 
 **Key files / modules:**
 
@@ -859,10 +890,16 @@ Track test execution during implementation.
 - `.github/workflows/release-dry-run.yml` - PR-safe publish dry run
 - `.github/workflows/release.yml` - tag-triggered coordinated publish workflow
 - `packages/*/README.md` - npm package landing pages
+- `.oat/repo/knowledge/*.md` - refreshed generated knowledge snapshot
+- `packages/cli/AGENTS.md` - contributor command guidance for the renamed CLI package
 
 **Verification performed:**
 
-- `pnpm build && pnpm release:validate`
+- `pnpm test`
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm build`
+- `pnpm release:validate`
 - `pnpm --dir packages/cli exec vitest run src/release/public-package-contract.test.ts`
 - `pnpm --dir packages/cli exec vitest run src/commands/docs/init/scaffold.test.ts`
 - `pnpm --dir packages/cli exec vitest run src/commands/docs/init/integration.test.ts src/commands/docs/init/mkdocs-compat.test.ts src/commands/docs/e2e-pipeline.test.ts src/commands/docs/migrate/frontmatter.test.ts`
@@ -871,6 +908,7 @@ Track test execution during implementation.
 **Design deltas (if any):**
 
 - The release validator inspects `pnpm pack` tarballs rather than `npm pack --dry-run` so workspace dependency rewrites are validated against the actual publish artifact.
+- Final verification must be run sequentially because the CLI build rebundles `packages/cli/assets`, which races when multiple root workspace commands build the CLI in parallel.
 
 ## References
 
