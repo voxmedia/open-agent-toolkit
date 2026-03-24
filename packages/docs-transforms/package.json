@@ -1,8 +1,22 @@
 {
-  "name": "@oat/docs-transforms",
+  "name": "@voxmedia/oat-docs-transforms",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "description": "Remark/unified transforms for OAT documentation",
+  "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/docs-transforms",
+  "bugs": {
+    "url": "https://github.com/voxmedia/open-agent-toolkit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voxmedia/open-agent-toolkit.git",
+    "directory": "packages/docs-transforms"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,6 +25,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc",

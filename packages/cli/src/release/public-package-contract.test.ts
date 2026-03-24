@@ -8,6 +8,15 @@ import { getPublicPackageContracts } from './public-package-contract';
 const cliPackageJsonPath = fileURLToPath(
   new URL('../../package.json', import.meta.url),
 );
+const docsConfigPackageJsonPath = fileURLToPath(
+  new URL('../../../docs-config/package.json', import.meta.url),
+);
+const docsThemePackageJsonPath = fileURLToPath(
+  new URL('../../../docs-theme/package.json', import.meta.url),
+);
+const docsTransformsPackageJsonPath = fileURLToPath(
+  new URL('../../../docs-transforms/package.json', import.meta.url),
+);
 
 async function readJson(path: string): Promise<Record<string, unknown>> {
   return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
@@ -111,5 +120,47 @@ describe('getPublicPackageContracts', () => {
     expect(packageJson.files).toEqual(['dist', 'assets', 'README.md']);
     expect(packageJson.publishConfig).toEqual({ access: 'public' });
     expect(packageJson.bin).toEqual({ oat: 'dist/index.js' });
+  });
+
+  it('matches the docs package manifests to the public contract', async () => {
+    const contracts = getPublicPackageContracts().slice(1);
+    const manifests = await Promise.all([
+      readJson(docsConfigPackageJsonPath),
+      readJson(docsThemePackageJsonPath),
+      readJson(docsTransformsPackageJsonPath),
+    ]);
+
+    for (const [index, contract] of contracts.entries()) {
+      const packageJson = manifests[index];
+
+      expect(packageJson.name).toBe(contract.publicName);
+      expect(packageJson.private).toBe(false);
+      expect(packageJson.license).toBe('MIT');
+      expect(packageJson.repository).toEqual({
+        type: 'git',
+        url: 'git+https://github.com/voxmedia/open-agent-toolkit.git',
+        directory: contract.workspaceDir,
+      });
+      expect(packageJson.homepage).toBe(
+        `https://github.com/voxmedia/open-agent-toolkit/tree/main/${contract.workspaceDir}`,
+      );
+      expect(packageJson.bugs).toEqual({
+        url: 'https://github.com/voxmedia/open-agent-toolkit/issues',
+      });
+      expect(packageJson.files).toEqual(['dist', 'README.md']);
+      expect(packageJson.publishConfig).toEqual({ access: 'public' });
+      expect(packageJson.main).toBe('dist/index.js');
+      expect(packageJson.types).toBe('dist/index.d.ts');
+      expect(packageJson.exports).toEqual({
+        '.': {
+          types: './dist/index.d.ts',
+          import: './dist/index.js',
+        },
+      });
+    }
+
+    expect(manifests[0].dependencies).toMatchObject({
+      '@voxmedia/oat-docs-transforms': 'workspace:*',
+    });
   });
 });
