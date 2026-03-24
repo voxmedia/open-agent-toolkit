@@ -24,6 +24,13 @@ const COMMON_FORBIDDEN_PATH_PATTERNS = [
   'tsconfig.tsbuildinfo',
 ] as const;
 
+const PACKED_DEPENDENCY_FIELDS = [
+  'dependencies',
+  'devDependencies',
+  'optionalDependencies',
+  'peerDependencies',
+] as const;
+
 const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   {
     workspaceDir: 'packages/cli',
@@ -118,4 +125,27 @@ export function findForbiddenPackedPaths(
       matchesGlob(packedPath, pattern),
     ),
   );
+}
+
+export function findWorkspaceProtocolDependencySpecs(
+  packageJson: Record<string, unknown>,
+): string[] {
+  const workspaceSpecs: string[] = [];
+
+  for (const dependencyField of PACKED_DEPENDENCY_FIELDS) {
+    const dependencies = packageJson[dependencyField];
+    if (!dependencies || typeof dependencies !== 'object') {
+      continue;
+    }
+
+    for (const [dependencyName, spec] of Object.entries(
+      dependencies as Record<string, unknown>,
+    )) {
+      if (typeof spec === 'string' && spec.startsWith('workspace:')) {
+        workspaceSpecs.push(`${dependencyField}.${dependencyName}=${spec}`);
+      }
+    }
+  }
+
+  return workspaceSpecs;
 }

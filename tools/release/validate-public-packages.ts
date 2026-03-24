@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import { constants as fsConstants } from 'node:fs';
-import { access, readFile } from 'node:fs/promises';
+import { access, mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -9,6 +10,7 @@ import {
   findForbiddenPackedPaths,
   findMissingMetadataFields,
   findMissingPackedPaths,
+  findWorkspaceProtocolDependencySpecs,
   getPublicPackageContracts,
   type PublicPackageContract,
 } from '../../packages/cli/src/release/public-package-contract';
@@ -20,9 +22,9 @@ interface PackedFileEntry {
   path: string;
 }
 
-interface NpmPackDryRunResult {
-  name: string;
+interface PackedArtifact {
   filename: string;
+  packageJson: Record<string, unknown>;
   files: PackedFileEntry[];
 }
 
@@ -76,20 +78,49 @@ async function readPackageJson(
 
 async function packPackage(
   contract: PublicPackageContract,
-): Promise<NpmPackDryRunResult> {
-  const stdout = await runCommand(
-    'npm',
-    ['pack', '--dry-run', '--json'],
-    getPackageDir(contract),
-  );
-  const packResults = JSON.parse(stdout) as NpmPackDryRunResult[];
-  const packResult = packResults[0];
+): Promise<PackedArtifact> {
+  const packDir = await mkdtemp(join(tmpdir(), 'oat-public-pack-'));
 
-  if (!packResult) {
-    throw new Error(`npm pack returned no result for ${contract.publicName}`);
+  try {
+    await runCommand(
+      'pnpm',
+      ['--filter', contract.publicName, 'pack', '--pack-destination', packDir],
+      REPO_ROOT,
+    );
+
+    const packedFiles = (await readdir(packDir)).filter((file) =>
+      file.endsWith('.tgz'),
+    );
+    const tarballName = packedFiles[0];
+
+    if (!tarballName) {
+      throw new Error(
+        `pnpm pack produced no tarball for ${contract.publicName}`,
+      );
+    }
+
+    const tarballPath = join(packDir, tarballName);
+    const tarList = await runCommand('tar', ['-tzf', tarballPath], REPO_ROOT);
+    const packageJsonText = await runCommand(
+      'tar',
+      ['-xOf', tarballPath, 'package/package.json'],
+      REPO_ROOT,
+    );
+    const packedPaths = tarList
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => line.replace(/^package\//, ''))
+      .filter((line) => line.length > 0);
+
+    return {
+      filename: tarballName,
+      packageJson: JSON.parse(packageJsonText) as Record<string, unknown>,
+      files: packedPaths.map((path) => ({ path })),
+    };
+  } finally {
+    await rm(packDir, { recursive: true, force: true });
   }
-
-  return packResult;
 }
 
 async function buildPublicPackages(
@@ -119,20 +150,33 @@ async function validatePackage(
     getPackageDir(contract),
     contract,
   );
-  const packResult = await packPackage(contract);
-  const packedPaths = packResult.files.map((file) => file.path);
+  const packedArtifact = await packPackage(contract);
+  const packedPackageJson = packedArtifact.packageJson;
+  const missingPackedMetadataFields = findMissingMetadataFields(
+    packedPackageJson,
+    contract,
+  );
+  const workspaceProtocolSpecs =
+    findWorkspaceProtocolDependencySpecs(packedPackageJson);
+  const packedPaths = packedArtifact.files.map((file) => file.path);
   const missingPackedPaths = findMissingPackedPaths(packedPaths, contract);
   const forbiddenPackedPaths = findForbiddenPackedPaths(packedPaths, contract);
   const errors: string[] = [];
 
-  if (packResult.name !== contract.publicName) {
+  if (packedPackageJson.name !== contract.publicName) {
     errors.push(
-      `npm pack reported package name ${packResult.name} instead of ${contract.publicName}`,
+      `packed package.json name ${String(packedPackageJson.name)} does not match ${contract.publicName}`,
     );
   }
 
   if (missingMetadataFields.length > 0) {
     errors.push(`missing metadata fields: ${missingMetadataFields.join(', ')}`);
+  }
+
+  if (missingPackedMetadataFields.length > 0) {
+    errors.push(
+      `packed package.json is missing metadata fields: ${missingPackedMetadataFields.join(', ')}`,
+    );
   }
 
   if (missingBuildArtifacts.length > 0) {
@@ -149,8 +193,16 @@ async function validatePackage(
     errors.push(`forbidden packed paths: ${forbiddenPackedPaths.join(', ')}`);
   }
 
+  if (workspaceProtocolSpecs.length > 0) {
+    errors.push(
+      `packed package.json still contains workspace protocol specs: ${workspaceProtocolSpecs.join(', ')}`,
+    );
+  }
+
   if (errors.length === 0) {
-    console.log(`validated ${contract.publicName} (${packResult.filename})`);
+    console.log(
+      `validated ${contract.publicName} (${packedArtifact.filename})`,
+    );
     return null;
   }
 

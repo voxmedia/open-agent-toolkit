@@ -10,6 +10,7 @@ import {
   findForbiddenPackedPaths,
   findMissingMetadataFields,
   findMissingPackedPaths,
+  findWorkspaceProtocolDependencySpecs,
   getPublicPackageContracts,
 } from './public-package-contract';
 
@@ -147,6 +148,23 @@ describe('getPublicPackageContracts', () => {
     expect(findForbiddenPackedPaths(packedPaths, cliContract)).toEqual([
       'src/index.ts',
       'tsconfig.tsbuildinfo',
+    ]);
+  });
+
+  it('reports workspace protocol dependency specs from packed package metadata', () => {
+    expect(
+      findWorkspaceProtocolDependencySpecs({
+        dependencies: {
+          '@voxmedia/oat-docs-transforms': 'workspace:*',
+          chalk: '^5.6.2',
+        },
+        devDependencies: {
+          '@voxmedia/oat-cli': 'workspace:^',
+        },
+      }),
+    ).toEqual([
+      'dependencies.@voxmedia/oat-docs-transforms=workspace:*',
+      'devDependencies.@voxmedia/oat-cli=workspace:^',
     ]);
   });
 
