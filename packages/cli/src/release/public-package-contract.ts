@@ -37,7 +37,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     publicName: '@voxmedia/oat-cli',
     role: 'cli',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'bin.oat'],
-    requiredPaths: ['dist/index.js', 'assets'],
+    requiredPaths: ['dist/index.js', 'assets', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
   },
   {
@@ -45,7 +45,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     publicName: '@voxmedia/oat-docs-config',
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
-    requiredPaths: ['dist/index.js', 'dist/index.d.ts'],
+    requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
   },
   {
@@ -53,7 +53,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     publicName: '@voxmedia/oat-docs-theme',
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
-    requiredPaths: ['dist/index.js', 'dist/index.d.ts'],
+    requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
   },
   {
@@ -61,7 +61,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     publicName: '@voxmedia/oat-docs-transforms',
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
-    requiredPaths: ['dist/index.js', 'dist/index.d.ts'],
+    requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
   },
 ];

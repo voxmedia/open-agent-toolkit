@@ -71,7 +71,11 @@ describe('getPublicPackageContracts', () => {
           'files',
           'publishConfig.access',
         ]),
-        requiredPaths: expect.arrayContaining(['dist/index.js', 'assets']),
+        requiredPaths: expect.arrayContaining([
+          'dist/index.js',
+          'assets',
+          'README.md',
+        ]),
         forbiddenPathPatterns: expect.arrayContaining([
           'src/**',
           '**/*.test.*',
@@ -84,6 +88,7 @@ describe('getPublicPackageContracts', () => {
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
           'dist/index.d.ts',
+          'README.md',
         ]),
       }),
       expect.objectContaining({
@@ -92,6 +97,7 @@ describe('getPublicPackageContracts', () => {
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
           'dist/index.d.ts',
+          'README.md',
         ]),
       }),
       expect.objectContaining({
@@ -100,6 +106,7 @@ describe('getPublicPackageContracts', () => {
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
           'dist/index.d.ts',
+          'README.md',
         ]),
       }),
     ]);
@@ -140,6 +147,7 @@ describe('getPublicPackageContracts', () => {
     const packedPaths = [
       'dist/index.js',
       'assets/docs/index.md',
+      'README.md',
       'src/index.ts',
       'tsconfig.tsbuildinfo',
     ];
@@ -173,6 +181,7 @@ describe('getPublicPackageContracts', () => {
     const packageDir = await mkdtemp(join(tmpdir(), 'oat-release-validate-'));
     await mkdir(join(packageDir, 'dist'), { recursive: true });
     await writeFile(join(packageDir, 'dist', 'index.js'), '', 'utf8');
+    await writeFile(join(packageDir, 'README.md'), '', 'utf8');
 
     await expect(
       findMissingBuildArtifacts(packageDir, docsThemeContract),
