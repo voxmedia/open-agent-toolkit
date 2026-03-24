@@ -1,4 +1,4 @@
-import { DocsLayout } from '@oat/docs-theme';
+import { DocsLayout } from '@voxmedia/oat-docs-theme';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { ReactNode } from 'react';
 

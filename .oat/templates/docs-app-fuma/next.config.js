@@ -1,4 +1,4 @@
-import { createDocsConfig } from '@oat/docs-config';
+import { createDocsConfig } from '@voxmedia/oat-docs-config';
 
 export default createDocsConfig({
   title: '{{SITE_NAME}}',
