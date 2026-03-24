@@ -66,10 +66,10 @@ jobs:
           NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
         run: |
           for pkg in \
-            @voxmedia/oat-cli \
+            @voxmedia/oat-docs-transforms \
             @voxmedia/oat-docs-config \
             @voxmedia/oat-docs-theme \
-            @voxmedia/oat-docs-transforms
+            @voxmedia/oat-cli
           do
             pnpm --filter "$pkg" publish --dry-run --access public --no-git-checks
           done
