@@ -1,9 +1,17 @@
-import { readFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { getPublicPackageContracts } from './public-package-contract';
+import { findMissingBuildArtifacts } from '../../../../tools/release/validate-public-packages';
+import {
+  findForbiddenPackedPaths,
+  findMissingMetadataFields,
+  findMissingPackedPaths,
+  getPublicPackageContracts,
+} from './public-package-contract';
 
 const cliPackageJsonPath = fileURLToPath(
   new URL('../../package.json', import.meta.url),
@@ -103,6 +111,54 @@ describe('getPublicPackageContracts', () => {
 
     expect(new Set(publicNames).size).toBe(publicNames.length);
     expect(new Set(workspaceDirs).size).toBe(workspaceDirs.length);
+  });
+
+  it('reports missing metadata fields for release validation', () => {
+    const cliContract = getPublicPackageContracts()[0];
+    const missingFields = findMissingMetadataFields(
+      {
+        name: cliContract.publicName,
+        repository: { type: 'git' },
+        homepage: 'https://example.com',
+        files: ['dist'],
+        publishConfig: {},
+      },
+      cliContract,
+    );
+
+    expect(missingFields).toEqual([
+      'bugs',
+      'license',
+      'publishConfig.access',
+      'bin.oat',
+    ]);
+  });
+
+  it('reports missing and forbidden packed paths for release validation', () => {
+    const cliContract = getPublicPackageContracts()[0];
+    const packedPaths = [
+      'dist/index.js',
+      'assets/docs/index.md',
+      'src/index.ts',
+      'tsconfig.tsbuildinfo',
+    ];
+
+    expect(findMissingPackedPaths(packedPaths, cliContract)).toEqual([]);
+    expect(findForbiddenPackedPaths(packedPaths, cliContract)).toEqual([
+      'src/index.ts',
+      'tsconfig.tsbuildinfo',
+    ]);
+  });
+
+  it('reports missing build artifacts before packing', async () => {
+    const docsThemeContract = getPublicPackageContracts()[2];
+    const packageDir = await mkdtemp(join(tmpdir(), 'oat-release-validate-'));
+    await mkdir(join(packageDir, 'dist'), { recursive: true });
+    await writeFile(join(packageDir, 'dist', 'index.js'), '', 'utf8');
+
+    await expect(
+      findMissingBuildArtifacts(packageDir, docsThemeContract),
+    ).resolves.toEqual(['dist/index.d.ts']);
   });
 
   it('matches the CLI package manifest to the public contract', async () => {

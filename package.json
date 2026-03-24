@@ -24,6 +24,7 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "prepare": "test \"$GIT_HOOKS\" = \"0\" && exit 0; node tools/git-hooks/manage-hooks.js setup 2>/dev/null || true",
+    "release:validate": "tsx tools/release/validate-public-packages.ts",
     "test": "turbo run test",
     "type-check": "turbo run type-check",
     "cli:link": "pnpm run build --filter=@voxmedia/oat-cli && cd packages/cli && pnpm link --global",

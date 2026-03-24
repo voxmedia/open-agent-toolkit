@@ -1,3 +1,5 @@
+import { matchesGlob } from 'node:path';
+
 export interface PublicPackageContract {
   workspaceDir: string;
   publicName: string;
@@ -57,6 +59,29 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   },
 ];
 
+function getMetadataValue(
+  packageJson: Record<string, unknown>,
+  fieldPath: string,
+): unknown {
+  return fieldPath.split('.').reduce<unknown>((value, segment) => {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+
+    return (value as Record<string, unknown>)[segment];
+  }, packageJson);
+}
+
+function hasRequiredPackPath(
+  packedPaths: readonly string[],
+  requiredPath: string,
+): boolean {
+  return packedPaths.some(
+    (packedPath) =>
+      packedPath === requiredPath || packedPath.startsWith(`${requiredPath}/`),
+  );
+}
+
 export function getPublicPackageContracts(): PublicPackageContract[] {
   return PUBLIC_PACKAGE_CONTRACTS.map((contract) => ({
     ...contract,
@@ -64,4 +89,33 @@ export function getPublicPackageContracts(): PublicPackageContract[] {
     requiredPaths: [...contract.requiredPaths],
     forbiddenPathPatterns: [...contract.forbiddenPathPatterns],
   }));
+}
+
+export function findMissingMetadataFields(
+  packageJson: Record<string, unknown>,
+  contract: PublicPackageContract,
+): string[] {
+  return contract.requiredMetadataFields.filter(
+    (fieldPath) => getMetadataValue(packageJson, fieldPath) === undefined,
+  );
+}
+
+export function findMissingPackedPaths(
+  packedPaths: readonly string[],
+  contract: PublicPackageContract,
+): string[] {
+  return contract.requiredPaths.filter(
+    (requiredPath) => !hasRequiredPackPath(packedPaths, requiredPath),
+  );
+}
+
+export function findForbiddenPackedPaths(
+  packedPaths: readonly string[],
+  contract: PublicPackageContract,
+): string[] {
+  return packedPaths.filter((packedPath) =>
+    contract.forbiddenPathPatterns.some((pattern) =>
+      matchesGlob(packedPath, pattern),
+    ),
+  );
 }
