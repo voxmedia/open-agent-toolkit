@@ -621,15 +621,15 @@ git commit -m "docs(p04-t02): update public install guidance for @voxmedia/oat-*
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                              |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                     |
-| p02    | code     | pending | -          | -                                                     |
-| p03    | code     | pending | -          | -                                                     |
-| p04    | code     | pending | -          | -                                                     |
-| final  | code     | pending | -          | -                                                     |
-| spec   | artifact | pending | -          | -                                                     |
-| design | artifact | passed  | 2026-03-24 | reviews/archived/artifact-design-review-2026-03-23.md |
+| Scope  | Type     | Status   | Date       | Artifact                                              |
+| ------ | -------- | -------- | ---------- | ----------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                     |
+| p02    | code     | pending  | -          | -                                                     |
+| p03    | code     | pending  | -          | -                                                     |
+| p04    | code     | pending  | -          | -                                                     |
+| final  | code     | received | 2026-03-23 | reviews/final-review-2026-03-23.md                    |
+| spec   | artifact | pending  | -          | -                                                     |
+| design | artifact | passed   | 2026-03-24 | reviews/archived/artifact-design-review-2026-03-23.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
