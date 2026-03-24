@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-24
-oat_current_task_id: p04-t05
+oat_current_task_id: p04-t06
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | completed   | 4     | 4/4       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 3     | 3/3       |
-| Phase 4 | in_progress | 6     | 4/6       |
+| Phase 4 | in_progress | 6     | 5/6       |
 
-**Total:** 14/16 tasks completed
+**Total:** 15/16 tasks completed
 
 ---
 
@@ -656,6 +656,33 @@ oat_generated: false
 - Run: `rg -n '@oat/cli|@voxmedia/oat-cli' packages/cli/AGENTS.md`
 - Result: pass (`@voxmedia/oat-cli` only)
 
+### Task p04-t05: (review) Scope release dry-run workflow to relevant package changes
+
+**Status:** completed
+**Commit:** 48e1871
+
+**Outcome (required when completed):**
+
+- Scoped the release dry-run workflow so it only runs for pull requests that
+  can affect publish readiness.
+- Excluded docs-only and `.oat/`-only changes from triggering the full release
+  dry-run pipeline while keeping a manual `workflow_dispatch` path available.
+
+**Files changed:**
+
+- `.github/workflows/release-dry-run.yml`
+
+**Verification:**
+
+- Run: `sed -n '1,40p' .github/workflows/release-dry-run.yml`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The path filter intentionally includes workflow, lockfile, workspace, and
+  tooling files in addition to `packages/**` so release-contract changes still
+  exercise the dry-run workflow.
+
 ---
 
 ## Orchestration Runs
@@ -691,6 +718,7 @@ Chronological log of implementation progress.
 - [x] p04-t02: Update root and docs-site consumer guidance to the public package names - `5909304`
 - [x] p04-t03: (review) Regenerate knowledge artifacts for renamed public packages - `e83c506`
 - [x] p04-t04: (review) Update CLI contributor instructions to renamed package filters - `d06d3cd`
+- [x] p04-t05: (review) Scope release dry-run workflow to relevant package changes - `48e1871`
 
 **What changed (high level):**
 
