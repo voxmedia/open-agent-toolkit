@@ -108,7 +108,9 @@ export async function regenerateBacklogIndex(
   const startIndex = content.indexOf(INDEX_START);
   const endIndex = content.indexOf(INDEX_END);
   if (startIndex === -1 || endIndex === -1) {
-    throw new Error(`Managed backlog index markers missing in ${indexPath}.`);
+    throw new Error(
+      `Managed backlog index markers missing in ${indexPath}. Expected the exact marker pair:\n${INDEX_START}\n${INDEX_END}\nRun \`oat backlog init\` if the backlog scaffold is missing, or restore those exact markers in \`backlog/index.md\` before rerunning \`oat backlog regenerate-index\`.`,
+    );
   }
 
   const before = content.slice(0, startIndex);

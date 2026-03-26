@@ -45,7 +45,24 @@ Write down a 1-3 bullet summary of the implementation change:
 - Repo-reference behavior changes
 - File moves, renames, or retirements
 
-### Step 2: Mine Project Artifacts for Deferred Work and Decisions
+### Step 2: Ensure Backlog Scaffold
+
+Before editing any backlog files or running backlog regeneration, run:
+
+```bash
+oat backlog init
+```
+
+This command is idempotent and ensures `.oat/repo/reference/backlog/index.md` exists with the exact managed markers required by the CLI:
+
+```md
+<!-- OAT BACKLOG-INDEX -->
+<!-- END OAT BACKLOG-INDEX -->
+```
+
+Do not hand-author or rename those managed markers.
+
+### Step 3: Mine Project Artifacts for Deferred Work and Decisions
 
 For recently completed or in-progress projects, read `discovery.md`, `spec.md`, `design.md`, and `implementation.md` as applicable.
 
@@ -56,7 +73,7 @@ Promote notable findings into one of:
 - Decision record entries in `.oat/repo/reference/decision-record.md`
 - Roadmap updates in `.oat/repo/reference/roadmap.md`
 
-### Step 3: Update Canonical Reference Docs
+### Step 4: Update Canonical Reference Docs
 
 Update these files as applicable:
 
@@ -80,7 +97,7 @@ If you modify backlog item files or the completed archive structure, run:
 oat backlog regenerate-index
 ```
 
-### Step 4: Sanity Checks
+### Step 5: Sanity Checks
 
 Use the `Grep` tool for focused searches:
 
@@ -94,7 +111,7 @@ Confirm that:
 - Completed summaries live in `backlog/completed.md`
 - Roadmap wording matches the current `Now / Next / Later` structure
 
-### Step 5: Output
+### Step 6: Output
 
 Provide:
 

@@ -219,4 +219,34 @@ describe('regenerateBacklogIndex', () => {
       regenerateBacklogIndex(clonedBacklogRoot),
     ).resolves.toBeUndefined();
   });
+
+  it('reports the exact marker pair required when the index was hand-authored incorrectly', async () => {
+    const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-markers-'));
+    tempDirs.push(backlogRoot);
+
+    await mkdir(join(backlogRoot, 'items'), { recursive: true });
+    await writeFile(
+      join(backlogRoot, 'index.md'),
+      [
+        '# Backlog Index',
+        '',
+        '## Curated Overview',
+        '',
+        'Hand-authored content.',
+        '',
+        '<!-- oat:managed:start -->',
+        '| stale | stale |',
+        '<!-- oat:managed:end -->',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await expect(regenerateBacklogIndex(backlogRoot)).rejects.toThrow(
+      /Expected the exact marker pair:\n<!-- OAT BACKLOG-INDEX -->\n<!-- END OAT BACKLOG-INDEX -->/,
+    );
+    await expect(regenerateBacklogIndex(backlogRoot)).rejects.toThrow(
+      /Run `oat backlog init` if the backlog scaffold is missing/,
+    );
+  });
 });
