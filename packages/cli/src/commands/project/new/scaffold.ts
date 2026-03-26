@@ -44,6 +44,84 @@ const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
   import: ['state.md', 'plan.md', 'implementation.md'],
 };
 
+interface StateTemplateContent {
+  hillCheckpoints: string;
+  phase: string;
+  status: string;
+  currentPhase: string;
+  artifacts: string[];
+  progress: string[];
+  nextMilestone: string;
+}
+
+const STATE_TEMPLATE_BY_MODE: Record<
+  ProjectScaffoldMode,
+  StateTemplateContent
+> = {
+  'spec-driven': {
+    hillCheckpoints: "['discovery', 'spec', 'design']",
+    phase: 'discovery',
+    status: 'Discovery',
+    currentPhase:
+      'Discovery - Gathering requirements and understanding the problem space',
+    artifacts: [
+      '- **Discovery:** `discovery.md` (in_progress)',
+      '- **Spec:** `spec.md` (scaffolded template — not started)',
+      '- **Design:** `design.md` (scaffolded template — not started)',
+      '- **Plan:** `plan.md` (scaffolded template — not started)',
+      '- **Implementation:** `implementation.md` (scaffolded template — not started)',
+    ],
+    progress: [
+      '- ✓ Discovery started',
+      '- ✓ Downstream lifecycle files scaffolded',
+      '- ⧗ Awaiting user input',
+    ],
+    nextMilestone: 'Complete discovery and move to specification phase',
+  },
+  quick: {
+    hillCheckpoints: '[]',
+    phase: 'discovery',
+    status: 'Discovery',
+    currentPhase:
+      'Discovery - Gathering requirements for a quick workflow before planning',
+    artifacts: [
+      '- **Discovery:** `discovery.md` (in_progress)',
+      '- **Spec:** N/A (quick mode)',
+      '- **Design:** N/A (quick mode unless lightweight design is needed)',
+      '- **Plan:** `plan.md` (scaffolded template — not started)',
+      '- **Implementation:** `implementation.md` (scaffolded template — not started)',
+    ],
+    progress: [
+      '- ✓ Discovery started',
+      '- ✓ Execution artifacts scaffolded',
+      '- ⧗ Awaiting user input',
+    ],
+    nextMilestone:
+      'Complete discovery and generate a quick implementation plan',
+  },
+  import: {
+    hillCheckpoints: '[]',
+    phase: 'plan',
+    status: 'Plan Import',
+    currentPhase:
+      'Plan import - Waiting to normalize an external plan into OAT format',
+    artifacts: [
+      '- **Discovery:** N/A (import mode)',
+      '- **Spec:** N/A (import mode)',
+      '- **Design:** N/A (import mode)',
+      '- **Plan:** `plan.md` (scaffolded template — awaiting imported content)',
+      '- **Implementation:** `implementation.md` (scaffolded template — awaiting imported plan)',
+    ],
+    progress: [
+      '- ✓ Import-mode project scaffolded',
+      '- ✓ Execution artifacts scaffolded',
+      '- ⧗ Awaiting external plan import',
+    ],
+    nextMilestone:
+      'Run `oat-project-import-plan` to normalize the external plan',
+  },
+};
+
 function validateProjectName(name: string): void {
   if (name.startsWith('-')) {
     throw new Error(
@@ -62,10 +140,20 @@ function applyTemplateReplacements(
   projectName: string,
   today: string,
   nowUtc: string,
+  mode: ProjectScaffoldMode,
 ): string {
+  const stateContent = STATE_TEMPLATE_BY_MODE[mode];
   return template
     .replaceAll('{Project Name}', projectName)
     .replaceAll('YYYY-MM-DD', today)
+    .replaceAll('{OAT_HILL_CHECKPOINTS}', stateContent.hillCheckpoints)
+    .replaceAll('{OAT_WORKFLOW_MODE}', mode)
+    .replaceAll('{OAT_PHASE}', stateContent.phase)
+    .replaceAll('{OAT_STATUS}', stateContent.status)
+    .replaceAll('{OAT_CURRENT_PHASE}', stateContent.currentPhase)
+    .replaceAll('{OAT_ARTIFACTS}', stateContent.artifacts.join('\n'))
+    .replaceAll('{OAT_PROGRESS}', stateContent.progress.join('\n'))
+    .replaceAll('{OAT_NEXT_MILESTONE}', stateContent.nextMilestone)
     .replaceAll(
       /oat_project_created:\s*null/gi,
       `oat_project_created: "${nowUtc}"`,
@@ -109,6 +197,7 @@ async function scaffoldModeTemplates(
       projectName,
       today,
       nowUtc,
+      mode,
     );
     await writeFile(dest, rendered, 'utf8');
     createdFiles.push(templateFile);
