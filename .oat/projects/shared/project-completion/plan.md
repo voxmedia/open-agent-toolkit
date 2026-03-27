@@ -700,18 +700,134 @@ git commit -m "docs(p05-t03): app docs mirror lifecycle changes, doctor knows ne
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status   | Date       | Artifact                           |
-| ------ | -------- | -------- | ---------- | ---------------------------------- |
-| p01    | code     | pending  | -          | -                                  |
-| p02    | code     | pending  | -          | -                                  |
-| p03    | code     | pending  | -          | -                                  |
-| p04    | code     | pending  | -          | -                                  |
-| p05    | code     | pending  | -          | -                                  |
-| final  | code     | received | 2026-03-27 | reviews/final-review-2026-03-27.md |
-| spec   | artifact | pending  | -          | -                                  |
-| design | artifact | pending  | -          | -                                  |
+| Scope  | Type     | Status      | Date       | Artifact                                    |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------- |
+| p01    | code     | pending     | -          | -                                           |
+| p02    | code     | pending     | -          | -                                           |
+| p03    | code     | pending     | -          | -                                           |
+| p04    | code     | pending     | -          | -                                           |
+| p05    | code     | pending     | -          | -                                           |
+| final  | code     | fixes_added | 2026-03-27 | reviews/archived/final-review-2026-03-27.md |
+| spec   | artifact | pending     | -          | -                                           |
+| design | artifact | pending     | -          | -                                           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+
+---
+
+## Phase 6: Review Fixes
+
+### Task p06-t01: (review) Fix inline revise flow to advance implementation cursor
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-revise/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: Inline path (Step 4e-4f) updates `state.md` but not `implementation.md` frontmatter `oat_current_task_id`. The implement skill resumes from `implementation.md`, so revision tasks can be missed.
+
+**Step 2: Implement fix**
+
+In Step 4e (Update implementation.md), add: set `oat_current_task_id: prevN-t01` in implementation.md frontmatter. Also update the Progress Overview table to include the new revision phase.
+
+**Step 3: Verify**
+
+Run: `grep -A2 "oat_current_task_id" .agents/skills/oat-project-revise/SKILL.md | head -5`
+Expected: Reference to updating `oat_current_task_id` in implementation.md
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-revise/SKILL.md
+git commit -m "fix(p06-t01): revise skill advances implementation cursor for revision tasks"
+```
+
+---
+
+### Task p06-t02: (review) Fix review-receive task numbering for revision phases
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-receive/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: review-receive uses `^### Task ${TARGET_PHASE}-t[0-9]+:` regex to find existing tasks. For revision phase `p-rev1`, this looks for `p-rev1-tNN` but actual tasks are `prev1-tNN`.
+
+**Step 2: Implement fix**
+
+In Step 4 (Determine Next Task IDs), add a note that for revision phases (`p-revN`), the task prefix is `prevN` not `p-revN`. The regex and numbering logic must map `p-rev1` scope → `prev1-tNN` task prefix. Add an explicit mapping note:
+
+- Scope `p-revN` → task prefix `prevN` → regex `^### Task prevN-t[0-9]+:`
+
+**Step 3: Verify**
+
+Run: `grep -c "prevN" .agents/skills/oat-project-review-receive/SKILL.md`
+Expected: At least 1 match
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-review-receive/SKILL.md
+git commit -m "fix(p06-t02): review-receive handles prevN-tNN task IDs for revision phases"
+```
+
+---
+
+### Task p06-t03: (review) Fix state.md body to reflect implementation status
+
+**Files:**
+
+- Modify: `.oat/projects/shared/project-completion/state.md`
+
+**Step 1: Understand the issue**
+
+Review finding: state.md frontmatter says `oat_phase: implement` but body still says "Status: Plan Complete", "Planning - Ready for implementation", etc.
+
+**Step 2: Implement fix**
+
+Update the markdown body of state.md to reflect current state: implementation complete, all tasks done, awaiting final review pass.
+
+**Step 3: Verify**
+
+Run: `grep "Plan Complete" .oat/projects/shared/project-completion/state.md`
+Expected: No matches (stale text removed)
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/project-completion/state.md
+git commit -m "fix(p06-t03): state.md body reflects implementation complete status"
+```
+
+---
+
+### Task p06-t04: (review) Fix implementation.md progress table consistency
+
+**Files:**
+
+- Modify: `.oat/projects/shared/project-completion/implementation.md`
+
+**Step 1: Understand the issue**
+
+Review finding: Progress table shows phases 1-5 complete then repeats phases 3-5 as pending. Phase 1 still marked `in_progress`.
+
+**Step 2: Implement fix**
+
+Clean up the progress overview table: remove duplicate rows, ensure all 5 phases show `complete` with correct task counts, fix Phase 1 status from `in_progress` to `complete`.
+
+**Step 3: Verify**
+
+Run: `grep "pending" .oat/projects/shared/project-completion/implementation.md | head -5`
+Expected: No matches in progress table (only in task template text)
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/project-completion/implementation.md
+git commit -m "fix(p06-t04): implementation.md progress table is internally consistent"
+```
 
 ---
 
@@ -724,8 +840,9 @@ git commit -m "docs(p05-t03): app docs mirror lifecycle changes, doctor knows ne
 - Phase 3: 6 tasks — Summary in pr-final/complete + auto-review in implement + revision handling + review contract + config
 - Phase 4: 3 tasks — CLI state routing + config schema + state template
 - Phase 5: 3 tasks — Lifecycle docs + reference docs + app docs/doctor
+- Phase 6: 4 tasks — Review fixes (I1, I2, M1, M2)
 
-**Total: 19 tasks**
+**Total: 23 tasks**
 
 Ready for code review and merge.
 

@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-27
-oat_current_task_id: null
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -397,6 +397,28 @@ oat_generated: false
 ### 2026-03-27
 
 **Session Start:** implementation begun
+
+---
+
+### Review Received: final
+
+**Date:** 2026-03-27
+**Review artifact:** reviews/archived/final-review-2026-03-27.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 2
+- Minor: 0
+
+**New tasks added:** p06-t01, p06-t02, p06-t03, p06-t04
+
+**Deferred Findings (Medium/Minor):** None — all findings converted to tasks.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After fix tasks complete: update review row to `fixes_completed`, re-run review to reach `passed`.
 
 ---
 
