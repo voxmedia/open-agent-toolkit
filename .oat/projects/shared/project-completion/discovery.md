@@ -17,117 +17,173 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Improve the OAT project completion flow with three interconnected changes:
+
+1. **`summary.md`** — A new first-class project artifact that serves as institutional memory, generated at project closeout. More reflective and extensive than the PR description's summary section. Serves as the artifact posted back to Linear issues on closeout, and as the source for portfolio-level rollups across completed projects.
+
+2. **Post-PR revision workflow** — Fix the "dead zone" after `oat-project-pr-final` where the project looks complete to agents but is still awaiting human review. Introduce a `pr_open` phase status and a `oat-project-revise` skill that enables clean re-entry for human feedback without starting a new project.
+
+3. **Completion flow improvements** — Better guidance and state transitions across the final stretch of the project lifecycle (post-implementation through archive), including how summary, document, update-repo-reference, pr-final, revise, and complete interact.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Summary vs PR description distinction
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Should `summary.md` feed into the PR description, or are they independent artifacts?
+**A:** They serve different audiences. `summary.md` is institutional memory (future you, future agents, portfolio rollups, Linear closeout). The PR description is reviewer-oriented (enough to review the PR). `pr-final` should draw from `summary.md` for its Summary section rather than synthesizing independently from raw artifacts.
+**Decision:** Two distinct artifacts. PR description pulls from summary.md as a primary source but is thinner and more actionable.
+
+### Question 2: Summary sections
+
+**Q:** What sections should `summary.md` contain?
+**A:** Based on brainstorming:
+
+1. Overview — 2-3 sentences on what the project was and why
+2. What was implemented — capability-level, narrative
+3. Key decisions — design choices with rationale
+4. Design deltas — where final result diverged from original design and why
+5. Notable challenges — what was harder than expected, resolution
+6. Tradeoffs made — explicit tradeoffs with reasoning
+7. Integration notes — things other projects/developers need to know
+8. Revision history — if revisions happened post-PR, what changed and why
+9. Follow-up items — deferred work, known limitations, spawned backlog items with refs
+10. Associated issues — which backlog items / Linear issues this project satisfied
+    **Decision:** These 10 sections form the summary template. Several sections may be omitted if not applicable (e.g., revision history for projects with no revisions).
+
+### Question 3: When should summary be generated?
+
+**Q:** What triggers summary generation?
+**A:** Multiple valid triggers:
+
+- `oat-project-summary` can be run independently at any time after implementation has meaningful progress
+- `oat-project-pr-final` triggers summary generation if not yet done (summary feeds the PR description)
+- `oat-project-complete` generates summary if not yet done
+- Summary is re-runnable — can be updated after revisions
+  **Decision:** Summary is an independent, re-runnable skill. Both pr-final and complete invoke it if summary.md doesn't exist. After revisions, summary should be updated (not fully rewritten — update relevant sections).
+
+### Question 4: How does summary know what's new on re-run?
+
+**Q:** When summary is re-run after revisions, how does it know what changed?
+**A:** Track in summary.md frontmatter what the summary has "seen":
+
+- `oat_summary_last_task` — last task ID when summary was generated
+- `oat_summary_revision_count` — how many revision phases existed at generation time
+- `oat_summary_includes_revisions` — which revision phases are reflected
+  On re-run, check for new tasks or revision phases since the tracked point and update relevant sections.
+  **Decision:** Frontmatter-based tracking of summary state enables incremental updates.
+
+### Question 5: Post-PR phase status
+
+**Q:** What should the project state be after pr-final but before human approval?
+**A:** A new phase status `pr_open` that signals "PR is open, human reviewing, revisions may come." This is NOT a blocker — `oat-project-complete` should still work from `pr_open`. The user may review inline (not on GitHub) and just want to close out directly.
+**Decision:** `pr_open` is guidance, not a gate. Complete is permissive from any status.
+
+### Question 6: How does the revision skill work?
+
+**Q:** What is the entry point for post-PR revisions?
+**A:** `oat-project-revise` accepts feedback from multiple sources:
+
+- Inline conversation (user describes changes needed)
+- GitHub PR comments (delegates to `review-receive-remote`)
+- A review artifact (delegates to `review-receive`)
+  For inline feedback, it's simpler than review-receive — no severity classification, no triage ceremony. Just "here are the things I want changed" → tasks → implement.
+  **Decision:** `oat-project-revise` is a unified re-entry point that routes to the right handler based on feedback source.
+
+### Question 7: Should OAT manage Linear status transitions?
+
+**Q:** When a project completes, should OAT move the Linear issue to Done?
+**A:** No. The GitHub integration handles status transitions automatically: branch push → In Progress, PR → In Review, merge → Done. OAT's responsibility is posting the summary as a comment/update, not managing status.
+**Decision:** OAT posts data to Linear (summary on closeout). Status lifecycle is GitHub integration's job.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+This project has a clear direction from extensive brainstorming. The solution involves three coordinated changes to existing skills plus two new skills/artifacts.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**Approach:** Incremental extension of existing lifecycle skills with two new artifacts (summary.md, revision workflow)
+**Rationale:** The existing skill architecture (declarative frontmatter, phase-based lifecycle, review-receive pattern) already has the right seams. We're adding a missing artifact and fixing a state gap, not redesigning the lifecycle.
+**User validated:** Yes — confirmed through brainstorming session
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Summary.md is distinct from PR description:** Summary is institutional memory (deeper, more reflective). PR description is reviewer-oriented (thinner, actionable). PR description draws from summary.md as a source.
+
+2. **`pr_open` is not a gate:** It's a status signal. `oat-project-complete` works from `pr_open`, `complete`, or `in_progress`. The user controls when to close out, not the state machine.
+
+3. **Revision skill is a unified re-entry point:** `oat-project-revise` handles inline feedback directly and delegates to existing review-receive skills for structured feedback. It adds revision phases to plan.md and returns to `pr_open` after completion.
+
+4. **Summary is re-runnable with incremental updates:** Frontmatter tracks what the summary has seen. Re-runs after revisions update relevant sections rather than full rewrites.
+
+5. **No Linear status management from OAT:** GitHub integration owns status transitions. OAT posts summary content to Linear issues on closeout.
+
+6. **Complete is permissive:** Completion gates (final review, docs sync, summary) remain as warnings, not hard blocks. The user can always force completion.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Must not break any existing project lifecycle workflow
+- Must not require summary.md for projects that don't want it (existing projects should still complete normally)
+- `pr_open` must be backward-compatible — agents reading older state.md files without this status should not break
+- Summary generation must work from any state (mid-implementation, post-implementation, post-revision)
+- The revision workflow must be compatible with both inline review (no GitHub PR) and GitHub PR review paths
+- Skills must follow existing OAT skill conventions (frontmatter, progress indicators, mode assertion, allowed-tools)
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- `summary.md` is generated as a first-class project artifact with the defined section structure
+- `summary.md` is re-runnable and tracks what it has seen via frontmatter
+- `pr-final` uses summary.md as a source for its Summary section
+- `oat-project-complete` generates summary if not done, uses it as archive cover page
+- After pr-final, state.md reflects `pr_open` status with clear next-step guidance (revise or complete)
+- `oat-project-revise` cleanly re-enters implementation for inline feedback without triggering new project creation
+- `oat-project-revise` creates revision phases in plan.md and returns to `pr_open` on completion
+- `oat-project-complete` works from any phase status without blocking on `pr_open`
+- Agents in new sessions reading state.md correctly understand the project is "awaiting human review / open for revisions" rather than "done, start a new project"
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Linear integration (handled by separate `remote-project-management` project)
+- Backlog promotion skill (`oat-pjm-promote-to-project`) — related but separate
+- Deferred work capture skill (`oat-pjm-capture-deferred`) — related but separate
+- Changes to `oat-project-document` or `oat-pjm-update-repo-reference` skills — these continue to work as-is
+- Portfolio rollup skill that reads summary.md across projects — future work
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- **Portfolio rollup from summaries** — A skill that reads `summary.md` from recent completed projects to synthesize a status report. Valuable but depends on having completed projects with summaries first.
+- **Summary as Linear project update** — Beyond posting to individual issues, summary content could feed into Linear project-level updates with health/progress. Depends on Linear integration project.
+- **Auto-generation of decision-record entries from summary** — Summary's "key decisions" section overlaps with the repo decision record. Could auto-promote decisions to the decision record during update-repo-reference.
+- **Summary diff view** — Show what changed between summary versions when re-run after revisions.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Revision phase naming:** Should revision phases use `p-rev1`, `p-rev2` naming or extend the existing phase numbering (e.g., if last phase was p03, revision becomes p04)?
+- **Summary template location:** Should the summary template live in `.oat/templates/summary.md` alongside other templates?
+- **Complete flow ordering:** Exact ordering of summary generation, document, update-repo-reference, and archive within `oat-project-complete`. Currently complete generates PR description then archives — where does summary fit relative to those?
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Projects that were completed before this change (without summary.md) will not be retroactively updated
+- The `pr_open` status will be understood by agents that read state.md next-milestone guidance text, even without explicit code changes in the agent
+- Inline revision feedback (not from GitHub) will be conversational — the user describes what they want changed, the agent creates tasks
 
 ## Risks
 
-{Potential risks identified during discovery}
+- **State complexity:** Adding `pr_open` and revision loops increases the number of possible state transitions. Risk of edge cases where state gets inconsistent.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Keep `pr_open` as guidance only, not a gate. Complete always works. Revision always returns to `pr_open`.
 
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Summary bloat:** Summary.md could become too long for large projects with many revisions, reducing its value as a quick-read artifact.
+  - **Likelihood:** Low
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Keep sections concise. Revision history is additive but brief. Cap revision detail at 2-3 sentences per round.
+
+- **Skill interaction complexity:** Five skills need coordinated changes (implement, pr-final, complete, plus two new). Risk of inconsistent behavior across skills.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Design the state transitions clearly in spec. Test the full lifecycle flow end-to-end.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused `design.md` (architecture, components, data flow, testing) before planning. Choose this when discovery surfaced architecture choices or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed the scope is larger or more complex than expected.
-- **Spec-driven mode:** continue to `oat-project-spec` (after HiLL approval if configured).
+Spec-driven mode: continue to `oat-project-spec` (after HiLL approval if configured).
