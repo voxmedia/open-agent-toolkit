@@ -42,6 +42,7 @@ SKILLS=(
   oat-project-promote-spec-driven
   oat-project-quick-start
   oat-project-reconcile
+  oat-project-revise
   oat-project-review-provide
   oat-project-review-receive
   oat-project-review-receive-remote
