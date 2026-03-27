@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-27
-oat_current_task_id: null
+oat_current_task_id: p06-t05
 oat_generated: false
 ---
 
@@ -414,7 +414,23 @@ oat_generated: false
 
 **Deferred Findings (Medium/Minor):** None — all findings converted to tasks.
 
-**Next:** Fix tasks complete. Request re-review: `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`.
+**Next:** Fix tasks complete. Re-review completed (cycle 2).
+
+### Re-Review Received: final (v2)
+
+**Date:** 2026-03-27
+**Review artifact:** reviews/archived/final-review-2026-03-27-v2.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1 (M1 — state.md status header inconsistency)
+- Minor: 0
+
+**New task added:** p06-t05
+
+**Next:** Execute fix task, then re-review to reach `passed`.
 
 ---
 

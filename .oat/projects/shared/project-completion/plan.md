@@ -700,16 +700,16 @@ git commit -m "docs(p05-t03): app docs mirror lifecycle changes, doctor knows ne
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status   | Date       | Artifact                              |
-| ------ | -------- | -------- | ---------- | ------------------------------------- |
-| p01    | code     | pending  | -          | -                                     |
-| p02    | code     | pending  | -          | -                                     |
-| p03    | code     | pending  | -          | -                                     |
-| p04    | code     | pending  | -          | -                                     |
-| p05    | code     | pending  | -          | -                                     |
-| final  | code     | received | 2026-03-27 | reviews/final-review-2026-03-27-v2.md |
-| spec   | artifact | pending  | -          | -                                     |
-| design | artifact | pending  | -          | -                                     |
+| Scope  | Type     | Status      | Date       | Artifact                                       |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending     | -          | -                                              |
+| p02    | code     | pending     | -          | -                                              |
+| p03    | code     | pending     | -          | -                                              |
+| p04    | code     | pending     | -          | -                                              |
+| p05    | code     | pending     | -          | -                                              |
+| final  | code     | fixes_added | 2026-03-27 | reviews/archived/final-review-2026-03-27-v2.md |
+| spec   | artifact | pending     | -          | -                                              |
+| design | artifact | pending     | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -831,6 +831,24 @@ git commit -m "fix(p06-t04): implementation.md progress table is internally cons
 
 ---
 
+### Task p06-t05: (review) Fix state.md status header consistency
+
+**Files:**
+
+- Modify: `.oat/projects/shared/project-completion/state.md`
+
+**Step 1: Fix status line**
+Change line 23 from "executing review fix tasks" to "review fix tasks complete; awaiting re-review".
+
+**Step 2: Commit**
+
+```bash
+git add .oat/projects/shared/project-completion/state.md
+git commit -m "fix(p06-t05): state.md status header matches body"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -840,9 +858,9 @@ git commit -m "fix(p06-t04): implementation.md progress table is internally cons
 - Phase 3: 6 tasks — Summary in pr-final/complete + auto-review in implement + revision handling + review contract + config
 - Phase 4: 3 tasks — CLI state routing + config schema + state template
 - Phase 5: 3 tasks — Lifecycle docs + reference docs + app docs/doctor
-- Phase 6: 4 tasks — Review fixes (I1, I2, M1, M2)
+- Phase 6: 5 tasks — Review fixes (I1, I2, M1, M2, M1-v2)
 
-**Total: 23 tasks**
+**Total: 24 tasks**
 
 Ready for code review and merge.
 
