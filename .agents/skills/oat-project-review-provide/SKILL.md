@@ -422,7 +422,7 @@ Before selecting a tier, announce the probe and its result so the user can see w
 
 ```
 [3/5] Checking subagent availability…
-  → oat-reviewer: {available | not resolved} ({reason})
+  → oat-reviewer: {available | authorization required | not resolved} ({reason})
   → Selected: Tier {1|2|3} — {Subagent (fresh context) | Fresh session (recommended) | Inline review}
 ```
 
@@ -434,6 +434,15 @@ Detection logic:
   - `[features] multi_agent = true` is enabled in active Codex config.
   - If explicit role pinning is desired, `agent_type` must be a built-in role (`default`/`worker`/`explorer`) or a custom role declared under `[agents.<name>]`.
   - Codex may also auto-select and spawn agents without explicit role pinning.
+  - If the current Codex host requires explicit user authorization before calling `spawn_agent`, do not mark `oat-reviewer` as unresolved. Announce `authorization required` and ask one concise confirmation question before selecting Tier 2 or Tier 3:
+
+    ```
+    Delegate this review to `oat-reviewer`?
+    ```
+
+  - If the user authorizes delegation and Codex role prerequisites are satisfied, use **Tier 1**.
+  - If the user declines delegation, continue with the existing Tier 2 / Tier 3 fallback flow.
+
 - If the runtime can dispatch reviewer work (`subagent_type` in Claude Code, Cursor invocation via `/name` or natural mention, or Codex multi-agent spawn/auto-spawn) → **Tier 1**.
 - If the Task tool is not available or subagent dispatch is not supported → **Tier 2**.
 - If user explicitly requests inline or confirms they are already in a fresh session → **Tier 3**.
@@ -465,6 +474,7 @@ After the subagent completes:
 If subagent not available:
 
 - If user is already in a fresh session (confirmed), proceed to Tier 3.
+- If Codex reported `authorization required` and the user approved delegation, do **not** use Tier 2. Return to Tier 1 and delegate to `oat-reviewer`.
 - If user prefers fresh session: provide instructions and exit.
 
 Instructions for fresh session:

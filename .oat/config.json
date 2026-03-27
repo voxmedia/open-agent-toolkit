@@ -13,11 +13,11 @@
     "index": "apps/oat-docs/index.md",
     "requireForProjectCompletion": true
   },
-  "autoReviewAtCheckpoints": false,
   "localPaths": [
     ".oat/**/analysis",
     ".oat/**/pr",
     ".oat/**/reviews/archived",
     ".oat/ideas"
-  ]
+  ],
+  "autoReviewAtCheckpoints": true
 }

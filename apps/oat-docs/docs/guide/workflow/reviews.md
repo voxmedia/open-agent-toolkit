@@ -72,6 +72,7 @@ Final review `passed` gate requires:
     - If explicit role pinning is used, role must be built-in (`default`/`worker`/`explorer`) or configured under `[agents.<name>]`.
   - Project-scope Codex role files are generated from canonical `.agents/agents/*.md` during `oat sync --scope project`.
   - User-scope Codex role generation (`~/.codex`) is intentionally deferred.
+  - Some Codex hosts require explicit user authorization before the skill may call `spawn_agent`. In those hosts, `oat-project-review-provide` should ask whether to delegate to `oat-reviewer` instead of reporting the reviewer as unresolved.
 - If subagent dispatch is unavailable, follow the existing fallback path (fresh session preferred, inline reset as fallback).
 
 ## Reference artifacts
