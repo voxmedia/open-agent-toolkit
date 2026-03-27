@@ -4,6 +4,7 @@ oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-27
 oat_plan_source: spec-driven
+oat_plan_hill_phases: ['p05']
 oat_generated: false
 ---
 

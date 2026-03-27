@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-27
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -12,96 +12,223 @@ oat_generated: false
 **Started:** 2026-03-27
 **Last Updated:** 2026-03-27
 
-> This document is used to resume interrupted implementation sessions.
->
 > Conventions:
 >
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
+> - `oat_current_task_id` always points at the **next plan task to do**.
 > - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> - Reviews are **not** plan tasks. Track in `plan.md` `## Reviews`.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | in_progress | 4     | 0/4       |
+| Phase 3 | pending     | 6     | 0/6       |
+| Phase 4 | pending     | 3     | 0/3       |
+| Phase 5 | pending     | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 3/19 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Summary Artifact + Template
 
 **Status:** in_progress
 **Started:** 2026-03-27
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-**Outcome (what changed):**
+**Outcome:**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Summary.md template created with 10-section structure and frontmatter tracking fields
+- oat-project-summary skill created with incremental update logic and section omission rules
+- Both bundled in CLI assets via bundle-assets.sh
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `.oat/templates/summary.md`
+- `.agents/skills/oat-project-summary/SKILL.md`
+- `packages/cli/scripts/bundle-assets.sh`
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm build`
+- Result: pass — both assets present in `packages/cli/assets/`
 
-**Notes / Decisions:**
+### Task p01-t01: Create summary.md template
 
-- {trade-offs or deviations discovered during implementation}
+**Status:** completed
+**Commit:** e816246
 
-### Task p01-t01: {Task Name}
+**Outcome:**
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
+- Summary template exists at `.oat/templates/summary.md` with 10 sections, frontmatter tracking fields, and section omission guidance
 
 **Files changed:**
 
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+- `.oat/templates/summary.md` - created with full section structure
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Create oat-project-summary skill
+
+**Status:** completed
+**Commit:** de53460
+
+**Outcome:**
+
+- New skill at `.agents/skills/oat-project-summary/SKILL.md` generates summary.md from project artifacts
+- Supports incremental updates via frontmatter tracking (last_task, revision_count)
+- Section omission rule and 200-line conciseness constraint built in
+
+**Files changed:**
+
+- `.agents/skills/oat-project-summary/SKILL.md` - created (227 lines)
+
+---
+
+### Task p01-t03: Update bundle-assets.sh for summary template and skill
+
+**Status:** completed
+**Commit:** 5396383
+
+**Outcome:**
+
+- Summary skill and template are bundled in CLI assets after build
+
+**Files changed:**
+
+- `packages/cli/scripts/bundle-assets.sh` - added oat-project-summary to SKILLS, summary.md to templates
+
+---
+
+## Phase 2: pr_open Status + Revision Skill
+
+**Status:** in_progress
+**Started:** 2026-03-27
+
+### Task p02-t01: Update oat-project-pr-final — pr_open status
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+---
 
-- {Notes will be added during implementation}
+### Task p02-t02: Create oat-project-revise skill
+
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p02-t03: Update oat-project-complete — permissiveness (FR7)
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t04: Update bundle-assets.sh for revise skill
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Skill Integration — Summary + Auto-Review
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p03-t01: Update oat-project-pr-final — summary integration (FR3)
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Update oat-project-complete — summary gate (FR4)
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t03: Update oat-project-implement — auto-review at checkpoints (FR8)
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t04: Update oat-project-implement — post-completion guidance + revision handling (FR9)
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t05: Update review-provide + review-receive — auto-review invocation contract
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t06: Add autoReviewAtCheckpoints to config.json
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: CLI Runtime + Templates
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Update state/generate.ts — pr_open routing
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t02: Update config schema + get/set for autoReviewAtCheckpoints
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t03: Update state.md template + verify bundling
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Documentation + Diagnostics
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Update bundled workflow docs — lifecycle + state machine
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t02: Update bundled reference docs — directory structure
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t03: Update app docs + oat-doctor skill manifest
 
 **Status:** pending
 **Commit:** -
@@ -110,9 +237,7 @@ oat_generated: false
 
 ## Orchestration Runs
 
-> This section is used by `oat-project-subagent-implement` to log parallel execution runs.
-> Each run appends a new subsection — never overwrite prior entries.
-> For single-thread execution (via `oat-project-implement`), this section remains empty.
+> For single-thread execution, this section remains empty.
 
 <!-- orchestration-runs-start -->
 <!-- orchestration-runs-end -->
@@ -121,46 +246,13 @@ oat_generated: false
 
 ## Implementation Log
 
-Chronological log of implementation progress.
-
 ### 2026-03-27
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-03-27
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session Start:** implementation begun
 
 ---
 
 ## Deviations from Plan
-
-Document any deviations from the original plan.
 
 | Task | Planned | Actual | Reason |
 | ---- | ------- | ------ | ------ |
@@ -168,35 +260,35 @@ Document any deviations from the original plan.
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
+| 5     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- {fill at end}
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- {fill at end}
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- {fill at end}
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- {fill at end}
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- {fill at end}
 
 ## References
 
