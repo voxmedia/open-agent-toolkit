@@ -171,6 +171,22 @@ When user confirms/changes:
 - Update `"$PROJECT_PATH/plan.md"` frontmatter `oat_plan_hill_phases` to the confirmed value before executing tasks.
 - Keep the value stable for the rest of the run unless the user explicitly requests a change.
 
+#### Auto-Review at Checkpoints (Touchpoint A)
+
+After checkpoint behavior is confirmed, resolve auto-review preference:
+
+1. Read `.oat/config.json` `autoReviewAtCheckpoints` (default: `false`)
+2. **If config explicitly `true`:** Skip the prompt. Write `oat_auto_review_at_checkpoints: true` to plan.md frontmatter. Print: "Auto-review at checkpoints: enabled (from config)."
+3. **If config `false` or absent:** Add one question after the checkpoint choice:
+   ```
+   4. Auto-review at checkpoints?
+      - yes: automatically spawn a subagent code review when a checkpoint phase completes
+      - no (default): manual review triggering (current behavior)
+   ```
+4. Write `oat_auto_review_at_checkpoints: true|false` to plan.md frontmatter alongside `oat_plan_hill_phases`.
+
+**On resume:** If `oat_auto_review_at_checkpoints` is already present in plan.md frontmatter, skip Touchpoint A entirely — do not re-ask, do not re-read config, do not print the auto-review note. The stored value is authoritative.
+
 ### Step 3: Check Implementation State
 
 Check if implementation already started:
@@ -388,6 +404,24 @@ At the end of each plan phase (p01, p02, etc.), check `oat_plan_hill_phases` in 
 - **If `oat_plan_hill_phases` is missing at a phase boundary:** treat this as bookkeeping drift and stop to repair it before continuing, because the confirmation should already have been written during the first implementation run.
 
 **Key semantic: listed phases are where you stop AFTER completing them, not before.** `["p03"]` means "complete p03, then pause" — not "pause before starting p03."
+
+**Auto-review at checkpoints (Touchpoint B):**
+
+Before pausing at a checkpoint, check if auto-review is enabled:
+
+1. Read `oat_auto_review_at_checkpoints` from plan.md frontmatter. If not present, fall back to `.oat/config.json` `autoReviewAtCheckpoints` (default: `false`).
+
+2. If enabled and this is a checkpoint phase:
+   a. **Determine review scope:** Find the last checkpoint phase with a **`passed`** row in plan.md Reviews table. Rows with `fixes_added` or `fixes_completed` do NOT count — those reviews didn't pass and should be re-covered. Scope = all phases from (last passed + 1) through current. If this is the final phase, use scope `final`.
+   b. **Spawn subagent review:** `oat-project-review-provide code {scope}` — instruct it to include `oat_review_invocation: auto` in the review artifact frontmatter.
+   c. **Auto-invoke review-receive:** `oat-project-review-receive` — operates in auto-disposition mode when `oat_review_invocation: auto` is present:
+   - Critical/Important/Medium: convert to fix tasks (same as manual)
+   - Minor: auto-convert to fix tasks unless clearly out of scope
+   - No user prompts for disposition
+     d. **If fix tasks added:** continue implementing automatically (no checkpoint pause — return to Step 5 for the new fix tasks)
+     e. **If scope passed:** proceed to the checkpoint pause below
+
+3. If disabled: skip directly to the checkpoint pause.
 
 When pausing:
 
