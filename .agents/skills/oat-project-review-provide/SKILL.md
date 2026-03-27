@@ -539,6 +539,7 @@ oat_generated: true
 oat_generated_at: { today }
 oat_review_scope: { scope }
 oat_review_type: { code|artifact }
+oat_review_invocation: { manual|auto }
 oat_project: { PROJECT_PATH }
 ---
 
@@ -548,6 +549,14 @@ oat_project: { PROJECT_PATH }
 **Scope:** {scope description}
 **Files reviewed:** {N}
 **Commits:** {range}
+```
+
+**Frontmatter field: `oat_review_invocation`**
+
+- `manual` (default): Review was manually triggered by the user. `oat-project-review-receive` uses standard disposition behavior (user prompts for triage, minors auto-deferred for non-final scopes).
+- `auto`: Review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. `oat-project-review-receive` uses relaxed disposition: minors are auto-converted to fix tasks (not deferred), no user prompts for disposition decisions.
+
+When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter. For all other invocations (user-triggered, fresh session), use `manual`.
 
 ## Summary
 
@@ -590,6 +599,7 @@ oat_project: { PROJECT_PATH }
 ## Recommended Next Step
 
 Run the `oat-project-review-receive` skill to convert findings into plan tasks.
+
 ```
 
 ### Step 9: Update Plan Reviews Section
@@ -636,14 +646,17 @@ After writing the review artifact and applying the Step 9 Reviews-table update, 
 **If subagent used (Tier 1):**
 
 ```
+
 Review requested via subagent.
 
 When the reviewer finishes, run the oat-project-review-receive skill to process findings.
+
 ```
 
 **If fresh session recommended (Tier 2):**
 
 ```
+
 For best review quality, run in a fresh session:
 
 1. Open new terminal/session
@@ -651,11 +664,13 @@ For best review quality, run in a fresh session:
 3. Return here and run the oat-project-review-receive skill
 
 Or say "inline" to run review in current session (less reliable).
+
 ```
 
 **If inline review completed (Tier 3):**
 
 ```
+
 Review complete for {project-name}.
 
 Scope: {scope}
@@ -666,6 +681,7 @@ Review artifact: {path}
 Bookkeeping commit: {sha or "deferred with user approval"}
 
 Next: Run the oat-project-review-receive skill to convert findings into plan tasks.
+
 ```
 
 ## Success Criteria
@@ -681,3 +697,4 @@ Next: Run the oat-project-review-receive skill to convert findings into plan tas
 - Review artifact + plan bookkeeping committed atomically on the correct branch (or explicitly deferred with user approval)
 - For final scope, deferred findings ledger included in reviewer context
 - User guided to next step (`oat-project-review-receive`)
+```

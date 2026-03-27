@@ -232,15 +232,22 @@ Rules:
 
 ### Step 2.6: Select Review Handling Mode (Required)
 
-Read `oat_review_type` from review artifact frontmatter:
+Read `oat_review_type` and `oat_review_invocation` from review artifact frontmatter:
 
 - If `oat_review_type == artifact`:
   - Present findings and proposed artifact edits/dispositions to the user first.
   - Require explicit user confirmation before applying any artifact edits.
   - Resolve findings directly in artifact files; do not convert findings into plan tasks.
   - Do not defer findings by default. Only use `rejected_with_rationale` for invalid findings, or `needs_user_direction` when user input is required.
-- If `oat_review_type == code`:
-  - Follow the existing task-conversion flow in Steps 3-10.
+- If `oat_review_type == code` AND `oat_review_invocation == auto`:
+  - **Auto-disposition mode.** This review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. Apply relaxed disposition defaults:
+    - Critical/Important/Medium: convert to fix tasks (same as manual mode)
+    - Minor: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). In manual mode, minors are auto-deferred for non-final scopes — in auto mode, the goal is to fix everything while context is fresh.
+    - **No user prompts for disposition decisions.** The auto-review path runs fully autonomously.
+    - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are deferred with a note explaining why, rather than pausing for interactive resolution.
+  - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
+- If `oat_review_type == code` (manual or `oat_review_invocation` absent):
+  - Follow the existing task-conversion flow in Steps 3-10 with standard disposition behavior.
 
 ### Step 3: Determine Task Scope
 
