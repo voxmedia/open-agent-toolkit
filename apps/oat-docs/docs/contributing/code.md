@@ -53,9 +53,9 @@ For narrower changes, use package-specific checks when possible, but do not merg
 Common targeted checks:
 
 ```bash
-pnpm --filter @oat/cli test
-pnpm --filter @oat/cli lint
-pnpm --filter @oat/cli type-check
+pnpm --filter @tkstang/oat-cli test
+pnpm --filter @tkstang/oat-cli lint
+pnpm --filter @tkstang/oat-cli type-check
 pnpm --filter oat-docs docs:lint
 pnpm build:docs
 ```

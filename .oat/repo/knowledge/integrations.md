@@ -1,165 +1,105 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-02-16
-oat_source_head_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
-oat_source_main_merge_base_sha: a80661894616fc9323542a4bcbcc22c08917e440
+oat_generated_at: 2026-03-24
+oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
+oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
 # External Integrations
 
-**Analysis Date:** 2026-02-16
+**Analysis Date:** 2026-03-24
 
 ## APIs & External Services
 
-**No External API Integrations:**
+**Developer Tool Ecosystem:**
 
-- OAT is self-contained with no outbound API calls to external services
-- No third-party cloud services, SaaS APIs, or microservice dependencies
-- Communication is limited to local filesystem operations and command execution
+- Claude, Cursor, Codex, Copilot, and Gemini provider surfaces are supported as filesystem-based integration targets rather than hosted API integrations.
+  - SDK/Client: none at runtime in this repo for those providers
+  - Auth: handled externally by the installed tools, not by OAT itself
 
-**Provider Integrations (Local):**
+**Documentation Tooling:**
 
-- Claude Code - File-based detection via `.claude` directory
-  - SDK/Client: Direct filesystem access
-  - Auth: None (local configuration only)
-- Cursor - File-based detection via `.cursor` directory
-  - SDK/Client: Direct filesystem access
-  - Auth: None (local configuration only)
-- Codex CLI - File-based detection via `.codex` directory
-  - SDK/Client: Direct filesystem access
-  - Auth: None (local configuration only)
+- Fumadocs - used to build the reference docs app and scaffold similar apps
+  - SDK/Client: `fumadocs-core`, `fumadocs-mdx`, `fumadocs-ui`
+  - Auth: none
 
 ## Data Storage
 
 **Databases:**
 
-- None - OAT uses no database systems
-- All data is persisted in local JSON files
+- None
 
 **File Storage:**
 
 - Local filesystem only
-- No cloud storage integration
-- Manifest files: JSON format stored alongside skills/agents
-- Configuration: JSON files in `.oat/` and provider directories
-- Data locations:
-  - Canonical assets: `.agents/skills/` and `.agents/agents/`
-  - Sync manifests: `.oat/.sync.json` and provider-specific manifests
-  - Project artifacts: `.oat/projects/<scope>/<project>/`
+- Repo-owned state is stored under `.oat/`, provider directories, and generated assets in `packages/cli/assets/`
 
 **Caching:**
 
-- pnpm store (`.pnpm-store/`) for dependency caching during development
-- Turbo cache (`.turbo/`) for build task caching
-- No application-level caching service; all caching is local
+- Turborepo local cache via `.turbo/`
+- No dedicated application cache service
 
 ## Authentication & Identity
 
 **Auth Provider:**
 
-- None - OAT does not require external authentication
-- Local user detection based on machine configuration
-- Provider-specific auth is managed by each AI tool (Claude Code, Cursor, Codex)
-- Implementation approach: File-based detection of provider directories; no token or credential management
+- None managed by the application itself
+  - Implementation: users authenticate with external AI tools or GitHub/npm outside this repo
 
 ## Monitoring & Observability
 
 **Error Tracking:**
 
-- None - No external error tracking or monitoring services
-- Local error handling via `CliError` class
-- Errors reported to stderr/stdout and exit codes
+- None built into the repo
 
 **Logs:**
 
-- Approach: Console-based logging with optional JSON output
-- Logger implementation: `ui/logger.ts` with chalk-based colored output
-- Verbose mode available via `--verbose` flag
-- Optional JSON structured logging via `--json` flag
-- No persistent logging; output is ephemeral to current shell session
+- CLI logger output to terminal
+- CI logs via GitHub Actions
 
 ## CI/CD & Deployment
 
 **Hosting:**
 
-- Deployed as local CLI tool via npm/pnpm
-- Execution: Direct Node.js invocation or via npm scripts
-- Package: `@oat/cli` (currently private, not on npm registry)
-- No cloud deployment or hosting required
+- Docs site targets GitHub Pages via `apps/oat-docs`
 
 **CI Pipeline:**
 
-- Platform: GitHub Actions
-- Workflow file: `.github/workflows/ci.yml`
-- Triggers: Push to main, pull requests to main
-- Environment: Ubuntu latest
-- Steps:
-  1. Checkout code
-  2. Setup pnpm with cache
-  3. Setup Node.js from `.nvmrc`
-  4. Install frozen dependencies (`pnpm install --frozen-lockfile`)
-  5. Run checks (`pnpm check` - oxlint + oxfmt)
-  6. Type checking (`pnpm type-check`)
-  7. Run tests (`pnpm test` - Vitest)
-  8. Build (`pnpm build` - TypeScript compilation via Turbo)
-
-**Deployment Model:**
-
-- No automated deployment pipeline
-- Manual: Users install from source or npm (when public)
-- CLI used locally within projects or via global npm link
-- Git commit hooks handled via `tools/git-hooks/manage-hooks.js`
+- GitHub Actions CI in `.github/workflows/ci.yml`
+- GitHub Actions docs deployment in `.github/workflows/deploy-docs.yml`
 
 ## Environment Configuration
 
 **Required env vars:**
 
-- None - No environment variables required for operation
-- Optional: `GIT_HOOKS` environment variable (controls git hook setup in `prepare` script)
-- CLI overrides: `--cwd <path>` for working directory, `--scope <scope>` for limiting operations
+- No globally required runtime env vars for core local development
+- Common optional vars include:
+  - `GIT_HOOKS` for hook setup control
+  - `OAT_ASSETS_DIR` for docs/CLI scaffold tests and asset overrides
+  - `OAT_PROJECTS_ROOT` for project root overrides
 
 **Secrets location:**
 
-- No secrets management required
-- No API keys, tokens, or credentials needed
-- Provider-specific secrets (if any) are managed by each AI tool independently
+- No active secret-backed runtime integration in the current repo
+- Future npm publishing would require GitHub Actions secrets or trusted publishing setup
 
 ## Webhooks & Callbacks
 
 **Incoming:**
 
-- None - OAT does not expose HTTP endpoints or receive webhooks
+- None
 
 **Outgoing:**
 
-- None - OAT does not send webhooks or outbound HTTP requests
+- None at runtime
 
-## Data Flow & Interactions
+## Integration Notes
 
-**Provider Sync Flow:**
-
-1. User runs `oat sync --scope <scope>`
-2. CLI scans `.agents/` for canonical assets
-3. Detects installed providers (Claude, Cursor, Codex) via directory presence
-4. Computes diff between canonical and provider views
-5. Outputs dry-run plan to console
-6. Updates provider directories using copy/symlink strategies (use `--dry-run` to preview)
-7. Generates/updates `.sync.json` manifest with content hashes and timestamps
-
-**Manifest Management:**
-
-- Zod-validated JSON schemas for all file structures
-- Content hashing (SHA for copy strategy validation)
-- Datetime tracking for sync operations
-- No external validation or verification services
-
-**Build Dependency Graph:**
-
-- Turbo orchestrates task execution across workspace packages
-- All packages use `workspace:*` for internal dependencies
-- No external package registry calls during CI (frozen lockfile)
+- The CLI integrates primarily with repository layout and local tool installations rather than hosted APIs.
+- The docs libraries are conventional npm-style code libraries with framework integrations, not service clients.
+- Public package publishing is a planned integration area but is not configured yet in the current repo state.
 
 ---
 
-_Integration audit: 2026-02-16_
+_Integration audit: 2026-03-24_

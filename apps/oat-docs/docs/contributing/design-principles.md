@@ -113,9 +113,9 @@ For CLI behavior changes:
 - Keep adapter contract coverage for provider interface behavior.
 - Keep logger/spinner behavior tests aligned with human vs JSON mode behavior.
 - Run package checks before merge:
-  - `pnpm --filter @oat/cli test`
-  - `pnpm --filter @oat/cli lint`
-  - `pnpm --filter @oat/cli type-check`
+  - `pnpm --filter @tkstang/oat-cli test`
+  - `pnpm --filter @tkstang/oat-cli lint`
+  - `pnpm --filter @tkstang/oat-cli type-check`
 
 ## Related Docs
 

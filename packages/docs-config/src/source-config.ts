@@ -1,4 +1,8 @@
-import { remarkLinks, remarkMermaid, remarkTabs } from '@oat/docs-transforms';
+import {
+  remarkLinks,
+  remarkMermaid,
+  remarkTabs,
+} from '@tkstang/oat-docs-transforms';
 import type { Root } from 'mdast';
 import { remarkAlert } from 'remark-github-blockquote-alert';
 import type { Plugin } from 'unified';

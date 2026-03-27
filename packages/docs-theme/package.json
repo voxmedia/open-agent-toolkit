@@ -1,8 +1,22 @@
 {
-  "name": "@oat/docs-theme",
+  "name": "@tkstang/oat-docs-theme",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "description": "Theme components for OAT documentation sites",
+  "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/docs-theme",
+  "bugs": {
+    "url": "https://github.com/voxmedia/open-agent-toolkit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voxmedia/open-agent-toolkit.git",
+    "directory": "packages/docs-theme"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,6 +25,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc",

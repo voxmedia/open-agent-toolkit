@@ -24,9 +24,10 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "prepare": "test \"$GIT_HOOKS\" = \"0\" && exit 0; node tools/git-hooks/manage-hooks.js setup 2>/dev/null || true",
+    "release:validate": "tsx tools/release/validate-public-packages.ts",
     "test": "turbo run test",
     "type-check": "turbo run type-check",
-    "cli:link": "pnpm run build --filter=@oat/cli && cd packages/cli && pnpm link --global",
+    "cli:link": "pnpm run build --filter=@tkstang/oat-cli && cd packages/cli && pnpm link --global",
     "worktree:init": "pnpm install && pnpm run build && pnpm run cli -- sync --scope project"
   },
   "devDependencies": {

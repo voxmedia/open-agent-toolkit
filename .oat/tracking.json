@@ -14,5 +14,13 @@
     "baseBranch": "main",
     "mode": "apply",
     "formats": []
+  },
+  "knowledgeIndex": {
+    "lastRunAt": "2026-03-24T02:27:07Z",
+    "commitHash": "146eed87a123f0b31d60726a4acfd6d7c83d1478",
+    "baseBranch": "main",
+    "mode": "full",
+    "formats": [],
+    "artifactPath": ".oat/repo/knowledge/"
   }
 }

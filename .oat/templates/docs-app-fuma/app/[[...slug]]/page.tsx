@@ -1,4 +1,4 @@
-import { DocsPage, Mermaid, Tab, Tabs } from '@oat/docs-theme';
+import { DocsPage, Mermaid, Tab, Tabs } from '@tkstang/oat-docs-theme';
 import defaultComponents from 'fumadocs-ui/mdx';
 import { notFound } from 'next/navigation';
 

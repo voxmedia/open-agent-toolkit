@@ -1,218 +1,116 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-02-16
-oat_source_head_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
-oat_source_main_merge_base_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
+oat_generated_at: 2026-03-24
+oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
+oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
 # Coding Conventions
 
-**Analysis Date:** 2026-02-16
+**Analysis Date:** 2026-03-24
 
 ## Naming Patterns
 
 **Files:**
 
-- kebab-case for file names (e.g., `sync-config.ts`, `command-context.ts`)
-- Module files use descriptive names (e.g., `logger.ts`, `spinner.ts`)
-- Test files follow source file naming with `.test.ts` suffix (e.g., `logger.test.ts`)
-- Index files use `index.ts` as barrel exports for modules
+- Mostly kebab-case or descriptive lowercase file names such as `command-context.ts`, `search-config.ts`, and `remark-links.ts`.
+- Tests are generally co-located and use `.test.ts` suffix.
+- Barrel exports use `index.ts`.
 
 **Functions:**
 
-- camelCase for function names (e.g., `createLogger`, `computeDirectoryHash`, `getActiveAdapters`)
-- Factory functions use `create*` prefix (e.g., `createProgram`, `createSpinner`, `createLogger`)
-- Detect functions use `detect*` prefix (e.g., `detectCursor`, `detectClaude`)
-- Async functions follow camelCase convention (e.g., `loadManifest`, `loadSyncConfig`)
+- camelCase for runtime helpers and factories, for example `createDocsConfig`, `createProgram`, `generateThinIndex`.
+- `create*`, `resolve*`, `read*`, and `detect*` prefixes are common.
 
 **Variables:**
 
-- camelCase for variables and constants (e.g., `workDir`, `manifestPath`, `scopeRoot`)
-- Constant values (configuration) use UPPER_SNAKE_CASE when exported (e.g., `PROGRAM_NAME`, `SCOPE_CHOICES`, `PROJECT_SCOPE_CONTENT_TYPES`)
-- Use descriptive names: `accumulated` arrays, `detected` results, `resolved` paths
+- camelCase in implementation code.
+- UPPER_SNAKE_CASE is reserved for constant tables or config-like values.
 
 **Types:**
 
-- PascalCase for type and interface names (e.g., `CliLogger`, `CommandContext`, `ProviderAdapter`)
-- Schemas and validators use `*Schema` suffix (e.g., `ManifestSchema`, `SyncConfigSchema`)
-- Union types use PascalCase (e.g., `Scope`, `ContentType`, `SyncStrategy`)
-- Optional types wrapped in `Partial<T>` or nullable fields explicitly typed
+- PascalCase for interfaces and type aliases such as `CommandContext`, `BrandingConfig`, and `SearchConfig`.
 
 ## Code Style
 
 **Formatting:**
 
-- Tool: oxfmt (Prettier-compatible)
-- Indentation: 2 spaces
-- Line width: 80 characters
-- Line ending: LF (Unix)
-- Quote style: Single quotes for JavaScript (e.g., `'hello'`)
-- Trailing commas: All (including function parameters)
-- Semicolons: Always required
-- Arrow function parentheses: Always (e.g., `(x) => x`)
-- Bracket spacing: Enabled (e.g., `{ key: value }`)
+- Primary tools: `oxfmt` and `oxlint`
+- Indentation is 2 spaces.
+- The codebase uses ESM, single quotes, trailing commas, and semicolons.
 
 **Linting:**
 
-- Tool: oxlint (ESLint-compatible)
-- Base: recommended rule set
-- Key rules enforced:
-  - `noUnusedVariables` (error): All variables must be used
-  - `useConst` (error): Prefer `const` over `let`
-  - `noDoubleEquals` (error): Use strict equality (`===`)
-  - `noDebugger` (error): No debugger statements
-  - `noExplicitAny` (warn): Avoid `any` types (relaxed in test files)
-  - `noUndeclaredVariables` (error): All variables must be declared
-  - `noUnreachable` (error): No unreachable code
-- Test override: `noExplicitAny` disabled in `*.test.ts` files for flexibility with mocks
+- `oxlint` is the repo-wide linter.
+- `typescript-eslint/no-explicit-any` is occasionally suppressed with a local rationale when library typings are awkward.
+- Formatting and linting are wired into per-package scripts and root Turbo tasks.
 
 ## Import Organization
 
 **Order:**
 
-1. Node.js built-in imports (e.g., `import { readFile } from 'node:fs/promises'`)
-2. External packages (e.g., `import chalk from 'chalk'`, `import { z } from 'zod'`)
-3. Type imports from internal modules (e.g., `import type { Manifest } from '@manifest/manifest.types'`)
-4. Internal imports (e.g., `import { CliError } from '@errors/index'`)
-5. Relative imports from same directory or parent (use explicit aliases instead)
+1. Node built-ins
+2. Third-party packages
+3. Internal type/value imports
+4. Local relative imports inside the same package
 
 **Path Aliases:**
 
-- Mandatory: All imports outside current directory use TypeScript path aliases
-- Never use relative paths (`../...`) or `src/...` imports
-- Standard aliases defined per package:
-  - `@ui/*` → `src/ui/*`
-  - `@config/*` → `src/config/*`
-  - `@errors/*` → `src/errors/*`
-  - `@manifest/*` → `src/manifest/*`
-  - `@providers/*` → `src/providers/*`
-  - `@shared/*` → `src/shared/*`
-  - `@app/*` → `src/app/*`
-  - `@commands/*` → `src/commands/*`
-  - `@drift/*` → `src/drift/*`
-  - `@engine/*` → `src/engine/*`
-  - `@fs/*` → `src/fs/*`
-  - `@validation/*` → `src/validation/*`
-- oxfmt's import sorting (enabled) auto-sorts imports
+- `packages/cli` relies heavily on TypeScript path aliases such as `@commands/*`, `@providers/*`, `@ui/*`, and `@fs/*`.
+- The repo guidance prefers same-directory `./...` imports locally and aliases for anything outside the current directory.
+- Parent-relative imports are intentionally discouraged in repo instructions.
 
 ## Error Handling
 
 **Patterns:**
 
-- Custom error class: `CliError` extends `Error` with optional `exitCode` (1 or 2)
-- Error throwing: Always throw `CliError` with descriptive message for user-facing errors
-- Exit codes: `1` (default) for general errors, `2` for fatal/unrecoverable errors
-- Try-catch with type guards: Check error structure explicitly
-  ```typescript
-  try {
-    /* async work */
-  } catch (error) {
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      error.code === 'ENOENT'
-    ) {
-      throw new CliError(`File not found: ${path}`);
-    }
-    throw new CliError(
-      `Operation failed: ${error instanceof Error ? error.message : 'unknown'}`,
-      2,
-    );
-  }
-  ```
-- Never silently swallow errors; always log or re-throw with context
-- Schema validation errors: Use Zod's `safeParse()` and extract error details
+- CLI code uses `CliError` for expected user-facing failures and exit-code control.
+- Build/test/library code generally relies on thrown `Error` objects or framework defaults.
+- Commands tend to convert thrown errors into logger output at the command boundary.
 
 ## Logging
 
-**Framework:** Custom `CliLogger` interface with `createLogger` factory
+**Framework:** Custom logger/spinner layer in the CLI; framework defaults elsewhere.
 
 **Patterns:**
 
-- Info messages: stdout, cyan color (user-facing status)
-- Warn messages: stderr, yellow color (non-critical issues)
-- Error messages: stderr, red color (failures); JSON mode outputs structured data to stderr
-- Success messages: stdout, green color (positive outcomes)
-- Debug messages: stdout, gray color; only shown with `--verbose` flag
-- JSON output: Pretty-printed to stdout (2-space indentation)
-- Never mix styled output in JSON mode (JSON mode outputs machine-readable data only)
+- CLI output is intentionally structured for human and JSON modes.
+- The docs packages are small libraries and generally avoid their own logging.
+- CI relies on command output from pnpm scripts and GitHub Actions.
 
 ## Comments
 
 **When to Comment:**
 
-- Document non-obvious algorithm choices or workarounds
-- Explain WHY, not WHAT (code should express WHAT clearly)
-- Mark TODO/FIXME items with rationale
-- Avoid redundant comments that restate code
+- Comments are used sparingly to explain non-obvious transforms, runtime assumptions, or linter suppressions.
+- Repo-level instructions emphasize comments that explain why, not trivial line-by-line behavior.
 
 **JSDoc/TSDoc:**
 
-- Optional for public functions and exports
-- Required for complex type parameters or overloads
-- Example:
-  ```typescript
-  /**
-   * Computes deterministic SHA-256 hash of directory contents.
-   * Hash is stable regardless of readdir filesystem order.
-   */
-  export async function computeDirectoryHash(dirPath: string): Promise<string> {
-    /* ... */
-  }
-  ```
+- Public library and plugin code uses concise docblocks where behavior is subtle, especially in remark plugins and React wrappers.
+- Many internal helpers rely on clear naming instead of heavy annotation.
 
 ## Function Design
 
-**Size:**
+**Size:** Most functions are modest in size, with larger orchestration modules in the CLI command and state-generation areas.
 
-- Prefer small, focused functions (< 50 lines typical)
-- Extract helper functions for reusable logic
-- Example: `collectFiles()` extracted from `computeDirectoryHash()`
+**Parameters:** Object parameters are common for config-style APIs; smaller helpers still use positional arguments.
 
-**Parameters:**
-
-- Maximum 3-4 positional parameters; use object/interface for more
-- Use type-safe options interfaces for configuration
-  ```typescript
-  interface CreateLoggerOptions {
-    json: boolean;
-    verbose: boolean;
-  }
-  export function createLogger(options: CreateLoggerOptions): CliLogger {
-    /* ... */
-  }
-  ```
-
-**Return Values:**
-
-- Prefer explicit return types on public functions
-- Use TypeScript inference for small helpers
-- Return early to reduce nesting
-- Async functions return `Promise<T>`
+**Return Values:** Explicit interfaces are common for factory/config results, especially in the docs packages.
 
 ## Module Design
 
-**Exports:**
+**Exports:** Each package exposes a small `index.ts` barrel and keeps implementation files private behind that boundary.
 
-- Export both types (`export type`) and values (`export const`, `export function`)
-- Explicitly export what's public; don't use catch-all exports
-- Factory functions are primary public API (e.g., `createLogger`)
-- Implementation details kept private (no export)
+**Barrel Files:** Barrels are the default package entrypoints in `packages/docs-*` and many CLI submodules.
 
-**Barrel Files:**
+## Repo-Specific Guidance
 
-- Canonical pattern: `index.ts` re-exports types and key functions from module
-- Example (`src/ui/index.ts`):
-  ```typescript
-  export type { CliLogger } from './logger';
-  export { createLogger } from './logger';
-  export type { Spinner } from './spinner';
-  export { createSpinner } from './spinner';
-  ```
-- Enables clean imports: `import { createLogger } from '@ui'` instead of `@ui/logger`
+- Root `AGENTS.md` requires same-directory imports where possible and explicit aliases otherwise.
+- OAT workflow artifacts are markdown-first and meant to stay readable to humans and tools.
+- Manual edits to generated content should be avoided; regenerate instead.
 
 ---
 
-_Convention analysis: 2026-02-16_
+_Convention analysis: 2026-03-24_

@@ -1,4 +1,4 @@
-import { createDocsConfig } from '@oat/docs-config';
+import { createDocsConfig } from '@tkstang/oat-docs-config';
 
 export default createDocsConfig({
   title: 'Open Agent Toolkit',

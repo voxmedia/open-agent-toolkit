@@ -1,255 +1,162 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-02-16
-oat_source_head_sha: 72b568a6cc88d2ce2b3889de3b904b7dd73e9d8d
-oat_source_main_merge_base_sha: a80661894616fc9323542a4bcbcc22c08917e440
+oat_generated_at: 2026-03-24
+oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
+oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
 # Architecture
 
-**Analysis Date:** 2026-02-16
+**Analysis Date:** 2026-03-24
 
 ## Pattern Overview
 
-**Overall:** Modular TypeScript CLI with layered architecture and adapter pattern for provider support
+**Overall:** TypeScript pnpm monorepo with one primary CLI package, three reusable docs libraries, and one reference docs application.
 
 **Key Characteristics:**
 
-- **Monorepo with Turborepo**: Single package (@oat/cli) with TypeScript ESM throughout
-- **Adapter Pattern**: Pluggable provider adapters (Claude, Cursor, Codex) implementing a common contract
-- **Synchronization Engine**: Core computation and execution separation for sync operations
-- **Manifest-Based State**: JSON manifest tracks canonical-to-provider mappings with content hashes
-- **Scope-Based Execution**: Project-level and user-level scoping for skills and agents
+- Root-level orchestration is handled by pnpm workspaces plus Turborepo.
+- `packages/cli` is the operational core and bundles repo-owned assets into the built CLI.
+- `packages/docs-config`, `packages/docs-theme`, and `packages/docs-transforms` form a composable docs toolkit consumed by `apps/oat-docs` and scaffold flows.
+- OAT workflow state lives in committed markdown artifacts under `.oat/`.
 
 ## Layers
 
-**Application Layer (app/)**
+**Workspace Orchestration:**
 
-- Purpose: Bootstrap and command routing infrastructure
-- Location: `packages/cli/src/app/`
-- Contains: Program factory, command context building, global options handling
-- Depends on: Commander.js, configuration, UI
-- Used by: Main entry point, all commands
+- Purpose: Coordinate install, build, lint, type-check, test, and docs tasks across packages.
+- Location: repo root (`package.json`, `pnpm-workspace.yaml`, `turbo.json`, `tsconfig.json`)
+- Contains: shared scripts, workspace package registration, TypeScript defaults, Turbo task graph
+- Depends on: pnpm, Turbo, TypeScript
+- Used by: all packages and CI workflows
 
-**Command Layer (commands/)**
+**CLI Application Layer:**
 
-- Purpose: CLI command implementations (init, sync, status, providers, doctor)
-- Location: `packages/cli/src/commands/`
-- Contains: Command handlers, prompts, output formatting
-- Depends on: Engine, providers, manifest, drift detection
-- Used by: Application layer to register CLI commands
+- Purpose: Expose the `oat` command surface and execute sync, project, docs, tools, cleanup, and diagnostics flows.
+- Location: `packages/cli/src/`
+- Contains: command registration, command handlers, sync engine, provider adapters, filesystem helpers, validation, UI helpers
+- Depends on: Commander, Chalk, Ora, Zod, filesystem and git state
+- Used by: local development scripts, generated docs-app scaffolds, future external consumers
 
-**Engine Layer (engine/)**
+**Bundled Asset Layer:**
 
-- Purpose: Core sync computation and execution logic
-- Location: `packages/cli/src/engine/`
-- Contains: Sync plan computation, plan execution, manifest persistence, hook management
-- Depends on: Providers, manifest, file I/O
-- Used by: Sync command, compute-plan, execute-plan workflows
+- Purpose: Package canonical skills, templates, scripts, agents, and docs alongside the CLI runtime.
+- Location: `packages/cli/scripts/bundle-assets.sh`, `packages/cli/assets/`
+- Contains: copied `.agents` skills/agents, `.oat` templates/scripts, bundled docs content
+- Depends on: repository source-of-truth directories and CLI build
+- Used by: `oat tools ...`, docs scaffolding, workflow/project commands
 
-**Provider Layer (providers/)**
+**Docs Library Layer:**
 
-- Purpose: Adapter implementations for provider-specific path mappings
-- Location: `packages/cli/src/providers/`
-- Contains: Claude, Cursor, Codex adapters; shared adapter contract and utilities
-- Depends on: Shared types and interfaces
-- Used by: Engine for detecting and configuring providers
+- Purpose: Provide reusable building blocks for Fumadocs-based documentation apps.
+- Location: `packages/docs-config/src/`, `packages/docs-theme/src/`, `packages/docs-transforms/src/`
+- Contains: Next/Fumadocs config factories, UI wrappers, remark plugins, search/source helpers
+- Depends on: Next, Fumadocs, Unified/remark ecosystem, Mermaid
+- Used by: `apps/oat-docs` and generated consumer docs apps
 
-**Manifest Layer (manifest/)**
+**Docs App Layer:**
 
-- Purpose: State persistence for sync operations
-- Location: `packages/cli/src/manifest/`
-- Contains: Manifest loading/saving, entry management, content hashing
-- Depends on: File I/O, Zod validation
-- Used by: Engine for state tracking, drift detection
+- Purpose: Serve and statically export the OAT documentation site.
+- Location: `apps/oat-docs/`
+- Contains: Next app routes, docs content, source loader, global styling, docs build hooks
+- Depends on: the three docs libraries plus Fumadocs runtime packages
+- Used by: GitHub Pages deployment and docs authoring workflows
 
-**Drift Detection Layer (drift/)**
+**Workflow Artifact Layer:**
 
-- Purpose: Identify divergence between canonical and provider copies
-- Location: `packages/cli/src/drift/`
-- Contains: Drift detection, "stray" file discovery, drift report generation
-- Depends on: Manifest, file I/O, hashing
-- Used by: Status command, drift reporting
-
-**Configuration Layer (config/)**
-
-- Purpose: Sync configuration loading and runtime context
-- Location: `packages/cli/src/config/`
-- Contains: Sync config schema, defaults, runtime environment detection
-- Depends on: Zod validation, file I/O
-- Used by: Engine for strategy and provider enablement
-
-**File I/O Layer (fs/)**
-
-- Purpose: Filesystem abstractions and path utilities
-- Location: `packages/cli/src/fs/`
-- Contains: Directory operations, symlink/copy strategies, atomic writes, path resolution
-- Depends on: Node.js fs/promises
-- Used by: Engine, manifest manager, drift detector
-
-**UI Layer (ui/)**
-
-- Purpose: CLI output, logging, and interactive elements
-- Location: `packages/cli/src/ui/`
-- Contains: Logger, spinner, output formatting, ANSI utilities
-- Depends on: Chalk, Ora, Inquirer (for prompts)
-- Used by: All commands for user feedback
-
-**Shared Layer (shared/)**
-
-- Purpose: Common types and constants across modules
-- Location: `packages/cli/src/shared/`
-- Contains: Content types (skill/agent), scopes (project/user/all), sync strategies
-- Depends on: Zod for validation
-- Used by: All layers for type safety
-
-**Error Handling Layer (errors/)**
-
-- Purpose: CLI-specific error handling
-- Location: `packages/cli/src/errors/`
-- Contains: CliError class with exit codes
-- Depends on: None
-- Used by: All layers for controlled error propagation
+- Purpose: Track project lifecycle state and repo-level operational context in markdown and JSON files.
+- Location: `.oat/projects/`, `.oat/repo/`, `.oat/sync/`, `.oat/templates/`
+- Contains: discovery/spec/design/plan artifacts, repo knowledge, tracking data, template files
+- Depends on: CLI commands that read and write these artifacts
+- Used by: OAT lifecycle skills and status/dashboard generation
 
 ## Data Flow
 
-**Sync Workflow (init -> status -> sync):**
+**CLI Build and Asset Bundling:**
 
-1. User runs `oat sync` with scope and apply flag
-2. buildCommandContext constructs context (cwd, home, interactive, logger)
-3. CommandContext feeds into sync command handler
-4. For each concrete scope (project, user):
-   - Resolve scope root (.agents/skills, .agents/agents directories)
-   - Load manifest from `.oat/sync/manifest.json` (or create empty)
-   - Load sync config from `.oat/sync/config.json` (or use defaults)
-   - scanCanonical discovers entries in `.agents/skills` and `.agents/agents`
-   - getActiveAdapters detects installed providers (Claude, Cursor, Codex)
-   - computeSyncPlan generates sync operations comparing canonical vs manifest vs provider paths
-5. executeSyncPlan applies operations (create symlink/copy, update, remove)
-6. saveManifest persists updated state with content hashes
-7. Output formatted results to user
+1. Root or package build invokes `packages/cli` build.
+2. `bundle-assets.sh` copies canonical skills, templates, scripts, and docs into `packages/cli/assets/`.
+3. TypeScript compiles CLI source into `packages/cli/dist/`.
+4. Runtime commands resolve assets relative to the built package root.
 
-**Provider Detection:**
+**Provider Sync / Workflow Operations:**
 
-1. Each adapter (ProviderAdapter) exposes a detect() function
-2. Detection checks for provider-specific markers (e.g., `.claude` directory)
-3. getActiveAdapters runs parallel detection across all adapters
-4. Only active adapters are included in sync plan computation
+1. `packages/cli/src/index.ts` builds a command program and dispatches the selected command.
+2. Commands build a shared command context from cwd, environment, and output flags.
+3. Providers, manifests, filesystem helpers, and workflow/project modules read repo state.
+4. Commands mutate `.oat/`, provider directories, or generated outputs as needed and surface status through the UI layer.
 
-**Drift Detection:**
+**Docs App Build:**
 
-1. Status command loads manifest entries
-2. detectDrift() checks each entry:
-   - Provider path exists? (symlink or file)
-   - For symlink: target points to canonical?
-   - For copy: content hash matches?
-3. Generate DriftReport with status (in_sync, drifted, missing)
-4. Display drift summary and stray files
-
-**State Management:**
-
-- Manifest acts as source of truth for sync state
-- Content hashes enable copy strategy drift detection
-- Symlink targets are validated by target path resolution
-- Last sync timestamp in manifest for audit
+1. `apps/oat-docs` prebuild/predev runs `fumadocs-mdx` and `oat docs generate-index`.
+2. `@tkstang/oat-docs-config` supplies source and search config.
+3. `@tkstang/oat-docs-transforms` rewrites markdown features like tabs, Mermaid, and internal links.
+4. `@tkstang/oat-docs-theme` wraps Fumadocs layout/page primitives for site rendering.
+5. Next statically exports the site for GitHub Pages deployment.
 
 ## Key Abstractions
 
-**ProviderAdapter:**
-
-- Purpose: Standardized interface for providers (Claude, Cursor, Codex)
-- Examples: `claudeAdapter`, `cursorAdapter`, `codexAdapter`
-- Pattern: Adapter exposes name, displayName, path mappings (project/user), detect function
-
-**PathMapping:**
-
-- Purpose: Define canonical-to-provider directory mappings per content type
-- Examples: Claude skills path, Cursor agents path
-- Pattern: Maps contentType + canonicalDir to providerDir with nativeRead flag
-
-**SyncPlan & SyncPlanEntry:**
-
-- Purpose: Computed representation of all sync operations for a scope
-- Pattern: Entry specifies canonical path, provider, strategy, operation type (create/update/remove)
-- Contains reason for operation and actual strategy to apply
-
-**Manifest & ManifestEntry:**
-
-- Purpose: Persistent state tracking canonical-provider relationships
-- Pattern: Entry stores both paths, provider name, content hash, last sync timestamp
-- Zod schema ensures invariants (copy must have hash, symlink must not)
-
 **CommandContext:**
 
-- Purpose: Unified context object passed through command execution
-- Pattern: Encapsulates cwd, scope, interactive flag, logger, apply mode
-- Contains: home directory, verbose/json flags for output control
+- Purpose: Shared runtime context for CLI commands.
+- Examples: `packages/cli/src/app/command-context.ts`
+- Pattern: collect cwd, home, logger, JSON/verbose flags, and environment once and pass through command execution
 
-**CanonicalEntry:**
+**ProviderAdapter and Sync Planning Types:**
 
-- Purpose: Discovered skill/agent in canonical location
-- Pattern: Name, type, canonicalPath derived from .agents directory scan
-- Sourced from scanCanonical during sync plan computation
+- Purpose: Normalize provider-specific behavior for Claude, Cursor, Codex, Copilot, and Gemini paths/sync logic.
+- Examples: `packages/cli/src/providers/*`, `packages/cli/src/engine/*`
+- Pattern: adapter contract plus plan/apply separation
+
+**Bundled Tool Packs:**
+
+- Purpose: Treat skills, agents, docs, templates, and scripts as installable or updatable assets.
+- Examples: `packages/cli/src/commands/init/tools/`, `packages/cli/assets/`
+- Pattern: canonical repo content copied into a bundled asset surface, then installed into user/project scopes
+
+**Docs Toolkit Factories and Plugins:**
+
+- Purpose: Keep docs-app scaffolding and the reference docs app on a shared config/theme/transform stack.
+- Examples: `packages/docs-config/src/*.ts`, `packages/docs-theme/src/*.tsx`, `packages/docs-transforms/src/*.ts`
+- Pattern: factory exports and small focused plugins/components
 
 ## Entry Points
 
-**CLI Main Entry (index.ts):**
+**CLI Entrypoint:**
 
 - Location: `packages/cli/src/index.ts`
-- Triggers: `oat` command execution
-- Responsibilities: Bootstrap program, register commands, error handling, exit codes
+- Triggers: `oat` executable or `pnpm run cli -- ...`
+- Responsibilities: normalize argv, register commands, handle top-level CLI errors
 
-**Sync Command (commands/sync/index.ts):**
+**Docs Library Entrypoints:**
 
-- Location: `packages/cli/src/commands/sync/index.ts`
-- Triggers: `oat sync [--scope] [--dry-run] [--verbose] [--json]`
-- Responsibilities: Orchestrate sync workflow, compute plans per scope, execute by default (preview with --dry-run)
+- Location: `packages/docs-config/src/index.ts`, `packages/docs-theme/src/index.ts`, `packages/docs-transforms/src/index.ts`
+- Triggers: consumed by `apps/oat-docs` and generated docs apps
+- Responsibilities: expose reusable docs configuration, components, and markdown transforms
 
-**Init Command (commands/init/index.ts):**
+**Docs App Entrypoints:**
 
-- Location: `packages/cli/src/commands/init/index.ts`
-- Triggers: `oat init`
-- Responsibilities: Initialize .oat structure, create default config/manifest
-
-**Status Command (commands/status/index.ts):**
-
-- Location: `packages/cli/src/commands/status/index.ts`
-- Triggers: `oat status`
-- Responsibilities: Load manifest, detect drift, display sync status per scope
-
-**Providers Command (commands/providers/index.ts):**
-
-- Location: `packages/cli/src/commands/providers/index.ts`
-- Triggers: `oat providers list|inspect`
-- Responsibilities: List installed providers, inspect adapter details and mappings
-
-**Doctor Command (commands/doctor/index.ts):**
-
-- Location: `packages/cli/src/commands/doctor/index.ts`
-- Triggers: `oat doctor`
-- Responsibilities: Run diagnostic checks on environment and configurations
+- Location: `apps/oat-docs/app/layout.tsx`, `apps/oat-docs/app/[[...slug]]/page.tsx`, `apps/oat-docs/source.config.ts`
+- Triggers: Next build/dev server and static export
+- Responsibilities: load docs content, render the Fumadocs site, wire shared theme/config
 
 ## Error Handling
 
-**Strategy:** Custom CliError class with exit codes (1 for user errors, 2 for system errors)
+**Strategy:** Explicit CLI errors in the runtime packages, standard build/test failure propagation in the workspace and docs app.
 
 **Patterns:**
 
-- Validation errors (manifest, config): CliError with exit code 1
-- File access errors: CliError with descriptive message and exit code 2
-- JSON parsing failures: Caught and converted to CliError with remediation advice
-- Zod validation failures: Formatted with issue path and message
-- Unhandled errors: Caught at main() entry point, logged, exit code 2
+- `CliError` is used for controlled user-facing command failures in the CLI.
+- Most package libraries prefer typed return values and tests rather than custom error hierarchies.
+- CI relies on command exit codes from pnpm scripts and GitHub Actions steps.
 
 ## Cross-Cutting Concerns
 
-**Logging:** CliLogger supports json/verbose modes, routed through ui/logger module. JSON output wraps results in structured format. Verbose enables debug information.
-
-**Validation:** Zod schemas enforce shape and constraints for Manifest, SyncConfig, ProviderSyncConfig. Superrefine blocks invalid state (copy without hash, symlink with hash).
-
-**Type Safety:** TypeScript strict mode, exhaustive scope handling, path-based imports via aliases (@commands, @engine, @providers, etc). ESM modules with verbatimModuleSyntax.
+**Logging:** CLI-oriented logger and spinner abstractions in `packages/cli/src/ui/`; docs app uses framework defaults.
+**Validation:** Zod in the CLI, TypeScript strict mode across the repo, frontmatter parsing for project artifacts.
+**Persistence:** Mostly filesystem-backed markdown/JSON state; no database layer.
 
 ---
 
-_Architecture analysis: 2026-02-16_
+_Architecture analysis: 2026-03-24_

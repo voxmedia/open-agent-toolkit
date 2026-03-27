@@ -1,12 +1,30 @@
 {
-  "name": "@oat/cli",
+  "name": "@tkstang/oat-cli",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "description": "Open Agent Toolkit CLI",
+  "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/cli",
+  "bugs": {
+    "url": "https://github.com/voxmedia/open-agent-toolkit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voxmedia/open-agent-toolkit.git",
+    "directory": "packages/cli"
+  },
   "bin": {
     "oat": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "assets",
+    "README.md"
+  ],
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "bash scripts/bundle-assets.sh && tsc && tsc-alias",
     "clean": "rm -rf dist",

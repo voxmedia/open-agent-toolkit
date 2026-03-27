@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Publish workflow contract:
+      # - run only from release tags
+      # - fail fast if npm auth is unavailable
+      # - rerun the same build and release validation path as dry-run
+      # - publish the four @tkstang/oat-* packages in lockstep
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure npmjs registry
+        run: |
+          cat > .npmrc.publish <<'EOF'
+          registry=https://registry.npmjs.org/
+          @tkstang:registry=https://registry.npmjs.org/
+          //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+          EOF
+
+      - name: Verify npm auth is configured
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN" || {
+            echo "NPM_TOKEN is required to publish @tkstang/oat-* packages"
+            exit 1
+          }
+
+      - name: Build
+        run: pnpm build
+
+      - name: Release validate
+        run: pnpm release:validate
+
+      - name: Publish packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
+        run: |
+          for pkg in \
+            @tkstang/oat-docs-transforms \
+            @tkstang/oat-docs-config \
+            @tkstang/oat-docs-theme \
+            @tkstang/oat-cli
+          do
+            pnpm --filter "$pkg" publish --access public --no-git-checks
+          done
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: publish
+
+    steps:
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true

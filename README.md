@@ -237,9 +237,32 @@ Maintenance note:
 
 If you are using OAT CLI as a consumer, prefer the `oat` executable interface rather than repo scripts.
 
-Current state:
+Public package names for release automation in this repo:
 
-- `@oat/cli` is currently private in this repository (`packages/cli/package.json` has `"private": true`), so registry `npx` usage is not available yet.
+- `@tkstang/oat-cli`
+- `@tkstang/oat-docs-config`
+- `@tkstang/oat-docs-theme`
+- `@tkstang/oat-docs-transforms`
+
+Once published, install the CLI with npm:
+
+```bash
+npm install -g @tkstang/oat-cli
+oat --help
+```
+
+Or run it without a global install:
+
+```bash
+npx @tkstang/oat-cli --help
+pnpm dlx @tkstang/oat-cli --help
+```
+
+Fumadocs helper packages are published separately:
+
+```bash
+pnpm add @tkstang/oat-docs-config @tkstang/oat-docs-theme @tkstang/oat-docs-transforms
+```
 
 Run from source with npm:
 
