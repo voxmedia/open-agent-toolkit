@@ -395,6 +395,11 @@ function computeNextStep(
       step: 'oat-project-implement',
       reason: 'Continue implementation',
     },
+    'implement:pr_open': {
+      step: 'oat-project-revise',
+      reason:
+        'PR open — run oat-project-revise for feedback or oat-project-complete when approved',
+    },
   };
 
   if (sharedMap[sharedKey]) return sharedMap[sharedKey]!;

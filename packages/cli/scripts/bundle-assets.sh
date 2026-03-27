@@ -42,11 +42,13 @@ SKILLS=(
   oat-project-promote-spec-driven
   oat-project-quick-start
   oat-project-reconcile
+  oat-project-revise
   oat-project-review-provide
   oat-project-review-receive
   oat-project-review-receive-remote
   oat-project-spec
   oat-project-subagent-implement
+  oat-project-summary
   oat-repo-knowledge-index
   oat-review-provide
   oat-review-receive
@@ -68,7 +70,7 @@ for agent in oat-codebase-mapper.md oat-reviewer.md skeptical-evaluator.md; do
   cp "${REPO_ROOT}/.agents/agents/${agent}" "${ASSETS}/agents/"
 done
 
-for template in backlog-item.md roadmap.md state.md discovery.md spec.md design.md plan.md implementation.md; do
+for template in backlog-item.md roadmap.md state.md discovery.md spec.md design.md plan.md implementation.md summary.md; do
   cp "${REPO_ROOT}/.oat/templates/${template}" "${ASSETS}/templates/"
 done
 cp -R "${REPO_ROOT}/.oat/templates/ideas" "${ASSETS}/templates/"

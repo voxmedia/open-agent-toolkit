@@ -7,7 +7,7 @@ oat_hill_checkpoints: { OAT_HILL_CHECKPOINTS } # Configured: which phases requir
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: { OAT_PHASE } # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import
 oat_workflow_origin: native # native | imported

@@ -83,9 +83,19 @@ Store the answers as `SHOULD_ARCHIVE` and `SHOULD_OPEN_PR` for use in later step
 
 ### Step 3: Check Completion Gates
 
-Run all gate checks and collect warnings. These are informational — they don't require individual user answers.
+#### 3.0: Phase Status Permissiveness
+
+Read `oat_phase_status` from `state.md` frontmatter and handle permissively:
+
+- **`pr_open`:** Proceed normally. This is the expected entry point after `oat-project-pr-final`.
+- **`complete`:** Proceed normally. Implementation is done.
+- **`in_progress`:** Note: "Project is still in progress. Completing anyway." — proceed without additional confirmation.
+
+All three are valid starting states for completion. Do not block on any phase status value.
 
 #### 3.1: Final Review Status
+
+Run all gate checks and collect warnings. These are informational — they don't require individual user answers.
 
 ```bash
 PLAN_FILE="${PROJECT_PATH}/plan.md"
@@ -167,6 +177,21 @@ After collecting all warnings from 3.1, 3.2, and 3.3:
   - "Completion gates are not fully satisfied. Continue marking lifecycle complete anyway?"
 - If all gates pass, proceed without asking.
 
+### Step 3.5: Summary Gate
+
+Check if `{PROJECT_PATH}/summary.md` exists:
+
+1. **If missing:**
+   - Suggest: "No summary.md found. Generate project summary before completing?"
+   - If user agrees: invoke `oat-project-summary`
+     - If generation succeeds: proceed with summary available
+     - If generation fails mid-way (context limits, missing artifacts, etc.): warn "Summary generation failed: {reason}. Proceeding without summary." Do NOT leave a half-written summary.md — either it completes fully or clean up the partial file and proceed without it.
+   - If user declines: warn and proceed (summary is not a hard gate)
+
+2. **If exists:** Note as available. Summary.md will be:
+   - Used as source for the PR description (in Step 7)
+   - Preserved in the archived project directory (in Step 8)
+
 ### Step 4: Archive Residual Active Review Artifacts
 
 Detect any leftover active review artifacts in the top level of `"$PROJECT_PATH/reviews/"`:
@@ -246,7 +271,7 @@ Follow the `oat-project-pr-final` skill's process (Steps 0.5 through 4) inline:
 1. **Archive residual review artifacts** — already handled in Step 4.
 2. **Validate required artifacts** — read available project artifacts (`plan.md`, `implementation.md`, `spec.md`, `design.md`, `discovery.md`) based on workflow mode from `state.md`.
 3. **Check final review status** — already checked in Step 3.1. Use the result, don't re-check.
-4. **Collect project summary** — read artifacts and collect git context:
+4. **Collect project summary** — if `summary.md` exists (from Step 3.5), use it as the primary source for the PR description's Summary section (per `oat-project-pr-final` Step 3.0). Read remaining artifacts and collect git context:
 
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD)

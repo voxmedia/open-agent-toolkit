@@ -169,6 +169,16 @@ If `FINAL_ROW` is missing or does not contain `passed`:
 
 ### Step 3: Collect Project Summary
 
+**Step 3.0: Check for summary.md**
+
+Check if `{PROJECT_PATH}/summary.md` exists:
+
+- **If exists and current:** Read it. Use as the primary source for the PR description's `## Summary` section. The PR Summary should be a condensed version of summary.md's Overview + What Was Implemented sections — reviewer-oriented and actionable, not a copy-paste.
+- **If missing:** Invoke `oat-project-summary` to generate it. If generation fails or user declines, fall back to the raw artifact synthesis below.
+- **If exists but outdated** (check `oat_summary_last_task` vs implementation.md): Re-run `oat-project-summary` to update, then use as source.
+
+**Step 3.1: Read remaining artifacts**
+
 Read:
 
 - `{PROJECT_PATH}/spec.md` (goals, priorities, verification; optional in quick/import)
@@ -335,15 +345,30 @@ gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 
 Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
 
-### Step 6: Update Project State Milestone
+### Step 6: Update Project State to pr_open
 
-After writing the PR artifact (and after optional PR creation), update `"$PROJECT_PATH/state.md"` so project routing reflects the next lifecycle step.
+After writing the PR artifact (and after optional PR creation), update `"$PROJECT_PATH/state.md"` so project routing reflects that the PR is open and awaiting human review.
 
-Required update:
+**Frontmatter updates:**
 
-- In the `## Next Milestone` section, set:
-  - `Run \`oat-project-complete\`.`
-- Update frontmatter: `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+- `oat_phase_status: pr_open`
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+**Content updates:**
+
+- In `## Current Phase`, set:
+  - `Implementation — PR open, awaiting human review.`
+- In `## Progress`, add:
+  - `- ✓ PR created`
+  - `- ⧗ Awaiting human review`
+- In `## Next Milestone`, set:
+
+  ```markdown
+  PR is open for review.
+
+  - To incorporate feedback: run `oat-project-revise`
+  - When approved: run `oat-project-complete`
+  ```
 
 If `state.md` is missing, skip with a warning.
 
@@ -353,4 +378,5 @@ If `state.md` is missing, skip with a warning.
 - Final PR description artifact written to `{PROJECT_PATH}/pr/`
 - Final review status checked and referenced
 - User has clear next step to open PR (manual or gh)
-- Project `state.md` next milestone points to `oat-project-complete`
+- Project `state.md` shows `oat_phase_status: pr_open`
+- Next milestone references both `oat-project-revise` (for feedback) and `oat-project-complete` (when approved)

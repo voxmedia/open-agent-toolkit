@@ -18,5 +18,6 @@
     ".oat/**/pr",
     ".oat/**/reviews/archived",
     ".oat/ideas"
-  ]
+  ],
+  "autoReviewAtCheckpoints": true
 }

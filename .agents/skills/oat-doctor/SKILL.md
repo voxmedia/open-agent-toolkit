@@ -158,9 +158,9 @@ Workflow pack skills:
 - oat-project-open, oat-project-plan, oat-project-plan-writing
 - oat-project-pr-final, oat-project-pr-progress, oat-project-progress
 - oat-project-promote-spec-driven, oat-project-quick-start
-- oat-project-reconcile, oat-project-review-provide
+- oat-project-reconcile, oat-project-revise, oat-project-review-provide
 - oat-project-review-receive, oat-project-review-receive-remote
-- oat-project-spec, oat-project-subagent-implement
+- oat-project-spec, oat-project-subagent-implement, oat-project-summary
 - oat-repo-knowledge-index, oat-worktree-bootstrap, oat-worktree-bootstrap-auto
 
 Ideas pack skills:
@@ -263,6 +263,7 @@ Read config key descriptions from `~/.oat/docs/reference/file-locations.md` and 
 - **documentation.config:** Path to docs config file (e.g., mkdocs.yml).
 - **documentation.tooling:** Docs tooling in use (e.g., mkdocs, fumadocs).
 - **documentation.requireForProjectCompletion:** Whether docs update is required before project completion.
+- **autoReviewAtCheckpoints:** When true, completing a plan phase checkpoint auto-triggers a subagent code review. Default false. Can be overridden per-project via `oat_auto_review_at_checkpoints` in plan.md frontmatter.
 - **worktrees.root:** Base directory for git worktrees. Used by worktree-bootstrap skills.
 
 ## Sync Status

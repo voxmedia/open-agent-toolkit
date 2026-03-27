@@ -422,7 +422,7 @@ Before selecting a tier, announce the probe and its result so the user can see w
 
 ```
 [3/5] Checking subagent availability…
-  → oat-reviewer: {available | not resolved} ({reason})
+  → oat-reviewer: {available | authorization required | not resolved} ({reason})
   → Selected: Tier {1|2|3} — {Subagent (fresh context) | Fresh session (recommended) | Inline review}
 ```
 
@@ -434,6 +434,15 @@ Detection logic:
   - `[features] multi_agent = true` is enabled in active Codex config.
   - If explicit role pinning is desired, `agent_type` must be a built-in role (`default`/`worker`/`explorer`) or a custom role declared under `[agents.<name>]`.
   - Codex may also auto-select and spawn agents without explicit role pinning.
+  - If the current Codex host requires explicit user authorization before calling `spawn_agent`, do not mark `oat-reviewer` as unresolved. Announce `authorization required` and ask one concise confirmation question before selecting Tier 2 or Tier 3:
+
+    ```
+    Delegate this review to `oat-reviewer`?
+    ```
+
+  - If the user authorizes delegation and Codex role prerequisites are satisfied, use **Tier 1**.
+  - If the user declines delegation, continue with the existing Tier 2 / Tier 3 fallback flow.
+
 - If the runtime can dispatch reviewer work (`subagent_type` in Claude Code, Cursor invocation via `/name` or natural mention, or Codex multi-agent spawn/auto-spawn) → **Tier 1**.
 - If the Task tool is not available or subagent dispatch is not supported → **Tier 2**.
 - If user explicitly requests inline or confirms they are already in a fresh session → **Tier 3**.
@@ -465,6 +474,7 @@ After the subagent completes:
 If subagent not available:
 
 - If user is already in a fresh session (confirmed), proceed to Tier 3.
+- If Codex reported `authorization required` and the user approved delegation, do **not** use Tier 2. Return to Tier 1 and delegate to `oat-reviewer`.
 - If user prefers fresh session: provide instructions and exit.
 
 Instructions for fresh session:
@@ -539,6 +549,7 @@ oat_generated: true
 oat_generated_at: { today }
 oat_review_scope: { scope }
 oat_review_type: { code|artifact }
+oat_review_invocation: { manual|auto }
 oat_project: { PROJECT_PATH }
 ---
 
@@ -548,6 +559,14 @@ oat_project: { PROJECT_PATH }
 **Scope:** {scope description}
 **Files reviewed:** {N}
 **Commits:** {range}
+```
+
+**Frontmatter field: `oat_review_invocation`**
+
+- `manual` (default): Review was manually triggered by the user. `oat-project-review-receive` uses standard disposition behavior (user prompts for triage, minors auto-deferred for non-final scopes).
+- `auto`: Review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. `oat-project-review-receive` uses relaxed disposition: minors are auto-converted to fix tasks (not deferred), no user prompts for disposition decisions.
+
+When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter. For all other invocations (user-triggered, fresh session), use `manual`.
 
 ## Summary
 
@@ -590,6 +609,7 @@ oat_project: { PROJECT_PATH }
 ## Recommended Next Step
 
 Run the `oat-project-review-receive` skill to convert findings into plan tasks.
+
 ```
 
 ### Step 9: Update Plan Reviews Section
@@ -636,14 +656,17 @@ After writing the review artifact and applying the Step 9 Reviews-table update, 
 **If subagent used (Tier 1):**
 
 ```
+
 Review requested via subagent.
 
 When the reviewer finishes, run the oat-project-review-receive skill to process findings.
+
 ```
 
 **If fresh session recommended (Tier 2):**
 
 ```
+
 For best review quality, run in a fresh session:
 
 1. Open new terminal/session
@@ -651,11 +674,13 @@ For best review quality, run in a fresh session:
 3. Return here and run the oat-project-review-receive skill
 
 Or say "inline" to run review in current session (less reliable).
+
 ```
 
 **If inline review completed (Tier 3):**
 
 ```
+
 Review complete for {project-name}.
 
 Scope: {scope}
@@ -666,6 +691,7 @@ Review artifact: {path}
 Bookkeeping commit: {sha or "deferred with user approval"}
 
 Next: Run the oat-project-review-receive skill to convert findings into plan tasks.
+
 ```
 
 ## Success Criteria
@@ -681,3 +707,4 @@ Next: Run the oat-project-review-receive skill to convert findings into plan tas
 - Review artifact + plan bookkeeping committed atomically on the correct branch (or explicitly deferred with user approval)
 - For final scope, deferred findings ledger included in reviewer context
 - User guided to next step (`oat-project-review-receive`)
+```

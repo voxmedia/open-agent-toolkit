@@ -232,15 +232,22 @@ Rules:
 
 ### Step 2.6: Select Review Handling Mode (Required)
 
-Read `oat_review_type` from review artifact frontmatter:
+Read `oat_review_type` and `oat_review_invocation` from review artifact frontmatter:
 
 - If `oat_review_type == artifact`:
   - Present findings and proposed artifact edits/dispositions to the user first.
   - Require explicit user confirmation before applying any artifact edits.
   - Resolve findings directly in artifact files; do not convert findings into plan tasks.
   - Do not defer findings by default. Only use `rejected_with_rationale` for invalid findings, or `needs_user_direction` when user input is required.
-- If `oat_review_type == code`:
-  - Follow the existing task-conversion flow in Steps 3-10.
+- If `oat_review_type == code` AND `oat_review_invocation == auto`:
+  - **Auto-disposition mode.** This review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. Apply relaxed disposition defaults:
+    - Critical/Important/Medium: convert to fix tasks (same as manual mode)
+    - Minor: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). In manual mode, minors are auto-deferred for non-final scopes — in auto mode, the goal is to fix everything while context is fresh.
+    - **No user prompts for disposition decisions.** The auto-review path runs fully autonomously.
+    - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are deferred with a note explaining why, rather than pausing for interactive resolution.
+  - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
+- If `oat_review_type == code` (manual or `oat_review_invocation` absent):
+  - Follow the existing task-conversion flow in Steps 3-10 with standard disposition behavior.
 
 ### Step 3: Determine Task Scope
 
@@ -259,13 +266,27 @@ Read plan.md to find the last task ID in the target phase:
 ```bash
 # Example for phase p03:
 # grep -E "^### Task p03-t[0-9]+:" "$PROJECT_PATH/plan.md" | tail -5
-grep -E "^### Task ${TARGET_PHASE}-t[0-9]+:" "$PROJECT_PATH/plan.md" | tail -5
+grep -E "^### Task ${TASK_PREFIX}-t[0-9]+:" "$PROJECT_PATH/plan.md" | tail -5
 ```
+
+**Revision phase naming:**
+
+For revision phases (`p-revN`), the task prefix is `prevN`, not `p-revN`:
+
+- Scope `p-rev1` → task prefix `prev1` → regex `^### Task prev1-t[0-9]+:`
+- Scope `p-rev2` → task prefix `prev2` → regex `^### Task prev2-t[0-9]+:`
+
+For standard phases (`pNN`), the task prefix matches the phase: `p03` → `p03-tNN`.
+
+Derive `TASK_PREFIX` from scope:
+
+- If scope matches `p-revN`: `TASK_PREFIX = "prevN"` (e.g., `p-rev1` → `prev1`)
+- Otherwise: `TASK_PREFIX = TARGET_PHASE` (e.g., `p03` → `p03`)
 
 **Numbering convention:**
 
-- Find highest task number in target phase (e.g., `p03-t08`)
-- New tasks continue sequentially: `p03-t09`, `p03-t10`, etc.
+- Find highest task number in target phase using the correct `TASK_PREFIX` (e.g., `prev1-t02`)
+- New tasks continue sequentially: `prev1-t03`, `prev1-t04`, etc.
 
 ### Step 5: Convert Findings to Tasks
 

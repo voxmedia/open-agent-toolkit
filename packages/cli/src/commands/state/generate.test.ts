@@ -371,6 +371,29 @@ describe('generateStateDashboard', () => {
     expect(dashboard).toContain('| Pause Reason | qa hold |');
   });
 
+  it('routes to oat-project-revise when phase status is pr_open', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/test-proj',
+    });
+    await writeStateFile(root, '.oat/projects/shared/test-proj', {
+      oat_phase: 'implement',
+      oat_phase_status: 'pr_open',
+      oat_workflow_mode: 'spec-driven',
+    });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-03-27',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('oat-project-revise');
+    expect(result.recommendedReason).toContain('PR open');
+  });
+
   it('generates valid dashboard with throwing git mock (degraded output)', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);

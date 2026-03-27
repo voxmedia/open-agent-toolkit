@@ -78,7 +78,7 @@ describe('installWorkflows', () => {
     tempDirs.length = 0;
   });
 
-  it('copies all workflow skills, 2 agents, 6 templates, and 3 scripts on fresh install', async () => {
+  it('copies all workflow skills, agents, templates, and scripts on fresh install', async () => {
     const root = await makeTempDir();
     const assetsRoot = join(root, 'assets');
     const targetRoot = join(root, 'target');
@@ -89,7 +89,7 @@ describe('installWorkflows', () => {
     expect(result.copiedSkills).toHaveLength(WORKFLOW_SKILLS.length);
     expect(result.outdatedSkills).toEqual([]);
     expect(result.copiedAgents).toHaveLength(2);
-    expect(result.copiedTemplates).toHaveLength(6);
+    expect(result.copiedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
     expect(result.copiedScripts).toHaveLength(3);
     expect(result.projectsRootInitialized).toBe(true);
   });
@@ -269,7 +269,7 @@ describe('installWorkflows', () => {
     expect(second.skippedSkills).toHaveLength(WORKFLOW_SKILLS.length);
     expect(second.outdatedSkills).toEqual([]);
     expect(second.skippedAgents).toHaveLength(2);
-    expect(second.skippedTemplates).toHaveLength(6);
+    expect(second.skippedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
     expect(second.skippedScripts).toHaveLength(3);
   });
 
@@ -295,7 +295,7 @@ describe('installWorkflows', () => {
     expect(result.updatedSkills).toHaveLength(WORKFLOW_SKILLS.length);
     expect(result.outdatedSkills).toEqual([]);
     expect(result.updatedAgents).toHaveLength(2);
-    expect(result.updatedTemplates).toHaveLength(6);
+    expect(result.updatedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
     expect(result.updatedScripts).toHaveLength(3);
   });
 

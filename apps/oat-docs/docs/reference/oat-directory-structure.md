@@ -85,17 +85,18 @@ Legacy `.oat/active-project` / `.oat/projects-root` / `.oat/active-idea` files m
 
 Current schema keys:
 
-| Key                                         | Type       | Default                  | Description                                                                                                                                                     |
-| ------------------------------------------- | ---------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version`                                   | `number`   | `1`                      | Schema version                                                                                                                                                  |
-| `worktrees.root`                            | `string`   | `".worktrees"`           | Root directory for git worktrees (repo-relative or absolute)                                                                                                    |
-| `projects.root`                             | `string`   | `".oat/projects/shared"` | Default root directory for OAT projects                                                                                                                         |
-| `localPaths`                                | `string[]` | -                        | Gitignored directories to sync between main repo and worktrees. Supports glob patterns. Managed via `oat local add/remove`.                                     |
-| `documentation.root`                        | `string`   | -                        | Root directory containing documentation source files (e.g., `apps/docs/docs`)                                                                                   |
-| `documentation.tooling`                     | `string`   | -                        | Documentation framework identifier (`mkdocs` or `fumadocs`)                                                                                                     |
-| `documentation.config`                      | `string`   | -                        | Path to the documentation framework config file (e.g., `mkdocs.yml`, `next.config.js`)                                                                          |
-| `documentation.index`                       | `string`   | -                        | Path to the docs surface entry point (e.g., `index.md` for Fumadocs, `mkdocs.yml` for MkDocs). Set by `oat docs init` and updated by `oat docs generate-index`. |
-| `documentation.requireForProjectCompletion` | `boolean`  | `false`                  | When `true`, OAT project completion gates require documentation to be updated                                                                                   |
+| Key                                         | Type       | Default                  | Description                                                                                                                                                                               |
+| ------------------------------------------- | ---------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`                                   | `number`   | `1`                      | Schema version                                                                                                                                                                            |
+| `worktrees.root`                            | `string`   | `".worktrees"`           | Root directory for git worktrees (repo-relative or absolute)                                                                                                                              |
+| `projects.root`                             | `string`   | `".oat/projects/shared"` | Default root directory for OAT projects                                                                                                                                                   |
+| `localPaths`                                | `string[]` | -                        | Gitignored directories to sync between main repo and worktrees. Supports glob patterns. Managed via `oat local add/remove`.                                                               |
+| `documentation.root`                        | `string`   | -                        | Root directory containing documentation source files (e.g., `apps/docs/docs`)                                                                                                             |
+| `documentation.tooling`                     | `string`   | -                        | Documentation framework identifier (`mkdocs` or `fumadocs`)                                                                                                                               |
+| `documentation.config`                      | `string`   | -                        | Path to the documentation framework config file (e.g., `mkdocs.yml`, `next.config.js`)                                                                                                    |
+| `documentation.index`                       | `string`   | -                        | Path to the docs surface entry point (e.g., `index.md` for Fumadocs, `mkdocs.yml` for MkDocs). Set by `oat docs init` and updated by `oat docs generate-index`.                           |
+| `documentation.requireForProjectCompletion` | `boolean`  | `false`                  | When `true`, OAT project completion gates require documentation to be updated                                                                                                             |
+| `autoReviewAtCheckpoints`                   | `boolean`  | `false`                  | When `true`, completing a plan phase checkpoint automatically spawns a subagent code review. Can be overridden per-project via `oat_auto_review_at_checkpoints` in `plan.md` frontmatter. |
 
 All `documentation.*` keys are managed via `oat config get/set` and are set automatically by `oat docs init`.
 
@@ -152,6 +153,7 @@ Typical contents:
   design.md
   plan.md
   implementation.md
+  summary.md
   reviews/
   pr/
   references/
@@ -159,18 +161,19 @@ Typical contents:
 
 ### Core artifact roles
 
-| File                    | Purpose                                                              |
-| ----------------------- | -------------------------------------------------------------------- |
-| `state.md`              | Lifecycle routing state (`oat_phase`, status, current task pointers) |
-| `discovery.md`          | Problem framing and requirements discovery notes                     |
-| `spec.md`               | Formalized requirements                                              |
-| `design.md`             | Technical architecture/design decisions                              |
-| `plan.md`               | Executable task/phase plan and review table                          |
-| `implementation.md`     | Execution log, progress table, outcomes, verification history        |
-| `reviews/*.md`          | Active tracked review artifacts awaiting receive/closeout            |
-| `reviews/archived/*.md` | Local-only historical review artifacts after receive/closeout        |
-| `pr/*.md`               | PR description artifacts                                             |
-| `references/*`          | Imported or supporting source material                               |
+| File                    | Purpose                                                                                                                                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `state.md`              | Lifecycle routing state (`oat_phase`, status, current task pointers)                                                                                                                                                           |
+| `discovery.md`          | Problem framing and requirements discovery notes                                                                                                                                                                               |
+| `spec.md`               | Formalized requirements                                                                                                                                                                                                        |
+| `design.md`             | Technical architecture/design decisions                                                                                                                                                                                        |
+| `plan.md`               | Executable task/phase plan and review table                                                                                                                                                                                    |
+| `implementation.md`     | Execution log, progress table, outcomes, verification history                                                                                                                                                                  |
+| `summary.md`            | Institutional memory artifact — generated from project artifacts by `oat-project-summary`. Contains overview, key decisions, design deltas, challenges, follow-up items. Used as PR description source and archive cover page. |
+| `reviews/*.md`          | Active tracked review artifacts awaiting receive/closeout                                                                                                                                                                      |
+| `reviews/archived/*.md` | Local-only historical review artifacts after receive/closeout                                                                                                                                                                  |
+| `pr/*.md`               | PR description artifacts                                                                                                                                                                                                       |
+| `references/*`          | Imported or supporting source material                                                                                                                                                                                         |
 
 Not all workflow modes require every artifact:
 

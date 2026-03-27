@@ -15,6 +15,7 @@ import { Command } from 'commander';
 type ConfigKey =
   | 'activeIdea'
   | 'activeProject'
+  | 'autoReviewAtCheckpoints'
   | 'lastPausedProject'
   | 'documentation.config'
   | 'documentation.requireForProjectCompletion'
@@ -51,6 +52,7 @@ interface ConfigCommandDependencies {
 const KEY_ORDER: ConfigKey[] = [
   'activeIdea',
   'activeProject',
+  'autoReviewAtCheckpoints',
   'lastPausedProject',
   'documentation.root',
   'documentation.tooling',
@@ -178,6 +180,19 @@ async function getConfigValue(
     };
   }
 
+  if (key === 'autoReviewAtCheckpoints') {
+    const config = await dependencies.readOatConfig(repoRoot);
+    return {
+      key,
+      value:
+        config.autoReviewAtCheckpoints != null
+          ? String(config.autoReviewAtCheckpoints)
+          : 'false',
+      source:
+        config.autoReviewAtCheckpoints != null ? 'config.json' : 'default',
+    };
+  }
+
   const localConfig = await dependencies.readOatLocalConfig(repoRoot);
   const localKey = key as keyof OatLocalConfig;
   const hasKey = Object.hasOwn(localConfig, localKey);
@@ -244,6 +259,19 @@ async function setConfigValue(
     return {
       key,
       value: resultValue,
+      source: 'config.json',
+    };
+  }
+
+  if (key === 'autoReviewAtCheckpoints') {
+    const nextValue = rawValue.trim().toLowerCase() === 'true';
+    await dependencies.writeOatConfig(repoRoot, {
+      ...config,
+      autoReviewAtCheckpoints: nextValue,
+    });
+    return {
+      key,
+      value: String(nextValue),
       source: 'config.json',
     };
   }

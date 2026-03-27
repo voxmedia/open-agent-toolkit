@@ -13,7 +13,11 @@ flowchart TD
   RS --> S["Spec in progress"] --> RD["Ready for design"]
   RD --> G["Design in progress"] --> RP["Ready for plan"]
   RP --> P["Plan in progress"] --> RI["Ready for implement"]
-  RI --> I["Implement in progress"] --> C["Complete"]
+  RI --> I["Implement in progress"] --> IC["Implement complete"]
+  IC --> PRO["PR open (pr_open)"]
+  PRO --> REV["Revise (in_progress)"]
+  REV --> PRO
+  PRO --> C["Complete"]
 
   I --> RV["Review received"]
   RV --> FA["Fixes added"]
@@ -21,6 +25,14 @@ flowchart TD
   FC --> PASSED["Review passed"]
   PASSED --> I
 ```
+
+## Phase status values
+
+`oat_phase_status` in `state.md`:
+
+- `in_progress` — phase is actively being worked on
+- `complete` — phase is finished
+- `pr_open` — PR has been created, awaiting human review. Set by `oat-project-pr-final`. Agents should route to `oat-project-revise` (for feedback) or `oat-project-complete` (when approved).
 
 ## Lifecycle progression
 
@@ -35,7 +47,10 @@ Typical progression:
 7. Plan in progress
 8. Ready for implement
 9. Implement in progress
-10. Complete
+10. Implement complete (final review passed)
+11. PR open (`pr_open`) — awaiting human review
+12. Revision loop (optional): `pr_open` → revise → `in_progress` → implement → `pr_open`
+13. Complete
 
 ## Review progression
 
