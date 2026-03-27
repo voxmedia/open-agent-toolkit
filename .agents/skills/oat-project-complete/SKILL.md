@@ -83,9 +83,19 @@ Store the answers as `SHOULD_ARCHIVE` and `SHOULD_OPEN_PR` for use in later step
 
 ### Step 3: Check Completion Gates
 
-Run all gate checks and collect warnings. These are informational — they don't require individual user answers.
+#### 3.0: Phase Status Permissiveness
+
+Read `oat_phase_status` from `state.md` frontmatter and handle permissively:
+
+- **`pr_open`:** Proceed normally. This is the expected entry point after `oat-project-pr-final`.
+- **`complete`:** Proceed normally. Implementation is done.
+- **`in_progress`:** Note: "Project is still in progress. Completing anyway." — proceed without additional confirmation.
+
+All three are valid starting states for completion. Do not block on any phase status value.
 
 #### 3.1: Final Review Status
+
+Run all gate checks and collect warnings. These are informational — they don't require individual user answers.
 
 ```bash
 PLAN_FILE="${PROJECT_PATH}/plan.md"
