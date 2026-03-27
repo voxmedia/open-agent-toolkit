@@ -199,6 +199,13 @@ Update `## Implementation Complete` section to include the new revision phase an
 
 #### 4e: Update implementation.md
 
+Update frontmatter to point at the first revision task so `oat-project-implement` resumes correctly:
+
+- `oat_current_task_id: prev{N}-t01`
+- `oat_status: in_progress`
+
+Update the Progress Overview table to include the new revision phase (e.g., add a `Phase p-rev{N}` row with task count and `in_progress` status).
+
 Add a "Revision Received" entry:
 
 ```markdown
