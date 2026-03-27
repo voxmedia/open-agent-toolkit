@@ -197,7 +197,8 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 
 **If exists and has progress:**
 
-- Read `oat_current_task_id` from frontmatter (e.g., "p01-t03")
+- Read `oat_current_task_id` from frontmatter (e.g., "p01-t03" or "prev1-t01")
+- **Revision task recognition:** `p-revN` phases and `prevN-tNN` task IDs are treated identically to standard `pNN` phases and `pNN-tNN` tasks for execution purposes. The implement skill does not need special handling — it just follows the plan sequentially.
 - Validate the task pointer:
   - If `oat_current_task_id` points at a task already marked `completed` in the body, advance to the **next incomplete** task (first `pending` / `in_progress` / `blocked` entry).
   - If all tasks are completed, skip ahead to finalization (Step 11+).
@@ -459,6 +460,18 @@ Do not use `git add -A` or glob patterns. Only commit the three OAT project file
 - **Workflow HiLL** (`oat_hill_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-project-progress router.
 - **Plan phase checkpoints** (`oat_plan_hill_phases` in plan.md): Gates at plan phase boundaries during implementation. `[]` means pause after every phase; a populated array pauses only after listed phases. The field may be absent only before the first implementation-run confirmation. Listed phases are where you stop AFTER completing them.
 
+**Revision phase completion handling:**
+
+When all tasks in a `p-revN` phase complete (revision phases created by `oat-project-revise`):
+
+1. Set `oat_phase_status: pr_open` (not `complete` — the PR is still open for further review)
+2. Set `oat_current_task: null`
+3. Invoke `oat-project-summary` to update summary.md if it exists (implement owns summary re-generation at revision phase completion, not the revise skill)
+4. Update next milestone: "Revision complete. Push changes to update PR. Run `oat-project-revise` for more feedback or `oat-project-complete` when approved."
+5. Push changes to update the PR branch
+
+This is different from regular phase completion — revision phases return to `pr_open` instead of continuing to the next phase, because the user needs to decide whether more revisions are needed.
+
 ### Step 9: Repeat Until Complete
 
 Continue Steps 5-8 until all plan phases complete.
@@ -653,35 +666,38 @@ To run in a separate session use: oat-project-review-provide code final
   - Ensure `oat_current_task_id: null`
   - Ensure the “Review Received” section reflects completed fixes and points to the next action (PR) rather than “execute fix tasks”
 
-### Step 15: Prompt for PR
+### Step 15: Prompt for Next Steps
 
 After final review passes (no Critical/Important findings):
 
 ```
 Final review passed for {project-name}.
 
-All tasks complete and verified. Ready to create PR.
+All tasks complete and verified. Next steps:
+
+1. Generate project summary (oat-project-summary)
+2. Sync documentation (oat-project-document) — if applicable
+3. Create final PR (oat-project-pr-final)
 
 Options:
-1. Open PR now (will generate PR description from OAT artifacts)
-2. Exit (create PR manually later)
+a. Run all three in sequence now
+b. Run summary + PR only (skip docs)
+c. Exit (run individually later)
 
 Choose:
 ```
 
-**If user chooses to open PR:**
+**If user chooses sequence (a or b):**
 
-- Prefer using the `oat-project-pr-final` skill to generate a final PR description from OAT artifacts:
-  ```
-  oat-project-pr-final
-  ```
-- If the environment cannot run skills for any reason, fall back to manual PR creation:
-  ```
-  To create PR manually:
-  1. Push branch: git push -u origin {branch}
-  2. Create PR with summary from implementation.md
-  3. Reference: spec.md, design.md for context
-  ```
+1. Invoke `oat-project-summary` to generate summary.md
+2. If docs selected: invoke `oat-project-document`
+3. Invoke `oat-project-pr-final` — this sets `oat_phase_status: pr_open` and guides to revise/complete
+
+Do not route directly to `oat-project-complete`. The `pr_open` status set by pr-final is the proper entry to the revision/completion flow.
+
+**If user chooses exit (c):**
+
+Tell user: "Run the skills individually when ready: oat-project-summary → oat-project-document → oat-project-pr-final"
 
 ### Step 16: Output Summary
 
