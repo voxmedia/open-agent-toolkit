@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-27
-oat_current_task_id: p06-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | Phase 3 | complete | 6     | 6/6       |
 | Phase 4 | complete | 3     | 3/3       |
 | Phase 5 | complete | 3     | 3/3       |
-| Phase 6 | complete | 4     | 4/4       |
+| Phase 6 | complete | 5     | 5/5       |
 
-**Total:** 23/23 tasks completed
+**Total:** 24/24 tasks completed
 
 ---
 
@@ -430,7 +430,7 @@ oat_generated: false
 
 **New task added:** p06-t05
 
-**Next:** Execute fix task, then re-review to reach `passed`.
+**Next:** Fix task complete. Request re-review to reach `passed`.
 
 ---
 
