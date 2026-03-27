@@ -266,13 +266,27 @@ Read plan.md to find the last task ID in the target phase:
 ```bash
 # Example for phase p03:
 # grep -E "^### Task p03-t[0-9]+:" "$PROJECT_PATH/plan.md" | tail -5
-grep -E "^### Task ${TARGET_PHASE}-t[0-9]+:" "$PROJECT_PATH/plan.md" | tail -5
+grep -E "^### Task ${TASK_PREFIX}-t[0-9]+:" "$PROJECT_PATH/plan.md" | tail -5
 ```
+
+**Revision phase naming:**
+
+For revision phases (`p-revN`), the task prefix is `prevN`, not `p-revN`:
+
+- Scope `p-rev1` → task prefix `prev1` → regex `^### Task prev1-t[0-9]+:`
+- Scope `p-rev2` → task prefix `prev2` → regex `^### Task prev2-t[0-9]+:`
+
+For standard phases (`pNN`), the task prefix matches the phase: `p03` → `p03-tNN`.
+
+Derive `TASK_PREFIX` from scope:
+
+- If scope matches `p-revN`: `TASK_PREFIX = "prevN"` (e.g., `p-rev1` → `prev1`)
+- Otherwise: `TASK_PREFIX = TARGET_PHASE` (e.g., `p03` → `p03`)
 
 **Numbering convention:**
 
-- Find highest task number in target phase (e.g., `p03-t08`)
-- New tasks continue sequentially: `p03-t09`, `p03-t10`, etc.
+- Find highest task number in target phase using the correct `TASK_PREFIX` (e.g., `prev1-t02`)
+- New tasks continue sequentially: `prev1-t03`, `prev1-t04`, etc.
 
 ### Step 5: Convert Findings to Tasks
 
