@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-27
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -20,16 +20,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 4     | 4/4       |
-| Phase 3 | complete    | 6     | 6/6       |
-| Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | complete    | 3     | 3/3       |
-| Phase 6 | in_progress | 4     | 3/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 4     | 4/4       |
+| Phase 3 | complete | 6     | 6/6       |
+| Phase 4 | complete | 3     | 3/3       |
+| Phase 5 | complete | 3     | 3/3       |
+| Phase 6 | complete | 4     | 4/4       |
 
-**Total:** 22/23 tasks completed
+**Total:** 23/23 tasks completed
 
 ---
 
@@ -414,9 +414,7 @@ oat_generated: false
 
 **Deferred Findings (Medium/Minor):** None — all findings converted to tasks.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
-
-After fix tasks complete: update review row to `fixes_completed`, re-run review to reach `passed`.
+**Next:** Fix tasks complete. Request re-review: `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`.
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: p06-t01
+oat_current_task: null
 oat_last_commit: f4bb2c5
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -26,7 +26,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — executing review fix tasks (Phase 6)
+Implementation — review fix tasks complete; awaiting re-review
 
 ## Artifacts
 
@@ -44,7 +44,8 @@ Implementation — executing review fix tasks (Phase 6)
 - ✓ Plan complete
 - ✓ Implementation tasks complete (phases 1-5)
 - ✓ Final review received (2 Important, 2 Medium findings)
-- ⧗ Executing review fix tasks (Phase 6)
+- ✓ Review fix tasks complete (Phase 6)
+- ⧗ Awaiting re-review
 
 ## Blockers
 
@@ -52,4 +53,4 @@ None
 
 ## Next Milestone
 
-Complete review fix tasks, then re-review to reach `passed`
+Re-review to reach `passed`: `oat-project-review-provide code final` then `oat-project-review-receive`
