@@ -158,9 +158,9 @@ Workflow pack skills:
 - oat-project-open, oat-project-plan, oat-project-plan-writing
 - oat-project-pr-final, oat-project-pr-progress, oat-project-progress
 - oat-project-promote-spec-driven, oat-project-quick-start
-- oat-project-reconcile, oat-project-review-provide
+- oat-project-reconcile, oat-project-revise, oat-project-review-provide
 - oat-project-review-receive, oat-project-review-receive-remote
-- oat-project-spec, oat-project-subagent-implement
+- oat-project-spec, oat-project-subagent-implement, oat-project-summary
 - oat-repo-knowledge-index, oat-worktree-bootstrap, oat-worktree-bootstrap-auto
 
 Ideas pack skills:
