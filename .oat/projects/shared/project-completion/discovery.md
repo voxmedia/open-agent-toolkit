@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-spec
 oat_blockers: []
 oat_last_updated: 2026-03-27
 oat_generated: false
