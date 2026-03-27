@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-27
@@ -420,23 +420,48 @@ oat_generated: false
 
 **What shipped:**
 
-- {fill at end}
+- `oat-project-summary` skill — generates `summary.md` as institutional memory from project artifacts, with frontmatter-based incremental update tracking
+- `oat-project-revise` skill — unified post-PR feedback re-entry point with inline (p-revN phases), GitHub PR, and review artifact paths
+- `pr_open` phase status — eliminates the post-PR "dead zone" where agents misinterpret project state; set by pr-final, routes to revise or complete
+- Auto-review at checkpoints — opt-in config (`autoReviewAtCheckpoints`) auto-triggers subagent review at plan phase boundaries with auto-disposition mode
+- Summary integration in pr-final and complete — summary.md used as PR description source and archive cover page
+- Complete permissiveness — accepts any phase status (pr_open, complete, in_progress) without blocking
 
 **Behavioral changes (user-facing):**
 
-- {fill at end}
+- After pr-final, state shows `pr_open` with guidance to revise or complete (not just "run complete")
+- Post-completion guidance in implement routes to summary → document → pr-final (not direct PR/complete)
+- When auto-review is enabled, checkpoint pauses auto-trigger review + receive with minors auto-converted
+- Review artifacts include `oat_review_invocation: auto|manual` field; review-receive adjusts disposition defaults
 
 **Key files / modules:**
 
-- {fill at end}
+- `.agents/skills/oat-project-summary/SKILL.md` — new skill (227 lines)
+- `.agents/skills/oat-project-revise/SKILL.md` — new skill (309 lines)
+- `.agents/skills/oat-project-implement/SKILL.md` — auto-review, revision handling, updated guidance
+- `.agents/skills/oat-project-pr-final/SKILL.md` — pr_open status, summary integration
+- `.agents/skills/oat-project-complete/SKILL.md` — permissiveness, summary gate
+- `.agents/skills/oat-project-review-provide/SKILL.md` — oat_review_invocation frontmatter
+- `.agents/skills/oat-project-review-receive/SKILL.md` — auto-disposition mode
+- `.oat/templates/summary.md` — new template
+- `.oat/config.json` — autoReviewAtCheckpoints key
+- `packages/cli/src/commands/state/generate.ts` — pr_open routing
+- `packages/cli/src/config/oat-config.ts` — OatConfig interface
+- `packages/cli/src/commands/config/index.ts` — config get/set
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` — skill/template manifests
 
 **Verification performed:**
 
-- {fill at end}
+- `pnpm test` — 1079 tests pass
+- `pnpm lint` — clean
+- `pnpm type-check` — no errors
+- `pnpm build` — success
+- `pnpm build:docs` — success, no broken references
 
 **Design deltas (if any):**
 
-- {fill at end}
+- Auto-review config simplified from 3 layers to 2 (dropped config.local.json — would require CLI runtime changes beyond scope)
+- Skill manifest and install-workflows tests required updates (not in original plan — discovered during p04-t01)
 
 ## References
 
