@@ -15,9 +15,11 @@ OAT lifecycle order:
 4. Plan (`oat-project-plan`)
 5. Implement (`oat-project-implement` or `oat-project-subagent-implement`)
 6. Review loop (`oat-project-review-provide` / `oat-project-review-receive`)
-7. PR (`oat-project-pr-progress` / `oat-project-pr-final`)
-8. Documentation sync (`oat-project-document`) — optional; reads project artifacts to identify docs needing updates
-9. Complete (`oat-project-complete`)
+7. Summary (`oat-project-summary`) — generates `summary.md` as institutional memory
+8. PR (`oat-project-pr-progress` / `oat-project-pr-final`) — sets `pr_open` status
+9. Revision loop (`oat-project-revise`) — optional; accepts post-PR feedback
+10. Documentation sync (`oat-project-document`) — optional; reads project artifacts to identify docs needing updates
+11. Complete (`oat-project-complete`)
 
 ## Lifecycle Map
 
@@ -33,6 +35,32 @@ flowchart LR
   PR --> DOC["Docs sync (optional)"]
   DOC --> C["Complete"]
 ```
+
+## Post-implementation flow
+
+After implementation and final review pass:
+
+1. **Summary** (`oat-project-summary`) — generates `summary.md` as institutional memory from project artifacts
+2. **Documentation** (`oat-project-document`) — optional sync of project docs
+3. **PR** (`oat-project-pr-final`) — creates PR description (uses `summary.md` as source), sets `oat_phase_status: pr_open`
+4. **Revision loop** (`oat-project-revise`) — accepts post-PR feedback:
+   - Inline feedback creates `p-revN` revision phases with `prevN-tNN` task IDs
+   - GitHub PR feedback delegates to `oat-project-review-receive-remote`
+   - Review artifacts delegate to `oat-project-review-receive`
+   - After revision tasks complete, state returns to `pr_open`
+5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`)
+
+### Phase status: `pr_open`
+
+After `oat-project-pr-final` runs, `state.md` shows `oat_phase_status: pr_open`. This signals:
+
+- The PR is open and awaiting human review
+- The project is NOT done — agents should not start a new project
+- Next steps: `oat-project-revise` (for feedback) or `oat-project-complete` (when approved)
+
+### Auto-review at checkpoints
+
+When `autoReviewAtCheckpoints` is enabled (via `.oat/config.json` or `plan.md` frontmatter `oat_auto_review_at_checkpoints`), completing a plan phase checkpoint automatically spawns a subagent code review scoped to phases since the last passed checkpoint. The review uses auto-disposition mode (minors auto-converted to fix tasks, no user prompts). Disabled by default.
 
 ## Implementation modes
 
@@ -126,7 +154,7 @@ Key differences from other lanes:
 
 ## Artifact progression
 
-`discovery.md` -> `spec.md` -> `design.md` -> `plan.md` -> `implementation.md`
+`discovery.md` -> `spec.md` -> `design.md` -> `plan.md` -> `implementation.md` -> `summary.md`
 
 Quick lane progression:
 
