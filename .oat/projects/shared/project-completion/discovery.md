@@ -25,6 +25,8 @@ Improve the OAT project completion flow with three interconnected changes:
 
 3. **Completion flow improvements** — Better guidance and state transitions across the final stretch of the project lifecycle (post-implementation through archive), including how summary, document, update-repo-reference, pr-final, revise, and complete interact.
 
+4. **Automatic subagent review at phase checkpoints** — Configurable option to automatically trigger a subagent code review when a plan phase checkpoint completes, instead of requiring the user to manually invoke review-provide. Scopes the review to all phases since the last checkpoint (e.g., if checkpoints are p02 and p05, completing p02 triggers review for p01-p02, completing p05 triggers review for p03-p05). If it's the final phase, triggers `code final` review. Keeps sequential implementation but removes the manual review-triggering step.
+
 ## Clarifying Questions
 
 ### Question 1: Summary vs PR description distinction
@@ -89,7 +91,13 @@ Improve the OAT project completion flow with three interconnected changes:
   For inline feedback, it's simpler than review-receive — no severity classification, no triage ceremony. Just "here are the things I want changed" → tasks → implement.
   **Decision:** `oat-project-revise` is a unified re-entry point that routes to the right handler based on feedback source.
 
-### Question 7: Should OAT manage Linear status transitions?
+### Question 8: Automatic subagent review at checkpoints
+
+**Q:** Should phase checkpoint completion automatically trigger a code review?
+**A:** Yes, as a configurable option. When enabled, completing a plan phase checkpoint automatically spawns a subagent review scoped to all phases since the last reviewed checkpoint. This keeps sequential implementation (not switching to subagent-driven execution mode) but removes the manual step of invoking review-provide at every checkpoint. Configuration could live in oat config (global default), local config (per-repo override), or per-project (state.md or plan.md frontmatter override).
+**Decision:** Add a configuration option for auto-review at checkpoints. The review scope is derived from checkpoint boundaries. Final phase checkpoint triggers `code final`. This is opt-in, not default behavior.
+
+### Question 9: Should OAT manage Linear status transitions?
 
 **Q:** When a project completes, should OAT move the Linear issue to Done?
 **A:** No. The GitHub integration handles status transitions automatically: branch push → In Progress, PR → In Review, merge → Done. OAT's responsibility is posting the summary as a comment/update, not managing status.
@@ -119,6 +127,8 @@ This project has a clear direction from extensive brainstorming. The solution in
 
 6. **Complete is permissive:** Completion gates (final review, docs sync, summary) remain as warnings, not hard blocks. The user can always force completion.
 
+7. **Auto-review at checkpoints is opt-in:** Configurable at global, repo, or project level. When enabled, phase checkpoint completion spawns a subagent review covering all phases since the last checkpoint. Keeps sequential execution mode — this is about automating the review trigger, not changing how implementation runs.
+
 ## Constraints
 
 - Must not break any existing project lifecycle workflow
@@ -139,6 +149,8 @@ This project has a clear direction from extensive brainstorming. The solution in
 - `oat-project-revise` creates revision phases in plan.md and returns to `pr_open` on completion
 - `oat-project-complete` works from any phase status without blocking on `pr_open`
 - Agents in new sessions reading state.md correctly understand the project is "awaiting human review / open for revisions" rather than "done, start a new project"
+- Auto-review at checkpoints can be enabled via configuration and correctly scopes reviews to phases since the last checkpoint
+- Final phase checkpoint with auto-review triggers `code final` review
 
 ## Out of Scope
 
@@ -160,6 +172,8 @@ This project has a clear direction from extensive brainstorming. The solution in
 - **Revision phase naming:** Should revision phases use `p-rev1`, `p-rev2` naming or extend the existing phase numbering (e.g., if last phase was p03, revision becomes p04)?
 - **Summary template location:** Should the summary template live in `.oat/templates/summary.md` alongside other templates?
 - **Complete flow ordering:** Exact ordering of summary generation, document, update-repo-reference, and archive within `oat-project-complete`. Currently complete generates PR description then archives — where does summary fit relative to those?
+- **Auto-review config location:** Where does the auto-review setting live? Options: `oat config` (global default), `.oat/config.local.json` (per-repo), `state.md` or `plan.md` frontmatter (per-project). Could support cascading (project overrides repo overrides global).
+- **Auto-review + review-receive flow:** After auto-review completes, should it automatically invoke review-receive to process findings, or pause for the user to run it manually? Automatic would be more seamless but removes a human decision point.
 
 ## Assumptions
 
