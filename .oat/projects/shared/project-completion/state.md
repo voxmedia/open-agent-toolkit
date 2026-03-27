@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: c518b0d
+oat_current_task: p04-t01
+oat_last_commit: 69197a3
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval

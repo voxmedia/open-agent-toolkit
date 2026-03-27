@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-27
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,12 +24,13 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
 | Phase 2 | complete    | 4     | 4/4       |
-| Phase 3 | in_progress | 6     | 0/6       |
+| Phase 3 | complete    | 6     | 6/6       |
+| Phase 4 | in_progress | 3     | 0/3       |
 | Phase 3 | pending     | 6     | 0/6       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 
-**Total:** 7/19 tasks completed
+**Total:** 13/19 tasks completed
 
 ---
 
@@ -171,55 +172,103 @@ oat_generated: false
 
 ## Phase 3: Skill Integration — Summary + Auto-Review
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-03-27
+
+### Phase Summary
+
+**Outcome:**
+
+- pr-final uses summary.md as PR description source (with fallback)
+- Complete generates summary if missing (Step 3.5, non-blocking)
+- Implement skill has auto-review at checkpoints (config-gated) with scope calculation and auto-disposition
+- Implement handles revision tasks and updated post-completion guidance (summary → docs → pr-final)
+- Review skills support `oat_review_invocation: auto` contract
+- `autoReviewAtCheckpoints` config key added (default false)
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-pr-final/SKILL.md`
+- `.agents/skills/oat-project-complete/SKILL.md`
+- `.agents/skills/oat-project-implement/SKILL.md`
+- `.agents/skills/oat-project-review-provide/SKILL.md`
+- `.agents/skills/oat-project-review-receive/SKILL.md`
+- `.oat/config.json`
 
 ### Task p03-t01: Update oat-project-pr-final — summary integration (FR3)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5167e60
+
+**Outcome:**
+
+- Step 3.0 checks for summary.md, generates if missing, uses as PR Summary source
 
 ---
 
 ### Task p03-t02: Update oat-project-complete — summary gate (FR4)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 97ef0cb
+
+**Outcome:**
+
+- Step 3.5 summary gate: generate if missing, non-blocking, handles mid-generation failure
 
 ---
 
 ### Task p03-t03: Update oat-project-implement — auto-review at checkpoints (FR8)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** dba8302
+
+**Outcome:**
+
+- Touchpoint A: auto-review question in Step 2.5 (skipped if config true)
+- Touchpoint B: auto-review trigger in Step 8 with scope calculation and auto-disposition
 
 ---
 
 ### Task p03-t04: Update oat-project-implement — post-completion guidance + revision handling (FR9)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** fe4ac12
+
+**Outcome:**
+
+- Step 15 routes to summary → document → pr-final
+- Step 3 recognizes prevN-tNN task IDs
+- Revision phase completion returns to pr_open with summary re-generation
 
 ---
 
 ### Task p03-t05: Update review-provide + review-receive — auto-review invocation contract
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c513a28
+
+**Outcome:**
+
+- review-provide: `oat_review_invocation` field in artifact frontmatter (manual|auto)
+- review-receive: auto-disposition mode when auto — minors auto-converted, no user prompts
 
 ---
 
 ### Task p03-t06: Add autoReviewAtCheckpoints to config.json
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 69197a3
+
+**Outcome:**
+
+- Config key added with default false
 
 ---
 
 ## Phase 4: CLI Runtime + Templates
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-03-27
 
 ### Task p04-t01: Update state/generate.ts — pr_open routing
 
