@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-27
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -23,12 +23,13 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 0/4       |
+| Phase 2 | complete    | 4     | 4/4       |
+| Phase 3 | in_progress | 6     | 0/6       |
 | Phase 3 | pending     | 6     | 0/6       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 
-**Total:** 3/19 tasks completed
+**Total:** 7/19 tasks completed
 
 ---
 
@@ -105,41 +106,73 @@ oat_generated: false
 
 ## Phase 2: pr_open Status + Revision Skill
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-03-27
+
+### Phase Summary
+
+**Outcome:**
+
+- pr-final now sets `oat_phase_status: pr_open` and guides to revise/complete
+- New revise skill handles inline/GitHub/artifact feedback with state management
+- Complete skill accepts any phase status permissively
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-pr-final/SKILL.md` - Step 6 rewritten for pr_open
+- `.agents/skills/oat-project-revise/SKILL.md` - new skill (309 lines)
+- `.agents/skills/oat-project-complete/SKILL.md` - Step 3.0 added for permissiveness
+- `packages/cli/scripts/bundle-assets.sh` - added revise skill
 
 ### Task p02-t01: Update oat-project-pr-final — pr_open status
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5bcc301
+
+**Outcome:**
+
+- Step 6 sets `oat_phase_status: pr_open` and next-milestone references both revise and complete
 
 ---
 
 ### Task p02-t02: Create oat-project-revise skill
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 64afba4
+
+**Outcome:**
+
+- New skill with inline path (p-revN phases, prevN-tNN task IDs, no severity triage) and delegated paths (GitHub PR, review artifact)
+- Manages pr_open ↔ in_progress state transitions
 
 ---
 
 ### Task p02-t03: Update oat-project-complete — permissiveness (FR7)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cc1bf32
+
+**Outcome:**
+
+- Step 3.0 explicitly accepts pr_open, complete, and in_progress as valid entry states
 
 ---
 
 ### Task p02-t04: Update bundle-assets.sh for revise skill
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c518b0d
+
+**Outcome:**
+
+- Revise skill bundled in CLI assets
 
 ---
 
 ## Phase 3: Skill Integration — Summary + Auto-Review
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-03-27
 
 ### Task p03-t01: Update oat-project-pr-final — summary integration (FR3)
 
