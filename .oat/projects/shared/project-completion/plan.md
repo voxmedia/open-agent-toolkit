@@ -700,16 +700,16 @@ git commit -m "docs(p05-t03): app docs mirror lifecycle changes, doctor knows ne
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| p05    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                           |
+| ------ | -------- | -------- | ---------- | ---------------------------------- |
+| p01    | code     | pending  | -          | -                                  |
+| p02    | code     | pending  | -          | -                                  |
+| p03    | code     | pending  | -          | -                                  |
+| p04    | code     | pending  | -          | -                                  |
+| p05    | code     | pending  | -          | -                                  |
+| final  | code     | received | 2026-03-27 | reviews/final-review-2026-03-27.md |
+| spec   | artifact | pending  | -          | -                                  |
+| design | artifact | pending  | -          | -                                  |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
