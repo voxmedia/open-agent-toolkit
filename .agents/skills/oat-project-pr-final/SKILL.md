@@ -169,6 +169,16 @@ If `FINAL_ROW` is missing or does not contain `passed`:
 
 ### Step 3: Collect Project Summary
 
+**Step 3.0: Check for summary.md**
+
+Check if `{PROJECT_PATH}/summary.md` exists:
+
+- **If exists and current:** Read it. Use as the primary source for the PR description's `## Summary` section. The PR Summary should be a condensed version of summary.md's Overview + What Was Implemented sections — reviewer-oriented and actionable, not a copy-paste.
+- **If missing:** Invoke `oat-project-summary` to generate it. If generation fails or user declines, fall back to the raw artifact synthesis below.
+- **If exists but outdated** (check `oat_summary_last_task` vs implementation.md): Re-run `oat-project-summary` to update, then use as source.
+
+**Step 3.1: Read remaining artifacts**
+
 Read:
 
 - `{PROJECT_PATH}/spec.md` (goals, priorities, verification; optional in quick/import)
