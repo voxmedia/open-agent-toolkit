@@ -1,11 +1,11 @@
-# @voxmedia/oat-docs-config
+# @tkstang/oat-docs-config
 
 Configuration helpers for OAT-powered Fumadocs apps.
 
 ## Install
 
 ```bash
-pnpm add @voxmedia/oat-docs-config @voxmedia/oat-docs-theme @voxmedia/oat-docs-transforms
+pnpm add @tkstang/oat-docs-config @tkstang/oat-docs-theme @tkstang/oat-docs-transforms
 ```
 
 Install the required Fumadocs, Next.js, and React peer dependencies in your app as well.
@@ -15,7 +15,7 @@ Install the required Fumadocs, Next.js, and React peer dependencies in your app 
 `next.config.js`
 
 ```js
-import { createDocsConfig } from '@voxmedia/oat-docs-config';
+import { createDocsConfig } from '@tkstang/oat-docs-config';
 
 export default createDocsConfig({
   title: 'My Docs',
@@ -26,7 +26,7 @@ export default createDocsConfig({
 `source.config.ts`
 
 ```ts
-import { createSourceConfig } from '@voxmedia/oat-docs-config';
+import { createSourceConfig } from '@tkstang/oat-docs-config';
 import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
 
 const sourceConfig = createSourceConfig();

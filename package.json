@@ -27,7 +27,7 @@
     "release:validate": "tsx tools/release/validate-public-packages.ts",
     "test": "turbo run test",
     "type-check": "turbo run type-check",
-    "cli:link": "pnpm run build --filter=@voxmedia/oat-cli && cd packages/cli && pnpm link --global",
+    "cli:link": "pnpm run build --filter=@tkstang/oat-cli && cd packages/cli && pnpm link --global",
     "worktree:init": "pnpm install && pnpm run build && pnpm run cli -- sync --scope project"
   },
   "devDependencies": {

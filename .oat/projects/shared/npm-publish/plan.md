@@ -18,7 +18,7 @@ oat_template: false
 
 > Execute this plan using `oat-project-implement` (sequential) or `oat-project-subagent-implement` (parallel), with review gates and pack-validation checks before any real publish.
 
-**Goal:** Publish the CLI and three docs libraries as clean public npm packages under `@voxmedia/oat-*`, with lockstep GitHub-based release automation and aligned consumer-facing references.
+**Goal:** Publish the CLI and three docs libraries as clean public npm packages under `@tkstang/oat-*`, with lockstep GitHub-based release automation and aligned consumer-facing references.
 
 **Architecture:** Keep the current monorepo package split intact, add explicit public package contracts in package manifests, align scaffold/templates and in-repo consumers to the new package names, and add validation/publish workflows that treat the four packages as one release unit.
 
@@ -103,7 +103,7 @@ git commit -m "feat(p01-t01): add public package contract helpers"
 
 Extend `packages/cli/src/release/public-package-contract.test.ts` with CLI-specific expectations for:
 
-- `name: @voxmedia/oat-cli`
+- `name: @tkstang/oat-cli`
 - `private: false`
 - explicit public-package metadata
 - intentional publish surface for built CLI output and bundled assets
@@ -119,7 +119,7 @@ Key manifest shape to add or update:
 
 ```typescript
 {
-  name: '@voxmedia/oat-cli',
+  name: '@tkstang/oat-cli',
   private: false,
   files: ['dist', 'assets', 'README.md'],
   publishConfig: { access: 'public' },
@@ -144,7 +144,7 @@ Expected: CLI still builds cleanly with the updated package contract.
 
 ```bash
 git add packages/cli/package.json
-git commit -m "feat(p01-t02): publish the cli under @voxmedia/oat-cli"
+git commit -m "feat(p01-t02): publish the cli under @tkstang/oat-cli"
 ```
 
 ---
@@ -161,9 +161,9 @@ git commit -m "feat(p01-t02): publish the cli under @voxmedia/oat-cli"
 
 Extend `packages/cli/src/release/public-package-contract.test.ts` with docs-library expectations for:
 
-- `@voxmedia/oat-docs-config`
-- `@voxmedia/oat-docs-theme`
-- `@voxmedia/oat-docs-transforms`
+- `@tkstang/oat-docs-config`
+- `@tkstang/oat-docs-theme`
+- `@tkstang/oat-docs-transforms`
 - `private: false`
 - explicit `files`, `exports`, and public metadata
 
@@ -190,7 +190,7 @@ Expected: All three docs packages build cleanly under the renamed package identi
 
 ```bash
 git add packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
-git commit -m "feat(p01-t03): publish docs libraries under @voxmedia/oat-*"
+git commit -m "feat(p01-t03): publish docs libraries under @tkstang/oat-*"
 ```
 
 ---
@@ -298,7 +298,7 @@ git commit -m "feat(p02-t01): rename in-repo docs package imports"
 
 **Step 1: Write test (RED)**
 
-Add failing scaffold expectations that generated docs apps use `@voxmedia/oat-*` when outside the OAT repo and still use `workspace:*` locally inside the repo.
+Add failing scaffold expectations that generated docs apps use `@tkstang/oat-*` when outside the OAT repo and still use `workspace:*` locally inside the repo.
 
 Run: `pnpm --filter ./packages/cli test -- src/commands/docs/init/scaffold.test.ts`
 Expected: Scaffold tests fail until the replacement logic and template files are updated.
@@ -323,7 +323,7 @@ Expected: CLI type-check and scaffold tests pass.
 
 ```bash
 git add packages/cli/src/commands/docs/init/scaffold.ts .oat/templates/docs-app-fuma/package.json.template .oat/templates/docs-app-fuma/source.config.ts .oat/templates/docs-app-fuma/next.config.js .oat/templates/docs-app-fuma/app/layout.tsx .oat/templates/docs-app-fuma/app/[[...slug]]/page.tsx
-git commit -m "feat(p02-t02): update docs init templates to @voxmedia/oat-*"
+git commit -m "feat(p02-t02): update docs init templates to @tkstang/oat-*"
 ```
 
 ---
@@ -342,8 +342,8 @@ git commit -m "feat(p02-t02): update docs init templates to @voxmedia/oat-*"
 
 Tighten expectations to assert:
 
-- versioned installs use `@voxmedia/oat-docs-*`
-- CLI installation examples use `@voxmedia/oat-cli`
+- versioned installs use `@tkstang/oat-docs-*`
+- CLI installation examples use `@tkstang/oat-cli`
 - migration fixtures no longer reference `@oat/cli`
 
 Run: `pnpm --filter ./packages/cli test -- src/commands/docs/init/integration.test.ts src/commands/docs/e2e-pipeline.test.ts`
@@ -502,7 +502,7 @@ Create a publish workflow that:
 - checks out the repo
 - installs dependencies
 - runs the same release validation path
-- publishes `@voxmedia/oat-cli`, `@voxmedia/oat-docs-config`, `@voxmedia/oat-docs-theme`, and `@voxmedia/oat-docs-transforms`
+- publishes `@tkstang/oat-cli`, `@tkstang/oat-docs-config`, `@tkstang/oat-docs-theme`, and `@tkstang/oat-docs-transforms`
 - optionally creates/updates the GitHub release after successful publish
 
 **Step 3: Refactor**
@@ -594,7 +594,7 @@ Expected: Existing consumer-facing references are found and must be updated.
 
 Rewrite external install/import guidance so it reflects:
 
-- `@voxmedia/oat-cli` as the primary package
+- `@tkstang/oat-cli` as the primary package
 - the three docs libraries as supported secondary packages
 - the current release reality instead of “private package” guidance
 
@@ -614,7 +614,7 @@ Expected: The docs site still builds after the content updates.
 
 ```bash
 git add README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/guide/documentation/commands.md apps/oat-docs/docs/guide/documentation/quickstart.md apps/oat-docs/docs/guide/documentation/workflows.md
-git commit -m "docs(p04-t02): update public install guidance for @voxmedia/oat-*"
+git commit -m "docs(p04-t02): update public install guidance for @tkstang/oat-*"
 ```
 
 ---
@@ -641,7 +641,7 @@ Location: `.oat/repo/knowledge/testing.md:28`
 
 **Step 2: Implement fix**
 
-Regenerate the repo knowledge base from the current branch state so generated architecture, testing, and concern snapshots match the `@voxmedia/oat-*` public package contract.
+Regenerate the repo knowledge base from the current branch state so generated architecture, testing, and concern snapshots match the `@tkstang/oat-*` public package contract.
 
 **Step 3: Verify**
 
@@ -670,12 +670,12 @@ Location: `packages/cli/AGENTS.md:16`
 
 **Step 2: Implement fix**
 
-Replace stale package-name references in the CLI package instructions so contributor commands consistently point to `@voxmedia/oat-cli`.
+Replace stale package-name references in the CLI package instructions so contributor commands consistently point to `@tkstang/oat-cli`.
 
 **Step 3: Verify**
 
-Run: `rg -n '@oat/cli|@voxmedia/oat-cli' packages/cli/AGENTS.md`
-Expected: Only `@voxmedia/oat-cli` remains in the file.
+Run: `rg -n '@oat/cli|@tkstang/oat-cli' packages/cli/AGENTS.md`
+Expected: Only `@tkstang/oat-cli` remains in the file.
 
 **Step 4: Commit**
 
@@ -732,7 +732,7 @@ Update the dry-run publish loop to match the real release workflow order: transf
 
 **Step 3: Verify**
 
-Run: `rg -n '@voxmedia/oat-(docs-transforms|docs-config|docs-theme|cli)' .github/workflows/release-dry-run.yml .github/workflows/release.yml`
+Run: `rg -n '@tkstang/oat-(docs-transforms|docs-config|docs-theme|cli)' .github/workflows/release-dry-run.yml .github/workflows/release.yml`
 Expected: The dry-run and release workflows list the packages in the same order.
 
 **Step 4: Commit**

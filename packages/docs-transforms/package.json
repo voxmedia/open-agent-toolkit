@@ -1,5 +1,5 @@
 {
-  "name": "@voxmedia/oat-docs-transforms",
+  "name": "@tkstang/oat-docs-transforms",
   "version": "0.0.1",
   "private": false,
   "description": "Remark/unified transforms for OAT documentation",

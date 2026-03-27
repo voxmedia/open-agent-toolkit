@@ -43,10 +43,10 @@ describe('getPublicPackageContracts', () => {
 
     expect(contracts).toHaveLength(4);
     expect(contracts.map((contract) => contract.publicName)).toEqual([
-      '@voxmedia/oat-cli',
-      '@voxmedia/oat-docs-config',
-      '@voxmedia/oat-docs-theme',
-      '@voxmedia/oat-docs-transforms',
+      '@tkstang/oat-cli',
+      '@tkstang/oat-docs-config',
+      '@tkstang/oat-docs-theme',
+      '@tkstang/oat-docs-transforms',
     ]);
     expect(contracts.map((contract) => contract.workspaceDir)).toEqual([
       'packages/cli',
@@ -61,7 +61,7 @@ describe('getPublicPackageContracts', () => {
 
     expect(contracts).toEqual([
       expect.objectContaining({
-        publicName: '@voxmedia/oat-cli',
+        publicName: '@tkstang/oat-cli',
         role: 'cli',
         requiredMetadataFields: expect.arrayContaining([
           'repository',
@@ -83,7 +83,7 @@ describe('getPublicPackageContracts', () => {
         ]),
       }),
       expect.objectContaining({
-        publicName: '@voxmedia/oat-docs-config',
+        publicName: '@tkstang/oat-docs-config',
         role: 'docs-library',
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
@@ -92,7 +92,7 @@ describe('getPublicPackageContracts', () => {
         ]),
       }),
       expect.objectContaining({
-        publicName: '@voxmedia/oat-docs-theme',
+        publicName: '@tkstang/oat-docs-theme',
         role: 'docs-library',
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
@@ -101,7 +101,7 @@ describe('getPublicPackageContracts', () => {
         ]),
       }),
       expect.objectContaining({
-        publicName: '@voxmedia/oat-docs-transforms',
+        publicName: '@tkstang/oat-docs-transforms',
         role: 'docs-library',
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
@@ -163,16 +163,16 @@ describe('getPublicPackageContracts', () => {
     expect(
       findWorkspaceProtocolDependencySpecs({
         dependencies: {
-          '@voxmedia/oat-docs-transforms': 'workspace:*',
+          '@tkstang/oat-docs-transforms': 'workspace:*',
           chalk: '^5.6.2',
         },
         devDependencies: {
-          '@voxmedia/oat-cli': 'workspace:^',
+          '@tkstang/oat-cli': 'workspace:^',
         },
       }),
     ).toEqual([
-      'dependencies.@voxmedia/oat-docs-transforms=workspace:*',
-      'devDependencies.@voxmedia/oat-cli=workspace:^',
+      'dependencies.@tkstang/oat-docs-transforms=workspace:*',
+      'devDependencies.@tkstang/oat-cli=workspace:^',
     ]);
   });
 
@@ -249,7 +249,7 @@ describe('getPublicPackageContracts', () => {
     }
 
     expect(manifests[0].dependencies).toMatchObject({
-      '@voxmedia/oat-docs-transforms': 'workspace:*',
+      '@tkstang/oat-docs-transforms': 'workspace:*',
     });
   });
 
@@ -260,16 +260,16 @@ describe('getPublicPackageContracts', () => {
     );
 
     expect(docsAppPackageJson.dependencies).toMatchObject({
-      '@voxmedia/oat-docs-config': 'workspace:*',
-      '@voxmedia/oat-docs-theme': 'workspace:*',
-      '@voxmedia/oat-docs-transforms': 'workspace:*',
+      '@tkstang/oat-docs-config': 'workspace:*',
+      '@tkstang/oat-docs-theme': 'workspace:*',
+      '@tkstang/oat-docs-transforms': 'workspace:*',
     });
     expect(docsAppPackageJson.devDependencies).toMatchObject({
-      '@voxmedia/oat-cli': 'workspace:*',
+      '@tkstang/oat-cli': 'workspace:*',
     });
     expect(workspaceRootPackageJson.scripts).toMatchObject({
       'cli:link':
-        'pnpm run build --filter=@voxmedia/oat-cli && cd packages/cli && pnpm link --global',
+        'pnpm run build --filter=@tkstang/oat-cli && cd packages/cli && pnpm link --global',
     });
   });
 });

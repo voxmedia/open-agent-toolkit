@@ -64,7 +64,7 @@ describe('scaffold integration', () => {
         await mkdir(pkgDir, { recursive: true });
         await writeFile(
           join(pkgDir, 'package.json'),
-          JSON.stringify({ name: `@voxmedia/oat-${pkg}`, version: '0.0.1' }),
+          JSON.stringify({ name: `@tkstang/oat-${pkg}`, version: '0.0.1' }),
           'utf8',
         );
       }
@@ -131,13 +131,13 @@ describe('scaffold integration', () => {
       };
       expect(packageJson.name).toBe('test-docs');
       expect(packageJson.description).toBe('Integration test documentation');
-      expect(packageJson.dependencies['@voxmedia/oat-docs-config']).toBe(
+      expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe(
         'workspace:*',
       );
-      expect(packageJson.dependencies['@voxmedia/oat-docs-theme']).toBe(
+      expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe(
         'workspace:*',
       );
-      expect(packageJson.dependencies['@voxmedia/oat-docs-transforms']).toBe(
+      expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
         'workspace:*',
       );
       expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
@@ -161,7 +161,7 @@ describe('scaffold integration', () => {
       // Seed a CLI package.json adjacent to assetsRoot for version resolution
       await writeFile(
         join(dirname(assetsRoot), 'package.json'),
-        JSON.stringify({ name: '@voxmedia/oat-cli', version: '2.0.0' }),
+        JSON.stringify({ name: '@tkstang/oat-cli', version: '2.0.0' }),
         'utf8',
       );
 
@@ -195,13 +195,13 @@ describe('scaffold integration', () => {
         scripts: Record<string, string>;
         dependencies: Record<string, string>;
       };
-      expect(packageJson.dependencies['@voxmedia/oat-docs-config']).toBe(
+      expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe(
         '^2.0.0',
       );
-      expect(packageJson.dependencies['@voxmedia/oat-docs-theme']).toBe(
+      expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe(
         '^2.0.0',
       );
-      expect(packageJson.dependencies['@voxmedia/oat-docs-transforms']).toBe(
+      expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
         '^2.0.0',
       );
 

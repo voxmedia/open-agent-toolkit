@@ -90,9 +90,9 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 **Docs App Build:**
 
 1. `apps/oat-docs` prebuild/predev runs `fumadocs-mdx` and `oat docs generate-index`.
-2. `@voxmedia/oat-docs-config` supplies source and search config.
-3. `@voxmedia/oat-docs-transforms` rewrites markdown features like tabs, Mermaid, and internal links.
-4. `@voxmedia/oat-docs-theme` wraps Fumadocs layout/page primitives for site rendering.
+2. `@tkstang/oat-docs-config` supplies source and search config.
+3. `@tkstang/oat-docs-transforms` rewrites markdown features like tabs, Mermaid, and internal links.
+4. `@tkstang/oat-docs-theme` wraps Fumadocs layout/page primitives for site rendering.
 5. Next statically exports the site for GitHub Pages deployment.
 
 ## Key Abstractions

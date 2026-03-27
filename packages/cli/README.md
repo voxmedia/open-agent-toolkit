@@ -1,17 +1,17 @@
-# @voxmedia/oat-cli
+# @tkstang/oat-cli
 
 Open Agent Toolkit command-line interface for provider sync, workflow tooling, docs scaffolding, and project hygiene.
 
 ## Install
 
 ```bash
-npm install -g @voxmedia/oat-cli
+npm install -g @tkstang/oat-cli
 ```
 
 You can also run it without a global install:
 
 ```bash
-npx @voxmedia/oat-cli --help
+npx @tkstang/oat-cli --help
 ```
 
 ## Usage
@@ -25,9 +25,9 @@ oat docs init --app-name my-docs
 
 ## Related Packages
 
-- `@voxmedia/oat-docs-config`
-- `@voxmedia/oat-docs-theme`
-- `@voxmedia/oat-docs-transforms`
+- `@tkstang/oat-docs-config`
+- `@tkstang/oat-docs-theme`
+- `@tkstang/oat-docs-transforms`
 
 ## Requirements
 

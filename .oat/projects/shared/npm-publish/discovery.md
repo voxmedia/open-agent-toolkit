@@ -20,8 +20,8 @@ Discovery is for requirements and decisions, not implementation details.
 Add public npm publishing for the OAT packages in this monorepo, including the
 CLI and the reusable docs libraries. The current working direction is to publish
 separate lockstep packages under the Vox Media npm scope, with candidate names
-such as `@voxmedia/oat-cli`, `@voxmedia/oat-docs-config`,
-`@voxmedia/oat-docs-theme`, and `@voxmedia/oat-docs-transforms`.
+such as `@tkstang/oat-cli`, `@tkstang/oat-docs-config`,
+`@tkstang/oat-docs-theme`, and `@tkstang/oat-docs-transforms`.
 
 Discovery should clarify the public package surface, release/versioning model,
 consumer expectations, and the boundaries of the first publishing milestone.
@@ -42,10 +42,10 @@ changes and API reshaping.
 ### Question 2: Public package names
 
 **Q:** Which public package names should define the first-release contract?
-**A:** Use `@voxmedia/oat-cli`, `@voxmedia/oat-docs-config`,
-`@voxmedia/oat-docs-theme`, and `@voxmedia/oat-docs-transforms`.
+**A:** Use `@tkstang/oat-cli`, `@tkstang/oat-docs-config`,
+`@tkstang/oat-docs-theme`, and `@tkstang/oat-docs-transforms`.
 **Decision:** Discovery should treat the public package rename from `@oat/*` to
-`@voxmedia/oat-*` as part of the required release work and update internal
+`@tkstang/oat-*` as part of the required release work and update internal
 references, generated templates, and consumer documentation accordingly.
 
 ### Question 3: Versioning model
@@ -76,7 +76,7 @@ repo's current lockstep assumptions.
 ### Approach 1: Simple coordinated release workflow _(Recommended)_
 
 **Description:** Keep the existing monorepo package boundaries, rename the
-public packages to `@voxmedia/oat-*`, and publish all four packages together
+public packages to `@tkstang/oat-*`, and publish all four packages together
 through one coordinated GitHub Actions release flow.
 **When this is the right choice:** Best when the first goal is a bounded public
 launch, the repo already assumes lockstep versions, and the team wants low
@@ -107,7 +107,7 @@ machinery before the public package surface is validated.
 
 ### Option A: Publish only the CLI first
 
-**Description:** Release `@voxmedia/oat-cli` now and defer the docs libraries to
+**Description:** Release `@tkstang/oat-cli` now and defer the docs libraries to
 later.
 
 **Pros:**
@@ -128,7 +128,7 @@ docs libraries in the first public release.
 ### Option B: Publish the current four packages together in lockstep
 
 **Description:** Release the CLI and the three docs packages together under the
-`@voxmedia/oat-*` namespace.
+`@tkstang/oat-*` namespace.
 
 **Pros:**
 
@@ -151,10 +151,10 @@ goal while keeping versioning and release coordination simple.
    for the initial release, rather than introducing an umbrella package or
    larger package-surface redesign.
 2. **Public naming:** The published package surface should use the Vox Media npm
-   scope with the `@voxmedia/oat-*` naming pattern.
+   scope with the `@tkstang/oat-*` naming pattern.
 3. **Versioning model:** The first public release should use lockstep versions
    across the four published packages.
-4. **Consumer hierarchy:** `@voxmedia/oat-cli` is the primary consumer entry
+4. **Consumer hierarchy:** `@tkstang/oat-cli` is the primary consumer entry
    point; the docs packages are public and supported, but secondary library
    surfaces.
 
@@ -169,7 +169,7 @@ goal while keeping versioning and release coordination simple.
 ## Success Criteria
 
 - The repo can publish the four target packages publicly under the
-  `@voxmedia/oat-*` namespace using a lockstep release model.
+  `@tkstang/oat-*` namespace using a lockstep release model.
 - External consumers can clearly understand that the CLI is the main entry
   point and that the docs packages are supported libraries for docs-app usage.
 - The release path depends on GitHub as the source of truth for coordinated
@@ -212,7 +212,7 @@ goal while keeping versioning and release coordination simple.
 
 ## Risks
 
-- **Package rename drift:** Renaming from `@oat/*` to `@voxmedia/oat-*` can
+- **Package rename drift:** Renaming from `@oat/*` to `@tkstang/oat-*` can
   leave stale internal references in manifests, templates, and docs.
   - **Likelihood:** High
   - **Impact:** High

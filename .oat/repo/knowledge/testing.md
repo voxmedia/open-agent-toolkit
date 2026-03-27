@@ -25,9 +25,9 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 
 ```bash
 pnpm test                           # Run workspace tests
-pnpm --filter @voxmedia/oat-cli test              # Run CLI package tests
-pnpm --filter @voxmedia/oat-docs-config test      # Run docs-config tests
-pnpm --filter @voxmedia/oat-docs-transforms test
+pnpm --filter @tkstang/oat-cli test              # Run CLI package tests
+pnpm --filter @tkstang/oat-docs-config test      # Run docs-config tests
+pnpm --filter @tkstang/oat-docs-transforms test
 ```
 
 ## Test File Organization
@@ -107,7 +107,7 @@ vi.mock('fumadocs-mdx/next', () => ({
 **View Coverage:**
 
 ```bash
-pnpm --filter @voxmedia/oat-cli test:coverage
+pnpm --filter @tkstang/oat-cli test:coverage
 ```
 
 ## Test Types

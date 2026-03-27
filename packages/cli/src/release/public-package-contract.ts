@@ -34,7 +34,7 @@ const PACKED_DEPENDENCY_FIELDS = [
 const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   {
     workspaceDir: 'packages/cli',
-    publicName: '@voxmedia/oat-cli',
+    publicName: '@tkstang/oat-cli',
     role: 'cli',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'bin.oat'],
     requiredPaths: ['dist/index.js', 'assets', 'README.md'],
@@ -42,7 +42,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   },
   {
     workspaceDir: 'packages/docs-config',
-    publicName: '@voxmedia/oat-docs-config',
+    publicName: '@tkstang/oat-docs-config',
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
@@ -50,7 +50,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   },
   {
     workspaceDir: 'packages/docs-theme',
-    publicName: '@voxmedia/oat-docs-theme',
+    publicName: '@tkstang/oat-docs-theme',
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
@@ -58,7 +58,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   },
   {
     workspaceDir: 'packages/docs-transforms',
-    publicName: '@voxmedia/oat-docs-transforms',
+    publicName: '@tkstang/oat-docs-transforms',
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],

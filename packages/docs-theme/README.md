@@ -1,11 +1,11 @@
-# @voxmedia/oat-docs-theme
+# @tkstang/oat-docs-theme
 
 Shared React components for OAT-powered Fumadocs apps.
 
 ## Install
 
 ```bash
-pnpm add @voxmedia/oat-docs-theme
+pnpm add @tkstang/oat-docs-theme
 ```
 
 Install the required Fumadocs and React peer dependencies in your app as well.
@@ -19,7 +19,7 @@ import {
   Mermaid,
   Tab,
   Tabs,
-} from '@voxmedia/oat-docs-theme';
+} from '@tkstang/oat-docs-theme';
 
 export function Layout({ tree, children }) {
   return (

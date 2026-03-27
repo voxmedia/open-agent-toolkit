@@ -41,7 +41,7 @@ package redesign or independent-package release machinery in the first release.
 ### Primary Goals
 
 - Enable public npm publication for the four agreed packages under the
-  `@voxmedia/oat-*` namespace.
+  `@tkstang/oat-*` namespace.
 - Define a lockstep release model that publishes all four packages together from
   GitHub.
 - Establish a public consumer contract in which the CLI is the primary entry
@@ -72,7 +72,7 @@ package redesign or independent-package release machinery in the first release.
 **FR1: Public package identity**
 
 - **Description:** The system must define and expose four public package
-  identities for the initial release under the `@voxmedia/oat-*` namespace.
+  identities for the initial release under the `@tkstang/oat-*` namespace.
 - **Acceptance Criteria:**
   - The first release surface is limited to four published packages.
   - The public names correspond to one CLI package and three docs-library
@@ -249,7 +249,7 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 
 | ID   | Description                                        | Priority | Verification                                 | Planned Tasks                      |
 | ---- | -------------------------------------------------- | -------- | -------------------------------------------- | ---------------------------------- |
-| FR1  | Define four public `@voxmedia/oat-*` package IDs   | P0       | manual: package identity contract            | p01-t02, p01-t03, p01-t04          |
+| FR1  | Define four public `@tkstang/oat-*` package IDs    | P0       | manual: package identity contract            | p01-t02, p01-t03, p01-t04          |
 | FR2  | Publish all four packages together from GitHub     | P0       | integration: coordinated release workflow    | p03-t02, p03-t03                   |
 | FR3  | Provide complete public metadata and package scope | P0       | manual + integration: package artifact check | p01-t01, p01-t02, p01-t03, p04-t01 |
 | FR4  | Document CLI-primary consumer positioning          | P1       | manual: consumer-facing package guidance     | p04-t01, p04-t02                   |
@@ -281,7 +281,7 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 
 ## Risks
 
-- **Package rename drift:** Renaming from `@oat/*` to `@voxmedia/oat-*` may
+- **Package rename drift:** Renaming from `@oat/*` to `@tkstang/oat-*` may
   leave stale references in docs, templates, or package metadata.
   - **Likelihood:** High
   - **Impact:** High

@@ -239,29 +239,29 @@ If you are using OAT CLI as a consumer, prefer the `oat` executable interface ra
 
 Public package names for release automation in this repo:
 
-- `@voxmedia/oat-cli`
-- `@voxmedia/oat-docs-config`
-- `@voxmedia/oat-docs-theme`
-- `@voxmedia/oat-docs-transforms`
+- `@tkstang/oat-cli`
+- `@tkstang/oat-docs-config`
+- `@tkstang/oat-docs-theme`
+- `@tkstang/oat-docs-transforms`
 
 Once published, install the CLI with npm:
 
 ```bash
-npm install -g @voxmedia/oat-cli
+npm install -g @tkstang/oat-cli
 oat --help
 ```
 
 Or run it without a global install:
 
 ```bash
-npx @voxmedia/oat-cli --help
-pnpm dlx @voxmedia/oat-cli --help
+npx @tkstang/oat-cli --help
+pnpm dlx @tkstang/oat-cli --help
 ```
 
 Fumadocs helper packages are published separately:
 
 ```bash
-pnpm add @voxmedia/oat-docs-config @voxmedia/oat-docs-theme @voxmedia/oat-docs-transforms
+pnpm add @tkstang/oat-docs-config @tkstang/oat-docs-theme @tkstang/oat-docs-transforms
 ```
 
 Run from source with npm:

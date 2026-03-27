@@ -101,7 +101,7 @@ Use `oat-worktree-bootstrap` for an OAT-aware guided flow when creating or resum
 
 ### Consumer usage (without pnpm scripts)
 
-When `@voxmedia/oat-cli` is consumed as a built package or linked binary, use `oat` directly:
+When `@tkstang/oat-cli` is consumed as a built package or linked binary, use `oat` directly:
 
 ```bash
 oat --help

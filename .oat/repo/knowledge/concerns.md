@@ -47,7 +47,7 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 - Symptoms: a fresh `pnpm install` can warn that the `oat` binary cannot be linked for `apps/oat-docs` before `packages/cli/dist/index.js` exists.
 - Files: `apps/oat-docs/package.json`, `packages/cli/package.json`
 - Trigger: install in a clean checkout before building the CLI.
-- Workaround: build `@voxmedia/oat-cli` after install or adjust workspace/bin expectations.
+- Workaround: build `@tkstang/oat-cli` after install or adjust workspace/bin expectations.
 
 ## Security Considerations
 

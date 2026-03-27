@@ -103,8 +103,8 @@ export interface OatDepContext {
   oatPackageVersions: Record<string, string>;
 }
 
-// Assumes lockstep versioning: all @voxmedia/oat-* packages are published at
-// the same version as @voxmedia/oat-cli. If packages are ever versioned
+// Assumes lockstep versioning: all @tkstang/oat-* packages are published at
+// the same version as @tkstang/oat-cli. If packages are ever versioned
 // independently, version resolution here will need per-package lookups.
 const OAT_DEP_PACKAGES = [
   'docs-config',

@@ -114,7 +114,7 @@ the publish workflow uses the same inputs to perform the real release.
 5. A release-triggered workflow performs the same validation, then publishes all
    four packages as one lockstep release unit.
 6. External consumers install the CLI or docs libraries using the published
-   `@voxmedia/oat-*` package names.
+   `@tkstang/oat-*` package names.
 ```
 
 ## Component Design
@@ -126,7 +126,7 @@ first-release packages.
 
 **Responsibilities:**
 
-- Rename the public package identities to the agreed `@voxmedia/oat-*` names.
+- Rename the public package identities to the agreed `@tkstang/oat-*` names.
 - Add npm-facing metadata that makes each package discoverable and supportable.
 - Define explicit `files`, entrypoints, exports, and publish configuration so
   tarballs include only intended release artifacts.
@@ -177,7 +177,7 @@ stay consistent with the public package contract.
 **Responsibilities:**
 
 - Update docs scaffolding and any generated consumer dependencies to point at
-  `@voxmedia/oat-*`.
+  `@tkstang/oat-*`.
 - Align docs, install guidance, and repo messaging with the CLI-primary package
   story.
 - Preserve lockstep version assumptions in generated docs-consumer output.
@@ -320,10 +320,10 @@ aligned for each public release.
 interface PublicReleaseManifest {
   releaseVersion: string;
   // First release target names:
-  // @voxmedia/oat-cli
-  // @voxmedia/oat-docs-config
-  // @voxmedia/oat-docs-theme
-  // @voxmedia/oat-docs-transforms
+  // @tkstang/oat-cli
+  // @tkstang/oat-docs-config
+  // @tkstang/oat-docs-theme
+  // @tkstang/oat-docs-transforms
   packages: Array<{
     workspaceName: string;
     publicName: string;
@@ -338,7 +338,7 @@ interface PublicReleaseManifest {
 
 - Exactly four packages are included for the first release boundary.
 - Every package shares the same release version.
-- Every public name uses the `@voxmedia/oat-` prefix.
+- Every public name uses the `@tkstang/oat-` prefix.
 
 **Storage:**
 
@@ -384,10 +384,10 @@ use.
 
 ```typescript
 interface ConsumerPackageReferenceSet {
-  cli: '@voxmedia/oat-cli';
-  docsConfig: '@voxmedia/oat-docs-config';
-  docsTheme: '@voxmedia/oat-docs-theme';
-  docsTransforms: '@voxmedia/oat-docs-transforms';
+  cli: '@tkstang/oat-cli';
+  docsConfig: '@tkstang/oat-docs-config';
+  docsTheme: '@tkstang/oat-docs-theme';
+  docsTransforms: '@tkstang/oat-docs-transforms';
   version: string;
 }
 ```
@@ -529,7 +529,7 @@ GitHub when approving or triggering releases.
 
 Authorization is enforced through repository permissions and npm package
 ownership rather than runtime code. Only authorized maintainers and GitHub
-workflow executions should be able to publish the `@voxmedia/oat-*` packages.
+workflow executions should be able to publish the `@tkstang/oat-*` packages.
 Public package metadata and release workflow definitions should remain
 repo-controlled and reviewable.
 
@@ -617,7 +617,7 @@ coordinated release checks.
 
 | ID   | Verification         | Key Scenarios                                                                                                    |
 | ---- | -------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| FR1  | manual + integration | Public names are `@voxmedia/oat-*`; only four target packages are exposed                                        |
+| FR1  | manual + integration | Public names are `@tkstang/oat-*`; only four target packages are exposed                                         |
 | FR2  | integration          | GitHub workflow validates and publishes all four packages as one unit                                            |
 | FR3  | integration + manual | Each package has public metadata and intentional tarball contents                                                |
 | FR4  | manual               | Root README and package docs list the CLI first; docs packages are described as supported secondary libraries    |
@@ -635,7 +635,7 @@ coordinated release checks.
 - **Coverage Target:** No new repo-wide numeric threshold; add focused coverage
   for new packaging and reference-alignment logic
 - **Key Test Cases:**
-  - Docs scaffolding emits `@voxmedia/oat-*` package names with one shared
+  - Docs scaffolding emits `@tkstang/oat-*` package names with one shared
     version
   - Package validation helpers detect missing metadata fields or forbidden
     tarball paths
@@ -678,7 +678,7 @@ existing build outputs.
 ### Deployment Steps
 
 1. Prepare package manifests, references, and docs for the public
-   `@voxmedia/oat-*` contract.
+   `@tkstang/oat-*` contract.
 2. Run workspace build/test and package artifact validation for the four target
    packages.
 3. Execute the non-destructive release workflow in GitHub to confirm readiness.

@@ -45,7 +45,7 @@ oat_generated: false
 **Outcome (what changed):**
 
 - The repo now has an explicit code-level contract for the four first-release
-  public packages under the `@voxmedia/oat-*` namespace.
+  public packages under the `@tkstang/oat-*` namespace.
 - All four package manifests now advertise public npm metadata and intentional
   publish surfaces instead of remaining private workspace-only packages.
 - The in-repo docs app and root helper script now reference the renamed package
@@ -132,7 +132,7 @@ oat_generated: false
 **Outcome (required when completed):**
 
 - The CLI package now advertises the public npm identity
-  `@voxmedia/oat-cli` instead of the internal `@oat/cli` name.
+  `@tkstang/oat-cli` instead of the internal `@oat/cli` name.
 - The manifest now carries public-package metadata and an explicit publish
   surface for the built CLI artifact and bundled assets.
 
@@ -165,10 +165,10 @@ oat_generated: false
 **Outcome (required when completed):**
 
 - The three docs libraries now expose their public npm identities under the
-  `@voxmedia/oat-*` namespace instead of the internal `@oat/docs-*` names.
+  `@tkstang/oat-*` namespace instead of the internal `@oat/docs-*` names.
 - Each docs package now has explicit public npm metadata and a constrained
   publish surface that matches the intended library contract.
-- `docs-config` now depends on `@voxmedia/oat-docs-transforms`, keeping the
+- `docs-config` now depends on `@tkstang/oat-docs-transforms`, keeping the
   internal workspace dependency graph aligned with the public package contract.
 
 **Files changed:**
@@ -201,7 +201,7 @@ oat_generated: false
 
 **Outcome (required when completed):**
 
-- The in-repo docs app now consumes the renamed `@voxmedia/oat-*` workspace
+- The in-repo docs app now consumes the renamed `@tkstang/oat-*` workspace
   packages instead of the legacy `@oat/*` package names.
 - The root `cli:link` helper now targets the renamed CLI package identity.
 - The workspace lockfile is refreshed so frozen installs succeed after the
@@ -210,7 +210,7 @@ oat_generated: false
 **Files changed:**
 
 - `apps/oat-docs/package.json` - updated workspace dependencies and devDependency to the renamed packages
-- `package.json` - updated the `cli:link` filter to `@voxmedia/oat-cli`
+- `package.json` - updated the `cli:link` filter to `@tkstang/oat-cli`
 - `packages/cli/src/release/public-package-contract.test.ts` - added workspace consumer alignment assertions
 - `pnpm-lock.yaml` - updated workspace dependency graph after package renames
 
@@ -238,7 +238,7 @@ oat_generated: false
 **Outcome (what changed):**
 
 - Repo-owned docs consumers, scaffolds, templates, and package-oriented tests
-  now consistently reference the public `@voxmedia/oat-*` package names.
+  now consistently reference the public `@tkstang/oat-*` package names.
 - The canonical Fumadocs templates now emit the public package identities for
   both workspace and versioned dependency modes.
 - Integration, MkDocs compatibility, pipeline, and migration fixture coverage
@@ -284,7 +284,7 @@ oat_generated: false
 **Outcome (required when completed):**
 
 - The in-repo docs app source now imports the docs config and theme packages
-  using their public `@voxmedia/oat-*` names.
+  using their public `@tkstang/oat-*` names.
 - `docs-config` now imports the renamed transforms package, and the Mermaid
   transform docs reference the renamed theme package.
 - The docs app build succeeds once the touched docs packages are rebuilt.
@@ -318,12 +318,12 @@ oat_generated: false
 
 **Outcome (required when completed):**
 
-- The docs-init scaffold fixtures now assert `@voxmedia/oat-*` package names
+- The docs-init scaffold fixtures now assert `@tkstang/oat-*` package names
   instead of the old `@oat/*` identities.
 - The canonical Fumadocs templates emitted by the CLI now import and depend on
   the public docs packages under the `@voxmedia` scope.
 - The scaffold implementation comment now documents lockstep publication
-  against `@voxmedia/oat-cli`.
+  against `@tkstang/oat-cli`.
 
 **Files changed:**
 
@@ -353,11 +353,11 @@ oat_generated: false
 **Outcome (required when completed):**
 
 - The real-template integration tests now seed and assert the public
-  `@voxmedia/oat-*` package names in both monorepo and consuming-repo modes.
+  `@tkstang/oat-*` package names in both monorepo and consuming-repo modes.
 - The MkDocs compatibility test now guards against the renamed Fumadocs package
   identities instead of the stale internal names.
 - Consumer-facing pipeline examples and frontmatter migration fixtures now use
-  the public CLI package name `@voxmedia/oat-cli`.
+  the public CLI package name `@tkstang/oat-cli`.
 
 **Files changed:**
 
@@ -393,7 +393,7 @@ oat_generated: false
   packages, inspects pnpm-produced tarballs, and fails on metadata, build, or
   pack-surface regressions.
 - GitHub Actions now has a PR-safe dry-run workflow and a tag-triggered publish
-  workflow for the lockstep `@voxmedia/oat-*` release.
+  workflow for the lockstep `@tkstang/oat-*` release.
 - Release automation is insulated from ambient scoped npm registry config by
   writing workflow-local npmjs userconfig files.
 
@@ -416,7 +416,7 @@ oat_generated: false
 - Result: pass
 - Run: `pnpm build && pnpm release:validate`
 - Result: pass
-- Run: `NPM_CONFIG_USERCONFIG=<temp npmjs config> pnpm --filter @voxmedia/oat-docs-config publish --dry-run --access public --no-git-checks`
+- Run: `NPM_CONFIG_USERCONFIG=<temp npmjs config> pnpm --filter @tkstang/oat-docs-config publish --dry-run --access public --no-git-checks`
 - Result: pass and targets `https://registry.npmjs.org/`
 
 **Notes / Decisions:**
@@ -482,7 +482,7 @@ oat_generated: false
 
 - Run: `pnpm release:validate`
 - Result: pass
-- Run: `NPM_CONFIG_USERCONFIG=<temp npmjs config> pnpm --filter @voxmedia/oat-docs-config publish --dry-run --access public --no-git-checks`
+- Run: `NPM_CONFIG_USERCONFIG=<temp npmjs config> pnpm --filter @tkstang/oat-docs-config publish --dry-run --access public --no-git-checks`
 - Result: pass against npmjs
 
 ### Task p03-t03: Add the coordinated publish workflow for lockstep releases
@@ -493,7 +493,7 @@ oat_generated: false
 **Outcome (required when completed):**
 
 - Added a tag-triggered publish workflow that reruns build and release
-  validation, publishes the four `@voxmedia/oat-*` packages in lockstep order,
+  validation, publishes the four `@tkstang/oat-*` packages in lockstep order,
   and then creates a GitHub release.
 
 **Files changed:**
@@ -520,7 +520,7 @@ oat_generated: false
 - All four public packages now have npm-facing READMEs that describe purpose,
   install surface, and exported entry points.
 - The repo README and docs-site consumer guidance now refer to
-  `@voxmedia/oat-*` instead of the old private `@oat/*` package names.
+  `@tkstang/oat-*` instead of the old private `@oat/*` package names.
 - The publish validator now enforces README presence in public tarballs.
 - Final review fixes refreshed stale generated knowledge artifacts, aligned the
   CLI package's contributor instructions with the public package name, and made
@@ -535,7 +535,7 @@ oat_generated: false
 - `packages/cli/src/release/public-package-contract.ts` - README required in tarballs
 - `packages/cli/src/release/public-package-contract.test.ts` - README contract coverage
 - `.oat/repo/knowledge/*.md` - generated knowledge artifacts refreshed for the public package rename
-- `packages/cli/AGENTS.md` - CLI contributor instructions aligned to `@voxmedia/oat-cli`
+- `packages/cli/AGENTS.md` - CLI contributor instructions aligned to `@tkstang/oat-cli`
 - `.github/workflows/release-dry-run.yml` - trigger filters and publish order aligned to release behavior
 
 **Verification:**
@@ -585,7 +585,7 @@ oat_generated: false
 
 **Outcome (required when completed):**
 
-- Root consumer guidance now documents the public `@voxmedia/oat-*` package
+- Root consumer guidance now documents the public `@tkstang/oat-*` package
   identities and post-publish install paths.
 - Docs-site consumer and contributor guidance now references the public package
   names instead of the old private `@oat/*` package identities.
@@ -662,8 +662,8 @@ oat_generated: false
 
 **Verification:**
 
-- Run: `rg -n '@oat/cli|@voxmedia/oat-cli' packages/cli/AGENTS.md`
-- Result: pass (`@voxmedia/oat-cli` only)
+- Run: `rg -n '@oat/cli|@tkstang/oat-cli' packages/cli/AGENTS.md`
+- Result: pass (`@tkstang/oat-cli` only)
 
 ### Task p04-t05: (review) Scope release dry-run workflow to relevant package changes
 
@@ -710,7 +710,7 @@ oat_generated: false
 
 **Verification:**
 
-- Run: `rg -n '@voxmedia/oat-(docs-transforms|docs-config|docs-theme|cli)' .github/workflows/release-dry-run.yml .github/workflows/release.yml`
+- Run: `rg -n '@tkstang/oat-(docs-transforms|docs-config|docs-theme|cli)' .github/workflows/release-dry-run.yml .github/workflows/release.yml`
 - Result: pass
 
 ---
@@ -756,21 +756,21 @@ Chronological log of implementation progress.
 - Confirmed checkpoint behavior as final-phase-only (`p04`).
 - Added the first reusable release-contract helper and test surface in
   `packages/cli/src/release/`.
-- Renamed the CLI package to `@voxmedia/oat-cli` and added public npm metadata.
-- Renamed the three docs libraries to `@voxmedia/oat-*` and aligned their
+- Renamed the CLI package to `@tkstang/oat-cli` and added public npm metadata.
+- Renamed the three docs libraries to `@tkstang/oat-*` and aligned their
   publish metadata plus internal package dependency naming.
 - Aligned the workspace docs app, root helper script, and lockfile to the
   renamed package identities.
 - Renamed the in-repo docs app and docs-config source imports to the public
-  `@voxmedia/oat-*` package names.
+  `@tkstang/oat-*` package names.
 - Updated the canonical Fumadocs templates and scaffold fixtures to emit the
   renamed public package identities.
 - Aligned integration tests, e2e coverage, MkDocs compatibility checks, and
-  migration fixtures to the `@voxmedia/oat-*` public package surface.
+  migration fixtures to the `@tkstang/oat-*` public package surface.
 - Added release validation and GitHub workflows for dry-run and tag-based
   public package publishing.
 - Added npm-facing package READMEs and updated root/docs-site consumer guidance
-  to the public `@voxmedia/oat-*` package names.
+  to the public `@tkstang/oat-*` package names.
 
 **Decisions:**
 
@@ -911,12 +911,12 @@ Track test execution during implementation.
 
 - Public npm package identities and metadata for the CLI plus three docs libraries
 - Lockstep release validation and GitHub Actions automation for dry-run and real publish
-- Npm-facing package READMEs and public install guidance aligned to `@voxmedia/oat-*`
+- Npm-facing package READMEs and public install guidance aligned to `@tkstang/oat-*`
 - Final review cleanup for knowledge artifacts, contributor guidance, and release dry-run workflow behavior
 
 **Behavioral changes (user-facing):**
 
-- Consumers can install the CLI as `@voxmedia/oat-cli` and the docs libraries as separate `@voxmedia/oat-*` packages.
+- Consumers can install the CLI as `@tkstang/oat-cli` and the docs libraries as separate `@tkstang/oat-*` packages.
 - Release readiness is now enforced by `pnpm release:validate` and mirrored in CI/release workflows.
 - The dry-run publish workflow now triggers only for release-relevant pull requests and mirrors the real publish order.
 

@@ -52,7 +52,7 @@ jobs:
         run: |
           cat > .npmrc.publish <<'EOF'
           registry=https://registry.npmjs.org/
-          @voxmedia:registry=https://registry.npmjs.org/
+          @tkstang:registry=https://registry.npmjs.org/
           EOF
 
       - name: Build
@@ -66,10 +66,10 @@ jobs:
           NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
         run: |
           for pkg in \
-            @voxmedia/oat-docs-transforms \
-            @voxmedia/oat-docs-config \
-            @voxmedia/oat-docs-theme \
-            @voxmedia/oat-cli
+            @tkstang/oat-docs-transforms \
+            @tkstang/oat-docs-config \
+            @tkstang/oat-docs-theme \
+            @tkstang/oat-cli
           do
             pnpm --filter "$pkg" publish --dry-run --access public --no-git-checks
           done

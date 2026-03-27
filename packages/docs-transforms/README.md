@@ -1,11 +1,11 @@
-# @voxmedia/oat-docs-transforms
+# @tkstang/oat-docs-transforms
 
 Remark plugins and default transform bundle for OAT-powered Fumadocs apps.
 
 ## Install
 
 ```bash
-pnpm add @voxmedia/oat-docs-transforms
+pnpm add @tkstang/oat-docs-transforms
 ```
 
 ## Usage
@@ -16,7 +16,7 @@ import {
   remarkLinks,
   remarkMermaid,
   remarkTabs,
-} from '@voxmedia/oat-docs-transforms';
+} from '@tkstang/oat-docs-transforms';
 
 export const remarkPlugins = defaultTransforms;
 

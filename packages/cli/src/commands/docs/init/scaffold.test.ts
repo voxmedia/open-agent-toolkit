@@ -35,7 +35,7 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
   '.gitignore':
     '# Dependencies\nnode_modules/\n\n# Next.js build output\n.next/\nout/\n\n# fumadocs-mdx generated source\n.source/\n\n# Next.js generated types\nnext-env.d.ts\n',
   'next.config.js':
-    "import { createDocsConfig } from '@voxmedia/oat-docs-config';\nexport default createDocsConfig({ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' });\n",
+    "import { createDocsConfig } from '@tkstang/oat-docs-config';\nexport default createDocsConfig({ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' });\n",
   'postcss.config.mjs':
     "const config = {\n  plugins: {\n    '@tailwindcss/postcss': {},\n  },\n};\n\nexport default config;\n",
   'source.config.ts':
@@ -54,9 +54,9 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
     "docs:format:check": "{{DOCS_FORMAT_CHECK_SCRIPT}}"
   },
   "dependencies": {
-    "@voxmedia/oat-docs-config": "{{OAT_DOCS_CONFIG_DEP}}",
-    "@voxmedia/oat-docs-theme": "{{OAT_DOCS_THEME_DEP}}",
-    "@voxmedia/oat-docs-transforms": "{{OAT_DOCS_TRANSFORMS_DEP}}"
+    "@tkstang/oat-docs-config": "{{OAT_DOCS_CONFIG_DEP}}",
+    "@tkstang/oat-docs-theme": "{{OAT_DOCS_THEME_DEP}}",
+    "@tkstang/oat-docs-transforms": "{{OAT_DOCS_TRANSFORMS_DEP}}"
   },
   "devDependencies": {
     "typescript": "^5.8.3"{{FUMA_DEV_DEPENDENCIES}}
@@ -67,9 +67,9 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
   'app/globals.css':
     "@import 'tailwindcss';\n@import 'fumadocs-ui/css/black.css';\n@import 'fumadocs-ui/css/preset.css';\n\n@source '../node_modules/fumadocs-ui/dist/**/*.js';\n",
   'app/layout.tsx':
-    "import { DocsLayout } from '@voxmedia/oat-docs-theme';\nexport default function Layout({ children }) { return <DocsLayout branding={{ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' }} tree={{}}>{children}</DocsLayout>; }\n",
+    "import { DocsLayout } from '@tkstang/oat-docs-theme';\nexport default function Layout({ children }) { return <DocsLayout branding={{ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' }} tree={{}}>{children}</DocsLayout>; }\n",
   'app/[[...slug]]/page.tsx':
-    "import { DocsPage, Mermaid, Tab, Tabs } from '@voxmedia/oat-docs-theme';\nimport defaultComponents from 'fumadocs-ui/mdx';\nexport default function Page() { return <div />; }\n",
+    "import { DocsPage, Mermaid, Tab, Tabs } from '@tkstang/oat-docs-theme';\nimport defaultComponents from 'fumadocs-ui/mdx';\nexport default function Page() { return <div />; }\n",
   'app/api/search/route.ts':
     "import { createFromSource } from 'fumadocs-core/search/server';\nimport { source } from '@/lib/source';\nconst search = createFromSource(source);\nexport const revalidate = false;\nexport const { staticGET: GET } = search;\n",
   'docs/index.md': '# {{SITE_NAME}}\n\n{{SITE_DESCRIPTION}}\n',
@@ -300,7 +300,7 @@ describe('scaffoldDocsApp', () => {
     // Seed a CLI package.json so version resolution finds it
     await writeFile(
       join(root, 'package.json'),
-      JSON.stringify({ name: '@voxmedia/oat-cli', version: '1.2.3' }),
+      JSON.stringify({ name: '@tkstang/oat-cli', version: '1.2.3' }),
       'utf8',
     );
 
@@ -324,11 +324,9 @@ describe('scaffoldDocsApp', () => {
     };
 
     // Should use versioned deps, not workspace:*
-    expect(packageJson.dependencies['@voxmedia/oat-docs-config']).toBe(
-      '^1.2.3',
-    );
-    expect(packageJson.dependencies['@voxmedia/oat-docs-theme']).toBe('^1.2.3');
-    expect(packageJson.dependencies['@voxmedia/oat-docs-transforms']).toBe(
+    expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe('^1.2.3');
+    expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe('^1.2.3');
+    expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
       '^1.2.3',
     );
 
@@ -356,7 +354,7 @@ describe('scaffoldDocsApp', () => {
       await mkdir(pkgDir, { recursive: true });
       await writeFile(
         join(pkgDir, 'package.json'),
-        JSON.stringify({ name: `@voxmedia/oat-${pkg}`, version: '0.0.1' }),
+        JSON.stringify({ name: `@tkstang/oat-${pkg}`, version: '0.0.1' }),
         'utf8',
       );
     }
@@ -382,13 +380,13 @@ describe('scaffoldDocsApp', () => {
     };
 
     // Should use workspace:* for OAT packages
-    expect(packageJson.dependencies['@voxmedia/oat-docs-config']).toBe(
+    expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe(
       'workspace:*',
     );
-    expect(packageJson.dependencies['@voxmedia/oat-docs-theme']).toBe(
+    expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe(
       'workspace:*',
     );
-    expect(packageJson.dependencies['@voxmedia/oat-docs-transforms']).toBe(
+    expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
       'workspace:*',
     );
 

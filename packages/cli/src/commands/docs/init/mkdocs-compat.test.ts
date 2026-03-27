@@ -106,9 +106,9 @@ describe('MkDocs scaffold compatibility (FR8)', () => {
         join(result.appRoot, 'package.json'),
         'utf8',
       );
-      expect(packageJson).not.toContain('@voxmedia/oat-docs-config');
-      expect(packageJson).not.toContain('@voxmedia/oat-docs-theme');
-      expect(packageJson).not.toContain('@voxmedia/oat-docs-transforms');
+      expect(packageJson).not.toContain('@tkstang/oat-docs-config');
+      expect(packageJson).not.toContain('@tkstang/oat-docs-theme');
+      expect(packageJson).not.toContain('@tkstang/oat-docs-transforms');
     },
   );
 });

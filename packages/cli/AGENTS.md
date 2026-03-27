@@ -13,9 +13,9 @@ Maintain consistent, safe CLI behavior across commands and modules.
 
 ## Package commands
 
-- `pnpm --filter @voxmedia/oat-cli test`
-- `pnpm --filter @voxmedia/oat-cli lint`
-- `pnpm --filter @voxmedia/oat-cli type-check`
+- `pnpm --filter @tkstang/oat-cli test`
+- `pnpm --filter @tkstang/oat-cli lint`
+- `pnpm --filter @tkstang/oat-cli type-check`
 
 ## Working conventions
 
@@ -32,5 +32,5 @@ Maintain consistent, safe CLI behavior across commands and modules.
 ## Completion checks
 
 - Tests updated for changed behavior.
-- Lint and type-check pass for `@voxmedia/oat-cli`.
+- Lint and type-check pass for `@tkstang/oat-cli`.
 - User-facing output includes clear next steps when failing.

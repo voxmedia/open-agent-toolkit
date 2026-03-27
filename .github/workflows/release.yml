@@ -21,7 +21,7 @@ jobs:
       # - run only from release tags
       # - fail fast if npm auth is unavailable
       # - rerun the same build and release validation path as dry-run
-      # - publish the four @voxmedia/oat-* packages in lockstep
+      # - publish the four @tkstang/oat-* packages in lockstep
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -42,7 +42,7 @@ jobs:
         run: |
           cat > .npmrc.publish <<'EOF'
           registry=https://registry.npmjs.org/
-          @voxmedia:registry=https://registry.npmjs.org/
+          @tkstang:registry=https://registry.npmjs.org/
           //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
           EOF
 
@@ -51,7 +51,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           test -n "$NODE_AUTH_TOKEN" || {
-            echo "NPM_TOKEN is required to publish @voxmedia/oat-* packages"
+            echo "NPM_TOKEN is required to publish @tkstang/oat-* packages"
             exit 1
           }
 
@@ -67,10 +67,10 @@ jobs:
           NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
         run: |
           for pkg in \
-            @voxmedia/oat-docs-transforms \
-            @voxmedia/oat-docs-config \
-            @voxmedia/oat-docs-theme \
-            @voxmedia/oat-cli
+            @tkstang/oat-docs-transforms \
+            @tkstang/oat-docs-config \
+            @tkstang/oat-docs-theme \
+            @tkstang/oat-cli
           do
             pnpm --filter "$pkg" publish --access public --no-git-checks
           done
