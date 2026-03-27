@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-27
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -20,18 +20,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 4     | 4/4       |
-| Phase 3 | complete    | 6     | 6/6       |
-| Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | in_progress | 3     | 0/3       |
-| Phase 3 | pending     | 6     | 0/6       |
-| Phase 4 | pending     | 3     | 0/3       |
-| Phase 5 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 4     | 4/4       |
+| Phase 3 | complete | 6     | 6/6       |
+| Phase 4 | complete | 3     | 3/3       |
+| Phase 5 | complete | 3     | 3/3       |
+| Phase 3 | pending  | 6     | 0/6       |
+| Phase 4 | pending  | 3     | 0/3       |
+| Phase 5 | pending  | 3     | 0/3       |
 
-**Total:** 16/19 tasks completed
+**Total:** 19/19 tasks completed
 
 ---
 
@@ -330,27 +330,56 @@ oat_generated: false
 
 ## Phase 5: Documentation + Diagnostics
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-03-27
+
+### Phase Summary
+
+**Outcome:**
+
+- Lifecycle and state machine docs updated with pr_open, revision loop, auto-review, summary.md
+- Reference docs updated with autoReviewAtCheckpoints config key and summary.md artifact
+- Doctor skill manifest includes new skills
+
+**Key files touched:**
+
+- `apps/oat-docs/docs/guide/workflow/lifecycle.md`
+- `apps/oat-docs/docs/guide/workflow/state-machine.md`
+- `apps/oat-docs/docs/reference/oat-directory-structure.md`
+- `.agents/skills/oat-doctor/SKILL.md`
 
 ### Task p05-t01: Update bundled workflow docs — lifecycle + state machine
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 793cfdd
+
+**Outcome:**
+
+- Lifecycle: post-implementation flow, pr_open status, auto-review, summary.md
+- State machine: pr_open transitions, revision loop, phase status values
 
 ---
 
 ### Task p05-t02: Update bundled reference docs — directory structure
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a6f0fe5
+
+**Outcome:**
+
+- autoReviewAtCheckpoints in config schema table
+- summary.md in project artifacts table and file tree
 
 ---
 
 ### Task p05-t03: Update app docs + oat-doctor skill manifest
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f4bb2c5
+
+**Outcome:**
+
+- Doctor manifest lists oat-project-summary and oat-project-revise
 
 ---
 
