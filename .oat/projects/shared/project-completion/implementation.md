@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-27
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -25,12 +25,13 @@ oat_generated: false
 | Phase 1 | complete    | 3     | 3/3       |
 | Phase 2 | complete    | 4     | 4/4       |
 | Phase 3 | complete    | 6     | 6/6       |
-| Phase 4 | in_progress | 3     | 0/3       |
+| Phase 4 | complete    | 3     | 3/3       |
+| Phase 5 | in_progress | 3     | 0/3       |
 | Phase 3 | pending     | 6     | 0/6       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 
-**Total:** 13/19 tasks completed
+**Total:** 16/19 tasks completed
 
 ---
 
@@ -267,34 +268,70 @@ oat_generated: false
 
 ## Phase 4: CLI Runtime + Templates
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-03-27
+
+### Phase Summary
+
+**Outcome:**
+
+- State routing handles `pr_open` → routes to `oat-project-revise`
+- Config schema supports `autoReviewAtCheckpoints` boolean with get/set
+- Skill manifest includes new skills, templates include summary.md
+- State template documents `pr_open` as valid status
+
+**Key files touched:**
+
+- `packages/cli/src/commands/state/generate.ts` + test
+- `packages/cli/src/config/oat-config.ts`
+- `packages/cli/src/commands/config/index.ts` + test
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`
+- `packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts`
+- `.oat/templates/state.md`
 
 ### Task p04-t01: Update state/generate.ts — pr_open routing
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b800488
+
+**Outcome:**
+
+- `implement:pr_open` routes to `oat-project-revise` in sharedMap
+- New skills added to WORKFLOW_SKILLS, summary.md to WORKFLOW_TEMPLATES
+- Install-workflows tests fixed to use manifest length
 
 ---
 
 ### Task p04-t02: Update config schema + get/set for autoReviewAtCheckpoints
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9d2c1e0
+
+**Outcome:**
+
+- OatConfig interface has `autoReviewAtCheckpoints?: boolean`
+- normalizeOatConfig preserves the field
+- ConfigKey, KEY_ORDER, getConfigValue, setConfigValue all handle the key
+- Tests: get returns 'false' default, set writes boolean
 
 ---
 
 ### Task p04-t03: Update state.md template + verify bundling
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3c3b03c
+
+**Outcome:**
+
+- State template comment shows `in_progress | complete | pr_open`
+- All bundled assets verified present after build
 
 ---
 
 ## Phase 5: Documentation + Diagnostics
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-03-27
 
 ### Task p05-t01: Update bundled workflow docs — lifecycle + state machine
 
