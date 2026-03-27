@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-design
 oat_blockers: []
 oat_last_updated: 2026-03-27
 oat_generated: false
@@ -228,20 +228,20 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 
 ## Requirement Index
 
-| ID   | Description                                           | Priority | Verification                                          | Planned Tasks |
-| ---- | ----------------------------------------------------- | -------- | ----------------------------------------------------- | ------------- |
-| FR1  | Summary artifact generation with 10-section structure | P0       | manual: end-to-end project lifecycle                  | TBD           |
-| FR2  | Summary re-runnability with frontmatter tracking      | P0       | manual: generate, revise, re-generate                 | TBD           |
-| FR3  | PR-final invokes summary if missing, uses as source   | P1       | manual: pr-final with/without existing summary        | TBD           |
-| FR4  | Complete invokes summary if missing, uses as cover    | P1       | manual: complete with/without existing summary        | TBD           |
-| FR5  | `pr_open` phase status after pr-final                 | P0       | manual: verify state.md after pr-final                | TBD           |
-| FR6  | Revision skill with multi-source feedback support     | P0       | manual: inline feedback → tasks → implement → pr_open | TBD           |
-| FR7  | Complete works from any phase status                  | P0       | manual: complete from in_progress, pr_open, complete  | TBD           |
-| FR8  | Auto subagent review at checkpoints                   | P1       | manual: enable config, verify review triggers         | TBD           |
-| FR9  | Updated implement skill guidance                      | P1       | manual: verify next-step routing after final phase    | TBD           |
-| NFR1 | Backward compatibility with existing projects         | P0       | manual: existing projects complete without summary    | TBD           |
-| NFR2 | Skill convention compliance                           | P0       | manual: review skill frontmatter and structure        | TBD           |
-| NFR3 | Summary conciseness under 200 lines                   | P1       | manual: verify summary length on real projects        | TBD           |
+| ID   | Description                                           | Priority | Verification                                          | Planned Tasks                      |
+| ---- | ----------------------------------------------------- | -------- | ----------------------------------------------------- | ---------------------------------- |
+| FR1  | Summary artifact generation with 10-section structure | P0       | manual: end-to-end project lifecycle                  | p01-t01, p01-t02                   |
+| FR2  | Summary re-runnability with frontmatter tracking      | P0       | manual: generate, revise, re-generate                 | p01-t02                            |
+| FR3  | PR-final invokes summary if missing, uses as source   | P1       | manual: pr-final with/without existing summary        | p03-t01                            |
+| FR4  | Complete invokes summary if missing, uses as cover    | P1       | manual: complete with/without existing summary        | p03-t02                            |
+| FR5  | `pr_open` phase status after pr-final                 | P0       | manual: verify state.md after pr-final                | p02-t01, p04-t01, p04-t03          |
+| FR6  | Revision skill with multi-source feedback support     | P0       | manual: inline feedback → tasks → implement → pr_open | p02-t02, p03-t04                   |
+| FR7  | Complete works from any phase status                  | P0       | manual: complete from in_progress, pr_open, complete  | p02-t03                            |
+| FR8  | Auto subagent review at checkpoints                   | P1       | manual: enable config, verify review triggers         | p03-t03, p03-t05, p03-t06, p04-t02 |
+| FR9  | Updated implement skill guidance                      | P1       | manual: verify next-step routing after final phase    | p03-t04                            |
+| NFR1 | Backward compatibility with existing projects         | P0       | manual: existing projects complete without summary    | p02-t03, p04-t01                   |
+| NFR2 | Skill convention compliance                           | P0       | manual: review skill frontmatter and structure        | p01-t02, p02-t02                   |
+| NFR3 | Summary conciseness under 200 lines                   | P1       | manual: verify summary length on real projects        | p01-t02                            |
 
 ## Open Questions
 
