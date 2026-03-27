@@ -7,7 +7,7 @@ oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete
+oat_phase_status: complete # Status: in_progress | complete
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -20,13 +20,13 @@ oat_generated: false
 
 # Project State: project-completion
 
-**Status:** Implementation — review fix tasks complete; awaiting re-review
+**Status:** Implementation complete — final review passed
 **Started:** 2026-03-27
 **Last Updated:** 2026-03-27
 
 ## Current Phase
 
-Implementation — review fix tasks complete; awaiting re-review
+Implementation complete — final review passed
 
 ## Artifacts
 
@@ -45,7 +45,7 @@ Implementation — review fix tasks complete; awaiting re-review
 - ✓ Implementation tasks complete (phases 1-5)
 - ✓ Final review received (2 Important, 2 Medium findings)
 - ✓ Review fix tasks complete (Phase 6)
-- ⧗ Awaiting re-review
+- ✓ Final review passed
 
 ## Blockers
 
@@ -53,4 +53,4 @@ None
 
 ## Next Milestone
 
-Re-review to reach `passed`: `oat-project-review-provide code final` then `oat-project-review-receive`
+Generate summary (`oat-project-summary`), then PR (`oat-project-pr-final`)
