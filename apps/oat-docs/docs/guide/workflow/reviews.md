@@ -50,6 +50,14 @@ Status progression in `plan.md` Reviews table:
 - Minor (non-final scopes): auto-deferred by default with rationale; do not block review completion.
 - Minor (final scope): not auto-deferred; require explicit user disposition (defer vs convert), and explain each minor in plain language before asking.
 
+## Auto-review at checkpoints
+
+When `autoReviewAtCheckpoints` is enabled (via `oat config set autoReviewAtCheckpoints true` or per-project in `plan.md` frontmatter), completing a plan phase checkpoint automatically spawns a subagent review. The review scope covers all phases since the last passed checkpoint. The final phase checkpoint triggers a `code final` review.
+
+Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` auto-converts all findings to fix tasks without user prompts (Minor findings that are clearly out of scope are deferred with a note).
+
+This feature is opt-in and disabled by default. When disabled, the manual `oat-project-review-provide` workflow applies.
+
 ## Phase and final review
 
 Use phase-scoped review artifacts during implementation (`p01`, `p02`, etc), then run final review before project closeout.
