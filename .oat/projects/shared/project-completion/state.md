@@ -7,7 +7,7 @@ oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -20,13 +20,13 @@ oat_generated: false
 
 # Project State: project-completion
 
-**Status:** Implementation complete — final review passed
+**Status:** PR open, awaiting human review
 **Started:** 2026-03-27
 **Last Updated:** 2026-03-27
 
 ## Current Phase
 
-Implementation complete — final review passed
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -34,7 +34,8 @@ Implementation complete — final review passed
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in_progress — review fixes)
+- **Implementation:** `implementation.md` (complete)
+- **Summary:** `summary.md` (complete)
 
 ## Progress
 
@@ -47,6 +48,9 @@ Implementation complete — final review passed
 - ✓ Review fix tasks complete (Phase 6)
 - ✓ Final review passed
 - ✓ Documentation sync complete (oat-project-document)
+- ✓ Summary generated
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -54,4 +58,7 @@ None
 
 ## Next Milestone
 
-Generate summary (`oat-project-summary`), then PR (`oat-project-pr-final`)
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
