@@ -18,6 +18,7 @@ export interface OatConfig {
   projects?: { root: string };
   documentation?: OatDocumentationConfig;
   localPaths?: string[];
+  autoReviewAtCheckpoints?: boolean;
 }
 
 export interface OatLocalConfig {
@@ -170,6 +171,10 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     if (filtered.length > 0) {
       next.localPaths = [...new Set(filtered)].sort();
     }
+  }
+
+  if (typeof parsed.autoReviewAtCheckpoints === 'boolean') {
+    next.autoReviewAtCheckpoints = parsed.autoReviewAtCheckpoints;
   }
 
   return next;

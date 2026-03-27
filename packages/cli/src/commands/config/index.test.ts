@@ -260,4 +260,26 @@ describe('oat config', () => {
     });
     expect(process.exitCode).toBe(0);
   });
+
+  it('gets autoReviewAtCheckpoints default false when not set', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'autoReviewAtCheckpoints']);
+
+    expect(capture.info[0]).toBe('false');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('sets autoReviewAtCheckpoints to true in config.json', async () => {
+    const root = await createRepoRoot();
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'autoReviewAtCheckpoints', 'true']);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    const config = JSON.parse(raw);
+    expect(config.autoReviewAtCheckpoints).toBe(true);
+    expect(process.exitCode).toBe(0);
+  });
 });
