@@ -1,7 +1,7 @@
 ---
 name: oat-project-pr-final
-version: 1.2.0
-description: Use when an active OAT project has completed all phases and is ready for final merge to main. Generates the final OAT lifecycle PR description from artifacts and review status, with optional PR creation.
+version: 1.3.0
+description: Use when an active OAT project has completed all phases and is ready for final merge to main. Generates the final OAT lifecycle PR description from artifacts and review status, then creates the PR automatically.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
@@ -36,7 +36,7 @@ Generate a PR-ready summary grounded in canonical OAT artifacts, including:
 
 **OAT MODE: PR (Project)**
 
-**Purpose:** Create final PR description and (optionally) open a PR.
+**Purpose:** Create final PR description and open the PR.
 
 ## Progress Indicators (User-Facing)
 
@@ -66,7 +66,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 - Reading artifacts and git history
 - Writing PR description file
-- Running `gh pr create` (optional, user-confirmed)
+- Running `gh pr create` (automatic)
 
 ## Usage
 
@@ -313,19 +313,9 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 - Reviews: `[reviews/]({REPO_WEB}/tree/{BRANCH}/{PROJECT_REL}/reviews)` (fallback: `{PROJECT_PATH}/reviews/`) — include when active `reviews/` is tracked; omit archived review paths and any target that still matches a `localPaths` pattern
 ```
 
-### Step 5: Optional - Open PR
+### Step 5: Create PR
 
-Ask the user:
-
-```
-PR description written to {path}.
-
-Do you want to open a PR now?
-1) Yes (use gh CLI if available)
-2) No (I will open manually)
-```
-
-If user chooses (1):
+After writing the PR artifact, push and create the PR automatically.
 
 **CRITICAL — Strip YAML frontmatter before submitting to GitHub.**
 The local artifact file contains YAML frontmatter (`---` delimited block at the top) for OAT metadata. This frontmatter MUST NOT appear in the GitHub PR body. Before passing the file to `gh pr create`, strip everything from the start of the file through and including the closing `---` line. Verify the resulting body starts with the markdown heading (e.g., `# feat: ...`), not YAML keys.
@@ -347,7 +337,7 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 
 ### Step 6: Update Project State to pr_open
 
-After writing the PR artifact (and after optional PR creation), update `"$PROJECT_PATH/state.md"` so project routing reflects that the PR is open and awaiting human review.
+After writing the PR artifact and creating the PR, update `"$PROJECT_PATH/state.md"` so project routing reflects that the PR is open and awaiting human review.
 
 **Frontmatter updates:**
 
