@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-29
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -29,8 +29,9 @@ oat_generated: false
 | Phase 1 | complete | 6     | 6/6       |
 | Phase 2 | complete | 3     | 3/3       |
 | Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | pending  | 2     | 0/2       |
 
-**Total:** 11/11 tasks completed
+**Total:** 11/13 tasks completed
 
 ---
 
@@ -286,6 +287,22 @@ Chronological log of implementation progress.
 
 - Combined p01-t01..t05 into single commit — artificial splitting of a single file was counterproductive
 - Phase 2 tasks delivered as part of Phase 1 — same file, same sections
+
+### Review Received: final
+
+**Date:** 2026-03-29
+**Review artifact:** reviews/archived/final-review-2026-03-29.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** p04-t01, p04-t02
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
 
 ---
 

@@ -385,16 +385,82 @@ git commit -m "feat(p03-t02): sync oat-project-pr-final after auto-create PR fix
 
 ---
 
+## Phase 4: Review Fixes (Final)
+
+### Task p04-t01: (review) Fix fixes_completed final review routing
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-next/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: In the post-implementation router (Step 5.3), any non-`passed` final review status is routed to `oat-project-review-receive`. But `fixes_completed` means "fix tasks done, awaiting re-review" — and `review-receive` blocks when there's no active review artifact. The correct route for `fixes_completed` is `oat-project-review-provide code final` (to trigger re-review).
+
+**Step 2: Implement fix**
+
+In Step 5.3, split the non-`passed` condition into two branches:
+
+- `fixes_completed` → route to `oat-project-review-provide` (with scope hint: "code final") with announce: "Review fixes implemented — triggering re-review"
+- All other non-passed statuses (`received`, `fixes_added`) → route to `oat-project-review-receive` (current behavior, correct for these statuses)
+
+**Step 3: Verify**
+
+Read the updated section and confirm:
+
+- `fixes_completed` routes to `review-provide`, not `review-receive`
+- `received` and `fixes_added` still route to `review-receive`
+- `passed` still continues to step 5.4
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-next/SKILL.md
+git commit -m "fix(p04-t01): route fixes_completed to review-provide for re-review"
+```
+
+---
+
+### Task p04-t02: (review) Fix PR base branch to use resolved value
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-pr-final/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: Step 5 hardcodes `gh pr create --base main` but the skill documents a configurable `base=` argument. The hardcoded `main` ignores any user-specified base branch.
+
+**Step 2: Implement fix**
+
+Update the `gh pr create` command in Step 5 to use the resolved base branch variable (`{base}`) instead of hardcoded `main`. The base branch resolution already exists earlier in the skill — ensure the Step 5 code block references it.
+
+**Step 3: Verify**
+
+Read the updated step and confirm:
+
+- `gh pr create` uses `--base "{base}"` (the resolved variable)
+- The base branch resolution logic earlier in the skill is intact
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-pr-final/SKILL.md
+git commit -m "fix(p04-t02): use resolved base branch in gh pr create"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                 |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                        |
-| p02    | code     | pending  | -          | -                                                        |
-| p03    | code     | pending  | -          | -                                                        |
-| final  | code     | received | 2026-03-29 | reviews/final-review-2026-03-29.md                       |
-| spec   | artifact | pending  | -          | -                                                        |
-| design | artifact | passed   | 2026-03-29 | reviews/archived/artifact-design-review-2026-03-29-v2.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                 |
+| ------ | -------- | ----------- | ---------- | -------------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                        |
+| p02    | code     | pending     | -          | -                                                        |
+| p03    | code     | pending     | -          | -                                                        |
+| final  | code     | fixes_added | 2026-03-29 | reviews/archived/final-review-2026-03-29.md              |
+| spec   | artifact | pending     | -          | -                                                        |
+| design | artifact | passed      | 2026-03-29 | reviews/archived/artifact-design-review-2026-03-29-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -414,8 +480,9 @@ git commit -m "feat(p03-t02): sync oat-project-pr-final after auto-create PR fix
 - Phase 1: 6 tasks - Core skill file (state reader, boundary detector, phase router, dispatcher, sync)
 - Phase 2: 3 tasks - Review safety check + post-implementation router + sync
 - Phase 3: 2 tasks - Adjacent fix: oat-project-pr-final auto-create PR + sync
+- Phase 4: 2 tasks - Review fixes (final): fixes_completed routing + PR base branch
 
-**Total: 11 tasks**
+**Total: 13 tasks**
 
 Ready for code review and merge.
 
