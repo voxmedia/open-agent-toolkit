@@ -241,8 +241,12 @@ Parse plan.md Reviews table for a row with `Scope="final"` and `Type="code"`:
   → Route to `oat-project-review-provide` (with scope hint: "code final")
   → Announce: "Implementation complete — triggering final code review"
 
-- If row exists with Status that is NOT `"passed"` (e.g., `"fixes_added"`, `"fixes_completed"`, `"received"`):
-  → Route to `oat-project-review-receive` (review cycle not yet complete)
+- If row exists with `Status="fixes_completed"`:
+  → Route to `oat-project-review-provide` (with scope hint: "code final")
+  → Announce: "Review fixes implemented — triggering re-review"
+
+- If row exists with other non-passed status (e.g., `"received"`, `"fixes_added"`):
+  → Route to `oat-project-review-receive` (review findings not yet converted to tasks)
   → Announce: "Final review in progress — continuing review cycle"
 
 - If row exists with `Status="passed"`:
