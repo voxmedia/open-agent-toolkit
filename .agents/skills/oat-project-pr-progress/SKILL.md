@@ -81,7 +81,7 @@ oat-project-pr-progress base_sha=abc123     # progress PR for abc123..HEAD
 Run the `oat-project-pr-progress` skill and it will ask:
 
 - which phase (pNN) or range to scope to
-- PR title + base branch (defaults to main)
+- PR title + base branch (resolved from: explicit `base=` arg → `git.defaultBranch` in `.oat/config.json` → `git rev-parse --abbrev-ref origin/HEAD` → fallback `main`)
 
 ## Process
 
@@ -318,19 +318,33 @@ If user chooses (1), provide best-effort guidance:
   TMP_BODY="$(mktemp -t oat-pr-body.XXXXXX.md)"
   awk 'NR==1 && $0=="---" {infm=1; next} infm && $0=="---" {infm=0; next} !infm {print}' "$BODY_FILE" > "$TMP_BODY"
   ```
+- Resolve the base branch:
+
+  ```bash
+  # Resolution chain: explicit arg > OAT config > git remote > fallback
+  BASE_BRANCH="{base_arg if provided}"
+  if [ -z "$BASE_BRANCH" ]; then
+    BASE_BRANCH=$(oat config get git.defaultBranch 2>/dev/null || true)
+  fi
+  if [ -z "$BASE_BRANCH" ]; then
+    BASE_BRANCH=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|origin/||' || true)
+  fi
+  BASE_BRANCH="${BASE_BRANCH:-main}"
+  ```
+
 - Use the stripped body file with `gh`:
 
-```bash
-git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
-gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
-```
+  ```bash
+  git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
+  gh pr create --base "$BASE_BRANCH" --title "{title}" --body-file "$TMP_BODY"
+  ```
 
 - Optionally clean up temp file:
   ```bash
   rm -f "$TMP_BODY"
   ```
 
-Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
+Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents and note the resolved base branch.
 
 ## Success Criteria
 

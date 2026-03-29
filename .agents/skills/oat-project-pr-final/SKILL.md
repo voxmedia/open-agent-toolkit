@@ -85,7 +85,7 @@ Run the `oat-project-pr-final` skill and it will ask for:
 - PR title
   - default when a known ticket is associated: `[{TICKET-NUM}] {Descriptive Project Title}`
   - otherwise default: `{type}: {project description}` using conventional-commit style (for example `feat: add review loop` or `docs: reorganize documentation for discoverability`)
-- base branch (default: `main`)
+- base branch (resolved from: explicit `base=` arg → `git.defaultBranch` in `.oat/config.json` → `git rev-parse --abbrev-ref origin/HEAD` → fallback `main`)
 
 ## Process
 
@@ -324,16 +324,30 @@ Steps:
 
 1. Write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
 2. Verify the temp file does not start with YAML frontmatter keys.
-3. Push and create the PR:
+3. Resolve the base branch:
+
+```bash
+# Resolution chain: explicit arg > OAT config > git remote > fallback
+BASE_BRANCH="{base_arg if provided}"
+if [ -z "$BASE_BRANCH" ]; then
+  BASE_BRANCH=$(oat config get git.defaultBranch 2>/dev/null || true)
+fi
+if [ -z "$BASE_BRANCH" ]; then
+  BASE_BRANCH=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|origin/||' || true)
+fi
+BASE_BRANCH="${BASE_BRANCH:-main}"
+```
+
+4. Push and create the PR:
 
 ```bash
 git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
-gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
+gh pr create --base "$BASE_BRANCH" --title "{title}" --body-file "$TMP_BODY"
 ```
 
-4. Clean up the temp file.
+5. Clean up the temp file.
 
-Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
+Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents and note the resolved base branch.
 
 ### Step 6: Update Project State to pr_open
 

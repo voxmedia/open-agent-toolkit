@@ -42,6 +42,7 @@ import {
   saveSyncConfig,
 } from '@config/index';
 import {
+  detectDefaultBranch,
   type OatConfig,
   type OatDocumentationConfig,
   readOatConfig,
@@ -205,6 +206,7 @@ interface InitDependencies {
     localPaths: string[],
   ) => Promise<{ action: string }>;
   writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
+  detectDefaultBranch: (repoRoot: string) => string;
   detectExistingDocs: (
     repoRoot: string,
     deps: DetectDocsDependencies,
@@ -372,6 +374,7 @@ function createDependencies(): InitDependencies {
     addLocalPaths,
     applyGitignore,
     writeOatConfig,
+    detectDefaultBranch,
     detectExistingDocs,
     fileExists,
     inputWithDefault,
@@ -664,6 +667,21 @@ async function runGuidedSetupImpl(
   context.logger.info(
     'Add custom local paths anytime with `oat local add <path>`',
   );
+
+  // Detect and store default branch if not already configured
+  {
+    const currentConfig = await dependencies.readOatConfig(projectRoot);
+    if (!currentConfig.git?.defaultBranch) {
+      const detected = dependencies.detectDefaultBranch(projectRoot);
+      currentConfig.git = { ...currentConfig.git, defaultBranch: detected };
+      await dependencies.writeOatConfig(projectRoot, currentConfig);
+      context.logger.info(`Default branch: ${detected}`);
+    } else {
+      context.logger.info(
+        `Default branch: ${currentConfig.git.defaultBranch} (already configured)`,
+      );
+    }
+  }
 
   context.logger.info('[3/5] Documentation…');
   let docsSummary = 'skipped';
