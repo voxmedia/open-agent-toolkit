@@ -6,6 +6,8 @@ oat_last_updated: 2026-03-29
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_source: spec-driven
+oat_plan_hill_phases: ['p03']
+oat_auto_review_at_checkpoints: true
 oat_generated: false
 oat_template: false
 ---

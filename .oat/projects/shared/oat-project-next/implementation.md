@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-29
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,12 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 6     | 6/6       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 2     | 2/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 11/11 tasks completed
 
 ---
 
@@ -179,24 +180,35 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- `oat-project-next` skill: stateful lifecycle router that reads project state and invokes the correct next skill automatically
+- `oat-project-pr-final` fix: PR creation is now automatic (no confirmation prompt)
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Users can call `oat-project-next` from any point in the lifecycle to continue working
+- Three-tier boundary detection avoids "double-tap" friction at phase boundaries
+- Review safety check prevents advancing past unprocessed review feedback
+- Post-implementation chain (review → summary → PR → complete) is fully navigable via repeated `next` calls
+- `oat-project-pr-final` now auto-creates the PR after generating the description
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/oat-project-next/SKILL.md` - New lifecycle router skill
+- `.agents/skills/oat-project-pr-final/SKILL.md` - Removed PR confirmation prompt
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` - Added oat-project-next to workflow skills
+- `packages/cli/scripts/bundle-assets.sh` - Added oat-project-next to bundle
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm test` — 140 test files, 1079 tests passing
+- `pnpm lint` — clean
+- `pnpm type-check` — clean
+- `pnpm build` — success
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Plan phases 1-2 were implemented together since all content goes into a single skill file. Tasks p01-t01 through p01-t05 combined into one commit, p02-t01 and p02-t02 were already included.
+- p02-t03 and p03-t02 (re-sync tasks) were no-ops since symlinks auto-reflect changes to canonical files.
 
 ## References
 
