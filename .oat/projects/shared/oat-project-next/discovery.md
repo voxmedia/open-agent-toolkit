@@ -84,6 +84,10 @@ Single clear approach: a self-contained skill file with a state-driven routing t
 - Works correctly for spec-driven, quick, and import workflow modes
 - Post-implementation chain (review → summary → PR → complete) is navigable entirely via repeated `next` calls
 
+## Adjacent Fixes (Bundled)
+
+- **oat-project-pr-final: auto-create PR** — Currently the skill creates the PR description and then asks the user whether to create the PR. It should just create the PR automatically — no reason for an extra confirmation step. Include as a task in the plan since we're already working on project flow.
+
 ## Out of Scope
 
 - Modifying oat-project-progress — it stays as-is

@@ -198,19 +198,19 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 
 ## Requirement Index
 
-| ID   | Description                          | Priority | Verification                               | Planned Tasks     |
-| ---- | ------------------------------------ | -------- | ------------------------------------------ | ----------------- |
-| FR1  | Read state.md + artifact frontmatter | P0       | manual: verify state reads in all phases   | TBD - see plan.md |
-| FR2  | Three-tier boundary detection        | P0       | manual: test complete/substantive/template | TBD - see plan.md |
-| FR3  | Workflow-mode-aware routing tables   | P0       | manual: test all three modes               | TBD - see plan.md |
-| FR4  | Review safety check before advancing | P0       | manual: test with pending review artifact  | TBD - see plan.md |
-| FR5  | Post-implementation routing chain    | P0       | manual: test each post-impl transition     | TBD - see plan.md |
-| FR6  | HiLL gate respect                    | P0       | manual: test with configured HiLL gates    | TBD - see plan.md |
-| FR7  | Direct skill invocation              | P0       | manual: verify seamless dispatch           | TBD - see plan.md |
-| FR8  | Active project resolution            | P0       | manual: test with/without active project   | TBD - see plan.md |
-| FR9  | No-project guidance                  | P1       | manual: test with no projects              | TBD - see plan.md |
-| NFR1 | Routing announcement before dispatch | P0       | manual: verify announcement format         | TBD - see plan.md |
-| NFR2 | Standard OAT skill structure         | P1       | manual: verify frontmatter and structure   | TBD - see plan.md |
+| ID   | Description                          | Priority | Verification                               | Planned Tasks |
+| ---- | ------------------------------------ | -------- | ------------------------------------------ | ------------- |
+| FR1  | Read state.md + artifact frontmatter | P0       | manual: verify state reads in all phases   | p01-t02       |
+| FR2  | Three-tier boundary detection        | P0       | manual: test complete/substantive/template | p01-t03       |
+| FR3  | Workflow-mode-aware routing tables   | P0       | manual: test all three modes               | p01-t04       |
+| FR4  | Review safety check before advancing | P0       | manual: test with pending review artifact  | p02-t01       |
+| FR5  | Post-implementation routing chain    | P0       | manual: test each post-impl transition     | p02-t02       |
+| FR6  | HiLL gate respect                    | P0       | manual: test with configured HiLL gates    | p01-t04       |
+| FR7  | Direct skill invocation              | P0       | manual: verify seamless dispatch           | p01-t05       |
+| FR8  | Active project resolution            | P0       | manual: test with/without active project   | p01-t02       |
+| FR9  | No-project guidance                  | P1       | manual: test with no projects              | p01-t02       |
+| NFR1 | Routing announcement before dispatch | P0       | manual: verify announcement format         | p01-t05       |
+| NFR2 | Standard OAT skill structure         | P1       | manual: verify frontmatter and structure   | p01-t01       |
 
 ## Open Questions
 
