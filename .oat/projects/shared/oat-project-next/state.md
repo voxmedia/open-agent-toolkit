@@ -7,7 +7,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -26,7 +26,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Complete. Final review passed.
+Implementation - Review fixes complete. Re-review passed.
 
 ## Artifacts
 
@@ -42,8 +42,8 @@ Implementation - Complete. Final review passed.
 - ✓ Specification complete
 - ✓ Design complete (2 reviews received + resolved)
 - ✓ Plan complete
-- ✓ Implementation tasks complete (11/11)
-- ✓ Final review passed
+- ✓ Implementation tasks complete (13/13, including review fixes)
+- ✓ Final review passed (re-review after fixes)
 - ⧗ Ready for summary + PR
 
 ## Blockers
