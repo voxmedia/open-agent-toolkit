@@ -34,78 +34,227 @@ oat_generated: false
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Core Skill File
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-03-29
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-**Outcome (what changed):**
+**Outcome:**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Created `oat-project-next` skill with complete routing algorithm
+- State reader resolves active project, reads state.md + artifact frontmatter
+- Four-tier boundary detector classifies artifact state (complete/complete-no-target/substantive/template)
+- Phase router covers all three workflow modes with full routing tables
+- HiLL gate override applied before routing table lookup
+- Dispatcher announces routing decision with blocker warnings and invokes target skill
+- Synced to provider views via `oat sync`
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `.agents/skills/oat-project-next/SKILL.md` - Created (293 lines)
+- `.claude/skills/oat-project-next` - Symlink created by sync
+- `.cursor/skills/oat-project-next` - Symlink created by sync
+- `.oat/sync/manifest.json` - Updated with new skill entry
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `ls .agents/skills/oat-project-next/SKILL.md && ls .claude/skills/oat-project-next/SKILL.md`
+- Result: Both exist; symlink points to canonical location
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Tasks p01-t01 through p01-t05 were combined into a single commit since they all build the same file incrementally. Writing the complete skill in one pass was more efficient than artificial checkpoints.
+- Review checker (p02-t01) and post-implementation router (p02-t02) were included in the initial write since the design has them as sections in the same file.
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Create skill file with frontmatter and skeleton
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** d771bb9
 
-**Outcome (required when completed):**
+**Outcome:**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Skill file created with standard frontmatter (name, version, description, disable-model-invocation, user-invocable, allowed-tools)
+- Phase banner and step indicators defined
 
 **Files changed:**
 
-- `{path}` - {why}
+- `.agents/skills/oat-project-next/SKILL.md` - Created
 
-**Verification:**
+---
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+### Task p01-t02: Implement State Reader
+
+**Status:** completed
+**Commit:** d771bb9 (combined with p01-t01)
+
+**Outcome:**
+
+- Step 0 resolves active project from `.oat/config.local.json`
+- Two-branch error handling: no projects exist vs projects exist but none active (FR9)
+- Step 1 reads state.md and artifact frontmatter with phase-to-artifact mapping
+
+---
+
+### Task p01-t03: Implement Boundary Detector
+
+**Status:** completed
+**Commit:** d771bb9 (combined)
+
+**Outcome:**
+
+- Four-tier algorithm: Tier 1 (complete+target), Tier 1b (complete+no-target), Tier 2 (substantive), Tier 3 (template)
+- Primary signal: `oat_template` frontmatter field
+- Fallback heuristic: `{placeholder}` pattern detection
+
+---
+
+### Task p01-t04: Implement Phase Router
+
+**Status:** completed
+**Commit:** d771bb9 (combined)
+
+**Outcome:**
+
+- Three routing tables: spec-driven (12 rows), quick (7 rows), import (4 rows)
+- HiLL gate override applied before table lookup
+- Execution mode check for subagent-driven routing
+- Behavioral divergence from progress documented
+
+---
+
+### Task p01-t05: Implement Dispatcher
+
+**Status:** completed
+**Commit:** d771bb9 (combined)
+
+**Outcome:**
+
+- Announcement format with project, current state, routing target, and reason
+- Blocker warning when `oat_blockers` is non-empty
+- Skill invocation via Skill tool
+
+---
+
+### Task p01-t06: Sync skill to provider views
+
+**Status:** completed
+**Commit:** 2f7f108
+
+**Outcome:**
+
+- Ran `oat sync --scope all`
+- Created symlinks: `.claude/skills/oat-project-next` and `.cursor/skills/oat-project-next`
+- Updated `.oat/sync/manifest.json`
+
+---
+
+## Phase 2: Review Safety Check + Post-Implementation Router
+
+**Status:** complete
+**Started:** 2026-03-29
+
+### Phase Summary
+
+**Outcome:**
+
+- Review checker and post-implementation router were already included in the Phase 1 skill file write
+- All Phase 2 tasks were effectively complete as part of Phase 1 implementation
+- Re-sync was a no-op since symlinks auto-reflect canonical file changes
+
+**Key files touched:**
+
+- No additional files — all content in `.agents/skills/oat-project-next/SKILL.md` from Phase 1
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- Plan deviation: Phase 2 tasks were delivered as part of Phase 1 since they're sections in the same file. Splitting into separate commits would have been artificial.
 
-**Issues Encountered:**
+### Task p02-t01: Implement Review Checker
 
-- {Issue and resolution}
+**Status:** completed
+**Commit:** d771bb9 (included in Phase 1 write)
 
----
+**Outcome:**
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
+- Step 3.5 scans `reviews/` directory (excluding `archived/`)
+- Cross-references plan.md Reviews table for status
+- Processed statuses: `passed`, `fixes_added`, `fixes_completed`
+- Overrides routing target to `oat-project-review-receive` when unprocessed reviews found
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p02-t02: Implement Post-Implementation Router
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Commit:** d771bb9 (included in Phase 1 write)
 
-### Task p02-t01: {Task Name}
+**Outcome:**
 
-**Status:** pending
-**Commit:** -
+- Step 4 with six priority-ordered checks: revision tasks → unprocessed reviews → final review status → summary → PR → complete
+- Final review requires `Status=passed` (not just row existence)
+- Handles `pending` row from template pre-population
+
+---
+
+### Task p02-t03: Re-sync skill to provider views
+
+**Status:** completed (no-op)
+**Commit:** - (no changes needed)
+
+**Outcome:**
+
+- Symlinks already point to canonical file; no re-sync required
+
+---
+
+## Phase 3: Adjacent Fix — oat-project-pr-final Auto-Create PR
+
+**Status:** complete
+**Started:** 2026-03-29
+
+### Phase Summary
+
+**Outcome:**
+
+- Removed PR creation confirmation prompt from `oat-project-pr-final`
+- PR is now created automatically after generating the description
+- Bumped version to 1.3.0
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-pr-final/SKILL.md` - Modified Step 5, description, version
+
+**Verification:**
+
+- Run: `pnpm test`
+- Result: 140 files, 1079 tests passing
+
+### Task p03-t01: Remove PR creation confirmation prompt
+
+**Status:** completed
+**Commit:** 38490a3
+
+**Outcome:**
+
+- Renamed “Step 5: Optional - Open PR” to “Step 5: Create PR”
+- Removed `AskUserQuestion` prompt (“Do you want to open a PR now?”)
+- PR creation is now the default behavior
+- Preserved YAML frontmatter stripping logic and `gh` availability fallback
+- Bumped version 1.2.0 → 1.3.0
+- Updated description, mode assertion, and allowed activities
+
+---
+
+### Task p03-t02: Sync pr-final to provider views
+
+**Status:** completed (no-op)
+**Commit:** - (no changes needed)
+
+**Outcome:**
+
+- Symlinks already point to canonical file; no re-sync required
 
 ---
 
@@ -126,36 +275,17 @@ Chronological log of implementation progress.
 
 ### 2026-03-29
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
+- [x] p01-t01..t05: Create oat-project-next skill with full routing - d771bb9
+- [x] p01-t06: Sync to provider views - 2f7f108
+- [x] p02-t01..t03: Review checker + post-impl router (included in Phase 1 write) - no-op
+- [x] p03-t01: Remove PR confirmation prompt from pr-final - 38490a3
+- [x] p03-t02: Sync pr-final (no-op, symlinks)
+- [x] Fix: Add oat-project-next to bundle assets + skill manifest - 5b307b7
 
 **Decisions:**
 
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-03-29
-
-**Session Start:** {time}
-
-{Continue log...}
+- Combined p01-t01..t05 into single commit — artificial splitting of a single file was counterproductive
+- Phase 2 tasks delivered as part of Phase 1 — same file, same sections
 
 ---
 
@@ -163,9 +293,11 @@ Chronological log of implementation progress.
 
 Document any deviations from the original plan.
 
-| Task | Planned | Actual | Reason |
-| ---- | ------- | ------ | ------ |
-| -    | -       | -      | -      |
+| Task             | Planned                   | Actual                              | Reason                                              |
+| ---------------- | ------------------------- | ----------------------------------- | --------------------------------------------------- |
+| p01-t01..t05     | Separate commits per task | Combined into single commit d771bb9 | All sections of same file; splitting was artificial |
+| p02-t01..t02     | Phase 2 tasks             | Delivered in Phase 1                | Same file; content was written in one pass          |
+| p02-t03, p03-t02 | Re-sync provider views    | No-op                               | Symlinks auto-reflect changes to canonical files    |
 
 ## Test Results
 
@@ -173,8 +305,7 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Final | 1079      | 1079   | 0      | -        |
 
 ## Final Summary (for PR/docs)
 

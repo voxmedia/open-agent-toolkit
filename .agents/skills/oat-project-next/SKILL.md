@@ -146,10 +146,12 @@ Phase-to-skill mapping for HiLL override:
 | design    | `oat-project-design`   |
 | plan      | `oat-project-plan`     |
 
+Note: `implement` is intentionally omitted. Implementation-phase checkpoints are handled by `oat_plan_hill_phases` in plan.md (plan-phase-level gates), not by the workflow-level `oat_hill_checkpoints` in state.md.
+
 #### Step 3b: Phase Routing Tables
 
 If `oat_phase == "implement"` AND (`oat_phase_status == "complete"` OR `oat_phase_status == "pr_open"`):
-→ Skip to **Step 4: Post-Implementation Router**
+→ Skip to **Step 5: Post-Implementation Router**
 
 Otherwise, look up the target skill from the routing table for the current `oat_workflow_mode`:
 
@@ -194,7 +196,7 @@ Otherwise, look up the target skill from the routing table for the current `oat_
 
 \* When `oat_execution_mode: subagent-driven`, use `oat-project-subagent-implement` instead.
 
-#### Step 3.5: Check for Unprocessed Reviews (Review Safety Check)
+### Step 4: Check for Unprocessed Reviews (Review Safety Check)
 
 Before dispatching the target skill, check for unprocessed review artifacts:
 
@@ -213,25 +215,25 @@ Before dispatching the target skill, check for unprocessed review artifacts:
 
 **Design note:** This expands beyond the spec's original definition of "processed" (which only listed `passed`) to include `fixes_added` and `fixes_completed`, because re-invoking review-receive on already-processed reviews would be redundant.
 
-### Step 4: Post-Implementation Router
+### Step 5: Post-Implementation Router
 
 Entry condition: `oat_phase == "implement"` AND (`oat_phase_status == "complete"` OR `oat_phase_status == "pr_open"`)
 
 Apply the following checks in priority order. Stop at the first match:
 
-**4.1: Incomplete revision tasks**
+**5.1: Incomplete revision tasks**
 
 Grep plan.md for `p-revN` phases. If any `p-revN` tasks exist with status != completed in implementation.md:
 → Route to `oat-project-implement` (or `oat-project-subagent-implement` if subagent-driven)
 → Announce: "Revision tasks pending — continuing implementation"
 
-**4.2: Unprocessed reviews**
+**5.2: Unprocessed reviews**
 
-Run the Review Safety Check (Step 3.5 above). If unprocessed reviews exist:
+Run the Review Safety Check (Step 4 above). If unprocessed reviews exist:
 → Route to `oat-project-review-receive`
 → Announce: "Unprocessed review feedback detected"
 
-**4.3: Final code review not passed**
+**5.3: Final code review not passed**
 
 Parse plan.md Reviews table for a row with `Scope="final"` and `Type="code"`:
 
@@ -244,9 +246,9 @@ Parse plan.md Reviews table for a row with `Scope="final"` and `Type="code"`:
   → Announce: "Final review in progress — continuing review cycle"
 
 - If row exists with `Status="passed"`:
-  → Continue to 4.4
+  → Continue to 5.4
 
-**4.4: Summary not done**
+**5.4: Summary not done**
 
 Read `{PROJECT_PATH}/summary.md`:
 
@@ -254,19 +256,19 @@ Read `{PROJECT_PATH}/summary.md`:
   → Route to `oat-project-summary`
   → Announce: "Final review passed — generating project summary"
 
-**4.5: PR not created**
+**5.5: PR not created**
 
 If `oat_phase_status != "pr_open"`:
 → Route to `oat-project-pr-final`
 → Announce: "Summary complete — creating final PR"
 
-**4.6: PR is open**
+**5.6: PR is open**
 
 If `oat_phase_status == "pr_open"`:
 → Route to `oat-project-complete`
 → Announce: "PR is open — ready to complete project"
 
-### Step 5: Announce and Invoke
+### Step 6: Announce and Invoke
 
 Print the routing announcement:
 
