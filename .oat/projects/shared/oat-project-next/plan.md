@@ -387,14 +387,14 @@ git commit -m "feat(p03-t02): sync oat-project-pr-final after auto-create PR fix
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                 |
-| ------ | -------- | ------- | ---------- | -------------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                        |
-| p02    | code     | pending | -          | -                                                        |
-| p03    | code     | pending | -          | -                                                        |
-| final  | code     | passed  | 2026-03-29 | reviews/archived/code-final-review-2026-03-29.md         |
-| spec   | artifact | pending | -          | -                                                        |
-| design | artifact | passed  | 2026-03-29 | reviews/archived/artifact-design-review-2026-03-29-v2.md |
+| Scope  | Type     | Status   | Date       | Artifact                                                 |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                        |
+| p02    | code     | pending  | -          | -                                                        |
+| p03    | code     | pending  | -          | -                                                        |
+| final  | code     | received | 2026-03-29 | reviews/final-review-2026-03-29.md                       |
+| spec   | artifact | pending  | -          | -                                                        |
+| design | artifact | passed   | 2026-03-29 | reviews/archived/artifact-design-review-2026-03-29-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
