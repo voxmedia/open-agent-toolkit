@@ -453,14 +453,14 @@ git commit -m "fix(p04-t02): use resolved base branch in gh pr create"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                 |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                        |
-| p02    | code     | pending         | -          | -                                                        |
-| p03    | code     | pending         | -          | -                                                        |
-| final  | code     | fixes_completed | 2026-03-29 | reviews/archived/final-review-2026-03-29.md              |
-| spec   | artifact | pending         | -          | -                                                        |
-| design | artifact | passed          | 2026-03-29 | reviews/archived/artifact-design-review-2026-03-29-v2.md |
+| Scope  | Type     | Status   | Date       | Artifact                                                 |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                        |
+| p02    | code     | pending  | -          | -                                                        |
+| p03    | code     | pending  | -          | -                                                        |
+| final  | code     | received | 2026-03-29 | reviews/final-review-2026-03-29-v2.md                    |
+| spec   | artifact | pending  | -          | -                                                        |
+| design | artifact | passed   | 2026-03-29 | reviews/archived/artifact-design-review-2026-03-29-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
