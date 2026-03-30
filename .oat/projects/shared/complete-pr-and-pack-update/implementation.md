@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-30
-oat_current_task_id: p02-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | pending  | 2     | 0/2       |
+| Phase 2 | complete | 2     | 2/2       |
 
-**Total:** 2/4 tasks completed
+**Total:** 4/4 tasks completed
 
 ---
 
@@ -48,6 +48,7 @@ oat_generated: false
 **Key files touched:**
 
 - `.oat/templates/state.md` - add canonical PR tracking fields
+- `packages/cli/assets/templates/state.md` - keep bundled CLI template assets aligned with the canonical state template
 - `.agents/skills/oat-project-pr-final/SKILL.md` - define `ready` versus `open` PR states
 - `.agents/skills/oat-project-complete/SKILL.md` - suppress duplicate PR prompting when state already tracks an open PR
 - `packages/cli/src/commands/project/new/scaffold.test.ts` - assert scaffolded state includes PR fields
@@ -80,6 +81,7 @@ oat_generated: false
 **Files changed:**
 
 - `.oat/templates/state.md` - add tracked PR metadata fields
+- `packages/cli/assets/templates/state.md` - propagate the state template changes into the bundled CLI assets
 - `.agents/skills/oat-project-pr-final/SKILL.md` - write and maintain PR status/url
 - `packages/cli/src/commands/project/new/scaffold.test.ts` - lock scaffold/template PR-field coverage into the CLI test suite
 
@@ -94,6 +96,7 @@ oat_generated: false
 
 - Keep `oat_phase_status` as routing state; use new PR fields as existence state.
 - Keep the first task scoped to template and lifecycle-contract changes; defer prompt suppression behavior to `p01-t02`.
+- A follow-up commit (`0abb79b`) synced the tracked bundled CLI state template asset after the local CLI bundle step surfaced it as stale.
 
 **Issues Encountered:**
 
@@ -132,28 +135,94 @@ oat_generated: false
 
 ## Phase 2: Reconcile Missing Tools for Installed Packs
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-03-30
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- `oat tools update --pack <pack>` and `oat tools update --all` now reconcile missing bundled skills and agents for packs that are already installed in a given scope.
+- Name-targeted updates remain update-only, so the new reconciliation behavior is limited to pack and all targets.
+- Core-pack refresh behavior now also updates `.oat/docs` when core tooling is touched through `--all`, and the docs now describe the new reconciliation semantics.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/tools/update/update-tools.ts` - synthesize missing bundled members for installed packs during pack/all updates
+- `packages/cli/src/commands/tools/update/update-tools.test.ts` - lock reconciliation behavior into unit coverage
+- `packages/cli/src/commands/tools/update/index.ts` - refresh core docs when `--all` updates bundled core tooling
+- `packages/cli/src/commands/tools/update/index.test.ts` - verify core docs refresh decision logic
+- `apps/oat-docs/docs/guide/tool-packs.md` - document pack reconciliation and core docs refresh behavior
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- update-tools`
+- Result: pass
+- Run: `pnpm --filter @tkstang/oat-cli test`
+- Result: pass
+- Run: `pnpm --filter @tkstang/oat-cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Keep installed-pack reconciliation internal to `tools update`; do not change `tools list` or `tools outdated` behavior in this pass.
 
 ### Task p02-t01: Extend `oat tools update` to reconcile missing bundled members for installed packs
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 67a2d99
 
 **Notes:**
 
 - Preserve name-based update behavior; only pack and all targets should reconcile missing bundled members.
 
+**Outcome (required when completed):**
+
+- `updateTools` now expands already-installed packs to include newly added bundled members before evaluating pack and all updates.
+- Reconciliation is scope-aware and only installs missing members for packs that already have installed presence in that same scope.
+- Direct name updates still target only the named installed tool and do not backfill pack siblings.
+
+**Files changed:**
+
+- `packages/cli/src/commands/tools/update/update-tools.ts` - add installed-pack expansion and missing-member synthesis
+- `packages/cli/src/commands/tools/update/update-tools.test.ts` - cover targeted pack reconciliation and `--all` scope behavior
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- update-tools`
+- Result: pass
+- Run: `pnpm --filter @tkstang/oat-cli lint && pnpm --filter @tkstang/oat-cli type-check`
+- Result: pass
+
 ---
 
 ### Task p02-t02: Cover reconciliation edge cases and core pack side effects
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 026e90f
 
 **Notes:**
 
 - Add tests for scope boundaries, core docs refresh, and newly added bundled members.
+
+**Outcome (required when completed):**
+
+- Core docs refresh logic is now testable in isolation and runs for `--all` whenever bundled core tooling is updated or reconciled.
+- Tool-pack docs now explicitly describe pack reconciliation and the `.oat/docs` refresh behavior.
+- Package-level verification covers both reconciliation semantics and the command entrypoint side effects.
+
+**Files changed:**
+
+- `packages/cli/src/commands/tools/update/index.ts` - add `shouldRefreshCoreDocs` and reuse it from the command entrypoint
+- `packages/cli/src/commands/tools/update/index.test.ts` - assert the core docs refresh decision matrix
+- `apps/oat-docs/docs/guide/tool-packs.md` - clarify update semantics for installed packs
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test`
+- Result: pass
+- Run: `pnpm --filter @tkstang/oat-cli type-check`
+- Result: pass
 
 ---
 
@@ -174,12 +243,12 @@ Chronological log of implementation progress.
 
 ### 2026-03-30
 
-**Session Start:** {time}
+**Session Start:** 14:38:42 CDT
 
 - [x] p01-t01: Add explicit PR metadata to project state and final PR flow - d284019
 - [x] p01-t02: Skip completion PR prompt when project state already tracks an open PR - 4533adc
-- [ ] p02-t01: Extend `oat tools update` to reconcile missing bundled members for installed packs
-- [ ] p02-t02: Cover reconciliation edge cases and core pack side effects
+- [x] p02-t01: Extend `oat tools update` to reconcile missing bundled members for installed packs - 67a2d99
+- [x] p02-t02: Cover reconciliation edge cases and core pack side effects - 026e90f
 
 **What changed (high level):**
 
@@ -187,21 +256,25 @@ Chronological log of implementation progress.
 - Added explicit PR state fields to the canonical state template and scaffold coverage.
 - Clarified `oat-project-pr-final` so PR state and review posture are distinct concepts.
 - Updated `oat-project-complete` so it does not ask to open a PR when state already tracks one.
+- Extended `oat tools update` so pack/all targets reconcile newly added bundled members for already-installed packs.
+- Refreshed core-docs update behavior so `--all` also updates `.oat/docs` when core tooling is touched.
+- Synced the tracked bundled CLI state template asset so published CLI assets match the canonical template.
 
 **Decisions:**
 
 - Use explicit PR state fields in `state.md` instead of inferring PR existence from `pr_open` alone.
 - Reconcile missing bundled tools only for packs already installed in a given scope.
+- Keep the stale bundled template sync as a separate follow-up commit rather than hiding it inside the OAT bookkeeping commit.
 
 **Follow-ups / TODO:**
 
-- None yet.
+- Final review required before PR creation.
 
 **Blockers:**
 
 - None.
 
-**Session End:** {time}
+**Session End:** 14:38:42 CDT
 
 ---
 
@@ -209,7 +282,31 @@ Chronological log of implementation progress.
 
 **Session Start:** {time}
 
-{Continue log...}
+**Session Start:** 14:38:42 CDT
+
+- [x] p02-t01: Extend `oat tools update` to reconcile missing bundled members for installed packs - 67a2d99
+- [x] p02-t02: Cover reconciliation edge cases and core pack side effects - 026e90f
+
+**What changed (high level):**
+
+- Added installed-pack reconciliation so pack and all updates synthesize missing bundled tools from the canonical pack manifests.
+- Kept direct name updates unchanged to avoid broadening single-tool update behavior.
+- Added core-docs refresh coverage for `--all` and documented the resulting semantics.
+
+**Decisions:**
+
+- Detect installed packs from existing bundled members within a scope instead of introducing a separate persisted pack registry.
+- Extract the core-docs refresh predicate into a helper so the command side effect is directly testable.
+
+**Follow-ups / TODO:**
+
+- Final review required before PR creation.
+
+**Blockers:**
+
+- None.
+
+**Session End:** 14:38:42 CDT
 
 ---
 
@@ -228,7 +325,7 @@ Track test execution during implementation.
 | Phase | Tests Run                                          | Passed | Failed | Coverage |
 | ----- | -------------------------------------------------- | ------ | ------ | -------- |
 | 1     | scaffold, review-skill-contracts, lint, type-check | pass   | 0      | -        |
-| 2     | -                                                  | -      | -      | -        |
+| 2     | update-tools, full package test suite, type-check  | pass   | 0      | -        |
 
 ## Final Summary (for PR/docs)
 
@@ -236,22 +333,38 @@ Track test execution during implementation.
 
 - {capability 1}
 - {capability 2}
+- Explicit project PR-tracking state via `oat_pr_status` and `oat_pr_url`
+- `oat-project-complete` suppression of the duplicate PR prompt when an open PR is already tracked
+- Installed-pack reconciliation for `oat tools update --pack <pack>` and `oat tools update --all`
+- Core docs refresh during `oat tools update --all` when bundled core tooling is updated or reconciled
+- Bundled CLI state-template assets refreshed to match the canonical project template
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Project completion no longer asks whether to open a PR when project state already tracks an open PR, and it can surface the tracked PR URL instead.
+- Pack and all tool updates now backfill newly introduced bundled skills and agents for packs that are already installed in the current scope.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.oat/templates/state.md` - canonical PR-tracking fields for new projects
+- `packages/cli/assets/templates/state.md` - bundled CLI copy of the project state template
+- `.agents/skills/oat-project-pr-final/SKILL.md` - final PR flow state transitions
+- `.agents/skills/oat-project-complete/SKILL.md` - conditional PR prompting during completion
+- `packages/cli/src/commands/tools/update/update-tools.ts` - installed-pack reconciliation logic
+- `packages/cli/src/commands/tools/update/index.ts` - core docs refresh decision logic
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm --filter @tkstang/oat-cli test -- scaffold`
+- `pnpm --filter @tkstang/oat-cli test -- review-skill-contracts`
+- `pnpm --filter @tkstang/oat-cli test -- update-tools`
+- `pnpm --filter @tkstang/oat-cli test`
+- `pnpm --filter @tkstang/oat-cli lint`
+- `pnpm --filter @tkstang/oat-cli type-check`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- None. The implementation matched the imported plan; the only notable shaping choice was extracting a helper for core docs refresh so the command-side effect stays testable.
 
 ## References
 
