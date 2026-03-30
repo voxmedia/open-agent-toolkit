@@ -53,13 +53,13 @@ If you catch yourself:
   OAT ▸ NEXT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Print each step indicator at the **start** of the corresponding step (not all at once). This gives the user real-time progress:
-  - Step 0: `[1/6] Resolving active project…`
-  - Step 1: `[2/6] Reading state.md + artifact frontmatter…`
-  - Step 2: `[3/6] Classifying artifact state (boundary detection)…`
-  - Step 4: `[4/6] Checking for unprocessed reviews…`
-  - Step 3/5: `[5/6] Routing to target skill…`
-  - Step 6: `[6/6] Announcing + invoking {target-skill}…`
+- Print each step indicator at the **start** of that step, not all at once upfront:
+  - `[1/6] Resolving active project…`
+  - `[2/6] Reading project state…`
+  - `[3/6] Classifying artifact state…`
+  - `[4/6] Checking for unprocessed reviews…`
+  - `[5/6] Routing to target skill…`
+  - `[6/6] Invoking {target-skill}…`
 
 ## Behavioral Notes
 
