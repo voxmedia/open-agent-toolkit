@@ -43,7 +43,7 @@ Project scope is used for project workflows and repo-local sync state. User scop
 
 | Path                     | Purpose                                          | Notes                                                                                                   |
 | ------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `.oat/config.json`       | Shared repo runtime config for non-sync settings | Includes `worktrees.root`, `projects.root`                                                              |
+| `.oat/config.json`       | Shared repo runtime config for non-sync settings | Includes `worktrees.root`, `projects.root`, `git.defaultBranch`                                         |
 | `.oat/config.local.json` | Local per-developer runtime state                | Gitignored; includes `activeProject`, `lastPausedProject`, `activeIdea`                                 |
 | `.oat/projects/`         | OAT project artifacts                            | `shared`, `local`, `archived` scopes                                                                    |
 | `.oat/ideas/`            | Project-level ideas store                        | Often gitignored                                                                                        |
@@ -96,9 +96,11 @@ Current schema keys:
 | `documentation.config`                      | `string`   | -                        | Path to the documentation framework config file (e.g., `mkdocs.yml`, `next.config.js`)                                                                                                    |
 | `documentation.index`                       | `string`   | -                        | Path to the docs surface entry point (e.g., `index.md` for Fumadocs, `mkdocs.yml` for MkDocs). Set by `oat docs init` and updated by `oat docs generate-index`.                           |
 | `documentation.requireForProjectCompletion` | `boolean`  | `false`                  | When `true`, OAT project completion gates require documentation to be updated                                                                                                             |
+| `git.defaultBranch`                         | `string`   | `"main"`                 | Default branch for PR creation. Auto-detected during `oat init` via `gh repo view` or `origin/HEAD`. Used by `oat-project-pr-final` and `oat-project-pr-progress`.                        |
 | `autoReviewAtCheckpoints`                   | `boolean`  | `false`                  | When `true`, completing a plan phase checkpoint automatically spawns a subagent code review. Can be overridden per-project via `oat_auto_review_at_checkpoints` in `plan.md` frontmatter. |
 
 All `documentation.*` keys are managed via `oat config get/set` and are set automatically by `oat docs init`.
+The `git.defaultBranch` key is auto-detected during `oat init` and can be overridden via `oat config set git.defaultBranch <branch>`.
 
 Example:
 

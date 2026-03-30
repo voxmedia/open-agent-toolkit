@@ -326,6 +326,12 @@ flowchart LR
   Review -->|Ad-hoc local| AdHocReview["oat-review-provide + oat-review-receive"]
   Review -->|Ad-hoc remote| AdHocReviewRemote["oat-review-receive-remote"]
   ProjectReview --> PR["PR artifacts: oat-project-pr-progress / oat-project-pr-final"]
+  Next["oat-project-next\n(auto-router)"] -.->|"reads state,\ninvokes next skill"| SpecDriven
+  Next -.-> Quick
+  Next -.-> Import
+  Next -.-> ImplementSeq
+  Next -.-> Review
+  Next -.-> PR
 ```
 
 ### Choose a lane
@@ -370,7 +376,8 @@ flowchart LR
 ### Shared workflow options
 
 1. Routing and next-step checks:
-   - `oat-project-progress` (includes drift detection that suggests reconciliation when manual commits are detected)
+   - `oat-project-next` — reads project state and invokes the correct next skill automatically (one command to continue working)
+   - `oat-project-progress` — read-only diagnostic with drift detection that suggests reconciliation when manual commits are detected
 2. Reconciliation (manual commit → task mapping):
    - `oat-project-reconcile` — analyzes untracked commits, maps them to planned tasks using five signals, and updates tracking artifacts after human confirmation
 3. Execution mode persistence:
