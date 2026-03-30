@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
@@ -12,10 +13,15 @@ export interface OatDocumentationConfig {
   requireForProjectCompletion?: boolean;
 }
 
+export interface OatGitConfig {
+  defaultBranch?: string;
+}
+
 export interface OatConfig {
   version: number;
   worktrees?: { root: string };
   projects?: { root: string };
+  git?: OatGitConfig;
   documentation?: OatDocumentationConfig;
   localPaths?: string[];
   autoReviewAtCheckpoints?: boolean;
@@ -127,6 +133,19 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     parsed.projects.root.trim()
   ) {
     next.projects = { root: parsed.projects.root.trim() };
+  }
+
+  if (isRecord(parsed.git)) {
+    const git: OatGitConfig = {};
+    if (
+      typeof parsed.git.defaultBranch === 'string' &&
+      parsed.git.defaultBranch.trim()
+    ) {
+      git.defaultBranch = parsed.git.defaultBranch.trim();
+    }
+    if (Object.keys(git).length > 0) {
+      next.git = git;
+    }
   }
 
   if (isRecord(parsed.documentation)) {
@@ -403,4 +422,35 @@ export async function clearActiveIdea(repoRoot: string): Promise<void> {
     ...localConfig,
     activeIdea: null,
   });
+}
+
+export function detectDefaultBranch(repoRoot: string): string {
+  try {
+    const branch = execSync(
+      'gh repo view --json defaultBranchRef --jq .defaultBranchRef.name',
+      {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        timeout: 10_000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      },
+    ).trim();
+    if (branch) return branch;
+  } catch {
+    // gh not available or not authenticated — fall through
+  }
+
+  try {
+    const ref = execSync('git rev-parse --abbrev-ref origin/HEAD', {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      timeout: 5_000,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+    if (ref.startsWith('origin/')) return ref.replace('origin/', '');
+  } catch {
+    // origin/HEAD not set — fall through
+  }
+
+  return 'main';
 }

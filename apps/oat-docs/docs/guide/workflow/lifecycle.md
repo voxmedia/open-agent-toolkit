@@ -21,6 +21,8 @@ OAT lifecycle order:
 10. Documentation sync (`oat-project-document`) — optional; reads project artifacts to identify docs needing updates
 11. Complete (`oat-project-complete`)
 
+**Shortcut:** `oat-project-next` reads project state and invokes the correct next skill automatically — use it instead of remembering which skill comes next. Complements `oat-project-progress` (which is read-only diagnostic).
+
 ## Lifecycle Map
 
 ```mermaid

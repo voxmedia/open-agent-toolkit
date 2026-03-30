@@ -18,6 +18,7 @@ export const WORKFLOW_SKILLS = [
   'oat-project-implement',
   'oat-project-import-plan',
   'oat-project-new',
+  'oat-project-next',
   'oat-project-open',
   'oat-project-plan',
   'oat-project-plan-writing',

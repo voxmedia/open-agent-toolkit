@@ -296,6 +296,7 @@ Workflow:
 
 Status:
   oat-project-progress          - Check project progress (this skill)
+  oat-project-next              - Continue working — routes to the correct next skill automatically
 
 Reviews:
   oat-project-review-provide    - Request a fresh-context code/artifact review (writes review artifact)
