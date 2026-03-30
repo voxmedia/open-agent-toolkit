@@ -62,11 +62,15 @@ Ask all user questions at once so the user can answer them in a single interacti
 - Codex: use structured user-input tooling when available in the current Codex host/runtime
 - Fallback: present as a plain-text conversational prompt
 
+Before asking the batched questions, read `oat_pr_status` and `oat_pr_url` from `state.md` frontmatter.
+
 **Questions to ask (in a single prompt):**
 
 1. **Confirm completion:** "Ready to mark **{PROJECT_NAME}** as complete?"
 2. **Archive** (only if `IS_SHARED_PROJECT` is `true`): "Archive the project after completion?"
-3. **Open PR:** "Open a PR in GitHub after generating the PR description?"
+3. **Open PR:** "Open a PR in GitHub after generating the PR description?" — ask this only when no tracked open PR already exists.
+
+If `oat_pr_status` is `open`, do not ask the Open PR question. Set `SHOULD_OPEN_PR="false"` and treat the existing PR as already tracked.
 
 Present all applicable questions together. Example combined prompt:
 
@@ -80,6 +84,8 @@ Ready to complete project **{PROJECT_NAME}**?
 If the user declines the completion confirmation, exit gracefully.
 
 Store the answers as `SHOULD_ARCHIVE` and `SHOULD_OPEN_PR` for use in later steps.
+
+If `oat_pr_url` is present, show it in the completion summary.
 
 ### Step 3: Check Completion Gates
 
@@ -445,3 +451,4 @@ Show user:
 - If archived: "Archived location: **{PROJECT_PATH}**"
 - Include commit hash and push result for the bookkeeping changes.
 - If PR was opened: include the PR URL.
+- If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.

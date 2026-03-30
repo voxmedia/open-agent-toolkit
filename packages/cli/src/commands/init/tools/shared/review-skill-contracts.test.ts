@@ -21,4 +21,19 @@ describe('review skill contracts', () => {
       'missing `spec.md` must not be treated as a project review gate failure for `artifact design`',
     );
   });
+
+  it('requires project completion to skip PR prompting when an open PR is tracked', () => {
+    const skillPath = repoFilePath(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const content = readFileSync(skillPath, 'utf8');
+
+    expect(content).toContain('oat_pr_status');
+    expect(content).toContain(
+      'If `oat_pr_status` is `open`, do not ask the Open PR question',
+    );
+    expect(content).toContain(
+      'If `oat_pr_url` is present, show it in the completion summary',
+    );
+  });
 });
