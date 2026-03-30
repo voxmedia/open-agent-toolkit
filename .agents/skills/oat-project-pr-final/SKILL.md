@@ -351,11 +351,14 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 
 ### Step 6: Update Project State to pr_open
 
-After writing the PR artifact and creating the PR, update `"$PROJECT_PATH/state.md"` so project routing reflects that the PR is open and awaiting human review.
+After writing the PR artifact and creating the PR, update `"$PROJECT_PATH/state.md"` so project routing reflects both the actual PR state and the `pr_open` review posture.
 
 **Frontmatter updates:**
 
 - `oat_phase_status: pr_open`
+- `oat_pr_status: ready` after the PR artifact exists but before `gh pr create` succeeds
+- `oat_pr_status: open` after PR creation succeeds
+- `oat_pr_url: "{created PR URL}"` after PR creation succeeds; leave `null` when PR still needs to be opened manually
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
 **Content updates:**

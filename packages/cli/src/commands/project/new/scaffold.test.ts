@@ -31,6 +31,8 @@ async function seedTemplates(repoRoot: string): Promise<void> {
             'oat_phase: {OAT_PHASE}',
             'oat_phase_status: in_progress',
             'oat_workflow_mode: {OAT_WORKFLOW_MODE}',
+            'oat_pr_status: null',
+            'oat_pr_url: null',
             'oat_project_created: null',
             'oat_project_completed: null',
             'oat_project_state_updated: null',
@@ -467,6 +469,8 @@ describe('scaffoldProject', () => {
       join(repoRoot, '.oat', 'projects', 'shared', 'import-mode', 'state.md'),
       'utf8',
     );
+    expect(state).toContain('oat_pr_status: null');
+    expect(state).toContain('oat_pr_url: null');
     expect(state).toContain('oat_workflow_mode: import');
     expect(state).toContain('oat_hill_checkpoints: []');
     expect(state).toContain('oat_phase: plan');
@@ -575,5 +579,16 @@ describe('scaffoldProject', () => {
     expect(discoveryTemplate).toMatch(
       /design\.md.*optional|optional.*design\.md/i,
     );
+  });
+
+  it('keeps the repo state template ready for explicit PR tracking', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const stateTemplate = await readFile(
+      join(repoRoot, '.oat', 'templates', 'state.md'),
+      'utf8',
+    );
+
+    expect(stateTemplate).toContain('oat_pr_status: null');
+    expect(stateTemplate).toContain('oat_pr_url: null');
   });
 });
