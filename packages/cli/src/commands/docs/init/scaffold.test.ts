@@ -354,7 +354,7 @@ describe('scaffoldDocsApp', () => {
       await mkdir(pkgDir, { recursive: true });
       await writeFile(
         join(pkgDir, 'package.json'),
-        JSON.stringify({ name: `@tkstang/oat-${pkg}`, version: '0.0.3' }),
+        JSON.stringify({ name: `@tkstang/oat-${pkg}`, version: '0.0.4' }),
         'utf8',
       );
     }

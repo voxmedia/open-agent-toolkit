@@ -54,7 +54,7 @@ function createAdapter(
 function createManifest(entries: ManifestEntry[]): Manifest {
   return {
     version: 1,
-    oatVersion: '0.0.3',
+    oatVersion: '0.0.4',
     entries,
     lastUpdated: '2026-02-14T00:00:00.000Z',
   };
