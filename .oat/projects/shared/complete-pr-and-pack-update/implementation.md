@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-30
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -24,12 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | complete | 2     | 2/2       |
+| Phase    | Status   | Tasks | Completed |
+| -------- | -------- | ----- | --------- |
+| Phase 1  | complete | 2     | 2/2       |
+| Phase 2  | complete | 2     | 2/2       |
+| Review 1 | pending  | 4     | 0/4       |
 
-**Total:** 4/4 tasks completed
+**Total:** 4/8 tasks completed
 
 ---
 
@@ -226,6 +227,55 @@ oat_generated: false
 
 ---
 
+## Phase p-rev1: Review Fixes from Final Review
+
+**Status:** pending
+**Started:** -
+
+### Task prev1-t01: (review) Add negative coverage for name-targeted updates staying update-only
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- The implementation already avoids pack reconciliation for `target.kind === "name"`; this task is about proving that contract with a targeted regression test.
+
+---
+
+### Task prev1-t02: (review) Distinguish synthesized installs from versioned updates in CLI output
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Prefer a small CLI-output change over introducing extra manifest loading into the reporting path.
+
+---
+
+### Task prev1-t03: (review) Remove final-summary placeholder bullets from implementation summary
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- This is bookkeeping-only but it affects downstream PR summary quality, so keep it in the review-fix pass.
+
+---
+
+### Task prev1-t04: (review) Consolidate duplicated implementation log entry
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Keep the implementation history readable without losing the fact that the review cycle reopened the project.
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -310,6 +360,34 @@ Chronological log of implementation progress.
 
 ---
 
+### Review Received: final
+
+**Date:** 2026-03-30
+**Review artifact:** reviews/archived/final-review-2026-03-30.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`, `prev1-t04`
+
+**Disposition notes:**
+
+- Important findings `I1` and `I2` were converted to review-fix tasks.
+- Minor findings `m1` and `m2` were explicitly approved for task conversion by the user rather than deferred.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update the final review row status to `fixes_completed`
+- Re-run `oat-project-review-provide` for final code review, then `oat-project-review-receive`, to reach `passed`
+
+---
+
 ## Deviations from Plan
 
 Document any deviations from the original plan.
@@ -326,6 +404,7 @@ Track test execution during implementation.
 | ----- | -------------------------------------------------- | ------ | ------ | -------- |
 | 1     | scaffold, review-skill-contracts, lint, type-check | pass   | 0      | -        |
 | 2     | update-tools, full package test suite, type-check  | pass   | 0      | -        |
+| rev1  | -                                                  | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 

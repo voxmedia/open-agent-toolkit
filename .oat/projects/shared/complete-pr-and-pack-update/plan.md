@@ -194,19 +194,138 @@ git commit -m "test(p02-t02): cover pack reconciliation behavior"
 
 ---
 
+## Phase p-rev1: Review Fixes from Final Review
+
+### Task prev1-t01: (review) Add negative coverage for name-targeted updates staying update-only
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/update/update-tools.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: The final review identified that the imported plan explicitly required proof that `oat tools update <name>` does not reconcile uninstalled siblings from the same pack, but the current tests never exercise that negative case.
+Location: `packages/cli/src/commands/tools/update/update-tools.test.ts`
+
+**Step 2: Implement fix**
+
+Add a name-targeted update test where one member of a pack is installed, another pack member is missing, and the update target is the installed tool by name. Assert that only the named tool is updated and no sibling pack member is copied into the scope.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @tkstang/oat-cli test -- update-tools`
+Expected: The new negative test passes and the targeted update path remains update-only.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/tools/update/update-tools.test.ts
+git commit -m "test(prev1-t01): cover name-targeted updates staying scoped"
+```
+
+---
+
+### Task prev1-t02: (review) Distinguish synthesized installs from versioned updates in CLI output
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/update/index.ts`
+- Modify: `packages/cli/src/commands/tools/update/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Synthesized missing bundled members currently render as `? -> ?` in update output, even though they are being newly installed rather than updated from one version to another.
+Location: `packages/cli/src/commands/tools/update/index.ts:149`
+
+**Step 2: Implement fix**
+
+Adjust the CLI output so synthesized tools with no installed version are presented as installs or additions rather than as ordinary version-to-version updates. Add focused coverage that locks the new output semantics down.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @tkstang/oat-cli test -- update-tools`
+Expected: The CLI output reflects installs distinctly and the update command tests pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/tools/update/index.ts packages/cli/src/commands/tools/update/index.test.ts
+git commit -m "fix(prev1-t02): clarify synthesized install output"
+```
+
+---
+
+### Task prev1-t03: (review) Remove final-summary placeholder bullets from implementation summary
+
+**Files:**
+
+- Modify: `implementation.md`
+
+**Step 1: Understand the issue**
+
+Review finding: `implementation.md` still contains template bullets `{capability 1}` and `{capability 2}` in the Final Summary section, which can leak into downstream PR-generation output.
+Location: `implementation.md:333`
+
+**Step 2: Implement fix**
+
+Remove the leftover placeholder bullets while preserving the real shipped-summary content that follows them.
+
+**Step 3: Verify**
+
+Run: `rg -n "\\{capability [12]\\}" .oat/projects/shared/complete-pr-and-pack-update/implementation.md`
+Expected: No placeholder capability bullets remain.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/complete-pr-and-pack-update/implementation.md
+git commit -m "chore(prev1-t03): remove summary placeholders"
+```
+
+---
+
+### Task prev1-t04: (review) Consolidate duplicated implementation log entry
+
+**Files:**
+
+- Modify: `implementation.md`
+
+**Step 1: Understand the issue**
+
+Review finding: The implementation log repeats part of the same session, which makes the review trail noisier than necessary.
+Location: `implementation.md:282`
+
+**Step 2: Implement fix**
+
+Consolidate the duplicated log entry or clearly distinguish it so the implementation history reflects one coherent sequence of work.
+
+**Step 3: Verify**
+
+Run: `sed -n '220,340p' .oat/projects/shared/complete-pr-and-pack-update/implementation.md`
+Expected: The implementation log no longer duplicates the same session content.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/complete-pr-and-pack-update/implementation.md
+git commit -m "chore(prev1-t04): clean implementation log duplication"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                           |
-| ------ | -------- | -------- | ---------- | ---------------------------------- |
-| p01    | code     | pending  | -          | -                                  |
-| p02    | code     | pending  | -          | -                                  |
-| final  | code     | received | 2026-03-30 | reviews/final-review-2026-03-30.md |
-| spec   | artifact | pending  | -          | -                                  |
-| design | artifact | pending  | -          | -                                  |
+| Scope  | Type     | Status      | Date       | Artifact                                    |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------- |
+| p01    | code     | pending     | -          | -                                           |
+| p02    | code     | pending     | -          | -                                           |
+| final  | code     | fixes_added | 2026-03-30 | reviews/archived/final-review-2026-03-30.md |
+| spec   | artifact | pending     | -          | -                                           |
+| design | artifact | pending     | -          | -                                           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -225,10 +344,11 @@ git commit -m "test(p02-t02): cover pack reconciliation behavior"
 
 - Phase 1: 2 tasks - Persist PR state and remove redundant completion prompting when a PR is already tracked
 - Phase 2: 2 tasks - Reconcile newly added bundled tools for installed packs and lock behavior down with tests
+- Phase p-rev1: 4 tasks - Address final review findings before re-review
 
-**Total: 4 tasks**
+**Total: 8 tasks**
 
-Ready for code review and merge.
+Ready for review-fix implementation, then re-review.
 
 ---
 
