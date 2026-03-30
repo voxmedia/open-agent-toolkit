@@ -410,8 +410,6 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
 - Explicit project PR-tracking state via `oat_pr_status` and `oat_pr_url`
 - `oat-project-complete` suppression of the duplicate PR prompt when an open PR is already tracked
 - Installed-pack reconciliation for `oat tools update --pack <pack>` and `oat tools update --all`
