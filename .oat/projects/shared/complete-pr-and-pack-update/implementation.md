@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-30
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | -------- | -------- | ----- | --------- |
 | Phase 1  | complete | 2     | 2/2       |
 | Phase 2  | complete | 2     | 2/2       |
-| Review 1 | pending  | 4     | 0/4       |
+| Review 1 | complete | 4     | 4/4       |
 
-**Total:** 4/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ---
 
@@ -229,50 +229,133 @@ oat_generated: false
 
 ## Phase p-rev1: Review Fixes from Final Review
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-03-30
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Final review fixes now cover the missing negative test for name-targeted updates, the misleading synthesized-install CLI output, and the two implementation tracker cleanup findings.
+- The project is back to an implementation-complete state and ready for final code re-review.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/tools/update/update-tools.test.ts` - add the missing negative coverage for name-targeted updates
+- `packages/cli/src/commands/tools/update/index.ts` - distinguish synthesized installs from ordinary updates in CLI output
+- `packages/cli/src/commands/tools/update/index.test.ts` - lock the new output message behavior into unit tests
+- `implementation.md` - remove summary placeholders and consolidate the duplicated log entry
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- update-tools index`
+- Result: pass
+- Run: `pnpm --filter @tkstang/oat-cli type-check`
+- Result: pass
+- Run: `rg -n "\\{capability [12]\\}" .oat/projects/shared/complete-pr-and-pack-update/implementation.md`
+- Result: pass (no matches)
+
+**Notes / Decisions:**
+
+- Treat the two minor findings as first-class cleanup tasks because they affect downstream PR-generation quality and project traceability.
 
 ### Task prev1-t01: (review) Add negative coverage for name-targeted updates staying update-only
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 28a9d1d
 
 **Notes:**
 
 - The implementation already avoids pack reconciliation for `target.kind === "name"`; this task is about proving that contract with a targeted regression test.
 
+**Outcome (required when completed):**
+
+- Added a negative regression test that proves a name-targeted update stays scoped to the named tool even when sibling pack members are missing.
+
+**Files changed:**
+
+- `packages/cli/src/commands/tools/update/update-tools.test.ts` - add targeted update-only coverage under pack-reconciliation conditions
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- update-tools index`
+- Result: pass
+
 ---
 
 ### Task prev1-t02: (review) Distinguish synthesized installs from versioned updates in CLI output
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7b54625
 
 **Notes:**
 
 - Prefer a small CLI-output change over introducing extra manifest loading into the reporting path.
 
+**Outcome (required when completed):**
+
+- Synthesized missing pack members now display as installs instead of version-to-version updates, avoiding the misleading `? -> ?` output.
+- Added helper coverage so the output distinction remains directly testable.
+
+**Files changed:**
+
+- `packages/cli/src/commands/tools/update/index.ts` - format synthesized missing tools as installs
+- `packages/cli/src/commands/tools/update/index.test.ts` - assert install-versus-update messaging
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- update-tools index`
+- Result: pass
+- Run: `pnpm --filter @tkstang/oat-cli type-check`
+- Result: pass
+
 ---
 
 ### Task prev1-t03: (review) Remove final-summary placeholder bullets from implementation summary
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5a8ea88
 
 **Notes:**
 
 - This is bookkeeping-only but it affects downstream PR summary quality, so keep it in the review-fix pass.
 
+**Outcome (required when completed):**
+
+- Removed the leftover summary placeholders so downstream PR-generation artifacts do not inherit template text.
+
+**Files changed:**
+
+- `implementation.md` - remove `{capability 1}` and `{capability 2}` placeholders from the final summary
+
+**Verification:**
+
+- Run: `rg -n "\\{capability [12]\\}" .oat/projects/shared/complete-pr-and-pack-update/implementation.md`
+- Result: pass (no matches)
+
 ---
 
 ### Task prev1-t04: (review) Consolidate duplicated implementation log entry
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0673fc8
 
 **Notes:**
 
 - Keep the implementation history readable without losing the fact that the review cycle reopened the project.
+
+**Outcome (required when completed):**
+
+- Consolidated the duplicated implementation log section so the review trail is easier to follow.
+
+**Files changed:**
+
+- `implementation.md` - remove the duplicated session block while preserving the review-received entry
+
+**Verification:**
+
+- Run: `sed -n '300,360p' .oat/projects/shared/complete-pr-and-pack-update/implementation.md`
+- Result: pass
 
 ---
 
@@ -344,6 +427,7 @@ Chronological log of implementation progress.
 
 - Important findings `I1` and `I2` were converted to review-fix tasks.
 - Minor findings `m1` and `m2` were explicitly approved for task conversion by the user rather than deferred.
+- Review-fix tasks `prev1-t01` through `prev1-t04` are complete; the final review row should now move to `fixes_completed` pending re-review.
 
 **Next:** Execute fix tasks via the `oat-project-implement` skill.
 
@@ -370,7 +454,7 @@ Track test execution during implementation.
 | ----- | -------------------------------------------------- | ------ | ------ | -------- |
 | 1     | scaffold, review-skill-contracts, lint, type-check | pass   | 0      | -        |
 | 2     | update-tools, full package test suite, type-check  | pass   | 0      | -        |
-| rev1  | -                                                  | -      | -      | -        |
+| rev1  | update-tools, index, type-check, rg verification   | pass   | 0      | -        |
 
 ## Final Summary (for PR/docs)
 
