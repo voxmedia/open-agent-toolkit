@@ -72,6 +72,29 @@ describe('updateTools', () => {
     expect(deps.copies[0]!.source).toContain('skills/oat-idea-new');
   });
 
+  it('keeps name-targeted updates scoped to the named tool', async () => {
+    const tool = createTool({ name: IDEA_SKILLS[0] });
+    const deps = createDeps({ project: [tool] });
+
+    const result = await updateTools(
+      { kind: 'name', name: IDEA_SKILLS[0]! },
+      ['project'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(result.updated.map((entry) => entry.name)).toEqual([IDEA_SKILLS[0]]);
+    expect(deps.copies).toHaveLength(1);
+    expect(deps.copies[0]!.source).toContain(`skills/${IDEA_SKILLS[0]}`);
+    expect(
+      deps.copies.some((copy) =>
+        copy.source.includes(`skills/${IDEA_SKILLS[1]}`),
+      ),
+    ).toBe(false);
+  });
+
   it('updates a single outdated agent by name', async () => {
     const tool = createTool({
       name: 'oat-reviewer',
