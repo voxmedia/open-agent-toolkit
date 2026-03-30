@@ -22,6 +22,7 @@ import { Command } from 'commander';
 
 import {
   type UpdateTarget,
+  type UpdateResult,
   type UpdateToolsDependencies,
   updateTools,
 } from './update-tools';
@@ -100,8 +101,9 @@ export function createToolsUpdateCommand(
         dependencies,
       );
 
-      // Refresh ~/.oat/docs/ when updating the core pack (D3 requirement)
-      if (target.kind === 'pack' && target.pack === 'core' && !dryRun) {
+      // Refresh ~/.oat/docs/ when the core pack is explicitly updated or
+      // reconciled through --all (D3 requirement).
+      if (shouldRefreshCoreDocs(target, result) && !dryRun) {
         const assetsRoot = await dependencies.resolveAssetsRoot();
         const userRoot = await dependencies.resolveScopeRoot(
           'user',
@@ -167,6 +169,18 @@ export function createToolsUpdateCommand(
         logger.info('No tools to update.');
       }
     });
+}
+
+export function shouldRefreshCoreDocs(
+  target: UpdateTarget,
+  result: UpdateResult,
+): boolean {
+  if (target.kind === 'name') return false;
+  if (target.kind === 'pack') return target.pack === 'core';
+
+  return [...result.updated, ...result.current, ...result.newer].some(
+    (tool) => tool.pack === 'core',
+  );
 }
 
 function resolveTarget(

@@ -82,6 +82,7 @@ Key behavior:
 
 - Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
 - Compares installed versions against bundled versions and copies updated assets
+- For `--pack <pack>` and `--all`, an already-installed pack is reconciled to include newly added bundled skills or agents in that same scope
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
 - Reports tools that are already current, newer than bundled, or not bundled (custom)
@@ -112,6 +113,7 @@ Key behavior:
 - Core is checked by default in the `oat init tools` guided setup.
 - Installation also bundles OAT documentation to `~/.oat/docs/` for the oat-docs skill.
 - `oat tools update --pack core` refreshes both skills and `~/.oat/docs/` documentation.
+- `oat tools update --all` also refreshes `~/.oat/docs/` when an installed core pack is reconciled.
 
 ## Docs pack
 
