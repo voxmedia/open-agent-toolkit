@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-30
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,38 +24,47 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 1/2       |
-| Phase 2 | pending     | 2     | 0/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | pending  | 2     | 0/2       |
 
-**Total:** 1/4 tasks completed
+**Total:** 2/4 tasks completed
 
 ---
 
 ## Phase 1: PR Tracking at Project Completion
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-03-30
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- Add bullets during implementation.
+- Project lifecycle state now has explicit PR metadata that can distinguish real PR existence from review posture.
+- Completion flow instructions now suppress the redundant PR question when a project already tracks an open PR.
 
 **Key files touched:**
 
-- Add file entries during implementation.
+- `.oat/templates/state.md` - add canonical PR tracking fields
+- `.agents/skills/oat-project-pr-final/SKILL.md` - define `ready` versus `open` PR states
+- `.agents/skills/oat-project-complete/SKILL.md` - suppress duplicate PR prompting when state already tracks an open PR
+- `packages/cli/src/commands/project/new/scaffold.test.ts` - assert scaffolded state includes PR fields
+- `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` - assert completion skill respects tracked PR state
 
 **Verification:**
 
-- Run: `pnpm --filter @tkstang/oat-cli test -- state complete`
-- Result: pending
+- Run: `pnpm --filter @tkstang/oat-cli test -- scaffold`
+- Result: pass
+- Run: `pnpm --filter @tkstang/oat-cli test -- review-skill-contracts`
+- Result: pass
+- Run: `pnpm --filter @tkstang/oat-cli lint && pnpm --filter @tkstang/oat-cli type-check`
+- Result: pass
 
 **Notes / Decisions:**
 
-- None yet.
+- Keep PR existence state in `oat_pr_status` and `oat_pr_url`; keep `oat_phase_status: pr_open` as routing state only.
 
 ### Task p01-t01: Add explicit PR metadata to project state and final PR flow
 
@@ -94,12 +103,30 @@ oat_generated: false
 
 ### Task p01-t02: Skip completion PR prompt when project state already tracks an open PR
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4533adc
 
 **Notes:**
 
-- Update `oat-project-complete` only for the PR-question branch; preserve the rest of the completion flow.
+- Preserve the rest of the completion flow; only make the batched PR question conditional on tracked open-PR state.
+
+**Outcome (required when completed):**
+
+- `oat-project-complete` now documents PR prompting as conditional on tracked PR state instead of unconditional.
+- Completion output now prefers the tracked PR URL when a project already has an open PR.
+- A repo-level contract test now guards this behavior so future wording drift fails CI.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-complete/SKILL.md` - make the Open PR question conditional and prefer tracked PR URL output
+- `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` - assert completion skill honors `oat_pr_status` and `oat_pr_url`
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- review-skill-contracts`
+- Result: pass
+- Run: `pnpm --filter @tkstang/oat-cli lint && pnpm --filter @tkstang/oat-cli type-check`
+- Result: pass
 
 ---
 
@@ -110,7 +137,7 @@ oat_generated: false
 
 ### Task p02-t01: Extend `oat tools update` to reconcile missing bundled members for installed packs
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes:**
@@ -150,7 +177,7 @@ Chronological log of implementation progress.
 **Session Start:** {time}
 
 - [x] p01-t01: Add explicit PR metadata to project state and final PR flow - d284019
-- [ ] p01-t02: Skip completion PR prompt when project state already tracks an open PR
+- [x] p01-t02: Skip completion PR prompt when project state already tracks an open PR - 4533adc
 - [ ] p02-t01: Extend `oat tools update` to reconcile missing bundled members for installed packs
 - [ ] p02-t02: Cover reconciliation edge cases and core pack side effects
 
@@ -159,6 +186,7 @@ Chronological log of implementation progress.
 - Imported external plan into canonical OAT artifacts.
 - Added explicit PR state fields to the canonical state template and scaffold coverage.
 - Clarified `oat-project-pr-final` so PR state and review posture are distinct concepts.
+- Updated `oat-project-complete` so it does not ask to open a PR when state already tracks one.
 
 **Decisions:**
 
@@ -197,10 +225,10 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                  | Passed | Failed | Coverage |
-| ----- | -------------------------- | ------ | ------ | -------- |
-| 1     | scaffold, lint, type-check | pass   | 0      | -        |
-| 2     | -                          | -      | -      | -        |
+| Phase | Tests Run                                          | Passed | Failed | Coverage |
+| ----- | -------------------------------------------------- | ------ | ------ | -------- |
+| 1     | scaffold, review-skill-contracts, lint, type-check | pass   | 0      | -        |
+| 2     | -                                                  | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
