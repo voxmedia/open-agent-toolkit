@@ -9,12 +9,12 @@ oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: import # spec-driven | quick | import
 oat_workflow_origin: imported # native | imported
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-03-30T18:29:20.557Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-03-30T20:25:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-03-30T21:15:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_current_task: null
 oat_last_commit: 0673fc8
 oat_generated: false
