@@ -11,6 +11,40 @@ allowed-tools: Read, Glob, Grep, Bash(git:*), Skill
 
 Stateful router for the OAT project lifecycle. Reads project state and invokes the appropriate next skill.
 
+## Prerequisites
+
+- Active OAT project set in `.oat/config.local.json` (`activeProject`), or at least one project directory in the projects root
+
+## Mode Assertion
+
+**OAT MODE: Routing**
+
+**Purpose:** Read project state and dispatch to the correct next lifecycle skill. Never mutate project state.
+
+**BLOCKED Activities:**
+
+- ❌ No modifying state.md, plan.md, implementation.md, or any project artifact
+- ❌ No executing implementation tasks
+- ❌ No creating or modifying review artifacts
+
+**ALLOWED Activities:**
+
+- ✅ Reading all project artifacts and frontmatter
+- ✅ Scanning the reviews/ directory
+- ✅ Invoking the determined target skill via the Skill tool
+
+**Self-Correction Protocol:**
+If you catch yourself:
+
+- Modifying any project file → STOP (this skill is read-only)
+- Making a routing decision without reading state → STOP (always read state.md first)
+
+**Recovery:**
+
+1. Acknowledge the deviation
+2. Re-read project state
+3. Route based on the algorithm below
+
 ## Progress Indicators (User-Facing)
 
 - Print a phase banner once at start:
@@ -19,10 +53,13 @@ Stateful router for the OAT project lifecycle. Reads project state and invokes t
   OAT ▸ NEXT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Step indicators:
-  - `[1/3] Reading project state…`
-  - `[2/3] Determining next action…`
-  - `[3/3] Invoking target skill…`
+- Before multi-step work, print step indicators matching the actual process:
+  - `[1/6] Resolving active project…`
+  - `[2/6] Reading state.md + artifact frontmatter…`
+  - `[3/6] Classifying artifact state (boundary detection)…`
+  - `[4/6] Checking for unprocessed reviews…`
+  - `[5/6] Routing to target skill…`
+  - `[6/6] Announcing + invoking {target-skill}…`
 
 ## Behavioral Notes
 
@@ -296,3 +333,13 @@ Reason: {one-line explanation}
 The router still dispatches (blockers are informational, not gates).
 
 **Invoke the target skill** using the Skill tool. The agent will load the skill content and follow it directly.
+
+## Success Criteria
+
+- ✅ Active project resolved (or clear error with guidance if none set)
+- ✅ State.md and artifact frontmatter read correctly
+- ✅ Boundary tier classified correctly (complete / substantive / template)
+- ✅ HiLL gates respected (not bypassed)
+- ✅ Unprocessed reviews caught before advancing
+- ✅ Correct target skill invoked for the current workflow mode and phase
+- ✅ Routing announcement displayed before dispatch
