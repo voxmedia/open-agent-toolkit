@@ -1,6 +1,6 @@
 {
   "name": "open-agent-toolkit",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "description": "An open-source toolkit for portable, provider-agnostic agent tooling and workflows.",
   "license": "MIT",

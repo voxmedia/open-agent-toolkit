@@ -126,9 +126,9 @@ async function readCliVersion(assetsRoot: string): Promise<string> {
   try {
     const content = await readFile(join(cliRoot, 'package.json'), 'utf8');
     const pkg = JSON.parse(content) as { version?: string };
-    return pkg.version ?? '0.0.2';
+    return pkg.version ?? '0.0.3';
   } catch {
-    return '0.0.2';
+    return '0.0.3';
   }
 }
 
@@ -197,7 +197,7 @@ function oatDepVersion(depContext: OatDepContext, packageName: string): string {
   if (depContext.isOatRepo) {
     return 'workspace:*';
   }
-  return `^${depContext.oatPackageVersions[packageName] ?? '0.0.2'}`;
+  return `^${depContext.oatPackageVersions[packageName] ?? '0.0.3'}`;
 }
 
 function renderTemplate(
