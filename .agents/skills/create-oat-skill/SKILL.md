@@ -72,7 +72,7 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 
 - Start-of-skill banner with horizontal separators:
   - `OAT ▸ {LABEL}` (uppercase label)
-- A few short step indicators for multi-step work (2–5 lines)
+- Step indicators printed at the **start** of each corresponding process step (not all at once upfront). Each indicator appears only when that step begins executing, giving the user real-time progress.
 - For long-running operations, print a “starting…” line and a “done” line (duration optional)
 
 ### Step 3: Apply OAT Conventions

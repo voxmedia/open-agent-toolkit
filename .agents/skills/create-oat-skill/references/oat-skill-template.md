@@ -51,11 +51,12 @@ When executing this skill, provide lightweight progress feedback so the user can
   OAT ▸ {LABEL}
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Before multi-step work, print step indicators with the `[N/N]` format, e.g.:
-  - `[1/3] {First major action}…`
-  - `[2/3] {Second major action}…`
-  - `[3/3] {Final action}…`
+- Print each step indicator at the **start** of the corresponding process step (not all at once upfront). This gives the user real-time progress as work happens:
+  - Step 0: `[1/3] {First major action}…`
+  - Step 1: `[2/3] {Second major action}…`
+  - Step 2: `[3/3] {Final action}…`
 - Replace the examples above with skill-specific step labels that match the actual process steps. Do not leave generic placeholders.
+- Never print all step indicators together — each one appears only when that step begins executing.
 
 ## Process
 
