@@ -326,40 +326,6 @@ Chronological log of implementation progress.
 
 **Session End:** 14:38:42 CDT
 
----
-
-### 2026-03-30
-
-**Session Start:** {time}
-
-**Session Start:** 14:38:42 CDT
-
-- [x] p02-t01: Extend `oat tools update` to reconcile missing bundled members for installed packs - 67a2d99
-- [x] p02-t02: Cover reconciliation edge cases and core pack side effects - 026e90f
-
-**What changed (high level):**
-
-- Added installed-pack reconciliation so pack and all updates synthesize missing bundled tools from the canonical pack manifests.
-- Kept direct name updates unchanged to avoid broadening single-tool update behavior.
-- Added core-docs refresh coverage for `--all` and documented the resulting semantics.
-
-**Decisions:**
-
-- Detect installed packs from existing bundled members within a scope instead of introducing a separate persisted pack registry.
-- Extract the core-docs refresh predicate into a helper so the command side effect is directly testable.
-
-**Follow-ups / TODO:**
-
-- Final review required before PR creation.
-
-**Blockers:**
-
-- None.
-
-**Session End:** 14:38:42 CDT
-
----
-
 ### Review Received: final
 
 **Date:** 2026-03-30
