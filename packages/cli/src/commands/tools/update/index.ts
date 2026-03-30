@@ -15,7 +15,7 @@ import {
   autoSync,
 } from '@commands/tools/shared/auto-sync';
 import { scanTools } from '@commands/tools/shared/scan-tools';
-import type { PackName } from '@commands/tools/shared/types';
+import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -143,11 +143,8 @@ export function createToolsUpdateCommand(
       }
 
       if (result.updated.length > 0) {
-        const verb = dryRun ? 'Would update' : 'Updated';
         for (const tool of result.updated) {
-          logger.success(
-            `${verb}: ${tool.name} (${tool.version ?? '?'} -> ${tool.bundledVersion ?? '?'})`,
-          );
+          logger.success(formatUpdatedToolMessage(tool, dryRun));
         }
       }
 
@@ -181,6 +178,17 @@ export function shouldRefreshCoreDocs(
   return [...result.updated, ...result.current, ...result.newer].some(
     (tool) => tool.pack === 'core',
   );
+}
+
+export function formatUpdatedToolMessage(
+  tool: ToolInfo,
+  dryRun: boolean,
+): string {
+  if (tool.version === null) {
+    return `${dryRun ? 'Would install' : 'Installed'}: ${tool.name}`;
+  }
+
+  return `${dryRun ? 'Would update' : 'Updated'}: ${tool.name} (${tool.version} -> ${tool.bundledVersion ?? '?'})`;
 }
 
 function resolveTarget(

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { shouldRefreshCoreDocs } from './index';
+import { formatUpdatedToolMessage, shouldRefreshCoreDocs } from './index';
 import type { UpdateResult, UpdateTarget } from './update-tools';
 
 function createResult(overrides: Partial<UpdateResult> = {}): UpdateResult {
@@ -57,5 +57,41 @@ describe('shouldRefreshCoreDocs', () => {
     });
 
     expect(shouldRefreshCoreDocs(target, result)).toBe(false);
+  });
+});
+
+describe('formatUpdatedToolMessage', () => {
+  it('reports synthesized pack members as installs', () => {
+    expect(
+      formatUpdatedToolMessage(
+        {
+          name: 'oat-idea-ideate',
+          type: 'skill',
+          scope: 'project',
+          version: null,
+          bundledVersion: null,
+          pack: 'ideas',
+          status: 'outdated',
+        },
+        false,
+      ),
+    ).toBe('Installed: oat-idea-ideate');
+  });
+
+  it('reports ordinary bundled updates with versions', () => {
+    expect(
+      formatUpdatedToolMessage(
+        {
+          name: 'oat-idea-new',
+          type: 'skill',
+          scope: 'project',
+          version: '1.0.0',
+          bundledVersion: '2.0.0',
+          pack: 'ideas',
+          status: 'outdated',
+        },
+        false,
+      ),
+    ).toBe('Updated: oat-idea-new (1.0.0 -> 2.0.0)');
   });
 });
