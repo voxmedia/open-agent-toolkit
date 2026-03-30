@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-03-29
 oat_generated: true
 oat_template: false
-oat_summary_last_task: p03-t02
+oat_summary_last_task: p04-t02
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -32,7 +32,11 @@ The OAT project lifecycle has 15+ skills spanning discovery through completion, 
 
 6. **Dispatcher** — Announces routing decision (project, current state, target skill, reason) with optional blocker warnings, then invokes the target skill.
 
-**oat-project-pr-final fix**: Removed the "Do you want to open a PR now?" confirmation prompt. PR creation is now automatic after generating the description. Version bumped 1.2.0 → 1.3.0.
+**oat-project-pr-final fix**: Removed the "Do you want to open a PR now?" confirmation prompt. PR creation is now automatic after generating the description. Added base branch resolution chain (explicit arg → `git.defaultBranch` config → `origin/HEAD` → fallback `main`) replacing the hardcoded `--base main`. Version bumped 1.2.0 → 1.3.0.
+
+**oat-project-pr-progress fix**: Applied the same base branch resolution chain — was also hardcoding `main`.
+
+**Default branch detection in `oat init`**: Added `git.defaultBranch` to `OatConfig`, with `detectDefaultBranch()` helper that queries `gh repo view` then falls back to `origin/HEAD`. Runs during `oat init` and persists to `.oat/config.json`.
 
 **Bundle/manifest updates**: Added `oat-project-next` to `bundle-assets.sh` and `skill-manifest.ts` for bundle consistency.
 
@@ -48,13 +52,16 @@ The OAT project lifecycle has 15+ skills spanning discovery through completion, 
 
 5. **Canonical skill registration only**: Skill authored in `.agents/skills/` only. Provider-linked views (`.claude/skills/`, `.cursor/skills/`) are symlinks managed by `oat sync`, not manual copies.
 
+6. **Base branch should never be hardcoded**: Caught during final review — PR skills were hardcoding `--base main`. Replaced with a resolution chain that respects user config and git remote state. Also added `git.defaultBranch` to the OAT config schema and auto-detection during `oat init`.
+
 ## Design Deltas
 
-| Aspect                        | Planned                  | Actual                         | Reason                                              |
-| ----------------------------- | ------------------------ | ------------------------------ | --------------------------------------------------- |
-| Task commits                  | Separate commit per task | p01-t01..t05 combined into one | All sections of same file; splitting was artificial |
-| Phase 2 tasks                 | Separate from Phase 1    | Included in Phase 1 write      | Same file; content was written in one pass          |
-| Sync tasks (p02-t03, p03-t02) | Active re-sync step      | No-op                          | Symlinks auto-reflect changes to canonical files    |
+| Aspect                        | Planned                  | Actual                                      | Reason                                              |
+| ----------------------------- | ------------------------ | ------------------------------------------- | --------------------------------------------------- |
+| Task commits                  | Separate commit per task | p01-t01..t05 combined into one              | All sections of same file; splitting was artificial |
+| Phase 2 tasks                 | Separate from Phase 1    | Included in Phase 1 write                   | Same file; content was written in one pass          |
+| Sync tasks (p02-t03, p03-t02) | Active re-sync step      | No-op                                       | Symlinks auto-reflect changes to canonical files    |
+| p04-t02 scope                 | Fix PR base branch only  | Also added init detection + pr-progress fix | User expanded scope during review-fix discussion    |
 
 ## Follow-up Items
 
