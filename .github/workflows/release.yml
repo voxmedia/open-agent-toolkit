@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 concurrency:
   group: release-${{ github.ref }}
@@ -19,7 +20,7 @@ jobs:
     steps:
       # Publish workflow contract:
       # - run only from release tags
-      # - fail fast if npm auth is unavailable
+      # - use npm trusted publishing via GitHub OIDC
       # - rerun the same build and release validation path as dry-run
       # - publish the four @tkstang/oat-* packages in lockstep
       - name: Checkout
@@ -43,17 +44,7 @@ jobs:
           cat > .npmrc.publish <<'EOF'
           registry=https://registry.npmjs.org/
           @tkstang:registry=https://registry.npmjs.org/
-          //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
           EOF
-
-      - name: Verify npm auth is configured
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          test -n "$NODE_AUTH_TOKEN" || {
-            echo "NPM_TOKEN is required to publish @tkstang/oat-* packages"
-            exit 1
-          }
 
       - name: Build
         run: pnpm build
@@ -63,7 +54,6 @@ jobs:
 
       - name: Publish packages
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
         run: |
           for pkg in \
