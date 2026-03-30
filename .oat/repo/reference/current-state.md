@@ -26,6 +26,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - Knowledge + routing:
   - `oat-repo-knowledge-index` (thin-first index + enrichment)
   - `oat-project-progress` (router / status)
+  - `oat-project-next` (stateful dispatcher — reads state and invokes the correct next skill)
   - `oat-project-plan-writing` (shared plan writing contract used by planning/import/review flows)
 - Artifact generation:
   - `oat-project-new` (scaffold a project dir from templates)

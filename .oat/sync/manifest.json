@@ -1221,7 +1221,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-03-27T19:29:41.551Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-next",
+      "providerPath": ".claude/skills/oat-project-next",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-29T21:16:14.631Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-next",
+      "providerPath": ".cursor/skills/oat-project-next",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-03-29T21:16:14.632Z"
     }
   ],
-  "lastUpdated": "2026-03-27T19:29:41.551Z"
+  "lastUpdated": "2026-03-29T21:16:14.632Z"
 }

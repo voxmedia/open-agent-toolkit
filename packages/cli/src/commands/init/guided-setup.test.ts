@@ -121,6 +121,7 @@ function createGuidedSetupHarness(options: {
     addLocalPaths,
     applyGitignore,
     writeOatConfig,
+    detectDefaultBranch: vi.fn(() => 'main'),
     detectExistingDocs: vi.fn(
       async (
         _root: string,
@@ -379,7 +380,10 @@ describe('guided setup integration', () => {
       commandArgs: ['--setup'],
     });
 
-    expect(writeOatConfig).not.toHaveBeenCalled();
+    expect(writeOatConfig).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ documentation: expect.anything() }),
+    );
     expect(
       capture.info.some(
         (msg) => msg.includes('Documentation') && msg.includes('skipped'),
@@ -548,7 +552,12 @@ describe('guided setup integration', () => {
       commandArgs: ['--setup'],
     });
 
-    expect(writeOatConfig).not.toHaveBeenCalled();
+    // writeOatConfig is called once for git.defaultBranch, but not for docs
+    expect(writeOatConfig).toHaveBeenCalledTimes(1);
+    expect(writeOatConfig).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ git: { defaultBranch: 'main' } }),
+    );
     expect(
       capture.info.some(
         (msg) =>
