@@ -32,7 +32,12 @@ flowchart TD
 
 - `in_progress` — phase is actively being worked on
 - `complete` — phase is finished
-- `pr_open` — PR has been created, awaiting human review. Set by `oat-project-pr-final`. Agents should route to `oat-project-revise` (for feedback) or `oat-project-complete` (when approved).
+- `pr_open` — post-PR review posture. Set by `oat-project-pr-final`. Agents should route to `oat-project-revise` (for feedback) or `oat-project-complete` (when approved).
+
+`pr_open` is not the source of truth for actual PR existence. That is tracked separately in `state.md` via:
+
+- `oat_pr_status` — PR lifecycle state (`ready`, `open`, `closed`, `merged`)
+- `oat_pr_url` — tracked PR URL when a PR exists
 
 ## Lifecycle progression
 
@@ -48,7 +53,7 @@ Typical progression:
 8. Ready for implement
 9. Implement in progress
 10. Implement complete (final review passed)
-11. PR open (`pr_open`) — awaiting human review
+11. PR open (`pr_open`) — post-PR review posture; actual PR existence is tracked via `oat_pr_status` / `oat_pr_url`
 12. Revision loop (optional): `pr_open` → revise → `in_progress` → implement → `pr_open`
 13. Complete
 

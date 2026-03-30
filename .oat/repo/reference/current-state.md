@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-30
 
 ## Canonical References
 
@@ -75,6 +75,15 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - CLI infrastructure: `oat init tools core` subcommand (always user scope), core pack in `oat init tools` guided setup (checked by default)
 - Docs bundling: `apps/oat-docs/docs/` → `assets/docs/` (build time) → `~/.oat/docs/` (install/update time)
 - `oat tools update --pack core` refreshes both skills and bundled docs
+- `oat tools update --all` also refreshes `~/.oat/docs/` when an installed core pack is included in the update/reconciliation set
+
+### Workflow PR Tracking
+
+- Project `state.md` now distinguishes routing/review posture from actual PR existence
+- `oat_phase_status: pr_open` remains the post-PR routing state used by revise/complete flows
+- `oat_pr_status` tracks whether the PR is `ready`, `open`, `closed`, or `merged`
+- `oat_pr_url` stores the tracked PR URL when a PR exists
+- `oat-project-complete` suppresses the duplicate "Open a PR?" prompt when `oat_pr_status: open` is already present
 
 ### Documentation Analysis (Utility)
 

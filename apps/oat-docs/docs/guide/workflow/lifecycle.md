@@ -44,7 +44,7 @@ After implementation and final review pass:
 
 1. **Summary** (`oat-project-summary`) — generates `summary.md` as institutional memory from project artifacts
 2. **Documentation** (`oat-project-document`) — optional sync of project docs
-3. **PR** (`oat-project-pr-final`) — creates PR description (uses `summary.md` as source), sets `oat_phase_status: pr_open`
+3. **PR** (`oat-project-pr-final`) — creates PR description (uses `summary.md` as source), sets `oat_phase_status: pr_open`, and tracks actual PR existence with `oat_pr_status` / `oat_pr_url`
 4. **Revision loop** (`oat-project-revise`) — accepts post-PR feedback:
    - Inline feedback creates `p-revN` revision phases with `prevN-tNN` task IDs
    - GitHub PR feedback delegates to `oat-project-review-receive-remote`
@@ -56,9 +56,16 @@ After implementation and final review pass:
 
 After `oat-project-pr-final` runs, `state.md` shows `oat_phase_status: pr_open`. This signals:
 
-- The PR is open and awaiting human review
+- The project is in its post-PR review posture
 - The project is NOT done — agents should not start a new project
 - Next steps: `oat-project-revise` (for feedback) or `oat-project-complete` (when approved)
+
+Actual PR existence is tracked separately from `oat_phase_status`:
+
+- `oat_pr_status` records whether the PR is merely ready to create, open, closed, or merged
+- `oat_pr_url` records the tracked PR URL when a PR exists
+
+This distinction matters during completion: `oat-project-complete` can skip the "Open a PR?" prompt when `oat_pr_status: open` is already present.
 
 ### Auto-review at checkpoints
 
