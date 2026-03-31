@@ -20,6 +20,44 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'missing `spec.md` must not be treated as a project review gate failure for `artifact design`',
     );
+    expect(content).toContain('`pNN-pMM` contiguous phase range');
+    expect(content).toContain(
+      'This is the canonical scope format for checkpoint auto-reviews',
+    );
+    expect(content).toContain(
+      'For contiguous phase-range scopes (`pNN-pMM`), aggregate commit matches for each phase in the inclusive range',
+    );
+  });
+
+  it('defines auto-review checkpoint scope from the last passed whole-phase review', () => {
+    const skillPath = repoFilePath(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const content = readFileSync(skillPath, 'utf8');
+
+    expect(content).toContain(
+      'Count only whole-phase scopes: `pNN` or `pNN-pMM`',
+    );
+    expect(content).toContain(
+      'Example: prior passed row `p01`, current checkpoint `p03` → review `p02-p03`',
+    );
+    expect(content).toContain(
+      'Example: no prior passed whole-phase review, current checkpoint `p03` → review `p01-p03`',
+    );
+  });
+
+  it('routes phase-range review fixes into the last phase in the range', () => {
+    const skillPath = repoFilePath(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+    const content = readFileSync(skillPath, 'utf8');
+
+    expect(content).toContain(
+      'If scope is `pNN-pMM` (contiguous phase range): add fix tasks to the last phase in the range (`pMM`)',
+    );
+    expect(content).toContain(
+      'including range review tags such as `(p02-p03-review)`',
+    );
   });
 
   it('requires project completion to skip PR prompting when an open PR is tracked', () => {

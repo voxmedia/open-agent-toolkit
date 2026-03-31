@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 1.2.1
+version: 1.2.2
 description: Use when plan.md is ready for execution. Implements plan tasks sequentially with TDD discipline and state tracking.
 disable-model-invocation: true
 user-invocable: true
@@ -413,9 +413,12 @@ Before pausing at a checkpoint, check if auto-review is enabled:
 1. Read `oat_auto_review_at_checkpoints` from plan.md frontmatter. If not present, fall back to `.oat/config.json` `autoReviewAtCheckpoints` (default: `false`).
 
 2. If enabled and this is a checkpoint phase:
-   a. **Determine review scope:** Find the last checkpoint phase with a **`passed`** row in plan.md Reviews table. Rows with `fixes_added` or `fixes_completed` do NOT count — those reviews didn't pass and should be re-covered. Scope = all phases from (last passed + 1) through current. If this is the final phase, use scope `final`.
-   b. **Spawn subagent review:** `oat-project-review-provide code {scope}` — instruct it to include `oat_review_invocation: auto` in the review artifact frontmatter.
-   c. **Auto-invoke review-receive:** `oat-project-review-receive` — operates in auto-disposition mode when `oat_review_invocation: auto` is present:
+   a. **Determine review scope:** Find the highest completed implementation phase already covered by a **`passed`** code-review row in plan.md Reviews table. Count only whole-phase scopes: `pNN` or `pNN-pMM`. Ignore task scopes (`pNN-tNN`) and rows with `fixes_added` or `fixes_completed` because those reviews did not pass and must be re-covered. Scope = every implementation phase after that passed coverage through the current phase, inclusive. If no earlier passed whole-phase review exists, start from the first implementation phase. Use `pNN-pMM` when the scope spans multiple phases. If this is the final implementation phase checkpoint, use scope `final`.
+   - Example: prior passed row `p01`, current checkpoint `p03` → review `p02-p03`
+   - Example: no prior passed whole-phase review, current checkpoint `p03` → review `p01-p03`
+   - Example: current checkpoint is the last implementation phase → review `final`
+     b. **Spawn subagent review:** `oat-project-review-provide code {scope}` — instruct it to include `oat_review_invocation: auto` in the review artifact frontmatter.
+     c. **Auto-invoke review-receive:** `oat-project-review-receive` — operates in auto-disposition mode when `oat_review_invocation: auto` is present:
    - Critical/Important/Medium: convert to fix tasks (same as manual)
    - Minor: auto-convert to fix tasks unless clearly out of scope
    - No user prompts for disposition
