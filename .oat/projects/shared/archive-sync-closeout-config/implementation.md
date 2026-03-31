@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p04-t02
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 7     | 1/7       |
+| Phase 4 | in_progress | 7     | 2/7       |
 
-**Total:** 8/14 tasks completed
+**Total:** 9/14 tasks completed
 
 ---
 
@@ -308,12 +308,26 @@ oat_generated: false
 
 ### Task p04-t02: (review) Add missing archive URI regression coverage
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** dc6e920
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Cover the fail-fast config error when `archive.s3Uri` is not configured.
+- Added regression coverage for the fail-fast archive sync error when `archive.s3Uri` is missing from shared config.
+- Locked the behavior so the command exits before AWS preflight or sync execution when remote archive config is absent.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/archive/index.test.ts` - added missing-`archive.s3Uri` failure-path coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The test uses a minimal shared config (`{ version: 1 }`) so the contract is exercised independently of the default harness setup.
 
 ---
 
