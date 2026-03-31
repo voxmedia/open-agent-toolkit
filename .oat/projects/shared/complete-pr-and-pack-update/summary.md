@@ -4,10 +4,11 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-03-30
 oat_generated: true
-oat_summary_last_task: prev1-t04
-oat_summary_revision_count: 1
+oat_summary_last_task: prev2-t01
+oat_summary_revision_count: 2
 oat_summary_includes_revisions:
   - p-rev1
+  - p-rev2
 ---
 
 # Summary: complete-pr-and-pack-update
@@ -22,7 +23,7 @@ The lifecycle state template now includes explicit PR metadata through `oat_pr_s
 
 The CLI tool-update flow now reconciles installed packs instead of only updating already-present members. `oat tools update --pack <pack>` and `oat tools update --all` now synthesize missing bundled skills and agents for packs that already have installed presence in a scope, while direct name-based updates remain intentionally narrow. Core docs refresh logic was also extended so `.oat/docs` refreshes when core tooling is touched through `--all`.
 
-The project closed with a final review-fix round. That round added the missing negative regression test for name-targeted updates, clarified CLI output so synthesized pack members are displayed as installs instead of `? -> ?` updates, and cleaned up the project’s own implementation summary/log artifacts.
+The project also took two revision passes after implementation. The first revision addressed final review findings by adding the missing negative regression test for name-targeted updates, clarifying CLI output so synthesized pack members are displayed as installs instead of `? -> ?` updates, and cleaning up the project’s own implementation summary/log artifacts. The second revision addressed CI feedback by teaching release validation to require lockstep version bumps for publishable package changes and by advancing the public package set to `0.0.5`.
 
 ## Key Decisions
 
@@ -30,14 +31,20 @@ The project closed with a final review-fix round. That round added the missing n
 - Pack reconciliation is scoped only to pack and all targets. Name-based updates deliberately remain update-only to avoid surprising installs.
 - Installed-pack presence is inferred from existing bundled members in a scope rather than adding a separate persisted pack registry.
 - The synthesized-install output change was implemented as a small formatting helper, which made the new behavior easy to test without reshaping the update command internals.
+- The four public `@tkstang/oat-*` packages are treated as a lockstep release unit because the release workflows dry-run and publish them together.
 
 ## Integration Notes
 
 - Any workflow that scaffolds or consumes project state should now treat `oat_pr_status` and `oat_pr_url` as the canonical PR-existence fields.
 - Future changes to `oat tools update` should preserve the boundary that reconciliation applies only to installed packs and should keep CLI messaging distinct between installs and versioned updates.
+- Future PRs that modify a publishable package should either bump the public package versions in lockstep or expect release validation to fail before the publish dry-run step.
 
 ## Revision History
 
 ### p-rev1
 
 The first final review found one missing negative test, one CLI output issue, and two project-bookkeeping issues. The revision phase added the missing update-only coverage, clarified synthesized install output, removed summary placeholders, and consolidated the duplicated implementation log entry. A second final review then passed with no remaining findings.
+
+### p-rev2
+
+The second revision responded to CI feedback from the new release dry-run workflow. It added an explicit lockstep version-bump check to release validation, then bumped the public package set and related CLI/runtime version references to `0.0.5` so the branch passes both `pnpm release:validate` and the `npm publish --dry-run` loop.

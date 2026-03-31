@@ -313,19 +313,54 @@ git commit -m "chore(prev1-t04): clean implementation log duplication"
 
 ---
 
+## Phase p-rev2: Revision 2
+
+Source: inline feedback (2026-03-30)
+
+### Task prev2-t01: (revision) Enforce release validation for lockstep version bumps
+
+**Files:**
+
+- Modify: `tools/release/validate-public-packages.ts`
+- Modify: `packages/cli/src/release/public-package-contract.test.ts`
+- Modify: any package version constants/manifests needed to keep release validation and publish dry-run aligned
+
+**Step 1:** Add or extend release-validation coverage so a PR that changes a publishable package without the required lockstep version bump fails with a clear, deterministic error before the later `npm publish --dry-run` step.
+
+**Step 2: Implement**
+
+Teach release validation to compare publishable package changes against the merge-base with `main`, require the public packages to stay versioned in lockstep for releasable changes, and update any package version metadata needed for this PR to satisfy that policy.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @tkstang/oat-cli test -- public-package-contract`
+Expected: Release-validation coverage passes with the new version-bump rule.
+
+Run: `pnpm release:validate`
+Expected: Validation passes locally for the current branch state.
+
+**Step 4: Commit**
+
+```bash
+git add tools/release/validate-public-packages.ts packages/cli/src/release/public-package-contract.test.ts package.json packages/*/package.json packages/cli/src/app/create-program.ts packages/cli/src/manifest/manager.ts
+git commit -m "fix(prev2-t01): require lockstep version bumps for releases"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date       | Artifact                                       |
-| ------ | -------- | ------- | ---------- | ---------------------------------------------- |
-| p01    | code     | pending | -          | -                                              |
-| p02    | code     | pending | -          | -                                              |
-| final  | code     | passed  | 2026-03-30 | reviews/archived/final-review-2026-03-30-v3.md |
-| spec   | artifact | pending | -          | -                                              |
-| design | artifact | pending | -          | -                                              |
+| Scope  | Type     | Status  | Date | Artifact |
+| ------ | -------- | ------- | ---- | -------- |
+| p01    | code     | pending | -    | -        |
+| p02    | code     | pending | -    | -        |
+| final  | code     | pending | -    | -        |
+| spec   | artifact | pending | -    | -        |
+| design | artifact | pending | -    | -        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -345,10 +380,11 @@ git commit -m "chore(prev1-t04): clean implementation log duplication"
 - Phase 1: 2 tasks - Persist PR state and remove redundant completion prompting when a PR is already tracked
 - Phase 2: 2 tasks - Reconcile newly added bundled tools for installed packs and lock behavior down with tests
 - Phase p-rev1: 4 tasks - Address final review findings before re-review
+- Phase p-rev2: 1 task - Add explicit release validation for missing lockstep version bumps on publishable package changes
 
-**Total: 8 tasks**
+**Total: 9 tasks**
 
-Ready for review-fix implementation, then re-review.
+Revision implementation complete. Re-run final review before project completion.
 
 ---
 

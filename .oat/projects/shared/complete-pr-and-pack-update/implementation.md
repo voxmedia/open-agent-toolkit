@@ -24,13 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase    | Status   | Tasks | Completed |
-| -------- | -------- | ----- | --------- |
-| Phase 1  | complete | 2     | 2/2       |
-| Phase 2  | complete | 2     | 2/2       |
-| Review 1 | complete | 4     | 4/4       |
+| Phase      | Status   | Tasks | Completed |
+| ---------- | -------- | ----- | --------- |
+| Phase 1    | complete | 2     | 2/2       |
+| Phase 2    | complete | 2     | 2/2       |
+| Review 1   | complete | 4     | 4/4       |
+| Revision 2 | complete | 1     | 1/1       |
 
-**Total:** 8/8 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -467,6 +468,93 @@ After the fix tasks are complete:
 
 ---
 
+### Revision Received: Inline Feedback
+
+**Date:** 2026-03-30
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Add a deterministic release-validation check that fails clearly when publishable package changes do not include the required lockstep version bump, instead of relying on the later `npm publish --dry-run` error.
+
+**New tasks added:** `prev2-t01`
+
+**Next:** Execute revision tasks via the `oat-project-implement` workflow and push the follow-up changes to the existing PR.
+
+---
+
+## Phase p-rev2: Release Validation Follow-up
+
+**Status:** complete
+**Started:** 2026-03-30
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Release validation now fails early with a clear error when a PR changes a publishable package without the required lockstep version bump across the public packages.
+- The public package version set and related CLI/runtime references were advanced to `0.0.5`, which unblocks the existing release dry-run workflow for this PR.
+
+**Key files touched:**
+
+- `tools/release/validate-public-packages.ts` - add merge-base-aware lockstep version-bump validation before package dry-runs
+- `packages/cli/src/release/public-package-contract.test.ts` - cover the new release-version policy helper
+- `package.json` and `packages/*/package.json` - advance the workspace and publishable package versions to `0.0.5`
+- `packages/cli/src/app/create-program.ts` and `packages/cli/src/manifest/manager.ts` - keep runtime version reporting aligned with the package bump
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- public-package-contract`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+- Run: `pnpm type-check`
+- Result: pass
+- Run: `pnpm lint`
+- Result: pass
+- Run: release-dry-run publish loop for `packages/docs-transforms`, `packages/docs-config`, `packages/docs-theme`, `packages/cli`
+- Result: pass (`npm publish --dry-run --access public`)
+
+**Notes / Decisions:**
+
+- Treat the four public packages as a lockstep release unit because the release workflows dry-run and publish them together.
+- Keep the workflow trigger unchanged for now; the revision focuses on clearer validation and satisfying the release policy for this PR.
+
+### Task prev2-t01: (revision) Enforce release validation for lockstep version bumps
+
+**Status:** completed
+**Commit:** 43cd797
+
+**Outcome (required when completed):**
+
+- Added a release-validation check that compares publishable package changes to the merge-base with `main` and fails with an explicit lockstep version-bump error before the later publish dry-run.
+- Bumped the public package versions and dependent CLI/runtime version references to `0.0.5` so the current PR satisfies the lockstep publish policy.
+
+**Files changed:**
+
+- `tools/release/validate-public-packages.ts` - add lockstep version-bump validation
+- `packages/cli/src/release/public-package-contract.test.ts` - add coverage for the version-bump helper
+- `package.json` - update workspace version to `0.0.5`
+- `packages/cli/package.json` - update publishable CLI version to `0.0.5`
+- `packages/docs-config/package.json` - update publishable docs-config version to `0.0.5`
+- `packages/docs-theme/package.json` - update publishable docs-theme version to `0.0.5`
+- `packages/docs-transforms/package.json` - update publishable docs-transforms version to `0.0.5`
+- `packages/cli/src/app/create-program.ts` - keep CLI-reported version aligned
+- `packages/cli/src/manifest/manager.ts` - keep manifest oatVersion aligned
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- public-package-contract`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+- Run: `pnpm type-check`
+- Result: pass
+- Run: `pnpm lint`
+- Result: pass
+
+---
+
 ## Deviations from Plan
 
 Document any deviations from the original plan.
@@ -479,11 +567,12 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                          | Passed | Failed | Coverage |
-| ----- | -------------------------------------------------- | ------ | ------ | -------- |
-| 1     | scaffold, review-skill-contracts, lint, type-check | pass   | 0      | -        |
-| 2     | update-tools, full package test suite, type-check  | pass   | 0      | -        |
-| rev1  | update-tools, index, type-check, rg verification   | pass   | 0      | -        |
+| Phase | Tests Run                                                                    | Passed | Failed | Coverage |
+| ----- | ---------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | scaffold, review-skill-contracts, lint, type-check                           | pass   | 0      | -        |
+| 2     | update-tools, full package test suite, type-check                            | pass   | 0      | -        |
+| rev1  | update-tools, index, type-check, rg verification                             | pass   | 0      | -        |
+| rev2  | public-package-contract, release:validate, type-check, lint, publish dry-run | pass   | 0      | -        |
 
 ## Final Summary (for PR/docs)
 
@@ -493,12 +582,15 @@ Track test execution during implementation.
 - `oat-project-complete` suppression of the duplicate PR prompt when an open PR is already tracked
 - Installed-pack reconciliation for `oat tools update --pack <pack>` and `oat tools update --all`
 - Core docs refresh during `oat tools update --all` when bundled core tooling is updated or reconciled
+- Early release validation for missing lockstep version bumps on publishable package changes
+- Lockstep public package version bump to `0.0.5` so the release dry-run path is publishable again
 - Bundled CLI state-template assets refreshed to match the canonical project template
 
 **Behavioral changes (user-facing):**
 
 - Project completion no longer asks whether to open a PR when project state already tracks an open PR, and it can surface the tracked PR URL instead.
 - Pack and all tool updates now backfill newly introduced bundled skills and agents for packs that are already installed in the current scope.
+- Release validation now reports missing publishable-package version bumps before the workflow reaches `npm publish --dry-run`, and the public package set is versioned in lockstep at `0.0.5`.
 
 **Key files / modules:**
 
@@ -508,6 +600,7 @@ Track test execution during implementation.
 - `.agents/skills/oat-project-complete/SKILL.md` - conditional PR prompting during completion
 - `packages/cli/src/commands/tools/update/update-tools.ts` - installed-pack reconciliation logic
 - `packages/cli/src/commands/tools/update/index.ts` - core docs refresh decision logic
+- `tools/release/validate-public-packages.ts` - lockstep release-version validation
 
 **Verification performed:**
 
@@ -515,8 +608,11 @@ Track test execution during implementation.
 - `pnpm --filter @tkstang/oat-cli test -- review-skill-contracts`
 - `pnpm --filter @tkstang/oat-cli test -- update-tools`
 - `pnpm --filter @tkstang/oat-cli test`
+- `pnpm --filter @tkstang/oat-cli test -- public-package-contract`
 - `pnpm --filter @tkstang/oat-cli lint`
 - `pnpm --filter @tkstang/oat-cli type-check`
+- `pnpm release:validate`
+- `npm publish --dry-run --access public` for each public package
 
 **Design deltas (if any):**
 
