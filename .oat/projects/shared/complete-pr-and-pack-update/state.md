@@ -14,7 +14,7 @@ oat_pr_status: open
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/9
 oat_project_created: '2026-03-30T18:29:20.557Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-03-31T00:22:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-03-31T02:19:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_current_task: null
 oat_last_commit: 43cd797
 oat_generated: false
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision complete. PR open, awaiting human review and a fresh final review pass on the updated code.
+Final review passed. PR is open and the project is ready for final completion once you want to close it out.
 
 ## Artifacts
 
@@ -63,7 +63,7 @@ Revision complete. PR open, awaiting human review and a fresh final review pass 
 - ✓ PR created
 - ✓ Version-bump guidance documented in `AGENTS.md`
 - ✓ Revision task `prev2-t01` completed
-- ⧗ Awaiting human review and final re-review
+- ✓ Final review v4 passed and archived
 
 ## Blockers
 
@@ -71,8 +71,7 @@ None
 
 ## Next Milestone
 
-PR is open for review.
+PR is open and the final review gate is closed.
 
-- Re-run final review before completion
-- To incorporate more feedback: run `oat-project-revise`
-- When approved and re-reviewed: run `oat-project-complete`
+- If more feedback arrives: run `oat-project-revise`
+- Otherwise: run `oat-project-complete`

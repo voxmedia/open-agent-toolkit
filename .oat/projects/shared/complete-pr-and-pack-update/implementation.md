@@ -483,6 +483,21 @@ After the fix tasks are complete:
 
 ---
 
+### Review Passed: final
+
+**Date:** 2026-03-30
+**Review artifact:** reviews/archived/final-review-2026-03-30-v4.md
+
+**Result:**
+
+- Final re-review after the release-validation revision completed with 0 critical, 0 important, 0 medium, and 0 minor findings.
+- No deferred medium findings remained from prior review cycles, and no final-scope minor findings required conversion or deferral.
+- No additional review-fix tasks were added; the project is back to the PR/completion path.
+
+**Next:** Proceed with the open PR and run `oat-project-complete` when ready to finalize the project.
+
+---
+
 ## Phase p-rev2: Release Validation Follow-up
 
 **Status:** complete

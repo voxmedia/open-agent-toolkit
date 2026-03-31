@@ -354,13 +354,13 @@ git commit -m "fix(prev2-t01): require lockstep version bumps for releases"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                              |
-| ------ | -------- | -------- | ---------- | ------------------------------------- |
-| p01    | code     | pending  | -          | -                                     |
-| p02    | code     | pending  | -          | -                                     |
-| final  | code     | received | 2026-03-30 | reviews/final-review-2026-03-30-v4.md |
-| spec   | artifact | pending  | -          | -                                     |
-| design | artifact | pending  | -          | -                                     |
+| Scope  | Type     | Status  | Date       | Artifact                                       |
+| ------ | -------- | ------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending | -          | -                                              |
+| p02    | code     | pending | -          | -                                              |
+| final  | code     | passed  | 2026-03-30 | reviews/archived/final-review-2026-03-30-v4.md |
+| spec   | artifact | pending | -          | -                                              |
+| design | artifact | pending | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
