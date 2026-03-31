@@ -52,7 +52,7 @@ Status progression in `plan.md` Reviews table:
 
 ## Auto-review at checkpoints
 
-When `autoReviewAtCheckpoints` is enabled (via `oat config set autoReviewAtCheckpoints true` or per-project in `plan.md` frontmatter), completing a plan phase checkpoint automatically spawns a subagent review. The review scope covers all phases since the last passed checkpoint. The final phase checkpoint triggers a `code final` review.
+When `autoReviewAtCheckpoints` is enabled (via `oat config set autoReviewAtCheckpoints true` or per-project in `plan.md` frontmatter), completing a plan phase checkpoint automatically spawns a subagent review. The review scope covers every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase checkpoint reviews use inclusive phase-range scopes such as `p02-p03`. The final phase checkpoint triggers a `code final` review.
 
 Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` auto-converts all findings to fix tasks without user prompts (Minor findings that are clearly out of scope are deferred with a note).
 

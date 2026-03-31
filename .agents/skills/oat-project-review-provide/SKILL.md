@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.2.1
+version: 1.2.3
 description: Use when completed work in an active OAT project needs a quality gate before merge. Performs a lifecycle-scoped review after a task, phase, or full implementation, unlike oat-review-provide.
 disable-model-invocation: true
 user-invocable: true
@@ -61,6 +61,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ```
 oat-project-review-provide code p02          # Code review for phase
+oat-project-review-provide code p02-p03      # Code review for contiguous phase range
 oat-project-review-provide code p02-t03      # Code review for task
 oat-project-review-provide code final        # Final code review
 oat-project-review-provide code base_sha=abc # Review since specific SHA
@@ -148,7 +149,7 @@ If the user confirms (or just presses enter), use the inferred type and scope. I
 
 - Ask: "What type of review? (code / artifact)"
 - Ask: "What scope?"
-  - For code: `pNN-tNN` task / `pNN` phase / `final` / `base_sha=SHA` / `SHA..HEAD` range
+  - For code: `pNN-tNN` task / `pNN` phase / `pNN-pMM` contiguous phase range / `final` / `base_sha=SHA` / `SHA..HEAD` range
   - For artifact: `discovery` / `spec` / `design` (and optionally `plan`)
 
 ### Step 1.5: Resolve Target Branch and Working Directory
@@ -261,7 +262,7 @@ If review type is `code`, use the scope resolution below.
 
 Before resolving scope, check if this is a re-review of fixes from a prior review cycle:
 
-1. Scan `plan.md` for tasks tagged with `(review)` in the scope being reviewed (e.g., `(p02-review)` fix tasks for a `p02` phase review).
+1. Scan `plan.md` for tasks tagged with `(review)` in the scope being reviewed (e.g., `(p02-review)` fix tasks for a `p02` phase review or `(p02-p03-review)` for a contiguous phase-range review).
 2. If `(review)` fix tasks exist **and** their status is `completed`:
    - This is a re-review. Offer the user a narrowed scope:
 
@@ -284,7 +285,14 @@ Before resolving scope, check if this is a re-review of fixes from a prior revie
    - `<sha1>..<sha2>` → exact range review
    - `pNN-tNN` → task scope
    - `pNN` → phase scope
+   - `pNN-pMM` → contiguous inclusive phase-range scope (for example `p02-p03`)
    - `final` → full project review
+
+**Phase-range semantics:**
+
+- `pNN-pMM` scopes are inclusive and must represent contiguous implementation phases.
+- This is the canonical scope format for checkpoint auto-reviews that need to cover multiple previously unpassed phases in one review.
+- When a phase-range token is used, treat it as a range review for artifact naming/storage, but preserve the exact `oat_review_scope` value (for example `p02-p03`) in frontmatter and plan review rows.
 
 2. **Automatic phase detection (if invoked at phase boundary):**
    - Derive current phase from plan.md + implementation.md
@@ -296,6 +304,15 @@ Before resolving scope, check if this is a re-review of fixes from a prior revie
 
      # Phase commits: grep for (pNN-
      git log --oneline --grep="\(p${PHASE}-" HEAD~50..HEAD
+     ```
+
+   - For contiguous phase-range scopes (`pNN-pMM`), aggregate commit matches for each phase in the inclusive range:
+
+     ```bash
+     for PHASE_NUM in $(seq "$START_PHASE_NUM" "$END_PHASE_NUM"); do
+       PHASE_ID=$(printf "p%02d" "$PHASE_NUM")
+       git log --oneline --grep="\\(${PHASE_ID}-" HEAD~50..HEAD
+     done
      ```
 
 3. **Fallback (if commit conventions missing/inconsistent):**
@@ -619,6 +636,7 @@ After review artifact is written, update `plan.md` `## Reviews` table _if plan.m
 Update or add a row matching `{scope}`:
 
 - `Scope`: `{scope}` (examples: `p02`, `final`, `spec`, `design`)
+  - Phase-range examples such as `p02-p03` are valid code-review scopes and should be preserved exactly.
 - `Type`: `code` or `artifact`
 - `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; `passed` now requires no unresolved Critical/Important/Medium and final deferred-medium disposition when applicable)
 - `Date`: `{today}`

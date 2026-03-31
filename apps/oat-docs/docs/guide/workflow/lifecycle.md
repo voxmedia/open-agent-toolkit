@@ -69,7 +69,7 @@ This distinction matters during completion: `oat-project-complete` can skip the 
 
 ### Auto-review at checkpoints
 
-When `autoReviewAtCheckpoints` is enabled (via `.oat/config.json` or `plan.md` frontmatter `oat_auto_review_at_checkpoints`), completing a plan phase checkpoint automatically spawns a subagent code review scoped to phases since the last passed checkpoint. The review uses auto-disposition mode (minors auto-converted to fix tasks, no user prompts). Disabled by default.
+When `autoReviewAtCheckpoints` is enabled (via `.oat/config.json` or `plan.md` frontmatter `oat_auto_review_at_checkpoints`), completing a plan phase checkpoint automatically spawns a subagent code review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (minors auto-converted to fix tasks, no user prompts). Disabled by default.
 
 ## Implementation modes
 

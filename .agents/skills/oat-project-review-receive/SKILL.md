@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.2.0
+version: 1.2.1
 description: Use when review findings from oat-project-review-provide need closure. Converts review artifacts into actionable plan tasks.
 disable-model-invocation: true
 user-invocable: true
@@ -257,7 +257,8 @@ Applies to `code` reviews only. (`artifact` reviews are handled via Step 2.6, th
 
 1. Check review scope from artifact frontmatter (`oat_review_scope`)
 2. If scope is `pNN` (phase) or `pNN-tNN` (task): add fix tasks to that phase
-3. If scope is `final` or range: add fix tasks to a new "Review Fixes" phase or the last phase
+3. If scope is `pNN-pMM` (contiguous phase range): add fix tasks to the last phase in the range (`pMM`)
+4. If scope is `final` or SHA/range review: add fix tasks to a new "Review Fixes" phase or the last phase
 
 ### Step 4: Determine Next Task IDs
 
@@ -617,7 +618,7 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 **How it works:**
 
 1. When `oat-project-review-provide` is called after fix tasks exist
-2. It detects `(review)` tasks in plan.md for the scope
+2. It detects `(review)` tasks in plan.md for the scope, including range review tags such as `(p02-p03-review)`
 3. It offers: "Scope to fix tasks only? (Y/n)"
 4. If yes: scope is just the fix task commits
 
