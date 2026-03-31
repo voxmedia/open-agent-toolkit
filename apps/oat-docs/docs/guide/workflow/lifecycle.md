@@ -15,7 +15,7 @@ OAT lifecycle order:
 4. Plan (`oat-project-plan`)
 5. Implement (`oat-project-implement` or `oat-project-subagent-implement`)
 6. Review loop (`oat-project-review-provide` / `oat-project-review-receive`)
-7. Summary (`oat-project-summary`) — generates `summary.md` as institutional memory
+7. Summary (`oat-project-summary`) — generates `summary.md` as institutional memory; `oat-project-pr-final` and `oat-project-complete` auto-refresh it when missing or stale
 8. PR (`oat-project-pr-progress` / `oat-project-pr-final`) — sets `pr_open` status
 9. Revision loop (`oat-project-revise`) — optional; accepts post-PR feedback
 10. Documentation sync (`oat-project-document`) — optional; reads project artifacts to identify docs needing updates
@@ -42,15 +42,15 @@ flowchart LR
 
 After implementation and final review pass:
 
-1. **Summary** (`oat-project-summary`) — generates `summary.md` as institutional memory from project artifacts
+1. **Summary** (`oat-project-summary`) — generates `summary.md` as institutional memory from project artifacts; PR-final and completion will auto-refresh it if you have not already run it or if it is stale
 2. **Documentation** (`oat-project-document`) — optional sync of project docs
-3. **PR** (`oat-project-pr-final`) — creates PR description (uses `summary.md` as source), sets `oat_phase_status: pr_open`, and tracks actual PR existence with `oat_pr_status` / `oat_pr_url`
+3. **PR** (`oat-project-pr-final`) — creates PR description (auto-refreshes `summary.md` first when needed, then uses it as source), sets `oat_phase_status: pr_open`, and tracks actual PR existence with `oat_pr_status` / `oat_pr_url`
 4. **Revision loop** (`oat-project-revise`) — accepts post-PR feedback:
    - Inline feedback creates `p-revN` revision phases with `prevN-tNN` task IDs
    - GitHub PR feedback delegates to `oat-project-review-receive-remote`
    - Review artifacts delegate to `oat-project-review-receive`
    - After revision tasks complete, state returns to `pr_open`
-5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`)
+5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`) and auto-refreshes `summary.md` before closeout when needed
 
 ### Phase status: `pr_open`
 

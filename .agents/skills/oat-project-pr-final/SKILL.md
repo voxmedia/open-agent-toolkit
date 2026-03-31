@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-version: 1.3.0
+version: 1.3.1
 description: Use when an active OAT project has completed all phases and is ready for final merge to main. Generates the final OAT lifecycle PR description from artifacts and review status, then creates the PR automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -173,9 +173,11 @@ If `FINAL_ROW` is missing or does not contain `passed`:
 
 Check if `{PROJECT_PATH}/summary.md` exists:
 
-- **If exists and current:** Read it. Use as the primary source for the PR description's `## Summary` section. The PR Summary should be a condensed version of summary.md's Overview + What Was Implemented sections — reviewer-oriented and actionable, not a copy-paste.
-- **If missing:** Invoke `oat-project-summary` to generate it. If generation fails or user declines, fall back to the raw artifact synthesis below.
-- **If exists but outdated** (check `oat_summary_last_task` vs implementation.md): Re-run `oat-project-summary` to update, then use as source.
+- If `summary.md` is missing or stale, invoke `oat-project-summary` automatically before proceeding.
+- Do not ask whether to generate or refresh `summary.md` during pr-final.
+- **If generation succeeds:** Read the refreshed `summary.md` and use it as the primary source for the PR description's `## Summary` section. The PR Summary should be a condensed version of summary.md's Overview + What Was Implemented sections — reviewer-oriented and actionable, not a copy-paste.
+- **If generation fails:** Warn and fall back to the raw artifact synthesis below.
+- **If `summary.md` already exists and is current:** Read it directly and use it as the primary summary source.
 
 **Step 3.1: Read remaining artifacts**
 

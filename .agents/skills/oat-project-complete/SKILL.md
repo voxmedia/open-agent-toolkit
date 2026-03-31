@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.3.2
+version: 1.3.3
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -185,18 +185,15 @@ After collecting all warnings from 3.1, 3.2, and 3.3:
 
 ### Step 3.5: Summary Gate
 
-Check if `{PROJECT_PATH}/summary.md` exists:
+Check if `{PROJECT_PATH}/summary.md` exists and whether it is current against the implementation state:
 
-1. **If missing:**
-   - Suggest: "No summary.md found. Generate project summary before completing?"
-   - If user agrees: invoke `oat-project-summary`
-     - If generation succeeds: proceed with summary available
-     - If generation fails mid-way (context limits, missing artifacts, etc.): warn "Summary generation failed: {reason}. Proceeding without summary." Do NOT leave a half-written summary.md — either it completes fully or clean up the partial file and proceed without it.
-   - If user declines: warn and proceed (summary is not a hard gate)
-
-2. **If exists:** Note as available. Summary.md will be:
-   - Used as source for the PR description (in Step 7)
-   - Preserved in the archived project directory (in Step 8)
+- If `summary.md` is missing or stale, invoke `oat-project-summary` automatically before completing.
+- Do not prompt the user about whether to generate `summary.md` during completion.
+- If summary generation succeeds, proceed with the refreshed `summary.md` available for PR and archive steps.
+- If summary generation fails mid-way (context limits, missing artifacts, etc.), warn "Summary generation failed: {reason}. Proceeding without summary." Do NOT leave a half-written summary.md — either it completes fully or clean up the partial file and proceed without it.
+- If `summary.md` already exists and is current, note it as available. Summary.md will be:
+  - Used as source for the PR description (in Step 7)
+  - Preserved in the archived project directory (in Step 8)
 
 ### Step 4: Archive Residual Active Review Artifacts
 
