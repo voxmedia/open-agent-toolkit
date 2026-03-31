@@ -1,8 +1,16 @@
 import { execFile as execFileCallback } from 'node:child_process';
-import { basename, posix as path } from 'node:path';
+import { rm } from 'node:fs/promises';
+import { basename, dirname, join, posix as path } from 'node:path';
 import { promisify } from 'node:util';
 
 import { CliError } from '@errors/cli-error';
+import {
+  copyDirectory,
+  copySingleFile,
+  dirExists,
+  ensureDir,
+  fileExists,
+} from '@fs/io';
 
 const execFileAsync = promisify(execFileCallback);
 
@@ -33,6 +41,38 @@ export interface EnsureS3ArchiveAccessResult {
   warnings: string[];
 }
 
+export interface ArchiveProjectOnCompletionOptions {
+  repoRoot: string;
+  projectPath: string;
+  projectName: string;
+  projectsRoot: string;
+  s3Uri?: string | null;
+  s3SyncOnComplete: boolean;
+  summaryExportPath?: string | null;
+}
+
+interface ArchiveProjectOnCompletionDependencies extends EnsureS3ArchiveAccessDependencies {
+  ensureS3ArchiveAccess?: typeof ensureS3ArchiveAccess;
+  execFile?: ExecFileLike;
+  ensureDir?: typeof ensureDir;
+  copyDirectory?: typeof copyDirectory;
+  removePath?: (
+    target: string,
+    options: { recursive: true; force: true },
+  ) => Promise<void>;
+  copySingleFile?: typeof copySingleFile;
+  dirExists?: typeof dirExists;
+  fileExists?: typeof fileExists;
+  timestamp?: () => string;
+}
+
+export interface ArchiveProjectOnCompletionResult {
+  archivePath: string;
+  s3Path: string | null;
+  summaryExportFile: string | null;
+  warnings: string[];
+}
+
 function normalizeS3Uri(s3Uri: string): string {
   return s3Uri.trim().replace(/\/+$/, '');
 }
@@ -57,7 +97,7 @@ function requiresRemoteAccess(
 ): options is EnsureS3ArchiveAccessOptions & { s3Uri: string } {
   return Boolean(
     options.s3Uri &&
-      (options.mode === 'sync' || options.syncOnComplete === true),
+    (options.mode === 'sync' || options.syncOnComplete === true),
   );
 }
 
@@ -80,6 +120,140 @@ export function resolveLocalArchiveProjectPath(
   const normalizedProjectsRoot = projectsRoot.replace(/\/+$/, '');
   const projectsBase = path.dirname(normalizedProjectsRoot);
   return path.join(projectsBase, 'archived', projectName);
+}
+
+function resolveCompletionArchivePath(
+  repoRoot: string,
+  projectsRoot: string,
+  projectName: string,
+): string {
+  return join(
+    repoRoot,
+    resolveLocalArchiveProjectPath(projectsRoot, projectName),
+  );
+}
+
+async function resolveUniqueArchivePath(
+  archivePath: string,
+  dependencies: ArchiveProjectOnCompletionDependencies,
+): Promise<string> {
+  const directoryExists = dependencies.dirExists ?? dirExists;
+  if (!(await directoryExists(archivePath))) {
+    return archivePath;
+  }
+
+  const timestamp = dependencies.timestamp?.() ?? new Date().toISOString();
+  const suffix = timestamp.replace(/[-:TZ.]/g, '').slice(0, 15);
+  return `${archivePath}-${suffix}`;
+}
+
+async function exportProjectSummary(
+  archivePath: string,
+  projectName: string,
+  summaryExportPath: string,
+  repoRoot: string,
+  dependencies: ArchiveProjectOnCompletionDependencies,
+): Promise<string | null> {
+  const summarySource = join(archivePath, 'summary.md');
+  const exists = dependencies.fileExists ?? fileExists;
+  if (!(await exists(summarySource))) {
+    return null;
+  }
+
+  const summaryTarget = join(repoRoot, summaryExportPath, `${projectName}.md`);
+  const copySummary = dependencies.copySingleFile ?? copySingleFile;
+  await copySummary(summarySource, summaryTarget);
+  return summaryTarget;
+}
+
+export async function archiveProjectOnCompletion(
+  options: ArchiveProjectOnCompletionOptions,
+  dependencies: ArchiveProjectOnCompletionDependencies = {},
+): Promise<ArchiveProjectOnCompletionResult> {
+  const makeDir = dependencies.ensureDir ?? ensureDir;
+  const copyProjectDirectory = dependencies.copyDirectory ?? copyDirectory;
+  const removePath =
+    dependencies.removePath ??
+    (async (target, removeOptions) => rm(target, removeOptions));
+  const ensureAccess =
+    dependencies.ensureS3ArchiveAccess ?? ensureS3ArchiveAccess;
+  const execFile = dependencies.execFile ?? execFileAsync;
+
+  const archiveBasePath = resolveCompletionArchivePath(
+    options.repoRoot,
+    options.projectsRoot,
+    options.projectName,
+  );
+  const archivePath = await resolveUniqueArchivePath(
+    archiveBasePath,
+    dependencies,
+  );
+
+  await makeDir(dirname(archivePath));
+  await copyProjectDirectory(options.projectPath, archivePath);
+  await removePath(options.projectPath, { recursive: true, force: true });
+
+  const warnings: string[] = [];
+
+  let summaryExportFile: string | null = null;
+  if (options.summaryExportPath) {
+    try {
+      summaryExportFile = await exportProjectSummary(
+        archivePath,
+        options.projectName,
+        options.summaryExportPath,
+        options.repoRoot,
+        dependencies,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      warnings.push(
+        `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
+      );
+    }
+  }
+
+  let s3Path: string | null = null;
+  if (options.s3Uri && options.s3SyncOnComplete) {
+    const access = await ensureAccess(
+      {
+        mode: 'completion',
+        s3Uri: options.s3Uri,
+        syncOnComplete: options.s3SyncOnComplete,
+      },
+      {
+        execFile,
+        env: dependencies.env,
+      },
+    );
+    warnings.push(...access.warnings);
+
+    if (access.ok) {
+      s3Path = buildProjectArchiveS3Uri(
+        options.s3Uri,
+        options.repoRoot,
+        options.projectName,
+      );
+
+      try {
+        await execFile('aws', ['s3', 'sync', archivePath, s3Path], {
+          cwd: options.repoRoot,
+          env: dependencies.env ?? process.env,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        warnings.push(`Archive S3 sync to \`${s3Path}\` failed: ${message}`);
+        s3Path = null;
+      }
+    }
+  }
+
+  return {
+    archivePath,
+    s3Path,
+    summaryExportFile,
+    warnings,
+  };
 }
 
 export async function ensureS3ArchiveAccess(
@@ -117,7 +291,7 @@ export async function ensureS3ArchiveAccess(
   try {
     await execFile('aws', ['sts', 'get-caller-identity'], execOptions);
     return { ok: true, warnings: [] };
-  } catch (error) {
+  } catch {
     if (options.mode === 'completion') {
       return buildCompletionWarning(
         'Archive S3 sync is enabled via `archive.s3SyncOnComplete` and `archive.s3Uri`, but AWS CLI is not configured for access. Skipping S3 archive sync.',

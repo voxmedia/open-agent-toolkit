@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.3.1
+version: 1.3.2
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -299,6 +299,8 @@ If a PR description artifact already exists at `{PROJECT_PATH}/pr/project-pr-*.m
 
 Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).
 
+The archive-side effects in this step are CLI-owned. Follow the canonical behavior from `packages/cli/src/commands/project/archive/archive-utils.ts` rather than inventing separate S3 or summary-export logic inside the skill.
+
 ```bash
 ARCHIVED_ROOT=".oat/projects/archived"
 MAIN_WORKTREE_PATH=$(git worktree list --porcelain 2>/dev/null | awk '
@@ -344,6 +346,14 @@ mv "$PROJECT_PATH" "$ARCHIVE_PATH"
 PROJECT_PATH="$ARCHIVE_PATH"
 echo "Project archived to $ARCHIVE_PATH"
 ```
+
+**Canonical helper behaviors (required):**
+
+- Always archive locally first. The local archive is the authoritative completion artifact even when remote sync is also configured.
+- If `archive.summaryExportPath` is configured and `summary.md` exists after archive, copy it to `{repoRoot}/{archive.summaryExportPath}/{PROJECT_NAME}.md`.
+- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, sync the archived project to `{archive.s3Uri}/{repo-slug}/{PROJECT_NAME}/`.
+- If AWS CLI is missing or unusable for that S3 sync, warn and continue. Completion must not fail after the local archive succeeds.
+- If `archive.s3SyncOnComplete` is false or `archive.s3Uri` is unset, skip remote sync without prompting.
 
 **Worktree durability guard (required):**
 
