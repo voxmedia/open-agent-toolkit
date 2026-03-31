@@ -195,6 +195,19 @@ describe('oat project archive sync', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('fails when --force is used without a project name', async () => {
+    const { command, capture, execFile, removeDirectory } = createHarness();
+
+    await runArchiveSyncCommand(command, { commandArgs: ['--force'] });
+
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(execFile).not.toHaveBeenCalled();
+    expect(capture.error[0]).toBe(
+      '`--force` requires a project name for `oat project archive sync`.',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it('preserves unrelated local-only archives during full sync', async () => {
     const repoRoot = await createRepoRoot();
     await mkdir(join(repoRoot, '.oat', 'projects', 'archived', 'local-only'), {
