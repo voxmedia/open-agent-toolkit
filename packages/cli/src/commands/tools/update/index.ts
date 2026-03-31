@@ -15,13 +15,14 @@ import {
   autoSync,
 } from '@commands/tools/shared/auto-sync';
 import { scanTools } from '@commands/tools/shared/scan-tools';
-import type { PackName } from '@commands/tools/shared/types';
+import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
   type UpdateTarget,
+  type UpdateResult,
   type UpdateToolsDependencies,
   updateTools,
 } from './update-tools';
@@ -100,8 +101,9 @@ export function createToolsUpdateCommand(
         dependencies,
       );
 
-      // Refresh ~/.oat/docs/ when updating the core pack (D3 requirement)
-      if (target.kind === 'pack' && target.pack === 'core' && !dryRun) {
+      // Refresh ~/.oat/docs/ when the core pack is explicitly updated or
+      // reconciled through --all (D3 requirement).
+      if (shouldRefreshCoreDocs(target, result) && !dryRun) {
         const assetsRoot = await dependencies.resolveAssetsRoot();
         const userRoot = await dependencies.resolveScopeRoot(
           'user',
@@ -141,11 +143,8 @@ export function createToolsUpdateCommand(
       }
 
       if (result.updated.length > 0) {
-        const verb = dryRun ? 'Would update' : 'Updated';
         for (const tool of result.updated) {
-          logger.success(
-            `${verb}: ${tool.name} (${tool.version ?? '?'} -> ${tool.bundledVersion ?? '?'})`,
-          );
+          logger.success(formatUpdatedToolMessage(tool, dryRun));
         }
       }
 
@@ -167,6 +166,29 @@ export function createToolsUpdateCommand(
         logger.info('No tools to update.');
       }
     });
+}
+
+export function shouldRefreshCoreDocs(
+  target: UpdateTarget,
+  result: UpdateResult,
+): boolean {
+  if (target.kind === 'name') return false;
+  if (target.kind === 'pack') return target.pack === 'core';
+
+  return [...result.updated, ...result.current, ...result.newer].some(
+    (tool) => tool.pack === 'core',
+  );
+}
+
+export function formatUpdatedToolMessage(
+  tool: ToolInfo,
+  dryRun: boolean,
+): string {
+  if (tool.version === null) {
+    return `${dryRun ? 'Would install' : 'Installed'}: ${tool.name}`;
+  }
+
+  return `${dryRun ? 'Would update' : 'Updated'}: ${tool.name} (${tool.version} -> ${tool.bundledVersion ?? '?'})`;
 }
 
 function resolveTarget(

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { findMissingBuildArtifacts } from '../../../../tools/release/validate-public-packages';
+import { findLockstepVersionBumpErrors } from '../../../../tools/release/validate-public-packages';
 import {
   findForbiddenPackedPaths,
   findMissingMetadataFields,
@@ -186,6 +187,91 @@ describe('getPublicPackageContracts', () => {
     await expect(
       findMissingBuildArtifacts(packageDir, docsThemeContract),
     ).resolves.toEqual(['dist/index.d.ts']);
+  });
+
+  it('requires lockstep version bumps when a public package changes', () => {
+    const contracts = getPublicPackageContracts();
+
+    expect(
+      findLockstepVersionBumpErrors([
+        {
+          contract: contracts[0],
+          changedSinceBase: true,
+          currentVersion: '0.0.4',
+          baseVersion: '0.0.4',
+        },
+        {
+          contract: contracts[1],
+          changedSinceBase: false,
+          currentVersion: '0.0.4',
+          baseVersion: '0.0.4',
+        },
+        {
+          contract: contracts[2],
+          changedSinceBase: false,
+          currentVersion: '0.0.4',
+          baseVersion: '0.0.4',
+        },
+        {
+          contract: contracts[3],
+          changedSinceBase: false,
+          currentVersion: '0.0.4',
+          baseVersion: '0.0.4',
+        },
+      ]),
+    ).toEqual([
+      'publishable package changes require a lockstep version bump across all public packages. Changed packages: @tkstang/oat-cli. Packages still at their base version: @tkstang/oat-cli@0.0.4, @tkstang/oat-docs-config@0.0.4, @tkstang/oat-docs-theme@0.0.4, @tkstang/oat-docs-transforms@0.0.4',
+    ]);
+  });
+
+  it('allows lockstep bumps when publishable package changes are versioned together', () => {
+    const contracts = getPublicPackageContracts();
+
+    expect(
+      findLockstepVersionBumpErrors(
+        contracts.map((contract) => ({
+          contract,
+          changedSinceBase: contract.publicName === '@tkstang/oat-cli',
+          currentVersion: '0.0.5',
+          baseVersion: '0.0.4',
+        })),
+      ),
+    ).toEqual([]);
+  });
+
+  it('rejects divergent public package versions even when they are bumped', () => {
+    const contracts = getPublicPackageContracts();
+
+    expect(
+      findLockstepVersionBumpErrors([
+        {
+          contract: contracts[0],
+          changedSinceBase: true,
+          currentVersion: '0.0.5',
+          baseVersion: '0.0.4',
+        },
+        {
+          contract: contracts[1],
+          changedSinceBase: false,
+          currentVersion: '0.0.6',
+          baseVersion: '0.0.4',
+        },
+        {
+          contract: contracts[2],
+          changedSinceBase: false,
+          currentVersion: '0.0.5',
+          baseVersion: '0.0.4',
+        },
+        {
+          contract: contracts[3],
+          changedSinceBase: false,
+          currentVersion: '0.0.5',
+          baseVersion: '0.0.4',
+        },
+      ]),
+    ).toEqual([
+      'public packages must stay on the same version for lockstep release publishes. Found: @tkstang/oat-cli@0.0.5, @tkstang/oat-docs-config@0.0.6, @tkstang/oat-docs-theme@0.0.5, @tkstang/oat-docs-transforms@0.0.5',
+    ]);
   });
 
   it('matches the CLI package manifest to the public contract', async () => {

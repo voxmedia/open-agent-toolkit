@@ -1,4 +1,11 @@
+import { CORE_SKILLS } from '@commands/init/tools/core/install-core';
+import { DOCS_SKILLS } from '@commands/init/tools/docs/install-docs';
+import { IDEA_SKILLS } from '@commands/init/tools/ideas/install-ideas';
 import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
+import {
+  WORKFLOW_AGENTS,
+  WORKFLOW_SKILLS,
+} from '@commands/init/tools/shared/skill-manifest';
 import type { ToolInfo } from '@commands/tools/shared/types';
 import { describe, expect, it } from 'vitest';
 
@@ -63,6 +70,29 @@ describe('updateTools', () => {
     expect(result.updated[0]!.name).toBe('oat-idea-new');
     expect(deps.copies).toHaveLength(1);
     expect(deps.copies[0]!.source).toContain('skills/oat-idea-new');
+  });
+
+  it('keeps name-targeted updates scoped to the named tool', async () => {
+    const tool = createTool({ name: IDEA_SKILLS[0] });
+    const deps = createDeps({ project: [tool] });
+
+    const result = await updateTools(
+      { kind: 'name', name: IDEA_SKILLS[0]! },
+      ['project'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(result.updated.map((entry) => entry.name)).toEqual([IDEA_SKILLS[0]]);
+    expect(deps.copies).toHaveLength(1);
+    expect(deps.copies[0]!.source).toContain(`skills/${IDEA_SKILLS[0]}`);
+    expect(
+      deps.copies.some((copy) =>
+        copy.source.includes(`skills/${IDEA_SKILLS[1]}`),
+      ),
+    ).toBe(false);
   });
 
   it('updates a single outdated agent by name', async () => {
@@ -164,9 +194,38 @@ describe('updateTools', () => {
       deps,
     );
 
-    expect(result.updated).toHaveLength(2);
+    expect(result.updated.map((tool) => tool.name).sort()).toEqual(
+      [...IDEA_SKILLS].sort(),
+    );
     expect(result.current).toHaveLength(0);
-    expect(deps.copies).toHaveLength(2);
+    expect(deps.copies).toHaveLength(IDEA_SKILLS.length);
+  });
+
+  it('installs missing bundled members for a targeted installed pack', async () => {
+    const tools = [
+      createTool({
+        name: IDEA_SKILLS[0],
+        status: 'current',
+        version: '1.0.0',
+        bundledVersion: '1.0.0',
+      }),
+    ];
+    const deps = createDeps({ project: tools });
+
+    const result = await updateTools(
+      { kind: 'pack', pack: 'ideas' },
+      ['project'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(result.current.map((tool) => tool.name)).toEqual([IDEA_SKILLS[0]]);
+    expect(result.updated.map((tool) => tool.name).sort()).toEqual(
+      IDEA_SKILLS.slice(1).sort(),
+    );
+    expect(deps.copies).toHaveLength(IDEA_SKILLS.length - 1);
   });
 
   it('updates all outdated tools when --all', async () => {
@@ -190,9 +249,49 @@ describe('updateTools', () => {
       deps,
     );
 
-    expect(result.updated).toHaveLength(2);
+    const expectedUpdated = [
+      ...IDEA_SKILLS,
+      ...WORKFLOW_SKILLS,
+      ...WORKFLOW_AGENTS.map((name) => name.replace(/\.md$/, '')),
+      ...DOCS_SKILLS.filter((name) => name !== 'oat-docs-analyze'),
+    ].sort();
+
+    expect(result.updated.map((tool) => tool.name).sort()).toEqual(
+      expectedUpdated,
+    );
     expect(result.current).toHaveLength(1);
-    expect(deps.copies).toHaveLength(2);
+    expect(deps.copies).toHaveLength(expectedUpdated.length);
+  });
+
+  it('reconciles only packs already installed in a scope when using --all', async () => {
+    const tools = [
+      createTool({
+        name: CORE_SKILLS[0],
+        scope: 'user',
+        pack: 'core',
+        status: 'current',
+        version: '1.0.0',
+        bundledVersion: '1.0.0',
+      }),
+    ];
+    const deps = createDeps({ user: tools });
+
+    const result = await updateTools(
+      { kind: 'all' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(result.current.map((tool) => tool.name)).toEqual([CORE_SKILLS[0]]);
+    expect(result.updated.map((tool) => tool.name)).toEqual([CORE_SKILLS[1]]);
+    expect(result.updated.every((tool) => tool.pack === 'core')).toBe(true);
+    expect(deps.copies).toHaveLength(1);
+    expect(deps.copies[0]!.dest).toContain(
+      `/home/user/.agents/skills/${CORE_SKILLS[1]}`,
+    );
   });
 
   it('dry-run reports without copying', async () => {

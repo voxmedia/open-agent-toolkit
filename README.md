@@ -177,7 +177,7 @@ Notes:
 
 - `tools install` installs OAT skills/agents/templates/scripts by pack (`core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`) and auto-syncs provider views. The core pack (diagnostics, passive docs access) always installs at user scope.
 - `tools outdated` shows which installed tools have available updates.
-- `tools update --all` updates all outdated tools to bundled versions.
+- `tools update --all` updates all outdated tools to bundled versions, reconciles newly added bundled members for packs that are already installed in a scope, and refreshes `~/.oat/docs/` when core tooling is included in the update set.
 - Use `--no-sync` on any mutation command to skip auto-sync.
 
 ### 3.6) Bootstrap or maintain a docs app (optional)

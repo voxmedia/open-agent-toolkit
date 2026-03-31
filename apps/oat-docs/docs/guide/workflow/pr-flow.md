@@ -36,10 +36,17 @@ GitHub PR body policy:
 
 ## Post-PR state
 
-After `oat-project-pr-final` creates the PR, `state.md` transitions to `oat_phase_status: pr_open`. This signals "awaiting human review" rather than "done." From `pr_open`:
+After `oat-project-pr-final` creates the PR, `state.md` transitions to `oat_phase_status: pr_open`. This signals "awaiting human review" rather than "done."
+
+`pr_open` is the routing/review posture. Actual PR existence is tracked separately in:
+
+- `oat_pr_status` — lifecycle state for the PR itself (`ready`, `open`, etc.)
+- `oat_pr_url` — the tracked PR URL when a PR exists
+
+From `pr_open`:
 
 - **Feedback received:** run `oat-project-revise` to create revision tasks and re-enter implementation
-- **Approved:** run `oat-project-complete` to finalize and archive the project
+- **Approved:** run `oat-project-complete` to finalize and archive the project. If `oat_pr_status: open` is already tracked, completion skips asking whether to open a PR again and can show the tracked `oat_pr_url` in its summary.
 
 ## Reference artifacts
 
