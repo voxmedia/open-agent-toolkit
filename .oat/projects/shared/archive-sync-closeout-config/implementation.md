@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p03-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -23,13 +23,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | in_progress | 2     | 1/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 3     | 3/3       |
+| Phase 3 | completed | 2     | 2/2       |
 
-**Total:** 6/7 tasks completed
+**Total:** 7/7 tasks completed
 
 ---
 
@@ -103,7 +103,7 @@ oat_generated: false
 
 ## Phase 2: Archive Sync And Closeout Automation
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-03-31
 
 ### Task p02-t01: Add `oat project archive sync [project-name]`
@@ -198,13 +198,13 @@ oat_generated: false
 ### Phase 2 Summary
 
 - Phase 2 delivered the public archive sync command, CLI-owned completion archive behavior, and automatic summary refresh in the closeout lifecycle.
-- The remaining work is Phase 3 config discoverability and documentation/help surfaces.
+- Phase 2 laid the runtime behavior that Phase 3 then documented and exposed more clearly.
 
 ---
 
 ## Phase 3: Config Discoverability And Documentation
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-03-31
 
 ### Task p03-t01: Add `oat config describe [key]`
@@ -235,31 +235,43 @@ oat_generated: false
 
 ---
 
-### Task p03-t02: Update docs and help surfaces for config discoverability
+### Task p03-t02: Update docs, help text, and reference material
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 21a53b3
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Update CLI help and help snapshots so `oat config --help` points users at `oat config describe`.
-- Refresh reference docs so config file locations, scopes, and the new archive settings are easy to discover from docs as well as CLI help.
+- Added visible config discovery guidance to the CLI docs and reference surfaces so `oat config describe` is documented alongside config file ownership.
+- Documented the new archive lifecycle behavior, including shared archive config keys, local archive layout, optional S3 sync, summary export, and archive sync commands.
+- Completed verification for the docs/help phase by fixing a type gap in the archive helper that blocked `pnpm build:docs`.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/guide/cli-reference.md` - documented `oat config ...` and `oat project archive sync ...` in the top-level CLI reference
+- `apps/oat-docs/docs/guide/provider-sync/config.md` - connected sync config docs to `oat config describe`
+- `apps/oat-docs/docs/guide/workflow/lifecycle.md` - documented completion-time archive behavior and warning-tolerant S3 closeout handling
+- `apps/oat-docs/docs/reference/file-locations.md` - added config discovery guidance plus archive config and archive sync locations
+- `apps/oat-docs/docs/reference/oat-directory-structure.md` - added archive schema/config ownership details and archive sync behavior
+- `packages/cli/src/commands/help-snapshots.test.ts` - added `config --help` coverage
+- `packages/cli/src/commands/project/archive/archive-utils.ts` - widened the async exec helper options so docs builds compile cleanly
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/archive-utils.test.ts src/commands/config/index.test.ts src/commands/help-snapshots.test.ts`
+- Result: pass
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Notes / Decisions:**
+
+- `oat config --help` now exposes `describe [key]` via snapshot-covered command help, while the deeper ownership details live in the docs/reference pages.
+- The docs build failure was caused by an overly narrow helper type in archive utils, so the phase includes that compile fix rather than leaving the docs verification red.
 
 ### Phase 3 Summary
 
-- In progress.
-
----
-
-### Task p03-t02: Update docs, help text, and reference material
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- Document archive sync behavior, AWS warnings, config ownership, and summary export.
-- Ensure `oat config --help` and CLI reference point users to `oat config describe`.
+- Phase 3 added the `oat config describe` discovery surface, documented config ownership across repo/local/user/sync scopes, and published the new archive lifecycle behavior in the CLI and docs references.
+- All planned implementation tasks are complete; the project is ready for final review.
 
 ---
 
@@ -285,7 +297,8 @@ oat_generated: false
 - [x] p02-t01: Add `oat project archive sync [project-name]` - 148cbd6
 - [x] p02-t02: Move project completion archival into CLI-owned helpers - 5dee2de
 - [x] p02-t03: Auto-refresh summary during PR-final and completion flows - 8b3486d
-- [ ] p03-t01: Add `oat config describe [key]` - next
+- [x] p03-t01: Add `oat config describe [key]` - 3478e99
+- [x] p03-t02: Update docs, help text, and reference material - 21a53b3
 
 **What changed (high level):**
 
@@ -297,6 +310,7 @@ oat_generated: false
 - Added `oat project archive sync [project-name]` with dry-run, named-project force, and fail-fast AWS preflight behavior.
 - Moved completion-time archive, optional S3 sync, and optional summary export into the reusable CLI archive helper layer.
 - Updated PR-final and completion so summary refresh is automatic when `summary.md` is missing or stale.
+- Added `oat config describe [key]`, config/help snapshots, and reference docs for archive sync, config ownership, and completion-time archive behavior.
 
 **Decisions:**
 
@@ -308,13 +322,13 @@ oat_generated: false
 
 **Follow-ups / TODO:**
 
-- Implement `oat config describe [key]` and reconcile the documented config catalog with the actual command surface.
+- Run final code review and process any review fixes before PR/closeout steps.
 
 **Blockers:**
 
 - None
 
-**Session End:** plan import complete
+**Session End:** implementation tasks complete
 
 ---
 
@@ -330,30 +344,43 @@ oat_generated: false
 | ----- | ----------------------------------------------------------------- | -------- | ------ | ------------------------------------------------------ |
 | 1     | Targeted unit tests for config and archive helpers                | 2 suites | 0      | Focused regression coverage                            |
 | 2     | Archive sync, completion archive helper, and skill-contract tests | 5 suites | 0      | Command, helper, docs, and lifecycle contract coverage |
-| 3     | -                                                                 | -        | -      | -                                                      |
+| 3     | Config/help snapshots, archive helper regression, and docs build  | 2 checks | 0      | CLI discovery, archive docs, and compile-time coverage |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Not started yet
+- Optional archive sync configuration through shared OAT config, including `archive.s3Uri`, `archive.s3SyncOnComplete`, and `archive.summaryExportPath`
+- `oat project archive sync [project-name]` for repo-wide or single-project archive sync from S3 into the local archive tree
+- Automatic summary refresh during `oat-project-pr-final` and `oat-project-complete`, plus optional completion-time summary export
+- `oat config describe [key]` and updated docs/help surfaces for config ownership and archive lifecycle discovery
 
 **Behavioral changes (user-facing):**
 
-- Not started yet
+- Repositories can opt into S3-backed archived-project sync without changing the default local-only archive flow.
+- Completion automatically refreshes project summaries and can export them into a tracked reference directory.
+- CLI users can inspect config ownership with `oat config describe` and sync archived projects back down with `oat project archive sync`.
 
 **Key files / modules:**
 
-- `plan.md` - canonical imported implementation plan
-- `references/imported-plan.md` - preserved source plan snapshot
+- `packages/cli/src/commands/project/archive/archive-utils.ts` - shared archive, completion, and AWS preflight behavior
+- `packages/cli/src/commands/project/archive/index.ts` - archive sync command surface
+- `packages/cli/src/commands/config/index.ts` - config catalog and `describe` command implementation
+- `apps/oat-docs/docs/guide/cli-reference.md` - top-level CLI reference for config and archive sync
+- `apps/oat-docs/docs/reference/oat-directory-structure.md` - config ownership and archive lifecycle reference
 
 **Verification performed:**
 
-- Plan import only; implementation verification pending
+- `pnpm --filter @tkstang/oat-cli test -- src/config/oat-config.test.ts src/commands/config/index.test.ts`
+- `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/archive-utils.test.ts`
+- `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/index.test.ts src/commands/help-snapshots.test.ts`
+- `pnpm --filter @tkstang/oat-cli test -- src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/archive-utils.test.ts src/commands/config/index.test.ts src/commands/help-snapshots.test.ts`
+- `pnpm build:docs`
 
 **Design deltas (if any):**
 
-- None yet
+- The docs/help phase included a small compile-time fix in `archive-utils.ts` after `pnpm build:docs` exposed an overly narrow exec-helper type.
 
 ## References
 
