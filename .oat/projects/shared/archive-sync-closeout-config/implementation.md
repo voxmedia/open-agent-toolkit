@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p04-t03
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 7     | 2/7       |
+| Phase 4 | in_progress | 7     | 3/7       |
 
-**Total:** 9/14 tasks completed
+**Total:** 10/14 tasks completed
 
 ---
 
@@ -333,12 +333,27 @@ oat_generated: false
 
 ### Task p04-t03: (review) Deduplicate archive exec helper types
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9e6044e
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Consolidate the duplicated archive exec helper types into one canonical export.
+- Removed the duplicated archive exec helper type definitions so the archive command and helper layer now share one canonical contract.
+- Reduced the chance of drift between the helper dependency interface and the command dependency interface.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/archive/archive-utils.ts` - exported the shared exec helper types
+- `packages/cli/src/commands/project/archive/index.ts` - imported the shared exec helper types and removed duplicate local definitions
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/archive-utils.test.ts src/commands/project/archive/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The refactor stayed intentionally small: only the type definitions moved, with no command-behavior changes folded into the task.
 
 ---
 
