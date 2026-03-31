@@ -79,10 +79,6 @@ export async function runSyncApply(
   for (const scopePlan of scopePlans) {
     const hasSyncEntries =
       scopePlan.plan.entries.length > 0 || scopePlan.plan.removals.length > 0;
-    const hasSyncPlannedOperations = [
-      ...scopePlan.plan.entries,
-      ...scopePlan.plan.removals,
-    ].some((entry) => entry.operation !== 'skip');
     const hasCodexPlannedOperations =
       scopePlan.codexExtensionPlan?.operations.some(
         (operation) => operation.action !== 'skip',
