@@ -50,7 +50,17 @@ After implementation and final review pass:
    - GitHub PR feedback delegates to `oat-project-review-receive-remote`
    - Review artifacts delegate to `oat-project-review-receive`
    - After revision tasks complete, state returns to `pr_open`
-5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`) and auto-refreshes `summary.md` before closeout when needed
+5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and always archives the project locally
+
+### Completion archive behavior
+
+On completion, OAT now treats archive handling as part of the closeout lifecycle:
+
+- Local archive is always written to `.oat/projects/archived/<project>/`.
+- If `.oat/config.json` enables `archive.s3SyncOnComplete` and sets `archive.s3Uri`, completion also attempts an S3 upload for the archived project.
+- If `.oat/config.json` sets `archive.summaryExportPath`, completion copies `summary.md` to `<archive.summaryExportPath>/<project-name>.md`.
+- Missing or unusable AWS CLI configuration produces warnings during completion instead of blocking closeout.
+- `oat project archive sync` can later sync all archived projects, or one named archived project, back down from S3 into the local archive tree.
 
 ### Phase status: `pr_open`
 

@@ -22,7 +22,7 @@ type ExecFileResult = {
 type ExecFileLike = (
   file: string,
   args: string[],
-  options?: { env?: NodeJS.ProcessEnv },
+  options?: { cwd?: string; env?: NodeJS.ProcessEnv },
 ) => Promise<ExecFileResult>;
 
 export interface EnsureS3ArchiveAccessOptions {

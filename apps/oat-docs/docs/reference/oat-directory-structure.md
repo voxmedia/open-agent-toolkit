@@ -43,7 +43,7 @@ Project scope is used for project workflows and repo-local sync state. User scop
 
 | Path                     | Purpose                                          | Notes                                                                                                   |
 | ------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `.oat/config.json`       | Shared repo runtime config for non-sync settings | Includes `worktrees.root`, `projects.root`, `git.defaultBranch`                                         |
+| `.oat/config.json`       | Shared repo runtime config for non-sync settings | Includes `worktrees.root`, `projects.root`, `git.defaultBranch`, `archive.*`, and `documentation.*`     |
 | `.oat/config.local.json` | Local per-developer runtime state                | Gitignored; includes `activeProject`, `lastPausedProject`, `activeIdea`                                 |
 | `.oat/projects/`         | OAT project artifacts                            | `shared`, `local`, `archived` scopes                                                                    |
 | `.oat/ideas/`            | Project-level ideas store                        | Often gitignored                                                                                        |
@@ -79,6 +79,12 @@ Current config ownership:
 - `~/.oat/config.json` owns user-level state (`activeIdea` at global scope).
 - `.oat/sync/config.json` continues to own sync/provider behavior.
 
+CLI discovery surfaces:
+
+- `oat config describe` lists the supported config surfaces and keys across shared repo, repo-local, user, and sync/provider config.
+- `oat config describe <key>` prints scope, file, default, mutability, owning command, and description for one config key.
+- `oat config list` prints the resolved values for the repo-scoped/local command surface.
+
 Legacy `.oat/active-project` / `.oat/projects-root` / `.oat/active-idea` files may still be present in some environments but are no longer the canonical source in migrated command paths.
 
 ### `.oat/config.json` schema
@@ -98,9 +104,13 @@ Current schema keys:
 | `documentation.requireForProjectCompletion` | `boolean`  | `false`                  | When `true`, OAT project completion gates require documentation to be updated                                                                                                             |
 | `git.defaultBranch`                         | `string`   | `"main"`                 | Default branch for PR creation. Auto-detected during `oat init` via `gh repo view` or `origin/HEAD`. Used by `oat-project-pr-final` and `oat-project-pr-progress`.                        |
 | `autoReviewAtCheckpoints`                   | `boolean`  | `false`                  | When `true`, completing a plan phase checkpoint automatically spawns a subagent code review. Can be overridden per-project via `oat_auto_review_at_checkpoints` in `plan.md` frontmatter. |
+| `archive.s3Uri`                             | `string`   | -                        | Base S3 URI for repo-scoped archived project sync, for example `s3://bucket/oat-archive`                                                                                                  |
+| `archive.s3SyncOnComplete`                  | `boolean`  | `false`                  | When `true`, `oat-project-complete` uploads the archived project to the configured S3 archive after local archive succeeds                                                                |
+| `archive.summaryExportPath`                 | `string`   | -                        | Repo-relative directory where completion exports `summary.md` as `<project-name>.md` for durable tracked reference                                                                        |
 
 All `documentation.*` keys are managed via `oat config get/set` and are set automatically by `oat docs init`.
 The `git.defaultBranch` key is auto-detected during `oat init` and can be overridden via `oat config set git.defaultBranch <branch>`.
+Archive settings are managed via `oat config get/set`, and `oat config describe archive.s3Uri` (or the other archive keys) shows the lifecycle and ownership details from the CLI.
 
 Example:
 
@@ -144,6 +154,14 @@ Each OAT project lives under:
 - `.oat/projects/shared/<project>/`
 - `.oat/projects/local/<project>/`
 - `.oat/projects/archived/<project>/`
+
+Archive sync behavior:
+
+- `oat-project-complete` always archives locally into `.oat/projects/archived/<project>/`.
+- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, completion also uploads that archived project to the repo-scoped S3 archive prefix.
+- `oat project archive sync` syncs all repo archived projects down from S3 into `.oat/projects/archived/`.
+- `oat project archive sync <project-name>` syncs a single archived project subtree.
+- Default archive sync is non-destructive: it downloads missing or updated remote content and preserves unrelated local-only archive data.
 
 Typical contents:
 
@@ -212,7 +230,7 @@ User scope is primarily for:
 ## Practical guidance
 
 - Treat `.oat/templates/` as scaffolding source.
-- Treat `.oat/config.json` + `.oat/config.local.json` as OAT runtime config/state (`oat config get/set/list` is the preferred interface).
+- Treat `.oat/config.json` + `.oat/config.local.json` as OAT runtime config/state (`oat config get/set/list/describe` is the preferred interface).
 - Treat `.oat/sync/manifest.json` and `.oat/sync/config.json` as sync runtime state/config.
 - Treat project artifacts under `.oat/projects/**` as lifecycle source-of-truth for workflow execution.
 - Keep `state.md`, `plan.md`, and `implementation.md` consistent after each workflow step.
