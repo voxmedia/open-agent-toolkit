@@ -14,12 +14,12 @@ import {
 
 const execFileAsync = promisify(execFileCallback);
 
-type ExecFileResult = {
+export type ExecFileResult = {
   stdout: string;
   stderr: string;
 };
 
-type ExecFileLike = (
+export type ExecFileLike = (
   file: string,
   args: string[],
   options?: { cwd?: string; env?: NodeJS.ProcessEnv },

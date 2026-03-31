@@ -15,21 +15,11 @@ import {
   buildProjectArchiveS3Uri,
   buildRepoArchiveS3Uri,
   ensureS3ArchiveAccess,
+  type ExecFileLike,
   resolveLocalArchiveProjectPath,
 } from './archive-utils';
 
 const execFileAsync = promisify(execFileCallback);
-
-type ExecFileResult = {
-  stdout: string;
-  stderr: string;
-};
-
-type ExecFileLike = (
-  file: string,
-  args: string[],
-  options?: { cwd?: string; env?: NodeJS.ProcessEnv },
-) => Promise<ExecFileResult>;
 
 interface ArchiveSyncOptions {
   dryRun?: boolean;
