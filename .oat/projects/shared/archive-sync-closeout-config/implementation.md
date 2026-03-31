@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p02-t02
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -26,10 +26,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | in_progress | 3     | 1/3       |
+| Phase 2 | in_progress | 3     | 2/3       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 3/7 tasks completed
+**Total:** 4/7 tasks completed
 
 ---
 
@@ -138,13 +138,31 @@ oat_generated: false
 
 ### Task p02-t02: Move project completion archival into CLI-owned helpers
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5dee2de
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Completion must remain local-first and warning-tolerant for remote failures.
-- Summary export should remain optional and config-driven.
+- Expanded the archive helper so completion-time archive behavior is CLI-owned instead of living only in skill-local shell logic.
+- Completion archiving now handles local archive placement, optional S3 upload, optional summary export, and warning-only remote failure behavior in one tested helper.
+- Updated the completion skill and backlog reference so the lifecycle contract now points at the canonical archive-helper behavior.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/archive/archive-utils.ts` - added completion-time archive orchestration with optional S3 sync and summary export
+- `packages/cli/src/commands/project/archive/archive-utils.test.ts` - added coverage for local archive success, config-conditioned S3 behavior, summary export, and warning-tolerant completion
+- `.agents/skills/oat-project-complete/SKILL.md` - documented that archive-side effects follow the canonical CLI helper behavior
+- `.oat/repo/reference/backlog/items/project-complete-cli-helper.md` - updated backlog status/note to reflect the CLI-owned archive-helper work
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/archive-utils.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Completion always archives locally first; S3 and summary export are follow-on effects that can warn without failing the closeout flow.
+- `archive.summaryExportPath` remains opt-in and summary export is skipped silently when the path is unset or `summary.md` does not exist.
 
 ---
 
@@ -209,7 +227,8 @@ oat_generated: false
 - [x] p01-t01: Extend config schema and command support for archive settings - 531d3a8
 - [x] p01-t02: Build reusable archive and AWS preflight helpers - 8f99ce2
 - [x] p02-t01: Add `oat project archive sync [project-name]` - 148cbd6
-- [ ] p02-t02: Move project completion archival into CLI-owned helpers - next
+- [x] p02-t02: Move project completion archival into CLI-owned helpers - 5dee2de
+- [ ] p02-t03: Auto-refresh summary during PR-final and completion flows - next
 
 **What changed (high level):**
 
@@ -219,6 +238,7 @@ oat_generated: false
 - Added archive config keys to the shared OAT config model and `oat config` command surface.
 - Added reusable archive path and AWS preflight helpers for later command wiring and completion flows.
 - Added `oat project archive sync [project-name]` with dry-run, named-project force, and fail-fast AWS preflight behavior.
+- Moved completion-time archive, optional S3 sync, and optional summary export into the reusable CLI archive helper layer.
 
 **Decisions:**
 
@@ -230,7 +250,7 @@ oat_generated: false
 
 **Follow-ups / TODO:**
 
-- Delegate completion-time archive side effects to the CLI-owned archive helper and keep warning-tolerant behavior for remote failures.
+- Automate summary refresh during PR-final and completion so a durable summary artifact is always produced before closeout.
 
 **Blockers:**
 
@@ -248,11 +268,11 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run                                          | Passed   | Failed | Coverage                         |
-| ----- | -------------------------------------------------- | -------- | ------ | -------------------------------- |
-| 1     | Targeted unit tests for config and archive helpers | 2 suites | 0      | Focused regression coverage      |
-| 2     | Archive sync command and help snapshot tests       | 2 suites | 0      | Command contract and help output |
-| 3     | -                                                  | -        | -      | -                                |
+| Phase | Tests Run                                                         | Passed   | Failed | Coverage                                         |
+| ----- | ----------------------------------------------------------------- | -------- | ------ | ------------------------------------------------ |
+| 1     | Targeted unit tests for config and archive helpers                | 2 suites | 0      | Focused regression coverage                      |
+| 2     | Archive sync, completion archive helper, and skill-contract tests | 4 suites | 0      | Command, helper, and lifecycle contract coverage |
+| 3     | -                                                                 | -        | -      | -                                                |
 
 ## Final Summary (for PR/docs)
 
