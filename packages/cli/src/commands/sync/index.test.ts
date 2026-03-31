@@ -368,6 +368,20 @@ describe('createSyncCommand', () => {
     expect(capture.success).toContain('\nSync applied successfully.');
   });
 
+  it('apply (default): executes skip-only plans to reconcile manifest state', async () => {
+    const { capture, command, executeSyncPlan } = createHarness({
+      plans: [createPlan('skip')],
+      executeResults: [{ applied: 0, failed: 0, skipped: 1 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(executeSyncPlan).toHaveBeenCalledTimes(1);
+    expect(capture.info).toContain('\nNo changes required.');
+  });
+
   it('apply (default): executes transformed rule copy plans', async () => {
     const { command, executeSyncPlan } = createHarness({
       adapters: [createAdapter('cursor')],
