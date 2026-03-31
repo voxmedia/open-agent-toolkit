@@ -3,6 +3,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readlink,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -10,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
+import { createSymlink } from '@fs/io';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -106,6 +108,65 @@ describe('sync engine integration', () => {
     expect(
       secondPlan.entries.every((entry) => entry.operation === 'skip'),
     ).toBe(true);
+  });
+
+  it('repairs missing manifest entries for pre-existing in-sync symlinks', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createTestAdapter();
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root);
+
+    const skillCanonical = join(root, '.agents', 'skills', 'skill-one');
+    const agentCanonical = join(root, '.agents', 'agents', 'agent-one');
+    await Promise.all([
+      createSymlink(
+        skillCanonical,
+        join(root, '.claude', 'skills', 'skill-one'),
+        undefined,
+        false,
+      ),
+      createSymlink(
+        agentCanonical,
+        join(root, '.claude', 'agents', 'agent-one'),
+        undefined,
+        false,
+      ),
+    ]);
+
+    const emptyManifest = createEmptyManifest();
+    const canonical = await scanCanonical(root, 'project');
+    const plan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest: emptyManifest,
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries).toHaveLength(2);
+    expect(plan.entries.every((entry) => entry.operation === 'skip')).toBe(
+      true,
+    );
+
+    const result = await executeSyncPlan(plan, emptyManifest, manifestPath);
+    const manifest = await loadManifest(manifestPath);
+
+    expect(result.applied).toBe(0);
+    expect(result.failed).toBe(0);
+    expect(result.skipped).toBe(2);
+    expect(
+      manifest.entries.map((entry) => [entry.canonicalPath, entry.provider]),
+    ).toEqual(
+      expect.arrayContaining([
+        ['.agents/skills/skill-one', 'claude'],
+        ['.agents/agents/agent-one', 'claude'],
+      ]),
+    );
+    expect(
+      await readlink(join(root, '.claude', 'skills', 'skill-one')),
+    ).toBeDefined();
   });
 
   it('dry-run: computeSyncPlan without execute makes zero fs changes', async () => {
