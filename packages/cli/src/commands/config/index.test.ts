@@ -360,6 +360,26 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('describe supports json mode', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'archive.s3Uri'], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      key: 'archive.s3Uri',
+      entries: [
+        expect.objectContaining({
+          key: 'archive.s3Uri',
+          file: '.oat/config.json',
+          scope: 'shared repo',
+        }),
+      ],
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('describe returns exit code 1 for unknown keys', async () => {
     const root = await createRepoRoot();
     const { command, capture } = createHarness({ cwd: root });
