@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -26,10 +26,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | in_progress | 3     | 2/3       |
-| Phase 3 | pending     | 2     | 0/2       |
+| Phase 2 | completed   | 3     | 3/3       |
+| Phase 3 | in_progress | 2     | 0/2       |
 
-**Total:** 4/7 tasks completed
+**Total:** 5/7 tasks completed
 
 ---
 
@@ -168,13 +168,37 @@ oat_generated: false
 
 ### Task p02-t03: Auto-refresh summary during PR-final and completion flows
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8b3486d
 
-**Notes:**
+**Outcome (required when completed):**
 
-- `oat-project-pr-final` and `oat-project-complete` should ensure summary freshness automatically.
-- Summary generation failure should warn, not block closeout.
+- `oat-project-pr-final` and `oat-project-complete` now both treat summary refresh as automatic lifecycle behavior instead of a prompt-driven option.
+- The skill contract test now enforces the new automatic-summary wording so the lifecycle behavior cannot drift back to optional prompting.
+- Workflow docs now describe summary refresh as an automatic part of PR-final and completion when `summary.md` is missing or stale.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-pr-final/SKILL.md` - made summary refresh automatic during PR-final
+- `.agents/skills/oat-project-complete/SKILL.md` - made summary refresh automatic during completion
+- `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` - added contract coverage for automatic summary refresh wording
+- `apps/oat-docs/docs/guide/workflow/pr-flow.md` - documented automatic summary refresh in PR flow
+- `apps/oat-docs/docs/guide/workflow/lifecycle.md` - documented automatic summary refresh in lifecycle guidance
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Summary generation failure remains warning-only during closeout flows; automatic refresh changes the default behavior, not the failure severity.
+- The explicit standalone `oat-project-summary` skill remains useful, but PR-final and completion no longer depend on the user remembering to invoke it first.
+
+### Phase 2 Summary
+
+- Phase 2 delivered the public archive sync command, CLI-owned completion archive behavior, and automatic summary refresh in the closeout lifecycle.
+- The remaining work is Phase 3 config discoverability and documentation/help surfaces.
 
 ---
 
@@ -228,7 +252,8 @@ oat_generated: false
 - [x] p01-t02: Build reusable archive and AWS preflight helpers - 8f99ce2
 - [x] p02-t01: Add `oat project archive sync [project-name]` - 148cbd6
 - [x] p02-t02: Move project completion archival into CLI-owned helpers - 5dee2de
-- [ ] p02-t03: Auto-refresh summary during PR-final and completion flows - next
+- [x] p02-t03: Auto-refresh summary during PR-final and completion flows - 8b3486d
+- [ ] p03-t01: Add `oat config describe [key]` - next
 
 **What changed (high level):**
 
@@ -239,6 +264,7 @@ oat_generated: false
 - Added reusable archive path and AWS preflight helpers for later command wiring and completion flows.
 - Added `oat project archive sync [project-name]` with dry-run, named-project force, and fail-fast AWS preflight behavior.
 - Moved completion-time archive, optional S3 sync, and optional summary export into the reusable CLI archive helper layer.
+- Updated PR-final and completion so summary refresh is automatic when `summary.md` is missing or stale.
 
 **Decisions:**
 
@@ -250,7 +276,7 @@ oat_generated: false
 
 **Follow-ups / TODO:**
 
-- Automate summary refresh during PR-final and completion so a durable summary artifact is always produced before closeout.
+- Implement `oat config describe [key]` and reconcile the documented config catalog with the actual command surface.
 
 **Blockers:**
 
@@ -268,11 +294,11 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run                                                         | Passed   | Failed | Coverage                                         |
-| ----- | ----------------------------------------------------------------- | -------- | ------ | ------------------------------------------------ |
-| 1     | Targeted unit tests for config and archive helpers                | 2 suites | 0      | Focused regression coverage                      |
-| 2     | Archive sync, completion archive helper, and skill-contract tests | 4 suites | 0      | Command, helper, and lifecycle contract coverage |
-| 3     | -                                                                 | -        | -      | -                                                |
+| Phase | Tests Run                                                         | Passed   | Failed | Coverage                                               |
+| ----- | ----------------------------------------------------------------- | -------- | ------ | ------------------------------------------------------ |
+| 1     | Targeted unit tests for config and archive helpers                | 2 suites | 0      | Focused regression coverage                            |
+| 2     | Archive sync, completion archive helper, and skill-contract tests | 5 suites | 0      | Command, helper, docs, and lifecycle contract coverage |
+| 3     | -                                                                 | -        | -      | -                                                      |
 
 ## Final Summary (for PR/docs)
 
