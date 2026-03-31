@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -26,10 +26,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | in_progress | 3     | 0/3       |
+| Phase 2 | in_progress | 3     | 1/3       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 2/7 tasks completed
+**Total:** 3/7 tasks completed
 
 ---
 
@@ -108,14 +108,31 @@ oat_generated: false
 
 ### Task p02-t01: Add `oat project archive sync [project-name]`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 148cbd6
 
-**Notes:**
+**Outcome (required when completed):**
 
-- No arg should sync all archived projects.
-- Positional project name should sync one archived project.
-- `--force` should replace the named local archive before re-syncing from remote.
+- Added a CLI-owned `oat project archive sync [project-name]` command under `oat project archive`.
+- The command supports no-arg full sync, positional single-project sync, `--dry-run`, and named-project `--force`.
+- Explicit sync operations now reuse the archive helper preflight path and preserve local-only archives by relying on non-destructive `aws s3 sync` semantics.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/archive/index.ts` - added the archive command group and `sync` subcommand implementation
+- `packages/cli/src/commands/project/archive/index.test.ts` - added command-level coverage for full sync, single-project sync, dry-run, no-delete behavior, force, and AWS failures
+- `packages/cli/src/commands/project/index.ts` - registered the new `archive` subcommand under `oat project`
+- `packages/cli/src/commands/help-snapshots.test.ts` - updated the `project --help` snapshot for the new subcommand
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/index.test.ts src/commands/help-snapshots.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- `--force` is intentionally limited to named-project syncs so the command does not grow an implicit “replace everything locally” mode.
+- Full sync preserves unrelated local-only archives by omitting `--delete` and avoiding any local archive-root cleanup.
 
 ---
 
@@ -190,8 +207,9 @@ oat_generated: false
 - [x] Imported agreed external plan into OAT project artifacts
 - [x] Initialized `plan.md`, `state.md`, and `implementation.md` for import-mode execution
 - [x] p01-t01: Extend config schema and command support for archive settings - 531d3a8
-- [x] p01-t02: Build reusable archive and AWS preflight helpers - pending commit
-- [ ] p02-t01: Add `oat project archive sync [project-name]` - next
+- [x] p01-t02: Build reusable archive and AWS preflight helpers - 8f99ce2
+- [x] p02-t01: Add `oat project archive sync [project-name]` - 148cbd6
+- [ ] p02-t02: Move project completion archival into CLI-owned helpers - next
 
 **What changed (high level):**
 
@@ -200,6 +218,7 @@ oat_generated: false
 - Normalized the project into OAT phases and task IDs.
 - Added archive config keys to the shared OAT config model and `oat config` command surface.
 - Added reusable archive path and AWS preflight helpers for later command wiring and completion flows.
+- Added `oat project archive sync [project-name]` with dry-run, named-project force, and fail-fast AWS preflight behavior.
 
 **Decisions:**
 
@@ -211,7 +230,7 @@ oat_generated: false
 
 **Follow-ups / TODO:**
 
-- Implement `oat project archive sync [project-name]` on top of the new archive helpers.
+- Delegate completion-time archive side effects to the CLI-owned archive helper and keep warning-tolerant behavior for remote failures.
 
 **Blockers:**
 
@@ -229,11 +248,11 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run                                          | Passed   | Failed | Coverage                    |
-| ----- | -------------------------------------------------- | -------- | ------ | --------------------------- |
-| 1     | Targeted unit tests for config and archive helpers | 2 suites | 0      | Focused regression coverage |
-| 2     | -                                                  | -        | -      | -                           |
-| 3     | -                                                  | -        | -      | -                           |
+| Phase | Tests Run                                          | Passed   | Failed | Coverage                         |
+| ----- | -------------------------------------------------- | -------- | ------ | -------------------------------- |
+| 1     | Targeted unit tests for config and archive helpers | 2 suites | 0      | Focused regression coverage      |
+| 2     | Archive sync command and help snapshot tests       | 2 suites | 0      | Command contract and help output |
+| 3     | -                                                  | -        | -      | -                                |
 
 ## Final Summary (for PR/docs)
 
