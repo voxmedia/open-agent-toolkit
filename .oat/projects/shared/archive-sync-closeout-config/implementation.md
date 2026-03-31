@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -25,17 +25,17 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 1/2       |
-| Phase 2 | pending     | 3     | 0/3       |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | in_progress | 3     | 0/3       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 1/7 tasks completed
+**Total:** 2/7 tasks completed
 
 ---
 
 ## Phase 1: Archive Config And Helper Foundations
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-03-31
 
 ### Task p01-t01: Extend config schema and command support for archive settings
@@ -70,20 +70,41 @@ oat_generated: false
 
 ### Task p01-t02: Build reusable archive and AWS preflight helpers
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8f99ce2
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Centralize archive path resolution and AWS CLI preflight logic.
-- Keep completion warnings separate from explicit command failures while sharing helper behavior.
+- Added reusable archive helper primitives for repo-scoped S3 archive URI construction and local archived-project path resolution.
+- Added shared AWS CLI preflight behavior that distinguishes warning-tolerant completion flows from fail-fast explicit sync flows.
+- Locked the warning and error wording in tests so later command wiring can reuse deterministic user-facing messaging.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/archive/archive-utils.ts` - added archive path builders and AWS CLI preflight helpers
+- `packages/cli/src/commands/project/archive/archive-utils.test.ts` - added coverage for path resolution plus completion warning and sync failure behavior
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/archive-utils.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Remote archive paths are repo-scoped using the repo directory basename so multiple repos can share one bucket prefix.
+- Explicit `oat project archive sync` failures are surfaced as `CliError`s, while completion-time archive attempts return warnings instead of blocking closeout.
+
+### Phase 1 Summary
+
+- Archive config keys are now first-class config values and the archive helper foundation for AWS preflight and path resolution is in place.
+- Command wiring for `oat project archive sync` is intentionally deferred to Phase 2 so the helper layer stays reusable and independently testable.
 
 ---
 
 ## Phase 2: Archive Sync And Closeout Automation
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-03-31
 
 ### Task p02-t01: Add `oat project archive sync [project-name]`
 
@@ -169,7 +190,8 @@ oat_generated: false
 - [x] Imported agreed external plan into OAT project artifacts
 - [x] Initialized `plan.md`, `state.md`, and `implementation.md` for import-mode execution
 - [x] p01-t01: Extend config schema and command support for archive settings - 531d3a8
-- [ ] p01-t02: Build reusable archive and AWS preflight helpers - pending
+- [x] p01-t02: Build reusable archive and AWS preflight helpers - pending commit
+- [ ] p02-t01: Add `oat project archive sync [project-name]` - next
 
 **What changed (high level):**
 
@@ -177,6 +199,7 @@ oat_generated: false
 - Preserved the external plan under `references/imported-plan.md`.
 - Normalized the project into OAT phases and task IDs.
 - Added archive config keys to the shared OAT config model and `oat config` command surface.
+- Added reusable archive path and AWS preflight helpers for later command wiring and completion flows.
 
 **Decisions:**
 
@@ -184,10 +207,11 @@ oat_generated: false
 - Default archive sync behavior is non-destructive remote-to-local reconciliation.
 - Use AWS CLI rather than adding AWS SDK dependencies.
 - Normalize the S3 URI once at config-read/write time instead of deferring path cleanup to archive commands.
+- Keep archive command wiring out of the helper task so preflight behavior remains testable without Commander coupling.
 
 **Follow-ups / TODO:**
 
-- Confirm HiLL checkpoints when implementation starts.
+- Implement `oat project archive sync [project-name]` on top of the new archive helpers.
 
 **Blockers:**
 
@@ -205,11 +229,11 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
+| Phase | Tests Run                                          | Passed   | Failed | Coverage                    |
+| ----- | -------------------------------------------------- | -------- | ------ | --------------------------- |
+| 1     | Targeted unit tests for config and archive helpers | 2 suites | 0      | Focused regression coverage |
+| 2     | -                                                  | -        | -      | -                           |
+| 3     | -                                                  | -        | -      | -                           |
 
 ## Final Summary (for PR/docs)
 
