@@ -320,6 +320,21 @@ describe('oat project archive sync', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('supports json mode for archive sync output', async () => {
+    const { command, capture } = createHarness({ json: true });
+
+    await runArchiveSyncCommand(command, { commandArgs: ['demo-project'] });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      mode: 'apply',
+      projectName: 'demo-project',
+      source: 's3://example-bucket/oat-archive/open-agent-toolkit/demo-project',
+      target: '.oat/projects/archived/demo-project',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('fails when AWS CLI is missing', async () => {
     const { command, capture, execFile } = createHarness({
       preflightError: new CliError(
