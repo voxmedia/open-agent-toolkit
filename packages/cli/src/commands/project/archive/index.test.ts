@@ -281,6 +281,23 @@ describe('oat project archive sync', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('fails when archive.s3Uri is not configured', async () => {
+    const { command, capture, ensureS3ArchiveAccess, execFile } = createHarness(
+      {
+        config: { version: 1 },
+      },
+    );
+
+    await runArchiveSyncCommand(command);
+
+    expect(ensureS3ArchiveAccess).not.toHaveBeenCalled();
+    expect(execFile).not.toHaveBeenCalled();
+    expect(capture.error[0]).toBe(
+      'Archive sync requires `archive.s3Uri` to be configured. Set it with `oat config set archive.s3Uri <s3://...>` and retry.',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it('fails when AWS CLI is missing', async () => {
     const { command, capture, execFile } = createHarness({
       preflightError: new CliError(
