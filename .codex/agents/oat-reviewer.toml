@@ -34,7 +34,7 @@ You will be given a "Review Scope" block including:
 
 - **project**: Path to project directory (e.g., `.oat/projects/shared/my-feature/`)
 - **type**: `code` or `artifact`
-- **scope**: What to review (`pNN-tNN` task, `pNN` phase, `final`, `BASE..HEAD` range, or an artifact name like `spec` / `design`)
+- **scope**: What to review (`pNN-tNN` task, `pNN` phase, `pNN-pMM` contiguous phase range, `final`, `BASE..HEAD` range, or an artifact name like `spec` / `design`)
 - **commits/range**: Git commits or SHA range for changed files
 - **files_changed**: List of files modified in scope
 - **workflow_mode**: `spec-driven` | `quick` | `import` (default to `spec-driven` if absent)
