@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p04-t05
+oat_current_task_id: p04-t06
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 7     | 4/7       |
+| Phase 4 | in_progress | 7     | 5/7       |
 
-**Total:** 11/14 tasks completed
+**Total:** 12/14 tasks completed
 
 ---
 
@@ -385,12 +385,26 @@ oat_generated: false
 
 ### Task p04-t05: (review) Add JSON coverage for config describe
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 033c263
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Exercise the JSON output contract for `oat config describe`.
+- Added JSON-mode coverage for `oat config describe`, locking the structured response shape for key-scoped metadata output.
+- Extended config command regression coverage without changing command behavior.
+
+**Files changed:**
+
+- `packages/cli/src/commands/config/index.test.ts` - added JSON output coverage for `describe`
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/config/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The test targets `archive.s3Uri` so the payload shape is exercised with a real catalog entry rather than a broad snapshot.
 
 ---
 
