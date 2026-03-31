@@ -17,11 +17,18 @@ export interface OatGitConfig {
   defaultBranch?: string;
 }
 
+export interface OatArchiveConfig {
+  s3Uri?: string;
+  s3SyncOnComplete?: boolean;
+  summaryExportPath?: string;
+}
+
 export interface OatConfig {
   version: number;
   worktrees?: { root: string };
   projects?: { root: string };
   git?: OatGitConfig;
+  archive?: OatArchiveConfig;
   documentation?: OatDocumentationConfig;
   localPaths?: string[];
   autoReviewAtCheckpoints?: boolean;
@@ -145,6 +152,30 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     }
     if (Object.keys(git).length > 0) {
       next.git = git;
+    }
+  }
+
+  if (isRecord(parsed.archive)) {
+    const archive: OatArchiveConfig = {};
+    if (
+      typeof parsed.archive.s3Uri === 'string' &&
+      parsed.archive.s3Uri.trim()
+    ) {
+      archive.s3Uri = parsed.archive.s3Uri.trim().replace(/\/+$/, '');
+    }
+    if (typeof parsed.archive.s3SyncOnComplete === 'boolean') {
+      archive.s3SyncOnComplete = parsed.archive.s3SyncOnComplete;
+    }
+    if (
+      typeof parsed.archive.summaryExportPath === 'string' &&
+      parsed.archive.summaryExportPath.trim()
+    ) {
+      archive.summaryExportPath = normalizeToPosixPath(
+        parsed.archive.summaryExportPath.trim().replace(/\/+$/, ''),
+      );
+    }
+    if (Object.keys(archive).length > 0) {
+      next.archive = archive;
     }
   }
 

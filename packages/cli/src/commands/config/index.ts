@@ -15,12 +15,16 @@ import { Command } from 'commander';
 type ConfigKey =
   | 'activeIdea'
   | 'activeProject'
+  | 'archive.s3SyncOnComplete'
+  | 'archive.s3Uri'
+  | 'archive.summaryExportPath'
   | 'autoReviewAtCheckpoints'
   | 'lastPausedProject'
   | 'documentation.config'
   | 'documentation.requireForProjectCompletion'
   | 'documentation.root'
   | 'documentation.tooling'
+  | 'git.defaultBranch'
   | 'projects.root'
   | 'worktrees.root';
 
@@ -52,12 +56,16 @@ interface ConfigCommandDependencies {
 const KEY_ORDER: ConfigKey[] = [
   'activeIdea',
   'activeProject',
+  'archive.s3Uri',
+  'archive.s3SyncOnComplete',
+  'archive.summaryExportPath',
   'autoReviewAtCheckpoints',
   'lastPausedProject',
   'documentation.root',
   'documentation.tooling',
   'documentation.config',
   'documentation.requireForProjectCompletion',
+  'git.defaultBranch',
   'projects.root',
   'worktrees.root',
 ];
@@ -150,6 +158,38 @@ async function getConfigValue(
       key,
       value,
       source: doc ? 'config.json' : 'default',
+    };
+  }
+
+  if (key.startsWith('archive.')) {
+    const config = await dependencies.readOatConfig(repoRoot);
+    const archive = config.archive;
+    let value: string | null = null;
+
+    if (key === 'archive.s3Uri') {
+      value = archive?.s3Uri ?? null;
+    } else if (key === 'archive.s3SyncOnComplete') {
+      value =
+        archive?.s3SyncOnComplete != null
+          ? String(archive.s3SyncOnComplete)
+          : 'false';
+    } else if (key === 'archive.summaryExportPath') {
+      value = archive?.summaryExportPath ?? null;
+    }
+
+    return {
+      key,
+      value,
+      source: archive ? 'config.json' : 'default',
+    };
+  }
+
+  if (key === 'git.defaultBranch') {
+    const config = await dependencies.readOatConfig(repoRoot);
+    return {
+      key,
+      value: config.git?.defaultBranch ?? null,
+      source: config.git?.defaultBranch ? 'config.json' : 'default',
     };
   }
 
@@ -259,6 +299,57 @@ async function setConfigValue(
     return {
       key,
       value: resultValue,
+      source: 'config.json',
+    };
+  }
+
+  if (key.startsWith('archive.')) {
+    const archive = { ...config.archive };
+
+    if (key === 'archive.s3Uri') {
+      archive.s3Uri = rawValue.trim().replace(/\/+$/, '');
+    } else if (key === 'archive.s3SyncOnComplete') {
+      archive.s3SyncOnComplete = rawValue.trim().toLowerCase() === 'true';
+    } else if (key === 'archive.summaryExportPath') {
+      archive.summaryExportPath = normalizeSharedRoot(rawValue);
+    }
+
+    await dependencies.writeOatConfig(repoRoot, {
+      ...config,
+      archive,
+    });
+
+    const resultValue =
+      key === 'archive.s3SyncOnComplete'
+        ? String(archive.s3SyncOnComplete ?? false)
+        : ((archive[
+            key.replace('archive.', '') as keyof typeof archive
+          ] as string) ?? null);
+
+    return {
+      key,
+      value: resultValue,
+      source: 'config.json',
+    };
+  }
+
+  if (key === 'git.defaultBranch') {
+    const nextValue = rawValue.trim();
+    if (!nextValue) {
+      throw new Error('Shared config values cannot be empty.');
+    }
+
+    await dependencies.writeOatConfig(repoRoot, {
+      ...config,
+      git: {
+        ...config.git,
+        defaultBranch: nextValue,
+      },
+    });
+
+    return {
+      key,
+      value: nextValue,
       source: 'config.json',
     };
   }

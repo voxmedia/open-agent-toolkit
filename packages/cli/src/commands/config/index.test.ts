@@ -169,6 +169,73 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('gets git.defaultBranch from shared config', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, git: { defaultBranch: 'main' } })}\n`,
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root });
+    await runCommand(command, ['get', 'git.defaultBranch']);
+
+    expect(capture.info[0]).toBe('main');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('sets archive.s3Uri in config.json', async () => {
+    const root = await createRepoRoot();
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, [
+      'set',
+      'archive.s3Uri',
+      's3://example-bucket/oat-archive',
+    ]);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      archive: { s3Uri: 's3://example-bucket/oat-archive' },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('sets archive.s3SyncOnComplete to true in config.json', async () => {
+    const root = await createRepoRoot();
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'archive.s3SyncOnComplete', 'true']);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      archive: { s3SyncOnComplete: true },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('sets archive.summaryExportPath in config.json', async () => {
+    const root = await createRepoRoot();
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, [
+      'set',
+      'archive.summaryExportPath',
+      '.oat/repo/reference/project-summaries',
+    ]);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      archive: {
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('set creates config.json when missing', async () => {
     const root = await createRepoRoot();
     const { command } = createHarness({ cwd: root });
