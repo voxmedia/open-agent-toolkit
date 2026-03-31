@@ -1,6 +1,6 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { rm } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { join, posix as path } from 'node:path';
 import { promisify } from 'node:util';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
@@ -62,7 +62,7 @@ function defaultDependencies(): ProjectArchiveCommandDependencies {
 }
 
 function resolveLocalArchiveRoot(projectsRoot: string): string {
-  return join(dirname(projectsRoot.replace(/\/+$/, '')), 'archived');
+  return path.join(path.dirname(projectsRoot.replace(/\/+$/, '')), 'archived');
 }
 
 function getArchiveSyncTargets(

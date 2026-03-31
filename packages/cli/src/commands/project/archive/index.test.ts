@@ -19,6 +19,7 @@ interface HarnessOptions {
   cwd?: string;
   json?: boolean;
   preflightError?: Error;
+  projectsRoot?: string;
 }
 
 function createHarness(options: HarnessOptions = {}): {
@@ -30,6 +31,7 @@ function createHarness(options: HarnessOptions = {}): {
 } {
   const capture = createLoggerCapture();
   const cwd = options.cwd ?? '/tmp/workspace/open-agent-toolkit';
+  const projectsRoot = options.projectsRoot ?? '.oat/projects/shared';
   const config: OatConfig = options.config ?? {
     version: 1,
     archive: {
@@ -61,7 +63,7 @@ function createHarness(options: HarnessOptions = {}): {
     }),
     resolveProjectRoot: vi.fn(async () => cwd),
     readOatConfig: vi.fn(async () => config),
-    resolveProjectsRoot: vi.fn(async () => '.oat/projects/shared'),
+    resolveProjectsRoot: vi.fn(async () => projectsRoot),
     ensureS3ArchiveAccess,
     execFile,
     removeDirectory,
@@ -152,6 +154,26 @@ describe('oat project archive sync', () => {
       expect.objectContaining({
         cwd: '/tmp/workspace/open-agent-toolkit',
       }),
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('normalizes the local archive root when projects.root has a trailing slash', async () => {
+    const { command, execFile } = createHarness({
+      projectsRoot: '.oat/projects/shared/',
+    });
+
+    await runArchiveSyncCommand(command);
+
+    expect(execFile).toHaveBeenCalledWith(
+      'aws',
+      [
+        's3',
+        'sync',
+        's3://example-bucket/oat-archive/open-agent-toolkit',
+        '.oat/projects/archived',
+      ],
+      expect.any(Object),
     );
     expect(process.exitCode).toBe(0);
   });
