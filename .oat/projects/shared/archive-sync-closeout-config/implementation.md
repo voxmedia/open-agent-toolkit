@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | in_progress | 2     | 0/2       |
+| Phase 3 | in_progress | 2     | 1/2       |
 
-**Total:** 5/7 tasks completed
+**Total:** 6/7 tasks completed
 
 ---
 
@@ -204,18 +204,50 @@ oat_generated: false
 
 ## Phase 3: Config Discoverability And Documentation
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-03-31
 
 ### Task p03-t01: Add `oat config describe [key]`
+
+**Status:** completed
+**Commit:** 3478e99
+
+**Outcome (required when completed):**
+
+- Added `oat config describe [key]` as a first-class config discovery surface with both grouped catalog and per-key detail modes.
+- The config command now carries reusable catalog metadata for shared repo, local repo, user, and sync/provider config surfaces.
+- The command supports text and JSON output while keeping wildcard-style sync-provider keys discoverable without pretending they are mutable through `oat config set`.
+
+**Files changed:**
+
+- `packages/cli/src/commands/config/index.ts` - added reusable config catalog metadata plus `describe` command handling
+- `packages/cli/src/commands/config/index.test.ts` - added coverage for grouped catalog output, single-key detail output, and unknown-key failures
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/config/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Sync/provider config keys are documented in the catalog with ownership metadata even though mutation remains outside the `oat config set` command surface.
+- Wildcard provider keys are matched by prefix so `sync.providers.github.enabled` and similar concrete keys resolve to the same documented shape.
+
+---
+
+### Task p03-t02: Update docs and help surfaces for config discoverability
 
 **Status:** pending
 **Commit:** -
 
 **Notes:**
 
-- The command should catalog shared repo, local repo, user, and sync config surfaces.
-- Output should include file location, scope, type, default, mutability, owning command, and description.
+- Update CLI help and help snapshots so `oat config --help` points users at `oat config describe`.
+- Refresh reference docs so config file locations, scopes, and the new archive settings are easy to discover from docs as well as CLI help.
+
+### Phase 3 Summary
+
+- In progress.
 
 ---
 
