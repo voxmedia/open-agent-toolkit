@@ -328,6 +328,48 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('describe without a key prints the grouped config catalog', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe']);
+
+    expect(capture.info[0]).toContain('Shared Repo (.oat/config.json)');
+    expect(capture.info[0]).toContain('archive.s3Uri');
+    expect(capture.info[0]).toContain('Repo Local (.oat/config.local.json)');
+    expect(capture.info[0]).toContain('User (~/.oat/config.json)');
+    expect(capture.info[0]).toContain('Sync/Provider (.oat/sync/config.json)');
+    expect(capture.info[0]).toContain('sync.providers.<name>.enabled');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('describe with a key prints detailed metadata', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'archive.s3Uri']);
+
+    expect(capture.info[0]).toContain('Key: archive.s3Uri');
+    expect(capture.info[0]).toContain('Scope: shared repo');
+    expect(capture.info[0]).toContain('File: .oat/config.json');
+    expect(capture.info[0]).toContain('Type: string');
+    expect(capture.info[0]).toContain('Default: unset');
+    expect(capture.info[0]).toContain(
+      'Owning command: oat config set archive.s3Uri <value>',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('describe returns exit code 1 for unknown keys', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'missing.key']);
+
+    expect(capture.error[0]).toContain('Unknown config key: missing.key');
+    expect(process.exitCode).toBe(1);
+  });
+
   it('gets autoReviewAtCheckpoints default false when not set', async () => {
     const root = await createRepoRoot();
     const { command, capture } = createHarness({ cwd: root });
