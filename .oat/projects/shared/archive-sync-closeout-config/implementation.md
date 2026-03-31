@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 7     | 0/7       |
+| Phase 4 | in_progress | 7     | 1/7       |
 
-**Total:** 7/14 tasks completed
+**Total:** 8/14 tasks completed
 
 ---
 
@@ -283,12 +283,26 @@ oat_generated: false
 
 ### Task p04-t01: (review) Add `--force` guard regression coverage
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** be3530d
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Add regression coverage for the named-project requirement enforced by `--force`.
+- Added regression coverage for the user-facing validation that `--force` requires a named project target.
+- Locked the archive sync command behavior so the guard fails before any filesystem or AWS operations run.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/archive/index.test.ts` - added `--force` without project-name coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The new test asserts both the exact error text and the absence of downstream side effects (`execFile` / directory removal).
 
 ---
 
