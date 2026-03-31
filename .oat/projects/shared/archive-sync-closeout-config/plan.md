@@ -360,6 +360,213 @@ git commit -m "docs(p03-t02): document archive sync and config discovery"
 
 ---
 
+## Phase 4: Review Fixes
+
+### Task p04-t01: (review) Add `--force` guard regression coverage
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: The `--force` validation guard for `oat project archive sync` has no regression coverage.
+Location: `packages/cli/src/commands/project/archive/index.ts:160`
+
+**Step 2: Implement fix**
+
+Add a command test that invokes `oat project archive sync --force` without a project name and asserts the expected user-facing error message plus exit code `1`.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/index.test.ts`
+Expected: The new guard-coverage assertion passes.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/index.test.ts
+git commit -m "fix(p04-t01): cover archive force guard"
+```
+
+---
+
+### Task p04-t02: (review) Add missing archive URI regression coverage
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: The fail-fast error path when `archive.s3Uri` is unset is not tested.
+Location: `packages/cli/src/commands/project/archive/index.ts:172`
+
+**Step 2: Implement fix**
+
+Add a command test with shared config that omits `archive.s3Uri`, then assert the expected config error text and exit code `1`.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/index.test.ts`
+Expected: The missing-config regression test passes.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/index.test.ts
+git commit -m "fix(p04-t02): cover missing archive uri guard"
+```
+
+---
+
+### Task p04-t03: (review) Deduplicate archive exec helper types
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `ExecFileLike` and `ExecFileResult` are duplicated across archive command files.
+Location: `packages/cli/src/commands/project/archive/archive-utils.ts:17-26`, `packages/cli/src/commands/project/archive/index.ts:23-31`
+
+**Step 2: Implement fix**
+
+Export the shared exec helper types from `archive-utils.ts` and import them into `index.ts` so the archive command surface and helper layer use one canonical contract.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/archive-utils.test.ts src/commands/project/archive/index.test.ts`
+Expected: Archive helper and command tests pass with the shared type contract.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/index.ts
+git commit -m "fix(p04-t03): share archive exec helper types"
+```
+
+---
+
+### Task p04-t04: (review) Normalize local archive root path semantics
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/index.ts`
+- Modify: `packages/cli/src/commands/project/archive/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Local archive root resolution mixes platform `join` with `posix` helpers used elsewhere in archive path construction.
+Location: `packages/cli/src/commands/project/archive/index.ts:74-76`
+
+**Step 2: Implement fix**
+
+Normalize local archive root resolution so the archive command uses consistent path semantics with the shared archive helpers, or document the rationale directly in code if the filesystem-specific path remains intentional.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/index.test.ts`
+Expected: Archive sync tests continue to pass with the normalized path behavior.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/index.ts packages/cli/src/commands/project/archive/index.test.ts
+git commit -m "fix(p04-t04): normalize archive root path handling"
+```
+
+---
+
+### Task p04-t05: (review) Add JSON coverage for config describe
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `oat config describe` has a JSON output path but no test coverage.
+Location: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 2: Implement fix**
+
+Add a JSON-mode test that exercises `oat config describe` and asserts the structured payload for the grouped or key-specific response.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/config/index.test.ts`
+Expected: Config command tests pass with JSON describe coverage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.test.ts
+git commit -m "fix(p04-t05): cover config describe json output"
+```
+
+---
+
+### Task p04-t06: (review) Add JSON coverage for archive sync
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `oat project archive sync` supports JSON output but no test covers that response shape.
+Location: `packages/cli/src/commands/project/archive/index.test.ts`
+
+**Step 2: Implement fix**
+
+Add a JSON-mode archive sync test that asserts the emitted payload includes status, mode, source, target, and project context.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/index.test.ts`
+Expected: Archive sync tests pass with JSON output coverage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/index.test.ts
+git commit -m "fix(p04-t06): cover archive sync json output"
+```
+
+---
+
+### Task p04-t07: (review) Add wildcard provider key describe coverage
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Wildcard provider key resolution in `matchesCatalogKey` is never exercised with a concrete provider key.
+Location: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 2: Implement fix**
+
+Add a describe test that uses a concrete key like `sync.providers.github.enabled` and asserts that it resolves to the wildcard provider catalog entry.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/config/index.test.ts`
+Expected: Config describe tests pass with wildcard provider coverage.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.test.ts
+git commit -m "fix(p04-t07): cover wildcard provider describe"
+```
+
+---
+
 ## Reviews
 
 | Scope | Type     | Status          | Date       | Artifact                                            |
@@ -367,7 +574,7 @@ git commit -m "docs(p03-t02): document archive sync and config discovery"
 | p01   | code     | pending         | -          | -                                                   |
 | p02   | code     | pending         | -          | -                                                   |
 | p03   | code     | pending         | -          | -                                                   |
-| final | code     | received        | 2026-03-31 | reviews/final-review-2026-03-31.md                  |
+| final | code     | fixes_added     | 2026-03-31 | reviews/archived/final-review-2026-03-31.md         |
 | plan  | artifact | fixes_completed | 2026-03-31 | reviews/archived/artifact-plan-review-2026-03-31.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
@@ -388,8 +595,9 @@ git commit -m "docs(p03-t02): document archive sync and config discovery"
 - Phase 1: 2 tasks - add archive config keys and reusable archive/AWS preflight helpers
 - Phase 2: 3 tasks - add archive sync command and automate completion/summary closeout behavior
 - Phase 3: 2 tasks - add config discovery command and update docs/help surfaces
+- Phase 4: 7 tasks - address final review follow-up coverage and maintainability findings
 
-**Total: 7 tasks**
+**Total: 14 tasks**
 
 Ready for implementation via `oat-project-implement`.
 

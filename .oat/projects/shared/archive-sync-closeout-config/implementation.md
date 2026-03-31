@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-review-provide
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -23,13 +23,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 3     | 3/3       |
-| Phase 3 | completed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 3     | 3/3       |
+| Phase 3 | completed   | 2     | 2/2       |
+| Phase 4 | in_progress | 7     | 0/7       |
 
-**Total:** 7/7 tasks completed
+**Total:** 7/14 tasks completed
 
 ---
 
@@ -271,7 +272,120 @@ oat_generated: false
 ### Phase 3 Summary
 
 - Phase 3 added the `oat config describe` discovery surface, documented config ownership across repo/local/user/sync scopes, and published the new archive lifecycle behavior in the CLI and docs references.
-- All planned implementation tasks are complete; the project is ready for final review.
+- The initial implementation passed through final review and produced follow-up review-fix tasks for Phase 4.
+
+---
+
+## Phase 4: Review Fixes
+
+**Status:** in_progress
+**Started:** 2026-03-31
+
+### Task p04-t01: (review) Add `--force` guard regression coverage
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Add regression coverage for the named-project requirement enforced by `--force`.
+
+---
+
+### Task p04-t02: (review) Add missing archive URI regression coverage
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Cover the fail-fast config error when `archive.s3Uri` is not configured.
+
+---
+
+### Task p04-t03: (review) Deduplicate archive exec helper types
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Consolidate the duplicated archive exec helper types into one canonical export.
+
+---
+
+### Task p04-t04: (review) Normalize local archive root path semantics
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Make local archive root resolution semantics consistent with the shared archive helpers.
+
+---
+
+### Task p04-t05: (review) Add JSON coverage for config describe
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Exercise the JSON output contract for `oat config describe`.
+
+---
+
+### Task p04-t06: (review) Add JSON coverage for archive sync
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Exercise the JSON output contract for `oat project archive sync`.
+
+---
+
+### Task p04-t07: (review) Add wildcard provider key describe coverage
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Add one concrete regression around wildcard provider key resolution.
+
+### Review Received: final
+
+**Date:** 2026-03-31
+**Review artifact:** `reviews/archived/final-review-2026-03-31.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 2
+- Minor: 4
+
+**New tasks added:** `p04-t01`, `p04-t02`, `p04-t03`, `p04-t04`, `p04-t05`, `p04-t06`, `p04-t07`
+
+**Deferred Findings:**
+
+- `m4` Timestamp collision edge case in `resolveUniqueArchivePath` — deferred with rationale: the collision requires two archive completions to land on the same timestamped path and then collide again, which is theoretical and not worth expanding scope in this review cycle.
+
+**Finding disposition map:**
+
+- `I1` converted to `p04-t01`
+- `I2` converted to `p04-t02`
+- `M1` converted to `p04-t03`
+- `M2` converted to `p04-t04`
+- `m1` converted to `p04-t05`
+- `m2` converted to `p04-t06`
+- `m3` converted to `p04-t07`
+- `m4` deferred with rationale
+
+**Next:** Execute the review-fix tasks via the `oat-project-implement` skill starting from `p04-t01`, then re-run final code review.
 
 ---
 
@@ -322,7 +436,7 @@ oat_generated: false
 
 **Follow-ups / TODO:**
 
-- Run final code review and process any review fixes before PR/closeout steps.
+- Execute Phase 4 review-fix tasks and re-run the final review.
 
 **Blockers:**
 
@@ -345,6 +459,7 @@ oat_generated: false
 | 1     | Targeted unit tests for config and archive helpers                | 2 suites | 0      | Focused regression coverage                            |
 | 2     | Archive sync, completion archive helper, and skill-contract tests | 5 suites | 0      | Command, helper, docs, and lifecycle contract coverage |
 | 3     | Config/help snapshots, archive helper regression, and docs build  | 2 checks | 0      | CLI discovery, archive docs, and compile-time coverage |
+| 4     | Pending review-fix verification                                   | -        | -      | Review follow-up coverage and maintainability fixes    |
 
 ## Final Summary (for PR/docs)
 
