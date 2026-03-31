@@ -29,8 +29,15 @@ interface PackedArtifact {
 }
 
 interface PackageValidationFailure {
-  contract: PublicPackageContract;
+  contract: PublicPackageContract | null;
   errors: string[];
+}
+
+export interface PublicPackageVersionState {
+  contract: PublicPackageContract;
+  changedSinceBase: boolean;
+  currentVersion: string;
+  baseVersion: string | null;
 }
 
 function getPackageDir(contract: PublicPackageContract): string {
@@ -74,6 +81,156 @@ async function readPackageJson(
   return JSON.parse(
     await readFile(join(getPackageDir(contract), 'package.json'), 'utf8'),
   ) as Record<string, unknown>;
+}
+
+async function readPackageJsonAtGitRef(
+  ref: string,
+  contract: PublicPackageContract,
+): Promise<Record<string, unknown> | null> {
+  try {
+    return JSON.parse(
+      await runCommand(
+        'git',
+        ['show', `${ref}:${contract.workspaceDir}/package.json`],
+        REPO_ROOT,
+      ),
+    ) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function getPackageVersion(
+  packageJson: Record<string, unknown> | null,
+): string | null {
+  return packageJson && typeof packageJson.version === 'string'
+    ? packageJson.version
+    : null;
+}
+
+async function resolveMergeBase(): Promise<string | null> {
+  for (const ref of ['origin/main', 'main']) {
+    try {
+      return (
+        await runCommand('git', ['merge-base', ref, 'HEAD'], REPO_ROOT)
+      ).trim();
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
+async function findChangedWorkspaceDirs(
+  mergeBase: string,
+  contracts: readonly PublicPackageContract[],
+): Promise<Set<string>> {
+  const diff = await runCommand(
+    'git',
+    [
+      'diff',
+      '--name-only',
+      `${mergeBase}..HEAD`,
+      '--',
+      ...contracts.map((contract) => contract.workspaceDir),
+    ],
+    REPO_ROOT,
+  );
+
+  const changedDirs = new Set<string>();
+  for (const path of diff
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)) {
+    const contract = contracts.find(
+      (candidate) =>
+        path === candidate.workspaceDir ||
+        path.startsWith(`${candidate.workspaceDir}/`),
+    );
+    if (contract) {
+      changedDirs.add(contract.workspaceDir);
+    }
+  }
+
+  return changedDirs;
+}
+
+export function findLockstepVersionBumpErrors(
+  states: readonly PublicPackageVersionState[],
+): string[] {
+  const changedPackages = states.filter((state) => state.changedSinceBase);
+  if (changedPackages.length === 0) {
+    return [];
+  }
+
+  const errors: string[] = [];
+  const uniqueCurrentVersions = new Set(
+    states
+      .map((state) => state.currentVersion.trim())
+      .filter((version) => version.length > 0),
+  );
+
+  if (uniqueCurrentVersions.size > 1) {
+    errors.push(
+      `public packages must stay on the same version for lockstep release publishes. Found: ${states
+        .map((state) => `${state.contract.publicName}@${state.currentVersion}`)
+        .join(', ')}`,
+    );
+  }
+
+  const unchangedPackages = states.filter(
+    (state) =>
+      state.baseVersion !== null && state.currentVersion === state.baseVersion,
+  );
+
+  if (unchangedPackages.length > 0) {
+    errors.push(
+      `publishable package changes require a lockstep version bump across all public packages. Changed packages: ${changedPackages
+        .map((state) => state.contract.publicName)
+        .join(', ')}. Packages still at their base version: ${unchangedPackages
+        .map((state) => `${state.contract.publicName}@${state.currentVersion}`)
+        .join(', ')}`,
+    );
+  }
+
+  return errors;
+}
+
+async function validateLockstepVersionBumps(
+  contracts: readonly PublicPackageContract[],
+): Promise<PackageValidationFailure | null> {
+  const mergeBase = await resolveMergeBase();
+  if (!mergeBase) {
+    return null;
+  }
+
+  const changedWorkspaceDirs = await findChangedWorkspaceDirs(
+    mergeBase,
+    contracts,
+  );
+  if (changedWorkspaceDirs.size === 0) {
+    return null;
+  }
+
+  const states = await Promise.all(
+    contracts.map(async (contract) => {
+      const currentPackageJson = await readPackageJson(contract);
+      const basePackageJson = await readPackageJsonAtGitRef(
+        mergeBase,
+        contract,
+      );
+      return {
+        contract,
+        changedSinceBase: changedWorkspaceDirs.has(contract.workspaceDir),
+        currentVersion: getPackageVersion(currentPackageJson) ?? '',
+        baseVersion: getPackageVersion(basePackageJson),
+      } satisfies PublicPackageVersionState;
+    }),
+  );
+
+  const errors = findLockstepVersionBumpErrors(states);
+  return errors.length > 0 ? { contract: null, errors } : null;
 }
 
 async function packPackage(
@@ -216,6 +373,10 @@ export async function runReleaseValidation(): Promise<
   await buildPublicPackages(contracts);
 
   const failures: PackageValidationFailure[] = [];
+  const versionFailure = await validateLockstepVersionBumps(contracts);
+  if (versionFailure) {
+    failures.push(versionFailure);
+  }
   for (const contract of contracts) {
     const failure = await validatePackage(contract);
     if (failure) {
@@ -238,7 +399,11 @@ async function main() {
     }
 
     for (const failure of failures) {
-      console.error(`validation failed for ${failure.contract.publicName}`);
+      console.error(
+        failure.contract
+          ? `validation failed for ${failure.contract.publicName}`
+          : 'validation failed for release version policy',
+      );
       for (const error of failure.errors) {
         console.error(`- ${error}`);
       }
