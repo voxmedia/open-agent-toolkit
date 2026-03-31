@@ -367,7 +367,7 @@ git commit -m "docs(p03-t02): document archive sync and config discovery"
 | p01   | code     | pending         | -          | -                                                   |
 | p02   | code     | pending         | -          | -                                                   |
 | p03   | code     | pending         | -          | -                                                   |
-| final | code     | pending         | -          | -                                                   |
+| final | code     | received        | 2026-03-31 | reviews/final-review-2026-03-31.md                  |
 | plan  | artifact | fixes_completed | 2026-03-31 | reviews/archived/artifact-plan-review-2026-03-31.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
