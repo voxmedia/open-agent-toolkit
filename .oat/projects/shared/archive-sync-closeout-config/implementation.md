@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p04-t04
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 7     | 3/7       |
+| Phase 4 | in_progress | 7     | 4/7       |
 
-**Total:** 10/14 tasks completed
+**Total:** 11/14 tasks completed
 
 ---
 
@@ -359,12 +359,27 @@ oat_generated: false
 
 ### Task p04-t04: (review) Normalize local archive root path semantics
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4380ee3
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Make local archive root resolution semantics consistent with the shared archive helpers.
+- Normalized local archive root resolution to use explicit `posix` path helpers, matching the archive helper layer’s path semantics.
+- Added regression coverage so a trailing slash on `projects.root` still resolves the same local archive target.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/archive/index.ts` - switched local archive root derivation to `posix` helpers
+- `packages/cli/src/commands/project/archive/index.test.ts` - added trailing-slash `projects.root` coverage for full archive sync
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The code still uses platform `join` where a local filesystem path is needed (`join(repoRoot, target)` for removal), but the archive target derivation itself now follows one consistent contract.
 
 ---
 
