@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p04-t06
+oat_current_task_id: p04-t07
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 7     | 5/7       |
+| Phase 4 | in_progress | 7     | 6/7       |
 
-**Total:** 12/14 tasks completed
+**Total:** 13/14 tasks completed
 
 ---
 
@@ -410,12 +410,26 @@ oat_generated: false
 
 ### Task p04-t06: (review) Add JSON coverage for archive sync
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 37f825f
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Exercise the JSON output contract for `oat project archive sync`.
+- Added JSON-mode coverage for `oat project archive sync`, locking the structured success payload for project-scoped archive sync output.
+- Extended archive command contract coverage without changing runtime behavior.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/archive/index.test.ts` - added JSON output coverage for archive sync
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/project/archive/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The JSON assertion uses a named project sync so both the project-specific remote source and local target are covered by one test.
 
 ---
 
