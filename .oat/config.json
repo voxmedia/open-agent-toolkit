@@ -13,6 +13,9 @@
     "index": "apps/oat-docs/index.md",
     "requireForProjectCompletion": true
   },
+  "archive": {
+    "summaryExportPath": ".oat/repo/reference/project-summaries"
+  },
   "localPaths": [
     ".oat/**/analysis",
     ".oat/**/pr",
