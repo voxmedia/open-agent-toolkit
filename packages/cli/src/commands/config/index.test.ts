@@ -380,6 +380,18 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('describe resolves wildcard provider keys from concrete names', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'sync.providers.github.enabled']);
+
+    expect(capture.info[0]).toContain('Key: sync.providers.<name>.enabled');
+    expect(capture.info[0]).toContain('File: .oat/sync/config.json');
+    expect(capture.info[0]).toContain('Owning command: oat providers set');
+    expect(process.exitCode).toBe(0);
+  });
+
   it('describe returns exit code 1 for unknown keys', async () => {
     const root = await createRepoRoot();
     const { command, capture } = createHarness({ cwd: root });
