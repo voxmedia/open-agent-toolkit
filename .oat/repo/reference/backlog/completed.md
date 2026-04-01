@@ -10,6 +10,7 @@
 
 ## Completed Items
 
+- 2026-03-31 — bl-ea64 — Optional S3 archival in oat-project-complete workflow — Shipped shared archive config (`archive.s3Uri`, `archive.s3SyncOnComplete`, `archive.summaryExportPath`), completion-time S3/archive-summary behavior, and `oat project archive sync [project-name]` for pulling archived projects back down from S3.
 - 2026-03-15 — bl-dc12 — Add research, analysis, verification, and synthesis skill suite — Five new skills: deep-research (comprehensive research orchestrator with parallel sub-agent dispatch), analyze (multi-angle analysis of artifacts/codebases/systems), compare (domain-aware comparative analysis with clear recommendations), skeptic (adversarial claim verification with cited evidence), synthesize (merge multiple analysis artifacts into single report with provenance tracking).
 - 2026-03-14 — bl-1008 — Add retroactive project capture skill (`oat-project-capture`) — oat-project-capture creates a full OAT project from untracked work on an existing branch using conversation context + commit history.
 - 2026-03-14 — bl-1b44 — Add guided setup flow to `oat init` with documentation detection — Enhanced oat init with guided setup flow: auto-triggers on fresh repos (no .oat/), supports --setup flag for re-run on existing repos.
