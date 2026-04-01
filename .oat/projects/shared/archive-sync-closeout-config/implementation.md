@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-review-provide
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
 oat_last_updated: 2026-03-31
 oat_current_task_id: null
@@ -492,6 +492,30 @@ oat_generated: false
 
 **Next:** Re-run final code review to confirm the Phase 4 fixes and close the deferred/converted findings set.
 
+### Review Received: final (re-review)
+
+**Date:** 2026-03-31
+**Review artifact:** `reviews/archived/final-review-2026-03-31-v2.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** none
+
+**Deferred Findings:**
+
+- `m4` Timestamp collision edge case in `resolveUniqueArchivePath` remains explicitly deferred and accepted for this review cycle.
+
+**Finding disposition map:**
+
+- `m4` retained as deferred-accepted with rationale from the prior final review cycle
+
+**Next:** Final review is passed. Proceed to `oat-project-pr-final` or final project closeout.
+
 ---
 
 ## Orchestration Runs
@@ -548,7 +572,7 @@ oat_generated: false
 
 **Follow-ups / TODO:**
 
-- Re-run final code review.
+- Run `oat-project-pr-final` or proceed directly to final closeout if no PR step is needed.
 
 **Blockers:**
 
