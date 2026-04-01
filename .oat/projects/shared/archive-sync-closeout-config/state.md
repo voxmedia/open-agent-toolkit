@@ -7,28 +7,28 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: pr_open
 oat_execution_mode: single-thread
 oat_workflow_mode: import
 oat_workflow_origin: imported
 oat_docs_updated: complete
-oat_pr_status: null
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/12
 oat_project_created: '2026-03-31T17:16:41.143Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-01T02:13:16Z'
+oat_project_state_updated: '2026-04-01T03:10:47Z'
 oat_generated: false
 ---
 
 # Project State: archive-sync-closeout-config
 
-**Status:** Ready For Finalization
+**Status:** PR Open
 **Started:** 2026-03-31
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-01
 
 ## Current Phase
 
-Implementation and final re-review are complete. The project is ready for PR generation or closeout.
+Implementation - PR open, awaiting human review.
 
 ## Artifacts
 
@@ -61,7 +61,8 @@ Implementation and final re-review are complete. The project is ready for PR gen
 - ✓ `p04-t06` complete
 - ✓ `p04-t07` complete
 - ✓ Final re-review passed
-- ⧗ Awaiting PR/finalization step
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -69,4 +70,7 @@ None
 
 ## Next Milestone
 
-Run `oat-project-pr-final` or proceed to final project closeout.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
