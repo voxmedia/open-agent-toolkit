@@ -40,7 +40,16 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
     "const config = {\n  plugins: {\n    '@tailwindcss/postcss': {},\n  },\n};\n\nexport default config;\n",
   'source.config.ts':
     "import { defineConfig } from 'fumadocs-mdx/config';\nexport default defineConfig({});\n",
-  'tsconfig.json': '{ "extends": "next/core-js" }\n',
+  'tsconfig.json': `{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "fumadocs-mdx:collections/*": [".source/*"]
+    }
+  }
+}
+`,
   'package.json.template': `{
   "name": "{{PACKAGE_NAME}}",
   "description": "{{SITE_DESCRIPTION}}",
@@ -72,7 +81,15 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
     "import { DocsPage, Mermaid, Tab, Tabs } from '@tkstang/oat-docs-theme';\nimport defaultComponents from 'fumadocs-ui/mdx';\nexport default function Page() { return <div />; }\n",
   'app/api/search/route.ts':
     "import { createFromSource } from 'fumadocs-core/search/server';\nimport { source } from '@/lib/source';\nconst search = createFromSource(source);\nexport const revalidate = false;\nexport const { staticGET: GET } = search;\n",
-  'docs/index.md': '# {{SITE_NAME}}\n\n{{SITE_DESCRIPTION}}\n',
+  'docs/index.md': `---
+title: '{{SITE_NAME}}'
+description: '{{SITE_DESCRIPTION}}'
+---
+
+# {{SITE_NAME}}
+
+{{SITE_DESCRIPTION}}
+`,
   'docs/getting-started.md': '# Getting Started\n',
   'docs/contributing.md': '# Contributing\n',
 };
@@ -229,6 +246,15 @@ describe('scaffoldDocsApp', () => {
     );
     expect(layout).toContain('Project documentation site');
 
+    const docsIndex = await readFile(
+      join(result.appRoot, 'docs', 'index.md'),
+      'utf8',
+    );
+    expect(docsIndex).toContain("title: 'My Docs Documentation'");
+    expect(docsIndex).toContain("description: 'Project documentation site'");
+    expect(docsIndex).not.toContain('{{SITE_NAME}}');
+    expect(docsIndex).not.toContain('{{SITE_DESCRIPTION}}');
+
     const packageJson = JSON.parse(
       await readFile(join(result.appRoot, 'package.json'), 'utf8'),
     ) as {
@@ -253,6 +279,18 @@ describe('scaffoldDocsApp', () => {
     expect(result.createdFiles).toContain(
       join('app', 'api', 'search', 'route.ts'),
     );
+
+    const tsconfig = JSON.parse(
+      await readFile(join(result.appRoot, 'tsconfig.json'), 'utf8'),
+    ) as {
+      compilerOptions?: {
+        baseUrl?: string;
+        paths?: Record<string, string[]>;
+      };
+    };
+    expect(tsconfig.compilerOptions?.baseUrl).toBe('.');
+    expect(tsconfig.compilerOptions?.paths?.['@/*']).toEqual(['./*']);
+
     expect(result.documentationConfig).toEqual({
       root: 'apps/my-docs',
       tooling: 'fumadocs',
@@ -288,7 +326,7 @@ describe('scaffoldDocsApp', () => {
     expect(packageJson.devDependencies['prettier']).toBeUndefined();
   });
 
-  it('uses versioned deps and oat CLI for consuming repos', async () => {
+  it('uses bundled package versions for consuming repos', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-docs-consuming-'));
     createdRoots.push(root);
     const assetsRoot = await seedAssets(
@@ -296,11 +334,24 @@ describe('scaffoldDocsApp', () => {
       'docs-app-fuma',
       FUMA_TEMPLATE_FILES,
     );
+    await writeFile(
+      join(assetsRoot, 'public-package-versions.json'),
+      JSON.stringify(
+        {
+          'docs-config': '1.2.3',
+          'docs-theme': '2.3.4',
+          'docs-transforms': '3.4.5',
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
 
-    // Seed a CLI package.json so version resolution finds it
+    // Seed a mismatched CLI package.json to verify the manifest takes precedence.
     await writeFile(
       join(root, 'package.json'),
-      JSON.stringify({ name: '@tkstang/oat-cli', version: '1.2.3' }),
+      JSON.stringify({ name: '@tkstang/oat-cli', version: '9.9.9' }),
       'utf8',
     );
 
@@ -325,9 +376,9 @@ describe('scaffoldDocsApp', () => {
 
     // Should use versioned deps, not workspace:*
     expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe('^1.2.3');
-    expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe('^1.2.3');
+    expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe('^2.3.4');
     expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
-      '^1.2.3',
+      '^3.4.5',
     );
 
     // Should use oat CLI directly with paths relative to docs app
@@ -336,6 +387,46 @@ describe('scaffoldDocsApp', () => {
     );
     expect(packageJson.scripts['prebuild']).toBe(
       'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+    );
+  });
+
+  it('falls back to the CLI version when bundled package versions are missing', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-consuming-fallback-'));
+    createdRoots.push(root);
+    const assetsRoot = await seedAssets(
+      root,
+      'docs-app-fuma',
+      FUMA_TEMPLATE_FILES,
+    );
+
+    await writeFile(
+      join(root, 'package.json'),
+      JSON.stringify({ name: '@tkstang/oat-cli', version: '1.2.3' }),
+      'utf8',
+    );
+
+    const result = await scaffoldDocsApp({
+      assetsRoot,
+      repoRoot: root,
+      repoShape: 'single-package',
+      framework: 'fumadocs',
+      appName: 'docs',
+      targetDir: 'docs',
+      siteDescription: 'My project docs',
+      lint: 'none',
+      format: 'none',
+    });
+
+    const packageJson = JSON.parse(
+      await readFile(join(result.appRoot, 'package.json'), 'utf8'),
+    ) as {
+      dependencies: Record<string, string>;
+    };
+
+    expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe('^1.2.3');
+    expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe('^1.2.3');
+    expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
+      '^1.2.3',
     );
   });
 

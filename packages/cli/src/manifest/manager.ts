@@ -10,7 +10,7 @@ import {
   ManifestSchema,
 } from './manifest.types';
 
-const OAT_VERSION = '0.0.5';
+const OAT_VERSION = '0.0.7';
 
 function formatIssuePath(path: (string | number)[]): string {
   if (path.length === 0) {

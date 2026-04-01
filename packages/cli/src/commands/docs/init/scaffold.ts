@@ -103,14 +103,13 @@ export interface OatDepContext {
   oatPackageVersions: Record<string, string>;
 }
 
-// Assumes lockstep versioning: all @tkstang/oat-* packages are published at
-// the same version as @tkstang/oat-cli. If packages are ever versioned
-// independently, version resolution here will need per-package lookups.
 const OAT_DEP_PACKAGES = [
   'docs-config',
   'docs-theme',
   'docs-transforms',
 ] as const;
+const DEFAULT_OAT_PUBLISHED_VERSION = '0.0.5';
+const PUBLIC_PACKAGE_VERSIONS_FILE = 'public-package-versions.json';
 
 export async function detectIsOatRepo(repoRoot: string): Promise<boolean> {
   for (const pkg of OAT_DEP_PACKAGES) {
@@ -126,10 +125,35 @@ async function readCliVersion(assetsRoot: string): Promise<string> {
   try {
     const content = await readFile(join(cliRoot, 'package.json'), 'utf8');
     const pkg = JSON.parse(content) as { version?: string };
-    return pkg.version ?? '0.0.5';
+    return pkg.version ?? DEFAULT_OAT_PUBLISHED_VERSION;
   } catch {
-    return '0.0.5';
+    return DEFAULT_OAT_PUBLISHED_VERSION;
   }
+}
+
+async function readBundledOatPackageVersions(
+  assetsRoot: string,
+): Promise<Record<string, string>> {
+  try {
+    const content = await readFile(
+      join(assetsRoot, PUBLIC_PACKAGE_VERSIONS_FILE),
+      'utf8',
+    );
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    return Object.fromEntries(
+      OAT_DEP_PACKAGES.flatMap((name) =>
+        typeof parsed[name] === 'string' ? [[name, parsed[name]]] : [],
+      ),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function buildFallbackOatPackageVersions(
+  version: string,
+): Record<string, string> {
+  return Object.fromEntries(OAT_DEP_PACKAGES.map((name) => [name, version]));
 }
 
 export async function resolveOatDepContext(
@@ -141,10 +165,11 @@ export async function resolveOatDepContext(
     return { isOatRepo, oatPackageVersions: {} };
   }
 
-  const version = await readCliVersion(assetsRoot);
-  const oatPackageVersions = Object.fromEntries(
-    OAT_DEP_PACKAGES.map((name) => [name, version]),
-  );
+  const cliVersion = await readCliVersion(assetsRoot);
+  const oatPackageVersions = {
+    ...buildFallbackOatPackageVersions(cliVersion),
+    ...(await readBundledOatPackageVersions(assetsRoot)),
+  };
   return { isOatRepo, oatPackageVersions };
 }
 
@@ -197,7 +222,7 @@ function oatDepVersion(depContext: OatDepContext, packageName: string): string {
   if (depContext.isOatRepo) {
     return 'workspace:*';
   }
-  return `^${depContext.oatPackageVersions[packageName] ?? '0.0.5'}`;
+  return `^${depContext.oatPackageVersions[packageName] ?? DEFAULT_OAT_PUBLISHED_VERSION}`;
 }
 
 function renderTemplate(

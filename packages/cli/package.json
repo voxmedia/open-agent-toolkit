@@ -1,6 +1,6 @@
 {
   "name": "@tkstang/oat-cli",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": false,
   "description": "Open Agent Toolkit CLI",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/cli",

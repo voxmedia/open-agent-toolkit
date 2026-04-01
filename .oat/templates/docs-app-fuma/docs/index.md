@@ -1,11 +1,11 @@
 ---
-title: { { SITE_NAME } }
-description: { { SITE_DESCRIPTION } }
+title: '{{SITE_NAME}}'
+description: '{{SITE_DESCRIPTION}}'
 ---
 
 # {{SITE_NAME}}
 
-Use this site as the central documentation hub for the repository. It is organized to support both human readers and AI agents, with every directory exposing an `index.md` entrypoint.
+Use this file as the map to the repository's central documentation site. The site is organized to support both human readers and AI agents, with every directory exposing an `index.md` entrypoint.
 
 ## Contents
 
