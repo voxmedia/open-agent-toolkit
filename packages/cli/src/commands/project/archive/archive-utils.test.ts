@@ -204,6 +204,80 @@ describe('archive utils', () => {
     );
   });
 
+  it('archives to the primary checkout when completion runs from a git worktree', async () => {
+    const tempRoot = await createRepoRoot();
+    const mainRepoRoot = join(tempRoot, 'main-repo');
+    const worktreeRoot = join(tempRoot, 'feature-worktree');
+    const projectPath = join(
+      worktreeRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'demo',
+    );
+
+    await mkdir(join(mainRepoRoot, '.git'), { recursive: true });
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
+
+    const execFile = vi.fn(async (file: string, args: string[]) => {
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-common-dir'
+      ) {
+        return {
+          stdout: join(mainRepoRoot, '.git'),
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-dir'
+      ) {
+        return {
+          stdout: join(mainRepoRoot, '.git', 'worktrees', 'feature-worktree'),
+          stderr: '',
+        };
+      }
+
+      throw new Error(`Unexpected command: ${file} ${args.join(' ')}`);
+    });
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot: worktreeRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
+      { gitExecFile: execFile },
+    );
+
+    expect(result.archivePath).toBe(
+      join(mainRepoRoot, '.oat', 'projects', 'archived', 'demo'),
+    );
+    expect(result.summaryExportFile).toBe(
+      join(
+        worktreeRoot,
+        '.oat',
+        'repo',
+        'reference',
+        'project-summaries',
+        'demo.md',
+      ),
+    );
+    await expect(readFile(result.summaryExportFile!, 'utf8')).resolves.toBe(
+      '# summary\n',
+    );
+    await expect(
+      readFile(join(result.archivePath, 'summary.md'), 'utf8'),
+    ).resolves.toBe('# summary\n');
+  });
+
   it('skips summary export when no summary export path is configured', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');

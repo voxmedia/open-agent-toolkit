@@ -1,6 +1,6 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { rm } from 'node:fs/promises';
-import { basename, dirname, join, posix as path } from 'node:path';
+import { basename, dirname, isAbsolute, join, posix as path } from 'node:path';
 import { promisify } from 'node:util';
 
 import { CliError } from '@errors/cli-error';
@@ -54,6 +54,7 @@ export interface ArchiveProjectOnCompletionOptions {
 interface ArchiveProjectOnCompletionDependencies extends EnsureS3ArchiveAccessDependencies {
   ensureS3ArchiveAccess?: typeof ensureS3ArchiveAccess;
   execFile?: ExecFileLike;
+  gitExecFile?: ExecFileLike;
   ensureDir?: typeof ensureDir;
   copyDirectory?: typeof copyDirectory;
   removePath?: (
@@ -123,14 +124,58 @@ export function resolveLocalArchiveProjectPath(
 }
 
 function resolveCompletionArchivePath(
-  repoRoot: string,
+  archiveRepoRoot: string,
   projectsRoot: string,
   projectName: string,
 ): string {
   return join(
-    repoRoot,
+    archiveRepoRoot,
     resolveLocalArchiveProjectPath(projectsRoot, projectName),
   );
+}
+
+function resolveGitPath(repoRoot: string, gitPath: string): string {
+  const normalizedPath = gitPath.trim();
+  return isAbsolute(normalizedPath)
+    ? normalizedPath
+    : join(repoRoot, normalizedPath);
+}
+
+async function resolveArchiveRepoRoot(
+  repoRoot: string,
+  dependencies: ArchiveProjectOnCompletionDependencies,
+): Promise<string> {
+  const execFile = dependencies.gitExecFile ?? execFileAsync;
+
+  try {
+    const [{ stdout: commonDir }, { stdout: gitDir }] = await Promise.all([
+      execFile('git', ['rev-parse', '--git-common-dir'], {
+        cwd: repoRoot,
+        env: dependencies.env ?? process.env,
+      }),
+      execFile('git', ['rev-parse', '--git-dir'], {
+        cwd: repoRoot,
+        env: dependencies.env ?? process.env,
+      }),
+    ]);
+
+    const resolvedCommonDir = resolveGitPath(repoRoot, commonDir);
+    const resolvedGitDir = resolveGitPath(repoRoot, gitDir);
+
+    if (resolvedCommonDir === resolvedGitDir) {
+      return repoRoot;
+    }
+
+    const primaryRepoRoot = dirname(resolvedCommonDir);
+    const directoryExists = dependencies.dirExists ?? dirExists;
+    if (await directoryExists(primaryRepoRoot)) {
+      return primaryRepoRoot;
+    }
+  } catch {
+    return repoRoot;
+  }
+
+  return repoRoot;
 }
 
 async function resolveUniqueArchivePath(
@@ -178,9 +223,13 @@ export async function archiveProjectOnCompletion(
   const ensureAccess =
     dependencies.ensureS3ArchiveAccess ?? ensureS3ArchiveAccess;
   const execFile = dependencies.execFile ?? execFileAsync;
+  const archiveRepoRoot = await resolveArchiveRepoRoot(
+    options.repoRoot,
+    dependencies,
+  );
 
   const archiveBasePath = resolveCompletionArchivePath(
-    options.repoRoot,
+    archiveRepoRoot,
     options.projectsRoot,
     options.projectName,
   );
