@@ -71,14 +71,15 @@ jobs:
         env:
           NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
         run: |
-          for pkg_dir in \
-            packages/docs-transforms \
-            packages/docs-config \
-            packages/docs-theme \
-            packages/cli
+          for pkg_name in \
+            @tkstang/oat-docs-transforms \
+            @tkstang/oat-docs-config \
+            @tkstang/oat-docs-theme \
+            @tkstang/oat-cli
           do
-            (
-              cd "$pkg_dir"
-              npm publish --dry-run --access public
-            )
+            pack_dir="$(mktemp -d)"
+            pnpm --filter "$pkg_name" pack --pack-destination "$pack_dir"
+            tarball="$(find "$pack_dir" -maxdepth 1 -name '*.tgz' -print -quit)"
+            npm publish --dry-run --access public "$tarball"
+            rm -rf "$pack_dir"
           done

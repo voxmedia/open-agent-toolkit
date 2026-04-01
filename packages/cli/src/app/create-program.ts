@@ -3,7 +3,7 @@ import { Command, Option } from 'commander';
 const PROGRAM_NAME = 'oat';
 const PROGRAM_DESCRIPTION =
   'Open Agent Toolkit CLI for provider interoperability';
-const PROGRAM_VERSION = '0.0.5';
+const PROGRAM_VERSION = '0.0.7';
 const SCOPE_CHOICES = ['project', 'user', 'all'] as const;
 
 export function createProgram(): Command {

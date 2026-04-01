@@ -120,6 +120,26 @@ describe('scaffold integration', () => {
       expect(layout).toContain('Test Docs Documentation');
       expect(layout).toContain('Integration test documentation');
 
+      const tsconfig = JSON.parse(
+        await readFile(join(result.appRoot, 'tsconfig.json'), 'utf8'),
+      ) as {
+        compilerOptions?: {
+          baseUrl?: string;
+          paths?: Record<string, string[]>;
+        };
+      };
+      expect(tsconfig.compilerOptions?.baseUrl).toBe('.');
+      expect(tsconfig.compilerOptions?.paths?.['@/*']).toEqual(['./*']);
+
+      const docsIndex = await readFile(
+        join(result.appRoot, 'docs', 'index.md'),
+        'utf8',
+      );
+      expect(docsIndex).toContain("title: 'Test Docs Documentation'");
+      expect(docsIndex).toContain(
+        "description: 'Integration test documentation'",
+      );
+
       // Verify package.json is valid JSON with OAT workspace deps
       const packageJson = JSON.parse(
         await readFile(join(result.appRoot, 'package.json'), 'utf8'),
@@ -158,10 +178,25 @@ describe('scaffold integration', () => {
       const root = await mkdtemp(join(tmpdir(), 'oat-integration-consuming-'));
       createdRoots.push(root);
 
-      // Seed a CLI package.json adjacent to assetsRoot for version resolution
+      await writeFile(
+        join(assetsRoot, 'public-package-versions.json'),
+        JSON.stringify(
+          {
+            'docs-config': '2.0.0',
+            'docs-theme': '2.1.0',
+            'docs-transforms': '2.2.0',
+          },
+          null,
+          2,
+        ),
+        'utf8',
+      );
+
+      // Seed a CLI package.json adjacent to assetsRoot to verify it is ignored
+      // when bundled public package versions are available.
       await writeFile(
         join(dirname(assetsRoot), 'package.json'),
-        JSON.stringify({ name: '@tkstang/oat-cli', version: '2.0.0' }),
+        JSON.stringify({ name: '@tkstang/oat-cli', version: '9.9.9' }),
         'utf8',
       );
 
@@ -199,10 +234,10 @@ describe('scaffold integration', () => {
         '^2.0.0',
       );
       expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe(
-        '^2.0.0',
+        '^2.1.0',
       );
       expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
-        '^2.0.0',
+        '^2.2.0',
       );
 
       // Verify oat CLI with app-relative paths

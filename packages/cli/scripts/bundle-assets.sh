@@ -78,6 +78,29 @@ cp -R "${REPO_ROOT}/.oat/templates/ideas" "${ASSETS}/templates/"
 cp -R "${REPO_ROOT}/.oat/templates/docs-app-mkdocs" "${ASSETS}/templates/"
 cp -R "${REPO_ROOT}/.oat/templates/docs-app-fuma" "${ASSETS}/templates/"
 
+node - "${REPO_ROOT}" "${ASSETS}" <<'EOF'
+const { readFileSync, writeFileSync } = require('node:fs');
+const { join } = require('node:path');
+
+const repoRoot = process.argv[2];
+const assetsRoot = process.argv[3];
+const packageNames = ['docs-config', 'docs-theme', 'docs-transforms'];
+const versions = Object.fromEntries(
+  packageNames.map((name) => {
+    const pkg = JSON.parse(
+      readFileSync(join(repoRoot, 'packages', name, 'package.json'), 'utf8'),
+    );
+    return [name, pkg.version];
+  }),
+);
+
+writeFileSync(
+  join(assetsRoot, 'public-package-versions.json'),
+  `${JSON.stringify(versions, null, 2)}\n`,
+  'utf8',
+);
+EOF
+
 # Bundle OAT documentation for core pack (oat-docs skill)
 if [ -d "${REPO_ROOT}/apps/oat-docs/docs" ]; then
   cp -R "${REPO_ROOT}/apps/oat-docs/docs/." "${ASSETS}/docs/"
