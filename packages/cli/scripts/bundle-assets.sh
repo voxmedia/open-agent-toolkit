@@ -84,7 +84,7 @@ const { join } = require('node:path');
 
 const repoRoot = process.argv[2];
 const assetsRoot = process.argv[3];
-const packageNames = ['docs-config', 'docs-theme', 'docs-transforms'];
+const packageNames = ['cli', 'docs-config', 'docs-theme', 'docs-transforms'];
 const versions = Object.fromEntries(
   packageNames.map((name) => {
     const pkg = JSON.parse(

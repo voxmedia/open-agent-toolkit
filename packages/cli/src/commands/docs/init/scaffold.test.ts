@@ -68,6 +68,8 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
     "@tkstang/oat-docs-transforms": "{{OAT_DOCS_TRANSFORMS_DEP}}"
   },
   "devDependencies": {
+    "@tkstang/oat-cli": "{{OAT_CLI_DEP}}",
+    "@types/node": "^22.10.0",
     "typescript": "^5.8.3"{{FUMA_DEV_DEPENDENCIES}}
   }
 }
@@ -260,11 +262,14 @@ describe('scaffoldDocsApp', () => {
     ) as {
       description: string;
       scripts: Record<string, string>;
+      dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
     };
     expect(packageJson.description).toBe('Project documentation site');
     expect(packageJson.scripts['predev']).toContain('docs generate-index');
     expect(packageJson.scripts['prebuild']).toContain('docs generate-index');
+    expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('^0.0.8');
+    expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
     expect(packageJson.devDependencies['prettier']).toBeUndefined();
 
@@ -322,6 +327,8 @@ describe('scaffoldDocsApp', () => {
     const packageJson = JSON.parse(
       await readFile(join(result.appRoot, 'package.json'), 'utf8'),
     ) as { devDependencies: Record<string, string> };
+    expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('^0.0.8');
+    expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
     expect(packageJson.devDependencies['prettier']).toBeUndefined();
   });
@@ -372,6 +379,7 @@ describe('scaffoldDocsApp', () => {
     ) as {
       scripts: Record<string, string>;
       dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
     };
 
     // Should use versioned deps, not workspace:*
@@ -380,13 +388,15 @@ describe('scaffoldDocsApp', () => {
     expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
       '^3.4.5',
     );
+    expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('^9.9.9');
+    expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
 
     // Should use oat CLI directly with paths relative to docs app
     expect(packageJson.scripts['predev']).toBe(
-      'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+      'fumadocs-mdx && (oat docs generate-index --docs-dir docs --output index.md || true)',
     );
     expect(packageJson.scripts['prebuild']).toBe(
-      'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+      'fumadocs-mdx && (oat docs generate-index --docs-dir docs --output index.md || true)',
     );
   });
 
@@ -421,6 +431,7 @@ describe('scaffoldDocsApp', () => {
       await readFile(join(result.appRoot, 'package.json'), 'utf8'),
     ) as {
       dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
     };
 
     expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe('^1.2.3');
@@ -428,6 +439,8 @@ describe('scaffoldDocsApp', () => {
     expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
       '^1.2.3',
     );
+    expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('^1.2.3');
+    expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
   });
 
   it('uses workspace:* deps and pnpm -w run cli for OAT repo', async () => {
@@ -440,7 +453,7 @@ describe('scaffoldDocsApp', () => {
     );
 
     // Seed the OAT package directories so detectIsOatRepo returns true
-    for (const pkg of ['docs-config', 'docs-theme', 'docs-transforms']) {
+    for (const pkg of ['cli', 'docs-config', 'docs-theme', 'docs-transforms']) {
       const pkgDir = join(root, 'packages', pkg);
       await mkdir(pkgDir, { recursive: true });
       await writeFile(
@@ -468,6 +481,7 @@ describe('scaffoldDocsApp', () => {
     ) as {
       scripts: Record<string, string>;
       dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
     };
 
     // Should use workspace:* for OAT packages
@@ -480,6 +494,8 @@ describe('scaffoldDocsApp', () => {
     expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
       'workspace:*',
     );
+    expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('workspace:*');
+    expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
 
     // Should use pnpm -w run cli with full paths from workspace root
     expect(packageJson.scripts['predev']).toBe(
