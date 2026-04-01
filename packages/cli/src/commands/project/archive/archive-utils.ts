@@ -1,5 +1,5 @@
 import { execFile as execFileCallback } from 'node:child_process';
-import { rm } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, posix as path } from 'node:path';
 import { promisify } from 'node:util';
 
@@ -74,6 +74,13 @@ export interface ArchiveProjectOnCompletionResult {
   warnings: string[];
 }
 
+export const ARCHIVE_SNAPSHOT_METADATA_FILENAME = '.oat-archive-source.json';
+
+export interface ArchiveSnapshotMetadata {
+  projectName: string;
+  snapshotName: string;
+}
+
 function normalizeS3Uri(s3Uri: string): string {
   return s3Uri.trim().replace(/\/+$/, '');
 }
@@ -109,9 +116,67 @@ export function buildRepoArchiveS3Uri(s3Uri: string, repoRoot: string): string {
 export function buildProjectArchiveS3Uri(
   s3Uri: string,
   repoRoot: string,
-  projectName: string,
+  projectKey: string,
 ): string {
-  return `${buildRepoArchiveS3Uri(s3Uri, repoRoot)}/${projectName}`;
+  return `${buildRepoArchiveS3Uri(s3Uri, repoRoot)}/${projectKey}`;
+}
+
+function normalizeArchiveDateStamp(timestamp: string): string {
+  const isoPrefix = timestamp
+    .trim()
+    .match(/^(\d{4})-(\d{2})-(\d{2})/)
+    ?.slice(1);
+  if (isoPrefix) {
+    return isoPrefix.join('');
+  }
+
+  const digits = timestamp.replace(/\D/g, '');
+  if (digits.length >= 8) {
+    return digits.slice(0, 8);
+  }
+
+  return new Date().toISOString().slice(0, 10).replace(/-/g, '');
+}
+
+export function buildArchiveSnapshotName(
+  projectName: string,
+  timestamp: string,
+): string {
+  return `${normalizeArchiveDateStamp(timestamp)}-${projectName}`;
+}
+
+export function parseArchiveSnapshotName(snapshotName: string): {
+  projectName: string;
+  snapshotName: string;
+  dateStamp: string | null;
+} {
+  const trimmedSnapshot = snapshotName.replace(/\/+$/, '');
+  const match = trimmedSnapshot.match(/^(\d{8})-(.+)$/);
+
+  if (!match) {
+    return {
+      projectName: trimmedSnapshot,
+      snapshotName: trimmedSnapshot,
+      dateStamp: null,
+    };
+  }
+
+  const dateStamp = match[1];
+  const projectName = match[2];
+
+  if (!dateStamp || !projectName) {
+    return {
+      projectName: trimmedSnapshot,
+      snapshotName: trimmedSnapshot,
+      dateStamp: null,
+    };
+  }
+
+  return {
+    projectName,
+    snapshotName: trimmedSnapshot,
+    dateStamp,
+  };
 }
 
 export function resolveLocalArchiveProjectPath(
@@ -192,9 +257,20 @@ async function resolveUniqueArchivePath(
   return `${archivePath}-${suffix}`;
 }
 
+async function writeArchiveSnapshotMetadata(
+  archivePath: string,
+  metadata: ArchiveSnapshotMetadata,
+): Promise<void> {
+  await writeFile(
+    join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+    `${JSON.stringify(metadata, null, 2)}\n`,
+    'utf8',
+  );
+}
+
 async function exportProjectSummary(
   archivePath: string,
-  projectName: string,
+  snapshotName: string,
   summaryExportPath: string,
   repoRoot: string,
   dependencies: ArchiveProjectOnCompletionDependencies,
@@ -205,7 +281,7 @@ async function exportProjectSummary(
     return null;
   }
 
-  const summaryTarget = join(repoRoot, summaryExportPath, `${projectName}.md`);
+  const summaryTarget = join(repoRoot, summaryExportPath, `${snapshotName}.md`);
   const copySummary = dependencies.copySingleFile ?? copySingleFile;
   await copySummary(summarySource, summaryTarget);
   return summaryTarget;
@@ -223,6 +299,8 @@ export async function archiveProjectOnCompletion(
   const ensureAccess =
     dependencies.ensureS3ArchiveAccess ?? ensureS3ArchiveAccess;
   const execFile = dependencies.execFile ?? execFileAsync;
+  const timestamp = dependencies.timestamp?.() ?? new Date().toISOString();
+  const snapshotName = buildArchiveSnapshotName(options.projectName, timestamp);
   const archiveRepoRoot = await resolveArchiveRepoRoot(
     options.repoRoot,
     dependencies,
@@ -240,6 +318,10 @@ export async function archiveProjectOnCompletion(
 
   await makeDir(dirname(archivePath));
   await copyProjectDirectory(options.projectPath, archivePath);
+  await writeArchiveSnapshotMetadata(archivePath, {
+    projectName: options.projectName,
+    snapshotName,
+  });
   await removePath(options.projectPath, { recursive: true, force: true });
 
   const warnings: string[] = [];
@@ -249,7 +331,7 @@ export async function archiveProjectOnCompletion(
     try {
       summaryExportFile = await exportProjectSummary(
         archivePath,
-        options.projectName,
+        snapshotName,
         options.summaryExportPath,
         options.repoRoot,
         dependencies,
@@ -281,7 +363,7 @@ export async function archiveProjectOnCompletion(
       s3Path = buildProjectArchiveS3Uri(
         options.s3Uri,
         options.repoRoot,
-        options.projectName,
+        snapshotName,
       );
 
       try {

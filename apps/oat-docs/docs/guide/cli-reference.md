@@ -109,6 +109,8 @@ Archive lifecycle settings live here as shared repo config:
 - `archive.s3SyncOnComplete`
 - `archive.summaryExportPath`
 
+When archive settings are configured, completion uploads dated archive snapshots to S3 and exports dated summary snapshots into the configured summary reference directory.
+
 Use the reference pages for file ownership and schema details:
 
 - [File Locations](../reference/file-locations.md)
@@ -160,8 +162,8 @@ Project commands are the CLI entrypoint into the OAT lifecycle.
 - `oat project new <name>` - create a new project in spec-driven, quick, or import mode
 - `oat project open <name>` - activate an existing project
 - `oat project set-mode <mode>` - switch implementation between `single-thread` and `subagent-driven`
-- `oat project archive sync` - sync all repo archived projects from the configured S3 archive into `.oat/projects/archived/`
-- `oat project archive sync <project-name>` - sync one archived project subtree from the configured S3 archive
+- `oat project archive sync` - sync the latest dated remote snapshot for each archived project from the configured S3 archive into `.oat/projects/archived/`
+- `oat project archive sync <project-name>` - sync the latest dated remote snapshot for one archived project into `.oat/projects/archived/<project-name>/`
 
 ### `oat cleanup ...`
 

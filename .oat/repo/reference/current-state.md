@@ -196,7 +196,8 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `activeProject` is stored as a repo-relative path (worktree-safe).
 - Archive state and retrieval:
   - Archived projects live in `.oat/projects/archived/<project>/`.
-  - `oat project archive sync` can pull all archived projects, or one named project, down from the configured repo-scoped S3 archive.
+  - Completion can upload dated archive snapshots to the configured repo-scoped S3 archive and export dated summary snapshots to the configured reference directory.
+  - `oat project archive sync` can pull all archived projects, or one named project, down from the configured repo-scoped S3 archive, selecting the latest dated remote snapshot per project.
   - Explicit archive sync fails fast when AWS CLI is missing or unusable; completion-time archive sync warns instead of blocking closeout.
 - Legacy pointer note:
   - Existing `.oat/active-project` files may still exist as inert compatibility artifacts; migrated command paths do not treat them as canonical state.

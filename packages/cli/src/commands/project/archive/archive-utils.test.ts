@@ -6,7 +6,9 @@ import { CliError } from '@errors/cli-error';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  ARCHIVE_SNAPSHOT_METADATA_FILENAME,
   archiveProjectOnCompletion,
+  buildArchiveSnapshotName,
   buildProjectArchiveS3Uri,
   ensureS3ArchiveAccess,
   resolveLocalArchiveProjectPath,
@@ -68,6 +70,12 @@ describe('archive utils', () => {
     await expect(
       readFile(join(projectPath, 'state.md'), 'utf8'),
     ).rejects.toThrow();
+    await expect(
+      readFile(
+        join(result.archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        'utf8',
+      ),
+    ).resolves.toContain('"snapshotName": "');
     expect(result.s3Path).toBeNull();
     expect(result.summaryExportFile).toBeNull();
     expect(result.warnings).toEqual([]);
@@ -93,6 +101,7 @@ describe('archive utils', () => {
       {
         execFile,
         ensureS3ArchiveAccess: ensureAccess,
+        timestamp: () => '2026-04-01T12:34:56Z',
       },
     );
 
@@ -110,12 +119,12 @@ describe('archive utils', () => {
         's3',
         'sync',
         join(repoRoot, '.oat', 'projects', 'archived', 'demo'),
-        `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/demo`,
+        `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/20260401-demo`,
       ],
       expect.objectContaining({ cwd: repoRoot }),
     );
     expect(result.s3Path).toBe(
-      `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/demo`,
+      `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/20260401-demo`,
     );
   });
 
@@ -180,14 +189,19 @@ describe('archive utils', () => {
     await mkdir(projectPath, { recursive: true });
     await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
 
-    const result = await archiveProjectOnCompletion({
-      repoRoot,
-      projectPath,
-      projectName: 'demo',
-      projectsRoot: '.oat/projects/shared',
-      s3SyncOnComplete: false,
-      summaryExportPath: '.oat/repo/reference/project-summaries',
-    });
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
+      {
+        timestamp: () => '2026-04-01T12:34:56Z',
+      },
+    );
 
     expect(result.summaryExportFile).toBe(
       join(
@@ -196,7 +210,7 @@ describe('archive utils', () => {
         'repo',
         'reference',
         'project-summaries',
-        'demo.md',
+        '20260401-demo.md',
       ),
     );
     await expect(readFile(result.summaryExportFile!, 'utf8')).resolves.toBe(
@@ -254,7 +268,10 @@ describe('archive utils', () => {
         s3SyncOnComplete: false,
         summaryExportPath: '.oat/repo/reference/project-summaries',
       },
-      { gitExecFile: execFile },
+      {
+        gitExecFile: execFile,
+        timestamp: () => '2026-04-01T12:34:56Z',
+      },
     );
 
     expect(result.archivePath).toBe(
@@ -267,7 +284,7 @@ describe('archive utils', () => {
         'repo',
         'reference',
         'project-summaries',
-        'demo.md',
+        '20260401-demo.md',
       ),
     );
     await expect(readFile(result.summaryExportFile!, 'utf8')).resolves.toBe(
@@ -350,6 +367,15 @@ describe('archive utils', () => {
     expect(result.warnings).toEqual([
       'Archive S3 sync is enabled via `archive.s3SyncOnComplete`, but AWS CLI was not found on PATH. Skipping S3 archive sync.',
     ]);
+  });
+
+  it('builds a date-prefixed archive snapshot name', () => {
+    expect(
+      buildArchiveSnapshotName(
+        'documentation-improvement',
+        '2026-04-01T12:34:56Z',
+      ),
+    ).toBe('20260401-documentation-improvement');
   });
 
   it('fails for explicit sync when aws credentials are unusable', async () => {

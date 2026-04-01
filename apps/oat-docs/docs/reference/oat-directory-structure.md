@@ -106,7 +106,7 @@ Current schema keys:
 | `autoReviewAtCheckpoints`                   | `boolean`  | `false`                  | When `true`, completing a plan phase checkpoint automatically spawns a subagent code review. Can be overridden per-project via `oat_auto_review_at_checkpoints` in `plan.md` frontmatter. |
 | `archive.s3Uri`                             | `string`   | -                        | Base S3 URI for repo-scoped archived project sync, for example `s3://bucket/oat-archive`                                                                                                  |
 | `archive.s3SyncOnComplete`                  | `boolean`  | `false`                  | When `true`, `oat-project-complete` uploads the archived project to the configured S3 archive after local archive succeeds                                                                |
-| `archive.summaryExportPath`                 | `string`   | -                        | Repo-relative directory where completion exports `summary.md` as `<project-name>.md` for durable tracked reference                                                                        |
+| `archive.summaryExportPath`                 | `string`   | -                        | Repo-relative directory where completion exports `summary.md` as a dated snapshot like `20260401-<project-name>.md` for durable tracked reference                                         |
 
 All `documentation.*` keys are managed via `oat config get/set` and are set automatically by `oat docs init`.
 The `git.defaultBranch` key is auto-detected during `oat init` and can be overridden via `oat config set git.defaultBranch <branch>`.
@@ -158,10 +158,10 @@ Each OAT project lives under:
 Archive sync behavior:
 
 - `oat-project-complete` always archives locally into `.oat/projects/archived/<project>/`.
-- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, completion also uploads that archived project to the repo-scoped S3 archive prefix.
+- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, completion also uploads a dated snapshot such as `<archive.s3Uri>/<repo-slug>/20260401-<project>/`.
 - `oat project archive sync` syncs all repo archived projects down from S3 into `.oat/projects/archived/`.
-- `oat project archive sync <project-name>` syncs a single archived project subtree.
-- Default archive sync is non-destructive: it downloads missing or updated remote content and preserves unrelated local-only archive data.
+- `oat project archive sync <project-name>` syncs the latest dated remote snapshot for a single project into `.oat/projects/archived/<project-name>/`.
+- Default archive sync is non-destructive toward unrelated local-only archive data, but it does replace a local project archive when a newer dated remote snapshot is selected for that same project.
 
 Typical contents:
 

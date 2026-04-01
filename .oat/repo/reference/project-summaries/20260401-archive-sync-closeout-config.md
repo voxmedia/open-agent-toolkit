@@ -30,7 +30,7 @@ Config discoverability was improved in both code and docs. `oat config describe`
 ## Key Decisions
 
 - Use the AWS CLI instead of adding AWS SDK dependencies so archive sync could reuse a familiar external tool and stay lightweight inside the CLI package.
-- Keep the remote archive layout repo-scoped by composing `<archive.s3Uri>/<repo-slug>/<project-name>`, which allows multiple repos to share one S3 prefix without collisions.
+- Keep the remote archive layout repo-scoped while storing dated snapshots as `<archive.s3Uri>/<repo-slug>/YYYYMMDD-<project-name>`, which keeps archive history readable without nesting by project name.
 - Use a positional `project-name` for `oat project archive sync [project-name]` to match existing OAT command conventions for target entities.
 - Treat `oat config describe` as the canonical discovery surface for config ownership while leaving mutation ownership split between `oat config set` and specialized commands such as `oat providers set`.
 - Keep completion warning-tolerant for remote archive failures, but make explicit archive sync commands fail fast so closeout remains durable locally while direct sync operations stay strict.
@@ -46,6 +46,7 @@ The final review also exposed several public-contract gaps that were worth fixin
 - Archive sync defaults to non-destructive reconciliation rather than making remote authoritative. That preserves unrelated local-only archive data, but it also means stale local extras are not cleaned up automatically.
 - `--force` is limited to named-project syncs, which keeps the command safer and narrower at the cost of not offering a one-shot “replace every local archive from S3” mode.
 - Summary export is opt-in through `archive.summaryExportPath` rather than being inferred from directory existence. That reduces surprising behavior, but it requires explicit setup even in repos that already have a likely destination directory.
+- Exported summaries and S3 uploads now use dated snapshot names for readability and collision avoidance, while local archive sync materializes the latest remote snapshot into the bare project-name directory.
 
 ## Integration Notes
 

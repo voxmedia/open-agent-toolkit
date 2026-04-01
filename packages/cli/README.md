@@ -33,7 +33,7 @@ Archive lifecycle settings are managed through shared repo config:
 - `archive.s3SyncOnComplete`
 - `archive.summaryExportPath`
 
-Use `oat config describe` to inspect which file owns a setting and which command surface mutates it.
+Use `oat config describe` to inspect which file owns a setting and which command surface mutates it. Completion writes dated archive snapshots to S3 and exports dated summary snapshots when those archive settings are configured.
 
 ## Related Packages
 

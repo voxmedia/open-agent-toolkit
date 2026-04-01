@@ -76,9 +76,9 @@ oat config set archive.summaryExportPath .oat/repo/reference/project-summaries
 With those values configured:
 
 - `oat-project-complete` still archives locally into `.oat/projects/archived/<project>/`
-- completion also attempts an S3 upload when AWS CLI is available and configured
-- completion also copies `summary.md` into `<archive.summaryExportPath>/<project-name>.md`
-- `oat project archive sync` can later pull archive data back down from S3
+- completion also attempts an S3 upload when AWS CLI is available and configured, storing dated snapshots such as `<archive.s3Uri>/<repo-slug>/20260401-my-project/`
+- completion also copies `summary.md` into `<archive.summaryExportPath>/20260401-my-project.md`
+- `oat project archive sync` can later pull archive data back down from S3 and materialize the latest snapshot into the local bare archive path `.oat/projects/archived/<project>/`
 
 ## Repo-local and user state
 

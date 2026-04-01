@@ -18,6 +18,7 @@ interface HarnessOptions {
   config?: OatConfig;
   cwd?: string;
   json?: boolean;
+  listOutput?: string;
   preflightError?: Error;
   projectsRoot?: string;
 }
@@ -47,7 +48,15 @@ function createHarness(options: HarnessOptions = {}): {
     return { ok: true, warnings: [] };
   });
 
-  const execFile = vi.fn(async () => ({ stdout: '', stderr: '' }));
+  const listOutput =
+    options.listOutput ??
+    ['                           PRE 20260401-demo-project/'].join('\n');
+  const execFile = vi.fn(async (_file: string, args: string[]) => {
+    if (args[0] === 's3' && args[1] === 'ls') {
+      return { stdout: `${listOutput}\n`, stderr: '' };
+    }
+    return { stdout: '', stderr: '' };
+  });
   const removeDirectory = vi.fn(async () => undefined);
 
   const command = createProjectArchiveCommand({
@@ -133,7 +142,13 @@ describe('oat project archive sync', () => {
 
   it('syncs all archived projects when no project name is provided', async () => {
     const { command, ensureS3ArchiveAccess, execFile, removeDirectory } =
-      createHarness();
+      createHarness({
+        listOutput: [
+          '                           PRE 20260301-demo-project/',
+          '                           PRE 20260401-demo-project/',
+          '                           PRE 20260401-other-project/',
+        ].join('\n'),
+      });
 
     await runArchiveSyncCommand(command);
 
@@ -142,14 +157,49 @@ describe('oat project archive sync', () => {
       s3Uri: 's3://example-bucket/oat-archive',
       syncOnComplete: true,
     });
-    expect(removeDirectory).not.toHaveBeenCalled();
-    expect(execFile).toHaveBeenCalledWith(
+    expect(removeDirectory).toHaveBeenCalledWith(
+      join(
+        '/tmp/workspace/open-agent-toolkit',
+        '.oat/projects/archived/demo-project',
+      ),
+      { recursive: true, force: true },
+    );
+    expect(removeDirectory).toHaveBeenCalledWith(
+      join(
+        '/tmp/workspace/open-agent-toolkit',
+        '.oat/projects/archived/other-project',
+      ),
+      { recursive: true, force: true },
+    );
+    expect(execFile).toHaveBeenNthCalledWith(
+      1,
+      'aws',
+      ['s3', 'ls', 's3://example-bucket/oat-archive/open-agent-toolkit/'],
+      expect.objectContaining({
+        cwd: '/tmp/workspace/open-agent-toolkit',
+      }),
+    );
+    expect(execFile).toHaveBeenNthCalledWith(
+      2,
       'aws',
       [
         's3',
         'sync',
-        's3://example-bucket/oat-archive/open-agent-toolkit',
-        '.oat/projects/archived',
+        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-demo-project',
+        '.oat/projects/archived/demo-project',
+      ],
+      expect.objectContaining({
+        cwd: '/tmp/workspace/open-agent-toolkit',
+      }),
+    );
+    expect(execFile).toHaveBeenNthCalledWith(
+      3,
+      'aws',
+      [
+        's3',
+        'sync',
+        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-other-project',
+        '.oat/projects/archived/other-project',
       ],
       expect.objectContaining({
         cwd: '/tmp/workspace/open-agent-toolkit',
@@ -165,13 +215,14 @@ describe('oat project archive sync', () => {
 
     await runArchiveSyncCommand(command);
 
-    expect(execFile).toHaveBeenCalledWith(
+    expect(execFile).toHaveBeenNthCalledWith(
+      2,
       'aws',
       [
         's3',
         'sync',
-        's3://example-bucket/oat-archive/open-agent-toolkit',
-        '.oat/projects/archived',
+        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-demo-project',
+        '.oat/projects/archived/demo-project',
       ],
       expect.any(Object),
     );
@@ -179,16 +230,29 @@ describe('oat project archive sync', () => {
   });
 
   it('syncs one archived project when a project name is provided', async () => {
-    const { command, execFile } = createHarness();
+    const { command, execFile, removeDirectory } = createHarness({
+      listOutput: [
+        '                           PRE 20260301-demo-project/',
+        '                           PRE 20260401-demo-project/',
+      ].join('\n'),
+    });
 
     await runArchiveSyncCommand(command, { commandArgs: ['demo-project'] });
 
-    expect(execFile).toHaveBeenCalledWith(
+    expect(removeDirectory).toHaveBeenCalledWith(
+      join(
+        '/tmp/workspace/open-agent-toolkit',
+        '.oat/projects/archived/demo-project',
+      ),
+      { recursive: true, force: true },
+    );
+    expect(execFile).toHaveBeenNthCalledWith(
+      2,
       'aws',
       [
         's3',
         'sync',
-        's3://example-bucket/oat-archive/open-agent-toolkit/demo-project',
+        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-demo-project',
         '.oat/projects/archived/demo-project',
       ],
       expect.objectContaining({
@@ -199,17 +263,19 @@ describe('oat project archive sync', () => {
   });
 
   it('passes through --dry-run to aws s3 sync', async () => {
-    const { command, execFile } = createHarness();
+    const { command, execFile, removeDirectory } = createHarness();
 
     await runArchiveSyncCommand(command, { commandArgs: ['--dry-run'] });
 
-    expect(execFile).toHaveBeenCalledWith(
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(execFile).toHaveBeenNthCalledWith(
+      2,
       'aws',
       [
         's3',
         'sync',
-        's3://example-bucket/oat-archive/open-agent-toolkit',
-        '.oat/projects/archived',
+        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-demo-project',
+        '.oat/projects/archived/demo-project',
         '--dryrun',
       ],
       expect.any(Object),
@@ -243,11 +309,15 @@ describe('oat project archive sync', () => {
 
     const { command, execFile, removeDirectory } = createHarness({
       cwd: repoRoot,
+      listOutput: '                           PRE 20260401-remote-project/',
     });
 
     await runArchiveSyncCommand(command);
 
-    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeDirectory).toHaveBeenCalledWith(
+      join(repoRoot, '.oat/projects/archived/remote-project'),
+      { recursive: true, force: true },
+    );
     expect(execFile).toHaveBeenCalledWith(
       'aws',
       expect.not.arrayContaining(['--delete']),
@@ -290,12 +360,13 @@ describe('oat project archive sync', () => {
       join(repoRoot, '.oat', 'projects', 'archived', 'demo-project'),
       { recursive: true, force: true },
     );
-    expect(execFile).toHaveBeenCalledWith(
+    expect(execFile).toHaveBeenNthCalledWith(
+      2,
       'aws',
       [
         's3',
         'sync',
-        `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/demo-project`,
+        `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/20260401-demo-project`,
         '.oat/projects/archived/demo-project',
       ],
       expect.objectContaining({ cwd: repoRoot }),
@@ -329,8 +400,11 @@ describe('oat project archive sync', () => {
       status: 'ok',
       mode: 'apply',
       projectName: 'demo-project',
-      source: 's3://example-bucket/oat-archive/open-agent-toolkit/demo-project',
-      target: '.oat/projects/archived/demo-project',
+      sources: [
+        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-demo-project',
+      ],
+      targets: ['.oat/projects/archived/demo-project'],
+      skipped: false,
     });
     expect(process.exitCode).toBe(0);
   });

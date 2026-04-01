@@ -58,7 +58,8 @@ Archive sync surfaces:
 - Local archive root: `.oat/projects/archived/`
 - Remote archive base: `archive.s3Uri` in `.oat/config.json`
 - Archive sync command: `oat project archive sync` or `oat project archive sync <project-name>`
-- Summary export target: `<repo>/<archive.summaryExportPath>/<project-name>.md` when configured
+- Remote archive snapshot shape: `<archive.s3Uri>/<repo-slug>/YYYYMMDD-<project-name>/`
+- Summary export target: `<repo>/<archive.summaryExportPath>/YYYYMMDD-<project-name>.md` when configured
 
 ## Ideas — project level (gitignored)
 
