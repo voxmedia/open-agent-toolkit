@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 
 ## Canonical References
 
@@ -35,6 +35,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat-project-import-plan` (import lane: provider plan -> canonical `plan.md`)
   - `oat-project-promote-spec-driven` (in-place promotion from quick/import to spec-driven lifecycle)
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
+  - Completion closeout now auto-refreshes `summary.md`, always archives locally, can upload archives to S3 via `archive.s3Uri` + `archive.s3SyncOnComplete`, and can export summaries via `archive.summaryExportPath`
 - Idea workflow:
   - `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 - Review loop:
@@ -84,6 +85,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - `oat_pr_status` tracks whether the PR is `ready`, `open`, `closed`, or `merged`
 - `oat_pr_url` stores the tracked PR URL when a PR exists
 - `oat-project-complete` suppresses the duplicate "Open a PR?" prompt when `oat_pr_status: open` is already present
+- `oat-project-pr-final` and `oat-project-complete` both auto-refresh `summary.md` when it is missing or stale
 
 ### Documentation Analysis (Utility)
 
@@ -141,11 +143,17 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat cleanup project`, `oat cleanup artifacts`
   - `oat instructions validate`, `oat instructions sync`
   - `oat backlog init`, `oat backlog generate-id`, `oat backlog regenerate-index`
+  - `oat config get`, `oat config set`, `oat config list`, `oat config describe`
+  - `oat project archive sync`, `oat project archive sync <project-name>`
   - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install` (packs: core, ideas, workflows, utility, project-management, research)
 - Provider config model:
   - Project provider enablement lives in `.oat/sync/config.json` (`providers.<name>.enabled`).
   - `oat init --scope project` prompts for provider selection in interactive mode.
   - `oat sync --scope project` performs config-aware provider activation and mismatch remediation (interactive prompt in TTY mode, warning + remediation guidance in non-interactive mode).
+- Non-sync config model:
+  - Shared repo settings live in `.oat/config.json`, including `projects.root`, `worktrees.root`, `git.defaultBranch`, `documentation.*`, and `archive.*`.
+  - Repo-local state lives in `.oat/config.local.json`, including `activeProject`, `lastPausedProject`, and repo-scoped `activeIdea`.
+  - `oat config describe` exposes shared repo, repo-local, user, and sync/provider config ownership from one command surface.
 - Supported providers: Claude Code, Cursor, Codex CLI, GitHub Copilot, Gemini CLI.
 - Codex TOML sync:
   - Canonical agent parser/renderer (`agents/canonical/`) converts markdown agent definitions to/from structured format.
@@ -186,6 +194,10 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `.oat/config.local.json` (gitignored) stores per-developer lifecycle state, including `activeProject` and `lastPausedProject`.
   - `oat-*` skills resolve active project via `oat config get activeProject` (fallback: prompt + write when needed).
   - `activeProject` is stored as a repo-relative path (worktree-safe).
+- Archive state and retrieval:
+  - Archived projects live in `.oat/projects/archived/<project>/`.
+  - `oat project archive sync` can pull all archived projects, or one named project, down from the configured repo-scoped S3 archive.
+  - Explicit archive sync fails fast when AWS CLI is missing or unusable; completion-time archive sync warns instead of blocking closeout.
 - Legacy pointer note:
   - Existing `.oat/active-project` files may still exist as inert compatibility artifacts; migrated command paths do not treat them as canonical state.
 - User-facing progress indicators:
