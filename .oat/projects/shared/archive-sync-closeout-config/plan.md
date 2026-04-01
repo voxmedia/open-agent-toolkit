@@ -574,7 +574,7 @@ git commit -m "fix(p04-t07): cover wildcard provider describe"
 | p01   | code     | pending         | -          | -                                                   |
 | p02   | code     | pending         | -          | -                                                   |
 | p03   | code     | pending         | -          | -                                                   |
-| final | code     | fixes_added     | 2026-03-31 | reviews/archived/final-review-2026-03-31.md         |
+| final | code     | fixes_completed | 2026-03-31 | reviews/archived/final-review-2026-03-31.md         |
 | plan  | artifact | fixes_completed | 2026-03-31 | reviews/archived/artifact-plan-review-2026-03-31.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`

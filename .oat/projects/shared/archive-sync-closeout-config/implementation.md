@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-03-31
-oat_current_task_id: p04-t07
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -23,14 +23,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 7     | 6/7       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 3     | 3/3       |
+| Phase 3 | completed | 2     | 2/2       |
+| Phase 4 | completed | 7     | 7/7       |
 
-**Total:** 13/14 tasks completed
+**Total:** 14/14 tasks completed
 
 ---
 
@@ -278,7 +278,7 @@ oat_generated: false
 
 ## Phase 4: Review Fixes
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-03-31
 
 ### Task p04-t01: (review) Add `--force` guard regression coverage
@@ -435,12 +435,31 @@ oat_generated: false
 
 ### Task p04-t07: (review) Add wildcard provider key describe coverage
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** fbac6f0
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Add one concrete regression around wildcard provider key resolution.
+- Added a concrete regression test for resolving a provider-scoped config key through the wildcard catalog entry used by `oat config describe`.
+- Locked the documented ownership output for concrete provider keys without changing command behavior.
+
+**Files changed:**
+
+- `packages/cli/src/commands/config/index.test.ts` - added wildcard provider key coverage for `describe`
+
+**Verification:**
+
+- Run: `pnpm --filter @tkstang/oat-cli test -- src/commands/config/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The test targets `sync.providers.github.enabled` so the wildcard resolver is exercised with a real provider key instead of an abstract matcher-only unit.
+
+### Phase 4 Summary
+
+- Phase 4 closed all approved final-review follow-ups, including missing error-path coverage, JSON-mode coverage, wildcard provider key coverage, and two small maintainability fixes in the archive command layer.
+- The project is ready for final re-review with only deferred finding `m4` left intentionally out of scope.
 
 ### Review Received: final
 
@@ -471,7 +490,7 @@ oat_generated: false
 - `m3` converted to `p04-t07`
 - `m4` deferred with rationale
 
-**Next:** Execute the review-fix tasks via the `oat-project-implement` skill starting from `p04-t01`, then re-run final code review.
+**Next:** Re-run final code review to confirm the Phase 4 fixes and close the deferred/converted findings set.
 
 ---
 
@@ -499,6 +518,13 @@ oat_generated: false
 - [x] p02-t03: Auto-refresh summary during PR-final and completion flows - 8b3486d
 - [x] p03-t01: Add `oat config describe [key]` - 3478e99
 - [x] p03-t02: Update docs, help text, and reference material - 21a53b3
+- [x] p04-t01: (review) Add `--force` guard regression coverage - be3530d
+- [x] p04-t02: (review) Add missing archive URI regression coverage - dc6e920
+- [x] p04-t03: (review) Deduplicate archive exec helper types - 9e6044e
+- [x] p04-t04: (review) Normalize local archive root path semantics - 4380ee3
+- [x] p04-t05: (review) Add JSON coverage for config describe - 033c263
+- [x] p04-t06: (review) Add JSON coverage for archive sync - 37f825f
+- [x] p04-t07: (review) Add wildcard provider key describe coverage - fbac6f0
 
 **What changed (high level):**
 
@@ -522,7 +548,7 @@ oat_generated: false
 
 **Follow-ups / TODO:**
 
-- Execute Phase 4 review-fix tasks and re-run the final review.
+- Re-run final code review.
 
 **Blockers:**
 
@@ -540,12 +566,12 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run                                                         | Passed   | Failed | Coverage                                               |
-| ----- | ----------------------------------------------------------------- | -------- | ------ | ------------------------------------------------------ |
-| 1     | Targeted unit tests for config and archive helpers                | 2 suites | 0      | Focused regression coverage                            |
-| 2     | Archive sync, completion archive helper, and skill-contract tests | 5 suites | 0      | Command, helper, docs, and lifecycle contract coverage |
-| 3     | Config/help snapshots, archive helper regression, and docs build  | 2 checks | 0      | CLI discovery, archive docs, and compile-time coverage |
-| 4     | Pending review-fix verification                                   | -        | -      | Review follow-up coverage and maintainability fixes    |
+| Phase | Tests Run                                                         | Passed   | Failed | Coverage                                                                                        |
+| ----- | ----------------------------------------------------------------- | -------- | ------ | ----------------------------------------------------------------------------------------------- |
+| 1     | Targeted unit tests for config and archive helpers                | 2 suites | 0      | Focused regression coverage                                                                     |
+| 2     | Archive sync, completion archive helper, and skill-contract tests | 5 suites | 0      | Command, helper, docs, and lifecycle contract coverage                                          |
+| 3     | Config/help snapshots, archive helper regression, and docs build  | 2 checks | 0      | CLI discovery, archive docs, and compile-time coverage                                          |
+| 4     | Targeted config and archive regression verification               | 7 runs   | 0      | Review follow-up coverage for guards, JSON, wildcard resolution, and archive helper consistency |
 
 ## Final Summary (for PR/docs)
 
