@@ -109,6 +109,7 @@ describe('MkDocs scaffold compatibility (FR8)', () => {
       expect(packageJson).not.toContain('@tkstang/oat-docs-config');
       expect(packageJson).not.toContain('@tkstang/oat-docs-theme');
       expect(packageJson).not.toContain('@tkstang/oat-docs-transforms');
+      expect(packageJson).not.toContain('@tkstang/oat-cli');
     },
   );
 });

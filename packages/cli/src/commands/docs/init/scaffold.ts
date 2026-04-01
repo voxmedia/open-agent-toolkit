@@ -104,11 +104,12 @@ export interface OatDepContext {
 }
 
 const OAT_DEP_PACKAGES = [
+  'cli',
   'docs-config',
   'docs-theme',
   'docs-transforms',
 ] as const;
-const DEFAULT_OAT_PUBLISHED_VERSION = '0.0.5';
+const DEFAULT_OAT_PUBLISHED_VERSION = '0.0.8';
 const PUBLIC_PACKAGE_VERSIONS_FILE = 'public-package-versions.json';
 
 export async function detectIsOatRepo(repoRoot: string): Promise<boolean> {
@@ -215,7 +216,7 @@ function buildGenerateIndexCmd(isOatRepo: boolean, targetDir: string): string {
   if (isOatRepo) {
     return `pnpm -w run cli -- docs generate-index --docs-dir ${targetDir}/docs --output ${targetDir}/index.md`;
   }
-  return 'oat docs generate-index --docs-dir docs --output index.md';
+  return '(oat docs generate-index --docs-dir docs --output index.md || true)';
 }
 
 function oatDepVersion(depContext: OatDepContext, packageName: string): string {
@@ -260,6 +261,7 @@ function renderTemplate(
     '{{OAT_DOCS_CONFIG_DEP}}': oatDepVersion(depContext, 'docs-config'),
     '{{OAT_DOCS_THEME_DEP}}': oatDepVersion(depContext, 'docs-theme'),
     '{{OAT_DOCS_TRANSFORMS_DEP}}': oatDepVersion(depContext, 'docs-transforms'),
+    '{{OAT_CLI_DEP}}': oatDepVersion(depContext, 'cli'),
   };
 
   return Object.entries(replacements).reduce(

@@ -59,7 +59,12 @@ describe('scaffold integration', () => {
       await mkdir(join(root, 'apps'), { recursive: true });
 
       // Seed OAT package dirs so detectIsOatRepo returns true
-      for (const pkg of ['docs-config', 'docs-theme', 'docs-transforms']) {
+      for (const pkg of [
+        'cli',
+        'docs-config',
+        'docs-theme',
+        'docs-transforms',
+      ]) {
         const pkgDir = join(root, 'packages', pkg);
         await mkdir(pkgDir, { recursive: true });
         await writeFile(
@@ -160,6 +165,7 @@ describe('scaffold integration', () => {
       expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
         'workspace:*',
       );
+      expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
       expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
       expect(packageJson.devDependencies['prettier']).toBeUndefined();
       expect(packageJson.devDependencies['oxfmt']).toBeDefined();
@@ -229,6 +235,7 @@ describe('scaffold integration', () => {
       ) as {
         scripts: Record<string, string>;
         dependencies: Record<string, string>;
+        devDependencies: Record<string, string>;
       };
       expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe(
         '^2.0.0',
@@ -239,13 +246,15 @@ describe('scaffold integration', () => {
       expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
         '^2.2.0',
       );
+      expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
+      expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('^9.9.9');
 
       // Verify oat CLI with app-relative paths
       expect(packageJson.scripts['predev']).toBe(
-        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+        'fumadocs-mdx && (oat docs generate-index --docs-dir docs --output index.md || true)',
       );
       expect(packageJson.scripts['prebuild']).toBe(
-        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+        'fumadocs-mdx && (oat docs generate-index --docs-dir docs --output index.md || true)',
       );
     },
   );
