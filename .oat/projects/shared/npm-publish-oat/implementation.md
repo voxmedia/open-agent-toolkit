@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-02
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -25,14 +25,14 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 4     | 4/4       |
-| Phase 3 | complete    | 2     | 2/2       |
-| Phase 4 | in_progress | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 4     | 4/4       |
+| Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | complete | 1     | 1/1       |
 
-**Total:** 9/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ---
 
@@ -525,27 +525,31 @@ file` for `oxfmt --write` on the staged markdown set during commit, but git
 
 ## Phase 4: Review Fixes
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-02
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- Pending final-review fix work to restore passing lockstep release validation.
+- Bumped all four publishable packages to `0.0.10` in lockstep so the renamed
+  release surface satisfies the repo's publishable-package policy.
+- Restored a passing `pnpm release:validate` result after the namespace rename
+  changed shipped package functionality without a version bump.
 
 **Key files touched:**
 
-- `packages/cli/package.json` - pending version bump for the CLI package.
-- `packages/docs-config/package.json` - pending version bump for docs-config.
-- `packages/docs-theme/package.json` - pending version bump for docs-theme.
-- `packages/docs-transforms/package.json` - pending version bump for
-  docs-transforms.
+- `packages/cli/package.json` - bumped the CLI package version to `0.0.10`.
+- `packages/docs-config/package.json` - bumped docs-config to `0.0.10`.
+- `packages/docs-theme/package.json` - bumped docs-theme to `0.0.10`.
+- `packages/docs-transforms/package.json` - bumped docs-transforms to
+  `0.0.10`.
 
 **Verification:**
 
 - Run: `pnpm release:validate`
-- Result: pending
+- Result: pass; validated all four public packages and cleared the lockstep
+  version policy check
 
 **Notes / Decisions:**
 
@@ -555,7 +559,8 @@ file` for `oxfmt --write` on the staged markdown set during commit, but git
 
 ### Task p04-t01: (review) Bump publishable package versions in lockstep
 
-**Status:** pending
+**Status:** completed
+**Commit:** `c2b9338`
 
 **Files changed:**
 
@@ -568,7 +573,8 @@ file` for `oxfmt --write` on the staged markdown set during commit, but git
 **Verification:**
 
 - Run: `pnpm release:validate`
-- Result: pending
+- Result: pass; release validation succeeded for all four public packages at
+  `0.0.10`
 
 **Notes / Decisions:**
 
@@ -632,8 +638,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Final review produced one follow-up task: bump the four publishable package
-  versions in lockstep so `pnpm release:validate` passes.
+- The review-fix task is complete. Next: request final re-review so the
+  `fixes_completed` review state can advance to `passed`.
 
 **Blockers:**
 
@@ -641,7 +647,7 @@ Chronological log of implementation progress.
   depended on `@tkstang/oat-cli` and related packages - resolved by updating
   the docs app dependency names during `p01-t03`.
 
-**Session End:** resumed for review-fix planning
+**Session End:** resumed for review-fix implementation
 
 ---
 
@@ -670,6 +676,7 @@ Track test execution during implementation.
 | 1     | `pnpm --filter ./packages/cli test -- src/release/public-package-contract.test.ts`; `pnpm release:validate`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Yes    | No     | N/A      |
 | 2     | `pnpm build:docs`; `pnpm --filter ./packages/cli test -- src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/mkdocs-compat.test.ts`; `pnpm --filter ./packages/cli test -- src/commands/docs/e2e-pipeline.test.ts src/commands/docs/migrate/fixtures.test.ts src/commands/docs/migrate/frontmatter.test.ts`; `rg -n '@tkstang' README.md packages/cli/AGENTS.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/contributing/design-principles.md apps/oat-docs/docs/guide/documentation/commands.md apps/oat-docs/docs/contributing/code.md` | Yes    | No     | N/A      |
 | 3     | `rg -n '@tkstang' .github/workflows/release.yml .github/workflows/release-dry-run.yml`; `bash packages/cli/scripts/bundle-assets.sh`; `rg -n '@tkstang' apps/oat-docs/docs/contributing/code.md .oat/repo/knowledge/project-index.md .oat/repo/knowledge/architecture.md .oat/repo/knowledge/testing.md .oat/repo/knowledge/concerns.md .oat/repo/knowledge/integrations.md packages/cli/assets`                                                                                                                                                                                                                                                                                                                               | Yes    | No     | N/A      |
+| 4     | `pnpm release:validate`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Yes    | No     | N/A      |
 
 ## Final Summary (for PR/docs)
 
@@ -682,6 +689,8 @@ Track test execution during implementation.
 - Updated release workflows and maintainer/bootstrap guidance so the repo is
   ready for a manual first publish followed by GitHub trusted-publishing
   validation.
+- Bumped all four public packages to `0.0.10` so the shipped namespace rename
+  satisfies the repo's lockstep release policy.
 
 **Behavioral changes (user-facing):**
 
@@ -709,6 +718,7 @@ Track test execution during implementation.
 **Verification performed:**
 
 - `pnpm --filter ./packages/cli build`
+- `pnpm release:validate`
 - `pnpm test`
 - `pnpm lint`
 - `pnpm type-check`
@@ -738,8 +748,8 @@ Track test execution during implementation.
 
 **New tasks added:** `p04-t01`
 
-**Next:** Execute the review-fix task via `oat-project-implement`, then re-run
-the final review cycle to reach `passed`.
+**Next:** Request re-review for `final` so the review row can move from
+`fixes_completed` to `passed`.
 
 ## References
 

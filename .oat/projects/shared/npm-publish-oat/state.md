@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: c9d1cf6
+oat_current_task: null
+oat_last_commit: c2b9338
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-02T19:02:23.393Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-02T22:44:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-02T22:51:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Review fixes queued from final review
+Implementation - Review fixes complete; awaiting re-review
 
 ## Artifacts
 
@@ -52,7 +52,8 @@ Implementation - Review fixes queued from final review
 - ✓ p02-t03 complete: CLI docs migration fixtures renamed to the new CLI package
 - ✓ Phase 2 complete: docs app, scaffold, fixtures, and public docs aligned to `@open-agent-toolkit/*`
 - ✓ Phase 3 complete: release workflows, maintainer guidance, and knowledge refreshed for `@open-agent-toolkit/*`
-- ⧗ Final review received: one lockstep version-bump fix task added (`p04-t01`)
+- ✓ Final review fix task `p04-t01` complete: public packages bumped to `0.0.10`
+- ⧗ Awaiting final re-review to move `final` from `fixes_completed` to `passed`
 
 ## Blockers
 
@@ -60,4 +61,4 @@ None
 
 ## Next Milestone
 
-Execute `p04-t01`, then re-run the final code review to clear the project for summary/docs/PR work.
+Re-run the final code review for `final`, then receive it to clear the project for summary/docs/PR work.
