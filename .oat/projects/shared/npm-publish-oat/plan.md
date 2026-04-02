@@ -1,10 +1,12 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-02
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
+oat_plan_hill_phases: ['p03']
+oat_auto_review_at_checkpoints: true
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
@@ -57,6 +59,9 @@ identity set.
 Update the existing contract tests so they expect the four canonical
 `@open-agent-toolkit/*` package names, the preserved role split, and the new
 lockstep error messaging strings.
+
+This task intentionally leaves the suite red; `p01-t02` is the task that turns
+the renamed contract implementation green.
 
 Run: `pnpm --filter ./packages/cli test -- src/release/public-package-contract.test.ts`
 Expected: Contract assertions fail until implementation and manifests are
@@ -146,9 +151,12 @@ git commit -m "chore(p01-t02): rename release contract registry"
 
 - Modify: `packages/cli/package.json`
 - Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-config/src/source-config.ts`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/docs-transforms/src/remark-mermaid.ts`
 - Modify: `package.json`
+- Modify: `pnpm-lock.yaml`
 
 **Step 1: Write test (RED)**
 
@@ -161,7 +169,9 @@ present.
 **Step 2: Implement (GREEN)**
 
 Rename the package `name` fields, internal published dependency names, and the
-root `cli:link` filter to the canonical `@open-agent-toolkit/*` values.
+root `cli:link` filter to the canonical `@open-agent-toolkit/*` values. Update
+runtime imports and shipped source comments in publishable packages so the
+published code surface does not retain `@tkstang` references.
 
 ```json
 {
@@ -175,7 +185,9 @@ root `cli:link` filter to the canonical `@open-agent-toolkit/*` values.
 **Step 3: Refactor**
 
 Preserve current versions, metadata completeness, and workspace dependency
-policy while changing only the public names.
+policy while changing only the public names. Run `pnpm install` after the
+manifest rename so `pnpm-lock.yaml` is regenerated against the renamed package
+graph.
 
 **Step 4: Verify**
 
@@ -186,7 +198,7 @@ contract registry.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json package.json
+git add packages/cli/package.json packages/docs-config/package.json packages/docs-config/src/source-config.ts packages/docs-theme/package.json packages/docs-transforms/package.json packages/docs-transforms/src/remark-mermaid.ts package.json pnpm-lock.yaml
 git commit -m "chore(p01-t03): rename publishable package manifests"
 ```
 
@@ -196,6 +208,9 @@ git commit -m "chore(p01-t03): rename publishable package manifests"
 
 Deliver consistent `@open-agent-toolkit/*` references across the first-party
 docs app, generated docs consumers, migration fixtures, and public guidance.
+This phase intentionally groups design-time docs-app alignment with scaffold and
+public-doc updates because all consumer-visible package-reference surfaces can
+be verified together with the same namespace audit.
 
 ### Task p02-t01: Align first-party docs app dependencies and imports
 
@@ -254,6 +269,11 @@ git commit -m "chore(p02-t01): align docs app package imports"
 - Modify: `packages/cli/src/commands/docs/init/scaffold.test.ts`
 - Modify: `packages/cli/src/commands/docs/init/integration.test.ts`
 - Modify: `packages/cli/src/commands/docs/init/mkdocs-compat.test.ts`
+- Modify: `.oat/templates/docs-app-fuma/source.config.ts`
+- Modify: `.oat/templates/docs-app-fuma/next.config.js`
+- Modify: `.oat/templates/docs-app-fuma/package.json.template`
+- Modify: `.oat/templates/docs-app-fuma/app/layout.tsx`
+- Modify: `.oat/templates/docs-app-fuma/app/[[...slug]]/page.tsx`
 
 **Step 1: Write test (RED)**
 
@@ -268,6 +288,8 @@ names.
 
 Rename the scaffold package constants and emitted dependency/import templates to
 the canonical names while preserving workspace vs published-lockstep behavior.
+Apply the same namespace update to the checked-in docs-app-fuma source templates
+so generated docs consumers and their scaffold source of truth stay aligned.
 
 ```typescript
 const DOCS_PACKAGE_NAMES = {
@@ -285,13 +307,13 @@ easy to update together.
 
 **Step 4: Verify**
 
-Run: `pnpm --filter ./packages/cli test -- src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/mkdocs-compat.test.ts`
+Run: `pnpm --filter ./packages/cli test -- src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/mkdocs-compat.test.ts && rg -n '@tkstang' .oat/templates/docs-app-fuma`
 Expected: Docs-init scaffold coverage passes with the new namespace.
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/docs/init/scaffold.ts packages/cli/src/commands/docs/init/scaffold.test.ts packages/cli/src/commands/docs/init/integration.test.ts packages/cli/src/commands/docs/init/mkdocs-compat.test.ts
+git add packages/cli/src/commands/docs/init/scaffold.ts packages/cli/src/commands/docs/init/scaffold.test.ts packages/cli/src/commands/docs/init/integration.test.ts packages/cli/src/commands/docs/init/mkdocs-compat.test.ts .oat/templates/docs-app-fuma/source.config.ts .oat/templates/docs-app-fuma/next.config.js .oat/templates/docs-app-fuma/package.json.template .oat/templates/docs-app-fuma/app/layout.tsx '.oat/templates/docs-app-fuma/app/[[...slug]]/page.tsx'
 git commit -m "test(p02-t02): rename docs scaffold package outputs"
 ```
 
@@ -302,6 +324,8 @@ git commit -m "test(p02-t02): rename docs scaffold package outputs"
 **Files:**
 
 - Modify: `packages/cli/src/commands/docs/e2e-pipeline.test.ts`
+- Modify: `packages/cli/src/commands/docs/migrate/fixtures.test.ts`
+- Modify: `packages/cli/src/commands/docs/migrate/frontmatter.test.ts`
 - Modify: `packages/cli/src/commands/docs/migrate/fixtures/frontmatter-input.md`
 - Modify: `packages/cli/src/commands/docs/migrate/fixtures/frontmatter-expected.md`
 
@@ -336,7 +360,7 @@ Expected: CLI docs migration and package smoke coverage passes.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/docs/e2e-pipeline.test.ts packages/cli/src/commands/docs/migrate/fixtures/frontmatter-input.md packages/cli/src/commands/docs/migrate/fixtures/frontmatter-expected.md
+git add packages/cli/src/commands/docs/e2e-pipeline.test.ts packages/cli/src/commands/docs/migrate/fixtures.test.ts packages/cli/src/commands/docs/migrate/frontmatter.test.ts packages/cli/src/commands/docs/migrate/fixtures/frontmatter-input.md packages/cli/src/commands/docs/migrate/fixtures/frontmatter-expected.md
 git commit -m "test(p02-t03): rename cli docs migration fixtures"
 ```
 
@@ -347,18 +371,20 @@ git commit -m "test(p02-t03): rename cli docs migration fixtures"
 **Files:**
 
 - Modify: `README.md`
+- Modify: `packages/cli/AGENTS.md`
 - Modify: `packages/cli/README.md`
 - Modify: `packages/docs-config/README.md`
 - Modify: `packages/docs-theme/README.md`
 - Modify: `packages/docs-transforms/README.md`
 - Modify: `apps/oat-docs/docs/quickstart.md`
+- Modify: `apps/oat-docs/docs/contributing/design-principles.md`
 - Modify: `apps/oat-docs/docs/guide/documentation/commands.md`
 
 **Step 1: Write test (RED)**
 
 Capture the current public-doc drift with a namespace search.
 
-Run: `rg -n '@tkstang' README.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/guide/documentation/commands.md`
+Run: `rg -n '@tkstang' README.md packages/cli/AGENTS.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/contributing/design-principles.md apps/oat-docs/docs/guide/documentation/commands.md`
 Expected: Old install commands and package references are still present.
 
 **Step 2: Implement (GREEN)**
@@ -379,13 +405,13 @@ root docs and package READMEs.
 
 **Step 4: Verify**
 
-Run: `rg -n '@tkstang' README.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/guide/documentation/commands.md`
+Run: `rg -n '@tkstang' README.md packages/cli/AGENTS.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/contributing/design-principles.md apps/oat-docs/docs/guide/documentation/commands.md`
 Expected: No matches remain in the consumer-facing docs set.
 
 **Step 5: Commit**
 
 ```bash
-git add README.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/guide/documentation/commands.md
+git add README.md packages/cli/AGENTS.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/contributing/design-principles.md apps/oat-docs/docs/guide/documentation/commands.md
 git commit -m "docs(p02-t04): rename public package install guidance"
 ```
 
@@ -441,25 +467,30 @@ git commit -m "ci(p03-t01): rename npm release workflows"
 
 ---
 
-### Task p03-t02: Document manual bootstrap and trusted-publishing boundary
+### Task p03-t02: Document manual bootstrap boundary and refresh repo knowledge
 
 **Files:**
 
 - Modify: `apps/oat-docs/docs/contributing/code.md`
+- Modify: `.oat/repo/knowledge/project-index.md`
+- Modify: `.oat/repo/knowledge/architecture.md`
+- Modify: `.oat/repo/knowledge/testing.md`
+- Modify: `.oat/repo/knowledge/concerns.md`
 
 **Step 1: Write test (RED)**
 
 Identify that maintainer docs do not yet explain the manual-first bootstrap and
 post-bootstrap GitHub publish boundary for the renamed package set.
 
-Run: `rg -n 'manual publish|trusted publishing|@open-agent-toolkit' apps/oat-docs/docs/contributing/code.md`
+Run: `rg -n 'manual publish|trusted publishing|@open-agent-toolkit|@tkstang' apps/oat-docs/docs/contributing/code.md .oat/repo/knowledge/project-index.md .oat/repo/knowledge/architecture.md .oat/repo/knowledge/testing.md .oat/repo/knowledge/concerns.md`
 Expected: Required maintainer release guidance is missing or incomplete.
 
 **Step 2: Implement (GREEN)**
 
 Add a concise maintainer-facing section describing the first manual publish,
 the intended GitHub steady-state path, and the expected trusted-publishing
-handoff.
+handoff. Refresh the generated repo-knowledge outputs after the namespace
+rename so future agent guidance no longer suggests stale package names.
 
 ```md
 - First release under `@open-agent-toolkit/*`: manual publish
@@ -469,19 +500,20 @@ handoff.
 **Step 3: Refactor**
 
 Keep release guidance scoped to maintainers and avoid duplicating end-user
-install instructions already covered elsewhere.
+install instructions already covered elsewhere. Prefer regeneration of the
+knowledge artifacts over ad hoc manual edits.
 
 **Step 4: Verify**
 
-Run: `rg -n 'manual publish|trusted publishing|@open-agent-toolkit' apps/oat-docs/docs/contributing/code.md`
-Expected: Maintainer guidance captures the bootstrap and trusted-publishing
-boundary.
+Run: `rg -n '@tkstang' apps/oat-docs/docs/contributing/code.md .oat/repo/knowledge/project-index.md .oat/repo/knowledge/architecture.md .oat/repo/knowledge/testing.md .oat/repo/knowledge/concerns.md`
+Expected: No stale namespace references remain in maintainer docs or generated
+knowledge.
 
 **Step 5: Commit**
 
 ```bash
-git add apps/oat-docs/docs/contributing/code.md
-git commit -m "docs(p03-t02): document release bootstrap boundary"
+git add apps/oat-docs/docs/contributing/code.md .oat/repo/knowledge/project-index.md .oat/repo/knowledge/architecture.md .oat/repo/knowledge/testing.md .oat/repo/knowledge/concerns.md
+git commit -m "docs(p03-t02): refresh release bootstrap guidance"
 ```
 
 ---
@@ -491,15 +523,15 @@ git commit -m "docs(p03-t02): document release bootstrap boundary"
 Track reviews here after running the oat-project-review-provide and
 oat-project-review-receive skills.
 
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| p02    | code     | pending  | -          | -                                          |
-| p03    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| spec   | artifact | pending  | -          | -                                          |
-| plan   | artifact | received | 2026-04-02 | reviews/artifact-plan-review-2026-04-02.md |
-| design | artifact | pending  | -          | -                                          |
+| Scope  | Type     | Status  | Date       | Artifact                                            |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                   |
+| p02    | code     | pending | -          | -                                                   |
+| p03    | code     | pending | -          | -                                                   |
+| final  | code     | pending | -          | -                                                   |
+| spec   | artifact | pending | -          | -                                                   |
+| plan   | artifact | passed  | 2026-04-02 | reviews/archived/artifact-plan-review-2026-04-02.md |
+| design | artifact | pending | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -522,7 +554,7 @@ oat-project-review-receive skills.
 
 **Total: 9 tasks**
 
-Ready for code review and merge.
+Planned for implementation after final approval.
 
 ---
 
