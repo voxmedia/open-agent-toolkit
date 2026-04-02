@@ -528,7 +528,7 @@ oat-project-review-receive skills.
 | p01    | code     | pending | -          | -                                                   |
 | p02    | code     | pending | -          | -                                                   |
 | p03    | code     | pending | -          | -                                                   |
-| final  | code     | pending | -          | -                                                   |
+| final  | code     | passed  | 2026-04-02 | reviews/archived/code-final-review-2026-04-02.md    |
 | spec   | artifact | pending | -          | -                                                   |
 | plan   | artifact | passed  | 2026-04-02 | reviews/archived/artifact-plan-review-2026-04-02.md |
 | design | artifact | pending | -          | -                                                   |

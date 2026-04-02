@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-02
@@ -577,8 +577,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- All planned implementation tasks are complete. Next: run the final automatic
-  code review for the completed scope.
+- All planned implementation tasks and the automatic final review are complete.
+  Next: generate summary/docs updates or open the final PR when ready.
 
 **Blockers:**
 
@@ -586,7 +586,7 @@ Chronological log of implementation progress.
   depended on `@tkstang/oat-cli` and related packages - resolved by updating
   the docs app dependency names during `p01-t03`.
 
-**Session End:** in progress
+**Session End:** 17:27:00 CDT
 
 ---
 
@@ -620,24 +620,70 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Renamed the public npm contract from `@tkstang/oat-*` to the canonical
+  `@open-agent-toolkit/*` package set across all four publishable packages.
+- Aligned first-party docs, scaffold templates, migration fixtures, and public
+  install guidance to the renamed package identities.
+- Updated release workflows and maintainer/bootstrap guidance so the repo is
+  ready for a manual first publish followed by GitHub trusted-publishing
+  validation.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Consumers now install `@open-agent-toolkit/cli`,
+  `@open-agent-toolkit/docs-config`, `@open-agent-toolkit/docs-theme`, and
+  `@open-agent-toolkit/docs-transforms` instead of the temporary
+  `@tkstang/oat-*` names.
+- Docs scaffolding and migration examples now emit the new package namespace by
+  default.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/release/public-package-contract.ts` - canonical public
+  package registry used by release validation.
+- `packages/docs-config/package.json` and
+  `packages/docs-config/src/source-config.ts` - published docs-config identity
+  and runtime dependency alignment.
+- `.oat/templates/docs-app-fuma/package.json.template` - generated Fumadocs app
+  package contract.
+- `README.md` and `packages/*/README.md` - public install and package
+  positioning guidance.
+- `.github/workflows/release.yml` and `.github/workflows/release-dry-run.yml` -
+  renamed release automation surface.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm --filter ./packages/cli build`
+- `pnpm test`
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm build`
+- `rg -n '@tkstang' README.md packages apps/oat-docs .github/workflows .oat/templates/docs-app-fuma .oat/repo/knowledge package.json pnpm-lock.yaml`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- `apps/oat-docs/package.json` was pulled into Phase 1 so the manifest rename,
+  workspace install, and contract validation could succeed against one package
+  graph.
+- The initial final-verification failures were caused by concurrent verification
+  runs racing on `packages/cli/assets`; serialized verification passed, so no
+  implementation change was needed for review closure.
+
+### Review Received: final
+
+**Date:** 2026-04-02
+**Review artifact:** `reviews/archived/code-final-review-2026-04-02.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** none
+
+**Next:** Generate summary/docs artifacts or open the final PR when ready.
 
 ## References
 
