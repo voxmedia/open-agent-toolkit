@@ -7,7 +7,7 @@ import {
   gitRefExists,
   readPackageJsonAtGitRef,
   runCommand,
-} from './public-package-version-state';
+} from './release-utils';
 import {
   findLockstepVersionBumpErrors,
   type PublicPackageVersionState,

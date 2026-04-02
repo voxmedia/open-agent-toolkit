@@ -19,7 +19,7 @@ import {
   REPO_ROOT,
   resolveMergeBase,
   runCommand,
-} from './public-package-version-state';
+} from './release-utils';
 
 interface PackedFileEntry {
   path: string;
