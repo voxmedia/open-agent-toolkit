@@ -69,7 +69,10 @@ describe('scaffold integration', () => {
         await mkdir(pkgDir, { recursive: true });
         await writeFile(
           join(pkgDir, 'package.json'),
-          JSON.stringify({ name: `@tkstang/oat-${pkg}`, version: '0.0.5' }),
+          JSON.stringify({
+            name: `@open-agent-toolkit/${pkg}`,
+            version: '0.0.5',
+          }),
           'utf8',
         );
       }
@@ -156,15 +159,15 @@ describe('scaffold integration', () => {
       };
       expect(packageJson.name).toBe('test-docs');
       expect(packageJson.description).toBe('Integration test documentation');
-      expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe(
+      expect(packageJson.dependencies['@open-agent-toolkit/docs-config']).toBe(
         'workspace:*',
       );
-      expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe(
+      expect(packageJson.dependencies['@open-agent-toolkit/docs-theme']).toBe(
         'workspace:*',
       );
-      expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
-        'workspace:*',
-      );
+      expect(
+        packageJson.dependencies['@open-agent-toolkit/docs-transforms'],
+      ).toBe('workspace:*');
       expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
       expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
       expect(packageJson.devDependencies['prettier']).toBeUndefined();
@@ -202,7 +205,7 @@ describe('scaffold integration', () => {
       // when bundled public package versions are available.
       await writeFile(
         join(dirname(assetsRoot), 'package.json'),
-        JSON.stringify({ name: '@tkstang/oat-cli', version: '9.9.9' }),
+        JSON.stringify({ name: '@open-agent-toolkit/cli', version: '9.9.9' }),
         'utf8',
       );
 
@@ -237,17 +240,19 @@ describe('scaffold integration', () => {
         dependencies: Record<string, string>;
         devDependencies: Record<string, string>;
       };
-      expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe(
+      expect(packageJson.dependencies['@open-agent-toolkit/docs-config']).toBe(
         '^2.0.0',
       );
-      expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe(
+      expect(packageJson.dependencies['@open-agent-toolkit/docs-theme']).toBe(
         '^2.1.0',
       );
-      expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
-        '^2.2.0',
-      );
+      expect(
+        packageJson.dependencies['@open-agent-toolkit/docs-transforms'],
+      ).toBe('^2.2.0');
       expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
-      expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('^9.9.9');
+      expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
+        '^9.9.9',
+      );
 
       // Verify oat CLI with app-relative paths
       expect(packageJson.scripts['predev']).toBe(
