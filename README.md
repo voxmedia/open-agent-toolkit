@@ -256,29 +256,29 @@ If you are using OAT CLI as a consumer, prefer the `oat` executable interface ra
 
 Public package names for release automation in this repo:
 
-- `@tkstang/oat-cli`
-- `@tkstang/oat-docs-config`
-- `@tkstang/oat-docs-theme`
-- `@tkstang/oat-docs-transforms`
+- `@open-agent-toolkit/cli`
+- `@open-agent-toolkit/docs-config`
+- `@open-agent-toolkit/docs-theme`
+- `@open-agent-toolkit/docs-transforms`
 
 Once published, install the CLI with npm:
 
 ```bash
-npm install -g @tkstang/oat-cli
+npm install -g @open-agent-toolkit/cli
 oat --help
 ```
 
 Or run it without a global install:
 
 ```bash
-npx @tkstang/oat-cli --help
-pnpm dlx @tkstang/oat-cli --help
+npx @open-agent-toolkit/cli --help
+pnpm dlx @open-agent-toolkit/cli --help
 ```
 
 Fumadocs helper packages are published separately:
 
 ```bash
-pnpm add @tkstang/oat-docs-config @tkstang/oat-docs-theme @tkstang/oat-docs-transforms
+pnpm add @open-agent-toolkit/docs-config @open-agent-toolkit/docs-theme @open-agent-toolkit/docs-transforms
 ```
 
 Run from source with npm:
