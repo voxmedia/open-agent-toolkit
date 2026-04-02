@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-02
-oat_current_task_id: p02-t03
+oat_current_task_id: p02-t04
 oat_generated: false
 oat_template: false
 ---
@@ -28,10 +28,10 @@ oat_template: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 2/4       |
+| Phase 2 | in_progress | 4     | 3/4       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 5/9 tasks completed
+**Total:** 6/9 tasks completed
 
 ---
 
@@ -290,8 +290,39 @@ oat_template: false
 
 ### Task p02-t03: Update CLI docs migration fixtures and package smoke tests
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `41469a6`
+
+**Outcome (required when completed):**
+
+- The CLI docs migration and smoke-test fixtures now reference
+  `@open-agent-toolkit/cli` instead of the old scoped package name.
+- The frontmatter migration fixtures continue to round-trip correctly with the
+  renamed CLI install snippets.
+
+**Files changed:**
+
+- `packages/cli/src/commands/docs/e2e-pipeline.test.ts` - renamed the CLI
+  install example used in the end-to-end docs pipeline test.
+- `packages/cli/src/commands/docs/migrate/fixtures/frontmatter-input.md` -
+  renamed the CLI install command in the input fixture.
+- `packages/cli/src/commands/docs/migrate/fixtures/frontmatter-expected.md` -
+  renamed the CLI install command in the expected fixture.
+
+**Verification:**
+
+- Run: `pnpm --filter ./packages/cli test -- src/commands/docs/e2e-pipeline.test.ts src/commands/docs/migrate/fixtures.test.ts src/commands/docs/migrate/frontmatter.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- `fixtures.test.ts` and `frontmatter.test.ts` did not need direct edits; the
+  stale package references only lived in the fixture markdown and the E2E test
+  content.
+- The repo's staged-file formatter hook reported `Expected at least one target
+file` for `oxfmt --write` on the staged markdown set during commit, but git
+  still completed the commit successfully and the working tree remained clean
+  for task files.
 
 ---
 
@@ -345,6 +376,7 @@ Chronological log of implementation progress.
 - [x] p01-t03: Rename publishable package manifests and root link script
 - [x] p02-t01: Align first-party docs app dependencies and imports
 - [x] p02-t02: Rename docs-init scaffold outputs and tests
+- [x] p02-t03: Update CLI docs migration fixtures and package smoke tests
 
 **What changed (high level):**
 
@@ -356,6 +388,8 @@ Chronological log of implementation progress.
   against the renamed workspace packages.
 - Renamed the docs-init scaffold expectations and bundled Fumadocs templates so
   generated docs apps emit the new package namespace.
+- Renamed the CLI docs migration fixtures and pipeline smoke example to the new
+  CLI package identity.
 
 **Decisions:**
 
@@ -366,7 +400,8 @@ Chronological log of implementation progress.
 **Follow-ups / TODO:**
 
 - Continue with `p02-t02` to update scaffold tests and checked-in docs app
-- Continue with `p02-t03` to rename CLI docs migration and smoke-test fixtures.
+- Continue with `p02-t04` to finish the public docs and package README rename
+  sweep.
 
 **Blockers:**
 
