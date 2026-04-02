@@ -169,6 +169,73 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('gets git.defaultBranch from shared config', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, git: { defaultBranch: 'main' } })}\n`,
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root });
+    await runCommand(command, ['get', 'git.defaultBranch']);
+
+    expect(capture.info[0]).toBe('main');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('sets archive.s3Uri in config.json', async () => {
+    const root = await createRepoRoot();
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, [
+      'set',
+      'archive.s3Uri',
+      's3://example-bucket/oat-archive',
+    ]);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      archive: { s3Uri: 's3://example-bucket/oat-archive' },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('sets archive.s3SyncOnComplete to true in config.json', async () => {
+    const root = await createRepoRoot();
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'archive.s3SyncOnComplete', 'true']);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      archive: { s3SyncOnComplete: true },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('sets archive.summaryExportPath in config.json', async () => {
+    const root = await createRepoRoot();
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, [
+      'set',
+      'archive.summaryExportPath',
+      '.oat/repo/reference/project-summaries',
+    ]);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      archive: {
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('set creates config.json when missing', async () => {
     const root = await createRepoRoot();
     const { command } = createHarness({ cwd: root });
@@ -259,6 +326,80 @@ describe('oat config', () => {
       values: expect.any(Array),
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('describe without a key prints the grouped config catalog', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe']);
+
+    expect(capture.info[0]).toContain('Shared Repo (.oat/config.json)');
+    expect(capture.info[0]).toContain('archive.s3Uri');
+    expect(capture.info[0]).toContain('Repo Local (.oat/config.local.json)');
+    expect(capture.info[0]).toContain('User (~/.oat/config.json)');
+    expect(capture.info[0]).toContain('Sync/Provider (.oat/sync/config.json)');
+    expect(capture.info[0]).toContain('sync.providers.<name>.enabled');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('describe with a key prints detailed metadata', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'archive.s3Uri']);
+
+    expect(capture.info[0]).toContain('Key: archive.s3Uri');
+    expect(capture.info[0]).toContain('Scope: shared repo');
+    expect(capture.info[0]).toContain('File: .oat/config.json');
+    expect(capture.info[0]).toContain('Type: string');
+    expect(capture.info[0]).toContain('Default: unset');
+    expect(capture.info[0]).toContain(
+      'Owning command: oat config set archive.s3Uri <value>',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('describe supports json mode', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'archive.s3Uri'], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      key: 'archive.s3Uri',
+      entries: [
+        expect.objectContaining({
+          key: 'archive.s3Uri',
+          file: '.oat/config.json',
+          scope: 'shared repo',
+        }),
+      ],
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('describe resolves wildcard provider keys from concrete names', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'sync.providers.github.enabled']);
+
+    expect(capture.info[0]).toContain('Key: sync.providers.<name>.enabled');
+    expect(capture.info[0]).toContain('File: .oat/sync/config.json');
+    expect(capture.info[0]).toContain('Owning command: oat providers set');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('describe returns exit code 1 for unknown keys', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'missing.key']);
+
+    expect(capture.error[0]).toContain('Unknown config key: missing.key');
+    expect(process.exitCode).toBe(1);
   });
 
   it('gets autoReviewAtCheckpoints default false when not set', async () => {

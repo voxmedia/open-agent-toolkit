@@ -15,12 +15,16 @@ import { Command } from 'commander';
 type ConfigKey =
   | 'activeIdea'
   | 'activeProject'
+  | 'archive.s3SyncOnComplete'
+  | 'archive.s3Uri'
+  | 'archive.summaryExportPath'
   | 'autoReviewAtCheckpoints'
   | 'lastPausedProject'
   | 'documentation.config'
   | 'documentation.requireForProjectCompletion'
   | 'documentation.root'
   | 'documentation.tooling'
+  | 'git.defaultBranch'
   | 'projects.root'
   | 'worktrees.root';
 
@@ -28,6 +32,18 @@ interface ConfigValue {
   key: ConfigKey;
   value: string | null;
   source: string;
+}
+
+interface ConfigCatalogEntry {
+  key: string;
+  group: string;
+  file: string;
+  scope: string;
+  type: string;
+  defaultValue: string;
+  mutability: string;
+  owningCommand: string;
+  description: string;
 }
 
 interface ConfigCommandDependencies {
@@ -52,14 +68,234 @@ interface ConfigCommandDependencies {
 const KEY_ORDER: ConfigKey[] = [
   'activeIdea',
   'activeProject',
+  'archive.s3Uri',
+  'archive.s3SyncOnComplete',
+  'archive.summaryExportPath',
   'autoReviewAtCheckpoints',
   'lastPausedProject',
   'documentation.root',
   'documentation.tooling',
   'documentation.config',
   'documentation.requireForProjectCompletion',
+  'git.defaultBranch',
   'projects.root',
   'worktrees.root',
+];
+
+const CONFIG_CATALOG: ConfigCatalogEntry[] = [
+  {
+    key: 'projects.root',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: '.oat/projects/shared',
+    mutability: 'read/write',
+    owningCommand: 'oat config set projects.root <value>',
+    description: 'Root directory for tracked OAT projects in this repository.',
+  },
+  {
+    key: 'worktrees.root',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: '.worktrees',
+    mutability: 'read/write',
+    owningCommand: 'oat config set worktrees.root <value>',
+    description: 'Root directory used for git worktrees in this repository.',
+  },
+  {
+    key: 'git.defaultBranch',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: 'main',
+    mutability: 'read/write',
+    owningCommand: 'oat config set git.defaultBranch <value>',
+    description:
+      'Default branch used by lifecycle PR flows when base branch auto-detection is unavailable.',
+  },
+  {
+    key: 'autoReviewAtCheckpoints',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat config set autoReviewAtCheckpoints <true|false>',
+    description:
+      'Controls whether OAT automatically runs review gates at configured phase checkpoints.',
+  },
+  {
+    key: 'documentation.root',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set documentation.root <value>',
+    description:
+      'Repository-relative root for the docs surface managed by OAT.',
+  },
+  {
+    key: 'documentation.tooling',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set documentation.tooling <value>',
+    description: 'Documentation stack identifier used by docs workflows.',
+  },
+  {
+    key: 'documentation.config',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set documentation.config <value>',
+    description:
+      'Repository-relative path to the primary documentation tool config file.',
+  },
+  {
+    key: 'documentation.requireForProjectCompletion',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set documentation.requireForProjectCompletion <true|false>',
+    description:
+      'Turns documentation sync from a suggestion into a completion gate for project closeout.',
+  },
+  {
+    key: 'archive.s3Uri',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set archive.s3Uri <value>',
+    description:
+      'Base S3 URI used for repo-scoped archived project sync and completion uploads.',
+  },
+  {
+    key: 'archive.s3SyncOnComplete',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat config set archive.s3SyncOnComplete <true|false>',
+    description:
+      'Enables completion-time S3 sync after the local archive succeeds.',
+  },
+  {
+    key: 'archive.summaryExportPath',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set archive.summaryExportPath <value>',
+    description:
+      'Repository-relative directory where completion copies project summaries for durable tracked reference.',
+  },
+  {
+    key: 'activeProject',
+    group: 'Repo Local (.oat/config.local.json)',
+    file: '.oat/config.local.json',
+    scope: 'repo local',
+    type: 'string | null',
+    defaultValue: 'null',
+    mutability: 'read/write',
+    owningCommand: 'oat config set activeProject <value>',
+    description:
+      'Active OAT project for this repository checkout and developer workspace.',
+  },
+  {
+    key: 'lastPausedProject',
+    group: 'Repo Local (.oat/config.local.json)',
+    file: '.oat/config.local.json',
+    scope: 'repo local',
+    type: 'string | null',
+    defaultValue: 'null',
+    mutability: 'read/write',
+    owningCommand: 'oat config set lastPausedProject <value>',
+    description:
+      'Most recent paused project path for local lifecycle resume flows.',
+  },
+  {
+    key: 'activeIdea',
+    group: 'Repo Local (.oat/config.local.json)',
+    file: '.oat/config.local.json',
+    scope: 'repo local',
+    type: 'string | null',
+    defaultValue: 'null',
+    mutability: 'read/write',
+    owningCommand: 'oat config set activeIdea <value>',
+    description:
+      'Repository-scoped active idea pointer that overrides the user-level active idea when set.',
+  },
+  {
+    key: 'activeIdea',
+    group: 'User (~/.oat/config.json)',
+    file: '~/.oat/config.json',
+    scope: 'user',
+    type: 'string | null',
+    defaultValue: 'null',
+    mutability: 'read/write',
+    owningCommand: 'user config APIs (not surfaced via oat config set)',
+    description:
+      'User-level active idea fallback when no repo-local active idea is set.',
+  },
+  {
+    key: 'sync.defaultStrategy',
+    group: 'Sync/Provider (.oat/sync/config.json)',
+    file: '.oat/sync/config.json',
+    scope: 'project sync',
+    type: 'auto | symlink | copy',
+    defaultValue: 'auto',
+    mutability: 'read/write',
+    owningCommand: 'oat providers set --scope project',
+    description:
+      'Default sync strategy used when a provider does not override its own strategy.',
+  },
+  {
+    key: 'sync.providers.<name>.enabled',
+    group: 'Sync/Provider (.oat/sync/config.json)',
+    file: '.oat/sync/config.json',
+    scope: 'project sync',
+    type: 'boolean',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat providers set --scope project --enabled/--disabled',
+    description: 'Provider-specific enablement flag for project sync surfaces.',
+  },
+  {
+    key: 'sync.providers.<name>.strategy',
+    group: 'Sync/Provider (.oat/sync/config.json)',
+    file: '.oat/sync/config.json',
+    scope: 'project sync',
+    type: 'auto | symlink | copy',
+    defaultValue: 'inherit sync.defaultStrategy',
+    mutability: 'read/write',
+    owningCommand: 'oat providers set --scope project',
+    description:
+      'Provider-specific sync strategy override for a named provider.',
+  },
 ];
 
 const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
@@ -150,6 +386,38 @@ async function getConfigValue(
       key,
       value,
       source: doc ? 'config.json' : 'default',
+    };
+  }
+
+  if (key.startsWith('archive.')) {
+    const config = await dependencies.readOatConfig(repoRoot);
+    const archive = config.archive;
+    let value: string | null = null;
+
+    if (key === 'archive.s3Uri') {
+      value = archive?.s3Uri ?? null;
+    } else if (key === 'archive.s3SyncOnComplete') {
+      value =
+        archive?.s3SyncOnComplete != null
+          ? String(archive.s3SyncOnComplete)
+          : 'false';
+    } else if (key === 'archive.summaryExportPath') {
+      value = archive?.summaryExportPath ?? null;
+    }
+
+    return {
+      key,
+      value,
+      source: archive ? 'config.json' : 'default',
+    };
+  }
+
+  if (key === 'git.defaultBranch') {
+    const config = await dependencies.readOatConfig(repoRoot);
+    return {
+      key,
+      value: config.git?.defaultBranch ?? null,
+      source: config.git?.defaultBranch ? 'config.json' : 'default',
     };
   }
 
@@ -263,6 +531,57 @@ async function setConfigValue(
     };
   }
 
+  if (key.startsWith('archive.')) {
+    const archive = { ...config.archive };
+
+    if (key === 'archive.s3Uri') {
+      archive.s3Uri = rawValue.trim().replace(/\/+$/, '');
+    } else if (key === 'archive.s3SyncOnComplete') {
+      archive.s3SyncOnComplete = rawValue.trim().toLowerCase() === 'true';
+    } else if (key === 'archive.summaryExportPath') {
+      archive.summaryExportPath = normalizeSharedRoot(rawValue);
+    }
+
+    await dependencies.writeOatConfig(repoRoot, {
+      ...config,
+      archive,
+    });
+
+    const resultValue =
+      key === 'archive.s3SyncOnComplete'
+        ? String(archive.s3SyncOnComplete ?? false)
+        : ((archive[
+            key.replace('archive.', '') as keyof typeof archive
+          ] as string) ?? null);
+
+    return {
+      key,
+      value: resultValue,
+      source: 'config.json',
+    };
+  }
+
+  if (key === 'git.defaultBranch') {
+    const nextValue = rawValue.trim();
+    if (!nextValue) {
+      throw new Error('Shared config values cannot be empty.');
+    }
+
+    await dependencies.writeOatConfig(repoRoot, {
+      ...config,
+      git: {
+        ...config.git,
+        defaultBranch: nextValue,
+      },
+    });
+
+    return {
+      key,
+      value: nextValue,
+      source: 'config.json',
+    };
+  }
+
   if (key === 'autoReviewAtCheckpoints') {
     const nextValue = rawValue.trim().toLowerCase() === 'true';
     await dependencies.writeOatConfig(repoRoot, {
@@ -321,6 +640,59 @@ function formatList(values: ConfigValue[]): string {
   }
 
   return lines.join('\n');
+}
+
+function matchesCatalogKey(entryKey: string, requestedKey: string): boolean {
+  if (entryKey === requestedKey) {
+    return true;
+  }
+
+  if (entryKey.includes('<name>')) {
+    const escaped = entryKey.replaceAll('.', '\\.').replace('<name>', '[^.]+');
+    return new RegExp(`^${escaped}$`).test(requestedKey);
+  }
+
+  return false;
+}
+
+function formatCatalog(entries: ConfigCatalogEntry[]): string {
+  const groups = new Map<string, ConfigCatalogEntry[]>();
+
+  for (const entry of entries) {
+    const items = groups.get(entry.group) ?? [];
+    items.push(entry);
+    groups.set(entry.group, items);
+  }
+
+  const lines: string[] = [];
+  for (const [group, items] of groups) {
+    if (lines.length > 0) {
+      lines.push('');
+    }
+    lines.push(group);
+    for (const item of items) {
+      lines.push(`  ${item.key} — ${item.description}`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function formatCatalogDetails(entries: ConfigCatalogEntry[]): string {
+  return entries
+    .map((entry) =>
+      [
+        `Key: ${entry.key}`,
+        `Scope: ${entry.scope}`,
+        `File: ${entry.file}`,
+        `Type: ${entry.type}`,
+        `Default: ${entry.defaultValue}`,
+        `Mutability: ${entry.mutability}`,
+        `Owning command: ${entry.owningCommand}`,
+        `Description: ${entry.description}`,
+      ].join('\n'),
+    )
+    .join('\n\n');
 }
 
 async function runGet(
@@ -424,6 +796,43 @@ async function runList(
   }
 }
 
+async function runDescribe(
+  keyArg: string | undefined,
+  context: CommandContext,
+): Promise<void> {
+  try {
+    const entries = keyArg
+      ? CONFIG_CATALOG.filter((entry) => matchesCatalogKey(entry.key, keyArg))
+      : CONFIG_CATALOG;
+
+    if (entries.length === 0) {
+      throw new Error(`Unknown config key: ${keyArg}`);
+    }
+
+    if (context.json) {
+      context.logger.json({
+        status: 'ok',
+        key: keyArg ?? null,
+        entries,
+      });
+    } else if (keyArg) {
+      context.logger.info(formatCatalogDetails(entries));
+    } else {
+      context.logger.info(formatCatalog(entries));
+    }
+
+    process.exitCode = 0;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (context.json) {
+      context.logger.json({ status: 'error', message });
+    } else {
+      context.logger.error(message);
+    }
+    process.exitCode = 1;
+  }
+}
+
 export function createConfigCommand(
   overrides: Partial<ConfigCommandDependencies> = {},
 ): Command {
@@ -473,5 +882,22 @@ export function createConfigCommand(
           );
           await runList(context, dependencies);
         }),
+    )
+    .addCommand(
+      new Command('describe')
+        .description('Describe supported OAT config surfaces and keys')
+        .argument('[key]', 'Config key to describe')
+        .action(
+          async (
+            key: string | undefined,
+            _options: unknown,
+            command: Command,
+          ) => {
+            const context = dependencies.buildCommandContext(
+              readGlobalOptions(command),
+            );
+            await runDescribe(key, context);
+          },
+        ),
     );
 }

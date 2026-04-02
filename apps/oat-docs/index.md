@@ -38,6 +38,7 @@
     - [State Machine](guide/workflow/state-machine.md) — Workflow and review state transitions across lifecycle phases and checkpoints.
   - [CLI Reference](guide/cli-reference.md) — Scannable reference for the current OAT CLI surface, with links to the deeper guide pages for each command family.
   - [Core Concepts](guide/concepts.md) — Mental model for canonical assets, provider views, scopes, skills, and the optional workflow layer.
+  - [Configuration](guide/configuration.md) — How OAT configuration is split across shared repo, repo-local, user, and provider-sync surfaces.
   - [CLI Bootstrap](guide/getting-started.md) — Foundational setup via oat init for canonical directories, provider adoption, and configuration.
   - [Tool Packs and Installed Assets](guide/tool-packs.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
 - Reference

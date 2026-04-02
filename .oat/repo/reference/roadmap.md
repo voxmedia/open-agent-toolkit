@@ -12,7 +12,7 @@ For a birdseye snapshot of what exists _right now_, see `.oat/repo/reference/cur
 
 For day-to-day friction and pain points discovered while running the workflow, log notes in `.oat/repo/archive/workflow-user-feedback.md`.
 
-As of `2026-03-15` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor/instructions/tools`, config-aware sync, Codex TOML sync, worktree bootstrap, `oat config`, `oat project open/pause`). Project lifecycle state is config-backed (`.oat/config.json` + `.oat/config.local.json`) with final review/PR loops dogfooded through completion. Review receive skill family (local + remote) is implemented for both project and ad-hoc contexts. `oat tools` command group provides full skill lifecycle management (list, outdated, info, install, update, remove). `oat-project-reconcile` bridges manual/human implementation back into OAT tracking. Research skill suite (`deep-research`, `analyze`, `compare`, `skeptic`, `synthesize`) shipped as installable tool pack. `oat-project-capture` enables retroactive project creation from untracked work. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
+As of `2026-03-31` on `main`, dogfood workflow baseline and provider-interop CLI foundations are both in active use (`oat init/status/sync/providers/doctor/instructions/tools`, config-aware sync, Codex TOML sync, worktree bootstrap, `oat config`, `oat project open/pause`). Project lifecycle state is config-backed (`.oat/config.json` + `.oat/config.local.json`) with final review/PR loops dogfooded through completion. Closeout/archive hardening now includes `oat config describe`, repo-scoped archive config (`archive.s3Uri`, `archive.s3SyncOnComplete`, `archive.summaryExportPath`), dated S3/summary snapshot export on completion, `oat project archive sync [project-name]`, and automatic summary refresh during PR-final/completion. Review receive skill family (local + remote) is implemented for both project and ad-hoc contexts. `oat tools` command group provides full skill lifecycle management (list, outdated, info, install, update, remove). `oat-project-reconcile` bridges manual/human implementation back into OAT tracking. Research skill suite (`deep-research`, `analyze`, `compare`, `skeptic`, `synthesize`) shipped as installable tool pack. `oat-project-capture` enables retroactive project creation from untracked work. Near-term focus is hardening and lifecycle completeness rather than initial scaffolding.
 
 ## Now (Active / Committed)
 
@@ -25,7 +25,7 @@ As of `2026-03-15` on `main`, dogfood workflow baseline and provider-interop CLI
 ### Phase 8: Provider interop CLI + sync manifest
 
 - Status: In Progress
-- Focus: core provider CLI, config-aware sync, Codex TOML sync, and instruction integrity tooling are shipped; remaining work is lifecycle polish, deeper diagnostics, and provider-specific ergonomics.
+- Focus: core provider CLI, config-aware sync, Codex TOML sync, instruction integrity tooling, and archive/config discovery surfaces are shipped; remaining work is lifecycle polish, deeper diagnostics, and provider-specific ergonomics.
 - Related backlog: `bl-cbdd` (optional Codex prompt-wrapper generation for synced OAT skills)
 
 ## Next (Planned)
@@ -80,9 +80,10 @@ Dogfood workflow baseline is implemented and has been exercised end-to-end:
 - Knowledge: `oat-repo-knowledge-index` + `.oat/repo/knowledge/**` (thin->full project index, mapper outputs under `.oat/repo/knowledge/`)
 - Projects:
   - `oat-project-new` scaffolds `{PROJECTS_ROOT}/<project>/...` from `.oat/templates/`
-  - `.oat/config.json` + `.oat/config.local.json` back shared/local runtime config (`projects.root`, `worktrees.root`, `activeProject`, `lastPausedProject`)
-  - `oat config get/set/list` provides CLI accessors for config-backed workflow state
-  - Project lifecycle utilities are implemented: `oat project open`, `oat project pause`, `oat-project-open`, `oat-project-clear-active`, `oat-project-complete`
+  - `.oat/config.json` + `.oat/config.local.json` back shared/local runtime config (`projects.root`, `worktrees.root`, `activeProject`, `lastPausedProject`, `git.defaultBranch`, `archive.*`)
+  - `oat config get/set/list/describe` provides CLI accessors and config-ownership discovery for workflow state
+  - Project lifecycle utilities are implemented: `oat project open`, `oat project pause`, `oat project archive sync`, `oat-project-open`, `oat-project-clear-active`, `oat-project-complete`
+  - Completion now auto-refreshes `summary.md`, always archives locally, emits dated S3 and summary snapshots when configured, and archive sync restores the latest remote snapshot into the local bare project archive
 - Ideas workflow:
   - `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 - Workflow phases + routing:

@@ -176,6 +176,27 @@ describe('help output snapshots', () => {
     `);
   });
 
+  it('config --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['config']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat config [options] [command]
+
+      Read and write OAT config values
+
+      Options:
+        -h, --help         display help for command
+
+      Commands:
+        get <key>          Get a resolved OAT config value
+        set <key> <value>  Set an OAT config value
+        list               List resolved OAT config values with sources
+        describe [key]     Describe supported OAT config surfaces and keys
+        help [command]     display help for command
+      "
+    `);
+  });
+
   it('providers --help matches snapshot', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, ['providers']).helpInformation();
@@ -550,6 +571,7 @@ describe('help output snapshots', () => {
         -h, --help              display help for command
 
       Commands:
+        archive                 Manage archived project data
         new [options] <name>    Create or update an OAT project scaffold
         open [options] <name>   Open or switch to an OAT project
         pause [options] [name]  Pause an OAT project

@@ -15,6 +15,11 @@ This document defines the project sync config used by provider-interop commands.
 
 `config.json` controls provider enablement and sync strategy behavior.
 
+Discovery note:
+
+- `oat config describe` includes `.oat/sync/config.json` in its catalog so you can inspect the sync/provider keys from the main config help surface.
+- Mutation ownership still lives with provider-sync commands such as `oat providers set`, not `oat config set`.
+
 It is read by:
 
 - `oat init` (provider selection and defaults)
@@ -63,6 +68,7 @@ It is read by:
 - Initial setup (interactive): `oat init --scope project`
 - Explicit updates: `oat providers set --scope project --enabled <providers> --disabled <providers>`
 - Apply sync changes: `oat sync --scope project`
+- Inspect the sync config contract: `oat config describe sync.defaultStrategy` or `oat config describe sync.providers.<name>.enabled`
 
 ## Related references
 
