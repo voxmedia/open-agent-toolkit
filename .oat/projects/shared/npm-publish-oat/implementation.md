@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-02
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -29,9 +29,9 @@ oat_template: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 3     | 3/3       |
 | Phase 2 | complete | 4     | 4/4       |
-| Phase 3 | pending  | 2     | 0/2       |
+| Phase 3 | complete | 2     | 2/2       |
 
-**Total:** 7/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -410,20 +410,115 @@ file` for `oxfmt --write` on the staged markdown set during commit, but git
 
 ## Phase 3: Release Path Enablement
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-02
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- The release and release-dry-run GitHub workflows now target the
+  `@open-agent-toolkit/*` package scope.
+- Maintainer-facing release guidance now documents the manual-first npm
+  bootstrap and the intended trusted-publishing handoff.
+- Repo knowledge and shipped CLI bundled docs/templates were refreshed so the
+  release path no longer points at `@tkstang`.
+
+**Key files touched:**
+
+- `.github/workflows/release.yml` - renamed the live release registry scope and
+  publish package list.
+- `.github/workflows/release-dry-run.yml` - renamed the dry-run registry scope
+  and publish package list.
+- `apps/oat-docs/docs/contributing/code.md` - documented the manual bootstrap
+  and trusted-publishing handoff.
+- `.oat/repo/knowledge/project-index.md` - refreshed the repo-level publishing
+  state summary.
+- `packages/cli/assets/**` - regenerated shipped docs/templates from the
+  updated canonical sources.
+
+**Verification:**
+
+- Run: `rg -n '@tkstang' .github/workflows/release.yml .github/workflows/release-dry-run.yml`
+- Result: no matches
+- Run: `rg -n '@tkstang' apps/oat-docs/docs/contributing/code.md .oat/repo/knowledge/project-index.md .oat/repo/knowledge/architecture.md .oat/repo/knowledge/testing.md .oat/repo/knowledge/concerns.md .oat/repo/knowledge/integrations.md packages/cli/assets`
+- Result: no matches
+
+**Notes / Decisions:**
+
+- `integrations.md` was refreshed alongside the planned knowledge files because
+  it still described npm publishing as unconfigured.
 
 ### Task p03-t01: Update GitHub release workflows to the new scope
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `c9524ea`
+
+**Outcome (required when completed):**
+
+- Both GitHub release workflows now publish and dry-run against the
+  `@open-agent-toolkit/*` package list.
+- The scoped npm registry stanza now matches the new npm org name.
+
+**Files changed:**
+
+- `.github/workflows/release.yml` - renamed the live release comments,
+  registry scope, and publish loop.
+- `.github/workflows/release-dry-run.yml` - renamed the dry-run registry scope
+  and package loop.
+
+**Verification:**
+
+- Run: `rg -n '@tkstang' .github/workflows/release.yml .github/workflows/release-dry-run.yml`
+- Result: no matches
+
+**Notes / Decisions:**
+
+- Kept the live and dry-run workflows structurally parallel; only the package
+  namespace and comments changed.
 
 ---
 
 ### Task p03-t02: Document manual bootstrap boundary and refresh repo knowledge
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `248fda0`
+
+**Outcome (required when completed):**
+
+- Maintainer docs now explain that the first `@open-agent-toolkit/*` release is
+  manual and that GitHub trusted publishing is the follow-up steady-state path.
+- Repo knowledge now reflects the renamed docs packages, the current release
+  workflow state, and the remaining trusted-publishing bootstrap concern.
+- Bundled CLI docs/templates were regenerated so shipped assets no longer carry
+  stale `@tkstang` references.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/contributing/code.md` - added maintainer release
+  bootstrap guidance.
+- `.oat/repo/knowledge/project-index.md` - updated publishing-state summary and
+  provenance.
+- `.oat/repo/knowledge/architecture.md` - renamed docs package references in
+  the docs-app build flow.
+- `.oat/repo/knowledge/testing.md` - renamed package-specific test commands and
+  updated publishing coverage notes.
+- `.oat/repo/knowledge/concerns.md` - replaced stale pre-publish concerns with
+  the current trusted-publishing bootstrap risk.
+- `.oat/repo/knowledge/integrations.md` - aligned publishing integration notes
+  to the current workflow state.
+
+**Verification:**
+
+- Run: `bash packages/cli/scripts/bundle-assets.sh`
+- Result: pass
+- Run: `rg -n '@tkstang' apps/oat-docs/docs/contributing/code.md .oat/repo/knowledge/project-index.md .oat/repo/knowledge/architecture.md .oat/repo/knowledge/testing.md .oat/repo/knowledge/concerns.md .oat/repo/knowledge/integrations.md packages/cli/assets`
+- Result: no matches
+
+**Notes / Decisions:**
+
+- Refreshed `integrations.md` in addition to the planned knowledge files
+  because it still described npm publishing as a future integration.
 
 ---
 
@@ -453,6 +548,8 @@ Chronological log of implementation progress.
 - [x] p02-t02: Rename docs-init scaffold outputs and tests
 - [x] p02-t03: Update CLI docs migration fixtures and package smoke tests
 - [x] p02-t04: Update consumer-facing docs and package READMEs
+- [x] p03-t01: Update GitHub release workflows to the new scope
+- [x] p03-t02: Document manual bootstrap boundary and refresh repo knowledge
 
 **What changed (high level):**
 
@@ -468,6 +565,9 @@ Chronological log of implementation progress.
   CLI package identity.
 - Updated the public README, package READMEs, and repo docs so the published
   install guidance matches the renamed packages.
+- Renamed the GitHub release workflows and refreshed maintainer/knowledge
+  guidance so the repo now describes the manual bootstrap and trusted
+  publishing follow-up accurately.
 
 **Decisions:**
 
@@ -477,9 +577,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Continue with `p02-t02` to update scaffold tests and checked-in docs app
-- Continue with `p03-t01` to rename the GitHub release workflow and publishing
-  surfaces to the new npm scope.
+- All planned implementation tasks are complete. Next: run the final automatic
+  code review for the completed scope.
 
 **Blockers:**
 
@@ -511,11 +610,11 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                   | Passed | Failed | Coverage |
-| ----- | ----------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | `pnpm --filter ./packages/cli test -- src/release/public-package-contract.test.ts`; `pnpm release:validate` | Yes    | No     | N/A      |
-| 2     | -                                                                                                           | -      | -      | -        |
-| 3     | -                                                                                                           | -      | -      | -        |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Passed | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | -------- |
+| 1     | `pnpm --filter ./packages/cli test -- src/release/public-package-contract.test.ts`; `pnpm release:validate`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Yes    | No     | N/A      |
+| 2     | `pnpm build:docs`; `pnpm --filter ./packages/cli test -- src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/mkdocs-compat.test.ts`; `pnpm --filter ./packages/cli test -- src/commands/docs/e2e-pipeline.test.ts src/commands/docs/migrate/fixtures.test.ts src/commands/docs/migrate/frontmatter.test.ts`; `rg -n '@tkstang' README.md packages/cli/AGENTS.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/contributing/design-principles.md apps/oat-docs/docs/guide/documentation/commands.md apps/oat-docs/docs/contributing/code.md` | Yes    | No     | N/A      |
+| 3     | `rg -n '@tkstang' .github/workflows/release.yml .github/workflows/release-dry-run.yml`; `bash packages/cli/scripts/bundle-assets.sh`; `rg -n '@tkstang' apps/oat-docs/docs/contributing/code.md .oat/repo/knowledge/project-index.md .oat/repo/knowledge/architecture.md .oat/repo/knowledge/testing.md .oat/repo/knowledge/concerns.md .oat/repo/knowledge/integrations.md packages/cli/assets`                                                                                                                                                                                                                                                                                                                               | Yes    | No     | N/A      |
 
 ## Final Summary (for PR/docs)
 
