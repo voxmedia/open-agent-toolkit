@@ -572,15 +572,15 @@ git commit -m "fix(p04-t01): bump public package versions"
 Track reviews here after running the oat-project-review-provide and
 oat-project-review-receive skills.
 
-| Scope  | Type     | Status          | Date       | Artifact                                            |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                   |
-| p02    | code     | pending         | -          | -                                                   |
-| p03    | code     | pending         | -          | -                                                   |
-| final  | code     | fixes_completed | 2026-04-02 | reviews/archived/final-review-2026-04-02.md         |
-| spec   | artifact | pending         | -          | -                                                   |
-| plan   | artifact | passed          | 2026-04-02 | reviews/archived/artifact-plan-review-2026-04-02.md |
-| design | artifact | pending         | -          | -                                                   |
+| Scope  | Type     | Status  | Date       | Artifact                                            |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                   |
+| p02    | code     | pending | -          | -                                                   |
+| p03    | code     | pending | -          | -                                                   |
+| final  | code     | passed  | 2026-04-02 | reviews/archived/final-review-2026-04-02-r2.md      |
+| spec   | artifact | pending | -          | -                                                   |
+| plan   | artifact | passed  | 2026-04-02 | reviews/archived/artifact-plan-review-2026-04-02.md |
+| design | artifact | pending | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

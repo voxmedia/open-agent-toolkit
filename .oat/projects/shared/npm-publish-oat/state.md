@@ -7,7 +7,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-02T19:02:23.393Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-02T22:51:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-02T22:53:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: npm-publish-oat
 
-**Status:** Implementation In Progress
+**Status:** Implementation Complete
 **Started:** 2026-04-02
 **Last Updated:** 2026-04-02
 
 ## Current Phase
 
-Implementation - Review fixes complete; awaiting re-review
+Implementation - Complete; final review passed
 
 ## Artifacts
 
@@ -36,7 +36,7 @@ Implementation - Review fixes complete; awaiting re-review
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in_progress)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
@@ -53,7 +53,7 @@ Implementation - Review fixes complete; awaiting re-review
 - ✓ Phase 2 complete: docs app, scaffold, fixtures, and public docs aligned to `@open-agent-toolkit/*`
 - ✓ Phase 3 complete: release workflows, maintainer guidance, and knowledge refreshed for `@open-agent-toolkit/*`
 - ✓ Final review fix task `p04-t01` complete: public packages bumped to `0.0.10`
-- ⧗ Awaiting final re-review to move `final` from `fixes_completed` to `passed`
+- ✓ Final re-review passed with no findings
 
 ## Blockers
 
@@ -61,4 +61,4 @@ None
 
 ## Next Milestone
 
-Re-run the final code review for `final`, then receive it to clear the project for summary/docs/PR work.
+Implementation is complete. Next: run `oat-project-summary`, optionally `oat-project-document`, then `oat-project-pr-final` when ready.

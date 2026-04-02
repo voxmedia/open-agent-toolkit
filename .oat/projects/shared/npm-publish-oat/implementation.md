@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-02
@@ -638,8 +638,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- The review-fix task is complete. Next: request final re-review so the
-  `fixes_completed` review state can advance to `passed`.
+- All planned tasks and the final re-review are complete. Next: generate
+  summary/docs updates or open the final PR when ready.
 
 **Blockers:**
 
@@ -737,19 +737,18 @@ Track test execution during implementation.
 ### Review Received: final
 
 **Date:** 2026-04-02
-**Review artifact:** `reviews/archived/final-review-2026-04-02.md`
+**Review artifact:** `reviews/archived/final-review-2026-04-02-r2.md`
 
 **Findings:**
 
 - Critical: 0
-- Important: 1
+- Important: 0
 - Medium: 0
 - Minor: 0
 
-**New tasks added:** `p04-t01`
+**New tasks added:** none
 
-**Next:** Request re-review for `final` so the review row can move from
-`fixes_completed` to `passed`.
+**Next:** Generate summary/docs artifacts or open the final PR when ready.
 
 ## References
 
