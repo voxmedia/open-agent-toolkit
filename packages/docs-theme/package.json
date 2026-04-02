@@ -1,5 +1,5 @@
 {
-  "name": "@tkstang/oat-docs-theme",
+  "name": "@open-agent-toolkit/docs-theme",
   "version": "0.0.9",
   "private": false,
   "description": "Theme components for OAT documentation sites",

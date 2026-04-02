@@ -1,5 +1,5 @@
 {
-  "name": "@tkstang/oat-docs-transforms",
+  "name": "@open-agent-toolkit/docs-transforms",
   "version": "0.0.9",
   "private": false,
   "description": "Remark/unified transforms for OAT documentation",

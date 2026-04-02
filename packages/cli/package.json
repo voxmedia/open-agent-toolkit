@@ -1,5 +1,5 @@
 {
-  "name": "@tkstang/oat-cli",
+  "name": "@open-agent-toolkit/cli",
   "version": "0.0.9",
   "private": false,
   "description": "Open Agent Toolkit CLI",
