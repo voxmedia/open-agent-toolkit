@@ -44,7 +44,7 @@ describe('docs pipeline e2e', () => {
         '## Installation',
         '',
         '```bash',
-        'npm install @tkstang/oat-cli',
+        'npm install @open-agent-toolkit/cli',
         '```',
         '',
         '!!! tip',

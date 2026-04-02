@@ -5,7 +5,7 @@ Welcome to the Open Agent Toolkit. This guide walks you through initial setup.
 ## Installation
 
 ```bash
-npm install -g @tkstang/oat-cli
+npm install -g @open-agent-toolkit/cli
 ```
 
 ## First Steps
