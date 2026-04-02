@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-02
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 oat_template: false
 ---
@@ -25,13 +25,14 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 4     | 4/4       |
-| Phase 3 | complete | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 4     | 4/4       |
+| Phase 3 | complete    | 2     | 2/2       |
+| Phase 4 | in_progress | 1     | 0/1       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/10 tasks completed
 
 ---
 
@@ -522,6 +523,60 @@ file` for `oxfmt --write` on the staged markdown set during commit, but git
 
 ---
 
+## Phase 4: Review Fixes
+
+**Status:** in_progress
+**Started:** 2026-04-02
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Pending final-review fix work to restore passing lockstep release validation.
+
+**Key files touched:**
+
+- `packages/cli/package.json` - pending version bump for the CLI package.
+- `packages/docs-config/package.json` - pending version bump for docs-config.
+- `packages/docs-theme/package.json` - pending version bump for docs-theme.
+- `packages/docs-transforms/package.json` - pending version bump for
+  docs-transforms.
+
+**Verification:**
+
+- Run: `pnpm release:validate`
+- Result: pending
+
+**Notes / Decisions:**
+
+- The final manual review surfaced a missed definition-of-done gap:
+  publishable package versions still need a lockstep bump after the namespace
+  rename.
+
+### Task p04-t01: (review) Bump publishable package versions in lockstep
+
+**Status:** pending
+
+**Files changed:**
+
+- `packages/cli/package.json` - bump the published CLI version.
+- `packages/docs-config/package.json` - bump the published docs-config version.
+- `packages/docs-theme/package.json` - bump the published docs-theme version.
+- `packages/docs-transforms/package.json` - bump the published docs-transforms
+  version.
+
+**Verification:**
+
+- Run: `pnpm release:validate`
+- Result: pending
+
+**Notes / Decisions:**
+
+- The review fix is scoped only to the lockstep version fields; no namespace or
+  release workflow changes are needed.
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -577,8 +632,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- All planned implementation tasks and the automatic final review are complete.
-  Next: generate summary/docs updates or open the final PR when ready.
+- Final review produced one follow-up task: bump the four publishable package
+  versions in lockstep so `pnpm release:validate` passes.
 
 **Blockers:**
 
@@ -586,7 +641,7 @@ Chronological log of implementation progress.
   depended on `@tkstang/oat-cli` and related packages - resolved by updating
   the docs app dependency names during `p01-t03`.
 
-**Session End:** 17:27:00 CDT
+**Session End:** resumed for review-fix planning
 
 ---
 
@@ -672,18 +727,19 @@ Track test execution during implementation.
 ### Review Received: final
 
 **Date:** 2026-04-02
-**Review artifact:** `reviews/archived/code-final-review-2026-04-02.md`
+**Review artifact:** `reviews/archived/final-review-2026-04-02.md`
 
 **Findings:**
 
 - Critical: 0
-- Important: 0
+- Important: 1
 - Medium: 0
 - Minor: 0
 
-**New tasks added:** none
+**New tasks added:** `p04-t01`
 
-**Next:** Generate summary/docs artifacts or open the final PR when ready.
+**Next:** Execute the review-fix task via `oat-project-implement`, then re-run
+the final review cycle to reach `passed`.
 
 ## References
 

@@ -518,20 +518,69 @@ git commit -m "docs(p03-t02): refresh release bootstrap guidance"
 
 ---
 
+## Phase 4: Review Fixes
+
+Deliver the final review follow-up required to satisfy the publishable-package
+definition of done and restore passing release validation.
+
+### Task p04-t01: (review) Bump publishable package versions in lockstep
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+
+**Step 1: Understand the issue**
+
+Review finding: The final code review confirmed that `pnpm release:validate`
+fails because all four public packages changed shipped functionality but remain
+at version `0.0.9`.
+Location: `packages/cli/package.json:3`,
+`packages/docs-config/package.json:3`, `packages/docs-theme/package.json:3`,
+`packages/docs-transforms/package.json:3`
+
+**Step 2: Implement fix**
+
+Bump all four publishable package versions to the next intended lockstep
+release version while preserving the current metadata, dependency graph, and
+public package names.
+
+```json
+{
+  "version": "0.0.10"
+}
+```
+
+**Step 3: Verify**
+
+Run: `pnpm release:validate`
+Expected: Release validation passes, including the lockstep version policy.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
+git commit -m "fix(p04-t01): bump public package versions"
+```
+
+---
+
 ## Reviews
 
 Track reviews here after running the oat-project-review-provide and
 oat-project-review-receive skills.
 
-| Scope  | Type     | Status   | Date       | Artifact                                            |
-| ------ | -------- | -------- | ---------- | --------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                   |
-| p02    | code     | pending  | -          | -                                                   |
-| p03    | code     | pending  | -          | -                                                   |
-| final  | code     | received | 2026-04-02 | reviews/final-review-2026-04-02.md                  |
-| spec   | artifact | pending  | -          | -                                                   |
-| plan   | artifact | passed   | 2026-04-02 | reviews/archived/artifact-plan-review-2026-04-02.md |
-| design | artifact | pending  | -          | -                                                   |
+| Scope  | Type     | Status      | Date       | Artifact                                            |
+| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                   |
+| p02    | code     | pending     | -          | -                                                   |
+| p03    | code     | pending     | -          | -                                                   |
+| final  | code     | fixes_added | 2026-04-02 | reviews/archived/final-review-2026-04-02.md         |
+| spec   | artifact | pending     | -          | -                                                   |
+| plan   | artifact | passed      | 2026-04-02 | reviews/archived/artifact-plan-review-2026-04-02.md |
+| design | artifact | pending     | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -551,8 +600,9 @@ oat-project-review-receive skills.
 - Phase 1: 3 tasks - Canonical contract, validator, and manifest realignment
 - Phase 2: 4 tasks - Docs app, scaffold, fixture, and public-doc namespace alignment
 - Phase 3: 2 tasks - Release workflow rename and maintainer bootstrap guidance
+- Phase 4: 1 task - Final review follow-up for lockstep version validation
 
-**Total: 9 tasks**
+**Total: 10 tasks**
 
 Planned for implementation after final approval.
 
