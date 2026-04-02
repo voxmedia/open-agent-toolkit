@@ -24,13 +24,15 @@ jobs:
       # - rerun the same build and release validation path as dry-run
       # - publish the four @tkstang/oat-* packages in lockstep
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
+      # Release flows stay on Node 24 because trusted publishing uses the npm
+      # runtime from this job, not the repo's general development baseline.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

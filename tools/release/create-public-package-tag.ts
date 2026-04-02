@@ -1,16 +1,18 @@
-import { execFile } from 'node:child_process';
-import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
 
 import { getPublicPackageContracts } from '../../packages/cli/src/release/public-package-contract';
+import {
+  findChangedWorkspaceDirs,
+  getPackageVersion,
+  gitRefExists,
+  readPackageJsonAtGitRef,
+  runCommand,
+} from './public-package-version-state';
 import {
   findLockstepVersionBumpErrors,
   type PublicPackageVersionState,
 } from './validate-public-packages';
 
-const execFileAsync = promisify(execFile);
-const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ZERO_SHA = '0000000000000000000000000000000000000000';
 
 interface CliOptions {
@@ -51,86 +53,16 @@ function parseCliArgs(argv: readonly string[]): CliOptions {
   return { baseRef, headRef, push };
 }
 
-async function runCommand(
-  command: string,
-  args: readonly string[],
-): Promise<string> {
-  const { stdout } = await execFileAsync(command, args, {
-    cwd: REPO_ROOT,
-    env: process.env,
-    maxBuffer: 20 * 1024 * 1024,
-  });
-
-  return stdout;
-}
-
-async function runCommandQuietly(
-  command: string,
-  args: readonly string[],
-): Promise<boolean> {
-  try {
-    await runCommand(command, args);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function readPackageJsonAtGitRef(
-  ref: string,
-  workspaceDir: string,
-): Promise<Record<string, unknown> | null> {
-  try {
-    return JSON.parse(
-      await runCommand('git', ['show', `${ref}:${workspaceDir}/package.json`]),
-    ) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-function getPackageVersion(
-  packageJson: Record<string, unknown> | null,
-): string | null {
-  return packageJson && typeof packageJson.version === 'string'
-    ? packageJson.version
-    : null;
-}
-
-async function findChangedWorkspaceDirs(baseRef: string, headRef: string) {
-  const contracts = getPublicPackageContracts();
-  const diff = await runCommand('git', [
-    'diff',
-    '--name-only',
-    `${baseRef}..${headRef}`,
-    '--',
-    ...contracts.map((contract) => contract.workspaceDir),
-  ]);
-
-  const changedDirs = new Set<string>();
-  for (const path of diff
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)) {
-    const contract = contracts.find(
-      (candidate) =>
-        path === candidate.workspaceDir ||
-        path.startsWith(`${candidate.workspaceDir}/`),
-    );
-    if (contract) {
-      changedDirs.add(contract.workspaceDir);
-    }
-  }
-
-  return changedDirs;
-}
-
 async function getVersionStates(
   baseRef: string,
   headRef: string,
 ): Promise<PublicPackageVersionState[]> {
   const contracts = getPublicPackageContracts();
-  const changedWorkspaceDirs = await findChangedWorkspaceDirs(baseRef, headRef);
+  const changedWorkspaceDirs = await findChangedWorkspaceDirs(
+    baseRef,
+    headRef,
+    contracts,
+  );
 
   return Promise.all(
     contracts.map(async (contract) => {
@@ -177,12 +109,7 @@ function getReleaseTagName(
 }
 
 async function createTag(tagName: string, headRef: string, push: boolean) {
-  const tagExists = await runCommandQuietly('git', [
-    'rev-parse',
-    '--verify',
-    '--quiet',
-    `refs/tags/${tagName}`,
-  ]);
+  const tagExists = await gitRefExists(`refs/tags/${tagName}`);
 
   if (tagExists) {
     console.log(`release tag ${tagName} already exists`);
@@ -205,6 +132,13 @@ async function main() {
   if (!baseRef || baseRef === ZERO_SHA) {
     console.log(
       'no comparable base ref available; skipping release tag creation',
+    );
+    return;
+  }
+
+  if (!(await gitRefExists(baseRef))) {
+    console.log(
+      `base ref ${baseRef} is not available locally; skipping release tag creation`,
     );
     return;
   }
