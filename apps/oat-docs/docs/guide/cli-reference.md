@@ -25,6 +25,7 @@ The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oa
 | `oat init`                                             | Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.       | [Getting Started](getting-started.md)               |
 | `oat tools ...`                                        | Install, inspect, update, and remove bundled OAT tool packs and assets.                   | [Tool Packs](tool-packs.md)                         |
 | `oat backlog ...`                                      | Generate backlog IDs and rebuild the managed file-backed backlog index.                   | See sections below                                  |
+| `oat config ...`                                       | Inspect resolved config values, update supported keys, and discover config ownership.     | See sections below                                  |
 | `oat docs ...`                                         | Docs app bootstrap, migration, index generation, nav sync, and docs workflow entrypoints. | [Documentation Commands](documentation/commands.md) |
 | `oat status` / `oat sync` / `oat providers ...`        | Provider sync, drift inspection, provider configuration, and adoption behavior.           | [Provider Sync](provider-sync/index.md)             |
 | `oat project ...` / `oat cleanup ...`                  | Project scaffolding, execution mode, and project/artifact cleanup commands.               | [Workflow & Projects](workflow/index.md)            |
@@ -92,6 +93,29 @@ Available commands:
 
 Use this when you want archived review history or idea scratchpads to persist locally without being committed.
 
+### `oat config ...`
+
+Use `oat config` for repo runtime config inspection and supported key mutation.
+
+- `oat config get <key>` - read one resolved config value
+- `oat config set <key> <value>` - update a supported shared or repo-local key
+- `oat config list` - show the resolved command-surface values with source information
+- `oat config describe` - list supported config surfaces and keys across shared repo, repo-local, user, and sync/provider config
+- `oat config describe <key>` - show file location, scope, default, mutability, and owning command for one key
+
+Archive lifecycle settings live here as shared repo config:
+
+- `archive.s3Uri`
+- `archive.s3SyncOnComplete`
+- `archive.summaryExportPath`
+
+When archive settings are configured, completion uploads dated archive snapshots to S3 and exports dated summary snapshots into the configured summary reference directory.
+
+Use the reference pages for file ownership and schema details:
+
+- [File Locations](../reference/file-locations.md)
+- [`.oat` Directory Structure](../reference/oat-directory-structure.md)
+
 ## Instruction Integrity
 
 ### `oat instructions`
@@ -138,6 +162,8 @@ Project commands are the CLI entrypoint into the OAT lifecycle.
 - `oat project new <name>` - create a new project in spec-driven, quick, or import mode
 - `oat project open <name>` - activate an existing project
 - `oat project set-mode <mode>` - switch implementation between `single-thread` and `subagent-driven`
+- `oat project archive sync` - sync the latest dated remote snapshot for each archived project from the configured S3 archive into `.oat/projects/archived/`
+- `oat project archive sync <project-name>` - sync the latest dated remote snapshot for one archived project into `.oat/projects/archived/<project-name>/`
 
 ### `oat cleanup ...`
 

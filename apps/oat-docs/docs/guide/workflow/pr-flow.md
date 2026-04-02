@@ -20,7 +20,7 @@ Expected artifacts:
 - Recommended (quick mode): `discovery.md`
 - Recommended (import mode): `references/imported-plan.md`
 - Recommended: `implementation.md` final summary
-- Recommended: `summary.md` — if present, pr-final uses it as the primary source for the PR Summary section; if absent, pr-final generates it automatically
+- Recommended: `summary.md` — pr-final treats it as the primary source for the PR Summary section and automatically refreshes it first when missing or stale
 - Required gate for final PR: review table final row should be `passed`
 
 ## Output

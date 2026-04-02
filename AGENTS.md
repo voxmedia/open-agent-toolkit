@@ -46,7 +46,9 @@
 - Uses pnpm workspaces with Turborepo for efficient monorepo management
 - All packages use `workspace:*` for internal dependencies
 - Build dependencies are automatically handled by Turborepo (`^build` dependency)
-- Publishable packages under `packages/` are released from npm and participate in PR release dry-runs. If you change shipped functionality in a publishable package (`packages/cli`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms`), bump that package version in the same PR or the release dry-run can fail when `npm publish --dry-run` detects an already-published version.
+- Publishable packages under `packages/` are released from npm and participate in PR release dry-runs.
+- Publishable package guardrail: if you change shipped functionality in any publishable package (`packages/cli`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms`), bump the public package versions in the same PR. The repo enforces lockstep bumps across all public packages.
+- Definition of done for publishable package changes: run `pnpm release:validate` before finishing. A publishable-package PR is not done until that command passes.
 
 ## Architecture Overview
 

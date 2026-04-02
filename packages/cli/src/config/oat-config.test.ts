@@ -49,14 +49,50 @@ describe('oat-config', () => {
 
     await writeOatConfig(repoRoot, {
       version: 99,
+      git: { defaultBranch: 'main' },
       projects: { root: '.oat/projects/custom' },
       worktrees: { root: '.worktrees' },
+      archive: {
+        s3Uri: 's3://example-bucket/oat-archive',
+        s3SyncOnComplete: true,
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
     });
 
     await expect(readOatConfig(repoRoot)).resolves.toEqual({
       version: 1,
+      git: { defaultBranch: 'main' },
       projects: { root: '.oat/projects/custom' },
       worktrees: { root: '.worktrees' },
+      archive: {
+        s3Uri: 's3://example-bucket/oat-archive',
+        s3SyncOnComplete: true,
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
+    });
+  });
+
+  it('normalizes archive config values from config.json', async () => {
+    const repoRoot = await createRepoRoot();
+    const configPath = join(repoRoot, '.oat', 'config.json');
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        archive: {
+          s3Uri: 's3://example-bucket/oat-archive/',
+          s3SyncOnComplete: true,
+          summaryExportPath: ' .oat/repo/reference/project-summaries/ ',
+        },
+      }),
+      'utf8',
+    );
+
+    const config = await readOatConfig(repoRoot);
+    expect(config.archive).toEqual({
+      s3Uri: 's3://example-bucket/oat-archive',
+      s3SyncOnComplete: true,
+      summaryExportPath: '.oat/repo/reference/project-summaries',
     });
   });
 

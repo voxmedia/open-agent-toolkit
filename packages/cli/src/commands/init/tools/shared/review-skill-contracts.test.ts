@@ -74,4 +74,29 @@ describe('review skill contracts', () => {
       'If `oat_pr_url` is present, show it in the completion summary',
     );
   });
+
+  it('requires automatic summary refresh during pr-final and completion', () => {
+    const prFinalPath = repoFilePath(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+    const completePath = repoFilePath(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+
+    const prFinalContent = readFileSync(prFinalPath, 'utf8');
+    const completeContent = readFileSync(completePath, 'utf8');
+
+    expect(prFinalContent).toContain(
+      'If `summary.md` is missing or stale, invoke `oat-project-summary` automatically before proceeding.',
+    );
+    expect(prFinalContent).toContain(
+      'Do not ask whether to generate or refresh `summary.md` during pr-final.',
+    );
+    expect(completeContent).toContain(
+      'If `summary.md` is missing or stale, invoke `oat-project-summary` automatically before completing.',
+    );
+    expect(completeContent).toContain(
+      'Do not prompt the user about whether to generate `summary.md` during completion.',
+    );
+  });
 });

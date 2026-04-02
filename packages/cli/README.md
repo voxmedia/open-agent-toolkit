@@ -20,8 +20,20 @@ npx @tkstang/oat-cli --help
 oat init --scope project
 oat status --scope all
 oat sync --scope all
+oat config describe
+oat config describe archive.s3Uri
+oat project archive sync
+oat project archive sync my-project
 oat docs init --app-name my-docs
 ```
+
+Archive lifecycle settings are managed through shared repo config:
+
+- `archive.s3Uri`
+- `archive.s3SyncOnComplete`
+- `archive.summaryExportPath`
+
+Use `oat config describe` to inspect which file owns a setting and which command surface mutates it. Completion writes dated archive snapshots to S3 and exports dated summary snapshots when those archive settings are configured.
 
 ## Related Packages
 

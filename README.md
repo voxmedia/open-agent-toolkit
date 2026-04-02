@@ -194,6 +194,23 @@ Notes:
 - `docs analyze` and `docs apply` expose the docs workflow entrypoints and pair with the `oat-docs-analyze` / `oat-docs-apply` skills.
 - For the full consumer setup flow, see [Add docs to a new repo](apps/oat-docs/docs/cli/docs-consumer-quickstart.md).
 
+### 3.7) Inspect config ownership and archive sync behavior
+
+```bash
+pnpm run cli -- config describe
+pnpm run cli -- config describe archive.s3Uri
+pnpm run cli -- config describe sync.providers.codex.enabled
+pnpm run cli -- project archive sync
+pnpm run cli -- project archive sync my-project
+```
+
+Notes:
+
+- `oat config describe` is the main discovery surface for shared repo, repo-local, user, and provider-sync config.
+- Archive lifecycle settings live in `.oat/config.json`: `archive.s3Uri`, `archive.s3SyncOnComplete`, and `archive.summaryExportPath`.
+- When archive sync is configured, `oat-project-complete` still archives locally, uploads dated archive snapshots to S3, and exports dated `summary.md` copies into a tracked reference directory.
+- `oat project archive sync` pulls the latest dated remote snapshot for each project back into the local bare project archive path.
+
 ### 4) Validate instruction pointers (recommended)
 
 ```bash

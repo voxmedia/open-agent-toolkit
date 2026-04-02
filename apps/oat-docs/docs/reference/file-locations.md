@@ -21,7 +21,14 @@ For detailed `.oat/` tree semantics, see:
 - Local runtime config (per-developer state): `.oat/config.local.json`
 - Active idea: `activeIdea` in `.oat/config.local.json` (repo) or `~/.oat/config.json` (user)
 - Projects root config: `projects.root` in `.oat/config.json` (read via `oat config get projects.root`)
+- Archive config: `archive.s3Uri`, `archive.s3SyncOnComplete`, and `archive.summaryExportPath` in `.oat/config.json`
 - Project manifests/config: `.oat/sync/`
+
+Config discovery via CLI:
+
+- `oat config describe` lists the supported config surfaces and keys across `.oat/config.json`, `.oat/config.local.json`, `~/.oat/config.json`, and `.oat/sync/config.json`.
+- `oat config describe <key>` shows file location, scope, default, mutability, and the owning command for one key.
+- `oat config list` shows the currently resolved values for the repo-local/shared command surface.
 
 Config ownership note:
 
@@ -45,6 +52,14 @@ Config ownership note:
 - Shared: `.oat/projects/shared/<project>/`
 - Local: `.oat/projects/local/<project>/`
 - Archived: `.oat/projects/archived/<project>/`
+
+Archive sync surfaces:
+
+- Local archive root: `.oat/projects/archived/`
+- Remote archive base: `archive.s3Uri` in `.oat/config.json`
+- Archive sync command: `oat project archive sync` or `oat project archive sync <project-name>`
+- Remote archive snapshot shape: `<archive.s3Uri>/<repo-slug>/projects/YYYYMMDD-<project-name>/`
+- Summary export target: `<repo>/<archive.summaryExportPath>/YYYYMMDD-<project-name>.md` when configured
 
 ## Ideas — project level (gitignored)
 
