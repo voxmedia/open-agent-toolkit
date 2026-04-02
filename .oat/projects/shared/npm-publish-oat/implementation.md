@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-02
-oat_current_task_id: p02-t02
+oat_current_task_id: p02-t03
 oat_generated: false
 oat_template: false
 ---
@@ -28,10 +28,10 @@ oat_template: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 1/4       |
+| Phase 2 | in_progress | 4     | 2/4       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 4/9 tasks completed
+**Total:** 5/9 tasks completed
 
 ---
 
@@ -243,8 +243,48 @@ oat_template: false
 
 ### Task p02-t02: Rename docs-init scaffold outputs and tests
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8c08ec6`
+
+**Outcome (required when completed):**
+
+- Docs-init scaffold tests now expect `@open-agent-toolkit/*` package names for
+  both bundled-version and workspace-generated Fumadocs apps.
+- The checked-in Fumadocs template files now emit the renamed docs and CLI
+  package names, keeping scaffold source templates aligned with the integration
+  coverage.
+
+**Files changed:**
+
+- `packages/cli/src/commands/docs/init/scaffold.test.ts` - renamed seeded
+  template literals and generated package expectations.
+- `packages/cli/src/commands/docs/init/integration.test.ts` - renamed the real
+  template integration expectations.
+- `packages/cli/src/commands/docs/init/mkdocs-compat.test.ts` - updated the
+  negative assertions to the new package names.
+- `.oat/templates/docs-app-fuma/source.config.ts` - renamed the docs-config
+  import emitted to consumers.
+- `.oat/templates/docs-app-fuma/next.config.js` - renamed the docs-config
+  import emitted to consumers.
+- `.oat/templates/docs-app-fuma/package.json.template` - renamed emitted docs
+  package and CLI dependency names.
+- `.oat/templates/docs-app-fuma/app/layout.tsx` - renamed the docs-theme
+  import emitted to consumers.
+- `.oat/templates/docs-app-fuma/app/[[...slug]]/page.tsx` - renamed the
+  docs-theme import emitted to consumers.
+
+**Verification:**
+
+- Run: `pnpm --filter ./packages/cli test -- src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/mkdocs-compat.test.ts`
+- Result: pass
+- Run: `rg -n '@tkstang' .oat/templates/docs-app-fuma`
+- Result: no matches
+
+**Notes / Decisions:**
+
+- `packages/cli/src/commands/docs/init/scaffold.ts` did not need code changes;
+  the package-name drift lived in test expectations and the checked-in emitted
+  templates.
 
 ---
 
@@ -304,6 +344,7 @@ Chronological log of implementation progress.
 - [x] p01-t02: Implement renamed contract registry and validator alignment
 - [x] p01-t03: Rename publishable package manifests and root link script
 - [x] p02-t01: Align first-party docs app dependencies and imports
+- [x] p02-t02: Rename docs-init scaffold outputs and tests
 
 **What changed (high level):**
 
@@ -313,6 +354,8 @@ Chronological log of implementation progress.
   renamed publishable package set.
 - Updated the first-party docs app imports and verified the docs site builds
   against the renamed workspace packages.
+- Renamed the docs-init scaffold expectations and bundled Fumadocs templates so
+  generated docs apps emit the new package namespace.
 
 **Decisions:**
 
@@ -323,7 +366,7 @@ Chronological log of implementation progress.
 **Follow-ups / TODO:**
 
 - Continue with `p02-t02` to update scaffold tests and checked-in docs app
-  templates to the same namespace.
+- Continue with `p02-t03` to rename CLI docs migration and smoke-test fixtures.
 
 **Blockers:**
 
