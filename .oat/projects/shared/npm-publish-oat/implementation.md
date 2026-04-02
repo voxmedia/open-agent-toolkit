@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-02
-oat_current_task_id: p02-t04
+oat_current_task_id: p03-t01
 oat_generated: false
 oat_template: false
 ---
@@ -25,13 +25,13 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 3/4       |
-| Phase 3 | pending     | 2     | 0/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 4     | 4/4       |
+| Phase 3 | pending  | 2     | 0/2       |
 
-**Total:** 6/9 tasks completed
+**Total:** 7/9 tasks completed
 
 ---
 
@@ -205,8 +205,48 @@ oat_template: false
 
 ## Phase 2: Consumer, Scaffold, And Docs Alignment
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-02
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- The first-party docs app now imports the renamed docs packages and still
+  builds successfully.
+- Docs-init scaffold tests and bundled Fumadocs templates now emit the
+  `@open-agent-toolkit/*` package names for generated consumer docs apps.
+- CLI docs migration fixtures and the public/contributor docs surface now use
+  the renamed CLI and docs package identities consistently.
+
+**Key files touched:**
+
+- `apps/oat-docs/source.config.ts` - aligned the docs-config import used by the
+  first-party docs app.
+- `.oat/templates/docs-app-fuma/package.json.template` - renamed emitted docs
+  package and CLI dependency names for scaffolded apps.
+- `packages/cli/src/commands/docs/init/integration.test.ts` - verified real
+  bundled template output against the new namespace.
+- `packages/cli/src/commands/docs/e2e-pipeline.test.ts` - renamed the CLI
+  install example in the docs pipeline smoke coverage.
+- `README.md` - aligned the primary public install guidance to the new scope.
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+- Run: `pnpm --filter ./packages/cli test -- src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/mkdocs-compat.test.ts`
+- Result: pass
+- Run: `pnpm --filter ./packages/cli test -- src/commands/docs/e2e-pipeline.test.ts src/commands/docs/migrate/fixtures.test.ts src/commands/docs/migrate/frontmatter.test.ts`
+- Result: pass
+- Run: `rg -n '@tkstang' README.md packages/cli/AGENTS.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/contributing/design-principles.md apps/oat-docs/docs/guide/documentation/commands.md apps/oat-docs/docs/contributing/code.md`
+- Result: no matches
+
+**Notes / Decisions:**
+
+- `apps/oat-docs/docs/contributing/code.md` was added to the Phase 2 doc sweep
+  even though it was not listed in the original plan, because the namespace
+  audit surfaced the same stale CLI package references there.
 
 ### Task p02-t01: Align first-party docs app dependencies and imports
 
@@ -328,8 +368,43 @@ file` for `oxfmt --write` on the staged markdown set during commit, but git
 
 ### Task p02-t04: Update consumer-facing docs and package READMEs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `42c8e45`
+
+**Outcome (required when completed):**
+
+- The root README, package READMEs, CLI package AGENTS file, and repo docs now
+  consistently present the `@open-agent-toolkit/*` package names.
+- CLI-primary messaging remains intact while the docs packages are documented as
+  supporting packages for OAT-managed documentation flows.
+
+**Files changed:**
+
+- `README.md` - renamed the public install and package-reference guidance.
+- `packages/cli/AGENTS.md` - renamed package-specific contributor commands.
+- `packages/cli/README.md` - renamed the CLI package heading, install commands,
+  and related package references.
+- `packages/docs-config/README.md` - renamed install and import examples.
+- `packages/docs-theme/README.md` - renamed install and import examples.
+- `packages/docs-transforms/README.md` - renamed install and import examples.
+- `apps/oat-docs/docs/quickstart.md` - renamed the consumer CLI package
+  reference.
+- `apps/oat-docs/docs/contributing/design-principles.md` - renamed targeted CLI
+  verification commands.
+- `apps/oat-docs/docs/guide/documentation/commands.md` - renamed the Fumadocs
+  scaffold package references.
+- `apps/oat-docs/docs/contributing/code.md` - renamed targeted CLI verification
+  commands surfaced by the broader docs audit.
+
+**Verification:**
+
+- Run: `rg -n '@tkstang' README.md packages/cli/AGENTS.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/docs/quickstart.md apps/oat-docs/docs/contributing/design-principles.md apps/oat-docs/docs/guide/documentation/commands.md apps/oat-docs/docs/contributing/code.md`
+- Result: no matches
+
+**Notes / Decisions:**
+
+- Included `apps/oat-docs/docs/contributing/code.md` so the public docs sweep
+  closed without leaving an obvious stale contributor command reference behind.
 
 ---
 
@@ -377,6 +452,7 @@ Chronological log of implementation progress.
 - [x] p02-t01: Align first-party docs app dependencies and imports
 - [x] p02-t02: Rename docs-init scaffold outputs and tests
 - [x] p02-t03: Update CLI docs migration fixtures and package smoke tests
+- [x] p02-t04: Update consumer-facing docs and package READMEs
 
 **What changed (high level):**
 
@@ -390,6 +466,8 @@ Chronological log of implementation progress.
   generated docs apps emit the new package namespace.
 - Renamed the CLI docs migration fixtures and pipeline smoke example to the new
   CLI package identity.
+- Updated the public README, package READMEs, and repo docs so the published
+  install guidance matches the renamed packages.
 
 **Decisions:**
 
@@ -400,8 +478,8 @@ Chronological log of implementation progress.
 **Follow-ups / TODO:**
 
 - Continue with `p02-t02` to update scaffold tests and checked-in docs app
-- Continue with `p02-t04` to finish the public docs and package README rename
-  sweep.
+- Continue with `p03-t01` to rename the GitHub release workflow and publishing
+  surfaces to the new npm scope.
 
 **Blockers:**
 
