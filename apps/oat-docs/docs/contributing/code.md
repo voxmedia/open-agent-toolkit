@@ -60,6 +60,20 @@ pnpm --filter oat-docs docs:lint
 pnpm build:docs
 ```
 
+## Release Bootstrap
+
+The first publish under `@open-agent-toolkit/*` is a maintainer bootstrap step,
+not the steady-state path.
+
+- Run `pnpm release:validate` before any release attempt.
+- Publish the four public packages manually the first time under the new npm
+  org scope.
+- After those packages exist in npm, configure npm trusted publishing for this
+  repository so `.github/workflows/release.yml` can become the steady-state
+  release path without an npm token.
+- Use `.github/workflows/release-dry-run.yml` to validate the GitHub path after
+  the npm trust relationship is configured.
+
 ## Implementation Expectations
 
 - Follow the import-path rules and architectural guidance documented in [CLI Design Principles](design-principles.md).

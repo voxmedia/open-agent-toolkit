@@ -82,7 +82,8 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 **Secrets location:**
 
 - No active secret-backed runtime integration in the current repo
-- Future npm publishing would require GitHub Actions secrets or trusted publishing setup
+- npm publishing now targets GitHub OIDC trusted publishing after a one-time
+  manual bootstrap under `@open-agent-toolkit/*`
 
 ## Webhooks & Callbacks
 
@@ -98,7 +99,9 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 
 - The CLI integrates primarily with repository layout and local tool installations rather than hosted APIs.
 - The docs libraries are conventional npm-style code libraries with framework integrations, not service clients.
-- Public package publishing is a planned integration area but is not configured yet in the current repo state.
+- Public package publishing is partially configured: GitHub release workflows
+  exist, but the first live publish still requires manual npm bootstrap and
+  post-bootstrap trust setup.
 
 ---
 

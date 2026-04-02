@@ -1,8 +1,8 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-03-24
-oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
-oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
+oat_generated_at: 2026-04-02
+oat_source_head_sha: c9524eaf5e1fd1b527a821766d72f0df6ef70beb
+oat_source_main_merge_base_sha: 60b392c290313ca29404822d9952bbffdb3cb2ac
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
@@ -25,9 +25,9 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 
 ```bash
 pnpm test                           # Run workspace tests
-pnpm --filter @tkstang/oat-cli test              # Run CLI package tests
-pnpm --filter @tkstang/oat-docs-config test      # Run docs-config tests
-pnpm --filter @tkstang/oat-docs-transforms test
+pnpm --filter @open-agent-toolkit/cli test              # Run CLI package tests
+pnpm --filter @open-agent-toolkit/docs-config test      # Run docs-config tests
+pnpm --filter @open-agent-toolkit/docs-transforms test
 ```
 
 ## Test File Organization
@@ -107,7 +107,7 @@ vi.mock('fumadocs-mdx/next', () => ({
 **View Coverage:**
 
 ```bash
-pnpm --filter @tkstang/oat-cli test:coverage
+pnpm --filter @open-agent-toolkit/cli test:coverage
 ```
 
 ## Test Types
@@ -143,7 +143,9 @@ await expect(failingCall()).rejects.toThrow();
 ## Gaps
 
 - The docs app itself is validated mostly through build behavior rather than an app-specific test suite.
-- Public-package install and publish behavior is not currently covered by automated tests.
+- Live npm publication and post-bootstrap trusted-publishing behavior are not
+  covered end to end; current coverage stops at release validation and
+  publish dry runs.
 
 ---
 
