@@ -1,10 +1,8 @@
-import { execFile } from 'node:child_process';
 import { constants as fsConstants } from 'node:fs';
 import { access, mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
 
 import {
   findForbiddenPackedPaths,
@@ -14,9 +12,14 @@ import {
   getPublicPackageContracts,
   type PublicPackageContract,
 } from '../../packages/cli/src/release/public-package-contract';
-
-const execFileAsync = promisify(execFile);
-const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+import {
+  findChangedWorkspaceDirs,
+  getPackageVersion,
+  readPackageJsonAtGitRef,
+  REPO_ROOT,
+  resolveMergeBase,
+  runCommand,
+} from './release-utils';
 
 interface PackedFileEntry {
   path: string;
@@ -44,20 +47,6 @@ function getPackageDir(contract: PublicPackageContract): string {
   return join(REPO_ROOT, contract.workspaceDir);
 }
 
-async function runCommand(
-  command: string,
-  args: readonly string[],
-  cwd: string,
-): Promise<string> {
-  const { stdout } = await execFileAsync(command, args, {
-    cwd,
-    env: process.env,
-    maxBuffer: 20 * 1024 * 1024,
-  });
-
-  return stdout;
-}
-
 export async function findMissingBuildArtifacts(
   packageDir: string,
   contract: PublicPackageContract,
@@ -81,79 +70,6 @@ async function readPackageJson(
   return JSON.parse(
     await readFile(join(getPackageDir(contract), 'package.json'), 'utf8'),
   ) as Record<string, unknown>;
-}
-
-async function readPackageJsonAtGitRef(
-  ref: string,
-  contract: PublicPackageContract,
-): Promise<Record<string, unknown> | null> {
-  try {
-    return JSON.parse(
-      await runCommand(
-        'git',
-        ['show', `${ref}:${contract.workspaceDir}/package.json`],
-        REPO_ROOT,
-      ),
-    ) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-function getPackageVersion(
-  packageJson: Record<string, unknown> | null,
-): string | null {
-  return packageJson && typeof packageJson.version === 'string'
-    ? packageJson.version
-    : null;
-}
-
-async function resolveMergeBase(): Promise<string | null> {
-  for (const ref of ['origin/main', 'main']) {
-    try {
-      return (
-        await runCommand('git', ['merge-base', ref, 'HEAD'], REPO_ROOT)
-      ).trim();
-    } catch {
-      continue;
-    }
-  }
-
-  return null;
-}
-
-async function findChangedWorkspaceDirs(
-  mergeBase: string,
-  contracts: readonly PublicPackageContract[],
-): Promise<Set<string>> {
-  const diff = await runCommand(
-    'git',
-    [
-      'diff',
-      '--name-only',
-      `${mergeBase}..HEAD`,
-      '--',
-      ...contracts.map((contract) => contract.workspaceDir),
-    ],
-    REPO_ROOT,
-  );
-
-  const changedDirs = new Set<string>();
-  for (const path of diff
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)) {
-    const contract = contracts.find(
-      (candidate) =>
-        path === candidate.workspaceDir ||
-        path.startsWith(`${candidate.workspaceDir}/`),
-    );
-    if (contract) {
-      changedDirs.add(contract.workspaceDir);
-    }
-  }
-
-  return changedDirs;
 }
 
 export function findLockstepVersionBumpErrors(
@@ -207,6 +123,7 @@ async function validateLockstepVersionBumps(
 
   const changedWorkspaceDirs = await findChangedWorkspaceDirs(
     mergeBase,
+    'HEAD',
     contracts,
   );
   if (changedWorkspaceDirs.size === 0) {
@@ -218,7 +135,7 @@ async function validateLockstepVersionBumps(
       const currentPackageJson = await readPackageJson(contract);
       const basePackageJson = await readPackageJsonAtGitRef(
         mergeBase,
-        contract,
+        contract.workspaceDir,
       );
       return {
         contract,

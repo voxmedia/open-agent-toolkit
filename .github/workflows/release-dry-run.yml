@@ -33,11 +33,15 @@ jobs:
       # - run pnpm release:validate
       # - run pnpm publish --dry-run for each public package against npmjs
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
+      # Release flows stay on Node 24 because publishing and dry-run verification
+      # are coupled to the npm runtime we use for trusted publishing.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
