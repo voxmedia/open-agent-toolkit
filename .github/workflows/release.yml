@@ -25,6 +25,8 @@ jobs:
       # - publish the four @tkstang/oat-* packages in lockstep
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
