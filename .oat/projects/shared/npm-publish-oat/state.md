@@ -7,28 +7,28 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/16 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-02T19:02:23.393Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-02T23:28:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-02T23:41:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: npm-publish-oat
 
-**Status:** Implementation Complete
+**Status:** PR Open
 **Started:** 2026-04-02
 **Last Updated:** 2026-04-02
 
 ## Current Phase
 
-Implementation - Complete; final review passed
+Implementation - PR open, awaiting human review.
 
 ## Artifacts
 
@@ -54,6 +54,8 @@ Implementation - Complete; final review passed
 - ✓ Phase 3 complete: release workflows, maintainer guidance, and knowledge refreshed for `@open-agent-toolkit/*`
 - ✓ Final review fix task `p04-t01` complete: public packages bumped to `0.0.10`
 - ✓ Final re-review passed with no findings
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -61,4 +63,7 @@ None
 
 ## Next Milestone
 
-Implementation is complete. Next: run `oat-project-summary`, optionally `oat-project-document`, then `oat-project-pr-final` when ready.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
