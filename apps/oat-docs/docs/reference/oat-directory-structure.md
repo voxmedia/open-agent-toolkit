@@ -158,7 +158,7 @@ Each OAT project lives under:
 Archive sync behavior:
 
 - `oat-project-complete` always archives locally into `.oat/projects/archived/<project>/`.
-- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, completion also uploads a dated snapshot such as `<archive.s3Uri>/<repo-slug>/20260401-<project>/`.
+- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, completion also uploads a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/`.
 - `oat project archive sync` syncs all repo archived projects down from S3 into `.oat/projects/archived/`.
 - `oat project archive sync <project-name>` syncs the latest dated remote snapshot for a single project into `.oat/projects/archived/<project-name>/`.
 - Default archive sync is non-destructive toward unrelated local-only archive data, but it does replace a local project archive when a newer dated remote snapshot is selected for that same project.

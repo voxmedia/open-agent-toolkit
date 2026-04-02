@@ -174,7 +174,11 @@ describe('oat project archive sync', () => {
     expect(execFile).toHaveBeenNthCalledWith(
       1,
       'aws',
-      ['s3', 'ls', 's3://example-bucket/oat-archive/open-agent-toolkit/'],
+      [
+        's3',
+        'ls',
+        's3://example-bucket/oat-archive/open-agent-toolkit/projects/',
+      ],
       expect.objectContaining({
         cwd: '/tmp/workspace/open-agent-toolkit',
       }),
@@ -185,7 +189,7 @@ describe('oat project archive sync', () => {
       [
         's3',
         'sync',
-        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-demo-project',
+        's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
         '.oat/projects/archived/demo-project',
       ],
       expect.objectContaining({
@@ -198,7 +202,7 @@ describe('oat project archive sync', () => {
       [
         's3',
         'sync',
-        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-other-project',
+        's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-other-project',
         '.oat/projects/archived/other-project',
       ],
       expect.objectContaining({
@@ -221,7 +225,7 @@ describe('oat project archive sync', () => {
       [
         's3',
         'sync',
-        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-demo-project',
+        's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
         '.oat/projects/archived/demo-project',
       ],
       expect.any(Object),
@@ -252,7 +256,7 @@ describe('oat project archive sync', () => {
       [
         's3',
         'sync',
-        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-demo-project',
+        's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
         '.oat/projects/archived/demo-project',
       ],
       expect.objectContaining({
@@ -274,7 +278,7 @@ describe('oat project archive sync', () => {
       [
         's3',
         'sync',
-        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-demo-project',
+        's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
         '.oat/projects/archived/demo-project',
         '--dryrun',
       ],
@@ -366,7 +370,7 @@ describe('oat project archive sync', () => {
       [
         's3',
         'sync',
-        `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/20260401-demo-project`,
+        `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/projects/20260401-demo-project`,
         '.oat/projects/archived/demo-project',
       ],
       expect.objectContaining({ cwd: repoRoot }),
@@ -401,7 +405,7 @@ describe('oat project archive sync', () => {
       mode: 'apply',
       projectName: 'demo-project',
       sources: [
-        's3://example-bucket/oat-archive/open-agent-toolkit/20260401-demo-project',
+        's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
       ],
       targets: ['.oat/projects/archived/demo-project'],
       skipped: false,

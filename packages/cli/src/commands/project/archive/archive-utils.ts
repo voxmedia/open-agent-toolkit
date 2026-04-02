@@ -110,7 +110,7 @@ function requiresRemoteAccess(
 }
 
 export function buildRepoArchiveS3Uri(s3Uri: string, repoRoot: string): string {
-  return `${normalizeS3Uri(s3Uri)}/${resolveRepoSlug(repoRoot)}`;
+  return `${normalizeS3Uri(s3Uri)}/${resolveRepoSlug(repoRoot)}/projects`;
 }
 
 export function buildProjectArchiveS3Uri(

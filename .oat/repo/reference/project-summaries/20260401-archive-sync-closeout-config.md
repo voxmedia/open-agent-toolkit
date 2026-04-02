@@ -30,7 +30,7 @@ Config discoverability was improved in both code and docs. `oat config describe`
 ## Key Decisions
 
 - Use the AWS CLI instead of adding AWS SDK dependencies so archive sync could reuse a familiar external tool and stay lightweight inside the CLI package.
-- Keep the remote archive layout repo-scoped while storing dated snapshots as `<archive.s3Uri>/<repo-slug>/YYYYMMDD-<project-name>`, which keeps archive history readable without nesting by project name.
+- Keep the remote archive layout repo-scoped while storing dated snapshots as `<archive.s3Uri>/<repo-slug>/projects/YYYYMMDD-<project-name>`, which keeps archive history readable while letting `archive.s3Uri` point at the shared repositories prefix.
 - Use a positional `project-name` for `oat project archive sync [project-name]` to match existing OAT command conventions for target entities.
 - Treat S3 and exported summaries as immutable dated snapshots, while keeping the local archive as a latest-only bare project cache for day-to-day reference.
 - Treat `oat config describe` as the canonical discovery surface for config ownership while leaving mutation ownership split between `oat config set` and specialized commands such as `oat providers set`.

@@ -41,7 +41,9 @@ describe('archive utils', () => {
         '/tmp/workspace/open-agent-toolkit',
         'demo-project',
       ),
-    ).toBe('s3://example-bucket/oat-archive/open-agent-toolkit/demo-project');
+    ).toBe(
+      's3://example-bucket/oat-archive/open-agent-toolkit/projects/demo-project',
+    );
   });
 
   it('resolves local archived project paths from projects.root', () => {
@@ -119,12 +121,12 @@ describe('archive utils', () => {
         's3',
         'sync',
         join(repoRoot, '.oat', 'projects', 'archived', 'demo'),
-        `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/20260401-demo`,
+        `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/projects/20260401-demo`,
       ],
       expect.objectContaining({ cwd: repoRoot }),
     );
     expect(result.s3Path).toBe(
-      `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/20260401-demo`,
+      `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/projects/20260401-demo`,
     );
   });
 

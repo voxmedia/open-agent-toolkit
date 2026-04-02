@@ -57,7 +57,7 @@ After implementation and final review pass:
 On completion, OAT now treats archive handling as part of the closeout lifecycle:
 
 - Local archive is always written to `.oat/projects/archived/<project>/`.
-- If `.oat/config.json` enables `archive.s3SyncOnComplete` and sets `archive.s3Uri`, completion also attempts an S3 upload for a dated snapshot such as `<archive.s3Uri>/<repo-slug>/20260401-<project>/`.
+- If `.oat/config.json` enables `archive.s3SyncOnComplete` and sets `archive.s3Uri`, completion also attempts an S3 upload for a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/`.
 - If `.oat/config.json` sets `archive.summaryExportPath`, completion copies `summary.md` to `<archive.summaryExportPath>/20260401-<project>.md`.
 - Missing or unusable AWS CLI configuration produces warnings during completion instead of blocking closeout.
 - `oat project archive sync` can later sync all archived projects, or one named archived project, back down from S3; it selects the latest dated remote snapshot and materializes it into the local bare archive tree.
