@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 oat_template: false
 ---
@@ -25,13 +25,13 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | pending  | 4     | 0/4       |
-| Phase 3 | pending  | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | in_progress | 4     | 1/4       |
+| Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 3/9 tasks completed
+**Total:** 4/9 tasks completed
 
 ---
 
@@ -205,13 +205,39 @@ oat_template: false
 
 ## Phase 2: Consumer, Scaffold, And Docs Alignment
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-02
 
 ### Task p02-t01: Align first-party docs app dependencies and imports
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `571f768`
+
+**Outcome (required when completed):**
+
+- The first-party docs app now imports docs-config and docs-theme from the
+  `@open-agent-toolkit/*` namespace.
+- The docs build resolves the renamed workspace packages without behavior
+  changes in the app shell or page rendering surfaces.
+
+**Files changed:**
+
+- `apps/oat-docs/source.config.ts` - renamed the docs-config import.
+- `apps/oat-docs/next.config.js` - renamed the docs-config import used by the
+  Next.js configuration wrapper.
+- `apps/oat-docs/app/layout.tsx` - renamed the docs-theme layout import.
+- `apps/oat-docs/app/[[...slug]]/page.tsx` - renamed the docs-theme MDX
+  component imports.
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Notes / Decisions:**
+
+- `apps/oat-docs/package.json` had already been updated during `p01-t03`, so
+  this task only needed to finish the source-level import alignment.
 
 ---
 
@@ -277,6 +303,7 @@ Chronological log of implementation progress.
 - [x] p01-t01: Rename public package contract tests
 - [x] p01-t02: Implement renamed contract registry and validator alignment
 - [x] p01-t03: Rename publishable package manifests and root link script
+- [x] p02-t01: Align first-party docs app dependencies and imports
 
 **What changed (high level):**
 
@@ -284,6 +311,8 @@ Chronological log of implementation progress.
   graph from `@tkstang/oat-*` to `@open-agent-toolkit/*`.
 - Regenerated the workspace lockfile and verified release validation against the
   renamed publishable package set.
+- Updated the first-party docs app imports and verified the docs site builds
+  against the renamed workspace packages.
 
 **Decisions:**
 
@@ -293,8 +322,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Continue with `p02-t01` to rename docs-app source imports and any remaining
-  docs-app package references not needed for Phase 1 verification.
+- Continue with `p02-t02` to update scaffold tests and checked-in docs app
+  templates to the same namespace.
 
 **Blockers:**
 
