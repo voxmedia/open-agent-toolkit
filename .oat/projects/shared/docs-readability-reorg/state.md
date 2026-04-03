@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t02
-oat_last_commit: 1c0b759
+oat_current_task: p02-t03
+oat_last_commit: a4fc257
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-03T00:57:05.914Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-03T01:39:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-03T01:53:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -49,7 +49,8 @@ Implementation - Phase 2 in progress
 - ✓ Task `p01-t02` completed
 - ✓ Task `p01-t03` completed
 - ✓ Task `p02-t01` completed
-- ⧗ Task `p02-t02` next
+- ✓ Task `p02-t02` completed
+- ⧗ Task `p02-t03` next
 
 ## Blockers
 
@@ -57,4 +58,4 @@ None
 
 ## Next Milestone
 
-Move Docs Tooling and CLI Utilities content into their canonical routes
+Add progressive disclosure to the highest-density docs pages

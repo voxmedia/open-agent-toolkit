@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-03
-oat_current_task_id: p02-t02
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -27,10 +27,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | in_progress | 3     | 1/3       |
+| Phase 2 | in_progress | 3     | 2/3       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 4/8 tasks completed
+**Total:** 5/8 tasks completed
 
 ---
 
@@ -232,19 +232,48 @@ oat_generated: false
 
 ### Task p02-t02: Move Docs Tooling and CLI Utilities content into their canonical sections
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** a4fc257
 
 **Notes / Decisions:**
 
 - Split `guide/getting-started` between provider sync and CLI utility ownership.
 - Move deep utility command detail out of CLI Reference into `/cli-utilities/config-and-local-state`.
 
+**Outcome (required when completed):**
+
+- Moved the docs-tooling detail pages into `/docs-tooling/*` and rewired the section landing/overview pages to their canonical owners.
+- Moved bootstrap, tool-pack, and configuration docs into `/cli-utilities/*` and added a new `config-and-local-state.md` page for utility command groups.
+- Rewrote the canonical Reference CLI page into a real shallow command map and removed the old guide-owned CLI Reference page.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/docs-tooling/**` - canonical docs-tooling section now owns quickstart, commands, and workflow docs
+- `apps/oat-docs/docs/cli-utilities/**` - canonical CLI utilities section now owns bootstrap, tool packs, configuration, and utility command groups
+- `apps/oat-docs/docs/reference/cli-reference.md` - rewritten as the canonical shallow CLI map
+- `apps/oat-docs/docs/reference/index.md` - updated to point at canonical reference and docs-tooling ownership
+- `apps/oat-docs/docs/reference/docs-index-contract.md` - updated to point at canonical docs-tooling ownership
+- `apps/oat-docs/docs/contributing/documentation.md` - updated to point at canonical docs-tooling ownership
+- `apps/oat-docs/docs/contributing/design-principles.md` - updated to point at canonical CLI reference ownership
+- `apps/oat-docs/docs/guide/index.md` - further reduced to a compatibility router
+- `apps/oat-docs/docs/guide/concepts.md` - updated to point at canonical CLI reference ownership
+- `apps/oat-docs/index.md` - regenerated app-level index after the route migration
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Issues Encountered:**
+
+- The `Guide` bucket still remains in generated navigation because `guide/index.md` and `guide/concepts.md` are intentionally still present during transition.
+- This is acceptable for now because the substantive user docs have moved; the remaining `Guide` surface is now mostly compatibility material.
+
 ---
 
 ### Task p02-t03: Add progressive disclosure to the highest-density docs pages
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes / Decisions:**
@@ -307,7 +336,8 @@ Chronological log of implementation progress.
 - [x] p01-t02: rewrite `/` and `/quickstart`
 - [x] p01-t03: create the new section landings and overview pages
 - [x] p02-t01: move Provider Sync and Agentic Workflows content into canonical routes
-- [ ] p02-t02: move Docs Tooling and CLI Utilities content into canonical routes
+- [x] p02-t02: move Docs Tooling and CLI Utilities content into canonical routes
+- [ ] p02-t03: add progressive disclosure to the highest-density docs pages
 
 **What changed (high level):**
 
@@ -318,6 +348,7 @@ Chronological log of implementation progress.
 - Split the docs entrypoint model so `/` is overview and `/quickstart` is Start Here
 - Established real landing pages plus overview pages for the four new top-level adoption lanes
 - Moved Provider Sync and workflow-owned pages into canonical top-level routes
+- Moved docs-tooling and CLI-utility pages into canonical top-level routes and established the canonical shallow CLI reference
 
 **Decisions:**
 
@@ -325,6 +356,7 @@ Chronological log of implementation progress.
 - Reorganization must preserve information; removals or major rewrites require user approval
 - During phased migration, new section landings may point at legacy guide pages until canonical child routes are in place
 - The `guide` tree can temporarily act as a compatibility router while the remaining docs-tooling and CLI-utility pages are still being moved
+- The remaining Phase 2 work is readability framing only; the next pass should add overview/Quick Look affordances without reducing coverage
 - The generated app-level index can temporarily show legacy guide structure until the underlying guide content is migrated
 
 **Follow-ups / TODO:**
