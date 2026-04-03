@@ -214,15 +214,10 @@ async function readFileAtGitRef(
 async function collectChangedSkillVersionBumpFindings(
   repoRoot: string,
   baseRef: string,
+  changedSkillFiles: readonly string[],
   findings: ValidationFinding[],
   dependencies: ValidateOatSkillsDependencies,
 ): Promise<void> {
-  const changedSkillFiles = await listChangedSkillFiles(
-    repoRoot,
-    baseRef,
-    dependencies,
-  );
-
   for (const relativeSkillPath of changedSkillFiles) {
     const skillPath = join(repoRoot, relativeSkillPath);
     const currentContent = await readFile(skillPath, 'utf8');
@@ -286,6 +281,7 @@ export async function validateChangedSkillVersionBumps(
   await collectChangedSkillVersionBumpFindings(
     repoRoot,
     options.baseRef,
+    changedSkillFiles,
     findings,
     dependencies,
   );
@@ -410,9 +406,15 @@ export async function validateOatSkills(
   }
 
   if (options.baseRef) {
+    const changedSkillFiles = await listChangedSkillFiles(
+      repoRoot,
+      options.baseRef,
+      dependencies,
+    );
     await collectChangedSkillVersionBumpFindings(
       repoRoot,
       options.baseRef,
+      changedSkillFiles,
       findings,
       dependencies,
     );

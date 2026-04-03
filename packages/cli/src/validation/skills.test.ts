@@ -11,7 +11,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { validateOatSkills } from './skills';
+import { validateChangedSkillVersionBumps, validateOatSkills } from './skills';
 
 async function createSkillFile(
   root: string,
@@ -869,5 +869,98 @@ describe('validateOatSkills', () => {
     );
 
     expect(result.findings).toEqual([]);
+  });
+
+  it('allows brand-new canonical skills that do not exist at the base ref', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+
+    await createSkillFile(
+      root,
+      'oat-brand-new-skill',
+      currentSkillContent(
+        'oat-brand-new-skill',
+        '1.0.0',
+        'Brand-new skill content.',
+      ),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      {
+        gitExecFile: async (_file, args) => {
+          if (args[0] === 'diff') {
+            return {
+              stdout: '.agents/skills/oat-brand-new-skill/SKILL.md\n',
+              stderr: '',
+            };
+          }
+
+          if (
+            args[0] === 'show' &&
+            args[1] ===
+              'origin/main:.agents/skills/oat-brand-new-skill/SKILL.md'
+          ) {
+            throw new Error('not found');
+          }
+
+          throw new Error(`Unexpected command: git ${args.join(' ')}`);
+        },
+      },
+    );
+
+    expect(result).toEqual({
+      validatedSkillCount: 1,
+      findings: [],
+    });
+  });
+
+  it('skips version-bump enforcement when a changed skill lacks a version key', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+
+    await createSkillFile(
+      root,
+      'oat-no-version-enforcement',
+      validSkillContent('oat-no-version-enforcement'),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      {
+        gitExecFile: async (_file, args) => {
+          if (args[0] === 'diff') {
+            return {
+              stdout: '.agents/skills/oat-no-version-enforcement/SKILL.md\n',
+              stderr: '',
+            };
+          }
+
+          if (
+            args[0] === 'show' &&
+            args[1] ===
+              'origin/main:.agents/skills/oat-no-version-enforcement/SKILL.md'
+          ) {
+            return {
+              stdout: currentSkillContent(
+                'oat-no-version-enforcement',
+                '1.2.3',
+                'Previous versioned content.',
+              ),
+              stderr: '',
+            };
+          }
+
+          throw new Error(`Unexpected command: git ${args.join(' ')}`);
+        },
+      },
+    );
+
+    expect(result).toEqual({
+      validatedSkillCount: 1,
+      findings: [],
+    });
   });
 });

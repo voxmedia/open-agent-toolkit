@@ -106,6 +106,20 @@ describe('createValidateSkillVersionBumpsCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('uses a clearer success message when no skills changed', async () => {
+    const { command, capture } = createHarness({
+      validatedSkillCount: 0,
+      findings: [],
+    });
+
+    await runCommand(command, [], ['--base-ref', 'origin/main']);
+
+    expect(capture.info[0]).toContain(
+      'OK: 0 canonical skills changed relative to origin/main - nothing to validate',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
   it('returns validation failures with exit code 1', async () => {
     const { command, capture } = createHarness({
       findings: [

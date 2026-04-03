@@ -73,9 +73,15 @@ async function runValidateSkillVersionBumps(
         findings: result.findings,
       });
     } else {
-      context.logger.info(
-        `OK: validated ${result.validatedSkillCount} changed canonical skill version bump checks against ${options.baseRef}`,
-      );
+      if (result.validatedSkillCount === 0) {
+        context.logger.info(
+          `OK: 0 canonical skills changed relative to ${options.baseRef} - nothing to validate`,
+        );
+      } else {
+        context.logger.info(
+          `OK: validated ${result.validatedSkillCount} changed canonical skill version bump checks against ${options.baseRef}`,
+        );
+      }
     }
     process.exitCode = 0;
   } catch (error) {
