@@ -188,6 +188,10 @@ function buildDevDependencies(
 ): string {
   const entries: string[] = [];
 
+  if (lint === 'markdownlint-cli2') {
+    entries.push('    "markdownlint-cli2": "^0.13.0"');
+  }
+
   if (format === 'oxfmt') {
     entries.push('    "oxfmt": "^0.36.0"');
   }
@@ -200,6 +204,10 @@ function buildFumaDevDependencies(
   format: DocsFormatMode,
 ): string {
   const entries: string[] = [];
+
+  if (lint === 'markdownlint-cli2') {
+    entries.push('    "markdownlint-cli2": "^0.13.0"');
+  }
 
   if (format === 'oxfmt') {
     entries.push('    "oxfmt": "^0.36.0"');
@@ -238,7 +246,10 @@ function renderTemplate(
     '{{PACKAGE_NAME}}': options.appName,
     '{{SITE_NAME}}': siteName,
     '{{SITE_DESCRIPTION}}': options.siteDescription,
-    '{{DOCS_LINT_SCRIPT}}': "echo 'docs lint disabled'",
+    '{{DOCS_LINT_SCRIPT}}':
+      options.lint === 'markdownlint-cli2'
+        ? "markdownlint-cli2 'docs/**/*.md'"
+        : "echo 'docs lint disabled'",
     '{{DOCS_FORMAT_SCRIPT}}':
       options.format === 'oxfmt'
         ? "oxfmt 'docs/**/*.md'"

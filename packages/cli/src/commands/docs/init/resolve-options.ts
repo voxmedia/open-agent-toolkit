@@ -8,7 +8,7 @@ import { dirExists, fileExists } from '@fs/io';
 
 export type DocsRepoShape = 'monorepo' | 'single-package';
 export type DocsFramework = 'fumadocs' | 'mkdocs';
-export type DocsLintMode = 'none';
+export type DocsLintMode = 'none' | 'markdownlint-cli2';
 export type DocsFormatMode = 'oxfmt' | 'none';
 
 export interface DocsInitResolvedOptions {
@@ -58,6 +58,7 @@ const FRAMEWORK_CHOICES: SelectChoice<DocsFramework>[] = [
 
 const LINT_CHOICES: SelectChoice<DocsLintMode>[] = [
   { label: 'none', value: 'none' },
+  { label: 'markdownlint-cli2', value: 'markdownlint-cli2' },
 ];
 
 const FORMAT_CHOICES: SelectChoice<DocsFormatMode>[] = [

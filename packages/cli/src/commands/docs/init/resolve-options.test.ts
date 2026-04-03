@@ -166,4 +166,37 @@ describe('docs init option resolution', () => {
     expect(getTemplateDir('fumadocs')).toBe('docs-app-fuma');
     expect(getTemplateDir('mkdocs')).toBe('docs-app-mkdocs');
   });
+
+  it('accepts markdownlint-cli2 as a lint mode', async () => {
+    const inputWithDefault = vi.fn();
+    const selectWithAbort = vi.fn();
+
+    const result = await resolveDocsInitOptions({
+      repoRoot: '/tmp/open-agent-toolkit',
+      repoShape: 'monorepo',
+      interactive: true,
+      acceptDefaults: false,
+      providedFramework: 'mkdocs',
+      providedAppName: 'oat-docs',
+      providedTargetDir: 'apps/oat-docs',
+      providedSiteDescription: 'My docs',
+      providedLint: 'markdownlint-cli2',
+      providedFormat: 'oxfmt',
+      inputWithDefault,
+      selectWithAbort,
+    });
+
+    expect(result).toEqual({
+      repoRoot: '/tmp/open-agent-toolkit',
+      repoShape: 'monorepo',
+      framework: 'mkdocs',
+      appName: 'oat-docs',
+      targetDir: 'apps/oat-docs',
+      siteDescription: 'My docs',
+      lint: 'markdownlint-cli2',
+      format: 'oxfmt',
+    });
+    expect(inputWithDefault).not.toHaveBeenCalled();
+    expect(selectWithAbort).not.toHaveBeenCalled();
+  });
 });
