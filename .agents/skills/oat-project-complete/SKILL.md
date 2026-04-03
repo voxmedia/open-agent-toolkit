@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.3.3
+version: 1.3.4
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -300,35 +300,30 @@ The archive-side effects in this step are CLI-owned. Follow the canonical behavi
 
 ```bash
 ARCHIVED_ROOT=".oat/projects/archived"
-MAIN_WORKTREE_PATH=$(git worktree list --porcelain 2>/dev/null | awk '
-  /^worktree / { wt=$2 }
-  /^branch refs\\/heads\\/main$/ { print wt; exit }
-')
-MAIN_REPO_ARCHIVE=""
-if [[ -n "$MAIN_WORKTREE_PATH" ]]; then
-  MAIN_REPO_ARCHIVE="${MAIN_WORKTREE_PATH}/.oat/projects/archived"
-fi
+PRIMARY_REPO_ARCHIVE=""
 LOCAL_ARCHIVED_ROOT=".oat/projects/archived"
-USE_MAIN_REPO_ARCHIVE="false"
+USE_PRIMARY_REPO_ARCHIVE="false"
 
-# Heuristic: if this checkout is a worktree and the main repo archive parent exists,
-# use the main repo archive as the canonical archive destination.
+# Heuristic: if this checkout is a worktree and the primary repo archive parent
+# exists, use that durable archive path as the canonical archive destination.
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null || true)
   GIT_DIR=$(git rev-parse --git-dir 2>/dev/null || true)
   if [[ -n "$GIT_COMMON_DIR" && -n "$GIT_DIR" && "$GIT_COMMON_DIR" != "$GIT_DIR" ]]; then
-    if [[ -d "$(dirname "$MAIN_REPO_ARCHIVE")" ]]; then
-      USE_MAIN_REPO_ARCHIVE="true"
-      ARCHIVED_ROOT="$MAIN_REPO_ARCHIVE"
+    PRIMARY_REPO_ROOT=$(cd "$(dirname "$GIT_COMMON_DIR")" && pwd)
+    PRIMARY_REPO_ARCHIVE="${PRIMARY_REPO_ROOT}/.oat/projects/archived"
+    if [[ -d "$(dirname "$PRIMARY_REPO_ARCHIVE")" ]]; then
+      USE_PRIMARY_REPO_ARCHIVE="true"
+      ARCHIVED_ROOT="$PRIMARY_REPO_ARCHIVE"
     else
-      echo "Warning: Running in a worktree, but main repo archive path is unavailable: $MAIN_REPO_ARCHIVE"
+      echo "Warning: Running in a worktree, but the primary repo archive path is unavailable: $PRIMARY_REPO_ARCHIVE"
       echo "A worktree-local archive may be deleted when the worktree is removed and is not a durable archive."
       echo "Require explicit confirmation before proceeding with local-only archive."
     fi
   fi
 fi
 
-if [[ "$USE_MAIN_REPO_ARCHIVE" != "true" ]]; then
+if [[ "$USE_PRIMARY_REPO_ARCHIVE" != "true" ]]; then
   ARCHIVED_ROOT="$LOCAL_ARCHIVED_ROOT"
 fi
 
@@ -354,10 +349,10 @@ echo "Project archived to $ARCHIVE_PATH"
 
 **Worktree durability guard (required):**
 
-- If running in a worktree and `MAIN_REPO_ARCHIVE` is unavailable, do not silently continue with a local-only archive.
-- Ask the user explicitly: "Main repo archive path is unavailable, so this archive may be lost when the worktree is deleted. Continue with local-only archive anyway?"
+- If running in a worktree and the primary repo archive path is unavailable, do not silently continue with a local-only archive.
+- Ask the user explicitly: "Primary repo archive path is unavailable, so this archive may be lost when the worktree is deleted. Continue with local-only archive anyway?"
 - If the user declines, skip archiving and continue the completion flow without archive.
-- If your repository does not use `main` as the default branch, use `git worktree list --porcelain` to identify the primary worktree path by another stable rule (for example the non-ephemeral root checkout), then append `/.oat/projects/archived`.
+- Resolve the durable repo root from `git rev-parse --git-common-dir` and `git rev-parse --git-dir`, matching the CLI helper in `packages/cli/src/commands/project/archive/archive-utils.ts`. Do not rely on a `main` checkout or default-branch naming.
 
 **Git handling after archive:**
 
@@ -376,16 +371,14 @@ If running from a git worktree, the primary repo archive directory is the canoni
 Reference path:
 
 ```bash
-MAIN_WORKTREE_PATH=$(git worktree list --porcelain | awk '
-  /^worktree / { wt=$2 }
-  /^branch refs\\/heads\\/main$/ { print wt; exit }
-')
-MAIN_REPO_ARCHIVE="${MAIN_WORKTREE_PATH}/.oat/projects/archived"
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir)
+PRIMARY_REPO_ROOT=$(cd "$(dirname "$GIT_COMMON_DIR")" && pwd)
+PRIMARY_REPO_ARCHIVE="${PRIMARY_REPO_ROOT}/.oat/projects/archived"
 ```
 
 Guidance:
 
-- In a worktree, prefer moving directly to `MAIN_REPO_ARCHIVE` instead of archiving locally and copying later.
+- In a worktree, prefer moving directly to `PRIMARY_REPO_ARCHIVE` instead of archiving locally and copying later.
 - Do not treat the worktree-local archive as durable.
 - If forced to use a local-only archive, warn and require explicit user confirmation.
 - Do not hardcode user-specific absolute paths.
