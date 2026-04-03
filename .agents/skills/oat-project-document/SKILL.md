@@ -1,6 +1,6 @@
 ---
 name: oat-project-document
-version: 1.0.0
+version: 1.0.1
 description: Run when implementation is complete and documentation needs updating. Analyzes project artifacts to produce documentation update recommendations, then applies approved changes before project completion.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: true
