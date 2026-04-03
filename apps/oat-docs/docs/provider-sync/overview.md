@@ -33,6 +33,6 @@ Use Provider Sync when:
 
 ## Continue Here
 
-- [Getting Started](getting-started.md) for the first sync setup flow
+- [CLI Bootstrap](../guide/getting-started.md) for the first sync setup flow
 - [Scope and Surface](scope-and-surface.md) for the canonical/provider-view model
 - [Commands](commands.md) for the exact CLI behavior

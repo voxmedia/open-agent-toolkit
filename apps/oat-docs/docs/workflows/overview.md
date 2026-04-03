@@ -33,6 +33,6 @@ Stay with direct CLI usage when:
 
 ## Continue Here
 
-- [Skills](../guide/skills/index.md) for task-oriented workflow skill discovery
-- [Ideas](../guide/ideas/index.md) for lightweight capture and refinement
-- [Workflow & Projects](../guide/workflow/index.md) for the lifecycle, artifact, and review model
+- [Skills](skills/index.md) for task-oriented workflow skill discovery
+- [Ideas](ideas/index.md) for lightweight capture and refinement
+- [Workflow & Projects](projects/index.md) for the lifecycle, artifact, and review model

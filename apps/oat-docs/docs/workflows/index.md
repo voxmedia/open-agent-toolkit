@@ -22,19 +22,19 @@ This section explains when workflow mode is worth the overhead, how OAT projects
 ## Start Here
 
 - Read [Overview](overview.md) to decide whether you want workflow mode or just direct CLI usage.
-- Use [Skills](../guide/skills/index.md) when you want task-oriented guidance on the most useful workflow skills.
-- Go to [Workflow & Projects](../guide/workflow/index.md) when you need the lifecycle and artifact model in detail.
+- Use [Skills](skills/index.md) when you want task-oriented guidance on the most useful workflow skills.
+- Go to [Workflow & Projects](projects/index.md) when you need the lifecycle and artifact model in detail.
 
 ## Common Tasks
 
-- Capture or refine early work in [Ideas](../guide/ideas/index.md).
-- Understand how tracked projects progress in [Workflow & Projects](../guide/workflow/index.md).
-- Learn the artifact contract in [Artifacts](../guide/workflow/artifacts.md).
-- Understand review and PR expectations in [Reviews](../guide/workflow/reviews.md) and [PR Flow](../guide/workflow/pr-flow.md).
+- Capture or refine early work in [Ideas](ideas/index.md).
+- Understand how tracked projects progress in [Workflow & Projects](projects/index.md).
+- Learn the artifact contract in [Artifacts](projects/artifacts.md).
+- Understand review and PR expectations in [Reviews](projects/reviews.md) and [PR Flow](projects/pr-flow.md).
 
 ## Go Deeper
 
 - [Overview](overview.md) - What the workflow layer adds and when to use it.
-- [Skills](../guide/skills/index.md) - Workflow-oriented skill discovery and use-case routing.
-- [Ideas](../guide/ideas/index.md) - Idea capture, refinement, and promotion flows.
-- [Workflow & Projects](../guide/workflow/index.md) - Lifecycle, artifacts, reviews, PR flow, and repository analysis.
+- [Skills](skills/index.md) - Workflow-oriented skill discovery and use-case routing.
+- [Ideas](ideas/index.md) - Idea capture, refinement, and promotion flows.
+- [Workflow & Projects](projects/index.md) - Lifecycle, artifacts, reviews, PR flow, and repository analysis.

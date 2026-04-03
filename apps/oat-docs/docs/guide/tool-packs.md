@@ -163,5 +163,5 @@ These commands mutate by default; use `--dry-run` to preview deletions.
 Related docs:
 
 - Bootstrap (`oat init`): `getting-started.md`
-- Provider sync (`oat status`, `oat sync`, `oat providers ...`): `provider-sync/index.md`
+- Provider sync (`oat status`, `oat sync`, `oat providers ...`): `../provider-sync/index.md`
 - Diagnostics and local-state commands: `cli-reference.md`

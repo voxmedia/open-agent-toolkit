@@ -23,21 +23,21 @@ This section explains how OAT treats `.agents/` and `.oat/` as the source of tru
 
 - Read [Overview](overview.md) for the plain-language model and the first-sync flow.
 - Use [CLI Bootstrap](../guide/getting-started.md) when you are bootstrapping OAT and want the sync-relevant setup path.
-- Go to [Commands](../guide/provider-sync/commands.md) once you are actively using `oat status`, `oat sync`, and `oat providers`.
+- Go to [Commands](commands.md) once you are actively using `oat status`, `oat sync`, and `oat providers`.
 
 ## Common Tasks
 
-- Understand the canonical/provider-view model in [Scope and Surface](../guide/provider-sync/scope-and-surface.md).
-- Learn provider-specific mappings in [Providers](../guide/provider-sync/providers.md).
-- Diagnose drift and adoption behavior in [Manifest and Drift](../guide/provider-sync/manifest-and-drift.md).
-- Adjust provider enablement and scope behavior in [Sync Config](../guide/provider-sync/config.md).
+- Understand the canonical/provider-view model in [Scope and Surface](scope-and-surface.md).
+- Learn provider-specific mappings in [Providers](providers.md).
+- Diagnose drift and adoption behavior in [Manifest and Drift](manifest-and-drift.md).
+- Adjust provider enablement and scope behavior in [Sync Config](config.md).
 
 ## Go Deeper
 
 - [Overview](overview.md) - What provider sync is, when to use it, and what a typical sync loop looks like.
 - [CLI Bootstrap](../guide/getting-started.md) - Foundational setup before first sync.
-- [Scope and Surface](../guide/provider-sync/scope-and-surface.md) - Canonical assets, provider views, scopes, and the sync surface area.
-- [Commands](../guide/provider-sync/commands.md) - `oat status`, `oat sync`, and `oat providers ...` behavior.
-- [Providers](../guide/provider-sync/providers.md) - Provider-specific mappings, capabilities, and path conventions.
-- [Manifest and Drift](../guide/provider-sync/manifest-and-drift.md) - How OAT tracks synced state, stray files, and adoption decisions.
-- [Sync Config](../guide/provider-sync/config.md) - Provider config model, enablement, and scope semantics.
+- [Scope and Surface](scope-and-surface.md) - Canonical assets, provider views, scopes, and the sync surface area.
+- [Commands](commands.md) - `oat status`, `oat sync`, and `oat providers ...` behavior.
+- [Providers](providers.md) - Provider-specific mappings, capabilities, and path conventions.
+- [Manifest and Drift](manifest-and-drift.md) - How OAT tracks synced state, stray files, and adoption decisions.
+- [Sync Config](config.md) - Provider config model, enablement, and scope semantics.

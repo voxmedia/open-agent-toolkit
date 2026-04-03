@@ -14,7 +14,7 @@ For the deep file-by-file reference, see:
 
 - [File Locations](../reference/file-locations.md)
 - [`.oat` Directory Structure](../reference/oat-directory-structure.md)
-- [Sync Config (`.oat/sync/config.json`)](provider-sync/config.md)
+- [Sync Config (`.oat/sync/config.json`)](../provider-sync/config.md)
 
 ## The four config surfaces
 
@@ -117,7 +117,7 @@ Use:
 - `oat config describe ...` to understand sync keys
 - `oat providers set ...` to mutate sync/provider settings
 
-For the provider-sync schema details, use [Sync Config (`.oat/sync/config.json`)](provider-sync/config.md).
+For the provider-sync schema details, use [Sync Config (`.oat/sync/config.json`)](../provider-sync/config.md).
 
 ## Recommended workflow
 

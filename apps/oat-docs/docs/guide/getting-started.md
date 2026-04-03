@@ -60,4 +60,4 @@ Related commands:
 
 - `oat tools ...` (tool-pack install, update, remove, list, info): `tool-packs.md`
 - `oat local ...`, `oat doctor`, and other utility commands: `cli-reference.md`
-- `oat status` / `oat sync` (provider sync): `provider-sync/index.md`
+- `oat status` / `oat sync` (provider sync): `../provider-sync/index.md`

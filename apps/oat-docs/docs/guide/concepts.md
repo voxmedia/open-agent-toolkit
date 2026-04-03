@@ -33,7 +33,7 @@ flowchart LR
 
 Use these docs next:
 
-- [Provider Sync](provider-sync/index.md)
+- [Provider Sync](../provider-sync/index.md)
 - [Reference](../reference/index.md)
 
 ## Sync, Drift, and Adoption
@@ -42,8 +42,8 @@ Use these docs next:
 
 Use these docs next:
 
-- [Provider Sync Commands](provider-sync/commands.md)
-- [Manifest and Drift](provider-sync/manifest-and-drift.md)
+- [Provider Sync Commands](../provider-sync/commands.md)
+- [Manifest and Drift](../provider-sync/manifest-and-drift.md)
 
 ## Scopes
 
@@ -51,7 +51,7 @@ Most OAT operations run in one of three scopes: `project`, `user`, or `all`. Pro
 
 Use these docs next:
 
-- [Scope and Surface](provider-sync/scope-and-surface.md)
+- [Scope and Surface](../provider-sync/scope-and-surface.md)
 - [CLI Reference](cli-reference.md)
 
 ## Skills and CLI Commands
@@ -60,7 +60,7 @@ Skills are structured workflow instructions stored in `.agents/skills`, while CL
 
 Use these docs next:
 
-- [Skills](skills/index.md)
+- [Skills](../workflows/skills/index.md)
 - [Contributing Skills](../contributing/skills.md)
 
 ## The Three Usage Modes
@@ -76,7 +76,7 @@ These layers stack. You can stay at the interop layer, use only the tooling laye
 Use these docs next:
 
 - [Quickstart](../quickstart.md)
-- [Workflow & Projects](workflow/index.md)
+- [Workflow & Projects](../workflows/projects/index.md)
 
 ## Human-in-the-Loop Lifecycle
 
@@ -84,5 +84,5 @@ The workflow system supports explicit checkpoints so a project can pause at sele
 
 Use these docs next:
 
-- [Workflow & Projects](workflow/index.md)
-- [Hill Checkpoints](workflow/hill-checkpoints.md)
+- [Workflow & Projects](../workflows/projects/index.md)
+- [Hill Checkpoints](../workflows/projects/hill-checkpoints.md)

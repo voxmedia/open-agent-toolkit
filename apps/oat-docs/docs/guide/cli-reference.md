@@ -1,11 +1,11 @@
 ---
 title: CLI Reference
-description: 'Scannable reference for the current OAT CLI surface, with links to the deeper guide pages for each command family.'
+description: 'Scannable reference for the current OAT CLI surface, with links to the deeper owning pages for each command family.'
 ---
 
 # CLI Reference
 
-Use this page when you need a quick map of the OAT CLI rather than the full command-by-command docs. It is intentionally shallow: each section points to the guide page that owns the detailed behavior.
+Use this page when you need a quick map of the OAT CLI rather than the full command-by-command docs. It is intentionally shallow: each section points to the owning page that documents the detailed behavior.
 
 The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oat tools`, docs commands, and repo-analysis commands without adopting the full project workflow.
 
@@ -14,23 +14,23 @@ The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oa
 - [Getting Started](getting-started.md) - Bootstrap a repo with `oat init`, guided setup, and initial provider adoption.
 - [Tool Packs](tool-packs.md) - Install, update, inspect, and remove bundled OAT skills and agents.
 - [Documentation Commands](documentation/commands.md) - Docs app scaffolding, migration, index generation, and nav sync.
-- [Provider Sync](provider-sync/index.md) - Sync behavior, provider capabilities, config, and drift management.
-- [Workflow & Projects](workflow/index.md) - Project lifecycle, artifacts, reviews, PR flow, and state-machine docs.
-- [Repository Analysis](workflow/repo-analysis.md) - Detailed `oat repo pr-comments ...` behavior.
+- [Provider Sync](../provider-sync/index.md) - Sync behavior, provider capabilities, config, and drift management.
+- [Workflow & Projects](../workflows/projects/index.md) - Project lifecycle, artifacts, reviews, PR flow, and state-machine docs.
+- [Repository Analysis](../workflows/projects/repo-analysis.md) - Detailed `oat repo pr-comments ...` behavior.
 
 ## Command Groups
 
-| Command group                                          | What it covers                                                                            | Go deeper                                           |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `oat init`                                             | Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.       | [Getting Started](getting-started.md)               |
-| `oat tools ...`                                        | Install, inspect, update, and remove bundled OAT tool packs and assets.                   | [Tool Packs](tool-packs.md)                         |
-| `oat backlog ...`                                      | Generate backlog IDs and rebuild the managed file-backed backlog index.                   | See sections below                                  |
-| `oat config ...`                                       | Inspect resolved config values, update supported keys, and discover config ownership.     | See sections below                                  |
-| `oat docs ...`                                         | Docs app bootstrap, migration, index generation, nav sync, and docs workflow entrypoints. | [Documentation Commands](documentation/commands.md) |
-| `oat status` / `oat sync` / `oat providers ...`        | Provider sync, drift inspection, provider configuration, and adoption behavior.           | [Provider Sync](provider-sync/index.md)             |
-| `oat project ...` / `oat cleanup ...`                  | Project scaffolding, execution mode, and project/artifact cleanup commands.               | [Workflow & Projects](workflow/index.md)            |
-| `oat repo ...`                                         | Repository-level analysis workflows, currently centered on PR comments.                   | [Repository Analysis](workflow/repo-analysis.md)    |
-| `oat state ...` / `oat index ...` / `oat internal ...` | Repo dashboard refresh, repo indexing, and internal validation helpers.                   | See sections below                                  |
+| Command group                                          | What it covers                                                                            | Go deeper                                                     |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `oat init`                                             | Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.       | [Getting Started](getting-started.md)                         |
+| `oat tools ...`                                        | Install, inspect, update, and remove bundled OAT tool packs and assets.                   | [Tool Packs](tool-packs.md)                                   |
+| `oat backlog ...`                                      | Generate backlog IDs and rebuild the managed file-backed backlog index.                   | See sections below                                            |
+| `oat config ...`                                       | Inspect resolved config values, update supported keys, and discover config ownership.     | See sections below                                            |
+| `oat docs ...`                                         | Docs app bootstrap, migration, index generation, nav sync, and docs workflow entrypoints. | [Documentation Commands](documentation/commands.md)           |
+| `oat status` / `oat sync` / `oat providers ...`        | Provider sync, drift inspection, provider configuration, and adoption behavior.           | [Provider Sync](../provider-sync/index.md)                    |
+| `oat project ...` / `oat cleanup ...`                  | Project scaffolding, execution mode, and project/artifact cleanup commands.               | [Workflow & Projects](../workflows/projects/index.md)         |
+| `oat repo ...`                                         | Repository-level analysis workflows, currently centered on PR comments.                   | [Repository Analysis](../workflows/projects/repo-analysis.md) |
+| `oat state ...` / `oat index ...` / `oat internal ...` | Repo dashboard refresh, repo indexing, and internal validation helpers.                   | See sections below                                            |
 
 ## Bootstrap and Setup
 
@@ -151,7 +151,7 @@ These commands manage the relationship between canonical OAT assets and provider
 - `oat sync` - write provider views from canonical assets
 - `oat providers list` / `inspect` / `set` - inspect providers and control enablement
 
-Use [Provider Sync](provider-sync/index.md) for the full model, including scope, manifest, config, and safety behavior.
+Use [Provider Sync](../provider-sync/index.md) for the full model, including scope, manifest, config, and safety behavior.
 
 ## Workflow and Project Commands
 
@@ -172,7 +172,7 @@ Cleanup commands handle lifecycle drift and stale artifacts:
 - `oat cleanup project` - reconcile project pointers and lifecycle state
 - `oat cleanup artifacts` - prune duplicate or stale review/reference artifacts
 
-Use [Workflow & Projects](workflow/index.md) for the full lifecycle map and related docs on artifacts, reviews, PR flow, and state transitions.
+Use [Workflow & Projects](../workflows/projects/index.md) for the full lifecycle map and related docs on artifacts, reviews, PR flow, and state transitions.
 
 ## Repository Analysis
 
@@ -183,7 +183,7 @@ The `oat repo` command group is for repository-wide analysis work rather than si
 - `oat repo pr-comments collect` - collect merged PR review comments into monthly artifacts
 - `oat repo pr-comments triage-collection` - interactively keep or discard collected comments
 
-See [Repository Analysis](workflow/repo-analysis.md) for the detailed collection, filtering, and triage workflow.
+See [Repository Analysis](../workflows/projects/repo-analysis.md) for the detailed collection, filtering, and triage workflow.
 
 ## Repo State and Internal Commands
 
