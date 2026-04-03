@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-04-03
-oat_current_task_id: p03-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | in_progress | 2     | 1/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 3     | 3/3       |
+| Phase 2 | completed | 3     | 3/3       |
+| Phase 3 | completed | 2     | 2/2       |
 
-**Total:** 7/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ---
 
@@ -186,7 +186,7 @@ oat_generated: false
 
 ## Phase 2: Content migration and readability framing
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-03
 
 ### Task p02-t01: Move Provider Sync and Agentic Workflows content into canonical section routes
@@ -312,7 +312,7 @@ oat_generated: false
 
 ## Phase 3: README realignment and final audit
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-03
 
 ### Task p03-t01: Rewrite the root README as an overview and quick-start document
@@ -348,13 +348,37 @@ oat_generated: false
 
 ### Task p03-t02: Tighten package and tooling READMEs and run a final audit
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 3fd0cfe
 
 **Notes / Decisions:**
 
 - Package READMEs should be package-local quick-start/orientation docs.
 - Final audit must confirm no documentation was removed or materially narrowed without approval.
+
+**Outcome (required when completed):**
+
+- Rewrote the package and tooling READMEs into concise orientation and quick-start surfaces that point outward to the docs site for depth.
+- Tightened the publishable package READMEs so they now explain the package purpose, a small number of representative usage patterns, and where to find the canonical docs.
+- Confirmed with a final docs build that the new docs IA and README surfaces render cleanly without removing documentation coverage.
+
+**Files changed:**
+
+- `packages/cli/README.md` - trimmed to package orientation, representative commands, and docs links
+- `packages/docs-config/README.md` - tightened to package overview, install, usage, and docs link
+- `packages/docs-theme/README.md` - tightened to package overview, install, usage, and docs link
+- `packages/docs-transforms/README.md` - tightened to package overview, install, usage, and docs link
+- `tools/git-hooks/README.md` - rewritten as a concise tooling-oriented quick reference
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+- Audit result: package/tooling README changes did not remove canonical documentation; they now defer dense detail to the docs site by design
+
+**Issues Encountered:**
+
+- None
 
 ---
 
@@ -386,7 +410,7 @@ Chronological log of implementation progress.
 - [x] p02-t02: move Docs Tooling and CLI Utilities content into canonical routes
 - [x] p02-t03: add progressive disclosure to the highest-density docs pages
 - [x] p03-t01: rewrite the root README as an overview and quick-start document
-- [ ] p03-t02: tighten package and tooling READMEs and run a final audit
+- [x] p03-t02: tighten package and tooling READMEs and run a final audit
 
 **What changed (high level):**
 
@@ -400,6 +424,8 @@ Chronological log of implementation progress.
 - Moved docs-tooling and CLI-utility pages into canonical top-level routes and established the canonical shallow CLI reference
 - Added progressive-disclosure framing to the densest priority pages and finalized the guide cleanup
 - Rewrote the root README into a short overview that pushes dense detail to the docs site
+- Tightened package and tooling READMEs so they stay package-local and route readers into the canonical docs for dense detail
+- Ran a final docs build audit after the README updates
 
 **Decisions:**
 
@@ -411,16 +437,18 @@ Chronological log of implementation progress.
 - Phase 3 should now align the repository README surfaces with the new docs-first structure and confirm the final docs/readme surface is consistent
 - Final task should keep package/tooling READMEs concise and verify the finished docs surface still preserves coverage
 - The generated app-level index can temporarily show legacy guide structure until the underlying guide content is migrated
+- Dense/reference detail should live on the docs site; README files should stay concise and link outward
+- No documentation should be wholesale removed or materially narrowed as part of this reorganization without user approval
 
 **Follow-ups / TODO:**
 
-- Flesh out the canonical section landing pages so the new routes are usable on their own
+- Run the implementation review gate with `oat-project-review-provide`
 
 **Blockers:**
 
 - None
 
-**Session End:** 01:00Z
+**Session End:** 17:35Z
 
 ---
 
@@ -436,33 +464,51 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
+| Phase | Tests Run         | Passed | Failed | Coverage |
+| ----- | ----------------- | ------ | ------ | -------- |
+| 1     | `pnpm build:docs` | yes    | no     | n/a      |
+| 2     | `pnpm build:docs` | yes    | no     | n/a      |
+| 3     | `pnpm build:docs` | yes    | no     | n/a      |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Pending implementation
+- Reorganized the docs into clear adoption lanes for Provider Sync, Agentic Workflows, Docs Tooling, and CLI Utilities.
+- Separated the docs entrypoints so `/` is a concise overview and `/quickstart` is the only path-selection page.
+- Moved dense guide content into canonical section-owned routes and added readability framing to the highest-density pages.
+- Realigned the root, package, and tooling READMEs so they now act as orientation surfaces that point outward to the docs site for full depth.
 
 **Behavioral changes (user-facing):**
 
-- Pending implementation
+- New users now encounter a clearer top-level docs structure with less up-front density and more explicit section ownership.
+- The homepage explains what OAT is and why it exists without duplicating the start-here routing logic.
+- Quickstart now routes users into the correct adoption lane instead of acting as a command-heavy mini manual.
+- Dense technical pages now begin with brief framing and Quick Look guidance before the full detail.
 
 **Key files / modules:**
 
-- Pending implementation
+- `apps/oat-docs/docs/index.md`
+- `apps/oat-docs/docs/quickstart.md`
+- `apps/oat-docs/docs/provider-sync/**`
+- `apps/oat-docs/docs/workflows/**`
+- `apps/oat-docs/docs/docs-tooling/**`
+- `apps/oat-docs/docs/cli-utilities/**`
+- `apps/oat-docs/docs/reference/cli-reference.md`
+- `README.md`
+- `packages/*/README.md`
+- `tools/git-hooks/README.md`
 
 **Verification performed:**
 
-- Pending implementation
+- Ran `pnpm build:docs` after each implementation phase
+- Ran a final `pnpm build:docs` audit after the README/package README work
+- Confirmed the reorganization preserved documentation coverage rather than narrowing it
 
 **Design deltas (if any):**
 
-- None yet
+- Kept `/` as overview and `/quickstart` as the canonical Start Here page after explicitly evaluating both entrypoint options
+- Retained compatibility-oriented guide material where needed instead of forcing hard removals during the reorg
 
 ## References
 
