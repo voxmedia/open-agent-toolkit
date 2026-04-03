@@ -52,4 +52,3 @@ The docs contract no longer carries the obsolete `overview.md` deprecation note,
 ## Follow-up Items
 
 - Deferred review item: no dedicated `/provider-sync/getting-started` page was added. The current bootstrap routing is acceptable, but this remains a possible future cleanup if the team wants tighter alignment between the imported reference plan and the final docs shape.
-- The project is still awaiting a final re-review. At summary generation time, the selected review-fix tasks are complete and the next lifecycle step is `oat-project-review-provide code final`, followed by `oat-project-review-receive`.
