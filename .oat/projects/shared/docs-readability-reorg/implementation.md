@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-03
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | in_progress | 2     | 0/2       |
+| Phase 3 | in_progress | 2     | 1/2       |
 
-**Total:** 6/8 tasks completed
+**Total:** 7/8 tasks completed
 
 ---
 
@@ -317,19 +317,38 @@ oat_generated: false
 
 ### Task p03-t01: Rewrite the root README as an overview and quick-start document
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 0eb0fbd
 
 **Notes / Decisions:**
 
 - Dense documentation belongs on the docs site.
 - The root README should become concise and link outward to the deployed docs.
 
+**Outcome (required when completed):**
+
+- Rewrote the root README from a dense mini-docs surface into a concise monorepo overview.
+- Kept only the high-level capability framing, a short repo quickstart, and explicit links to the deployed docs site and canonical docs sections.
+- Removed the long mode-by-mode operational detail from the root README and pushed that depth to the docs site by design.
+
+**Files changed:**
+
+- `README.md` - rewritten as overview, quick-start, and docs-entry surface
+
+**Verification:**
+
+- Markdown formatting applied via commit hooks
+- Manual check: README now points users at the deployed docs for depth instead of duplicating the docs site inline
+
+**Issues Encountered:**
+
+- None
+
 ---
 
 ### Task p03-t02: Tighten package and tooling READMEs and run a final audit
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes / Decisions:**
@@ -366,7 +385,8 @@ Chronological log of implementation progress.
 - [x] p02-t01: move Provider Sync and Agentic Workflows content into canonical routes
 - [x] p02-t02: move Docs Tooling and CLI Utilities content into canonical routes
 - [x] p02-t03: add progressive disclosure to the highest-density docs pages
-- [ ] p03-t01: rewrite the root README as an overview and quick-start document
+- [x] p03-t01: rewrite the root README as an overview and quick-start document
+- [ ] p03-t02: tighten package and tooling READMEs and run a final audit
 
 **What changed (high level):**
 
@@ -379,6 +399,7 @@ Chronological log of implementation progress.
 - Moved Provider Sync and workflow-owned pages into canonical top-level routes
 - Moved docs-tooling and CLI-utility pages into canonical top-level routes and established the canonical shallow CLI reference
 - Added progressive-disclosure framing to the densest priority pages and finalized the guide cleanup
+- Rewrote the root README into a short overview that pushes dense detail to the docs site
 
 **Decisions:**
 
@@ -388,6 +409,7 @@ Chronological log of implementation progress.
 - The `guide` tree can temporarily act as a compatibility router while the remaining docs-tooling and CLI-utility pages are still being moved
 - The remaining Phase 2 work is readability framing only; the next pass should add overview/Quick Look affordances without reducing coverage
 - Phase 3 should now align the repository README surfaces with the new docs-first structure and confirm the final docs/readme surface is consistent
+- Final task should keep package/tooling READMEs concise and verify the finished docs surface still preserves coverage
 - The generated app-level index can temporarily show legacy guide structure until the underlying guide content is migrated
 
 **Follow-ups / TODO:**
