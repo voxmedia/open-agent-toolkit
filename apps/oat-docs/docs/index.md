@@ -23,23 +23,26 @@ OAT is organized as three distinct capabilities that can be used together or ind
 - [Contributing](contributing/index.md) - Contributor-facing guide for code, docs, markdown features, and skill authoring.
 - [Reference](reference/index.md) - Durable reference material for operating and maintaining OAT.
 
-## Choose a usage path
+## Why OAT Exists
 
-- Provider sync users:
-  - Start with [`quickstart.md`](quickstart.md)
-  - Then [`provider-sync/index.md`](provider-sync/index.md)
-- Agentic workflow users:
-  - Start with [`quickstart.md`](quickstart.md)
-  - Then [`workflows/index.md`](workflows/index.md)
-- Docs-tooling users:
-  - Start with [`quickstart.md`](quickstart.md)
-  - Then [`docs-tooling/index.md`](docs-tooling/index.md)
-- General CLI users:
-  - Start with [`quickstart.md`](quickstart.md)
-  - Then [`cli-utilities/index.md`](cli-utilities/index.md) and [`reference/index.md`](reference/index.md)
-- Contributors:
-  - Start with [`contributing/index.md`](contributing/index.md)
-  - Then route into code, docs, markdown features, or skill authoring guidance
+Teams often need some combination of:
+
+- provider-specific agent instructions that stay aligned from one tool to another
+- reusable skills and helper tooling that do not depend on one provider
+- a more structured workflow for longer-running implementation work
+
+OAT exists to make those layers work together without forcing teams to adopt all of them at once.
+
+## Start Here
+
+If you are new to OAT, start with [Quickstart](quickstart.md).
+
+That page is the canonical path-selection guide. Use it to choose whether you need:
+
+- provider sync
+- agentic workflows
+- docs tooling
+- general CLI utilities
 
 ## Source-of-truth hierarchy
 
@@ -47,3 +50,12 @@ OAT is organized as three distinct capabilities that can be used together or ind
 2. Skill behavior contracts: `.agents/skills/*/SKILL.md`
 3. OAT templates and runtime state: `.oat/templates/**`, `.oat/sync/**`, `.oat/config.json`, `.oat/config.local.json`
 4. Repo reference records: `.oat/repo/**`
+
+## Where To Go Next
+
+- New to OAT: [Quickstart](quickstart.md)
+- Need canonical-to-provider sync: [Provider Sync](provider-sync/index.md)
+- Need tracked project execution: [Agentic Workflows](workflows/index.md)
+- Need docs app or docs maintenance tooling: [Docs Tooling](docs-tooling/index.md)
+- Need general command-line help: [CLI Utilities](cli-utilities/index.md)
+- Need stable contracts and reference material: [Reference](reference/index.md)

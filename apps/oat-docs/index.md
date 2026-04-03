@@ -56,4 +56,4 @@
   - [Troubleshooting](reference/troubleshooting.md) — Common issues and fixes for skills visibility, worktrees, sync, and manifest problems.
 - Workflows
   - [Agentic Workflows](workflows/index.md) — Canonical section for tracked project workflows, ideas, lifecycle execution, and workflow-oriented skills.
-- [Quickstart](quickstart.md) — Quick-start guides for interop-only, provider-agnostic tooling, and optional workflow adoption.
+- [Quickstart](quickstart.md) — Start-here guide for choosing the right OAT adoption path.
