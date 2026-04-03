@@ -810,7 +810,28 @@ describe('help output snapshots', () => {
       Validate required structure of oat-* workflow skills
 
       Options:
-        -h, --help  display help for command
+        --base-ref <ref>  Also require changed canonical skills to bump version
+                          relative to this git ref
+        -h, --help        display help for command
+      "
+    `);
+  });
+
+  it('internal validate-skill-version-bumps --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'internal',
+      'validate-skill-version-bumps',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat internal validate-skill-version-bumps [options]
+
+      Validate that changed canonical skills bump version relative to a git base ref
+
+      Options:
+        --base-ref <ref>  Git ref used as the comparison base for changed canonical
+                          skills
+        -h, --help        display help for command
       "
     `);
   });

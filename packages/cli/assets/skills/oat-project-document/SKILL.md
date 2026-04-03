@@ -1,6 +1,6 @@
 ---
 name: oat-project-document
-version: 1.0.0
+version: 1.0.1
 description: Run when implementation is complete and documentation needs updating. Analyzes project artifacts to produce documentation update recommendations, then applies approved changes before project completion.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: true
@@ -222,7 +222,7 @@ Scan the repository for all documentation and instruction surfaces.
 
 4. **Reference files:**
    - Check `.oat/repo/reference/` directory
-   - Read: `current-state.md`, `backlog.md`, `roadmap.md`, `decision-record.md` (whichever exist)
+   - Read: `current-state.md`, `backlog/index.md`, `backlog/completed.md`, `roadmap.md`, `decision-record.md`, and relevant `backlog/items/*.md` files as needed (whichever exist)
 
 **3b. Instruction surfaces (secondary — strong signals only):**
 

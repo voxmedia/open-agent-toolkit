@@ -3,11 +3,14 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import type { ValidateOatSkillsOptions } from '@validation/index';
+import type {
+  ValidateChangedSkillVersionBumpsOptions,
+  ValidateChangedSkillVersionBumpsResult,
+} from '@validation/index';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createValidateOatSkillsCommand } from './validate-oat-skills';
+import { createValidateSkillVersionBumpsCommand } from './validate-skill-version-bumps';
 
 interface HarnessOptions {
   findings?: Array<{ file: string; message: string }>;
@@ -18,22 +21,25 @@ interface HarnessOptions {
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
-  validateOatSkills: ReturnType<typeof vi.fn>;
+  validateChangedSkillVersionBumps: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
-  const validateOatSkills = vi.fn(
-    async (_repoRoot: string, _options?: ValidateOatSkillsOptions) => {
+  const validateChangedSkillVersionBumps = vi.fn(
+    async (
+      _repoRoot: string,
+      _options: ValidateChangedSkillVersionBumpsOptions,
+    ): Promise<ValidateChangedSkillVersionBumpsResult> => {
       if (options.throwError) {
         throw new Error('boom');
       }
       return {
-        validatedSkillCount: options.validatedSkillCount ?? 3,
+        validatedSkillCount: options.validatedSkillCount ?? 2,
         findings: options.findings ?? [],
       };
     },
   );
 
-  const command = createValidateOatSkillsCommand({
+  const command = createValidateSkillVersionBumpsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
       dryRun: false,
@@ -44,10 +50,10 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
-    validateOatSkills,
+    validateChangedSkillVersionBumps,
   });
 
-  return { capture, command, validateOatSkills };
+  return { capture, command, validateChangedSkillVersionBumps };
 }
 
 async function runCommand(
@@ -67,14 +73,14 @@ async function runCommand(
   internal.addCommand(command);
   program.addCommand(internal);
   await program.parseAsync(
-    [...globalArgs, 'internal', 'validate-oat-skills', ...commandArgs],
+    [...globalArgs, 'internal', 'validate-skill-version-bumps', ...commandArgs],
     {
       from: 'user',
     },
   );
 }
 
-describe('createValidateOatSkillsCommand', () => {
+describe('createValidateSkillVersionBumpsCommand', () => {
   let originalExitCode: number | undefined;
 
   beforeEach(() => {
@@ -88,13 +94,29 @@ describe('createValidateOatSkillsCommand', () => {
 
   it('returns success output when no findings', async () => {
     const { command, capture } = createHarness({
-      validatedSkillCount: 5,
+      validatedSkillCount: 3,
       findings: [],
     });
 
-    await runCommand(command);
+    await runCommand(command, [], ['--base-ref', 'origin/main']);
 
-    expect(capture.info[0]).toContain('OK: validated 5 oat-* skills');
+    expect(capture.info[0]).toContain(
+      'OK: validated 3 changed canonical skill version bump checks against origin/main',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('uses a clearer success message when no skills changed', async () => {
+    const { command, capture } = createHarness({
+      validatedSkillCount: 0,
+      findings: [],
+    });
+
+    await runCommand(command, [], ['--base-ref', 'origin/main']);
+
+    expect(capture.info[0]).toContain(
+      'OK: 0 canonical skills changed relative to origin/main - nothing to validate',
+    );
     expect(process.exitCode).toBe(0);
   });
 
@@ -103,55 +125,53 @@ describe('createValidateOatSkillsCommand', () => {
       findings: [
         {
           file: '/tmp/workspace/.agents/skills/oat-demo/SKILL.md',
-          message: 'Missing frontmatter block (--- ... ---)',
+          message:
+            'Changed canonical skill must bump frontmatter version relative to origin/main (still 1.2.3)',
         },
       ],
     });
 
-    await runCommand(command);
+    await runCommand(command, [], ['--base-ref', 'origin/main']);
 
-    expect(capture.error.join('\n')).toContain('OAT skill validation failed:');
-    expect(capture.error.join('\n')).toContain('Missing frontmatter block');
     expect(capture.error.join('\n')).toContain(
-      'Fix the issues above, then re-run: pnpm oat:validate-skills',
+      'Canonical skill version validation failed:',
+    );
+    expect(capture.error.join('\n')).toContain(
+      'Changed canonical skill must bump frontmatter version',
+    );
+    expect(capture.error.join('\n')).toContain(
+      'oat internal validate-skill-version-bumps --base-ref origin/main',
     );
     expect(process.exitCode).toBe(1);
   });
 
   it('outputs JSON when --json is set', async () => {
     const { command, capture } = createHarness({
-      validatedSkillCount: 2,
+      validatedSkillCount: 1,
       findings: [],
     });
 
-    await runCommand(command, ['--json']);
+    await runCommand(command, ['--json'], ['--base-ref', 'origin/main']);
 
     expect(capture.info).toHaveLength(0);
     expect(capture.error).toHaveLength(0);
     expect(capture.jsonPayloads[0]).toMatchObject({
-      validatedSkillCount: 2,
+      baseRef: 'origin/main',
+      validatedSkillCount: 1,
       findings: [],
       status: 'ok',
     });
     expect(process.exitCode).toBe(0);
   });
 
-  it('returns exit code 2 for runtime errors', async () => {
-    const { command, capture } = createHarness({ throwError: true });
-
-    await runCommand(command);
-
-    expect(capture.error[0]).toContain('boom');
-    expect(process.exitCode).toBe(2);
-  });
-
   it('passes base-ref through to validation', async () => {
-    const { command, validateOatSkills } = createHarness();
+    const { command, validateChangedSkillVersionBumps } = createHarness();
 
     await runCommand(command, [], ['--base-ref', 'origin/main']);
 
-    expect(validateOatSkills).toHaveBeenCalledWith('/tmp/workspace', {
-      baseRef: 'origin/main',
-    });
+    expect(validateChangedSkillVersionBumps).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      { baseRef: 'origin/main' },
+    );
   });
 });

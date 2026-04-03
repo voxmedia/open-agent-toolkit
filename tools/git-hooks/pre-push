@@ -1,4 +1,6 @@
+#!/bin/sh
 # Fast quality gate before pushing — CI handles tests and full builds
+pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
 pnpm run type-check
 pnpm run lint
 pnpm run format
