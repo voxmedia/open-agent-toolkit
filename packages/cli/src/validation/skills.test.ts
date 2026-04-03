@@ -45,6 +45,33 @@ function validSkillContent(skillName: string): string {
   ].join('\n');
 }
 
+function currentSkillContent(
+  skillName: string,
+  version: string,
+  body: string,
+): string {
+  return [
+    '---',
+    `name: ${skillName}`,
+    `version: ${version}`,
+    'description: Use when validating oat skill structure. Provides a valid fixture for validator tests.',
+    'disable-model-invocation: true',
+    'user-invocable: true',
+    'allowed-tools: Read, Write',
+    '---',
+    '',
+    '# Demo',
+    '',
+    '## Progress Indicators (User-Facing)',
+    '',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ' OAT ▸ DEMO',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '',
+    body,
+  ].join('\n');
+}
+
 describe('validateOatSkills', () => {
   const tempDirs: string[] = [];
 
@@ -688,6 +715,159 @@ describe('validateOatSkills', () => {
     );
 
     const result = await validateOatSkills(root);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('requires changed canonical skills to bump version relative to base ref', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+
+    const skillPath = await createSkillFile(
+      root,
+      'oat-version-check',
+      currentSkillContent(
+        'oat-version-check',
+        '1.2.3',
+        'Updated skill instructions without a version bump.',
+      ),
+    );
+
+    const result = await validateOatSkills(
+      root,
+      { baseRef: 'origin/main' },
+      {
+        gitExecFile: async (_file, args) => {
+          if (args[0] === 'diff') {
+            return {
+              stdout: '.agents/skills/oat-version-check/SKILL.md\n',
+              stderr: '',
+            };
+          }
+
+          if (
+            args[0] === 'show' &&
+            args[1] === 'origin/main:.agents/skills/oat-version-check/SKILL.md'
+          ) {
+            return {
+              stdout: currentSkillContent(
+                'oat-version-check',
+                '1.2.3',
+                'Previous skill instructions.',
+              ),
+              stderr: '',
+            };
+          }
+
+          throw new Error(`Unexpected command: git ${args.join(' ')}`);
+        },
+      },
+    );
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message:
+        'Changed canonical skill must bump frontmatter version relative to origin/main (still 1.2.3)',
+    });
+  });
+
+  it('requires changed canonical skills to increase version relative to base ref', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+
+    const skillPath = await createSkillFile(
+      root,
+      'oat-version-regression',
+      currentSkillContent(
+        'oat-version-regression',
+        '1.2.2',
+        'Updated skill instructions with a regressed version.',
+      ),
+    );
+
+    const result = await validateOatSkills(
+      root,
+      { baseRef: 'origin/main' },
+      {
+        gitExecFile: async (_file, args) => {
+          if (args[0] === 'diff') {
+            return {
+              stdout: '.agents/skills/oat-version-regression/SKILL.md\n',
+              stderr: '',
+            };
+          }
+
+          if (
+            args[0] === 'show' &&
+            args[1] ===
+              'origin/main:.agents/skills/oat-version-regression/SKILL.md'
+          ) {
+            return {
+              stdout: currentSkillContent(
+                'oat-version-regression',
+                '1.2.3',
+                'Previous skill instructions.',
+              ),
+              stderr: '',
+            };
+          }
+
+          throw new Error(`Unexpected command: git ${args.join(' ')}`);
+        },
+      },
+    );
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message:
+        'Changed canonical skill version must increase relative to origin/main (base 1.2.3, current 1.2.2)',
+    });
+  });
+
+  it('allows changed canonical skills when the version increases', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+
+    await createSkillFile(
+      root,
+      'oat-version-bumped',
+      currentSkillContent(
+        'oat-version-bumped',
+        '1.2.4',
+        'Updated skill instructions with a version bump.',
+      ),
+    );
+
+    const result = await validateOatSkills(
+      root,
+      { baseRef: 'origin/main' },
+      {
+        gitExecFile: async (_file, args) => {
+          if (args[0] === 'diff') {
+            return {
+              stdout: '.agents/skills/oat-version-bumped/SKILL.md\n',
+              stderr: '',
+            };
+          }
+
+          if (
+            args[0] === 'show' &&
+            args[1] === 'origin/main:.agents/skills/oat-version-bumped/SKILL.md'
+          ) {
+            return {
+              stdout: currentSkillContent(
+                'oat-version-bumped',
+                '1.2.3',
+                'Previous skill instructions.',
+              ),
+              stderr: '',
+            };
+          }
+
+          throw new Error(`Unexpected command: git ${args.join(' ')}`);
+        },
+      },
+    );
+
     expect(result.findings).toEqual([]);
   });
 });

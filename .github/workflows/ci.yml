@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Validate skill version bumps
+        run: pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
+
       - name: Check
         run: pnpm check
 

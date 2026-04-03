@@ -6,13 +6,17 @@ import {
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   validateOatSkills as defaultValidateOatSkills,
+  type ValidateOatSkillsOptions,
   type ValidateOatSkillsResult,
 } from '@validation/index';
 import { Command } from 'commander';
 
 interface ValidateOatSkillsDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
-  validateOatSkills: (repoRoot: string) => Promise<ValidateOatSkillsResult>;
+  validateOatSkills: (
+    repoRoot: string,
+    options?: ValidateOatSkillsOptions,
+  ) => Promise<ValidateOatSkillsResult>;
 }
 
 const DEFAULT_DEPENDENCIES: ValidateOatSkillsDependencies = {
@@ -44,10 +48,11 @@ function reportFindings(
 
 async function runValidateOatSkills(
   context: CommandContext,
+  options: ValidateOatSkillsOptions,
   dependencies: ValidateOatSkillsDependencies,
 ): Promise<void> {
   try {
-    const result = await dependencies.validateOatSkills(context.cwd);
+    const result = await dependencies.validateOatSkills(context.cwd, options);
 
     if (result.findings.length > 0) {
       reportFindings(context, result);
@@ -88,10 +93,14 @@ export function createValidateOatSkillsCommand(
 
   return new Command('validate-oat-skills')
     .description('Validate required structure of oat-* workflow skills')
-    .action(async (_options, command: Command) => {
+    .option(
+      '--base-ref <ref>',
+      'Also require changed canonical skills to bump version relative to this git ref',
+    )
+    .action(async (options: ValidateOatSkillsOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      await runValidateOatSkills(context, dependencies);
+      await runValidateOatSkills(context, options, dependencies);
     });
 }
