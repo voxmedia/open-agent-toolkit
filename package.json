@@ -15,6 +15,7 @@
     "cli": "bash packages/cli/scripts/bundle-assets.sh && tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts",
     "dev": "turbo run dev",
     "dev:docs": "pnpm --filter oat-docs dev",
+    "docs:check-links": "tsx tools/docs/check-links.ts",
     "format": "turbo run format",
     "format:fix": "turbo run format:fix",
     "hooks:disable-all": "node tools/git-hooks/manage-hooks.js disable-all",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@playwright/test": "^1.51.1",
     "@types/node": "^22.10.0",
     "lint-staged": "^15.2.11",
     "oxfmt": "^0.36.0",

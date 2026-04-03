@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/docs-transforms",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "private": false,
   "description": "Remark/unified transforms for OAT documentation",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/docs-transforms",

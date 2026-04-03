@@ -27,13 +27,21 @@ Documentation should ship with the code it explains. This page covers the core d
    pnpm build:docs
    ```
 
-3. Run Markdown linting:
+3. Check rendered links against a local or deployed docs host:
+
+   ```bash
+   pnpm docs:check-links
+   # or target a local docs server explicitly
+   pnpm docs:check-links --url http://127.0.0.1:3000/open-agent-toolkit/
+   ```
+
+4. Run Markdown linting:
 
    ```bash
    pnpm --filter oat-docs docs:lint
    ```
 
-4. Run Markdown formatting:
+5. Run Markdown formatting:
 
    ```bash
    pnpm --filter oat-docs docs:format
