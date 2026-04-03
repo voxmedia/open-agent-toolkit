@@ -1,15 +1,22 @@
+import { posix as path } from 'node:path';
+
 import type { InlineCode, Link, Root } from 'mdast';
 import type { Plugin } from 'unified';
 import { visit } from 'unist-util-visit';
 
 /**
- * Strip `.md` extension and collapse `/index` from a relative path.
- * Returns null if the path is not a `.md` link that should be rewritten.
+ * Strip markdown extension and collapse `/index` from a relative path.
+ * Returns null if the path is not a markdown link that should be rewritten.
  */
 function cleanMdPath(raw: string): string | null {
-  if (!raw.endsWith('.md')) return null;
+  const extension = raw.endsWith('.mdx')
+    ? '.mdx'
+    : raw.endsWith('.md')
+      ? '.md'
+      : null;
+  if (!extension) return null;
 
-  let cleaned = raw.slice(0, -3);
+  let cleaned = raw.slice(0, -extension.length);
 
   if (cleaned.endsWith('/index')) {
     cleaned = cleaned.slice(0, -'/index'.length) || '.';
@@ -21,14 +28,56 @@ function cleanMdPath(raw: string): string | null {
   return cleaned;
 }
 
+function normalizeFsPath(raw: string): string {
+  return raw.replaceAll('\\', '/');
+}
+
+function docsRelativeFilePath(filePath: string): string | null {
+  const normalized = normalizeFsPath(filePath);
+  const marker = '/docs/';
+  const index = normalized.lastIndexOf(marker);
+  if (index === -1) return null;
+
+  return normalized.slice(index + marker.length);
+}
+
+function routePathFromDocsFile(filePath: string): string | null {
+  const cleaned = cleanMdPath(filePath);
+  if (cleaned === null) return null;
+  if (cleaned === '.') return '/';
+
+  return path.normalize(`/${cleaned}`);
+}
+
+function resolveRelativeDocsLink(
+  sourceFilePath: string,
+  targetPath: string,
+): string | null {
+  const sourceDocsFile = docsRelativeFilePath(sourceFilePath);
+  if (!sourceDocsFile) return null;
+
+  const targetDocsFile = path
+    .normalize(path.join('/', path.dirname(sourceDocsFile), targetPath))
+    .slice(1);
+
+  const currentRoute = routePathFromDocsFile(sourceDocsFile);
+  const targetRoute = routePathFromDocsFile(targetDocsFile);
+  if (!currentRoute || !targetRoute) return null;
+
+  const relativeRoute = path.relative(currentRoute, targetRoute) || '.';
+  return relativeRoute.startsWith('.') ? relativeRoute : `./${relativeRoute}`;
+}
+
 /**
- * Remark plugin that rewrites relative `.md` links to extensionless paths
- * for Fumadocs routing.
+ * Remark plugin that rewrites source-relative markdown links to routed,
+ * extensionless URLs that still work once pages are emitted with trailing
+ * slashes.
  *
  * URL rewriting:
- * - `quickstart.md` → `./quickstart`
- * - `cli/index.md` → `./cli`
- * - `../reference/index.md` → `../reference`
+ * - `quickstart.md` from `docs/index.md` → `./quickstart`
+ * - `documentation/commands.md` from `docs/guide/cli-reference.md`
+ *   → `../documentation/commands`
+ * - `../reference/index.md` from `docs/guide/concepts.md` → `../../reference`
  * - Absolute URLs and anchors are left unchanged.
  *
  * Display text cleanup:
@@ -38,7 +87,7 @@ function cleanMdPath(raw: string): string | null {
  *   while rendering clean labels on the web.
  */
 export const remarkLinks: Plugin<[], Root> = function remarkLinks() {
-  return (tree: Root) => {
+  return (tree: Root, file?: { path?: string }) => {
     visit(tree, 'link', (node: Link) => {
       const { url } = node;
 
@@ -55,15 +104,17 @@ export const remarkLinks: Plugin<[], Root> = function remarkLinks() {
       const cleaned = cleanMdPath(path);
       if (cleaned === null) return;
 
-      // With trailingSlash enabled, each page URL has an extra directory level
-      // (e.g., /guide/commands/ instead of /guide/commands), so ../ links need
-      // one additional ../ to reach the correct parent.
-      const adjusted = cleaned.startsWith('..') ? `../${cleaned}` : cleaned;
+      const rewrittenPath =
+        typeof file?.path === 'string'
+          ? (resolveRelativeDocsLink(file.path, path) ?? cleaned)
+          : cleaned;
 
       // Rewrite URL
       const prefix =
-        adjusted.startsWith('.') || adjusted.startsWith('/') ? '' : './';
-      node.url = prefix + adjusted + fragment;
+        rewrittenPath.startsWith('.') || rewrittenPath.startsWith('/')
+          ? ''
+          : './';
+      node.url = prefix + rewrittenPath + fragment;
 
       // Clean display text when it's a single inlineCode child with a .md path
       const firstChild = node.children[0];

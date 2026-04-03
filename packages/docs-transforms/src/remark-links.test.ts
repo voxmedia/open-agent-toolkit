@@ -11,10 +11,15 @@ interface LinkResult {
   text: string;
 }
 
-async function transformLinks(markdown: string): Promise<LinkResult[]> {
+async function transformLinks(
+  markdown: string,
+  filePath = '/repo/docs/index.md',
+): Promise<LinkResult[]> {
   const processor = unified().use(remarkParse).use(remarkLinks);
   const tree = processor.parse(markdown);
-  const result = (await processor.run(tree)) as Root;
+  const result = (await processor.run(tree, {
+    path: filePath,
+  } as never)) as Root;
   const links: LinkResult[] = [];
   visit(result, 'link', (node: Link) => {
     let text = '';
@@ -43,7 +48,10 @@ describe('remarkLinks — URL rewriting', () => {
   });
 
   it('handles parent-relative index links with trailing-slash adjustment', async () => {
-    const links = await transformLinks('[Back](../reference/index.md)');
+    const links = await transformLinks(
+      '[Back](../reference/index.md)',
+      '/repo/docs/guide/concepts.md',
+    );
     expect(urls(links)).toEqual(['../../reference']);
   });
 
@@ -75,8 +83,17 @@ describe('remarkLinks — URL rewriting', () => {
   it('adds extra ../ for deep parent-relative links (trailing-slash compensation)', async () => {
     const links = await transformLinks(
       '[Contract](../../reference/docs-index-contract.md)',
+      '/repo/docs/guide/documentation/index.md',
     );
-    expect(urls(links)).toEqual(['../../../reference/docs-index-contract']);
+    expect(urls(links)).toEqual(['../../reference/docs-index-contract']);
+  });
+
+  it('rewrites source-relative links for non-index pages', async () => {
+    const links = await transformLinks(
+      '[Docs Commands](documentation/commands.md)',
+      '/repo/docs/guide/cli-reference.md',
+    );
+    expect(urls(links)).toEqual(['../documentation/commands']);
   });
 
   it('leaves non-.md links unchanged', async () => {
@@ -107,6 +124,11 @@ describe('remarkLinks — display text cleanup', () => {
   it('preserves human-readable display text unchanged', async () => {
     const links = await transformLinks('[Quickstart](quickstart.md)');
     expect(links[0].text).toBe('Quickstart');
+  });
+
+  it('strips .mdx from inline code display text', async () => {
+    const links = await transformLinks('[`quickstart.mdx`](quickstart.mdx)');
+    expect(links).toEqual([{ url: './quickstart', text: 'quickstart' }]);
   });
 
   it('does not touch inline code that is not a .md path', async () => {
