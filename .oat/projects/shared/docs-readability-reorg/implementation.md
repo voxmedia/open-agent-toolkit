@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-03
-oat_current_task_id: p01-t03
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,17 +26,17 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 2/3       |
-| Phase 2 | pending     | 3     | 0/3       |
+| Phase 1 | completed   | 3     | 3/3       |
+| Phase 2 | in_progress | 3     | 0/3       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 2/8 tasks completed
+**Total:** 3/8 tasks completed
 
 ---
 
 ## Phase 1: Navigation and entrypoint restructuring
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-03
 
 ### Phase Summary (fill when phase is complete)
@@ -48,10 +48,13 @@ oat_generated: false
 - Added a shallow CLI Reference page under Reference so the canonical reference route now exists.
 - Reworked the homepage into a calmer overview page that explains OAT and points users to Start Here.
 - Rewrote `quickstart.md` into a lightweight path-selection page instead of a command-heavy mini manual.
+- Turned the four new top-level section routes into real landing pages with consistent section templates and overview pages.
+- Kept phase-1 links pointed at existing guide pages where necessary so the site stays coherent until the phase-2 content moves happen.
 
 **Key files touched:**
 
 - `apps/oat-docs/**` - docs IA, routing, and landing-page work
+- `.oat/projects/shared/docs-readability-reorg/**` - implementation tracking artifacts
 
 **Verification:**
 
@@ -138,8 +141,8 @@ oat_generated: false
 
 ### Task p01-t03: Create the new section landings and overview pages
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 9d8ead7
 
 **Notes / Decisions:**
 
@@ -149,17 +152,46 @@ oat_generated: false
   - start here
   - common tasks
   - go deeper
+- To avoid broken routes before the migration phase, the new top-level landing pages can link to existing guide-owned pages until those pages are moved.
+
+**Outcome (required when completed):**
+
+- Replaced the thin placeholder section stubs with real landing pages for Provider Sync, Agentic Workflows, Docs Tooling, and CLI Utilities.
+- Added new overview pages for all four top-level sections so each lane now has an approachable plain-language entry point.
+- Regenerated the app-level docs index so the new overview pages are discoverable in generated navigation output.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/provider-sync/index.md` - section landing with standard template and routing
+- `apps/oat-docs/docs/provider-sync/overview.md` - new plain-language overview page
+- `apps/oat-docs/docs/workflows/index.md` - section landing with standard template and routing
+- `apps/oat-docs/docs/workflows/overview.md` - new plain-language overview page
+- `apps/oat-docs/docs/docs-tooling/index.md` - section landing with standard template and routing
+- `apps/oat-docs/docs/docs-tooling/overview.md` - new plain-language overview page
+- `apps/oat-docs/docs/cli-utilities/index.md` - section landing with standard template and routing
+- `apps/oat-docs/docs/cli-utilities/overview.md` - new plain-language overview page
+- `apps/oat-docs/index.md` - regenerated app-level index after the new overview pages were added
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Issues Encountered:**
+
+- The canonical child routes for later phases do not all exist yet, so the new landing pages currently point into legacy guide pages for deep content where needed.
+- This is intentional and temporary; Phase 2 will move the owned content into the new section routes.
 
 ---
 
 ## Phase 2: Content migration and readability framing
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-03
 
 ### Task p02-t01: Move Provider Sync and Agentic Workflows content into canonical section routes
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes / Decisions:**
@@ -244,7 +276,8 @@ Chronological log of implementation progress.
 - [x] Backfilled `discovery.md`
 - [x] p01-t01: establish the new top-level docs IA and canonical routes
 - [x] p01-t02: rewrite `/` and `/quickstart`
-- [ ] p01-t03: create the new section landings and overview pages
+- [x] p01-t03: create the new section landings and overview pages
+- [ ] p02-t01: move Provider Sync and Agentic Workflows content into canonical routes
 
 **What changed (high level):**
 
@@ -253,11 +286,13 @@ Chronological log of implementation progress.
 - Backfilled the project artifacts for implementation readiness
 - Established canonical top-level docs section routes and root docs entry links
 - Split the docs entrypoint model so `/` is overview and `/quickstart` is Start Here
+- Established real landing pages plus overview pages for the four new top-level adoption lanes
 
 **Decisions:**
 
 - `/` remains overview and `/quickstart` remains the decision page
 - Reorganization must preserve information; removals or major rewrites require user approval
+- During phased migration, new section landings may point at legacy guide pages until canonical child routes are in place
 - The generated app-level index can temporarily show legacy guide structure until the underlying guide content is migrated
 
 **Follow-ups / TODO:**
