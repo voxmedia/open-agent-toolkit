@@ -1,6 +1,7 @@
 - [OAT Documentation](index.md) — An open-source toolkit for portable, provider-agnostic agent tooling and workflows.
 - Cli Utilities
-  - [CLI Utilities](cli-utilities/index.md) — Canonical section for general OAT CLI surfaces outside provider sync, docs tooling, and tracked workflows.
+  - [CLI Utilities](cli-utilities/index.md) — Standalone adoption lane for general OAT CLI surfaces outside provider sync, docs tooling, and tracked workflows.
+  - [CLI Utilities Overview](cli-utilities/overview.md) — Plain-language explanation of the OAT CLI surface that lives outside provider sync, docs tooling, and tracked workflows.
 - Contributing
   - [Contributing](contributing/index.md) — Contributor-facing guide for working on OAT code, docs, markdown patterns, and skill authoring.
   - [Contributing Code](contributing/code.md) — Contributor setup, repo structure, quality gates, and pull request expectations for OAT changes.
@@ -11,7 +12,8 @@
   - [Markdown Features](contributing/markdown-features.md) — Supported markdown patterns for OAT docs, including frontmatter, callouts, Mermaid, tabs, and code blocks.
   - [Writing Skills](contributing/skills.md) — Contributor guide to authoring OAT skills, including runtime contracts, governance, and where to start.
 - Docs Tooling
-  - [Docs Tooling](docs-tooling/index.md) — Canonical section for docs app setup, docs commands, and docs maintenance workflows.
+  - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for docs app setup, docs commands, and docs maintenance workflows.
+  - [Docs Tooling Overview](docs-tooling/overview.md) — Plain-language explanation of OAT docs support, docs app choices, and the index contract.
 - Guide
   - [User Guide](guide/index.md) — User-facing guide for operating OAT across provider sync, docs tooling, workflow execution, skills, and ideas.
   - Documentation
@@ -46,7 +48,8 @@
   - [CLI Bootstrap](guide/getting-started.md) — Foundational setup via oat init for canonical directories, provider adoption, and configuration.
   - [Tool Packs and Installed Assets](guide/tool-packs.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
 - Provider Sync
-  - [Provider Sync](provider-sync/index.md) — Canonical section for provider interoperability, drift management, and canonical-to-provider sync.
+  - [Provider Sync](provider-sync/index.md) — Standalone adoption lane for canonical assets, provider views, sync commands, and drift management.
+  - [Provider Sync Overview](provider-sync/overview.md) — Plain-language explanation of canonical assets, provider views, and the first-sync loop.
 - Reference
   - [Reference](reference/index.md) — Durable reference material for OAT file locations, docs contracts, directory structure, and troubleshooting.
   - [CLI Reference](reference/cli-reference.md) — Scannable reference for the current OAT CLI surface, with links to the deeper owning sections for each command family.
@@ -55,5 +58,6 @@
   - [`.oat` Directory Structure](reference/oat-directory-structure.md) — Canonical .oat/ tree reference: config, projects, sync state, templates, and per-file purpose.
   - [Troubleshooting](reference/troubleshooting.md) — Common issues and fixes for skills visibility, worktrees, sync, and manifest problems.
 - Workflows
-  - [Agentic Workflows](workflows/index.md) — Canonical section for tracked project workflows, ideas, lifecycle execution, and workflow-oriented skills.
+  - [Agentic Workflows](workflows/index.md) — Standalone adoption lane for tracked OAT projects, workflow lifecycle execution, ideas, and workflow-oriented skills.
+  - [Agentic Workflows Overview](workflows/overview.md) — Plain-language explanation of when to use tracked OAT projects versus direct CLI usage.
 - [Quickstart](quickstart.md) — Start-here guide for choosing the right OAT adoption path.

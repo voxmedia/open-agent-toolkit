@@ -1,26 +1,40 @@
 ---
 title: Agentic Workflows
-description: Canonical section for tracked project workflows, ideas, lifecycle execution, and workflow-oriented skills.
+description: Standalone adoption lane for tracked OAT projects, workflow lifecycle execution, ideas, and workflow-oriented skills.
 ---
 
 # Agentic Workflows
 
-This is the canonical top-level section for OAT workflow-driven project execution.
+Agentic Workflows is the OAT lane for tracked, resumable work on top of the base CLI and provider-sync layers.
 
-Use this section when you want tracked project artifacts, resumable lifecycle execution, workflow-oriented skills, and idea-to-project flows.
+Use this section when you want explicit project artifacts, stable task IDs, review loops, and resumable execution across longer-running work.
 
-For now, the detailed material still lives under the existing guide pages while this section is being fully established.
+## What This Section Is
 
-## Contents
+This section explains when workflow mode is worth the overhead, how OAT projects move through lifecycle phases, and how ideas, skills, reviews, and PR flow fit into that model.
 
-- [Overview](../guide/workflow/index.md) - Current workflow overview and lifecycle framing.
-- [Skills](../guide/skills/index.md) - Current user-facing skills guide.
-- [Ideas](../guide/ideas/index.md) - Current ideas workflow guide.
-- [Ideas Lifecycle](../guide/ideas/lifecycle.md) - Current ideas lifecycle details.
-- [Lifecycle](../guide/workflow/lifecycle.md) - Current end-to-end workflow lifecycle.
-- [HiLL Checkpoints](../guide/workflow/hill-checkpoints.md) - Current checkpoint behavior.
-- [Artifacts](../guide/workflow/artifacts.md) - Current project artifact contracts.
-- [State Machine](../guide/workflow/state-machine.md) - Current workflow and review state transitions.
-- [Reviews](../guide/workflow/reviews.md) - Current review loop guidance.
-- [PR Flow](../guide/workflow/pr-flow.md) - Current PR flow guidance.
-- [Repository Analysis](../guide/workflow/repo-analysis.md) - Current repo-wide analysis workflows.
+## Who It's For
+
+- Teams doing multi-session or multi-phase work that benefits from tracked artifacts
+- Users who want explicit discovery, planning, implementation, and review state
+- Repos that need a repeatable human-in-the-loop execution model
+
+## Start Here
+
+- Read [Overview](overview.md) to decide whether you want workflow mode or just direct CLI usage.
+- Use [Skills](../guide/skills/index.md) when you want task-oriented guidance on the most useful workflow skills.
+- Go to [Workflow & Projects](../guide/workflow/index.md) when you need the lifecycle and artifact model in detail.
+
+## Common Tasks
+
+- Capture or refine early work in [Ideas](../guide/ideas/index.md).
+- Understand how tracked projects progress in [Workflow & Projects](../guide/workflow/index.md).
+- Learn the artifact contract in [Artifacts](../guide/workflow/artifacts.md).
+- Understand review and PR expectations in [Reviews](../guide/workflow/reviews.md) and [PR Flow](../guide/workflow/pr-flow.md).
+
+## Go Deeper
+
+- [Overview](overview.md) - What the workflow layer adds and when to use it.
+- [Skills](../guide/skills/index.md) - Workflow-oriented skill discovery and use-case routing.
+- [Ideas](../guide/ideas/index.md) - Idea capture, refinement, and promotion flows.
+- [Workflow & Projects](../guide/workflow/index.md) - Lifecycle, artifacts, reviews, PR flow, and repository analysis.
