@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-03
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -27,10 +27,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | in_progress | 3     | 0/3       |
+| Phase 2 | in_progress | 3     | 1/3       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 3/8 tasks completed
+**Total:** 4/8 tasks completed
 
 ---
 
@@ -191,19 +191,48 @@ oat_generated: false
 
 ### Task p02-t01: Move Provider Sync and Agentic Workflows content into canonical section routes
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 1c0b759
 
 **Notes / Decisions:**
 
 - Move and reorganize existing guide content without narrowing coverage.
 - Keep cross-cutting skill guidance, but make the Skills page task-oriented first.
 
+**Outcome (required when completed):**
+
+- Moved the owned Provider Sync detail pages into `/provider-sync/*` so the top-level section now owns its detailed command, provider, drift, and config docs.
+- Moved workflow-owned pages into `/workflows/*`, including new canonical homes for skills, ideas, and project lifecycle content.
+- Reworked the old `guide/index.md` into a compatibility router and rewired remaining reference/concepts pages to the new canonical routes.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/provider-sync/**` - canonical provider-sync section now owns its detailed docs
+- `apps/oat-docs/docs/workflows/**` - canonical workflows section now owns skills, ideas, and project lifecycle docs
+- `apps/oat-docs/docs/guide/index.md` - converted to a compatibility router
+- `apps/oat-docs/docs/guide/cli-reference.md` - relinked to canonical provider-sync and workflow routes
+- `apps/oat-docs/docs/guide/concepts.md` - relinked to canonical provider-sync and workflow routes
+- `apps/oat-docs/docs/guide/configuration.md` - relinked to canonical provider-sync config docs
+- `apps/oat-docs/docs/guide/getting-started.md` - relinked provider-sync references
+- `apps/oat-docs/docs/guide/tool-packs.md` - relinked provider-sync references
+- `apps/oat-docs/docs/contributing/design-principles.md` - relinked provider-sync references
+- `apps/oat-docs/index.md` - regenerated app-level index after the route migration
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Issues Encountered:**
+
+- The `Guide` bucket still exists because Docs Tooling, CLI Utilities, and concept/bootstrap/reference-adjacent router pages have not finished moving yet.
+- This is expected and will be reduced further in `p02-t02`.
+
 ---
 
 ### Task p02-t02: Move Docs Tooling and CLI Utilities content into their canonical sections
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes / Decisions:**
@@ -277,7 +306,8 @@ Chronological log of implementation progress.
 - [x] p01-t01: establish the new top-level docs IA and canonical routes
 - [x] p01-t02: rewrite `/` and `/quickstart`
 - [x] p01-t03: create the new section landings and overview pages
-- [ ] p02-t01: move Provider Sync and Agentic Workflows content into canonical routes
+- [x] p02-t01: move Provider Sync and Agentic Workflows content into canonical routes
+- [ ] p02-t02: move Docs Tooling and CLI Utilities content into canonical routes
 
 **What changed (high level):**
 
@@ -287,12 +317,14 @@ Chronological log of implementation progress.
 - Established canonical top-level docs section routes and root docs entry links
 - Split the docs entrypoint model so `/` is overview and `/quickstart` is Start Here
 - Established real landing pages plus overview pages for the four new top-level adoption lanes
+- Moved Provider Sync and workflow-owned pages into canonical top-level routes
 
 **Decisions:**
 
 - `/` remains overview and `/quickstart` remains the decision page
 - Reorganization must preserve information; removals or major rewrites require user approval
 - During phased migration, new section landings may point at legacy guide pages until canonical child routes are in place
+- The `guide` tree can temporarily act as a compatibility router while the remaining docs-tooling and CLI-utility pages are still being moved
 - The generated app-level index can temporarily show legacy guide structure until the underlying guide content is migrated
 
 **Follow-ups / TODO:**
