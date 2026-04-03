@@ -7,6 +7,12 @@ description: 'Tool-pack lifecycle commands (oat tools) for installing, updating,
 
 This page covers CLI commands that manage bundled OAT tool packs and installed OAT skill/agent assets in canonical directories.
 
+## Quick Look
+
+- What it does: explains how bundled OAT packs are installed, updated, inspected, and removed.
+- When to use it: when you need to add capabilities to a repo, update installed skills, or understand which packs own which tools.
+- Primary commands: `oat tools list`, `oat tools install`, `oat tools update`, `oat tools remove`
+
 ## Bundled packs at a glance
 
 - `core` - foundational diagnostics and docs access (`oat-doctor`, `oat-docs`)

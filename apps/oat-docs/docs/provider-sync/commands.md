@@ -17,6 +17,12 @@ These command definitions inherit the cross-cutting CLI conventions in:
 - `oat tools ...` (tool-pack lifecycle — install, update, remove, list, info): `../cli-utilities/tool-packs.md`
 - `oat doctor` (cross-cutting diagnostics): `../reference/cli-reference.md`
 
+## Quick Look
+
+- What it does: defines the day-to-day provider-sync command surface for inspecting state, reconciling provider views, and changing provider enablement.
+- When to use it: after you have canonical assets in place and need to check sync state, write provider views, or change provider config.
+- Primary commands: `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`
+
 ## `oat status`
 
 Purpose:

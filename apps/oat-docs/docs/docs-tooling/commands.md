@@ -9,6 +9,12 @@ OAT includes a dedicated docs command family for bootstrapping and maintaining
 documentation apps. Two frameworks are supported: **Fumadocs** (Next.js-based)
 and **MkDocs Material**.
 
+## Quick Look
+
+- What it does: documents the docs-specific CLI surface for scaffolding apps, migrating markdown, generating indexes, and syncing navigation.
+- When to use it: when you already know you are working on a docs surface and need the exact command-level behavior.
+- Primary commands: `oat docs init`, `oat docs migrate`, `oat docs generate-index`, `oat docs nav sync`
+
 ## Command surface
 
 | Command                   | Purpose                                                                              |
@@ -50,6 +56,7 @@ Supported flags:
 - `--target-dir <path>`
 - `--framework <fumadocs|mkdocs>` (default: `fumadocs` in non-interactive mode)
 - `--description <text>` (site description, optional)
+- `--lint <none|markdownlint-cli2>`
 - `--format <oxfmt|none>`
 - `--yes`
 

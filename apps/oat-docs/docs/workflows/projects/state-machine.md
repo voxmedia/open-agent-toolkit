@@ -5,6 +5,14 @@ description: 'Workflow and review state transitions across lifecycle phases and 
 
 # State Machine
 
+This page is the compact contract for how project lifecycle state and review state advance across a tracked OAT project.
+
+## Quick Look
+
+- What it does: defines the allowed lifecycle and review-state transitions recorded in `state.md` and `plan.md`.
+- When to use it: when you need to debug lifecycle routing, review posture, or why a project is not advancing to the next phase.
+- Primary artifacts: `state.md`, `plan.md`, `implementation.md`
+
 ## State Transition Map
 
 ```mermaid

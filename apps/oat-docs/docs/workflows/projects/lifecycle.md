@@ -23,6 +23,12 @@ OAT lifecycle order:
 
 **Shortcut:** `oat-project-next` reads project state and invokes the correct next skill automatically — use it instead of remembering which skill comes next. Complements `oat-project-progress` (which is read-only diagnostic).
 
+## Quick Look
+
+- What it does: explains the end-to-end lifecycle for tracked OAT projects, including alternate quick and import lanes.
+- When to use it: when you need the actual project execution model, not just a high-level overview of workflow mode.
+- Primary entry points: `oat-project-new`, `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-implement`
+
 ## Lifecycle Map
 
 ```mermaid
