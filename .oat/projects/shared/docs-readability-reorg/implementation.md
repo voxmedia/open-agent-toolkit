@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-03
-oat_current_task_id: p04-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 2     | 1/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 3     | 3/3       |
+| Phase 2 | completed | 3     | 3/3       |
+| Phase 3 | completed | 2     | 2/2       |
+| Phase 4 | completed | 2     | 2/2       |
 
-**Total:** 9/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ---
 
@@ -414,19 +414,43 @@ oat_generated: false
   - Disposition: deferred with rationale
   - Rationale: current user routing works through `cli-utilities/bootstrap`, and the normalized implementation plan did not require a separate canonical page. This is plan/reference alignment cleanup rather than a correctness gap.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill starting at `p04-t01`.
+**Next:** Re-run `oat-project-review-provide code final`, then process the re-review with `oat-project-review-receive`.
 
-After the fix tasks are complete:
-
-- Update the review row status to `fixes_completed`
-- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+**Review fix status:** `fixes_completed`
 
 ---
 
 ## Phase 4: Review fixes
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-03
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Closed the selected review follow-ups by cleaning up the stale guide-directory clutter and removing obsolete contract wording.
+- Left the project in the correct lifecycle posture for a final re-review rather than incorrectly marking the review as passed.
+
+**Key files touched:**
+
+- `apps/oat-docs/docs/reference/docs-index-contract.md` - removed the obsolete `overview.md` deprecation note
+- `apps/oat-docs/docs/guide/` - removed stale empty subdirectories from the local workspace
+- `.oat/projects/shared/docs-readability-reorg/**` - updated lifecycle tracking after the review-fix work
+
+**Verification:**
+
+- Run: `find apps/oat-docs/docs/guide -empty -type d`
+- Result: pass
+- Run: `rg -n "overview\\.md is deprecated" apps/oat-docs/docs/reference/docs-index-contract.md`
+- Result: pass
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Notes / Decisions:**
+
+- `p04-t01` resolved a real review concern but produced no tracked Git diff because empty directories are not versioned.
+- The review row moves to `fixes_completed`, not `passed`; a fresh final review is still required.
 
 ### Task p04-t01: (review) Remove empty legacy guide subdirectories
 
@@ -455,12 +479,28 @@ After the fix tasks are complete:
 
 ### Task p04-t02: (review) Remove obsolete overview deprecation note from docs index contract
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** a29dacb
 
 **Notes / Decisions:**
 
 - The goal is to remove obsolete migration language, not to rename or restructure the new section overview pages.
+
+**Outcome (required when completed):**
+
+- Removed the outdated deprecation sentence from the docs index contract so the contract no longer implies that the new overview leaf pages are suspect.
+- Verified that the old wording is gone and that the docs site still builds cleanly after the contract update.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/reference/docs-index-contract.md` - removed obsolete `overview.md` deprecation guidance
+
+**Verification:**
+
+- Run: `rg -n "overview\\.md is deprecated" apps/oat-docs/docs/reference/docs-index-contract.md`
+- Result: pass
+- Run: `pnpm build:docs`
+- Result: pass
 
 ---
 
@@ -484,7 +524,7 @@ Chronological log of implementation progress.
 - [x] p03-t02: tighten package and tooling READMEs and run a final audit
 - [x] final review received
 - [x] p04-t01: remove empty legacy guide subdirectories
-- [ ] p04-t02: remove obsolete overview deprecation note from docs index contract
+- [x] p04-t02: remove obsolete overview deprecation note from docs index contract
 
 **What changed (high level):**
 
@@ -502,6 +542,7 @@ Chronological log of implementation progress.
 - Ran a final docs build audit after the README updates
 - Received the final code review and converted two selected minor findings into explicit follow-up tasks
 - Cleared the stale empty legacy guide directories called out in the review and confirmed the cleanup was workspace-only
+- Removed the obsolete `overview.md` deprecation note from the docs index contract and revalidated the docs build
 
 **Decisions:**
 
@@ -517,6 +558,7 @@ Chronological log of implementation progress.
 - No documentation should be wholesale removed or materially narrowed as part of this reorganization without user approval
 - Minor finding `m2` remains deferred because the current provider-sync onboarding route is acceptable and the normalized plan did not require a dedicated page
 - Review-fix task `p04-t01` did not produce a tracked diff because the cleanup removed only untracked empty directories
+- Review fixes are implemented and the project is now awaiting a final re-review rather than additional implementation work
 
 **Follow-ups / TODO:**
 
@@ -526,7 +568,7 @@ Chronological log of implementation progress.
 
 - None
 
-**Session End:** 19:06Z
+**Session End:** 19:08Z
 
 ---
 
@@ -547,6 +589,7 @@ Track test execution during implementation.
 | 1     | `pnpm build:docs` | yes    | no     | n/a      |
 | 2     | `pnpm build:docs` | yes    | no     | n/a      |
 | 3     | `pnpm build:docs` | yes    | no     | n/a      |
+| 4     | `pnpm build:docs` | yes    | no     | n/a      |
 
 ## Final Summary (for PR/docs)
 
@@ -556,6 +599,7 @@ Track test execution during implementation.
 - Separated the docs entrypoints so `/` is a concise overview and `/quickstart` is the only path-selection page.
 - Moved dense guide content into canonical section-owned routes and added readability framing to the highest-density pages.
 - Realigned the root, package, and tooling READMEs so they now act as orientation surfaces that point outward to the docs site for full depth.
+- Closed the selected post-review cleanup items by removing obsolete contract wording and clearing the stale guide-directory clutter.
 
 **Behavioral changes (user-facing):**
 
@@ -587,6 +631,7 @@ Track test execution during implementation.
 
 - Kept `/` as overview and `/quickstart` as the canonical Start Here page after explicitly evaluating both entrypoint options
 - Retained compatibility-oriented guide material where needed instead of forcing hard removals during the reorg
+- Chose to defer the missing `/provider-sync/getting-started` page because the current bootstrap routing remains acceptable and non-blocking
 
 ## References
 
