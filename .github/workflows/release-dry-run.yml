@@ -11,6 +11,7 @@ on:
       - 'pnpm-workspace.yaml'
       - 'turbo.json'
       - '.nvmrc'
+      - '.github/actions/**'
       - '.github/workflows/ci.yml'
       - '.github/workflows/release*.yml'
   workflow_dispatch:
@@ -37,16 +38,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
       # Release flows stay on Node 24 because publishing and dry-run verification
       # are coupled to the npm runtime we use for trusted publishing.
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup pnpm
+        uses: ./.github/actions/setup-pnpm
         with:
           node-version: '24'
-          cache: 'pnpm'
+          pnpm-version: '10.13.1'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Show runtime versions

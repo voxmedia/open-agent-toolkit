@@ -53,7 +53,7 @@ interface RunDoctorArgs {
 function defaultManifest(): Manifest {
   return {
     version: 1,
-    oatVersion: '0.0.5',
+    oatVersion: '0.0.16',
     entries: [],
     lastUpdated: '2026-02-14T00:00:00.000Z',
   };

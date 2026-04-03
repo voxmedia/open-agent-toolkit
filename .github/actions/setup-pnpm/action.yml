@@ -1,0 +1,52 @@
+name: Setup Node and pnpm
+description: Set up Node.js, activate pnpm through Corepack, and cache the pnpm store
+
+inputs:
+  node-version:
+    description: Explicit Node.js version to install
+    required: false
+  node-version-file:
+    description: File containing the Node.js version to install
+    required: false
+  pnpm-version:
+    description: pnpm version to activate through Corepack
+    required: false
+    default: '10.13.1'
+  registry-url:
+    description: Optional npm registry URL passed to actions/setup-node
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js from version file
+      if: ${{ inputs.node-version-file != '' }}
+      uses: actions/setup-node@v6
+      with:
+        node-version-file: ${{ inputs.node-version-file }}
+        registry-url: ${{ inputs.registry-url }}
+
+    - name: Setup Node.js from explicit version
+      if: ${{ inputs.node-version-file == '' && inputs.node-version != '' }}
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
+        registry-url: ${{ inputs.registry-url }}
+
+    - name: Enable Corepack
+      shell: bash
+      run: |
+        corepack enable
+        corepack prepare pnpm@${{ inputs.pnpm-version }} --activate
+
+    - name: Resolve pnpm store path
+      shell: bash
+      run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+
+    - name: Cache pnpm store
+      uses: actions/cache@v5
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-

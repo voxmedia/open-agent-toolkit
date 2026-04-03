@@ -40,16 +40,13 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.RELEASE_TAG }}
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
       # Release flows stay on Node 24 because trusted publishing uses the npm
       # runtime from this job, not the repo's general development baseline.
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup pnpm
+        uses: ./.github/actions/setup-pnpm
         with:
           node-version: '24'
-          cache: 'pnpm'
+          pnpm-version: '10.13.1'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Show runtime versions
