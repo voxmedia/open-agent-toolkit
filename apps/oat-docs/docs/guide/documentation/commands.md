@@ -50,6 +50,7 @@ Supported flags:
 - `--target-dir <path>`
 - `--framework <fumadocs|mkdocs>` (default: `fumadocs` in non-interactive mode)
 - `--description <text>` (site description, optional)
+- `--lint <none|markdownlint-cli2>`
 - `--format <oxfmt|none>`
 - `--yes`
 

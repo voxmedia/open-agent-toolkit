@@ -208,6 +208,39 @@ describe('scaffoldDocsApp', () => {
     ).rejects.toThrow();
   });
 
+  it('scaffolds markdownlint-cli2 when lint mode is enabled', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-lint-'));
+    createdRoots.push(root);
+    const assetsRoot = await seedAssets(
+      root,
+      'docs-app-mkdocs',
+      MKDOCS_TEMPLATE_FILES,
+    );
+
+    const result = await scaffoldDocsApp({
+      assetsRoot,
+      repoRoot: root,
+      repoShape: 'single-package',
+      framework: 'mkdocs',
+      appName: 'docs',
+      targetDir: 'docs',
+      siteDescription: '',
+      lint: 'markdownlint-cli2',
+      format: 'none',
+    });
+
+    const packageJson = JSON.parse(
+      await readFile(join(result.appRoot, 'package.json'), 'utf8'),
+    ) as {
+      scripts: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+    expect(packageJson.scripts['docs:lint']).toBe(
+      "markdownlint-cli2 'docs/**/*.md'",
+    );
+    expect(packageJson.devDependencies['markdownlint-cli2']).toBe('^0.13.0');
+  });
+
   it('scaffolds a Fumadocs app with token replacements', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-docs-fuma-'));
     createdRoots.push(root);
