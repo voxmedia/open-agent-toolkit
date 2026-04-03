@@ -55,13 +55,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      release_tag: ${{ steps.create_release_tag.outputs.release_tag }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          token: ${{ secrets.VOXOPS_GITHUB_ACCESS_TOKEN || github.token }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -76,8 +77,17 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Create release tag for lockstep package bump
+        id: create_release_tag
         run: >
           pnpm exec tsx tools/release/create-public-package-tag.ts
           --base-ref "${{ github.event.before }}"
           --head-ref "${{ github.sha }}"
           --push
+
+  release-public-packages:
+    if: needs.tag-public-release.outputs.release_tag != ''
+    needs: tag-public-release
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.tag-public-release.outputs.release_tag }}
+    secrets: inherit

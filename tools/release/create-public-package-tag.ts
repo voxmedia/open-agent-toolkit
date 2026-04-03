@@ -1,3 +1,4 @@
+import { appendFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 import { getPublicPackageContracts } from '../../packages/cli/src/release/public-package-contract';
@@ -113,7 +114,7 @@ async function createTag(tagName: string, headRef: string, push: boolean) {
 
   if (tagExists) {
     console.log(`release tag ${tagName} already exists`);
-    return;
+    return false;
   }
 
   await runCommand('git', ['tag', tagName, headRef]);
@@ -123,6 +124,17 @@ async function createTag(tagName: string, headRef: string, push: boolean) {
     await runCommand('git', ['push', 'origin', `refs/tags/${tagName}`]);
     console.log(`pushed release tag ${tagName}`);
   }
+
+  return true;
+}
+
+async function writeGithubOutput(name: string, value: string) {
+  const outputPath = process.env.GITHUB_OUTPUT?.trim();
+  if (!outputPath) {
+    return;
+  }
+
+  await appendFile(outputPath, `${name}=${value}\n`, 'utf8');
 }
 
 async function main() {
@@ -133,6 +145,7 @@ async function main() {
     console.log(
       'no comparable base ref available; skipping release tag creation',
     );
+    await writeGithubOutput('release_tag', '');
     return;
   }
 
@@ -140,6 +153,7 @@ async function main() {
     console.log(
       `base ref ${baseRef} is not available locally; skipping release tag creation`,
     );
+    await writeGithubOutput('release_tag', '');
     return;
   }
 
@@ -154,10 +168,12 @@ async function main() {
     console.log(
       'no public package version bump detected; skipping release tag creation',
     );
+    await writeGithubOutput('release_tag', '');
     return;
   }
 
   await createTag(tagName, options.headRef, options.push);
+  await writeGithubOutput('release_tag', tagName);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
