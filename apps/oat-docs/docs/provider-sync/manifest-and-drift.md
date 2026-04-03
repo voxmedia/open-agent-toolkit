@@ -5,6 +5,14 @@ description: 'Manifest tracking, drift states, and stray adoption for canonical-
 
 # Manifest and Drift
 
+This page explains how OAT remembers what it manages and how it distinguishes clean sync state from drift, missing files, or unmanaged strays.
+
+## Quick Look
+
+- What it does: describes the manifest contract behind provider sync and the drift/adoption model built on top of it.
+- When to use it: when `oat status` shows drift or strays and you need to understand why OAT thinks a file is managed, missing, or adoptable.
+- Primary commands: `oat status`, `oat init`, `oat sync`
+
 ## Manifest locations
 
 - Project: `.oat/sync/manifest.json`

@@ -12,7 +12,6 @@ OAT docs navigation is generated from each directory `index.md`, not from hand-m
 - Every documentation directory must contain an `index.md`.
 - Every `index.md` must include a `## Contents` section.
 - The `## Contents` section is the only machine-readable source used by `oat docs nav sync`.
-- `overview.md` is deprecated. Replace it with `index.md`, or convert it to a descriptive leaf page when the directory already has its own `index.md`.
 
 ## `## Contents` format
 
@@ -49,5 +48,5 @@ Generated behavior:
 
 ## If You Are Trying To...
 
-- learn the docs workflow or docs commands as a user, start with [Documentation](../guide/documentation/index.md)
+- learn the docs workflow or docs commands as a user, start with [Docs Tooling](../docs-tooling/index.md)
 - contribute or restructure docs in this repo, pair this contract with [Contributing to OAT Docs](../contributing/documentation.md)

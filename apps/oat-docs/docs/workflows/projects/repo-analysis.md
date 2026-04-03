@@ -7,6 +7,12 @@ description: 'Repository-level analysis commands for collecting and triaging PR 
 
 The `oat repo` command group provides repository-level analysis and insight tools. These commands operate across merged pull requests rather than on individual PRs.
 
+## Quick Look
+
+- What it does: collects and triages review-comment data across merged pull requests so you can mine recurring feedback patterns.
+- When to use it: when you want repo-wide review insight rather than project-by-project execution guidance.
+- Primary commands: `oat repo pr-comments collect`, `oat repo pr-comments triage-collection`
+
 ## Commands
 
 | Command                                  | Purpose                                                              |

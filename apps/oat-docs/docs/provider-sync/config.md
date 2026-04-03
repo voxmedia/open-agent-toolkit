@@ -74,4 +74,4 @@ It is read by:
 
 - [`commands.md`](commands.md)
 - [`manifest-and-drift.md`](manifest-and-drift.md)
-- [`../../reference/oat-directory-structure.md`](../../reference/oat-directory-structure.md)
+- [`../reference/oat-directory-structure.md`](../reference/oat-directory-structure.md)

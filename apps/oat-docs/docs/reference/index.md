@@ -5,12 +5,13 @@ description: 'Durable reference material for OAT file locations, docs contracts,
 
 # Reference
 
-Use this section for durable facts and contracts that should stay stable even as the guide and contributing flows evolve.
+Use this section for durable facts and contracts that should stay stable even as the user-facing adoption lanes and contributor flows evolve.
 
-Contributor how-to material now lives under `contributing/`, and audience-routing guidance lives under `guide/`.
+Contributor how-to material now lives under `contributing/`, and user-facing routing now lives in the top-level adoption lanes.
 
 ## Contents
 
+- [CLI Reference](cli-reference.md) - Shallow map of the OAT command surface with links to owning sections.
 - [File Locations](file-locations.md) - Where core OAT files, assets, and artifacts live.
 - [Docs Index Contract](docs-index-contract.md) - Rules for directory `index.md` files and reserved `## Contents` sections.
 - [OAT Directory Structure](oat-directory-structure.md) - Canonical `.oat/` tree map and the role of each major directory.
@@ -24,6 +25,6 @@ Contributor how-to material now lives under `contributing/`, and audience-routin
 
 ## Related Sections
 
-- [CLI Reference](../guide/cli-reference.md) for the command-surface map
-- [Documentation](../guide/documentation/index.md) for docs app setup and workflow guidance
+- [CLI Reference](cli-reference.md) for the command-surface map
+- [Docs Tooling](../docs-tooling/index.md) for docs app setup and workflow guidance
 - [Contributing](../contributing/index.md) for code, docs, and skill-authoring practices

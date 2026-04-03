@@ -1,162 +1,79 @@
 ---
 title: Quickstart
-description: 'Quick-start guides for interop-only, provider-agnostic tooling, and optional workflow adoption.'
+description: 'Start-here guide for choosing the right OAT adoption path.'
 ---
 
 # Quickstart
 
-## Prerequisites
+Use this page to choose the OAT path that matches what you are actually trying to do.
 
-- Node.js `22.17.0+`
-- pnpm `10.13.1+`
+This page is intentionally lightweight. It is not the full command manual. Once you choose a path, continue into the owning section for the deeper operational detail.
 
-## Path A: Interop-only (CLI)
+## Choose a Path
 
-```bash
-pnpm install
-pnpm run cli -- --help
-```
+### Provider Sync
 
-### Initialize canonical structure
+Use this path when you want canonical skills, agents, and rules to stay aligned across provider surfaces such as Claude, Cursor, Copilot, Gemini, or Codex.
 
-```bash
-pnpm run cli -- init --scope project
-```
+Best fit:
 
-Creates canonical directories and can offer stray adoption/hook installation.
+- you want cross-provider sync and drift checks
+- you care about canonical-to-provider asset management
+- you do not necessarily need tracked project workflows
 
-### Check status and sync
+Continue here:
 
-```bash
-pnpm run cli -- status --scope all
-pnpm run cli -- sync --scope all
-```
+- [Provider Sync](provider-sync/index.md)
 
-Notes:
+### Agentic Workflows
 
-- `sync` mutates by default; use `--dry-run` to preview changes without writing.
+Use this path when you want tracked, resumable implementation work with explicit lifecycle artifacts, reviews, and handoff-friendly state.
 
-### Install or update OAT tool packs (optional)
+Best fit:
 
-```bash
-pnpm run cli -- tools install
-# or install just the project-management pack
-pnpm run cli -- tools install project-management
-```
+- you want structured project execution
+- you want lifecycle artifacts like `state.md`, `plan.md`, and `implementation.md`
+- you want a workflow layer on top of the base CLI/tooling
 
-Notes:
+Continue here:
 
-- Installs OAT tool packs (`docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`) into canonical directories. The `core` pack is always installed at user scope for diagnostics and passive docs access.
-- `oat init tools` remains available as a backward-compatible install path.
-- If installed OAT skills are older than bundled versions, interactive runs prompt for selective updates.
-- Non-interactive runs report outdated skills without updating them.
+- [Agentic Workflows](workflows/index.md)
 
-### Remove installed skills or packs (optional)
+### Docs Tooling
 
-```bash
-pnpm run cli -- remove skill oat-idea-scratchpad
-pnpm run cli -- remove skills --pack utility
-```
+Use this path when you are bootstrapping or maintaining a documentation surface with OAT.
 
-Notes:
+Best fit:
 
-- `oat remove` mutates by default; use `--dry-run` to preview deletions.
-- Managed provider views are removed alongside canonical skill deletion; unmanaged views are preserved with warnings.
+- you need docs app setup or maintenance workflows
+- you care about docs navigation, docs commands, and docs-specific analysis/apply flows
+- you want the docs-system contract rather than the broader workflow layer
 
-### Validate instruction pointers
+Continue here:
 
-```bash
-pnpm run cli -- instructions validate
-pnpm run cli -- instructions sync
-```
+- [Docs Tooling](docs-tooling/index.md)
 
-Notes:
+### CLI Utilities
 
-- `instructions validate` is read-only.
-- `instructions sync` mutates by default; use `--dry-run` to preview changes.
-- Use `instructions sync --force` if you intend to overwrite mismatched `CLAUDE.md` content.
+Use this path when you want general OAT CLI help outside the dedicated provider-sync, workflows, and docs-tooling lanes.
 
-### Additional CLI commands
+Best fit:
 
-```bash
-# Mode-aware project scaffold
-pnpm run cli -- project new my-project --mode quick
+- you want bootstrap/setup guidance
+- you want tool-pack, configuration, local-state, or utility command guidance
+- you want a general CLI surface map rather than one specific product lane
 
-# Bootstrap or maintain a docs app
-pnpm run cli -- docs init --app-name my-docs
-pnpm run cli -- docs nav sync --target-dir apps/my-docs
+Continue here:
 
-# Manage the file-backed backlog directly
-pnpm run cli -- backlog init
-pnpm run cli -- backlog generate-id add-webhook-support --created-at 2026-03-15T14:30:00Z
-pnpm run cli -- backlog regenerate-index
+- [CLI Utilities](cli-utilities/index.md)
 
-# Internal oat-* skill validation (primary path)
-pnpm oat:validate-skills
-```
+## If You Are Unsure
 
-### Worktree setup
+Start with the path that best matches the primary thing you need right now.
 
-Use `oat-worktree-bootstrap` for an OAT-aware guided flow when creating or resuming git worktree checkouts. It resolves worktree paths, runs bootstrap checks (`worktree:init`, tests), and validates project sync state before implementation.
+- If you are trying to sync canonical assets across tools, choose Provider Sync.
+- If you are trying to run a tracked implementation workflow, choose Agentic Workflows.
+- If you are working on the docs system itself, choose Docs Tooling.
+- If you mainly need command-line setup or utility guidance, choose CLI Utilities.
 
-### Consumer usage (without pnpm scripts)
-
-When `@open-agent-toolkit/cli` is consumed as a built package or linked binary, use `oat` directly:
-
-```bash
-oat --help
-oat init --scope project
-oat tools install
-oat status --scope all
-oat sync --scope all
-oat instructions validate
-oat instructions sync
-oat remove skills --pack utility
-oat doctor --scope all
-oat project new my-project --mode spec-driven
-oat backlog init
-oat backlog regenerate-index
-```
-
-## Path B: Provider-agnostic tooling (skills + utilities)
-
-Use shared skills and helper tooling without adopting the spec-driven OAT project lifecycle.
-
-This is also the right path for plan-first ideation that can later be synced/imported into an OAT project.
-
-Start here:
-
-- [`guide/skills/index.md`](guide/skills/index.md)
-- [`guide/documentation/workflows.md`](guide/documentation/workflows.md)
-- [`guide/documentation/commands.md`](guide/documentation/commands.md)
-- [`guide/documentation/quickstart.md`](guide/documentation/quickstart.md)
-- [`reference/index.md`](reference/index.md)
-
-## Path C: Workflow layer (optional)
-
-Adopt the workflow layer when you want tracked project artifacts, explicit review gates, and resumable execution state.
-
-Start with:
-
-- [`guide/workflow/index.md`](guide/workflow/index.md)
-- [`guide/workflow/lifecycle.md`](guide/workflow/lifecycle.md)
-- [`guide/workflow/artifacts.md`](guide/workflow/artifacts.md)
-
-Typical entry points:
-
-- Spec-driven work: `oat-project-new` or `oat-project-open`, then discovery → spec → design → plan → implement
-- Quick work: `oat-project-quick-start`, then plan or lightweight design as needed before implementation
-- Imported plans: `oat-project-import-plan`, then tracked implementation and review
-
-Implementation modes:
-
-- `oat-project-implement` for sequential execution
-- `oat-project-subagent-implement` for parallel/subagent-driven execution
-
-Review and close-out:
-
-- `oat-project-review-provide` / `oat-project-review-receive`
-- `oat-project-pr-progress` or `oat-project-pr-final`
-- `oat-project-document` and `oat-project-complete` when the work is ready to close
-
-If you are importing plans from external provider plan folders, set `OAT_PROVIDER_PLAN_DIRS` before running `oat-project-import-plan`.
+You can adopt more than one lane over time. OAT is designed so these sections can be used together or independently.

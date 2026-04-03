@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/docs-config",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": false,
   "description": "Configuration factories for OAT documentation sites",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/docs-config",

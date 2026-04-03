@@ -161,4 +161,4 @@ Important:
 
 - [`commands.md`](commands.md)
 - [`workflows.md`](workflows.md)
-- [`../../reference/docs-index-contract.md`](../../reference/docs-index-contract.md)
+- [`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)

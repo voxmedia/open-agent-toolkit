@@ -7,6 +7,12 @@ description: 'Foundational setup via oat init for canonical directories, provide
 
 This page covers foundational CLI setup commands that prepare OAT structures and configuration before provider sync or tool-pack workflows.
 
+## Quick Look
+
+- What it does: explains the initial `oat init` setup flow and the optional guided setup path that configures packs, local paths, and provider sync.
+- When to use it: when you are first introducing OAT into a repo or need to re-run the guided setup path on an existing checkout.
+- Primary commands: `oat init`, `oat init --setup`, `oat init --scope project`
+
 ## `oat init`
 
 Purpose:
@@ -59,5 +65,5 @@ oat init --scope project
 Related commands:
 
 - `oat tools ...` (tool-pack install, update, remove, list, info): `tool-packs.md`
-- `oat local ...`, `oat doctor`, and other utility commands: `cli-reference.md`
-- `oat status` / `oat sync` (provider sync): `provider-sync/index.md`
+- `oat local ...`, `oat doctor`, and other utility commands: `config-and-local-state.md`
+- `oat status` / `oat sync` (provider sync): `../provider-sync/index.md`

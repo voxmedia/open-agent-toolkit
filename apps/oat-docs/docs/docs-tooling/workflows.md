@@ -62,6 +62,6 @@ to open every page.
 ## Related docs
 
 - [`commands.md`](commands.md)
-- [`quickstart.md`](quickstart.md)
-- [`../../reference/docs-index-contract.md`](../../reference/docs-index-contract.md)
-- [`../../contributing/skills.md`](../../contributing/skills.md)
+- [`add-docs-to-a-repo.md`](add-docs-to-a-repo.md)
+- [`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)
+- [`../contributing/skills.md`](../contributing/skills.md)

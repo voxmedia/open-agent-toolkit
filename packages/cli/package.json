@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/cli",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": false,
   "description": "Open Agent Toolkit CLI",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/cli",
