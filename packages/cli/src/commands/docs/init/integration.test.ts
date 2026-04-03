@@ -301,4 +301,38 @@ describe('scaffold integration', () => {
       expect(result.documentationConfig.tooling).toBe('mkdocs');
     },
   );
+
+  it(
+    'scaffolds markdownlint-cli2 when requested',
+    { timeout: 30_000 },
+    async () => {
+      assetsRoot = await bundleAssets();
+      const root = await mkdtemp(join(tmpdir(), 'oat-integration-lint-'));
+      createdRoots.push(root);
+
+      const result = await scaffoldDocsApp({
+        assetsRoot,
+        repoRoot: root,
+        repoShape: 'single-package',
+        framework: 'fumadocs',
+        appName: 'docs',
+        targetDir: 'docs',
+        siteDescription: '',
+        lint: 'markdownlint-cli2',
+        format: 'none',
+      });
+
+      const packageJson = JSON.parse(
+        await readFile(join(result.appRoot, 'package.json'), 'utf8'),
+      ) as {
+        scripts: Record<string, string>;
+        devDependencies: Record<string, string>;
+      };
+
+      expect(packageJson.scripts['docs:lint']).toBe(
+        "markdownlint-cli2 'docs/**/*.md'",
+      );
+      expect(packageJson.devDependencies['markdownlint-cli2']).toBe('^0.13.0');
+    },
+  );
 });

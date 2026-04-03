@@ -203,6 +203,12 @@ export function createDocsInitCommand(
     )
     .addOption(new Option('--description <text>', 'Site description'))
     .addOption(
+      new Option('--lint <mode>', 'Markdown lint mode').choices([
+        'none',
+        'markdownlint-cli2',
+      ]),
+    )
+    .addOption(
       new Option('--format <mode>', 'Markdown format mode').choices([
         'oxfmt',
         'none',
