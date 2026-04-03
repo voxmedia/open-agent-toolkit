@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-03
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -26,11 +26,11 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 1/3       |
+| Phase 1 | in_progress | 3     | 2/3       |
 | Phase 2 | pending     | 3     | 0/3       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 1/8 tasks completed
+**Total:** 2/8 tasks completed
 
 ---
 
@@ -46,6 +46,8 @@ oat_generated: false
 - Introduced canonical top-level section routes for Provider Sync, Agentic Workflows, Docs Tooling, and CLI Utilities.
 - Rewired the docs root page to point users at the new canonical sections instead of the broad User Guide bucket.
 - Added a shallow CLI Reference page under Reference so the canonical reference route now exists.
+- Reworked the homepage into a calmer overview page that explains OAT and points users to Start Here.
+- Rewrote `quickstart.md` into a lightweight path-selection page instead of a command-heavy mini manual.
 
 **Key files touched:**
 
@@ -102,8 +104,8 @@ oat_generated: false
 
 ### Task p01-t02: Rewrite `/` as overview and `/quickstart` as the only decision page
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 90c1693
 
 **Notes / Decisions:**
 
@@ -111,11 +113,32 @@ oat_generated: false
 - `/quickstart` owns path-selection logic.
 - Avoid duplicating the same routing content on both pages.
 
+**Outcome (required when completed):**
+
+- Reframed the homepage as a high-level overview page rather than a second path router.
+- Turned Quickstart into the single canonical path-selection page for new users.
+- Removed the long command-heavy quickstart material from the first user decision surface.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/index.md` - replaced the old path-routing block with overview framing and repeated Start Here guidance
+- `apps/oat-docs/docs/quickstart.md` - rewrote Quickstart into a lightweight path-selection page
+- `apps/oat-docs/index.md` - regenerated app-level index text to match the new Quickstart role
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Issues Encountered:**
+
+- None
+
 ---
 
 ### Task p01-t03: Create the new section landings and overview pages
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes / Decisions:**
@@ -220,7 +243,8 @@ Chronological log of implementation progress.
 - [x] Imported external plan into `docs-readability-reorg`
 - [x] Backfilled `discovery.md`
 - [x] p01-t01: establish the new top-level docs IA and canonical routes
-- [ ] p01-t02: rewrite `/` and `/quickstart`
+- [x] p01-t02: rewrite `/` and `/quickstart`
+- [ ] p01-t03: create the new section landings and overview pages
 
 **What changed (high level):**
 
@@ -228,6 +252,7 @@ Chronological log of implementation progress.
 - Imported the external plan into a new OAT import-mode project
 - Backfilled the project artifacts for implementation readiness
 - Established canonical top-level docs section routes and root docs entry links
+- Split the docs entrypoint model so `/` is overview and `/quickstart` is Start Here
 
 **Decisions:**
 
@@ -237,7 +262,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Complete the overview/start-here rewrite and then add the fuller section landing content
+- Flesh out the canonical section landing pages so the new routes are usable on their own
 
 **Blockers:**
 
