@@ -49,3 +49,8 @@ export function Page({ toc, chart }) {
 - `Mermaid`
 - `Tab`
 - `Tabs`
+
+## Docs
+
+- [Docs Tooling](https://voxmedia.github.io/open-agent-toolkit/docs-tooling)
+- [Repository](https://github.com/voxmedia/open-agent-toolkit)

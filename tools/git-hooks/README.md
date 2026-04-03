@@ -1,109 +1,40 @@
 # Git Hooks
 
-Automated git hooks for code quality and consistency.
+Repository git hooks for code quality and consistency.
 
-## Features
+## What They Do
 
-- **Automatic Setup**: Hooks are installed automatically on `pnpm install`
-- **Silent When Ready**: No output if hooks are already configured
-- **Skippable in CI/Docker**: Set `GIT_HOOKS=0` to skip installation
-- **Individually Controllable**: Enable/disable specific hooks as needed
+- `pre-commit` - runs `lint-staged`
+- `commit-msg` - validates commit messages with `commitlint`
+- `pre-push` - runs `check`, `type-check`, and `test`
+- `post-checkout` - runs `pnpm install` when lockfile-sensitive branch switches happen
 
-## Available Hooks
+## Default Behavior
 
-- `pre-commit`: Runs `lint-staged` (linting, formatting, tests on staged files)
-- `commit-msg`: Validates commit messages with `commitlint`
-- `pre-push`: Runs `check`, `type-check`, and `test` before pushing
-- `post-checkout`: Runs `pnpm install` when switching branches with lockfile changes
+Hooks are installed automatically on `pnpm install`.
 
-## Usage
+- setup is silent when hooks are already configured
+- set `GIT_HOOKS=0` to skip installation in CI, Docker, or one-off local runs
+- intentionally disabled hooks stay disabled until you re-enable them
 
-### Automatic (Recommended)
-
-Hooks are automatically installed when you run `pnpm install`. If they're already installed, the setup is silent.
-
-### Manual Control
+## Common Commands
 
 ```bash
-# View status of all hooks
 pnpm hooks:status
-
-# Enable all hooks
 pnpm hooks:enable-all
-
-# Disable all hooks
 pnpm hooks:disable-all
-
-# Enable specific hook
 pnpm hooks enable pre-commit
-
-# Disable specific hook
-pnpm hooks disable pre-commit
+pnpm hooks disable pre-push
 ```
 
-## Skipping Hooks
-
-### In Docker/CI
-
-Set the `GIT_HOOKS` environment variable to `0`:
-
-```dockerfile
-ENV GIT_HOOKS=0
-RUN pnpm install
-```
-
-### Locally (Temporary)
+## Temporarily Skip Hook Setup
 
 ```bash
-# Skip hook setup for this install only
 GIT_HOOKS=0 pnpm install
 ```
 
-### Locally (Permanent)
+## Notes
 
-```bash
-# Disable all hooks
-pnpm hooks:disable-all
-```
-
-Disabled hooks are tracked in `.git/hooks/.disabled-hooks` and won't be re-enabled by `pnpm install`.
-
-## How It Works
-
-1. The `prepare` script in `package.json` runs `manage-hooks.js setup` after every `pnpm install`
-2. The script checks if `GIT_HOOKS=0` is set - if so, it exits immediately
-3. If all hooks are already installed or intentionally disabled, it exits silently
-4. Otherwise, it installs missing hooks and reports what was done
-
-## Troubleshooting
-
-### Hooks not running
-
-```bash
-# Check hook status
-pnpm hooks:status
-
-# Re-enable all hooks
-pnpm hooks:enable-all
-```
-
-### Hooks running when they shouldn't
-
-```bash
-# Disable specific hook
-pnpm hooks disable pre-push
-
-# Or disable all
-pnpm hooks:disable-all
-```
-
-### Hooks failing in CI
-
-Ensure `GIT_HOOKS=0` is set in your CI environment or Dockerfile.
-
-## Implementation Details
-
-- Hooks are symlinked from `tools/git-hooks/` to `.git/hooks/`
+- Hooks are symlinked from `tools/git-hooks/` into `.git/hooks/`
 - Disabled hooks are tracked in `.git/hooks/.disabled-hooks`
-- The `setup` action respects intentionally disabled hooks
-- Git's `core.hooksPath` is unset to ensure hooks run from `.git/hooks/`
+- Git `core.hooksPath` is unset so hooks run from `.git/hooks/`

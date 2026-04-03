@@ -47,3 +47,8 @@ export default defineConfig({
 - `createDocsConfig`
 - `createSearchConfig`
 - `createSourceConfig`
+
+## Docs
+
+- [Docs Tooling](https://voxmedia.github.io/open-agent-toolkit/docs-tooling)
+- [Repository](https://github.com/voxmedia/open-agent-toolkit)
