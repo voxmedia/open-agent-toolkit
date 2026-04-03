@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-03
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,10 +27,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | in_progress | 3     | 2/3       |
-| Phase 3 | pending     | 2     | 0/2       |
+| Phase 2 | completed   | 3     | 3/3       |
+| Phase 3 | in_progress | 2     | 0/2       |
 
-**Total:** 5/8 tasks completed
+**Total:** 6/8 tasks completed
 
 ---
 
@@ -273,23 +273,51 @@ oat_generated: false
 
 ### Task p02-t03: Add progressive disclosure to the highest-density docs pages
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** c47bece
 
 **Notes / Decisions:**
 
 - Add overview intros and Quick Look blocks to priority pages while keeping the detailed content below.
 
+**Outcome (required when completed):**
+
+- Added Quick Look or short framing blocks to the eight highest-priority dense pages identified in the plan.
+- Completed the cleanup of old guide-owned files that had already been re-homed into canonical sections, so the old `guide` tree now only contains compatibility material.
+- Preserved detailed content while making the first screen of the densest pages easier to scan.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/workflows/projects/lifecycle.md` - added lifecycle Quick Look framing
+- `apps/oat-docs/docs/provider-sync/commands.md` - added command-surface Quick Look framing
+- `apps/oat-docs/docs/provider-sync/manifest-and-drift.md` - added introductory framing plus Quick Look
+- `apps/oat-docs/docs/cli-utilities/tool-packs.md` - added pack-management Quick Look framing
+- `apps/oat-docs/docs/workflows/projects/state-machine.md` - added state-machine framing plus Quick Look
+- `apps/oat-docs/docs/workflows/projects/repo-analysis.md` - added repo-analysis Quick Look framing
+- `apps/oat-docs/docs/cli-utilities/bootstrap.md` - added bootstrap Quick Look framing
+- `apps/oat-docs/docs/docs-tooling/commands.md` - added docs-command Quick Look framing
+- `apps/oat-docs/docs/guide/**` - removed the guide-owned pages that had already been re-homed to canonical sections
+- `apps/oat-docs/index.md` - regenerated app-level index after the guide cleanup
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Issues Encountered:**
+
+- The guide cleanup landed in the same commit because the old moved pages were still present in the working tree. This did not remove documentation coverage; it finalized the route ownership changes from the earlier migration tasks.
+
 ---
 
 ## Phase 3: README realignment and final audit
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-03
 
 ### Task p03-t01: Rewrite the root README as an overview and quick-start document
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes / Decisions:**
@@ -337,7 +365,8 @@ Chronological log of implementation progress.
 - [x] p01-t03: create the new section landings and overview pages
 - [x] p02-t01: move Provider Sync and Agentic Workflows content into canonical routes
 - [x] p02-t02: move Docs Tooling and CLI Utilities content into canonical routes
-- [ ] p02-t03: add progressive disclosure to the highest-density docs pages
+- [x] p02-t03: add progressive disclosure to the highest-density docs pages
+- [ ] p03-t01: rewrite the root README as an overview and quick-start document
 
 **What changed (high level):**
 
@@ -349,6 +378,7 @@ Chronological log of implementation progress.
 - Established real landing pages plus overview pages for the four new top-level adoption lanes
 - Moved Provider Sync and workflow-owned pages into canonical top-level routes
 - Moved docs-tooling and CLI-utility pages into canonical top-level routes and established the canonical shallow CLI reference
+- Added progressive-disclosure framing to the densest priority pages and finalized the guide cleanup
 
 **Decisions:**
 
@@ -357,6 +387,7 @@ Chronological log of implementation progress.
 - During phased migration, new section landings may point at legacy guide pages until canonical child routes are in place
 - The `guide` tree can temporarily act as a compatibility router while the remaining docs-tooling and CLI-utility pages are still being moved
 - The remaining Phase 2 work is readability framing only; the next pass should add overview/Quick Look affordances without reducing coverage
+- Phase 3 should now align the repository README surfaces with the new docs-first structure and confirm the final docs/readme surface is consistent
 - The generated app-level index can temporarily show legacy guide structure until the underlying guide content is migrated
 
 **Follow-ups / TODO:**
