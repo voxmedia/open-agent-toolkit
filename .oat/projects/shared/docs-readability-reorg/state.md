@@ -7,7 +7,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: import # spec-driven | quick | import
 oat_workflow_origin: imported # native | imported
@@ -22,13 +22,13 @@ oat_generated: false
 
 # Project State: docs-readability-reorg
 
-**Status:** Awaiting Re-Review
+**Status:** Implementation Complete
 **Started:** 2026-04-03
 **Last Updated:** 2026-04-03
 
 ## Current Phase
 
-Implementation complete - review fixes done, awaiting re-review
+Implementation complete - final review passed
 
 ## Artifacts
 
@@ -56,7 +56,7 @@ Implementation complete - review fixes done, awaiting re-review
 - ✓ Final review received
 - ✓ Task `p04-t01` completed
 - ✓ Task `p04-t02` completed
-- ⧗ Awaiting final re-review
+- ✓ Final re-review passed
 
 ## Blockers
 
@@ -64,4 +64,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-review-provide code final`, then `oat-project-review-receive`
+Run `oat-project-pr-final` to open the final project PR

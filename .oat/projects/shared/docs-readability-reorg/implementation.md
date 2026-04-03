@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-03
 oat_current_task_id: null
@@ -417,6 +417,30 @@ oat_generated: false
 **Next:** Re-run `oat-project-review-provide code final`, then process the re-review with `oat-project-review-receive`.
 
 **Review fix status:** `fixes_completed`
+
+---
+
+### Review Received: final (re-review)
+
+**Date:** 2026-04-03
+**Review artifact:** `reviews/archived/final-review-2026-04-03-v2.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** none
+
+**Disposition:**
+
+- Prior review fixes verified as resolved
+- Deferred finding `m2` remains explicitly accepted with rationale
+- Final review status: `passed`
+
+**Next:** Summary is already generated. Run `oat-project-pr-final` to create the final project PR when ready.
 
 ---
 
