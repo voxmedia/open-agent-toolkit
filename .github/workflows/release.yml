@@ -22,7 +22,7 @@ jobs:
       # - run only from release tags
       # - use npm trusted publishing via GitHub OIDC
       # - rerun the same build and release validation path as dry-run
-      # - publish the four @tkstang/oat-* packages in lockstep
+      # - publish the four @open-agent-toolkit/* packages in lockstep
       - name: Checkout
         uses: actions/checkout@v5
         with:
@@ -53,7 +53,7 @@ jobs:
         run: |
           cat > .npmrc.publish <<'EOF'
           registry=https://registry.npmjs.org/
-          @tkstang:registry=https://registry.npmjs.org/
+          @open-agent-toolkit:registry=https://registry.npmjs.org/
           EOF
 
       - name: Build
@@ -67,10 +67,10 @@ jobs:
           NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
         run: |
           for pkg_name in \
-            @tkstang/oat-docs-transforms \
-            @tkstang/oat-docs-config \
-            @tkstang/oat-docs-theme \
-            @tkstang/oat-cli
+            @open-agent-toolkit/docs-transforms \
+            @open-agent-toolkit/docs-config \
+            @open-agent-toolkit/docs-theme \
+            @open-agent-toolkit/cli
           do
             pack_dir="$(mktemp -d)"
             pnpm --filter "$pkg_name" pack --pack-destination "$pack_dir"

@@ -1,8 +1,8 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-03-24
-oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
-oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
+oat_generated_at: 2026-04-02
+oat_source_head_sha: c9524eaf5e1fd1b527a821766d72f0df6ef70beb
+oat_source_main_merge_base_sha: 60b392c290313ca29404822d9952bbffdb3cb2ac
 oat_index_type: full
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
@@ -85,7 +85,9 @@ Useful root scripts:
 ## Known Issues
 
 - Repo knowledge artifacts become invalid when copied across unrelated git histories and should be regenerated after a fork or migration.
-- Public npm publishing is not configured yet; package manifests and workflows are still private/internal.
+- Public package metadata and GitHub release workflows now target
+  `@open-agent-toolkit/*`, but the first publish still requires manual npm
+  bootstrap before steady-state trusted publishing is fully validated.
 
 ## Generated Knowledge Base Files
 

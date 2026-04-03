@@ -2,7 +2,7 @@ import {
   remarkLinks,
   remarkMermaid,
   remarkTabs,
-} from '@tkstang/oat-docs-transforms';
+} from '@open-agent-toolkit/docs-transforms';
 import type { Root } from 'mdast';
 import { remarkAlert } from 'remark-github-blockquote-alert';
 import type { Plugin } from 'unified';

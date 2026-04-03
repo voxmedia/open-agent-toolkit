@@ -35,7 +35,7 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
   '.gitignore':
     '# Dependencies\nnode_modules/\n\n# Next.js build output\n.next/\nout/\n\n# fumadocs-mdx generated source\n.source/\n\n# Next.js generated types\nnext-env.d.ts\n',
   'next.config.js':
-    "import { createDocsConfig } from '@tkstang/oat-docs-config';\nexport default createDocsConfig({ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' });\n",
+    "import { createDocsConfig } from '@open-agent-toolkit/docs-config';\nexport default createDocsConfig({ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' });\n",
   'postcss.config.mjs':
     "const config = {\n  plugins: {\n    '@tailwindcss/postcss': {},\n  },\n};\n\nexport default config;\n",
   'source.config.ts':
@@ -63,12 +63,12 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
     "docs:format:check": "{{DOCS_FORMAT_CHECK_SCRIPT}}"
   },
   "dependencies": {
-    "@tkstang/oat-docs-config": "{{OAT_DOCS_CONFIG_DEP}}",
-    "@tkstang/oat-docs-theme": "{{OAT_DOCS_THEME_DEP}}",
-    "@tkstang/oat-docs-transforms": "{{OAT_DOCS_TRANSFORMS_DEP}}"
+    "@open-agent-toolkit/docs-config": "{{OAT_DOCS_CONFIG_DEP}}",
+    "@open-agent-toolkit/docs-theme": "{{OAT_DOCS_THEME_DEP}}",
+    "@open-agent-toolkit/docs-transforms": "{{OAT_DOCS_TRANSFORMS_DEP}}"
   },
   "devDependencies": {
-    "@tkstang/oat-cli": "{{OAT_CLI_DEP}}",
+    "@open-agent-toolkit/cli": "{{OAT_CLI_DEP}}",
     "@types/node": "^22.10.0",
     "typescript": "^5.8.3"{{FUMA_DEV_DEPENDENCIES}}
   }
@@ -78,9 +78,9 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
   'app/globals.css':
     "@import 'tailwindcss';\n@import 'fumadocs-ui/css/black.css';\n@import 'fumadocs-ui/css/preset.css';\n\n@source '../node_modules/fumadocs-ui/dist/**/*.js';\n",
   'app/layout.tsx':
-    "import { DocsLayout } from '@tkstang/oat-docs-theme';\nexport default function Layout({ children }) { return <DocsLayout branding={{ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' }} tree={{}}>{children}</DocsLayout>; }\n",
+    "import { DocsLayout } from '@open-agent-toolkit/docs-theme';\nexport default function Layout({ children }) { return <DocsLayout branding={{ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' }} tree={{}}>{children}</DocsLayout>; }\n",
   'app/[[...slug]]/page.tsx':
-    "import { DocsPage, Mermaid, Tab, Tabs } from '@tkstang/oat-docs-theme';\nimport defaultComponents from 'fumadocs-ui/mdx';\nexport default function Page() { return <div />; }\n",
+    "import { DocsPage, Mermaid, Tab, Tabs } from '@open-agent-toolkit/docs-theme';\nimport defaultComponents from 'fumadocs-ui/mdx';\nexport default function Page() { return <div />; }\n",
   'app/api/search/route.ts':
     "import { createFromSource } from 'fumadocs-core/search/server';\nimport { source } from '@/lib/source';\nconst search = createFromSource(source);\nexport const revalidate = false;\nexport const { staticGET: GET } = search;\n",
   'docs/index.md': `---
@@ -268,7 +268,9 @@ describe('scaffoldDocsApp', () => {
     expect(packageJson.description).toBe('Project documentation site');
     expect(packageJson.scripts['predev']).toContain('docs generate-index');
     expect(packageJson.scripts['prebuild']).toContain('docs generate-index');
-    expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('^0.0.8');
+    expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
+      '^0.0.8',
+    );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
     expect(packageJson.devDependencies['prettier']).toBeUndefined();
@@ -327,7 +329,9 @@ describe('scaffoldDocsApp', () => {
     const packageJson = JSON.parse(
       await readFile(join(result.appRoot, 'package.json'), 'utf8'),
     ) as { devDependencies: Record<string, string> };
-    expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('^0.0.8');
+    expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
+      '^0.0.8',
+    );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
     expect(packageJson.devDependencies['prettier']).toBeUndefined();
@@ -358,7 +362,7 @@ describe('scaffoldDocsApp', () => {
     // Seed a mismatched CLI package.json to verify the manifest takes precedence.
     await writeFile(
       join(root, 'package.json'),
-      JSON.stringify({ name: '@tkstang/oat-cli', version: '9.9.9' }),
+      JSON.stringify({ name: '@open-agent-toolkit/cli', version: '9.9.9' }),
       'utf8',
     );
 
@@ -383,12 +387,18 @@ describe('scaffoldDocsApp', () => {
     };
 
     // Should use versioned deps, not workspace:*
-    expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe('^1.2.3');
-    expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe('^2.3.4');
-    expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
-      '^3.4.5',
+    expect(packageJson.dependencies['@open-agent-toolkit/docs-config']).toBe(
+      '^1.2.3',
     );
-    expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('^9.9.9');
+    expect(packageJson.dependencies['@open-agent-toolkit/docs-theme']).toBe(
+      '^2.3.4',
+    );
+    expect(
+      packageJson.dependencies['@open-agent-toolkit/docs-transforms'],
+    ).toBe('^3.4.5');
+    expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
+      '^9.9.9',
+    );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
 
     // Should use oat CLI directly with paths relative to docs app
@@ -411,7 +421,7 @@ describe('scaffoldDocsApp', () => {
 
     await writeFile(
       join(root, 'package.json'),
-      JSON.stringify({ name: '@tkstang/oat-cli', version: '1.2.3' }),
+      JSON.stringify({ name: '@open-agent-toolkit/cli', version: '1.2.3' }),
       'utf8',
     );
 
@@ -434,12 +444,18 @@ describe('scaffoldDocsApp', () => {
       devDependencies: Record<string, string>;
     };
 
-    expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe('^1.2.3');
-    expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe('^1.2.3');
-    expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
+    expect(packageJson.dependencies['@open-agent-toolkit/docs-config']).toBe(
       '^1.2.3',
     );
-    expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('^1.2.3');
+    expect(packageJson.dependencies['@open-agent-toolkit/docs-theme']).toBe(
+      '^1.2.3',
+    );
+    expect(
+      packageJson.dependencies['@open-agent-toolkit/docs-transforms'],
+    ).toBe('^1.2.3');
+    expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
+      '^1.2.3',
+    );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
   });
 
@@ -458,7 +474,10 @@ describe('scaffoldDocsApp', () => {
       await mkdir(pkgDir, { recursive: true });
       await writeFile(
         join(pkgDir, 'package.json'),
-        JSON.stringify({ name: `@tkstang/oat-${pkg}`, version: '0.0.5' }),
+        JSON.stringify({
+          name: `@open-agent-toolkit/${pkg}`,
+          version: '0.0.5',
+        }),
         'utf8',
       );
     }
@@ -485,16 +504,18 @@ describe('scaffoldDocsApp', () => {
     };
 
     // Should use workspace:* for OAT packages
-    expect(packageJson.dependencies['@tkstang/oat-docs-config']).toBe(
+    expect(packageJson.dependencies['@open-agent-toolkit/docs-config']).toBe(
       'workspace:*',
     );
-    expect(packageJson.dependencies['@tkstang/oat-docs-theme']).toBe(
+    expect(packageJson.dependencies['@open-agent-toolkit/docs-theme']).toBe(
       'workspace:*',
     );
-    expect(packageJson.dependencies['@tkstang/oat-docs-transforms']).toBe(
+    expect(
+      packageJson.dependencies['@open-agent-toolkit/docs-transforms'],
+    ).toBe('workspace:*');
+    expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
       'workspace:*',
     );
-    expect(packageJson.devDependencies['@tkstang/oat-cli']).toBe('workspace:*');
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
 
     // Should use pnpm -w run cli with full paths from workspace root

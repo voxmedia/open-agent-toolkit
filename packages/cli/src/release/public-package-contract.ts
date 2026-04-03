@@ -34,7 +34,7 @@ const PACKED_DEPENDENCY_FIELDS = [
 const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   {
     workspaceDir: 'packages/cli',
-    publicName: '@tkstang/oat-cli',
+    publicName: '@open-agent-toolkit/cli',
     role: 'cli',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'bin.oat'],
     requiredPaths: ['dist/index.js', 'assets', 'README.md'],
@@ -42,7 +42,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   },
   {
     workspaceDir: 'packages/docs-config',
-    publicName: '@tkstang/oat-docs-config',
+    publicName: '@open-agent-toolkit/docs-config',
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
@@ -50,7 +50,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   },
   {
     workspaceDir: 'packages/docs-theme',
-    publicName: '@tkstang/oat-docs-theme',
+    publicName: '@open-agent-toolkit/docs-theme',
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
@@ -58,7 +58,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   },
   {
     workspaceDir: 'packages/docs-transforms',
-    publicName: '@tkstang/oat-docs-transforms',
+    publicName: '@open-agent-toolkit/docs-transforms',
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],

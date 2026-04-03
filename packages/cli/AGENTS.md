@@ -13,9 +13,9 @@ Maintain consistent, safe CLI behavior across commands and modules.
 
 ## Package commands
 
-- `pnpm --filter @tkstang/oat-cli test`
-- `pnpm --filter @tkstang/oat-cli lint`
-- `pnpm --filter @tkstang/oat-cli type-check`
+- `pnpm --filter @open-agent-toolkit/cli test`
+- `pnpm --filter @open-agent-toolkit/cli lint`
+- `pnpm --filter @open-agent-toolkit/cli type-check`
 
 ## Working conventions
 
@@ -32,5 +32,5 @@ Maintain consistent, safe CLI behavior across commands and modules.
 ## Completion checks
 
 - Tests updated for changed behavior.
-- Lint and type-check pass for `@tkstang/oat-cli`.
+- Lint and type-check pass for `@open-agent-toolkit/cli`.
 - User-facing output includes clear next steps when failing.

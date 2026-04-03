@@ -1,17 +1,17 @@
-# @tkstang/oat-cli
+# @open-agent-toolkit/cli
 
 Open Agent Toolkit command-line interface for provider sync, workflow tooling, docs scaffolding, and project hygiene.
 
 ## Install
 
 ```bash
-npm install -g @tkstang/oat-cli
+npm install -g @open-agent-toolkit/cli
 ```
 
 You can also run it without a global install:
 
 ```bash
-npx @tkstang/oat-cli --help
+npx @open-agent-toolkit/cli --help
 ```
 
 ## Usage
@@ -37,9 +37,9 @@ Use `oat config describe` to inspect which file owns a setting and which command
 
 ## Related Packages
 
-- `@tkstang/oat-docs-config`
-- `@tkstang/oat-docs-theme`
-- `@tkstang/oat-docs-transforms`
+- `@open-agent-toolkit/docs-config`
+- `@open-agent-toolkit/docs-theme`
+- `@open-agent-toolkit/docs-transforms`
 
 ## Requirements
 

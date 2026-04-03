@@ -62,7 +62,7 @@ jobs:
         run: |
           cat > .npmrc.publish <<'EOF'
           registry=https://registry.npmjs.org/
-          @tkstang:registry=https://registry.npmjs.org/
+          @open-agent-toolkit:registry=https://registry.npmjs.org/
           EOF
 
       - name: Build
@@ -76,14 +76,23 @@ jobs:
           NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
         run: |
           for pkg_name in \
-            @tkstang/oat-docs-transforms \
-            @tkstang/oat-docs-config \
-            @tkstang/oat-docs-theme \
-            @tkstang/oat-cli
+            @open-agent-toolkit/docs-transforms \
+            @open-agent-toolkit/docs-config \
+            @open-agent-toolkit/docs-theme \
+            @open-agent-toolkit/cli
           do
             pack_dir="$(mktemp -d)"
             pnpm --filter "$pkg_name" pack --pack-destination "$pack_dir"
             tarball="$(find "$pack_dir" -maxdepth 1 -name '*.tgz' -print -quit)"
-            npm publish --dry-run --access public "$tarball"
+            pkg_version="$(
+              pnpm --filter "$pkg_name" exec node -e "process.stdout.write(require('./package.json').version)"
+            )"
+
+            if npm view "${pkg_name}@${pkg_version}" version >/dev/null 2>&1; then
+              echo "Skipping npm publish --dry-run for ${pkg_name}@${pkg_version}; version already exists on npm."
+            else
+              npm publish --dry-run --access public "$tarball"
+            fi
+
             rm -rf "$pack_dir"
           done

@@ -1,4 +1,4 @@
-import { createSourceConfig } from '@tkstang/oat-docs-config';
+import { createSourceConfig } from '@open-agent-toolkit/docs-config';
 import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
 
 const sourceConfig = createSourceConfig();

@@ -1,11 +1,11 @@
-# @tkstang/oat-docs-transforms
+# @open-agent-toolkit/docs-transforms
 
 Remark plugins and default transform bundle for OAT-powered Fumadocs apps.
 
 ## Install
 
 ```bash
-pnpm add @tkstang/oat-docs-transforms
+pnpm add @open-agent-toolkit/docs-transforms
 ```
 
 ## Usage
@@ -16,7 +16,7 @@ import {
   remarkLinks,
   remarkMermaid,
   remarkTabs,
-} from '@tkstang/oat-docs-transforms';
+} from '@open-agent-toolkit/docs-transforms';
 
 export const remarkPlugins = defaultTransforms;
 

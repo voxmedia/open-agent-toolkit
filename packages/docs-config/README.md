@@ -1,11 +1,11 @@
-# @tkstang/oat-docs-config
+# @open-agent-toolkit/docs-config
 
 Configuration helpers for OAT-powered Fumadocs apps.
 
 ## Install
 
 ```bash
-pnpm add @tkstang/oat-docs-config @tkstang/oat-docs-theme @tkstang/oat-docs-transforms
+pnpm add @open-agent-toolkit/docs-config @open-agent-toolkit/docs-theme @open-agent-toolkit/docs-transforms
 ```
 
 Install the required Fumadocs, Next.js, and React peer dependencies in your app as well.
@@ -15,7 +15,7 @@ Install the required Fumadocs, Next.js, and React peer dependencies in your app 
 `next.config.js`
 
 ```js
-import { createDocsConfig } from '@tkstang/oat-docs-config';
+import { createDocsConfig } from '@open-agent-toolkit/docs-config';
 
 export default createDocsConfig({
   title: 'My Docs',
@@ -26,7 +26,7 @@ export default createDocsConfig({
 `source.config.ts`
 
 ```ts
-import { createSourceConfig } from '@tkstang/oat-docs-config';
+import { createSourceConfig } from '@open-agent-toolkit/docs-config';
 import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
 
 const sourceConfig = createSourceConfig();

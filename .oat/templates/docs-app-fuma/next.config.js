@@ -1,4 +1,4 @@
-import { createDocsConfig } from '@tkstang/oat-docs-config';
+import { createDocsConfig } from '@open-agent-toolkit/docs-config';
 
 export default createDocsConfig({
   title: '{{SITE_NAME}}',

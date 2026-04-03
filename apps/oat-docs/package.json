@@ -13,9 +13,9 @@
     "docs:format:check": "prettier --check 'docs/**/*.md'"
   },
   "dependencies": {
-    "@tkstang/oat-docs-config": "workspace:*",
-    "@tkstang/oat-docs-theme": "workspace:*",
-    "@tkstang/oat-docs-transforms": "workspace:*",
+    "@open-agent-toolkit/docs-config": "workspace:*",
+    "@open-agent-toolkit/docs-theme": "workspace:*",
+    "@open-agent-toolkit/docs-transforms": "workspace:*",
     "fumadocs-core": "^16.6.13",
     "fumadocs-mdx": "^14.2.9",
     "fumadocs-ui": "^16.6.13",
@@ -24,8 +24,8 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@open-agent-toolkit/cli": "workspace:*",
     "@tailwindcss/postcss": "^4.2.1",
-    "@tkstang/oat-cli": "workspace:*",
     "@types/mdx": "^2.0.13",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",

@@ -15,9 +15,9 @@
     "docs:format:check": "{{DOCS_FORMAT_CHECK_SCRIPT}}"
   },
   "dependencies": {
-    "@tkstang/oat-docs-config": "{{OAT_DOCS_CONFIG_DEP}}",
-    "@tkstang/oat-docs-theme": "{{OAT_DOCS_THEME_DEP}}",
-    "@tkstang/oat-docs-transforms": "{{OAT_DOCS_TRANSFORMS_DEP}}",
+    "@open-agent-toolkit/docs-config": "{{OAT_DOCS_CONFIG_DEP}}",
+    "@open-agent-toolkit/docs-theme": "{{OAT_DOCS_THEME_DEP}}",
+    "@open-agent-toolkit/docs-transforms": "{{OAT_DOCS_TRANSFORMS_DEP}}",
     "fumadocs-core": "^16.6.13",
     "fumadocs-mdx": "^14.2.9",
     "fumadocs-ui": "^16.6.13",
@@ -26,7 +26,7 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@tkstang/oat-cli": "{{OAT_CLI_DEP}}",
+    "@open-agent-toolkit/cli": "{{OAT_CLI_DEP}}",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/mdx": "^2.0.13",
     "@types/node": "^22.10.0",

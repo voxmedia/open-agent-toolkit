@@ -44,10 +44,10 @@ describe('getPublicPackageContracts', () => {
 
     expect(contracts).toHaveLength(4);
     expect(contracts.map((contract) => contract.publicName)).toEqual([
-      '@tkstang/oat-cli',
-      '@tkstang/oat-docs-config',
-      '@tkstang/oat-docs-theme',
-      '@tkstang/oat-docs-transforms',
+      '@open-agent-toolkit/cli',
+      '@open-agent-toolkit/docs-config',
+      '@open-agent-toolkit/docs-theme',
+      '@open-agent-toolkit/docs-transforms',
     ]);
     expect(contracts.map((contract) => contract.workspaceDir)).toEqual([
       'packages/cli',
@@ -62,7 +62,7 @@ describe('getPublicPackageContracts', () => {
 
     expect(contracts).toEqual([
       expect.objectContaining({
-        publicName: '@tkstang/oat-cli',
+        publicName: '@open-agent-toolkit/cli',
         role: 'cli',
         requiredMetadataFields: expect.arrayContaining([
           'repository',
@@ -84,7 +84,7 @@ describe('getPublicPackageContracts', () => {
         ]),
       }),
       expect.objectContaining({
-        publicName: '@tkstang/oat-docs-config',
+        publicName: '@open-agent-toolkit/docs-config',
         role: 'docs-library',
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
@@ -93,7 +93,7 @@ describe('getPublicPackageContracts', () => {
         ]),
       }),
       expect.objectContaining({
-        publicName: '@tkstang/oat-docs-theme',
+        publicName: '@open-agent-toolkit/docs-theme',
         role: 'docs-library',
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
@@ -102,7 +102,7 @@ describe('getPublicPackageContracts', () => {
         ]),
       }),
       expect.objectContaining({
-        publicName: '@tkstang/oat-docs-transforms',
+        publicName: '@open-agent-toolkit/docs-transforms',
         role: 'docs-library',
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
@@ -164,16 +164,16 @@ describe('getPublicPackageContracts', () => {
     expect(
       findWorkspaceProtocolDependencySpecs({
         dependencies: {
-          '@tkstang/oat-docs-transforms': 'workspace:*',
+          '@open-agent-toolkit/docs-transforms': 'workspace:*',
           chalk: '^5.6.2',
         },
         devDependencies: {
-          '@tkstang/oat-cli': 'workspace:^',
+          '@open-agent-toolkit/cli': 'workspace:^',
         },
       }),
     ).toEqual([
-      'dependencies.@tkstang/oat-docs-transforms=workspace:*',
-      'devDependencies.@tkstang/oat-cli=workspace:^',
+      'dependencies.@open-agent-toolkit/docs-transforms=workspace:*',
+      'devDependencies.@open-agent-toolkit/cli=workspace:^',
     ]);
   });
 
@@ -220,7 +220,7 @@ describe('getPublicPackageContracts', () => {
         },
       ]),
     ).toEqual([
-      'publishable package changes require a lockstep version bump across all public packages. Changed packages: @tkstang/oat-cli. Packages still at their base version: @tkstang/oat-cli@0.0.4, @tkstang/oat-docs-config@0.0.4, @tkstang/oat-docs-theme@0.0.4, @tkstang/oat-docs-transforms@0.0.4',
+      'publishable package changes require a lockstep version bump across all public packages. Changed packages: @open-agent-toolkit/cli. Packages still at their base version: @open-agent-toolkit/cli@0.0.4, @open-agent-toolkit/docs-config@0.0.4, @open-agent-toolkit/docs-theme@0.0.4, @open-agent-toolkit/docs-transforms@0.0.4',
     ]);
   });
 
@@ -231,7 +231,7 @@ describe('getPublicPackageContracts', () => {
       findLockstepVersionBumpErrors(
         contracts.map((contract) => ({
           contract,
-          changedSinceBase: contract.publicName === '@tkstang/oat-cli',
+          changedSinceBase: contract.publicName === '@open-agent-toolkit/cli',
           currentVersion: '0.0.5',
           baseVersion: '0.0.4',
         })),
@@ -270,7 +270,7 @@ describe('getPublicPackageContracts', () => {
         },
       ]),
     ).toEqual([
-      'public packages must stay on the same version for lockstep release publishes. Found: @tkstang/oat-cli@0.0.5, @tkstang/oat-docs-config@0.0.6, @tkstang/oat-docs-theme@0.0.5, @tkstang/oat-docs-transforms@0.0.5',
+      'public packages must stay on the same version for lockstep release publishes. Found: @open-agent-toolkit/cli@0.0.5, @open-agent-toolkit/docs-config@0.0.6, @open-agent-toolkit/docs-theme@0.0.5, @open-agent-toolkit/docs-transforms@0.0.5',
     ]);
   });
 
@@ -335,7 +335,7 @@ describe('getPublicPackageContracts', () => {
     }
 
     expect(manifests[0].dependencies).toMatchObject({
-      '@tkstang/oat-docs-transforms': 'workspace:*',
+      '@open-agent-toolkit/docs-transforms': 'workspace:*',
     });
   });
 
@@ -346,16 +346,16 @@ describe('getPublicPackageContracts', () => {
     );
 
     expect(docsAppPackageJson.dependencies).toMatchObject({
-      '@tkstang/oat-docs-config': 'workspace:*',
-      '@tkstang/oat-docs-theme': 'workspace:*',
-      '@tkstang/oat-docs-transforms': 'workspace:*',
+      '@open-agent-toolkit/docs-config': 'workspace:*',
+      '@open-agent-toolkit/docs-theme': 'workspace:*',
+      '@open-agent-toolkit/docs-transforms': 'workspace:*',
     });
     expect(docsAppPackageJson.devDependencies).toMatchObject({
-      '@tkstang/oat-cli': 'workspace:*',
+      '@open-agent-toolkit/cli': 'workspace:*',
     });
     expect(workspaceRootPackageJson.scripts).toMatchObject({
       'cli:link':
-        'pnpm run build --filter=@tkstang/oat-cli && cd packages/cli && pnpm link --global',
+        'pnpm run build --filter=@open-agent-toolkit/cli && cd packages/cli && pnpm link --global',
     });
   });
 });

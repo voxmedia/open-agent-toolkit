@@ -1,6 +1,6 @@
 {
-  "name": "@tkstang/oat-docs-config",
-  "version": "0.0.9",
+  "name": "@open-agent-toolkit/docs-config",
+  "version": "0.0.10",
   "private": false,
   "description": "Configuration factories for OAT documentation sites",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/docs-config",
@@ -43,7 +43,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@tkstang/oat-docs-transforms": "workspace:*",
+    "@open-agent-toolkit/docs-transforms": "workspace:*",
     "flexsearch": "^0.8.212",
     "remark-github-blockquote-alert": "^2.0.1",
     "unified": "^11.0.5"

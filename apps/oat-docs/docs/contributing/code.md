@@ -53,12 +53,26 @@ For narrower changes, use package-specific checks when possible, but do not merg
 Common targeted checks:
 
 ```bash
-pnpm --filter @tkstang/oat-cli test
-pnpm --filter @tkstang/oat-cli lint
-pnpm --filter @tkstang/oat-cli type-check
+pnpm --filter @open-agent-toolkit/cli test
+pnpm --filter @open-agent-toolkit/cli lint
+pnpm --filter @open-agent-toolkit/cli type-check
 pnpm --filter oat-docs docs:lint
 pnpm build:docs
 ```
+
+## Release Bootstrap
+
+The first publish under `@open-agent-toolkit/*` is a maintainer bootstrap step,
+not the steady-state path.
+
+- Run `pnpm release:validate` before any release attempt.
+- Publish the four public packages manually the first time under the new npm
+  org scope.
+- After those packages exist in npm, configure npm trusted publishing for this
+  repository so `.github/workflows/release.yml` can become the steady-state
+  release path without an npm token.
+- Use `.github/workflows/release-dry-run.yml` to validate the GitHub path after
+  the npm trust relationship is configured.
 
 ## Implementation Expectations
 

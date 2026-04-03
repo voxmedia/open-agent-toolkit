@@ -1,8 +1,8 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-03-24
-oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
-oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
+oat_generated_at: 2026-04-02
+oat_source_head_sha: c9524eaf5e1fd1b527a821766d72f0df6ef70beb
+oat_source_main_merge_base_sha: 60b392c290313ca29404822d9952bbffdb3cb2ac
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
@@ -12,12 +12,17 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 
 ## Tech Debt
 
-**Publish Metadata Gap:**
+**Trusted Publishing Bootstrap Gap:**
 
-- Issue: All publishable-looking packages are still marked private and lack public-package metadata.
+- Issue: Public package metadata and GitHub release workflows now exist, but the
+  first release under `@open-agent-toolkit/*` still depends on a manual npm
+  bootstrap and post-publish trust configuration.
 - Files: `package.json`, `packages/cli/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`
-- Impact: npm publication and consumer install flows are not yet production-ready.
-- Fix approach: define public names/versioning policy, add publish metadata, and add release automation.
+- Impact: the steady-state OIDC-based GitHub release path cannot be treated as
+  fully validated until the npm org trust relationship is configured.
+- Fix approach: manually publish the first release, attach trusted publishing in
+  npm, then validate `.github/workflows/release.yml` against the live package
+  org.
 
 **Manual Asset Bundle Manifest:**
 
@@ -47,7 +52,8 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 - Symptoms: a fresh `pnpm install` can warn that the `oat` binary cannot be linked for `apps/oat-docs` before `packages/cli/dist/index.js` exists.
 - Files: `apps/oat-docs/package.json`, `packages/cli/package.json`
 - Trigger: install in a clean checkout before building the CLI.
-- Workaround: build `@tkstang/oat-cli` after install or adjust workspace/bin expectations.
+- Workaround: build `@open-agent-toolkit/cli` after install or adjust
+  workspace/bin expectations.
 
 ## Security Considerations
 
@@ -115,15 +121,12 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 
 ## Missing Critical Features
 
-**No npm Release Workflow Yet:**
+**Trusted Publishing Not Yet Validated End to End:**
 
-- Problem: the repo has CI and docs deployment, but no npm dry-run or publish pipeline.
-- Blocks: public package distribution for the CLI and docs libraries.
-
-**No Public Consumer Metadata Yet:**
-
-- Problem: package manifests do not yet describe repository, bugs, homepage, files, or publish config.
-- Blocks: clean npm package surfaces and polished consumer adoption.
+- Problem: release workflows exist, but the manual-first publish boundary means
+  live GitHub OIDC publishing is still unproven until npm trust is configured.
+- Blocks: fully automated steady-state release confidence for the CLI and docs
+  libraries.
 
 ## Test Coverage Gaps
 

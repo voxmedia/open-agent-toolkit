@@ -41,13 +41,13 @@ importers:
 
   apps/oat-docs:
     dependencies:
-      '@tkstang/oat-docs-config':
+      '@open-agent-toolkit/docs-config':
         specifier: workspace:*
         version: link:../../packages/docs-config
-      '@tkstang/oat-docs-theme':
+      '@open-agent-toolkit/docs-theme':
         specifier: workspace:*
         version: link:../../packages/docs-theme
-      '@tkstang/oat-docs-transforms':
+      '@open-agent-toolkit/docs-transforms':
         specifier: workspace:*
         version: link:../../packages/docs-transforms
       fumadocs-core:
@@ -69,12 +69,12 @@ importers:
         specifier: ^19.1.0
         version: 19.2.4(react@19.2.4)
     devDependencies:
+      '@open-agent-toolkit/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@tailwindcss/postcss':
         specifier: ^4.2.1
         version: 4.2.1
-      '@tkstang/oat-cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
       '@types/mdx':
         specifier: ^2.0.13
         version: 2.0.13
@@ -139,7 +139,7 @@ importers:
 
   packages/docs-config:
     dependencies:
-      '@tkstang/oat-docs-transforms':
+      '@open-agent-toolkit/docs-transforms':
         specifier: workspace:*
         version: link:../docs-transforms
       flexsearch:
