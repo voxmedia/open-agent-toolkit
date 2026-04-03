@@ -375,20 +375,88 @@ git commit -m "docs(p03-t02): align package readmes with docs-first strategy"
 
 ---
 
+## Phase 4: Review fixes
+
+### Task p04-t01: (review) Remove empty legacy guide subdirectories
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/guide/`
+
+**Step 1: Understand the issue**
+
+Review finding: Five empty legacy subdirectories remain under `apps/oat-docs/docs/guide/` after the content migration.
+Location: `apps/oat-docs/docs/guide/`
+
+**Step 2: Implement fix**
+
+Remove the empty legacy subdirectories that no longer own content:
+
+- `apps/oat-docs/docs/guide/documentation/`
+- `apps/oat-docs/docs/guide/provider-sync/`
+- `apps/oat-docs/docs/guide/workflow/`
+- `apps/oat-docs/docs/guide/skills/`
+- `apps/oat-docs/docs/guide/ideas/`
+
+Keep the compatibility material that still matters, including `guide/index.md` and `guide/concepts.md`.
+
+**Step 3: Verify**
+
+Run: `find apps/oat-docs/docs/guide -empty -type d`
+Expected: Only intentionally empty directories remain, or no stale migrated-guide directories remain.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/guide
+git commit -m "fix(p04-t01): remove empty legacy guide directories"
+```
+
+---
+
+### Task p04-t02: (review) Remove obsolete overview deprecation note from docs index contract
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/reference/docs-index-contract.md`
+
+**Step 1: Understand the issue**
+
+Review finding: The docs index contract still says `overview.md` is deprecated, even though the reorganized docs now intentionally use `overview.md` as descriptive leaf pages beside section `index.md` files.
+Location: `apps/oat-docs/docs/reference/docs-index-contract.md`
+
+**Step 2: Implement fix**
+
+Remove the obsolete deprecation note so the contract reflects the current intended structure instead of documenting a historical migration concern.
+
+**Step 3: Verify**
+
+Run: `rg -n "overview\\.md is deprecated" apps/oat-docs/docs/reference/docs-index-contract.md`
+Expected: No matches.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/reference/docs-index-contract.md
+git commit -m "fix(p04-t02): update docs index contract wording"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                           |
-| ------ | -------- | -------- | ---------- | ---------------------------------- |
-| p01    | code     | pending  | -          | -                                  |
-| p02    | code     | pending  | -          | -                                  |
-| p03    | code     | pending  | -          | -                                  |
-| final  | code     | received | 2026-04-03 | reviews/final-review-2026-04-03.md |
-| spec   | artifact | pending  | -          | -                                  |
-| design | artifact | pending  | -          | -                                  |
+| Scope  | Type     | Status      | Date       | Artifact                                    |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------- |
+| p01    | code     | pending     | -          | -                                           |
+| p02    | code     | pending     | -          | -                                           |
+| p03    | code     | pending     | -          | -                                           |
+| final  | code     | fixes_added | 2026-04-03 | reviews/archived/final-review-2026-04-03.md |
+| spec   | artifact | pending     | -          | -                                           |
+| design | artifact | pending     | -          | -                                           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -408,10 +476,11 @@ git commit -m "docs(p03-t02): align package readmes with docs-first strategy"
 - Phase 1: 3 tasks - establish the new docs IA and entrypoints
 - Phase 2: 3 tasks - move guide content and add progressive disclosure
 - Phase 3: 2 tasks - realign READMEs and run a final audit
+- Phase 4: 2 tasks - address selected review-fix cleanup items
 
-**Total: 8 tasks**
+**Total: 10 tasks**
 
-Ready for code review and merge.
+Pending review-fix implementation and a final re-review pass before merge.
 
 ---
 

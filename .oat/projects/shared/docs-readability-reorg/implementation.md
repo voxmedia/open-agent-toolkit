@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-03
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,13 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 3     | 3/3       |
-| Phase 2 | completed | 3     | 3/3       |
-| Phase 3 | completed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 3     | 3/3       |
+| Phase 2 | completed   | 3     | 3/3       |
+| Phase 3 | completed   | 2     | 2/2       |
+| Phase 4 | in_progress | 2     | 0/2       |
 
-**Total:** 8/8 tasks completed
+**Total:** 8/10 tasks completed
 
 ---
 
@@ -393,6 +394,35 @@ oat_generated: false
 
 ---
 
+### Review Received: final
+
+**Date:** 2026-04-03
+**Review artifact:** `reviews/archived/final-review-2026-04-03.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 3
+
+**New tasks added:** `p04-t01`, `p04-t02`
+
+**Deferred Findings:**
+
+- `m2` Missing `/provider-sync/getting-started` canonical page
+  - Disposition: deferred with rationale
+  - Rationale: current user routing works through `cli-utilities/bootstrap`, and the normalized implementation plan did not require a separate canonical page. This is plan/reference alignment cleanup rather than a correctness gap.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill starting at `p04-t01`.
+
+After the fix tasks are complete:
+
+- Update the review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.
@@ -411,6 +441,9 @@ Chronological log of implementation progress.
 - [x] p02-t03: add progressive disclosure to the highest-density docs pages
 - [x] p03-t01: rewrite the root README as an overview and quick-start document
 - [x] p03-t02: tighten package and tooling READMEs and run a final audit
+- [x] final review received
+- [ ] p04-t01: remove empty legacy guide subdirectories
+- [ ] p04-t02: remove obsolete overview deprecation note from docs index contract
 
 **What changed (high level):**
 
@@ -426,6 +459,7 @@ Chronological log of implementation progress.
 - Rewrote the root README into a short overview that pushes dense detail to the docs site
 - Tightened package and tooling READMEs so they stay package-local and route readers into the canonical docs for dense detail
 - Ran a final docs build audit after the README updates
+- Received the final code review and converted two selected minor findings into explicit follow-up tasks
 
 **Decisions:**
 
@@ -439,6 +473,7 @@ Chronological log of implementation progress.
 - The generated app-level index can temporarily show legacy guide structure until the underlying guide content is migrated
 - Dense/reference detail should live on the docs site; README files should stay concise and link outward
 - No documentation should be wholesale removed or materially narrowed as part of this reorganization without user approval
+- Minor finding `m2` remains deferred because the current provider-sync onboarding route is acceptable and the normalized plan did not require a dedicated page
 
 **Follow-ups / TODO:**
 
@@ -448,7 +483,7 @@ Chronological log of implementation progress.
 
 - None
 
-**Session End:** 17:35Z
+**Session End:** 18:19Z
 
 ---
 
