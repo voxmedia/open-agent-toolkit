@@ -32,7 +32,7 @@ jobs:
       # - install dependencies
       # - build the publishable workspace packages
       # - run pnpm release:validate
-      # - run pnpm publish --dry-run for each public package against npmjs
+      # - verify publishable tarballs can be produced without requiring npm auth
       - name: Checkout
         uses: actions/checkout@v5
         with:
@@ -56,22 +56,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Configure npmjs registry
-        run: |
-          cat > .npmrc.publish <<'EOF'
-          registry=https://registry.npmjs.org/
-          @open-agent-toolkit:registry=https://registry.npmjs.org/
-          EOF
-
       - name: Build
         run: pnpm build
 
       - name: Release validate
         run: pnpm release:validate
 
-      - name: Publish dry run
-        env:
-          NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
+      - name: Verify publishable tarballs
         run: |
           for pkg_name in \
             @open-agent-toolkit/docs-transforms \
@@ -87,9 +78,9 @@ jobs:
             )"
 
             if npm view "${pkg_name}@${pkg_version}" version >/dev/null 2>&1; then
-              echo "Skipping npm publish --dry-run for ${pkg_name}@${pkg_version}; version already exists on npm."
+              echo "Tarball ready for ${pkg_name}@${pkg_version}; version already exists on npm."
             else
-              npm publish --dry-run --access public "$tarball"
+              echo "Tarball ready for unpublished version ${pkg_name}@${pkg_version}: $(basename "$tarball")"
             fi
 
             rm -rf "$pack_dir"
