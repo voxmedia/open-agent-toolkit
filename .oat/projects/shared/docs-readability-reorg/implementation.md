@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-03
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 2     | 0/2       |
+| Phase 4 | in_progress | 2     | 1/2       |
 
-**Total:** 8/10 tasks completed
+**Total:** 9/10 tasks completed
 
 ---
 
@@ -423,6 +423,47 @@ After the fix tasks are complete:
 
 ---
 
+## Phase 4: Review fixes
+
+**Status:** in_progress
+**Started:** 2026-04-03
+
+### Task p04-t01: (review) Remove empty legacy guide subdirectories
+
+**Status:** completed
+**Commit:** -
+
+**Outcome (required when completed):**
+
+- Removed the stale empty `guide/` subdirectories from the local workspace so the compatibility surface now contains only the remaining guide files.
+- Verified that `find apps/oat-docs/docs/guide -empty -type d` returns no stale empty guide directories.
+- Confirmed that this cleanup produced no tracked repository diff because Git does not version empty directories.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/guide/` - workspace-only empty-directory cleanup; no tracked files were modified
+
+**Verification:**
+
+- Run: `find apps/oat-docs/docs/guide -empty -type d`
+- Result: pass
+
+**Notes / Decisions:**
+
+- No code commit was possible for this task because empty directories are not represented in Git history.
+- The task is still marked complete because the review concern was resolved in the working tree and verified directly.
+
+### Task p04-t02: (review) Remove obsolete overview deprecation note from docs index contract
+
+**Status:** in_progress
+**Commit:** -
+
+**Notes / Decisions:**
+
+- The goal is to remove obsolete migration language, not to rename or restructure the new section overview pages.
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.
@@ -442,7 +483,7 @@ Chronological log of implementation progress.
 - [x] p03-t01: rewrite the root README as an overview and quick-start document
 - [x] p03-t02: tighten package and tooling READMEs and run a final audit
 - [x] final review received
-- [ ] p04-t01: remove empty legacy guide subdirectories
+- [x] p04-t01: remove empty legacy guide subdirectories
 - [ ] p04-t02: remove obsolete overview deprecation note from docs index contract
 
 **What changed (high level):**
@@ -460,6 +501,7 @@ Chronological log of implementation progress.
 - Tightened package and tooling READMEs so they stay package-local and route readers into the canonical docs for dense detail
 - Ran a final docs build audit after the README updates
 - Received the final code review and converted two selected minor findings into explicit follow-up tasks
+- Cleared the stale empty legacy guide directories called out in the review and confirmed the cleanup was workspace-only
 
 **Decisions:**
 
@@ -474,6 +516,7 @@ Chronological log of implementation progress.
 - Dense/reference detail should live on the docs site; README files should stay concise and link outward
 - No documentation should be wholesale removed or materially narrowed as part of this reorganization without user approval
 - Minor finding `m2` remains deferred because the current provider-sync onboarding route is acceptable and the normalized plan did not require a dedicated page
+- Review-fix task `p04-t01` did not produce a tracked diff because the cleanup removed only untracked empty directories
 
 **Follow-ups / TODO:**
 
@@ -483,7 +526,7 @@ Chronological log of implementation progress.
 
 - None
 
-**Session End:** 18:19Z
+**Session End:** 19:06Z
 
 ---
 
