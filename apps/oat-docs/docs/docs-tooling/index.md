@@ -22,19 +22,19 @@ This section explains how OAT supports docs surfaces, how the index contract wor
 ## Start Here
 
 - Read [Overview](overview.md) for the docs-tooling model and where Fumadocs versus MkDocs matters.
-- Use [Quickstart](../guide/documentation/quickstart.md) when you are bootstrapping a docs surface.
-- Go to [Commands](../guide/documentation/commands.md) when you already have a docs app and need the CLI surface.
+- Use [Add Docs to a Repo](add-docs-to-a-repo.md) when you are bootstrapping a docs surface.
+- Go to [Commands](commands.md) when you already have a docs app and need the CLI surface.
 
 ## Common Tasks
 
-- Bootstrap docs app support with [Quickstart](../guide/documentation/quickstart.md).
-- Maintain docs structure with [Commands](../guide/documentation/commands.md).
-- Use the governed workflow in [Workflows](../guide/documentation/workflows.md).
+- Bootstrap docs app support with [Add Docs to a Repo](add-docs-to-a-repo.md).
+- Maintain docs structure with [Commands](commands.md).
+- Use the governed workflow in [Workflows](workflows.md).
 - Check the underlying docs contract in [Docs Index Contract](../reference/docs-index-contract.md).
 
 ## Go Deeper
 
 - [Overview](overview.md) - What docs tooling is for and how the docs contract fits together.
-- [Quickstart](../guide/documentation/quickstart.md) - Bootstrap a docs app and adopt the docs workflow in a repo.
-- [Commands](../guide/documentation/commands.md) - Docs CLI surface for init, migration, index generation, and nav sync.
-- [Workflows](../guide/documentation/workflows.md) - How the docs CLI helpers pair with analyze/apply workflows.
+- [Add Docs to a Repo](add-docs-to-a-repo.md) - Bootstrap a docs app and adopt the docs workflow in a repo.
+- [Commands](commands.md) - Docs CLI surface for init, migration, index generation, and nav sync.
+- [Workflows](workflows.md) - How the docs CLI helpers pair with analyze/apply workflows.

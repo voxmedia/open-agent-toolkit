@@ -20,7 +20,4 @@ The old catch-all User Guide is being split into clearer adoption lanes so new u
 ## Legacy Pages Still Under Guide
 
 - [Core Concepts](concepts.md) - High-level mental model while concept material is being redistributed.
-- [CLI Bootstrap](getting-started.md) - `oat init` setup guidance until CLI Utilities migration is complete.
-- [Tool Packs](tool-packs.md) - Pack lifecycle guidance until CLI Utilities migration is complete.
-- [Documentation](documentation/index.md) - Docs tooling pages until that section finishes moving.
-- [CLI Reference](cli-reference.md) - Scannable command map until the remaining command families are re-homed.
+- This guide bucket is being retired. Use the canonical top-level sections above for active documentation.

@@ -1,7 +1,11 @@
 - [OAT Documentation](index.md) — An open-source toolkit for portable, provider-agnostic agent tooling and workflows.
 - Cli Utilities
   - [CLI Utilities](cli-utilities/index.md) — Standalone adoption lane for general OAT CLI surfaces outside provider sync, docs tooling, and tracked workflows.
+  - [CLI Bootstrap](cli-utilities/bootstrap.md) — Foundational setup via oat init for canonical directories, provider adoption, and configuration.
+  - [Config and Local State](cli-utilities/config-and-local-state.md) — Utility command groups for config discovery, backlog helpers, local paths, instruction integrity, and diagnostics.
+  - [Configuration](cli-utilities/configuration.md) — How OAT configuration is split across shared repo, repo-local, user, and provider-sync surfaces.
   - [CLI Utilities Overview](cli-utilities/overview.md) — Plain-language explanation of the OAT CLI surface that lives outside provider sync, docs tooling, and tracked workflows.
+  - [Tool Packs and Installed Assets](cli-utilities/tool-packs.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
 - Contributing
   - [Contributing](contributing/index.md) — Contributor-facing guide for working on OAT code, docs, markdown patterns, and skill authoring.
   - [Contributing Code](contributing/code.md) — Contributor setup, repo structure, quality gates, and pull request expectations for OAT changes.
@@ -13,19 +17,13 @@
   - [Writing Skills](contributing/skills.md) — Contributor guide to authoring OAT skills, including runtime contracts, governance, and where to start.
 - Docs Tooling
   - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for docs app setup, docs commands, and docs maintenance workflows.
+  - [Add Docs to a New Repo](docs-tooling/add-docs-to-a-repo.md) — Step-by-step guide for adding an OAT-managed docs app to a repository.
+  - [Docs App Commands](docs-tooling/commands.md) — Docs scaffolding CLI surface for Fumadocs/MkDocs, migration, index generation, and nav sync.
   - [Docs Tooling Overview](docs-tooling/overview.md) — Plain-language explanation of OAT docs support, docs app choices, and the index contract.
+  - [Docs Workflows](docs-tooling/workflows.md) — Docs CLI helpers and skills for analysis and controlled documentation updates.
 - Guide
   - [User Guide](guide/index.md) — User-facing guide for operating OAT across provider sync, docs tooling, workflow execution, skills, and ideas.
-  - Documentation
-    - [Documentation](guide/documentation/index.md) — Guide to OAT documentation app setup, docs commands, and docs analysis/apply workflows.
-    - [Docs App Commands](guide/documentation/commands.md) — Docs scaffolding CLI surface for Fumadocs/MkDocs, migration, index generation, and nav sync.
-    - [Add Docs to a New Repo](guide/documentation/quickstart.md) — Step-by-step guide for adding an OAT-managed docs app to a repository.
-    - [Docs Workflows](guide/documentation/workflows.md) — Docs CLI helpers and skills for analysis and controlled documentation updates.
-  - [CLI Reference](guide/cli-reference.md) — Scannable reference for the current OAT CLI surface, with links to the deeper owning pages for each command family.
   - [Core Concepts](guide/concepts.md) — Mental model for canonical assets, provider views, scopes, skills, and the optional workflow layer.
-  - [Configuration](guide/configuration.md) — How OAT configuration is split across shared repo, repo-local, user, and provider-sync surfaces.
-  - [CLI Bootstrap](guide/getting-started.md) — Foundational setup via oat init for canonical directories, provider adoption, and configuration.
-  - [Tool Packs and Installed Assets](guide/tool-packs.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
 - Provider Sync
   - [Provider Sync](provider-sync/index.md) — Standalone adoption lane for canonical assets, provider views, sync commands, and drift management.
   - [Provider Interop Commands](provider-sync/commands.md) — CLI commands for provider status, sync, and drift management.

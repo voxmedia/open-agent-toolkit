@@ -52,7 +52,7 @@ Most OAT operations run in one of three scopes: `project`, `user`, or `all`. Pro
 Use these docs next:
 
 - [Scope and Surface](../provider-sync/scope-and-surface.md)
-- [CLI Reference](cli-reference.md)
+- [CLI Reference](../reference/cli-reference.md)
 
 ## Skills and CLI Commands
 

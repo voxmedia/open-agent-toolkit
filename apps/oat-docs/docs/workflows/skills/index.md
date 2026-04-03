@@ -10,7 +10,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 ## Contents
 
 - [Writing Skills](../../contributing/skills.md) - Contributor guide to skill authoring, contracts, and governance.
-- [Docs Workflows](../../guide/documentation/workflows.md) - How docs CLI helpers and docs skills work together.
+- [Docs Workflows](../../docs-tooling/workflows.md) - How docs CLI helpers and docs skills work together.
 
 ## Key Skills by Use Case
 
@@ -33,7 +33,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 
 - choose the right skill for a task, stay in this guide page
 - write or update a skill, use [Writing Skills](../../contributing/skills.md)
-- understand how docs-specific skills fit with docs commands, use [Docs Workflows](../../guide/documentation/workflows.md)
+- understand how docs-specific skills fit with docs commands, use [Docs Workflows](../../docs-tooling/workflows.md)
 
 ## Full Catalog
 

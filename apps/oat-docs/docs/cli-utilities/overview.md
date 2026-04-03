@@ -27,7 +27,7 @@ Use CLI Utilities when:
 
 ## Continue Here
 
-- [CLI Bootstrap](../guide/getting-started.md) for initial setup
-- [Tool Packs](../guide/tool-packs.md) for pack lifecycle management
-- [Configuration](../guide/configuration.md) for config semantics
-- [CLI Reference](../reference/cli-reference.md) for the wider utility command map
+- [CLI Bootstrap](bootstrap.md) for initial setup
+- [Tool Packs](tool-packs.md) for pack lifecycle management
+- [Configuration](configuration.md) for config semantics
+- [Config and Local State](config-and-local-state.md) for the wider utility command map

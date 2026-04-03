@@ -22,7 +22,7 @@ This section explains how OAT treats `.agents/` and `.oat/` as the source of tru
 ## Start Here
 
 - Read [Overview](overview.md) for the plain-language model and the first-sync flow.
-- Use [CLI Bootstrap](../guide/getting-started.md) when you are bootstrapping OAT and want the sync-relevant setup path.
+- Use [CLI Bootstrap](../cli-utilities/bootstrap.md) when you are bootstrapping OAT and want the sync-relevant setup path.
 - Go to [Commands](commands.md) once you are actively using `oat status`, `oat sync`, and `oat providers`.
 
 ## Common Tasks
@@ -35,7 +35,7 @@ This section explains how OAT treats `.agents/` and `.oat/` as the source of tru
 ## Go Deeper
 
 - [Overview](overview.md) - What provider sync is, when to use it, and what a typical sync loop looks like.
-- [CLI Bootstrap](../guide/getting-started.md) - Foundational setup before first sync.
+- [CLI Bootstrap](../cli-utilities/bootstrap.md) - Foundational setup before first sync.
 - [Scope and Surface](scope-and-surface.md) - Canonical assets, provider views, scopes, and the sync surface area.
 - [Commands](commands.md) - `oat status`, `oat sync`, and `oat providers ...` behavior.
 - [Providers](providers.md) - Provider-specific mappings, capabilities, and path conventions.

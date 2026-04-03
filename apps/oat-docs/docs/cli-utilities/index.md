@@ -22,20 +22,20 @@ This section collects the command groups that help you initialize OAT, manage in
 ## Start Here
 
 - Read [Overview](overview.md) to see what command groups live here and how this section relates to the other adoption lanes.
-- Use [CLI Bootstrap](../guide/getting-started.md) when you are starting with `oat init`.
-- Go to [Tool Packs](../guide/tool-packs.md) when you are managing bundled OAT packs and installed assets.
+- Use [CLI Bootstrap](bootstrap.md) when you are starting with `oat init`.
+- Go to [Tool Packs](tool-packs.md) when you are managing bundled OAT packs and installed assets.
 
 ## Common Tasks
 
-- Bootstrap OAT in a repo with [CLI Bootstrap](../guide/getting-started.md).
-- Manage installed packs in [Tool Packs](../guide/tool-packs.md).
-- Adjust settings in [Configuration](../guide/configuration.md).
-- Use [CLI Reference](../reference/cli-reference.md) for the wider command map while utility ownership is being migrated.
+- Bootstrap OAT in a repo with [CLI Bootstrap](bootstrap.md).
+- Manage installed packs in [Tool Packs](tool-packs.md).
+- Adjust settings in [Configuration](configuration.md).
+- Use [Config and Local State](config-and-local-state.md) for the utility command groups that support inspection and diagnostics.
 
 ## Go Deeper
 
 - [Overview](overview.md) - What belongs in CLI Utilities and when to use this section.
-- [CLI Bootstrap](../guide/getting-started.md) - Foundational `oat init` guidance outside provider-sync-specific onboarding.
-- [Tool Packs](../guide/tool-packs.md) - Bundled packs and `oat tools` lifecycle commands.
-- [Configuration](../guide/configuration.md) - OAT configuration guidance.
-- [CLI Reference](../reference/cli-reference.md) - Scannable command surface while utility ownership is being migrated.
+- [CLI Bootstrap](bootstrap.md) - Foundational `oat init` guidance outside provider-sync-specific onboarding.
+- [Tool Packs](tool-packs.md) - Bundled packs and `oat tools` lifecycle commands.
+- [Configuration](configuration.md) - OAT configuration guidance.
+- [Config and Local State](config-and-local-state.md) - Utility command groups for config, local state, diagnostics, and related inspection flows.

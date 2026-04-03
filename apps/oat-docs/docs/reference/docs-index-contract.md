@@ -49,5 +49,5 @@ Generated behavior:
 
 ## If You Are Trying To...
 
-- learn the docs workflow or docs commands as a user, start with [Documentation](../guide/documentation/index.md)
+- learn the docs workflow or docs commands as a user, start with [Docs Tooling](../docs-tooling/index.md)
 - contribute or restructure docs in this repo, pair this contract with [Contributing to OAT Docs](../contributing/documentation.md)

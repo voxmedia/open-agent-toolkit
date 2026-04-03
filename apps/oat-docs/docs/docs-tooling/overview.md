@@ -25,7 +25,7 @@ Use Docs Tooling when:
 
 ## Continue Here
 
-- [Quickstart](../guide/documentation/quickstart.md) for initial setup
-- [Commands](../guide/documentation/commands.md) for the CLI surface
-- [Workflows](../guide/documentation/workflows.md) for governed docs changes
+- [Add Docs to a Repo](add-docs-to-a-repo.md) for initial setup
+- [Commands](commands.md) for the CLI surface
+- [Workflows](workflows.md) for governed docs changes
 - [Docs Index Contract](../reference/docs-index-contract.md) for the underlying rules
