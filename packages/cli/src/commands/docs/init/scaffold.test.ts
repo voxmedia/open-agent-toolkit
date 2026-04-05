@@ -302,7 +302,7 @@ describe('scaffoldDocsApp', () => {
     expect(packageJson.scripts['predev']).toContain('docs generate-index');
     expect(packageJson.scripts['prebuild']).toContain('docs generate-index');
     expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
-      '^0.0.16',
+      '^0.0.17',
     );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
@@ -334,7 +334,7 @@ describe('scaffoldDocsApp', () => {
     expect(result.documentationConfig).toEqual({
       root: 'apps/my-docs',
       tooling: 'fumadocs',
-      index: join('apps/my-docs', 'index.md'),
+      index: join('apps/my-docs', 'docs', 'index.md'),
     });
   });
 
@@ -363,7 +363,7 @@ describe('scaffoldDocsApp', () => {
       await readFile(join(result.appRoot, 'package.json'), 'utf8'),
     ) as { devDependencies: Record<string, string> };
     expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
-      '^0.0.16',
+      '^0.0.17',
     );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
@@ -434,12 +434,12 @@ describe('scaffoldDocsApp', () => {
     );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
 
-    // Should use oat CLI directly with paths relative to docs app
+    // Should use oat CLI directly with paths relative to docs app — no || true suppression
     expect(packageJson.scripts['predev']).toBe(
-      'fumadocs-mdx && (oat docs generate-index --docs-dir docs --output index.md || true)',
+      'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
     );
     expect(packageJson.scripts['prebuild']).toBe(
-      'fumadocs-mdx && (oat docs generate-index --docs-dir docs --output index.md || true)',
+      'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
     );
   });
 
@@ -490,6 +490,64 @@ describe('scaffoldDocsApp', () => {
       '^1.2.3',
     );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
+  });
+
+  it('uses workspace:* for locally found OAT packages and published versions for the rest', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-partial-'));
+    createdRoots.push(root);
+    const assetsRoot = await seedAssets(
+      root,
+      'docs-app-fuma',
+      FUMA_TEMPLATE_FILES,
+    );
+
+    // Seed only docs-config and docs-theme locally (not cli or docs-transforms)
+    for (const pkg of ['docs-config', 'docs-theme']) {
+      const pkgDir = join(root, 'packages', pkg);
+      await mkdir(pkgDir, { recursive: true });
+      await writeFile(
+        join(pkgDir, 'package.json'),
+        JSON.stringify({
+          name: `@open-agent-toolkit/${pkg}`,
+          version: '0.0.16',
+        }),
+        'utf8',
+      );
+    }
+
+    const result = await scaffoldDocsApp({
+      assetsRoot,
+      repoRoot: root,
+      repoShape: 'single-package',
+      framework: 'fumadocs',
+      appName: 'docs',
+      targetDir: 'docs',
+      siteDescription: 'Partial local packages',
+      lint: 'none',
+      format: 'none',
+    });
+
+    const packageJson = JSON.parse(
+      await readFile(join(result.appRoot, 'package.json'), 'utf8'),
+    ) as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+
+    // Local packages should use workspace:*
+    expect(packageJson.dependencies['@open-agent-toolkit/docs-config']).toBe(
+      'workspace:*',
+    );
+    expect(packageJson.dependencies['@open-agent-toolkit/docs-theme']).toBe(
+      'workspace:*',
+    );
+    // Non-local packages should use published versions
+    expect(
+      packageJson.dependencies['@open-agent-toolkit/docs-transforms'],
+    ).toMatch(/^\^/);
+    expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toMatch(
+      /^\^/,
+    );
   });
 
   it('uses workspace:* deps and pnpm -w run cli for OAT repo', async () => {

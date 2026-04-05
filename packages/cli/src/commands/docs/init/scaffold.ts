@@ -100,6 +100,7 @@ export interface ScaffoldDocsAppResult {
 
 export interface OatDepContext {
   isOatRepo: boolean;
+  localPackages: Set<string>;
   oatPackageVersions: Record<string, string>;
 }
 
@@ -109,7 +110,7 @@ const OAT_DEP_PACKAGES = [
   'docs-theme',
   'docs-transforms',
 ] as const;
-const DEFAULT_OAT_PUBLISHED_VERSION = '0.0.16';
+const DEFAULT_OAT_PUBLISHED_VERSION = '0.0.17';
 const PUBLIC_PACKAGE_VERSIONS_FILE = 'public-package-versions.json';
 
 export async function detectIsOatRepo(repoRoot: string): Promise<boolean> {
@@ -157,13 +158,24 @@ function buildFallbackOatPackageVersions(
   return Object.fromEntries(OAT_DEP_PACKAGES.map((name) => [name, version]));
 }
 
+async function detectLocalOatPackages(repoRoot: string): Promise<Set<string>> {
+  const found = new Set<string>();
+  for (const pkg of OAT_DEP_PACKAGES) {
+    if (await fileExists(join(repoRoot, 'packages', pkg, 'package.json'))) {
+      found.add(pkg);
+    }
+  }
+  return found;
+}
+
 export async function resolveOatDepContext(
   repoRoot: string,
   assetsRoot: string,
 ): Promise<OatDepContext> {
-  const isOatRepo = await detectIsOatRepo(repoRoot);
+  const localPackages = await detectLocalOatPackages(repoRoot);
+  const isOatRepo = localPackages.size === OAT_DEP_PACKAGES.length;
   if (isOatRepo) {
-    return { isOatRepo, oatPackageVersions: {} };
+    return { isOatRepo, localPackages, oatPackageVersions: {} };
   }
 
   const cliVersion = await readCliVersion(assetsRoot);
@@ -171,7 +183,7 @@ export async function resolveOatDepContext(
     ...buildFallbackOatPackageVersions(cliVersion),
     ...(await readBundledOatPackageVersions(assetsRoot)),
   };
-  return { isOatRepo, oatPackageVersions };
+  return { isOatRepo, localPackages, oatPackageVersions };
 }
 
 function humanizeAppName(appName: string): string {
@@ -224,11 +236,11 @@ function buildGenerateIndexCmd(isOatRepo: boolean, targetDir: string): string {
   if (isOatRepo) {
     return `pnpm -w run cli -- docs generate-index --docs-dir ${targetDir}/docs --output ${targetDir}/index.md`;
   }
-  return '(oat docs generate-index --docs-dir docs --output index.md || true)';
+  return 'oat docs generate-index --docs-dir docs --output index.md';
 }
 
 function oatDepVersion(depContext: OatDepContext, packageName: string): string {
-  if (depContext.isOatRepo) {
+  if (depContext.localPackages.has(packageName)) {
     return 'workspace:*';
   }
   return `^${depContext.oatPackageVersions[packageName] ?? DEFAULT_OAT_PUBLISHED_VERSION}`;
@@ -289,7 +301,7 @@ function buildDocumentationConfig(
     return {
       root: targetDir,
       tooling: 'fumadocs',
-      index: join(targetDir, 'index.md'),
+      index: join(targetDir, 'docs', 'index.md'),
     };
   }
 

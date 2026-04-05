@@ -8,6 +8,7 @@ import {
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
+import { resolveProjectRoot } from '@fs/paths';
 import { Command, Option } from 'commander';
 
 import { generateIndex, renderIndex } from './generator';
@@ -34,6 +35,7 @@ interface IndexGenerateFileDependencies {
     repoRoot: string,
     config: import('@config/oat-config').OatConfig,
   ) => Promise<void>;
+  resolveRepoRoot: (cwd: string) => Promise<string>;
 }
 
 interface IndexGenerateDependencies {
@@ -47,6 +49,7 @@ const DEFAULT_FILE_DEPS: IndexGenerateFileDependencies = {
   writeFile,
   readOatConfig,
   writeOatConfig,
+  resolveRepoRoot: resolveProjectRoot,
 };
 
 const DEFAULT_DEPENDENCIES: IndexGenerateDependencies = {
@@ -69,12 +72,13 @@ async function runIndexGenerate(
 
   await deps.writeFile(outputPath, content, 'utf8');
 
-  const config = await deps.readOatConfig(context.cwd);
+  const repoRoot = await deps.resolveRepoRoot(context.cwd);
+  const config = await deps.readOatConfig(repoRoot);
   config.documentation = {
     ...config.documentation,
-    index: relative(context.cwd, outputPath) || 'index.md',
+    index: relative(repoRoot, outputPath) || 'index.md',
   };
-  await deps.writeOatConfig(context.cwd, config);
+  await deps.writeOatConfig(repoRoot, config);
 
   if (context.json) {
     context.logger.json({

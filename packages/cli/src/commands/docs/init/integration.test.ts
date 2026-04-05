@@ -254,12 +254,12 @@ describe('scaffold integration', () => {
         '^9.9.9',
       );
 
-      // Verify oat CLI with app-relative paths
+      // Verify oat CLI with app-relative paths — no || true suppression
       expect(packageJson.scripts['predev']).toBe(
-        'fumadocs-mdx && (oat docs generate-index --docs-dir docs --output index.md || true)',
+        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
       );
       expect(packageJson.scripts['prebuild']).toBe(
-        'fumadocs-mdx && (oat docs generate-index --docs-dir docs --output index.md || true)',
+        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
       );
     },
   );

@@ -146,6 +146,204 @@ describe('createDocsInitCommand', () => {
 
     expect(capture.info.join('\n')).not.toContain('AGENTS.md');
   });
+  it('prints single-package next steps when repo shape is single-package', async () => {
+    const capture = createLoggerCapture();
+    const command = createDocsInitCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: 'all' as Scope,
+        dryRun: false,
+        verbose: globalOptions.verbose ?? false,
+        json: globalOptions.json ?? false,
+        cwd: globalOptions.cwd ?? '/tmp/workspace',
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+      detectRepoShape: vi.fn(async () => 'single-package' as const),
+      inputWithDefault: vi.fn(async () => null),
+      selectWithAbort: vi.fn(
+        async <T extends string>(
+          _message: string,
+          choices: SelectChoice<T>[],
+        ) => choices[0]?.value ?? null,
+      ),
+      runDocsInit: vi.fn(async () => {}),
+      upsertAgentsMdSection: vi.fn(async () => ({
+        action: 'updated' as const,
+      })),
+    });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'docs',
+      '--target-dir',
+      'docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('cd docs');
+    expect(output).toContain('pnpm install');
+    expect(output).toContain('pnpm build');
+  });
+
+  it('warns and exits when existing docs config found in non-interactive mode', async () => {
+    const capture = createLoggerCapture();
+    const readOatConfig = vi.fn(async () => ({
+      version: 1,
+      documentation: { root: 'docs', tooling: 'fumadocs' },
+    }));
+
+    const command = createDocsInitCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: 'all' as Scope,
+        dryRun: false,
+        verbose: globalOptions.verbose ?? false,
+        json: globalOptions.json ?? false,
+        cwd: globalOptions.cwd ?? '/tmp/workspace',
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+      detectRepoShape: vi.fn(async () => 'monorepo' as const),
+      inputWithDefault: vi.fn(async () => null),
+      selectWithAbort: vi.fn(
+        async <T extends string>(
+          _message: string,
+          choices: SelectChoice<T>[],
+        ) => choices[0]?.value ?? null,
+      ),
+      runDocsInit: vi.fn(async () => {}),
+      upsertAgentsMdSection: vi.fn(async () => ({
+        action: 'updated' as const,
+      })),
+      readOatConfig,
+      confirmAction: vi.fn(async () => false),
+    });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'my-docs',
+      '--target-dir',
+      'apps/my-docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+    ]);
+
+    expect(capture.warn.join('\n')).toContain('Existing docs config');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('proceeds when --yes bypasses preflight warning', async () => {
+    const capture = createLoggerCapture();
+    const runDocsInit = vi.fn(async () => {});
+    const readOatConfig = vi.fn(async () => ({
+      version: 1,
+      documentation: { root: 'docs', tooling: 'fumadocs' },
+    }));
+
+    const command = createDocsInitCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: 'all' as Scope,
+        dryRun: false,
+        verbose: globalOptions.verbose ?? false,
+        json: globalOptions.json ?? false,
+        cwd: globalOptions.cwd ?? '/tmp/workspace',
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+      detectRepoShape: vi.fn(async () => 'monorepo' as const),
+      inputWithDefault: vi.fn(async () => null),
+      selectWithAbort: vi.fn(
+        async <T extends string>(
+          _message: string,
+          choices: SelectChoice<T>[],
+        ) => choices[0]?.value ?? null,
+      ),
+      runDocsInit,
+      upsertAgentsMdSection: vi.fn(async () => ({
+        action: 'updated' as const,
+      })),
+      readOatConfig,
+      confirmAction: vi.fn(async () => false),
+    });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'my-docs',
+      '--target-dir',
+      'apps/my-docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    expect(capture.warn.join('\n')).toContain('Existing docs config');
+    expect(runDocsInit).toHaveBeenCalledTimes(1);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints guidance when monorepo app name differs from default', async () => {
+    const { command, capture } = createHarness({ interactive: false });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'custom-docs',
+      '--target-dir',
+      'apps/custom-docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('custom-docs');
+    expect(output).toContain('root scripts');
+  });
+
+  it('prints monorepo next steps when repo shape is monorepo', async () => {
+    const { command, capture } = createHarness({ interactive: false });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'my-docs',
+      '--target-dir',
+      'apps/my-docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('pnpm install');
+    expect(output).toContain('pnpm --filter my-docs build');
+  });
 });
 
 describe('buildDocsSectionBody', () => {
