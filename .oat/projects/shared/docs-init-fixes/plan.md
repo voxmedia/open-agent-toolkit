@@ -399,13 +399,9 @@ git commit -m "fix(docs-init): integration fixups"
 
 ## Reviews
 
-| Scope | Type | Status  | Date | Artifact |
-| ----- | ---- | ------- | ---- | -------- |
-| p01   | code | pending | -    | -        |
-| p02   | code | pending | -    | -        |
-| p03   | code | pending | -    | -        |
-| p04   | code | pending | -    | -        |
-| final | code | pending | -    | -        |
+| Scope | Type | Status | Date       | Artifact                           |
+| ----- | ---- | ------ | ---------- | ---------------------------------- |
+| final | code | passed | 2026-04-05 | reviews/2026-04-05-final-review.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
