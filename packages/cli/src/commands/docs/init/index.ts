@@ -169,6 +169,18 @@ async function runDocsInitCommand(
       context.logger.info(`AGENTS.md docs section ${sectionResult.action}.`);
     }
 
+    if (!context.json) {
+      context.logger.info('');
+      context.logger.info('Next steps:');
+      if (resolved.repoShape === 'single-package') {
+        context.logger.info(`  cd ${resolved.targetDir} && pnpm install`);
+        context.logger.info('  pnpm build');
+      } else {
+        context.logger.info('  pnpm install');
+        context.logger.info(`  pnpm --filter ${resolved.appName} build`);
+      }
+    }
+
     process.exitCode = 0;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

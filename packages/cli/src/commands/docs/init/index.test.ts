@@ -146,6 +146,75 @@ describe('createDocsInitCommand', () => {
 
     expect(capture.info.join('\n')).not.toContain('AGENTS.md');
   });
+  it('prints single-package next steps when repo shape is single-package', async () => {
+    const capture = createLoggerCapture();
+    const command = createDocsInitCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: 'all' as Scope,
+        dryRun: false,
+        verbose: globalOptions.verbose ?? false,
+        json: globalOptions.json ?? false,
+        cwd: globalOptions.cwd ?? '/tmp/workspace',
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+      detectRepoShape: vi.fn(async () => 'single-package' as const),
+      inputWithDefault: vi.fn(async () => null),
+      selectWithAbort: vi.fn(
+        async <T extends string>(
+          _message: string,
+          choices: SelectChoice<T>[],
+        ) => choices[0]?.value ?? null,
+      ),
+      runDocsInit: vi.fn(async () => {}),
+      upsertAgentsMdSection: vi.fn(async () => ({
+        action: 'updated' as const,
+      })),
+    });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'docs',
+      '--target-dir',
+      'docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('cd docs');
+    expect(output).toContain('pnpm install');
+    expect(output).toContain('pnpm build');
+  });
+
+  it('prints monorepo next steps when repo shape is monorepo', async () => {
+    const { command, capture } = createHarness({ interactive: false });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'my-docs',
+      '--target-dir',
+      'apps/my-docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('pnpm install');
+    expect(output).toContain('pnpm --filter my-docs build');
+  });
 });
 
 describe('buildDocsSectionBody', () => {
