@@ -110,7 +110,7 @@ const OAT_DEP_PACKAGES = [
   'docs-theme',
   'docs-transforms',
 ] as const;
-const DEFAULT_OAT_PUBLISHED_VERSION = '0.0.17';
+const DEFAULT_OAT_PUBLISHED_VERSION = '0.0.18';
 const PUBLIC_PACKAGE_VERSIONS_FILE = 'public-package-versions.json';
 
 export async function detectIsOatRepo(repoRoot: string): Promise<boolean> {
