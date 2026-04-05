@@ -1,12 +1,8 @@
 name: Release
 
 on:
-  workflow_call:
-    inputs:
-      tag:
-        description: 'Existing release tag to publish (for example: v0.0.14)'
-        required: true
-        type: string
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       tag:
@@ -15,22 +11,71 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
-  group: release-${{ inputs.tag }}
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.sha }}
   cancel-in-progress: false
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.resolve_release.outputs.release_tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        if: ${{ github.event_name == 'push' }}
+        uses: ./.github/actions/setup-pnpm
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install dependencies
+        if: ${{ github.event_name == 'push' }}
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve release tag
+        id: resolve_release
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            release_tag="${{ inputs.tag }}"
+            if [[ ! "$release_tag" =~ ^v[0-9] ]]; then
+              echo "Release tag must start with 'v': $release_tag" >&2
+              exit 1
+            fi
+
+            if ! git rev-parse --verify --quiet "refs/tags/${release_tag}" >/dev/null; then
+              echo "Release tag does not exist: $release_tag" >&2
+              exit 1
+            fi
+
+            echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          pnpm exec tsx tools/release/create-public-package-tag.ts \
+            --base-ref "${{ github.event.before }}" \
+            --head-ref "${{ github.sha }}" \
+            --push
+
   publish:
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_tag != '' }}
     runs-on: ubuntu-latest
     env:
-      RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
 
     steps:
       # Publish workflow contract:
-      # - run only from release tags
+      # - create a release tag on pushes to main when lockstep versions change
+      # - support reruns from an existing release tag via workflow_dispatch
       # - use npm trusted publishing via GitHub OIDC
       # - rerun the same build and release validation path as dry-run
       # - publish the four @open-agent-toolkit/* packages in lockstep
@@ -58,13 +103,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Configure npmjs registry
-        run: |
-          cat > .npmrc.publish <<'EOF'
-          registry=https://registry.npmjs.org/
-          @open-agent-toolkit:registry=https://registry.npmjs.org/
-          EOF
-
       - name: Build
         run: pnpm build
 
@@ -72,8 +110,6 @@ jobs:
         run: pnpm release:validate
 
       - name: Publish packages
-        env:
-          NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.publish
         run: |
           for pkg_name in \
             @open-agent-toolkit/docs-transforms \
@@ -84,17 +120,25 @@ jobs:
             pack_dir="$(mktemp -d)"
             pnpm --filter "$pkg_name" pack --pack-destination "$pack_dir"
             tarball="$(find "$pack_dir" -maxdepth 1 -name '*.tgz' -print -quit)"
-            npm publish --access public "$tarball"
+            pkg_version="$(
+              pnpm --filter "$pkg_name" exec node -e "process.stdout.write(require('./package.json').version)"
+            )"
+
+            if npm view "${pkg_name}@${pkg_version}" version >/dev/null 2>&1; then
+              echo "Skipping ${pkg_name}@${pkg_version}; version already exists on npm."
+            else
+              npm publish --access public "$tarball"
+            fi
+
             rm -rf "$pack_dir"
           done
 
   create-release:
     runs-on: ubuntu-latest
-    needs: publish
-    permissions:
-      contents: write
+    needs: [prepare, publish]
+    if: ${{ needs.prepare.outputs.release_tag != '' }}
     env:
-      RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
 
     steps:
       - name: Create GitHub Release
