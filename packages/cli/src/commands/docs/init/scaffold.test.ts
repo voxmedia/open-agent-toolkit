@@ -434,12 +434,12 @@ describe('scaffoldDocsApp', () => {
     );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
 
-    // Should use oat CLI directly with paths relative to docs app
+    // Should use oat CLI directly with paths relative to docs app — no || true suppression
     expect(packageJson.scripts['predev']).toBe(
-      'fumadocs-mdx && (oat docs generate-index --docs-dir docs --output index.md || true)',
+      'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
     );
     expect(packageJson.scripts['prebuild']).toBe(
-      'fumadocs-mdx && (oat docs generate-index --docs-dir docs --output index.md || true)',
+      'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
     );
   });
 
