@@ -239,6 +239,18 @@ describe('archive utils', () => {
     const execFile = vi.fn(async (file: string, args: string[]) => {
       if (
         file === 'git' &&
+        args[0] === 'check-ignore' &&
+        args[1] === '--quiet' &&
+        args[2] === '--no-index' &&
+        args[3] === '.oat/projects/archived/demo'
+      ) {
+        return {
+          stdout: '',
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
         args[0] === 'rev-parse' &&
         args[1] === '--git-common-dir'
       ) {
@@ -278,6 +290,94 @@ describe('archive utils', () => {
 
     expect(result.archivePath).toBe(
       join(mainRepoRoot, '.oat', 'projects', 'archived', 'demo'),
+    );
+    expect(result.summaryExportFile).toBe(
+      join(
+        worktreeRoot,
+        '.oat',
+        'repo',
+        'reference',
+        'project-summaries',
+        '20260401-demo.md',
+      ),
+    );
+    await expect(readFile(result.summaryExportFile!, 'utf8')).resolves.toBe(
+      '# summary\n',
+    );
+    await expect(
+      readFile(join(result.archivePath, 'summary.md'), 'utf8'),
+    ).resolves.toBe('# summary\n');
+  });
+
+  it('archives in the current worktree when the archive path is version controlled', async () => {
+    const tempRoot = await createRepoRoot();
+    const mainRepoRoot = join(tempRoot, 'main-repo');
+    const worktreeRoot = join(tempRoot, 'feature-worktree');
+    const projectPath = join(
+      worktreeRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'demo',
+    );
+
+    await mkdir(join(mainRepoRoot, '.git'), { recursive: true });
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
+
+    const execFile = vi.fn(async (file: string, args: string[]) => {
+      if (
+        file === 'git' &&
+        args[0] === 'check-ignore' &&
+        args[1] === '--quiet' &&
+        args[2] === '--no-index' &&
+        args[3] === '.oat/projects/archived/demo'
+      ) {
+        const error = new Error('not ignored') as NodeJS.ErrnoException;
+        error.code = 1;
+        throw error;
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-common-dir'
+      ) {
+        return {
+          stdout: join(mainRepoRoot, '.git'),
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-dir'
+      ) {
+        return {
+          stdout: join(mainRepoRoot, '.git', 'worktrees', 'feature-worktree'),
+          stderr: '',
+        };
+      }
+
+      throw new Error(`Unexpected command: ${file} ${args.join(' ')}`);
+    });
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot: worktreeRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
+      {
+        gitExecFile: execFile,
+        timestamp: () => '2026-04-01T12:34:56Z',
+      },
+    );
+
+    expect(result.archivePath).toBe(
+      join(worktreeRoot, '.oat', 'projects', 'archived', 'demo'),
     );
     expect(result.summaryExportFile).toBe(
       join(

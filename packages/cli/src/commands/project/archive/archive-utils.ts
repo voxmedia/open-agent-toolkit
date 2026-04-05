@@ -206,10 +206,58 @@ function resolveGitPath(repoRoot: string, gitPath: string): string {
     : join(repoRoot, normalizedPath);
 }
 
+function isExitCode(error: unknown, code: number): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    Number(error.code) === code
+  );
+}
+
+async function isGitignoredArchivePath(
+  repoRoot: string,
+  archiveProjectPath: string,
+  dependencies: ArchiveProjectOnCompletionDependencies,
+): Promise<boolean> {
+  const execFile = dependencies.gitExecFile ?? execFileAsync;
+
+  try {
+    await execFile(
+      'git',
+      ['check-ignore', '--quiet', '--no-index', archiveProjectPath],
+      {
+        cwd: repoRoot,
+        env: dependencies.env ?? process.env,
+      },
+    );
+    return true;
+  } catch (error) {
+    if (isExitCode(error, 1)) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 async function resolveArchiveRepoRoot(
   repoRoot: string,
+  archiveProjectPath: string,
   dependencies: ArchiveProjectOnCompletionDependencies,
 ): Promise<string> {
+  try {
+    const archivePathIsGitignored = await isGitignoredArchivePath(
+      repoRoot,
+      archiveProjectPath,
+      dependencies,
+    );
+    if (!archivePathIsGitignored) {
+      return repoRoot;
+    }
+  } catch {
+    return repoRoot;
+  }
+
   const execFile = dependencies.gitExecFile ?? execFileAsync;
 
   try {
@@ -301,8 +349,13 @@ export async function archiveProjectOnCompletion(
   const execFile = dependencies.execFile ?? execFileAsync;
   const timestamp = dependencies.timestamp?.() ?? new Date().toISOString();
   const snapshotName = buildArchiveSnapshotName(options.projectName, timestamp);
+  const archiveProjectPath = resolveLocalArchiveProjectPath(
+    options.projectsRoot,
+    options.projectName,
+  );
   const archiveRepoRoot = await resolveArchiveRepoRoot(
     options.repoRoot,
+    archiveProjectPath,
     dependencies,
   );
 

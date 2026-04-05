@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.3.4
+version: 1.3.5
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -342,7 +342,7 @@ echo "Project archived to $ARCHIVE_PATH"
 **Canonical helper behaviors (required):**
 
 - Always archive locally first. The local archive is the authoritative completion artifact even when remote sync is also configured.
-- If `archive.summaryExportPath` is configured and `summary.md` exists after archive, copy it to `{repoRoot}/{archive.summaryExportPath}/{PROJECT_NAME}.md`.
+- If `archive.summaryExportPath` is configured and `summary.md` exists after archive, copy it to `{repoRoot}/{archive.summaryExportPath}/YYYYMMDD-{PROJECT_NAME}.md`.
 - If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, sync the archived project to `{archive.s3Uri}/{repo-slug}/{PROJECT_NAME}/`.
 - If AWS CLI is missing or unusable for that S3 sync, warn and continue. Completion must not fail after the local archive succeeds.
 - If `archive.s3SyncOnComplete` is false or `archive.s3Uri` is unset, skip remote sync without prompting.
@@ -378,9 +378,10 @@ PRIMARY_REPO_ARCHIVE="${PRIMARY_REPO_ROOT}/.oat/projects/archived"
 
 Guidance:
 
-- In a worktree, prefer moving directly to `PRIMARY_REPO_ARCHIVE` instead of archiving locally and copying later.
+- In a worktree, only prefer `PRIMARY_REPO_ARCHIVE` when the archive destination is local-only/gitignored in the current checkout. If `.oat/projects/archived/` is version controlled on the current branch, archive in the current checkout instead.
 - Do not treat the worktree-local archive as durable.
 - If forced to use a local-only archive, warn and require explicit user confirmation.
+- Always write the dated `archive.summaryExportPath` copy into the current checkout (`repoRoot`), even when the project archive itself is written to the primary checkout.
 - Do not hardcode user-specific absolute paths.
 
 ### Step 9: Regenerate Dashboard
