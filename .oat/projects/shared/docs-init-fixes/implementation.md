@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-05
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,55 +24,57 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 3     | 0/3       |
-| Phase 2 | pending | 2     | 0/2       |
-| Phase 3 | pending | 3     | 0/3       |
-| Phase 4 | pending | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | in_progress | 2     | 0/2       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 1     | 0/1       |
 
-**Total:** 0/9 tasks completed
+**Total:** 3/9 tasks completed
 
 ---
 
 ## Phase 1: Core Fixes (CWD + Index Consistency)
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-05
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- `generate-index` now writes `.oat/config.json` to the git repo root instead of CWD, fixing spurious config creation in docs app subdirs
+- Config and AGENTS.md index paths are now consistent, both pointing to `<app>/docs/index.md`
+- Scaffold no longer wraps `generate-index` in `|| true` — failures are visible
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/docs/index-generate/index.ts` - Added resolveRepoRoot dep, use repo root for config ops
+- `packages/cli/src/commands/docs/init/scaffold.ts` - Fixed index path in buildDocumentationConfig, removed || true
+- `packages/cli/src/commands/docs/init/scaffold.test.ts` - Updated assertions
+- `packages/cli/src/commands/docs/init/integration.test.ts` - Updated assertions
+- `packages/cli/src/commands/docs/index-generate/index.test.ts` - New command-level tests
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
+- Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: 1153 tests pass, 0 lint errors, 0 type errors
 
 ### Task p01-t01: Fix generate-index to resolve repo root for config writes
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 487bea8
 
 ### Task p01-t02: Fix index path inconsistency between config and AGENTS.md
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4110de1
 
 ### Task p01-t03: Remove silent failure from generate-index in scaffold template
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e5febed
 
 ---
 
