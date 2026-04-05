@@ -302,7 +302,7 @@ describe('scaffoldDocsApp', () => {
     expect(packageJson.scripts['predev']).toContain('docs generate-index');
     expect(packageJson.scripts['prebuild']).toContain('docs generate-index');
     expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
-      '^0.0.16',
+      '^0.0.17',
     );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
@@ -363,7 +363,7 @@ describe('scaffoldDocsApp', () => {
       await readFile(join(result.appRoot, 'package.json'), 'utf8'),
     ) as { devDependencies: Record<string, string> };
     expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
-      '^0.0.16',
+      '^0.0.17',
     );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
