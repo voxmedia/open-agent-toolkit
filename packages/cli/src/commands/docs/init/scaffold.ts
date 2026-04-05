@@ -289,7 +289,7 @@ function buildDocumentationConfig(
     return {
       root: targetDir,
       tooling: 'fumadocs',
-      index: join(targetDir, 'index.md'),
+      index: join(targetDir, 'docs', 'index.md'),
     };
   }
 

@@ -334,7 +334,7 @@ describe('scaffoldDocsApp', () => {
     expect(result.documentationConfig).toEqual({
       root: 'apps/my-docs',
       tooling: 'fumadocs',
-      index: join('apps/my-docs', 'index.md'),
+      index: join('apps/my-docs', 'docs', 'index.md'),
     });
   });
 
