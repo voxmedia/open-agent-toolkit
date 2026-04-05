@@ -30,6 +30,7 @@ import {
   type DocsInitResolvedOptions,
   type DocsLintMode,
   detectDocsRepoShape,
+  getDefaultDocsAppName,
   resolveDocsInitOptions,
 } from './resolve-options';
 import { scaffoldDocsApp } from './scaffold';
@@ -218,6 +219,16 @@ async function runDocsInitCommand(
       } else {
         context.logger.info('  pnpm install');
         context.logger.info(`  pnpm --filter ${resolved.appName} build`);
+        const defaultName = getDefaultDocsAppName(
+          context.cwd,
+          resolved.repoShape,
+        );
+        if (resolved.appName !== defaultName) {
+          context.logger.info('');
+          context.logger.info(
+            `Note: Your docs app is named "${resolved.appName}" — if you have root scripts or CI filters referencing "${defaultName}", update them to match.`,
+          );
+        }
       }
     }
 

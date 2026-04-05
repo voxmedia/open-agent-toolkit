@@ -301,6 +301,28 @@ describe('createDocsInitCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('prints guidance when monorepo app name differs from default', async () => {
+    const { command, capture } = createHarness({ interactive: false });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'custom-docs',
+      '--target-dir',
+      'apps/custom-docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('custom-docs');
+    expect(output).toContain('root scripts');
+  });
+
   it('prints monorepo next steps when repo shape is monorepo', async () => {
     const { command, capture } = createHarness({ interactive: false });
 
