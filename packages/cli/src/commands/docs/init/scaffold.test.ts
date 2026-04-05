@@ -492,6 +492,64 @@ describe('scaffoldDocsApp', () => {
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
   });
 
+  it('uses workspace:* for locally found OAT packages and published versions for the rest', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-docs-partial-'));
+    createdRoots.push(root);
+    const assetsRoot = await seedAssets(
+      root,
+      'docs-app-fuma',
+      FUMA_TEMPLATE_FILES,
+    );
+
+    // Seed only docs-config and docs-theme locally (not cli or docs-transforms)
+    for (const pkg of ['docs-config', 'docs-theme']) {
+      const pkgDir = join(root, 'packages', pkg);
+      await mkdir(pkgDir, { recursive: true });
+      await writeFile(
+        join(pkgDir, 'package.json'),
+        JSON.stringify({
+          name: `@open-agent-toolkit/${pkg}`,
+          version: '0.0.16',
+        }),
+        'utf8',
+      );
+    }
+
+    const result = await scaffoldDocsApp({
+      assetsRoot,
+      repoRoot: root,
+      repoShape: 'single-package',
+      framework: 'fumadocs',
+      appName: 'docs',
+      targetDir: 'docs',
+      siteDescription: 'Partial local packages',
+      lint: 'none',
+      format: 'none',
+    });
+
+    const packageJson = JSON.parse(
+      await readFile(join(result.appRoot, 'package.json'), 'utf8'),
+    ) as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+
+    // Local packages should use workspace:*
+    expect(packageJson.dependencies['@open-agent-toolkit/docs-config']).toBe(
+      'workspace:*',
+    );
+    expect(packageJson.dependencies['@open-agent-toolkit/docs-theme']).toBe(
+      'workspace:*',
+    );
+    // Non-local packages should use published versions
+    expect(
+      packageJson.dependencies['@open-agent-toolkit/docs-transforms'],
+    ).toMatch(/^\^/);
+    expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toMatch(
+      /^\^/,
+    );
+  });
+
   it('uses workspace:* deps and pnpm -w run cli for OAT repo', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-docs-oatrepo-'));
     createdRoots.push(root);

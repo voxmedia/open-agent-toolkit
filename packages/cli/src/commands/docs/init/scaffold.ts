@@ -100,6 +100,7 @@ export interface ScaffoldDocsAppResult {
 
 export interface OatDepContext {
   isOatRepo: boolean;
+  localPackages: Set<string>;
   oatPackageVersions: Record<string, string>;
 }
 
@@ -157,13 +158,24 @@ function buildFallbackOatPackageVersions(
   return Object.fromEntries(OAT_DEP_PACKAGES.map((name) => [name, version]));
 }
 
+async function detectLocalOatPackages(repoRoot: string): Promise<Set<string>> {
+  const found = new Set<string>();
+  for (const pkg of OAT_DEP_PACKAGES) {
+    if (await fileExists(join(repoRoot, 'packages', pkg, 'package.json'))) {
+      found.add(pkg);
+    }
+  }
+  return found;
+}
+
 export async function resolveOatDepContext(
   repoRoot: string,
   assetsRoot: string,
 ): Promise<OatDepContext> {
-  const isOatRepo = await detectIsOatRepo(repoRoot);
+  const localPackages = await detectLocalOatPackages(repoRoot);
+  const isOatRepo = localPackages.size === OAT_DEP_PACKAGES.length;
   if (isOatRepo) {
-    return { isOatRepo, oatPackageVersions: {} };
+    return { isOatRepo, localPackages, oatPackageVersions: {} };
   }
 
   const cliVersion = await readCliVersion(assetsRoot);
@@ -171,7 +183,7 @@ export async function resolveOatDepContext(
     ...buildFallbackOatPackageVersions(cliVersion),
     ...(await readBundledOatPackageVersions(assetsRoot)),
   };
-  return { isOatRepo, oatPackageVersions };
+  return { isOatRepo, localPackages, oatPackageVersions };
 }
 
 function humanizeAppName(appName: string): string {
@@ -228,7 +240,7 @@ function buildGenerateIndexCmd(isOatRepo: boolean, targetDir: string): string {
 }
 
 function oatDepVersion(depContext: OatDepContext, packageName: string): string {
-  if (depContext.isOatRepo) {
+  if (depContext.localPackages.has(packageName)) {
     return 'workspace:*';
   }
   return `^${depContext.oatPackageVersions[packageName] ?? DEFAULT_OAT_PUBLISHED_VERSION}`;
