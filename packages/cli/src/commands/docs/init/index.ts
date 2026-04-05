@@ -8,13 +8,18 @@ import {
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
 import {
+  confirmAction,
   inputWithDefault,
   type PromptContext,
   type SelectChoice,
   selectWithAbort,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
-import { readOatConfig, writeOatConfig } from '@config/oat-config';
+import {
+  type OatConfig,
+  readOatConfig,
+  writeOatConfig,
+} from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { Command, Option } from 'commander';
 
@@ -63,6 +68,8 @@ interface DocsInitDependencies {
     key: string,
     body: string,
   ) => Promise<UpsertSectionResult>;
+  readOatConfig: (repoRoot: string) => Promise<OatConfig>;
+  confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
 }
 
 const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
@@ -103,6 +110,8 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
     context.logger.info(`  Format: ${options.format}`);
   },
   upsertAgentsMdSection,
+  readOatConfig,
+  confirmAction,
 };
 
 const FRAMEWORK_LABELS: Record<DocsFramework, string> = {
@@ -154,6 +163,37 @@ async function runDocsInitCommand(
       }
       process.exitCode = 0;
       return;
+    }
+
+    const existingConfig = await dependencies.readOatConfig(context.cwd);
+    if (existingConfig.documentation?.root) {
+      const configDesc = `root: ${existingConfig.documentation.root}, tooling: ${existingConfig.documentation.tooling ?? 'unknown'}`;
+      if (context.json) {
+        // JSON mode: include warning in output, proceed only with --yes
+        if (!options.yes) {
+          context.logger.json({
+            status: 'error',
+            message: `Existing docs config found (${configDesc}). Use --yes to replace.`,
+          });
+          process.exitCode = 1;
+          return;
+        }
+      } else {
+        context.logger.warn(
+          `Existing docs config detected (${configDesc}). This will replace the current setup.`,
+        );
+        if (!options.yes) {
+          const proceed = await dependencies.confirmAction(
+            'Replace existing docs setup?',
+            { interactive: context.interactive },
+          );
+          if (!proceed) {
+            context.logger.info('Docs init cancelled.');
+            process.exitCode = 1;
+            return;
+          }
+        }
+      }
     }
 
     const assetsRoot = await dependencies.resolveAssetsRoot();

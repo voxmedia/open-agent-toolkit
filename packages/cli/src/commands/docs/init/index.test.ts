@@ -194,6 +194,113 @@ describe('createDocsInitCommand', () => {
     expect(output).toContain('pnpm build');
   });
 
+  it('warns and exits when existing docs config found in non-interactive mode', async () => {
+    const capture = createLoggerCapture();
+    const readOatConfig = vi.fn(async () => ({
+      version: 1,
+      documentation: { root: 'docs', tooling: 'fumadocs' },
+    }));
+
+    const command = createDocsInitCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: 'all' as Scope,
+        dryRun: false,
+        verbose: globalOptions.verbose ?? false,
+        json: globalOptions.json ?? false,
+        cwd: globalOptions.cwd ?? '/tmp/workspace',
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+      detectRepoShape: vi.fn(async () => 'monorepo' as const),
+      inputWithDefault: vi.fn(async () => null),
+      selectWithAbort: vi.fn(
+        async <T extends string>(
+          _message: string,
+          choices: SelectChoice<T>[],
+        ) => choices[0]?.value ?? null,
+      ),
+      runDocsInit: vi.fn(async () => {}),
+      upsertAgentsMdSection: vi.fn(async () => ({
+        action: 'updated' as const,
+      })),
+      readOatConfig,
+      confirmAction: vi.fn(async () => false),
+    });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'my-docs',
+      '--target-dir',
+      'apps/my-docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+    ]);
+
+    expect(capture.warn.join('\n')).toContain('Existing docs config');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('proceeds when --yes bypasses preflight warning', async () => {
+    const capture = createLoggerCapture();
+    const runDocsInit = vi.fn(async () => {});
+    const readOatConfig = vi.fn(async () => ({
+      version: 1,
+      documentation: { root: 'docs', tooling: 'fumadocs' },
+    }));
+
+    const command = createDocsInitCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: 'all' as Scope,
+        dryRun: false,
+        verbose: globalOptions.verbose ?? false,
+        json: globalOptions.json ?? false,
+        cwd: globalOptions.cwd ?? '/tmp/workspace',
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+      detectRepoShape: vi.fn(async () => 'monorepo' as const),
+      inputWithDefault: vi.fn(async () => null),
+      selectWithAbort: vi.fn(
+        async <T extends string>(
+          _message: string,
+          choices: SelectChoice<T>[],
+        ) => choices[0]?.value ?? null,
+      ),
+      runDocsInit,
+      upsertAgentsMdSection: vi.fn(async () => ({
+        action: 'updated' as const,
+      })),
+      readOatConfig,
+      confirmAction: vi.fn(async () => false),
+    });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'my-docs',
+      '--target-dir',
+      'apps/my-docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    expect(capture.warn.join('\n')).toContain('Existing docs config');
+    expect(runDocsInit).toHaveBeenCalledTimes(1);
+    expect(process.exitCode).toBe(0);
+  });
+
   it('prints monorepo next steps when repo shape is monorepo', async () => {
     const { command, capture } = createHarness({ interactive: false });
 
