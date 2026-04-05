@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-05
-oat_current_task_id: p02-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 2     | 0/2       |
-| Phase 3 | pending     | 3     | 0/3       |
-| Phase 4 | pending     | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 1     | 1/1       |
 
-**Total:** 3/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -80,82 +80,89 @@ oat_generated: false
 
 ## Phase 2: Setup Completeness
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-05
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {bullets}
+- Post-scaffold output now includes actionable next steps tailored to repo shape
+- Preflight checks detect existing `.oat/config.json` documentation config before scaffolding
+- Interactive mode asks for confirmation; `--yes` mode warns but proceeds; non-interactive exits with error
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/docs/init/index.ts` - Added next steps output and preflight checks
+- `packages/cli/src/commands/docs/init/index.test.ts` - Added tests for both features
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- --run src/commands/docs/init/index`
+- Result: 1157 tests pass
 
 ### Task p02-t01: Add post-scaffold next steps for single-package repos
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 84a2047
 
 ### Task p02-t02: Add preflight checks for existing docs setup
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7dfe40a
 
 ---
 
 ## Phase 3: Polish
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-05
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {bullets}
+- Non-default monorepo app names trigger a guidance note about root script assumptions
+- Partial local OAT packages get workspace:\* wiring individually (no longer all-or-nothing)
+- Fumadocs tsconfig template preseeded with Next.js-compatible settings (jsx: react-jsx, .next/types includes)
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/docs/init/index.ts` - Non-default app name guidance
+- `packages/cli/src/commands/docs/init/scaffold.ts` - Per-package local detection
+- `packages/cli/assets/templates/docs-app-fuma/tsconfig.json` - Next.js-compatible presets
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: 1159 tests pass, 0 lint/type errors
 
 ### Task p03-t01: Add monorepo integration guidance for non-default app names
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** da11df8
 
 ### Task p03-t02: Detect partial local OAT packages for workspace wiring
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 31f0b01
 
 ### Task p03-t03: Preseed Next.js-compatible tsconfig to prevent first-build rewrite
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2923383
 
 ---
 
 ## Phase 4: Integration Verification
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-05
 
 ### Task p04-t01: Run full test suite and verify end-to-end
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** N/A (verification only, no code changes)
 
 ---
 
@@ -194,19 +201,37 @@ Chronological log of implementation progress.
 
 **What shipped:**
 
-- {capability 1}
+- `generate-index` resolves repo root for config writes (fixes spurious `.oat/config.json` in docs app subdirs)
+- Config and AGENTS.md index paths are now consistent (`<app>/docs/index.md`)
+- `generate-index` in scaffold scripts no longer silently suppresses errors
+- Post-scaffold next steps printed, tailored to repo shape (monorepo vs single-package)
+- Preflight checks detect existing docs config before scaffolding
+- Non-default monorepo app names trigger root script guidance
+- Partial local OAT packages detected individually for workspace wiring
+- Fumadocs tsconfig preseeded with Next.js-compatible settings
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat docs init` now prints next steps after scaffolding
+- `oat docs init` warns when existing docs config is detected
+- `oat docs init` notes when a non-default app name may conflict with root scripts
+- Repos with some (not all) OAT packages locally get per-package workspace:\* wiring
+- `oat docs generate-index` writes config to repo root, not CWD
+- Scaffold scripts fail loudly if generate-index fails
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/docs/index-generate/index.ts` - Repo root resolution for config
+- `packages/cli/src/commands/docs/init/index.ts` - Next steps, preflight checks, app name guidance
+- `packages/cli/src/commands/docs/init/scaffold.ts` - Index path fix, silent failure removal, partial package detection
+- `packages/cli/assets/templates/docs-app-fuma/tsconfig.json` - Next.js-compatible presets
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- 1159 tests passing
+- 0 lint errors (oxlint)
+- 0 type errors (tsc --noEmit)
+- Clean workspace build (4/4 packages)
 
 ## References
 
