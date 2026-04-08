@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t03
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -26,9 +26,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 9     | 2/9       |
+| Phase 1 | in_progress | 9     | 3/9       |
 
-**Total:** 2/9 tasks completed
+**Total:** 3/9 tasks completed
 
 ---
 
@@ -102,6 +102,21 @@ oat_generated: false
 
 ### Task p01-t03: Write tools config during install
 
+**Status:** completed
+**Commit:** 7ba2653
+
+**Notes:**
+
+- `oat tools install` now records every selected pack in shared config under `tools`.
+- The install command dependency surface now includes `writeOatConfig` so repo config updates stay explicit and testable.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+
+### Task p01-t04: Reconcile tools config during update
+
 **Status:** in_progress
 **Commit:** -
 
@@ -132,22 +147,25 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Add `tools` to OatConfig interface and normalizer - b2a7f7d
 - [x] p01-t02: Add config get/set/describe support for tools keys - 540ba54
-- [ ] p01-t03: Write tools config during install - in progress
+- [x] p01-t03: Write tools config during install - 7ba2653
+- [ ] p01-t04: Reconcile tools config during update - in progress
 
 **What changed (high level):**
 
 - Added `tools` support to the shared OAT config schema.
 - Normalized only known tool-pack boolean flags from `.oat/config.json`.
 - Exposed `tools.*` through the config command catalog and shared get/set handlers.
+- Persisted selected tool packs to shared config during `oat tools install`.
 
 **Decisions:**
 
 - Kept this task limited to config typing and normalization; CLI read/write support remains in the next task.
 - Reused the existing shared-config patterns so `tools.*` behaves like other boolean repo settings.
+- The install flow writes repo config after pack installation and AGENTS bookkeeping complete.
 
 **Follow-ups / TODO:**
 
-- Persist installed tool packs during `oat tools install` in `p01-t03`.
+- Reconcile tool-pack config from update scan results in `p01-t04`.
 
 **Blockers:**
 
