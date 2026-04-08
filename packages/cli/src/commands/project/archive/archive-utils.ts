@@ -76,6 +76,12 @@ export interface ArchiveProjectOnCompletionResult {
 
 export const ARCHIVE_SNAPSHOT_METADATA_FILENAME = '.oat-archive-source.json';
 
+/**
+ * Directories excluded from S3 archive sync. These contain process artifacts
+ * (reviews, PR descriptions) rather than project deliverables.
+ */
+export const S3_ARCHIVE_SYNC_EXCLUDES = ['reviews/*', 'pr/*'];
+
 export interface ArchiveSnapshotMetadata {
   projectName: string;
   snapshotName: string;
@@ -420,7 +426,11 @@ export async function archiveProjectOnCompletion(
       );
 
       try {
-        await execFile('aws', ['s3', 'sync', archivePath, s3Path], {
+        const syncArgs = ['s3', 'sync', archivePath, s3Path];
+        for (const pattern of S3_ARCHIVE_SYNC_EXCLUDES) {
+          syncArgs.push('--exclude', pattern);
+        }
+        await execFile('aws', syncArgs, {
           cwd: options.repoRoot,
           env: dependencies.env ?? process.env,
         });

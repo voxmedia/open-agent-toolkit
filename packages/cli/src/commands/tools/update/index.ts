@@ -16,6 +16,7 @@ import {
 } from '@commands/tools/shared/auto-sync';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
+import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -100,11 +101,11 @@ export function createToolsUpdateCommand(
         dryRun,
         dependencies,
       );
+      const assetsRoot = dryRun ? null : await dependencies.resolveAssetsRoot();
 
       // Refresh ~/.oat/docs/ when the core pack is explicitly updated or
       // reconciled through --all (D3 requirement).
-      if (shouldRefreshCoreDocs(target, result) && !dryRun) {
-        const assetsRoot = await dependencies.resolveAssetsRoot();
+      if (shouldRefreshCoreDocs(target, result) && assetsRoot) {
         const userRoot = await dependencies.resolveScopeRoot(
           'user',
           context.cwd,
@@ -113,6 +114,41 @@ export function createToolsUpdateCommand(
         const docsSource = join(assetsRoot, 'docs');
         const docsDestination = join(userRoot, '.oat', 'docs');
         await dependencies.copyDirWithStatus(docsSource, docsDestination, true);
+      }
+
+      if (assetsRoot && (target.kind === 'all' || target.kind === 'pack')) {
+        const repoRoot = await resolveProjectRoot(context.cwd);
+        const config = await readOatConfig(repoRoot);
+        const installedPacks = new Set<PackName>();
+        const configScopes = resolveConcreteScopes('all');
+
+        for (const scope of configScopes) {
+          const scopeRoot = await dependencies.resolveScopeRoot(
+            scope,
+            context.cwd,
+            context.home,
+          );
+          const tools = await dependencies.scanTools({
+            scope,
+            scopeRoot,
+            assetsRoot,
+          });
+
+          for (const tool of tools) {
+            if (tool.pack !== 'custom') {
+              installedPacks.add(tool.pack);
+            }
+          }
+        }
+
+        // Preserve unrelated shared config keys while rebuilding tools state
+        // from the repo-wide installed-pack scan.
+        await writeOatConfig(repoRoot, {
+          ...config,
+          tools: Object.fromEntries(
+            VALID_PACKS.map((pack) => [pack, installedPacks.has(pack)]),
+          ),
+        });
       }
 
       if (result.notInstalled.length > 0) {

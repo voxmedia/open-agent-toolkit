@@ -74,6 +74,7 @@ Key behavior:
 - Same pack selection and install flow as `oat init tools`
 - Pack-oriented install subcommands: `core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`
 - Tracks installed vs bundled skill versions and reports outdated skills
+- Records installed pack state in shared repo config as `tools.<pack>: true` so other OAT workflows can detect installed capabilities without relying on filesystem heuristics
 - Interactive runs can prompt to update selected outdated skills
 - Auto-sync runs automatically after successful install (provider views are updated)
 - Use `--no-sync` to skip auto-sync
@@ -89,6 +90,7 @@ Key behavior:
 - Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
 - Compares installed versions against bundled versions and copies updated assets
 - For `--pack <pack>` and `--all`, an already-installed pack is reconciled to include newly added bundled skills or agents in that same scope
+- For `--pack <pack>` and `--all`, shared repo config is also reconciled from an installed-pack scan so `tools.*` reflects what is actually available and stale `true` flags are cleared
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
 - Reports tools that are already current, newer than bundled, or not bundled (custom)
@@ -103,8 +105,19 @@ Key behavior:
 
 - Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
 - Removes skill directories and agent `.md` files from canonical locations
+- For `--pack <pack>` and `--all`, shared repo config is rewritten from a post-removal scan so `tools.<pack>` becomes `false` when a pack is no longer installed in any scope
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
+
+## Shared config signal: `tools.*`
+
+Tool-pack lifecycle commands now persist pack availability in shared repo config under `.oat/config.json`.
+
+- `oat tools install <pack>` writes `tools.<pack>: true`
+- `oat tools update --pack <pack>` and `oat tools update --all` rebuild the full `tools` map from installed-pack scans
+- `oat tools remove --pack <pack>` and `oat tools remove --all` rebuild the same map after removals
+
+This matters because other workflows can now check `oat config get tools.<pack>` instead of inferring capabilities from directory existence alone. For example, `oat-project-document` checks `tools.project-management` before auto-running repo-reference refresh work.
 
 ## Core pack
 

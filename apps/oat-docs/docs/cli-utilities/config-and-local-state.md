@@ -54,6 +54,18 @@ Archive lifecycle settings live here as shared repo config:
 - `archive.s3SyncOnComplete`
 - `archive.summaryExportPath`
 
+Tool-pack installation state also lives here as shared repo config:
+
+- `tools.core`
+- `tools.docs`
+- `tools.ideas`
+- `tools.project-management`
+- `tools.research`
+- `tools.utility`
+- `tools.workflows`
+
+Use `oat config get tools.<pack>` when you need an explicit installed-capability signal for workflows or troubleshooting.
+
 When archive settings are configured, completion uploads dated archive snapshots to S3 and exports dated summary snapshots into the configured summary reference directory.
 
 Use these reference pages for file ownership and schema details:

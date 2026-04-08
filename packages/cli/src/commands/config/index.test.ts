@@ -236,6 +236,64 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('gets tools.project-management default false when not set', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'tools.project-management']);
+
+    expect(capture.info[0]).toBe('false');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('sets tools.project-management to true in config.json', async () => {
+    const root = await createRepoRoot();
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'tools.project-management', 'true']);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      tools: { 'project-management': true },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('gets tools.project-management true after setting it', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, tools: { 'project-management': true } })}\n`,
+      'utf8',
+    );
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'tools.project-management']);
+
+    expect(capture.info[0]).toBe('true');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('sets tools.project-management to false in config.json', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, tools: { 'project-management': true } })}\n`,
+      'utf8',
+    );
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'tools.project-management', 'false']);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      tools: { 'project-management': false },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('set creates config.json when missing', async () => {
     const root = await createRepoRoot();
     const { command } = createHarness({ cwd: root });

@@ -122,6 +122,10 @@ describe('archive utils', () => {
         'sync',
         join(repoRoot, '.oat', 'projects', 'archived', 'demo'),
         `s3://example-bucket/oat-archive/${repoRoot.split('/').at(-1)}/projects/20260401-demo`,
+        '--exclude',
+        'reviews/*',
+        '--exclude',
+        'pr/*',
       ],
       expect.objectContaining({ cwd: repoRoot }),
     );

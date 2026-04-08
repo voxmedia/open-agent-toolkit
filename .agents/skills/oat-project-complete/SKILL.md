@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.3.5
+version: 1.3.6
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -343,7 +343,7 @@ echo "Project archived to $ARCHIVE_PATH"
 
 - Always archive locally first. The local archive is the authoritative completion artifact even when remote sync is also configured.
 - If `archive.summaryExportPath` is configured and `summary.md` exists after archive, copy it to `{repoRoot}/{archive.summaryExportPath}/YYYYMMDD-{PROJECT_NAME}.md`.
-- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, sync the archived project to `{archive.s3Uri}/{repo-slug}/{PROJECT_NAME}/`.
+- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, sync the archived project to `{archive.s3Uri}/{repo-slug}/{PROJECT_NAME}/`. The S3 sync excludes process artifacts (`reviews/*`, `pr/*`) — only core deliverables (discovery, spec, design, plan, implementation, summary, state) are uploaded. The CLI enforces this via `S3_ARCHIVE_SYNC_EXCLUDES` in `archive-utils.ts`.
 - If AWS CLI is missing or unusable for that S3 sync, warn and continue. Completion must not fail after the local archive succeeds.
 - If `archive.s3SyncOnComplete` is false or `archive.s3Uri` is unset, skip remote sync without prompting.
 

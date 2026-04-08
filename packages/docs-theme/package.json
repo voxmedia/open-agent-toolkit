@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/docs-theme",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "private": false,
   "description": "Theme components for OAT documentation sites",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/docs-theme",

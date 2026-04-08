@@ -18,12 +18,12 @@ For the deep file-by-file reference, see:
 
 ## The four config surfaces
 
-| Surface              | File                     | Typical contents                                                                                                 | Primary CLI surface                        |
-| -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Shared repo config   | `.oat/config.json`       | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, and `archive.*`     | `oat config get/set/list/describe`         |
-| Repo-local config    | `.oat/config.local.json` | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, and repo-local `activeIdea` | `oat config get/set/list/describe`         |
-| User config          | `~/.oat/config.json`     | User-level state such as global `activeIdea` fallback                                                            | `oat config describe`                      |
-| Provider sync config | `.oat/sync/config.json`  | Provider enablement and sync strategy settings                                                                   | `oat providers set`, `oat config describe` |
+| Surface              | File                     | Typical contents                                                                                                        | Primary CLI surface                        |
+| -------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Shared repo config   | `.oat/config.json`       | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, and `tools.*` | `oat config get/set/list/describe`         |
+| Repo-local config    | `.oat/config.local.json` | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, and repo-local `activeIdea`        | `oat config get/set/list/describe`         |
+| User config          | `~/.oat/config.json`     | User-level state such as global `activeIdea` fallback                                                                   | `oat config describe`                      |
+| Provider sync config | `.oat/sync/config.json`  | Provider enablement and sync strategy settings                                                                          | `oat providers set`, `oat config describe` |
 
 The main split is:
 
@@ -64,6 +64,16 @@ Common keys in `.oat/config.json`:
 - `archive.s3Uri` — base S3 archive prefix
 - `archive.s3SyncOnComplete` — upload archived projects to S3 during completion
 - `archive.summaryExportPath` — export `summary.md` into a durable tracked directory during completion
+- `tools.<pack>` — whether a bundled tool pack is currently installed in the repo or user scopes after lifecycle reconciliation
+
+Tool-pack state example:
+
+```bash
+oat config get tools.project-management
+oat config set tools.project-management true
+```
+
+The `tools.*` keys are primarily maintained by `oat tools install`, `oat tools update`, and `oat tools remove`, but they are intentionally visible through `oat config` so workflows and operators can inspect or override pack-state signals when needed.
 
 Archive example:
 
