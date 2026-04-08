@@ -666,14 +666,15 @@ git commit -m "docs(p05-t01): document workflow preference config keys"
 
 ## Reviews
 
-| Scope | Type | Status  | Date | Artifact |
-| ----- | ---- | ------- | ---- | -------- |
-| p01   | code | pending | -    | -        |
-| p02   | code | pending | -    | -        |
-| p03   | code | pending | -    | -        |
-| p04   | code | pending | -    | -        |
-| p05   | code | pending | -    | -        |
-| final | code | pending | -    | -        |
+| Scope | Type     | Status   | Date       | Artifact                                   |
+| ----- | -------- | -------- | ---------- | ------------------------------------------ |
+| p01   | code     | pending  | -          | -                                          |
+| p02   | code     | pending  | -          | -                                          |
+| p03   | code     | pending  | -          | -                                          |
+| p04   | code     | pending  | -          | -                                          |
+| p05   | code     | pending  | -          | -                                          |
+| final | code     | pending  | -          | -                                          |
+| plan  | artifact | received | 2026-04-08 | reviews/artifact-plan-review-2026-04-08.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
