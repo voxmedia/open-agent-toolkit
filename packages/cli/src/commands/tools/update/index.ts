@@ -101,11 +101,11 @@ export function createToolsUpdateCommand(
         dryRun,
         dependencies,
       );
+      const assetsRoot = dryRun ? null : await dependencies.resolveAssetsRoot();
 
       // Refresh ~/.oat/docs/ when the core pack is explicitly updated or
       // reconciled through --all (D3 requirement).
-      if (shouldRefreshCoreDocs(target, result) && !dryRun) {
-        const assetsRoot = await dependencies.resolveAssetsRoot();
+      if (shouldRefreshCoreDocs(target, result) && assetsRoot) {
         const userRoot = await dependencies.resolveScopeRoot(
           'user',
           context.cwd,
@@ -116,8 +116,7 @@ export function createToolsUpdateCommand(
         await dependencies.copyDirWithStatus(docsSource, docsDestination, true);
       }
 
-      if (!dryRun && (target.kind === 'all' || target.kind === 'pack')) {
-        const assetsRoot = await dependencies.resolveAssetsRoot();
+      if (assetsRoot && (target.kind === 'all' || target.kind === 'pack')) {
         const repoRoot = await resolveProjectRoot(context.cwd);
         const config = await readOatConfig(repoRoot);
         const installedPacks = new Set<PackName>();
