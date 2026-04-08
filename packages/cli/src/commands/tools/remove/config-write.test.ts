@@ -2,22 +2,28 @@ import type { ToolInfo } from '@commands/tools/shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { readOatConfig, writeOatConfig, resolveProjectRoot, resolveScopeRoot } =
-  vi.hoisted(() => ({
-    readOatConfig: vi.fn(async () => ({
-      version: 1 as const,
-      tools: {
-        ideas: true,
-        'project-management': true,
-      },
-    })),
-    writeOatConfig: vi.fn(async () => {}),
-    resolveProjectRoot: vi.fn(async (cwd: string) => cwd),
-    resolveScopeRoot: vi.fn(
-      (scope: 'project' | 'user', cwd: string, home: string) =>
-        scope === 'project' ? cwd : home,
-    ),
-  }));
+const {
+  readOatConfig,
+  writeOatConfig,
+  resolveProjectRoot,
+  resolveScopeRoot,
+  scanToolsMock,
+} = vi.hoisted(() => ({
+  readOatConfig: vi.fn(async () => ({
+    version: 1 as const,
+    tools: {
+      ideas: true,
+      'project-management': true,
+    },
+  })),
+  writeOatConfig: vi.fn(async () => {}),
+  resolveProjectRoot: vi.fn(async (cwd: string) => cwd),
+  resolveScopeRoot: vi.fn(
+    (scope: 'project' | 'user', cwd: string, home: string) =>
+      scope === 'project' ? cwd : home,
+  ),
+  scanToolsMock: vi.fn(),
+}));
 
 vi.mock('@config/oat-config', () => ({
   readOatConfig,
@@ -77,15 +83,32 @@ describe('createToolsRemoveCommand config writes', () => {
     writeOatConfig.mockClear();
     resolveProjectRoot.mockClear();
     resolveScopeRoot.mockClear();
+    scanToolsMock.mockReset();
   });
 
   afterEach(() => {
     process.exitCode = originalExitCode;
   });
 
-  it('sets the removed pack to false after --pack removal', async () => {
+  it('preserves a pack flag when that pack remains installed in user scope', async () => {
+    scanToolsMock.mockImplementation(async ({ scope }: { scope: string }) => {
+      if (scope === 'project') {
+        if (scanToolsMock.mock.calls.length === 1) {
+          return [createTool()];
+        }
+        return [];
+      }
+
+      return [
+        createTool({
+          name: 'oat-project-summary',
+          scope: 'user',
+        }),
+      ];
+    });
+
     const dependencies: RemoveToolsDependencies = {
-      scanTools: vi.fn(async () => [createTool()]),
+      scanTools: scanToolsMock,
       resolveScopeRoot: vi.fn(async (scope, cwd, home) =>
         scope === 'project' ? cwd : home,
       ),
@@ -107,8 +130,13 @@ describe('createToolsRemoveCommand config writes', () => {
     expect(writeOatConfig).toHaveBeenCalledWith('/tmp/workspace', {
       version: 1,
       tools: {
-        ideas: true,
-        'project-management': false,
+        core: false,
+        ideas: false,
+        docs: false,
+        workflows: false,
+        utility: false,
+        'project-management': true,
+        research: false,
       },
     });
     expect(process.exitCode).toBeUndefined();

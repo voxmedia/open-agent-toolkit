@@ -121,8 +121,9 @@ export function createToolsUpdateCommand(
         const repoRoot = await resolveProjectRoot(context.cwd);
         const config = await readOatConfig(repoRoot);
         const installedPacks = new Set<PackName>();
+        const configScopes = resolveConcreteScopes('all');
 
-        for (const scope of scopes) {
+        for (const scope of configScopes) {
           const scopeRoot = await dependencies.resolveScopeRoot(
             scope,
             context.cwd,

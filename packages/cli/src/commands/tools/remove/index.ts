@@ -102,19 +102,37 @@ export function createToolsRemoveCommand(
       );
 
       if (!dryRun && result.removed.length > 0) {
+        const assetsRoot = await dependencies.resolveAssetsRoot();
         const repoRoot = await resolveProjectRoot(context.cwd);
         const config = await readOatConfig(repoRoot);
-        const tools = { ...config.tools };
+        const installedPacks = new Set<PackName>();
+        const configScopes = resolveConcreteScopes('all');
 
-        if (target.kind === 'all') {
-          for (const pack of VALID_PACKS) {
-            tools[pack] = false;
+        for (const scope of configScopes) {
+          const scopeRoot = await dependencies.resolveScopeRoot(
+            scope,
+            context.cwd,
+            context.home,
+          );
+          const tools = await dependencies.scanTools({
+            scope,
+            scopeRoot,
+            assetsRoot,
+          });
+
+          for (const tool of tools) {
+            if (tool.pack !== 'custom') {
+              installedPacks.add(tool.pack);
+            }
           }
-        } else if (target.kind === 'pack') {
-          tools[target.pack] = false;
         }
 
-        await writeOatConfig(repoRoot, { ...config, tools });
+        await writeOatConfig(repoRoot, {
+          ...config,
+          tools: Object.fromEntries(
+            VALID_PACKS.map((pack) => [pack, installedPacks.has(pack)]),
+          ),
+        });
       }
 
       if (result.notInstalled.length > 0) {

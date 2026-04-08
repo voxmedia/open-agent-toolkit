@@ -77,13 +77,20 @@ describe('createToolsUpdateCommand config writes', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('reconciles tools config from installed packs after --all', async () => {
+  it('preserves packs still installed in another scope after project update', async () => {
     const toolsByScope: Record<string, ToolInfo[]> = {
       project: [
         createTool(),
         createTool({
           name: 'oat-project-new',
           pack: 'workflows',
+        }),
+      ],
+      user: [
+        createTool({
+          name: 'oat-docs',
+          scope: 'user',
+          pack: 'docs',
         }),
       ],
     };
@@ -105,7 +112,7 @@ describe('createToolsUpdateCommand config writes', () => {
     await runCommand(
       command,
       ['--all', '--no-sync'],
-      ['--scope', 'all', '--cwd', '/tmp/workspace'],
+      ['--scope', 'project', '--cwd', '/tmp/workspace'],
     );
 
     expect(writeOatConfig).toHaveBeenCalledWith('/tmp/workspace', {
@@ -113,7 +120,7 @@ describe('createToolsUpdateCommand config writes', () => {
       tools: {
         core: false,
         ideas: false,
-        docs: false,
+        docs: true,
         workflows: true,
         utility: false,
         'project-management': true,
