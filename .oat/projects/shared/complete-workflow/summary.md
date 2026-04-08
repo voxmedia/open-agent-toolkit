@@ -23,7 +23,7 @@ The `oat config` command surface was extended to expose `tools.*` keys through `
 
 The project also switched `oat-project-document` to check `tools.project-management` instead of treating `.oat/repo/reference/` as a proxy for PJM infrastructure. In parallel, the close-out flow improvements already present on the branch were carried through documentation and review: project-document now auto-invokes repo-reference refresh when the project-management pack is installed, and archive sync excludes `reviews/*` and `pr/*` process artifacts from S3 uploads.
 
-Implementation coverage was reinforced with config normalization tests, config command tests, and command-level install/update/remove config-write tests. Because the change affected shipped CLI behavior in a publishable package, all four public packages were bumped in lockstep to `0.0.19` and validated with the release contract.
+Implementation coverage was reinforced with config normalization tests, config command tests, and command-level install/update/remove config-write tests. Because the change affected shipped CLI behavior in a publishable package, all four public packages were bumped in lockstep to `0.0.20` and validated with the release contract.
 
 ## Key Decisions
 
