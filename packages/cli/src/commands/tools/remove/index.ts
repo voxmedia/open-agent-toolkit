@@ -12,6 +12,7 @@ import {
 } from '@commands/tools/shared/auto-sync';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { PackName } from '@commands/tools/shared/types';
+import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -99,6 +100,22 @@ export function createToolsRemoveCommand(
         dryRun,
         dependencies,
       );
+
+      if (!dryRun && result.removed.length > 0) {
+        const repoRoot = await resolveProjectRoot(context.cwd);
+        const config = await readOatConfig(repoRoot);
+        const tools = { ...config.tools };
+
+        if (target.kind === 'all') {
+          for (const pack of VALID_PACKS) {
+            tools[pack] = false;
+          }
+        } else if (target.kind === 'pack') {
+          tools[target.pack] = false;
+        }
+
+        await writeOatConfig(repoRoot, { ...config, tools });
+      }
 
       if (result.notInstalled.length > 0) {
         if (context.json) {
