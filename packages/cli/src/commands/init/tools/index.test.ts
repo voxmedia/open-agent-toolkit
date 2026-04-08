@@ -119,6 +119,7 @@ function createHarness(options: HarnessOptions = {}) {
     version: 1 as const,
     localPaths: [] as string[],
   }));
+  const writeOatConfig = vi.fn(async () => {});
   const resolveLocalPaths = vi.fn(
     (config: { localPaths?: string[] }) => config.localPaths ?? [],
   );
@@ -154,6 +155,7 @@ function createHarness(options: HarnessOptions = {}) {
     addLocalPaths,
     applyGitignore,
     readOatConfig,
+    writeOatConfig,
     resolveLocalPaths,
     upsertAgentsMdSection,
     removeAgentsMdSection,
@@ -175,6 +177,7 @@ function createHarness(options: HarnessOptions = {}) {
     addLocalPaths,
     applyGitignore,
     readOatConfig,
+    writeOatConfig,
     resolveLocalPaths,
     upsertAgentsMdSection,
   };
@@ -508,6 +511,29 @@ describe('createInitToolsCommand', () => {
       '/tmp/workspace',
       'tools',
       expect.stringContaining('Tool Packs'),
+    );
+  });
+
+  it('records installed tool packs in shared config', async () => {
+    const { command, writeOatConfig } = createHarness({
+      interactive: false,
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(writeOatConfig).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      expect.objectContaining({
+        tools: {
+          core: true,
+          ideas: true,
+          docs: true,
+          workflows: true,
+          utility: true,
+          'project-management': true,
+          research: true,
+        },
+      }),
     );
   });
 
