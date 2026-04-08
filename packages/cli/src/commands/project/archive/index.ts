@@ -13,6 +13,7 @@ import { Command } from 'commander';
 
 import {
   ARCHIVE_SNAPSHOT_METADATA_FILENAME,
+  S3_ARCHIVE_SYNC_EXCLUDES,
   buildProjectArchiveS3Uri,
   buildRepoArchiveS3Uri,
   ensureS3ArchiveAccess,
@@ -73,6 +74,10 @@ function buildArchiveSyncArgs(
   options: ArchiveSyncOptions,
 ): string[] {
   const args = ['s3', 'sync', source, target];
+
+  for (const pattern of S3_ARCHIVE_SYNC_EXCLUDES) {
+    args.push('--exclude', pattern);
+  }
 
   if (options.dryRun) {
     args.push('--dryrun');
