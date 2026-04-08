@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t06
+oat_current_task_id: p01-t07
 oat_generated: false
 ---
 
@@ -26,9 +26,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 9     | 5/9       |
+| Phase 1 | in_progress | 9     | 6/9       |
 
-**Total:** 5/9 tasks completed
+**Total:** 6/9 tasks completed
 
 ---
 
@@ -147,6 +147,21 @@ oat_generated: false
 
 ### Task p01-t06: Update oat-project-document to check config
 
+**Status:** completed
+**Commit:** b1ee60a
+
+**Notes:**
+
+- `oat-project-document` now checks `tools.project-management` instead of inferring PJM availability from a directory.
+- The canonical skill version was bumped to `1.2.0`.
+
+**Verification:**
+
+- Run: inspect skill for updated Step 1 wording and step-number consistency
+- Result: pass
+
+### Task p01-t07: Add tests for config round-trip
+
 **Status:** in_progress
 **Commit:** -
 
@@ -180,7 +195,8 @@ Chronological log of implementation progress.
 - [x] p01-t03: Write tools config during install - 7ba2653
 - [x] p01-t04: Reconcile tools config during update - c94a906
 - [x] p01-t05: Clear tools config on remove - c268d10
-- [ ] p01-t06: Update oat-project-document to check config - in progress
+- [x] p01-t06: Update oat-project-document to check config - b1ee60a
+- [ ] p01-t07: Add tests for config round-trip - in progress
 
 **What changed (high level):**
 
@@ -190,6 +206,7 @@ Chronological log of implementation progress.
 - Persisted selected tool packs to shared config during `oat tools install`.
 - Rebuilt tool-pack config from installed-tool scans during update flows.
 - Cleared tool-pack flags during remove flows for pack and all-target removals.
+- Switched `oat-project-document` PJM detection to the new shared config signal.
 
 **Decisions:**
 
@@ -198,10 +215,11 @@ Chronological log of implementation progress.
 - The install flow writes repo config after pack installation and AGENTS bookkeeping complete.
 - Update reconciliation now clears stale `true` flags instead of only backfilling missing entries.
 - Remove flows only mutate pack config for whole-pack or all-tool removals, not single-tool removals.
+- The project-document skill now uses the config signal instead of filesystem heuristics.
 
 **Follow-ups / TODO:**
 
-- Update `oat-project-document` to read `tools.project-management` in `p01-t06`.
+- Add config normalization and config command round-trip tests in `p01-t07`.
 
 **Blockers:**
 
