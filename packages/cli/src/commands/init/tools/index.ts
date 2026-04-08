@@ -25,6 +25,7 @@ import {
   type OatConfig,
   readOatConfig,
   resolveLocalPaths,
+  writeOatConfig,
 } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
@@ -130,6 +131,7 @@ interface InitToolsDependencies {
     localPaths: string[],
   ) => Promise<{ action: string }>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
+  writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
   resolveLocalPaths: (config: OatConfig) => string[];
   upsertAgentsMdSection: (
     repoRoot: string,
@@ -182,6 +184,7 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   addLocalPaths,
   applyGitignore,
   readOatConfig,
+  writeOatConfig,
   resolveLocalPaths,
   upsertAgentsMdSection,
   removeAgentsMdSection,
@@ -612,6 +615,13 @@ export async function runInitTools(
         `AGENTS.md tool packs section ${sectionResult.action}.`,
       );
     }
+
+    const config = await dependencies.readOatConfig(projectRoot);
+    const tools = { ...config.tools };
+    for (const pack of selectedPacks) {
+      tools[pack] = true;
+    }
+    await dependencies.writeOatConfig(projectRoot, { ...config, tools });
 
     const hasUserScope = selectedPacks.some(
       (pack) => packScopes[pack] === 'user',
