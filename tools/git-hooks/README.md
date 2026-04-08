@@ -6,7 +6,7 @@ Repository git hooks for code quality and consistency.
 
 - `pre-commit` - runs `lint-staged`
 - `commit-msg` - validates commit messages with `commitlint`
-- `pre-push` - runs canonical skill version-bump validation plus `type-check`, `lint`, and `format`
+- `pre-push` - runs public package version-bump validation, canonical skill version-bump validation, plus `type-check`, `lint`, and `format`
 - `post-checkout` - runs `pnpm install` when lockfile-sensitive branch switches happen
 
 ## Default Behavior
