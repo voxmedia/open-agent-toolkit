@@ -457,10 +457,10 @@ git commit -m "fix(p01-t10): preserve tools config across scopes"
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                    |
-| ----- | -------- | --------------- | ---------- | ------------------------------------------- |
-| plan  | artifact | received        | 2026-04-07 | reviews/artifact-plan-review-2026-04-07.md  |
-| final | code     | fixes_completed | 2026-04-07 | reviews/archived/final-review-2026-04-07.md |
+| Scope | Type     | Status   | Date       | Artifact                                   |
+| ----- | -------- | -------- | ---------- | ------------------------------------------ |
+| plan  | artifact | received | 2026-04-07 | reviews/artifact-plan-review-2026-04-07.md |
+| final | code     | received | 2026-04-07 | reviews/final-review-2026-04-07-r2.md      |
 
 ## Implementation Complete
 
