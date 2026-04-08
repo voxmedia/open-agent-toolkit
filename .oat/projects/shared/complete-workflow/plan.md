@@ -511,15 +511,15 @@ git commit -m "docs(p01-t12): clarify update config reconciliation"
 
 ## Reviews
 
-| Scope | Type     | Status      | Date       | Artifact                                       |
-| ----- | -------- | ----------- | ---------- | ---------------------------------------------- |
-| plan  | artifact | received    | 2026-04-07 | reviews/artifact-plan-review-2026-04-07.md     |
-| final | code     | passed      | 2026-04-07 | reviews/archived/final-review-2026-04-07-r2.md |
-| final | code     | fixes_added | 2026-04-08 | reviews/archived/final-review-2026-04-08.md    |
+| Scope | Type     | Status          | Date       | Artifact                                       |
+| ----- | -------- | --------------- | ---------- | ---------------------------------------------- |
+| plan  | artifact | received        | 2026-04-07 | reviews/artifact-plan-review-2026-04-07.md     |
+| final | code     | passed          | 2026-04-07 | reviews/archived/final-review-2026-04-07-r2.md |
+| final | code     | fixes_completed | 2026-04-08 | reviews/archived/final-review-2026-04-08.md    |
 
 ## Implementation Complete
 
-- [ ] All tasks complete
+- [x] All tasks complete
 - [ ] All tests passing
 - [ ] Lint and type-check clean
 - [ ] `pnpm release:validate` passes

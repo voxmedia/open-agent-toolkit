@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t12
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 12    | 11/12     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 12    | 12/12     |
 
-**Total:** 11/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ---
 
 ## Phase 1: Track installed tool packs in config
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-08
 
 ### Phase Summary (fill when phase is complete)
@@ -246,12 +246,26 @@ oat_generated: false
 
 ### Task p01-t12: (review) Clarify non-tools config preservation in update reconciliation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 54c4f25
 
-**Notes:**
+**Outcome (required):**
 
-- Added from the 2026-04-08 final review.
+- Documented why the update reconciliation spreads the existing repo config.
+- Made it explicit that non-tools shared config keys are preserved while `tools` is rebuilt from scan results.
+
+**Files changed:**
+
+- `packages/cli/src/commands/tools/update/index.ts` - add an inline clarification above the config write.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass (1170/1170)
+
+**Notes / Decisions:**
+
+- Kept the clarification as a brief inline comment rather than extracting extra helper code, since the review concern was intent readability rather than behavior.
 
 ---
 
@@ -285,7 +299,7 @@ Chronological log of implementation progress.
 - [x] p01-t09: Version bumps and validation - b8aff58
 - [x] p01-t10: (review) Preserve repo-level tools config across scope-specific mutations - fb7720d
 - [x] p01-t11: (review) Remove redundant assets-root lookup in tools update - 98d77bb
-- [ ] p01-t12: (review) Clarify non-tools config preservation in update reconciliation - pending
+- [x] p01-t12: (review) Clarify non-tools config preservation in update reconciliation - 54c4f25
 
 **What changed (high level):**
 
@@ -312,7 +326,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Implement `p01-t12`, then request final re-review for scope `final`.
+- Request final re-review for scope `final`.
 
 **Blockers:**
 
