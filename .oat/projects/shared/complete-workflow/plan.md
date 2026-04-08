@@ -34,6 +34,45 @@ oat_generated: false
 
 ---
 
+## Phase 0: Streamline project close-out workflow (complete)
+
+### Task p00-t01: Auto-invoke PJM repo reference update from project-document
+
+**Files:**
+
+- Modified: `.agents/skills/oat-project-document/SKILL.md`
+
+**Steps:**
+
+- [x] Add `Skill` to `allowed-tools` in frontmatter
+- [x] Insert new Step 1 (Check for PJM Infrastructure) between Step 0 and old Step 1
+- [x] Renumber all subsequent steps (1→2 through 7→8) and update all internal cross-references
+- [x] Bump skill version to 1.1.0
+- [x] Commit: `feat(project-document): auto-invoke pjm repo reference update` (814e612)
+
+### Task p00-t02: Exclude process artifacts from S3 archive sync
+
+**Files:**
+
+- Modified: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modified: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modified: `packages/cli/src/commands/project/archive/index.ts`
+- Modified: `packages/cli/src/commands/project/archive/index.test.ts`
+- Modified: `.agents/skills/oat-project-complete/SKILL.md`
+
+**Steps:**
+
+- [x] Add `S3_ARCHIVE_SYNC_EXCLUDES` constant (`['reviews/*', 'pr/*']`) in `archive-utils.ts`
+- [x] Add `--exclude` flags to completion-time `aws s3 sync` call in `archiveProjectOnCompletion()`
+- [x] Import and apply excludes in `buildArchiveSyncArgs()` in `index.ts`
+- [x] Update test assertions in both test files to expect `--exclude` flags
+- [x] Strengthen `oat-project-complete` Step 8 guidance to document S3 sync exclusions
+- [x] Bump `oat-project-complete` skill version to 1.3.6
+- [x] All tests pass (1160/1160)
+- [x] Commit: `fix(archive): exclude reviews and PR artifacts from S3 sync` (01c3f4f)
+
+---
+
 ## Phase 1: Track installed tool packs in config
 
 ### Task p01-t01: Add `tools` to OatConfig interface and normalizer
