@@ -430,6 +430,7 @@ oat_generated: false
 | Scope | Type     | Status   | Date       | Artifact                                   |
 | ----- | -------- | -------- | ---------- | ------------------------------------------ |
 | plan  | artifact | received | 2026-04-07 | reviews/artifact-plan-review-2026-04-07.md |
+| final | code     | received | 2026-04-07 | reviews/final-review-2026-04-07.md         |
 
 ## Implementation Complete
 
