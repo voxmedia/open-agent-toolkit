@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t09
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,37 +24,47 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 9     | 8/9       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 9     | 9/9       |
 
-**Total:** 8/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
 ## Phase 1: Track installed tool packs in config
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-08
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added repo-level `tools.<pack>` config support so installed tool packs are tracked in shared OAT config instead of inferred from filesystem state.
+- `oat tools install`, `update`, and `remove` now persist or reconcile tool-pack config, including clearing stale `true` values when packs are no longer installed.
+- `oat config get/set/list/describe` now supports `tools.*` keys with sensible default `false` reads.
+- `oat-project-document` now checks `tools.project-management`, which makes PJM detection explicit and independent of directory heuristics.
+- Added CLI coverage for config normalization plus install/update/remove config writes, then completed lockstep public-package version bumps and workspace validation.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/config/oat-config.ts` - add `tools` schema support and normalization.
+- `packages/cli/src/commands/config/index.ts` - expose `tools.*` via config command handlers and catalog metadata.
+- `packages/cli/src/commands/init/tools/index.ts` - write selected tool packs to shared config during install.
+- `packages/cli/src/commands/tools/update/index.ts` - rebuild tool-pack config from installed packs during update flows.
+- `packages/cli/src/commands/tools/remove/index.ts` - clear tool-pack config during pack/all removals.
+- `.agents/skills/oat-project-document/SKILL.md` - switch PJM detection to the new config signal.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm release:validate && pnpm test && pnpm lint && pnpm type-check && pnpm build`
+- Result: pass
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- The update flow intentionally reconstructs the full `tools` map from the scan result rather than merging into existing config so stale enabled flags are removed.
+- Single-tool removals do not rewrite pack state because they do not necessarily uninstall an entire tool pack.
 
 ### Task p01-t01: Add `tools` to OatConfig interface and normalizer
 
@@ -192,12 +202,14 @@ oat_generated: false
 
 ### Task p01-t09: Version bumps and validation
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** b8aff58
 
 **Notes:**
 
-- Next up.
+- Bumped all four publishable packages from `0.0.18` to `0.0.19` in commit `e67e105`.
+- Synced the generated public-package version asset to `0.0.19` for all publishable packages in commit `b8aff58`.
+- Completed full release and workspace validation after the version bump.
 
 ---
 
@@ -228,7 +240,7 @@ Chronological log of implementation progress.
 - [x] p01-t06: Update oat-project-document to check config - b1ee60a
 - [x] p01-t07: Add tests for config round-trip - 4fa94f0
 - [x] p01-t08: Add tests for install/update/remove config writes - 2e70411
-- [ ] p01-t09: Version bumps and validation - in progress
+- [x] p01-t09: Version bumps and validation - b8aff58
 
 **What changed (high level):**
 
@@ -255,13 +267,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Bump publishable package versions and run release/quality validation in `p01-t09`.
+- None.
 
 **Blockers:**
 
 - None.
 
-**Session End:** -
+**Session End:** 21:45:01
 
 ---
 
@@ -285,33 +297,46 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                          | Passed | Failed | Coverage |
+| ----- | ---------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | `pnpm release:validate`, `pnpm test`, `pnpm lint`, `pnpm type-check`, `pnpm build` | Yes    | 0      | N/A      |
+| 2     | -                                                                                  | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Added shared OAT config support for tracking installed tool packs under `tools`.
+- Persisted tool-pack config during install/update/remove flows and exposed it via `oat config`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat config get tools.project-management` now returns pack state from shared config, defaulting to `false` when unset.
+- `oat tools update --all|--pack` now reconciles config with actual installed packs instead of leaving stale enabled flags behind.
+- `oat-project-document` now checks the explicit tool-pack config signal before auto-running PJM repo-reference updates.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/config/oat-config.ts` - schema and normalization for `tools`.
+- `packages/cli/src/commands/config/index.ts` - CLI config surface for `tools.*`.
+- `packages/cli/src/commands/init/tools/index.ts` - install-time config persistence.
+- `packages/cli/src/commands/tools/update/index.ts` - update-time reconciliation.
+- `packages/cli/src/commands/tools/remove/index.ts` - remove-time cleanup.
+- `packages/cli/src/commands/init/tools/index.test.ts` - install config-write coverage.
+- `packages/cli/src/commands/tools/update/config-write.test.ts` - update reconciliation coverage.
+- `packages/cli/src/commands/tools/remove/config-write.test.ts` - remove config-write coverage.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm release:validate`
+- `pnpm test`
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm build`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- No material design delta. The implementation followed the plan update that required full config reconciliation during update flows and lockstep public-package version bumps.
 
 ## References
 
