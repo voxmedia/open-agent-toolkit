@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t05
-oat_last_commit: c94a906
+oat_current_task: p01-t06
+oat_last_commit: c268d10
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-08T01:11:42.717Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-08T02:21:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-08T02:24:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress — current task `p01-t05`
+Implementation in progress — current task `p01-t06`
 
 ## Artifacts
 
@@ -47,7 +47,8 @@ Implementation in progress — current task `p01-t05`
 - ✓ p01-t02 complete
 - ✓ p01-t03 complete
 - ✓ p01-t04 complete
-- ⧗ Implementing p01-t05
+- ✓ p01-t05 complete
+- ⧗ Implementing p01-t06
 
 ## Blockers
 
@@ -55,4 +56,4 @@ None
 
 ## Next Milestone
 
-Implement p01-t05: Clear tools config on remove
+Implement p01-t06: Update oat-project-document to check config

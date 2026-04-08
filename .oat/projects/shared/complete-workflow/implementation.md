@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t05
+oat_current_task_id: p01-t06
 oat_generated: false
 ---
 
@@ -26,9 +26,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 9     | 4/9       |
+| Phase 1 | in_progress | 9     | 5/9       |
 
-**Total:** 4/9 tasks completed
+**Total:** 5/9 tasks completed
 
 ---
 
@@ -132,6 +132,21 @@ oat_generated: false
 
 ### Task p01-t05: Clear tools config on remove
 
+**Status:** completed
+**Commit:** c268d10
+
+**Notes:**
+
+- `oat tools remove --pack` now marks the removed pack as `false` in shared config.
+- `oat tools remove --all` clears every known tool-pack flag to `false`.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+
+### Task p01-t06: Update oat-project-document to check config
+
 **Status:** in_progress
 **Commit:** -
 
@@ -164,7 +179,8 @@ Chronological log of implementation progress.
 - [x] p01-t02: Add config get/set/describe support for tools keys - 540ba54
 - [x] p01-t03: Write tools config during install - 7ba2653
 - [x] p01-t04: Reconcile tools config during update - c94a906
-- [ ] p01-t05: Clear tools config on remove - in progress
+- [x] p01-t05: Clear tools config on remove - c268d10
+- [ ] p01-t06: Update oat-project-document to check config - in progress
 
 **What changed (high level):**
 
@@ -173,6 +189,7 @@ Chronological log of implementation progress.
 - Exposed `tools.*` through the config command catalog and shared get/set handlers.
 - Persisted selected tool packs to shared config during `oat tools install`.
 - Rebuilt tool-pack config from installed-tool scans during update flows.
+- Cleared tool-pack flags during remove flows for pack and all-target removals.
 
 **Decisions:**
 
@@ -180,10 +197,11 @@ Chronological log of implementation progress.
 - Reused the existing shared-config patterns so `tools.*` behaves like other boolean repo settings.
 - The install flow writes repo config after pack installation and AGENTS bookkeeping complete.
 - Update reconciliation now clears stale `true` flags instead of only backfilling missing entries.
+- Remove flows only mutate pack config for whole-pack or all-tool removals, not single-tool removals.
 
 **Follow-ups / TODO:**
 
-- Clear tool-pack flags during remove flows in `p01-t05`.
+- Update `oat-project-document` to read `tools.project-management` in `p01-t06`.
 
 **Blockers:**
 
