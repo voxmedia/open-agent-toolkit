@@ -453,22 +453,76 @@ git add packages/cli/src/commands/tools/update/index.ts packages/cli/src/command
 git commit -m "fix(p01-t10): preserve tools config across scopes"
 ```
 
+### Task p01-t11: (review) Remove redundant assets-root lookup in tools update
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/update/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: the update command resolves `assetsRoot` twice within the same execution path, even though the second use can reuse the earlier value.
+Location: `packages/cli/src/commands/tools/update/index.ts:120`
+
+**Step 2: Implement fix**
+
+Resolve `assetsRoot` once in the update action and reuse that value for both core-doc refresh checks and tools-config reconciliation.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: pass
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/tools/update/index.ts
+git commit -m "fix(p01-t11): reuse assets root in update command"
+```
+
+### Task p01-t12: (review) Clarify non-tools config preservation in update reconciliation
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/update/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: the update reconciliation preserves non-tools config keys via `{ ...config, tools: ... }`, but that intent is implicit.
+Location: `packages/cli/src/commands/tools/update/index.ts:122`
+
+**Step 2: Implement fix**
+
+Add a brief comment or equivalent clarification explaining that the spread preserves unrelated shared-config keys while the `tools` map is fully rebuilt from the scan.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: pass
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/tools/update/index.ts
+git commit -m "docs(p01-t12): clarify update config reconciliation"
+```
+
 ---
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                       |
-| ----- | -------- | -------- | ---------- | ---------------------------------------------- |
-| plan  | artifact | received | 2026-04-07 | reviews/artifact-plan-review-2026-04-07.md     |
-| final | code     | passed   | 2026-04-07 | reviews/archived/final-review-2026-04-07-r2.md |
-| final | code     | received | 2026-04-08 | reviews/final-review-2026-04-08.md             |
+| Scope | Type     | Status      | Date       | Artifact                                       |
+| ----- | -------- | ----------- | ---------- | ---------------------------------------------- |
+| plan  | artifact | received    | 2026-04-07 | reviews/artifact-plan-review-2026-04-07.md     |
+| final | code     | passed      | 2026-04-07 | reviews/archived/final-review-2026-04-07-r2.md |
+| final | code     | fixes_added | 2026-04-08 | reviews/archived/final-review-2026-04-08.md    |
 
 ## Implementation Complete
 
-- [x] All tasks complete
-- [x] All tests passing
-- [x] Lint and type-check clean
-- [x] `pnpm release:validate` passes
+- [ ] All tasks complete
+- [ ] All tests passing
+- [ ] Lint and type-check clean
+- [ ] `pnpm release:validate` passes
 
 ## References
 

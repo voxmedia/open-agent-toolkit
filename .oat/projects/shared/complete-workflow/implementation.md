@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: null
+oat_current_task_id: p01-t11
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 12    | 10/12     |
 
-**Total:** 10/10 tasks completed
+**Total:** 10/12 tasks completed
 
 ---
 
 ## Phase 1: Track installed tool packs in config
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-04-08
 
 ### Phase Summary (fill when phase is complete)
@@ -221,6 +221,24 @@ oat_generated: false
 - Repo-level `tools.*` reconciliation now scans both concrete scopes after update/remove mutations.
 - Added regression coverage proving project-scope mutations preserve tool packs that remain installed in user scope.
 
+### Task p01-t11: (review) Remove redundant assets-root lookup in tools update
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Added from the 2026-04-08 final review.
+
+### Task p01-t12: (review) Clarify non-tools config preservation in update reconciliation
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Added from the 2026-04-08 final review.
+
 ---
 
 ## Orchestration Runs
@@ -252,6 +270,8 @@ Chronological log of implementation progress.
 - [x] p01-t08: Add tests for install/update/remove config writes - 2e70411
 - [x] p01-t09: Version bumps and validation - b8aff58
 - [x] p01-t10: (review) Preserve repo-level tools config across scope-specific mutations - fb7720d
+- [ ] p01-t11: (review) Remove redundant assets-root lookup in tools update - pending
+- [ ] p01-t12: (review) Clarify non-tools config preservation in update reconciliation - pending
 
 **What changed (high level):**
 
@@ -278,7 +298,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Request final re-review for scope `final`.
+- Implement `p01-t11` and `p01-t12`, then request final re-review for scope `final`.
 
 **Blockers:**
 
@@ -385,6 +405,28 @@ After the fix tasks are complete:
 - Minor: 0
 
 **Next:** Proceed to summary/docs sync or final PR creation.
+
+### Review Received: final
+
+**Date:** 2026-04-08
+**Review artifact:** `reviews/archived/final-review-2026-04-08.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 3
+
+**New tasks added:** `p01-t11`, `p01-t12`
+
+**Deferred Findings:**
+
+- `m3` Remove test uses pre-seeded config that is never read
+  - Disposition: deferred by user
+  - Rationale: low-signal test-fixture cleanup that does not affect correctness or coverage
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
 
 ## References
 
