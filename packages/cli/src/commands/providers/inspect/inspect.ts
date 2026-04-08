@@ -106,6 +106,10 @@ async function collectInspectResult(
         missing: 0,
       };
 
+      const copyTransform = mapping.transformCanonical
+        ? { transformCanonical: mapping.transformCanonical }
+        : undefined;
+
       for (const entry of manifest.entries) {
         if (entry.provider !== adapter.name) {
           continue;
@@ -115,7 +119,11 @@ async function collectInspectResult(
         }
 
         state.managed += 1;
-        const report = await dependencies.detectDrift(entry, scopeRoot.root);
+        const report = await dependencies.detectDrift(
+          entry,
+          scopeRoot.root,
+          copyTransform,
+        );
         if (report.state.status === 'in_sync') {
           state.inSync += 1;
           continue;

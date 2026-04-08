@@ -24,7 +24,12 @@ import {
   readGlobalOptions,
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
-import { type DriftReport, detectDrift, detectStrays } from '@drift/index';
+import {
+  type CopyTransform,
+  type DriftReport,
+  detectDrift,
+  detectStrays,
+} from '@drift/index';
 import { type CanonicalEntry, scanCanonical } from '@engine/index';
 import {
   normalizeToPosixPath,
@@ -96,6 +101,7 @@ interface StatusDependencies {
   detectDrift: (
     entry: Manifest['entries'][number],
     scopeRoot: string,
+    copyTransform?: CopyTransform,
   ) => Promise<DriftReport>;
   detectStrays: (
     provider: string,
@@ -319,15 +325,23 @@ async function collectScopeReports(
       if (!contentTypeAllowed(entry.contentType, scope)) {
         continue;
       }
-      if (
-        !mappings.some((mapping) =>
+
+      const matchedMapping = mappings.find(
+        (mapping) =>
+          mapping.contentType === entry.contentType &&
           entryInsideMapping(entry.providerPath, mapping.providerDir),
-        )
-      ) {
+      );
+      if (!matchedMapping) {
         continue;
       }
 
-      reports.push(await dependencies.detectDrift(entry, scopeRoot));
+      const copyTransform = matchedMapping.transformCanonical
+        ? { transformCanonical: matchedMapping.transformCanonical }
+        : undefined;
+
+      reports.push(
+        await dependencies.detectDrift(entry, scopeRoot, copyTransform),
+      );
     }
 
     for (const mapping of mappings) {

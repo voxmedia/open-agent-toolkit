@@ -1,6 +1,6 @@
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import type { SyncConfig } from '@config/index';
-import type { DriftReport } from '@drift/index';
+import type { CopyTransform, DriftReport } from '@drift/index';
 import type { Manifest } from '@manifest/index';
 import type { PathMapping, ProviderAdapter } from '@providers/shared';
 import type {
@@ -38,6 +38,7 @@ export interface ProvidersListDependencies {
   detectDrift: (
     entry: Manifest['entries'][number],
     scopeRoot: string,
+    copyTransform?: CopyTransform,
   ) => Promise<DriftReport>;
 }
 
@@ -74,6 +75,7 @@ export interface ProvidersInspectDependencies {
   detectDrift: (
     entry: Manifest['entries'][number],
     scopeRoot: string,
+    copyTransform?: CopyTransform,
   ) => Promise<DriftReport>;
 }
 
