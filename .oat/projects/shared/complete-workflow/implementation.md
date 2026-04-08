@@ -365,12 +365,26 @@ Track test execution during implementation.
 
 **New tasks added:** `p01-t10`
 
-**Next:** Request re-review via `oat-project-review-provide code final`.
+**Next:** `p01-t10` is complete and the follow-up final review passed.
 
 After the fix tasks are complete:
 
-- Review row is now `fixes_completed`
-- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+- Review row progressed from `fixes_completed` to `passed`
+- Proceed to summary/docs sync or final PR creation when ready
+
+### Review Passed: final
+
+**Date:** 2026-04-07
+**Review artifact:** `reviews/archived/final-review-2026-04-07-r2.md`
+
+**Result:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Next:** Proceed to summary/docs sync or final PR creation.
 
 ## References
 
