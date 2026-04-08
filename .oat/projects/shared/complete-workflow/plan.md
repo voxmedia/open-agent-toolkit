@@ -424,8 +424,9 @@ oat_generated: false
 
 ## Reviews
 
-| Review | Reviewer | Status | Date | Artifact |
-| ------ | -------- | ------ | ---- | -------- |
+| Scope | Type     | Status   | Date       | Artifact                                   |
+| ----- | -------- | -------- | ---------- | ------------------------------------------ |
+| plan  | artifact | received | 2026-04-07 | reviews/artifact-plan-review-2026-04-07.md |
 
 ## Implementation Complete
 
