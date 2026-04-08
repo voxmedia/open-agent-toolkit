@@ -24,84 +24,121 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 5     | 0/5       |
+| Phase 2 | pending | 1     | 0/1       |
+| Phase 3 | pending | 1     | 0/1       |
+| Phase 4 | pending | 4     | 0/4       |
+| Phase 5 | pending | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-04-08
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/12 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 1: Control Plane — Package and Types
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p01-t01: Scaffold `packages/control-plane/` package
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t02: State.md frontmatter parser
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t03: Artifact scanner and boundary tier detection
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t04: Task progress parser
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t05: Review status aggregator
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Skill Recommender
+
+**Status:** pending
+**Started:** -
+
+### Task p02-t01: Phase routing state machine
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Public API and Integration
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Wire up `getProjectState` and `listProjects`
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: CLI Commands
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Add `@open-agent-toolkit/control-plane` dependency to CLI
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t02: `oat project status` command
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t03: `oat project list` command
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t04: `oat config dump` command
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Final Verification
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Full build and test suite
 
 **Status:** pending
 **Commit:** -
@@ -123,39 +160,6 @@ oat_generated: false
 
 Chronological log of implementation progress.
 
-### 2026-04-08
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-04-08
-
-**Session Start:** {time}
-
-{Continue log...}
-
 ---
 
 ## Deviations from Plan
@@ -174,6 +178,9 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
+| 5     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
@@ -202,4 +209,4 @@ Track test execution during implementation.
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
