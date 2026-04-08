@@ -4,6 +4,7 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   type OatConfig,
   type OatLocalConfig,
+  type OatToolsConfig,
   readOatConfig,
   readOatLocalConfig,
   writeOatConfig,
@@ -26,6 +27,13 @@ type ConfigKey =
   | 'documentation.tooling'
   | 'git.defaultBranch'
   | 'projects.root'
+  | 'tools.core'
+  | 'tools.docs'
+  | 'tools.ideas'
+  | 'tools.project-management'
+  | 'tools.research'
+  | 'tools.utility'
+  | 'tools.workflows'
   | 'worktrees.root';
 
 interface ConfigValue {
@@ -79,6 +87,13 @@ const KEY_ORDER: ConfigKey[] = [
   'documentation.requireForProjectCompletion',
   'git.defaultBranch',
   'projects.root',
+  'tools.core',
+  'tools.docs',
+  'tools.ideas',
+  'tools.project-management',
+  'tools.research',
+  'tools.utility',
+  'tools.workflows',
   'worktrees.root',
 ];
 
@@ -212,6 +227,83 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set archive.summaryExportPath <value>',
     description:
       'Repository-relative directory where completion copies project summaries for durable tracked reference.',
+  },
+  {
+    key: 'tools.core',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat tools install / oat tools update',
+    description: 'Whether the core tool pack is installed.',
+  },
+  {
+    key: 'tools.docs',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat tools install / oat tools update',
+    description: 'Whether the docs tool pack is installed.',
+  },
+  {
+    key: 'tools.ideas',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat tools install / oat tools update',
+    description: 'Whether the ideas tool pack is installed.',
+  },
+  {
+    key: 'tools.project-management',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat tools install / oat tools update',
+    description: 'Whether the project-management tool pack is installed.',
+  },
+  {
+    key: 'tools.research',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat tools install / oat tools update',
+    description: 'Whether the research tool pack is installed.',
+  },
+  {
+    key: 'tools.utility',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat tools install / oat tools update',
+    description: 'Whether the utility tool pack is installed.',
+  },
+  {
+    key: 'tools.workflows',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat tools install / oat tools update',
+    description: 'Whether the workflows tool pack is installed.',
   },
   {
     key: 'activeProject',
@@ -412,6 +504,17 @@ async function getConfigValue(
     };
   }
 
+  if (key.startsWith('tools.')) {
+    const config = await dependencies.readOatConfig(repoRoot);
+    const packName = key.slice('tools.'.length) as keyof OatToolsConfig;
+    const tools = config.tools ?? {};
+    return {
+      key,
+      value: String(tools[packName] ?? false),
+      source: config.tools ? 'config.json' : 'default',
+    };
+  }
+
   if (key === 'git.defaultBranch') {
     const config = await dependencies.readOatConfig(repoRoot);
     return {
@@ -557,6 +660,23 @@ async function setConfigValue(
     return {
       key,
       value: resultValue,
+      source: 'config.json',
+    };
+  }
+
+  if (key.startsWith('tools.')) {
+    const packName = key.slice('tools.'.length) as keyof OatToolsConfig;
+    const tools = { ...config.tools };
+    tools[packName] = rawValue.trim().toLowerCase() === 'true';
+
+    await dependencies.writeOatConfig(repoRoot, {
+      ...config,
+      tools,
+    });
+
+    return {
+      key,
+      value: String(tools[packName] ?? false),
       source: 'config.json',
     };
   }
