@@ -96,6 +96,62 @@ describe('oat-config', () => {
     });
   });
 
+  it('reads and writes tools config round-trip', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await writeOatConfig(repoRoot, {
+      version: 1,
+      tools: {
+        'project-management': true,
+        workflows: true,
+      },
+    });
+
+    await expect(readOatConfig(repoRoot)).resolves.toEqual({
+      version: 1,
+      tools: {
+        'project-management': true,
+        workflows: true,
+      },
+    });
+  });
+
+  it('drops invalid tools config values during normalization', async () => {
+    const repoRoot = await createRepoRoot();
+    const configPath = join(repoRoot, '.oat', 'config.json');
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        tools: {
+          'project-management': 'yes',
+          workflows: true,
+        },
+      }),
+      'utf8',
+    );
+
+    const config = await readOatConfig(repoRoot);
+    expect(config.tools).toEqual({
+      workflows: true,
+    });
+  });
+
+  it('omits empty tools objects during normalization', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await writeOatConfig(repoRoot, {
+      version: 1,
+      tools: {},
+    });
+
+    const config = await readOatConfig(repoRoot);
+    expect(config.tools).toBeUndefined();
+
+    const raw = await readFile(join(repoRoot, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({ version: 1 });
+  });
+
   it('reads and writes .oat/config.local.json round-trip', async () => {
     const repoRoot = await createRepoRoot();
 
