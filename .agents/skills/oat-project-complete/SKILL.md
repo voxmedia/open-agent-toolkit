@@ -64,11 +64,20 @@ Ask all user questions at once so the user can answer them in a single interacti
 
 Before asking the batched questions, read `oat_pr_status` and `oat_pr_url` from `state.md` frontmatter.
 
+Also preflight summary status using the same freshness rules as `oat-project-summary`:
+
+- `summary.md` is `missing` when `{PROJECT_PATH}/summary.md` does not exist
+- `summary.md` is `stale` when the tracking frontmatter fields `oat_summary_last_task`, `oat_summary_revision_count`, or `oat_summary_includes_revisions` no longer match `current_last_task`, `current_rev_count`, or `current_rev_list` as defined in `oat-project-summary` Step 3
+- `summary.md` is `current` when those tracking fields still match the `oat-project-summary` Step 3 comparison inputs
+
 **Questions to ask (in a single prompt):**
 
 1. **Confirm completion:** "Ready to mark **{PROJECT_NAME}** as complete?"
 2. **Archive** (only if `IS_SHARED_PROJECT` is `true`): "Archive the project after completion?"
-3. **Open PR:** "Open a PR in GitHub after generating the PR description?" — ask this only when no tracked open PR already exists.
+3. **Generate or refresh summary** (only if summary status is `missing` or `stale`): present the status explicitly:
+   - Missing example: "A summary has not been generated yet. Would you like me to generate it now as part of completion?"
+   - Stale example: "The project summary is out of date. Would you like me to refresh it now as part of completion?"
+4. **Open PR:** "Open a PR in GitHub after generating the PR description?" — ask this only when no tracked open PR already exists.
 
 If `oat_pr_status` is `open`, do not ask the Open PR question. Set `SHOULD_OPEN_PR="false"` and treat the existing PR as already tracked.
 
@@ -78,12 +87,15 @@ Present all applicable questions together. Example combined prompt:
 Ready to complete project **{PROJECT_NAME}**?
 
 1. Archive the project after completion? (yes/no)
-2. Open a PR in GitHub? (yes/no)
+2. A summary has not been generated yet. Generate it now as part of completion? (yes/no)
+3. Open a PR in GitHub? (yes/no)
 ```
 
 If the user declines the completion confirmation, exit gracefully.
 
-Store the answers as `SHOULD_ARCHIVE` and `SHOULD_OPEN_PR` for use in later steps.
+Store the answers as `SHOULD_ARCHIVE`, `SHOULD_GENERATE_SUMMARY`, and `SHOULD_OPEN_PR` for use in later steps.
+
+If the summary status is `current`, set `SHOULD_GENERATE_SUMMARY="false"` and note that a current summary is already available.
 
 If `oat_pr_url` is present, show it in the completion summary.
 
@@ -187,8 +199,11 @@ After collecting all warnings from 3.1, 3.2, and 3.3:
 
 Check if `{PROJECT_PATH}/summary.md` exists and whether it is current against the implementation state:
 
-- If `summary.md` is missing or stale, invoke `oat-project-summary` automatically before completing.
-- Do not prompt the user about whether to generate `summary.md` during completion.
+- If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="true"`, generate or refresh it before completing.
+- Prefer running the `oat-project-summary` skill when skill-to-skill invocation is available in the current host/runtime.
+- If direct skill invocation is unavailable, generate or update `summary.md` inline by following the same synthesis rules as `oat-project-summary` (validate implementation state, read the same project artifacts, apply the same freshness checks, update the same frontmatter tracking fields, and write a complete `summary.md` before continuing).
+- Do not assume `oat-project-summary` is a shell command on `PATH`. Only execute a shell command with that name if the environment explicitly provides a real executable.
+- If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="false"`, emit: `Warning: Proceeding without summary generation.`
 - If summary generation succeeds, proceed with the refreshed `summary.md` available for PR and archive steps.
 - If summary generation fails mid-way (context limits, missing artifacts, etc.), warn "Summary generation failed: {reason}. Proceeding without summary." Do NOT leave a half-written summary.md — either it completes fully or clean up the partial file and proceed without it.
 - If `summary.md` already exists and is current, note it as available. Summary.md will be:
