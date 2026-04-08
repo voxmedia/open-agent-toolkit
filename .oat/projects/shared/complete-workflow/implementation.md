@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -26,9 +26,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 9     | 1/9       |
+| Phase 1 | in_progress | 9     | 2/9       |
 
-**Total:** 1/9 tasks completed
+**Total:** 2/9 tasks completed
 
 ---
 
@@ -87,6 +87,21 @@ oat_generated: false
 
 ### Task p01-t02: Add config get/set/describe support for tools keys
 
+**Status:** completed
+**Commit:** 540ba54
+
+**Notes:**
+
+- Added `tools.*` shared config keys to `oat config get`, `set`, `list`, and `describe`.
+- Default reads now return `false` when no tool-pack state is stored.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+
+### Task p01-t03: Write tools config during install
+
 **Status:** in_progress
 **Commit:** -
 
@@ -116,20 +131,23 @@ Chronological log of implementation progress.
 **Session Start:** 21:12:51
 
 - [x] p01-t01: Add `tools` to OatConfig interface and normalizer - b2a7f7d
-- [ ] p01-t02: Add config get/set/describe support for tools keys - in progress
+- [x] p01-t02: Add config get/set/describe support for tools keys - 540ba54
+- [ ] p01-t03: Write tools config during install - in progress
 
 **What changed (high level):**
 
 - Added `tools` support to the shared OAT config schema.
 - Normalized only known tool-pack boolean flags from `.oat/config.json`.
+- Exposed `tools.*` through the config command catalog and shared get/set handlers.
 
 **Decisions:**
 
 - Kept this task limited to config typing and normalization; CLI read/write support remains in the next task.
+- Reused the existing shared-config patterns so `tools.*` behaves like other boolean repo settings.
 
 **Follow-ups / TODO:**
 
-- Add CLI accessors for `tools.*` keys in `p01-t02`.
+- Persist installed tool packs during `oat tools install` in `p01-t03`.
 
 **Blockers:**
 
