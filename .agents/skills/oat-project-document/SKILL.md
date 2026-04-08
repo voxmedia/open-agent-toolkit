@@ -1,11 +1,11 @@
 ---
 name: oat-project-document
-version: 1.0.1
+version: 1.1.0
 description: Run when implementation is complete and documentation needs updating. Analyzes project artifacts to produce documentation update recommendations, then applies approved changes before project completion.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Edit, Bash(git:*), Glob, Grep, AskUserQuestion, Skill
 ---
 
 # Project Documentation Sync
@@ -140,7 +140,20 @@ Glob: **/docusaurus.config.{js,ts}
 
 Store resolved values for use in later steps. Do not write auto-detected values to config.
 
-### Step 1: Read Project Artifacts
+### Step 1: Check for PJM Infrastructure
+
+Check if `.oat/repo/reference/` directory exists (indicates the project-management toolpack is active).
+
+**If `.oat/repo/reference/` exists:**
+
+- Invoke `oat-pjm-update-repo-reference` automatically before proceeding.
+- Do not ask whether to run the repo reference update during project-document.
+- **If invocation succeeds:** Log that repo reference docs were refreshed and continue to Step 2. The reference surfaces will already be current when the documentation scan reads them in Step 4a.4.
+- **If invocation fails:** Warn the user that the repo reference update failed, but continue with the documentation sync — a PJM failure should not block documentation updates.
+
+**If `.oat/repo/reference/` does not exist:** Skip silently and proceed to Step 2.
+
+### Step 2: Read Project Artifacts
 
 Read all available project artifacts to build an understanding of what was built.
 
@@ -171,14 +184,14 @@ While reading artifacts, collect all source file paths mentioned in:
 - Implementation.md `**Files changed:**` entries
 - Design component interfaces and data models
 
-These will be verified against actual code in Step 2.
+These will be verified against actual code in Step 3.
 
 **Handle missing artifacts gracefully:**
 
 - Quick-mode projects may lack spec.md and design.md — extract what's available
 - If only plan.md exists (no implementation.md), the project may not have started implementation yet — still proceed, but note that documentation recommendations will be based on planned work rather than verified implementation
 
-### Step 2: Verify Against Code
+### Step 3: Verify Against Code
 
 Read source files referenced in artifacts to confirm what actually shipped.
 
@@ -201,11 +214,11 @@ Read source files referenced in artifacts to confirm what actually shipped.
 - If artifacts reference many files (>20), prioritize: new files first, then modified files with the most changes
 - Read file contents, not just check existence — the skill needs to understand what the code does to make good documentation recommendations
 
-### Step 3: Discover Documentation Surfaces
+### Step 4: Discover Documentation Surfaces
 
 Scan the repository for all documentation and instruction surfaces.
 
-**3a. Documentation surfaces (primary — thorough analysis):**
+**4a. Documentation surfaces (primary — thorough analysis):**
 
 1. **Docs directory** (if `$DOCS_ROOT` is set):
    - Read the docs tooling config (e.g., `$DOCS_CONFIG`) to understand nav structure
@@ -224,7 +237,7 @@ Scan the repository for all documentation and instruction surfaces.
    - Check `.oat/repo/reference/` directory
    - Read: `current-state.md`, `backlog/index.md`, `backlog/completed.md`, `roadmap.md`, `decision-record.md`, and relevant `backlog/items/*.md` files as needed (whichever exist)
 
-**3b. Instruction surfaces (secondary — strong signals only):**
+**4b. Instruction surfaces (secondary — strong signals only):**
 
 1. **Root AGENTS.md / CLAUDE.md:**
    - Always check — read current content
@@ -242,18 +255,18 @@ Scan the repository for all documentation and instruction surfaces.
      - Gemini: `.gemini/rules/`
    - Read existing rules files that may need updating
 
-**Store surface inventory** for use in Step 4. For each surface, record:
+**Store surface inventory** for use in Step 5. For each surface, record:
 
 - File path (existing or potential)
 - Surface type (docs | readme | reference | agents | provider-rules)
 - Current content summary (for existing files)
 - Whether it's in a directory affected by the project
 
-### Step 4: Assess Documentation Delta
+### Step 5: Assess Documentation Delta
 
-Compare "what was built" (from Steps 1-2) against "what's documented" (from Step 3) to produce recommendations.
+Compare "what was built" (from Steps 2-3) against "what's documented" (from Step 4) to produce recommendations.
 
-**4a. Documentation surface assessment:**
+**5a. Documentation surface assessment:**
 
 For each documentation surface relevant to the project, determine one of:
 
@@ -274,7 +287,7 @@ For each documentation surface relevant to the project, determine one of:
 
 - **No change:** Surface is already accurate — skip from delta plan.
 
-**4b. Instruction surface assessment (strong signals only):**
+**5b. Instruction surface assessment (strong signals only):**
 
 Only recommend instruction changes when there is a clear trigger:
 
@@ -288,7 +301,7 @@ Only recommend instruction changes when there is a clear trigger:
 
 If no strong signal is present for an instruction surface, skip it.
 
-**4c. Per recommendation, capture:**
+**5c. Per recommendation, capture:**
 
 ```
 - Target: {file path — existing or proposed}
@@ -298,11 +311,11 @@ If no strong signal is present for an instruction surface, skip it.
 - Content guidance: {specific content to add or outline for new files}
 ```
 
-### Step 5: Present Delta Plan
+### Step 6: Present Delta Plan
 
 Format and present the recommendations for user approval.
 
-**5a. Format output:**
+**6a. Format output:**
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -326,13 +339,13 @@ Format and present the recommendations for user approval.
    Evidence: {reference}
 ```
 
-**5b. Handle edge cases:**
+**6b. Handle edge cases:**
 
-- If `$AUTO_MODE` is true: skip to Step 6 (apply all recommendations)
+- If `$AUTO_MODE` is true: skip to Step 7 (apply all recommendations)
 - If no recommendations found: report "No documentation updates identified for this project.", set `oat_docs_updated: complete` in state.md, and exit
 - If only instruction recommendations (no docs): still present, but note the documentation-first priority
 
-**5c. Interactive approval:**
+**6c. Interactive approval:**
 
 ```
 Approve recommendations?
@@ -345,9 +358,9 @@ Approve recommendations?
 - **Individual:** present each recommendation one at a time with approve/reject
 - **Skip:** set `oat_docs_updated: skipped` and `oat_project_state_updated: "{ISO 8601 UTC timestamp}"` in `$PROJECT_PATH/state.md` frontmatter, commit the state change, and exit without applying documentation changes
 
-Track which recommendations were approved for Step 6.
+Track which recommendations were approved for Step 7.
 
-### Step 6: Apply Approved Changes
+### Step 7: Apply Approved Changes
 
 Execute the approved documentation updates.
 
@@ -382,36 +395,36 @@ If `$DOCS_CONFIG` exists and new files were created in the docs directory:
 - Track a `$ALL_SUCCEEDED` flag (default: true). If any file write fails, set `$ALL_SUCCEEDED` to false, log the error, and continue with remaining recommendations
 - At the end, report any failures with the specific files that could not be written
 
-### Step 7: Commit and Update State
+### Step 8: Commit and Update State
 
-**7a. Stage and commit documentation changes:**
+**8a. Stage and commit documentation changes:**
 
 ```bash
 git add {list of changed/created documentation files}
 git diff --cached --quiet || git commit -m "docs({project-name}): update documentation from project artifacts"
 ```
 
-Only stage files that were actually changed or created in Step 6. Do not use `git add -A`.
+Only stage files that were actually changed or created in Step 7. Do not use `git add -A`.
 
-**7b. Update project state:**
+**8b. Update project state:**
 
 Update `$PROJECT_PATH/state.md` frontmatter based on apply outcome:
 
 - If `$ALL_SUCCEEDED` is true: set `oat_docs_updated: complete` and `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
-- If `$ALL_SUCCEEDED` is false: do **not** set `oat_docs_updated: complete` — leave the field as `null` so the skill can be re-run. Still set `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`. Surface the failures clearly in the summary report (Step 7d) so the user knows which updates failed and why.
+- If `$ALL_SUCCEEDED` is false: do **not** set `oat_docs_updated: complete` — leave the field as `null` so the skill can be re-run. Still set `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`. Surface the failures clearly in the summary report (Step 8d) so the user knows which updates failed and why.
 
 ```bash
 git add "$PROJECT_PATH/state.md"
 git diff --cached --quiet || git commit -m "chore({project-name}): mark docs updated"
 ```
 
-**7c. Handle edge cases:**
+**8c. Handle edge cases:**
 
-- If user explicitly skipped (chose [S]kip in Step 5): `oat_docs_updated` was already set to `skipped` in Step 5. No further state update needed here.
+- If user explicitly skipped (chose [S]kip in Step 6): `oat_docs_updated` was already set to `skipped` in Step 6. No further state update needed here.
 - If no recommendations were found: set `oat_docs_updated: complete` (nothing to do is still "done").
 - If `--auto` mode: apply all, commit, set state — no user interaction.
 
-**7d. Report summary:**
+**8d. Report summary:**
 
 If `$ALL_SUCCEEDED` is true:
 
