@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t08
+oat_current_task_id: p01-t09
 oat_generated: false
 ---
 
@@ -26,9 +26,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 9     | 7/9       |
+| Phase 1 | in_progress | 9     | 8/9       |
 
-**Total:** 7/9 tasks completed
+**Total:** 8/9 tasks completed
 
 ---
 
@@ -177,6 +177,21 @@ oat_generated: false
 
 ### Task p01-t08: Add tests for install/update/remove config writes
 
+**Status:** completed
+**Commit:** 2e70411
+
+**Notes:**
+
+- Added init command coverage for shared `tools` config writes after tool-pack installation.
+- Added command-level update/remove coverage for tool-pack config reconciliation and pack removal writes.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass (1170/1170)
+
+### Task p01-t09: Version bumps and validation
+
 **Status:** in_progress
 **Commit:** -
 
@@ -212,7 +227,8 @@ Chronological log of implementation progress.
 - [x] p01-t05: Clear tools config on remove - c268d10
 - [x] p01-t06: Update oat-project-document to check config - b1ee60a
 - [x] p01-t07: Add tests for config round-trip - 4fa94f0
-- [ ] p01-t08: Add tests for install/update/remove config writes - in progress
+- [x] p01-t08: Add tests for install/update/remove config writes - 2e70411
+- [ ] p01-t09: Version bumps and validation - in progress
 
 **What changed (high level):**
 
@@ -224,6 +240,7 @@ Chronological log of implementation progress.
 - Cleared tool-pack flags during remove flows for pack and all-target removals.
 - Switched `oat-project-document` PJM detection to the new shared config signal.
 - Added normalization and config-command tests covering the new `tools` config surface.
+- Added command-level tests for install/update/remove tool-pack config writes.
 
 **Decisions:**
 
@@ -234,10 +251,11 @@ Chronological log of implementation progress.
 - Remove flows only mutate pack config for whole-pack or all-tool removals, not single-tool removals.
 - The project-document skill now uses the config signal instead of filesystem heuristics.
 - The CLI package test suite is still green after the config and skill changes.
+- Command-level tests use mocked config/path modules to isolate config-write behavior.
 
 **Follow-ups / TODO:**
 
-- Add install/update/remove config-write tests in `p01-t08`.
+- Bump publishable package versions and run release/quality validation in `p01-t09`.
 
 **Blockers:**
 
