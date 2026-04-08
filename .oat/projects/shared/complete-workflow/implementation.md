@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: null
+oat_current_task_id: p01-t10
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 9     | 9/9       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 10    | 9/10      |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/10 tasks completed
 
 ---
 
 ## Phase 1: Track installed tool packs in config
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-04-08
 
 ### Phase Summary (fill when phase is complete)
@@ -211,6 +211,15 @@ oat_generated: false
 - Synced the generated public-package version asset to `0.0.19` for all publishable packages in commit `b8aff58`.
 - Completed full release and workspace validation after the version bump.
 
+### Task p01-t10: (review) Preserve repo-level tools config across scope-specific mutations
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Added from final review to keep repo-level `tools.*` state accurate when only one scope is updated or removed.
+
 ---
 
 ## Orchestration Runs
@@ -241,6 +250,7 @@ Chronological log of implementation progress.
 - [x] p01-t07: Add tests for config round-trip - 4fa94f0
 - [x] p01-t08: Add tests for install/update/remove config writes - 2e70411
 - [x] p01-t09: Version bumps and validation - b8aff58
+- [ ] p01-t10: (review) Preserve repo-level tools config across scope-specific mutations - pending
 
 **What changed (high level):**
 
@@ -267,13 +277,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- None.
+- Implement the final review fix in `p01-t10`, then rerun final review.
 
 **Blockers:**
 
 - None.
 
-**Session End:** 21:45:01
+**Session End:** -
 
 ---
 
@@ -337,6 +347,29 @@ Track test execution during implementation.
 **Design deltas (if any):**
 
 - No material design delta. The implementation followed the plan update that required full config reconciliation during update flows and lockstep public-package version bumps.
+
+## Review Received
+
+### Review Received: final
+
+**Date:** 2026-04-07
+**Review artifact:** `reviews/archived/final-review-2026-04-07.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p01-t10`
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update the review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
 
 ## References
 

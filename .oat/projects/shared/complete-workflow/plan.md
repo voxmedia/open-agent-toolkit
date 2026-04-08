@@ -423,21 +423,51 @@ oat_generated: false
 
 - [ ] Commit: `chore: bump publishable package versions`
 
+### Task p01-t10: (review) Preserve repo-level tools config across scope-specific mutations
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/update/index.ts`
+- Modify: `packages/cli/src/commands/tools/remove/index.ts`
+- Modify: `packages/cli/src/commands/tools/update/config-write.test.ts`
+- Modify: `packages/cli/src/commands/tools/remove/config-write.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: scope-specific update/remove operations currently rewrite `.oat/config.json` from only the requested scopes, which can clear a tool-pack flag even when the pack remains installed in another scope.
+Location: `packages/cli/src/commands/tools/update/index.ts:119`, `packages/cli/src/commands/tools/remove/index.ts:104`
+
+**Step 2: Implement fix**
+
+Reconcile repo-level `tools` config from the union of installed packs across both concrete scopes when update/remove rewrites config. Keep the requested mutation behavior unchanged, but ensure the shared repo config still reflects packs that remain available from another scope.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: pass, including coverage proving project-scope mutations preserve packs still installed in user scope
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/tools/update/index.ts packages/cli/src/commands/tools/remove/index.ts packages/cli/src/commands/tools/update/config-write.test.ts packages/cli/src/commands/tools/remove/config-write.test.ts
+git commit -m "fix(p01-t10): preserve tools config across scopes"
+```
+
 ---
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                   |
-| ----- | -------- | -------- | ---------- | ------------------------------------------ |
-| plan  | artifact | received | 2026-04-07 | reviews/artifact-plan-review-2026-04-07.md |
-| final | code     | received | 2026-04-07 | reviews/final-review-2026-04-07.md         |
+| Scope | Type     | Status      | Date       | Artifact                                    |
+| ----- | -------- | ----------- | ---------- | ------------------------------------------- |
+| plan  | artifact | received    | 2026-04-07 | reviews/artifact-plan-review-2026-04-07.md  |
+| final | code     | fixes_added | 2026-04-07 | reviews/archived/final-review-2026-04-07.md |
 
 ## Implementation Complete
 
-- [x] All tasks complete
-- [x] All tests passing
-- [x] Lint and type-check clean
-- [x] `pnpm release:validate` passes
+- [ ] All tasks complete
+- [ ] All tests passing
+- [ ] Lint and type-check clean
+- [ ] `pnpm release:validate` passes
 
 ## References
 
