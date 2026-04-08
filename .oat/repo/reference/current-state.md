@@ -151,9 +151,10 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat init --scope project` prompts for provider selection in interactive mode.
   - `oat sync --scope project` performs config-aware provider activation and mismatch remediation (interactive prompt in TTY mode, warning + remediation guidance in non-interactive mode).
 - Non-sync config model:
-  - Shared repo settings live in `.oat/config.json`, including `projects.root`, `worktrees.root`, `git.defaultBranch`, `documentation.*`, and `archive.*`.
+  - Shared repo settings live in `.oat/config.json`, including `projects.root`, `worktrees.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, and `tools.*`.
   - Repo-local state lives in `.oat/config.local.json`, including `activeProject`, `lastPausedProject`, and repo-scoped `activeIdea`.
   - `oat config describe` exposes shared repo, repo-local, user, and sync/provider config ownership from one command surface.
+  - Tool-pack lifecycle commands now persist pack availability in `tools.<pack>` so workflows can use an explicit config signal instead of inferring installed capability from filesystem artifacts alone.
 - Supported providers: Claude Code, Cursor, Codex CLI, GitHub Copilot, Gemini CLI.
 - Codex TOML sync:
   - Canonical agent parser/renderer (`agents/canonical/`) converts markdown agent definitions to/from structured format.

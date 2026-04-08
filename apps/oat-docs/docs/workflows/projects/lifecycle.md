@@ -18,7 +18,7 @@ OAT lifecycle order:
 7. Summary (`oat-project-summary`) — generates `summary.md` as institutional memory; `oat-project-pr-final` and `oat-project-complete` auto-refresh it when missing or stale
 8. PR (`oat-project-pr-progress` / `oat-project-pr-final`) — sets `pr_open` status
 9. Revision loop (`oat-project-revise`) — optional; accepts post-PR feedback
-10. Documentation sync (`oat-project-document`) — optional; reads project artifacts to identify docs needing updates
+10. Documentation sync (`oat-project-document`) — optional; reads project artifacts to identify docs needing updates, checks `tools.project-management`, and auto-runs `oat-pjm-update-repo-reference` before scanning docs when the project-management pack is installed
 11. Complete (`oat-project-complete`)
 
 **Shortcut:** `oat-project-next` reads project state and invokes the correct next skill automatically — use it instead of remembering which skill comes next. Complements `oat-project-progress` (which is read-only diagnostic).
@@ -49,7 +49,7 @@ flowchart LR
 After implementation and final review pass:
 
 1. **Summary** (`oat-project-summary`) — generates `summary.md` as institutional memory from project artifacts; PR-final and completion will auto-refresh it if you have not already run it or if it is stale
-2. **Documentation** (`oat-project-document`) — optional sync of project docs
+2. **Documentation** (`oat-project-document`) — optional sync of project docs; now uses the shared `tools.project-management` config signal to decide whether repo-reference refresh should run before docs analysis
 3. **PR** (`oat-project-pr-final`) — creates PR description (auto-refreshes `summary.md` first when needed, then uses it as source), sets `oat_phase_status: pr_open`, and tracks actual PR existence with `oat_pr_status` / `oat_pr_url`
 4. **Revision loop** (`oat-project-revise`) — accepts post-PR feedback:
    - Inline feedback creates `p-revN` revision phases with `prevN-tNN` task IDs
