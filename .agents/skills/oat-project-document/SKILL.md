@@ -1,6 +1,6 @@
 ---
 name: oat-project-document
-version: 1.1.0
+version: 1.2.0
 description: Run when implementation is complete and documentation needs updating. Analyzes project artifacts to produce documentation update recommendations, then applies approved changes before project completion.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: true
@@ -142,16 +142,20 @@ Store resolved values for use in later steps. Do not write auto-detected values 
 
 ### Step 1: Check for PJM Infrastructure
 
-Check if `.oat/repo/reference/` directory exists (indicates the project-management toolpack is active).
+Check whether the project-management tool pack is installed by reading config:
 
-**If `.oat/repo/reference/` exists:**
+```bash
+PJM_INSTALLED=$(oat config get tools.project-management 2>/dev/null || echo "false")
+```
+
+**If `PJM_INSTALLED` is `true`:**
 
 - Invoke `oat-pjm-update-repo-reference` automatically before proceeding.
 - Do not ask whether to run the repo reference update during project-document.
 - **If invocation succeeds:** Log that repo reference docs were refreshed and continue to Step 2. The reference surfaces will already be current when the documentation scan reads them in Step 4a.4.
 - **If invocation fails:** Warn the user that the repo reference update failed, but continue with the documentation sync — a PJM failure should not block documentation updates.
 
-**If `.oat/repo/reference/` does not exist:** Skip silently and proceed to Step 2.
+**If `PJM_INSTALLED` is not `true`:** Skip silently and proceed to Step 2.
 
 ### Step 2: Read Project Artifacts
 
