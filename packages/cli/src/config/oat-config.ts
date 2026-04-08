@@ -23,12 +23,26 @@ export interface OatArchiveConfig {
   summaryExportPath?: string;
 }
 
+export type OatToolsConfig = Partial<
+  Record<
+    | 'core'
+    | 'ideas'
+    | 'docs'
+    | 'workflows'
+    | 'utility'
+    | 'project-management'
+    | 'research',
+    boolean
+  >
+>;
+
 export interface OatConfig {
   version: number;
   worktrees?: { root: string };
   projects?: { root: string };
   git?: OatGitConfig;
   archive?: OatArchiveConfig;
+  tools?: OatToolsConfig;
   documentation?: OatDocumentationConfig;
   localPaths?: string[];
   autoReviewAtCheckpoints?: boolean;
@@ -176,6 +190,29 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     }
     if (Object.keys(archive).length > 0) {
       next.archive = archive;
+    }
+  }
+
+  if (isRecord(parsed.tools)) {
+    const validPacks = [
+      'core',
+      'ideas',
+      'docs',
+      'workflows',
+      'utility',
+      'project-management',
+      'research',
+    ] as const;
+    const tools: OatToolsConfig = {};
+
+    for (const pack of validPacks) {
+      if (typeof parsed.tools[pack] === 'boolean') {
+        tools[pack] = parsed.tools[pack];
+      }
+    }
+
+    if (Object.keys(tools).length > 0) {
+      next.tools = tools;
     }
   }
 
