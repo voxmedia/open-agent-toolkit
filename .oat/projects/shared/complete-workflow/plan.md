@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-04-08
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: []
+oat_plan_hill_phases: ['p01']
+oat_auto_review_at_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -26,14 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 9     | 1/9       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 1/9 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Track installed tool packs in config
 
 **Status:** in_progress
 **Started:** 2026-04-08
@@ -57,54 +56,43 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add `tools` to OatConfig interface and normalizer
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** b2a7f7d
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- `OatConfig` now accepts repo-level tool-pack state under `tools`.
+- Config normalization preserves only boolean values for known tool packs and drops invalid or empty entries.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/config/oat-config.ts` - add tool-pack config typing and normalization.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- Kept the pack union local to the config module for now so this task stays scoped to the config file.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- None.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add config get/set/describe support for tools keys
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes:**
 
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
+- Next up.
 
 ---
 
@@ -125,28 +113,29 @@ Chronological log of implementation progress.
 
 ### 2026-04-08
 
-**Session Start:** {time}
+**Session Start:** 21:12:51
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Add `tools` to OatConfig interface and normalizer - b2a7f7d
+- [ ] p01-t02: Add config get/set/describe support for tools keys - in progress
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Added `tools` support to the shared OAT config schema.
+- Normalized only known tool-pack boolean flags from `.oat/config.json`.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Kept this task limited to config typing and normalization; CLI read/write support remains in the next task.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Add CLI accessors for `tools.*` keys in `p01-t02`.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
+**Session End:** -
 
 ---
 
