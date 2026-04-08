@@ -141,6 +141,8 @@ export function createToolsUpdateCommand(
           }
         }
 
+        // Preserve unrelated shared config keys while rebuilding tools state
+        // from the repo-wide installed-pack scan.
         await writeOatConfig(repoRoot, {
           ...config,
           tools: Object.fromEntries(
