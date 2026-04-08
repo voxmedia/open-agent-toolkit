@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
@@ -454,7 +454,26 @@ After the fix tasks are complete:
   - Disposition: deferred by user
   - Rationale: low-signal test-fixture cleanup that does not affect correctness or coverage
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
+**Next:** `p01-t11` and `p01-t12` are complete and the follow-up final review passed.
+
+After the fix tasks were complete:
+
+- Review row progressed from `fixes_completed` to `passed`
+- Proceed to summary/docs sync or final PR creation when ready
+
+### Review Passed: final
+
+**Date:** 2026-04-08
+**Review artifact:** `reviews/archived/final-review-2026-04-08-r2.md`
+
+**Result:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Next:** Proceed to summary/docs sync or final PR creation.
 
 ## References
 
