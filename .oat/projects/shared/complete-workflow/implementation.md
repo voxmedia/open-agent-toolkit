@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t11
+oat_current_task_id: p01-t12
 oat_generated: false
 ---
 
@@ -26,9 +26,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 12    | 10/12     |
+| Phase 1 | in_progress | 12    | 11/12     |
 
-**Total:** 10/12 tasks completed
+**Total:** 11/12 tasks completed
 
 ---
 
@@ -223,12 +223,26 @@ oat_generated: false
 
 ### Task p01-t11: (review) Remove redundant assets-root lookup in tools update
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 98d77bb
 
-**Notes:**
+**Outcome (required):**
 
-- Added from the 2026-04-08 final review.
+- `createToolsUpdateCommand` now resolves `assetsRoot` once per non-dry-run execution.
+- The same resolved path is reused for both docs refresh and tools-config reconciliation.
+
+**Files changed:**
+
+- `packages/cli/src/commands/tools/update/index.ts` - hoist `assetsRoot` resolution and reuse it in both update branches.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass (1170/1170)
+
+**Notes / Decisions:**
+
+- Kept the change localized to the command action so behavior and dependency flow stayed unchanged outside the redundant lookup removal.
 
 ### Task p01-t12: (review) Clarify non-tools config preservation in update reconciliation
 
@@ -270,7 +284,7 @@ Chronological log of implementation progress.
 - [x] p01-t08: Add tests for install/update/remove config writes - 2e70411
 - [x] p01-t09: Version bumps and validation - b8aff58
 - [x] p01-t10: (review) Preserve repo-level tools config across scope-specific mutations - fb7720d
-- [ ] p01-t11: (review) Remove redundant assets-root lookup in tools update - pending
+- [x] p01-t11: (review) Remove redundant assets-root lookup in tools update - 98d77bb
 - [ ] p01-t12: (review) Clarify non-tools config preservation in update reconciliation - pending
 
 **What changed (high level):**
@@ -298,7 +312,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Implement `p01-t11` and `p01-t12`, then request final re-review for scope `final`.
+- Implement `p01-t12`, then request final re-review for scope `final`.
 
 **Blockers:**
 
