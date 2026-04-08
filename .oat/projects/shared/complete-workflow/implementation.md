@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 10    | 9/10      |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 10    | 10/10     |
 
-**Total:** 9/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ---
 
 ## Phase 1: Track installed tool packs in config
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-08
 
 ### Phase Summary (fill when phase is complete)
@@ -213,12 +213,13 @@ oat_generated: false
 
 ### Task p01-t10: (review) Preserve repo-level tools config across scope-specific mutations
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** fb7720d
 
 **Notes:**
 
-- Added from final review to keep repo-level `tools.*` state accurate when only one scope is updated or removed.
+- Repo-level `tools.*` reconciliation now scans both concrete scopes after update/remove mutations.
+- Added regression coverage proving project-scope mutations preserve tool packs that remain installed in user scope.
 
 ---
 
@@ -250,7 +251,7 @@ Chronological log of implementation progress.
 - [x] p01-t07: Add tests for config round-trip - 4fa94f0
 - [x] p01-t08: Add tests for install/update/remove config writes - 2e70411
 - [x] p01-t09: Version bumps and validation - b8aff58
-- [ ] p01-t10: (review) Preserve repo-level tools config across scope-specific mutations - pending
+- [x] p01-t10: (review) Preserve repo-level tools config across scope-specific mutations - fb7720d
 
 **What changed (high level):**
 
@@ -277,7 +278,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Implement the final review fix in `p01-t10`, then rerun final review.
+- Request final re-review for scope `final`.
 
 **Blockers:**
 
@@ -364,11 +365,11 @@ Track test execution during implementation.
 
 **New tasks added:** `p01-t10`
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
+**Next:** Request re-review via `oat-project-review-provide code final`.
 
 After the fix tasks are complete:
 
-- Update the review row status to `fixes_completed`
+- Review row is now `fixes_completed`
 - Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
 
 ## References
