@@ -16,6 +16,7 @@ import {
 } from '@commands/tools/shared/auto-sync';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
+import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -113,6 +114,39 @@ export function createToolsUpdateCommand(
         const docsSource = join(assetsRoot, 'docs');
         const docsDestination = join(userRoot, '.oat', 'docs');
         await dependencies.copyDirWithStatus(docsSource, docsDestination, true);
+      }
+
+      if (!dryRun && (target.kind === 'all' || target.kind === 'pack')) {
+        const assetsRoot = await dependencies.resolveAssetsRoot();
+        const repoRoot = await resolveProjectRoot(context.cwd);
+        const config = await readOatConfig(repoRoot);
+        const installedPacks = new Set<PackName>();
+
+        for (const scope of scopes) {
+          const scopeRoot = await dependencies.resolveScopeRoot(
+            scope,
+            context.cwd,
+            context.home,
+          );
+          const tools = await dependencies.scanTools({
+            scope,
+            scopeRoot,
+            assetsRoot,
+          });
+
+          for (const tool of tools) {
+            if (tool.pack !== 'custom') {
+              installedPacks.add(tool.pack);
+            }
+          }
+        }
+
+        await writeOatConfig(repoRoot, {
+          ...config,
+          tools: Object.fromEntries(
+            VALID_PACKS.map((pack) => [pack, installedPacks.has(pack)]),
+          ),
+        });
       }
 
       if (result.notInstalled.length > 0) {
