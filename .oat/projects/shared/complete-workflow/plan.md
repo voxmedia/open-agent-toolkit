@@ -252,16 +252,15 @@ oat_generated: false
 
 - [ ] After `updateTools()` returns and before auto-sync (around line 128), add reconciliation logic.
 
-  When `--all` or `--pack` is used, scan the installed tools to determine which packs are present and write the result to config. This catches existing repos that installed packs before this config existed.
+  When `--all` or `--pack` is used, scan the installed tools to determine which packs are present and write the result to config. This catches existing repos that installed packs before this config existed. Build a fresh `tools` object from the scan — do not spread the existing config, as that would preserve stale flags for packs that were removed from disk.
 
   ```typescript
   // Reconcile tools config from scan results
   if (!dryRun && (target.kind === 'all' || target.kind === 'pack')) {
     const repoRoot = await resolveProjectRoot(context.cwd);
     const config = await readOatConfig(repoRoot);
-    const tools = { ...config.tools };
 
-    // Determine which packs have at least one installed member
+    // Build fresh tools state from scan — clears stale flags
     const allToolsFlat = [
       ...result.updated,
       ...result.current,
@@ -272,6 +271,7 @@ oat_generated: false
         .map((t) => t.pack)
         .filter((pack): pack is PackName => pack !== 'custom'),
     );
+    const tools: Partial<Record<PackName, boolean>> = {};
     for (const pack of installedPacks) {
       tools[pack] = true;
     }
@@ -280,7 +280,7 @@ oat_generated: false
   }
   ```
 
-  Add imports for `readOatConfig`, `writeOatConfig` from `@config/oat-config` and `resolveProjectRoot` (already imported via `@fs/paths`).
+  Add imports for `readOatConfig`, `writeOatConfig` from `@config/oat-config`, `PackName` from `@commands/tools/shared/types`, and `resolveProjectRoot` (already imported via `@fs/paths`).
 
 - [ ] Verify: `pnpm --filter @open-agent-toolkit/cli type-check`
 
@@ -401,24 +401,26 @@ oat_generated: false
 
 - [ ] Commit: `test(p01-t08): add tests for install/update/remove config writes`
 
-### Task p01-t09: Version bumps and validation
+### Task p01-t09: Lockstep version bumps and validation
 
 **Files:**
 
-- Modify: `packages/cli/package.json` (if needed for publishable bump)
-- Check: all publishable package versions
+- Modify: `packages/cli/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
 
 **Steps:**
 
-- [ ] Check if publishable package versions need bumping per the lockstep bump rule. The CLI package is publishable and we changed shipped functionality.
+- [ ] Bump the version in all four publishable packages to the next patch version. This PR changes shipped CLI behavior (new config key, config writes on install/update/remove), which requires lockstep version bumps across all publishable packages per repo policy.
 
-- [ ] Run `pnpm release:validate` to verify.
+- [ ] Run `pnpm release:validate` — this is the gate that proves the lockstep bump requirement is satisfied. Do not proceed until it passes.
 
 - [ ] Run full test suite: `pnpm test`
 
 - [ ] Run full lint + type-check: `pnpm lint && pnpm type-check`
 
-- [ ] Commit version bumps if needed: `chore: bump publishable package versions`
+- [ ] Commit: `chore: bump publishable package versions`
 
 ---
 
