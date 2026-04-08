@@ -11,14 +11,18 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import { detectDrift } from '@drift/index';
-import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import {
+  normalizeToPosixPath,
+  resolveProjectRoot,
+  resolveScopeRoot,
+} from '@fs/paths';
 import { loadManifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
 import { geminiAdapter } from '@providers/gemini';
-import { getSyncMappings } from '@providers/shared';
+import { getSyncMappings, type PathMapping } from '@providers/shared';
 import type { ContentType } from '@shared/types';
 import { Command } from 'commander';
 
@@ -136,9 +140,11 @@ async function collectProviderList(
   for (const adapter of dependencies.getAdapters()) {
     const summary = createEmptySummary();
     const contentTypes = new Set<ContentType>();
+    const allMappings: PathMapping[] = [];
     for (const scope of scopes) {
       for (const mapping of dependencies.getSyncMappings(adapter, scope)) {
         contentTypes.add(mapping.contentType);
+        allMappings.push(mapping);
       }
     }
     let detected = false;
@@ -159,7 +165,23 @@ async function collectProviderList(
         }
 
         summary.managed += 1;
-        const report = await dependencies.detectDrift(entry, scopeRoot.root);
+        const matchedMapping = allMappings.find((mapping) => {
+          const normalizedEntry = normalizeToPosixPath(entry.providerPath);
+          const normalizedDir = normalizeToPosixPath(mapping.providerDir);
+          return (
+            mapping.contentType === entry.contentType &&
+            (normalizedEntry === normalizedDir ||
+              normalizedEntry.startsWith(`${normalizedDir}/`))
+          );
+        });
+        const copyTransform = matchedMapping?.transformCanonical
+          ? { transformCanonical: matchedMapping.transformCanonical }
+          : undefined;
+        const report = await dependencies.detectDrift(
+          entry,
+          scopeRoot.root,
+          copyTransform,
+        );
         if (report.state.status === 'in_sync') {
           summary.inSync += 1;
           continue;

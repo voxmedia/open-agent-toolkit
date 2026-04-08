@@ -6,6 +6,7 @@ import { computeDirectoryHash, computeFileHash } from '@manifest/hash';
 import type { ManifestEntry } from '@manifest/manifest.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import type { CopyTransform } from './detector';
 import { detectDrift } from './detector';
 
 function createManifestEntry(
@@ -188,5 +189,127 @@ describe('detectDrift', () => {
     );
 
     expect(report.state).toEqual({ status: 'in_sync' });
+  });
+
+  it('returns in_sync via transform fallback when manifest hash is stale', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await mkdir(join(root, '.claude', 'rules'), { recursive: true });
+
+    // Canonical has frontmatter that gets stripped by the transform
+    await writeFile(
+      join(root, '.agents', 'rules', 'observability.md'),
+      '---\ndescription: obs rules\nactivation: always\n---\n\n# Obs\n',
+      'utf8',
+    );
+    // Provider has the rendered (transformed) content
+    const renderedContent =
+      '# Obs\n\n<!-- OAT-managed: Source: .agents/rules/observability.md -->\n';
+    await writeFile(
+      join(root, '.claude', 'rules', 'observability.md'),
+      renderedContent,
+      'utf8',
+    );
+
+    const transform: CopyTransform = {
+      transformCanonical: (content: string, _path: string) => {
+        // Simulate stripping frontmatter + appending marker
+        const body = content.replace(/^---\n[\s\S]*?\n---\n\n?/, '');
+        return `${body.trimEnd()}\n\n<!-- OAT-managed: Source: .agents/rules/observability.md -->\n`;
+      },
+    };
+
+    const report = await detectDrift(
+      createManifestEntry({
+        canonicalPath: '.agents/rules/observability.md',
+        providerPath: '.claude/rules/observability.md',
+        provider: 'claude',
+        contentType: 'rule',
+        strategy: 'copy',
+        // Stale hash — simulates hash computed from a previous version
+        contentHash: 'stale-hash-from-previous-sync',
+        isFile: true,
+      }),
+      root,
+      transform,
+    );
+
+    expect(report.state).toEqual({ status: 'in_sync' });
+  });
+
+  it('returns drifted when provider was manually edited even with transform', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await mkdir(join(root, '.claude', 'rules'), { recursive: true });
+
+    await writeFile(
+      join(root, '.agents', 'rules', 'observability.md'),
+      '---\ndescription: obs rules\nactivation: always\n---\n\n# Obs\n',
+      'utf8',
+    );
+    // Provider was manually edited — content differs from transform output
+    await writeFile(
+      join(root, '.claude', 'rules', 'observability.md'),
+      '# MANUALLY EDITED\n',
+      'utf8',
+    );
+
+    const transform: CopyTransform = {
+      transformCanonical: (content: string, _path: string) => {
+        const body = content.replace(/^---\n[\s\S]*?\n---\n\n?/, '');
+        return `${body.trimEnd()}\n\n<!-- OAT-managed: Source: .agents/rules/observability.md -->\n`;
+      },
+    };
+
+    const report = await detectDrift(
+      createManifestEntry({
+        canonicalPath: '.agents/rules/observability.md',
+        providerPath: '.claude/rules/observability.md',
+        provider: 'claude',
+        contentType: 'rule',
+        strategy: 'copy',
+        contentHash: 'stale-hash',
+        isFile: true,
+      }),
+      root,
+      transform,
+    );
+
+    expect(report.state).toEqual({ status: 'drifted', reason: 'modified' });
+  });
+
+  it('skips transform fallback when no copyTransform provided', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await mkdir(join(root, '.claude', 'rules'), { recursive: true });
+
+    await writeFile(
+      join(root, '.agents', 'rules', 'test-rule.md'),
+      '---\nactivation: always\n---\n\n# Rule\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.claude', 'rules', 'test-rule.md'),
+      '# Rule\n',
+      'utf8',
+    );
+
+    const report = await detectDrift(
+      createManifestEntry({
+        canonicalPath: '.agents/rules/test-rule.md',
+        providerPath: '.claude/rules/test-rule.md',
+        provider: 'claude',
+        contentType: 'rule',
+        strategy: 'copy',
+        contentHash: 'wrong-hash',
+        isFile: true,
+      }),
+      root,
+    );
+
+    expect(report.state).toEqual({ status: 'drifted', reason: 'modified' });
   });
 });

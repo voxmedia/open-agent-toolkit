@@ -294,6 +294,46 @@ describe('e2e workflow', () => {
     expect(entry?.contentHash).toBeTruthy();
   });
 
+  it('rule status: sync → frontmatter edit → status still in sync', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    await runCli(root, ['init']);
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'rules', 'test-rule.md'),
+      '---\ndescription: original\nactivation: always\n---\n\n# Rule Body\n',
+      'utf8',
+    );
+
+    // First sync creates the copies
+    const firstSync = await runCli(root, ['sync']);
+    expect(firstSync.exitCode).toBe(0);
+
+    // Status should be clean
+    const beforeEdit = await runCli(root, ['status', '--json'], ['--json']);
+    expect(beforeEdit.exitCode).toBe(0);
+    const beforePayload = JSON.parse(beforeEdit.stdout);
+    expect(beforePayload.summary.drifted).toBe(0);
+
+    // Edit only frontmatter (body stays the same)
+    await writeFile(
+      join(root, '.agents', 'rules', 'test-rule.md'),
+      '---\ndescription: updated description\nactivation: always\n---\n\n# Rule Body\n',
+      'utf8',
+    );
+
+    // Sync should skip (transformed output unchanged for claude)
+    const secondSync = await runCli(root, ['sync']);
+    expect(secondSync.exitCode).toBe(0);
+
+    // Status should still report in sync (not false-positive drift)
+    const afterEdit = await runCli(root, ['status', '--json'], ['--json']);
+    expect(afterEdit.exitCode).toBe(0);
+    const afterPayload = JSON.parse(afterEdit.stdout);
+    expect(afterPayload.summary.drifted).toBe(0);
+  });
+
   it('removal: delete canonical → sync removes provider view', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
