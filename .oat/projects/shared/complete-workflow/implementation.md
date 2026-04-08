@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-08
-oat_current_task_id: p01-t04
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -26,9 +26,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 9     | 3/9       |
+| Phase 1 | in_progress | 9     | 4/9       |
 
-**Total:** 3/9 tasks completed
+**Total:** 4/9 tasks completed
 
 ---
 
@@ -117,6 +117,21 @@ oat_generated: false
 
 ### Task p01-t04: Reconcile tools config during update
 
+**Status:** completed
+**Commit:** c94a906
+
+**Notes:**
+
+- `oat tools update --all|--pack` now rescans installed tools and rewrites the full `tools` map.
+- Reconciliation clears stale flags by deriving booleans from actual installed packs instead of merging into existing config state.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+
+### Task p01-t05: Clear tools config on remove
+
 **Status:** in_progress
 **Commit:** -
 
@@ -148,7 +163,8 @@ Chronological log of implementation progress.
 - [x] p01-t01: Add `tools` to OatConfig interface and normalizer - b2a7f7d
 - [x] p01-t02: Add config get/set/describe support for tools keys - 540ba54
 - [x] p01-t03: Write tools config during install - 7ba2653
-- [ ] p01-t04: Reconcile tools config during update - in progress
+- [x] p01-t04: Reconcile tools config during update - c94a906
+- [ ] p01-t05: Clear tools config on remove - in progress
 
 **What changed (high level):**
 
@@ -156,16 +172,18 @@ Chronological log of implementation progress.
 - Normalized only known tool-pack boolean flags from `.oat/config.json`.
 - Exposed `tools.*` through the config command catalog and shared get/set handlers.
 - Persisted selected tool packs to shared config during `oat tools install`.
+- Rebuilt tool-pack config from installed-tool scans during update flows.
 
 **Decisions:**
 
 - Kept this task limited to config typing and normalization; CLI read/write support remains in the next task.
 - Reused the existing shared-config patterns so `tools.*` behaves like other boolean repo settings.
 - The install flow writes repo config after pack installation and AGENTS bookkeeping complete.
+- Update reconciliation now clears stale `true` flags instead of only backfilling missing entries.
 
 **Follow-ups / TODO:**
 
-- Reconcile tool-pack config from update scan results in `p01-t04`.
+- Clear tool-pack flags during remove flows in `p01-t05`.
 
 **Blockers:**
 
