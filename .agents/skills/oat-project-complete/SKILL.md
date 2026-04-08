@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.3.6
+version: 1.3.7
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
