@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 
 import { createProjectArchiveCommand } from './archive';
+import { createProjectListCommand } from './list';
 import { createProjectNewCommand } from './new';
 import { createProjectOpenCommand } from './open';
 import { createProjectPauseCommand } from './pause';
@@ -11,6 +12,7 @@ export function createProjectCommand(): Command {
   return new Command('project')
     .description('Manage OAT project workflows')
     .addCommand(createProjectArchiveCommand())
+    .addCommand(createProjectListCommand())
     .addCommand(createProjectNewCommand())
     .addCommand(createProjectOpenCommand())
     .addCommand(createProjectPauseCommand())

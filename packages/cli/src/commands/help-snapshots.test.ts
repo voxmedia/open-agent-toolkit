@@ -574,6 +574,7 @@ describe('help output snapshots', () => {
 
       Commands:
         archive                 Manage archived project data
+        list                    List tracked OAT projects
         new [options] <name>    Create or update an OAT project scaffold
         open [options] <name>   Open or switch to an OAT project
         pause [options] [name]  Pause an OAT project
