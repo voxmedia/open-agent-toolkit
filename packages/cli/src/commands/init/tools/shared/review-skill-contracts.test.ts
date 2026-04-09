@@ -75,7 +75,7 @@ describe('review skill contracts', () => {
     );
   });
 
-  it('requires automatic summary refresh during pr-final and completion', () => {
+  it('defines runtime-safe summary handling during pr-final and completion', () => {
     const prFinalPath = repoFilePath(
       '.agents/skills/oat-project-pr-final/SKILL.md',
     );
@@ -87,16 +87,32 @@ describe('review skill contracts', () => {
     const completeContent = readFileSync(completePath, 'utf8');
 
     expect(prFinalContent).toContain(
-      'If `summary.md` is missing or stale, invoke `oat-project-summary` automatically before proceeding.',
+      'If `summary.md` is missing or stale, refresh it automatically before proceeding.',
+    );
+    expect(prFinalContent).toContain(
+      'Prefer running the `oat-project-summary` skill when skill-to-skill invocation is available in the current host/runtime.',
+    );
+    expect(prFinalContent).toContain(
+      'Do not assume `oat-project-summary` is a shell command on `PATH`.',
     );
     expect(prFinalContent).toContain(
       'Do not ask whether to generate or refresh `summary.md` during pr-final.',
     );
     expect(completeContent).toContain(
-      'If `summary.md` is missing or stale, invoke `oat-project-summary` automatically before completing.',
+      'Also preflight summary status using the same freshness rules as `oat-project-summary`:',
     );
     expect(completeContent).toContain(
-      'Do not prompt the user about whether to generate `summary.md` during completion.',
+      'Would you like me to generate it now as part of completion?',
+    );
+    expect(completeContent).toContain('SHOULD_GENERATE_SUMMARY');
+    expect(completeContent).toContain(
+      'If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="true"`, generate or refresh it before completing.',
+    );
+    expect(completeContent).toContain(
+      'Do not assume `oat-project-summary` is a shell command on `PATH`.',
+    );
+    expect(completeContent).toContain(
+      'Warning: Proceeding without summary generation.',
     );
   });
 });
