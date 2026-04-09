@@ -38,6 +38,9 @@ oat_parallel_execution: false
 oat_phase: plan
 oat_phase_status: complete
 oat_execution_mode: single-thread
+oat_lifecycle: paused
+oat_pause_timestamp: '2026-04-09T21:00:00Z'
+oat_pause_reason: waiting on review
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
@@ -115,6 +118,9 @@ oat_template: false
     expect(projectState.phase).toBe('plan');
     expect(projectState.phaseStatus).toBe('complete');
     expect(projectState.workflowMode).toBe('quick');
+    expect(projectState.lifecycle).toBe('paused');
+    expect(projectState.pauseTimestamp).toBe('2026-04-09T21:00:00Z');
+    expect(projectState.pauseReason).toBe('waiting on review');
     expect(projectState.progress).toEqual({
       total: 2,
       completed: 2,
@@ -145,7 +151,7 @@ oat_template: false
     const projectsRoot = await createDir('oat-control-plane-projects-root-');
 
     await Promise.all([
-      createProject(projectsRoot, 'beta', 'design', 'complete'),
+      createProject(projectsRoot, 'beta', 'design', 'complete', 'complete'),
       createProject(projectsRoot, 'alpha', 'discovery', 'in_progress'),
       createProject(projectsRoot, 'gamma', 'implement', 'pr_open'),
     ]);
@@ -160,10 +166,15 @@ oat_template: false
     expect(projects[0]).toMatchObject({
       phase: 'discovery',
       phaseStatus: 'in_progress',
+      lifecycle: 'active',
     });
     expect(projects[2]).toMatchObject({
       phase: 'implement',
       phaseStatus: 'pr_open',
+      lifecycle: 'active',
+    });
+    expect(projects[1]).toMatchObject({
+      lifecycle: 'complete',
     });
   });
 });
@@ -173,6 +184,7 @@ async function createProject(
   name: string,
   phase: string,
   phaseStatus: string,
+  lifecycle = 'active',
 ): Promise<void> {
   const projectDir = join(projectsRoot, name);
   await mkdir(projectDir, { recursive: true });
@@ -189,6 +201,7 @@ oat_parallel_execution: false
 oat_phase: ${phase}
 oat_phase_status: ${phaseStatus}
 oat_execution_mode: single-thread
+oat_lifecycle: ${lifecycle}
 oat_workflow_mode: spec-driven
 oat_workflow_origin: native
 oat_docs_updated: null

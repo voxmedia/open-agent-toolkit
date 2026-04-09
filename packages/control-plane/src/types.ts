@@ -6,7 +6,7 @@ export type WorkflowMode = 'spec-driven' | 'quick' | 'import';
 
 export type ExecutionMode = 'single-thread' | 'subagent-driven';
 
-export type Lifecycle = 'active' | 'paused';
+export type Lifecycle = 'active' | 'paused' | 'complete';
 
 export type ArtifactType =
   | 'discovery'

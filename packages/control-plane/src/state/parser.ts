@@ -1,6 +1,12 @@
 import YAML from 'yaml';
 
-import type { ExecutionMode, Phase, PhaseStatus, WorkflowMode } from '../types';
+import type {
+  ExecutionMode,
+  Lifecycle,
+  Phase,
+  PhaseStatus,
+  WorkflowMode,
+} from '../types';
 
 const FRONTMATTER_PATTERN = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
 const PLACEHOLDER_PATTERN = /^\{[^}]+\}$/;
@@ -9,6 +15,7 @@ const PHASES = ['discovery', 'spec', 'design', 'plan', 'implement'] as const;
 const PHASE_STATUSES = ['in_progress', 'complete', 'pr_open'] as const;
 const EXECUTION_MODES = ['single-thread', 'subagent-driven'] as const;
 const WORKFLOW_MODES = ['spec-driven', 'quick', 'import'] as const;
+const LIFECYCLE_VALUES = ['active', 'paused', 'complete'] as const;
 
 export interface ParsedStateFrontmatter {
   currentTask: string | null;
@@ -20,6 +27,9 @@ export interface ParsedStateFrontmatter {
   phase: Phase | null;
   phaseStatus: PhaseStatus | null;
   executionMode: ExecutionMode;
+  lifecycle: Lifecycle | null;
+  pauseTimestamp: string | null;
+  pauseReason: string | null;
   workflowMode: WorkflowMode | null;
   workflowOrigin: string | null;
   docsUpdated: string | null;
@@ -42,6 +52,9 @@ const EMPTY_PARSED_STATE: ParsedStateFrontmatter = {
   phase: null,
   phaseStatus: null,
   executionMode: 'single-thread',
+  lifecycle: null,
+  pauseTimestamp: null,
+  pauseReason: null,
   workflowMode: null,
   workflowOrigin: null,
   docsUpdated: null,
@@ -84,6 +97,9 @@ export function parseStateFrontmatter(content: string): ParsedStateFrontmatter {
     executionMode:
       normalizeEnum(parsed.oat_execution_mode, EXECUTION_MODES) ??
       'single-thread',
+    lifecycle: normalizeEnum(parsed.oat_lifecycle, LIFECYCLE_VALUES),
+    pauseTimestamp: normalizeNullableString(parsed.oat_pause_timestamp),
+    pauseReason: normalizeNullableString(parsed.oat_pause_reason),
     workflowMode: normalizeEnum(parsed.oat_workflow_mode, WORKFLOW_MODES),
     workflowOrigin: normalizeNullableString(parsed.oat_workflow_origin),
     docsUpdated: normalizeNullableString(parsed.oat_docs_updated),

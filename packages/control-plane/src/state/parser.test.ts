@@ -17,6 +17,9 @@ oat_parallel_execution: true
 oat_phase: implement
 oat_phase_status: in_progress
 oat_execution_mode: subagent-driven
+oat_lifecycle: paused
+oat_pause_timestamp: '2026-04-09T21:00:00Z'
+oat_pause_reason: waiting on review
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: complete
@@ -40,6 +43,9 @@ oat_template: false
       phase: 'implement',
       phaseStatus: 'in_progress',
       executionMode: 'subagent-driven',
+      lifecycle: 'paused',
+      pauseTimestamp: '2026-04-09T21:00:00Z',
+      pauseReason: 'waiting on review',
       workflowMode: 'quick',
       workflowOrigin: 'native',
       docsUpdated: 'complete',
@@ -72,6 +78,9 @@ oat_workflow_mode: spec-driven
       phase: 'discovery',
       phaseStatus: 'complete',
       executionMode: 'single-thread',
+      lifecycle: null,
+      pauseTimestamp: null,
+      pauseReason: null,
       workflowMode: 'spec-driven',
       workflowOrigin: null,
       docsUpdated: null,
@@ -108,6 +117,25 @@ oat_workflow_mode: import
     });
   });
 
+  it('parses complete lifecycle values when present', () => {
+    const content = `---
+oat_lifecycle: complete
+oat_project_completed: '2026-04-09T23:00:00Z'
+oat_phase: implement
+oat_phase_status: complete
+oat_execution_mode: single-thread
+oat_workflow_mode: quick
+---
+`;
+
+    expect(parseStateFrontmatter(content)).toMatchObject({
+      lifecycle: 'complete',
+      projectCompleted: '2026-04-09T23:00:00Z',
+      phase: 'implement',
+      phaseStatus: 'complete',
+    });
+  });
+
   it('treats template placeholders and malformed YAML as empty/default values', () => {
     const placeholderContent = `---
 oat_hill_checkpoints: { OAT_HILL_CHECKPOINTS }
@@ -139,6 +167,9 @@ oat_phase: [unterminated
       phase: null,
       phaseStatus: null,
       executionMode: 'single-thread',
+      lifecycle: null,
+      pauseTimestamp: null,
+      pauseReason: null,
       workflowMode: null,
       workflowOrigin: null,
       docsUpdated: null,
