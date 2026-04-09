@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p06-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 1     | 1/1       |
-| Phase 3 | complete    | 1     | 1/1       |
-| Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | complete    | 1     | 1/1       |
-| Phase 6 | in_progress | 2     | 1/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 1     | 1/1       |
+| Phase 3 | complete | 1     | 1/1       |
+| Phase 4 | complete | 4     | 4/4       |
+| Phase 5 | complete | 1     | 1/1       |
+| Phase 6 | complete | 2     | 2/2       |
 
-**Total:** 13/14 tasks completed
+**Total:** 14/14 tasks completed
 
 ---
 
@@ -288,7 +288,7 @@ oat_generated: false
 
 ## Phase 4: CLI Commands
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-09
 
 ### Task p04-t01: Add `@open-agent-toolkit/control-plane` dependency to CLI
@@ -542,8 +542,33 @@ oat_generated: false
 
 ### Task p06-t02: (review) Return repo-relative project paths from control-plane state
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 84b82a0
+
+**Outcome (required):**
+
+- Updated control-plane project state assembly to return repo-relative display paths while keeping filesystem reads on absolute paths internally.
+- Added repo-root detection using `.git` or `.oat/config.json` so absolute project paths no longer leak into the JSON contract.
+- Updated project and CLI list tests to assert repo-relative paths for exported project state.
+
+**Files changed:**
+
+- `packages/control-plane/src/project.ts` - normalized outward-facing project paths to repo-relative values.
+- `packages/control-plane/src/project.test.ts` - added integration coverage for absolute-input paths with repo-relative output.
+- `packages/cli/src/commands/project/list.test.ts` - aligned command-level project path expectations with the repo-relative contract.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts src/commands/project/list.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane build`
+- Result: pass
 
 ---
 
@@ -577,9 +602,9 @@ oat_generated: false
 - `I1` Convert to task `p06-t01` to implement lifecycle-aware parsing and project-state assembly.
 - `M1` Convert to task `p06-t02` to restore the repo-relative project path contract.
 
-**Next:** Execute review-fix tasks via `oat-project-implement`, then re-run `oat-project-review-provide code final` and `oat-project-review-receive`.
+**Next:** Re-run `oat-project-review-provide code final` and process the re-review with `oat-project-review-receive`.
 
-**Review fix status:** `fixes_added`
+**Review fix status:** `fixes_completed`
 
 ---
 
@@ -601,6 +626,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p05-t01`, closed Phase 5, and finished implementation.
 - 2026-04-09: Received final review, added `p06-t01` and `p06-t02`, and resumed implementation from `p06-t01`.
 - 2026-04-09: Completed `p06-t01` and advanced to `p06-t02`.
+- 2026-04-09: Completed `p06-t02`, closed Phase 6, and finished review-fix implementation.
 
 ---
 
@@ -623,7 +649,7 @@ Track test execution during implementation.
 | 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
 | 4     | `pnpm install`; `pnpm build`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/list.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/resolve.test.ts src/commands/config/dump.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/control-plane test`; `pnpm --filter @open-agent-toolkit/control-plane lint`; `pnpm --filter @open-agent-toolkit/control-plane type-check`; `pnpm --filter @open-agent-toolkit/control-plane build`; `pnpm run cli -- project status --json`; `pnpm run cli -- project list --json`; `pnpm run cli -- config dump --json` | pass   | 0      | n/a      |
 | 5     | `pnpm build`; `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm release:validate`; `pnpm run cli -- project status --json`; `pnpm run cli -- project list --json`; `pnpm run cli -- config dump --json`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | pass   | 0      | n/a      |
-| 6     | `pnpm --filter @open-agent-toolkit/control-plane test`; `pnpm --filter @open-agent-toolkit/control-plane lint`; `pnpm --filter @open-agent-toolkit/control-plane type-check`; `pnpm --filter @open-agent-toolkit/control-plane build`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | pass   | 0      | n/a      |
+| 6     | `pnpm --filter @open-agent-toolkit/control-plane test`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts src/commands/project/list.test.ts`; `pnpm --filter @open-agent-toolkit/control-plane lint`; `pnpm --filter @open-agent-toolkit/control-plane type-check`; `pnpm --filter @open-agent-toolkit/control-plane build`                                                                                                                                                                                                                                                                                                                                                                                                                     | pass   | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
