@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete | 1     | 1/1       |
 | Phase 3 | complete | 1     | 1/1       |
 | Phase 4 | complete | 4     | 4/4       |
-| Phase 5 | pending  | 1     | 0/1       |
+| Phase 5 | complete | 1     | 1/1       |
 
-**Total:** 11/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ---
 
@@ -437,13 +437,68 @@ oat_generated: false
 
 ## Phase 5: Final Verification
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-09
 
 ### Task p05-t01: Full build and test suite
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a2e211c
+
+**Outcome (required):**
+
+- Bumped all publishable package versions in lockstep to `0.0.19` for the shipped CLI functionality added in this project.
+- Updated CLI-managed version metadata and test fixtures to match the new public package versions.
+- Ran the full workspace verification suite, release validation, and manual JSON smoke tests for the new control-plane-backed commands.
+
+**Files changed:**
+
+- `packages/cli/package.json` - bumped the CLI package version to `0.0.19`.
+- `packages/docs-config/package.json` - bumped the publishable package version to `0.0.19`.
+- `packages/docs-theme/package.json` - bumped the publishable package version to `0.0.19`.
+- `packages/docs-transforms/package.json` - bumped the publishable package version to `0.0.19`.
+- `packages/cli/assets/public-package-versions.json` - updated embedded public package version metadata.
+- `packages/cli/src/app/create-program.ts` - updated the CLI-reported version string.
+- `packages/cli/src/manifest/manager.ts` - updated scaffolded manifest version references.
+- `packages/cli/src/commands/docs/init/scaffold.ts` - updated docs-init scaffold version references.
+- `packages/cli/src/commands/status/index.test.ts` - aligned version assertions.
+- `packages/cli/src/commands/doctor/index.test.ts` - aligned version assertions.
+- `packages/cli/src/commands/sync/index.test.ts` - aligned version assertions.
+- `packages/cli/src/commands/providers/list/list.test.ts` - aligned version assertions.
+- `packages/cli/src/commands/providers/inspect/inspect.test.ts` - aligned version assertions.
+- `packages/cli/src/commands/docs/init/integration.test.ts` - aligned version assertions.
+- `packages/cli/src/commands/docs/init/scaffold.test.ts` - aligned version assertions.
+
+**Verification:**
+
+- Run: `pnpm build`
+- Result: pass
+- Run: `pnpm test`
+- Result: pass
+- Run: `pnpm lint`
+- Result: pass
+- Run: `pnpm type-check`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+- Run: `pnpm run cli -- project status --json`
+- Result: pass
+- Run: `pnpm run cli -- project list --json`
+- Result: pass
+- Run: `pnpm run cli -- config dump --json`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Initial parallel final-verification attempts exposed an existing CLI asset-bundling race because concurrent builds and smoke runs both rewrite `packages/cli/assets/`; sequential reruns passed without code changes.
+- Kept the final smoke runs sequential so the project finishes on the repo's current build behavior rather than introducing unrelated bundler changes in this scope.
+
+**Phase Summary:**
+
+- Outcome: Phase 5 completed release guardrails, full workspace verification, and final smoke validation for the new control-plane surfaces.
+- Key files touched: `packages/cli/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`, `packages/cli/assets/public-package-versions.json`, `packages/cli/src/app/create-program.ts`, `packages/cli/src/manifest/manager.ts`, `packages/cli/src/commands/docs/init/scaffold.ts`.
+- Verification: `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm type-check`, `pnpm release:validate`, `pnpm run cli -- project status --json`, `pnpm run cli -- project list --json`, `pnpm run cli -- config dump --json`.
+- Notable decisions/deviations: treated the CLI asset-bundling concurrency failure as pre-existing infrastructure behavior and completed validation with sequential reruns instead of broadening scope into bundler changes.
 
 ---
 
@@ -473,6 +528,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p04-t02` and advanced to `p04-t03`.
 - 2026-04-09: Completed `p04-t03` and advanced to `p04-t04`.
 - 2026-04-09: Completed `p04-t04`, closed Phase 4, and advanced to `p05-t01`.
+- 2026-04-09: Completed `p05-t01`, closed Phase 5, and finished implementation.
 
 ---
 
@@ -494,30 +550,57 @@ Track test execution during implementation.
 | 2     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
 | 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
 | 4     | `pnpm install`; `pnpm build`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/list.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/resolve.test.ts src/commands/config/dump.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/control-plane test`; `pnpm --filter @open-agent-toolkit/control-plane lint`; `pnpm --filter @open-agent-toolkit/control-plane type-check`; `pnpm --filter @open-agent-toolkit/control-plane build`; `pnpm run cli -- project status --json`; `pnpm run cli -- project list --json`; `pnpm run cli -- config dump --json` | pass   | 0      | n/a      |
-| 5     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| 5     | `pnpm build`; `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm release:validate`; `pnpm run cli -- project status --json`; `pnpm run cli -- project list --json`; `pnpm run cli -- config dump --json`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | pass   | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Added the new `@open-agent-toolkit/control-plane` package for parsing OAT project artifacts, aggregating project state, listing projects, and recommending the next lifecycle skill.
+- Added `oat project status` with text and JSON output for the active project's full control-plane state.
+- Added `oat project list` with text and JSON output for projects under the configured projects root.
+- Added `oat config dump` with merged shared/local/user/env-aware config resolution and source attribution.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Users can inspect the active project's parsed lifecycle state directly from the CLI instead of reading artifacts manually.
+- Users can enumerate tracked OAT projects and their completion/recommendation summaries from the CLI.
+- Users can dump resolved OAT configuration, including source precedence, in a machine-readable JSON format.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/control-plane/src/project.ts` - assembles full project state and project summaries from OAT artifacts.
+- `packages/control-plane/src/recommender/router.ts` - pure next-skill routing logic used by the control plane.
+- `packages/control-plane/src/state/parser.ts` - typed `state.md` frontmatter parsing.
+- `packages/control-plane/src/state/tasks.ts` - plan and implementation progress parsing.
+- `packages/control-plane/src/state/reviews.ts` - review table parsing and active review detection.
+- `packages/cli/src/commands/project/status.ts` - active project status command.
+- `packages/cli/src/commands/project/list.ts` - project listing command.
+- `packages/cli/src/config/resolve.ts` - merged config resolution with precedence/source tracking.
+- `packages/cli/src/commands/config/dump.ts` - config dump command surface.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm --filter @open-agent-toolkit/control-plane test`
+- `pnpm --filter @open-agent-toolkit/control-plane lint`
+- `pnpm --filter @open-agent-toolkit/control-plane type-check`
+- `pnpm --filter @open-agent-toolkit/control-plane build`
+- `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts`
+- `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/list.test.ts`
+- `pnpm --filter @open-agent-toolkit/cli test -- src/config/resolve.test.ts src/commands/config/dump.test.ts`
+- `pnpm build`
+- `pnpm test`
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm release:validate`
+- `pnpm run cli -- project status --json`
+- `pnpm run cli -- project list --json`
+- `pnpm run cli -- config dump --json`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- The control-plane package stayed read-only and pure as designed, but the CLI implementation also fixed a completed-task parsing bug surfaced by the new `project status` command so live counts match real implementation artifacts.
+- Final verification was completed with sequential reruns because the repo's existing CLI asset bundler is not safe for concurrent build/smoke execution.
 
 ## References
 
