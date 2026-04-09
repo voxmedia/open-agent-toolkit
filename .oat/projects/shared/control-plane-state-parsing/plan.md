@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-04-08
+oat_last_updated: 2026-04-09
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: []
@@ -604,79 +604,148 @@ git commit -m "feat(p04-t03): oat project list command with JSON output"
 
 ---
 
-### Task p04-t04: `oat config dump` command
+### Task p04-t04: Config resolution utility and `oat config dump` command
 
 **Files:**
 
+- Create: `packages/cli/src/config/resolve.ts`
+- Create: `packages/cli/src/config/resolve.test.ts`
 - Create: `packages/cli/src/commands/config/dump.ts`
 - Create: `packages/cli/src/commands/config/dump.test.ts`
 - Modify: `packages/cli/src/commands/config/index.ts`
 
-**Step 1: Write test (RED)**
+**Context:** The follow-up `workflow-friction` project will add `workflow.*` preference keys to OatConfig/OatLocalConfig/UserConfig and needs 3-layer resolution with per-key source attribution. The merge logic built here must be reusable — the dump command is a thin consumer, not the owner of the merge logic.
 
-Test the command handler:
+**Step 1: Write test for `resolveEffectiveConfig` (RED)**
 
-- With shared + local config files → outputs merged JSON with source attribution
+Test the resolution utility (`packages/cli/src/config/resolve.test.ts`):
+
+- All three config surfaces present → returns `shared`, `local`, `user`, and `resolved` sections
+- Per-key source attribution: `resolved` is a `Record<string, { value: unknown; source: 'shared' | 'local' | 'user' | 'env' | 'default' }>` where each key tracks its winning source
+- Precedence: local overrides shared, user provides fallback for keys not in shared/local (e.g., `activeIdea`)
+- Env overrides: `OAT_PROJECTS_ROOT` overrides `projects.root` with source `'env'`
+- Missing config files → defaults used, source is `'default'`
+- Generic key walking: adding a new top-level key to the interfaces should be resolved without changes to the merge logic (test with a hypothetical key)
+- Nested keys flattened to dot notation in resolved output (e.g., `projects.root`, `documentation.tooling`, `archive.s3Uri`)
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- src/config/resolve.test.ts`
+Expected: Tests fail (RED)
+
+**Step 2: Implement `resolveEffectiveConfig` (GREEN)**
+
+Create `packages/cli/src/config/resolve.ts`:
+
+```typescript
+interface ResolvedKeyEntry {
+  value: unknown;
+  source: 'shared' | 'local' | 'user' | 'env' | 'default';
+}
+
+interface ResolvedConfig {
+  shared: OatConfig;
+  local: OatLocalConfig;
+  user: UserConfig;
+  resolved: Record<string, ResolvedKeyEntry>;
+}
+
+export async function resolveEffectiveConfig(
+  repoRoot: string,
+  userConfigDir: string,
+  env?: NodeJS.ProcessEnv,
+): Promise<ResolvedConfig>;
+```
+
+Implementation approach:
+
+1. Read all three config surfaces using existing `readOatConfig()`, `readOatLocalConfig()`, `readUserConfig()`
+2. Flatten each surface's keys to dot-notation entries (generic walk, not hardcoded per-key)
+3. Apply precedence: for each key, local > shared > user, tracking which surface won
+4. Apply env overrides for known env-mapped keys (`OAT_PROJECTS_ROOT` → `projects.root`, `OAT_WORKTREES_ROOT` → `worktrees.root`), source becomes `'env'`
+5. Keys with no value from any source get source `'default'` with the framework default
+6. Return the three raw surfaces plus the resolved per-key map
+
+The merge is generic: it walks all keys present across the three surfaces rather than hardcoding known keys. Adding new top-level keys (e.g., `workflow.*`) to the config interfaces will be resolved automatically without changes to this function.
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- src/config/resolve.test.ts`
+Expected: Tests pass (GREEN)
+
+**Step 3: Write test for dump command (RED)**
+
+Test the command handler (`packages/cli/src/commands/config/dump.test.ts`):
+
 - JSON output includes `shared`, `local`, `user`, and `resolved` sections
-- Missing config files → defaults are used
+- `resolved` section has per-key source attribution
+- Missing config files → defaults are used with `'default'` source
 
 Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/config/dump.test.ts`
 Expected: Tests fail (RED)
 
-**Step 2: Implement (GREEN)**
+**Step 4: Implement dump command (GREEN)**
 
-1. Read all config layers using existing functions: `readOatConfig()`, `readOatLocalConfig()`, `readUserConfig()`
-2. Apply env variable overrides (`OAT_PROJECTS_ROOT`, `OAT_WORKTREES_ROOT`)
-3. Build merged "resolved" object that represents the final effective config
-4. JSON output: `{ status: 'ok', shared: {...}, local: {...}, user: {...}, resolved: {...} }`
-5. Text output: key-value list grouped by source
+The command is a thin wrapper:
+
+1. Call `resolveEffectiveConfig(repoRoot, userConfigDir, env)`
+2. JSON output: `{ status: 'ok', ...result }`
+3. Text output: key-value list grouped by source
 
 Register in config command index.
 
 Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/config/dump.test.ts`
 Expected: Tests pass (GREEN)
 
-**Step 3: Verify**
+**Step 5: Verify**
 
 Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
 Expected: No errors
 
 Run manual test: `pnpm run cli -- config dump --json`
-Expected: Returns merged config JSON
+Expected: Returns merged config JSON with per-key source attribution
 
-**Step 4: Commit**
+**Step 6: Commit**
 
 ```bash
-git add packages/cli/src/commands/config/
-git commit -m "feat(p04-t04): oat config dump command with merged config output"
+git add packages/cli/src/config/resolve.ts packages/cli/src/config/resolve.test.ts packages/cli/src/commands/config/
+git commit -m "feat(p04-t04): config resolution utility and oat config dump command"
 ```
 
 ---
 
 ## Phase 5: Final Verification
 
-### Task p05-t01: Full build and test suite
+### Task p05-t01: Full build, test suite, and release validation
 
 **Files:**
 
-- None (verification only)
+- Modify: `packages/cli/assets/public-package-versions.json` (version bump)
+- Possibly modify: other publishable package version files if lockstep requires it
 
-**Step 1: Run full workspace build**
+**Note:** Phase 4 modifies `packages/cli/` which is a publishable package (`@open-agent-toolkit/cli`). Per AGENTS.md, any PR that changes shipped functionality in a publishable package must include lockstep public package version bumps and pass `pnpm release:validate`.
+
+**Step 1: Bump public package versions**
+
+Bump versions in lockstep across all publishable packages per repo convention. Check `packages/cli/assets/public-package-versions.json` and any other versioning files.
+
+**Step 2: Run full workspace build**
 
 Run: `pnpm build`
 Expected: All packages build successfully, including control-plane → CLI dependency chain
 
-**Step 2: Run full test suite**
+**Step 3: Run full test suite**
 
 Run: `pnpm test`
 Expected: All tests pass across both packages
 
-**Step 3: Run lint and type-check**
+**Step 4: Run lint and type-check**
 
 Run: `pnpm lint && pnpm type-check`
 Expected: No errors
 
-**Step 4: Manual smoke test**
+**Step 5: Run release validation**
+
+Run: `pnpm release:validate`
+Expected: Passes — version bumps are correct, publishable packages are consistent
+
+**Step 6: Manual smoke test**
 
 Run:
 
@@ -688,25 +757,25 @@ pnpm run cli -- config dump --json
 
 Expected: All three commands return valid JSON with correct data for the current repo state
 
-**Step 5: Commit (if any cleanup was needed)**
+**Step 7: Commit**
 
 ```bash
-git commit -m "chore(p05-t01): final verification and cleanup"
+git add packages/
+git commit -m "chore(p05-t01): version bumps, release validation, and final verification"
 ```
 
 ---
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| p02    | code     | pending  | -          | -                                          |
-| p03    | code     | pending  | -          | -                                          |
-| p04    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| plan   | artifact | received | 2026-04-09 | reviews/artifact-plan-review-2026-04-09.md |
-| design | artifact | pending  | -          | -                                          |
+| Scope | Type     | Status  | Date       | Artifact                                            |
+| ----- | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01   | code     | pending | -          | -                                                   |
+| p02   | code     | pending | -          | -                                                   |
+| p03   | code     | pending | -          | -                                                   |
+| p04   | code     | pending | -          | -                                                   |
+| final | code     | pending | -          | -                                                   |
+| plan  | artifact | passed  | 2026-04-09 | reviews/archived/artifact-plan-review-2026-04-09.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -714,17 +783,17 @@ git commit -m "chore(p05-t01): final verification and cleanup"
 
 ## Implementation Complete
 
-**Summary:**
+_This section will be updated during implementation as phases are completed._
+
+**Plan summary:**
 
 - Phase 1: 5 tasks — Package scaffold, state parser, artifact scanner, task progress parser, review aggregator
 - Phase 2: 1 task — Skill recommender with full routing state machine
 - Phase 3: 1 task — Public API wiring and integration tests
-- Phase 4: 4 tasks — CLI dependency, project status command, project list command, config dump command
-- Phase 5: 1 task — Full verification and smoke testing
+- Phase 4: 4 tasks — CLI dependency, project status command, project list command, config dump command (with reusable resolution utility)
+- Phase 5: 1 task — Version bumps, release validation, and final verification
 
 **Total: 12 tasks**
-
-Ready for code review and merge.
 
 ---
 
