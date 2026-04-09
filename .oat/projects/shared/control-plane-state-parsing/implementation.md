@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 1     | 1/1       |
-| Phase 3 | complete | 1     | 1/1       |
-| Phase 4 | pending  | 4     | 0/4       |
-| Phase 5 | pending  | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 1     | 1/1       |
+| Phase 3 | complete    | 1     | 1/1       |
+| Phase 4 | in_progress | 4     | 1/4       |
+| Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 7/12 tasks completed
+**Total:** 8/12 tasks completed
 
 ---
 
@@ -287,13 +287,36 @@ oat_generated: false
 
 ## Phase 4: CLI Commands
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-09
 
 ### Task p04-t01: Add `@open-agent-toolkit/control-plane` dependency to CLI
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cf14af3
+
+**Outcome (required):**
+
+- Added the new control-plane workspace package as a runtime dependency of `@open-agent-toolkit/cli`.
+- Refreshed the workspace lockfile importer entry so the CLI package resolves the local control-plane package correctly.
+- Verified that the full workspace build now includes the control-plane to CLI dependency chain cleanly.
+
+**Files changed:**
+
+- `packages/cli/package.json` - added `@open-agent-toolkit/control-plane` as a workspace dependency.
+- `pnpm-lock.yaml` - recorded the CLI importer link to `../control-plane`.
+
+**Verification:**
+
+- Run: `pnpm install`
+- Result: pass
+- Run: `pnpm build`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the dependency in `dependencies` rather than `devDependencies` because the CLI imports the package at runtime.
+- `pnpm install` updated only the expected importer section in the lockfile; no unrelated workspace dependency churn was introduced.
 
 ---
 
@@ -352,6 +375,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p01-t05`, closed Phase 1, and advanced to `p02-t01`.
 - 2026-04-09: Completed `p02-t01`, closed Phase 2, and advanced to `p03-t01`.
 - 2026-04-09: Completed `p03-t01`, closed Phase 3, and advanced to `p04-t01`.
+- 2026-04-09: Completed `p04-t01` and advanced to `p04-t02`.
 
 ---
 
@@ -367,13 +391,13 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
-| 4     | -         | -      | -      | -        |
-| 5     | -         | -      | -      | -        |
+| Phase | Tests Run                    | Passed | Failed | Coverage |
+| ----- | ---------------------------- | ------ | ------ | -------- |
+| 1     | -                            | -      | -      | -        |
+| 2     | -                            | -      | -      | -        |
+| 3     | -                            | -      | -      | -        |
+| 4     | `pnpm install`; `pnpm build` | pass   | 0      | n/a      |
+| 5     | -                            | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
