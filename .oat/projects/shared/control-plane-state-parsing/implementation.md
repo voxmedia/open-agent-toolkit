@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p01-t05
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,21 +24,21 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 4/5       |
-| Phase 2 | pending     | 1     | 0/1       |
-| Phase 3 | pending     | 1     | 0/1       |
-| Phase 4 | pending     | 4     | 0/4       |
-| Phase 5 | pending     | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | pending  | 1     | 0/1       |
+| Phase 3 | pending  | 1     | 0/1       |
+| Phase 4 | pending  | 4     | 0/4       |
+| Phase 5 | pending  | 1     | 0/1       |
 
-**Total:** 4/12 tasks completed
+**Total:** 5/12 tasks completed
 
 ---
 
 ## Phase 1: Control Plane — Package and Types
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-09
 
 ### Task p01-t01: Scaffold `packages/control-plane/` package
@@ -165,8 +165,38 @@ oat_generated: false
 
 ### Task p01-t05: Review status aggregator
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cceb8a4
+
+**Outcome (required):**
+
+- Added parsing for the `## Reviews` markdown table in `plan.md`.
+- Added scanning for active review artifacts in the project `reviews/` directory.
+- Covered both review-table parsing and review-directory scanning with tests.
+
+**Files changed:**
+
+- `packages/control-plane/src/state/reviews.ts` - review table parser and unprocessed review scanner.
+- `packages/control-plane/src/state/reviews.test.ts` - tests for plan review parsing and review directory scanning.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Treated the plan table as the authoritative review record and `reviews/` as supplemental active-review input.
+- Excluded `reviews/archived/` from active review scanning so later routing only sees actionable review files.
+
+**Phase Summary:**
+
+- Outcome: Phase 1 now provides the core state-reading primitives needed for higher-level project aggregation.
+- Key files touched: `packages/control-plane/src/types.ts`, `packages/control-plane/src/state/parser.ts`, `packages/control-plane/src/state/artifacts.ts`, `packages/control-plane/src/state/tasks.ts`, `packages/control-plane/src/state/reviews.ts`, `packages/control-plane/src/recommender/boundary.ts`.
+- Verification: `pnpm --filter @open-agent-toolkit/control-plane test`, `pnpm --filter @open-agent-toolkit/control-plane lint`, `pnpm --filter @open-agent-toolkit/control-plane type-check`.
+- Notable decisions/deviations: kept frontmatter helpers local to each parser for now; broader helper extraction can happen later if duplication becomes a maintenance issue.
 
 ---
 
@@ -258,6 +288,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p01-t02` and advanced to `p01-t03`.
 - 2026-04-09: Completed `p01-t03` and advanced to `p01-t04`.
 - 2026-04-09: Completed `p01-t04` and advanced to `p01-t05`.
+- 2026-04-09: Completed `p01-t05`, closed Phase 1, and advanced to `p02-t01`.
 
 ---
 
