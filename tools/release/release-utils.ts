@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { dirname, join } from 'node:path';
+import { dirname, join, matchesGlob } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -94,10 +94,25 @@ export async function findChangedWorkspaceDirs(
         path === candidate.workspaceDir ||
         path.startsWith(`${candidate.workspaceDir}/`),
     );
-    if (contract) {
+    if (contract && !isVersionPolicyIgnoredPath(contract, path)) {
       changedDirs.add(contract.workspaceDir);
     }
   }
 
   return changedDirs;
+}
+
+export function isVersionPolicyIgnoredPath(
+  contract: PublicPackageContract,
+  workspacePath: string,
+): boolean {
+  const relativePath = workspacePath.startsWith(`${contract.workspaceDir}/`)
+    ? workspacePath.slice(contract.workspaceDir.length + 1)
+    : workspacePath === contract.workspaceDir
+      ? ''
+      : workspacePath;
+
+  return contract.versionPolicyIgnorePatterns.some((pattern) =>
+    matchesGlob(relativePath, pattern),
+  );
 }

@@ -7,6 +7,7 @@ export interface PublicPackageContract {
   requiredMetadataFields: string[];
   requiredPaths: string[];
   forbiddenPathPatterns: string[];
+  versionPolicyIgnorePatterns: string[];
 }
 
 const COMMON_METADATA_FIELDS = [
@@ -39,6 +40,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'bin.oat'],
     requiredPaths: ['dist/index.js', 'assets', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
+    versionPolicyIgnorePatterns: ['assets/public-package-versions.json'],
   },
   {
     workspaceDir: 'packages/docs-config',
@@ -47,6 +49,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
+    versionPolicyIgnorePatterns: [],
   },
   {
     workspaceDir: 'packages/docs-theme',
@@ -55,6 +58,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
+    versionPolicyIgnorePatterns: [],
   },
   {
     workspaceDir: 'packages/docs-transforms',
@@ -63,6 +67,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
+    versionPolicyIgnorePatterns: [],
   },
 ];
 
@@ -95,6 +100,7 @@ export function getPublicPackageContracts(): PublicPackageContract[] {
     requiredMetadataFields: [...contract.requiredMetadataFields],
     requiredPaths: [...contract.requiredPaths],
     forbiddenPathPatterns: [...contract.forbiddenPathPatterns],
+    versionPolicyIgnorePatterns: [...contract.versionPolicyIgnorePatterns],
   }));
 }
 

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import { isVersionPolicyIgnoredPath } from '../../../../tools/release/release-utils';
 import { findMissingBuildArtifacts } from '../../../../tools/release/validate-public-packages';
 import { findLockstepVersionBumpErrors } from '../../../../tools/release/validate-public-packages';
 import {
@@ -76,6 +77,9 @@ describe('getPublicPackageContracts', () => {
           'dist/index.js',
           'assets',
           'README.md',
+        ]),
+        versionPolicyIgnorePatterns: expect.arrayContaining([
+          'assets/public-package-versions.json',
         ]),
         forbiddenPathPatterns: expect.arrayContaining([
           'src/**',
@@ -175,6 +179,23 @@ describe('getPublicPackageContracts', () => {
       'dependencies.@open-agent-toolkit/docs-transforms=workspace:*',
       'devDependencies.@open-agent-toolkit/cli=workspace:^',
     ]);
+  });
+
+  it('ignores generated version metadata for release version policy checks', () => {
+    const cliContract = getPublicPackageContracts()[0];
+
+    expect(
+      isVersionPolicyIgnoredPath(
+        cliContract,
+        'packages/cli/assets/public-package-versions.json',
+      ),
+    ).toBe(true);
+    expect(
+      isVersionPolicyIgnoredPath(
+        cliContract,
+        'packages/cli/assets/skills/oat-project-document/SKILL.md',
+      ),
+    ).toBe(false);
   });
 
   it('reports missing build artifacts before packing', async () => {
