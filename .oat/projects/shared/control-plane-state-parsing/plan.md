@@ -698,14 +698,15 @@ git commit -m "chore(p05-t01): final verification and cleanup"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                   |
+| ------ | -------- | -------- | ---------- | ------------------------------------------ |
+| p01    | code     | pending  | -          | -                                          |
+| p02    | code     | pending  | -          | -                                          |
+| p03    | code     | pending  | -          | -                                          |
+| p04    | code     | pending  | -          | -                                          |
+| final  | code     | pending  | -          | -                                          |
+| plan   | artifact | received | 2026-04-09 | reviews/artifact-plan-review-2026-04-09.md |
+| design | artifact | pending  | -          | -                                          |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
