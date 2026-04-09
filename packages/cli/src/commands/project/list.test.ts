@@ -87,7 +87,7 @@ describe('oat project list', () => {
     const projects: ProjectSummary[] = [
       {
         name: 'alpha',
-        path: '/repo/.oat/projects/shared/alpha',
+        path: '.oat/projects/shared/alpha',
         phase: 'plan',
         phaseStatus: 'complete',
         workflowMode: 'quick',
@@ -100,7 +100,7 @@ describe('oat project list', () => {
       },
       {
         name: 'beta',
-        path: '/repo/.oat/projects/shared/beta',
+        path: '.oat/projects/shared/beta',
         phase: 'implement',
         phaseStatus: 'in_progress',
         workflowMode: 'quick',
@@ -150,7 +150,7 @@ describe('oat project list', () => {
       projects: [
         {
           name: 'alpha',
-          path: '/repo/.oat/projects/shared/alpha',
+          path: '.oat/projects/shared/alpha',
           phase: 'plan',
           phaseStatus: 'complete',
           workflowMode: 'quick',

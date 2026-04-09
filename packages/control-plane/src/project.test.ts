@@ -23,9 +23,17 @@ describe('project state integration', () => {
   }
 
   it('assembles a full ProjectState for a project directory', async () => {
-    const projectDir = await createDir('oat-control-plane-project-');
+    const repoRoot = await createDir('oat-control-plane-project-');
+    const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await mkdir(projectDir, { recursive: true });
 
     await Promise.all([
+      writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        `${JSON.stringify({ version: 1 })}\n`,
+        'utf8',
+      ),
       writeFile(
         join(projectDir, 'state.md'),
         `---
@@ -114,7 +122,7 @@ oat_template: false
     const projectState = await getProjectState(projectDir);
 
     expect(projectState.name).toBe(basename(projectDir));
-    expect(projectState.path).toBe(projectDir);
+    expect(projectState.path).toBe('.oat/projects/shared/demo');
     expect(projectState.phase).toBe('plan');
     expect(projectState.phaseStatus).toBe('complete');
     expect(projectState.workflowMode).toBe('quick');
@@ -148,7 +156,18 @@ oat_template: false
   });
 
   it('lists project summaries sorted by name', async () => {
-    const projectsRoot = await createDir('oat-control-plane-projects-root-');
+    const repoRoot = await createDir('oat-control-plane-projects-root-');
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+
+    await Promise.all([
+      mkdir(join(repoRoot, '.oat'), { recursive: true }),
+      mkdir(projectsRoot, { recursive: true }),
+      writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        `${JSON.stringify({ version: 1 })}\n`,
+        'utf8',
+      ),
+    ]);
 
     await Promise.all([
       createProject(projectsRoot, 'beta', 'design', 'complete', 'complete'),
@@ -164,17 +183,20 @@ oat_template: false
       'gamma',
     ]);
     expect(projects[0]).toMatchObject({
+      path: '.oat/projects/shared/alpha',
       phase: 'discovery',
       phaseStatus: 'in_progress',
       lifecycle: 'active',
     });
+    expect(projects[1]).toMatchObject({
+      path: '.oat/projects/shared/beta',
+      lifecycle: 'complete',
+    });
     expect(projects[2]).toMatchObject({
+      path: '.oat/projects/shared/gamma',
       phase: 'implement',
       phaseStatus: 'pr_open',
       lifecycle: 'active',
-    });
-    expect(projects[1]).toMatchObject({
-      lifecycle: 'complete',
     });
   });
 });

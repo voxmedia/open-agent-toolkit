@@ -1,5 +1,5 @@
-import { readdir } from 'node:fs/promises';
-import { basename, join, relative } from 'node:path';
+import { access, readdir } from 'node:fs/promises';
+import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 
 import { recommendSkill } from './recommender/router';
 import { scanArtifacts } from './state/artifacts';
@@ -11,6 +11,7 @@ import type { ProjectState, ProjectSummary, ReviewStatus } from './types';
 export async function getProjectState(
   projectPath: string,
 ): Promise<ProjectState> {
+  const displayPath = await resolveProjectDisplayPath(projectPath);
   const [
     stateContent,
     planContent,
@@ -38,7 +39,7 @@ export async function getProjectState(
     'recommendation'
   > = {
     name: basename(projectPath),
-    path: projectPath,
+    path: displayPath,
     phase: parsedState.phase ?? 'discovery',
     phaseStatus: parsedState.phaseStatus ?? 'in_progress',
     workflowMode: parsedState.workflowMode ?? 'spec-driven',
@@ -72,6 +73,7 @@ export async function getProjectState(
 export async function listProjects(
   projectsRoot: string,
 ): Promise<ProjectSummary[]> {
+  const repoRoot = await findRepoRoot(projectsRoot);
   const entries = await readdir(projectsRoot, { withFileTypes: true });
   const projectDirs = entries
     .filter((entry) => entry.isDirectory())
@@ -102,7 +104,7 @@ export async function listProjects(
 
       const stateWithoutRecommendation: Omit<ProjectState, 'recommendation'> = {
         name: basename(projectDir),
-        path: projectDir,
+        path: formatProjectDisplayPath(projectDir, repoRoot),
         phase: parsedState.phase ?? 'discovery',
         phaseStatus: parsedState.phaseStatus ?? 'in_progress',
         workflowMode: parsedState.workflowMode ?? 'spec-driven',
@@ -146,6 +148,63 @@ export async function listProjects(
   return summaries
     .filter((summary): summary is ProjectSummary => summary !== null)
     .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+async function resolveProjectDisplayPath(projectPath: string): Promise<string> {
+  if (!isAbsolute(projectPath)) {
+    return normalizePath(projectPath);
+  }
+
+  const repoRoot = await findRepoRoot(projectPath);
+  return formatProjectDisplayPath(projectPath, repoRoot);
+}
+
+function formatProjectDisplayPath(
+  projectPath: string,
+  repoRoot: string | null,
+): string {
+  if (!isAbsolute(projectPath)) {
+    return normalizePath(projectPath);
+  }
+
+  if (!repoRoot) {
+    return projectPath;
+  }
+
+  return normalizePath(relative(repoRoot, projectPath));
+}
+
+async function findRepoRoot(startPath: string): Promise<string | null> {
+  let currentPath = startPath;
+
+  while (true) {
+    if (
+      (await pathExists(join(currentPath, '.git'))) ||
+      (await pathExists(join(currentPath, '.oat', 'config.json')))
+    ) {
+      return currentPath;
+    }
+
+    const parentPath = dirname(currentPath);
+    if (parentPath === currentPath) {
+      return null;
+    }
+
+    currentPath = parentPath;
+  }
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function normalizePath(path: string): string {
+  return path.replace(/\\/g, '/');
 }
 
 async function readOptionalFile(path: string): Promise<string> {
