@@ -35,6 +35,7 @@ GIT_HOOKS=0 pnpm install
 
 ## Notes
 
-- Hooks are symlinked from `tools/git-hooks/` into `.git/hooks/`
-- Disabled hooks are tracked in `.git/hooks/.disabled-hooks`
-- Git `core.hooksPath` is unset so hooks run from `.git/hooks/`
+- Hooks are installed as managed wrapper scripts in Git's active hooks directory
+- The wrappers dispatch to the current checkout's `tools/git-hooks/` scripts, so they work correctly from git worktrees
+- Disabled hooks are tracked in Git's active hooks directory via `.disabled-hooks`
+- Git `core.hooksPath` is unset so hooks run from Git's default hooks directory
