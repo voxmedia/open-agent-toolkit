@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p01-t03
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 2/5       |
+| Phase 1 | in_progress | 5     | 3/5       |
 | Phase 2 | pending     | 1     | 0/1       |
 | Phase 3 | pending     | 1     | 0/1       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 2/12 tasks completed
+**Total:** 3/12 tasks completed
 
 ---
 
@@ -103,8 +103,33 @@ oat_generated: false
 
 ### Task p01-t03: Artifact scanner and boundary tier detection
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5c92ce0
+
+**Outcome (required):**
+
+- Added boundary-tier detection to classify artifact readiness for routing.
+- Implemented project artifact scanning across the tracked OAT markdown files.
+- Covered both the pure boundary logic and the file-system scanner with tests against real fixture files.
+
+**Files changed:**
+
+- `packages/control-plane/src/recommender/boundary.ts` - boundary-tier classification logic.
+- `packages/control-plane/src/recommender/boundary.test.ts` - unit tests for tier detection.
+- `packages/control-plane/src/state/artifacts.ts` - artifact scanner over project markdown files.
+- `packages/control-plane/src/state/artifacts.test.ts` - scanner tests using temporary project directories.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept artifact frontmatter parsing local to the scanner for now; broader frontmatter sharing can be revisited once more parser modules exist.
+- Treat missing artifacts as non-existent tier-3 boundaries so later routing can reason about incomplete phases consistently.
 
 ---
 
@@ -208,6 +233,7 @@ Chronological log of implementation progress.
 
 - 2026-04-09: Completed `p01-t01` and advanced to `p01-t02`.
 - 2026-04-09: Completed `p01-t02` and advanced to `p01-t03`.
+- 2026-04-09: Completed `p01-t03` and advanced to `p01-t04`.
 
 ---
 
