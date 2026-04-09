@@ -1,11 +1,26 @@
 #!/usr/bin/env node
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const hooks = ['commit-msg', 'pre-commit', 'pre-push', 'post-checkout'];
-const hooksSourceDir = 'tools/git-hooks';
-const gitHooksDir = '.git/hooks';
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+);
+const hooksSourceDir = path.join(repoRoot, 'tools', 'git-hooks');
+const MANAGED_HOOK_MARKER = '# open-agent-toolkit managed hook';
+
+function resolveGitPath(...segments) {
+  return execFileSync('git', ['rev-parse', '--git-path', ...segments], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  }).trim();
+}
+
+const gitHooksDir = resolveGitPath('hooks');
 const disabledHooksFile = path.join(gitHooksDir, '.disabled-hooks');
 
 function showUsage() {
@@ -58,27 +73,47 @@ function isHookDisabled(hookName) {
   return getDisabledHooks().has(hookName);
 }
 
-/**
- * Check if a Git hook is enabled (symlink exists and target is executable)
- * @param {string} hookName - The name of the hook to check
- * @returns {boolean} True if hook is enabled
- */
-function isHookEnabled(hookName) {
-  const hookPath = path.join(gitHooksDir, hookName);
+function getHookPath(hookName) {
+  return path.join(gitHooksDir, hookName);
+}
+
+function getHookState(hookName) {
+  const hookPath = getHookPath(hookName);
 
   try {
-    // Check if symlink exists (use lstat to check the link itself)
     const linkStats = fs.lstatSync(hookPath);
-    if (!linkStats.isSymbolicLink() && !linkStats.isFile()) {
-      return false;
+
+    if (linkStats.isSymbolicLink()) {
+      const target = fs.readlinkSync(hookPath);
+      return target.includes('tools/git-hooks') ? 'legacy-managed' : 'custom';
     }
 
-    // Check if target is executable (use stat to follow symlink)
-    const stats = fs.statSync(hookPath);
-    return !!(stats.mode & 0o100); // Check if executable
+    if (!linkStats.isFile()) {
+      return 'missing';
+    }
+
+    const content = fs.readFileSync(hookPath, 'utf8');
+    return content.includes(MANAGED_HOOK_MARKER) ? 'managed' : 'custom';
   } catch {
-    return false;
+    return 'missing';
   }
+}
+
+function createManagedHookContents(hookName) {
+  return `#!/bin/sh
+${MANAGED_HOOK_MARKER}
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+hook_script="$repo_root/tools/git-hooks/${hookName}"
+
+if [ ! -x "$hook_script" ]; then
+  echo "❌ Hook file $hook_script not found or not executable" >&2
+  exit 1
+fi
+
+exec "$hook_script" "$@"
+`;
 }
 
 /**
@@ -87,10 +122,15 @@ function isHookEnabled(hookName) {
  */
 function enableHook(hookName) {
   const sourcePath = path.join(hooksSourceDir, hookName);
-  const hookPath = path.join(gitHooksDir, hookName);
+  const hookPath = getHookPath(hookName);
 
   if (fs.existsSync(sourcePath)) {
-    // Remove existing hook if present (could be old copy or broken symlink)
+    const state = getHookState(hookName);
+    if (state === 'custom') {
+      console.log(`⏭️  Skipped ${hookName} hook (custom hook already exists)`);
+      return;
+    }
+
     if (
       fs.existsSync(hookPath) ||
       fs.lstatSync(hookPath, { throwIfNoEntry: false })
@@ -98,11 +138,10 @@ function enableHook(hookName) {
       fs.unlinkSync(hookPath);
     }
 
-    // Create relative symlink from .git/hooks to tools/git-hooks
-    const relativeSourcePath = path.relative(gitHooksDir, sourcePath);
-    fs.symlinkSync(relativeSourcePath, hookPath);
+    fs.mkdirSync(gitHooksDir, { recursive: true });
+    fs.writeFileSync(hookPath, createManagedHookContents(hookName), 'utf8');
+    fs.chmodSync(hookPath, 0o755);
 
-    // Remove from disabled list when enabling
     unmarkHookAsDisabled(hookName);
     console.log(`✅ Enabled ${hookName} hook`);
   } else {
@@ -111,10 +150,9 @@ function enableHook(hookName) {
 }
 
 function disableHook(hookName) {
-  const hookPath = path.join(gitHooksDir, hookName);
+  const hookPath = getHookPath(hookName);
   if (fs.existsSync(hookPath)) {
     fs.unlinkSync(hookPath);
-    // Mark as intentionally disabled
     markHookAsDisabled(hookName);
     console.log(`🚫 Disabled ${hookName} hook`);
   } else {
@@ -127,13 +165,18 @@ function showStatus() {
   console.log('===================');
 
   hooks.forEach((hook) => {
-    const enabled = isHookEnabled(hook);
+    const state = getHookState(hook);
+    const enabled = state === 'managed';
     const disabled = isHookDisabled(hook);
     let status;
     if (enabled) {
       status = '✅ Enabled';
     } else if (disabled) {
       status = '🚫 Disabled (intentional)';
+    } else if (state === 'custom') {
+      status = '⚪ Custom hook present';
+    } else if (state === 'legacy-managed') {
+      status = '⚠️ Legacy managed hook';
     } else {
       status = '⚪ Not installed';
     }
@@ -151,40 +194,41 @@ if (!action) {
 
 switch (action) {
   case 'enable-all':
-    // Ensure Git uses the default .git/hooks directory
     try {
       execSync('git config --unset core.hooksPath', { stdio: 'ignore' });
     } catch {
-      // Ignore error if hooksPath wasn't set
+      // Ignore unset errors when Git is already using its default hooks path.
     }
     hooks.forEach(enableHook);
     console.log('✅ All hooks enabled');
     break;
 
   case 'setup': {
-    // Ensure Git uses the default .git/hooks directory
     try {
       execSync('git config --unset core.hooksPath', { stdio: 'ignore' });
     } catch {
-      // Ignore error if hooksPath wasn't set
+      // Ignore unset errors when Git is already using its default hooks path.
     }
 
-    // Check if all hooks are already set up
     const allHooksReady = hooks.every(
-      (hook) => isHookDisabled(hook) || isHookEnabled(hook),
+      (hook) =>
+        isHookDisabled(hook) ||
+        getHookState(hook) === 'managed' ||
+        getHookState(hook) === 'custom',
     );
 
     if (allHooksReady) {
-      // All hooks already configured - show brief confirmation
       console.log('✅ Git hooks already configured');
       process.exit(0);
     }
 
-    // Only enable hooks that don't exist AND weren't intentionally disabled
     hooks.forEach((hook) => {
+      const state = getHookState(hook);
       if (isHookDisabled(hook)) {
         console.log(`⏭️  Skipped ${hook} hook (intentionally disabled)`);
-      } else if (!isHookEnabled(hook)) {
+      } else if (state === 'custom') {
+        console.log(`⏭️  Skipped ${hook} hook (custom hook already exists)`);
+      } else if (state !== 'managed') {
         enableHook(hook);
       } else {
         console.log(`⏭️  Skipped ${hook} hook (already exists)`);
