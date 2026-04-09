@@ -7,6 +7,7 @@ export interface PublicPackageContract {
   requiredMetadataFields: string[];
   requiredPaths: string[];
   forbiddenPathPatterns: string[];
+  versionPolicyAdditionalRoots: string[];
   versionPolicyIgnorePatterns: string[];
 }
 
@@ -40,7 +41,14 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'bin.oat'],
     requiredPaths: ['dist/index.js', 'assets', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
-    versionPolicyIgnorePatterns: ['assets/public-package-versions.json'],
+    versionPolicyAdditionalRoots: [
+      '.agents/skills',
+      '.agents/agents',
+      '.oat/templates',
+      '.oat/scripts',
+      'apps/oat-docs/docs',
+    ],
+    versionPolicyIgnorePatterns: ['assets/**'],
   },
   {
     workspaceDir: 'packages/docs-config',
@@ -49,6 +57,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
+    versionPolicyAdditionalRoots: [],
     versionPolicyIgnorePatterns: [],
   },
   {
@@ -58,6 +67,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
+    versionPolicyAdditionalRoots: [],
     versionPolicyIgnorePatterns: [],
   },
   {
@@ -67,6 +77,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
+    versionPolicyAdditionalRoots: [],
     versionPolicyIgnorePatterns: [],
   },
 ];
@@ -100,6 +111,7 @@ export function getPublicPackageContracts(): PublicPackageContract[] {
     requiredMetadataFields: [...contract.requiredMetadataFields],
     requiredPaths: [...contract.requiredPaths],
     forbiddenPathPatterns: [...contract.forbiddenPathPatterns],
+    versionPolicyAdditionalRoots: [...contract.versionPolicyAdditionalRoots],
     versionPolicyIgnorePatterns: [...contract.versionPolicyIgnorePatterns],
   }));
 }

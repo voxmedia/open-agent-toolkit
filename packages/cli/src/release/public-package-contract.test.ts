@@ -78,9 +78,14 @@ describe('getPublicPackageContracts', () => {
           'assets',
           'README.md',
         ]),
-        versionPolicyIgnorePatterns: expect.arrayContaining([
-          'assets/public-package-versions.json',
+        versionPolicyAdditionalRoots: expect.arrayContaining([
+          '.agents/skills',
+          '.agents/agents',
+          '.oat/templates',
+          '.oat/scripts',
+          'apps/oat-docs/docs',
         ]),
+        versionPolicyIgnorePatterns: expect.arrayContaining(['assets/**']),
         forbiddenPathPatterns: expect.arrayContaining([
           'src/**',
           '**/*.test.*',
@@ -194,6 +199,12 @@ describe('getPublicPackageContracts', () => {
       isVersionPolicyIgnoredPath(
         cliContract,
         'packages/cli/assets/skills/oat-project-document/SKILL.md',
+      ),
+    ).toBe(true);
+    expect(
+      isVersionPolicyIgnoredPath(
+        cliContract,
+        '.agents/skills/oat-project-document/SKILL.md',
       ),
     ).toBe(false);
   });

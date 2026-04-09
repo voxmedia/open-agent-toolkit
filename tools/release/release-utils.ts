@@ -81,18 +81,36 @@ export async function findChangedWorkspaceDirs(
     '--name-only',
     `${baseRef}..${headRef}`,
     '--',
-    ...contracts.map((contract) => contract.workspaceDir),
+    ...Array.from(
+      new Set(
+        contracts.flatMap((contract) => [
+          contract.workspaceDir,
+          ...contract.versionPolicyAdditionalRoots,
+        ]),
+      ),
+    ),
   ]);
 
+  return findChangedWorkspaceDirsFromPaths(
+    diff
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean),
+    contracts,
+  );
+}
+
+export function findChangedWorkspaceDirsFromPaths(
+  changedPaths: readonly string[],
+  contracts: readonly PublicPackageContract[],
+): Set<string> {
   const changedDirs = new Set<string>();
-  for (const path of diff
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)) {
-    const contract = contracts.find(
-      (candidate) =>
-        path === candidate.workspaceDir ||
-        path.startsWith(`${candidate.workspaceDir}/`),
+
+  for (const path of changedPaths) {
+    const contract = contracts.find((candidate) =>
+      [candidate.workspaceDir, ...candidate.versionPolicyAdditionalRoots].some(
+        (root) => path === root || path.startsWith(`${root}/`),
+      ),
     );
     if (contract && !isVersionPolicyIgnoredPath(contract, path)) {
       changedDirs.add(contract.workspaceDir);
