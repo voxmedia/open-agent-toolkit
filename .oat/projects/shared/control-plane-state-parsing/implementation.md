@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p01-t04
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 3/5       |
+| Phase 1 | in_progress | 5     | 4/5       |
 | Phase 2 | pending     | 1     | 0/1       |
 | Phase 3 | pending     | 1     | 0/1       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 3/12 tasks completed
+**Total:** 4/12 tasks completed
 
 ---
 
@@ -135,8 +135,31 @@ oat_generated: false
 
 ### Task p01-t04: Task progress parser
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d7d70a9
+
+**Outcome (required):**
+
+- Added a parser that derives task totals, completed counts, and phase-level progress from `plan.md` and `implementation.md`.
+- Implemented `oat_current_task_id` parsing from implementation frontmatter.
+- Added revision-phase coverage so follow-up review phases use the same progress model as normal phases.
+
+**Files changed:**
+
+- `packages/control-plane/src/state/tasks.ts` - task and phase progress parser.
+- `packages/control-plane/src/state/tasks.test.ts` - tests for multi-phase, revision, and empty-plan cases.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Used OAT task IDs as the phase-grouping source of truth so revision tasks stay aligned even if headings vary.
+- Kept current-task parsing separate from task-section parsing so later project-level aggregation can reuse either piece independently.
 
 ---
 
@@ -234,6 +257,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p01-t01` and advanced to `p01-t02`.
 - 2026-04-09: Completed `p01-t02` and advanced to `p01-t03`.
 - 2026-04-09: Completed `p01-t03` and advanced to `p01-t04`.
+- 2026-04-09: Completed `p01-t04` and advanced to `p01-t05`.
 
 ---
 
