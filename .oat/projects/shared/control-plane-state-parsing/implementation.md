@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p06-t01
+oat_current_task_id: p06-t02
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3 | complete    | 1     | 1/1       |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 1     | 1/1       |
-| Phase 6 | in_progress | 2     | 0/2       |
+| Phase 6 | in_progress | 2     | 1/2       |
 
-**Total:** 12/14 tasks completed
+**Total:** 13/14 tasks completed
 
 ---
 
@@ -510,8 +510,33 @@ oat_generated: false
 
 ### Task p06-t01: (review) Parse lifecycle state fields from `state.md`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b8c3970
+
+**Outcome (required):**
+
+- Extended the control-plane state parser to read `oat_lifecycle`, `oat_pause_timestamp`, and `oat_pause_reason`.
+- Updated project assembly so `getProjectState()` and `listProjects()` use parsed lifecycle state instead of hardcoded active/null values.
+- Added regression coverage for paused and completed lifecycle states in both parser-level and project-level tests.
+
+**Files changed:**
+
+- `packages/control-plane/src/types.ts` - expanded the lifecycle type to include `complete`.
+- `packages/control-plane/src/state/parser.ts` - parsed lifecycle and pause metadata from `state.md` frontmatter.
+- `packages/control-plane/src/state/parser.test.ts` - added paused and complete lifecycle regression coverage.
+- `packages/control-plane/src/project.ts` - sourced lifecycle fields from parsed state in assembled project objects.
+- `packages/control-plane/src/project.test.ts` - added integration assertions for paused and completed project lifecycle state.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane build`
+- Result: pass
 
 ---
 
@@ -575,6 +600,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p04-t04`, closed Phase 4, and advanced to `p05-t01`.
 - 2026-04-09: Completed `p05-t01`, closed Phase 5, and finished implementation.
 - 2026-04-09: Received final review, added `p06-t01` and `p06-t02`, and resumed implementation from `p06-t01`.
+- 2026-04-09: Completed `p06-t01` and advanced to `p06-t02`.
 
 ---
 
@@ -597,7 +623,7 @@ Track test execution during implementation.
 | 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
 | 4     | `pnpm install`; `pnpm build`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/list.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/resolve.test.ts src/commands/config/dump.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/control-plane test`; `pnpm --filter @open-agent-toolkit/control-plane lint`; `pnpm --filter @open-agent-toolkit/control-plane type-check`; `pnpm --filter @open-agent-toolkit/control-plane build`; `pnpm run cli -- project status --json`; `pnpm run cli -- project list --json`; `pnpm run cli -- config dump --json` | pass   | 0      | n/a      |
 | 5     | `pnpm build`; `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm release:validate`; `pnpm run cli -- project status --json`; `pnpm run cli -- project list --json`; `pnpm run cli -- config dump --json`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | pass   | 0      | n/a      |
-| 6     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| 6     | `pnpm --filter @open-agent-toolkit/control-plane test`; `pnpm --filter @open-agent-toolkit/control-plane lint`; `pnpm --filter @open-agent-toolkit/control-plane type-check`; `pnpm --filter @open-agent-toolkit/control-plane build`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | pass   | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
