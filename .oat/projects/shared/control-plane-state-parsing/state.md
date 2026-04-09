@@ -36,7 +36,7 @@ Implementation complete - final re-review passed
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete, optional quick-mode background)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in_progress)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
