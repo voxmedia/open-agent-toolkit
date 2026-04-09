@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p04-t04
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 1     | 1/1       |
-| Phase 3 | complete    | 1     | 1/1       |
-| Phase 4 | in_progress | 4     | 3/4       |
-| Phase 5 | pending     | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 1     | 1/1       |
+| Phase 3 | complete | 1     | 1/1       |
+| Phase 4 | complete | 4     | 4/4       |
+| Phase 5 | pending  | 1     | 0/1       |
 
-**Total:** 10/12 tasks completed
+**Total:** 11/12 tasks completed
 
 ---
 
@@ -394,8 +394,44 @@ oat_generated: false
 
 ### Task p04-t04: `oat config dump` command
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9275dc7
+
+**Outcome (required):**
+
+- Added a reusable config-resolution utility that reads shared, local, and user config surfaces and produces a dot-notation resolved map with source attribution.
+- Added an `oat config dump` subcommand that exposes the merged config in JSON and grouped text output.
+- Verified the live dump command against this checkout, including repo config, local active project state, and defaulted keys.
+
+**Files changed:**
+
+- `packages/cli/src/config/resolve.ts` - generic config flattening, precedence resolution, and env override handling.
+- `packages/cli/src/config/resolve.test.ts` - coverage for precedence, defaults, env overrides, and generic nested keys.
+- `packages/cli/src/commands/config/dump.ts` - new dump command implementation.
+- `packages/cli/src/commands/config/dump.test.ts` - JSON contract tests for the dump command.
+- `packages/cli/src/commands/config/index.ts` - registered the `dump` subcommand.
+- `packages/cli/src/commands/help-snapshots.test.ts` - updated the `config --help` inline snapshot.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- src/config/resolve.test.ts src/commands/config/dump.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm run cli -- config dump --json`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the resolution logic generic and reader-injectable so future config keys can flow through without reworking merge code.
+- Used defaults for missing keys only when no shared/local/user/env value exists, preserving user fallback behavior for keys like `activeIdea`.
+
+**Phase Summary:**
+
+- Outcome: Phase 4 now exposes all planned control-plane-backed CLI surfaces: `project status`, `project list`, and `config dump`.
+- Key files touched: `packages/cli/src/commands/project/status.ts`, `packages/cli/src/commands/project/list.ts`, `packages/cli/src/config/resolve.ts`, `packages/cli/src/commands/config/dump.ts`, `packages/control-plane/src/state/tasks.ts`.
+- Verification: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts`, `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/list.test.ts`, `pnpm --filter @open-agent-toolkit/cli test -- src/config/resolve.test.ts src/commands/config/dump.test.ts`, `pnpm --filter @open-agent-toolkit/cli lint`, `pnpm --filter @open-agent-toolkit/cli type-check`, `pnpm --filter @open-agent-toolkit/control-plane test`, `pnpm --filter @open-agent-toolkit/control-plane lint`, `pnpm --filter @open-agent-toolkit/control-plane type-check`, `pnpm --filter @open-agent-toolkit/control-plane build`, `pnpm run cli -- project status --json`, `pnpm run cli -- project list --json`, `pnpm run cli -- config dump --json`.
+- Notable decisions/deviations: fixed the control-plane completed-task parser during `p04-t02` because the new live status command surfaced a mismatch between parser expectations and the verbose implementation artifact format.
 
 ---
 
@@ -436,6 +472,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p04-t01` and advanced to `p04-t02`.
 - 2026-04-09: Completed `p04-t02` and advanced to `p04-t03`.
 - 2026-04-09: Completed `p04-t03` and advanced to `p04-t04`.
+- 2026-04-09: Completed `p04-t04`, closed Phase 4, and advanced to `p05-t01`.
 
 ---
 
@@ -451,13 +488,13 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Passed | Failed | Coverage |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | -      | -      | -        |
-| 2     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | -      | -      | -        |
-| 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | -      | -      | -        |
-| 4     | `pnpm install`; `pnpm build`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/list.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/control-plane test`; `pnpm --filter @open-agent-toolkit/control-plane lint`; `pnpm --filter @open-agent-toolkit/control-plane type-check`; `pnpm --filter @open-agent-toolkit/control-plane build`; `pnpm run cli -- project status --json`; `pnpm run cli -- project list --json` | pass   | 0      | n/a      |
-| 5     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | -      | -      | -        |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Passed | Failed | Coverage |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| 2     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| 4     | `pnpm install`; `pnpm build`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/list.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/resolve.test.ts src/commands/config/dump.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/control-plane test`; `pnpm --filter @open-agent-toolkit/control-plane lint`; `pnpm --filter @open-agent-toolkit/control-plane type-check`; `pnpm --filter @open-agent-toolkit/control-plane build`; `pnpm run cli -- project status --json`; `pnpm run cli -- project list --json`; `pnpm run cli -- config dump --json` | pass   | 0      | n/a      |
+| 5     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
