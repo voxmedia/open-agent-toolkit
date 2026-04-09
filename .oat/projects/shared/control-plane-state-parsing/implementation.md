@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 5     | 5/5       |
 | Phase 2 | complete | 1     | 1/1       |
-| Phase 3 | pending  | 1     | 0/1       |
+| Phase 3 | complete | 1     | 1/1       |
 | Phase 4 | pending  | 4     | 0/4       |
 | Phase 5 | pending  | 1     | 0/1       |
 
-**Total:** 6/12 tasks completed
+**Total:** 7/12 tasks completed
 
 ---
 
@@ -244,13 +244,44 @@ oat_generated: false
 
 ## Phase 3: Public API and Integration
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-09
 
 ### Task p03-t01: Wire up `getProjectState` and `listProjects`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 545151c
+
+**Outcome (required):**
+
+- Wired the parser modules and recommender into a real `getProjectState()` aggregator.
+- Added `listProjects()` summary generation and switched the package entrypoint to export the real public API.
+- Added integration tests that build `ProjectState` and project summaries from realistic temp-directory fixtures.
+
+**Files changed:**
+
+- `packages/control-plane/src/project.ts` - public API assembly for project state and project listing.
+- `packages/control-plane/src/project.test.ts` - integration tests for full state assembly and sorted summaries.
+- `packages/control-plane/src/index.ts` - real exports for project APIs and recommender.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check && pnpm --filter @open-agent-toolkit/control-plane build`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept `ProjectState.path` as the provided project path so the CLI can pass absolute paths without losing filesystem fidelity.
+- Merged active review files into parsed review rows so the pure router can detect unprocessed feedback from the assembled state.
+
+**Phase Summary:**
+
+- Outcome: Phase 3 turns the parser modules into the package’s usable public API.
+- Key files touched: `packages/control-plane/src/project.ts`, `packages/control-plane/src/project.test.ts`, `packages/control-plane/src/index.ts`.
+- Verification: `pnpm --filter @open-agent-toolkit/control-plane test`, `pnpm --filter @open-agent-toolkit/control-plane lint`, `pnpm --filter @open-agent-toolkit/control-plane type-check`, `pnpm --filter @open-agent-toolkit/control-plane build`.
+- Notable decisions/deviations: used full `getProjectState()` assembly inside `listProjects()`-style summary construction to keep summary recommendations aligned with the real router logic.
 
 ---
 
@@ -320,6 +351,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p01-t04` and advanced to `p01-t05`.
 - 2026-04-09: Completed `p01-t05`, closed Phase 1, and advanced to `p02-t01`.
 - 2026-04-09: Completed `p02-t01`, closed Phase 2, and advanced to `p03-t01`.
+- 2026-04-09: Completed `p03-t01`, closed Phase 3, and advanced to `p04-t01`.
 
 ---
 
