@@ -13,6 +13,8 @@ import {
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
+import { createConfigDumpCommand } from './dump';
+
 type ConfigKey =
   | 'activeIdea'
   | 'activeProject'
@@ -1002,6 +1004,13 @@ export function createConfigCommand(
           );
           await runList(context, dependencies);
         }),
+    )
+    .addCommand(
+      createConfigDumpCommand({
+        buildCommandContext: dependencies.buildCommandContext,
+        resolveProjectRoot: dependencies.resolveProjectRoot,
+        processEnv: dependencies.processEnv,
+      }),
     )
     .addCommand(
       new Command('describe')

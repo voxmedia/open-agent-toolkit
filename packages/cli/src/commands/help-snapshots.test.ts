@@ -191,6 +191,7 @@ describe('help output snapshots', () => {
         get <key>          Get a resolved OAT config value
         set <key> <value>  Set an OAT config value
         list               List resolved OAT config values with sources
+        dump               Dump merged OAT config with source attribution
         describe [key]     Describe supported OAT config surfaces and keys
         help [command]     display help for command
       "
