@@ -578,6 +578,7 @@ describe('help output snapshots', () => {
         open [options] <name>   Open or switch to an OAT project
         pause [options] [name]  Pause an OAT project
         set-mode <mode>         Set project implementation execution mode
+        status                  Show the current OAT project state
         help [command]          display help for command
       "
     `);

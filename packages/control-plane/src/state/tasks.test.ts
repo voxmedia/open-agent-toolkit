@@ -87,6 +87,77 @@ oat_current_task_id: p-rev1-t02
     });
   });
 
+  it('parses completed tasks from verbose implementation sections', () => {
+    const planContent = `## Phase 1: Package and Types
+
+### Task p01-t01: Scaffold package
+### Task p01-t02: Parse state
+
+## Phase 2: API
+
+### Task p02-t01: Wire project state
+`;
+
+    const implementationContent = `---
+oat_current_task_id: p02-t01
+---
+
+## Phase 1: Package and Types
+
+### Task p01-t01: Scaffold package
+
+**Status:** completed
+**Commit:** abc1234
+
+**Outcome (required):**
+
+- Added package scaffolding.
+
+---
+
+### Task p01-t02: Parse state
+
+**Status:** completed
+**Commit:** def5678
+
+**Verification:**
+
+- Run: pnpm test
+- Result: pass
+
+---
+
+## Phase 2: API
+
+### Task p02-t01: Wire project state
+
+**Status:** pending
+**Commit:** -
+`;
+
+    expect(parseTaskProgress(planContent, implementationContent)).toEqual({
+      total: 3,
+      completed: 2,
+      currentTaskId: 'p02-t01',
+      phases: [
+        {
+          phaseId: 'p01',
+          name: 'Package and Types',
+          total: 2,
+          completed: 2,
+          isRevision: false,
+        },
+        {
+          phaseId: 'p02',
+          name: 'API',
+          total: 1,
+          completed: 0,
+          isRevision: false,
+        },
+      ],
+    });
+  });
+
   it('returns empty progress for plans without task definitions', () => {
     expect(
       parseTaskProgress(

@@ -5,9 +5,6 @@ import type { TaskProgress } from '../types';
 const FRONTMATTER_PATTERN = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
 const PHASE_HEADING_PATTERN = /^## Phase \d+: (.+)$/m;
 const REVISION_PHASE_HEADING_PATTERN = /^## Revision Phase \d+: (.+)$/m;
-const TASK_SECTION_PATTERN =
-  /^### Task ((?:p\d+|p-rev\d+)-t\d+): .+$\n([\s\S]*?)(?=^### Task |\n*$)/gm;
-
 interface MutablePhaseProgress {
   phaseId: string | null;
   name: string;
@@ -83,12 +80,17 @@ function parsePhaseProgress(
 
 function parseCompletedTaskIds(implementationContent: string): Set<string> {
   const completedTasks = new Set<string>();
+  let currentTaskId: string | null = null;
 
-  for (const match of implementationContent.matchAll(TASK_SECTION_PATTERN)) {
-    const taskId = match[1];
-    const sectionBody = match[2] ?? '';
-    if (taskId && /\*\*Status:\*\*\s+completed/.test(sectionBody)) {
-      completedTasks.add(taskId);
+  for (const line of implementationContent.split('\n')) {
+    const taskMatch = line.match(/^### Task ((?:p\d+|p-rev\d+)-t\d+): .+$/);
+    if (taskMatch?.[1]) {
+      currentTaskId = taskMatch[1];
+      continue;
+    }
+
+    if (currentTaskId && /^\*\*Status:\*\*\s+completed$/.test(line.trim())) {
+      completedTasks.add(currentTaskId);
     }
   }
 

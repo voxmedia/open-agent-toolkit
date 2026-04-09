@@ -5,6 +5,7 @@ import { createProjectNewCommand } from './new';
 import { createProjectOpenCommand } from './open';
 import { createProjectPauseCommand } from './pause';
 import { createProjectSetModeCommand } from './set-mode';
+import { createProjectStatusCommand } from './status';
 
 export function createProjectCommand(): Command {
   return new Command('project')
@@ -13,5 +14,6 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectNewCommand())
     .addCommand(createProjectOpenCommand())
     .addCommand(createProjectPauseCommand())
-    .addCommand(createProjectSetModeCommand());
+    .addCommand(createProjectSetModeCommand())
+    .addCommand(createProjectStatusCommand());
 }
