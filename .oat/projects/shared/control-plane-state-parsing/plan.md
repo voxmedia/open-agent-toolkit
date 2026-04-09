@@ -767,16 +767,102 @@ git commit -m "chore(p05-t01): version bumps, release validation, and final veri
 
 ---
 
+## Phase 6: Review Fixes
+
+### Task p06-t01: (review) Parse lifecycle state fields from `state.md`
+
+**Files:**
+
+- Modify: `packages/control-plane/src/types.ts`
+- Modify: `packages/control-plane/src/state/parser.ts`
+- Modify: `packages/control-plane/src/state/parser.test.ts`
+- Modify: `packages/control-plane/src/project.ts`
+- Modify: `packages/control-plane/src/project.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: The control plane never parses lifecycle state from `state.md`, so completed or paused projects are always reported as active with null pause metadata.
+Location: `packages/control-plane/src/state/parser.ts`, `packages/control-plane/src/project.ts`
+
+**Step 2: Implement fix**
+
+Update the parser and project assembly to honor the lifecycle contract:
+
+1. Extend the parsed state model to include `oat_lifecycle`, `oat_pause_timestamp`, and `oat_pause_reason` when present.
+2. Normalize lifecycle values so active/completed/paused state is represented consistently in the returned project state.
+3. Stop hardcoding `lifecycle`, `pauseTimestamp`, and `pauseReason` in `getProjectState()` / `listProjects()` and instead source them from parsed frontmatter with safe defaults.
+4. Add regression coverage for completed/paused project state so downstream consumers can distinguish active vs completed/paused projects correctly.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+Expected: Parser and integration tests pass, including lifecycle-state coverage
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check && pnpm --filter @open-agent-toolkit/control-plane build`
+Expected: No errors
+
+**Step 4: Commit**
+
+```bash
+git add packages/control-plane/src/types.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts packages/control-plane/src/project.ts packages/control-plane/src/project.test.ts
+git commit -m "fix(p06-t01): parse lifecycle state in control plane"
+```
+
+---
+
+### Task p06-t02: (review) Return repo-relative project paths from control-plane state
+
+**Files:**
+
+- Modify: `packages/control-plane/src/project.ts`
+- Modify: `packages/control-plane/src/project.test.ts`
+- Modify: `packages/cli/src/commands/project/status.test.ts`
+- Modify: `packages/cli/src/commands/project/list.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `ProjectState.path` and `ProjectSummary.path` are returned as absolute filesystem paths even though the design defines them as repo-relative paths.
+Location: `packages/control-plane/src/project.ts`, `packages/cli/src/commands/project/status.ts`, `packages/cli/src/commands/project/list.ts`
+
+**Step 2: Implement fix**
+
+Align the returned path contract with the design:
+
+1. Ensure the control-plane project state surfaces repo-relative project paths rather than machine-specific absolute paths.
+2. Keep filesystem reads working for both `getProjectState()` and `listProjects()` while separating internal read paths from outward-facing `path` values.
+3. Update command-level expectations so `project status --json` and `project list --json` expose stable repo-relative paths.
+4. Add regression coverage for absolute-input path handling so callers can still pass absolute paths without leaking them in output.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+Expected: Project-state integration tests pass with repo-relative path expectations
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts src/commands/project/list.test.ts`
+Expected: Command tests pass with repo-relative JSON output expectations
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check`
+Expected: No errors
+
+**Step 4: Commit**
+
+```bash
+git add packages/control-plane/src/project.ts packages/control-plane/src/project.test.ts packages/cli/src/commands/project/status.test.ts packages/cli/src/commands/project/list.test.ts
+git commit -m "fix(p06-t02): return repo-relative project paths"
+```
+
+---
+
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                            |
-| ----- | -------- | -------- | ---------- | --------------------------------------------------- |
-| p01   | code     | pending  | -          | -                                                   |
-| p02   | code     | pending  | -          | -                                                   |
-| p03   | code     | pending  | -          | -                                                   |
-| p04   | code     | pending  | -          | -                                                   |
-| final | code     | received | 2026-04-09 | reviews/final-review-2026-04-09.md                  |
-| plan  | artifact | passed   | 2026-04-09 | reviews/archived/artifact-plan-review-2026-04-09.md |
+| Scope | Type     | Status      | Date       | Artifact                                            |
+| ----- | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01   | code     | pending     | -          | -                                                   |
+| p02   | code     | pending     | -          | -                                                   |
+| p03   | code     | pending     | -          | -                                                   |
+| p04   | code     | pending     | -          | -                                                   |
+| final | code     | fixes_added | 2026-04-09 | reviews/archived/final-review-2026-04-09.md         |
+| plan  | artifact | passed      | 2026-04-09 | reviews/archived/artifact-plan-review-2026-04-09.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -793,8 +879,9 @@ _This section will be updated during implementation as phases are completed._
 - Phase 3: 1 task — Public API wiring and integration tests
 - Phase 4: 4 tasks — CLI dependency, project status command, project list command, config dump command (with reusable resolution utility)
 - Phase 5: 1 task — Version bumps, release validation, and final verification
+- Phase 6: 2 tasks — Review fixes for lifecycle parsing and repo-relative project path output
 
-**Total: 12 tasks**
+**Total: 14 tasks**
 
 ---
 

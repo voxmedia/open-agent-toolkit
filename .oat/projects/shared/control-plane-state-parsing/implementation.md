@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: null
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 1     | 1/1       |
-| Phase 3 | complete | 1     | 1/1       |
-| Phase 4 | complete | 4     | 4/4       |
-| Phase 5 | complete | 1     | 1/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 1     | 1/1       |
+| Phase 3 | complete    | 1     | 1/1       |
+| Phase 4 | complete    | 4     | 4/4       |
+| Phase 5 | complete    | 1     | 1/1       |
+| Phase 6 | in_progress | 2     | 0/2       |
 
-**Total:** 12/12 tasks completed
+**Total:** 12/14 tasks completed
 
 ---
 
@@ -502,6 +503,25 @@ oat_generated: false
 
 ---
 
+## Phase 6: Review Fixes
+
+**Status:** in_progress
+**Started:** 2026-04-09
+
+### Task p06-t01: (review) Parse lifecycle state fields from `state.md`
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t02: (review) Return repo-relative project paths from control-plane state
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -510,6 +530,31 @@ oat_generated: false
 
 <!-- orchestration-runs-start -->
 <!-- orchestration-runs-end -->
+
+---
+
+### Review Received: final
+
+**Date:** 2026-04-09
+**Review artifact:** `reviews/archived/final-review-2026-04-09.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `p06-t01`, `p06-t02`
+
+**Disposition:**
+
+- `I1` Convert to task `p06-t01` to implement lifecycle-aware parsing and project-state assembly.
+- `M1` Convert to task `p06-t02` to restore the repo-relative project path contract.
+
+**Next:** Execute review-fix tasks via `oat-project-implement`, then re-run `oat-project-review-provide code final` and `oat-project-review-receive`.
+
+**Review fix status:** `fixes_added`
 
 ---
 
@@ -529,6 +574,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p04-t03` and advanced to `p04-t04`.
 - 2026-04-09: Completed `p04-t04`, closed Phase 4, and advanced to `p05-t01`.
 - 2026-04-09: Completed `p05-t01`, closed Phase 5, and finished implementation.
+- 2026-04-09: Received final review, added `p06-t01` and `p06-t02`, and resumed implementation from `p06-t01`.
 
 ---
 
@@ -551,6 +597,7 @@ Track test execution during implementation.
 | 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
 | 4     | `pnpm install`; `pnpm build`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/list.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/resolve.test.ts src/commands/config/dump.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/control-plane test`; `pnpm --filter @open-agent-toolkit/control-plane lint`; `pnpm --filter @open-agent-toolkit/control-plane type-check`; `pnpm --filter @open-agent-toolkit/control-plane build`; `pnpm run cli -- project status --json`; `pnpm run cli -- project list --json`; `pnpm run cli -- config dump --json` | pass   | 0      | n/a      |
 | 5     | `pnpm build`; `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm release:validate`; `pnpm run cli -- project status --json`; `pnpm run cli -- project list --json`; `pnpm run cli -- config dump --json`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | pass   | 0      | n/a      |
+| 6     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
