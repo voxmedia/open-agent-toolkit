@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -24,27 +24,50 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 5     | 0/5       |
-| Phase 2 | pending | 1     | 0/1       |
-| Phase 3 | pending | 1     | 0/1       |
-| Phase 4 | pending | 4     | 0/4       |
-| Phase 5 | pending | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 5     | 1/5       |
+| Phase 2 | pending     | 1     | 0/1       |
+| Phase 3 | pending     | 1     | 0/1       |
+| Phase 4 | pending     | 4     | 0/4       |
+| Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 0/12 tasks completed
+**Total:** 1/12 tasks completed
 
 ---
 
 ## Phase 1: Control Plane — Package and Types
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-09
 
 ### Task p01-t01: Scaffold `packages/control-plane/` package
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2be7e14
+
+**Outcome (required):**
+
+- Scaffolded a new `@open-agent-toolkit/control-plane` workspace package under `packages/control-plane/`.
+- Added package-level build, test, lint, format, and type-check scripts for the new library.
+- Defined the initial shared control-plane types and placeholder public API exports for later implementation tasks.
+
+**Files changed:**
+
+- `packages/control-plane/package.json` - new workspace package manifest and scripts.
+- `packages/control-plane/tsconfig.json` - package-local TypeScript build configuration.
+- `packages/control-plane/src/types.ts` - initial control-plane type definitions.
+- `packages/control-plane/src/index.ts` - placeholder public exports for upcoming tasks.
+
+**Verification:**
+
+- Run: `pnpm install && pnpm --filter @open-agent-toolkit/control-plane build && pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the package private for the initial rollout, matching discovery and design.
+- Matched existing monorepo package conventions instead of introducing package-specific script or build patterns.
 
 ---
 
@@ -159,6 +182,8 @@ oat_generated: false
 ## Implementation Log
 
 Chronological log of implementation progress.
+
+- 2026-04-09: Completed `p01-t01` and advanced to `p01-t02`.
 
 ---
 
