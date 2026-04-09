@@ -100,7 +100,7 @@ function createCodexAdapter(): ProviderAdapter {
 function createManifest(entries: ManifestEntry[]): Manifest {
   return {
     version: 1,
-    oatVersion: '0.0.18',
+    oatVersion: '0.0.23',
     entries,
     lastUpdated: '2026-02-14T00:00:00.000Z',
   };
