@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p04-t02
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 1     | 1/1       |
 | Phase 3 | complete    | 1     | 1/1       |
-| Phase 4 | in_progress | 4     | 1/4       |
+| Phase 4 | in_progress | 4     | 2/4       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 8/12 tasks completed
+**Total:** 9/12 tasks completed
 
 ---
 
@@ -322,8 +322,39 @@ oat_generated: false
 
 ### Task p04-t02: `oat project status` command
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2bc4793
+
+**Outcome (required):**
+
+- Added an `oat project status` subcommand that resolves the active project and returns the full control-plane `ProjectState`.
+- Added text and JSON output paths, including explicit `unset` and `missing` handling for invalid active-project state.
+- Fixed the control-plane task-progress parser so verbose implementation sections correctly report completed task counts in live CLI output.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/status.ts` - new status command implementation and output formatting.
+- `packages/cli/src/commands/project/status.test.ts` - command-level tests for JSON, unset, and text summary flows.
+- `packages/cli/src/commands/project/index.ts` - registered the new `status` subcommand.
+- `packages/cli/src/commands/help-snapshots.test.ts` - updated the `project --help` inline snapshot.
+- `packages/control-plane/src/state/tasks.ts` - fixed completed-task detection for real implementation artifact structure.
+- `packages/control-plane/src/state/tasks.test.ts` - added regression coverage for verbose task sections.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test && pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check && pnpm --filter @open-agent-toolkit/control-plane build`
+- Result: pass
+- Run: `pnpm run cli -- project status --json`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the command dependency-injected so tests can override project resolution and control-plane reads without filesystem fixtures.
+- Treated the parser fix as in-scope for this task because the new command exposed the live mismatch immediately.
 
 ---
 
@@ -376,6 +407,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p02-t01`, closed Phase 2, and advanced to `p03-t01`.
 - 2026-04-09: Completed `p03-t01`, closed Phase 3, and advanced to `p04-t01`.
 - 2026-04-09: Completed `p04-t01` and advanced to `p04-t02`.
+- 2026-04-09: Completed `p04-t02` and advanced to `p04-t03`.
 
 ---
 
@@ -391,13 +423,13 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                    | Passed | Failed | Coverage |
-| ----- | ---------------------------- | ------ | ------ | -------- |
-| 1     | -                            | -      | -      | -        |
-| 2     | -                            | -      | -      | -        |
-| 3     | -                            | -      | -      | -        |
-| 4     | `pnpm install`; `pnpm build` | pass   | 0      | n/a      |
-| 5     | -                            | -      | -      | -        |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Passed | Failed | Coverage |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | -      | -      | -        |
+| 2     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | -      | -      | -        |
+| 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | -      | -      | -        |
+| 4     | `pnpm install`; `pnpm build`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/status.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/control-plane test`; `pnpm --filter @open-agent-toolkit/control-plane lint`; `pnpm --filter @open-agent-toolkit/control-plane type-check`; `pnpm --filter @open-agent-toolkit/control-plane build`; `pnpm run cli -- project status --json` | pass   | 0      | n/a      |
+| 5     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
