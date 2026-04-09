@@ -855,14 +855,14 @@ git commit -m "fix(p06-t02): return repo-relative project paths"
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                            |
-| ----- | -------- | --------------- | ---------- | --------------------------------------------------- |
-| p01   | code     | pending         | -          | -                                                   |
-| p02   | code     | pending         | -          | -                                                   |
-| p03   | code     | pending         | -          | -                                                   |
-| p04   | code     | pending         | -          | -                                                   |
-| final | code     | fixes_completed | 2026-04-09 | reviews/archived/final-review-2026-04-09.md         |
-| plan  | artifact | passed          | 2026-04-09 | reviews/archived/artifact-plan-review-2026-04-09.md |
+| Scope | Type     | Status  | Date       | Artifact                                            |
+| ----- | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01   | code     | pending | -          | -                                                   |
+| p02   | code     | pending | -          | -                                                   |
+| p03   | code     | pending | -          | -                                                   |
+| p04   | code     | pending | -          | -                                                   |
+| final | code     | passed  | 2026-04-09 | reviews/archived/final-review-2026-04-09-v2.md      |
+| plan  | artifact | passed  | 2026-04-09 | reviews/archived/artifact-plan-review-2026-04-09.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

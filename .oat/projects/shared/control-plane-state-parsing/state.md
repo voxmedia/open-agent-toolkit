@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-08T17:16:52.421Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-09T23:25:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-09T23:28:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation complete - review fixes finished, awaiting final re-review
+Implementation complete - final re-review passed
 
 ## Artifacts
 
@@ -47,7 +47,7 @@ Implementation complete - review fixes finished, awaiting final re-review
 - ✓ Final code review received
 - ✓ Review fix `p06-t01` completed
 - ✓ Review fix `p06-t02` completed
-- ⧗ Final re-review pending
+- ✓ Final re-review passed
 
 ## Blockers
 
@@ -55,4 +55,4 @@ None
 
 ## Next Milestone
 
-Re-run the final code review and record the passing result
+Run `oat-project-summary` to generate the summary artifact
