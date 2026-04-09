@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | pending  | 1     | 0/1       |
+| Phase 2 | complete | 1     | 1/1       |
 | Phase 3 | pending  | 1     | 0/1       |
 | Phase 4 | pending  | 4     | 0/4       |
 | Phase 5 | pending  | 1     | 0/1       |
 
-**Total:** 5/12 tasks completed
+**Total:** 6/12 tasks completed
 
 ---
 
@@ -202,13 +202,43 @@ oat_generated: false
 
 ## Phase 2: Skill Recommender
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-09
 
 ### Task p02-t01: Phase routing state machine
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9e7a30c
+
+**Outcome (required):**
+
+- Ported the current `oat-project-next` routing tables and post-implementation cascade into a pure recommender.
+- Added HiLL override handling, implementation-mode substitution, and review-cycle routing behavior.
+- Added coverage for early-phase, review-cycle, summary, and PR-opening transitions.
+
+**Files changed:**
+
+- `packages/control-plane/src/recommender/router.ts` - pure skill recommender implementation.
+- `packages/control-plane/src/recommender/router.test.ts` - routing table and post-implementation tests.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept non-final review routing separate from final-review handling so pending final review rows still trigger `review-provide` instead of `review-receive`.
+- Used the parsed summary artifact status rather than raw file existence for the post-implementation summary gate.
+
+**Phase Summary:**
+
+- Outcome: Phase 2 adds the pure routing layer that converts parsed project state into the next-skill recommendation.
+- Key files touched: `packages/control-plane/src/recommender/router.ts`, `packages/control-plane/src/recommender/router.test.ts`.
+- Verification: `pnpm --filter @open-agent-toolkit/control-plane test`, `pnpm --filter @open-agent-toolkit/control-plane lint`, `pnpm --filter @open-agent-toolkit/control-plane type-check`.
+- Notable decisions/deviations: modeled review safety from parsed review records rather than direct filesystem access so the recommender stays pure.
 
 ---
 
@@ -289,6 +319,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p01-t03` and advanced to `p01-t04`.
 - 2026-04-09: Completed `p01-t04` and advanced to `p01-t05`.
 - 2026-04-09: Completed `p01-t05`, closed Phase 1, and advanced to `p02-t01`.
+- 2026-04-09: Completed `p02-t01`, closed Phase 2, and advanced to `p03-t01`.
 
 ---
 
