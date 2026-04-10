@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p02-t05
+oat_current_task_id: p03-t01
 oat_generated: false
 oat_template: false
 ---
@@ -28,12 +28,12 @@ oat_template: false
 | Phase                                              | Status      | Tasks | Completed |
 | -------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
-| Phase 2: Skill Integration — oat-project-implement | in_progress | 5     | 4/5       |
-| Phase 3: Skill Integration — oat-project-complete  | pending     | 2     | 0/2       |
+| Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
+| Phase 3: Skill Integration — oat-project-complete  | in_progress | 2     | 0/2       |
 | Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 8/16 tasks completed
+**Total:** 9/16 tasks completed
 
 ---
 
@@ -237,8 +237,39 @@ oat_template: false
 
 ## Phase 2: Skill Integration — oat-project-implement
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-10
+**Completed:** 2026-04-10
+
+### Phase Summary
+
+**Outcome:**
+
+- `oat-project-implement` (v1.2.2 → v1.3.0) now respects 3 workflow preferences and has stronger bookkeeping enforcement
+- Step 2.5: reads `workflow.hillCheckpointDefault` before checkpoint prompt (`every` / `final`)
+- Step 15: reads `workflow.postImplementSequence` before next-steps prompt (`wait` / `summary` / `pr` / `docs-pr`)
+- Step 14: reads `workflow.reviewExecutionModel` with fresh-session soft-preference escape hatch (`subagent` / `inline` / `fresh-session`)
+- Step 3: removed interactive resume/fresh-start prompt — always resume by default, fresh start is an explicit argument-only override
+- Mode Assertion: added CRITICAL rule that bookkeeping commits are mandatory, not optional, with prose explaining that "not related to the implementation" is not an excuse to skip
+- All 4 existing `Bookkeeping commit (required)` sections now carry a `DO NOT SKIP` callout
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-implement/SKILL.md` — 5 distinct edits across Mode Assertion, Step 2.5, Step 3, Step 14, Step 15, and 4 bookkeeping commit sections
+
+**Verification:**
+
+- `pnpm lint` → clean on every task
+- `pnpm format` → clean on every task
+- Step numbering preserved (Steps 0, 0.5, 1, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16) — no drift from the 5 edits
+- `grep -c "DO NOT SKIP"` → 4 (all four bookkeeping sections hardened)
+- Skill version bumped once per PR rule: 1.2.2 → 1.3.0
+
+**Notes / Decisions:**
+
+- Used "Workflow preference check (before prompting)" subsections to match the existing "Auto-Review at Checkpoints (Touchpoint A)" pattern in Step 2.5 — consistent mental model for where preferences apply
+- `fresh-session` review preference is the only value that isn't a hands-free execution — it prints guidance but still offers escape hatches, per the plan's "soft preference" design
+- The resume-by-default change is a deliberate UX simplification, not a config preference — in practice fresh start is a rare edge case and doesn't deserve a prompt every session
 
 ### Task p02-t01: HiLL checkpoint default preference
 
@@ -347,8 +378,26 @@ oat_template: false
 
 ### Task p02-t05: Strengthen bookkeeping commit enforcement
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f6ffbfe
+
+**Outcome:**
+
+- Added CRITICAL block after Mode Assertion explaining that bookkeeping commits are mandatory and calling out the specific agent-reasoning failure mode ("not related to the implementation")
+- Added `**DO NOT SKIP.** This commit prevents state drift across sessions.` callout to each of the 4 existing `**Bookkeeping commit (required):**` sections:
+  - Step 7: after each task code commit
+  - Step 7 review-fix branch: after review-fix completion
+  - Step 8: at phase boundaries
+  - Step 12: at implementation completion
+
+**Files changed:**
+
+- `.agents/skills/oat-project-implement/SKILL.md` — Mode Assertion block, 4 bookkeeping commit section callouts
+
+**Verification:**
+
+- `pnpm lint` → clean
+- `grep -c "DO NOT SKIP"` → 4 (all four sections hardened)
 
 ---
 
