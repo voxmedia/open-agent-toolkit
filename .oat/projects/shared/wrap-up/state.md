@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t03
-oat_last_commit: 7619c58
+oat_current_task: null
+oat_last_commit: 9710c2c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval (deferred to oat-project-implement Step 2.5)
@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-10T16:50:42.213Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-10T17:50:22.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-10T17:58:14.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — p01-t02 complete (`7619c58`). Next: p01-t03 (register `oat-wrap-up` skill for CLI distribution via `bundle-assets.sh` + `WORKFLOW_SKILLS`). Checkpoint behavior: pause only after the final phase (p01). Auto-review at checkpoints: enabled.
+Implementation — all 4 tasks of p01 complete through commit `9710c2c`. Final gate clean (`lint`, `type-check`, `test` 1202/1202, `oat:validate-skills` 47/47, `release:validate` 4/4 at v0.0.26). Awaiting auto-review at the HiLL checkpoint (Touchpoint B — scope `final`).
 
 ## Artifacts
 
