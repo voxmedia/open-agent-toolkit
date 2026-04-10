@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p04-t03
+oat_current_task_id: p05-t01
 oat_generated: false
 oat_template: false
 ---
@@ -30,10 +30,10 @@ oat_template: false
 | Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
 | Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
 | Phase 3: Skill Integration — oat-project-complete  | complete    | 2     | 2/2       |
-| Phase 4: Skill Integration — Review Skills         | in_progress | 3     | 2/3       |
-| Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
+| Phase 4: Skill Integration — Review Skills         | complete    | 3     | 3/3       |
+| Phase 5: Documentation and Bundled Docs Update     | in_progress | 2     | 0/2       |
 
-**Total:** 13/16 tasks completed
+**Total:** 14/16 tasks completed
 
 ---
 
@@ -476,8 +476,32 @@ oat_template: false
 
 ## Phase 4: Skill Integration — Review Skills
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-10
+**Completed:** 2026-04-10
+
+### Phase Summary
+
+**Outcome:**
+
+- `oat-project-review-provide` (v1.2.3 → v1.3.0) Step 3a now reads `workflow.autoNarrowReReviewScope` before the re-review prompt
+- `oat-project-review-receive` (v1.2.1 → v1.3.0) now has a required Step 7.6 bookkeeping commit — fixing the root cause of cross-agent drift
+- `oat-project-review-receive-remote` (v1.2.0 → v1.3.0) now has a required Step 6.5 bookkeeping commit — same fix for GitHub PR comment flows
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-review-provide/SKILL.md`
+- `.agents/skills/oat-project-review-receive/SKILL.md`
+- `.agents/skills/oat-project-review-receive-remote/SKILL.md`
+
+**Verification:**
+
+- `pnpm lint` → clean on every task
+
+**Notes / Decisions:**
+
+- The commit steps in p04-t02 and p04-t03 are the most load-bearing changes in this phase. They eliminate the primary cause of cross-agent bookkeeping drift that was identified during discovery. The CRITICAL / DO NOT SKIP framing mirrors the oat-project-implement hardening done in p02-t05
+- Worktree handling is explicit (`git -C "$WORKTREE_PATH"`) in both receive skills so they work correctly from a subagent running in a different git context
 
 ### Task p04-t01: Auto-narrow re-review scope preference
 
@@ -528,8 +552,24 @@ oat_template: false
 
 ### Task p04-t03: Add bookkeeping commit step to oat-project-review-receive-remote
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b393910
+
+**Outcome:**
+
+- Added new Step 6.5 "Commit Review Bookkeeping (Required)" between Step 6 (artifact updates) and Step 7 (routing)
+- Same CRITICAL / DO NOT SKIP structure as p04-t02
+- Commit message includes PR number: `chore(oat): record remote review findings and add fix tasks (pr-#$PR_NUMBER)`
+- Added success criterion for atomic commit before exit
+- Bumped skill version 1.2.0 → 1.3.0
+
+**Files changed:**
+
+- `.agents/skills/oat-project-review-receive-remote/SKILL.md` — new Step 6.5, success criterion addition, version bump
+
+**Verification:**
+
+- `pnpm lint` → clean
 
 ---
 
