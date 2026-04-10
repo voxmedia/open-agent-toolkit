@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive-remote
-version: 1.2.0
+version: 1.3.0
 description: Use when processing GitHub PR review comments within project context. Fetches PR comments, creates plan tasks, and updates project artifacts.
 disable-model-invocation: true
 user-invocable: true
@@ -190,6 +190,21 @@ Update `state.md`:
 - `oat_current_task: <first-new-task-id|null>`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
+### Step 6.5: Commit Review Bookkeeping (Required)
+
+**CRITICAL — DO NOT SKIP.** This skill modifies `plan.md`, `implementation.md`, and `state.md` when processing GitHub PR comments. When it runs in a separate agent session (subagent, fresh session, or different conversation), uncommitted bookkeeping updates cause state drift for the original agent. The commit below is the safety net.
+
+Commit all modified OAT tracking files atomically:
+
+```bash
+git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
+git diff --cached --quiet || git commit -m "chore(oat): record remote review findings and add fix tasks (pr-#$PR_NUMBER)"
+```
+
+Do not use `git add -A` or glob patterns. Do not include unrelated implementation or code files. Do not defer this commit without explicit user approval.
+
+**Worktree handling:** If the project was resolved via a worktree in Step 0, run the git commands scoped to the worktree (`git -C "$WORKTREE_PATH" ...`) so the commit lands on the worktree branch.
+
 ### Step 7: Enforce Review Cycle Limit and Route Next Action
 
 Track review cycles for the same scope.
@@ -232,4 +247,5 @@ At completion, report:
 - Findings triaged with explicit dispositions.
 - Plan tasks created with stable IDs when needed.
 - `plan.md`, `implementation.md`, and `state.md` updated consistently.
+- All artifact updates committed atomically before the skill exits to prevent cross-session drift.
 - Review cycle guard and next-action routing applied.
