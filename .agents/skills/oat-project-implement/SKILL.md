@@ -216,8 +216,8 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 - Validate the task pointer:
   - If `oat_current_task_id` points at a task already marked `completed` in the body, advance to the **next incomplete** task (first `pending` / `in_progress` / `blocked` entry).
   - If all tasks are completed, skip ahead to finalization (Step 11+).
-- Resume from the resolved task
-- Ask user: "Resume from {task_id}, or start fresh (overwrite implementation.md)?"
+- **Always resume** from the resolved task. Print `Resuming from {task_id}.` Do not prompt.
+- **Fresh start is an explicit override only.** If the user invoked the skill with `fresh=true` (argument), warn `Starting fresh — this will overwrite implementation.md. Any draft logs will be lost.` and proceed with fresh initialization. Do not offer fresh start interactively; it is a rare edge case reserved for corrupt state or deliberate plan rewrites.
 
 **Stale-state reconciliation (approval required):**
 
