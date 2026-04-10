@@ -21,6 +21,7 @@ type ConfigKey =
   | 'archive.s3SyncOnComplete'
   | 'archive.s3Uri'
   | 'archive.summaryExportPath'
+  | 'archive.wrapUpExportPath'
   | 'autoReviewAtCheckpoints'
   | 'lastPausedProject'
   | 'documentation.config'
@@ -81,6 +82,7 @@ const KEY_ORDER: ConfigKey[] = [
   'archive.s3Uri',
   'archive.s3SyncOnComplete',
   'archive.summaryExportPath',
+  'archive.wrapUpExportPath',
   'autoReviewAtCheckpoints',
   'lastPausedProject',
   'documentation.root',
@@ -229,6 +231,18 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set archive.summaryExportPath <value>',
     description:
       'Repository-relative directory where completion copies project summaries for durable tracked reference.',
+  },
+  {
+    key: 'archive.wrapUpExportPath',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set archive.wrapUpExportPath <value>',
+    description:
+      'Repository-relative directory where the oat-wrap-up skill writes date-ranged shipping digests. When unset, the skill falls back to `.oat/repo/reference/wrap-ups`.',
   },
   {
     key: 'tools.core',
@@ -497,6 +511,8 @@ async function getConfigValue(
           : 'false';
     } else if (key === 'archive.summaryExportPath') {
       value = archive?.summaryExportPath ?? null;
+    } else if (key === 'archive.wrapUpExportPath') {
+      value = archive?.wrapUpExportPath ?? null;
     }
 
     return {
@@ -645,6 +661,8 @@ async function setConfigValue(
       archive.s3SyncOnComplete = rawValue.trim().toLowerCase() === 'true';
     } else if (key === 'archive.summaryExportPath') {
       archive.summaryExportPath = normalizeSharedRoot(rawValue);
+    } else if (key === 'archive.wrapUpExportPath') {
+      archive.wrapUpExportPath = normalizeSharedRoot(rawValue);
     }
 
     await dependencies.writeOatConfig(repoRoot, {

@@ -481,4 +481,93 @@ describe('oat config', () => {
     expect(config.autoReviewAtCheckpoints).toBe(true);
     expect(process.exitCode).toBe(0);
   });
+
+  it('sets archive.wrapUpExportPath in config.json', async () => {
+    const root = await createRepoRoot();
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, [
+      'set',
+      'archive.wrapUpExportPath',
+      '.oat/repo/reference/wrap-ups/',
+    ]);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      archive: {
+        wrapUpExportPath: '.oat/repo/reference/wrap-ups',
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('gets archive.wrapUpExportPath after setting it', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, archive: { wrapUpExportPath: 'custom/wrap-ups' } })}\n`,
+      'utf8',
+    );
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'archive.wrapUpExportPath']);
+
+    expect(capture.info[0]).toBe('custom/wrap-ups');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('gets empty string for archive.wrapUpExportPath when unset', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'archive.wrapUpExportPath']);
+
+    expect(capture.info[0]).toBe('');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects empty string for archive.wrapUpExportPath', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'archive.wrapUpExportPath', '']);
+
+    expect(capture.error[0]).toContain('Shared config values cannot be empty');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('list includes archive.wrapUpExportPath', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        archive: { wrapUpExportPath: '.oat/repo/reference/wrap-ups' },
+      })}\n`,
+      'utf8',
+    );
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['list']);
+
+    expect(capture.info[0]).toContain('archive.wrapUpExportPath');
+    expect(capture.info[0]).toContain('.oat/repo/reference/wrap-ups');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('describe surfaces archive.wrapUpExportPath catalog entry', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'archive.wrapUpExportPath']);
+
+    expect(capture.info[0]).toContain('Key: archive.wrapUpExportPath');
+    expect(capture.info[0]).toContain('Scope: shared repo');
+    expect(capture.info[0]).toContain('File: .oat/config.json');
+    expect(capture.info[0]).toContain(
+      'Owning command: oat config set archive.wrapUpExportPath <value>',
+    );
+    expect(process.exitCode).toBe(0);
+  });
 });
