@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-10
+oat_last_updated: 2026-04-05
 oat_generated: false
 ---
 
@@ -131,40 +131,159 @@ Captured from PR #13 bootstrapping + 8 fix commits over ~4 hours.
 
 **CLI fix needed:** Preseed tsconfig with Next.js-compatible settings so first build is clean.
 
-### Round 3: Site name vs app name conflation (captured 2026-04-10, post PR #27)
+### Round 3: Nested standalone docs app in non-monorepo (captured 2026-04-10)
 
-#### FP-11: Display title derived from package name produces awkward results
+**Scenario:** A non-monorepo parent repo gets a docs app scaffolded as a nested subdirectory. Both the parent and the scaffolded docs app have their own `pnpm-lock.yaml` — this is intentional because the docs app should be installable and buildable independently.
 
-**Problem:** `oat docs init` uses a single "app name" input for two unrelated concerns:
+#### FP-11: `createDocsConfig()` blocks passthrough of Next.js config fields (Turbopack root, etc.)
 
-1. The `package.json` `name` field (used by pnpm/Turborepo for workspace filtering, e.g., `pnpm --filter documentation dev`)
-2. The human-readable display title shown in the UI, derived in `scaffold.ts` as:
-   `const siteName = \`${humanizeAppName(options.appName)} Documentation\`;`
+**Problem:** `next build` in a nested standalone docs app emits the Turbopack multiple-lockfile warning:
 
-This derivation produces poor results in the common cases:
+> Next.js inferred your workspace root, but it may not be correct. We detected multiple lockfiles...
+
+The canonical fix is to set `turbopack.root` in `next.config.js` to pin the workspace root to the docs app directory. But because the scaffolded `next.config.js` delegates to `@open-agent-toolkit/docs-config`'s `createDocsConfig()`, there's no way to get that field into the final Next config.
+
+**Root cause:** `createDocsConfig()` in `packages/docs-config/src/next-config.ts` takes a narrow options shape (`title`, `description`, `logo`, `basePath`) and builds a fresh Next config object:
+
+```ts
+export function createDocsConfig(options: DocsConfigOptions): NextConfig {
+  const baseConfig: NextConfig = {
+    output: 'export',
+    trailingSlash: true,
+    images: { unoptimized: true },
+    reactStrictMode: true,
+    ...(options.basePath ? { basePath: options.basePath } : {}),
+  };
+  const withMDX = createMDX();
+  return withMDX(baseConfig);
+}
+```
+
+Callers cannot add or override `turbopack`, `experimental`, `webpack`, `env`, or any other Next config fields. Attempts to set `turbopack.root` in the caller's `next.config.js` have no effect because the wrapper returns its own baseline config and doesn't merge anything from the caller.
+
+**Observed workaround:** Replace the `createDocsConfig()` wrapper entirely with an explicit `createMDX()` call plus a hand-written Next config object, then set `turbopack.root` to the docs package directory. After that the warning disappeared and the build stayed green — but the user is now off the supported wrapper path.
+
+**Reproduction:**
+
+1. In a non-monorepo parent repo with its own `pnpm-lock.yaml`, scaffold a docs app as a nested subdirectory via `oat docs init`
+2. Run `pnpm install` and `pnpm build` inside the scaffolded docs app (which generates its own lockfile)
+3. Observe the Turbopack multiple-lockfiles warning
+4. Try to suppress it by passing `turbopack: { root: __dirname }` through `createDocsConfig()`
+5. Observe the setting is silently dropped because the wrapper doesn't merge caller fields
+
+**Fix needed in `@open-agent-toolkit/docs-config`:**
+
+1. **Extend `DocsConfigOptions` to accept an optional Next.js config passthrough.** Deep-merge caller-provided fields over the base config before wrapping with `createMDX()`. At minimum `turbopack`, `experimental`, `webpack`, `env`, and arbitrary top-level Next config fields should be mergeable.
+2. **Prefer a merge strategy that lets callers override base defaults** (e.g., `reactStrictMode`, `images`) while still getting sensible Fumadocs static-export defaults.
+
+**Fix needed in the docs init scaffold:**
+
+1. **Set `turbopack.root` to the docs app directory by default for the nested standalone case.** Detect this case as "parent has its own `pnpm-lock.yaml` and target dir is a subdirectory that will get its own lockfile" or simply as "non-monorepo shape with a target subdirectory."
+2. **Update the Fumadocs `next.config.js.template`** to show the passthrough pattern so users know how to add their own Next config overrides.
+
+**Skill implication:** The Build Verifier should recognize the Turbopack multiple-lockfile warning as a known issue and surface it with a focused remediation pointer rather than letting the user hunt for the cause.
+
+**Separate observation (not a friction point):** An `expo/tsconfig.base` warning was observed in the same session but traced to missing root Expo dependencies in the parent checkout — unrelated to the docs scaffold.
+
+#### FP-12: Fumadocs scaffold has no coherent site-title story
+
+**Problem:** The scaffolded Fumadocs docs app has three unrelated bugs that together leave the user with no clean way to set a display title. Found during hands-on bootstrapping and confirmed by runtime verification of `node_modules/@open-agent-toolkit/docs-theme/dist/docs-layout.js`.
+
+**Sub-finding A — `humanizeAppName` double-title:** `scaffold.ts` derives the display title as `humanizeAppName(options.appName) + ' Documentation'`. This produces bad results in the common cases:
 
 - App name `documentation` → display title `"Documentation Documentation"`
 - App name `cyclone-app-docs` → display title `"Cyclone App-docs Documentation"` (broken title-casing around the `-docs` suffix)
 - App name `docs` → display title `"Docs Documentation"`
 
-Users then have to manually edit two files to fix the display title after scaffolding:
+The scaffolder conflates the package name (used for pnpm filtering, e.g., `pnpm --filter documentation dev`) with the product/project name (used for the display title). There is no separate prompt or flag for the product name.
 
-- `app/layout.tsx` — the `branding.title` prop on `DocsLayout`
-- `next.config.js` — the `title` option passed to `createDocsConfig()`
+**Sub-finding B — `createDocsConfig.title` is dead code:** `@open-agent-toolkit/docs-config`'s `createDocsConfig(options)` accepts a `title` field in its `DocsConfigOptions` type, but the returned Next config never references `options.title`. The `baseConfig` only uses `options.basePath`. Any caller setting `title` believes it is configuring something; it is configuring nothing. The scaffolded `next.config.js.template` passes `title: '{{SITE_NAME}}'` which is silently discarded.
 
-The location of these edits is not obvious without reading the scaffold output or the Fumadocs/docs-theme source.
+**Sub-finding C — No page metadata anywhere in the scaffold:** Runtime inspection of the compiled `DocsLayout` from `@open-agent-toolkit/docs-theme` confirms it only forwards `branding.title` into Fumadocs navigation chrome. It does not create Next.js page metadata. The scaffolded `app/layout.tsx` does not export `metadata`, does not set a `<title>` tag, and has no SEO / browser-tab title mechanism at all. Even after fixing sub-findings A and B, the browser tab will show Next.js's default fallback rather than the site title.
 
-**Root cause:** The scaffolder treats "app name" as the authoritative source for the display title, but in practice the display title should be the **product/project name** (e.g., "Cyclone App"), not the docs package name.
+**Root cause:** Three disconnected gaps in how "title" flows through the scaffold:
 
-Related: The existing `siteDescription` prompt is a separate, well-scoped field — it sets `{{SITE_DESCRIPTION}}` which lands in `package.json` description, `next.config.js` description, `docs/index.md` frontmatter, and `layout.tsx` branding description. It is the meta/subtitle, not the title. That field is fine as-is.
+1. `scaffold.ts` — derives the display title from the wrong input (package name), with no separate prompt for product name
+2. `packages/docs-config/src/next-config.ts` — `DocsConfigOptions.title` is accepted but unused
+3. `packages/cli/assets/templates/docs-app-fuma/app/layout.tsx` — no `export const metadata` declaration
 
-**CLI fix needed:**
+**Observed workaround (for the already-scaffolded app):**
 
-- Add a separate "Site name" prompt (and corresponding `--title` / `--site-name` flag) that represents the product/project name
-- Default to the humanized repo name (e.g., `cyclone-app` → `Cyclone App`) rather than humanizing the app name
-- In monorepos, this is distinct from the docs package name; in single-package repos, the repo-name default usually matches the project name automatically
-- Derive `{{SITE_NAME}}` as `${siteName} Documentation` (or allow the user to opt out of the "Documentation" suffix)
-- The bootstrap skill should then pass both `--name` (package) and `--site-name` (display) through to the CLI
+1. Manually edit `app/layout.tsx` to set `DocsLayout.branding.title` to the real product name
+2. Manually edit `docs/index.md` frontmatter `title:` and the `# ...` H1
+3. Manually edit `docs/getting-started.md` body text referencing the site name
+4. Manually edit `docs/contributing.md` H1 `# Contributing to ...`
+5. Remove the dead `title` plumbing from `next.config.js`
+6. Live with no browser-tab title (or add `export const metadata` manually)
+
+**Unified fix (CLI + packages):**
+
+1. **Add a "Site name" prompt** to `oat docs init` (and corresponding `--site-name` / `--title` flag) representing the product/project name. Default to the humanized repo name (e.g., `cyclone-app` → `Cyclone App`) rather than humanizing the app name. In monorepos this is distinct from the docs package name; in single-package repos the repo-name default usually matches.
+2. **Remove or make functional the `title` parameter in `createDocsConfig`.** Either delete it from `DocsConfigOptions` (breaking change) or use it to populate sensible defaults when callers pass through `export const metadata` to Next.js. Aligns with the FP-11 passthrough fix.
+3. **Add `export const metadata = { title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' }`** to the scaffolded `app/layout.tsx.template`. This gives the scaffolded app a proper browser-tab title and SEO metadata by default.
+4. **Ensure `{{SITE_NAME}}` is set once and flows to all four user-visible locations** (layout branding, layout metadata, docs/index.md frontmatter + H1, docs/getting-started.md body, docs/contributing.md H1).
+
+**Skill implication:** The bootstrap skill's Input Gathering step must prompt for _both_ a package/app name and a separate site/display name, explain what each controls, and recommend sensible defaults derived from the repo name. Even once the CLI fix lands, the skill should show the user a coherence check — "your display title will be X, your package will be Y, your description is Z — does that look right?" — before running the scaffold.
+
+#### FP-13: Scaffolded template content has inaccuracies and footguns
+
+**Problem:** During post-bootstrap audit of a real scaffolded non-monorepo docs app, multiple content-level issues were found in the Fumadocs template files. Individually minor; collectively they undermine the "first-time contributor can read the docs app and understand what to do" goal.
+
+**Sub-finding A — Empty `description:` frontmatter on sibling pages:**
+
+`packages/cli/assets/templates/docs-app-fuma/docs/contributing.md:3` and `.../docs/getting-started.md:3` have `description: ''` hardcoded. Only `docs/index.md:3` uses the templated `{{SITE_DESCRIPTION}}`. Fumadocs uses the description field for search previews, social cards, and sibling link summaries — empty descriptions leave those features broken for the two scaffolded sibling pages. The sibling pages don't need site-description templating; they should have sensible static defaults that describe their own page purpose.
+
+**Sub-finding B — `getting-started.md` install/run/build commands have no working-directory context:**
+
+`packages/cli/assets/templates/docs-app-fuma/docs/getting-started.md:15-33` shows bare commands:
+
+```
+pnpm install
+pnpm dev
+pnpm build
+```
+
+No `cd` step, no `--filter` flag, no indication of what directory the reader is supposed to be in. This works if the reader happens to already be inside the docs app directory, but breaks for:
+
+- **Nested non-monorepo** — reader is at the parent repo root and runs `pnpm install` there, which either silently does the wrong thing or installs unrelated deps
+- **Monorepo** — reader needs `pnpm --filter <docs-app-name> install/dev/build` from the repo root, or an explicit `cd apps/<docs-app-name>`
+
+**Sub-finding C — `contributing.md` docs:lint claim is false when lint=none:**
+
+`packages/cli/assets/templates/docs-app-fuma/docs/contributing.md:31` says:
+
+> 3. Run Markdown formatting and linting as configured for this docs app.
+
+But `package.json.template:13` renders `docs:lint` as `{{DOCS_LINT_SCRIPT}}`, which becomes `"echo 'docs lint disabled'"` when the user picks lint=none (the default). The contributing doc makes a blanket claim that's false for the default scaffold. The template is static; it doesn't branch on the user's lint/format choices.
+
+**Sub-finding D — Root-level generated `index.md` has no "do not hand-edit" warning:**
+
+`package.json.template:8,10` wire the `predev` and `prebuild` scripts to run `{{GENERATE_INDEX_CMD}}` (e.g., `oat docs generate-index --docs-dir docs --output index.md`), which generates an `index.md` at the docs app root — **separate from** the hand-authored `docs/index.md`. The root-level file is tracked in git but rewritten on every build/dev. A new contributor has no way to tell these two `index.md` files apart: the first is the authored content map, the second is a machine-shaped footgun. Hand-edits to the generated file are silently clobbered on the next build. There is no warning in `contributing.md`, no header comment in the generated output, and no mention in `getting-started.md`.
+
+**Fix options (template-level):**
+
+1. **Sub-finding A:** Replace `description: ''` in the two sibling pages with static defaults that describe each page's purpose (e.g., `'Set up the local environment and preview the docs site.'` and `'Authoring conventions and navigation rules for this docs site.'`). No templating needed — these descriptions are about the page, not the site.
+2. **Sub-finding B:** Update `getting-started.md` install/run/build section to show the commands in context of the repo shape. Either branch the template on shape, or show both forms with a clear "if you're in a monorepo, use X; if you're in a nested standalone docs app, use Y" framing.
+3. **Sub-finding C:** Either narrow the contributing claim unconditionally (drop "and linting") or template it based on the lint/format choices (`{{DOCS_LINT_INSTRUCTION}}` that expands to the right instruction).
+4. **Sub-finding D:** Add a "Generated files" section to `contributing.md` calling out the root-level `index.md`, and have `oat docs generate-index` emit a header comment like `<!-- generated by oat docs generate-index; do not hand-edit. Source: docs/index.md -->` at the top of its output.
+
+**Skill implication:** The Educational Walkthrough should explain the two-`index.md` situation explicitly (source under `docs/` vs. generated at docs app root), since this is one of the most confusing aspects of the scaffold for a first-time contributor. Even if the template is fixed, the teaching moment is valuable because the skill's users are the ones bootstrapping these apps and will be asked about them by their teammates.
+
+#### FP-14: Post-bootstrap config verification is not part of the scaffold flow
+
+**Problem:** `oat docs init` writes a `documentation` section into `.oat/config.json` (root, tooling, index) and stops there. After the scaffold succeeds, there is no step that:
+
+1. **Reads back** what was written and shows it to the user
+2. **Verifies** each referenced path actually exists on disk (catches drift from manual edits like the Turbopack workaround or the title patches)
+3. **Explains** what each field is used for by downstream tools (`oat-project-document`, `oat docs analyze`, `oat docs apply`, project-completion gates)
+4. **Asks** about `requireForProjectCompletion` opt-in — the one field not auto-derived, and a real decision that depends on how strict the team wants docs sync to be
+5. **Handles the nested non-monorepo case** where there's potentially a second `.oat/config.json` inside the docs app directory with different path semantics (related to FP-4 from Round 1)
+
+The result is that first-time users have a `.oat/config.json` they didn't write, don't understand, and can't adjust confidently. This is fine for users who never touch the config again, but the moment they run `oat docs analyze` or `oat-project-document` and hit a path error, they're stuck.
+
+**Fix needed:** This is primarily a **skill-level** concern, not a CLI fix. The bootstrap skill should add a Post-Scaffold Inspector step that does all five jobs above and hands the findings to the Educational Walkthrough as teaching material. The CLI could also gain an `oat docs config check` command that runs just the read-back + verification, so the skill can delegate.
+
+**Skill implication:** Adds a distinct component (Post-Scaffold Inspector) to the skill pipeline between Build Verifier and Educational Walkthrough. The Inspector output becomes the opening material for the Walkthrough so the teaching is grounded in the user's actual config state.
 
 ## Key Decisions
 
@@ -213,18 +332,25 @@ Related: The existing `siteDescription` prompt is a separate, well-scoped field 
 
 ## Risks
 
-- **CLI fix scope creep:** 11 friction points is substantial CLI work alongside the skill
+- **CLI fix scope creep:** 14 friction points is substantial work alongside the skill
   - **Likelihood:** Medium
   - **Impact:** Medium
   - **Mitigation Ideas:** Prioritize fixes that block the skill flow; defer nice-to-haves
-  - **Status:** FP-1..FP-10 resolved via PR #27 (`4d66f0d`). FP-11 (site name conflation) still open.
+  - **Status:** FP-1..FP-10 resolved via PR #27 (`4d66f0d`). FP-11..FP-14 still open:
+    - FP-11: `createDocsConfig` Next config passthrough + scaffold `turbopack.root` for nested standalone apps
+    - FP-12: Incoherent site-title story across scaffold / docs-config / layout metadata
+    - FP-13: Scaffolded template content inaccuracies and footguns (4 sub-findings)
+    - FP-14: Post-bootstrap config verification missing (skill-level, not CLI)
 
 ## Blockers
 
-- None. CLI fixes for FP-1..FP-10 landed in PR #27. FP-11 (site name) is tracked but does not block skill planning — the skill can pass a site-name flag once the CLI supports it, or post-patch the two files as a fallback until the CLI fix lands.
+- **Blocked on CLI fixes:** FP-1 through FP-10 need to be resolved in `oat docs init` before the skill can be accurately tested and designed. A separate project (`docs-init-fixes`) has been created to track that work.
+- Resume this project after CLI fixes land and the user can test clean bootstrapping flows.
 
 ## Next Steps
 
-- Resolve FP-11 in the CLI (add `--site-name` / "Site name" prompt) — can be bundled into this project's plan or split into a follow-up CLI fix
+- Complete `docs-init-fixes` project (CLI improvements)
+- User re-tests bootstrapping with fixed CLI in both repo shapes
+- Resume this project's discovery with clean feedback
 - Decide on design depth (straight to plan vs lightweight design)
 - Build the skill against the improved CLI
