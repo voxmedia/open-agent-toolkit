@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev1-t08
+oat_current_task: null
 oat_last_commit: 69a7a72
 oat_blockers: []
 associated_issues: []
@@ -29,7 +29,7 @@ oat_template: false
 
 ## Current Phase
 
-Implementation — Revision Phase p-rev1: processing final review findings (0/8 fix tasks)
+Implementation — revision fixes complete (8/8); awaiting re-review
 
 ## Artifacts
 
@@ -51,4 +51,4 @@ None
 
 ## Next Milestone
 
-Execute 8 fix tasks (prev1-t01 through prev1-t08), then re-review final scope
+Re-review final scope (narrowed to prev1 fix-task commits), then PR

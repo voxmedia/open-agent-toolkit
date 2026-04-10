@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: prev1-t08
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -25,16 +25,16 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase                                              | Status      | Tasks | Completed |
-| -------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
-| Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
-| Phase 3: Skill Integration — oat-project-complete  | complete    | 2     | 2/2       |
-| Phase 4: Skill Integration — Review Skills         | complete    | 3     | 3/3       |
-| Phase 5: Documentation and Bundled Docs Update     | complete    | 2     | 2/2       |
-| Revision Phase p-rev1: Final Review Fixes          | in_progress | 8     | 7/8       |
+| Phase                                              | Status   | Tasks | Completed |
+| -------------------------------------------------- | -------- | ----- | --------- |
+| Phase 1: Config System Extension                   | complete | 4     | 4/4       |
+| Phase 2: Skill Integration — oat-project-implement | complete | 5     | 5/5       |
+| Phase 3: Skill Integration — oat-project-complete  | complete | 2     | 2/2       |
+| Phase 4: Skill Integration — Review Skills         | complete | 3     | 3/3       |
+| Phase 5: Documentation and Bundled Docs Update     | complete | 2     | 2/2       |
+| Revision Phase p-rev1: Final Review Fixes          | complete | 8     | 8/8       |
 
-**Total:** 23/24 tasks completed (16 plan + 8 revision)
+**Total:** 24/24 tasks completed (16 plan + 8 revision)
 
 ---
 
@@ -671,7 +671,7 @@ oat_template: false
 
 **Auto-disposition rationale:** All Important findings require action. 5 of 6 Minor findings are in-scope (doc/description fixes and readability improvements) so they are converted per auto-disposition mode. The comma-handling minor is a pre-existing latent edge case explicitly marked "no action needed" by the reviewer, so it is deferred with rationale.
 
-**Next:** Execute fix tasks via `oat-project-implement`. After all `prev1-t*` tasks are complete, plan.md Reviews table final row moves from `fixes_added` → `fixes_completed`, then a re-review (narrowed to fix-task commits per `workflow.autoNarrowReReviewScope` when set) will be run before reaching `passed`.
+**Next:** Request re-review. All 8 `prev1-t*` fix tasks are complete (2026-04-10), plan.md Reviews final row moved to `fixes_completed`. Re-review should be narrowed to the prev1 fix-task commits via `oat-project-review-provide code final` — the re-review-scope-narrowing prompt will activate because `(review)` fix tasks with completed status exist.
 
 ---
 
