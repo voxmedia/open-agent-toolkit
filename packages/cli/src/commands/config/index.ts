@@ -573,9 +573,23 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
   }
 
   if (isStateKey(key)) {
+    // activeIdea has both a repo-local and a user-level surface in the
+    // catalog (the user-level entry is the global fallback). Both surfaces
+    // are writable; shared is not supported because an idea pointer is not
+    // a team decision.
+    if (key === 'activeIdea') {
+      if (surface !== 'local' && surface !== 'user') {
+        throw new Error(
+          `Cannot set 'activeIdea' at '${surface}' scope. activeIdea can only be set at local scope (.oat/config.local.json) or user scope (~/.oat/config.json).`,
+        );
+      }
+      return;
+    }
+
+    // activeProject and lastPausedProject are per-checkout state only.
     if (surface !== 'local') {
       throw new Error(
-        `Cannot set state key '${key}' at '${surface}' scope. State keys (activeProject, lastPausedProject, activeIdea) can only be set at local scope (.oat/config.local.json).`,
+        `Cannot set state key '${key}' at '${surface}' scope. State keys (activeProject, lastPausedProject) can only be set at local scope (.oat/config.local.json).`,
       );
     }
     return;
@@ -742,8 +756,19 @@ async function setConfigValue(
     key === 'activeProject' ||
     key === 'lastPausedProject'
   ) {
-    const localConfig = await dependencies.readOatLocalConfig(repoRoot);
     const nextValue = rawValue === '' ? null : rawValue;
+
+    // activeIdea --user writes to ~/.oat/config.json
+    if (key === 'activeIdea' && effectiveSurface === 'user') {
+      const userConfig = await dependencies.readUserConfig(userConfigDir);
+      await dependencies.writeUserConfig(userConfigDir, {
+        ...userConfig,
+        activeIdea: nextValue,
+      });
+      return { key, value: nextValue, source: 'user' };
+    }
+
+    const localConfig = await dependencies.readOatLocalConfig(repoRoot);
     await dependencies.writeOatLocalConfig(repoRoot, {
       ...localConfig,
       [key]: nextValue,

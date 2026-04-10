@@ -640,6 +640,112 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain('mutually exclusive');
     });
 
+    it('set activeIdea --user writes to ~/.oat/config.json', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeIdea',
+        '.oat/ideas/my-idea',
+        '--user',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      const raw = await readFile(join(home, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        activeIdea: '.oat/ideas/my-idea',
+      });
+      // Should NOT write to local
+      await expect(
+        readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+      ).rejects.toThrow();
+    });
+
+    it('set activeIdea --local writes to .oat/config.local.json', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeIdea',
+        '.oat/ideas/repo-idea',
+        '--local',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      const raw = await readFile(
+        join(root, '.oat', 'config.local.json'),
+        'utf8',
+      );
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        activeIdea: '.oat/ideas/repo-idea',
+      });
+    });
+
+    it('set activeIdea --shared is rejected (no shared surface for activeIdea)', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeIdea',
+        '.oat/ideas/some-idea',
+        '--shared',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('activeIdea');
+      expect(capture.error[0]).toContain('shared');
+    });
+
+    it('set activeProject --user is still rejected (no user surface for activeProject)', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeProject',
+        '.oat/projects/shared/demo',
+        '--user',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('activeProject');
+      expect(capture.error[0]).toContain('user');
+    });
+
+    it('get activeIdea resolves from user when only set there', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeIdea',
+        '.oat/ideas/user-idea',
+        '--user',
+      ]);
+
+      const { command: getCmd, capture: getCap } = createHarness({
+        cwd: root,
+        home,
+      });
+      await runCommand(getCmd, ['get', 'activeIdea'], ['--json']);
+      expect(getCap.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'activeIdea',
+        value: '.oat/ideas/user-idea',
+        source: 'user',
+      });
+    });
+
     it('set workflow.postImplementSequence validates enum', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
