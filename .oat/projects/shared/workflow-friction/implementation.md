@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p02-t02
+oat_current_task_id: p02-t03
 oat_generated: false
 oat_template: false
 ---
@@ -28,12 +28,12 @@ oat_template: false
 | Phase                                              | Status      | Tasks | Completed |
 | -------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
-| Phase 2: Skill Integration — oat-project-implement | in_progress | 5     | 1/5       |
+| Phase 2: Skill Integration — oat-project-implement | in_progress | 5     | 2/5       |
 | Phase 3: Skill Integration — oat-project-complete  | pending     | 2     | 0/2       |
 | Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 5/16 tasks completed
+**Total:** 6/16 tasks completed
 
 ---
 
@@ -273,8 +273,28 @@ oat_template: false
 
 ### Task p02-t02: Post-implementation sequence preference
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ec5b998
+
+**Outcome:**
+
+- Step 15 now reads `workflow.postImplementSequence` before presenting the next-steps prompt
+- All 4 values handled: `wait`, `summary`, `pr`, `docs-pr`
+- Added explanatory note that `pr` and `docs-pr` don't list summary separately because `oat-project-pr-final` auto-generates summary.md
+- Standard prompt preserved as fallback when preference is unset
+- Backward compatible — unset preference = existing prompt behavior
+
+**Files changed:**
+
+- `.agents/skills/oat-project-implement/SKILL.md` — Step 15 workflow preference check, prompt reorganization with "Standard prompt" subheading
+
+**Verification:**
+
+- `pnpm lint` / `pnpm format` → clean
+
+**Notes:**
+
+- Chose to use inline subsections rather than a separate "Touchpoint" heading since Step 15 is more linear than Step 2.5. The "Workflow preference check (before prompting)" + "Standard prompt (when preference is unset)" split keeps both paths readable
 
 ### Task p02-t03: Review execution model preference
 
