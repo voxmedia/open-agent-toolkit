@@ -316,7 +316,7 @@ All 4 original Phase 1 tasks complete. Auto-review at the HiLL checkpoint (Touch
 - `p01-t08` → commit `87ecdfd` (Step 0 `[ -d "$ARCHIVE_DIR" ]` guard with differentiated warning)
 - `p01-t09` → commit `f392d1e` (Troubleshooting notes for both false-positive AND false-negative cross-reference scenarios)
 
-**Next:** Request re-review via `oat-project-review-provide code final` (auto-dispatched as Touchpoint B cycle 2). If the re-review passes with no Critical/Important/Medium findings, the `final` Reviews row advances from `fixes_completed` → `passed` and the project proceeds to the HiLL checkpoint pause.
+**Next:** Cycle 2 re-review was skipped per user call ("get it out and iterate on"). The `final` Reviews row advances directly from `fixes_completed` → `passed`. Proceed to `oat-project-summary` + `oat-project-pr-final`. Any residual refinements (e.g., cross-reference heuristic improvements, additional cycle-2 polish) deferred to a follow-up iteration.
 
 **What changed (high level):**
 
