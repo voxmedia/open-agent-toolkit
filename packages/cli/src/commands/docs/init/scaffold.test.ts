@@ -35,7 +35,7 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
   '.gitignore':
     '# Dependencies\nnode_modules/\n\n# Next.js build output\n.next/\nout/\n\n# fumadocs-mdx generated source\n.source/\n\n# Next.js generated types\nnext-env.d.ts\n',
   'next.config.js':
-    "import { createDocsConfig } from '@open-agent-toolkit/docs-config';\nexport default createDocsConfig({ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' });\n",
+    "import { createDocsConfig } from '@open-agent-toolkit/docs-config';\nconst basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;\nexport default createDocsConfig({ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}', ...(basePath ? { basePath } : {}) });\n",
   'postcss.config.mjs':
     "const config = {\n  plugins: {\n    '@tailwindcss/postcss': {},\n  },\n};\n\nexport default config;\n",
   'source.config.ts':
@@ -78,7 +78,7 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
   'app/globals.css':
     "@import 'tailwindcss';\n@import 'fumadocs-ui/css/black.css';\n@import 'fumadocs-ui/css/preset.css';\n\n@source '../node_modules/fumadocs-ui/dist/**/*.js';\n",
   'app/layout.tsx':
-    "import { DocsLayout } from '@open-agent-toolkit/docs-theme';\nexport default function Layout({ children }) { return <DocsLayout branding={{ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' }} tree={{}}>{children}</DocsLayout>; }\n",
+    "import { DocsLayout } from '@open-agent-toolkit/docs-theme';\nconst basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';\nexport default function Layout({ children }) { return <DocsLayout branding={{ title: '{{SITE_NAME}}', description: '{{SITE_DESCRIPTION}}' }} tree={{}} searchApi={`${basePath}/api/search`}>{children}</DocsLayout>; }\n",
   'app/[[...slug]]/page.tsx':
     "import { DocsPage, Mermaid, Tab, Tabs } from '@open-agent-toolkit/docs-theme';\nimport defaultComponents from 'fumadocs-ui/mdx';\nexport default function Page() { return <div />; }\n",
   'app/api/search/route.ts':
@@ -274,12 +274,15 @@ describe('scaffoldDocsApp', () => {
     );
     expect(nextConfig).toContain('My Docs Documentation');
     expect(nextConfig).toContain('Project documentation site');
+    expect(nextConfig).toContain('NEXT_PUBLIC_BASE_PATH');
 
     const layout = await readFile(
       join(result.appRoot, 'app', 'layout.tsx'),
       'utf8',
     );
     expect(layout).toContain('Project documentation site');
+    expect(layout).toContain('NEXT_PUBLIC_BASE_PATH');
+    expect(layout).toContain('/api/search');
 
     const docsIndex = await readFile(
       join(result.appRoot, 'docs', 'index.md'),

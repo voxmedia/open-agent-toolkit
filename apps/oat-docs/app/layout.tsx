@@ -5,11 +5,21 @@ import type { ReactNode } from 'react';
 import './globals.css';
 import { source } from '@/lib/source';
 
+const basePath = '/open-agent-toolkit';
+
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang='en' suppressHydrationWarning>
       <body>
-        <RootProvider search={{ options: { type: 'static' as const } }}>
+        <RootProvider
+          search={{
+            options: {
+              type: 'static' as const,
+              // Static search does not inherit Next.js basePath automatically.
+              api: `${basePath}/api/search`,
+            },
+          }}
+        >
           <DocsLayout
             branding={{
               title: 'Open Agent Toolkit',

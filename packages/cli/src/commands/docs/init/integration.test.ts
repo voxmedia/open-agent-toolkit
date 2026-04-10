@@ -119,6 +119,7 @@ describe('scaffold integration', () => {
       );
       expect(nextConfig).toContain('Test Docs Documentation');
       expect(nextConfig).toContain('Integration test documentation');
+      expect(nextConfig).toContain('NEXT_PUBLIC_BASE_PATH');
 
       // Verify layout has branding
       const layout = await readFile(
@@ -127,6 +128,8 @@ describe('scaffold integration', () => {
       );
       expect(layout).toContain('Test Docs Documentation');
       expect(layout).toContain('Integration test documentation');
+      expect(layout).toContain('NEXT_PUBLIC_BASE_PATH');
+      expect(layout).toContain('/api/search');
 
       const tsconfig = JSON.parse(
         await readFile(join(result.appRoot, 'tsconfig.json'), 'utf8'),
