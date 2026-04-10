@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: null
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -46,11 +46,11 @@ Reference for full rationale: `/Users/thomas.stang/.claude/plans/luminous-greeti
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 9     | 4/9       |
 
-**Total:** 4/4 tasks completed (awaiting final auto-review)
+**Total:** 4/9 tasks completed (p01-t01…p01-t04 done; p01-t05…p01-t09 are review-fix tasks added after the auto-review at the HiLL checkpoint)
 
 ---
 
@@ -278,7 +278,37 @@ Chronological log of implementation progress.
 - [x] p01-t03: Register skill for CLI distribution — `2648a0a`
 - [x] p01-t04: Lockstep version bump + final gate — `9710c2c`
 
-All Phase 1 tasks complete. Awaiting auto-review at the HiLL checkpoint (Touchpoint B).
+All 4 original Phase 1 tasks complete. Auto-review at the HiLL checkpoint (Touchpoint B) added 5 fix tasks (p01-t05…p01-t09) — implementing now.
+
+## Review Received: final (2026-04-10)
+
+**Date:** 2026-04-10
+**Review artifact:** `reviews/archived/2026-04-10-130658-final-code-review.md` (to be archived after findings are processed)
+**Invocation:** `auto` (Touchpoint B at the HiLL checkpoint for p01 completion)
+
+**Findings:**
+
+- Critical: 0
+- Important: 1 (I1)
+- Medium: 2 (M1, M2)
+- Minor: 3 (m1, m2, m3)
+
+**Disposition (auto-disposition mode):**
+
+| ID  | Severity  | Disposition | Fix task | Rationale                                                                                                   |
+| --- | --------- | ----------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| I1  | Important | convert     | p01-t05  | PR-scoped skill version bump required by AGENTS.md skills_system.                                           |
+| M1  | Medium    | convert     | p01-t06  | Plan explicitly listed the unit-test files; close the gap.                                                  |
+| M2  | Medium    | convert     | p01-t07  | Pre-merge write-path dry-run smoke, no sample artifact.                                                     |
+| m1  | Minor     | convert     | p01-t08  | Robustness fix for Step 0 under strict shell modes; bounded change.                                         |
+| m2  | Minor     | convert     | p01-t09  | Troubleshooting note only; no re-architecture.                                                              |
+| m3  | Minor     | defer       | —        | Reviewer explicit recommendation: "Leave as-is for convention consistency... No action required." Deferred. |
+
+**New tasks added:** p01-t05, p01-t06, p01-t07, p01-t08, p01-t09
+
+**Review cycle:** 1 of 3
+
+**Next:** Execute fix tasks via the oat-project-implement sequential loop, then re-run `oat-project-review-provide code final` for a re-review until scope `final` passes.
 
 **What changed (high level):**
 
