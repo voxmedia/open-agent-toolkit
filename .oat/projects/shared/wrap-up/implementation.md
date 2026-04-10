@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -48,9 +48,9 @@ Reference for full rationale: `/Users/thomas.stang/.claude/plans/luminous-greeti
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 1/4       |
+| Phase 1 | in_progress | 4     | 2/4       |
 
-**Total:** 1/4 tasks completed
+**Total:** 2/4 tasks completed
 
 ---
 
@@ -117,12 +117,42 @@ Reference for full rationale: `/Users/thomas.stang/.claude/plans/luminous-greeti
 
 ### Task p01-t02: Author oat-wrap-up skill via create-oat-skill
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7619c58
 
-**Notes:**
+**Outcome:**
 
-- {Notes will be added during implementation}
+- New canonical skill at `.agents/skills/oat-wrap-up/SKILL.md` (version `1.0.0`, manual + model-invocable) with full OAT conventions: mode assertion, `OAT ▸ WRAP-UP` progress banner, 9 step indicators printed at the start of each step, prerequisite warning, runtime-portable tool set.
+- Documents the 11-step algorithm (prerequisite check → resolve inputs → resolve config → discover summaries from 3 local locations → parse+filter by `oat_last_updated` → dedupe by project → fetch merged PRs via `gh api graphql` → cross-reference PRs to summaries → synthesize report → write to file or stdout → final banner).
+- Two reference files: `references/report-template.md` (markdown skeleton for synthesis with section-omission rules and synthesis guidance) and `references/automation-recipes.md` (Claude Code `CronCreate`, Codex host scheduling, plain cron + systemd timer patterns).
+- Skill falls back to `.oat/repo/reference/wrap-ups` when `archive.wrapUpExportPath` is unset (matches the consumer-applies-default pattern from the `archive.summaryExportPath` sibling).
+- Prerequisite hint: if `archive.s3Uri` is configured and `.oat/projects/archived/` has no `.oat-archive-source.json` files, the skill warns the user to run `oat project archive sync` first. Does NOT auto-invoke sync.
+- Synced to provider views (`.claude/skills/oat-wrap-up` and `.cursor/skills/oat-wrap-up`) as symlinks via `oat sync --scope all`.
+
+**Files changed:**
+
+- `.agents/skills/oat-wrap-up/SKILL.md` — new canonical skill definition.
+- `.agents/skills/oat-wrap-up/references/report-template.md` — new report skeleton.
+- `.agents/skills/oat-wrap-up/references/automation-recipes.md` — new automation recipes.
+- `.claude/skills/oat-wrap-up` — new symlink created by `oat sync`.
+- `.cursor/skills/oat-wrap-up` — new symlink created by `oat sync`.
+- `.oat/sync/manifest.json` — two new entries for the claude/cursor provider symlinks.
+
+**Verification:**
+
+- Run: `pnpm oat:validate-skills` — "OK: validated 47 oat-\* skills" (clean).
+- Run: `pnpm -s run cli -- sync --scope all` — "Sync applied successfully."
+
+**Notes / Decisions:**
+
+- **Drive-by fix in separate commit `b1a2fa9`**: the validator flagged a pre-existing violation in `oat-project-next` ("Frontmatter description must start with Use when / Run when / Trigger when" — the existing description started with "Use to continue"). This was a regression introduced by PR #8 that would have blocked `pnpm oat:validate-skills` at the p01-t04 final gate. Fixed with a one-word rephrase ("Use to continue" → "Use when continuing") in a standalone commit so the drive-by scope is explicit and not lumped into the p01-t02 work. No behavioral or routing change.
+- **Validator required `disable-model-invocation` key**: my initial draft omitted this field because I wanted both manual and model invocation. The validator requires the key to be present regardless. Added it with value `false` (explicitly allowing model invocation), which is semantically equivalent to omitting it and satisfies the contract.
+- **Linter formatting**: `oxfmt` reformatted whitespace inside YAML template braces in the skill body and aligned table columns in the report template. These are cosmetic, intentional, and already baked into commit `7619c58`.
+- **No tests**: OAT skill authoring is validated by `pnpm oat:validate-skills` rather than unit tests. The substantive verification for the skill is the end-to-end smoke in p01-t04.
+
+**Issues Encountered:**
+
+- Pre-existing `oat-project-next` validator violation blocked my phase verification. Resolved via drive-by fix (commit `b1a2fa9`).
 
 ---
 
@@ -168,24 +198,30 @@ Chronological log of implementation progress.
 **Session Start:** 17:34 UTC
 
 - [x] p01-t01: Add archive.wrapUpExportPath config key — `b31a357`
-- [ ] p01-t02: Author oat-wrap-up skill via create-oat-skill — next
+- [x] p01-t02: Author oat-wrap-up skill via create-oat-skill — `7619c58`
+  - Drive-by fix for pre-existing oat-project-next validator violation: `b1a2fa9`
+- [ ] p01-t03: Register skill for CLI distribution — next
 
 **What changed (high level):**
 
-- New shared-config key `archive.wrapUpExportPath` is fully wired through the CLI config command surface. The forthcoming `oat-wrap-up` skill can read it via `oat config get` and write it via `oat config set`.
+- New shared-config key `archive.wrapUpExportPath` is fully wired through the CLI config command surface.
+- New canonical skill `oat-wrap-up` authored under `.agents/skills/oat-wrap-up/` with SKILL.md + report-template + automation-recipes reference files. Synced to `.claude/skills/` and `.cursor/skills/` as symlinks via `oat sync --scope all`.
+- Drive-by: pre-existing `oat-project-next` description violation fixed so `pnpm oat:validate-skills` is clean (blocker for p01-t04).
 
 **Decisions:**
 
-- Default resolution behavior: `oat config get` returns empty (null) when unset, matching the sibling `archive.summaryExportPath`. The skill applies its own fallback. Alternative rejected: special-casing `getConfigValue` to return the default directly would diverge from the sibling and surprise users of the command surface.
+- Default resolution behavior for `archive.wrapUpExportPath`: `oat config get` returns empty (null) when unset, matching the sibling `archive.summaryExportPath`. The skill applies its own fallback. Alternative rejected: special-casing `getConfigValue` to return the default directly would diverge from the sibling and surprise users of the command surface.
 - Empty-string set: rejected via `normalizeSharedRoot` (no opt-out). Alternative rejected: a sentinel value would add a parser contract change for no real benefit — `--dry-run` and `--output /dev/null` already cover the "don't persist" case.
+- `disable-model-invocation: false` on the new skill to explicitly allow model-driven invocation. The validator requires the key to be present; the value `false` is the closest semantic match for the plan's "manual or model-invocable" requirement.
+- Drive-by fix for `oat-project-next` committed separately from p01-t02 so the scope is explicit and blame is clean.
 
 **Follow-ups / TODO:**
 
-- None from p01-t01.
+- None from p01-t01 or p01-t02.
 
 **Blockers:**
 
-- None.
+- None (pre-existing oat-project-next validator failure resolved via drive-by fix).
 
 **Session End:** {in progress}
 
