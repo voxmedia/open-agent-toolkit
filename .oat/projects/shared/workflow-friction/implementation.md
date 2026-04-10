@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 oat_template: false
 ---
@@ -29,11 +29,11 @@ oat_template: false
 | -------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
 | Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
-| Phase 3: Skill Integration — oat-project-complete  | in_progress | 2     | 0/2       |
+| Phase 3: Skill Integration — oat-project-complete  | in_progress | 2     | 1/2       |
 | Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 9/16 tasks completed
+**Total:** 10/16 tasks completed
 
 ---
 
@@ -408,8 +408,25 @@ oat_template: false
 
 ### Task p03-t01: Archive on complete preference
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7be5f4e
+
+**Outcome:**
+
+- `oat-project-complete` Step 2 now reads `workflow.archiveOnComplete` before presenting the batched questions
+- `true` → sets `SHOULD_ARCHIVE=true`, skips the archive question, prints `Archive on complete: enabled (from workflow.archiveOnComplete).`
+- `false` → sets `SHOULD_ARCHIVE=false`, skips the archive question, prints `Archive on complete: disabled (from workflow.archiveOnComplete).`
+- Unset → includes the archive question in the batched prompt as before (backward compatible)
+- Added an explicit note: the "Ready to mark complete?" confirmation is always asked regardless of preferences — it's a meaningful confirmation, not a preference
+- Bumped skill version 1.3.7 → 1.4.0
+
+**Files changed:**
+
+- `.agents/skills/oat-project-complete/SKILL.md` — frontmatter version bump, new "Workflow preference checks" subsection before Step 2 batched questions
+
+**Verification:**
+
+- `pnpm lint` → clean
 
 ### Task p03-t02: Create-PR-on-complete preference
 
