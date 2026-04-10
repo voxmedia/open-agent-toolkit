@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t05
-oat_last_commit: 9710c2c
+oat_current_task: null
+oat_last_commit: f392d1e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval (deferred to oat-project-implement Step 2.5)
@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-10T16:50:42.213Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-10T18:22:11.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-10T18:31:03.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all 4 original tasks of p01 complete through commit `9710c2c`. Auto-review at the HiLL checkpoint added 5 fix tasks (p01-t05…p01-t09) from findings I1, M1, M2, m1, m2 (m3 deferred). Currently at p01-t05 (bump `oat-project-next` skill version).
+Implementation — all 9 tasks of p01 complete (4 original + 5 review-fix). Final commit `f392d1e`. Reviews row `final` at `fixes_completed`; awaiting re-review (Touchpoint B cycle 2 of 3).
 
 ## Artifacts
 

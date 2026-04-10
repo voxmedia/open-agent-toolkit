@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p01-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -48,9 +48,9 @@ Reference for full rationale: `/Users/thomas.stang/.claude/plans/luminous-greeti
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 9     | 4/9       |
+| Phase 1 | in_progress | 9     | 9/9       |
 
-**Total:** 4/9 tasks completed (p01-t01…p01-t04 done; p01-t05…p01-t09 are review-fix tasks added after the auto-review at the HiLL checkpoint)
+**Total:** 9/9 tasks completed (awaiting re-review — review cycle 2 of 3)
 
 ---
 
@@ -308,7 +308,15 @@ All 4 original Phase 1 tasks complete. Auto-review at the HiLL checkpoint (Touch
 
 **Review cycle:** 1 of 3
 
-**Next:** Execute fix tasks via the oat-project-implement sequential loop, then re-run `oat-project-review-provide code final` for a re-review until scope `final` passes.
+**Fix tasks completed:**
+
+- `p01-t05` → commit `3908c04` (oat-project-next version bump to 1.0.1)
+- `p01-t06` → commit `0b9682c` (mirrored unit tests for wrapUpExportPath in oat-config.test.ts + resolve.test.ts; test count 1202 → 1205)
+- `p01-t07` → commit `60e8ff6` (write-path dry-run smoke documented; surfaced the cross-reference false-negative finding which is addressed in p01-t09)
+- `p01-t08` → commit `87ecdfd` (Step 0 `[ -d "$ARCHIVE_DIR" ]` guard with differentiated warning)
+- `p01-t09` → commit `f392d1e` (Troubleshooting notes for both false-positive AND false-negative cross-reference scenarios)
+
+**Next:** Request re-review via `oat-project-review-provide code final` (auto-dispatched as Touchpoint B cycle 2). If the re-review passes with no Critical/Important/Medium findings, the `final` Reviews row advances from `fixes_completed` → `passed` and the project proceeds to the HiLL checkpoint pause.
 
 **What changed (high level):**
 
