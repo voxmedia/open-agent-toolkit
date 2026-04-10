@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-04-07
+oat_last_updated: 2026-04-08
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -27,8 +27,8 @@ oat_template: false
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
+- [x] HiLL checkpoint confirmation deferred to first `oat-project-implement` run (quick-mode convention)
+- [x] `oat_plan_hill_phases` will be written by implement after user confirms checkpoint behavior
 
 ---
 
@@ -263,7 +263,12 @@ HILL_DEFAULT=$(oat config get workflow.hillCheckpointDefault 2>/dev/null || true
 - If `HILL_DEFAULT` is `"final"` → write `oat_plan_hill_phases: ["<last-phase-id>"]`, print "HiLL checkpoints: final only (from config)", skip prompt
 - If unset → prompt as before (no change)
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm the skill's step indicators still match actual step numbering.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-implement/SKILL.md
@@ -293,7 +298,12 @@ POST_IMPL=$(oat config get workflow.postImplementSequence 2>/dev/null || true)
 
 Print: "Post-implementation: {chosen} (from config)" when using preference.
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm the skill's step indicators still match actual step numbering.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-implement/SKILL.md
@@ -321,7 +331,12 @@ REVIEW_MODEL=$(oat config get workflow.reviewExecutionModel 2>/dev/null || true)
 - If `"inline"` → run inline
 - If unset → prompt as before
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm the skill's step indicators still match actual step numbering.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-implement/SKILL.md
@@ -347,7 +362,12 @@ AUTO_FIX=$(oat config get workflow.autoFixBookkeepingDrift 2>/dev/null || true)
 - If `"true"` → auto-fix and print "Auto-fixed bookkeeping drift (from config)"
 - If unset → prompt as before
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm the skill's step indicators still match actual step numbering.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-implement/SKILL.md
@@ -370,7 +390,12 @@ In Step 3, replace the "Resume from {task_id}, or start fresh?" prompt:
 - **Fresh start:** Only available as an explicit argument (e.g., `oat-project-implement fresh=true`). When passed, warn "Starting fresh — this will overwrite implementation.md" and proceed without asking.
 - Remove the interactive choice entirely from normal flow.
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm the skill's step indicators still match actual step numbering.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-implement/SKILL.md
@@ -411,7 +436,12 @@ The skill already has 4 "Bookkeeping commit (required):" sections with explicit 
    git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for {context}"
    ```
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm all 4 bookkeeping commit sections have consistent command patterns and DO NOT SKIP callouts.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-implement/SKILL.md
@@ -442,7 +472,12 @@ ARCHIVE_PREF=$(oat config get workflow.archiveOnComplete 2>/dev/null || true)
 
 Note: The "Ready to mark complete?" question (Question 1) should still be asked — it's a meaningful confirmation, not a preference.
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm the skill's step indicators still match actual step numbering.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-complete/SKILL.md
@@ -472,7 +507,12 @@ PR_ON_COMPLETE=$(oat config get workflow.createPrOnComplete 2>/dev/null || true)
 - If unset → ask as before
 - Still skip entirely if `oat_pr_status: open` (existing behavior preserved)
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm the skill's step indicators still match actual step numbering.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-complete/SKILL.md
@@ -501,7 +541,12 @@ AUTO_NARROW=$(oat config get workflow.autoNarrowReReviewScope 2>/dev/null || tru
 - If `"false"` → use full scope, print "Re-review scope: full (from config)"
 - If unset → prompt as before
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm the skill's step indicators still match actual step numbering.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-review-provide/SKILL.md
@@ -551,7 +596,12 @@ Also add to the Success Criteria section:
 - ✅ All artifact updates are committed before the skill exits
 ```
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm the new step number doesn't conflict with existing step numbering.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-review-receive/SKILL.md
@@ -595,7 +645,12 @@ Also add to the Success Criteria / Output Contract:
 - ✅ All artifact updates are committed before the skill exits
 ```
 
-**Step 1: Commit**
+**Step 1: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: No errors. Manually confirm the new step number doesn't conflict with existing step numbering.
+
+**Step 2: Commit**
 
 ```bash
 git add .agents/skills/oat-project-review-receive-remote/SKILL.md
@@ -631,15 +686,22 @@ git commit -m "fix(p04-t03): add required bookkeeping commit step to review-rece
 
 **Note:** Bundled docs at `~/.oat/docs/` are read-only reference. The source docs that get bundled live in `apps/oat-docs/`. Update the source docs, and they'll be bundled on next `oat init tools`.
 
+4. Document the relationship between the existing top-level `autoReviewAtCheckpoints` key and the new `workflow.*` namespace. Explain that `autoReviewAtCheckpoints` is not being migrated under `workflow.*` for backward compatibility, and clarify which key controls what.
+
 **Step 1: Identify source doc files**
 
 Find the actual source files in `apps/oat-docs/` that correspond to the bundled docs.
 
 **Step 2: Update source docs**
 
-Add workflow preferences documentation.
+Add workflow preferences documentation including the `autoReviewAtCheckpoints` relationship note.
 
-**Step 3: Commit**
+**Step 3: Verify**
+
+Run: `pnpm build:docs`
+Expected: Docs build succeeds with no errors.
+
+**Step 4: Commit**
 
 ```bash
 git add apps/oat-docs/
@@ -654,7 +716,9 @@ git commit -m "docs(p05-t01): document workflow preference config keys"
 
 - (Already covered in p01-t02, but verify completeness here)
 
-**Verify:** Run `oat config describe` and confirm all workflow keys appear with:
+**Step 1: Verify**
+
+Run: `oat config describe` and confirm all workflow keys appear with:
 
 - Correct group ("Shared Repo" or "Repo Local" depending on surface)
 - Accurate descriptions
@@ -662,19 +726,24 @@ git commit -m "docs(p05-t01): document workflow preference config keys"
 - Correct default values
 - Correct owning command (`oat config set`)
 
+Run: `oat config set workflow.archiveOnComplete true && oat config get workflow.archiveOnComplete`
+Expected: Returns `true` with source `config.local.json`
+
 ---
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                   |
-| ----- | -------- | -------- | ---------- | ------------------------------------------ |
-| p01   | code     | pending  | -          | -                                          |
-| p02   | code     | pending  | -          | -                                          |
-| p03   | code     | pending  | -          | -                                          |
-| p04   | code     | pending  | -          | -                                          |
-| p05   | code     | pending  | -          | -                                          |
-| final | code     | pending  | -          | -                                          |
-| plan  | artifact | received | 2026-04-08 | reviews/artifact-plan-review-2026-04-08.md |
+| Scope  | Type     | Status  | Date       | Artifact                                            |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                   |
+| p02    | code     | pending | -          | -                                                   |
+| p03    | code     | pending | -          | -                                                   |
+| p04    | code     | pending | -          | -                                                   |
+| p05    | code     | pending | -          | -                                                   |
+| final  | code     | pending | -          | -                                                   |
+| spec   | artifact | n/a     | -          | -                                                   |
+| design | artifact | n/a     | -          | -                                                   |
+| plan   | artifact | passed  | 2026-04-08 | reviews/archived/artifact-plan-review-2026-04-08.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
