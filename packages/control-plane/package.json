@@ -13,8 +13,8 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf dist",
+    "build": "tsc && tsc-alias",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "dev": "tsc --watch",
     "lint": "oxlint .",
     "format": "oxfmt --check .",
@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "tsc-alias": "^1.8.10",
     "typescript": "^5.8.3",
     "vitest": "^4.0.18"
   },
