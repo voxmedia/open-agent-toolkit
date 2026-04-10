@@ -355,9 +355,9 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Notes                                                                                      |
-| ----- | --------- | ------ | ------ | ------------------------------------------------------------------------------------------ |
-| 1     | 1202      | 1202   | 0      | Plus `pnpm oat:validate-skills` (47/47) and `pnpm release:validate` (4/4 public packages). |
+| Phase | Tests Run | Passed | Failed | Notes                                                                                                                                                                                                       |
+| ----- | --------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | 1208      | 1208   | 0      | Final post-rebase count: 1205 from p01-t01..t09 + 3 picked up from origin/main's 426a4e2. Plus `pnpm oat:validate-skills` (47/47) and `pnpm release:validate` (4/4 public packages at 0.0.27 after rebase). |
 
 ## Final Summary (for PR/docs)
 
