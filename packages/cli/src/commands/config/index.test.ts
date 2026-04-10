@@ -882,7 +882,7 @@ describe('oat config', () => {
 
       expect(capture.info[0]).toContain('Key: workflow.hillCheckpointDefault');
       expect(capture.info[0]).toContain('every | final');
-      expect(capture.info[0]).toContain('Default: null');
+      expect(capture.info[0]).toContain('Default: unset');
       expect(capture.info[0]).toContain(
         'Owning command: oat config set workflow.hillCheckpointDefault',
       );
@@ -897,7 +897,7 @@ describe('oat config', () => {
 
       expect(capture.info[0]).toContain('Key: workflow.archiveOnComplete');
       expect(capture.info[0]).toContain('Type: boolean');
-      expect(capture.info[0]).toContain('Default: null');
+      expect(capture.info[0]).toContain('Default: unset');
       expect(process.exitCode).toBe(0);
     });
 

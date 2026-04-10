@@ -393,7 +393,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
     type: 'every | final',
-    defaultValue: 'null',
+    defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.hillCheckpointDefault <value>',
     description:
@@ -405,7 +405,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
     type: 'boolean',
-    defaultValue: 'null',
+    defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.archiveOnComplete <true|false>',
     description:
@@ -417,7 +417,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
     type: 'boolean',
-    defaultValue: 'null',
+    defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.createPrOnComplete <true|false>',
     description:
@@ -429,7 +429,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
     type: 'wait | summary | pr | docs-pr',
-    defaultValue: 'null',
+    defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.postImplementSequence <value>',
     description:
@@ -441,7 +441,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
     type: 'subagent | inline | fresh-session',
-    defaultValue: 'null',
+    defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.reviewExecutionModel <value>',
     description:
@@ -453,7 +453,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
     type: 'boolean',
-    defaultValue: 'null',
+    defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand:
       'oat config set workflow.autoNarrowReReviewScope <true|false>',
