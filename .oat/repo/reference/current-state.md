@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-04-10
+**Last Updated:** 2026-04-10 (workflow-friction project landed workflow preference config + review-receive drift fix)
 
 ## Canonical References
 
@@ -87,6 +87,12 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - `oat-project-complete` suppresses the duplicate "Open a PR?" prompt when `oat_pr_status: open` is already present
 - `oat-project-pr-final` and `oat-project-complete` both auto-refresh `summary.md` when it is missing or stale
 
+### Cross-agent Bookkeeping Integrity
+
+- `oat-project-review-receive` and `oat-project-review-receive-remote` now require an atomic bookkeeping commit before the skill exits. The commit stages `plan.md`, `implementation.md`, `state.md`, and the project's `reviews/` directory (to capture the Step 7.5 archive move when the archive path is tracked).
+- This closes the primary cause of cross-agent state drift: when a subagent ran a receive skill in isolation, it used to leave project tracking files dirty for the original agent to discover on return. The required commit is scoped (no `git add -A`) and worktree-aware.
+- `oat-project-implement` bookkeeping commits carry CRITICAL / DO NOT SKIP callouts across all four required commit points (per-task, review-fix completion, phase boundary, implementation complete).
+
 ### Documentation Analysis (Utility)
 
 - `oat-docs-analyze` (evaluate documentation structure, navigation, and coverage against the OAT docs app contract; severity-rated analysis artifacts)
@@ -161,10 +167,18 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat init --scope project` prompts for provider selection in interactive mode.
   - `oat sync --scope project` performs config-aware provider activation and mismatch remediation (interactive prompt in TTY mode, warning + remediation guidance in non-interactive mode).
 - Non-sync config model:
-  - Shared repo settings live in `.oat/config.json`, including `projects.root`, `worktrees.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, and `tools.*`.
-  - Repo-local state lives in `.oat/config.local.json`, including `activeProject`, `lastPausedProject`, and repo-scoped `activeIdea`.
+  - Shared repo settings live in `.oat/config.json`, including `projects.root`, `worktrees.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, `tools.*`, and `workflow.*`.
+  - Repo-local state lives in `.oat/config.local.json`, including `activeProject`, `lastPausedProject`, repo-scoped `activeIdea`, and repo-scoped `workflow.*` overrides.
+  - User-level state lives in `~/.oat/config.json` and includes global `activeIdea` fallback plus personal `workflow.*` defaults.
   - `oat config describe` exposes shared repo, repo-local, user, and sync/provider config ownership from one command surface.
+  - `oat config get` resolves all keys through `resolveEffectiveConfig()` with 3-layer precedence (`env > local > shared > user > default`) and emits source labels `env`/`local`/`shared`/`user`/`default` for consistency with `oat config dump` output.
+  - `oat config set` accepts mutually exclusive `--shared`/`--local`/`--user` surface flags with per-key restrictions (structural keys shared-only, state keys local-only except `activeIdea` which also accepts user, workflow keys accept all three).
   - Tool-pack lifecycle commands now persist pack availability in `tools.<pack>` so workflows can use an explicit config signal instead of inferring installed capability from filesystem artifacts alone.
+- Workflow preferences (`workflow.*`):
+  - Six user-facing workflow preference keys skip repetitive prompts in project lifecycle skills when set: `workflow.hillCheckpointDefault`, `workflow.archiveOnComplete`, `workflow.createPrOnComplete`, `workflow.postImplementSequence`, `workflow.reviewExecutionModel`, `workflow.autoNarrowReReviewScope`.
+  - Skills check the relevant preference before prompting. When set, they print `"<preference>: <value> (from <key>)"` so the user can see the preference was used; when unset, they prompt as before (backward compatible).
+  - Skill integrations: `oat-project-implement` (hillCheckpoint, postImplementSequence, reviewExecutionModel), `oat-project-complete` (archive, createPr), `oat-project-review-provide` (autoNarrow).
+  - Cross-surface guidance: preferences whose correctness depends on other per-repo settings (e.g., `postImplementSequence` depends on `documentation.requireForProjectCompletion`) belong at shared scope; purely personal preferences (e.g., `hillCheckpointDefault`) belong at user scope.
 - Supported providers: Claude Code, Cursor, Codex CLI, GitHub Copilot, Gemini CLI.
 - Codex TOML sync:
   - Canonical agent parser/renderer (`agents/canonical/`) converts markdown agent definitions to/from structured format.

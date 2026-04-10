@@ -39,3 +39,28 @@ Notable inspection commands introduced in the current CLI surface:
 - `oat config dump --json` - merged config with source attribution
 - `oat project status --json` - full parsed state for the active tracked project
 - `oat project list --json` - summary state for tracked projects under the configured projects root
+
+## `oat config` surface flags
+
+`oat config set` supports mutually exclusive surface flags that control which config file receives the write:
+
+- `--shared` — write to `.oat/config.json` (committed team repo settings)
+- `--local` — write to `.oat/config.local.json` (per-developer repo state, gitignored)
+- `--user` — write to `~/.oat/config.json` (user-level fallback, applies across all repos)
+
+When no flag is passed, the CLI picks a sensible default per key type: structural keys (`projects.root`, `documentation.*`, etc.) go to shared, state keys (`activeProject`, etc.) go to local, workflow preferences (`workflow.*`) go to local. Pass at most one flag — the command rejects multiple surface flags.
+
+Per-key restrictions apply: structural keys can only be written at shared scope, most state keys can only be written at local scope (`activeIdea` is the exception — it accepts both local and user), and `autoReviewAtCheckpoints` remains shared-only. Workflow preference keys accept any non-auto surface.
+
+## `workflow.*` preference keys
+
+The `workflow.*` namespace holds user-facing workflow preferences that let you answer repetitive confirmation prompts once and have OAT skills respect the answer automatically. Six keys:
+
+- `workflow.hillCheckpointDefault` (`every` | `final`) — default HiLL checkpoint behavior in `oat-project-implement`
+- `workflow.archiveOnComplete` (`boolean`) — skip the archive prompt in `oat-project-complete`
+- `workflow.createPrOnComplete` (`boolean`) — skip the "Open a PR?" prompt in `oat-project-complete`
+- `workflow.postImplementSequence` (`wait` | `summary` | `pr` | `docs-pr`) — post-implementation chaining behavior
+- `workflow.reviewExecutionModel` (`subagent` | `inline` | `fresh-session`) — default final-review execution model
+- `workflow.autoNarrowReReviewScope` (`boolean`) — auto-narrow re-review scope to fix-task commits
+
+All six keys resolve through the 3-layer precedence chain (`env > local > shared > user > default`). See [Workflow preferences in the Configuration guide](../cli-utilities/configuration.md#workflow-preferences-workflow) for full descriptions, surface guidance, and cross-repo foot-gun examples.
