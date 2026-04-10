@@ -365,19 +365,209 @@ Otherwise, no commit for this task.
 
 ---
 
+### Task p01-t05: (review-final) Bump oat-project-next skill version
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-next/SKILL.md` (frontmatter line 3)
+
+**Step 1: Understand the issue**
+
+Finding **I1** from the `code final` review (see `reviews/archived/2026-04-10-130658-final-code-review.md`). The drive-by description fix in commit `b1a2fa9` modified a canonical SKILL.md without bumping its frontmatter `version:`. `AGENTS.md` `skills_system` requires a PR-scoped version bump for any canonical SKILL.md edit in the final PR diff, regardless of whether the change is behavioral.
+
+**Step 2: Implement fix**
+
+Change `version: 1.0.0` → `version: 1.0.1` in `.agents/skills/oat-project-next/SKILL.md` frontmatter. Patch bump matches the cosmetic nature of the fix.
+
+**Step 3: Verify**
+
+```bash
+head -10 .agents/skills/oat-project-next/SKILL.md
+pnpm oat:validate-skills
+```
+
+Expected: version shows `1.0.1`; validator still "OK: validated 47 oat-\* skills".
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-next/SKILL.md
+git commit -m "fix(p01-t05): bump oat-project-next skill version for drive-by description fix"
+```
+
+---
+
+### Task p01-t06: (review-final) Add mirrored unit tests for archive.wrapUpExportPath
+
+**Files:**
+
+- Modify: `packages/cli/src/config/oat-config.test.ts`
+- Modify: `packages/cli/src/config/resolve.test.ts`
+
+**Step 1: Understand the issue**
+
+Finding **M1** from the `code final` review. The plan's p01-t01 listed `oat-config.test.ts` as a file to modify, but the delivered coverage lived only in `config/index.test.ts` (integration via round-trip). The normalization branch in `oat-config.ts` and the default entry in `resolve.ts` need direct unit-level coverage mirroring `summaryExportPath`.
+
+**Step 2: Implement fix**
+
+1. In `packages/cli/src/config/oat-config.test.ts`, after the existing `summaryExportPath` cases, add a `normalizeOatConfig` test:
+   - Parse a config with `{ archive: { wrapUpExportPath: ' foo/bar/ ' } }`
+   - Assert the normalized result has `archive.wrapUpExportPath === 'foo/bar'` (trim + trailing-slash strip + `normalizeToPosixPath`)
+2. In `packages/cli/src/config/resolve.test.ts`, extend the existing default-values test (or add a new one) to assert that `resolveEffectiveConfig` returns `result.resolved['archive.wrapUpExportPath']` equal to `{ value: null, source: 'default' }` when unset.
+
+**Step 3: Verify**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- --run src/config/oat-config.test.ts src/config/resolve.test.ts
+pnpm --filter @open-agent-toolkit/cli lint
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+Expected: both test files pass including the new assertions; lint + type-check clean.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/config/oat-config.test.ts packages/cli/src/config/resolve.test.ts
+git commit -m "test(p01-t06): add mirrored unit tests for archive.wrapUpExportPath"
+```
+
+---
+
+### Task p01-t07: (review-final) Run deferred write-path dry-run smoke
+
+**Files:**
+
+- Modify: `.oat/projects/shared/wrap-up/implementation.md` (Final Summary section — document the smoke results)
+
+**Step 1: Understand the issue**
+
+Finding **M2** from the `code final` review. The write-path portion of the skill's algorithm (steps 7-9: cross-reference, synthesize, write/stdout) was not exercised in the p01-t04 partial smoke. Close the coverage gap by executing the full algorithm with `--dry-run` (stdout only, no sample artifact written to the repo).
+
+**Step 2: Implement fix**
+
+Follow the `oat-wrap-up` SKILL.md 11-step algorithm end-to-end against this repo with the equivalent of `/oat-wrap-up --past-week --dry-run`:
+
+- Execute Steps 0-9 (steps 0-6 were already verified in p01-t04 — extend through steps 7, 8, 9 this time)
+- Capture the final banner line (should match `OAT ▸ WRAP-UP ▸ DONE — <N> summaries + <M> PRs → stdout (dry-run)`)
+- Sanity check: TL;DR section should be grammatically coherent and mention real project names from the window; Shipped-via-OAT table should list real PRs with real authors; Other-merged-PRs table should be populated with remaining PRs from the window
+- Paste the synthesized report (or at least its TL;DR + section headers + banner) into `implementation.md` under "Write-path smoke (p01-t07)"
+
+Do **not** write any file under `.oat/repo/reference/wrap-ups/` — `--dry-run` semantics require stdout only.
+
+**Step 3: Verify**
+
+- Final banner fires with correct format and non-zero counts
+- TL;DR is coherent and repo-accurate
+- Shipped-via-OAT partition contains summaries whose PRs are actually linkable
+- Other-merged-PRs partition contains the rest
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/wrap-up/implementation.md
+git commit -m "docs(p01-t07): document write-path dry-run smoke results"
+```
+
+---
+
+### Task p01-t08: (review-final) Guard oat-wrap-up Step 0 find against missing ARCHIVE_DIR
+
+**Files:**
+
+- Modify: `.agents/skills/oat-wrap-up/SKILL.md` (Step 0 bash snippet)
+
+**Step 1: Understand the issue**
+
+Finding **m1** from the `code final` review. The Step 0 prerequisite-warning snippet runs `find "$ARCHIVE_DIR" -maxdepth 2 ...` without first checking whether `ARCHIVE_DIR` exists. Under strict shells with `set -o pipefail` inherited from a parent shell, the behavior could diverge. Add a directory-existence guard and emit a clearer warning when the directory is missing entirely.
+
+**Step 2: Implement fix**
+
+Replace the current Step 0 `if [ -n "$S3_URI" ]; then ... fi` block with a guarded version:
+
+```bash
+if [ -n "$S3_URI" ] && [ -d "$ARCHIVE_DIR" ]; then
+  if ! find "$ARCHIVE_DIR" -maxdepth 2 -name '.oat-archive-source.json' 2>/dev/null | grep -q . ; then
+    printf '⚠️  archive.s3Uri is configured but no archived snapshots are hydrated locally.\n'
+    printf '    Run "oat project archive sync" first so teammates archived projects are visible to the wrap-up.\n'
+    printf '    (Proceeding with active projects and the version-controlled summaries directory only.)\n'
+  fi
+elif [ -n "$S3_URI" ]; then
+  printf '⚠️  archive.s3Uri is configured but %s does not exist.\n' "$ARCHIVE_DIR"
+  printf '    Run "oat project archive sync" first so archived projects are available.\n'
+fi
+```
+
+No skill version bump — per `AGENTS.md` `skills_system` PR-scoped rule, the initial `1.0.0` for a new skill counts as the single bump for this PR.
+
+**Step 3: Verify**
+
+```bash
+pnpm oat:validate-skills
+```
+
+Expected: "OK: validated 47 oat-\* skills" (still clean).
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-wrap-up/SKILL.md
+git commit -m "fix(p01-t08): guard oat-wrap-up Step 0 find against missing archive directory"
+```
+
+---
+
+### Task p01-t09: (review-final) Document cross-reference false-positive limitation
+
+**Files:**
+
+- Modify: `.agents/skills/oat-wrap-up/SKILL.md` (Troubleshooting section)
+
+**Step 1: Understand the issue**
+
+Finding **m2** from the `code final` review. The Step 7 cross-reference logic scans summary bodies for `#<number>` patterns to map PRs to projects, which can false-positive against heading anchors, footnote markers, or legacy issue numbers. Document as a known v1 limitation in Troubleshooting per reviewer recommendation — do not re-architect.
+
+**Step 2: Implement fix**
+
+Add a new Troubleshooting entry to `.agents/skills/oat-wrap-up/SKILL.md`:
+
+```markdown
+**A PR was partitioned into "Shipped via OAT projects" but the narrative does not mention it (or vice versa):**
+
+- Step 7's cross-reference logic scans summary bodies for `#<number>` patterns, `github.com/.../pull/<number>` URLs, and bare PR numbers adjacent to keywords like "PR" or "merged". This is advisory and can false-positive when a summary references a heading anchor like `#42` or a legacy issue number that happens to match a PR number in the window.
+- If the synthesized report puts a PR in the wrong bucket, the fix is manual: re-read the summary that claims the PR and the PR's actual body. If the connection is incorrect, move the PR row from "Shipped via OAT projects" to "Other merged PRs" by hand and delete the entry from any feature/bug/capability bullets that cite it. For v1 this is a known limitation; future versions may add stricter matching heuristics.
+```
+
+**Step 3: Verify**
+
+```bash
+pnpm oat:validate-skills
+```
+
+Expected: clean.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-wrap-up/SKILL.md
+git commit -m "docs(p01-t09): note cross-reference false-positive limitation in oat-wrap-up troubleshooting"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                |
-| ------ | -------- | --------------- | ---------- | --------------------------------------- |
-| p01    | code     | pending         | -          | -                                       |
-| final  | code     | pending         | -          | -                                       |
-| spec   | artifact | pending         | -          | -                                       |
-| design | artifact | pending         | -          | -                                       |
-| plan   | artifact | fixes_completed | 2026-04-10 | external (inline review pasted by user) |
+| Scope  | Type     | Status          | Date       | Artifact                                                |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                       |
+| final  | code     | fixes_added     | 2026-04-10 | reviews/archived/2026-04-10-130658-final-code-review.md |
+| spec   | artifact | pending         | -          | -                                                       |
+| design | artifact | pending         | -          | -                                                       |
+| plan   | artifact | fixes_completed | 2026-04-10 | external (inline review pasted by user)                 |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -396,11 +586,21 @@ Note: the `plan` review row records a plan-shape critique received inline (not v
 
 **Summary:**
 
-- Phase 1: 4 tasks — `oat-wrap-up` skill (config key + full config-command wiring, SKILL + references, CLI distribution wiring, end-to-end smoke)
+- Phase 1: 9 tasks — 4 original (`oat-wrap-up` skill: config key + full config-command wiring, SKILL + references, CLI distribution wiring, end-to-end smoke) + 5 review-fix tasks from the auto-review at the HiLL checkpoint (scope `final`).
 
-**Total: 4 tasks**
+**Review-fix breakdown (p01-t05 → p01-t09):**
 
-Ready for code review and merge. Ships as a single PR. Cross-teammate visibility comes from the **existing** `oat project archive sync` command, documented as a prerequisite in the skill itself — no new CLI command ships in this project.
+- `p01-t05` (I1, Important): bump `oat-project-next` skill version per AGENTS.md skills_system PR-scoped rule.
+- `p01-t06` (M1, Medium): add mirrored unit tests for `wrapUpExportPath` in `oat-config.test.ts` and `resolve.test.ts`.
+- `p01-t07` (M2, Medium): run deferred write-path `--dry-run` smoke and document results in implementation.md.
+- `p01-t08` (m1, Minor): guard `oat-wrap-up` Step 0 `find` against missing archive directory.
+- `p01-t09` (m2, Minor): document cross-reference false-positive limitation in `oat-wrap-up` Troubleshooting.
+
+Minor finding **m3** (unused `AskUserQuestion` declaration) was deferred per reviewer recommendation ("Leave as-is for convention consistency... No action required").
+
+**Total: 9 tasks**
+
+Ready for code review and merge after the review-fix tasks pass a re-review. Ships as a single PR. Cross-teammate visibility comes from the **existing** `oat project archive sync` command, documented as a prerequisite in the skill itself — no new CLI command ships in this project.
 
 ---
 
