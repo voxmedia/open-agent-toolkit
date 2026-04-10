@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: null
+oat_current_task_id: prev2-t01
 oat_generated: false
 oat_template: false
 ---
@@ -25,16 +25,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase                                              | Status   | Tasks | Completed |
-| -------------------------------------------------- | -------- | ----- | --------- |
-| Phase 1: Config System Extension                   | complete | 4     | 4/4       |
-| Phase 2: Skill Integration — oat-project-implement | complete | 5     | 5/5       |
-| Phase 3: Skill Integration — oat-project-complete  | complete | 2     | 2/2       |
-| Phase 4: Skill Integration — Review Skills         | complete | 3     | 3/3       |
-| Phase 5: Documentation and Bundled Docs Update     | complete | 2     | 2/2       |
-| Revision Phase p-rev1: Final Review Fixes          | complete | 8     | 8/8       |
+| Phase                                              | Status      | Tasks | Completed |
+| -------------------------------------------------- | ----------- | ----- | --------- |
+| Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
+| Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
+| Phase 3: Skill Integration — oat-project-complete  | complete    | 2     | 2/2       |
+| Phase 4: Skill Integration — Review Skills         | complete    | 3     | 3/3       |
+| Phase 5: Documentation and Bundled Docs Update     | complete    | 2     | 2/2       |
+| Revision Phase p-rev1: Final Review Fixes          | complete    | 8     | 8/8       |
+| Revision Phase p-rev2: Re-Review Polish            | in_progress | 1     | 0/1       |
 
-**Total:** 24/24 tasks completed (16 plan + 8 revision)
+**Total:** 24/25 tasks completed (16 plan + 8 rev1 + 1 rev2)
 
 ---
 
@@ -672,6 +673,40 @@ oat_template: false
 **Auto-disposition rationale:** All Important findings require action. 5 of 6 Minor findings are in-scope (doc/description fixes and readability improvements) so they are converted per auto-disposition mode. The comma-handling minor is a pre-existing latent edge case explicitly marked "no action needed" by the reviewer, so it is deferred with rationale.
 
 **Next:** Request re-review. All 8 `prev1-t*` fix tasks are complete (2026-04-10), plan.md Reviews final row moved to `fixes_completed`. Re-review should be narrowed to the prev1 fix-task commits via `oat-project-review-provide code final` — the re-review-scope-narrowing prompt will activate because `(review)` fix tasks with completed status exist.
+
+**Update (2026-04-10 later same day):** Re-review complete. See "Review Received: final (v2)" section below.
+
+---
+
+## Review Received: final (v2)
+
+**Date:** 2026-04-10
+**Review artifact:** `reviews/archived/final-review-2026-04-07-v2.md`
+**Invocation:** auto (narrowed re-review of prev1 fix-task commits)
+**Cycle:** 2 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1 (converted)
+
+**Converted to fix task:**
+
+- `prev2-t01` — Fix stale `owningCommand` on user-surface `activeIdea` catalog row (incidental drift from prev1-t03)
+
+**Auto-disposition rationale:** 0 Critical/Important/Medium. The single Minor is in-scope documentation polish (literally a 1-line string edit) directly caused by the prev1-t03 fix, so it gets auto-converted per auto-mode rules. Reviewer explicitly noted "it can ride in this PR as a one-line polish" and confirmed the review passes overall.
+
+**Regression check from re-review:**
+
+- All I1/I2/I3 important findings: resolved ✓
+- All 5 converted minors (prev1-t04..t08): resolved ✓
+- No new regressions from prev1 fix commits
+- Tests 1230/1230 passing, lint clean, type-check clean
+- Docs anchor `#workflow-preferences-workflow` verified in built HTML
+
+**Next:** Execute prev2-t01 via `oat-project-implement`. After the 1-line fix, mark `final` review as `passed` directly — no additional re-review cycle is needed for documentation-only polish with zero behavior change.
 
 ---
 

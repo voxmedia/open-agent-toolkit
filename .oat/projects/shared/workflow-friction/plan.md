@@ -1169,19 +1169,57 @@ git commit -m "docs(prev1-t08): fix workflow preferences section anchor in lifec
 
 ---
 
+## Revision Phase p-rev2: Re-Review Polish
+
+Single fix task from `final-review-2026-04-07-v2.md` re-review (0 important, 1 minor).
+
+### Task prev2-t01: (review) Fix stale owningCommand on activeIdea user catalog row
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+
+**Step 1: Understand the issue**
+
+Re-review finding: The prev1-t03 fix correctly made `oat config set activeIdea <value> --user` a supported command, but the corresponding user-surface catalog row still says `owningCommand: 'user config APIs (not surfaced via oat config set)'`. Verified via `oat config describe activeIdea`: the user row still prints the stale text. Users may interpret this as "I can't set this via the CLI" when in fact they can.
+
+**Step 2: Implement fix**
+
+Update the user-surface `activeIdea` catalog entry (`packages/cli/src/commands/config/index.ts:378-389`):
+
+- Change `owningCommand` from `'user config APIs (not surfaced via oat config set)'` to `'oat config set activeIdea <value> --user'` to match the now-working command
+- Optionally tighten the `description` to mention that the user-level row is the fallback used when the repo-local `activeIdea` is unset
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: Clean (no tests assert on the stale text, so this should pass without test updates)
+
+Run: `pnpm run cli -- config describe activeIdea`
+Expected: User-scope row shows `Owning command: oat config set activeIdea <value> --user`
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.ts
+git commit -m "docs(prev2-t01): fix stale owningCommand on activeIdea user catalog row"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                            |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                   |
-| p02    | code     | pending         | -          | -                                                   |
-| p03    | code     | pending         | -          | -                                                   |
-| p04    | code     | pending         | -          | -                                                   |
-| p05    | code     | pending         | -          | -                                                   |
-| final  | code     | fixes_completed | 2026-04-10 | reviews/archived/final-review-2026-04-07.md         |
-| spec   | artifact | n/a             | -          | -                                                   |
-| design | artifact | n/a             | -          | -                                                   |
-| plan   | artifact | passed          | 2026-04-08 | reviews/archived/artifact-plan-review-2026-04-08.md |
+| Scope  | Type     | Status      | Date       | Artifact                                            |
+| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                   |
+| p02    | code     | pending     | -          | -                                                   |
+| p03    | code     | pending     | -          | -                                                   |
+| p04    | code     | pending     | -          | -                                                   |
+| p05    | code     | pending     | -          | -                                                   |
+| final  | code     | fixes_added | 2026-04-10 | reviews/archived/final-review-2026-04-07-v2.md      |
+| spec   | artifact | n/a         | -          | -                                                   |
+| design | artifact | n/a         | -          | -                                                   |
+| plan   | artifact | passed      | 2026-04-08 | reviews/archived/artifact-plan-review-2026-04-08.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1197,8 +1235,9 @@ git commit -m "docs(prev1-t08): fix workflow preferences section anchor in lifec
 - Phase 4: 3 tasks — Review skill integration (1 config pref + 2 bookkeeping commit fixes for review-receive and review-receive-remote)
 - Phase 5: 2 tasks — Documentation updates
 - Revision Phase p-rev1: 8 tasks — Final review fix tasks (3 important + 5 minor findings)
+- Revision Phase p-rev2: 1 task — Re-review polish (1 minor drift from prev1-t03)
 
-**Total: 24 tasks (16 plan + 8 revision)**
+**Total: 25 tasks (16 plan + 8 rev1 + 1 rev2)**
 
 Ready for code review and merge.
 

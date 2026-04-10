@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 69a7a72
+oat_current_task: prev2-t01
+oat_last_commit: c2c9963
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: []
@@ -29,7 +29,7 @@ oat_template: false
 
 ## Current Phase
 
-Implementation — revision fixes complete (8/8); awaiting re-review
+Implementation — Revision Phase p-rev2: re-review polish (0/1 fix task)
 
 ## Artifacts
 
