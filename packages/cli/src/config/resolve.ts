@@ -46,6 +46,7 @@ const DEFAULT_SHARED_CONFIG = {
     s3Uri: null,
     s3SyncOnComplete: false,
     summaryExportPath: null,
+    wrapUpExportPath: null,
   },
   documentation: {
     root: null,
