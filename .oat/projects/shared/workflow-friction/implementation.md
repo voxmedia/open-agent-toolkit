@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 oat_template: false
 ---
@@ -27,13 +27,13 @@ oat_template: false
 
 | Phase                                              | Status      | Tasks | Completed |
 | -------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1: Config System Extension                   | in_progress | 4     | 0/4       |
+| Phase 1: Config System Extension                   | in_progress | 4     | 1/4       |
 | Phase 2: Skill Integration — oat-project-implement | pending     | 5     | 0/5       |
 | Phase 3: Skill Integration — oat-project-complete  | pending     | 2     | 0/2       |
 | Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 0/16 tasks completed
+**Total:** 1/16 tasks completed
 
 ---
 
@@ -48,8 +48,34 @@ _To be filled when Phase 1 completes._
 
 ### Task p01-t01: Add OatWorkflowConfig interface to all three config surfaces
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c7524d5
+
+**Outcome:**
+
+- `OatWorkflowConfig` interface added to `oat-config.ts` with 6 preference keys
+- `workflow?: OatWorkflowConfig` added to `OatConfig`, `OatLocalConfig`, and `UserConfig` interfaces
+- `normalizeWorkflowConfig()` validates enum values and coerces booleans, drops empty objects
+- All three normalize functions (`normalizeOatConfig`, `normalizeOatLocalConfig`, `normalizeUserConfig`) wired to call workflow normalizer
+- `DEFAULT_WORKFLOW_CONFIG` added to `resolve.ts` so unset workflow keys appear in resolved output with `source: 'default'`
+
+**Files changed:**
+
+- `packages/cli/src/config/oat-config.ts` — types, normalizer, three-surface wiring
+- `packages/cli/src/config/oat-config.test.ts` — 7 new tests for workflow normalization across all three surfaces
+- `packages/cli/src/config/resolve.ts` — DEFAULT_WORKFLOW_CONFIG and merge into defaultValues
+- `packages/cli/src/config/resolve.test.ts` — 4 new tests for workflow precedence chain (default, user-only, shared-overrides-user, local-overrides-all)
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test` — 1208 passed (7 new workflow tests)
+- Run: `pnpm --filter @open-agent-toolkit/cli lint` — 0 warnings, 0 errors
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check` — clean
+
+**Notes:**
+
+- Used `as readonly string[]` cast for the enum validation `.includes()` checks since TypeScript narrows the readonly tuple too tightly
+- Decided to drop empty workflow objects in normalization (`Object.keys(next).length > 0` check) so a config with `workflow: {}` doesn't pollute the resolved view
 
 ---
 
