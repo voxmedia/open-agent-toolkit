@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -25,15 +25,15 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase                                              | Status      | Tasks | Completed |
-| -------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
-| Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
-| Phase 3: Skill Integration — oat-project-complete  | complete    | 2     | 2/2       |
-| Phase 4: Skill Integration — Review Skills         | complete    | 3     | 3/3       |
-| Phase 5: Documentation and Bundled Docs Update     | in_progress | 2     | 0/2       |
+| Phase                                              | Status   | Tasks | Completed |
+| -------------------------------------------------- | -------- | ----- | --------- |
+| Phase 1: Config System Extension                   | complete | 4     | 4/4       |
+| Phase 2: Skill Integration — oat-project-implement | complete | 5     | 5/5       |
+| Phase 3: Skill Integration — oat-project-complete  | complete | 2     | 2/2       |
+| Phase 4: Skill Integration — Review Skills         | complete | 3     | 3/3       |
+| Phase 5: Documentation and Bundled Docs Update     | complete | 2     | 2/2       |
 
-**Total:** 14/16 tasks completed
+**Total:** 16/16 tasks completed
 
 ---
 
@@ -575,8 +575,37 @@ oat_template: false
 
 ## Phase 5: Documentation and Bundled Docs Update
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-10
+**Completed:** 2026-04-10
+
+### Phase Summary
+
+**Outcome:**
+
+- `apps/oat-docs/docs/cli-utilities/configuration.md` gained a full "Workflow preferences (`workflow.*`)" section:
+  - All 6 preference keys with descriptions
+  - Three-layer resolution explanation (env > local > shared > user > default)
+  - Setting examples for `--user`, `--shared`, and default (local) surfaces
+  - Explicit "Relationship to `autoReviewAtCheckpoints`" subsection explaining why that key was not migrated under `workflow.*`
+- `apps/oat-docs/docs/workflows/projects/lifecycle.md` gained a "Reducing lifecycle friction with workflow preferences" section linking to the configuration doc
+- `oat config describe` metadata verified end-to-end for all 6 workflow keys
+
+**Key files touched:**
+
+- `apps/oat-docs/docs/cli-utilities/configuration.md`
+- `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+
+**Verification:**
+
+- `pnpm build:docs` → clean build (6/6 tasks successful)
+- `oat config describe` → shows "Workflow Preferences (3-layer: local > shared > user)" group with all 6 keys
+- `oat config describe workflow.hillCheckpointDefault` → shows full metadata with correct scope, type, default, description
+- User-level round-trip: `oat config set workflow.archiveOnComplete true --user` writes to `$HOME/.oat/config.json`, `oat config get` returns `{ value: "true", source: "user" }`
+
+**Notes:**
+
+- p05-t02 is verification-only — no file changes, just `oat config describe` run and smoke tests. Bundled as part of the Phase 5 summary commit
 
 ### Task p05-t01: Update OAT bundled docs with workflow preferences
 
@@ -585,8 +614,22 @@ oat_template: false
 
 ### Task p05-t02: Add oat config describe metadata for all workflow keys
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** (no code change — verification only)
+
+**Outcome:**
+
+- All 6 workflow keys appear under `Workflow Preferences (3-layer: local > shared > user)` group in `oat config describe`
+- Each key has complete metadata: scope `workflow`, file describing 3-layer resolution, accurate type (enum or boolean), default `null`, mutability `read/write`, owning command `oat config set <key>`, descriptive text explaining values and precedence
+- End-to-end smoke tests confirm user-level round-trip works via `HOME=/tmp/... oat config set --user`
+
+**Files changed:** none (verification-only task)
+
+**Verification:**
+
+- `oat config describe` shows the workflow group with all 6 keys
+- `oat config describe workflow.hillCheckpointDefault` shows full metadata block
+- User-level set/get round-trip returns correct value with `source: "user"`
 
 ---
 
@@ -632,7 +675,64 @@ Phase 1 builds on top of `resolveEffectiveConfig()` from PR #38 (control-plane).
 
 ## Final Summary (for PR/docs)
 
-_To be filled when implementation is complete._
+**What shipped:**
+
+- **6 new `workflow.*` config keys** that let power users set personal or team defaults once and have OAT workflow skills respect them automatically:
+  - `workflow.hillCheckpointDefault` (`every` | `final`) — default HiLL checkpoint behavior in implement
+  - `workflow.archiveOnComplete` (boolean) — skip archive prompt in complete
+  - `workflow.createPrOnComplete` (boolean) — skip PR prompt in complete
+  - `workflow.postImplementSequence` (`wait` | `summary` | `pr` | `docs-pr`) — default post-implementation chaining
+  - `workflow.reviewExecutionModel` (`subagent` | `inline` | `fresh-session`) — default review execution, with soft-preference escape hatch for fresh-session
+  - `workflow.autoNarrowReReviewScope` (boolean) — auto-narrow re-review scope in review-provide
+- **3-layer config resolution** (`env > local > shared > user > default`) powered by a refactored `getConfigValue()` that delegates to the `resolveEffectiveConfig()` utility introduced in PR #38 (control-plane). ~150 lines of duplicated per-key if-else replaced with a single delegation.
+- **`--user` / `--shared` / `--local` surface flags** on `oat config set` with per-key restrictions:
+  - Structural keys (`projects.root`, `documentation.*`, `archive.*`, etc.) remain shared-only
+  - State keys (`activeProject`, `lastPausedProject`, `activeIdea`) remain local-only
+  - Workflow keys accept any of the three surfaces; default is local
+- **Hardened bookkeeping commit enforcement** in `oat-project-implement` with a CRITICAL callout in Mode Assertion and DO NOT SKIP markers in all 4 bookkeeping commit sections
+- **Always-resume default** in `oat-project-implement` — the interactive "resume or fresh start?" prompt is removed; fresh start is now an argument-only override (`fresh=true`)
+- **Cross-agent bookkeeping drift fixed** at the root cause: `oat-project-review-receive` (new Step 7.6) and `oat-project-review-receive-remote` (new Step 6.5) now have required atomic commits of `plan.md` + `implementation.md` + `state.md` with CRITICAL / DO NOT SKIP framing
+
+**Behavioral changes (user-facing):**
+
+- `oat config get --json` and `oat config list` now show source labels as `shared` / `local` / `user` / `env` / `default` (previously `config.json` / `config.local.json` / `env` / `default`) — aligned with `oat config dump` output
+- 4 workflow skills (implement, complete, review-provide, review-receive, review-receive-remote) check workflow preferences before prompting and skip prompts when a preference is set, printing `"<preference>: <value> (from <key>)"` so the user can see the preference was used
+- `fresh-session` review model is a soft preference: prints guidance but offers escape hatches to `subagent` or `inline`
+- Implementation no longer asks whether to resume — it just resumes
+
+**Key files / modules:**
+
+- `packages/cli/src/config/oat-config.ts` — `OatWorkflowConfig` type, normalization, three-surface wiring
+- `packages/cli/src/config/resolve.ts` — `DEFAULT_WORKFLOW_CONFIG`, `DEFAULT_SHARED_CONFIG` tools defaults (regression fix)
+- `packages/cli/src/commands/config/index.ts` — ConfigKey union, CONFIG_CATALOG entries, getConfigValue refactor, setConfigValue workflow branches, surface validation, `--shared`/`--local`/`--user` flags
+- `.agents/skills/oat-project-implement/SKILL.md` — 5 edits (hill default, post-impl sequence, review model, always-resume, bookkeeping hardening) + version bump 1.2.2 → 1.3.0
+- `.agents/skills/oat-project-complete/SKILL.md` — archive + PR preferences in Step 2 + version bump 1.3.7 → 1.4.0
+- `.agents/skills/oat-project-review-provide/SKILL.md` — Step 3a preference + version bump 1.2.3 → 1.3.0
+- `.agents/skills/oat-project-review-receive/SKILL.md` — new Step 7.6 commit step + version bump 1.2.1 → 1.3.0
+- `.agents/skills/oat-project-review-receive-remote/SKILL.md` — new Step 6.5 commit step + version bump 1.2.0 → 1.3.0
+- `apps/oat-docs/docs/cli-utilities/configuration.md` — new "Workflow preferences" section with 3-layer resolution explanation and `autoReviewAtCheckpoints` relationship note
+- `apps/oat-docs/docs/workflows/projects/lifecycle.md` — new friction-reduction section linking to configuration guide
+
+**Verification performed:**
+
+- `pnpm --filter @open-agent-toolkit/cli test` → 1225 passed (net +17 new tests for workflow preferences, surface flags, 3-layer resolution, and catalog metadata)
+- `pnpm --filter @open-agent-toolkit/cli lint` → 0 warnings, 0 errors
+- `pnpm --filter @open-agent-toolkit/cli type-check` → clean
+- `pnpm build:docs` → docs build succeeds
+- `oat config describe` manually verified all workflow keys appear with correct metadata
+- 3-layer round-trip smoke test: `oat config set workflow.archiveOnComplete true --user` / `--shared` / (default local) each resolve from the correct surface via `oat config get --json`
+- Env override smoke test: `OAT_PROJECTS_ROOT=/tmp/test oat config get projects.root --json` returns source `env`
+
+**Design deltas:**
+
+- **Dropped `workflow.autoFixBookkeepingDrift`** — the original plan included this as a way to auto-fix stale state reconciliation prompts in `oat-project-implement`. During discussion we identified that the root cause was missing commits in `review-receive` skills, not a preference that users needed. Phase 4 fixes the root cause (p04-t02, p04-t03), which should make the drift scenario rare enough that prompting is correct behavior when it does happen
+- **Changed `workflow.postImplementSequence` schema** — original plan had `all` / `summary-pr` / `exit`; during discussion we realized `pr-final` already auto-generates summary, so `summary` is only meaningful as a standalone. Final schema: `wait` / `summary` / `pr` / `docs-pr`
+- **`workflow.reviewExecutionModel` fresh-session as soft preference** — original plan treated it as hard preference; during discussion we realized the agent can't actually run a review in a fresh session, so fresh-session must still offer escape hatches to subagent/inline
+- **Source label update was a user-facing minor change** — refactoring `getConfigValue()` to use `resolveEffectiveConfig()` meant the source vocabulary changed from `config.json` → `shared`, etc. The new vocabulary is consistent with `oat config dump` and clearer, and the change was deliberate
+
+**Follow-up tracked:**
+
+- `bl-281c` captures the skill→control-plane migration follow-up (replace manual state.md parsing in skills with `oat project status --json`) plus the cloud-environment gap (fall back to `npx @open-agent-toolkit/cli` when `oat` binary isn't installed). Intentionally scoped out of this project
 
 ## References
 

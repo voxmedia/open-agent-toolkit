@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: b393910
+oat_current_task: null
+oat_last_commit: c87cb6c
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: []
@@ -29,13 +29,13 @@ oat_template: false
 
 ## Current Phase
 
-Implementation — Phase 5: Documentation updates
+Implementation — tasks complete; awaiting final review
 
 ## Artifacts
 
 - [x] `discovery.md` — problem framing and research findings
 - [x] `plan.md` — implementation plan (5 phases, 16 tasks) — artifact review passed; updated 2026-04-10 with Option A config refactor (use resolveEffectiveConfig from PR #38)
-- [x] `implementation.md` — execution log (initialized 2026-04-10)
+- [x] `implementation.md` — execution log (complete: 16/16 tasks)
 
 ## Progress
 
@@ -51,4 +51,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 (config system extension), auto-review will run at p05 final checkpoint
+Final code review (auto-triggered at p05 checkpoint)
