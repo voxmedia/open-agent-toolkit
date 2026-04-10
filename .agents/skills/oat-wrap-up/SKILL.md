@@ -120,14 +120,20 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ARCHIVE_DIR="$(dirname "$PROJECTS_ROOT")/archived"
 S3_URI="$(oat config get archive.s3Uri 2>/dev/null || true)"
 
-if [ -n "$S3_URI" ]; then
+if [ -n "$S3_URI" ] && [ -d "$ARCHIVE_DIR" ]; then
   if ! find "$ARCHIVE_DIR" -maxdepth 2 -name '.oat-archive-source.json' 2>/dev/null | grep -q . ; then
     printf '⚠️  archive.s3Uri is configured but no archived snapshots are hydrated locally.\n'
     printf '    Run "oat project archive sync" first so teammates archived projects are visible to the wrap-up.\n'
     printf '    (Proceeding with active projects and the version-controlled summaries directory only.)\n'
   fi
+elif [ -n "$S3_URI" ]; then
+  printf '⚠️  archive.s3Uri is configured but %s does not exist.\n' "$ARCHIVE_DIR"
+  printf '    Run "oat project archive sync" first so archived projects are available.\n'
+  printf '    (Proceeding with active projects and the version-controlled summaries directory only.)\n'
 fi
 ```
+
+The `[ -d "$ARCHIVE_DIR" ]` guard protects against parent shells inheriting `set -o pipefail`, where `find` on a missing directory could fail the pipeline. The differentiated branch also gives clearer guidance when the directory is missing entirely versus merely empty of metadata.
 
 Do NOT block on this warning. Continue to Step 1.
 
