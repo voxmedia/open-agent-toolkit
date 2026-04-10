@@ -12,12 +12,16 @@ import {
   findForbiddenPackedPaths,
   findMissingMetadataFields,
   findMissingPackedPaths,
+  findNonPublicWorkspaceDependencySpecs,
   findWorkspaceProtocolDependencySpecs,
   getPublicPackageContracts,
 } from './public-package-contract';
 
 const cliPackageJsonPath = fileURLToPath(
   new URL('../../package.json', import.meta.url),
+);
+const controlPlanePackageJsonPath = fileURLToPath(
+  new URL('../../../control-plane/package.json', import.meta.url),
 );
 const docsConfigPackageJsonPath = fileURLToPath(
   new URL('../../../docs-config/package.json', import.meta.url),
@@ -40,18 +44,20 @@ async function readJson(path: string): Promise<Record<string, unknown>> {
 }
 
 describe('getPublicPackageContracts', () => {
-  it('defines the four public packages for the first release', () => {
+  it('defines the five public packages for release publishing', () => {
     const contracts = getPublicPackageContracts();
 
-    expect(contracts).toHaveLength(4);
+    expect(contracts).toHaveLength(5);
     expect(contracts.map((contract) => contract.publicName)).toEqual([
       '@open-agent-toolkit/cli',
+      '@open-agent-toolkit/control-plane',
       '@open-agent-toolkit/docs-config',
       '@open-agent-toolkit/docs-theme',
       '@open-agent-toolkit/docs-transforms',
     ]);
     expect(contracts.map((contract) => contract.workspaceDir)).toEqual([
       'packages/cli',
+      'packages/control-plane',
       'packages/docs-config',
       'packages/docs-theme',
       'packages/docs-transforms',
@@ -90,6 +96,15 @@ describe('getPublicPackageContracts', () => {
           'src/**',
           '**/*.test.*',
           'tsconfig.tsbuildinfo',
+        ]),
+      }),
+      expect.objectContaining({
+        publicName: '@open-agent-toolkit/control-plane',
+        role: 'support-library',
+        requiredPaths: expect.arrayContaining([
+          'dist/index.js',
+          'dist/index.d.ts',
+          'README.md',
         ]),
       }),
       expect.objectContaining({
@@ -186,6 +201,30 @@ describe('getPublicPackageContracts', () => {
     ]);
   });
 
+  it('reports packed dependencies on non-public workspace packages', () => {
+    expect(
+      findNonPublicWorkspaceDependencySpecs(
+        {
+          dependencies: {
+            '@open-agent-toolkit/control-plane': '0.0.1',
+            '@open-agent-toolkit/docs-config': '0.0.27',
+            chalk: '^5.6.2',
+          },
+        },
+        [
+          '@open-agent-toolkit/cli',
+          '@open-agent-toolkit/docs-config',
+          '@open-agent-toolkit/docs-theme',
+          '@open-agent-toolkit/docs-transforms',
+        ],
+        [
+          '@open-agent-toolkit/control-plane',
+          '@open-agent-toolkit/docs-config',
+        ],
+      ),
+    ).toEqual(['dependencies.@open-agent-toolkit/control-plane=0.0.1']);
+  });
+
   it('ignores generated version metadata for release version policy checks', () => {
     const cliContract = getPublicPackageContracts()[0];
 
@@ -210,14 +249,17 @@ describe('getPublicPackageContracts', () => {
   });
 
   it('reports missing build artifacts before packing', async () => {
-    const docsThemeContract = getPublicPackageContracts()[2];
+    const docsThemeContract = getPublicPackageContracts().find(
+      (contract) => contract.publicName === '@open-agent-toolkit/docs-theme',
+    );
+    expect(docsThemeContract).toBeDefined();
     const packageDir = await mkdtemp(join(tmpdir(), 'oat-release-validate-'));
     await mkdir(join(packageDir, 'dist'), { recursive: true });
     await writeFile(join(packageDir, 'dist', 'index.js'), '', 'utf8');
     await writeFile(join(packageDir, 'README.md'), '', 'utf8');
 
     await expect(
-      findMissingBuildArtifacts(packageDir, docsThemeContract),
+      findMissingBuildArtifacts(packageDir, docsThemeContract!),
     ).resolves.toEqual(['dist/index.d.ts']);
   });
 
@@ -250,9 +292,15 @@ describe('getPublicPackageContracts', () => {
           currentVersion: '0.0.4',
           baseVersion: '0.0.4',
         },
+        {
+          contract: contracts[4],
+          changedSinceBase: false,
+          currentVersion: '0.0.4',
+          baseVersion: '0.0.4',
+        },
       ]),
     ).toEqual([
-      'publishable package changes require a lockstep version bump across all public packages. Changed packages: @open-agent-toolkit/cli. Packages still at their base version: @open-agent-toolkit/cli@0.0.4, @open-agent-toolkit/docs-config@0.0.4, @open-agent-toolkit/docs-theme@0.0.4, @open-agent-toolkit/docs-transforms@0.0.4',
+      'publishable package changes require a lockstep version bump across all public packages. Changed packages: @open-agent-toolkit/cli. Packages still at their base version: @open-agent-toolkit/cli@0.0.4, @open-agent-toolkit/control-plane@0.0.4, @open-agent-toolkit/docs-config@0.0.4, @open-agent-toolkit/docs-theme@0.0.4, @open-agent-toolkit/docs-transforms@0.0.4',
     ]);
   });
 
@@ -300,9 +348,15 @@ describe('getPublicPackageContracts', () => {
           currentVersion: '0.0.5',
           baseVersion: '0.0.4',
         },
+        {
+          contract: contracts[4],
+          changedSinceBase: false,
+          currentVersion: '0.0.5',
+          baseVersion: '0.0.4',
+        },
       ]),
     ).toEqual([
-      'public packages must stay on the same version for lockstep release publishes. Found: @open-agent-toolkit/cli@0.0.5, @open-agent-toolkit/docs-config@0.0.6, @open-agent-toolkit/docs-theme@0.0.5, @open-agent-toolkit/docs-transforms@0.0.5',
+      'public packages must stay on the same version for lockstep release publishes. Found: @open-agent-toolkit/cli@0.0.5, @open-agent-toolkit/control-plane@0.0.6, @open-agent-toolkit/docs-config@0.0.5, @open-agent-toolkit/docs-theme@0.0.5, @open-agent-toolkit/docs-transforms@0.0.5',
     ]);
   });
 
@@ -330,8 +384,11 @@ describe('getPublicPackageContracts', () => {
   });
 
   it('matches the docs package manifests to the public contract', async () => {
-    const contracts = getPublicPackageContracts().slice(1);
+    const contracts = getPublicPackageContracts().filter(
+      (contract) => contract.role !== 'cli',
+    );
     const manifests = await Promise.all([
+      readJson(controlPlanePackageJsonPath),
       readJson(docsConfigPackageJsonPath),
       readJson(docsThemePackageJsonPath),
       readJson(docsTransformsPackageJsonPath),
@@ -366,7 +423,7 @@ describe('getPublicPackageContracts', () => {
       });
     }
 
-    expect(manifests[0].dependencies).toMatchObject({
+    expect(manifests[1].dependencies).toMatchObject({
       '@open-agent-toolkit/docs-transforms': 'workspace:*',
     });
   });

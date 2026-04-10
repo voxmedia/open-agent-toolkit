@@ -65,6 +65,7 @@ jobs:
       - name: Verify publishable tarballs
         run: |
           for pkg_name in \
+            @open-agent-toolkit/control-plane \
             @open-agent-toolkit/docs-transforms \
             @open-agent-toolkit/docs-config \
             @open-agent-toolkit/docs-theme \
