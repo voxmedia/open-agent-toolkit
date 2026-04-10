@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p02-t04
+oat_current_task_id: p02-t05
 oat_generated: false
 oat_template: false
 ---
@@ -28,12 +28,12 @@ oat_template: false
 | Phase                                              | Status      | Tasks | Completed |
 | -------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
-| Phase 2: Skill Integration — oat-project-implement | in_progress | 5     | 3/5       |
+| Phase 2: Skill Integration — oat-project-implement | in_progress | 5     | 4/5       |
 | Phase 3: Skill Integration — oat-project-complete  | pending     | 2     | 0/2       |
 | Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 7/16 tasks completed
+**Total:** 8/16 tasks completed
 
 ---
 
@@ -323,8 +323,27 @@ oat_template: false
 
 ### Task p02-t04: Change resume to default behavior (no prompt)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d9c1cf3
+
+**Outcome:**
+
+- Removed the interactive "Resume from {task_id}, or start fresh (overwrite implementation.md)?" prompt
+- New behavior: always resume from the resolved task pointer with a simple `Resuming from {task_id}.` print
+- Fresh start is now an explicit argument-only override: `oat-project-implement fresh=true`, with a warning about overwriting implementation.md
+- Rationale: in practice, fresh start is a rare edge case (corrupt state, deliberate plan rewrites), not something that should be prompted every resume
+
+**Files changed:**
+
+- `.agents/skills/oat-project-implement/SKILL.md` — Step 3 "If exists and has progress" bullet list updated
+
+**Verification:**
+
+- `pnpm lint` → clean
+
+**Notes:**
+
+- This is a behavioral change (not a preference), so no new config key. The plan decision was that fresh-start is too rare to warrant a config toggle
 
 ### Task p02-t05: Strengthen bookkeeping commit enforcement
 
