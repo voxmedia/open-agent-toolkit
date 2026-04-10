@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 oat_template: false
 ---
@@ -28,12 +28,12 @@ oat_template: false
 | Phase                                              | Status      | Tasks | Completed |
 | -------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
-| Phase 2: Skill Integration — oat-project-implement | in_progress | 5     | 0/5       |
+| Phase 2: Skill Integration — oat-project-implement | in_progress | 5     | 1/5       |
 | Phase 3: Skill Integration — oat-project-complete  | pending     | 2     | 0/2       |
 | Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 4/16 tasks completed
+**Total:** 5/16 tasks completed
 
 ---
 
@@ -242,8 +242,34 @@ oat_template: false
 
 ### Task p02-t01: HiLL checkpoint default preference
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e2fd906
+
+**Outcome:**
+
+- Added "Workflow preference check (before prompting)" subsection to Step 2.5
+- Skill now reads `workflow.hillCheckpointDefault` via `oat config get` before presenting the 3-option prompt
+- `every` → writes `oat_plan_hill_phases: []`, skips prompt, continues to Touchpoint A
+- `final` → writes `oat_plan_hill_phases: ["<final-phase-id>"]`, skips prompt, continues to Touchpoint A
+- Unset/invalid → falls through to existing prompt behavior (backward compatible)
+- Preference check only applies on first runs; resuming implementations trust existing plan.md state
+- Bumped skill version 1.2.2 → 1.3.0 (first change in this PR for oat-project-implement)
+
+**Files changed:**
+
+- `.agents/skills/oat-project-implement/SKILL.md` — frontmatter version bump, new workflow preference check subsection in Step 2.5
+
+**Verification:**
+
+- `pnpm lint` → clean
+- `pnpm format` → clean
+- Step heading grep confirmed numbering (Steps 0, 0.5, 1, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
+- Subsection placement: inserted between "Determine whether this is a first implementation run" paragraph and "Prompt behavior" list so the preference check happens before the prompt
+
+**Notes:**
+
+- Used a subsection heading (`#### Workflow preference check (before prompting)`) to match the existing `#### Auto-Review at Checkpoints (Touchpoint A)` pattern in the same step
+- Deliberately kept prose concise; the pattern is simple enough that verbose docs would reduce signal
 
 ### Task p02-t02: Post-implementation sequence preference
 
