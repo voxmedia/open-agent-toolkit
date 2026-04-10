@@ -687,6 +687,22 @@ To run in a separate session use: oat-project-review-provide code final
 
 After final review passes (no Critical/Important findings):
 
+**Workflow preference check (before prompting):**
+
+```bash
+POST_IMPL=$(oat config get workflow.postImplementSequence 2>/dev/null || true)
+```
+
+- **If `POST_IMPL` is `wait`:** Print `Post-implementation: wait (from workflow.postImplementSequence). Run follow-up skills manually when ready.` Exit without auto-chaining.
+- **If `POST_IMPL` is `summary`:** Print `Post-implementation: summary (from workflow.postImplementSequence).` Invoke `oat-project-summary`. Stop after summary completes.
+- **If `POST_IMPL` is `pr`:** Print `Post-implementation: pr (from workflow.postImplementSequence).` Invoke `oat-project-pr-final` (which auto-generates `summary.md` as part of its flow).
+- **If `POST_IMPL` is `docs-pr`:** Print `Post-implementation: docs-pr (from workflow.postImplementSequence).` Invoke `oat-project-document` then `oat-project-pr-final` (summary included via pr-final).
+- **If unset or invalid:** Fall through to the standard prompt below.
+
+**Rationale:** `oat-project-pr-final` already auto-generates/refreshes `summary.md` as part of its flow, so `pr` and `docs-pr` do not need a separate summary step. The `summary` value exists as a standalone option for the rare case where you want just the summary without PR.
+
+**Standard prompt (when preference is unset):**
+
 ```
 Final review passed for {project-name}.
 
