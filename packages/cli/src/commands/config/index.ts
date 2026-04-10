@@ -383,9 +383,9 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     type: 'string | null',
     defaultValue: 'null',
     mutability: 'read/write',
-    owningCommand: 'user config APIs (not surfaced via oat config set)',
+    owningCommand: 'oat config set activeIdea <value> --user',
     description:
-      'User-level active idea fallback when no repo-local active idea is set.',
+      'User-level active idea fallback used when no repo-local active idea is set. Writable via `oat config set activeIdea <value> --user`.',
   },
   {
     key: 'workflow.hillCheckpointDefault',
