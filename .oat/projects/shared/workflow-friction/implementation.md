@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: prev1-t07
+oat_current_task_id: prev1-t08
 oat_generated: false
 oat_template: false
 ---
@@ -32,9 +32,9 @@ oat_template: false
 | Phase 3: Skill Integration — oat-project-complete  | complete    | 2     | 2/2       |
 | Phase 4: Skill Integration — Review Skills         | complete    | 3     | 3/3       |
 | Phase 5: Documentation and Bundled Docs Update     | complete    | 2     | 2/2       |
-| Revision Phase p-rev1: Final Review Fixes          | in_progress | 8     | 6/8       |
+| Revision Phase p-rev1: Final Review Fixes          | in_progress | 8     | 7/8       |
 
-**Total:** 22/24 tasks completed (16 plan + 8 revision)
+**Total:** 23/24 tasks completed (16 plan + 8 revision)
 
 ---
 
