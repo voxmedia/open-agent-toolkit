@@ -56,6 +56,7 @@ describe('oat-config', () => {
         s3Uri: 's3://example-bucket/oat-archive',
         s3SyncOnComplete: true,
         summaryExportPath: '.oat/repo/reference/project-summaries',
+        wrapUpExportPath: '.oat/repo/reference/wrap-ups',
       },
     });
 
@@ -68,6 +69,7 @@ describe('oat-config', () => {
         s3Uri: 's3://example-bucket/oat-archive',
         s3SyncOnComplete: true,
         summaryExportPath: '.oat/repo/reference/project-summaries',
+        wrapUpExportPath: '.oat/repo/reference/wrap-ups',
       },
     });
   });
@@ -83,6 +85,7 @@ describe('oat-config', () => {
           s3Uri: 's3://example-bucket/oat-archive/',
           s3SyncOnComplete: true,
           summaryExportPath: ' .oat/repo/reference/project-summaries/ ',
+          wrapUpExportPath: ' .oat/repo/reference/wrap-ups/ ',
         },
       }),
       'utf8',
@@ -93,6 +96,28 @@ describe('oat-config', () => {
       s3Uri: 's3://example-bucket/oat-archive',
       s3SyncOnComplete: true,
       summaryExportPath: '.oat/repo/reference/project-summaries',
+      wrapUpExportPath: '.oat/repo/reference/wrap-ups',
+    });
+  });
+
+  it('drops empty wrapUpExportPath during normalization', async () => {
+    const repoRoot = await createRepoRoot();
+    const configPath = join(repoRoot, '.oat', 'config.json');
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        archive: {
+          s3Uri: 's3://example-bucket/oat-archive',
+          wrapUpExportPath: '   ',
+        },
+      }),
+      'utf8',
+    );
+
+    const config = await readOatConfig(repoRoot);
+    expect(config.archive).toEqual({
+      s3Uri: 's3://example-bucket/oat-archive',
     });
   });
 
