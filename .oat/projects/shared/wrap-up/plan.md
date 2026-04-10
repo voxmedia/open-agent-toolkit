@@ -564,7 +564,7 @@ git commit -m "docs(p01-t09): note cross-reference false-positive limitation in 
 | Scope  | Type     | Status          | Date       | Artifact                                                |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------- |
 | p01    | code     | pending         | -          | -                                                       |
-| final  | code     | fixes_added     | 2026-04-10 | reviews/archived/2026-04-10-130658-final-code-review.md |
+| final  | code     | fixes_completed | 2026-04-10 | reviews/archived/2026-04-10-130658-final-code-review.md |
 | spec   | artifact | pending         | -          | -                                                       |
 | design | artifact | pending         | -          | -                                                       |
 | plan   | artifact | fixes_completed | 2026-04-10 | external (inline review pasted by user)                 |
