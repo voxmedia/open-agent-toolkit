@@ -20,6 +20,7 @@ Track notable decisions made while evolving OAT in this repo, so future sessions
 | ADR-012 | 2026-02-22 | accepted | Adopt config-local lifecycle state for active/paused project context                                   |
 | ADR-013 | 2026-02-22 | accepted | Standardize `oat project open/pause` lifecycle semantics                                               |
 | ADR-014 | 2026-03-07 | accepted | New CLI commands use `--dry-run` convention; defer CLI-wide flip                                       |
+| ADR-015 | 2026-04-09 | accepted | Introduce `@open-agent-toolkit/control-plane` as the read-only OAT state layer                         |
 
 ## Decisions
 
@@ -29,7 +30,7 @@ Track notable decisions made while evolving OAT in this repo, so future sessions
 - **Status:** accepted
 - **Drivers:** Avoid breaking existing skills that assume `.oat/active-project` contains a full path; keep dogfood v1 stable while we iterate on projects-root and multi-project workflows.
 - **Related:**
-  - `.oat/repo/reference/deferred-phases.md`
+  - `.oat/repo/reference/roadmap.md`
   - `.oat/projects-root`
 
 #### Context
@@ -130,7 +131,7 @@ Add a `create-oat-skill` skill as a specialization of `create-agnostic-skill`:
 - **Status:** accepted
 - **Drivers:** Avoid cross-skill coordination risk while we start the CLI; keep dogfood stable; let the CLI become the canonical interface for project creation/selection.
 - **Related:**
-  - `.oat/repo/reference/deferred-phases.md`
+  - `.oat/repo/reference/roadmap.md`
   - `.oat/repo/reference/current-state.md`
   - `oat state refresh` CLI command (reads both formats)
 
@@ -164,7 +165,7 @@ For dogfood v1 (until CLI project commands exist):
 - **Related:**
   - `.oat/templates/plan.md`
   - `.oat/repo/reference/roadmap.md`
-  - `.oat/repo/reference/backlog.md`
+  - `.oat/repo/reference/backlog/index.md`
 
 #### Context
 
@@ -409,7 +410,7 @@ Adopt option 2:
 - **Related:**
   - `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
   - `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
-  - `.oat/repo/reference/backlog.md`
+  - `.oat/repo/reference/backlog/index.md`
   - `.oat/sync/config.json`
 
 #### Context
@@ -615,7 +616,7 @@ Adopt option 2:
 - **Drivers:** Existing `--apply` convention (dry-run by default) is unintuitive — users expect commands to do what they ask. New `oat tools` commands adopted `--dry-run` (mutate by default) as the better UX pattern, but flipping all existing commands in the same PR would increase scope and risk.
 - **Related:**
   - `.oat/projects/shared/oat-tools-command-group/discovery.md` (Question 3, Deferred Ideas)
-  - `.oat/repo/reference/backlog.md` (CLI-wide flip backlog item)
+  - `.oat/repo/reference/backlog/index.md`
 
 #### Context
 
@@ -654,6 +655,47 @@ Adopt option 3:
 
 - ~~Create and execute the CLI-wide `--apply` → `--dry-run` convention flip (backlog item tracked).~~ Done — `.oat/projects/shared/auto-apply-dry-run/`, PR #46.
 - ~~Update all docs, skill references, and scripts that mention `--apply`.~~ Done — included in the same PR.
+
+---
+
+### ADR-015: Introduce `@open-agent-toolkit/control-plane` as the read-only OAT state layer
+
+- **Date:** 2026-04-09
+- **Status:** accepted
+- **Drivers:** OAT skills and future UI surfaces need a typed, reusable read layer for project state instead of repeated markdown parsing and ad hoc CLI-only aggregation.
+- **Related:**
+  - `.oat/projects/shared/control-plane-state-parsing/discovery.md`
+  - `.oat/projects/shared/control-plane-state-parsing/design.md`
+  - `.oat/repo/reference/backlog/items/control-plane-list-projects-summary-fast-path.md`
+
+#### Context
+
+Before this project, project-aware workflows repeatedly reimplemented the same bootstrap logic: resolve the active project, read several markdown artifacts, parse frontmatter, infer progress, and then route to the next skill. That made downstream consumers expensive to build and easy to drift.
+
+At the same time, we wanted new JSON inspection commands and eventual UI consumers without tying the parsing layer directly to Commander command code.
+
+#### Options Considered
+
+1. Add project-state parsing directly inside `packages/cli`
+2. Introduce a separate package that owns state parsing and recommendation while the CLI remains a thin consumer
+
+#### Decision
+
+Adopt option 2:
+
+- Add `packages/control-plane/` as a private workspace package exporting typed project-state readers and recommendation logic.
+- Keep the control plane read-only: it parses artifacts and returns structured data, but does not own config mutation, CLI formatting, or workflow execution.
+- Keep the CLI as the user-facing layer that resolves config and exposes the structured surfaces through `oat project status`, `oat project list`, and `oat config dump`.
+
+#### Consequences
+
+- Positive:
+  - Creates one reusable read surface for CLI, future dashboards, and other tooling.
+  - Reduces repeated artifact parsing logic across workflow entry points.
+  - Makes recommendation logic easier to test outside the CLI.
+- Trade-offs:
+  - Adds another package boundary to maintain.
+  - Summary-oriented optimizations such as a faster `listProjects()` path should be justified by measurement rather than assumed.
 
 ---
 

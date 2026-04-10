@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-10
 
 ## Canonical References
 
@@ -92,6 +92,15 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - `oat-docs-analyze` (evaluate documentation structure, navigation, and coverage against the OAT docs app contract; severity-rated analysis artifacts)
 - `oat-docs-apply` (apply approved docs analysis findings: branch, update docs, optionally open PR)
 
+### Control Plane + Inspection Surfaces
+
+- `@open-agent-toolkit/control-plane` (`packages/control-plane/`) is now the read-only OAT state layer for typed project parsing, review/task aggregation, and next-skill recommendation.
+- CLI inspection surfaces now include:
+  - `oat project status` (full active-project state, including recommendation)
+  - `oat project list` (structured summary listing for tracked projects)
+  - `oat config dump` (fully resolved config with source attribution)
+- The control plane keeps parsing and recommendation logic package-local while the CLI continues to own config resolution and user-facing formatting.
+
 ### Project Management (Utility)
 
 - `oat-pjm-add-backlog-item` (create a file-backed backlog item from the backlog template, regenerate the managed index, and prompt for curated-overview updates)
@@ -143,7 +152,8 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat cleanup project`, `oat cleanup artifacts`
   - `oat instructions validate`, `oat instructions sync`
   - `oat backlog init`, `oat backlog generate-id`, `oat backlog regenerate-index`
-  - `oat config get`, `oat config set`, `oat config list`, `oat config describe`
+  - `oat config get`, `oat config set`, `oat config list`, `oat config describe`, `oat config dump`
+  - `oat project status`, `oat project list`
   - `oat project archive sync`, `oat project archive sync <project-name>`
   - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install` (packs: core, ideas, workflows, utility, project-management, research)
 - Provider config model:

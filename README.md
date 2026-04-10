@@ -34,6 +34,9 @@ Useful next commands:
 - `pnpm run cli -- tools install`
 - `pnpm run cli -- docs init --app-name my-docs`
 - `pnpm run cli -- config describe`
+- `pnpm run cli -- config dump --json`
+- `pnpm run cli -- project status --json`
+- `pnpm run cli -- project list --json`
 
 For local repo development:
 
@@ -59,6 +62,7 @@ Full documentation lives on the docs site:
 ## Repo Layout
 
 - `packages/cli` - OAT CLI for provider sync, docs tooling, project utilities, and diagnostics
+- `packages/control-plane` - read-only project-state library used by the CLI for structured OAT project status, listing, and recommendation data
 - `packages/docs-config` - config helpers for OAT-powered Fumadocs apps
 - `packages/docs-theme` - shared React components for OAT-powered Fumadocs apps
 - `packages/docs-transforms` - remark plugins and transform bundle for OAT-powered Fumadocs apps
@@ -69,6 +73,7 @@ Full documentation lives on the docs site:
 ## Packages
 
 - [`@open-agent-toolkit/cli`](./packages/cli/README.md)
+- [`@open-agent-toolkit/control-plane`](./packages/control-plane/README.md)
 - [`@open-agent-toolkit/docs-config`](./packages/docs-config/README.md)
 - [`@open-agent-toolkit/docs-theme`](./packages/docs-theme/README.md)
 - [`@open-agent-toolkit/docs-transforms`](./packages/docs-transforms/README.md)

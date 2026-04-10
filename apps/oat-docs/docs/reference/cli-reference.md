@@ -22,14 +22,20 @@ The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oa
 
 ## Command Groups
 
-| Command group                                   | What it covers                                                                            | Go deeper                                                            |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `oat init`                                      | Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.       | [CLI Bootstrap](../cli-utilities/bootstrap.md)                       |
-| `oat tools ...`                                 | Install, inspect, update, and remove bundled OAT tool packs and assets.                   | [Tool Packs](../cli-utilities/tool-packs.md)                         |
-| `oat backlog ...` / `oat local ...`             | File-backed backlog helpers, local path sync, and local-only operational support.         | [Config and Local State](../cli-utilities/config-and-local-state.md) |
-| `oat config ...` / `oat instructions ...`       | Config discovery, supported mutations, and instruction-integrity helpers.                 | [Config and Local State](../cli-utilities/config-and-local-state.md) |
-| `oat state ...` / `oat index ...` / `internal`  | Repo dashboard refresh, repo indexing, validation helpers, and diagnostics.               | [Config and Local State](../cli-utilities/config-and-local-state.md) |
-| `oat docs ...`                                  | Docs app bootstrap, migration, index generation, nav sync, and docs workflow entrypoints. | [Docs Tooling Commands](../docs-tooling/commands.md)                 |
-| `oat status` / `oat sync` / `oat providers ...` | Provider sync, drift inspection, provider configuration, and adoption behavior.           | [Provider Sync](../provider-sync/index.md)                           |
-| `oat project ...` / `oat cleanup ...`           | Project scaffolding, execution mode, and project/artifact cleanup commands.               | [Workflow & Projects](../workflows/projects/index.md)                |
-| `oat repo ...`                                  | Repository-level analysis workflows, currently centered on PR comments.                   | [Repository Analysis](../workflows/projects/repo-analysis.md)        |
+| Command group                                   | What it covers                                                                                                                         | Go deeper                                                            |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `oat init`                                      | Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.                                                    | [CLI Bootstrap](../cli-utilities/bootstrap.md)                       |
+| `oat tools ...`                                 | Install, inspect, update, and remove bundled OAT tool packs and assets.                                                                | [Tool Packs](../cli-utilities/tool-packs.md)                         |
+| `oat backlog ...` / `oat local ...`             | File-backed backlog helpers, local path sync, and local-only operational support.                                                      | [Config and Local State](../cli-utilities/config-and-local-state.md) |
+| `oat config ...` / `oat instructions ...`       | Config discovery, source-aware config dumps, supported mutations, and instruction-integrity helpers.                                   | [Config and Local State](../cli-utilities/config-and-local-state.md) |
+| `oat state ...` / `oat index ...` / `internal`  | Repo dashboard refresh, repo indexing, validation helpers, and diagnostics.                                                            | [Config and Local State](../cli-utilities/config-and-local-state.md) |
+| `oat docs ...`                                  | Docs app bootstrap, migration, index generation, nav sync, and docs workflow entrypoints.                                              | [Docs Tooling Commands](../docs-tooling/commands.md)                 |
+| `oat status` / `oat sync` / `oat providers ...` | Provider sync, drift inspection, provider configuration, and adoption behavior.                                                        | [Provider Sync](../provider-sync/index.md)                           |
+| `oat project ...` / `oat cleanup ...`           | Project scaffolding, active-project status inspection, tracked-project listing, execution mode, and project/artifact cleanup commands. | [Workflow & Projects](../workflows/projects/index.md)                |
+| `oat repo ...`                                  | Repository-level analysis workflows, currently centered on PR comments.                                                                | [Repository Analysis](../workflows/projects/repo-analysis.md)        |
+
+Notable inspection commands introduced in the current CLI surface:
+
+- `oat config dump --json` - merged config with source attribution
+- `oat project status --json` - full parsed state for the active tracked project
+- `oat project list --json` - summary state for tracked projects under the configured projects root

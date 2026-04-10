@@ -191,6 +191,7 @@ describe('help output snapshots', () => {
         get <key>          Get a resolved OAT config value
         set <key> <value>  Set an OAT config value
         list               List resolved OAT config values with sources
+        dump               Dump merged OAT config with source attribution
         describe [key]     Describe supported OAT config surfaces and keys
         help [command]     display help for command
       "
@@ -574,10 +575,12 @@ describe('help output snapshots', () => {
 
       Commands:
         archive                 Manage archived project data
+        list                    List tracked OAT projects
         new [options] <name>    Create or update an OAT project scaffold
         open [options] <name>   Open or switch to an OAT project
         pause [options] [name]  Pause an OAT project
         set-mode <mode>         Set project implementation execution mode
+        status                  Show the current OAT project state
         help [command]          display help for command
       "
     `);

@@ -71,7 +71,7 @@ describe('scaffold integration', () => {
           join(pkgDir, 'package.json'),
           JSON.stringify({
             name: `@open-agent-toolkit/${pkg}`,
-            version: '0.0.18',
+            version: '0.0.24',
           }),
           'utf8',
         );
