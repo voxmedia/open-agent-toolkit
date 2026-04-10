@@ -52,6 +52,24 @@ What each command is for:
 - `oat config describe` shows the supported config catalog across shared repo, repo-local, user, and sync/provider surfaces.
 - `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key.
 
+### Source labels
+
+`oat config get --json` and `oat config list` emit a `source` field identifying which config surface a resolved value came from. The current labels are:
+
+| Label     | Meaning                                                                            |
+| --------- | ---------------------------------------------------------------------------------- |
+| `env`     | Value came from an environment variable override (e.g. `OAT_PROJECTS_ROOT`)        |
+| `local`   | Value came from `.oat/config.local.json` (per-developer repo state)                |
+| `shared`  | Value came from `.oat/config.json` (team-shared repo settings)                     |
+| `user`    | Value came from `~/.oat/config.json` (user-level fallback)                         |
+| `default` | No surface set the key; value is the CLI's built-in default (or `null` when unset) |
+
+These labels match what `oat config dump` emits, so tooling that consumes either command can rely on the same vocabulary.
+
+:::note Upgrade note
+Earlier CLI versions returned `config.json` / `config.local.json` / `env` / `default` as the `source` strings. External scripts that previously matched on `"source":"config.json"` or `"source":"config.local.json"` should update to match the new `shared` / `local` labels. This change was made to align the `oat config get` / `oat config list` output with `oat config dump` and to avoid confusing users about which file was consulted.
+:::
+
 ## Shared repo config you will touch most often
 
 Common keys in `.oat/config.json`:
