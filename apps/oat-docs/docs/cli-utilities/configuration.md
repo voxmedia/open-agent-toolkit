@@ -110,6 +110,57 @@ oat config get lastPausedProject
 oat config describe activeIdea
 ```
 
+## Workflow preferences (`workflow.*`)
+
+Workflow preferences let power users answer repetitive confirmation prompts once and have OAT workflow skills respect those answers automatically. They are the highest-value escape hatch from interactive friction when you always make the same choices.
+
+### Preference keys
+
+All six workflow preference keys live under the `workflow.*` namespace:
+
+- `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement`: pause after every phase or only after the last phase. When unset, the skill prompts.
+- `workflow.archiveOnComplete` — boolean. Skip the "Archive after completion?" prompt in `oat-project-complete`. When unset, the skill prompts.
+- `workflow.createPrOnComplete` — boolean. Skip the "Open a PR?" prompt in `oat-project-complete`; when true, completion auto-triggers PR creation. When unset, the skill prompts.
+- `workflow.postImplementSequence` — `wait`, `summary`, `pr`, or `docs-pr`. Controls what `oat-project-implement` chains after final review passes. `wait` stops without auto-chaining, `summary` runs only `oat-project-summary`, `pr` runs `oat-project-pr-final` (which auto-generates summary), `docs-pr` runs `oat-project-document` then `oat-project-pr-final`. When unset, the skill prompts.
+- `workflow.reviewExecutionModel` — `subagent`, `inline`, or `fresh-session`. Default final-review execution model in `oat-project-implement`. `subagent` and `inline` run automatically. `fresh-session` is a soft preference: the skill prints guidance to run the review in another session but still offers escape hatches to `subagent` or `inline` if you change your mind. When unset, the skill prompts.
+- `workflow.autoNarrowReReviewScope` — boolean. Auto-narrow re-review scope to fix-task commits only in `oat-project-review-provide`. When unset, the skill prompts.
+
+### Three-layer resolution
+
+Workflow preferences resolve through three config surfaces, with `env > local > shared > user > default` precedence per key. This is the same generic resolution used by `oat config dump`:
+
+- **User-level** (`~/.oat/config.json`): personal defaults that apply to every repo. This is where most power users should start — set preferences once, never worry about them again.
+- **Shared repo** (`.oat/config.json`): team decisions for this repo. Overrides user defaults when present.
+- **Repo-local** (`.oat/config.local.json`): personal override for this specific repo. Highest precedence per key.
+
+### Setting preferences
+
+`oat config set` supports mutually exclusive surface flags for workflow keys:
+
+```bash
+# User-level: applies to all repos on this machine
+oat config set workflow.hillCheckpointDefault final --user
+oat config set workflow.archiveOnComplete true --user
+oat config set workflow.createPrOnComplete true --user
+oat config set workflow.postImplementSequence pr --user
+oat config set workflow.reviewExecutionModel subagent --user
+oat config set workflow.autoNarrowReReviewScope true --user
+
+# Shared repo: team decision for this repo
+oat config set workflow.createPrOnComplete false --shared
+
+# Repo-local: personal override for this repo (default when no flag)
+oat config set workflow.hillCheckpointDefault every
+```
+
+Default (no flag) targets `.oat/config.local.json` for workflow keys. Pass at most one of `--user`, `--shared`, or `--local`. Structural keys (`projects.root`, `worktrees.root`, `git.*`, `documentation.*`, `archive.*`, `tools.*`) are still shared-only regardless of flag.
+
+### Relationship to `autoReviewAtCheckpoints`
+
+The existing `autoReviewAtCheckpoints` key (top-level in `.oat/config.json`) was **not** migrated under the `workflow.*` namespace to preserve backward compatibility. It remains shared-scope-only and controls whether `oat-project-implement` auto-triggers code reviews at plan phase checkpoints. That is a separate behavioral toggle from the workflow preferences above — it affects when reviews happen, not which prompt-skipping defaults apply.
+
+If you enable both, you get a near-uninterrupted lifecycle: auto-review runs at checkpoints, fix tasks are converted automatically, and the workflow preferences skip every remaining confirmation prompt.
+
 ## Provider sync config is different
 
 Provider sync settings are intentionally documented in the same discovery flow, but they are not owned by `oat config set`.

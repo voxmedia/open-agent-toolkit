@@ -199,6 +199,12 @@ Capture lane progression:
 - Stop at configured HiLL checkpoints.
 - Do not move lifecycle forward when required review gates are unresolved.
 
+## Reducing lifecycle friction with workflow preferences
+
+The lifecycle has several interactive prompts that power users often answer the same way every time — HiLL checkpoint behavior, archive on complete, auto-create PR, post-implementation chaining, final review execution model, and re-review scope narrowing. These can be configured once via `workflow.*` preference keys and respected automatically by skills.
+
+See the [Workflow preferences section in the Configuration guide](../../cli-utilities/configuration.md#workflow-preferences-workflow) for the full list of keys and how to set them. Preferences resolve through a three-layer chain (`env > repo-local > repo-shared > user > default`), so you can set personal defaults at user scope once and override per-repo only when needed.
+
 ## Active project resolution
 
 - Active project state is stored in `.oat/config.local.json` (`activeProject`, repo-relative path).
