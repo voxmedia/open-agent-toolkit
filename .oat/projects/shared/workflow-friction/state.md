@@ -7,13 +7,13 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: pr_open
 oat_execution_mode: single-thread
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: complete
-oat_pr_status: null
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/43
 oat_project_created: 2026-04-07T00:00:00Z
 oat_project_completed: null
 oat_project_state_updated: 2026-04-10T00:00:00Z
@@ -29,7 +29,7 @@ oat_template: false
 
 ## Current Phase
 
-Implementation — complete; final review passed (v2)
+Implementation — PR open, awaiting human review (voxmedia/open-agent-toolkit#43)
 
 ## Artifacts
 
@@ -51,4 +51,4 @@ None
 
 ## Next Milestone
 
-Generate summary, run docs sync, create final PR via oat-project-pr-final
+PR review → run oat-project-revise for feedback, or oat-project-complete when approved
