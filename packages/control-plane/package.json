@@ -1,8 +1,22 @@
 {
   "name": "@open-agent-toolkit/control-plane",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.0.27",
+  "private": false,
   "description": "Read-only OAT control-plane library for structured project state",
+  "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/control-plane",
+  "bugs": {
+    "url": "https://github.com/voxmedia/open-agent-toolkit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voxmedia/open-agent-toolkit.git",
+    "directory": "packages/control-plane"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,6 +25,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc && tsc-alias",

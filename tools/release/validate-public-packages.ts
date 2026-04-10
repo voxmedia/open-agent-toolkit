@@ -8,6 +8,7 @@ import {
   findForbiddenPackedPaths,
   findMissingMetadataFields,
   findMissingPackedPaths,
+  findNonPublicWorkspaceDependencySpecs,
   findWorkspaceProtocolDependencySpecs,
   getPublicPackageContracts,
   type PublicPackageContract,
@@ -42,6 +43,8 @@ export interface PublicPackageVersionState {
   currentVersion: string;
   baseVersion: string | null;
 }
+
+const WORKSPACE_DIRECTORIES = ['apps', 'packages'] as const;
 
 function getPackageDir(contract: PublicPackageContract): string {
   return join(REPO_ROOT, contract.workspaceDir);
@@ -197,6 +200,46 @@ async function packPackage(
   }
 }
 
+async function findWorkspacePackageNames(): Promise<Set<string>> {
+  const workspacePackageNames = new Set<string>();
+
+  for (const workspaceDirectory of WORKSPACE_DIRECTORIES) {
+    const absoluteWorkspaceDirectory = join(REPO_ROOT, workspaceDirectory);
+    let entries: Awaited<ReturnType<typeof readdir>>;
+
+    try {
+      entries = await readdir(absoluteWorkspaceDirectory, {
+        withFileTypes: true,
+      });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+
+      try {
+        const packageJson = JSON.parse(
+          await readFile(
+            join(absoluteWorkspaceDirectory, entry.name, 'package.json'),
+            'utf8',
+          ),
+        ) as { name?: unknown };
+
+        if (typeof packageJson.name === 'string') {
+          workspacePackageNames.add(packageJson.name);
+        }
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  return workspacePackageNames;
+}
+
 async function buildPublicPackages(
   contracts: readonly PublicPackageContract[],
 ) {
@@ -214,6 +257,8 @@ async function buildPublicPackages(
 
 async function validatePackage(
   contract: PublicPackageContract,
+  publicPackageNames: readonly string[],
+  workspacePackageNames: readonly string[],
 ): Promise<PackageValidationFailure | null> {
   const packageJson = await readPackageJson(contract);
   const missingMetadataFields = findMissingMetadataFields(
@@ -232,6 +277,12 @@ async function validatePackage(
   );
   const workspaceProtocolSpecs =
     findWorkspaceProtocolDependencySpecs(packedPackageJson);
+  const nonPublicWorkspaceDependencySpecs =
+    findNonPublicWorkspaceDependencySpecs(
+      packedPackageJson,
+      publicPackageNames,
+      workspacePackageNames,
+    );
   const packedPaths = packedArtifact.files.map((file) => file.path);
   const missingPackedPaths = findMissingPackedPaths(packedPaths, contract);
   const forbiddenPackedPaths = findForbiddenPackedPaths(packedPaths, contract);
@@ -273,6 +324,12 @@ async function validatePackage(
     );
   }
 
+  if (nonPublicWorkspaceDependencySpecs.length > 0) {
+    errors.push(
+      `packed package.json depends on non-public workspace packages: ${nonPublicWorkspaceDependencySpecs.join(', ')}`,
+    );
+  }
+
   if (errors.length === 0) {
     console.log(
       `validated ${contract.publicName} (${packedArtifact.filename})`,
@@ -287,6 +344,8 @@ export async function runReleaseValidation(): Promise<
   PackageValidationFailure[]
 > {
   const contracts = getPublicPackageContracts();
+  const publicPackageNames = contracts.map((contract) => contract.publicName);
+  const workspacePackageNames = Array.from(await findWorkspacePackageNames());
   await buildPublicPackages(contracts);
 
   const failures: PackageValidationFailure[] = [];
@@ -295,7 +354,11 @@ export async function runReleaseValidation(): Promise<
     failures.push(versionFailure);
   }
   for (const contract of contracts) {
-    const failure = await validatePackage(contract);
+    const failure = await validatePackage(
+      contract,
+      publicPackageNames,
+      workspacePackageNames,
+    );
     if (failure) {
       failures.push(failure);
     }

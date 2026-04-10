@@ -41,14 +41,14 @@ describe('findChangedWorkspaceDirsFromPaths', () => {
     ).toEqual(new Set(['packages/cli', 'packages/docs-theme']));
   });
 
-  it('tracks internal workspace dependency changes for dependent public packages', () => {
+  it('tracks shared public package changes for dependents and the package itself', () => {
     expect(
       findChangedWorkspaceDirsFromPaths(
         ['packages/control-plane/src/index.ts'],
         getPublicPackageContracts(),
         new Map([['packages/cli', ['packages/control-plane']]]),
       ),
-    ).toEqual(new Set(['packages/cli']));
+    ).toEqual(new Set(['packages/cli', 'packages/control-plane']));
   });
 
   it('marks all affected public packages when a shared dependency changes', () => {

@@ -78,7 +78,7 @@ jobs:
       # - support reruns from an existing release tag via workflow_dispatch
       # - use npm trusted publishing via GitHub OIDC
       # - rerun the same build and release validation path as dry-run
-      # - publish the four @open-agent-toolkit/* packages in lockstep
+      # - publish the five @open-agent-toolkit/* packages in lockstep
       - name: Checkout
         uses: actions/checkout@v5
         with:
@@ -112,6 +112,7 @@ jobs:
       - name: Publish packages
         run: |
           for pkg_name in \
+            @open-agent-toolkit/control-plane \
             @open-agent-toolkit/docs-transforms \
             @open-agent-toolkit/docs-config \
             @open-agent-toolkit/docs-theme \
@@ -156,6 +157,7 @@ jobs:
             `@open-agent-toolkit/*` packages:
 
             - `@open-agent-toolkit/cli`
+            - `@open-agent-toolkit/control-plane`
             - `@open-agent-toolkit/docs-config`
             - `@open-agent-toolkit/docs-theme`
             - `@open-agent-toolkit/docs-transforms`

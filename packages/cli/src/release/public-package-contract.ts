@@ -3,7 +3,7 @@ import { matchesGlob } from 'node:path';
 export interface PublicPackageContract {
   workspaceDir: string;
   publicName: string;
-  role: 'cli' | 'docs-library';
+  role: 'cli' | 'docs-library' | 'support-library';
   requiredMetadataFields: string[];
   requiredPaths: string[];
   forbiddenPathPatterns: string[];
@@ -49,6 +49,16 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
       'apps/oat-docs/docs',
     ],
     versionPolicyIgnorePatterns: ['assets/**'],
+  },
+  {
+    workspaceDir: 'packages/control-plane',
+    publicName: '@open-agent-toolkit/control-plane',
+    role: 'support-library',
+    requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
+    requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
+    forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
+    versionPolicyAdditionalRoots: [],
+    versionPolicyIgnorePatterns: [],
   },
   {
     workspaceDir: 'packages/docs-config',
@@ -166,4 +176,36 @@ export function findWorkspaceProtocolDependencySpecs(
   }
 
   return workspaceSpecs;
+}
+
+export function findNonPublicWorkspaceDependencySpecs(
+  packageJson: Record<string, unknown>,
+  publicPackageNames: readonly string[],
+  workspacePackageNames: readonly string[],
+): string[] {
+  const publicPackageNameSet = new Set(publicPackageNames);
+  const workspacePackageNameSet = new Set(workspacePackageNames);
+  const invalidSpecs: string[] = [];
+
+  for (const dependencyField of PACKED_DEPENDENCY_FIELDS) {
+    const dependencies = packageJson[dependencyField];
+    if (!dependencies || typeof dependencies !== 'object') {
+      continue;
+    }
+
+    for (const [dependencyName, spec] of Object.entries(
+      dependencies as Record<string, unknown>,
+    )) {
+      if (
+        workspacePackageNameSet.has(dependencyName) &&
+        !publicPackageNameSet.has(dependencyName)
+      ) {
+        invalidSpecs.push(
+          `${dependencyField}.${dependencyName}=${String(spec)}`,
+        );
+      }
+    }
+  }
+
+  return invalidSpecs;
 }
