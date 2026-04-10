@@ -1209,17 +1209,17 @@ git commit -m "docs(prev2-t01): fix stale owningCommand on activeIdea user catal
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                            |
-| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
-| p01    | code     | pending     | -          | -                                                   |
-| p02    | code     | pending     | -          | -                                                   |
-| p03    | code     | pending     | -          | -                                                   |
-| p04    | code     | pending     | -          | -                                                   |
-| p05    | code     | pending     | -          | -                                                   |
-| final  | code     | fixes_added | 2026-04-10 | reviews/archived/final-review-2026-04-07-v2.md      |
-| spec   | artifact | n/a         | -          | -                                                   |
-| design | artifact | n/a         | -          | -                                                   |
-| plan   | artifact | passed      | 2026-04-08 | reviews/archived/artifact-plan-review-2026-04-08.md |
+| Scope  | Type     | Status  | Date       | Artifact                                            |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                   |
+| p02    | code     | pending | -          | -                                                   |
+| p03    | code     | pending | -          | -                                                   |
+| p04    | code     | pending | -          | -                                                   |
+| p05    | code     | pending | -          | -                                                   |
+| final  | code     | passed  | 2026-04-10 | reviews/archived/final-review-2026-04-07-v2.md      |
+| spec   | artifact | n/a     | -          | -                                                   |
+| design | artifact | n/a     | -          | -                                                   |
+| plan   | artifact | passed  | 2026-04-08 | reviews/archived/artifact-plan-review-2026-04-08.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

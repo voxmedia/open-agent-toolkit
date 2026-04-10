@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: prev2-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -25,17 +25,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase                                              | Status      | Tasks | Completed |
-| -------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
-| Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
-| Phase 3: Skill Integration — oat-project-complete  | complete    | 2     | 2/2       |
-| Phase 4: Skill Integration — Review Skills         | complete    | 3     | 3/3       |
-| Phase 5: Documentation and Bundled Docs Update     | complete    | 2     | 2/2       |
-| Revision Phase p-rev1: Final Review Fixes          | complete    | 8     | 8/8       |
-| Revision Phase p-rev2: Re-Review Polish            | in_progress | 1     | 0/1       |
+| Phase                                              | Status   | Tasks | Completed |
+| -------------------------------------------------- | -------- | ----- | --------- |
+| Phase 1: Config System Extension                   | complete | 4     | 4/4       |
+| Phase 2: Skill Integration — oat-project-implement | complete | 5     | 5/5       |
+| Phase 3: Skill Integration — oat-project-complete  | complete | 2     | 2/2       |
+| Phase 4: Skill Integration — Review Skills         | complete | 3     | 3/3       |
+| Phase 5: Documentation and Bundled Docs Update     | complete | 2     | 2/2       |
+| Revision Phase p-rev1: Final Review Fixes          | complete | 8     | 8/8       |
+| Revision Phase p-rev2: Re-Review Polish            | complete | 1     | 1/1       |
 
-**Total:** 24/25 tasks completed (16 plan + 8 rev1 + 1 rev2)
+**Total:** 25/25 tasks completed (16 plan + 8 rev1 + 1 rev2) — final review passed
 
 ---
 
@@ -706,7 +706,9 @@ oat_template: false
 - Tests 1230/1230 passing, lint clean, type-check clean
 - Docs anchor `#workflow-preferences-workflow` verified in built HTML
 
-**Next:** Execute prev2-t01 via `oat-project-implement`. After the 1-line fix, mark `final` review as `passed` directly — no additional re-review cycle is needed for documentation-only polish with zero behavior change.
+**Next:** ~~Execute prev2-t01 via `oat-project-implement`. After the 1-line fix, mark `final` review as `passed` directly~~ — **Done.** prev2-t01 committed as `63dc144`. Plan.md Reviews final row moved to `passed`. Ready for PR flow.
+
+**prev2-t01 outcome:** Updated user-surface `activeIdea` catalog entry: `owningCommand` from `'user config APIs (not surfaced via oat config set)'` → `'oat config set activeIdea <value> --user'`. Also expanded the description to note CLI writability. Verified via `oat config describe activeIdea` showing both rows with correct owning commands. All 1230 tests still passing, lint/type-check clean.
 
 ---
 

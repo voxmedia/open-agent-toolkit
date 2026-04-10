@@ -1,13 +1,13 @@
 ---
-oat_current_task: prev2-t01
-oat_last_commit: c2c9963
+oat_current_task: null
+oat_last_commit: 63dc144
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_execution_mode: single-thread
 oat_workflow_mode: quick
 oat_workflow_origin: native
@@ -29,7 +29,7 @@ oat_template: false
 
 ## Current Phase
 
-Implementation — Revision Phase p-rev2: re-review polish (0/1 fix task)
+Implementation — complete; final review passed (v2)
 
 ## Artifacts
 
@@ -51,4 +51,4 @@ None
 
 ## Next Milestone
 
-Re-review final scope (narrowed to prev1 fix-task commits), then PR
+Generate summary, run docs sync, create final PR via oat-project-pr-final
