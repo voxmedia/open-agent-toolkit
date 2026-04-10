@@ -185,15 +185,15 @@ describe('help output snapshots', () => {
       Read and write OAT config values
 
       Options:
-        -h, --help         display help for command
+        -h, --help                   display help for command
 
       Commands:
-        get <key>          Get a resolved OAT config value
-        set <key> <value>  Set an OAT config value
-        list               List resolved OAT config values with sources
-        dump               Dump merged OAT config with source attribution
-        describe [key]     Describe supported OAT config surfaces and keys
-        help [command]     display help for command
+        get <key>                    Get a resolved OAT config value
+        set [options] <key> <value>  Set an OAT config value
+        list                         List resolved OAT config values with sources
+        dump                         Dump merged OAT config with source attribution
+        describe [key]               Describe supported OAT config surfaces and keys
+        help [command]               display help for command
       "
     `);
   });

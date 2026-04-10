@@ -7,10 +7,14 @@ import {
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
+  type OatWorkflowConfig,
+  type UserConfig,
   readOatConfig,
   readOatLocalConfig,
+  readUserConfig,
   writeOatConfig,
   writeOatLocalConfig,
+  writeUserConfig,
 } from '@config/oat-config';
 import {
   resolveEffectiveConfig,
@@ -81,6 +85,8 @@ interface ConfigCommandDependencies {
     repoRoot: string,
     config: OatLocalConfig,
   ) => Promise<void>;
+  readUserConfig: (userConfigDir: string) => Promise<UserConfig>;
+  writeUserConfig: (userConfigDir: string, config: UserConfig) => Promise<void>;
   resolveProjectsRoot: (
     repoRoot: string,
     env: NodeJS.ProcessEnv,
@@ -92,6 +98,8 @@ interface ConfigCommandDependencies {
   ) => Promise<ResolvedConfig>;
   processEnv: NodeJS.ProcessEnv;
 }
+
+type ConfigSurface = 'auto' | 'shared' | 'local' | 'user';
 
 const KEY_ORDER: ConfigKey[] = [
   'activeIdea',
@@ -496,6 +504,8 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   writeOatConfig,
   readOatLocalConfig,
   writeOatLocalConfig,
+  readUserConfig,
+  writeUserConfig,
   resolveProjectsRoot,
   resolveEffectiveConfig,
   processEnv: process.env,
@@ -511,6 +521,123 @@ function normalizeSharedRoot(value: string): string {
     throw new Error('Shared config values cannot be empty.');
   }
   return trimmed.replace(/\/+$/, '');
+}
+
+const WORKFLOW_ENUM_VALUES = {
+  'workflow.hillCheckpointDefault': ['every', 'final'],
+  'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
+  'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
+} as const satisfies Partial<Record<ConfigKey, readonly string[]>>;
+
+const WORKFLOW_BOOLEAN_KEYS = new Set<ConfigKey>([
+  'workflow.archiveOnComplete',
+  'workflow.createPrOnComplete',
+  'workflow.autoNarrowReReviewScope',
+]);
+
+function isWorkflowKey(key: ConfigKey): boolean {
+  return key.startsWith('workflow.');
+}
+
+function isStateKey(key: ConfigKey): boolean {
+  return (
+    key === 'activeIdea' ||
+    key === 'activeProject' ||
+    key === 'lastPausedProject'
+  );
+}
+
+function isStructuralKey(key: ConfigKey): boolean {
+  return (
+    key === 'projects.root' ||
+    key === 'worktrees.root' ||
+    key === 'git.defaultBranch' ||
+    key.startsWith('documentation.') ||
+    key.startsWith('archive.') ||
+    key.startsWith('tools.')
+  );
+}
+
+function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
+  if (surface === 'auto') {
+    return;
+  }
+
+  if (isStructuralKey(key)) {
+    if (surface !== 'shared') {
+      throw new Error(
+        `Cannot set structural key '${key}' at '${surface}' scope. Structural keys (projects.root, worktrees.root, git.*, documentation.*, archive.*, tools.*) can only be set at shared scope (.oat/config.json).`,
+      );
+    }
+    return;
+  }
+
+  if (isStateKey(key)) {
+    if (surface !== 'local') {
+      throw new Error(
+        `Cannot set state key '${key}' at '${surface}' scope. State keys (activeProject, lastPausedProject, activeIdea) can only be set at local scope (.oat/config.local.json).`,
+      );
+    }
+    return;
+  }
+
+  // autoReviewAtCheckpoints is currently shared-only. Multi-surface support
+  // for behavioral keys is out of scope for p01-t04 (workflow.* keys only).
+  if (key === 'autoReviewAtCheckpoints' && surface !== 'shared') {
+    throw new Error(
+      `Cannot set 'autoReviewAtCheckpoints' at '${surface}' scope. This key is currently shared-only.`,
+    );
+  }
+
+  // Workflow keys accept any non-auto surface.
+}
+
+function defaultSurfaceForKey(key: ConfigKey): ConfigSurface {
+  if (isWorkflowKey(key) || isStateKey(key)) {
+    return 'local';
+  }
+  return 'shared';
+}
+
+function parseWorkflowValue(
+  key: ConfigKey,
+  rawValue: string,
+): boolean | string {
+  if (WORKFLOW_BOOLEAN_KEYS.has(key)) {
+    const normalized = rawValue.trim().toLowerCase();
+    if (normalized !== 'true' && normalized !== 'false') {
+      throw new Error(
+        `Invalid value for ${key}: expected 'true' or 'false', got '${rawValue}'`,
+      );
+    }
+    return normalized === 'true';
+  }
+
+  const allowed =
+    WORKFLOW_ENUM_VALUES[key as keyof typeof WORKFLOW_ENUM_VALUES];
+  if (allowed) {
+    const normalized = rawValue.trim();
+    if (!(allowed as readonly string[]).includes(normalized)) {
+      throw new Error(
+        `Invalid value for ${key}: expected one of ${allowed.join(' | ')}, got '${rawValue}'`,
+      );
+    }
+    return normalized;
+  }
+
+  throw new Error(`Unknown workflow key: ${key}`);
+}
+
+function applyWorkflowValue(
+  workflow: OatWorkflowConfig,
+  key: ConfigKey,
+  value: boolean | string,
+): OatWorkflowConfig {
+  const subKey = key.slice('workflow.'.length);
+  return {
+    ...workflow,
+    [subKey]: value,
+  } as OatWorkflowConfig;
 }
 
 function formatResolvedValue(value: unknown): string | null {
@@ -555,10 +682,61 @@ async function getConfigValue(
 
 async function setConfigValue(
   repoRoot: string,
+  userConfigDir: string,
   key: ConfigKey,
   rawValue: string,
+  surface: ConfigSurface,
   dependencies: ConfigCommandDependencies,
 ): Promise<ConfigValue> {
+  validateSurfaceForKey(key, surface);
+
+  const effectiveSurface: ConfigSurface =
+    surface === 'auto' ? defaultSurfaceForKey(key) : surface;
+
+  if (isWorkflowKey(key)) {
+    const parsedValue = parseWorkflowValue(key, rawValue);
+    const displayValue =
+      typeof parsedValue === 'boolean' ? String(parsedValue) : parsedValue;
+
+    if (effectiveSurface === 'user') {
+      const userConfig = await dependencies.readUserConfig(userConfigDir);
+      await dependencies.writeUserConfig(userConfigDir, {
+        ...userConfig,
+        workflow: applyWorkflowValue(
+          userConfig.workflow ?? {},
+          key,
+          parsedValue,
+        ),
+      });
+      return { key, value: displayValue, source: 'user' };
+    }
+
+    if (effectiveSurface === 'local') {
+      const localConfig = await dependencies.readOatLocalConfig(repoRoot);
+      await dependencies.writeOatLocalConfig(repoRoot, {
+        ...localConfig,
+        workflow: applyWorkflowValue(
+          localConfig.workflow ?? {},
+          key,
+          parsedValue,
+        ),
+      });
+      return { key, value: displayValue, source: 'local' };
+    }
+
+    // shared
+    const sharedConfig = await dependencies.readOatConfig(repoRoot);
+    await dependencies.writeOatConfig(repoRoot, {
+      ...sharedConfig,
+      workflow: applyWorkflowValue(
+        sharedConfig.workflow ?? {},
+        key,
+        parsedValue,
+      ),
+    });
+    return { key, value: displayValue, source: 'shared' };
+  }
+
   if (
     key === 'activeIdea' ||
     key === 'activeProject' ||
@@ -834,6 +1012,7 @@ async function runGet(
 async function runSet(
   keyArg: string,
   rawValue: string,
+  surface: ConfigSurface,
   context: CommandContext,
   dependencies: ConfigCommandDependencies,
 ): Promise<void> {
@@ -843,10 +1022,13 @@ async function runSet(
     }
 
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    const userConfigDir = join(context.home, '.oat');
     const result = await setConfigValue(
       repoRoot,
+      userConfigDir,
       keyArg,
       rawValue,
+      surface,
       dependencies,
     );
     if (context.json) {
@@ -966,17 +1148,51 @@ export function createConfigCommand(
         .description('Set an OAT config value')
         .argument('<key>', 'Config key')
         .argument('<value>', 'Config value')
+        .option(
+          '--shared',
+          'Write to the shared repo config (.oat/config.json)',
+        )
+        .option(
+          '--local',
+          'Write to the repo-local config (.oat/config.local.json)',
+        )
+        .option('--user', 'Write to the user-level config (~/.oat/config.json)')
         .action(
           async (
             key: string,
             value: string,
-            _options: unknown,
+            options: { shared?: boolean; local?: boolean; user?: boolean },
             command: Command,
           ) => {
             const context = dependencies.buildCommandContext(
               readGlobalOptions(command),
             );
-            await runSet(key, value, context, dependencies);
+            try {
+              const flagsPresent = [
+                options.shared,
+                options.local,
+                options.user,
+              ].filter(Boolean).length;
+              if (flagsPresent > 1) {
+                throw new Error(
+                  '--shared, --local, and --user flags are mutually exclusive; pass at most one.',
+                );
+              }
+              let surface: ConfigSurface = 'auto';
+              if (options.shared) surface = 'shared';
+              else if (options.local) surface = 'local';
+              else if (options.user) surface = 'user';
+              await runSet(key, value, surface, context, dependencies);
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : String(error);
+              if (context.json) {
+                context.logger.json({ status: 'error', message });
+              } else {
+                context.logger.error(message);
+              }
+              process.exitCode = 1;
+            }
           },
         ),
     )
