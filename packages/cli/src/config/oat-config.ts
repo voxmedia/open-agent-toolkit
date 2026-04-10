@@ -23,6 +23,90 @@ export interface OatArchiveConfig {
   summaryExportPath?: string;
 }
 
+export type WorkflowHillCheckpointDefault = 'every' | 'final';
+export type WorkflowPostImplementSequence =
+  | 'wait'
+  | 'summary'
+  | 'pr'
+  | 'docs-pr';
+export type WorkflowReviewExecutionModel =
+  | 'subagent'
+  | 'inline'
+  | 'fresh-session';
+
+export interface OatWorkflowConfig {
+  hillCheckpointDefault?: WorkflowHillCheckpointDefault;
+  archiveOnComplete?: boolean;
+  createPrOnComplete?: boolean;
+  postImplementSequence?: WorkflowPostImplementSequence;
+  reviewExecutionModel?: WorkflowReviewExecutionModel;
+  autoNarrowReReviewScope?: boolean;
+}
+
+const VALID_HILL_CHECKPOINT_DEFAULTS: readonly WorkflowHillCheckpointDefault[] =
+  ['every', 'final'];
+const VALID_POST_IMPLEMENT_SEQUENCES: readonly WorkflowPostImplementSequence[] =
+  ['wait', 'summary', 'pr', 'docs-pr'];
+const VALID_REVIEW_EXECUTION_MODELS: readonly WorkflowReviewExecutionModel[] = [
+  'subagent',
+  'inline',
+  'fresh-session',
+];
+
+function normalizeWorkflowConfig(
+  parsed: unknown,
+): OatWorkflowConfig | undefined {
+  if (!isRecord(parsed)) {
+    return undefined;
+  }
+
+  const next: OatWorkflowConfig = {};
+
+  if (
+    typeof parsed.hillCheckpointDefault === 'string' &&
+    (VALID_HILL_CHECKPOINT_DEFAULTS as readonly string[]).includes(
+      parsed.hillCheckpointDefault,
+    )
+  ) {
+    next.hillCheckpointDefault =
+      parsed.hillCheckpointDefault as WorkflowHillCheckpointDefault;
+  }
+
+  if (typeof parsed.archiveOnComplete === 'boolean') {
+    next.archiveOnComplete = parsed.archiveOnComplete;
+  }
+
+  if (typeof parsed.createPrOnComplete === 'boolean') {
+    next.createPrOnComplete = parsed.createPrOnComplete;
+  }
+
+  if (
+    typeof parsed.postImplementSequence === 'string' &&
+    (VALID_POST_IMPLEMENT_SEQUENCES as readonly string[]).includes(
+      parsed.postImplementSequence,
+    )
+  ) {
+    next.postImplementSequence =
+      parsed.postImplementSequence as WorkflowPostImplementSequence;
+  }
+
+  if (
+    typeof parsed.reviewExecutionModel === 'string' &&
+    (VALID_REVIEW_EXECUTION_MODELS as readonly string[]).includes(
+      parsed.reviewExecutionModel,
+    )
+  ) {
+    next.reviewExecutionModel =
+      parsed.reviewExecutionModel as WorkflowReviewExecutionModel;
+  }
+
+  if (typeof parsed.autoNarrowReReviewScope === 'boolean') {
+    next.autoNarrowReReviewScope = parsed.autoNarrowReReviewScope;
+  }
+
+  return Object.keys(next).length > 0 ? next : undefined;
+}
+
 export type OatToolsConfig = Partial<
   Record<
     | 'core'
@@ -46,6 +130,7 @@ export interface OatConfig {
   documentation?: OatDocumentationConfig;
   localPaths?: string[];
   autoReviewAtCheckpoints?: boolean;
+  workflow?: OatWorkflowConfig;
 }
 
 export interface OatLocalConfig {
@@ -53,11 +138,13 @@ export interface OatLocalConfig {
   activeProject?: string | null;
   lastPausedProject?: string | null;
   activeIdea?: string | null;
+  workflow?: OatWorkflowConfig;
 }
 
 export interface UserConfig {
   version: number;
   activeIdea?: string | null;
+  workflow?: OatWorkflowConfig;
 }
 
 export interface ActiveProjectResolution {
@@ -264,6 +351,11 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     next.autoReviewAtCheckpoints = parsed.autoReviewAtCheckpoints;
   }
 
+  const workflow = normalizeWorkflowConfig(parsed.workflow);
+  if (workflow) {
+    next.workflow = workflow;
+  }
+
   return next;
 }
 
@@ -298,6 +390,11 @@ function normalizeOatLocalConfig(
       typeof parsed.activeIdea === 'string' && parsed.activeIdea.trim()
         ? parsed.activeIdea.trim()
         : null;
+  }
+
+  const workflow = normalizeWorkflowConfig(parsed.workflow);
+  if (workflow) {
+    next.workflow = workflow;
   }
 
   return next;
@@ -429,6 +526,11 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
       typeof parsed.activeIdea === 'string' && parsed.activeIdea.trim()
         ? parsed.activeIdea.trim()
         : null;
+  }
+
+  const workflow = normalizeWorkflowConfig(parsed.workflow);
+  if (workflow) {
+    next.workflow = workflow;
   }
 
   return next;
