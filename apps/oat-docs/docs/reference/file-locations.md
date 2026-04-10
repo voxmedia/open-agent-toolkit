@@ -80,6 +80,7 @@ Archive sync surfaces:
 
 ## CLI code
 
+- `packages/control-plane/` - read-only control-plane library for project-state parsing and recommendation
 - `packages/cli/src/commands/`
 - `packages/cli/src/commands/cleanup/`
 - `packages/cli/src/commands/cleanup/project/`

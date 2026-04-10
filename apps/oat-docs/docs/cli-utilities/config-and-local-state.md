@@ -45,8 +45,11 @@ Use `oat config` for repo runtime config inspection and supported key mutation.
 - `oat config get <key>` - read one resolved config value
 - `oat config set <key> <value>` - update a supported shared or repo-local key
 - `oat config list` - show the resolved command-surface values with source information
+- `oat config dump --json` - emit the full merged config payload with per-key source attribution, suitable for automation and debugging
 - `oat config describe` - list supported config surfaces and keys across shared repo, repo-local, user, and sync/provider config
 - `oat config describe <key>` - show file location, scope, default, mutability, and owning command for one key
+
+Use `oat config dump --json` when you need the whole resolved config in one machine-readable response rather than a single key or a human-oriented list view.
 
 Archive lifecycle settings live here as shared repo config:
 

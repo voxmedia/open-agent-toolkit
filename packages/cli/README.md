@@ -27,8 +27,19 @@ Additional useful entry points:
 
 - `oat tools install`
 - `oat docs init --app-name my-docs`
+- `oat config dump --json`
+- `oat project status --json`
+- `oat project list --json`
 - `oat project archive sync`
 - `oat doctor`
+
+## Inspection Commands
+
+Use these commands when you want structured runtime/project state out of the CLI:
+
+- `oat config dump --json` - emit merged OAT config with per-key source attribution
+- `oat project status --json` - emit the active project's full parsed control-plane state
+- `oat project list --json` - emit summary state for tracked projects under the configured projects root
 
 ## Requirements
 
