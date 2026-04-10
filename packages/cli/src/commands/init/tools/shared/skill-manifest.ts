@@ -38,6 +38,7 @@ export const WORKFLOW_SKILLS = [
   'oat-repo-knowledge-index',
   'oat-worktree-bootstrap',
   'oat-worktree-bootstrap-auto',
+  'oat-wrap-up',
 ] as const;
 
 export const WORKFLOW_AGENTS = [
