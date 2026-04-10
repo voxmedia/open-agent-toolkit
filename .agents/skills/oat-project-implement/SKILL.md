@@ -670,27 +670,30 @@ REVIEW_MODEL=$(oat config get workflow.reviewExecutionModel 2>/dev/null || true)
 
 - **If `REVIEW_MODEL` is `subagent`:** Print `Review execution: subagent (from workflow.reviewExecutionModel).` Dispatch the review subagent directly via the Task tool. No prompt.
 - **If `REVIEW_MODEL` is `inline`:** Print `Review execution: inline (from workflow.reviewExecutionModel).` Run the review in-context per `oat-project-review-provide` skill. No prompt.
-- **If `REVIEW_MODEL` is `fresh-session`:** This is a **soft preference with escape hatch** because the agent cannot run the review in a fresh session on the user's behalf. Print:
-
-  ```
-  Per your config (workflow.reviewExecutionModel: fresh-session), your
-  preference is to run the review in a fresh session.
-
-  Run `oat-project-review-provide code final` in a separate session, then
-  resume this session when the review is complete.
-
-  If you'd like to review here instead:
-    1) subagent
-    2) inline
-
-  Enter 1 or 2 to run the review here, or press Enter to wait.
-  ```
-
-  - If the user enters `1`, dispatch the subagent review.
-  - If the user enters `2`, run the review inline.
-  - If the user presses Enter (or equivalent), pause the session and wait for the fresh-session review to complete.
-
+- **If `REVIEW_MODEL` is `fresh-session`:** This is a **soft preference with escape hatch** because the agent cannot run the review in a fresh session on the user's behalf. Print the guidance block below, then handle the user's response per the three outcomes listed after it.
 - **If unset or invalid:** Fall through to the standard 3-tier prompt below.
+
+**Fresh-session guidance block (print when `REVIEW_MODEL` is `fresh-session`):**
+
+```
+Per your config (workflow.reviewExecutionModel: fresh-session), your
+preference is to run the review in a fresh session.
+
+Run `oat-project-review-provide code final` in a separate session, then
+resume this session when the review is complete.
+
+If you'd like to review here instead:
+  1) subagent
+  2) inline
+
+Enter 1 or 2 to run the review here, or press Enter to wait.
+```
+
+**Fresh-session response outcomes:**
+
+- User enters `1` → dispatch the subagent review (same behavior as `REVIEW_MODEL=subagent`).
+- User enters `2` → run the review inline (same behavior as `REVIEW_MODEL=inline`).
+- User presses Enter (or equivalent no-input confirmation) → pause the session and wait for the fresh-session review to complete before continuing.
 
 **Standard prompt (when preference is unset):**
 
