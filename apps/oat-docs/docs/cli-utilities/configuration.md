@@ -173,6 +173,45 @@ oat config set workflow.hillCheckpointDefault every
 
 Default (no flag) targets `.oat/config.local.json` for workflow keys. Pass at most one of `--user`, `--shared`, or `--local`. Structural keys (`projects.root`, `worktrees.root`, `git.*`, `documentation.*`, `archive.*`, `tools.*`) are still shared-only regardless of flag.
 
+### Choosing the right surface (personal vs per-repo)
+
+Not every workflow preference belongs at user level, even though "set once, applies everywhere" is tempting. The guiding principle:
+
+> **If a workflow preference's correctness depends on other repo-level settings, it belongs at shared (per-repo) level, not user level.**
+
+Some preferences are **genuinely personal** — their correct value is the same for you regardless of which repo you're in. These are safe to set at `--user`:
+
+- `workflow.hillCheckpointDefault` — your personal tolerance for mid-implementation interruption
+- `workflow.reviewExecutionModel` — depends on your provider environment (Claude Code, Cursor, Codex), not the repo
+- `workflow.autoNarrowReReviewScope` — pure personal workflow preference, no per-repo interaction
+
+Other preferences **depend on per-repo configuration** to be safe. These should be set at `--shared` (in each repo where they apply), not `--user`:
+
+- `workflow.archiveOnComplete` — correctness depends on the repo's `archive.s3Uri` / `archive.s3SyncOnComplete` being configured. A user-level `true` would try to archive in repos that aren't set up for it.
+- `workflow.postImplementSequence` — correctness depends on `documentation.requireForProjectCompletion`. Setting `pr` at user level would foot-gun you in any repo that requires docs, because completion would later block on the docs gate while the PR is already open.
+- `workflow.createPrOnComplete` — this key is almost always redundant with `postImplementSequence`-driven flows. When it's meaningful, its correctness depends on the same per-repo docs and PR gates. Prefer shared scope, or omit it entirely and rely on `postImplementSequence: pr` or `docs-pr` to handle PR creation at the end of implement.
+
+**Cross-repo foot-gun example:** If you set `workflow.createPrOnComplete: true --user`, it applies to every repo you work on. In a repo with `documentation.requireForProjectCompletion: true` and `postImplementSequence: pr` (no docs step), running `oat-project-complete` would try to auto-create a PR, then immediately hit the docs gate and block you — leaving you with an open PR and a stuck completion. Your user-level preference silently asserted something that only holds in a specific shared-config shape.
+
+**Recommended split for most users:**
+
+```bash
+# Personal defaults (apply everywhere)
+oat config set workflow.hillCheckpointDefault final --user
+oat config set workflow.reviewExecutionModel subagent --user
+oat config set workflow.autoNarrowReReviewScope true --user
+
+# Per-repo team decisions (set in each repo where they apply)
+oat config set workflow.archiveOnComplete true --shared
+oat config set workflow.postImplementSequence docs-pr --shared  # or "pr" if docs aren't required
+```
+
+If you want to override a shared team decision for this specific checkout, use `--local`:
+
+```bash
+oat config set workflow.archiveOnComplete false --local  # "I don't want to archive on this specific branch checkout"
+```
+
 ### Relationship to `autoReviewAtCheckpoints`
 
 The existing `autoReviewAtCheckpoints` key (top-level in `.oat/config.json`) was **not** migrated under the `workflow.*` namespace to preserve backward compatibility. It remains shared-scope-only and controls whether `oat-project-implement` auto-triggers code reviews at plan phase checkpoints. That is a separate behavioral toggle from the workflow preferences above — it affects when reviews happen, not which prompt-skipping defaults apply.
