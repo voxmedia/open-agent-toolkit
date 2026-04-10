@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 oat_template: false
 ---
@@ -27,13 +27,13 @@ oat_template: false
 
 | Phase                                              | Status      | Tasks | Completed |
 | -------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1: Config System Extension                   | in_progress | 4     | 1/4       |
+| Phase 1: Config System Extension                   | in_progress | 4     | 2/4       |
 | Phase 2: Skill Integration — oat-project-implement | pending     | 5     | 0/5       |
 | Phase 3: Skill Integration — oat-project-complete  | pending     | 2     | 0/2       |
 | Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 1/16 tasks completed
+**Total:** 2/16 tasks completed
 
 ---
 
@@ -81,8 +81,34 @@ _To be filled when Phase 1 completes._
 
 ### Task p01-t02: Register workflow keys in config command catalog
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 269c9ec
+
+**Outcome:**
+
+- Added all 6 `workflow.*` keys to `ConfigKey` union type
+- Added all 6 keys to `KEY_ORDER` array (grouped together after `tools.*` keys)
+- Added 6 catalog entries to `CONFIG_CATALOG` with full metadata under group "Workflow Preferences (3-layer: local > shared > user)"
+- Each entry uses `scope: 'workflow'` (new scope value)
+- File field describes the 3-layer file resolution chain
+- Default value for all workflow keys is `null` (unset = prompt)
+- No resolution logic added — that's reserved for p01-t03
+
+**Files changed:**
+
+- `packages/cli/src/commands/config/index.ts` — type union, KEY_ORDER, CONFIG_CATALOG entries
+- `packages/cli/src/commands/config/index.test.ts` — 6 new tests covering describe (group, individual keys, enum types, JSON mode)
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test` — 1214 passed (6 new catalog tests)
+- Run: `pnpm --filter @open-agent-toolkit/cli lint` — 0 warnings, 0 errors
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check` — clean
+
+**Notes:**
+
+- Catalog descriptions explicitly call out the 3-layer resolution and what each enum value means, since these will be the user-facing source of truth via `oat config describe`
+- Sorted KEY_ORDER puts workflow keys after tools.\* and before worktrees.root
 
 ---
 
