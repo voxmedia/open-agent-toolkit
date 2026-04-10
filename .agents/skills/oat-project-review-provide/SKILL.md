@@ -265,6 +265,7 @@ Before resolving scope, check if this is a re-review of fixes from a prior revie
 1. Scan `plan.md` for tasks tagged with `(review)` in the scope being reviewed (e.g., `(p02-review)` fix tasks for a `p02` phase review or `(p02-p03-review)` for a contiguous phase-range review).
 2. If `(review)` fix tasks exist **and** their status is `completed`:
    - This is a re-review. Before prompting, check the workflow preference:
+
      ```bash
      AUTO_NARROW=$(oat config get workflow.autoNarrowReReviewScope 2>/dev/null || true)
      ```
@@ -272,6 +273,7 @@ Before resolving scope, check if this is a re-review of fixes from a prior revie
      - **If `AUTO_NARROW` is `true`:** Auto-narrow. Print `Re-review scope: narrowed to fix commits (from workflow.autoNarrowReReviewScope).` Gather only the commits for completed `(review)` fix tasks (see below). Skip the prompt.
      - **If `AUTO_NARROW` is `false`:** Use full scope. Print `Re-review scope: full (from workflow.autoNarrowReReviewScope).` Skip the prompt and proceed with full scope resolution below.
      - **If unset:** Fall through to the standard prompt.
+
    - Standard prompt (when preference is unset):
 
      ```
