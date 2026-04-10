@@ -907,19 +907,281 @@ Expected: Returns `true` with source `config.local.json`
 
 ---
 
+## Revision Phase p-rev1: Final Review Fixes
+
+Fix tasks generated from `final` code review (2026-04-10, auto-triggered at p05 HiLL checkpoint).
+
+### Task prev1-t01: (review) Stage moved review artifact in review-receive Step 7.6 commit
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-receive/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding `I1`: Step 7.5 runs `mv "$REVIEW_PATH" "$ARCHIVED_REVIEW_PATH"` to move the consumed review artifact into `reviews/archived/`, but the new Step 7.6 atomic commit only stages `plan.md`, `implementation.md`, and `state.md` — so the rename remains unstaged after the commit. A subagent running this skill will leave the worktree dirty with the moved artifact, and the original agent will return to exactly the drift scenario p04-t02 was intended to eliminate.
+
+**Step 2: Implement fix**
+
+Update the Step 7.6 commit command to also stage the `reviews/` directory changes (both the deletion of the original path and the new archived location):
+
+```bash
+git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
+git add "$PROJECT_PATH/reviews/"
+git diff --cached --quiet || git commit -m "chore(oat): record review findings and add fix tasks ({scope})"
+```
+
+Use scoped `git add "$PROJECT_PATH/reviews/"`, not repo-wide `git add -A`. Note in the prose that this captures both the Step 7.5 archive move AND any newly-created review fix task references.
+
+**Step 3: Verify**
+
+Manually read the updated SKILL.md to confirm the `git add "$PROJECT_PATH/reviews/"` line is present and that the commit command still rejects `-A`/glob patterns.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-review-receive/SKILL.md
+git commit -m "fix(prev1-t01): stage moved review artifact in review-receive Step 7.6 commit"
+```
+
+---
+
+### Task prev1-t02: (review) Document source label rename in configuration.md
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+
+**Step 1: Understand the issue**
+
+Review finding `I2`: The `getConfigValue()` refactor in p01-t03 changes the `source` field returned by `oat config get --json` and `oat config list` from `config.json` / `config.local.json` → `shared` / `local` / `user`. The p01-t03 commit message mentions this but the published docs do not call it out. Any external script that greps for `"source":"config.json"` will silently stop matching.
+
+**Step 2: Implement fix**
+
+Add a "Source labels" subsection to `configuration.md` under "The fastest way to inspect config" that:
+
+- Lists the current labels: `env`, `local`, `shared`, `user`, `default`
+- Notes that earlier CLI versions (pre-this-release) returned `config.json` / `config.local.json` as the source strings
+- Explains why the rename happened (consistency with `oat config dump` output)
+
+**Step 3: Verify**
+
+Run: `pnpm build:docs`
+Expected: docs build succeeds. Read the rendered section to confirm the note is visible.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/cli-utilities/configuration.md
+git commit -m "docs(prev1-t02): document source label rename in configuration guide"
+```
+
+---
+
+### Task prev1-t03: (review) Resolve activeIdea --user surface inconsistency
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding `I3`: The catalog advertises a user-level `activeIdea` entry (`~/.oat/config.json`) but `validateSurfaceForKey()` rejects `oat config set activeIdea <path> --user` because `activeIdea` is in `isStateKey()`. The new `--user` flag (p01-t04) makes this pre-existing inconsistency more visible.
+
+**Step 2: Implement fix**
+
+Prefer **Option (a)** per the reviewer's recommendation: allow `activeIdea --user` as a legitimate surface by treating it as a multi-surface state key.
+
+- Update `validateSurfaceForKey()`: special-case `activeIdea` to allow `local` or `user` surface (but still reject `shared`)
+- Update `setConfigValue()`: add a branch that writes `activeIdea` to user config when `effectiveSurface === 'user'`, using `readUserConfig`/`writeUserConfig` analogously to the workflow key branches
+- Update tests: add coverage for `oat config set activeIdea <path> --user` writing to `~/.oat/config.json`, and confirm `oat config get activeIdea` resolves from user when set there
+- Confirm `activeProject` and `lastPausedProject` remain local-only (they don't have a user-surface catalog entry)
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: Tests pass, including new `activeIdea --user` tests.
+
+Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: Clean.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
+git commit -m "fix(prev1-t03): allow activeIdea --user surface to match catalog"
+```
+
+---
+
+### Task prev1-t04: (review) Update workflow catalog description precedence text
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding `m1`: Each workflow key catalog description ends with `Resolution: local > shared > user.` This omits `env` (future-proof) and `default` (how unset state is represented). Users may be confused about where the "unset" state comes from.
+
+**Step 2: Implement fix**
+
+Update all 6 workflow catalog entries: change `Resolution: local > shared > user.` → `Resolution: env > local > shared > user > default.`
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: Existing tests still pass (the catalog test assertions use substring matching so they should still match; update them if they become too loose).
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.ts
+git commit -m "docs(prev1-t04): include full precedence chain in workflow catalog descriptions"
+```
+
+---
+
+### Task prev1-t05: (review) Use "unset" instead of "null" for workflow defaults in catalog
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding `m2`: Workflow catalog entries show `defaultValue: 'null'` which reads confusingly for boolean keys (user asks "is the default `null` or `false`?"). Other optional catalog entries like `documentation.root` use `defaultValue: 'unset'` — a clearer convention that matches the skill behavior ("unset = prompt").
+
+**Step 2: Implement fix**
+
+Update all 6 workflow catalog entries: change `defaultValue: 'null'` → `defaultValue: 'unset'`.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: Existing tests still pass. If the `describe workflow.archiveOnComplete` test asserts `Default: null`, update it to `Default: unset`.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
+git commit -m "docs(prev1-t05): use unset instead of null for workflow catalog defaults"
+```
+
+---
+
+### Task prev1-t06: (review) Restructure fresh-session escape hatch for readability
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding `m3`: The `fresh-session` soft-preference escape hatch in Step 14 is documented inline in dense prose. Future skill readers may have trouble spotting the three outcomes (`1` → subagent, `2` → inline, Enter → wait).
+
+**Step 2: Implement fix**
+
+Break the escape hatch outcomes out into a short bullet list below the printed guidance block. Keep the existing guidance text but follow it with something like:
+
+```
+Handle the user response:
+
+- `1` → dispatch the subagent review
+- `2` → run the review inline
+- Enter (or equivalent) → pause the session and wait for the fresh-session review to complete
+```
+
+**Step 3: Verify**
+
+Run: `pnpm lint && pnpm format`
+Expected: Clean.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md
+git commit -m "docs(prev1-t06): restructure fresh-session escape hatch as bullet list"
+```
+
+---
+
+### Task prev1-t07: (review) Clarify autoNarrowReReviewScope description
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding `m4`: The `workflow.autoNarrowReReviewScope` catalog description reads as unconditional, but the preference only applies when re-reviewing completed fix tasks. A user who sets it to `true` but runs review-provide before any fix tasks have been completed won't see any config effect (which is correct behavior, just unclear from the description).
+
+**Step 2: Implement fix**
+
+Update the `workflow.autoNarrowReReviewScope` catalog description to clarify the scoping:
+
+```
+Auto-narrow re-review scope to fix-task commits in oat-project-review-provide when re-reviewing completed fix tasks. Has no effect on initial reviews. When unset, the skill prompts. Resolution: env > local > shared > user > default.
+```
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: Existing tests still pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.ts
+git commit -m "docs(prev1-t07): clarify workflow.autoNarrowReReviewScope branch scoping"
+```
+
+---
+
+### Task prev1-t08: (review) Verify and fix docs anchor for workflow preferences section
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md` (if anchor is broken)
+
+**Step 1: Understand the issue**
+
+Review finding `m6`: `lifecycle.md` links to `configuration.md#workflow-preferences-workflow` but the auto-generated slug for `## Workflow preferences (\`workflow.\*\`)` may differ depending on Fumadocs' slug generator.
+
+**Step 2: Implement fix**
+
+1. Run `pnpm build:docs` and inspect the rendered configuration.md for the actual anchor slug used for the "Workflow preferences" heading.
+2. If the anchor differs from `#workflow-preferences-workflow`, update the link in `lifecycle.md` to match the actual slug.
+3. If the anchor resolves correctly, no change is needed — verify and mark this task complete with a note in implementation.md.
+
+**Step 3: Verify**
+
+Run: `pnpm build:docs` and confirm the docs build succeeds. Manually verify the anchor resolves by inspecting the rendered HTML or JSON.
+
+**Step 4: Commit**
+
+```bash
+# Only commit if an actual change was needed
+git add apps/oat-docs/docs/workflows/projects/lifecycle.md
+git commit -m "docs(prev1-t08): fix workflow preferences section anchor in lifecycle doc"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                            |
-| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                   |
-| p02    | code     | pending | -          | -                                                   |
-| p03    | code     | pending | -          | -                                                   |
-| p04    | code     | pending | -          | -                                                   |
-| p05    | code     | pending | -          | -                                                   |
-| final  | code     | pending | -          | -                                                   |
-| spec   | artifact | n/a     | -          | -                                                   |
-| design | artifact | n/a     | -          | -                                                   |
-| plan   | artifact | passed  | 2026-04-08 | reviews/archived/artifact-plan-review-2026-04-08.md |
+| Scope  | Type     | Status      | Date       | Artifact                                            |
+| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                   |
+| p02    | code     | pending     | -          | -                                                   |
+| p03    | code     | pending     | -          | -                                                   |
+| p04    | code     | pending     | -          | -                                                   |
+| p05    | code     | pending     | -          | -                                                   |
+| final  | code     | fixes_added | 2026-04-10 | reviews/archived/final-review-2026-04-07.md         |
+| spec   | artifact | n/a         | -          | -                                                   |
+| design | artifact | n/a         | -          | -                                                   |
+| plan   | artifact | passed      | 2026-04-08 | reviews/archived/artifact-plan-review-2026-04-08.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -934,8 +1196,9 @@ Expected: Returns `true` with source `config.local.json`
 - Phase 3: 2 tasks — Skill integration for oat-project-complete
 - Phase 4: 3 tasks — Review skill integration (1 config pref + 2 bookkeeping commit fixes for review-receive and review-receive-remote)
 - Phase 5: 2 tasks — Documentation updates
+- Revision Phase p-rev1: 8 tasks — Final review fix tasks (3 important + 5 minor findings)
 
-**Total: 16 tasks**
+**Total: 24 tasks (16 plan + 8 revision)**
 
 Ready for code review and merge.
 

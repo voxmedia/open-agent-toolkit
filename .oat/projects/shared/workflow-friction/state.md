@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: c87cb6c
+oat_current_task: prev1-t01
+oat_last_commit: 58ba8b3
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: []
@@ -29,7 +29,7 @@ oat_template: false
 
 ## Current Phase
 
-Implementation — tasks complete; awaiting final review
+Implementation — Revision Phase p-rev1: processing final review findings (0/8 fix tasks)
 
 ## Artifacts
 
@@ -51,4 +51,4 @@ None
 
 ## Next Milestone
 
-Final code review (auto-triggered at p05 checkpoint)
+Execute 8 fix tasks (prev1-t01 through prev1-t08), then re-review final scope

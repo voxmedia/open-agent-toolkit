@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 oat_template: false
 ---
@@ -25,15 +25,16 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase                                              | Status   | Tasks | Completed |
-| -------------------------------------------------- | -------- | ----- | --------- |
-| Phase 1: Config System Extension                   | complete | 4     | 4/4       |
-| Phase 2: Skill Integration — oat-project-implement | complete | 5     | 5/5       |
-| Phase 3: Skill Integration — oat-project-complete  | complete | 2     | 2/2       |
-| Phase 4: Skill Integration — Review Skills         | complete | 3     | 3/3       |
-| Phase 5: Documentation and Bundled Docs Update     | complete | 2     | 2/2       |
+| Phase                                              | Status      | Tasks | Completed |
+| -------------------------------------------------- | ----------- | ----- | --------- |
+| Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
+| Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
+| Phase 3: Skill Integration — oat-project-complete  | complete    | 2     | 2/2       |
+| Phase 4: Skill Integration — Review Skills         | complete    | 3     | 3/3       |
+| Phase 5: Documentation and Bundled Docs Update     | complete    | 2     | 2/2       |
+| Revision Phase p-rev1: Final Review Fixes          | in_progress | 8     | 0/8       |
 
-**Total:** 16/16 tasks completed
+**Total:** 16/24 tasks completed (16 plan + 8 revision)
 
 ---
 
@@ -637,6 +638,40 @@ oat_template: false
 
 <!-- orchestration-runs-start -->
 <!-- orchestration-runs-end -->
+
+---
+
+## Review Received: final
+
+**Date:** 2026-04-10
+**Review artifact:** `reviews/archived/final-review-2026-04-07.md`
+**Invocation:** auto (triggered at p05 HiLL checkpoint via `oat_auto_review_at_checkpoints: true`)
+
+**Findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 0
+- Minor: 6 (5 converted, 1 deferred)
+
+**Converted to fix tasks:**
+
+- `prev1-t01` — I1: Stage moved review artifact in review-receive Step 7.6 commit
+- `prev1-t02` — I2: Document source label rename in configuration.md
+- `prev1-t03` — I3: Allow activeIdea --user surface to match catalog
+- `prev1-t04` — m1: Full precedence chain in workflow catalog descriptions
+- `prev1-t05` — m2: Use "unset" instead of "null" for workflow defaults
+- `prev1-t06` — m3: Restructure fresh-session escape hatch as bullet list
+- `prev1-t07` — m4: Clarify autoNarrowReReviewScope branch scoping
+- `prev1-t08` — m6: Verify/fix workflow preferences section docs anchor
+
+**Deferred (non-blocking):**
+
+- **m5** — `formatResolvedValue()` comma handling in arrays. Reviewer noted "no action needed now" — pre-existing latent edge case that doesn't affect current keys (`localPaths` entries are paths, unlikely to contain commas). Flagged for future maintainers via optional TODO comment.
+
+**Auto-disposition rationale:** All Important findings require action. 5 of 6 Minor findings are in-scope (doc/description fixes and readability improvements) so they are converted per auto-disposition mode. The comma-handling minor is a pre-existing latent edge case explicitly marked "no action needed" by the reviewer, so it is deferred with rationale.
+
+**Next:** Execute fix tasks via `oat-project-implement`. After all `prev1-t*` tasks are complete, plan.md Reviews table final row moves from `fixes_added` → `fixes_completed`, then a re-review (narrowed to fix-task commits per `workflow.autoNarrowReReviewScope` when set) will be run before reaching `passed`.
 
 ---
 
