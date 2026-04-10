@@ -11,12 +11,14 @@
 - Longer-horizon backlog work now includes explicit entries for freshness hardening (`bl-f9bd`) and memory/provider-enhancement work (`bl-71a1`).
 - Control-plane follow-through now has an explicit low-priority item: `bl-931d` tracks a possible `listProjects()` summary fast path, but only if real performance measurements show the current full-state assembly is too expensive.
 - `bl-281c` captures the broader follow-up from PR #38: migrate read-only skills to `oat project status --json` (instead of manual file parsing) and fix the cloud-environment gap by adding `npx @open-agent-toolkit/cli` fallback when `oat` isn't installed. This was intentionally kept out of the workflow-friction project to avoid scope creep.
+- `bl-af93` captures a small-but-sharp CLI gap discovered while dogfooding workflow preferences: there's no `oat config unset <key>` command, so users cannot remove a config value without hand-editing JSON. Especially load-bearing for enum workflow keys (`hillCheckpointDefault`, `postImplementSequence`, `reviewExecutionModel`) where no value represents "prompt me again" — once set, the user is stuck unless they edit `~/.oat/config.json` directly.
 
 <!-- OAT BACKLOG-INDEX -->
 
 | ID      | Title                                                                                           | Status      | Priority | Scope      | Estimate |
 | ------- | ----------------------------------------------------------------------------------------------- | ----------- | -------- | ---------- | -------- |
 | bl-42f9 | Add first-class OAT project/repo management workflow family (oat-pjm-_ or oat-repo-reference-_) | in_progress | high     | initiative | XL       |
+| bl-af93 | Add `oat config unset <key>` command for removing config values                                 | open        | medium   | feature    | S        |
 | bl-fb3f | Add configurable autonomous project lifecycle follow-through                                    | open        | medium   | feature    | L        |
 | bl-3327 | Add dependency intelligence skill family                                                        | open        | medium   | feature    | L        |
 | bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new                                   | open        | medium   | feature    | L        |
