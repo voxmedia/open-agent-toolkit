@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 oat_template: false
 ---
@@ -30,10 +30,10 @@ oat_template: false
 | Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
 | Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
 | Phase 3: Skill Integration — oat-project-complete  | complete    | 2     | 2/2       |
-| Phase 4: Skill Integration — Review Skills         | in_progress | 3     | 0/3       |
+| Phase 4: Skill Integration — Review Skills         | in_progress | 3     | 1/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 11/16 tasks completed
+**Total:** 12/16 tasks completed
 
 ---
 
@@ -481,8 +481,24 @@ oat_template: false
 
 ### Task p04-t01: Auto-narrow re-review scope preference
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bb7b1f0
+
+**Outcome:**
+
+- `oat-project-review-provide` Step 3a now reads `workflow.autoNarrowReReviewScope` before prompting
+- `true` → auto-narrows to fix commits, no prompt
+- `false` → uses full scope, no prompt
+- Unset → falls through to standard `Scope to fix task commits only? (Y/n)` prompt (backward compat)
+- Bumped skill version 1.2.3 → 1.3.0
+
+**Files changed:**
+
+- `.agents/skills/oat-project-review-provide/SKILL.md` — Step 3a preference check + version bump
+
+**Verification:**
+
+- `pnpm lint` → clean
 
 ### Task p04-t02: Add bookkeeping commit step to oat-project-review-receive
 
