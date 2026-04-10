@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p06-t03
+oat_current_task_id: p06-t04
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3 | complete    | 1     | 1/1       |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 1     | 1/1       |
-| Phase 6 | in_progress | 5     | 2/5       |
+| Phase 6 | in_progress | 5     | 3/5       |
 
-**Total:** 14/17 tasks completed
+**Total:** 15/17 tasks completed
 
 ---
 
@@ -572,6 +572,48 @@ oat_generated: false
 
 ---
 
+### Task p06-t03: (review) Extract shared control-plane frontmatter and normalization helpers
+
+**Status:** completed
+**Commit:** 4cb936e
+
+**Outcome (required):**
+
+- Extracted reusable frontmatter, normalization, and missing-file helpers into `packages/control-plane/src/shared/utils/`.
+- Updated the state parser, artifact scanner, review scanner, task parser, and boundary detector to consume the shared helpers instead of local copies.
+- Added focused utility tests so placeholder-aware normalization and frontmatter parsing stay pinned during future refactors.
+
+**Files changed:**
+
+- `packages/control-plane/src/shared/utils/frontmatter.ts` - shared frontmatter extraction and YAML record parsing.
+- `packages/control-plane/src/shared/utils/normalize.ts` - shared nullable-string and boolean normalization helpers.
+- `packages/control-plane/src/shared/utils/errors.ts` - shared ENOENT detection helper.
+- `packages/control-plane/src/shared/utils/frontmatter.test.ts` - frontmatter utility regression coverage.
+- `packages/control-plane/src/shared/utils/normalize.test.ts` - normalization utility regression coverage.
+- `packages/control-plane/src/state/parser.ts` - switched state parsing to shared utilities while preserving placeholder-aware behavior.
+- `packages/control-plane/src/state/artifacts.ts` - replaced local frontmatter and normalization helpers with shared utilities.
+- `packages/control-plane/src/recommender/boundary.ts` - reused shared normalization helpers for boundary-tier decisions.
+- `packages/control-plane/src/state/tasks.ts` - reused shared frontmatter parsing for current-task extraction.
+- `packages/control-plane/src/state/reviews.ts` - reused shared missing-file error handling.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane build`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Followed the package-local shared taxonomy agreed during review handling: `shared/utils` for reusable helpers rather than ad hoc flat `shared/*.ts` files.
+- Kept placeholder-aware string normalization configurable so parser semantics stayed stricter than the artifact/boundary readers where needed.
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -679,6 +721,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p06-t02`, closed Phase 6, and finished review-fix implementation.
 - 2026-04-09: Final re-review passed with no remaining findings.
 - 2026-04-09: Received independent final second-opinion review, added `p06-t03` through `p06-t05`, deferred `m4` by explicit user direction, and resumed implementation from `p06-t03`.
+- 2026-04-10: Completed `p06-t03` and advanced to `p06-t04`.
 
 ---
 
