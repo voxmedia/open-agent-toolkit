@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p03-t02
+oat_current_task_id: p04-t01
 oat_generated: false
 oat_template: false
 ---
@@ -29,11 +29,11 @@ oat_template: false
 | -------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
 | Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
-| Phase 3: Skill Integration — oat-project-complete  | in_progress | 2     | 1/2       |
-| Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
+| Phase 3: Skill Integration — oat-project-complete  | complete    | 2     | 2/2       |
+| Phase 4: Skill Integration — Review Skills         | in_progress | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 10/16 tasks completed
+**Total:** 11/16 tasks completed
 
 ---
 
@@ -403,8 +403,31 @@ oat_template: false
 
 ## Phase 3: Skill Integration — oat-project-complete
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-10
+**Completed:** 2026-04-10
+
+### Phase Summary
+
+**Outcome:**
+
+- `oat-project-complete` (v1.3.7 → v1.4.0) Step 2 now respects two workflow preferences before asking the batched questions
+- `workflow.archiveOnComplete` controls whether to archive without asking
+- `workflow.createPrOnComplete` controls whether to include PR creation in the completion flow without asking
+- Both preferences are skipped gracefully when unset (full backward compat)
+- The existing `oat_pr_status: open` short-circuit is preserved — a tracked PR still skips the PR question regardless of preference
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-complete/SKILL.md` — frontmatter version bump, new "Workflow preference checks" subsection in Step 2
+
+**Verification:**
+
+- `pnpm lint` → clean on both tasks
+
+**Notes:**
+
+- Deliberately kept the "Ready to mark complete?" confirmation outside the preference system — it's a meaningful safety prompt, not a workflow preference
 
 ### Task p03-t01: Archive on complete preference
 
@@ -430,8 +453,24 @@ oat_template: false
 
 ### Task p03-t02: Create-PR-on-complete preference
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6305cda
+
+**Outcome:**
+
+- Extended the same "Workflow preference checks" subsection added in p03-t01 to also read `workflow.createPrOnComplete`
+- `true` → sets `SHOULD_OPEN_PR=true`, skips the Open PR question (unless `oat_pr_status: open`, in which case the existing short-circuit still wins)
+- `false` → sets `SHOULD_OPEN_PR=false`, skips the Open PR question
+- Unset → asks as before (backward compat)
+- Preserved the existing behavior where a tracked open PR short-circuits the question regardless of preference
+
+**Files changed:**
+
+- `.agents/skills/oat-project-complete/SKILL.md` — extended the preference check block in Step 2
+
+**Verification:**
+
+- `pnpm lint` → clean
 
 ---
 
