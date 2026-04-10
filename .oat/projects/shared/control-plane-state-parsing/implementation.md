@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: null
+oat_current_task_id: p06-t03
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 1     | 1/1       |
-| Phase 3 | complete | 1     | 1/1       |
-| Phase 4 | complete | 4     | 4/4       |
-| Phase 5 | complete | 1     | 1/1       |
-| Phase 6 | complete | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 1     | 1/1       |
+| Phase 3 | complete    | 1     | 1/1       |
+| Phase 4 | complete    | 4     | 4/4       |
+| Phase 5 | complete    | 1     | 1/1       |
+| Phase 6 | in_progress | 5     | 2/5       |
 
-**Total:** 14/14 tasks completed
+**Total:** 14/17 tasks completed
 
 ---
 
@@ -631,6 +631,33 @@ oat_generated: false
 
 ---
 
+### Review Received: final (independent second opinion)
+
+**Date:** 2026-04-09
+**Review artifact:** `reviews/archived/final-review-2026-04-09-v3.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 4
+
+**New tasks added:** `p06-t03`, `p06-t04`, `p06-t05`
+
+**Disposition:**
+
+- `m1` Convert to task `p06-t03` to extract shared control-plane frontmatter, normalization, and error helpers into `src/shared/utils/`.
+- `m2` Convert to task `p06-t04` to replace the unnecessary dynamic `readFile` import with a static import.
+- `m3` Convert to task `p06-t05` to reuse `plan.md` content in `listProjects` instead of reading it twice per project.
+- `m4` Deferred by explicit user direction: the current `listProjects` full-state assembly is functionally correct, and the fast-path summary optimization should only be revisited if measured performance makes it worthwhile.
+
+**Next:** Execute the new review-fix tasks via `oat-project-implement`, then re-run `oat-project-review-provide code final`.
+
+**Review fix status:** `fixes_added`
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.
@@ -651,6 +678,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Completed `p06-t01` and advanced to `p06-t02`.
 - 2026-04-09: Completed `p06-t02`, closed Phase 6, and finished review-fix implementation.
 - 2026-04-09: Final re-review passed with no remaining findings.
+- 2026-04-09: Received independent final second-opinion review, added `p06-t03` through `p06-t05`, deferred `m4` by explicit user direction, and resumed implementation from `p06-t03`.
 
 ---
 

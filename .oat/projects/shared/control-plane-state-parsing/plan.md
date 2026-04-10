@@ -853,17 +853,135 @@ git commit -m "fix(p06-t02): return repo-relative project paths"
 
 ---
 
+### Task p06-t03: (review) Extract shared control-plane frontmatter and normalization helpers
+
+**Files:**
+
+- Create: `packages/control-plane/src/shared/utils/frontmatter.ts`
+- Create: `packages/control-plane/src/shared/utils/normalize.ts`
+- Create: `packages/control-plane/src/shared/utils/errors.ts`
+- Modify: `packages/control-plane/src/state/parser.ts`
+- Modify: `packages/control-plane/src/state/artifacts.ts`
+- Modify: `packages/control-plane/src/recommender/boundary.ts`
+- Modify: `packages/control-plane/src/state/reviews.ts`
+- Modify: `packages/control-plane/src/state/tasks.ts`
+- Modify: tests under `packages/control-plane/src/` as needed
+
+**Step 1: Understand the issue**
+
+Review finding: frontmatter/normalization/error helpers are duplicated across multiple control-plane modules, which creates drift risk when one copy changes without the others.
+Location: `packages/control-plane/src/state/parser.ts`, `packages/control-plane/src/state/artifacts.ts`, `packages/control-plane/src/recommender/boundary.ts`, `packages/control-plane/src/state/reviews.ts`, `packages/control-plane/src/state/tasks.ts`
+
+**Step 2: Implement fix**
+
+Extract the duplicated helpers into shared control-plane utility modules:
+
+1. Introduce package-local shared helpers under `src/shared/utils/` for frontmatter extraction, nullable-string/boolean normalization, and missing-file error detection.
+2. Preserve the stricter placeholder-aware normalization used by the state parser where needed; do not silently broaden or narrow behavior during extraction.
+3. Update the affected control-plane modules to import the shared helpers instead of maintaining local copies.
+4. Add or adjust targeted tests if helper behavior changes need explicit regression coverage.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+Expected: All control-plane tests pass after helper extraction
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check && pnpm --filter @open-agent-toolkit/control-plane build`
+Expected: No errors
+
+**Step 4: Commit**
+
+```bash
+git add packages/control-plane/src/
+git commit -m "refactor(p06-t03): extract shared control-plane utils"
+```
+
+---
+
+### Task p06-t04: (review) Remove dynamic `readFile` import from project assembly
+
+**Files:**
+
+- Modify: `packages/control-plane/src/project.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `readOptionalFile` dynamically imports `readFile` even though the file already statically imports other fs helpers, which is unnecessary and inconsistent.
+Location: `packages/control-plane/src/project.ts:212`
+
+**Step 2: Implement fix**
+
+Simplify the file read path:
+
+1. Add `readFile` to the existing static `node:fs/promises` import in `project.ts`.
+2. Remove the dynamic import inside `readOptionalFile`.
+3. Keep behavior identical aside from import strategy.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+Expected: Project assembly tests still pass
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check`
+Expected: No errors
+
+**Step 4: Commit**
+
+```bash
+git add packages/control-plane/src/project.ts
+git commit -m "refactor(p06-t04): remove dynamic readFile import"
+```
+
+---
+
+### Task p06-t05: (review) Avoid duplicate `plan.md` reads in `listProjects`
+
+**Files:**
+
+- Modify: `packages/control-plane/src/project.ts`
+- Modify: `packages/control-plane/src/project.test.ts` if needed
+
+**Step 1: Understand the issue**
+
+Review finding: `listProjects` reads `plan.md` twice per project, once for reviews and once for task progress, which doubles file I/O in the loop body.
+Location: `packages/control-plane/src/project.ts:96,100`
+
+**Step 2: Implement fix**
+
+Reduce duplicate file reads in the project summary path:
+
+1. Read `plan.md` once into a local variable within the `listProjects` loop.
+2. Reuse that content for both review parsing and task-progress parsing.
+3. Keep output behavior identical while removing redundant I/O.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+Expected: Project summary integration tests still pass
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check`
+Expected: No errors
+
+**Step 4: Commit**
+
+```bash
+git add packages/control-plane/src/project.ts packages/control-plane/src/project.test.ts
+git commit -m "perf(p06-t05): reuse plan content in listProjects"
+```
+
+---
+
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                            |
-| ----- | -------- | -------- | ---------- | --------------------------------------------------- |
-| p01   | code     | pending  | -          | -                                                   |
-| p02   | code     | pending  | -          | -                                                   |
-| p03   | code     | pending  | -          | -                                                   |
-| p04   | code     | pending  | -          | -                                                   |
-| final | code     | passed   | 2026-04-09 | reviews/archived/final-review-2026-04-09-v2.md      |
-| final | code     | received | 2026-04-09 | reviews/final-review-2026-04-09-v3.md               |
-| plan  | artifact | passed   | 2026-04-09 | reviews/archived/artifact-plan-review-2026-04-09.md |
+| Scope | Type     | Status      | Date       | Artifact                                            |
+| ----- | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01   | code     | pending     | -          | -                                                   |
+| p02   | code     | pending     | -          | -                                                   |
+| p03   | code     | pending     | -          | -                                                   |
+| p04   | code     | pending     | -          | -                                                   |
+| final | code     | passed      | 2026-04-09 | reviews/archived/final-review-2026-04-09-v2.md      |
+| final | code     | fixes_added | 2026-04-09 | reviews/archived/final-review-2026-04-09-v3.md      |
+| plan  | artifact | passed      | 2026-04-09 | reviews/archived/artifact-plan-review-2026-04-09.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -880,9 +998,9 @@ _This section will be updated during implementation as phases are completed._
 - Phase 3: 1 task — Public API wiring and integration tests
 - Phase 4: 4 tasks — CLI dependency, project status command, project list command, config dump command (with reusable resolution utility)
 - Phase 5: 1 task — Version bumps, release validation, and final verification
-- Phase 6: 2 tasks — Review fixes for lifecycle parsing and repo-relative project path output
+- Phase 6: 5 tasks — Review fixes for lifecycle parsing, repo-relative project paths, shared control-plane utils, import cleanup, and duplicate plan reads
 
-**Total: 14 tasks**
+**Total: 17 tasks**
 
 ---
 
