@@ -1,4 +1,4 @@
-import { access, readdir } from 'node:fs/promises';
+import { access, readFile, readdir } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 
 import { recommendSkill } from './recommender/router';
@@ -209,7 +209,6 @@ function normalizePath(path: string): string {
 
 async function readOptionalFile(path: string): Promise<string> {
   try {
-    const { readFile } = await import('node:fs/promises');
     return await readFile(path, 'utf8');
   } catch (error) {
     if (
