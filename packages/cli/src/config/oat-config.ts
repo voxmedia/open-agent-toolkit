@@ -21,6 +21,7 @@ export interface OatArchiveConfig {
   s3Uri?: string;
   s3SyncOnComplete?: boolean;
   summaryExportPath?: string;
+  wrapUpExportPath?: string;
 }
 
 export type OatToolsConfig = Partial<
@@ -186,6 +187,14 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     ) {
       archive.summaryExportPath = normalizeToPosixPath(
         parsed.archive.summaryExportPath.trim().replace(/\/+$/, ''),
+      );
+    }
+    if (
+      typeof parsed.archive.wrapUpExportPath === 'string' &&
+      parsed.archive.wrapUpExportPath.trim()
+    ) {
+      archive.wrapUpExportPath = normalizeToPosixPath(
+        parsed.archive.wrapUpExportPath.trim().replace(/\/+$/, ''),
       );
     }
     if (Object.keys(archive).length > 0) {

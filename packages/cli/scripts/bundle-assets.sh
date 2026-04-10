@@ -56,6 +56,7 @@ SKILLS=(
   oat-review-receive-remote
   oat-worktree-bootstrap
   oat-worktree-bootstrap-auto
+  oat-wrap-up
   analyze
   compare
   deep-research

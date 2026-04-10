@@ -234,4 +234,46 @@ describe('resolveEffectiveConfig', () => {
       source: 'shared',
     });
   });
+
+  it('surfaces archive.wrapUpExportPath with source default when unset', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({ version: 1 }) satisfies OatLocalConfig,
+        readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+      },
+    );
+
+    expect(result.resolved['archive.wrapUpExportPath']).toEqual({
+      value: null,
+      source: 'default',
+    });
+  });
+
+  it('surfaces archive.wrapUpExportPath from shared config when set', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () =>
+          ({
+            version: 1,
+            archive: { wrapUpExportPath: '.oat/repo/reference/wrap-ups' },
+          }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({ version: 1 }) satisfies OatLocalConfig,
+        readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+      },
+    );
+
+    expect(result.resolved['archive.wrapUpExportPath']).toEqual({
+      value: '.oat/repo/reference/wrap-ups',
+      source: 'shared',
+    });
+  });
 });
