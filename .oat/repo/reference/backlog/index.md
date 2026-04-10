@@ -9,6 +9,7 @@
 - `bl-ea64` moved to completed history after the archive-sync-closeout-config project shipped S3-backed archive sync, completion-time archive upload/export behavior, and related config discoverability improvements.
 - Planned follow-on investments cluster around provider ergonomics (`bl-cbdd`), review collaboration (`bl-9fb8`), dependency analysis (`bl-3327`), and ideas-to-project promotion (`bl-b3f7`).
 - Longer-horizon backlog work now includes explicit entries for freshness hardening (`bl-f9bd`) and memory/provider-enhancement work (`bl-71a1`).
+- Control-plane follow-through now has an explicit low-priority item: `bl-931d` tracks a possible `listProjects()` summary fast path, but only if real performance measurements show the current full-state assembly is too expensive.
 
 <!-- OAT BACKLOG-INDEX -->
 
@@ -24,6 +25,7 @@
 | bl-cbdd | Optional Codex prompt-wrapper generation for synced OAT skills                                  | open        | medium   | feature    | M        |
 | bl-f9bd | Staleness + knowledge drift upgrades                                                            | open        | medium   | feature    | L        |
 | bl-71a1 | Memory system + provider enhancements                                                           | open        | low      | initiative | XL       |
+| bl-931d | Optimize control-plane `listProjects()` summary path                                            | open        | low      | task       | M        |
 
 <!-- END OAT BACKLOG-INDEX -->
 
