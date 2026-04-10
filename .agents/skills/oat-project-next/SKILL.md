@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.0
+version: 1.0.1
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
