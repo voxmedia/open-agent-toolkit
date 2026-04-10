@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p06-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 1     | 1/1       |
-| Phase 3 | complete    | 1     | 1/1       |
-| Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | complete    | 1     | 1/1       |
-| Phase 6 | in_progress | 5     | 4/5       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 1     | 1/1       |
+| Phase 3 | complete | 1     | 1/1       |
+| Phase 4 | complete | 4     | 4/4       |
+| Phase 5 | complete | 1     | 1/1       |
+| Phase 6 | complete | 5     | 5/5       |
 
-**Total:** 16/17 tasks completed
+**Total:** 17/17 tasks completed
 
 ---
 
@@ -644,6 +644,44 @@ oat_generated: false
 
 ---
 
+### Task p06-t05: (review) Avoid duplicate `plan.md` reads in `listProjects`
+
+**Status:** completed
+**Commit:** cbeb160
+
+**Outcome (required):**
+
+- Updated `listProjects()` to read `plan.md` once per project and reuse that content for both review parsing and task-progress parsing.
+- Kept summary output behavior unchanged while reducing redundant file I/O in the project listing loop.
+- Fixed a race in the corresponding integration test setup so the repo-root fixture is created deterministically.
+
+**Files changed:**
+
+- `packages/control-plane/src/project.ts` - reused `plan.md` and `implementation.md` content within the per-project summary flow.
+- `packages/control-plane/src/project.test.ts` - removed the `.oat/config.json` setup race in the project listing fixture.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the optimization limited to redundant reads and deliberately did not take on the deferred fast-path summary redesign from `m4`.
+
+**Phase Summary:**
+
+- Outcome: Phase 6 resolved the second-opinion review findings by extracting shared helpers, simplifying project assembly imports, and removing duplicate plan-file reads in project summaries.
+- Key files touched: `packages/control-plane/src/shared/utils/frontmatter.ts`, `packages/control-plane/src/shared/utils/normalize.ts`, `packages/control-plane/src/shared/utils/errors.ts`, `packages/control-plane/src/project.ts`, `packages/control-plane/src/project.test.ts`, `packages/control-plane/src/state/parser.ts`, `packages/control-plane/src/state/artifacts.ts`, `packages/control-plane/src/state/tasks.ts`, `packages/control-plane/src/state/reviews.ts`, `packages/control-plane/src/recommender/boundary.ts`.
+- Verification: `pnpm --filter @open-agent-toolkit/control-plane test`, `pnpm --filter @open-agent-toolkit/control-plane lint`, `pnpm --filter @open-agent-toolkit/control-plane type-check`, `pnpm --filter @open-agent-toolkit/control-plane build`.
+- Notable decisions/deviations: formalized a package-local shared taxonomy under `shared/utils/`; deferred the broader `listProjects` fast-path optimization because it remains a performance consideration rather than a demonstrated defect.
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -724,9 +762,9 @@ oat_generated: false
 - `m3` Convert to task `p06-t05` to reuse `plan.md` content in `listProjects` instead of reading it twice per project.
 - `m4` Deferred by explicit user direction: the current `listProjects` full-state assembly is functionally correct, and the fast-path summary optimization should only be revisited if measured performance makes it worthwhile.
 
-**Next:** Execute the new review-fix tasks via `oat-project-implement`, then re-run `oat-project-review-provide code final`.
+**Next:** Re-run `oat-project-review-provide code final`, then process the result with `oat-project-review-receive`.
 
-**Review fix status:** `fixes_added`
+**Review fix status:** `fixes_completed`
 
 ---
 
@@ -753,6 +791,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Received independent final second-opinion review, added `p06-t03` through `p06-t05`, deferred `m4` by explicit user direction, and resumed implementation from `p06-t03`.
 - 2026-04-10: Completed `p06-t03` and advanced to `p06-t04`.
 - 2026-04-10: Completed `p06-t04` and advanced to `p06-t05`.
+- 2026-04-10: Completed `p06-t05`, closed Phase 6, and finished the second-opinion review-fix implementation.
 
 ---
 
@@ -795,6 +834,7 @@ Track test execution during implementation.
 **Key files / modules:**
 
 - `packages/control-plane/src/project.ts` - assembles full project state and project summaries from OAT artifacts.
+- `packages/control-plane/src/shared/utils/` - shared frontmatter, normalization, and error helpers extracted during final review-fix work.
 - `packages/control-plane/src/recommender/router.ts` - pure next-skill routing logic used by the control plane.
 - `packages/control-plane/src/state/parser.ts` - typed `state.md` frontmatter parsing.
 - `packages/control-plane/src/state/tasks.ts` - plan and implementation progress parsing.
@@ -825,6 +865,7 @@ Track test execution during implementation.
 **Design deltas (if any):**
 
 - The control-plane package stayed read-only and pure as designed, but the CLI implementation also fixed a completed-task parsing bug surfaced by the new `project status` command so live counts match real implementation artifacts.
+- Final review-fix work extracted duplicated control-plane helpers into `shared/utils/` and reduced redundant project-summary file reads without changing the outward JSON contract.
 - Final verification was completed with sequential reruns because the repo's existing CLI asset bundler is not safe for concurrent build/smoke execution.
 
 ## References
