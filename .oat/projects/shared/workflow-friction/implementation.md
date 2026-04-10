@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p01-t04
+oat_current_task_id: p02-t01
 oat_generated: false
 oat_template: false
 ---
@@ -27,24 +27,61 @@ oat_template: false
 
 | Phase                                              | Status      | Tasks | Completed |
 | -------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1: Config System Extension                   | in_progress | 4     | 3/4       |
-| Phase 2: Skill Integration — oat-project-implement | pending     | 5     | 0/5       |
+| Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
+| Phase 2: Skill Integration — oat-project-implement | in_progress | 5     | 0/5       |
 | Phase 3: Skill Integration — oat-project-complete  | pending     | 2     | 0/2       |
 | Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 3/16 tasks completed
+**Total:** 4/16 tasks completed
 
 ---
 
 ## Phase 1: Config System Extension
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-10
+**Completed:** 2026-04-10
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-_To be filled when Phase 1 completes._
+**Outcome:**
+
+- `OatWorkflowConfig` interface defined with 6 preference keys (`hillCheckpointDefault`, `archiveOnComplete`, `createPrOnComplete`, `postImplementSequence`, `reviewExecutionModel`, `autoNarrowReReviewScope`)
+- All 3 config surfaces (`OatConfig`, `OatLocalConfig`, `UserConfig`) now carry optional `workflow` field with shared normalization
+- `getConfigValue()` refactored to delegate to `resolveEffectiveConfig()` — ~150 lines of per-key if-else deleted; all keys now resolve through a single code path with per-key source attribution
+- Source labels updated to `shared` / `local` / `user` / `env` / `default` (previously `config.json` / `config.local.json` / …)
+- `oat config set` gained `--shared`, `--local`, `--user` mutually exclusive flags with per-key surface restrictions
+- Workflow keys can now be set at any of the three surfaces (default is local); power users can set personal defaults at user scope once and have them apply across all repos
+
+**Key files touched:**
+
+- `packages/cli/src/config/oat-config.ts` — OatWorkflowConfig type, normalizer, three-surface wiring
+- `packages/cli/src/config/resolve.ts` — DEFAULT_WORKFLOW_CONFIG, DEFAULT_SHARED_CONFIG tools defaults (regression fix)
+- `packages/cli/src/commands/config/index.ts` — ConfigKey union, KEY_ORDER, CONFIG_CATALOG entries, getConfigValue refactor, setConfigValue workflow branches, surface validation, `--shared`/`--local`/`--user` flags
+- `packages/cli/src/commands/config/index.test.ts` — 24 new tests covering normalization, catalog, surface flags, validation, enum/boolean parsing, and full 3-layer precedence
+- `packages/cli/src/config/oat-config.test.ts` — 7 new normalization tests
+- `packages/cli/src/config/resolve.test.ts` — 4 new resolution precedence tests
+- `packages/cli/src/commands/help-snapshots.test.ts` — updated config --help snapshot
+
+**Verification:**
+
+- Full test suite: 1225 passed (started at 1208 — net +17 new tests for workflow keys and surface flags)
+- Lint: 0 warnings, 0 errors
+- Type-check: clean
+- Manual smoke tests validated:
+  - `oat config get projects.root` → `.oat/projects/shared` (source: default)
+  - `oat config get autoReviewAtCheckpoints` → `true` (source: shared)
+  - `oat config get activeProject` → `.oat/projects/shared/workflow-friction` (source: local)
+  - `OAT_PROJECTS_ROOT=/tmp/test oat config get projects.root --json` → value `/tmp/test`, source `env`
+  - `oat config set workflow.archiveOnComplete true --user` → writes to `~/.oat/config.json`
+  - `oat config get workflow.archiveOnComplete --json` after user set → value `true`, source `user`
+
+**Notes / Decisions:**
+
+- Dropped `workflow.autoFixBookkeepingDrift` from the original plan during discussion — the root cause (missing commits in review-receive skills) is being fixed in Phase 4, so the config escape hatch is no longer needed
+- `autoReviewAtCheckpoints` stays shared-only for now. Extending behavioral keys to all surfaces is out of scope for this task (power users can still set it via `oat config set autoReviewAtCheckpoints true` default behavior)
+- Source label update is a minor user-facing change (visible in `oat config get --json` and `oat config list`). Justification: consistency with `oat config dump` output from PR #38 and clearer vocabulary (`local` > `config.local.json`)
 
 ### Task p01-t01: Add OatWorkflowConfig interface to all three config surfaces
 
@@ -159,8 +196,42 @@ _To be filled when Phase 1 completes._
 
 ### Task p01-t04: Add --user / --shared surface flags to oat config set
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9f6895b
+
+**Outcome:**
+
+- Added `ConfigSurface` type (`'auto' | 'shared' | 'local' | 'user'`) and extended `setConfigValue()` to accept a surface parameter
+- Added `--shared`, `--local`, `--user` mutually exclusive flags to the `oat config set` command
+- Surface validation enforces per-key restrictions:
+  - Structural keys → shared only (`projects.root`, `worktrees.root`, `git.*`, `documentation.*`, `archive.*`, `tools.*`)
+  - State keys → local only (`activeProject`, `lastPausedProject`, `activeIdea`)
+  - `autoReviewAtCheckpoints` → shared only (deferred multi-surface expansion to follow-up)
+  - Workflow keys → any non-auto surface; default is local
+- Added workflow value parsing with enum and boolean validation
+- Added workflow write branches for all three surfaces (shared, local, user) using read-merge-write pattern
+- Added `readUserConfig` / `writeUserConfig` to `ConfigCommandDependencies` for dependency injection
+- Updated config `--help` snapshot to reflect new `set [options]` signature
+
+**Files changed:**
+
+- `packages/cli/src/commands/config/index.ts` — ConfigSurface type, validation, workflow parsing, workflow write branches, --shared/--local/--user Commander flags, mutual-exclusivity check
+- `packages/cli/src/commands/config/index.test.ts` — 11 new tests covering all surface combinations, enum/boolean validation, invalid surface errors, mutually exclusive flag rejection, and full 3-layer precedence chain
+- `packages/cli/src/commands/help-snapshots.test.ts` — updated config --help inline snapshot
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test` — 1225 passed
+- Run: `pnpm --filter @open-agent-toolkit/cli lint` — 0 warnings, 0 errors
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check` — clean
+- Manual smoke: `HOME=$(mktemp -d) pnpm run cli -- config set workflow.archiveOnComplete true --user` → writes to fake home/.oat/config.json, source confirmed `user`
+- Manual smoke: Set user → shared → local in sequence, confirmed precedence chain resolves correctly
+
+**Notes:**
+
+- Discovered a minor cleanup need: the smoke test wrote `workflow.archiveOnComplete: false` to the real repo `.oat/config.json` (because `--shared` targets the repo regardless of HOME). Reverted with `git checkout .oat/config.json`
+- The `mapSurfaceToSource` helper I initially added was unused and removed before commit
+- autoReviewAtCheckpoints at `--local` / `--user` is explicitly rejected with a clear error message — this is the one place surface validation blocks a behavioral key
 
 ---
 

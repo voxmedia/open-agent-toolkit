@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t04
-oat_last_commit: 967ee68
+oat_current_task: p02-t01
+oat_last_commit: 9f6895b
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: []
@@ -29,7 +29,7 @@ oat_template: false
 
 ## Current Phase
 
-Implementation — Phase 1: Config System Extension (in progress)
+Implementation — Phase 2: Skill Integration (oat-project-implement)
 
 ## Artifacts
 
