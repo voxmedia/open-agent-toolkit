@@ -355,23 +355,66 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {to be filled at phase completion}
+- New `oat-wrap-up` skill (v1.0.0) — manual or model-invocable; reads local OAT project summaries plus merged PR metadata over a time window and produces a synthesized markdown wrap-up report.
+- New shared-config key `archive.wrapUpExportPath` fully wired through the `oat config get/set/list/describe` command surface.
+- New publication of the skill via `WORKFLOW_SKILLS` and `bundle-assets.sh` so `oat init tools` installs it automatically.
+- Drive-by fix: `oat-project-next` skill description rephrased to satisfy the validator contract, and its frontmatter version bumped to `1.0.1` per the PR-scoped skills_system rule.
 
 **Behavioral changes (user-facing):**
 
-- {to be filled at phase completion}
+- Users can now run `/oat-wrap-up --past-week` (or `--past-2-weeks`, `--past-month`, or explicit `--since` / `--until`) to get a shipping digest over OAT projects and merged PRs.
+- Users can configure `oat config set archive.wrapUpExportPath <path>` to change the report destination; the default is `.oat/repo/reference/wrap-ups`.
+- The skill warns if `archive.s3Uri` is configured but no local archive metadata exists, pointing users at the existing `oat project archive sync` prerequisite.
 
 **Key files / modules:**
 
-- {to be filled at phase completion}
+- `.agents/skills/oat-wrap-up/SKILL.md` + `references/report-template.md` + `references/automation-recipes.md` — new canonical skill.
+- `packages/cli/src/config/oat-config.ts`, `resolve.ts`, `oat-config.test.ts`, `resolve.test.ts` — new config key.
+- `packages/cli/src/commands/config/index.ts` + `index.test.ts` — 5 wiring points + 6 tests.
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` + `packages/cli/scripts/bundle-assets.sh` — distribution registration.
+- Four publishable packages bumped `0.0.25` → `0.0.26` for lockstep guardrail.
 
 **Verification performed:**
 
-- {to be filled at phase completion}
+- `pnpm --filter @open-agent-toolkit/cli lint`: 0 errors.
+- `pnpm --filter @open-agent-toolkit/cli type-check`: clean.
+- `pnpm --filter @open-agent-toolkit/cli test`: 1205/1205 passing (including 6 new config-surface tests + 3 new oat-config / resolve tests).
+- `pnpm oat:validate-skills`: OK, 47/47 oat-\* skills.
+- `pnpm release:validate`: 4/4 public packages at 0.0.26.
+- **Write-path smoke** executed in p01-t07 — see "Write-path smoke (p01-t07)" section below. All 9 skill algorithm steps fire end-to-end; banner format verified; 3 summaries + 23 merged PRs discovered in the `--past-week` window.
+- Auto-review at the HiLL checkpoint (oat-reviewer, scope `final`) found 1 Important + 2 Medium + 3 Minor. All 5 actionable findings were converted to fix tasks (p01-t05..p01-t09) and implemented; m3 was deferred per reviewer recommendation.
 
-**Design deltas (if any):**
+**Design deltas:**
 
-- {to be filled at phase completion}
+- p01-t01: `oat config get archive.wrapUpExportPath` returns `null` (empty string in CLI output) when unset, matching the sibling `archive.summaryExportPath` pattern. The consumer (the `oat-wrap-up` skill) applies the `.oat/repo/reference/wrap-ups` default itself. Recorded in the Deviations from Plan table above.
+
+---
+
+## Write-path smoke (p01-t07)
+
+Executed the `oat-wrap-up` skill's 11-step algorithm (Steps 0-9) against this repo with `--past-week --dry-run`. Window: **2026-04-03 → 2026-04-10**.
+
+**Counts:**
+
+- **Summaries discovered**: 5 candidates (1 active + 4 exported) → **3 in window** after date filtering (2 exported summaries with `oat_last_updated` 2026-03-31 and 2026-04-02 were correctly dropped as out-of-window).
+- **Merged PRs fetched**: 23 PRs in window via `gh api graphql`, single page, `hasNextPage: false`.
+- **Cross-reference hits**: **0**.
+
+**Finding surfaced during smoke**: the Step 7 cross-reference logic finds zero matches because (a) the 3 included summaries do not inline PR numbers (`#<n>`, `github.com/.../pull/<n>`, or bare PR-adjacent numbers) in their Overview / What Was Implemented / Notes sections, and (b) no project under review has a populated `pr/` directory that the fallback scan could inspect. This is **not a bug in the algorithm** — it is a legitimate v1 limitation that depends on a summary-authoring convention this repo does not currently follow. All 3 summaries still partition into "Shipped via OAT projects" (with empty PR column); all 23 merged PRs partition into "Other merged PRs"; the synthesized report is coherent but the partition is coarser than ideal. **p01-t09 expands the Troubleshooting note** in SKILL.md to cover both false-positive AND false-negative cross-reference scenarios.
+
+**Synthesized TL;DR** (abridged — full synthesis generated but not committed to the repo to avoid artifact bloat):
+
+> "In the past week, the OAT toolkit shipped three significant projects: a top-to-bottom documentation restructure around canonical adoption lanes, a new `tools.*` shared-config concept that makes installed tool packs a first-class signal for downstream workflows, and a new read-only `@open-agent-toolkit/control-plane` package with three new inspection CLIs (`oat project status`, `oat project list`, `oat config dump`). 23 PRs merged across these three projects plus a steady stream of release-workflow fixes, docs corrections, and CI hardening."
+
+**Features introduced** (sample — 3 bullets generated from summary synthesis):
+
+- Top-level docs reorganization around adoption lanes (docs-readability-reorg).
+- `tools.*` shared-config surface for installed tool packs (complete-workflow).
+- `@open-agent-toolkit/control-plane` read-only package + 3 new inspection CLIs (control-plane-state-parsing).
+
+**Final banner**: `OAT ▸ WRAP-UP ▸ DONE — 3 summaries + 23 PRs → stdout (dry-run)` — fires with correct format and non-zero counts.
+
+**Smoke result**: the algorithm executes end-to-end and produces a grammatically coherent, structurally correct report. The one caveat (zero cross-reference hits in this repo) is documented as a known limitation in the skill's Troubleshooting section (p01-t09). No blocking issues. No sample report artifact was written to `.oat/repo/reference/wrap-ups/` — this is a `--dry-run` smoke only, per the reviewer's M2 guidance.
 
 ## References
 
