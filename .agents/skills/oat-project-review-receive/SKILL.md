@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.2.1
+version: 1.3.0
 description: Use when review findings from oat-project-review-provide need closure. Converts review artifacts into actionable plan tasks.
 disable-model-invocation: true
 user-invocable: true
@@ -418,6 +418,21 @@ Rules:
 - If `"$ARCHIVED_REVIEW_PATH"` already exists, append a timestamp suffix before moving so history is preserved.
 - Report the archived location in the final summary.
 
+### Step 7.6: Commit Review Bookkeeping (Required)
+
+**CRITICAL — DO NOT SKIP.** When this skill runs in a separate agent session (subagent, fresh session, or different conversation), uncommitted bookkeeping updates cause state drift for the original agent. This skill modifies `plan.md`, `implementation.md`, and `state.md` but does not commit them on its own — the commit below is the safety net.
+
+Commit all modified OAT tracking files atomically:
+
+```bash
+git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
+git diff --cached --quiet || git commit -m "chore(oat): record review findings and add fix tasks ({scope})"
+```
+
+Do not use `git add -A` or glob patterns. Do not include unrelated implementation or code files in this commit. Do not defer this commit without explicit user approval — if deferred, clearly state in the summary that bookkeeping is uncommitted so the original agent knows to commit on return.
+
+**Worktree handling:** If the project was resolved via a worktree in Step 0, run the git commands scoped to the worktree (`git -C "$WORKTREE_PATH" ...`) so the commit lands on the worktree branch.
+
 ### Step 8: Check Review Cycle Count
 
 **Bounded loop protection:**
@@ -632,6 +647,7 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 - Plan.md updated with new tasks
 - Implementation.md updated with review notes
 - Consumed review artifact archived under `reviews/archived/`
+- All artifact updates (plan.md, implementation.md, state.md) committed atomically before the skill exits to prevent cross-session drift
 - Review cycle count checked (cap at 3)
 - Final-scope deferred Medium findings resurfaced and explicitly dispositioned
 - User routed to next action
