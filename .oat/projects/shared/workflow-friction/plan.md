@@ -36,29 +36,38 @@ oat_template: false
 
 These are the workflow preference keys to implement, grouped by tier:
 
-### Tier 1 — Highest friction, clearest defaults (Phase 1)
+### Preference keys (6 total)
 
-| Key                              | Type                                            | Default          | Effect when set                                                                  |
-| -------------------------------- | ----------------------------------------------- | ---------------- | -------------------------------------------------------------------------------- |
-| `workflow.hillCheckpointDefault` | `"every"` \| `"final"`                          | _unset (prompt)_ | Skip checkpoint prompt in implement; `"every"` = `[]`, `"final"` = last phase ID |
-| `workflow.archiveOnComplete`     | `boolean`                                       | _unset (prompt)_ | Skip "Archive after completion?" in complete                                     |
-| `workflow.createPrOnComplete`    | `boolean`                                       | _unset (prompt)_ | Skip "Open a PR?" in complete; when true, completion auto-triggers PR creation   |
-| `workflow.postImplementSequence` | `"all"` \| `"summary-pr"` \| `"exit"`           | _unset (prompt)_ | Skip post-implementation sequence choice in implement                            |
-| `workflow.reviewExecutionModel`  | `"subagent"` \| `"fresh-session"` \| `"inline"` | _unset (prompt)_ | Skip final review tier choice in implement                                       |
+| Key                                | Type                                             | Default          | Effect when set                                                                                                                    |
+| ---------------------------------- | ------------------------------------------------ | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `workflow.hillCheckpointDefault`   | `"every"` \| `"final"`                           | _unset (prompt)_ | Skip checkpoint prompt in implement; `"every"` = `[]`, `"final"` = last phase ID                                                   |
+| `workflow.archiveOnComplete`       | `boolean`                                        | _unset (prompt)_ | Skip "Archive after completion?" in complete                                                                                       |
+| `workflow.createPrOnComplete`      | `boolean`                                        | _unset (prompt)_ | Skip "Open a PR?" in complete; when true, completion auto-triggers PR creation                                                     |
+| `workflow.postImplementSequence`   | `"wait"` \| `"summary"` \| `"pr"` \| `"docs-pr"` | _unset (prompt)_ | `wait` = don't auto-chain; `summary` = generate summary only; `pr` = PR-final (includes summary); `docs-pr` = docs sync → PR-final |
+| `workflow.reviewExecutionModel`    | `"subagent"` \| `"inline"` \| `"fresh-session"`  | _unset (prompt)_ | `subagent`/`inline` = run automatically; `fresh-session` = print guidance and offer escape hatch to subagent/inline                |
+| `workflow.autoNarrowReReviewScope` | `boolean`                                        | _unset (prompt)_ | Auto-narrow re-review to fix commits in review-provide                                                                             |
 
-### Tier 2 — Medium friction, reasonable defaults (Phase 2)
+### Resolution precedence
 
-| Key                                | Type      | Default          | Effect when set                                        |
-| ---------------------------------- | --------- | ---------------- | ------------------------------------------------------ |
-| `workflow.autoNarrowReReviewScope` | `boolean` | _unset (prompt)_ | Auto-narrow re-review to fix commits in review-provide |
-| `workflow.autoFixBookkeepingDrift` | `boolean` | _unset (prompt)_ | Auto-fix stale state reconciliation in implement       |
+All workflow keys resolve through the 3-layer chain (already implemented by `resolveEffectiveConfig()` from PR #38):
+
+```
+env override  >  .oat/config.local.json  >  .oat/config.json  >  ~/.oat/config.json  >  default (unset = prompt)
+```
+
+- **User-level** (`~/.oat/config.json`): personal defaults across all repos
+- **Repo shared** (`.oat/config.json`): team decision for this repo, overrides user defaults
+- **Repo local** (`.oat/config.local.json`): personal override for this repo, highest precedence
+- If all three are unset, the skill prompts as before (backward compatible)
 
 ### Skill behavior changes (non-config)
 
-| Change                                              | Skill                 | Rationale                                                                                                                              |
-| --------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Always resume implementation by default (no prompt) | oat-project-implement | Fresh start is a rare edge case; make it an explicit `fresh=true` argument override instead of prompting every time                    |
-| Strengthen bookkeeping commit enforcement           | oat-project-implement | Bookkeeping commits are already marked `(required)` but agents sometimes skip them; elevate to top-level step with DO NOT SKIP callout |
+| Change                                              | Skill                             | Rationale                                                                                                                              |
+| --------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Always resume implementation by default (no prompt) | oat-project-implement             | Fresh start is a rare edge case; make it an explicit `fresh=true` argument override instead of prompting every time                    |
+| Strengthen bookkeeping commit enforcement           | oat-project-implement             | Bookkeeping commits are already marked `(required)` but agents sometimes skip them; elevate to top-level step with DO NOT SKIP callout |
+| Add required bookkeeping commit step                | oat-project-review-receive        | Skill modifies plan/impl/state but has no commit step; root cause of cross-agent bookkeeping drift                                     |
+| Add required bookkeeping commit step                | oat-project-review-receive-remote | Same gap as review-receive                                                                                                             |
 
 ### Explicitly NOT configurable (safety gates)
 
@@ -76,167 +85,343 @@ These prompts remain interactive regardless of config:
 
 ## Phase 1: Config System Extension
 
-Add workflow preference types, config registry entries, and CLI support.
+Add workflow preference types, register them in the config command, refactor `getConfigValue()` to use the existing `resolveEffectiveConfig()` utility, and add surface-targeting write flags.
 
-### Task p01-t01: Add OatWorkflowConfig interface and extend OatConfig
+**Prior art:** PR #38 introduced `packages/cli/src/config/resolve.ts` with `resolveEffectiveConfig()` — a generic 3-layer resolution function with per-key source attribution. Phase 1 builds on top of that utility rather than duplicating its logic.
+
+### Task p01-t01: Add OatWorkflowConfig interface to all three config surfaces
 
 **Files:**
 
 - Modify: `packages/cli/src/config/oat-config.ts`
+- Modify: `packages/cli/src/config/resolve.ts`
 
 **Changes:**
 
-1. Add `OatWorkflowConfig` interface with all preference keys:
+1. Add `OatWorkflowConfig` interface to `oat-config.ts`:
 
    ```typescript
    export interface OatWorkflowConfig {
      hillCheckpointDefault?: 'every' | 'final';
      archiveOnComplete?: boolean;
      createPrOnComplete?: boolean;
-     postImplementSequence?: 'all' | 'summary-pr' | 'exit';
-     reviewExecutionModel?: 'subagent' | 'fresh-session' | 'inline';
+     postImplementSequence?: 'wait' | 'summary' | 'pr' | 'docs-pr';
+     reviewExecutionModel?: 'subagent' | 'inline' | 'fresh-session';
      autoNarrowReReviewScope?: boolean;
-     autoFixBookkeepingDrift?: boolean;
    }
    ```
 
-2. Add `workflow?: OatWorkflowConfig` to the `OatConfig` interface
+2. Add `workflow?: OatWorkflowConfig` to all three existing interfaces:
+   - `OatConfig` (team shared)
+   - `OatLocalConfig` (repo local)
+   - `UserConfig` (user global) — this is the new addition since workflow preferences need user-level fallback
 
-3. Add `workflow?: OatWorkflowConfig` to the `OatLocalConfig` interface (for per-developer overrides)
+3. Extend `normalizeOatConfig()`, `normalizeOatLocalConfig()`, and `normalizeUserConfig()` to normalize the `workflow` object:
+   - Validate enum values against allowed sets (strip invalid)
+   - Coerce booleans from string inputs (`"true"` / `"false"`)
+   - Trim strings
+   - Drop empty/unknown fields
 
-4. Update `normalizeOatConfig()` to normalize the `workflow` object (trim strings, validate enum values, coerce booleans)
+4. Add a `DEFAULT_WORKFLOW_CONFIG` block to `resolve.ts` so unset workflow keys show up in `oat config dump` output with `source: 'default'`:
 
-5. Update `normalizeOatLocalConfig()` similarly
+   ```typescript
+   const DEFAULT_WORKFLOW_CONFIG = {
+     workflow: {
+       hillCheckpointDefault: null,
+       archiveOnComplete: null,
+       createPrOnComplete: null,
+       postImplementSequence: null,
+       reviewExecutionModel: null,
+       autoNarrowReReviewScope: null,
+     },
+   } satisfies Record<string, unknown>;
+   ```
+
+   Merge it into the existing `defaultValues` computation in `resolveEffectiveConfig()`.
 
 **Step 1: Write test (RED)**
 
-Add test cases in the config normalization test file for:
+Add test cases in `oat-config.test.ts` and `resolve.test.ts`:
 
-- Valid workflow config passes through
-- Invalid enum values are stripped
-- Boolean coercion works
-- Missing workflow key returns undefined
+- Valid workflow config in each of the three files → passes through normalization
+- Invalid enum values → stripped
+- Boolean coercion from string → correct boolean
+- Missing workflow key → undefined, does not crash
+- `resolveEffectiveConfig()` → unset workflow keys appear with `source: 'default'`
+- `resolveEffectiveConfig()` with workflow set in user only → resolves with `source: 'user'`
+- `resolveEffectiveConfig()` with workflow set in shared + user → shared wins, `source: 'shared'`
+- `resolveEffectiveConfig()` with workflow set in local + shared + user → local wins, `source: 'local'`
 
 Run: `pnpm --filter @open-agent-toolkit/cli test`
-Expected: Test fails (RED)
+Expected: Tests fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Add the interface and normalization logic.
+Add the interface, normalization logic, and default workflow config.
 
 Run: `pnpm --filter @open-agent-toolkit/cli test`
-Expected: Test passes (GREEN)
+Expected: Tests pass (GREEN)
 
 **Step 3: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
 Expected: No errors
 
 **Step 4: Commit**
 
 ```bash
-git add packages/cli/src/config/oat-config.ts packages/cli/src/config/*.test.ts
-git commit -m "feat(p01-t01): add OatWorkflowConfig interface and normalization"
+git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/config/resolve.ts packages/cli/src/config/resolve.test.ts
+git commit -m "feat(p01-t01): add OatWorkflowConfig to all three config surfaces with resolve defaults"
 ```
 
 ---
 
-### Task p01-t02: Register workflow keys in config command
+### Task p01-t02: Register workflow keys in config command catalog
 
 **Files:**
 
 - Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
 
 **Changes:**
 
-1. Add all `workflow.*` keys to the `ConfigKey` union type
-2. Add entries to `KEY_ORDER` array
-3. Add `CONFIG_CATALOG` entries with full metadata (group, file, scope, type, default, mutability, owningCommand, description)
-4. Extend `getConfigValue()` to resolve `workflow.*` keys with local-over-shared precedence:
-   - Read `.oat/config.local.json` workflow.\* first
-   - Fall back to `.oat/config.json` workflow.\*
-   - Fall back to undefined (= prompt)
-5. Extend `setConfigValue()` to handle workflow.\* keys:
-   - Boolean keys: string→boolean coercion
-   - Enum keys: validate against allowed values, reject invalid
-   - Determine target file: local by default (user preference), shared with `--shared` flag or if key is inherently shared
+1. Add all 6 `workflow.*` keys to the `ConfigKey` union type
+2. Add entries to `KEY_ORDER` array (group workflow keys together, preferably after behavioral keys like `autoReviewAtCheckpoints`)
+3. Add `CONFIG_CATALOG` entries with full metadata for each workflow key:
+   - `group: 'Workflow Preferences'` (new group)
+   - `file`: describe the 3-layer resolution (not a single file)
+   - `scope`: `workflow` (new scope value indicating multi-surface)
+   - `type`: enum string or boolean
+   - `defaultValue`: `null` (unset)
+   - `mutability`: `read/write`
+   - `owningCommand`: `oat config set workflow.<key> <value>`
+   - `description`: clear user-facing explanation including surface semantics
+
+4. Do **not** extend `getConfigValue()` per-key logic here — that happens in p01-t03. This task only registers the keys in the catalog so they show up in `oat config describe`.
 
 **Step 1: Write test (RED)**
 
 Add tests for:
 
-- `oat config get workflow.archiveOnComplete` resolves correctly (local > shared > unset)
-- `oat config set workflow.archiveOnComplete true` writes to local config
-- `oat config set workflow.hillCheckpointDefault final` validates enum
-- `oat config set workflow.hillCheckpointDefault invalid` rejects
-- `oat config list` includes workflow keys
-- `oat config describe workflow.archiveOnComplete` shows metadata
+- `oat config describe workflow.archiveOnComplete` → returns catalog entry with correct metadata
+- `oat config describe` → includes all 6 workflow keys in the "Workflow Preferences" group
+- `oat config list` → includes workflow keys (value resolution comes in p01-t03, so for now they can show as unset/default)
 
 Run: `pnpm --filter @open-agent-toolkit/cli test`
 Expected: Tests fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Add registry entries and resolution logic.
+Add registry entries and catalog metadata.
 
 Run: `pnpm --filter @open-agent-toolkit/cli test`
 Expected: Tests pass (GREEN)
 
 **Step 3: Verify**
 
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
+Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+
+Manual: `pnpm run cli -- config describe workflow.archiveOnComplete`
+Expected: Shows group, scope, type, default, mutability, owningCommand, description
 
 **Step 4: Commit**
 
 ```bash
 git add packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
-git commit -m "feat(p01-t02): register workflow preference keys in config command"
+git commit -m "feat(p01-t02): register workflow preference keys in config command catalog"
 ```
 
 ---
 
-### Task p01-t03: Resolution precedence — local overrides shared for workflow keys
+### Task p01-t03: Refactor `getConfigValue()` to use `resolveEffectiveConfig()`
 
 **Files:**
 
 - Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Rationale:**
+
+`getConfigValue()` currently contains ~150 lines of hardcoded if-else resolution logic, one branch per key or key group. `resolveEffectiveConfig()` (PR #38, `packages/cli/src/config/resolve.ts`) already implements generic 3-layer resolution with per-key source attribution. Refactoring `getConfigValue()` to delegate to `resolveEffectiveConfig()` eliminates the duplicate logic, gives all existing keys the benefit of multi-surface resolution, and makes workflow keys work without any per-key special casing.
+
+This is **Option A** from the workflow-friction planning discussion — refactor once, benefit everywhere.
 
 **Changes:**
 
-The `getConfigValue()` function needs a resolution path for workflow keys:
+1. Replace the `getConfigValue()` body with a call to `resolveEffectiveConfig()`:
 
-1. Check `.oat/config.local.json` `workflow.<subkey>` first
-2. Fall back to `.oat/config.json` `workflow.<subkey>`
-3. Return `{ value: undefined, source: 'default' }` if neither is set
+   ```typescript
+   async function getConfigValue(
+     repoRoot: string,
+     key: ConfigKey,
+   ): Promise<{ value: string | null; source: string }> {
+     const userConfigDir = join(homedir(), '.oat');
+     const resolved = await resolveEffectiveConfig(repoRoot, userConfigDir);
+     const entry = resolved.resolved[key];
+     if (!entry) {
+       return { value: null, source: 'default' };
+     }
+     return {
+       value: formatConfigValue(entry.value),
+       source: entry.source,
+     };
+   }
+   ```
 
-This means `oat config set workflow.archiveOnComplete true` writes to `config.local.json` by default (personal preference), while `oat config set workflow.archiveOnComplete true --shared` writes to `config.json` (team default).
+2. Add `formatConfigValue()` helper that normalizes the `unknown` value from `resolveEffectiveConfig` back into the string format `oat config get` currently returns (stringify booleans, handle null, etc.).
 
-**Note:** This may be merged into p01-t02 if the resolution logic is straightforward to include there. Keep as separate task for clarity.
+3. Update the source display format. The legacy `getConfigValue` used source labels like `'env'`, `'config.json'`, `'config.local.json'`, `'default'`. `resolveEffectiveConfig` uses `'env'`, `'shared'`, `'local'`, `'user'`, `'default'`. The new labels are clearer and more consistent — update the `oat config list` / `oat config get` user-facing output to use them directly. This is a minor user-facing change worth calling out in commit message and docs.
+
+4. Verify that all existing `oat config get <key>` invocations continue to return the expected values for the full set of registered keys:
+   - `projects.root`, `worktrees.root` (with env override support)
+   - `git.defaultBranch`
+   - `documentation.*` (all fields)
+   - `archive.*` (all fields)
+   - `autoReviewAtCheckpoints`
+   - `activeProject`, `lastPausedProject`, `activeIdea`
+   - All 6 new `workflow.*` keys
 
 **Step 1: Write test (RED)**
 
-Test the full precedence chain:
+Add regression tests to cover the full set of existing keys:
 
-- Local set, shared set → local wins
-- Local unset, shared set → shared wins
-- Both unset → returns undefined/default
+- Each existing `ConfigKey` returns its expected value from `resolveEffectiveConfig()`
+- Env overrides for `OAT_PROJECTS_ROOT` and `OAT_WORKTREES_ROOT` still work
+- Source labels match new format (`'shared'`, `'local'`, `'user'`, `'env'`, `'default'`)
+- Each of the 6 workflow keys resolves correctly through the 3-layer chain
+- `oat config list` output includes all keys (existing + workflow) with correct source attribution
 
 Run: `pnpm --filter @open-agent-toolkit/cli test`
 Expected: Tests fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Implement the resolution chain.
+Replace `getConfigValue()` body. Delete the ~150 lines of per-key if-else. Wire up the new format helper.
 
 Run: `pnpm --filter @open-agent-toolkit/cli test`
 Expected: Tests pass (GREEN)
 
-**Step 3: Commit**
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+
+Manual smoke test:
+
+```bash
+pnpm run cli -- config list
+pnpm run cli -- config get projects.root
+pnpm run cli -- config get autoReviewAtCheckpoints
+pnpm run cli -- config get activeProject
+OAT_PROJECTS_ROOT=/tmp/test pnpm run cli -- config get projects.root
+```
+
+Expected: All existing behavior preserved with the new source label format. Workflow keys return `null` / `source: 'default'` until set.
+
+**Step 4: Commit**
 
 ```bash
 git add packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
-git commit -m "feat(p01-t03): add local-over-shared resolution for workflow keys"
+git commit -m "refactor(p01-t03): replace getConfigValue() with resolveEffectiveConfig() delegation"
+```
+
+---
+
+### Task p01-t04: Add `--user` / `--shared` surface flags to `oat config set`
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+- Modify: `packages/cli/src/config/oat-config.ts` (if `writeUserConfig()` needs to accept workflow section)
+
+**Changes:**
+
+1. Add `--user` and `--shared` flags to the `oat config set` command:
+   - Default (no flag): existing behavior preserved — local keys → `config.local.json`, structural keys → `config.json`, workflow keys → `config.local.json` (matches "personal preference" default)
+   - `--shared`: write to `.oat/config.json` (team decision)
+   - `--user`: write to `~/.oat/config.json` (personal across all repos)
+   - Flags are mutually exclusive — reject if both provided
+
+2. Update `setConfigValue()` to accept a target surface parameter:
+
+   ```typescript
+   type ConfigSurface = 'auto' | 'shared' | 'local' | 'user';
+   async function setConfigValue(
+     repoRoot: string,
+     key: ConfigKey,
+     rawValue: string,
+     surface: ConfigSurface = 'auto',
+   ): Promise<...>
+   ```
+
+3. Surface restrictions:
+   - Structural keys (`projects.root`, `worktrees.root`, `git.defaultBranch`, `documentation.*`, `archive.*`) — only valid with `--shared` or `auto` (reject `--user` / `--local` with a clear error message)
+   - State keys (`activeProject`, `lastPausedProject`) — only valid with `auto` or `--local` (reject `--shared` / `--user`)
+   - Behavioral keys (`autoReviewAtCheckpoints`) — valid with `--shared`, `--local`, or `--user`
+   - Workflow keys (`workflow.*`) — valid with `--shared`, `--local`, or `--user`; default is `--local`
+
+4. If `writeUserConfig()` doesn't already handle a `workflow` section, extend it to pass the workflow object through normalization and write it atomically. The existing `UserConfig` interface gets `workflow?: OatWorkflowConfig` in p01-t01, so this should mostly be type-level.
+
+**Step 1: Write test (RED)**
+
+Add tests for:
+
+- `oat config set workflow.archiveOnComplete true` → writes to `config.local.json`, source `local` on next get
+- `oat config set workflow.archiveOnComplete true --shared` → writes to `config.json`, source `shared` on next get
+- `oat config set workflow.archiveOnComplete true --user` → writes to `~/.oat/config.json`, source `user` on next get
+- `oat config set projects.root /custom --user` → rejected with error ("structural key cannot be set at user scope")
+- `oat config set activeProject foo --shared` → rejected with error ("state key cannot be set at shared scope")
+- `oat config set workflow.archiveOnComplete true --shared --user` → rejected with error (mutually exclusive)
+- `oat config set workflow.hillCheckpointDefault invalid` → rejected with enum validation error
+- `oat config set workflow.hillCheckpointDefault final --user` → succeeds, writes to user config
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: Tests fail (RED)
+
+**Step 2: Implement (GREEN)**
+
+Add the flag definitions, surface routing, validation, and user config write support.
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: Tests pass (GREEN)
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+
+Manual smoke test:
+
+```bash
+# Set at user level
+pnpm run cli -- config set workflow.archiveOnComplete true --user
+pnpm run cli -- config get workflow.archiveOnComplete
+# Expected: true (from user)
+
+# Override at shared level
+pnpm run cli -- config set workflow.archiveOnComplete false --shared
+pnpm run cli -- config get workflow.archiveOnComplete
+# Expected: false (from shared)
+
+# Override at local level
+pnpm run cli -- config set workflow.archiveOnComplete true
+pnpm run cli -- config get workflow.archiveOnComplete
+# Expected: true (from local)
+
+# Confirm dump shows all three surfaces
+pnpm run cli -- config dump
+```
+
+Expected: All three layers visible, resolution follows `local > shared > user`.
+
+**Step 4: Cleanup**
+
+Reset the test config values after manual smoke testing to avoid polluting the workflow-friction dev environment.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts packages/cli/src/config/oat-config.ts
+git commit -m "feat(p01-t04): add --user and --shared surface flags to oat config set"
 ```
 
 ---
@@ -285,16 +470,19 @@ git commit -m "feat(p02-t01): read workflow.hillCheckpointDefault before checkpo
 
 **Changes:**
 
-In Step 15 (next steps sequence), before presenting the 3-option prompt:
+In Step 15 (next steps sequence), before presenting the prompt:
 
 ```
 POST_IMPL=$(oat config get workflow.postImplementSequence 2>/dev/null || true)
 ```
 
-- If `"all"` → run summary + docs + PR automatically
-- If `"summary-pr"` → run summary + PR, skip docs
-- If `"exit"` → exit (user will run individually)
+- If `"wait"` → exit without auto-chaining; print "Post-implementation: wait (from config). Run follow-up skills manually when ready."
+- If `"summary"` → run `oat-project-summary` only; stop after summary completes
+- If `"pr"` → run `oat-project-pr-final` (which auto-generates summary as part of its flow)
+- If `"docs-pr"` → run `oat-project-document` then `oat-project-pr-final` (summary included in PR-final)
 - If unset → prompt as before
+
+**Note:** Summary is not a separate step when PR is included because `oat-project-pr-final` already handles summary generation. This is why `"summary"` is standalone and `"pr"` / `"docs-pr"` do not list summary explicitly.
 
 Print: "Post-implementation: {chosen} (from config)" when using preference.
 
@@ -326,10 +514,27 @@ In Step 14 (final review options), before presenting the 3-tier prompt:
 REVIEW_MODEL=$(oat config get workflow.reviewExecutionModel 2>/dev/null || true)
 ```
 
-- If `"subagent"` → dispatch subagent directly
-- If `"fresh-session"` → instruct fresh session
-- If `"inline"` → run inline
-- If unset → prompt as before
+- If `"subagent"` → dispatch subagent directly, no prompt
+- If `"inline"` → run inline, no prompt
+- If `"fresh-session"` → this is a **soft preference with escape hatch** because the agent cannot actually run a review in a fresh session on the user's behalf. Print:
+
+  ```
+  Per your config, your preference is to run review in a fresh session.
+  Run `oat-project-review-provide code final` in a separate session, then
+  resume this session when the review is complete.
+
+  If you'd like to review here instead:
+    1) subagent
+    2) inline
+
+  Enter 1 or 2 to run here, or press Enter to wait.
+  ```
+
+  Then wait for input. If user enters 1 or 2, proceed with that option. If they press Enter (or equivalent), pause the session to wait for the fresh-session review to complete.
+
+- If unset → prompt the full 3-option choice as today (no behavioral change)
+
+**Design note:** `subagent` and `inline` are "run automatically" preferences. `fresh-session` is a "step aside" preference because the agent can't act on it — it still offers the user an escape hatch to bail into one of the actionable modes.
 
 **Step 1: Verify**
 
@@ -345,38 +550,7 @@ git commit -m "feat(p02-t03): read workflow.reviewExecutionModel before review t
 
 ---
 
-### Task p02-t04: Auto-fix bookkeeping drift preference
-
-**Files:**
-
-- Modify: `.agents/skills/oat-project-implement/SKILL.md`
-
-**Changes:**
-
-In Step 3, before stale-state reconciliation prompt:
-
-```
-AUTO_FIX=$(oat config get workflow.autoFixBookkeepingDrift 2>/dev/null || true)
-```
-
-- If `"true"` → auto-fix and print "Auto-fixed bookkeeping drift (from config)"
-- If unset → prompt as before
-
-**Step 1: Verify**
-
-Run: `pnpm lint && pnpm format`
-Expected: No errors. Manually confirm the skill's step indicators still match actual step numbering.
-
-**Step 2: Commit**
-
-```bash
-git add .agents/skills/oat-project-implement/SKILL.md
-git commit -m "feat(p02-t04): read workflow.autoFixBookkeepingDrift before drift prompt"
-```
-
----
-
-### Task p02-t05: Change resume to default behavior (no prompt)
+### Task p02-t04: Change resume to default behavior (no prompt)
 
 **Files:**
 
@@ -399,12 +573,12 @@ Expected: No errors. Manually confirm the skill's step indicators still match ac
 
 ```bash
 git add .agents/skills/oat-project-implement/SKILL.md
-git commit -m "fix(p02-t05): always resume implementation by default, drop fresh-start prompt"
+git commit -m "fix(p02-t04): always resume implementation by default, drop fresh-start prompt"
 ```
 
 ---
 
-### Task p02-t06: Strengthen bookkeeping commit enforcement
+### Task p02-t05: Strengthen bookkeeping commit enforcement
 
 **Files:**
 
@@ -445,7 +619,7 @@ Expected: No errors. Manually confirm all 4 bookkeeping commit sections have con
 
 ```bash
 git add .agents/skills/oat-project-implement/SKILL.md
-git commit -m "fix(p02-t06): strengthen bookkeeping commit enforcement with DO NOT SKIP callouts"
+git commit -m "fix(p02-t05): strengthen bookkeeping commit enforcement with DO NOT SKIP callouts"
 ```
 
 ---
@@ -753,11 +927,11 @@ Expected: Returns `true` with source `config.local.json`
 
 **Summary:**
 
-- Phase 1: 3 tasks - Config system extension (types, registry, resolution)
-- Phase 2: 6 tasks - Skill integration for oat-project-implement (4 config prefs + resume default change + bookkeeping enforcement)
-- Phase 3: 2 tasks - Skill integration for oat-project-complete
-- Phase 4: 3 tasks - Review skill integration (1 config pref + 2 bookkeeping commit fixes for review-receive and review-receive-remote)
-- Phase 5: 2 tasks - Documentation updates
+- Phase 1: 4 tasks — Config system extension (types + UserConfig, catalog registration, getConfigValue refactor to use resolveEffectiveConfig, --user/--shared flags on set)
+- Phase 2: 5 tasks — Skill integration for oat-project-implement (3 config prefs + resume default change + bookkeeping enforcement)
+- Phase 3: 2 tasks — Skill integration for oat-project-complete
+- Phase 4: 3 tasks — Review skill integration (1 config pref + 2 bookkeeping commit fixes for review-receive and review-receive-remote)
+- Phase 5: 2 tasks — Documentation updates
 
 **Total: 16 tasks**
 

@@ -16,7 +16,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: 2026-04-07T00:00:00Z
 oat_project_completed: null
-oat_project_state_updated: 2026-04-08T00:00:00Z
+oat_project_state_updated: 2026-04-10T00:00:00Z
 oat_generated: false
 oat_template: false
 ---
@@ -25,7 +25,7 @@ oat_template: false
 
 **Status:** In Progress
 **Started:** 2026-04-07
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-10
 
 ## Current Phase
 
@@ -34,7 +34,7 @@ Plan — complete, ready for implementation
 ## Artifacts
 
 - [x] `discovery.md` — problem framing and research findings
-- [x] `plan.md` — implementation plan (5 phases, 16 tasks) — artifact review passed
+- [x] `plan.md` — implementation plan (5 phases, 16 tasks) — artifact review passed; updated 2026-04-10 with Option A config refactor (use resolveEffectiveConfig from PR #38)
 - [ ] `implementation.md` — execution log
 
 ## Progress
@@ -43,6 +43,7 @@ Plan — complete, ready for implementation
 - Analyzed existing config system: 4 surfaces, type-safe registry, CLI get/set/list/describe
 - Chosen approach: extend existing config system with workflow preference keys
 - Plan artifact review passed (2026-04-08): fixed frontmatter, added verify steps, updated checklist/reviews table, expanded docs task
+- Plan refresh (2026-04-10): rebased on origin/main with control-plane PR #38 merged. Adopted Option A config refactor — Phase 1 now uses `resolveEffectiveConfig()` instead of duplicating multi-surface resolution. Added p01-t04 for `--user`/`--shared` write flags. Dropped `workflow.autoFixBookkeepingDrift` (root cause fixed by review-receive commit additions). Updated `workflow.postImplementSequence` schema to `wait`/`summary`/`pr`/`docs-pr`. Clarified `fresh-session` as a soft preference with escape hatch.
 
 ## Blockers
 
