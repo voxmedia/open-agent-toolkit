@@ -391,6 +391,18 @@ so I can review before committing it.
 - This is expected. The skill's internal fallback is `.oat/repo/reference/wrap-ups` — the config layer itself returns empty for unset values, consistent with the sibling `archive.summaryExportPath` behavior.
 - To change the destination, either `oat config set archive.wrapUpExportPath <path>` or use `--output <path>` for a one-off override.
 
+**"Shipped via OAT projects" is empty or "Other merged PRs" contains PRs that clearly correspond to included summaries (false negative):**
+
+- Step 7's cross-reference logic is strict: it only claims a PR for a summary when the summary body literally contains the PR number (`#<n>`, `github.com/.../pull/<n>`, or a bare PR number adjacent to keywords like "PR", "merged", "ships in"), or when a sibling `pr/` directory inside the project references the PR. OAT summaries as authored today (see `.oat/templates/summary.md`) do not inline PR numbers, so in repos that have not adopted the convention of citing PRs in summaries, the cross-reference will often find zero matches and all merged PRs will land in "Other merged PRs".
+- **Workaround options (author-time)**: add a short "Associated PRs" section to project summaries and list PR numbers inline, OR populate `pr/` under each project directory with PR metadata so the sibling scan has data to match against.
+- **Workaround options (report-time)**: manually re-read the generated report; move PRs from "Other merged PRs" into "Shipped via OAT projects" by hand if the correspondence is obvious (matching keywords in the PR title and the summary's What Was Implemented section). The skill is designed to produce an editable draft, not a final release note.
+- This is a v1 limitation. Future versions may add a looser heuristic (e.g., title-keyword matching, commit-to-project mapping via `git log`) to close the gap.
+
+**A PR was partitioned into "Shipped via OAT projects" but the narrative does not mention it (false positive):**
+
+- The `#<number>` pattern can false-positive when a summary references a heading anchor like `#42`, a footnote marker, or a legacy issue number that happens to match a PR number in the window. Step 7's hits are advisory, not authoritative.
+- If the synthesized report puts a PR in the wrong bucket, the fix is manual: re-read the summary that claims the PR and the PR's actual body. If the connection is incorrect, move the PR row from "Shipped via OAT projects" to "Other merged PRs" by hand and delete the entry from any feature/bug/capability bullets that cite it.
+
 ## Success Criteria
 
 - ✅ Prerequisite warning fired (if applicable) before step 1 started.
