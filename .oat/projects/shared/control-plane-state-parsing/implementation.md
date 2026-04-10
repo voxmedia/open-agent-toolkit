@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-09
-oat_current_task_id: p06-t04
+oat_current_task_id: p06-t05
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3 | complete    | 1     | 1/1       |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 1     | 1/1       |
-| Phase 6 | in_progress | 5     | 3/5       |
+| Phase 6 | in_progress | 5     | 4/5       |
 
-**Total:** 15/17 tasks completed
+**Total:** 16/17 tasks completed
 
 ---
 
@@ -614,6 +614,36 @@ oat_generated: false
 
 ---
 
+### Task p06-t04: (review) Remove dynamic `readFile` import from project assembly
+
+**Status:** completed
+**Commit:** b717d96
+
+**Outcome (required):**
+
+- Switched `project.ts` to use a static `readFile` import from `node:fs/promises`.
+- Removed the unnecessary dynamic import from `readOptionalFile`.
+- Kept file-read behavior unchanged while simplifying the module import path.
+
+**Files changed:**
+
+- `packages/control-plane/src/project.ts` - replaced the dynamic `readFile` import with a static import.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/control-plane test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept this task strictly scoped to import cleanup rather than folding in unrelated project assembly refactors.
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -722,6 +752,7 @@ Chronological log of implementation progress.
 - 2026-04-09: Final re-review passed with no remaining findings.
 - 2026-04-09: Received independent final second-opinion review, added `p06-t03` through `p06-t05`, deferred `m4` by explicit user direction, and resumed implementation from `p06-t03`.
 - 2026-04-10: Completed `p06-t03` and advanced to `p06-t04`.
+- 2026-04-10: Completed `p06-t04` and advanced to `p06-t05`.
 
 ---
 
