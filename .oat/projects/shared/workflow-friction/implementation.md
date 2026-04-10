@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p02-t03
+oat_current_task_id: p02-t04
 oat_generated: false
 oat_template: false
 ---
@@ -28,12 +28,12 @@ oat_template: false
 | Phase                                              | Status      | Tasks | Completed |
 | -------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
-| Phase 2: Skill Integration — oat-project-implement | in_progress | 5     | 2/5       |
+| Phase 2: Skill Integration — oat-project-implement | in_progress | 5     | 3/5       |
 | Phase 3: Skill Integration — oat-project-complete  | pending     | 2     | 0/2       |
 | Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 6/16 tasks completed
+**Total:** 7/16 tasks completed
 
 ---
 
@@ -298,8 +298,28 @@ oat_template: false
 
 ### Task p02-t03: Review execution model preference
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d4beb33
+
+**Outcome:**
+
+- Step 14 reads `workflow.reviewExecutionModel` before presenting the 3-tier review prompt
+- `subagent` → dispatches subagent directly, no prompt
+- `inline` → runs review inline, no prompt
+- `fresh-session` → implemented as a **soft preference with escape hatch**: prints the "run in a separate session" guidance, but also offers `1) subagent` or `2) inline` as escape options, or press Enter to wait. The agent can't actually run the review in a fresh session on the user's behalf, so this is the honest behavior.
+- Unset/invalid → falls through to the standard 3-tier prompt (backward compatible)
+
+**Files changed:**
+
+- `.agents/skills/oat-project-implement/SKILL.md` — Step 14 workflow preference check + standard prompt restructure
+
+**Verification:**
+
+- `pnpm lint` → clean
+
+**Notes:**
+
+- The `fresh-session` escape hatch design was validated in the plan discussion — the agent is stepping aside but still offers the user a way to bail into an actionable mode if they change their mind. The soft-preference behavior is what makes this key differently-shaped from the other two values
 
 ### Task p02-t04: Change resume to default behavior (no prompt)
 
