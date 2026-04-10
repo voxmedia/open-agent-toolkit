@@ -90,17 +90,20 @@ export async function listProjects(
         return null;
       }
 
+      const [planContent, implementationContent, artifacts, reviewFiles] =
+        await Promise.all([
+          readOptionalFile(planPath),
+          readOptionalFile(implementationPath),
+          scanArtifacts(projectDir),
+          scanUnprocessedReviews(projectDir),
+        ]);
       const parsedState = parseStateFrontmatter(stateContent);
-      const artifacts = await scanArtifacts(projectDir);
       const reviews = mergeReviews(
-        parseReviewTable(await readOptionalFile(planPath)),
-        await scanUnprocessedReviews(projectDir),
+        parseReviewTable(planContent),
+        reviewFiles,
         projectDir,
       );
-      const progress = parseTaskProgress(
-        await readOptionalFile(planPath),
-        await readOptionalFile(implementationPath),
-      );
+      const progress = parseTaskProgress(planContent, implementationContent);
 
       const stateWithoutRecommendation: Omit<ProjectState, 'recommendation'> = {
         name: basename(projectDir),

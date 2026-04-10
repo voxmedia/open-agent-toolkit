@@ -159,8 +159,8 @@ oat_template: false
     const repoRoot = await createDir('oat-control-plane-projects-root-');
     const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
 
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
     await Promise.all([
-      mkdir(join(repoRoot, '.oat'), { recursive: true }),
       mkdir(projectsRoot, { recursive: true }),
       writeFile(
         join(repoRoot, '.oat', 'config.json'),
