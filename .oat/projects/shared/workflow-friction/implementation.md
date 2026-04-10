@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p04-t02
+oat_current_task_id: p04-t03
 oat_generated: false
 oat_template: false
 ---
@@ -30,10 +30,10 @@ oat_template: false
 | Phase 1: Config System Extension                   | complete    | 4     | 4/4       |
 | Phase 2: Skill Integration — oat-project-implement | complete    | 5     | 5/5       |
 | Phase 3: Skill Integration — oat-project-complete  | complete    | 2     | 2/2       |
-| Phase 4: Skill Integration — Review Skills         | in_progress | 3     | 1/3       |
+| Phase 4: Skill Integration — Review Skills         | in_progress | 3     | 2/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 12/16 tasks completed
+**Total:** 13/16 tasks completed
 
 ---
 
@@ -502,8 +502,29 @@ oat_template: false
 
 ### Task p04-t02: Add bookkeeping commit step to oat-project-review-receive
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0112760
+
+**Outcome:**
+
+- Added new Step 7.6 "Commit Review Bookkeeping (Required)" between the existing Step 7.5 (archive) and Step 8 (review cycle count)
+- CRITICAL / DO NOT SKIP callout explaining the cross-agent drift failure mode
+- Atomic git add + commit of `plan.md` + `implementation.md` + `state.md` with scope-aware commit message
+- Explicit worktree handling note (use `git -C "$WORKTREE_PATH"`)
+- Added success criterion: "All artifact updates committed atomically before the skill exits to prevent cross-session drift"
+- Bumped skill version 1.2.1 → 1.3.0
+
+**Files changed:**
+
+- `.agents/skills/oat-project-review-receive/SKILL.md` — new Step 7.6, success criterion addition, version bump
+
+**Verification:**
+
+- `pnpm lint` → clean
+
+**Notes:**
+
+- This is the root-cause fix for the cross-agent bookkeeping drift identified during discovery. When a subagent runs review-receive to process findings, it was previously leaving plan/impl/state dirty. Now it commits atomically before exiting
 
 ### Task p04-t03: Add bookkeeping commit step to oat-project-review-receive-remote
 
