@@ -420,16 +420,22 @@ Rules:
 
 ### Step 7.6: Commit Review Bookkeeping (Required)
 
-**CRITICAL — DO NOT SKIP.** When this skill runs in a separate agent session (subagent, fresh session, or different conversation), uncommitted bookkeeping updates cause state drift for the original agent. This skill modifies `plan.md`, `implementation.md`, and `state.md` but does not commit them on its own — the commit below is the safety net.
+**CRITICAL — DO NOT SKIP.** When this skill runs in a separate agent session (subagent, fresh session, or different conversation), uncommitted bookkeeping updates cause state drift for the original agent. This skill modifies `plan.md`, `implementation.md`, `state.md`, and the contents of `reviews/` (via the Step 7.5 archive move) but does not commit them on its own — the commit below is the safety net.
 
 Commit all modified OAT tracking files atomically:
 
 ```bash
 git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
+# Capture the Step 7.5 archive move: stages both the deletion of the original
+# review path and the new archived location. Scope to the project's reviews/
+# directory — never use repo-wide `git add -A`.
+git add "$PROJECT_PATH/reviews/"
 git diff --cached --quiet || git commit -m "chore(oat): record review findings and add fix tasks ({scope})"
 ```
 
-Do not use `git add -A` or glob patterns. Do not include unrelated implementation or code files in this commit. Do not defer this commit without explicit user approval — if deferred, clearly state in the summary that bookkeeping is uncommitted so the original agent knows to commit on return.
+Do not use `git add -A` or glob patterns that reach outside `"$PROJECT_PATH/reviews/"`. Do not include unrelated implementation or code files in this commit. Do not defer this commit without explicit user approval — if deferred, clearly state in the summary that bookkeeping is uncommitted so the original agent knows to commit on return.
+
+**Note on archived review paths:** When `reviews/archived/` matches a `localPaths` pattern (the default setup), the archived file is gitignored and `git add "$PROJECT_PATH/reviews/"` will only stage the deletion of the original (now-moved) top-level review file. When `reviews/archived/` is tracked, both the deletion and the new archived location are staged. Both cases are safe — the command handles them uniformly.
 
 **Worktree handling:** If the project was resolved via a worktree in Step 0, run the git commands scoped to the worktree (`git -C "$WORKTREE_PATH" ...`) so the commit lands on the worktree branch.
 
