@@ -397,7 +397,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.hillCheckpointDefault <value>',
     description:
-      'Default HiLL checkpoint behavior in oat-project-implement: "every" pauses after every phase, "final" pauses only after the last phase. When unset, the skill prompts. Resolution: local > shared > user.',
+      'Default HiLL checkpoint behavior in oat-project-implement: "every" pauses after every phase, "final" pauses only after the last phase. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
   },
   {
     key: 'workflow.archiveOnComplete',
@@ -409,7 +409,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.archiveOnComplete <true|false>',
     description:
-      'Skip the "Archive after completion?" prompt in oat-project-complete. When unset, the skill prompts. Resolution: local > shared > user.',
+      'Skip the "Archive after completion?" prompt in oat-project-complete. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
   },
   {
     key: 'workflow.createPrOnComplete',
@@ -421,7 +421,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.createPrOnComplete <true|false>',
     description:
-      'Skip the "Open a PR?" prompt in oat-project-complete. When true, completion auto-triggers PR creation. Resolution: local > shared > user.',
+      'Skip the "Open a PR?" prompt in oat-project-complete. When true, completion auto-triggers PR creation. Resolution: env > local > shared > user > default.',
   },
   {
     key: 'workflow.postImplementSequence',
@@ -433,7 +433,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.postImplementSequence <value>',
     description:
-      'Default post-implementation chaining: "wait" stops without auto-chaining, "summary" generates summary only, "pr" runs pr-final (which auto-generates summary), "docs-pr" runs docs sync then pr-final. When unset, the skill prompts. Resolution: local > shared > user.',
+      'Default post-implementation chaining: "wait" stops without auto-chaining, "summary" generates summary only, "pr" runs pr-final (which auto-generates summary), "docs-pr" runs docs sync then pr-final. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
   },
   {
     key: 'workflow.reviewExecutionModel',
@@ -445,7 +445,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.reviewExecutionModel <value>',
     description:
-      'Default execution model for the final review step in oat-project-implement: "subagent" dispatches a review subagent, "inline" runs the review in-context, "fresh-session" prints guidance for running the review in a separate session (with an escape hatch to subagent/inline). When unset, the skill prompts. Resolution: local > shared > user.',
+      'Default execution model for the final review step in oat-project-implement: "subagent" dispatches a review subagent, "inline" runs the review in-context, "fresh-session" prints guidance for running the review in a separate session (with an escape hatch to subagent/inline). When unset, the skill prompts. Resolution: env > local > shared > user > default.',
   },
   {
     key: 'workflow.autoNarrowReReviewScope',
@@ -458,7 +458,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand:
       'oat config set workflow.autoNarrowReReviewScope <true|false>',
     description:
-      'Auto-narrow re-review scope to fix-task commits in oat-project-review-provide. When unset, the skill prompts. Resolution: local > shared > user.',
+      'Auto-narrow re-review scope to fix-task commits in oat-project-review-provide. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
   },
   {
     key: 'sync.defaultStrategy',
