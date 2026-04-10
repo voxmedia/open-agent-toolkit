@@ -21,6 +21,9 @@ Execute the implementation plan task-by-task with full state tracking.
 
 **Purpose:** Execute plan tasks with TDD discipline, track progress, handle blockers.
 
+**CRITICAL — Bookkeeping commits are mandatory, not optional.**
+After every code commit and after every phase/review-fix completion, you MUST commit the OAT tracking files (`implementation.md`, `state.md`, `plan.md`) as a separate bookkeeping commit. Do not defer, batch, or skip these commits under the reasoning that they "aren't related to the implementation." Skipping a bookkeeping commit is the primary cause of cross-session state drift and will cause the next implementation run to fail bookkeeping cross-checks. If bookkeeping commits feel frequent, that is the intended design — they are cheap and they prevent drift.
+
 ## Progress Indicators (User-Facing)
 
 When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
@@ -353,6 +356,9 @@ Keep project state in sync after each task (recommended source of truth for “w
   - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
 **Bookkeeping commit (required):**
+
+**DO NOT SKIP.** This commit prevents state drift across sessions.
+
 After the code commit (Step 6) and state updates above, commit all modified OAT tracking files:
 
 ```bash
@@ -390,6 +396,9 @@ Do not use `git add -A` or glob patterns. Only commit the three OAT project file
      - `oat_project_state_updated: “{ISO 8601 UTC timestamp}”`
 
   **Bookkeeping commit (required):**
+
+  **DO NOT SKIP.** This commit prevents state drift across sessions.
+
   After completing the review-fix checklist above, commit all modified OAT tracking files:
 
   ```bash
@@ -463,6 +472,9 @@ When pausing:
   - Notable decisions/deviations
 
 **Bookkeeping commit (required):**
+
+**DO NOT SKIP.** This commit prevents state drift across sessions.
+
 After phase summary and task pointer advancement, commit all modified OAT tracking files:
 
 ```bash
@@ -593,6 +605,9 @@ Implementation - Tasks complete; awaiting final review.
 ```
 
 **Bookkeeping commit (required):**
+
+**DO NOT SKIP.** This commit prevents state drift across sessions.
+
 After updating state.md to reflect implementation completion, commit all modified OAT tracking files:
 
 ```bash
