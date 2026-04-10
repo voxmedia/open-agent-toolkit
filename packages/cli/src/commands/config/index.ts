@@ -458,7 +458,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand:
       'oat config set workflow.autoNarrowReReviewScope <true|false>',
     description:
-      'Auto-narrow re-review scope to fix-task commits in oat-project-review-provide. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+      'Auto-narrow re-review scope to fix-task commits in oat-project-review-provide when re-reviewing completed fix tasks. Has no effect on initial reviews (there is nothing to narrow to). When unset, the skill prompts. Resolution: env > local > shared > user > default.',
   },
   {
     key: 'sync.defaultStrategy',
