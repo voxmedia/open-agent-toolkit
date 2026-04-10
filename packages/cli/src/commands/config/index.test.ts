@@ -481,4 +481,95 @@ describe('oat config', () => {
     expect(config.autoReviewAtCheckpoints).toBe(true);
     expect(process.exitCode).toBe(0);
   });
+
+  describe('workflow preference catalog', () => {
+    it('describe lists all six workflow preference keys under Workflow Preferences group', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe']);
+
+      expect(capture.info[0]).toContain('Workflow Preferences');
+      expect(capture.info[0]).toContain('workflow.hillCheckpointDefault');
+      expect(capture.info[0]).toContain('workflow.archiveOnComplete');
+      expect(capture.info[0]).toContain('workflow.createPrOnComplete');
+      expect(capture.info[0]).toContain('workflow.postImplementSequence');
+      expect(capture.info[0]).toContain('workflow.reviewExecutionModel');
+      expect(capture.info[0]).toContain('workflow.autoNarrowReReviewScope');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.hillCheckpointDefault shows enum metadata', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.hillCheckpointDefault']);
+
+      expect(capture.info[0]).toContain('Key: workflow.hillCheckpointDefault');
+      expect(capture.info[0]).toContain('every | final');
+      expect(capture.info[0]).toContain('Default: null');
+      expect(capture.info[0]).toContain(
+        'Owning command: oat config set workflow.hillCheckpointDefault',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.archiveOnComplete shows boolean metadata', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.archiveOnComplete']);
+
+      expect(capture.info[0]).toContain('Key: workflow.archiveOnComplete');
+      expect(capture.info[0]).toContain('Type: boolean');
+      expect(capture.info[0]).toContain('Default: null');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.postImplementSequence shows full enum', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.postImplementSequence']);
+
+      expect(capture.info[0]).toContain('Key: workflow.postImplementSequence');
+      expect(capture.info[0]).toContain('wait | summary | pr | docs-pr');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.reviewExecutionModel shows three-tier enum', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.reviewExecutionModel']);
+
+      expect(capture.info[0]).toContain('Key: workflow.reviewExecutionModel');
+      expect(capture.info[0]).toContain('subagent | inline | fresh-session');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe supports workflow keys via json mode', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(
+        command,
+        ['describe', 'workflow.archiveOnComplete'],
+        ['--json'],
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.archiveOnComplete',
+        entries: [
+          expect.objectContaining({
+            key: 'workflow.archiveOnComplete',
+            scope: 'workflow',
+            type: 'boolean',
+          }),
+        ],
+      });
+      expect(process.exitCode).toBe(0);
+    });
+  });
 });

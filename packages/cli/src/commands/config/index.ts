@@ -36,6 +36,12 @@ type ConfigKey =
   | 'tools.research'
   | 'tools.utility'
   | 'tools.workflows'
+  | 'workflow.archiveOnComplete'
+  | 'workflow.autoNarrowReReviewScope'
+  | 'workflow.createPrOnComplete'
+  | 'workflow.hillCheckpointDefault'
+  | 'workflow.postImplementSequence'
+  | 'workflow.reviewExecutionModel'
   | 'worktrees.root';
 
 interface ConfigValue {
@@ -96,6 +102,12 @@ const KEY_ORDER: ConfigKey[] = [
   'tools.research',
   'tools.utility',
   'tools.workflows',
+  'workflow.hillCheckpointDefault',
+  'workflow.archiveOnComplete',
+  'workflow.createPrOnComplete',
+  'workflow.postImplementSequence',
+  'workflow.reviewExecutionModel',
+  'workflow.autoNarrowReReviewScope',
   'worktrees.root',
 ];
 
@@ -354,6 +366,79 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'user config APIs (not surfaced via oat config set)',
     description:
       'User-level active idea fallback when no repo-local active idea is set.',
+  },
+  {
+    key: 'workflow.hillCheckpointDefault',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'every | final',
+    defaultValue: 'null',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.hillCheckpointDefault <value>',
+    description:
+      'Default HiLL checkpoint behavior in oat-project-implement: "every" pauses after every phase, "final" pauses only after the last phase. When unset, the skill prompts. Resolution: local > shared > user.',
+  },
+  {
+    key: 'workflow.archiveOnComplete',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'boolean',
+    defaultValue: 'null',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.archiveOnComplete <true|false>',
+    description:
+      'Skip the "Archive after completion?" prompt in oat-project-complete. When unset, the skill prompts. Resolution: local > shared > user.',
+  },
+  {
+    key: 'workflow.createPrOnComplete',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'boolean',
+    defaultValue: 'null',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.createPrOnComplete <true|false>',
+    description:
+      'Skip the "Open a PR?" prompt in oat-project-complete. When true, completion auto-triggers PR creation. Resolution: local > shared > user.',
+  },
+  {
+    key: 'workflow.postImplementSequence',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'wait | summary | pr | docs-pr',
+    defaultValue: 'null',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.postImplementSequence <value>',
+    description:
+      'Default post-implementation chaining: "wait" stops without auto-chaining, "summary" generates summary only, "pr" runs pr-final (which auto-generates summary), "docs-pr" runs docs sync then pr-final. When unset, the skill prompts. Resolution: local > shared > user.',
+  },
+  {
+    key: 'workflow.reviewExecutionModel',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'subagent | inline | fresh-session',
+    defaultValue: 'null',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.reviewExecutionModel <value>',
+    description:
+      'Default execution model for the final review step in oat-project-implement: "subagent" dispatches a review subagent, "inline" runs the review in-context, "fresh-session" prints guidance for running the review in a separate session (with an escape hatch to subagent/inline). When unset, the skill prompts. Resolution: local > shared > user.',
+  },
+  {
+    key: 'workflow.autoNarrowReReviewScope',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'boolean',
+    defaultValue: 'null',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set workflow.autoNarrowReReviewScope <true|false>',
+    description:
+      'Auto-narrow re-review scope to fix-task commits in oat-project-review-provide. When unset, the skill prompts. Resolution: local > shared > user.',
   },
   {
     key: 'sync.defaultStrategy',
