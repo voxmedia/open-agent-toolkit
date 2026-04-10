@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-05
+oat_last_updated: 2026-04-10
 oat_generated: false
 ---
 
@@ -131,6 +131,41 @@ Captured from PR #13 bootstrapping + 8 fix commits over ~4 hours.
 
 **CLI fix needed:** Preseed tsconfig with Next.js-compatible settings so first build is clean.
 
+### Round 3: Site name vs app name conflation (captured 2026-04-10, post PR #27)
+
+#### FP-11: Display title derived from package name produces awkward results
+
+**Problem:** `oat docs init` uses a single "app name" input for two unrelated concerns:
+
+1. The `package.json` `name` field (used by pnpm/Turborepo for workspace filtering, e.g., `pnpm --filter documentation dev`)
+2. The human-readable display title shown in the UI, derived in `scaffold.ts` as:
+   `const siteName = \`${humanizeAppName(options.appName)} Documentation\`;`
+
+This derivation produces poor results in the common cases:
+
+- App name `documentation` → display title `"Documentation Documentation"`
+- App name `cyclone-app-docs` → display title `"Cyclone App-docs Documentation"` (broken title-casing around the `-docs` suffix)
+- App name `docs` → display title `"Docs Documentation"`
+
+Users then have to manually edit two files to fix the display title after scaffolding:
+
+- `app/layout.tsx` — the `branding.title` prop on `DocsLayout`
+- `next.config.js` — the `title` option passed to `createDocsConfig()`
+
+The location of these edits is not obvious without reading the scaffold output or the Fumadocs/docs-theme source.
+
+**Root cause:** The scaffolder treats "app name" as the authoritative source for the display title, but in practice the display title should be the **product/project name** (e.g., "Cyclone App"), not the docs package name.
+
+Related: The existing `siteDescription` prompt is a separate, well-scoped field — it sets `{{SITE_DESCRIPTION}}` which lands in `package.json` description, `next.config.js` description, `docs/index.md` frontmatter, and `layout.tsx` branding description. It is the meta/subtitle, not the title. That field is fine as-is.
+
+**CLI fix needed:**
+
+- Add a separate "Site name" prompt (and corresponding `--title` / `--site-name` flag) that represents the product/project name
+- Default to the humanized repo name (e.g., `cyclone-app` → `Cyclone App`) rather than humanizing the app name
+- In monorepos, this is distinct from the docs package name; in single-package repos, the repo-name default usually matches the project name automatically
+- Derive `{{SITE_NAME}}` as `${siteName} Documentation` (or allow the user to opt out of the "Documentation" suffix)
+- The bootstrap skill should then pass both `--name` (package) and `--site-name` (display) through to the CLI
+
 ## Key Decisions
 
 1. **Approach:** Guided wrapper skill that calls `oat docs init` with flags rather than reimplementing scaffold logic.
@@ -178,20 +213,18 @@ Captured from PR #13 bootstrapping + 8 fix commits over ~4 hours.
 
 ## Risks
 
-- **CLI fix scope creep:** 10 friction points is substantial CLI work alongside the skill
+- **CLI fix scope creep:** 11 friction points is substantial CLI work alongside the skill
   - **Likelihood:** Medium
   - **Impact:** Medium
   - **Mitigation Ideas:** Prioritize fixes that block the skill flow; defer nice-to-haves
+  - **Status:** FP-1..FP-10 resolved via PR #27 (`4d66f0d`). FP-11 (site name conflation) still open.
 
 ## Blockers
 
-- **Blocked on CLI fixes:** FP-1 through FP-10 need to be resolved in `oat docs init` before the skill can be accurately tested and designed. A separate project (`docs-init-fixes`) has been created to track that work.
-- Resume this project after CLI fixes land and the user can test clean bootstrapping flows.
+- None. CLI fixes for FP-1..FP-10 landed in PR #27. FP-11 (site name) is tracked but does not block skill planning — the skill can pass a site-name flag once the CLI supports it, or post-patch the two files as a fallback until the CLI fix lands.
 
 ## Next Steps
 
-- Complete `docs-init-fixes` project (CLI improvements)
-- User re-tests bootstrapping with fixed CLI in both repo shapes
-- Resume this project's discovery with clean feedback
+- Resolve FP-11 in the CLI (add `--site-name` / "Site name" prompt) — can be bundled into this project's plan or split into a follow-up CLI fix
 - Decide on design depth (straight to plan vs lightweight design)
 - Build the skill against the improved CLI
