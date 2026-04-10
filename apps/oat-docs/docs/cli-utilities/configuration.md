@@ -52,6 +52,24 @@ What each command is for:
 - `oat config describe` shows the supported config catalog across shared repo, repo-local, user, and sync/provider surfaces.
 - `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key.
 
+### Source labels
+
+`oat config get --json` and `oat config list` emit a `source` field identifying which config surface a resolved value came from. The current labels are:
+
+| Label     | Meaning                                                                            |
+| --------- | ---------------------------------------------------------------------------------- |
+| `env`     | Value came from an environment variable override (e.g. `OAT_PROJECTS_ROOT`)        |
+| `local`   | Value came from `.oat/config.local.json` (per-developer repo state)                |
+| `shared`  | Value came from `.oat/config.json` (team-shared repo settings)                     |
+| `user`    | Value came from `~/.oat/config.json` (user-level fallback)                         |
+| `default` | No surface set the key; value is the CLI's built-in default (or `null` when unset) |
+
+These labels match what `oat config dump` emits, so tooling that consumes either command can rely on the same vocabulary.
+
+:::note Upgrade note
+Earlier CLI versions returned `config.json` / `config.local.json` / `env` / `default` as the `source` strings. External scripts that previously matched on `"source":"config.json"` or `"source":"config.local.json"` should update to match the new `shared` / `local` labels. This change was made to align the `oat config get` / `oat config list` output with `oat config dump` and to avoid confusing users about which file was consulted.
+:::
+
 ## Shared repo config you will touch most often
 
 Common keys in `.oat/config.json`:
@@ -109,6 +127,96 @@ oat config get activeProject
 oat config get lastPausedProject
 oat config describe activeIdea
 ```
+
+## Workflow preferences (`workflow.*`)
+
+Workflow preferences let power users answer repetitive confirmation prompts once and have OAT workflow skills respect those answers automatically. They are the highest-value escape hatch from interactive friction when you always make the same choices.
+
+### Preference keys
+
+All six workflow preference keys live under the `workflow.*` namespace:
+
+- `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement`: pause after every phase or only after the last phase. When unset, the skill prompts.
+- `workflow.archiveOnComplete` — boolean. Skip the "Archive after completion?" prompt in `oat-project-complete`. When unset, the skill prompts.
+- `workflow.createPrOnComplete` — boolean. Skip the "Open a PR?" prompt in `oat-project-complete`; when true, completion auto-triggers PR creation. When unset, the skill prompts.
+- `workflow.postImplementSequence` — `wait`, `summary`, `pr`, or `docs-pr`. Controls what `oat-project-implement` chains after final review passes. `wait` stops without auto-chaining, `summary` runs only `oat-project-summary`, `pr` runs `oat-project-pr-final` (which auto-generates summary), `docs-pr` runs `oat-project-document` then `oat-project-pr-final`. When unset, the skill prompts.
+- `workflow.reviewExecutionModel` — `subagent`, `inline`, or `fresh-session`. Default final-review execution model in `oat-project-implement`. `subagent` and `inline` run automatically. `fresh-session` is a soft preference: the skill prints guidance to run the review in another session but still offers escape hatches to `subagent` or `inline` if you change your mind. When unset, the skill prompts.
+- `workflow.autoNarrowReReviewScope` — boolean. Auto-narrow re-review scope to fix-task commits only in `oat-project-review-provide`. When unset, the skill prompts.
+
+### Three-layer resolution
+
+Workflow preferences resolve through three config surfaces, with `env > local > shared > user > default` precedence per key. This is the same generic resolution used by `oat config dump`:
+
+- **User-level** (`~/.oat/config.json`): personal defaults that apply to every repo. This is where most power users should start — set preferences once, never worry about them again.
+- **Shared repo** (`.oat/config.json`): team decisions for this repo. Overrides user defaults when present.
+- **Repo-local** (`.oat/config.local.json`): personal override for this specific repo. Highest precedence per key.
+
+### Setting preferences
+
+`oat config set` supports mutually exclusive surface flags for workflow keys:
+
+```bash
+# User-level: applies to all repos on this machine
+oat config set workflow.hillCheckpointDefault final --user
+oat config set workflow.archiveOnComplete true --user
+oat config set workflow.createPrOnComplete true --user
+oat config set workflow.postImplementSequence pr --user
+oat config set workflow.reviewExecutionModel subagent --user
+oat config set workflow.autoNarrowReReviewScope true --user
+
+# Shared repo: team decision for this repo
+oat config set workflow.createPrOnComplete false --shared
+
+# Repo-local: personal override for this repo (default when no flag)
+oat config set workflow.hillCheckpointDefault every
+```
+
+Default (no flag) targets `.oat/config.local.json` for workflow keys. Pass at most one of `--user`, `--shared`, or `--local`. Structural keys (`projects.root`, `worktrees.root`, `git.*`, `documentation.*`, `archive.*`, `tools.*`) are still shared-only regardless of flag.
+
+### Choosing the right surface (personal vs per-repo)
+
+Not every workflow preference belongs at user level, even though "set once, applies everywhere" is tempting. The guiding principle:
+
+> **If a workflow preference's correctness depends on other repo-level settings, it belongs at shared (per-repo) level, not user level.**
+
+Some preferences are **genuinely personal** — their correct value is the same for you regardless of which repo you're in. These are safe to set at `--user`:
+
+- `workflow.hillCheckpointDefault` — your personal tolerance for mid-implementation interruption
+- `workflow.reviewExecutionModel` — depends on your provider environment (Claude Code, Cursor, Codex), not the repo
+- `workflow.autoNarrowReReviewScope` — pure personal workflow preference, no per-repo interaction
+
+Other preferences **depend on per-repo configuration** to be safe. These should be set at `--shared` (in each repo where they apply), not `--user`:
+
+- `workflow.archiveOnComplete` — correctness depends on the repo's `archive.s3Uri` / `archive.s3SyncOnComplete` being configured. A user-level `true` would try to archive in repos that aren't set up for it.
+- `workflow.postImplementSequence` — correctness depends on `documentation.requireForProjectCompletion`. Setting `pr` at user level would foot-gun you in any repo that requires docs, because completion would later block on the docs gate while the PR is already open.
+- `workflow.createPrOnComplete` — this key is almost always redundant with `postImplementSequence`-driven flows. When it's meaningful, its correctness depends on the same per-repo docs and PR gates. Prefer shared scope, or omit it entirely and rely on `postImplementSequence: pr` or `docs-pr` to handle PR creation at the end of implement.
+
+**Cross-repo foot-gun example:** If you set `workflow.createPrOnComplete: true --user`, it applies to every repo you work on. In a repo with `documentation.requireForProjectCompletion: true` and `postImplementSequence: pr` (no docs step), running `oat-project-complete` would try to auto-create a PR, then immediately hit the docs gate and block you — leaving you with an open PR and a stuck completion. Your user-level preference silently asserted something that only holds in a specific shared-config shape.
+
+**Recommended split for most users:**
+
+```bash
+# Personal defaults (apply everywhere)
+oat config set workflow.hillCheckpointDefault final --user
+oat config set workflow.reviewExecutionModel subagent --user
+oat config set workflow.autoNarrowReReviewScope true --user
+
+# Per-repo team decisions (set in each repo where they apply)
+oat config set workflow.archiveOnComplete true --shared
+oat config set workflow.postImplementSequence docs-pr --shared  # or "pr" if docs aren't required
+```
+
+If you want to override a shared team decision for this specific checkout, use `--local`:
+
+```bash
+oat config set workflow.archiveOnComplete false --local  # "I don't want to archive on this specific branch checkout"
+```
+
+### Relationship to `autoReviewAtCheckpoints`
+
+The existing `autoReviewAtCheckpoints` key (top-level in `.oat/config.json`) was **not** migrated under the `workflow.*` namespace to preserve backward compatibility. It remains shared-scope-only and controls whether `oat-project-implement` auto-triggers code reviews at plan phase checkpoints. That is a separate behavioral toggle from the workflow preferences above — it affects when reviews happen, not which prompt-skipping defaults apply.
+
+If you enable both, you get a near-uninterrupted lifecycle: auto-review runs at checkpoints, fix tasks are converted automatically, and the workflow preferences skip every remaining confirmation prompt.
 
 ## Provider sync config is different
 

@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.3.7
+version: 1.4.0
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -63,6 +63,25 @@ Ask all user questions at once so the user can answer them in a single interacti
 - Fallback: present as a plain-text conversational prompt
 
 Before asking the batched questions, read `oat_pr_status` and `oat_pr_url` from `state.md` frontmatter.
+
+**Workflow preference checks (before asking questions):**
+
+Some questions can be answered automatically from workflow preferences. Read each preference before deciding whether to include its question in the batched prompt:
+
+```bash
+ARCHIVE_PREF=$(oat config get workflow.archiveOnComplete 2>/dev/null || true)
+PR_ON_COMPLETE=$(oat config get workflow.createPrOnComplete 2>/dev/null || true)
+```
+
+- **If `ARCHIVE_PREF` is `true`:** Set `SHOULD_ARCHIVE="true"`. Skip the archive question. Print `Archive on complete: enabled (from workflow.archiveOnComplete).`
+- **If `ARCHIVE_PREF` is `false`:** Set `SHOULD_ARCHIVE="false"`. Skip the archive question. Print `Archive on complete: disabled (from workflow.archiveOnComplete).`
+- **If unset:** Include the archive question in the batched prompt as normal (backward compatible).
+- **If `PR_ON_COMPLETE` is `true` AND no tracked open PR exists:** Set `SHOULD_OPEN_PR="true"`. Skip the Open PR question. Print `PR on complete: enabled (from workflow.createPrOnComplete).`
+- **If `PR_ON_COMPLETE` is `false`:** Set `SHOULD_OPEN_PR="false"`. Skip the Open PR question. Print `PR on complete: disabled (from workflow.createPrOnComplete).`
+- **If `PR_ON_COMPLETE` is unset:** Include the Open PR question in the batched prompt as normal (backward compatible).
+- The existing tracked-PR skip still applies: if `oat_pr_status` is `open`, do not ask the Open PR question and do not honor `PR_ON_COMPLETE=true` — the PR already exists.
+
+The "Ready to mark complete?" confirmation is always asked — it is a meaningful "are you sure" moment, not a preference.
 
 Also preflight summary status using the same freshness rules as `oat-project-summary`:
 

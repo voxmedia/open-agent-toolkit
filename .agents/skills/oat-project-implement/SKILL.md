@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 1.2.2
+version: 1.3.0
 description: Use when plan.md is ready for execution. Implements plan tasks sequentially with TDD discipline and state tracking.
 disable-model-invocation: true
 user-invocable: true
@@ -20,6 +20,9 @@ Execute the implementation plan task-by-task with full state tracking.
 **OAT MODE: Implementation**
 
 **Purpose:** Execute plan tasks with TDD discipline, track progress, handle blockers.
+
+**CRITICAL — Bookkeeping commits are mandatory, not optional.**
+After every code commit and after every phase/review-fix completion, you MUST commit the OAT tracking files (`implementation.md`, `state.md`, `plan.md`) as a separate bookkeeping commit. Do not defer, batch, or skip these commits under the reasoning that they "aren't related to the implementation." Skipping a bookkeeping commit is the primary cause of cross-session state drift and will cause the next implementation run to fail bookkeeping cross-checks. If bookkeeping commits feel frequent, that is the intended design — they are cheap and they prevent drift.
 
 ## Progress Indicators (User-Facing)
 
@@ -140,6 +143,20 @@ Determine whether this is a first implementation run:
 - If `"$PROJECT_PATH/implementation.md"` does not exist, treat as first run.
 - If it exists but still has template placeholders and no completed task evidence, treat as first run.
 
+#### Workflow preference check (before prompting)
+
+Before presenting the checkpoint prompt to the user, check if a workflow preference has been configured:
+
+```bash
+HILL_DEFAULT=$(oat config get workflow.hillCheckpointDefault 2>/dev/null || true)
+```
+
+- **If `HILL_DEFAULT` is `every`:** Skip the prompt. Write `oat_plan_hill_phases: []` to plan.md frontmatter. Print: `HiLL checkpoints: every phase (from workflow.hillCheckpointDefault)`. Continue to Touchpoint A.
+- **If `HILL_DEFAULT` is `final`:** Skip the prompt. Determine the final phase ID from plan.md (e.g., `p05`) and write `oat_plan_hill_phases: ["<final_phase_id>"]` to plan.md frontmatter. Print: `HiLL checkpoints: final phase only (from workflow.hillCheckpointDefault)`. Continue to Touchpoint A.
+- **If unset, empty, or invalid:** Fall through to the standard prompt behavior below.
+
+This preference check only applies on first runs — resuming implementations should trust the existing `oat_plan_hill_phases` value in plan.md (or repair as bookkeeping drift).
+
 Prompt behavior:
 
 - **If first run:** always present a complete phase-by-phase summary and confirm checkpoint phases before any task execution. A missing `oat_plan_hill_phases` value is the normal unconfirmed state; if a value is already present, treat it as a provisional value to confirm rather than as final.
@@ -202,8 +219,8 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 - Validate the task pointer:
   - If `oat_current_task_id` points at a task already marked `completed` in the body, advance to the **next incomplete** task (first `pending` / `in_progress` / `blocked` entry).
   - If all tasks are completed, skip ahead to finalization (Step 11+).
-- Resume from the resolved task
-- Ask user: "Resume from {task_id}, or start fresh (overwrite implementation.md)?"
+- **Always resume** from the resolved task. Print `Resuming from {task_id}.` Do not prompt.
+- **Fresh start is an explicit override only.** If the user invoked the skill with `fresh=true` (argument), warn `Starting fresh — this will overwrite implementation.md. Any draft logs will be lost.` and proceed with fresh initialization. Do not offer fresh start interactively; it is a rare edge case reserved for corrupt state or deliberate plan rewrites.
 
 **Stale-state reconciliation (approval required):**
 
@@ -339,6 +356,9 @@ Keep project state in sync after each task (recommended source of truth for “w
   - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
 **Bookkeeping commit (required):**
+
+**DO NOT SKIP.** This commit prevents state drift across sessions.
+
 After the code commit (Step 6) and state updates above, commit all modified OAT tracking files:
 
 ```bash
@@ -376,6 +396,9 @@ Do not use `git add -A` or glob patterns. Only commit the three OAT project file
      - `oat_project_state_updated: “{ISO 8601 UTC timestamp}”`
 
   **Bookkeeping commit (required):**
+
+  **DO NOT SKIP.** This commit prevents state drift across sessions.
+
   After completing the review-fix checklist above, commit all modified OAT tracking files:
 
   ```bash
@@ -449,6 +472,9 @@ When pausing:
   - Notable decisions/deviations
 
 **Bookkeeping commit (required):**
+
+**DO NOT SKIP.** This commit prevents state drift across sessions.
+
 After phase summary and task pointer advancement, commit all modified OAT tracking files:
 
 ```bash
@@ -579,6 +605,9 @@ Implementation - Tasks complete; awaiting final review.
 ```
 
 **Bookkeeping commit (required):**
+
+**DO NOT SKIP.** This commit prevents state drift across sessions.
+
 After updating state.md to reflect implementation completion, commit all modified OAT tracking files:
 
 ```bash
@@ -632,7 +661,43 @@ echo "$FINAL_ROW"
 **If final review is not marked `passed`:**
 
 - Tell user: "All tasks complete. Final review required before PR."
-- Offer review options (3-tier capability model):
+
+**Workflow preference check (before prompting):**
+
+```bash
+REVIEW_MODEL=$(oat config get workflow.reviewExecutionModel 2>/dev/null || true)
+```
+
+- **If `REVIEW_MODEL` is `subagent`:** Print `Review execution: subagent (from workflow.reviewExecutionModel).` Dispatch the review subagent directly via the Task tool. No prompt.
+- **If `REVIEW_MODEL` is `inline`:** Print `Review execution: inline (from workflow.reviewExecutionModel).` Run the review in-context per `oat-project-review-provide` skill. No prompt.
+- **If `REVIEW_MODEL` is `fresh-session`:** This is a **soft preference with escape hatch** because the agent cannot run the review in a fresh session on the user's behalf. Print the guidance block below, then handle the user's response per the three outcomes listed after it.
+- **If unset or invalid:** Fall through to the standard 3-tier prompt below.
+
+**Fresh-session guidance block (print when `REVIEW_MODEL` is `fresh-session`):**
+
+```
+Per your config (workflow.reviewExecutionModel: fresh-session), your
+preference is to run the review in a fresh session.
+
+Run `oat-project-review-provide code final` in a separate session, then
+resume this session when the review is complete.
+
+If you'd like to review here instead:
+  1) subagent
+  2) inline
+
+Enter 1 or 2 to run the review here, or press Enter to wait.
+```
+
+**Fresh-session response outcomes:**
+
+- User enters `1` → dispatch the subagent review (same behavior as `REVIEW_MODEL=subagent`).
+- User enters `2` → run the review inline (same behavior as `REVIEW_MODEL=inline`).
+- User presses Enter (or equivalent no-input confirmation) → pause the session and wait for the fresh-session review to complete before continuing.
+
+**Standard prompt (when preference is unset):**
+
+Offer review options (3-tier capability model):
 
 ```
 Implementation complete. Final review required.
@@ -672,6 +737,22 @@ To run in a separate session use: oat-project-review-provide code final
 ### Step 15: Prompt for Next Steps
 
 After final review passes (no Critical/Important findings):
+
+**Workflow preference check (before prompting):**
+
+```bash
+POST_IMPL=$(oat config get workflow.postImplementSequence 2>/dev/null || true)
+```
+
+- **If `POST_IMPL` is `wait`:** Print `Post-implementation: wait (from workflow.postImplementSequence). Run follow-up skills manually when ready.` Exit without auto-chaining.
+- **If `POST_IMPL` is `summary`:** Print `Post-implementation: summary (from workflow.postImplementSequence).` Invoke `oat-project-summary`. Stop after summary completes.
+- **If `POST_IMPL` is `pr`:** Print `Post-implementation: pr (from workflow.postImplementSequence).` Invoke `oat-project-pr-final` (which auto-generates `summary.md` as part of its flow).
+- **If `POST_IMPL` is `docs-pr`:** Print `Post-implementation: docs-pr (from workflow.postImplementSequence).` Invoke `oat-project-document` then `oat-project-pr-final` (summary included via pr-final).
+- **If unset or invalid:** Fall through to the standard prompt below.
+
+**Rationale:** `oat-project-pr-final` already auto-generates/refreshes `summary.md` as part of its flow, so `pr` and `docs-pr` do not need a separate summary step. The `summary` value exists as a standalone option for the rare case where you want just the summary without PR.
+
+**Standard prompt (when preference is unset):**
 
 ```
 Final review passed for {project-name}.

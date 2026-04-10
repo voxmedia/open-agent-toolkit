@@ -234,4 +234,133 @@ describe('resolveEffectiveConfig', () => {
       source: 'shared',
     });
   });
+
+  describe('workflow preferences', () => {
+    it('exposes workflow keys with source default when nothing set', async () => {
+      const repoRoot = await createRepoRoot();
+      const userConfigDir = await createUserConfigDir();
+
+      const result = await resolveEffectiveConfig(repoRoot, userConfigDir, {});
+
+      expect(result.resolved['workflow.hillCheckpointDefault']).toEqual({
+        value: null,
+        source: 'default',
+      });
+      expect(result.resolved['workflow.archiveOnComplete']).toEqual({
+        value: null,
+        source: 'default',
+      });
+      expect(result.resolved['workflow.createPrOnComplete']).toEqual({
+        value: null,
+        source: 'default',
+      });
+      expect(result.resolved['workflow.postImplementSequence']).toEqual({
+        value: null,
+        source: 'default',
+      });
+      expect(result.resolved['workflow.reviewExecutionModel']).toEqual({
+        value: null,
+        source: 'default',
+      });
+      expect(result.resolved['workflow.autoNarrowReReviewScope']).toEqual({
+        value: null,
+        source: 'default',
+      });
+    });
+
+    it('resolves workflow key from user when set only at user level', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                hillCheckpointDefault: 'final',
+                archiveOnComplete: true,
+              },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.hillCheckpointDefault']).toEqual({
+        value: 'final',
+        source: 'user',
+      });
+      expect(result.resolved['workflow.archiveOnComplete']).toEqual({
+        value: true,
+        source: 'user',
+      });
+    });
+
+    it('shared overrides user for workflow keys', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: { hillCheckpointDefault: 'every' },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { hillCheckpointDefault: 'final' },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.hillCheckpointDefault']).toEqual({
+        value: 'every',
+        source: 'shared',
+      });
+    });
+
+    it('local overrides shared and user for workflow keys', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                hillCheckpointDefault: 'every',
+                archiveOnComplete: false,
+              },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: { hillCheckpointDefault: 'final' },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { hillCheckpointDefault: 'every' },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.hillCheckpointDefault']).toEqual({
+        value: 'final',
+        source: 'local',
+      });
+      // archiveOnComplete only set in shared → still resolves from shared
+      expect(result.resolved['workflow.archiveOnComplete']).toEqual({
+        value: false,
+        source: 'shared',
+      });
+    });
+  });
 });

@@ -46,6 +46,23 @@ It then writes the confirmed value into `plan.md`. If the field is later missing
 
 Listed phases are where you stop **after completing them**, not before. `["p03"]` means "complete p03, then pause" — not "pause before starting p03." Setting the last phase ID (e.g., `["p03"]` when p03 is final) means "stop only at the end of implementation."
 
+### Setting a default via `workflow.hillCheckpointDefault`
+
+The first-run checkpoint prompt can be skipped entirely by setting the `workflow.hillCheckpointDefault` preference:
+
+- `every` — automatically write `oat_plan_hill_phases: []` (pause after every phase) without prompting
+- `final` — automatically write `oat_plan_hill_phases: ["<final-phase-id>"]` (pause only at the end) without prompting
+
+When set, `oat-project-implement` reads the preference before the prompt and prints `HiLL checkpoints: <every|final> (from workflow.hillCheckpointDefault)`, skipping the interactive choice. When unset (default), the skill prompts as before.
+
+This is a personal preference — typically set at user scope so it applies to every repo:
+
+```bash
+oat config set workflow.hillCheckpointDefault final --user
+```
+
+See [Workflow preferences in the Configuration guide](../../cli-utilities/configuration.md#workflow-preferences-workflow) for the full list of preference keys and surface guidance.
+
 ## Reference artifacts
 
 - `.oat/templates/plan.md`

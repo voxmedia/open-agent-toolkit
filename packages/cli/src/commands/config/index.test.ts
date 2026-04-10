@@ -15,6 +15,7 @@ import { createConfigCommand } from './index';
 interface HarnessOptions {
   cwd: string;
   env?: NodeJS.ProcessEnv;
+  home?: string;
 }
 
 function createHarness(options: HarnessOptions): {
@@ -22,6 +23,7 @@ function createHarness(options: HarnessOptions): {
   command: Command;
 } {
   const capture = createLoggerCapture();
+  const home = options.home ?? '/tmp/home';
 
   const command = createConfigCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -30,7 +32,7 @@ function createHarness(options: HarnessOptions): {
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? options.cwd,
-      home: '/tmp/home',
+      home,
       interactive: !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
@@ -343,11 +345,11 @@ describe('oat config', () => {
     await runCommand(command, ['list']);
 
     expect(capture.info[0]).toContain('activeProject');
-    expect(capture.info[0]).toContain('config.local.json');
+    expect(capture.info[0]).toContain('local');
     expect(capture.info[0]).toContain('projects.root');
     expect(capture.info[0]).toContain('.oat/projects/shared');
     expect(capture.info[0]).toContain('worktrees.root');
-    expect(capture.info[0]).toContain('config.json');
+    expect(capture.info[0]).toContain('shared');
     expect(process.exitCode).toBe(0);
   });
 
@@ -373,7 +375,7 @@ describe('oat config', () => {
       status: 'ok',
       key: 'projects.root',
       value: '.oat/projects/custom',
-      source: 'config.json',
+      source: 'shared',
     });
     expect(process.exitCode).toBe(0);
 
@@ -480,5 +482,469 @@ describe('oat config', () => {
     const config = JSON.parse(raw);
     expect(config.autoReviewAtCheckpoints).toBe(true);
     expect(process.exitCode).toBe(0);
+  });
+
+  describe('workflow preference surface flags', () => {
+    async function createHome(): Promise<string> {
+      const home = await mkdtemp(join(tmpdir(), 'oat-config-home-'));
+      tempDirs.push(home);
+      return home;
+    }
+
+    it('set workflow.archiveOnComplete without flag writes to config.local.json', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, ['set', 'workflow.archiveOnComplete', 'true']);
+
+      const raw = await readFile(
+        join(root, '.oat', 'config.local.json'),
+        'utf8',
+      );
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: { archiveOnComplete: true },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('set workflow.archiveOnComplete --shared writes to config.json', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.archiveOnComplete',
+        'true',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: { archiveOnComplete: true },
+      });
+      // Should NOT write to local
+      await expect(
+        readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+      ).rejects.toThrow();
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('set workflow.archiveOnComplete --user writes to ~/.oat/config.json', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.archiveOnComplete',
+        'true',
+        '--user',
+      ]);
+
+      const raw = await readFile(join(home, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: { archiveOnComplete: true },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('set workflow.hillCheckpointDefault validates enum', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.hillCheckpointDefault',
+        'final',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      const raw = await readFile(
+        join(root, '.oat', 'config.local.json'),
+        'utf8',
+      );
+      expect(JSON.parse(raw)).toMatchObject({
+        workflow: { hillCheckpointDefault: 'final' },
+      });
+    });
+
+    it('set workflow.hillCheckpointDefault rejects invalid enum value', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.hillCheckpointDefault',
+        'invalid-value',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('workflow.hillCheckpointDefault');
+    });
+
+    it('set projects.root --user is rejected as invalid surface', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'projects.root',
+        '.oat/custom',
+        '--user',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('projects.root');
+      expect(capture.error[0]).toContain('user');
+    });
+
+    it('set activeProject --shared is rejected as invalid surface', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeProject',
+        '.oat/projects/shared/demo',
+        '--shared',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('activeProject');
+      expect(capture.error[0]).toContain('shared');
+    });
+
+    it('set workflow.archiveOnComplete --shared --user rejects mutually exclusive flags', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.archiveOnComplete',
+        'true',
+        '--shared',
+        '--user',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('mutually exclusive');
+    });
+
+    it('set activeIdea --user writes to ~/.oat/config.json', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeIdea',
+        '.oat/ideas/my-idea',
+        '--user',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      const raw = await readFile(join(home, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        activeIdea: '.oat/ideas/my-idea',
+      });
+      // Should NOT write to local
+      await expect(
+        readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+      ).rejects.toThrow();
+    });
+
+    it('set activeIdea --local writes to .oat/config.local.json', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeIdea',
+        '.oat/ideas/repo-idea',
+        '--local',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      const raw = await readFile(
+        join(root, '.oat', 'config.local.json'),
+        'utf8',
+      );
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        activeIdea: '.oat/ideas/repo-idea',
+      });
+    });
+
+    it('set activeIdea --shared is rejected (no shared surface for activeIdea)', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeIdea',
+        '.oat/ideas/some-idea',
+        '--shared',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('activeIdea');
+      expect(capture.error[0]).toContain('shared');
+    });
+
+    it('set activeProject --user is still rejected (no user surface for activeProject)', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeProject',
+        '.oat/projects/shared/demo',
+        '--user',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('activeProject');
+      expect(capture.error[0]).toContain('user');
+    });
+
+    it('get activeIdea resolves from user when only set there', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'activeIdea',
+        '.oat/ideas/user-idea',
+        '--user',
+      ]);
+
+      const { command: getCmd, capture: getCap } = createHarness({
+        cwd: root,
+        home,
+      });
+      await runCommand(getCmd, ['get', 'activeIdea'], ['--json']);
+      expect(getCap.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'activeIdea',
+        value: '.oat/ideas/user-idea',
+        source: 'user',
+      });
+    });
+
+    it('set workflow.postImplementSequence validates enum', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.postImplementSequence',
+        'not-a-value',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('workflow.postImplementSequence');
+
+      // Valid value succeeds
+      const { command: command2 } = createHarness({ cwd: root, home });
+      await runCommand(command2, [
+        'set',
+        'workflow.postImplementSequence',
+        'docs-pr',
+      ]);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('get workflow.archiveOnComplete resolves from user when only set at user level', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      // Set at user level
+      await runCommand(command, [
+        'set',
+        'workflow.archiveOnComplete',
+        'true',
+        '--user',
+      ]);
+
+      // Get resolves from user
+      const { command: getCmd, capture: getCap } = createHarness({
+        cwd: root,
+        home,
+      });
+      await runCommand(
+        getCmd,
+        ['get', 'workflow.archiveOnComplete'],
+        ['--json'],
+      );
+      expect(getCap.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.archiveOnComplete',
+        value: 'true',
+        source: 'user',
+      });
+    });
+
+    it('local overrides shared overrides user for workflow keys (full chain)', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+
+      // Set user first
+      const h1 = createHarness({ cwd: root, home });
+      await runCommand(h1.command, [
+        'set',
+        'workflow.hillCheckpointDefault',
+        'every',
+        '--user',
+      ]);
+
+      // Then shared
+      const h2 = createHarness({ cwd: root, home });
+      await runCommand(h2.command, [
+        'set',
+        'workflow.hillCheckpointDefault',
+        'final',
+        '--shared',
+      ]);
+
+      // Get: shared wins over user
+      const h3 = createHarness({ cwd: root, home });
+      await runCommand(
+        h3.command,
+        ['get', 'workflow.hillCheckpointDefault'],
+        ['--json'],
+      );
+      expect(h3.capture.jsonPayloads[0]).toMatchObject({
+        value: 'final',
+        source: 'shared',
+      });
+
+      // Then local
+      const h4 = createHarness({ cwd: root, home });
+      await runCommand(h4.command, [
+        'set',
+        'workflow.hillCheckpointDefault',
+        'every',
+      ]);
+
+      // Get: local wins over everything
+      const h5 = createHarness({ cwd: root, home });
+      await runCommand(
+        h5.command,
+        ['get', 'workflow.hillCheckpointDefault'],
+        ['--json'],
+      );
+      expect(h5.capture.jsonPayloads[0]).toMatchObject({
+        value: 'every',
+        source: 'local',
+      });
+    });
+  });
+
+  describe('workflow preference catalog', () => {
+    it('describe lists all six workflow preference keys under Workflow Preferences group', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe']);
+
+      expect(capture.info[0]).toContain('Workflow Preferences');
+      expect(capture.info[0]).toContain('workflow.hillCheckpointDefault');
+      expect(capture.info[0]).toContain('workflow.archiveOnComplete');
+      expect(capture.info[0]).toContain('workflow.createPrOnComplete');
+      expect(capture.info[0]).toContain('workflow.postImplementSequence');
+      expect(capture.info[0]).toContain('workflow.reviewExecutionModel');
+      expect(capture.info[0]).toContain('workflow.autoNarrowReReviewScope');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.hillCheckpointDefault shows enum metadata', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.hillCheckpointDefault']);
+
+      expect(capture.info[0]).toContain('Key: workflow.hillCheckpointDefault');
+      expect(capture.info[0]).toContain('every | final');
+      expect(capture.info[0]).toContain('Default: unset');
+      expect(capture.info[0]).toContain(
+        'Owning command: oat config set workflow.hillCheckpointDefault',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.archiveOnComplete shows boolean metadata', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.archiveOnComplete']);
+
+      expect(capture.info[0]).toContain('Key: workflow.archiveOnComplete');
+      expect(capture.info[0]).toContain('Type: boolean');
+      expect(capture.info[0]).toContain('Default: unset');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.postImplementSequence shows full enum', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.postImplementSequence']);
+
+      expect(capture.info[0]).toContain('Key: workflow.postImplementSequence');
+      expect(capture.info[0]).toContain('wait | summary | pr | docs-pr');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.reviewExecutionModel shows three-tier enum', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.reviewExecutionModel']);
+
+      expect(capture.info[0]).toContain('Key: workflow.reviewExecutionModel');
+      expect(capture.info[0]).toContain('subagent | inline | fresh-session');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe supports workflow keys via json mode', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(
+        command,
+        ['describe', 'workflow.archiveOnComplete'],
+        ['--json'],
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.archiveOnComplete',
+        entries: [
+          expect.objectContaining({
+            key: 'workflow.archiveOnComplete',
+            scope: 'workflow',
+            type: 'boolean',
+          }),
+        ],
+      });
+      expect(process.exitCode).toBe(0);
+    });
   });
 });

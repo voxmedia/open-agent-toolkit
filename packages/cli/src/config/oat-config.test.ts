@@ -401,4 +401,179 @@ describe('oat-config', () => {
     );
     expect(raw.endsWith('\n')).toBe(true);
   });
+
+  describe('workflow preferences', () => {
+    it('reads valid workflow config from .oat/config.json', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            hillCheckpointDefault: 'final',
+            archiveOnComplete: true,
+            createPrOnComplete: true,
+            postImplementSequence: 'pr',
+            reviewExecutionModel: 'subagent',
+            autoNarrowReReviewScope: false,
+          },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow).toEqual({
+        hillCheckpointDefault: 'final',
+        archiveOnComplete: true,
+        createPrOnComplete: true,
+        postImplementSequence: 'pr',
+        reviewExecutionModel: 'subagent',
+        autoNarrowReReviewScope: false,
+      });
+    });
+
+    it('strips invalid enum values from workflow config', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            hillCheckpointDefault: 'invalid-value',
+            postImplementSequence: 'not-an-option',
+            reviewExecutionModel: 42,
+            archiveOnComplete: true,
+          },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow).toEqual({ archiveOnComplete: true });
+    });
+
+    it('drops empty workflow object', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({ version: 1, workflow: {} }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow).toBeUndefined();
+    });
+
+    it('reads workflow config from .oat/config.local.json', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.local.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            hillCheckpointDefault: 'every',
+            archiveOnComplete: false,
+            postImplementSequence: 'docs-pr',
+            reviewExecutionModel: 'inline',
+          },
+        }),
+        'utf8',
+      );
+
+      const localConfig = await readOatLocalConfig(repoRoot);
+      expect(localConfig.workflow).toEqual({
+        hillCheckpointDefault: 'every',
+        archiveOnComplete: false,
+        postImplementSequence: 'docs-pr',
+        reviewExecutionModel: 'inline',
+      });
+    });
+
+    it('reads workflow config from ~/.oat/config.json (user)', async () => {
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-wf-'));
+      tempDirs.push(userConfigDir);
+      await writeFile(
+        join(userConfigDir, 'config.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            hillCheckpointDefault: 'final',
+            createPrOnComplete: true,
+            reviewExecutionModel: 'fresh-session',
+          },
+        }),
+        'utf8',
+      );
+
+      const userConfig = await readUserConfig(userConfigDir);
+      expect(userConfig.workflow).toEqual({
+        hillCheckpointDefault: 'final',
+        createPrOnComplete: true,
+        reviewExecutionModel: 'fresh-session',
+      });
+    });
+
+    it('returns undefined workflow when not set in any surface', async () => {
+      const repoRoot = await createRepoRoot();
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-empty-'));
+      tempDirs.push(userConfigDir);
+
+      const sharedConfig = await readOatConfig(repoRoot);
+      const localConfig = await readOatLocalConfig(repoRoot);
+      const userConfig = await readUserConfig(userConfigDir);
+
+      expect(sharedConfig.workflow).toBeUndefined();
+      expect(localConfig.workflow).toBeUndefined();
+      expect(userConfig.workflow).toBeUndefined();
+    });
+
+    it('round-trips workflow config in shared config', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await writeOatConfig(repoRoot, {
+        version: 1,
+        workflow: {
+          hillCheckpointDefault: 'final',
+          archiveOnComplete: true,
+          createPrOnComplete: true,
+          postImplementSequence: 'docs-pr',
+          reviewExecutionModel: 'subagent',
+          autoNarrowReReviewScope: true,
+        },
+      });
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow).toEqual({
+        hillCheckpointDefault: 'final',
+        archiveOnComplete: true,
+        createPrOnComplete: true,
+        postImplementSequence: 'docs-pr',
+        reviewExecutionModel: 'subagent',
+        autoNarrowReReviewScope: true,
+      });
+    });
+
+    it('round-trips workflow config in user config', async () => {
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-rt-'));
+      tempDirs.push(userConfigDir);
+
+      await writeUserConfig(userConfigDir, {
+        version: 1,
+        workflow: {
+          hillCheckpointDefault: 'every',
+          createPrOnComplete: true,
+        },
+      });
+
+      const userConfig = await readUserConfig(userConfigDir);
+      expect(userConfig.workflow).toEqual({
+        hillCheckpointDefault: 'every',
+        createPrOnComplete: true,
+      });
+    });
+  });
 });

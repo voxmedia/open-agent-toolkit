@@ -19,6 +19,12 @@ Review loop:
 - `reviews/archived/` is the local-only historical surface. Active `reviews/` content is not gitignored by default.
 - Ad-hoc review artifacts still default to local-only orphan storage under `.oat/projects/local/orphan-reviews/`.
 
+## Bookkeeping commits (required)
+
+Both `oat-project-review-receive` and `oat-project-review-receive-remote` conclude with a required atomic commit of `plan.md`, `implementation.md`, `state.md`, and the archived review artifact (when tracked). This is the safety net that prevents cross-agent bookkeeping drift: when a subagent runs a receive skill in isolation, the commit ensures the original agent sees a clean checkout on return.
+
+The commit is scoped and explicit — it stages only the project's tracking files and the project's `reviews/` directory. It never uses `git add -A` or repo-wide glob patterns. Deferring this commit requires explicit user approval and must be recorded in the receive skill's summary so the original agent knows state is uncommitted.
+
 ## Project vs ad-hoc
 
 **Provide** (request a review):
@@ -57,6 +63,24 @@ When `autoReviewAtCheckpoints` is enabled (via `oat config set autoReviewAtCheck
 Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` auto-converts all findings to fix tasks without user prompts (Minor findings that are clearly out of scope are deferred with a note).
 
 This feature is opt-in and disabled by default. When disabled, the manual `oat-project-review-provide` workflow applies.
+
+## Re-review scope narrowing
+
+When re-reviewing after fix tasks have been applied, `oat-project-review-provide` detects completed `(review)` fix tasks and offers to narrow the re-review scope to just the fix-task commits. This avoids re-examining already-approved code.
+
+The behavior can be set as a default via `workflow.autoNarrowReReviewScope`:
+
+- `true` — automatically narrow to fix commits, no prompt
+- `false` — always use the full scope, no prompt
+- unset (default) — prompt the user on each re-review
+
+Typically set at user scope since it's a personal workflow preference:
+
+```bash
+oat config set workflow.autoNarrowReReviewScope true --user
+```
+
+The preference only applies when there are completed fix tasks to narrow to. Initial reviews (before any fix tasks exist) always use the full scope regardless of the preference. See [Workflow preferences in the Configuration guide](../../cli-utilities/configuration.md#workflow-preferences-workflow) for the full list of preference keys.
 
 ## Phase and final review
 

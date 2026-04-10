@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
@@ -5,11 +7,20 @@ import {
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
+  type OatWorkflowConfig,
+  type UserConfig,
   readOatConfig,
   readOatLocalConfig,
+  readUserConfig,
   writeOatConfig,
   writeOatLocalConfig,
+  writeUserConfig,
 } from '@config/oat-config';
+import {
+  resolveEffectiveConfig,
+  type ResolvedConfig,
+  type ResolvedConfigSource,
+} from '@config/resolve';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
@@ -36,12 +47,18 @@ type ConfigKey =
   | 'tools.research'
   | 'tools.utility'
   | 'tools.workflows'
+  | 'workflow.archiveOnComplete'
+  | 'workflow.autoNarrowReReviewScope'
+  | 'workflow.createPrOnComplete'
+  | 'workflow.hillCheckpointDefault'
+  | 'workflow.postImplementSequence'
+  | 'workflow.reviewExecutionModel'
   | 'worktrees.root';
 
 interface ConfigValue {
   key: ConfigKey;
   value: string | null;
-  source: string;
+  source: ResolvedConfigSource;
 }
 
 interface ConfigCatalogEntry {
@@ -68,12 +85,21 @@ interface ConfigCommandDependencies {
     repoRoot: string,
     config: OatLocalConfig,
   ) => Promise<void>;
+  readUserConfig: (userConfigDir: string) => Promise<UserConfig>;
+  writeUserConfig: (userConfigDir: string, config: UserConfig) => Promise<void>;
   resolveProjectsRoot: (
     repoRoot: string,
     env: NodeJS.ProcessEnv,
   ) => Promise<string>;
+  resolveEffectiveConfig: (
+    repoRoot: string,
+    userConfigDir: string,
+    env: NodeJS.ProcessEnv,
+  ) => Promise<ResolvedConfig>;
   processEnv: NodeJS.ProcessEnv;
 }
+
+type ConfigSurface = 'auto' | 'shared' | 'local' | 'user';
 
 const KEY_ORDER: ConfigKey[] = [
   'activeIdea',
@@ -96,6 +122,12 @@ const KEY_ORDER: ConfigKey[] = [
   'tools.research',
   'tools.utility',
   'tools.workflows',
+  'workflow.hillCheckpointDefault',
+  'workflow.archiveOnComplete',
+  'workflow.createPrOnComplete',
+  'workflow.postImplementSequence',
+  'workflow.reviewExecutionModel',
+  'workflow.autoNarrowReReviewScope',
   'worktrees.root',
 ];
 
@@ -351,9 +383,82 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     type: 'string | null',
     defaultValue: 'null',
     mutability: 'read/write',
-    owningCommand: 'user config APIs (not surfaced via oat config set)',
+    owningCommand: 'oat config set activeIdea <value> --user',
     description:
-      'User-level active idea fallback when no repo-local active idea is set.',
+      'User-level active idea fallback used when no repo-local active idea is set. Writable via `oat config set activeIdea <value> --user`.',
+  },
+  {
+    key: 'workflow.hillCheckpointDefault',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'every | final',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.hillCheckpointDefault <value>',
+    description:
+      'Default HiLL checkpoint behavior in oat-project-implement: "every" pauses after every phase, "final" pauses only after the last phase. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+  },
+  {
+    key: 'workflow.archiveOnComplete',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'boolean',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.archiveOnComplete <true|false>',
+    description:
+      'Skip the "Archive after completion?" prompt in oat-project-complete. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+  },
+  {
+    key: 'workflow.createPrOnComplete',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'boolean',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.createPrOnComplete <true|false>',
+    description:
+      'Skip the "Open a PR?" prompt in oat-project-complete. When true, completion auto-triggers PR creation. Resolution: env > local > shared > user > default.',
+  },
+  {
+    key: 'workflow.postImplementSequence',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'wait | summary | pr | docs-pr',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.postImplementSequence <value>',
+    description:
+      'Default post-implementation chaining: "wait" stops without auto-chaining, "summary" generates summary only, "pr" runs pr-final (which auto-generates summary), "docs-pr" runs docs sync then pr-final. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+  },
+  {
+    key: 'workflow.reviewExecutionModel',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'subagent | inline | fresh-session',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.reviewExecutionModel <value>',
+    description:
+      'Default execution model for the final review step in oat-project-implement: "subagent" dispatches a review subagent, "inline" runs the review in-context, "fresh-session" prints guidance for running the review in a separate session (with an escape hatch to subagent/inline). When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+  },
+  {
+    key: 'workflow.autoNarrowReReviewScope',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'boolean',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set workflow.autoNarrowReReviewScope <true|false>',
+    description:
+      'Auto-narrow re-review scope to fix-task commits in oat-project-review-provide when re-reviewing completed fix tasks. Has no effect on initial reviews (there is nothing to narrow to). When unset, the skill prompts. Resolution: env > local > shared > user > default.',
   },
   {
     key: 'sync.defaultStrategy',
@@ -399,7 +504,10 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   writeOatConfig,
   readOatLocalConfig,
   writeOatLocalConfig,
+  readUserConfig,
+  writeUserConfig,
   resolveProjectsRoot,
+  resolveEffectiveConfig,
   processEnv: process.env,
 };
 
@@ -415,181 +523,252 @@ function normalizeSharedRoot(value: string): string {
   return trimmed.replace(/\/+$/, '');
 }
 
-async function resolveProjectsRootWithSource(
-  repoRoot: string,
-  dependencies: ConfigCommandDependencies,
-): Promise<ConfigValue> {
-  const envRoot = dependencies.processEnv.OAT_PROJECTS_ROOT?.trim();
-  if (envRoot) {
-    return {
-      key: 'projects.root',
-      value: envRoot.replace(/\/+$/, ''),
-      source: 'env',
-    };
-  }
+const WORKFLOW_ENUM_VALUES = {
+  'workflow.hillCheckpointDefault': ['every', 'final'],
+  'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
+  'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
+} as const satisfies Partial<Record<ConfigKey, readonly string[]>>;
 
-  const config = await dependencies.readOatConfig(repoRoot);
-  const configRoot = config.projects?.root?.trim();
-  if (configRoot) {
-    return {
-      key: 'projects.root',
-      value: configRoot.replace(/\/+$/, ''),
-      source: 'config.json',
-    };
-  }
+const WORKFLOW_BOOLEAN_KEYS = new Set<ConfigKey>([
+  'workflow.archiveOnComplete',
+  'workflow.createPrOnComplete',
+  'workflow.autoNarrowReReviewScope',
+]);
 
-  const value = await dependencies.resolveProjectsRoot(
-    repoRoot,
-    dependencies.processEnv,
+function isWorkflowKey(key: ConfigKey): boolean {
+  return key.startsWith('workflow.');
+}
+
+function isStateKey(key: ConfigKey): boolean {
+  return (
+    key === 'activeIdea' ||
+    key === 'activeProject' ||
+    key === 'lastPausedProject'
   );
+}
+
+function isStructuralKey(key: ConfigKey): boolean {
+  return (
+    key === 'projects.root' ||
+    key === 'worktrees.root' ||
+    key === 'git.defaultBranch' ||
+    key.startsWith('documentation.') ||
+    key.startsWith('archive.') ||
+    key.startsWith('tools.')
+  );
+}
+
+function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
+  if (surface === 'auto') {
+    return;
+  }
+
+  if (isStructuralKey(key)) {
+    if (surface !== 'shared') {
+      throw new Error(
+        `Cannot set structural key '${key}' at '${surface}' scope. Structural keys (projects.root, worktrees.root, git.*, documentation.*, archive.*, tools.*) can only be set at shared scope (.oat/config.json).`,
+      );
+    }
+    return;
+  }
+
+  if (isStateKey(key)) {
+    // activeIdea has both a repo-local and a user-level surface in the
+    // catalog (the user-level entry is the global fallback). Both surfaces
+    // are writable; shared is not supported because an idea pointer is not
+    // a team decision.
+    if (key === 'activeIdea') {
+      if (surface !== 'local' && surface !== 'user') {
+        throw new Error(
+          `Cannot set 'activeIdea' at '${surface}' scope. activeIdea can only be set at local scope (.oat/config.local.json) or user scope (~/.oat/config.json).`,
+        );
+      }
+      return;
+    }
+
+    // activeProject and lastPausedProject are per-checkout state only.
+    if (surface !== 'local') {
+      throw new Error(
+        `Cannot set state key '${key}' at '${surface}' scope. State keys (activeProject, lastPausedProject) can only be set at local scope (.oat/config.local.json).`,
+      );
+    }
+    return;
+  }
+
+  // autoReviewAtCheckpoints is currently shared-only. Multi-surface support
+  // for behavioral keys is out of scope for p01-t04 (workflow.* keys only).
+  if (key === 'autoReviewAtCheckpoints' && surface !== 'shared') {
+    throw new Error(
+      `Cannot set 'autoReviewAtCheckpoints' at '${surface}' scope. This key is currently shared-only.`,
+    );
+  }
+
+  // Workflow keys accept any non-auto surface.
+}
+
+function defaultSurfaceForKey(key: ConfigKey): ConfigSurface {
+  if (isWorkflowKey(key) || isStateKey(key)) {
+    return 'local';
+  }
+  return 'shared';
+}
+
+function parseWorkflowValue(
+  key: ConfigKey,
+  rawValue: string,
+): boolean | string {
+  if (WORKFLOW_BOOLEAN_KEYS.has(key)) {
+    const normalized = rawValue.trim().toLowerCase();
+    if (normalized !== 'true' && normalized !== 'false') {
+      throw new Error(
+        `Invalid value for ${key}: expected 'true' or 'false', got '${rawValue}'`,
+      );
+    }
+    return normalized === 'true';
+  }
+
+  const allowed =
+    WORKFLOW_ENUM_VALUES[key as keyof typeof WORKFLOW_ENUM_VALUES];
+  if (allowed) {
+    const normalized = rawValue.trim();
+    if (!(allowed as readonly string[]).includes(normalized)) {
+      throw new Error(
+        `Invalid value for ${key}: expected one of ${allowed.join(' | ')}, got '${rawValue}'`,
+      );
+    }
+    return normalized;
+  }
+
+  throw new Error(`Unknown workflow key: ${key}`);
+}
+
+function applyWorkflowValue(
+  workflow: OatWorkflowConfig,
+  key: ConfigKey,
+  value: boolean | string,
+): OatWorkflowConfig {
+  const subKey = key.slice('workflow.'.length);
   return {
-    key: 'projects.root',
-    value,
-    source: 'default',
-  };
+    ...workflow,
+    [subKey]: value,
+  } as OatWorkflowConfig;
+}
+
+function formatResolvedValue(value: unknown): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === 'boolean') {
+    return String(value);
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.join(',');
+  }
+  return String(value);
 }
 
 async function getConfigValue(
   repoRoot: string,
+  userConfigDir: string,
   key: ConfigKey,
   dependencies: ConfigCommandDependencies,
 ): Promise<ConfigValue> {
-  if (key === 'projects.root') {
-    return resolveProjectsRootWithSource(repoRoot, dependencies);
+  const resolved = await dependencies.resolveEffectiveConfig(
+    repoRoot,
+    userConfigDir,
+    dependencies.processEnv,
+  );
+
+  const entry = resolved.resolved[key];
+  if (!entry) {
+    return { key, value: null, source: 'default' };
   }
 
-  if (key.startsWith('documentation.')) {
-    const config = await dependencies.readOatConfig(repoRoot);
-    const doc = config.documentation;
-    let value: string | null = null;
-
-    if (key === 'documentation.root') {
-      value = doc?.root ?? null;
-    } else if (key === 'documentation.tooling') {
-      value = doc?.tooling ?? null;
-    } else if (key === 'documentation.config') {
-      value = doc?.config ?? null;
-    } else if (key === 'documentation.requireForProjectCompletion') {
-      value =
-        doc?.requireForProjectCompletion != null
-          ? String(doc.requireForProjectCompletion)
-          : 'false';
-    }
-
-    return {
-      key,
-      value,
-      source: doc ? 'config.json' : 'default',
-    };
-  }
-
-  if (key.startsWith('archive.')) {
-    const config = await dependencies.readOatConfig(repoRoot);
-    const archive = config.archive;
-    let value: string | null = null;
-
-    if (key === 'archive.s3Uri') {
-      value = archive?.s3Uri ?? null;
-    } else if (key === 'archive.s3SyncOnComplete') {
-      value =
-        archive?.s3SyncOnComplete != null
-          ? String(archive.s3SyncOnComplete)
-          : 'false';
-    } else if (key === 'archive.summaryExportPath') {
-      value = archive?.summaryExportPath ?? null;
-    }
-
-    return {
-      key,
-      value,
-      source: archive ? 'config.json' : 'default',
-    };
-  }
-
-  if (key.startsWith('tools.')) {
-    const config = await dependencies.readOatConfig(repoRoot);
-    const packName = key.slice('tools.'.length) as keyof OatToolsConfig;
-    const tools = config.tools ?? {};
-    return {
-      key,
-      value: String(tools[packName] ?? false),
-      source: config.tools ? 'config.json' : 'default',
-    };
-  }
-
-  if (key === 'git.defaultBranch') {
-    const config = await dependencies.readOatConfig(repoRoot);
-    return {
-      key,
-      value: config.git?.defaultBranch ?? null,
-      source: config.git?.defaultBranch ? 'config.json' : 'default',
-    };
-  }
-
-  if (key === 'worktrees.root') {
-    const envRoot = dependencies.processEnv.OAT_WORKTREES_ROOT?.trim();
-    if (envRoot) {
-      return {
-        key,
-        value: envRoot.replace(/\/+$/, ''),
-        source: 'env',
-      };
-    }
-
-    const config = await dependencies.readOatConfig(repoRoot);
-    const value = config.worktrees?.root?.trim();
-    if (value) {
-      return {
-        key,
-        value: value.replace(/\/+$/, ''),
-        source: 'config.json',
-      };
-    }
-
-    return {
-      key,
-      value: '.worktrees',
-      source: 'default',
-    };
-  }
-
-  if (key === 'autoReviewAtCheckpoints') {
-    const config = await dependencies.readOatConfig(repoRoot);
-    return {
-      key,
-      value:
-        config.autoReviewAtCheckpoints != null
-          ? String(config.autoReviewAtCheckpoints)
-          : 'false',
-      source:
-        config.autoReviewAtCheckpoints != null ? 'config.json' : 'default',
-    };
-  }
-
-  const localConfig = await dependencies.readOatLocalConfig(repoRoot);
-  const localKey = key as keyof OatLocalConfig;
-  const hasKey = Object.hasOwn(localConfig, localKey);
-  const value = (localConfig[localKey] as string | null | undefined) ?? null;
   return {
     key,
-    value,
-    source: hasKey ? 'config.local.json' : 'default',
+    value: formatResolvedValue(entry.value),
+    source: entry.source,
   };
 }
 
 async function setConfigValue(
   repoRoot: string,
+  userConfigDir: string,
   key: ConfigKey,
   rawValue: string,
+  surface: ConfigSurface,
   dependencies: ConfigCommandDependencies,
 ): Promise<ConfigValue> {
+  validateSurfaceForKey(key, surface);
+
+  const effectiveSurface: ConfigSurface =
+    surface === 'auto' ? defaultSurfaceForKey(key) : surface;
+
+  if (isWorkflowKey(key)) {
+    const parsedValue = parseWorkflowValue(key, rawValue);
+    const displayValue =
+      typeof parsedValue === 'boolean' ? String(parsedValue) : parsedValue;
+
+    if (effectiveSurface === 'user') {
+      const userConfig = await dependencies.readUserConfig(userConfigDir);
+      await dependencies.writeUserConfig(userConfigDir, {
+        ...userConfig,
+        workflow: applyWorkflowValue(
+          userConfig.workflow ?? {},
+          key,
+          parsedValue,
+        ),
+      });
+      return { key, value: displayValue, source: 'user' };
+    }
+
+    if (effectiveSurface === 'local') {
+      const localConfig = await dependencies.readOatLocalConfig(repoRoot);
+      await dependencies.writeOatLocalConfig(repoRoot, {
+        ...localConfig,
+        workflow: applyWorkflowValue(
+          localConfig.workflow ?? {},
+          key,
+          parsedValue,
+        ),
+      });
+      return { key, value: displayValue, source: 'local' };
+    }
+
+    // shared
+    const sharedConfig = await dependencies.readOatConfig(repoRoot);
+    await dependencies.writeOatConfig(repoRoot, {
+      ...sharedConfig,
+      workflow: applyWorkflowValue(
+        sharedConfig.workflow ?? {},
+        key,
+        parsedValue,
+      ),
+    });
+    return { key, value: displayValue, source: 'shared' };
+  }
+
   if (
     key === 'activeIdea' ||
     key === 'activeProject' ||
     key === 'lastPausedProject'
   ) {
-    const localConfig = await dependencies.readOatLocalConfig(repoRoot);
     const nextValue = rawValue === '' ? null : rawValue;
+
+    // activeIdea --user writes to ~/.oat/config.json
+    if (key === 'activeIdea' && effectiveSurface === 'user') {
+      const userConfig = await dependencies.readUserConfig(userConfigDir);
+      await dependencies.writeUserConfig(userConfigDir, {
+        ...userConfig,
+        activeIdea: nextValue,
+      });
+      return { key, value: nextValue, source: 'user' };
+    }
+
+    const localConfig = await dependencies.readOatLocalConfig(repoRoot);
     await dependencies.writeOatLocalConfig(repoRoot, {
       ...localConfig,
       [key]: nextValue,
@@ -597,7 +776,7 @@ async function setConfigValue(
     return {
       key,
       value: nextValue,
-      source: 'config.local.json',
+      source: 'local',
     };
   }
 
@@ -632,7 +811,7 @@ async function setConfigValue(
     return {
       key,
       value: resultValue,
-      source: 'config.json',
+      source: 'shared',
     };
   }
 
@@ -662,7 +841,7 @@ async function setConfigValue(
     return {
       key,
       value: resultValue,
-      source: 'config.json',
+      source: 'shared',
     };
   }
 
@@ -679,7 +858,7 @@ async function setConfigValue(
     return {
       key,
       value: String(tools[packName] ?? false),
-      source: 'config.json',
+      source: 'shared',
     };
   }
 
@@ -700,7 +879,7 @@ async function setConfigValue(
     return {
       key,
       value: nextValue,
-      source: 'config.json',
+      source: 'shared',
     };
   }
 
@@ -713,7 +892,7 @@ async function setConfigValue(
     return {
       key,
       value: String(nextValue),
-      source: 'config.json',
+      source: 'shared',
     };
   }
 
@@ -734,7 +913,7 @@ async function setConfigValue(
   return {
     key,
     value: normalizedValue,
-    source: 'config.json',
+    source: 'shared',
   };
 }
 
@@ -828,7 +1007,13 @@ async function runGet(
     }
 
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-    const value = await getConfigValue(repoRoot, keyArg, dependencies);
+    const userConfigDir = join(context.home, '.oat');
+    const value = await getConfigValue(
+      repoRoot,
+      userConfigDir,
+      keyArg,
+      dependencies,
+    );
     if (context.json) {
       context.logger.json({
         status: 'ok',
@@ -852,6 +1037,7 @@ async function runGet(
 async function runSet(
   keyArg: string,
   rawValue: string,
+  surface: ConfigSurface,
   context: CommandContext,
   dependencies: ConfigCommandDependencies,
 ): Promise<void> {
@@ -861,10 +1047,13 @@ async function runSet(
     }
 
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    const userConfigDir = join(context.home, '.oat');
     const result = await setConfigValue(
       repoRoot,
+      userConfigDir,
       keyArg,
       rawValue,
+      surface,
       dependencies,
     );
     if (context.json) {
@@ -893,9 +1082,12 @@ async function runList(
 ): Promise<void> {
   try {
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    const userConfigDir = join(context.home, '.oat');
     const values: ConfigValue[] = [];
     for (const key of KEY_ORDER) {
-      values.push(await getConfigValue(repoRoot, key, dependencies));
+      values.push(
+        await getConfigValue(repoRoot, userConfigDir, key, dependencies),
+      );
     }
 
     if (context.json) {
@@ -981,17 +1173,51 @@ export function createConfigCommand(
         .description('Set an OAT config value')
         .argument('<key>', 'Config key')
         .argument('<value>', 'Config value')
+        .option(
+          '--shared',
+          'Write to the shared repo config (.oat/config.json)',
+        )
+        .option(
+          '--local',
+          'Write to the repo-local config (.oat/config.local.json)',
+        )
+        .option('--user', 'Write to the user-level config (~/.oat/config.json)')
         .action(
           async (
             key: string,
             value: string,
-            _options: unknown,
+            options: { shared?: boolean; local?: boolean; user?: boolean },
             command: Command,
           ) => {
             const context = dependencies.buildCommandContext(
               readGlobalOptions(command),
             );
-            await runSet(key, value, context, dependencies);
+            try {
+              const flagsPresent = [
+                options.shared,
+                options.local,
+                options.user,
+              ].filter(Boolean).length;
+              if (flagsPresent > 1) {
+                throw new Error(
+                  '--shared, --local, and --user flags are mutually exclusive; pass at most one.',
+                );
+              }
+              let surface: ConfigSurface = 'auto';
+              if (options.shared) surface = 'shared';
+              else if (options.local) surface = 'local';
+              else if (options.user) surface = 'user';
+              await runSet(key, value, surface, context, dependencies);
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : String(error);
+              if (context.json) {
+                context.logger.json({ status: 'error', message });
+              } else {
+                context.logger.error(message);
+              }
+              process.exitCode = 1;
+            }
           },
         ),
     )

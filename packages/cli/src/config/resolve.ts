@@ -54,6 +54,15 @@ const DEFAULT_SHARED_CONFIG = {
     index: null,
     requireForProjectCompletion: false,
   },
+  tools: {
+    core: false,
+    docs: false,
+    ideas: false,
+    'project-management': false,
+    research: false,
+    utility: false,
+    workflows: false,
+  },
   autoReviewAtCheckpoints: false,
 } satisfies Record<string, unknown>;
 
@@ -65,6 +74,17 @@ const DEFAULT_LOCAL_CONFIG = {
 
 const DEFAULT_USER_CONFIG = {
   activeIdea: null,
+} satisfies Record<string, unknown>;
+
+const DEFAULT_WORKFLOW_CONFIG = {
+  workflow: {
+    hillCheckpointDefault: null,
+    archiveOnComplete: null,
+    createPrOnComplete: null,
+    postImplementSequence: null,
+    reviewExecutionModel: null,
+    autoNarrowReReviewScope: null,
+  },
 } satisfies Record<string, unknown>;
 
 const ENV_OVERRIDE_MAP = {
@@ -96,6 +116,7 @@ export async function resolveEffectiveConfig(
     ...flattenConfig(DEFAULT_SHARED_CONFIG),
     ...flattenConfig(DEFAULT_LOCAL_CONFIG),
     ...flattenConfig(DEFAULT_USER_CONFIG),
+    ...flattenConfig(DEFAULT_WORKFLOW_CONFIG),
   };
 
   const keys = new Set([

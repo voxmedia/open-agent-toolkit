@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/control-plane",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "private": false,
   "description": "Read-only OAT control-plane library for structured project state",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/control-plane",
