@@ -1,5 +1,8 @@
-import YAML from 'yaml';
-
+import { parseFrontmatterRecord } from '../shared/utils/frontmatter';
+import {
+  normalizeNullableString,
+  parseBoolean,
+} from '../shared/utils/normalize';
 import type {
   ExecutionMode,
   Lifecycle,
@@ -7,9 +10,6 @@ import type {
   PhaseStatus,
   WorkflowMode,
 } from '../types';
-
-const FRONTMATTER_PATTERN = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
-const PLACEHOLDER_PATTERN = /^\{[^}]+\}$/;
 
 const PHASES = ['discovery', 'spec', 'design', 'plan', 'implement'] as const;
 const PHASE_STATUSES = ['in_progress', 'complete', 'pr_open'] as const;
@@ -68,26 +68,18 @@ const EMPTY_PARSED_STATE: ParsedStateFrontmatter = {
 };
 
 export function parseStateFrontmatter(content: string): ParsedStateFrontmatter {
-  const frontmatter = extractFrontmatter(content);
-  if (frontmatter == null) {
-    return EMPTY_PARSED_STATE;
-  }
-
-  let parsed: unknown;
-
-  try {
-    parsed = YAML.parse(frontmatter);
-  } catch {
-    return EMPTY_PARSED_STATE;
-  }
-
-  if (!isRecord(parsed)) {
+  const parsed = parseFrontmatterRecord(content);
+  if (Object.keys(parsed).length === 0) {
     return EMPTY_PARSED_STATE;
   }
 
   return {
-    currentTask: normalizeNullableString(parsed.oat_current_task),
-    lastCommit: normalizeNullableString(parsed.oat_last_commit),
+    currentTask: normalizeNullableString(parsed.oat_current_task, {
+      treatPlaceholdersAsNull: true,
+    }),
+    lastCommit: normalizeNullableString(parsed.oat_last_commit, {
+      treatPlaceholdersAsNull: true,
+    }),
     blockers: parseStringArray(parsed.oat_blockers),
     hillCheckpoints: parseStringArray(parsed.oat_hill_checkpoints),
     hillCompleted: parseStringArray(parsed.oat_hill_completed),
@@ -98,72 +90,48 @@ export function parseStateFrontmatter(content: string): ParsedStateFrontmatter {
       normalizeEnum(parsed.oat_execution_mode, EXECUTION_MODES) ??
       'single-thread',
     lifecycle: normalizeEnum(parsed.oat_lifecycle, LIFECYCLE_VALUES),
-    pauseTimestamp: normalizeNullableString(parsed.oat_pause_timestamp),
-    pauseReason: normalizeNullableString(parsed.oat_pause_reason),
+    pauseTimestamp: normalizeNullableString(parsed.oat_pause_timestamp, {
+      treatPlaceholdersAsNull: true,
+    }),
+    pauseReason: normalizeNullableString(parsed.oat_pause_reason, {
+      treatPlaceholdersAsNull: true,
+    }),
     workflowMode: normalizeEnum(parsed.oat_workflow_mode, WORKFLOW_MODES),
-    workflowOrigin: normalizeNullableString(parsed.oat_workflow_origin),
-    docsUpdated: normalizeNullableString(parsed.oat_docs_updated),
-    prStatus: normalizeNullableString(parsed.oat_pr_status),
-    prUrl: normalizeNullableString(parsed.oat_pr_url),
-    projectCreated: normalizeNullableString(parsed.oat_project_created),
-    projectCompleted: normalizeNullableString(parsed.oat_project_completed),
+    workflowOrigin: normalizeNullableString(parsed.oat_workflow_origin, {
+      treatPlaceholdersAsNull: true,
+    }),
+    docsUpdated: normalizeNullableString(parsed.oat_docs_updated, {
+      treatPlaceholdersAsNull: true,
+    }),
+    prStatus: normalizeNullableString(parsed.oat_pr_status, {
+      treatPlaceholdersAsNull: true,
+    }),
+    prUrl: normalizeNullableString(parsed.oat_pr_url, {
+      treatPlaceholdersAsNull: true,
+    }),
+    projectCreated: normalizeNullableString(parsed.oat_project_created, {
+      treatPlaceholdersAsNull: true,
+    }),
+    projectCompleted: normalizeNullableString(parsed.oat_project_completed, {
+      treatPlaceholdersAsNull: true,
+    }),
     projectStateUpdated: normalizeNullableString(
       parsed.oat_project_state_updated,
+      {
+        treatPlaceholdersAsNull: true,
+      },
     ),
     generated: parseBoolean(parsed.oat_generated),
     template: parseBoolean(parsed.oat_template),
   };
 }
 
-function extractFrontmatter(content: string): string | null {
-  const match = content.match(FRONTMATTER_PATTERN);
-  return match?.[1] ?? null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function normalizeNullableString(value: unknown): string | null {
-  if (typeof value !== 'string') {
-    return value == null ? null : String(value);
-  }
-
-  const normalized = value.trim();
-  if (
-    !normalized ||
-    normalized === 'null' ||
-    PLACEHOLDER_PATTERN.test(normalized)
-  ) {
-    return null;
-  }
-
-  return normalized;
-}
-
-function parseBoolean(value: unknown): boolean {
-  if (typeof value === 'boolean') {
-    return value;
-  }
-
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
-    if (normalized === 'true') {
-      return true;
-    }
-
-    if (normalized === 'false') {
-      return false;
-    }
-  }
-
-  return false;
-}
-
 function parseStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value
-      .map((item) => normalizeNullableString(item))
+      .map((item) =>
+        normalizeNullableString(item, { treatPlaceholdersAsNull: true }),
+      )
       .filter((item): item is string => item !== null);
   }
 
@@ -173,9 +141,8 @@ function parseStringArray(value: unknown): string[] {
 
   const normalized = value.trim();
   if (
-    !normalized ||
-    normalized === 'null' ||
-    PLACEHOLDER_PATTERN.test(normalized)
+    normalizeNullableString(normalized, { treatPlaceholdersAsNull: true }) ==
+    null
   ) {
     return [];
   }
@@ -184,7 +151,9 @@ function parseStringArray(value: unknown): string[] {
     const parsed = JSON.parse(normalized);
     if (Array.isArray(parsed)) {
       return parsed
-        .map((item) => normalizeNullableString(item))
+        .map((item) =>
+          normalizeNullableString(item, { treatPlaceholdersAsNull: true }),
+        )
         .filter((item): item is string => item !== null);
     }
   } catch {
@@ -198,7 +167,9 @@ function normalizeEnum<T extends string>(
   value: unknown,
   allowedValues: readonly T[],
 ): T | null {
-  const normalized = normalizeNullableString(value);
+  const normalized = normalizeNullableString(value, {
+    treatPlaceholdersAsNull: true,
+  });
   if (normalized == null) {
     return null;
   }

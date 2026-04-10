@@ -1,6 +1,7 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { isMissingFileError } from '../shared/utils/errors';
 import type { ReviewStatus } from '../types';
 
 const REVIEWS_HEADING = '## Reviews';
@@ -73,13 +74,4 @@ function parseTableRow(line: string): ReviewStatus | null {
   }
 
   return { scope, type, status, date, artifact };
-}
-
-function isMissingFileError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'ENOENT'
-  );
 }

@@ -1,8 +1,6 @@
-import YAML from 'yaml';
-
+import { parseFrontmatterRecord } from '../shared/utils/frontmatter';
 import type { TaskProgress } from '../types';
 
-const FRONTMATTER_PATTERN = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
 const PHASE_HEADING_PATTERN = /^## Phase \d+: (.+)$/m;
 const REVISION_PHASE_HEADING_PATTERN = /^## Revision Phase \d+: (.+)$/m;
 interface MutablePhaseProgress {
@@ -98,33 +96,11 @@ function parseCompletedTaskIds(implementationContent: string): Set<string> {
 }
 
 function parseCurrentTaskId(implementationContent: string): string | null {
-  const frontmatter = extractFrontmatter(implementationContent);
-  if (frontmatter == null) {
-    return null;
-  }
-
-  try {
-    const parsed = YAML.parse(frontmatter);
-    if (
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      'oat_current_task_id' in parsed
-    ) {
-      const currentTaskId = parsed.oat_current_task_id;
-      return typeof currentTaskId === 'string' && currentTaskId !== 'null'
-        ? currentTaskId
-        : null;
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-}
-
-function extractFrontmatter(content: string): string | null {
-  const match = content.match(FRONTMATTER_PATTERN);
-  return match?.[1] ?? null;
+  const parsed = parseFrontmatterRecord(implementationContent);
+  const currentTaskId = parsed.oat_current_task_id;
+  return typeof currentTaskId === 'string' && currentTaskId !== 'null'
+    ? currentTaskId
+    : null;
 }
 
 function extractPhaseName(line: string): string {
