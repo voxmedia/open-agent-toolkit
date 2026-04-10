@@ -7,28 +7,28 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: import # spec-driven | quick | import
 oat_workflow_origin: imported # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/42 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-10T16:50:42.213Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-10T18:41:44.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-10T18:51:40.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wrap-up
 
-**Status:** Implementation complete — ready for summary + PR
+**Status:** PR open, awaiting human review
 **Started:** 2026-04-10
 **Last Updated:** 2026-04-10
 
 ## Current Phase
 
-Implementation — all 9 tasks of p01 complete (4 original + 5 review-fix). Final commit `f392d1e`. Reviews row `final` at `passed` (cycle 2 re-review skipped per user call: "get it out and iterate on"). Ready for `oat-project-summary` + `oat-project-pr-final`.
+Implementation — PR open, awaiting human review. PR #42 at https://github.com/voxmedia/open-agent-toolkit/pull/42. Final review `passed` (cycle 1 + cycle 2 both clean). Reviews row `final: passed`, `plan: fixes_completed`.
 
 ## Artifacts
 
@@ -43,9 +43,12 @@ Implementation — all 9 tasks of p01 complete (4 original + 5 review-fix). Fina
 
 - ✓ Import-mode project scaffolded
 - ✓ External plan preserved at `references/imported-plan.md`
-- ✓ Canonical `plan.md` normalized
-- ✓ Plan rework applied after inline review (see `implementation.md` → "Plan rework"): single phase, 4 tasks, 1 PR
-- ⧗ Awaiting implementation kickoff
+- ✓ Canonical `plan.md` normalized + reworked after inline review (single phase, 4 tasks, 1 PR)
+- ✓ Phase 1 implementation complete (9 tasks including 5 review-fix)
+- ✓ Final code review passed (cycle 1 + cycle 2 both clean)
+- ✓ Summary generated (`summary.md`)
+- ✓ PR created (#42)
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -53,4 +56,7 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` (or `oat-project-subagent-implement` for parallel execution) to begin p01-t01.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
