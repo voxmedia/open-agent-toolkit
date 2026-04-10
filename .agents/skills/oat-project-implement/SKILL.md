@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 1.2.2
+version: 1.3.0
 description: Use when plan.md is ready for execution. Implements plan tasks sequentially with TDD discipline and state tracking.
 disable-model-invocation: true
 user-invocable: true
@@ -139,6 +139,20 @@ Determine whether this is a first implementation run:
 
 - If `"$PROJECT_PATH/implementation.md"` does not exist, treat as first run.
 - If it exists but still has template placeholders and no completed task evidence, treat as first run.
+
+#### Workflow preference check (before prompting)
+
+Before presenting the checkpoint prompt to the user, check if a workflow preference has been configured:
+
+```bash
+HILL_DEFAULT=$(oat config get workflow.hillCheckpointDefault 2>/dev/null || true)
+```
+
+- **If `HILL_DEFAULT` is `every`:** Skip the prompt. Write `oat_plan_hill_phases: []` to plan.md frontmatter. Print: `HiLL checkpoints: every phase (from workflow.hillCheckpointDefault)`. Continue to Touchpoint A.
+- **If `HILL_DEFAULT` is `final`:** Skip the prompt. Determine the final phase ID from plan.md (e.g., `p05`) and write `oat_plan_hill_phases: ["<final_phase_id>"]` to plan.md frontmatter. Print: `HiLL checkpoints: final phase only (from workflow.hillCheckpointDefault)`. Continue to Touchpoint A.
+- **If unset, empty, or invalid:** Fall through to the standard prompt behavior below.
+
+This preference check only applies on first runs — resuming implementations should trust the existing `oat_plan_hill_phases` value in plan.md (or repair as bookkeeping drift).
 
 Prompt behavior:
 
