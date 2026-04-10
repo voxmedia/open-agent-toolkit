@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-10
-oat_current_task_id: p01-t03
+oat_current_task_id: p01-t04
 oat_generated: false
 oat_template: false
 ---
@@ -27,13 +27,13 @@ oat_template: false
 
 | Phase                                              | Status      | Tasks | Completed |
 | -------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1: Config System Extension                   | in_progress | 4     | 2/4       |
+| Phase 1: Config System Extension                   | in_progress | 4     | 3/4       |
 | Phase 2: Skill Integration — oat-project-implement | pending     | 5     | 0/5       |
 | Phase 3: Skill Integration — oat-project-complete  | pending     | 2     | 0/2       |
 | Phase 4: Skill Integration — Review Skills         | pending     | 3     | 0/3       |
 | Phase 5: Documentation and Bundled Docs Update     | pending     | 2     | 0/2       |
 
-**Total:** 2/16 tasks completed
+**Total:** 3/16 tasks completed
 
 ---
 
@@ -114,8 +114,46 @@ _To be filled when Phase 1 completes._
 
 ### Task p01-t03: Refactor getConfigValue() to use resolveEffectiveConfig()
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 967ee68
+
+**Outcome:**
+
+- `getConfigValue()` is now a thin wrapper around `resolveEffectiveConfig()` from PR #38
+- Deleted ~150 lines of per-key if-else resolution logic and the `resolveProjectsRootWithSource()` helper
+- Added `formatResolvedValue()` helper that converts `unknown` from the resolved entry into `string | null` (handles booleans, strings, arrays, null)
+- Added `userConfigDir` parameter to `getConfigValue()`; runners (`runGet`, `runList`) compute it from `context.home` via `join(context.home, '.oat')`
+- Added `resolveEffectiveConfig` to `ConfigCommandDependencies` for test injection
+- Added `tools.*` defaults block to `DEFAULT_SHARED_CONFIG` in `resolve.ts` so unset tools keys still resolve to `'false'` (regression fix discovered during refactor)
+- Updated source labels in `setConfigValue()` from `'config.json'` / `'config.local.json'` → `'shared'` / `'local'` to match the resolveEffectiveConfig vocabulary
+- Updated `ConfigValue.source` to use the typed `ResolvedConfigSource` union from `resolve.ts`
+- Workflow keys (registered in catalog by p01-t02 with types from p01-t01) now resolve through this same code path automatically — no per-key special-casing needed
+
+**User-facing change:**
+
+`oat config get --json` and `oat config list` now show source labels as `shared` / `local` / `user` / `env` / `default` instead of `config.json` / `config.local.json` / `env` / `default`. This matches `oat config dump` output for consistency.
+
+**Files changed:**
+
+- `packages/cli/src/commands/config/index.ts` — refactor getConfigValue, update setConfigValue source labels, add userConfigDir to runners
+- `packages/cli/src/commands/config/index.test.ts` — update existing tests to use new source labels
+- `packages/cli/src/config/resolve.ts` — add tools.\* defaults block
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test` — 1214 passed (no test count change; all existing behavior preserved)
+- Run: `pnpm --filter @open-agent-toolkit/cli lint` — 0 warnings, 0 errors
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check` — clean
+- Manual smoke: `pnpm run cli -- config get projects.root` → `.oat/projects/shared` ✓
+- Manual smoke: `pnpm run cli -- config get autoReviewAtCheckpoints` → `true` ✓
+- Manual smoke: `pnpm run cli -- config get activeProject` → `.oat/projects/shared/workflow-friction` ✓
+- Manual smoke: `OAT_PROJECTS_ROOT=/tmp/test pnpm run cli -- config get projects.root --json` → value `/tmp/test`, source `env` ✓
+
+**Notes:**
+
+- Discovered one regression: `tools.*` keys returned empty string instead of `'false'` when unset, because `tools` wasn't in `DEFAULT_SHARED_CONFIG`. Fixed by adding the defaults block. This actually surfaces a benefit of the refactor — defaults are now centralized in one place
+- The `formatResolvedValue()` helper handles arrays via `.join(',')` for keys like `localPaths`. Existing list output still passes since the test only checks substring presence
+- Did not touch `setConfigValue()` write logic in this task — that's reserved for p01-t04 along with `--user`/`--shared` flags
 
 ---
 
