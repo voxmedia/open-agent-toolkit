@@ -7,7 +7,7 @@
     "root": ".oat/projects/shared"
   },
   "archive": {
-    "s3Uri": "s3://vox-media-open-agent-toolkit/repositories/",
+    "s3Uri": "s3://vox-media-open-agent-toolkit/repositories",
     "s3SyncOnComplete": true,
     "summaryExportPath": ".oat/repo/reference/project-summaries"
   },
