@@ -54,6 +54,15 @@ const DEFAULT_SHARED_CONFIG = {
     index: null,
     requireForProjectCompletion: false,
   },
+  tools: {
+    core: false,
+    docs: false,
+    ideas: false,
+    'project-management': false,
+    research: false,
+    utility: false,
+    workflows: false,
+  },
   autoReviewAtCheckpoints: false,
 } satisfies Record<string, unknown>;
 

@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
@@ -10,6 +12,11 @@ import {
   writeOatConfig,
   writeOatLocalConfig,
 } from '@config/oat-config';
+import {
+  resolveEffectiveConfig,
+  type ResolvedConfig,
+  type ResolvedConfigSource,
+} from '@config/resolve';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
@@ -47,7 +54,7 @@ type ConfigKey =
 interface ConfigValue {
   key: ConfigKey;
   value: string | null;
-  source: string;
+  source: ResolvedConfigSource;
 }
 
 interface ConfigCatalogEntry {
@@ -78,6 +85,11 @@ interface ConfigCommandDependencies {
     repoRoot: string,
     env: NodeJS.ProcessEnv,
   ) => Promise<string>;
+  resolveEffectiveConfig: (
+    repoRoot: string,
+    userConfigDir: string,
+    env: NodeJS.ProcessEnv,
+  ) => Promise<ResolvedConfig>;
   processEnv: NodeJS.ProcessEnv;
 }
 
@@ -485,6 +497,7 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   readOatLocalConfig,
   writeOatLocalConfig,
   resolveProjectsRoot,
+  resolveEffectiveConfig,
   processEnv: process.env,
 };
 
@@ -500,165 +513,43 @@ function normalizeSharedRoot(value: string): string {
   return trimmed.replace(/\/+$/, '');
 }
 
-async function resolveProjectsRootWithSource(
-  repoRoot: string,
-  dependencies: ConfigCommandDependencies,
-): Promise<ConfigValue> {
-  const envRoot = dependencies.processEnv.OAT_PROJECTS_ROOT?.trim();
-  if (envRoot) {
-    return {
-      key: 'projects.root',
-      value: envRoot.replace(/\/+$/, ''),
-      source: 'env',
-    };
+function formatResolvedValue(value: unknown): string | null {
+  if (value === null || value === undefined) {
+    return null;
   }
-
-  const config = await dependencies.readOatConfig(repoRoot);
-  const configRoot = config.projects?.root?.trim();
-  if (configRoot) {
-    return {
-      key: 'projects.root',
-      value: configRoot.replace(/\/+$/, ''),
-      source: 'config.json',
-    };
+  if (typeof value === 'boolean') {
+    return String(value);
   }
-
-  const value = await dependencies.resolveProjectsRoot(
-    repoRoot,
-    dependencies.processEnv,
-  );
-  return {
-    key: 'projects.root',
-    value,
-    source: 'default',
-  };
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.join(',');
+  }
+  return String(value);
 }
 
 async function getConfigValue(
   repoRoot: string,
+  userConfigDir: string,
   key: ConfigKey,
   dependencies: ConfigCommandDependencies,
 ): Promise<ConfigValue> {
-  if (key === 'projects.root') {
-    return resolveProjectsRootWithSource(repoRoot, dependencies);
+  const resolved = await dependencies.resolveEffectiveConfig(
+    repoRoot,
+    userConfigDir,
+    dependencies.processEnv,
+  );
+
+  const entry = resolved.resolved[key];
+  if (!entry) {
+    return { key, value: null, source: 'default' };
   }
 
-  if (key.startsWith('documentation.')) {
-    const config = await dependencies.readOatConfig(repoRoot);
-    const doc = config.documentation;
-    let value: string | null = null;
-
-    if (key === 'documentation.root') {
-      value = doc?.root ?? null;
-    } else if (key === 'documentation.tooling') {
-      value = doc?.tooling ?? null;
-    } else if (key === 'documentation.config') {
-      value = doc?.config ?? null;
-    } else if (key === 'documentation.requireForProjectCompletion') {
-      value =
-        doc?.requireForProjectCompletion != null
-          ? String(doc.requireForProjectCompletion)
-          : 'false';
-    }
-
-    return {
-      key,
-      value,
-      source: doc ? 'config.json' : 'default',
-    };
-  }
-
-  if (key.startsWith('archive.')) {
-    const config = await dependencies.readOatConfig(repoRoot);
-    const archive = config.archive;
-    let value: string | null = null;
-
-    if (key === 'archive.s3Uri') {
-      value = archive?.s3Uri ?? null;
-    } else if (key === 'archive.s3SyncOnComplete') {
-      value =
-        archive?.s3SyncOnComplete != null
-          ? String(archive.s3SyncOnComplete)
-          : 'false';
-    } else if (key === 'archive.summaryExportPath') {
-      value = archive?.summaryExportPath ?? null;
-    }
-
-    return {
-      key,
-      value,
-      source: archive ? 'config.json' : 'default',
-    };
-  }
-
-  if (key.startsWith('tools.')) {
-    const config = await dependencies.readOatConfig(repoRoot);
-    const packName = key.slice('tools.'.length) as keyof OatToolsConfig;
-    const tools = config.tools ?? {};
-    return {
-      key,
-      value: String(tools[packName] ?? false),
-      source: config.tools ? 'config.json' : 'default',
-    };
-  }
-
-  if (key === 'git.defaultBranch') {
-    const config = await dependencies.readOatConfig(repoRoot);
-    return {
-      key,
-      value: config.git?.defaultBranch ?? null,
-      source: config.git?.defaultBranch ? 'config.json' : 'default',
-    };
-  }
-
-  if (key === 'worktrees.root') {
-    const envRoot = dependencies.processEnv.OAT_WORKTREES_ROOT?.trim();
-    if (envRoot) {
-      return {
-        key,
-        value: envRoot.replace(/\/+$/, ''),
-        source: 'env',
-      };
-    }
-
-    const config = await dependencies.readOatConfig(repoRoot);
-    const value = config.worktrees?.root?.trim();
-    if (value) {
-      return {
-        key,
-        value: value.replace(/\/+$/, ''),
-        source: 'config.json',
-      };
-    }
-
-    return {
-      key,
-      value: '.worktrees',
-      source: 'default',
-    };
-  }
-
-  if (key === 'autoReviewAtCheckpoints') {
-    const config = await dependencies.readOatConfig(repoRoot);
-    return {
-      key,
-      value:
-        config.autoReviewAtCheckpoints != null
-          ? String(config.autoReviewAtCheckpoints)
-          : 'false',
-      source:
-        config.autoReviewAtCheckpoints != null ? 'config.json' : 'default',
-    };
-  }
-
-  const localConfig = await dependencies.readOatLocalConfig(repoRoot);
-  const localKey = key as keyof OatLocalConfig;
-  const hasKey = Object.hasOwn(localConfig, localKey);
-  const value = (localConfig[localKey] as string | null | undefined) ?? null;
   return {
     key,
-    value,
-    source: hasKey ? 'config.local.json' : 'default',
+    value: formatResolvedValue(entry.value),
+    source: entry.source,
   };
 }
 
@@ -682,7 +573,7 @@ async function setConfigValue(
     return {
       key,
       value: nextValue,
-      source: 'config.local.json',
+      source: 'local',
     };
   }
 
@@ -717,7 +608,7 @@ async function setConfigValue(
     return {
       key,
       value: resultValue,
-      source: 'config.json',
+      source: 'shared',
     };
   }
 
@@ -747,7 +638,7 @@ async function setConfigValue(
     return {
       key,
       value: resultValue,
-      source: 'config.json',
+      source: 'shared',
     };
   }
 
@@ -764,7 +655,7 @@ async function setConfigValue(
     return {
       key,
       value: String(tools[packName] ?? false),
-      source: 'config.json',
+      source: 'shared',
     };
   }
 
@@ -785,7 +676,7 @@ async function setConfigValue(
     return {
       key,
       value: nextValue,
-      source: 'config.json',
+      source: 'shared',
     };
   }
 
@@ -798,7 +689,7 @@ async function setConfigValue(
     return {
       key,
       value: String(nextValue),
-      source: 'config.json',
+      source: 'shared',
     };
   }
 
@@ -819,7 +710,7 @@ async function setConfigValue(
   return {
     key,
     value: normalizedValue,
-    source: 'config.json',
+    source: 'shared',
   };
 }
 
@@ -913,7 +804,13 @@ async function runGet(
     }
 
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-    const value = await getConfigValue(repoRoot, keyArg, dependencies);
+    const userConfigDir = join(context.home, '.oat');
+    const value = await getConfigValue(
+      repoRoot,
+      userConfigDir,
+      keyArg,
+      dependencies,
+    );
     if (context.json) {
       context.logger.json({
         status: 'ok',
@@ -978,9 +875,12 @@ async function runList(
 ): Promise<void> {
   try {
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    const userConfigDir = join(context.home, '.oat');
     const values: ConfigValue[] = [];
     for (const key of KEY_ORDER) {
-      values.push(await getConfigValue(repoRoot, key, dependencies));
+      values.push(
+        await getConfigValue(repoRoot, userConfigDir, key, dependencies),
+      );
     }
 
     if (context.json) {

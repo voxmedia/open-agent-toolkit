@@ -343,11 +343,11 @@ describe('oat config', () => {
     await runCommand(command, ['list']);
 
     expect(capture.info[0]).toContain('activeProject');
-    expect(capture.info[0]).toContain('config.local.json');
+    expect(capture.info[0]).toContain('local');
     expect(capture.info[0]).toContain('projects.root');
     expect(capture.info[0]).toContain('.oat/projects/shared');
     expect(capture.info[0]).toContain('worktrees.root');
-    expect(capture.info[0]).toContain('config.json');
+    expect(capture.info[0]).toContain('shared');
     expect(process.exitCode).toBe(0);
   });
 
@@ -373,7 +373,7 @@ describe('oat config', () => {
       status: 'ok',
       key: 'projects.root',
       value: '.oat/projects/custom',
-      source: 'config.json',
+      source: 'shared',
     });
     expect(process.exitCode).toBe(0);
 
