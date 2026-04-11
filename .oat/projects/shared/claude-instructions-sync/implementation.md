@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-10
-oat_current_task_id: p01-t01
+oat_last_updated: 2026-04-11
+oat_current_task_id: p01-t02
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -12,7 +12,7 @@ oat_template_name: implementation
 # Implementation: claude-instructions-sync
 
 **Started:** 2026-04-10
-**Last Updated:** 2026-04-10
+**Last Updated:** 2026-04-11
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,20 +26,20 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 2     | 0/2       |
-| Phase 2 | pending | 2     | 0/2       |
-| Phase 3 | pending | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 2     | 1/2       |
+| Phase 2 | pending     | 2     | 0/2       |
+| Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 0/6 tasks completed
+**Total:** 1/6 tasks completed
 
 ---
 
 ## Phase 1: Model Discovery And Strategy State
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-11
 
 ### Phase Summary (fill when phase is complete)
 
@@ -62,12 +62,32 @@ oat_template_name: implementation
 
 ### Task p01-t01: Expand instruction scan state for paired and stray files
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 231da372
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Establish the shared instruction entry model before changing sync/apply semantics.
+- Instruction scan entries now represent both canonical AGENTS/CLAUDE pairs and Claude-only stray directories.
+- Summary and report formatting handle stray instruction state instead of assuming every entry has an AGENTS path.
+- Utility coverage now exercises missing Claude, content mismatch, and Claude-only stray cases from the same scanner.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.types.ts` - widened the instruction entry/status model for stray support
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - switched scan discovery to per-directory instruction pairing
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - added scanner/summary/report coverage for Claude-only strays
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the new scan state additive by preserving existing `missing` / `content_mismatch` semantics and introducing `stray` for Claude-only directories.
+- Left sync/apply behavior unchanged for stray entries so the next task can add strategy selection without reworking scan shape again.
 
 ---
 
@@ -171,9 +191,34 @@ Chronological log of implementation progress.
 
 ---
 
-### Next Session
+### 2026-04-11
 
-Append future implementation notes here chronologically.
+**Session Start:** task execution
+
+- [x] p01-t01: Expand instruction scan state for paired and stray files - 231da372
+- [ ] p01-t02: Add project-scoped strategy selection to the instructions commands - next
+
+**What changed (high level):**
+
+- Reworked instruction discovery to index directories by both `AGENTS.md` and `CLAUDE.md`
+- Added `stray` scan state and summary/report support for Claude-only directories
+- Extended scanner tests to cover stray discovery and null `agentsPath` handling
+
+**Decisions:**
+
+- Preserve the existing `missing` state for AGENTS-only directories
+- Add `stray` as the forward-compatible Claude-only state instead of overloading `content_mismatch`
+
+**Follow-ups / TODO:**
+
+- Add strategy resolution to validate/sync in `p01-t02`
+- Decide whether strategy defaults remain CLI-only or become config-backed during implementation
+
+**Blockers:**
+
+- None
+
+**Session End:** task bookkeeping
 
 ---
 
