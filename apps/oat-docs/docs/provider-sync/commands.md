@@ -84,23 +84,27 @@ These commands are documented here because they are commonly used during interop
 
 Purpose:
 
-- Validate AGENTS.md to CLAUDE.md pointer integrity
+- Validate project-scoped `AGENTS.md` to `CLAUDE.md` integrity
 
 Key behavior:
 
-- Read-only validation of sibling `CLAUDE.md` pointer files for each discovered `AGENTS.md`
-- Reports `ok`, `missing`, and `content_mismatch` states
+- Read-only validation of sibling `CLAUDE.md` files for each discovered project-scoped `AGENTS.md`
+- Supports `--strategy pointer|symlink|copy` to validate the expected file shape
+- Reports `ok`, `missing`, `content_mismatch`, and `stray` states
+- Scans nested directories while excluding provider-irrelevant roots such as `node_modules`
 - Exit code `0` when all entries are valid, `1` when drift is detected
 
 ## `oat instructions sync`
 
 Purpose:
 
-- Repair AGENTS.md to CLAUDE.md pointer drift
+- Repair project-scoped `AGENTS.md` to `CLAUDE.md` drift
 
 Key behavior:
 
 - Mutates by default; use `--dry-run` to preview changes
-- Creates missing `CLAUDE.md` pointers
+- Supports `--strategy pointer|symlink|copy`
+- Creates missing `CLAUDE.md` files using the selected strategy
+- Adopts Claude-only stray files by writing canonical `AGENTS.md` content first, then regenerating `CLAUDE.md`
 - Skips mismatched files unless `--force` is provided
-- Writes canonical pointer content `@AGENTS.md\n`
+- Uses pointer content `@AGENTS.md\n`, file symlinks, or hard copies depending on the selected strategy

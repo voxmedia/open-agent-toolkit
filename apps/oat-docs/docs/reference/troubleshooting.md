@@ -27,11 +27,12 @@ Expected for native-read skill mappings. Codex can read canonical skills without
   - `oat providers set --scope project --enabled <providers> --disabled <providers>`
 - Re-run `oat sync --scope project` after updating config.
 
-## `instructions validate` reports `missing` or `content_mismatch`
+## `instructions validate` reports `missing`, `content_mismatch`, or `stray`
 
 - Run `oat instructions sync` to preview changes.
-- Run `oat instructions sync` to create missing pointer files.
+- Run `oat instructions sync --strategy pointer|symlink|copy` to create or repair the expected `CLAUDE.md` shape.
 - If mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --force`.
+- If `stray` is reported, `oat instructions sync` will adopt the Claude-only file into `AGENTS.md` and then regenerate `CLAUDE.md`.
 - Re-run `oat instructions validate` and confirm status is `ok`.
 
 ## `doctor` warns about canonical directories

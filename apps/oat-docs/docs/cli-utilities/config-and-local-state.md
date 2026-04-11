@@ -80,12 +80,12 @@ Use these reference pages for file ownership and schema details:
 
 ## `oat instructions ...`
 
-These commands validate and repair pointer integrity between `AGENTS.md` and sibling `CLAUDE.md` files.
+These commands validate and repair project-scoped instruction integrity between `AGENTS.md` and sibling `CLAUDE.md` files.
 
-- `oat instructions validate` - read-only integrity check
-- `oat instructions sync` - preview or apply pointer repairs
+- `oat instructions validate` - read-only integrity check with `--strategy pointer|symlink|copy`
+- `oat instructions sync` - preview or apply pointer, symlink, or hard-copy repairs
 
-Use this command group when instruction files drift after manual edits or generated updates.
+Use this command group when instruction files drift after manual edits or generated updates, or when nested project directories contain Claude-only stray files that should be adopted into canonical `AGENTS.md`.
 
 ## Repo state helpers
 
