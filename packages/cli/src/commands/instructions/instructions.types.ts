@@ -59,7 +59,9 @@ export interface InstructionsScanDependencies {
     path: string,
     options: { withFileTypes: true },
   ) => Promise<Dirent[]>;
+  lstat: (path: string) => Promise<Stats>;
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
+  readlink: (path: string) => Promise<string>;
   stat: (path: string) => Promise<Stats>;
   strategy?: InstructionSyncStrategy;
   debug?: (message: string) => void;
@@ -75,5 +77,8 @@ export interface InstructionsValidateCommandDependencies {
 }
 
 export interface InstructionsSyncCommandDependencies extends InstructionsValidateCommandDependencies {
+  readFile: (path: string, encoding: 'utf8') => Promise<string>;
+  removeFile: (path: string) => Promise<void>;
+  symlinkFile: (target: string, path: string) => Promise<void>;
   writeFile: (path: string, content: string, encoding: 'utf8') => Promise<void>;
 }

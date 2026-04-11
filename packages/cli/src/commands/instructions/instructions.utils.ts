@@ -1,5 +1,5 @@
-import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { lstat, readdir, readFile, readlink, stat } from 'node:fs/promises';
+import { dirname, join, relative, resolve } from 'node:path';
 
 import type {
   InstructionSyncStrategy,
@@ -44,6 +44,30 @@ export function resolveInstructionSyncStrategy(
   strategy?: InstructionSyncStrategy,
 ): InstructionSyncStrategy {
   return strategy ?? DEFAULT_INSTRUCTION_SYNC_STRATEGY;
+}
+
+function getValidInstructionDetail(strategy: InstructionSyncStrategy): string {
+  switch (strategy) {
+    case 'symlink':
+      return 'symlink valid';
+    case 'copy':
+      return 'copy valid';
+    default:
+      return 'pointer valid';
+  }
+}
+
+function getInvalidInstructionDetail(
+  strategy: InstructionSyncStrategy,
+): string {
+  switch (strategy) {
+    case 'symlink':
+      return 'expected symlink to AGENTS.md';
+    case 'copy':
+      return 'expected hard copy of AGENTS.md content';
+    default:
+      return `expected ${JSON.stringify(EXPECTED_CLAUDE_CONTENT)}`;
+  }
 }
 
 function toPosixPath(pathValue: string): string {
@@ -184,9 +208,12 @@ export async function scanInstructionFiles(
   repoRoot: string,
   overrides: Partial<InstructionsScanDependencies> = {},
 ): Promise<InstructionEntry[]> {
+  const strategy = resolveInstructionSyncStrategy(overrides.strategy);
   const dependencies: InstructionsScanDependencies = {
+    lstat,
     readdir,
     readFile,
+    readlink,
     stat,
     ...overrides,
   };
@@ -213,20 +240,71 @@ export async function scanInstructionFiles(
     }
 
     try {
+      const claudeStats = await dependencies.lstat(claudePath);
+
+      if (strategy === 'symlink') {
+        if (!claudeStats.isSymbolicLink()) {
+          entries.push({
+            agentsPath,
+            claudePath,
+            status: 'content_mismatch',
+            detail: getInvalidInstructionDetail(strategy),
+          });
+          continue;
+        }
+
+        const claudeTarget = await dependencies.readlink(claudePath);
+        const resolvedTarget = resolve(dirname(claudePath), claudeTarget);
+        if (resolvedTarget === agentsPath) {
+          entries.push({
+            agentsPath,
+            claudePath,
+            status: 'ok',
+            detail: getValidInstructionDetail(strategy),
+          });
+        } else {
+          entries.push({
+            agentsPath,
+            claudePath,
+            status: 'content_mismatch',
+            detail: getInvalidInstructionDetail(strategy),
+          });
+        }
+        continue;
+      }
+
+      if (claudeStats.isSymbolicLink()) {
+        entries.push({
+          agentsPath,
+          claudePath,
+          status: 'content_mismatch',
+          detail: getInvalidInstructionDetail(strategy),
+        });
+        continue;
+      }
+
       const claudeContent = await dependencies.readFile(claudePath, 'utf8');
-      if (normalizeLineEndings(claudeContent) === EXPECTED_CLAUDE_CONTENT) {
+      const expectedContent =
+        strategy === 'copy'
+          ? await dependencies.readFile(agentsPath, 'utf8')
+          : EXPECTED_CLAUDE_CONTENT;
+
+      if (
+        normalizeLineEndings(claudeContent) ===
+        normalizeLineEndings(expectedContent)
+      ) {
         entries.push({
           agentsPath,
           claudePath,
           status: 'ok',
-          detail: 'pointer valid',
+          detail: getValidInstructionDetail(strategy),
         });
       } else {
         entries.push({
           agentsPath,
           claudePath,
           status: 'content_mismatch',
-          detail: `expected ${JSON.stringify(EXPECTED_CLAUDE_CONTENT)}`,
+          detail: getInvalidInstructionDetail(strategy),
         });
       }
     } catch (error) {

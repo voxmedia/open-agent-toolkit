@@ -1,6 +1,8 @@
 import {
+  lstat as fsLstat,
   readdir as fsReaddir,
   readFile as fsReadFile,
+  readlink as fsReadlink,
   stat as fsStat,
   mkdir,
   mkdtemp,
@@ -150,6 +152,46 @@ describe('instructions utils', () => {
 
     expect(entries).toHaveLength(1);
     expect(entries[0]?.status).toBe('ok');
+  });
+
+  it('validates symlink strategy against CLAUDE.md link targets', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, 'docs'), { recursive: true });
+    await writeFile(join(repoRoot, 'docs', 'AGENTS.md'), '# docs\n', 'utf8');
+    await symlink('AGENTS.md', join(repoRoot, 'docs', 'CLAUDE.md'));
+
+    const entries = await scanInstructionFiles(repoRoot, {
+      lstat: fsLstat,
+      readlink: fsReadlink,
+      strategy: 'symlink',
+    });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      status: 'ok',
+      detail: 'symlink valid',
+    });
+  });
+
+  it('treats symlinks as drift when copy strategy is requested', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, 'docs'), { recursive: true });
+    await writeFile(join(repoRoot, 'docs', 'AGENTS.md'), '# docs\n', 'utf8');
+    await symlink('AGENTS.md', join(repoRoot, 'docs', 'CLAUDE.md'));
+
+    const entries = await scanInstructionFiles(repoRoot, {
+      lstat: fsLstat,
+      readlink: fsReadlink,
+      strategy: 'copy',
+    });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      status: 'content_mismatch',
+    });
+    expect(entries[0]?.detail).toContain('expected hard copy');
   });
 
   it('skips directory symlinks during traversal', async () => {

@@ -23,7 +23,10 @@ interface HarnessOptions {
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
+  readFile: ReturnType<typeof vi.fn>;
+  removeFile: ReturnType<typeof vi.fn>;
   scanInstructionFiles: ReturnType<typeof vi.fn>;
+  symlinkFile: ReturnType<typeof vi.fn>;
   writeFile: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
@@ -37,6 +40,9 @@ function createHarness(options: HarnessOptions = {}): {
   });
 
   const writeFile = vi.fn(async () => undefined);
+  const readFile = vi.fn(async () => '# canonical instructions\n');
+  const removeFile = vi.fn(async () => undefined);
+  const symlinkFile = vi.fn(async () => undefined);
 
   const command = createInstructionsSyncCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -49,15 +55,21 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: false,
       logger: capture.logger,
     }),
+    readFile,
+    removeFile,
     resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
     scanInstructionFiles,
+    symlinkFile,
     writeFile,
   } satisfies Partial<InstructionsSyncCommandDependencies>);
 
   return {
     capture,
     command,
+    readFile,
+    removeFile,
     scanInstructionFiles,
+    symlinkFile,
     writeFile,
   };
 }
@@ -159,7 +171,7 @@ describe('createInstructionsSyncCommand', () => {
   });
 
   it('apply (default) writes pointer content for planned create and update actions', async () => {
-    const { command, writeFile, capture } = createHarness({
+    const { command, removeFile, writeFile, capture } = createHarness({
       entries: [
         {
           agentsPath: '/tmp/workspace/AGENTS.md',
@@ -191,8 +203,95 @@ describe('createInstructionsSyncCommand', () => {
       EXPECTED_CLAUDE_CONTENT,
       'utf8',
     );
+    expect(removeFile).toHaveBeenCalledWith(
+      '/tmp/workspace/packages/cli/CLAUDE.md',
+    );
     expect(capture.info[0]).toContain('instructions apply');
     expect(process.exitCode).toBe(0);
+  });
+
+  it('apply with --strategy symlink creates relative file symlinks', async () => {
+    const { command, removeFile, symlinkFile, writeFile } = createHarness({
+      entries: [
+        {
+          agentsPath: '/tmp/workspace/docs/AGENTS.md',
+          claudePath: '/tmp/workspace/docs/CLAUDE.md',
+          status: 'missing',
+          detail: 'CLAUDE.md missing',
+        },
+        {
+          agentsPath: '/tmp/workspace/packages/cli/AGENTS.md',
+          claudePath: '/tmp/workspace/packages/cli/CLAUDE.md',
+          status: 'content_mismatch',
+          detail: 'wrong file type',
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      commandArgs: ['--strategy', 'symlink', '--force'],
+    });
+
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(symlinkFile).toHaveBeenCalledTimes(2);
+    expect(symlinkFile).toHaveBeenNthCalledWith(
+      1,
+      'AGENTS.md',
+      '/tmp/workspace/docs/CLAUDE.md',
+    );
+    expect(symlinkFile).toHaveBeenNthCalledWith(
+      2,
+      'AGENTS.md',
+      '/tmp/workspace/packages/cli/CLAUDE.md',
+    );
+    expect(removeFile).toHaveBeenCalledWith(
+      '/tmp/workspace/packages/cli/CLAUDE.md',
+    );
+  });
+
+  it('apply with --strategy copy writes AGENTS.md content into CLAUDE.md', async () => {
+    const { command, readFile, removeFile, symlinkFile, writeFile } =
+      createHarness({
+        entries: [
+          {
+            agentsPath: '/tmp/workspace/AGENTS.md',
+            claudePath: '/tmp/workspace/CLAUDE.md',
+            status: 'missing',
+            detail: 'CLAUDE.md missing',
+          },
+          {
+            agentsPath: '/tmp/workspace/packages/cli/AGENTS.md',
+            claudePath: '/tmp/workspace/packages/cli/CLAUDE.md',
+            status: 'content_mismatch',
+            detail: 'pointer file present',
+          },
+        ],
+      });
+
+    readFile
+      .mockResolvedValueOnce('# root instructions\n')
+      .mockResolvedValueOnce('# cli instructions\n');
+
+    await runSyncCommand(command, {
+      commandArgs: ['--strategy', 'copy', '--force'],
+    });
+
+    expect(symlinkFile).not.toHaveBeenCalled();
+    expect(writeFile).toHaveBeenNthCalledWith(
+      1,
+      '/tmp/workspace/CLAUDE.md',
+      '# root instructions\n',
+      'utf8',
+    );
+    expect(writeFile).toHaveBeenNthCalledWith(
+      2,
+      '/tmp/workspace/packages/cli/CLAUDE.md',
+      '# cli instructions\n',
+      'utf8',
+    );
+    expect(removeFile).toHaveBeenCalledWith(
+      '/tmp/workspace/packages/cli/CLAUDE.md',
+    );
   });
 
   it('apply (default) without --force leaves mismatches skipped and exits 1', async () => {

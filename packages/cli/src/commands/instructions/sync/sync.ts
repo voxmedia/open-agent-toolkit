@@ -1,4 +1,5 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { dirname, relative } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
 import {
@@ -24,20 +25,55 @@ import { Command, Option } from 'commander';
 interface PlanSyncActionsArgs {
   entries: InstructionEntry[];
   force: boolean;
+  strategy: InstructionSyncStrategy;
 }
 
 function defaultDependencies(): InstructionsSyncCommandDependencies {
   return {
     buildCommandContext,
+    readFile,
+    removeFile: async (path: string) => {
+      await rm(path, { force: true, recursive: true });
+    },
     resolveProjectRoot,
     scanInstructionFiles,
+    symlinkFile: async (target: string, path: string) => {
+      await symlink(target, path, 'file');
+    },
     writeFile,
   };
+}
+
+function getSyncReason(
+  actionType: 'create' | 'update',
+  strategy: InstructionSyncStrategy,
+): string {
+  const label =
+    strategy === 'symlink'
+      ? 'symlink'
+      : strategy === 'copy'
+        ? 'hard copy'
+        : 'pointer file';
+  return actionType === 'create'
+    ? `missing CLAUDE.md ${label}`
+    : `overwrite CLAUDE.md with canonical ${label}`;
+}
+
+function getSyncedDetail(strategy: InstructionSyncStrategy): string {
+  switch (strategy) {
+    case 'symlink':
+      return 'symlink synced';
+    case 'copy':
+      return 'copy synced';
+    default:
+      return 'pointer synced';
+  }
 }
 
 function planSyncActions({
   entries,
   force,
+  strategy,
 }: PlanSyncActionsArgs): InstructionActionRecord[] {
   const actions: InstructionActionRecord[] = [];
 
@@ -46,7 +82,7 @@ function planSyncActions({
       actions.push({
         type: 'create',
         target: entry.claudePath,
-        reason: 'missing CLAUDE.md pointer file',
+        reason: getSyncReason('create', strategy),
         result: 'planned',
       });
       continue;
@@ -69,7 +105,7 @@ function planSyncActions({
     actions.push({
       type: 'update',
       target: entry.claudePath,
-      reason: 'overwrite CLAUDE.md with canonical pointer',
+      reason: getSyncReason('update', strategy),
       result: 'planned',
     });
   }
@@ -79,9 +115,14 @@ function planSyncActions({
 
 async function applySyncActions(
   actions: InstructionActionRecord[],
+  entries: InstructionEntry[],
   dependencies: InstructionsSyncCommandDependencies,
+  strategy: InstructionSyncStrategy,
 ): Promise<InstructionActionRecord[]> {
   const appliedActions: InstructionActionRecord[] = [];
+  const entriesByClaudePath = new Map(
+    entries.map((entry) => [entry.claudePath, entry]),
+  );
 
   for (const action of actions) {
     if (action.result !== 'planned') {
@@ -89,11 +130,32 @@ async function applySyncActions(
       continue;
     }
 
-    await dependencies.writeFile(
-      action.target,
-      EXPECTED_CLAUDE_CONTENT,
-      'utf8',
-    );
+    const entry = entriesByClaudePath.get(action.target);
+    if (!entry?.agentsPath) {
+      throw new CliError(`Unable to resolve AGENTS.md for ${action.target}`, 2);
+    }
+
+    if (action.type === 'update') {
+      await dependencies.removeFile(action.target);
+    }
+
+    if (strategy === 'symlink') {
+      const symlinkTarget = relative(dirname(action.target), entry.agentsPath);
+      await dependencies.symlinkFile(symlinkTarget, action.target);
+    } else if (strategy === 'copy') {
+      const agentsContent = await dependencies.readFile(
+        entry.agentsPath,
+        'utf8',
+      );
+      await dependencies.writeFile(action.target, agentsContent, 'utf8');
+    } else {
+      await dependencies.writeFile(
+        action.target,
+        EXPECTED_CLAUDE_CONTENT,
+        'utf8',
+      );
+    }
+
     appliedActions.push({
       ...action,
       result: 'applied',
@@ -106,6 +168,7 @@ async function applySyncActions(
 function getPostSyncEntries(
   entries: InstructionEntry[],
   actions: InstructionActionRecord[],
+  strategy: InstructionSyncStrategy,
 ): InstructionEntry[] {
   const actionByTarget = new Map(
     actions.map((action) => [action.target, action]),
@@ -122,7 +185,7 @@ function getPostSyncEntries(
       return {
         ...entry,
         status: 'ok',
-        detail: 'pointer synced',
+        detail: getSyncedDetail(strategy),
       };
     }
 
@@ -166,22 +229,31 @@ export function createInstructionsSyncCommand(
 
         try {
           const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+          const strategy = resolveInstructionSyncStrategy(options.strategy);
           const entries = await dependencies.scanInstructionFiles(repoRoot, {
-            strategy: resolveInstructionSyncStrategy(options.strategy),
+            strategy,
           });
           const plannedActions = planSyncActions({
             entries,
             force: options.force ?? false,
+            strategy,
           });
 
           const dryRun = options.dryRun ?? false;
           const actions = dryRun
             ? plannedActions
-            : await applySyncActions(plannedActions, dependencies);
+            : await applySyncActions(
+                plannedActions,
+                entries,
+                dependencies,
+                strategy,
+              );
 
           const payload = buildInstructionsPayload({
             mode: dryRun ? 'dry-run' : 'apply',
-            entries: dryRun ? entries : getPostSyncEntries(entries, actions),
+            entries: dryRun
+              ? entries
+              : getPostSyncEntries(entries, actions, strategy),
             actions,
           });
 
