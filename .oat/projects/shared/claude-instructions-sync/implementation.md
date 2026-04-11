@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-11
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -29,10 +29,10 @@ oat_template_name: implementation
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | in_progress | 2     | 0/2       |
+| Phase 2 | in_progress | 2     | 1/2       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 2/6 tasks completed
+**Total:** 3/6 tasks completed
 
 ---
 
@@ -144,8 +144,34 @@ oat_template_name: implementation
 
 ### Task p02-t01: Implement strategy-aware `CLAUDE.md` repair and generation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 479f2ba0
+
+**Outcome (required when completed):**
+
+- `oat instructions sync` now creates or repairs `CLAUDE.md` using the selected `pointer`, `symlink`, or `copy` strategy instead of always writing pointer content.
+- Strategy-aware validation now distinguishes pointer files, hard copies, and file symlinks, so the scan result matches the chosen sync mode.
+- Sync test coverage now locks in update behavior that replaces mismatched files only under `--force`, including symlink replacement and hard-copy generation.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.types.ts` - extended scan and sync dependency contracts for file-kind checks and strategy-aware repair helpers
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - validated pointer, symlink, and copy modes against actual file type/content
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - added strategy-aware validation coverage for symlink and copy expectations
+- `packages/cli/src/commands/instructions/sync/sync.ts` - implemented strategy-aware create/update planning and application
+- `packages/cli/src/commands/instructions/sync/sync.test.ts` - added pointer, symlink, and hard-copy repair coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Treated file kind as part of validity, so `copy` rejects a symlink even when the target content matches and `pointer` rejects non-pointer copies.
+- Used relative file symlinks (`AGENTS.md`) for same-directory repairs so nested project moves keep links stable.
 
 ---
 
@@ -232,23 +258,25 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Expand instruction scan state for paired and stray files - 231da372
 - [x] p01-t02: Add project-scoped strategy selection to the instructions commands - e1b792bd
-- [ ] p02-t01: Implement strategy-aware `CLAUDE.md` repair and generation - next
+- [x] p02-t01: Implement strategy-aware `CLAUDE.md` repair and generation - 479f2ba0
+- [ ] p02-t02: Implement Claude-only stray adoption into canonical `AGENTS.md` - next
 
 **What changed (high level):**
 
 - Reworked instruction discovery to index directories by both `AGENTS.md` and `CLAUDE.md`
 - Added `stray` scan state and summary/report support for Claude-only directories
-- Extended scanner tests to cover stray discovery and null `agentsPath` handling
+- Implemented strategy-aware pointer, symlink, and copy repair behavior for `CLAUDE.md`
 
 **Decisions:**
 
 - Preserve the existing `missing` state for AGENTS-only directories
 - Add `stray` as the forward-compatible Claude-only state instead of overloading `content_mismatch`
+- Treat the selected file strategy as part of validation semantics, not just write behavior
 
 **Follow-ups / TODO:**
 
-- Implement concrete pointer/symlink/copy repair behavior in `p02-t01`
-- Add stray Claude adoption into canonical `AGENTS.md` generation in `p02-t02`
+- Implement Claude-only stray adoption into canonical `AGENTS.md` generation in `p02-t02`
+- Extend integration coverage for nested mixed-strategy repos in `p03`
 
 **Blockers:**
 
@@ -273,17 +301,18 @@ Track test execution during implementation.
 | Phase | Tests Run                                                                                                                                                                                                                                                                                                                    | Passed | Failed | Coverage |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
 | 1     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/validate/validate.test.ts packages/cli/src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check` | yes    | 0      | n/a      |
-| 2     | -                                                                                                                                                                                                                                                                                                                            | -      | -      | -        |
+| 2     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.utils.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`                                                 | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Instruction scan state and command contract work for project-scoped strategy selection
+- Instruction scan state, command contract work, and strategy-aware `CLAUDE.md` repair behavior
 
 **Behavioral changes (user-facing):**
 
 - `oat instructions validate` and `oat instructions sync` now expose a `--strategy` flag with `pointer`, `symlink`, and `copy`
+- `oat instructions sync` now creates or repairs `CLAUDE.md` as a pointer file, file symlink, or hard copy based on the selected strategy
 
 **Key files / modules:**
 
@@ -292,7 +321,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Phase 1 command tests, lint, and type-check passed
+- Phase 1 and current Phase 2 strategy tests, lint, and type-check passed
 
 **Design deltas (if any):**
 
