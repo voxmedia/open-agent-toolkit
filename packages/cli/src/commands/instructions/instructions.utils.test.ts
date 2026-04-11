@@ -43,11 +43,12 @@ describe('instructions utils', () => {
     return root;
   }
 
-  it('scans AGENTS.md files and reports ok/missing/content_mismatch statuses', async () => {
+  it('scans instruction files and reports ok/missing/content_mismatch/stray statuses', async () => {
     const repoRoot = await createRepoRoot();
 
     await mkdir(join(repoRoot, 'packages', 'cli'), { recursive: true });
     await mkdir(join(repoRoot, 'packages', 'docs'), { recursive: true });
+    await mkdir(join(repoRoot, 'packages', 'stray'), { recursive: true });
 
     await writeFile(
       join(repoRoot, 'AGENTS.md'),
@@ -76,19 +77,29 @@ describe('instructions utils', () => {
       'custom content\n',
       'utf8',
     );
+    await writeFile(
+      join(repoRoot, 'packages', 'stray', 'CLAUDE.md'),
+      '# stray claude instructions\n',
+      'utf8',
+    );
 
     const entries = await scanInstructionFiles(repoRoot);
-    const byAgents = Object.fromEntries(
-      entries.map((entry) => [relative(repoRoot, entry.agentsPath), entry]),
+    const byPath = Object.fromEntries(
+      entries.map((entry) => [
+        relative(repoRoot, entry.agentsPath ?? entry.claudePath),
+        entry,
+      ]),
     );
 
-    expect(entries).toHaveLength(3);
-    expect(byAgents['AGENTS.md']?.status).toBe('ok');
-    expect(byAgents['packages/cli/AGENTS.md']?.status).toBe('missing');
-    expect(byAgents['packages/docs/AGENTS.md']?.status).toBe(
-      'content_mismatch',
-    );
-    expect(byAgents['packages/docs/AGENTS.md']?.detail).toContain('expected');
+    expect(entries).toHaveLength(4);
+    expect(byPath['AGENTS.md']?.status).toBe('ok');
+    expect(byPath['packages/cli/AGENTS.md']?.status).toBe('missing');
+    expect(byPath['packages/docs/AGENTS.md']?.status).toBe('content_mismatch');
+    expect(byPath['packages/docs/AGENTS.md']?.detail).toContain('expected');
+    expect(byPath['packages/stray/CLAUDE.md']).toMatchObject({
+      agentsPath: null,
+      status: 'stray',
+    });
   });
 
   it('ignores excluded directories and nested node_modules', async () => {
@@ -228,6 +239,12 @@ describe('instructions utils', () => {
         status: 'content_mismatch',
         detail: 'content mismatch',
       },
+      {
+        agentsPath: null,
+        claudePath: '/tmp/workspace/d/CLAUDE.md',
+        status: 'stray',
+        detail: 'CLAUDE.md found without AGENTS.md',
+      },
     ];
 
     const actions: InstructionActionRecord[] = [
@@ -253,10 +270,11 @@ describe('instructions utils', () => {
 
     const summary = buildInstructionsSummary(entries, actions);
     expect(summary).toEqual({
-      scanned: 3,
+      scanned: 4,
       ok: 1,
       missing: 1,
       contentMismatch: 1,
+      stray: 1,
       created: 1,
       updated: 1,
       skipped: 1,
@@ -270,10 +288,13 @@ describe('instructions utils', () => {
 
     expect(payload.status).toBe('drift');
     expect(payload.summary).toEqual(summary);
-    expect(payload.entries.map((entry) => entry.agentsPath)).toEqual([
+    expect(
+      payload.entries.map((entry) => entry.agentsPath ?? entry.claudePath),
+    ).toEqual([
       '/tmp/workspace/a/AGENTS.md',
       '/tmp/workspace/b/AGENTS.md',
       '/tmp/workspace/c/AGENTS.md',
+      '/tmp/workspace/d/CLAUDE.md',
     ]);
   });
 
@@ -282,10 +303,10 @@ describe('instructions utils', () => {
       mode: 'validate',
       entries: [
         {
-          agentsPath: '/tmp/workspace/AGENTS.md',
+          agentsPath: null,
           claudePath: '/tmp/workspace/CLAUDE.md',
-          status: 'missing',
-          detail: 'CLAUDE.md missing',
+          status: 'stray',
+          detail: 'CLAUDE.md found without AGENTS.md',
         },
       ],
       actions: [],
@@ -295,7 +316,7 @@ describe('instructions utils', () => {
 
     expect(output).toContain('instructions validate');
     expect(output).toContain('status: drift');
-    expect(output).toContain('AGENTS.md');
-    expect(output).toContain('missing');
+    expect(output).toContain('CLAUDE.md');
+    expect(output).toContain('stray');
   });
 });

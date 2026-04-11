@@ -1,5 +1,5 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { dirname, join, relative } from 'node:path';
+import { join, relative } from 'node:path';
 
 import type {
   InstructionActionRecord,
@@ -22,6 +22,11 @@ interface BuildInstructionsPayloadArgs {
   actions: InstructionActionRecord[];
 }
 
+interface InstructionDirectoryEntry {
+  agentsPath?: string;
+  claudePath?: string;
+}
+
 function getErrorCode(error: unknown): string | null {
   return error && typeof error === 'object' && 'code' in error
     ? String(error.code)
@@ -38,8 +43,10 @@ function toPosixPath(pathValue: string): string {
 
 function normalizeEntries(entries: InstructionEntry[]): InstructionEntry[] {
   return [...entries].sort((left, right) => {
+    const leftSortPath = left.agentsPath ?? left.claudePath;
+    const rightSortPath = right.agentsPath ?? right.claudePath;
     return (
-      left.agentsPath.localeCompare(right.agentsPath) ||
+      leftSortPath.localeCompare(rightSortPath) ||
       left.claudePath.localeCompare(right.claudePath) ||
       left.status.localeCompare(right.status) ||
       left.detail.localeCompare(right.detail)
@@ -60,12 +67,27 @@ function normalizeActions(
   });
 }
 
-async function scanAgentsFiles(
+function recordInstructionFile(
+  directoryEntries: Map<string, InstructionDirectoryEntry>,
+  directoryPath: string,
+  entryName: 'AGENTS.md' | 'CLAUDE.md',
+  entryPath: string,
+): void {
+  const current = directoryEntries.get(directoryPath) ?? {};
+  if (entryName === 'AGENTS.md') {
+    current.agentsPath = entryPath;
+  } else {
+    current.claudePath = entryPath;
+  }
+  directoryEntries.set(directoryPath, current);
+}
+
+async function scanInstructionDirectories(
   repoRoot: string,
   dependencies: InstructionsScanDependencies,
-): Promise<string[]> {
+): Promise<Map<string, InstructionDirectoryEntry>> {
   const queue = [repoRoot];
-  const agentsFiles: string[] = [];
+  const directoryEntries = new Map<string, InstructionDirectoryEntry>();
 
   while (queue.length > 0) {
     const currentDirectory = queue.shift();
@@ -102,8 +124,13 @@ async function scanAgentsFiles(
       }
 
       if (entry.isFile()) {
-        if (entry.name === 'AGENTS.md') {
-          agentsFiles.push(entryPath);
+        if (entry.name === 'AGENTS.md' || entry.name === 'CLAUDE.md') {
+          recordInstructionFile(
+            directoryEntries,
+            currentDirectory,
+            entry.name,
+            entryPath,
+          );
         }
         continue;
       }
@@ -127,13 +154,21 @@ async function scanAgentsFiles(
         continue;
       }
 
-      if (entryStats.isFile() && entry.name === 'AGENTS.md') {
-        agentsFiles.push(entryPath);
+      if (
+        entryStats.isFile() &&
+        (entry.name === 'AGENTS.md' || entry.name === 'CLAUDE.md')
+      ) {
+        recordInstructionFile(
+          directoryEntries,
+          currentDirectory,
+          entry.name,
+          entryPath,
+        );
       }
     }
   }
 
-  return agentsFiles.sort((left, right) => left.localeCompare(right));
+  return directoryEntries;
 }
 
 export async function scanInstructionFiles(
@@ -147,11 +182,26 @@ export async function scanInstructionFiles(
     ...overrides,
   };
 
-  const agentsFiles = await scanAgentsFiles(repoRoot, dependencies);
+  const instructionDirectories = await scanInstructionDirectories(
+    repoRoot,
+    dependencies,
+  );
   const entries: InstructionEntry[] = [];
 
-  for (const agentsPath of agentsFiles) {
-    const claudePath = join(dirname(agentsPath), 'CLAUDE.md');
+  for (const [directoryPath, directoryEntry] of instructionDirectories) {
+    const agentsPath = directoryEntry.agentsPath ?? null;
+    const claudePath =
+      directoryEntry.claudePath ?? join(directoryPath, 'CLAUDE.md');
+
+    if (!agentsPath) {
+      entries.push({
+        agentsPath: null,
+        claudePath,
+        status: 'stray',
+        detail: 'CLAUDE.md found without AGENTS.md',
+      });
+      continue;
+    }
 
     try {
       const claudeContent = await dependencies.readFile(claudePath, 'utf8');
@@ -208,6 +258,7 @@ export function buildInstructionsSummary(
     contentMismatch: normalizedEntries.filter(
       (entry) => entry.status === 'content_mismatch',
     ).length,
+    stray: normalizedEntries.filter((entry) => entry.status === 'stray').length,
     created: normalizedActions.filter((action) => action.type === 'create')
       .length,
     updated: normalizedActions.filter((action) => action.type === 'update')
@@ -255,7 +306,7 @@ export function formatInstructionsReport(
   const lines = [
     `instructions ${payload.mode}`,
     `status: ${payload.status}`,
-    `summary: scanned=${payload.summary.scanned}, ok=${payload.summary.ok}, missing=${payload.summary.missing}, content_mismatch=${payload.summary.contentMismatch}, created=${payload.summary.created}, updated=${payload.summary.updated}, skipped=${payload.summary.skipped}`,
+    `summary: scanned=${payload.summary.scanned}, ok=${payload.summary.ok}, missing=${payload.summary.missing}, content_mismatch=${payload.summary.contentMismatch}, stray=${payload.summary.stray}, created=${payload.summary.created}, updated=${payload.summary.updated}, skipped=${payload.summary.skipped}`,
   ];
 
   if (payload.entries.length === 0) {
@@ -263,10 +314,11 @@ export function formatInstructionsReport(
   } else {
     lines.push('entries:');
     for (const entry of payload.entries) {
-      const agentsPath = repoRoot
-        ? toPosixPath(relative(repoRoot, entry.agentsPath)) || '.'
-        : toPosixPath(entry.agentsPath);
-      lines.push(`- ${agentsPath} -> ${entry.status} (${entry.detail})`);
+      const displayPath = entry.agentsPath ?? entry.claudePath;
+      const relativePath = repoRoot
+        ? toPosixPath(relative(repoRoot, displayPath)) || '.'
+        : toPosixPath(displayPath);
+      lines.push(`- ${relativePath} -> ${entry.status} (${entry.detail})`);
     }
   }
 

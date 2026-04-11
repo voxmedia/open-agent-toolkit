@@ -2,12 +2,12 @@ import type { Dirent, Stats } from 'node:fs';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 
-export type InstructionStatus = 'ok' | 'missing' | 'content_mismatch';
+export type InstructionStatus = 'ok' | 'missing' | 'content_mismatch' | 'stray';
 
 export type InstructionsStatus = 'ok' | 'drift';
 
 export interface InstructionEntry {
-  agentsPath: string;
+  agentsPath: string | null;
   claudePath: string;
   status: InstructionStatus;
   detail: string;
@@ -31,6 +31,7 @@ export interface InstructionsSummary {
   ok: number;
   missing: number;
   contentMismatch: number;
+  stray: number;
   created: number;
   updated: number;
   skipped: number;
