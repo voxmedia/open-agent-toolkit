@@ -1,21 +1,25 @@
 import { writeFile } from 'node:fs/promises';
 
 import { buildCommandContext } from '@app/command-context';
-import type {
-  InstructionActionRecord,
-  InstructionEntry,
-  InstructionsSyncCommandDependencies,
+import {
+  INSTRUCTION_SYNC_STRATEGIES,
+  type InstructionSyncStrategy,
+  type InstructionActionRecord,
+  type InstructionEntry,
+  type InstructionsSyncCommandDependencies,
 } from '@commands/instructions/instructions.types';
 import {
   buildInstructionsPayload,
+  DEFAULT_INSTRUCTION_SYNC_STRATEGY,
   EXPECTED_CLAUDE_CONTENT,
   formatInstructionsReport,
+  resolveInstructionSyncStrategy,
   scanInstructionFiles,
 } from '@commands/instructions/instructions.utils';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 
 interface PlanSyncActionsArgs {
   entries: InstructionEntry[];
@@ -142,57 +146,76 @@ export function createInstructionsSyncCommand(
     .description('Repair AGENTS.md to CLAUDE.md pointer drift')
     .option('--dry-run', 'Preview sync changes without applying')
     .option('--force', 'Overwrite mismatched CLAUDE.md files')
-    .action(async (options: { dryRun?: boolean; force?: boolean }, command) => {
-      const context = dependencies.buildCommandContext(
-        readGlobalOptions(command),
-      );
+    .addOption(
+      new Option('--strategy <strategy>', 'Sync strategy')
+        .choices([...INSTRUCTION_SYNC_STRATEGIES])
+        .default(DEFAULT_INSTRUCTION_SYNC_STRATEGY),
+    )
+    .action(
+      async (
+        options: {
+          dryRun?: boolean;
+          force?: boolean;
+          strategy?: InstructionSyncStrategy;
+        },
+        command,
+      ) => {
+        const context = dependencies.buildCommandContext(
+          readGlobalOptions(command),
+        );
 
-      try {
-        const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-        const entries = await dependencies.scanInstructionFiles(repoRoot);
-        const plannedActions = planSyncActions({
-          entries,
-          force: options.force ?? false,
-        });
+        try {
+          const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+          const entries = await dependencies.scanInstructionFiles(repoRoot, {
+            strategy: resolveInstructionSyncStrategy(options.strategy),
+          });
+          const plannedActions = planSyncActions({
+            entries,
+            force: options.force ?? false,
+          });
 
-        const dryRun = options.dryRun ?? false;
-        const actions = dryRun
-          ? plannedActions
-          : await applySyncActions(plannedActions, dependencies);
+          const dryRun = options.dryRun ?? false;
+          const actions = dryRun
+            ? plannedActions
+            : await applySyncActions(plannedActions, dependencies);
 
-        const payload = buildInstructionsPayload({
-          mode: dryRun ? 'dry-run' : 'apply',
-          entries: dryRun ? entries : getPostSyncEntries(entries, actions),
-          actions,
-        });
+          const payload = buildInstructionsPayload({
+            mode: dryRun ? 'dry-run' : 'apply',
+            entries: dryRun ? entries : getPostSyncEntries(entries, actions),
+            actions,
+          });
 
-        if (context.json) {
-          context.logger.json(payload);
-        } else {
-          context.logger.info(formatInstructionsReport(payload, repoRoot));
-          if (dryRun) {
-            context.logger.warn(
-              '\nDry-run only: no filesystem changes were made.',
-            );
-            if (plannedActions.length > 0) {
-              context.logger.info('Run without --dry-run to apply changes.');
-            } else {
-              context.logger.info('No changes to apply.');
+          if (context.json) {
+            context.logger.json(payload);
+          } else {
+            context.logger.info(formatInstructionsReport(payload, repoRoot));
+            if (dryRun) {
+              context.logger.warn(
+                '\nDry-run only: no filesystem changes were made.',
+              );
+              if (plannedActions.length > 0) {
+                context.logger.info('Run without --dry-run to apply changes.');
+              } else {
+                context.logger.info('No changes to apply.');
+              }
+            } else if (payload.status === 'ok') {
+              context.logger.success(
+                '\nInstruction sync applied successfully.',
+              );
             }
-          } else if (payload.status === 'ok') {
-            context.logger.success('\nInstruction sync applied successfully.');
           }
-        }
 
-        process.exitCode = hasSkippedActions(actions) ? 1 : 0;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (context.json) {
-          context.logger.json({ status: 'error', message });
-        } else {
-          context.logger.error(message);
+          process.exitCode = hasSkippedActions(actions) ? 1 : 0;
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          if (context.json) {
+            context.logger.json({ status: 'error', message });
+          } else {
+            context.logger.error(message);
+          }
+          process.exitCode = error instanceof CliError ? error.exitCode : 2;
         }
-        process.exitCode = error instanceof CliError ? error.exitCode : 2;
-      }
-    });
+      },
+    );
 }

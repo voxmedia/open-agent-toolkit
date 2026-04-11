@@ -2,6 +2,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 import type {
+  InstructionSyncStrategy,
   InstructionActionRecord,
   InstructionEntry,
   InstructionsJsonPayload,
@@ -12,6 +13,8 @@ import type {
 } from './instructions.types';
 
 export const EXPECTED_CLAUDE_CONTENT = '@AGENTS.md\n';
+export const DEFAULT_INSTRUCTION_SYNC_STRATEGY: InstructionSyncStrategy =
+  'pointer';
 
 const ROOT_EXCLUDED_DIRECTORIES = new Set(['.git', '.oat', '.worktrees']);
 const GLOBAL_EXCLUDED_DIRECTORIES = new Set(['node_modules']);
@@ -35,6 +38,12 @@ function getErrorCode(error: unknown): string | null {
 
 function normalizeLineEndings(content: string): string {
   return content.replaceAll('\r\n', '\n');
+}
+
+export function resolveInstructionSyncStrategy(
+  strategy?: InstructionSyncStrategy,
+): InstructionSyncStrategy {
+  return strategy ?? DEFAULT_INSTRUCTION_SYNC_STRATEGY;
 }
 
 function toPosixPath(pathValue: string): string {

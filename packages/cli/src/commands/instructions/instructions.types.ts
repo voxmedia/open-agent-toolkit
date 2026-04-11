@@ -2,6 +2,15 @@ import type { Dirent, Stats } from 'node:fs';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 
+export const INSTRUCTION_SYNC_STRATEGIES = [
+  'pointer',
+  'symlink',
+  'copy',
+] as const;
+
+export type InstructionSyncStrategy =
+  (typeof INSTRUCTION_SYNC_STRATEGIES)[number];
+
 export type InstructionStatus = 'ok' | 'missing' | 'content_mismatch' | 'stray';
 
 export type InstructionsStatus = 'ok' | 'drift';
@@ -52,6 +61,7 @@ export interface InstructionsScanDependencies {
   ) => Promise<Dirent[]>;
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
   stat: (path: string) => Promise<Stats>;
+  strategy?: InstructionSyncStrategy;
   debug?: (message: string) => void;
 }
 

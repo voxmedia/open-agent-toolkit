@@ -279,4 +279,18 @@ describe('createInstructionsSyncCommand', () => {
     expect(capture.error).toContain('sync failed');
     expect(process.exitCode).toBe(2);
   });
+
+  it('passes the requested strategy through the shared scan path', async () => {
+    const { command, scanInstructionFiles } = createHarness({
+      entries: [],
+    });
+
+    await runSyncCommand(command, {
+      commandArgs: ['--dry-run', '--strategy', 'copy'],
+    });
+
+    expect(scanInstructionFiles).toHaveBeenCalledWith('/tmp/workspace', {
+      strategy: 'copy',
+    });
+  });
 });

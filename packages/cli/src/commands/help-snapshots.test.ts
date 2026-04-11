@@ -403,12 +403,12 @@ describe('help output snapshots', () => {
       Manage AGENTS.md and CLAUDE.md instruction file integrity
 
       Options:
-        -h, --help      display help for command
+        -h, --help          display help for command
 
       Commands:
-        validate        Validate AGENTS.md to CLAUDE.md pointer integrity
-        sync [options]  Repair AGENTS.md to CLAUDE.md pointer drift
-        help [command]  display help for command
+        validate [options]  Validate AGENTS.md to CLAUDE.md pointer integrity
+        sync [options]      Repair AGENTS.md to CLAUDE.md pointer drift
+        help [command]      display help for command
       "
     `);
   });
@@ -522,7 +522,9 @@ describe('help output snapshots', () => {
       Validate AGENTS.md to CLAUDE.md pointer integrity
 
       Options:
-        -h, --help  display help for command
+        --strategy <strategy>  Sync strategy (choices: "pointer", "symlink", "copy",
+                               default: "pointer")
+        -h, --help             display help for command
       "
     `);
   });
@@ -539,9 +541,11 @@ describe('help output snapshots', () => {
       Repair AGENTS.md to CLAUDE.md pointer drift
 
       Options:
-        --dry-run   Preview sync changes without applying
-        --force     Overwrite mismatched CLAUDE.md files
-        -h, --help  display help for command
+        --dry-run              Preview sync changes without applying
+        --force                Overwrite mismatched CLAUDE.md files
+        --strategy <strategy>  Sync strategy (choices: "pointer", "symlink", "copy",
+                               default: "pointer")
+        -h, --help             display help for command
       "
     `);
   });

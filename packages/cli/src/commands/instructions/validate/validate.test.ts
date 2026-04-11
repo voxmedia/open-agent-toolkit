@@ -55,7 +55,10 @@ function createHarness(options: HarnessOptions = {}): {
 
 async function runValidateCommand(
   command: Command,
-  globalArgs: string[] = [],
+  {
+    globalArgs = [],
+    commandArgs = [],
+  }: { globalArgs?: string[]; commandArgs?: string[] } = {},
 ): Promise<void> {
   const program = new Command()
     .name('oat')
@@ -67,7 +70,7 @@ async function runValidateCommand(
 
   program.addCommand(command);
 
-  await program.parseAsync([...globalArgs, 'validate'], {
+  await program.parseAsync([...globalArgs, 'validate', ...commandArgs], {
     from: 'user',
   });
 }
@@ -134,7 +137,7 @@ describe('createInstructionsValidateCommand', () => {
       ],
     });
 
-    await runValidateCommand(command, ['--json']);
+    await runValidateCommand(command, { globalArgs: ['--json'] });
 
     expect(capture.jsonPayloads).toHaveLength(1);
     expect(capture.jsonPayloads[0]).toMatchObject({
@@ -162,5 +165,19 @@ describe('createInstructionsValidateCommand', () => {
 
     expect(process.exitCode).toBe(2);
     expect(capture.error).toContain('unable to scan');
+  });
+
+  it('passes the requested strategy through the shared scan path', async () => {
+    const { command, scanInstructionFiles } = createHarness({
+      entries: [],
+    });
+
+    await runValidateCommand(command, {
+      commandArgs: ['--strategy', 'symlink'],
+    });
+
+    expect(scanInstructionFiles).toHaveBeenCalledWith('/tmp/workspace', {
+      strategy: 'symlink',
+    });
   });
 });
