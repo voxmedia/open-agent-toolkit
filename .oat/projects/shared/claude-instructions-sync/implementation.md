@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-11
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -28,37 +28,48 @@ oat_template_name: implementation
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 1/2       |
-| Phase 2 | pending     | 2     | 0/2       |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | in_progress | 2     | 0/2       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 1/6 tasks completed
+**Total:** 2/6 tasks completed
 
 ---
 
 ## Phase 1: Model Discovery And Strategy State
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-11
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- Pending implementation
+- Strategy selection is now surfaced consistently on `oat instructions validate` and `oat instructions sync`.
+- Both commands resolve the same default strategy and pass the selected mode through the shared scan path.
+- Help output and command tests now cover the new project-scoped strategy flag shape.
 
 **Key files touched:**
 
-- To be filled during implementation
+- `packages/cli/src/commands/instructions/instructions.types.ts`
+- `packages/cli/src/commands/instructions/instructions.utils.ts`
+- `packages/cli/src/commands/instructions/validate/validate.ts`
+- `packages/cli/src/commands/instructions/validate/validate.test.ts`
+- `packages/cli/src/commands/instructions/sync/sync.ts`
+- `packages/cli/src/commands/instructions/sync/sync.test.ts`
+- `packages/cli/src/commands/help-snapshots.test.ts`
 
 **Verification:**
 
-- Run: -
-- Result: -
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/validate/validate.test.ts packages/cli/src/commands/help-snapshots.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
 
 **Notes / Decisions:**
 
-- None yet
+- Kept strategy resolution in shared instruction utilities so upcoming sync/adoption work can reuse one defaulting path.
+- Limited scope to project commands only; user-level provider scanning remains out of scope for this project.
 
 ### Task p01-t01: Expand instruction scan state for paired and stray files
 
@@ -93,19 +104,43 @@ oat_template_name: implementation
 
 ### Task p01-t02: Add project-scoped strategy selection to the instructions commands
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e1b792bd
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Wire strategy resolution once the scan/report model is stable.
+- Added `pointer`, `symlink`, and `copy` as explicit instruction sync strategies for project-scoped instruction commands.
+- Wired `validate` and `sync` to parse the same strategy flag and forward the resolved value to the shared scan path.
+- Updated command/help coverage to lock in the new option surface and invocation shape.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.types.ts` - declared the shared strategy union and scan dependency option
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - added the shared default/resolver used by command entrypoints
+- `packages/cli/src/commands/instructions/validate/validate.ts` - added `--strategy` parsing and scan forwarding
+- `packages/cli/src/commands/instructions/validate/validate.test.ts` - fixed command-arg harnessing and asserted strategy forwarding
+- `packages/cli/src/commands/instructions/sync/sync.ts` - added `--strategy` parsing and scan forwarding
+- `packages/cli/src/commands/instructions/sync/sync.test.ts` - asserted strategy forwarding for sync
+- `packages/cli/src/commands/help-snapshots.test.ts` - updated help output snapshots for the new option formatting
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/validate/validate.test.ts packages/cli/src/commands/help-snapshots.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Used Commander `Option` instead of chained `.option().choices()` so the CLI surface stays aligned with the version in this repo.
+- Left strategy behavior implementation for filesystem writes/adoption to Phase 2; this task only establishes the command contract.
 
 ---
 
 ## Phase 2: Implement Sync And Adoption Behavior
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-11
 
 ### Task p02-t01: Implement strategy-aware `CLAUDE.md` repair and generation
 
@@ -196,7 +231,8 @@ Chronological log of implementation progress.
 **Session Start:** task execution
 
 - [x] p01-t01: Expand instruction scan state for paired and stray files - 231da372
-- [ ] p01-t02: Add project-scoped strategy selection to the instructions commands - next
+- [x] p01-t02: Add project-scoped strategy selection to the instructions commands - e1b792bd
+- [ ] p02-t01: Implement strategy-aware `CLAUDE.md` repair and generation - next
 
 **What changed (high level):**
 
@@ -211,14 +247,14 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Add strategy resolution to validate/sync in `p01-t02`
-- Decide whether strategy defaults remain CLI-only or become config-backed during implementation
+- Implement concrete pointer/symlink/copy repair behavior in `p02-t01`
+- Add stray Claude adoption into canonical `AGENTS.md` generation in `p02-t02`
 
 **Blockers:**
 
 - None
 
-**Session End:** task bookkeeping
+**Session End:** phase 1 complete
 
 ---
 
@@ -234,20 +270,20 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                    | Passed | Failed | Coverage |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/validate/validate.test.ts packages/cli/src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check` | yes    | 0      | n/a      |
+| 2     | -                                                                                                                                                                                                                                                                                                                            | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Planning artifacts only; implementation not started
+- Instruction scan state and command contract work for project-scoped strategy selection
 
 **Behavioral changes (user-facing):**
 
-- None yet
+- `oat instructions validate` and `oat instructions sync` now expose a `--strategy` flag with `pointer`, `symlink`, and `copy`
 
 **Key files / modules:**
 
@@ -256,7 +292,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Quick-start artifact generation only; no implementation verification yet
+- Phase 1 command tests, lint, and type-check passed
 
 **Design deltas (if any):**
 
