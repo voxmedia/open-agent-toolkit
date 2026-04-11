@@ -312,4 +312,112 @@ describe('instructions command integration', () => {
     const payload = JSON.parse(validate.stdout);
     expect(payload.status).toBe('ok');
   });
+
+  it('syncs a nested mixed-state project tree while excluding node_modules', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    await mkdir(join(root, 'packages', 'valid', 'deep'), { recursive: true });
+    await mkdir(join(root, 'packages', 'missing'), { recursive: true });
+    await mkdir(join(root, 'packages', 'mismatch'), { recursive: true });
+    await mkdir(join(root, 'packages', 'stray', 'nested'), { recursive: true });
+    await mkdir(join(root, 'packages', 'ignored', 'node_modules', 'dep'), {
+      recursive: true,
+    });
+
+    await writeFile(join(root, 'AGENTS.md'), '# root\n', 'utf8');
+    await writeFile(join(root, 'CLAUDE.md'), EXPECTED_CLAUDE_CONTENT, 'utf8');
+
+    await writeFile(
+      join(root, 'packages', 'valid', 'deep', 'AGENTS.md'),
+      '# valid\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, 'packages', 'valid', 'deep', 'CLAUDE.md'),
+      EXPECTED_CLAUDE_CONTENT,
+      'utf8',
+    );
+
+    await writeFile(
+      join(root, 'packages', 'missing', 'AGENTS.md'),
+      '# missing\n',
+      'utf8',
+    );
+
+    await writeFile(
+      join(root, 'packages', 'mismatch', 'AGENTS.md'),
+      '# mismatch\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, 'packages', 'mismatch', 'CLAUDE.md'),
+      'custom mismatch\n',
+      'utf8',
+    );
+
+    await writeFile(
+      join(root, 'packages', 'stray', 'nested', 'CLAUDE.md'),
+      '# stray nested\n',
+      'utf8',
+    );
+
+    await writeFile(
+      join(root, 'packages', 'ignored', 'node_modules', 'dep', 'AGENTS.md'),
+      '# ignored\n',
+      'utf8',
+    );
+
+    const before = await runCli(
+      root,
+      ['instructions', 'validate', '--json'],
+      ['--json'],
+    );
+    expect(before.exitCode).toBe(1);
+    const beforePayload = JSON.parse(before.stdout);
+    expect(beforePayload.summary).toMatchObject({
+      scanned: 5,
+      ok: 2,
+      missing: 1,
+      contentMismatch: 1,
+      stray: 1,
+    });
+
+    const apply = await runCli(root, ['instructions', 'sync', '--force']);
+    expect(apply.exitCode).toBe(0);
+
+    await expect(
+      readFile(join(root, 'packages', 'missing', 'CLAUDE.md'), 'utf8'),
+    ).resolves.toBe(EXPECTED_CLAUDE_CONTENT);
+    await expect(
+      readFile(join(root, 'packages', 'mismatch', 'CLAUDE.md'), 'utf8'),
+    ).resolves.toBe(EXPECTED_CLAUDE_CONTENT);
+    await expect(
+      readFile(join(root, 'packages', 'stray', 'nested', 'AGENTS.md'), 'utf8'),
+    ).resolves.toBe('# stray nested\n');
+    await expect(
+      readFile(join(root, 'packages', 'stray', 'nested', 'CLAUDE.md'), 'utf8'),
+    ).resolves.toBe(EXPECTED_CLAUDE_CONTENT);
+    await expect(
+      readFile(
+        join(root, 'packages', 'ignored', 'node_modules', 'dep', 'AGENTS.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('# ignored\n');
+
+    const after = await runCli(
+      root,
+      ['instructions', 'validate', '--json'],
+      ['--json'],
+    );
+    expect(after.exitCode).toBe(0);
+    const afterPayload = JSON.parse(after.stdout);
+    expect(afterPayload.summary).toMatchObject({
+      scanned: 5,
+      ok: 5,
+      missing: 0,
+      contentMismatch: 0,
+      stray: 0,
+    });
+  });
 });
