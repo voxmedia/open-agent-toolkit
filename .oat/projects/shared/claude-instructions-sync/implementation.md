@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-11
-oat_current_task_id: p02-t02
+oat_current_task_id: p03-t01
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -29,10 +29,10 @@ oat_template_name: implementation
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | in_progress | 2     | 1/2       |
-| Phase 3 | pending     | 2     | 0/2       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | in_progress | 2     | 0/2       |
 
-**Total:** 3/6 tasks completed
+**Total:** 4/6 tasks completed
 
 ---
 
@@ -139,8 +139,39 @@ oat_template_name: implementation
 
 ## Phase 2: Implement Sync And Adoption Behavior
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-11
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- `oat instructions sync` now repairs `CLAUDE.md` using pointer, symlink, or hard-copy strategies instead of a pointer-only write path.
+- Claude-only stray files are now adopted into canonical `AGENTS.md` files before Claude is regenerated with the selected strategy.
+- Instruction integration coverage now includes real adoption flows, including symlink-based Claude regeneration.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/instructions/instructions.types.ts`
+- `packages/cli/src/commands/instructions/instructions.utils.ts`
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- `packages/cli/src/commands/instructions/sync/sync.ts`
+- `packages/cli/src/commands/instructions/sync/sync.test.ts`
+- `packages/cli/src/commands/instructions/instructions.integration.test.ts`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.integration.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Strategy validation now checks file kind as well as content, so `copy` and `symlink` remain semantically distinct.
+- Stray adoption writes canonical `AGENTS.md` first, then rewrites `CLAUDE.md`, ensuring the original Claude instructions are preserved before normalization.
 
 ### Task p02-t01: Implement strategy-aware `CLAUDE.md` repair and generation
 
@@ -177,15 +208,39 @@ oat_template_name: implementation
 
 ### Task p02-t02: Implement Claude-only stray adoption into canonical `AGENTS.md`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4c5c8023
+
+**Outcome (required when completed):**
+
+- Claude-only stray entries are now adopted into canonical `AGENTS.md` files and then re-synced into `CLAUDE.md` using the selected strategy.
+- Sync planning now emits explicit adoption work for stray entries instead of silently ignoring them.
+- Integration coverage now verifies both pointer-style and symlink-style post-adoption Claude regeneration.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/sync/sync.ts` - added stray adoption planning and apply logic
+- `packages/cli/src/commands/instructions/sync/sync.test.ts` - added unit coverage for adopt-then-resync behavior
+- `packages/cli/src/commands/instructions/instructions.integration.test.ts` - added real filesystem adoption scenarios
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.integration.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Adopted stray Claude content without requiring `--force` because there is no canonical `AGENTS.md` in the stray state.
+- Normalized adopted Claude files immediately after writing `AGENTS.md` so validate reports `ok` on the same strategy-specific pass.
 
 ---
 
 ## Phase 3: Finish Coverage And Documentation
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-11
 
 ### Task p03-t01: Add end-to-end coverage for nested project directories
 
@@ -259,13 +314,14 @@ Chronological log of implementation progress.
 - [x] p01-t01: Expand instruction scan state for paired and stray files - 231da372
 - [x] p01-t02: Add project-scoped strategy selection to the instructions commands - e1b792bd
 - [x] p02-t01: Implement strategy-aware `CLAUDE.md` repair and generation - 479f2ba0
-- [ ] p02-t02: Implement Claude-only stray adoption into canonical `AGENTS.md` - next
+- [x] p02-t02: Implement Claude-only stray adoption into canonical `AGENTS.md` - 4c5c8023
+- [ ] p03-t01: Add end-to-end coverage for nested project directories - next
 
 **What changed (high level):**
 
 - Reworked instruction discovery to index directories by both `AGENTS.md` and `CLAUDE.md`
 - Added `stray` scan state and summary/report support for Claude-only directories
-- Implemented strategy-aware pointer, symlink, and copy repair behavior for `CLAUDE.md`
+- Implemented strategy-aware repair and stray-adoption flows for `CLAUDE.md`
 
 **Decisions:**
 
@@ -275,14 +331,14 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Implement Claude-only stray adoption into canonical `AGENTS.md` generation in `p02-t02`
-- Extend integration coverage for nested mixed-strategy repos in `p03`
+- Extend integration coverage for nested mixed-state repos in `p03-t01`
+- Update docs/help guidance for strategy-aware sync and adoption in `p03-t02`
 
 **Blockers:**
 
 - None
 
-**Session End:** phase 1 complete
+**Session End:** phase 2 complete
 
 ---
 
@@ -298,21 +354,22 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                                                                    | Passed | Failed | Coverage |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/validate/validate.test.ts packages/cli/src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check` | yes    | 0      | n/a      |
-| 2     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.utils.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`                                                 | yes    | 0      | n/a      |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Passed | Failed | Coverage |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/validate/validate.test.ts packages/cli/src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`                                                                                                                                   | yes    | 0      | n/a      |
+| 2     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.utils.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check` | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Instruction scan state, command contract work, and strategy-aware `CLAUDE.md` repair behavior
+- Instruction scan state, command contract work, strategy-aware `CLAUDE.md` repair behavior, and Claude-only stray adoption
 
 **Behavioral changes (user-facing):**
 
 - `oat instructions validate` and `oat instructions sync` now expose a `--strategy` flag with `pointer`, `symlink`, and `copy`
 - `oat instructions sync` now creates or repairs `CLAUDE.md` as a pointer file, file symlink, or hard copy based on the selected strategy
+- `oat instructions sync` now adopts Claude-only stray files into canonical `AGENTS.md` content before regenerating Claude
 
 **Key files / modules:**
 
@@ -321,7 +378,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Phase 1 and current Phase 2 strategy tests, lint, and type-check passed
+- Phase 1 and Phase 2 strategy/adoption tests, lint, and type-check passed
 
 **Design deltas (if any):**
 
