@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-04-11
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -26,13 +26,13 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | in_progress | 2     | 0/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 2     | 2/2       |
 
-**Total:** 4/6 tasks completed
+**Total:** 6/6 tasks completed
 
 ---
 
@@ -239,20 +239,87 @@ oat_template_name: implementation
 
 ## Phase 3: Finish Coverage And Documentation
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-11
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Added end-to-end nested project coverage for mixed valid, missing, mismatched, stray, and excluded instruction states in one repo tree.
+- Updated user-facing docs so the CLI guidance now reflects strategy-aware validation/sync and Claude-only stray adoption.
+- Verified the final implementation with the full CLI package test suite and a docs production build.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/instructions/instructions.integration.test.ts`
+- `apps/oat-docs/docs/provider-sync/commands.md`
+- `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
+- `apps/oat-docs/docs/reference/troubleshooting.md`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the final phase implementation-light: the new nested mixed-tree test passed without further CLI code changes, which confirms the Phase 1/2 behavior composes correctly at depth.
+- Updated troubleshooting and command docs instead of expanding help text further, since the CLI surface already carries the concrete option contract.
 
 ### Task p03-t01: Add end-to-end coverage for nested project directories
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 37055047
+
+**Outcome (required when completed):**
+
+- Added a mixed nested-tree integration case that exercises valid pairs, missing Claude files, drifted files, stray Claude files, and excluded `node_modules` in one run.
+- Verified that `oat instructions sync --force` resolves every drifted nested case without touching excluded directories.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.integration.test.ts` - added end-to-end nested mixed-state coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.integration.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Consolidated the nesting scenarios into one integration case so exclusions, adoption, and repair behavior are proven together.
 
 ---
 
 ### Task p03-t02: Update docs and help text for strategy-aware project sync
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f25329a9
+
+**Outcome (required when completed):**
+
+- Updated the provider-sync and CLI utility docs to describe strategy-aware instruction validation/sync and Claude-only stray adoption.
+- Refreshed troubleshooting guidance so operators know when to use `--strategy` and how `stray` is resolved.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/provider-sync/commands.md` - documented strategy-aware validate/sync behavior
+- `apps/oat-docs/docs/cli-utilities/config-and-local-state.md` - updated the instruction command summary
+- `apps/oat-docs/docs/reference/troubleshooting.md` - added `stray` and strategy-specific troubleshooting guidance
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the docs changes focused on the existing provider-sync and CLI utility pages instead of creating a new instructions-specific doc leaf.
 
 ---
 
@@ -315,7 +382,8 @@ Chronological log of implementation progress.
 - [x] p01-t02: Add project-scoped strategy selection to the instructions commands - e1b792bd
 - [x] p02-t01: Implement strategy-aware `CLAUDE.md` repair and generation - 479f2ba0
 - [x] p02-t02: Implement Claude-only stray adoption into canonical `AGENTS.md` - 4c5c8023
-- [ ] p03-t01: Add end-to-end coverage for nested project directories - next
+- [x] p03-t01: Add end-to-end coverage for nested project directories - 37055047
+- [x] p03-t02: Update docs and help text for strategy-aware project sync - f25329a9
 
 **What changed (high level):**
 
@@ -331,8 +399,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Extend integration coverage for nested mixed-state repos in `p03-t01`
-- Update docs/help guidance for strategy-aware sync and adoption in `p03-t02`
+- Trigger final review and record results in `plan.md`
+- Prepare final summary/PR context from the completed implementation artifacts
 
 **Blockers:**
 
@@ -358,18 +426,20 @@ Track test execution during implementation.
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
 | 1     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/validate/validate.test.ts packages/cli/src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`                                                                                                                                   | yes    | 0      | n/a      |
 | 2     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.utils.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check` | yes    | 0      | n/a      |
+| 3     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm build:docs`                                                                                                                                                                                                                                                                       | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Instruction scan state, command contract work, strategy-aware `CLAUDE.md` repair behavior, and Claude-only stray adoption
+- Instruction scan state, command contract work, strategy-aware `CLAUDE.md` repair behavior, Claude-only stray adoption, nested coverage, and user-facing docs
 
 **Behavioral changes (user-facing):**
 
 - `oat instructions validate` and `oat instructions sync` now expose a `--strategy` flag with `pointer`, `symlink`, and `copy`
 - `oat instructions sync` now creates or repairs `CLAUDE.md` as a pointer file, file symlink, or hard copy based on the selected strategy
 - `oat instructions sync` now adopts Claude-only stray files into canonical `AGENTS.md` content before regenerating Claude
+- Nested project trees are now covered end to end, including excluded directories and mixed valid/drifted/adoptable states
 
 **Key files / modules:**
 
@@ -378,7 +448,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Phase 1 and Phase 2 strategy/adoption tests, lint, and type-check passed
+- Phase 1 through Phase 3 verification passed, including the full CLI package test suite and docs build
 
 **Design deltas (if any):**
 
