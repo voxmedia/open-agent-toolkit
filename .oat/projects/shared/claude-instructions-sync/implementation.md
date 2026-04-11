@@ -1,6 +1,6 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-review-provide
+oat_ready_for: oat-project-review-receive
 oat_blockers: []
 oat_last_updated: 2026-04-11
 oat_current_task_id: null

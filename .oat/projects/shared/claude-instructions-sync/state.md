@@ -30,7 +30,7 @@ oat_template_name: state
 
 ## Current Phase
 
-Implementation complete, awaiting automatic review
+Implementation complete, final review artifact recorded
 
 ## Artifacts
 
@@ -51,7 +51,7 @@ Implementation complete, awaiting automatic review
 - ✓ `p02-t02` completed
 - ✓ `p03-t01` completed
 - ✓ `p03-t02` completed
-- ⧗ Triggering final review
+- ✓ Final review artifact recorded
 
 ## Blockers
 
@@ -59,4 +59,4 @@ None
 
 ## Next Milestone
 
-Record final review results and address any findings if needed
+Run review-receive bookkeeping or proceed once the clean review is accepted
