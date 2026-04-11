@@ -1,5 +1,5 @@
 import { readFile, rm, symlink, writeFile } from 'node:fs/promises';
-import { dirname, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
 import {
@@ -70,6 +70,10 @@ function getSyncedDetail(strategy: InstructionSyncStrategy): string {
   }
 }
 
+function getAgentsPath(entry: InstructionEntry): string {
+  return entry.agentsPath ?? join(dirname(entry.claudePath), 'AGENTS.md');
+}
+
 function planSyncActions({
   entries,
   force,
@@ -78,6 +82,22 @@ function planSyncActions({
   const actions: InstructionActionRecord[] = [];
 
   for (const entry of entries) {
+    if (entry.status === 'stray') {
+      actions.push({
+        type: 'create',
+        target: getAgentsPath(entry),
+        reason: 'adopt stray CLAUDE.md into canonical AGENTS.md',
+        result: 'planned',
+      });
+      actions.push({
+        type: 'update',
+        target: entry.claudePath,
+        reason: getSyncReason('update', strategy),
+        result: 'planned',
+      });
+      continue;
+    }
+
     if (entry.status === 'missing') {
       actions.push({
         type: 'create',
@@ -120,9 +140,12 @@ async function applySyncActions(
   strategy: InstructionSyncStrategy,
 ): Promise<InstructionActionRecord[]> {
   const appliedActions: InstructionActionRecord[] = [];
-  const entriesByClaudePath = new Map(
-    entries.map((entry) => [entry.claudePath, entry]),
-  );
+  const entriesByTarget = new Map<string, InstructionEntry>();
+
+  for (const entry of entries) {
+    entriesByTarget.set(entry.claudePath, entry);
+    entriesByTarget.set(getAgentsPath(entry), entry);
+  }
 
   for (const action of actions) {
     if (action.result !== 'planned') {
@@ -130,8 +153,31 @@ async function applySyncActions(
       continue;
     }
 
-    const entry = entriesByClaudePath.get(action.target);
-    if (!entry?.agentsPath) {
+    const entry = entriesByTarget.get(action.target);
+    if (!entry) {
+      throw new CliError(
+        `Unable to resolve instruction entry for ${action.target}`,
+        2,
+      );
+    }
+
+    const agentsPath = getAgentsPath(entry);
+    const isAgentsAction = action.target === agentsPath;
+
+    if (isAgentsAction) {
+      const adoptedContent = await dependencies.readFile(
+        entry.claudePath,
+        'utf8',
+      );
+      await dependencies.writeFile(agentsPath, adoptedContent, 'utf8');
+      appliedActions.push({
+        ...action,
+        result: 'applied',
+      });
+      continue;
+    }
+
+    if (!entry.agentsPath && action.type !== 'update') {
       throw new CliError(`Unable to resolve AGENTS.md for ${action.target}`, 2);
     }
 
@@ -140,13 +186,10 @@ async function applySyncActions(
     }
 
     if (strategy === 'symlink') {
-      const symlinkTarget = relative(dirname(action.target), entry.agentsPath);
+      const symlinkTarget = relative(dirname(action.target), agentsPath);
       await dependencies.symlinkFile(symlinkTarget, action.target);
     } else if (strategy === 'copy') {
-      const agentsContent = await dependencies.readFile(
-        entry.agentsPath,
-        'utf8',
-      );
+      const agentsContent = await dependencies.readFile(agentsPath, 'utf8');
       await dependencies.writeFile(action.target, agentsContent, 'utf8');
     } else {
       await dependencies.writeFile(
@@ -176,14 +219,20 @@ function getPostSyncEntries(
 
   return entries.map((entry) => {
     const action = actionByTarget.get(entry.claudePath);
+    const adoptedAction = actionByTarget.get(getAgentsPath(entry));
 
-    if (!action) {
+    if (!action && !adoptedAction) {
       return entry;
     }
 
-    if (action.result === 'applied' && action.type !== 'skip') {
+    if (
+      action?.result === 'applied' &&
+      action.type !== 'skip' &&
+      (entry.status !== 'stray' || adoptedAction?.result === 'applied')
+    ) {
       return {
         ...entry,
+        agentsPath: getAgentsPath(entry),
         status: 'ok',
         detail: getSyncedDetail(strategy),
       };

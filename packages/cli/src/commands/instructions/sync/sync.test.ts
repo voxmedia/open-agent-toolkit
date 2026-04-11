@@ -294,6 +294,39 @@ describe('createInstructionsSyncCommand', () => {
     );
   });
 
+  it('adopts stray CLAUDE.md content into AGENTS.md before re-syncing Claude', async () => {
+    const { command, readFile, removeFile, symlinkFile, writeFile } =
+      createHarness({
+        entries: [
+          {
+            agentsPath: null,
+            claudePath: '/tmp/workspace/docs/CLAUDE.md',
+            status: 'stray',
+            detail: 'CLAUDE.md found without AGENTS.md',
+          },
+        ],
+      });
+
+    readFile.mockResolvedValueOnce('# stray claude instructions\n');
+
+    await runSyncCommand(command);
+
+    expect(symlinkFile).not.toHaveBeenCalled();
+    expect(writeFile).toHaveBeenNthCalledWith(
+      1,
+      '/tmp/workspace/docs/AGENTS.md',
+      '# stray claude instructions\n',
+      'utf8',
+    );
+    expect(removeFile).toHaveBeenCalledWith('/tmp/workspace/docs/CLAUDE.md');
+    expect(writeFile).toHaveBeenNthCalledWith(
+      2,
+      '/tmp/workspace/docs/CLAUDE.md',
+      EXPECTED_CLAUDE_CONTENT,
+      'utf8',
+    );
+  });
+
   it('apply (default) without --force leaves mismatches skipped and exits 1', async () => {
     const { command, writeFile } = createHarness({
       entries: [
