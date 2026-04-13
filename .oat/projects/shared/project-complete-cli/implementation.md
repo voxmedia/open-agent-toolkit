@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -27,10 +27,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | in_progress | 2     | 0/2       |
+| Phase 2 | in_progress | 2     | 1/2       |
 | Phase 3 | pending     | 1     | 0/1       |
 
-**Total:** 2/5 tasks completed
+**Total:** 3/5 tasks completed
 
 ---
 
@@ -138,8 +138,37 @@ oat_generated: false
 
 ### Task p02-t01: Add a shell-callable CLI command for completion-state mutation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `e9b3d904`
+
+**Outcome (required):**
+
+- Added a shell-callable `oat project complete-state <project-path>` command that rewrites a project `state.md` into the completed lifecycle shape
+- Added focused command coverage for success, archived output, missing project paths, and missing `state.md`
+- Wired the new command into the `project` command tree and updated the help snapshot expectations for the new surface
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/complete-state/index.ts` - added the command implementation and dependency-injection seam
+- `packages/cli/src/commands/project/complete-state/index.test.ts` - added focused command coverage for the new CLI surface
+- `packages/cli/src/commands/project/index.ts` - registered the new `complete-state` subcommand
+- `packages/cli/src/commands/help-snapshots.test.ts` - documented the new command in the help snapshots
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state/index.test.ts src/commands/project/complete-state/state-utils.test.ts`
+- Result: Pass
+- Run: `pnpm --filter @open-agent-toolkit/cli exec tsx -e "import { Command } from 'commander'; import { createProjectCompleteStateCommand } from './src/commands/project/complete-state/index.ts'; const program = new Command('oat'); const project = new Command('project').description('Manage OAT project workflows').addCommand(createProjectCompleteStateCommand()); program.addCommand(project); const nested = program.commands.find((c) => c.name() === 'project')?.commands.find((c) => c.name() === 'complete-state'); console.log(nested?.helpInformation())"`
+- Result: Pass; confirmed the nested help text for `project complete-state`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts`
+- Result: Fails for unrelated existing `@open-agent-toolkit/control-plane` resolution errors through `src/commands/project/list.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: Fails for the same unrelated existing `@open-agent-toolkit/control-plane` resolution errors in `src/commands/project/list.ts` and `src/commands/project/status.ts`
+
+**Notes / Decisions:**
+
+- Accepted repo-relative and absolute project paths so the shell skill can pass the active project path directly without extra normalization glue
+- Kept the command thin and delegated all `state.md` rendering to `renderCompletedProjectState()`
 
 ---
 
