@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t06
+oat_current_task_id: p04-t07
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -31,9 +31,9 @@ oat_template_name: implementation
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 5/11      |
+| Phase 4 | in_progress | 11    | 6/11      |
 
-**Total:** 11/17 tasks completed
+**Total:** 12/17 tasks completed
 
 ---
 
@@ -471,6 +471,32 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 **Notes / Decisions:**
 
 - Kept the change narrowly scoped to the stale wording called out by review instead of revising the page more broadly.
+
+### Task p04-t06: (review) Clarify scan dependency typing boundaries
+
+**Status:** completed
+**Commit:** 8d9c24f8
+
+**Outcome (required when completed):**
+
+- Introduced explicit scan options so strategy and debug logging are no longer mixed into the injected filesystem dependency contract.
+- Updated scan internals to pass debug logging separately while preserving current behavior.
+- Updated scan call sites and utility tests to use the new `options` plus `overrides` split.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.types.ts` - added `InstructionsScanOptions` and narrowed the dependency interface
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - split scan options from dependency injection
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - updated scan call sites to the new signature
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the command entrypoints unchanged from the caller perspective by preserving `scanInstructionFiles(repoRoot, { strategy })`.
 
 ---
 
