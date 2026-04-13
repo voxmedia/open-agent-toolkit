@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p05-t02
+oat_current_task_id: p05-t03
 oat_generated: false
 ---
 
@@ -30,10 +30,10 @@ oat_generated: false
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 4     | 4/4       |
 | Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | in_progress | 3     | 1/3       |
+| Phase 5 | in_progress | 3     | 2/3       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 14/19 tasks completed
+**Total:** 15/19 tasks completed
 
 ---
 
@@ -587,8 +587,31 @@ oat_generated: false
 
 ### Task p05-t02: Write Walkthrough Sections E-G (incl. MkDocs Minimum Contract)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8b950cf7
+
+**Outcome:**
+
+- Authored Walkthrough Sections E, F, G in SKILL.md (~49 insertions) replacing the p05-t02 placeholder.
+- **Section E (Fumadocs deep dive):** five narrative bullets (`layout.tsx` / `next.config.js` / FlexSearch / theme branding / FP-11). Includes the "compiled theme only forwards `branding.title`" runtime insight surfaced during discovery — this is the teaching point for why FP-12 patches `layout.tsx` in two distinct places.
+- **Section F (MkDocs Minimum Contract):** visibly split into "in scope (required)" and "deferred (point, don't teach)". Deferred list is actionable — each item has a specific upstream reference (Material docs, MkDocs plugin docs, general Python tooling, Material's Markdown extensions). Shared concepts (Sections B/C/D) are cross-referenced, with MkDocs-specific adaptation noted (e.g., the generated artifact for MkDocs is the `nav:` section of `mkdocs.yml`, not a root `index.md`).
+- **Section G (OAT docs ecosystem):** three tools ordered by when the user will meet each (`oat-project-document` → `oat docs analyze` → `oat docs apply`). Each explains provenance rules and the safety-net purpose.
+- Framework gating is explicit: Section E starts with "Skip when `mkdocs`"; Section F starts with "Skip when `fumadocs`"; Section G is both-frameworks.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (49 insertions, 1 deletion)
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md`
+- Result: pass on first try
+
+**Notes / Decisions:**
+
+- **Conflict with prior oxfmt rewrite.** My first Edit attempt failed because the lint-staged post-commit hook (p05-t01) had changed `*(...)*` to `_(...)_` in the placeholder text. Resolved by re-grepping the current form and editing the underscore variant. Flag: italic markers are normalized by oxfmt; use `_..._` going forward to minimize write collisions.
+- **Section E runtime insight.** The "compiled theme bundle only forwards `branding.title` into nav chrome" claim originated from hands-on runtime inspection during discovery (the user's other agent verified it). Embedding it in the Walkthrough makes FP-12's `metadata` export feel intentional rather than a leftover patch.
+- **Deferred list is a list of pointers, not refusals.** The framing is "here's where to look" rather than "we don't support this." Rationale: MkDocs is a legitimate framework; the skill's scope is bootstrap, not ongoing MkDocs expertise.
 
 ---
 
