@@ -87,6 +87,14 @@ These commands validate and repair project-scoped instruction integrity between 
 
 Use this command group when instruction files drift after manual edits or generated updates, or when nested project directories contain Claude-only stray files that should be adopted into canonical `AGENTS.md`.
 
+Operational notes:
+
+- Validation and sync use the same recursive scan model, so `--dry-run` previews the same states that `validate` reports.
+- `pointer` is the default strategy; `symlink` and `copy` make file shape part of correctness.
+- Unreadable canonical `AGENTS.md` files and unreadable Claude-only sources are surfaced as drift, but sync leaves them in manual-repair mode instead of guessing at recovery.
+
+For the full state model, repair semantics, and examples, see [Instruction Sync](../provider-sync/instruction-sync.md).
+
 ## Repo state helpers
 
 - `oat state refresh` - rebuild the `.oat/state.md` dashboard for the repo

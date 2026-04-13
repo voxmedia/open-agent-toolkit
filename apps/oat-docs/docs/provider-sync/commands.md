@@ -88,11 +88,12 @@ Purpose:
 
 Key behavior:
 
-- Read-only validation of sibling `CLAUDE.md` files for each discovered project-scoped `AGENTS.md`
+- Read-only validation of nested project-scoped instruction directories
 - Supports `--strategy pointer|symlink|copy` to validate the expected file shape
 - Reports `ok`, `missing`, `content_mismatch`, and `stray` states
-- Scans nested directories while excluding provider-irrelevant roots such as `node_modules`
+- Detects Claude-only adoptable directories and unreadable/broken instruction paths as drift
 - Exit code `0` when all entries are valid, `1` when drift is detected
+- Detailed behavior: [`Instruction Sync`](instruction-sync.md)
 
 ## `oat instructions sync`
 
@@ -107,4 +108,6 @@ Key behavior:
 - Creates missing `CLAUDE.md` files using the selected strategy
 - Adopts Claude-only stray files by writing canonical `AGENTS.md` content first, then regenerating `CLAUDE.md`
 - Skips mismatched files unless `--force` is provided
+- Skips unreadable canonical or Claude-only sources and reports manual-repair guidance instead of forcing recovery
 - Uses pointer content `@AGENTS.md\n`, file symlinks, or hard copies depending on the selected strategy
+- Detailed behavior and examples: [`Instruction Sync`](instruction-sync.md)

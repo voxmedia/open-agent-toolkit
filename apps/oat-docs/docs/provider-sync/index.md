@@ -28,6 +28,7 @@ This section explains how OAT treats `.agents/` and `.oat/` as the source of tru
 ## Common Tasks
 
 - Understand the canonical/provider-view model in [Scope and Surface](scope-and-surface.md).
+- Manage nested `AGENTS.md` / `CLAUDE.md` integrity in [Instruction Sync](instruction-sync.md).
 - Learn provider-specific mappings in [Providers](providers.md).
 - Diagnose drift and adoption behavior in [Manifest and Drift](manifest-and-drift.md).
 - Adjust provider enablement and scope behavior in [Sync Config](config.md).
@@ -38,6 +39,7 @@ This section explains how OAT treats `.agents/` and `.oat/` as the source of tru
 - [CLI Bootstrap](../cli-utilities/bootstrap.md) - Foundational setup before first sync.
 - [Scope and Surface](scope-and-surface.md) - Canonical assets, provider views, scopes, and the sync surface area.
 - [Commands](commands.md) - `oat status`, `oat sync`, and `oat providers ...` behavior.
+- [Instruction Sync](instruction-sync.md) - Project-scoped `AGENTS.md` / `CLAUDE.md` validation, repair, and Claude-only adoption.
 - [Providers](providers.md) - Provider-specific mappings, capabilities, and path conventions.
 - [Manifest and Drift](manifest-and-drift.md) - How OAT tracks synced state, stray files, and adoption decisions.
 - [Sync Config](config.md) - Provider config model, enablement, and scope semantics.

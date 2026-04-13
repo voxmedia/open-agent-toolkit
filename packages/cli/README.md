@@ -2,6 +2,8 @@
 
 Open Agent Toolkit command-line interface for provider sync, docs tooling, workflow utilities, and diagnostics.
 
+The CLI also supports project-scoped instruction sync for nested `AGENTS.md` / `CLAUDE.md` files, including pointer, symlink, and hard-copy repair strategies plus Claude-only adoption.
+
 ## Install
 
 ```bash
@@ -26,6 +28,8 @@ oat config describe
 Additional useful entry points:
 
 - `oat tools install`
+- `oat instructions validate --strategy pointer`
+- `oat instructions sync --dry-run --strategy symlink`
 - `oat docs init --app-name my-docs`
 - `oat config dump --json`
 - `oat project status --json`
@@ -50,4 +54,5 @@ Use these commands when you want structured runtime/project state out of the CLI
 - [Docs Home](https://voxmedia.github.io/open-agent-toolkit/)
 - [CLI Utilities](https://voxmedia.github.io/open-agent-toolkit/cli-utilities)
 - [Provider Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync)
+- [Instruction Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync/instruction-sync)
 - [Reference](https://voxmedia.github.io/open-agent-toolkit/reference)

@@ -33,7 +33,11 @@ Expected for native-read skill mappings. Codex can read canonical skills without
 - Run `oat instructions sync --strategy pointer|symlink|copy` to apply the expected `CLAUDE.md` shape.
 - If mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --force` (or combine it with `--strategy` if needed).
 - If `stray` is reported, `oat instructions sync` will adopt the Claude-only file into `AGENTS.md` and then regenerate `CLAUDE.md`.
+- If a broken or unreadable instruction path is reported, fix the underlying file or symlink target first; sync will intentionally skip manual-repair cases instead of forcing recovery.
+- If a directory you expected to see is missing from the scan, confirm it is not under `.git`, `.oat`, `.worktrees`, or `node_modules`.
 - Re-run `oat instructions validate` and confirm status is `ok`.
+
+Use [Instruction Sync](../provider-sync/instruction-sync.md) for the full strategy matrix and state model.
 
 ## `doctor` warns about canonical directories
 
