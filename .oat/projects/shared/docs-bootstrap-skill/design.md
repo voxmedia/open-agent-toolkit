@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-10
+oat_last_updated: 2026-04-13
 oat_generated: false
 oat_template: false
 ---
@@ -13,7 +13,7 @@ oat_template: false
 
 The docs-bootstrap skill is a **guided wrapper** around `oat docs init` that turns raw CLI scaffolding into an educational, support-rich onboarding experience. The skill performs four tightly sequenced jobs in one flow: (1) it **prepares** the repo by detecting shape (monorepo, single-package, or nested standalone), validating preconditions, and gathering richer inputs than the CLI prompts for; (2) it **executes** scaffolding by invoking `oat docs init` non-interactively with the collected flags, running dependency install, and verifying a clean build; (3) it **inspects** the post-scaffold state by reading back `.oat/config.json`, verifying paths exist, and asking the one real decision (`requireForProjectCompletion`); and (4) it **educates** the user on the docs model — the OAT documentation config, the two `index.md` files and the `## Contents` navigation contract, the scaffolded agent instructions, and how to populate real content via `oat-project-document`, `oat docs analyze`, and `oat docs apply`.
 
-The skill deliberately calls the CLI rather than reimplementing its scaffold logic. This keeps the skill thin and lets the CLI remain the source of truth for template rendering, version resolution, and configuration writes. The skill's value is in everything that sits **around** the CLI call: asking better questions before the call, auto-fixing or guiding through problems after the call, and sequencing educational content at teachable moments. Where the CLI has gaps (FP-11 Turbopack passthrough, FP-12 site-title coherence, FP-13 template content inaccuracies, FP-14 post-bootstrap config verification), the skill either passes flags if/when the CLI gains support or applies small, labeled, idempotent post-patches as fallbacks.
+The skill deliberately calls the CLI rather than reimplementing its scaffold logic. This keeps the skill thin and lets the CLI remain the source of truth for template rendering, version resolution, and configuration writes. The skill's value is in everything that sits **around** the CLI call: asking better questions before the call, auto-fixing or guiding through problems after the call, and sequencing educational content at teachable moments. Where the CLI has gaps (FP-11 Turbopack passthrough, FP-12 site-title coherence, FP-13 template content inaccuracies, FP-14 post-bootstrap config verification, FP-15 missing docs-app `AGENTS.md`), the skill either passes flags if/when the CLI gains support or applies small, labeled, idempotent post-patches as fallbacks.
 
 Two framework paths are supported: **Fumadocs** (primary) receives the full treatment — preflight, guided scaffold, build verification, config inspection, and deep educational walkthrough. **MkDocs** receives a lean path — same preflight and scaffold, basic verification, config inspection, and the shared educational concepts (config, index.md contract, analyze/apply), but no framework-specific deep dive. MkDocs is explicitly labeled in the skill as "needs elaboration" so future work can fill in the gap without rewriting the shared scaffolding.
 
@@ -27,10 +27,10 @@ The skill is a Claude Code skill (Markdown + frontmatter under the canonical ski
 
 - **Preflight Detector:** Inspects the working tree to determine repo shape, detect existing docs setup, and surface conflicts before any mutation.
 - **Input Gatherer:** Conducts a guided conversation to collect the richer set of inputs the skill needs (package name, site name, description, framework, lint/format, target directory), explaining what each value affects and showing a coherence check before scaffold.
-- **Scaffold Runner:** Invokes `oat docs init` non-interactively with collected flags, then handles the FP-12 site-title gap via fallback patching (layout branding, index.md frontmatter/H1, sibling page references, page metadata) and the FP-11 Turbopack root gap if needed.
+- **Scaffold Runner:** Invokes `oat docs init` non-interactively with collected flags, then handles the FP-12 site-title gap via fallback patching (layout branding, index.md frontmatter/H1, sibling page references, page metadata), the FP-11 Turbopack root gap if needed, and the FP-15 docs-app `AGENTS.md` gap (writes a task-framed AGENTS.md if the CLI hasn't scaffolded one).
 - **Build Verifier:** Runs install + build for the scaffolded app, classifies failures against known patterns, and either auto-fixes safe cases or surfaces focused remediation.
 - **Post-Scaffold Inspector:** Reads back `.oat/config.json`, verifies referenced paths exist on disk, detects drift from manual edits, asks about `requireForProjectCompletion`, and handles the nested non-monorepo dual-config case. Feeds its findings into the Educational Walkthrough.
-- **Educational Walkthrough:** A scripted, chunked conversation covering the docs model. Content branches on framework (Fumadocs deep, MkDocs lean) but shares the config explanation, the two-`index.md` situation, the `## Contents` contract, agent instructions, and analyze/apply sections.
+- **Educational Walkthrough:** A scripted, chunked conversation covering the docs model. Content branches on framework (Fumadocs deep, MkDocs lean) but shares the config explanation, the two-`index.md` situation, the `## Contents` contract, the audience distinction between the scaffolded docs-app `AGENTS.md` (ongoing task reference) and the Walkthrough itself (setup narration), and the analyze/apply sections.
 - **Optional Content Kickoff:** Offers to run `oat docs analyze` and `oat docs apply` as a final step to populate initial project-specific documentation.
 
 ### Component Diagram
@@ -96,6 +96,7 @@ Single-pass, mostly linear. Each component reads from the previous component's o
    │   - FP-12 title in layout.tsx, docs/index.md, docs/getting-started.md, docs/contributing.md
    │   - FP-12 layout.tsx export const metadata for page title
    │   - FP-11 turbopack.root in next.config.js for nested-standalone
+   │   - FP-15 write task-framed AGENTS.md at docs app root if CLI didn't scaffold one
    ├─ Capture CLI stdout/stderr
    └─ Output: { appRoot, createdFiles[], patchesApplied[], scaffoldSucceeded }
 
@@ -123,8 +124,12 @@ Single-pass, mostly linear. Each component reads from the previous component's o
    │                    (machine-shaped, clobbered on every build — do not hand-edit)
    ├─ Section C (both): index.md as content map, the ## Contents contract,
    │                    how nav sync reads it
-   ├─ Section D (both): Agent instructions scaffolded in the docs app
-   │                    (AGENTS.md repo section, contributing.md nav contract)
+   ├─ Section D (both): Agent instructions surfaces — three files with distinct roles:
+   │                    1. Root AGENTS.md ## Documentation section (repo-wide pointer)
+   │                    2. Docs-app AGENTS.md (task-framed ongoing reference — flag
+   │                       the audience distinction: it's for agents WORKING in the
+   │                       docs app, not setting it up)
+   │                    3. docs/contributing.md (authoring conventions, Markdown features)
    ├─ Section E (Fumadocs only): Fumadocs-specific deep dive (layout, search,
    │                              source.config, docs-theme)
    ├─ Section F (MkDocs only): lean summary + "needs elaboration" marker
@@ -225,7 +230,7 @@ Input Result:
 
 ### Scaffold Runner
 
-**Purpose:** Execute `oat docs init` with the collected inputs and apply post-scaffold patches for the CLI gaps (FP-11, FP-12).
+**Purpose:** Execute `oat docs init` with the collected inputs and apply post-scaffold patches for the CLI gaps (FP-11, FP-12, FP-15).
 
 **Responsibilities:**
 
@@ -238,14 +243,30 @@ Input Result:
   - Add `export const metadata = { title, description }` to `layout.tsx` (site metadata gap from FP-12 sub-finding C)
 - If nested-standalone and the CLI hasn't fixed FP-11, apply Turbopack root patch:
   - Set `turbopack: { root: __dirname }` in `next.config.js` (either via the `createDocsConfig` passthrough if that landed, or by replacing the wrapper with explicit `createMDX()` + hand config)
+- If the CLI hasn't scaffolded a docs-app `AGENTS.md` (FP-15 fix not yet landed), write one at the docs app root using a task-framed template. The template is owned by the skill (not by the CLI templates dir) while this patch is in force, and is migrated to the CLI templates once the CLI gains the capability.
 - Capture CLI stdout/stderr for the Build Verifier and Walkthrough
 - Reject if CLI returns non-zero; preserve CLI error text verbatim for the user
+
+**AGENTS.md template (FP-15 fallback) — content requirements:**
+
+- **Audience:** agents working _in_ the docs app after it exists, not bootstrapping it. Litmus test: "would this instruction still matter six months after scaffold?"
+- **Organizing principle:** task framing. Sections start with "when you need to..." — this is self-filtering (recurring actions pass; one-time setup fails).
+- **Required sections:**
+  1. Purpose and scope (one paragraph)
+  2. When you need to add a new page
+  3. When you need to restructure navigation
+  4. When you need to audit or bulk-edit docs
+  5. When you're unsure where content belongs
+  6. When you need project-level documentation updates
+  7. What not to do
+  8. Reference (pointers to `contributing.md`, `getting-started.md`, root `AGENTS.md`)
+- **Does NOT contain:** install commands, first-run build steps, how the scaffold was created, version-upgrade playbooks — those belong in `contributing.md`, `getting-started.md`, or the Walkthrough.
 
 **Design Decisions:**
 
 - **Post-patches are labeled and idempotent.** Each patch is wrapped in a comment describing which FP it addresses so future maintenance (e.g., after the CLI fix lands) can find and remove them.
 - **Post-patches only if the CLI fix hasn't landed.** The skill detects CLI version/capabilities and skips patches when the CLI can do the work directly. This means the skill gracefully ratchets as CLI fixes land.
-- **Never fabricate files the CLI doesn't create.** If the CLI changes its template, the skill surfaces the drift rather than trying to mimic CLI internals.
+- **Never fabricate files the CLI doesn't create** — **except** for the FP-15 AGENTS.md, which is an explicit bridge until the CLI fix lands. The bridge is documented as such and the content will be migrated upstream into `packages/cli/assets/templates/docs-app-{fuma,mkdocs}/AGENTS.md.template` when FP-15's CLI portion is tackled.
 
 ### Build Verifier
 
@@ -339,7 +360,10 @@ Inspection Result:
 - Start with the Inspector's output: "Here's what's in your .oat/config.json, here's what each field does, here's what I verified"
 - Explain the two-`index.md` situation explicitly (source under `docs/` vs. generated root-level) — flag the footgun from FP-13 sub-finding D
 - Explain the `## Contents` contract and how `oat docs nav sync` uses it
-- Point out the scaffolded agent instructions (the AGENTS.md `## Documentation` section and the nav contract in `contributing.md`) and explain what they signal to future AI agents working in this repo
+- Point out the three distinct agent-instruction surfaces and their audience differences:
+  - **Root `AGENTS.md` `## Documentation` section** — repo-wide pointer telling any agent "docs live here." Four-line breadcrumb, not a reference manual.
+  - **Docs-app `AGENTS.md`** — task-framed ongoing reference for agents working _in_ the docs app (adding pages, restructuring nav, bulk-editing, project-level doc updates). **Audience distinction:** this file is not bootstrap documentation; it's a runtime reference that should stay relevant six months after scaffold. The Walkthrough flags this distinction so users don't confuse it with `contributing.md` or this Walkthrough itself.
+  - **`docs/contributing.md`** — human-authoring conventions (frontmatter requirements, Markdown features like GFM alerts / mermaid / code blocks), the nav contract summary, and the pointer to `oat docs apply` for bulk changes.
 - Framework-specific deep dive:
   - **Fumadocs:** How `DocsLayout` renders chrome, how `createMDX` picks up `docs/`, how search indexing works, how the docs-theme package provides branding
   - **MkDocs:** Lean summary with explicit "needs elaboration" marker — this section should note what's NOT covered so future skill work can fill it in
@@ -353,6 +377,8 @@ Inspection Result:
 - **Chunked, not monolithic.** Each section is 2-4 paragraphs at most. The user can skip or dive deeper on any section. This matches the "pause for validation between chunks" pattern from the quick-start skill itself.
 - **Inspector output is the opening.** Starting with the user's actual config state (not abstract explanations) grounds the teaching in what they just produced.
 - **The footgun is called out.** The two-`index.md` situation is one of the most confusing scaffold outputs. Explicitly naming and explaining it is more valuable than hoping the user figures it out when something breaks later.
+- **Walkthrough does not derive from AGENTS.md.** The two serve different audiences at different times: Walkthrough is setup-time narration ("here's what just happened and why"), AGENTS.md is runtime task reference ("when you need to X, do Y"). Partial concept sharing (nav contract, tool pointers) is fine; full derivation would either pollute AGENTS.md with bootstrap context or strip setup context out of the Walkthrough.
+- **Point to AGENTS.md, don't narrate it.** The Walkthrough gives a one-sentence summary of what the docs-app `AGENTS.md` is for and flags the audience distinction, rather than reading its contents aloud. Users have the file; they don't need it read back to them.
 - **MkDocs "needs elaboration" marker.** A visible, non-apologetic note that MkDocs education is thinner. Users get enough to operate; future work can deepen it.
 
 ### Optional Content Kickoff
@@ -440,3 +466,6 @@ Because this skill is Markdown + conversation logic rather than compiled code, t
 - **Monorepo-specific friction points:** All friction discovery so far has been from non-monorepo testing. A separate follow-up project will capture monorepo feedback. Any friction found there may require skill adjustments.
 - **Scope of auto-fixes:** Currently limited to very narrow cases. Should we expand after observing real usage, or stay conservative and surface more to the user?
 - **Conflict `repair` option:** Preflight may surface an existing docs setup that's partially broken. Should the skill offer a "repair" path that fixes what's broken without full replace? Or defer to `oat docs analyze` / `oat docs apply` for that?
+- **FP-15 AGENTS.md template ownership:** The skill owns the AGENTS.md template content during the bridge period (before the CLI fix lands). Where does the bridge template live in the skill — inline in the skill Markdown as a heredoc, or as a separate file in the skill directory? Leaning separate file for maintainability and because it makes migration to CLI templates trivial.
+- **FP-15 canonical example (`apps/oat-docs/AGENTS.md`):** Adding this to the repo is a one-time fix, not part of the bootstrap skill's runtime behavior. Should this project's plan include it (because the content writing is a natural fit with the skill's template authoring), or should it be a separate trivial PR? Leaning include it because the content is co-authored with the skill's template.
+- **Post-patch detection for FP-15:** How does the Scaffold Runner detect whether the CLI has already scaffolded an AGENTS.md? Check for the file's existence at the expected path is the simplest answer. But what if the file exists but is content-stale (e.g., older CLI version scaffolded a thin version)? Skill should probably write if missing, never overwrite — and flag content staleness as a driftFinding from the Inspector.
