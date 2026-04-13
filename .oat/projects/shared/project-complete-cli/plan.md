@@ -27,8 +27,13 @@ oat_generated: false
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
+- [x] Confirmed no explicit HiLL checkpoints for this narrow quick-mode project; checkpoint choice remains deferred to `oat-project-implement` startup semantics
 - [x] Set `oat_plan_hill_phases` in frontmatter
+
+## Decisions Carried Forward From Discovery
+
+- **Command surface:** use a narrow public project subcommand under `packages/cli/src/commands/project/complete-state/` so the shell-based `oat-project-complete` skill can delegate to a stable CLI path.
+- **Cleanup helper reuse:** keep `packages/cli/src/commands/cleanup/project/project.utils.ts` contract-aligned through tests first; only switch it to direct reuse if that clearly lowers duplication without expanding scope.
 
 ---
 
@@ -38,6 +43,7 @@ oat_generated: false
 
 **Files:**
 
+- Create: `packages/cli/src/commands/project/complete-state/state-utils.ts`
 - Create: `packages/cli/src/commands/project/complete-state/state-utils.test.ts`
 - Review: `.agents/skills/oat-project-complete/SKILL.md`
 - Review: `packages/cli/src/commands/cleanup/project/project.utils.ts`
@@ -56,7 +62,7 @@ Expected: Test fails (RED)
 
 **Step 2: Implement (GREEN)**
 
-Create a pure completion-state mutation utility that accepts existing `state.md` content plus completion inputs and returns the fully updated canonical content.
+Create a pure completion-state mutation utility skeleton that accepts existing `state.md` content plus completion inputs and returns the fully updated canonical content needed to satisfy the baseline contract tests.
 
 Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/complete-state/state-utils.test.ts`
 Expected: Test passes (GREEN)
@@ -67,7 +73,7 @@ Factor shared string/frontmatter helpers only if they clearly reduce duplication
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/complete-state/state-utils.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
 Expected: No errors
 
 **Step 5: Commit**
@@ -83,7 +89,6 @@ git commit -m "feat(p01-t01): codify completion-state mutation contract"
 
 **Files:**
 
-- Create: `packages/cli/src/commands/project/complete-state/state-utils.ts`
 - Modify: `packages/cli/src/commands/cleanup/project/project.utils.ts` (only if direct reuse is natural)
 - Modify: `packages/cli/src/commands/cleanup/project/project.test.ts` (if helper alignment changes behavior)
 
@@ -94,6 +99,7 @@ Add any missing coverage for edge cases discovered during extraction:
 - existing `oat_lifecycle` field is updated, not duplicated
 - missing progress bullet is added once
 - archived vs non-archived completion text renders correctly
+- base contract assertions already covered in `p01-t01` stay untouched while this task extends edge-case coverage only
 
 **Step 2: Implement (GREEN)**
 
@@ -126,6 +132,7 @@ git commit -m "feat(p01-t02): implement complete-state mutator"
 - Create: `packages/cli/src/commands/project/complete-state/index.ts`
 - Create: `packages/cli/src/commands/project/complete-state/index.test.ts`
 - Modify: `packages/cli/src/commands/project/index.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts`
 
 **Step 1: Write test (RED)**
 
@@ -151,13 +158,13 @@ Keep the command thin and push formatting logic down into the mutator module.
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/complete-state/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/complete-state/index.test.ts src/commands/help-snapshots.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
 Expected: No errors
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/project/complete-state/index.ts packages/cli/src/commands/project/complete-state/index.test.ts packages/cli/src/commands/project/index.ts
+git add packages/cli/src/commands/project/complete-state/index.ts packages/cli/src/commands/project/complete-state/index.test.ts packages/cli/src/commands/project/index.ts packages/cli/src/commands/help-snapshots.test.ts
 git commit -m "feat(p02-t01): add project complete-state command"
 ```
 
@@ -197,7 +204,7 @@ Expected: Both suites pass
 
 ```bash
 git add .agents/skills/oat-project-complete/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
-git commit -m "refactor(p02-t02): delegate project completion state to cli"
+git commit -m "feat(p02-t02): delegate project completion state to cli"
 ```
 
 ---
@@ -208,22 +215,21 @@ git commit -m "refactor(p02-t02): delegate project completion state to cli"
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/help-snapshots.test.ts` (only if the new command is user-facing)
-- Modify: `.oat/repo/reference/backlog/items/project-complete-cli-helper.md` (only if a small implementation note update is warranted after the shape is final)
+- Modify: `.oat/repo/reference/backlog/items/project-complete-cli-helper.md` (if a small implementation note update is warranted after the shape is final)
 
 **Step 1: Write test (RED)**
 
-If the chosen command surface is public, add or update help snapshot coverage before final verification.
+Capture any remaining targeted verification gaps after the command and skill delegation land.
 
-Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/help-snapshots.test.ts`
-Expected: Test fails only if the command surface changed help output
+Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/complete-state/index.test.ts src/commands/project/complete-state/state-utils.test.ts`
+Expected: Any remaining targeted verification gap is exposed before final cleanup
 
 **Step 2: Implement (GREEN)**
 
-Apply any final help/backlog-note updates required by the chosen CLI surface and implementation shape.
+Apply any final backlog-note or verification-alignment updates required by the final implementation shape.
 
-Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/help-snapshots.test.ts`
-Expected: Targeted help coverage passes
+Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/complete-state/index.test.ts src/commands/project/complete-state/state-utils.test.ts`
+Expected: Targeted verification passes
 
 **Step 3: Refactor**
 
@@ -237,7 +243,7 @@ Expected: Focused suites pass and CLI compiles cleanly
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/help-snapshots.test.ts .oat/repo/reference/backlog/items/project-complete-cli-helper.md
+git add .oat/repo/reference/backlog/items/project-complete-cli-helper.md
 git commit -m "chore(p03-t01): verify project complete cli flow"
 ```
 
@@ -247,17 +253,15 @@ git commit -m "chore(p03-t01): verify project complete cli flow"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
+{Keep both code + artifact rows below. Add additional code rows as needed, and keep artifact rows mode-appropriate for the current project.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| p02    | code     | pending  | -          | -                                          |
-| p03    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| spec   | artifact | pending  | -          | -                                          |
-| design | artifact | pending  | -          | -                                          |
-| plan   | artifact | received | 2026-04-13 | reviews/artifact-plan-review-2026-04-13.md |
+| Scope | Type     | Status          | Date       | Artifact                                            |
+| ----- | -------- | --------------- | ---------- | --------------------------------------------------- |
+| p01   | code     | pending         | -          | -                                                   |
+| p02   | code     | pending         | -          | -                                                   |
+| p03   | code     | pending         | -          | -                                                   |
+| final | code     | pending         | -          | -                                                   |
+| plan  | artifact | fixes_completed | 2026-04-13 | reviews/archived/artifact-plan-review-2026-04-13.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -286,8 +290,6 @@ Ready for code review and merge.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
 - Backlog: `.oat/repo/reference/backlog/items/project-complete-cli-helper.md`
 - Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
