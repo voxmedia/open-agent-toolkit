@@ -936,11 +936,117 @@ Introduce the three tools the user will use after scaffold, ordered by when they
 
 End with: "`oat-project-document` fills docs from project artifacts. `oat docs analyze` tells you where the docs are drifting. `oat docs apply` fixes approved drift with a safety net. Together they're the reason hand-authoring docs from scratch isn't the expected path in OAT."
 
-_(Exit summary in p05-t03.)_
-
 ### Step 7: Optional Content Kickoff
 
-(Body authored in p05-t03; Exit summary in the same task.)
+After the Walkthrough, offer — but do not require — to populate initial documentation via the docs-analysis pack. Content authoring is outside this skill's scope (`oat-docs-analyze` + `oat-docs-apply` own it), so this step delegates if the user wants to go further now, and hands off with actionable commands if they don't.
+
+Print `[7/7] Optional content kickoff…` at the start of this step.
+
+**7a. Offer the option.**
+
+Ask once, plainly:
+
+```
+Your docs app is scaffolded and verified. Want to populate initial documentation
+now by running the docs-analysis pack?
+
+  oat-docs-analyze — reads your scaffolded `docs/` surface and proposes
+  content recommendations (missing pages, incomplete `## Contents`, link gaps)
+  without changing anything.
+
+  oat-docs-apply — executes approved recommendations on a branch, runs nav
+  sync, and optionally opens a PR.
+
+Options:
+  yes — run analyze now, then apply on approval
+  no  — exit; you can run these any time later
+```
+
+**7b. If the user accepts (`yes`).**
+
+Delegate — do not re-implement analyze/apply logic here.
+
+1. Invoke the `oat-docs-analyze` skill against the scaffolded app. Pass the Inspection Result's `documentation.root` path so analyze targets the right surface. Wait for analyze to complete.
+2. Surface analyze's report to the user in its native form — do not re-summarize. The user reads it, decides which recommendations to approve.
+3. If the user approves any recommendations, invoke the `oat-docs-apply` skill with the approved subset. Wait for apply to complete.
+4. Report the outcome back briefly: branch name, PR URL if opened, files changed count.
+
+If analyze produces no recommendations (the scaffold is complete and nothing's missing — unlikely on a fresh scaffold but possible), tell the user and skip apply.
+
+**7c. If the user declines (`no`).**
+
+Hand off with specific, runnable commands. Don't say "run analyze later" — give them the exact invocation for this repo:
+
+- `oat-docs-analyze` (skill invocation from this repo's provider) to audit the docs surface.
+- `oat-docs-apply` (skill invocation) to execute approved recommendations.
+- `oat-project-document` (skill invocation during OAT project workflows) to propose evidence-backed updates from project artifacts.
+
+Proceed to the Exit summary regardless of whether the user accepted or declined.
+
+#### Exit summary
+
+The final output of Step 7 — and of the skill. Regardless of whether the Content Kickoff delegated or was skipped, print a single scannable summary the user can refer back to later.
+
+Format as a bulleted summary, not prose. Keep it tight — this is a handoff, not a recap:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OAT ▸ DOCS BOOTSTRAP COMPLETE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+App:         {appName}
+Location:    {appRoot}
+Framework:   {framework}
+Config:      {configPath} (documentation section)
+
+Created:
+  - <count> files (see `git status` or `git log -1` for the full list)
+
+Patches applied:
+  - FP-11 Turbopack root: {applied | skipped | refused | n/a}
+  - FP-12 site title + metadata: {applied | skipped | refused}
+  - FP-13 template content (A–D): {applied | skipped | refused} per sub-finding
+  - FP-15 docs-app AGENTS.md: {applied | skipped}
+
+Build:
+  - Install: {ok | known-issue: ...}
+  - Build:   {ok | known-issue: ...}
+  - Known issues (from Verification Result.knownIssues): {list or 'none'}
+
+Inspection:
+  - Config paths verified:  {ok | see issues below}
+  - Drift findings:          {list or 'none'}
+  - requireForProjectCompletion: {true | false}
+
+Where things live:
+  - Authored content:  {appRoot}/docs/
+  - Content map:       {appRoot}/docs/index.md (and nested `## Contents`)
+  - Generated index:   {path, if Fumadocs} (regenerated on build — don't hand-edit)
+  - Agent instructions:
+      · Root AGENTS.md `## Documentation` — repo-wide pointer
+      · {appRoot}/AGENTS.md — reference for future agents working in this docs app
+      · {appRoot}/docs/contributing.md — human authoring conventions
+
+Next:
+  - Run `<framework-specific dev command>` to serve locally
+  - Run `oat-docs-analyze` to audit the docs surface (read-only)
+  - Run `oat-docs-apply` to execute approved recommendations
+  - Run `oat-project-document` during OAT project workflows to keep docs current
+
+Reminder: the docs-app AGENTS.md at {appRoot}/AGENTS.md tells future agents how
+to work inside this docs app. Read it before making non-trivial doc changes.
+```
+
+Substitute every `{placeholder}` with the actual value from `Scaffold Result`, `Verification Result`, or `Inspection Result`. If a patch was `skipped` because the CLI already handled it (e.g., `agentsMdScaffoldFlag === true`), say so explicitly rather than printing `n/a` — the user should know when the CLI has caught up with the skill.
+
+For the "Next" section's `<framework-specific dev command>`, render:
+
+- Fumadocs + `monorepo`: `pnpm --filter {appName} dev`
+- Fumadocs + `nested-standalone`: `cd {appRoot} && pnpm dev`
+- Fumadocs + `single-package`: `pnpm dev`
+- MkDocs (any shape): `{appRoot}/setup-docs.sh && cd {appRoot} && mkdocs serve`
+
+End the skill with the summary. Do not prompt for more input — the user knows what to do next, and the summary contains the commands.
 
 ## Success Criteria
 
