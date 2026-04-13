@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 4     | 4/4       |
-| Phase 2 | pending   | 3     | 0/3       |
-| Phase 3 | pending   | 4     | 0/4       |
-| Phase 4 | pending   | 2     | 0/2       |
-| Phase 5 | pending   | 3     | 0/3       |
-| Phase 6 | pending   | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 4     | 4/4       |
+| Phase 2 | in_progress | 3     | 1/3       |
+| Phase 3 | pending     | 4     | 0/4       |
+| Phase 4 | pending     | 2     | 0/2       |
+| Phase 5 | pending     | 3     | 0/3       |
+| Phase 6 | pending     | 3     | 0/3       |
 
 **Total:** 5/19 tasks completed
 
