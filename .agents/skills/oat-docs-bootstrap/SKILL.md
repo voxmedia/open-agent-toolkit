@@ -342,7 +342,103 @@ If any mutation fails or any invariant check fails, **stop the flow before scaff
 
 ### Step 3: Scaffold Runner
 
-(Body authored in p03-t01; Capability Detection in p03-t02; site-identity patches in p03-t03; scaffold-integrity patches in p03-t04.)
+Invoke `oat docs init` with the collected inputs and then apply labeled post-patches for any CLI gaps the Capability Detection sub-procedure reports as still-open. The Scaffold Runner has four phases: **CLI invocation** (authored here), **Capability Detection** (p03-t02), **site-identity patches** (p03-t03), and **scaffold-integrity patches** (p03-t04).
+
+Print `[3/7] Scaffolding…` at the start of this step.
+
+**Precondition:** The Conflict Resolution Contract's "Allowed mutations" have completed and the working-tree state matches what the CLI expects (Step 2's pre-scaffold invariant). If any resolution-triggered mutation is still pending, **do not invoke the CLI** — stop the flow and surface the missing state.
+
+**3a. Assemble CLI flags.**
+
+Build the flag list deterministically from the Input Result (Step 2e) and the Capability Detection result (3b, authored in p03-t02). Non-interactive mode is mandatory — the skill owns the interactive flow; the CLI runs headless.
+
+Base flags (always passed):
+
+- `--yes` — non-interactive
+- `--framework {framework}` — from Input Result
+- `--name {appName}` — from Input Result
+- `--target-dir {targetDir}` — from Input Result
+- `--description {siteDescription}` — from Input Result (pass empty string if user left blank)
+- `--lint {lint}` — from Input Result
+- `--format {format}` — from Input Result
+
+Capability-gated flags (added only when the Capability Probe reports support):
+
+- `--site-name {siteName}` — only if `capabilities.siteNameFlag === true` (FP-12 upstream fix landed). If `false`, **do not pass it**, and queue the FP-12 post-patch instead (applied in p03-t03).
+
+Do not pass flags the CLI doesn't advertise. Never assume a flag exists because the skill wants it — the Capability Probe is the source of truth for what's safe to pass.
+
+**3b. Run Capability Detection.**
+
+(Capability Detection sub-procedure body authored in p03-t02.)
+
+The probe runs once before CLI invocation and produces a `capabilities` record that both 3a (flag assembly above) and the post-patch sub-procedures (3c / 3d) consume.
+
+**3c. Invoke the CLI.**
+
+Execute `oat docs init` as a non-interactive child process. Use `$CLI_CMD` resolved in Step 0 (`oat` or `pnpm run cli --`):
+
+```bash
+$CLI_CMD docs init {flags...}
+```
+
+Capture both stdout and stderr. **Do not** stream output directly to the user; the Educational Walkthrough (Step 6) references specific CLI log lines, so the skill needs the captured text.
+
+**On non-zero exit:**
+
+- Surface the CLI's stderr **verbatim** to the user (no re-wording — the user needs to see exactly what the CLI said).
+- Print the exit code and the exact flag list that was passed.
+- **Stop the flow.** Do not apply any post-patches. Do not proceed to Build Verifier. A failed scaffold produces an undefined state; guessing at recovery is worse than letting the user diagnose.
+- Example surfaced error:
+
+  ```
+  oat docs init exited with code 2.
+
+  Flags passed:
+    --yes --framework fumadocs --name docs --target-dir docs
+    --description "" --lint none --format oxfmt
+
+  CLI stderr:
+  { verbatim CLI stderr }
+
+  Docs bootstrap stopped. Resolve the CLI error and re-run this skill.
+  ```
+
+**On zero exit:**
+
+- Read back `$REPO_ROOT/.oat/config.json` to resolve `appRoot` from the newly written `documentation.root` entry. This is authoritative; do not infer from `targetDir` alone.
+- Enumerate files under `appRoot` that did not exist before 3c (the Preflight Result's read-only snapshot provides the "before" set). Record as `createdFiles[]`.
+- Emit the Scaffold Result for downstream sub-procedures:
+
+  ```
+  Scaffold Result:
+    scaffoldSucceeded: true
+    appRoot: absolute-path-string
+    createdFiles: string[]           // paths relative to appRoot
+    capabilities: { siteNameFlag: boolean, ... } // from Capability Detection (3b)
+    cliLogs: { stdout: string, stderr: string }  // retained for Walkthrough
+    patchesApplied: []               // populated by 3c/3d site-identity + scaffold-integrity sub-procedures
+  ```
+
+The Walkthrough (Step 6) and Post-Scaffold Inspector (Step 5) both consume `Scaffold Result`; keep it structured and avoid shell-side ephemeral state.
+
+**3d. Apply post-patches.**
+
+(Site-identity patches authored in p03-t03; scaffold-integrity patches in p03-t04.)
+
+Each patch:
+
+- Reads the relevant capability flag from `Scaffold Result.capabilities` and the file-shape detection from Capability Detection (3b).
+- Runs only if the capability is **absent** (the CLI didn't already address the gap) AND the file-shape check passes.
+- Is **labeled** with a comment marker (e.g., `<!-- FP-12 patch -->`) so it can be found and removed deterministically when the CLI fix lands upstream.
+- Is **idempotent** — running the patch twice is a no-op.
+- Appends an entry to `Scaffold Result.patchesApplied` with `{ id, status: 'applied' | 'skipped' | 'refused', reason? }`.
+
+**Design discipline:**
+
+- **CLI is the source of truth for templates.** The Scaffold Runner never rewrites template content, re-renders frontmatter, or fabricates files the CLI was supposed to create. Post-patches only adjust specific known-gap locations, and every patch is labeled.
+- **Capability Detection gates every patch.** No patch runs blindly; the file-shape check must pass, and the capability must be absent. This means the skill self-ratchets as CLI fixes land — when `--site-name` is supported upstream, FP-12 patches are skipped automatically.
+- **Failure is loud, not silent.** CLI non-zero exit stops the flow with the verbatim error. Ambiguous file shapes record a `refused` patch status rather than guessing.
 
 ### Step 4: Build Verifier
 
