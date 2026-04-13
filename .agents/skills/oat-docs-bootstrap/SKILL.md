@@ -470,8 +470,6 @@ The Walkthrough (Step 6) and Post-Scaffold Inspector (Step 5) both consume `Scaf
 
 **3d. Apply post-patches.**
 
-(Site-identity patches authored in p03-t03; scaffold-integrity patches in p03-t04.)
-
 Each patch:
 
 - Reads the relevant capability flag from `Scaffold Result.capabilities` and the file-shape detection from Capability Detection (3b).
@@ -479,6 +477,82 @@ Each patch:
 - Is **labeled** with a comment marker (e.g., `<!-- FP-12 patch -->`) so it can be found and removed deterministically when the CLI fix lands upstream.
 - Is **idempotent** — running the patch twice is a no-op.
 - Appends an entry to `Scaffold Result.patchesApplied` with `{ id, status: 'applied' | 'skipped' | 'refused', reason? }`.
+
+##### Site-identity patches (FP-12 + FP-15)
+
+These patches close the "site name + AGENTS.md" gaps. They run after `oat docs init` (3c) and before scaffold-integrity patches (see 3d ordering note below). Site-identity must run before scaffold-integrity because the FP-13 sub-findings may reference `{siteName}` strings that FP-12 has just written.
+
+**FP-12: title patches.**
+
+Gate: run **only if** `capabilities.siteNameFlag === false`. If the CLI wrote the site title itself, skip the entire FP-12 group and record `{ id: 'FP-12', status: 'skipped', reason: 'CLI --site-name flag supported' }`.
+
+Per-file edits (Fumadocs only — MkDocs has no `layout.tsx`; its title handling is covered by the MkDocs Minimum Contract in Step 6):
+
+- **`<appRoot>/app/layout.tsx` — `branding.title`.** Scaffold shape has `branding: { title: '{appName}' }`. Replace the literal string value with `{siteName}` (the user-supplied display title) wrapped in FP-12 markers:
+
+  ```tsx
+  <!-- FP-12 patch: branding title -->
+  branding={{ title: '{siteName}' }}
+  <!-- /FP-12 patch -->
+  ```
+
+  Idempotency: if the marker `<!-- FP-12 patch: branding title -->` is already present, skip and record `status: 'skipped'`.
+
+- **`<appRoot>/app/layout.tsx` — `export const metadata`.** If no `export const metadata` exists in the file, insert it after the imports:
+
+  ```tsx
+  /* FP-12 patch: site metadata */
+  export const metadata = {
+    title: '{siteName} Documentation',
+    description: '{siteDescription}',
+  };
+  /* /FP-12 patch */
+  ```
+
+  (Use JS comment markers here — TSX does not allow HTML comments at module scope.) Idempotency: if `export const metadata` already exists anywhere in the file, skip; do not merge or replace user-authored metadata.
+
+- **`<appRoot>/docs/index.md`.** Two edits:
+  1. Frontmatter `title: '{appName}'` → `title: '{siteName}'`.
+  2. First H1 `# {appName}` → `# {siteName}`.
+     Wrap each edit with HTML-comment markers (`<!-- FP-12 patch: index title -->` / `<!-- /FP-12 patch -->` around the frontmatter line; same pattern around the H1 line). Idempotency: marker absence = scaffold shape, safe to patch; marker present = already patched, skip.
+
+- **`<appRoot>/docs/getting-started.md`.** Body contains references to `{appName}` in the intro paragraph (per the scaffold template). Replace those references with `{siteName}`, wrapped in an HTML-comment marker on the first occurrence. Idempotency: marker absence = patch; marker present = skip.
+
+- **`<appRoot>/docs/contributing.md`.** H1 `# {appName}` → `# {siteName}`, same marker pattern as `index.md`'s H1.
+
+Failure handling: if Capability Detection (3b) classified any of these files as `drift`, the patch is already recorded as `refused` in `Scaffold Result.patchesApplied` — skip and move on. Do not re-check drift here.
+
+**FP-15: AGENTS.md write-if-missing.**
+
+Gate: run **only if** `capabilities.agentsMdScaffoldFlag === false` AND `<appRoot>/AGENTS.md` does not exist on disk.
+
+- If the CLI scaffolded `AGENTS.md` itself, skip with `status: 'skipped', reason: 'CLI scaffolds AGENTS.md'`.
+- If the file already exists (user hand-authored, or a previous skill run wrote it), **never overwrite**. Skip with `status: 'skipped', reason: 'AGENTS.md already present — not overwriting'`.
+
+Procedure when gate passes:
+
+1. Read the template from `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template`.
+2. Substitute placeholders:
+   - `{{SITE_NAME}}` → `{siteName}` (Input Result)
+   - `{{APP_DIR}}` → `{targetDir}` (Input Result; the scaffolded app path relative to repo root)
+   - `{{REPO_NAME}}` → `{repoName}` (Preflight Result)
+   - `{{GENERATE_INDEX_CMD}}` → rendered per repo shape:
+     - `monorepo`: `pnpm --filter {appName} run docs:generate-index` (if the scaffold exposes that script) or the equivalent `pnpm -w run cli -- docs generate-index --docs-dir {appDir}/docs --output {appDir}/index.md`
+     - `nested-standalone`: `(cd {appDir} && pnpm run docs:generate-index)` or the `-w` equivalent
+     - `single-package`: `pnpm run docs:generate-index`
+     - Fall back to the `pnpm -w run cli -- docs generate-index ...` form if the scaffold did not write a `docs:generate-index` script (determined by grepping `<appRoot>/package.json` after scaffold).
+3. Write the rendered content to `<appRoot>/AGENTS.md`.
+4. Wrap the entire file in an HTML comment banner at the top — not for idempotency (file existence is the idempotency check), but so the user knows this file was written by the skill and can be regenerated: `<!-- Generated by oat-docs-bootstrap (FP-15 bridge). Safe to hand-edit after generation. -->`.
+5. Record `{ id: 'FP-15', status: 'applied', target: '<appRoot>/AGENTS.md' }` in `patchesApplied`.
+
+When the CLI eventually scaffolds `AGENTS.md` natively and `agentsMdScaffoldFlag` becomes `true`, the bridge template in this skill can be retired (or folded back into the skill as a reference for how the CLI's template evolved).
+
+##### Post-patch ordering
+
+Inside 3d, patches run in this order:
+
+1. Site-identity patches (this section) — FP-12 before FP-15 is irrelevant; they target disjoint files.
+2. Scaffold-integrity patches (p03-t04) — these run after site-identity because FP-13 sub-findings may reference strings FP-12 just rewrote.
 
 **Design discipline:**
 
