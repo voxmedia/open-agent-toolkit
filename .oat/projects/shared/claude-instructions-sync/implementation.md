@@ -26,15 +26,16 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 2     | 2/2       |
-| Phase 4 | completed | 11    | 11/11     |
-| Phase 5 | completed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | completed   | 2     | 2/2       |
+| Phase 4 | completed   | 11    | 11/11     |
+| Phase 5 | completed   | 2     | 2/2       |
+| Phase 6 | in_progress | 2     | 0/2       |
 
-**Total:** 19/19 tasks completed
+**Total:** 19/21 tasks completed
 
 ---
 
@@ -634,7 +635,7 @@ oat_template_name: implementation
 
 ## Phase 5: Review Fixes From Independent Final Re-Review
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
 
 ### Phase Summary (fill when phase is complete)
@@ -711,6 +712,47 @@ oat_template_name: implementation
 **Notes / Decisions:**
 
 - Kept the fix narrowly scoped to the misleading preview instructions so the troubleshooting flow stays consistent with the existing command surface.
+
+---
+
+## Phase 6: Review Fixes From Final Re-Review V3
+
+**Status:** in_progress
+**Started:** 2026-04-13
+
+### Phase Summary (fill when phase is complete)
+
+- Pending both review-fix tasks added from `final-review-2026-04-13-v3.md`.
+- Need to close the broken-`AGENTS.md` symlink validation gap and preserve non-default strategy guidance in `validate`.
+- A clean final re-review is required after Phase 6 completes.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts`
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- `packages/cli/src/commands/instructions/validate/validate.ts`
+- `packages/cli/src/commands/instructions/validate/validate.test.ts`
+- `.oat/projects/shared/claude-instructions-sync/{plan,implementation,state}.md`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pending
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/validate/validate.test.ts`
+- Result: pending
+
+**Notes / Decisions:**
+
+- Received the independent final review artifact and converted both findings directly into Phase 6 tasks.
+- Continuing automatically because the project is still in the implementation phase and no HiLL stop condition was reached.
+
+### Task p06-t01: (review) Reject broken AGENTS symlinks as healthy canonical instructions
+
+**Status:** pending
+
+### Task p06-t02: (review) Preserve selected strategy in validate fix guidance
+
+**Status:** pending
 
 ---
 
@@ -846,6 +888,30 @@ Chronological log of implementation progress.
 - Continued past the nominal review-cycle cap because the user explicitly requested processing this review artifact
 
 **Next:** Phase 5 review fixes are complete. Re-run final code review and process it via `oat-project-review-receive`.
+
+### Review Received: final
+
+**Date:** 2026-04-13
+**Review artifact:** `reviews/archived/final-review-2026-04-13-v3.md`
+**Review cycle:** 5 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `p06-t01`, `p06-t02`
+
+**Disposition summary:**
+
+- Converted the Important broken-`AGENTS.md` symlink finding into a fix task
+- Converted the Medium strategy-guidance finding into a fix task
+- Deferred findings: none
+- Continued past the nominal review-cycle cap because implementation is still active and the review surfaced actionable correctness gaps
+
+**Next:** Complete Phase 6 review fixes, then re-run final code review and process it via `oat-project-review-receive`.
 
 ---
 

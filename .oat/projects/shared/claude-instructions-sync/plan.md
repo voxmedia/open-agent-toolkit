@@ -682,20 +682,82 @@ git commit -m "docs(p05-t02): fix troubleshooting preview command"
 
 ---
 
+## Phase 6: Review Fixes From Final Re-Review V3
+
+### Task p06-t01: (review) Reject broken AGENTS symlinks as healthy canonical instructions
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.ts`
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: a dangling `AGENTS.md` symlink can still be recorded as the canonical instruction source, which lets pointer validation report `ok` when the canonical file is unreadable.
+Location: `packages/cli/src/commands/instructions/instructions.utils.ts:189`
+
+**Step 2: Implement fix**
+
+Stop preserving broken `AGENTS.md` symlinks as canonical scan entries, or otherwise classify them as drift, and add regression coverage for a dangling `AGENTS.md` symlink paired with pointer `CLAUDE.md`.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+Expected: Utility tests pass with broken-AGENTS coverage
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/instructions/instructions.utils.ts \
+  packages/cli/src/commands/instructions/instructions.utils.test.ts
+git commit -m "fix(p06-t01): reject broken canonical instruction symlinks"
+```
+
+### Task p06-t02: (review) Preserve selected strategy in validate fix guidance
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/instructions/validate/validate.ts`
+- Modify: `packages/cli/src/commands/instructions/validate/validate.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `oat instructions validate --strategy symlink|copy` still tells users to run plain `oat instructions sync`, which reverts to the default pointer strategy.
+Location: `packages/cli/src/commands/instructions/validate/validate.ts:58`
+
+**Step 2: Implement fix**
+
+Include the selected non-default strategy in the fix guidance and add command coverage for the drift output.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/validate/validate.test.ts`
+Expected: Validate command tests pass with strategy-aware guidance
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/instructions/validate/validate.ts \
+  packages/cli/src/commands/instructions/validate/validate.test.ts
+git commit -m "fix(p06-t02): preserve validate sync strategy guidance"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                       |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------- |
-| p01    | code     | pending         | -          | -                                              |
-| p02    | code     | pending         | -          | -                                              |
-| p03    | code     | pending         | -          | -                                              |
-| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v2.md |
-| spec   | artifact | pending         | -          | -                                              |
-| design | artifact | pending         | -          | -                                              |
+| Scope  | Type     | Status      | Date       | Artifact                                       |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending     | -          | -                                              |
+| p02    | code     | pending     | -          | -                                              |
+| p03    | code     | pending     | -          | -                                              |
+| final  | code     | fixes_added | 2026-04-13 | reviews/archived/final-review-2026-04-13-v3.md |
+| spec   | artifact | pending     | -          | -                                              |
+| design | artifact | pending     | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -717,10 +779,11 @@ git commit -m "docs(p05-t02): fix troubleshooting preview command"
 - Phase 3: 2 tasks - finish nested-flow coverage and user-facing docs
 - Phase 4: 11 tasks - address final review fixes before re-review
 - Phase 5: 2 tasks - address independent final re-review findings
+- Phase 6: 2 tasks - address final re-review v3 findings
 
-**Total: 19 tasks**
+**Total: 21 tasks**
 
-Independent final re-review findings were fixed. Re-run final code review before merge.
+Final re-review v3 findings were converted into Phase 6 fix tasks. Re-run final code review before merge.
 
 ---
 
