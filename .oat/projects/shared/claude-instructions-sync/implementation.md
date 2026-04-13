@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t03
+oat_current_task_id: p04-t04
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -31,9 +31,9 @@ oat_template_name: implementation
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 2/11      |
+| Phase 4 | in_progress | 11    | 3/11      |
 
-**Total:** 8/17 tasks completed
+**Total:** 9/17 tasks completed
 
 ---
 
@@ -396,6 +396,31 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 **Notes / Decisions:**
 
 - Reused the existing pointer/symlink stray fixture shape so the three strategy variants stay parallel and readable.
+
+### Task p04-t03: (review) Separate scan diagnostics for Claude and AGENTS read failures
+
+**Status:** completed
+**Commit:** 37183b96
+
+**Outcome (required when completed):**
+
+- Split scan failure handling so `CLAUDE.md`, `AGENTS.md`, and symlink-target read errors produce distinct diagnostics.
+- Preserved the existing `missing` behavior for missing Claude files while preventing copy-mode AGENTS failures from being misreported.
+- Added regression coverage for both copy-mode AGENTS read failures and symlink target read failures.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - narrowed scan error boundaries for `lstat`, `readFile`, and `readlink`
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - added explicit diagnostics regression tests
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept `ENOENT` on `CLAUDE.md` reads mapped to `missing` so existing validate semantics stay stable.
 
 ---
 
