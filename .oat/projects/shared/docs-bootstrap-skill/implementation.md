@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -29,11 +29,11 @@ oat_generated: false
 | Phase 1 | completed   | 4     | 4/4       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 4     | 4/4       |
-| Phase 4 | in_progress | 2     | 0/2       |
+| Phase 4 | in_progress | 2     | 1/2       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 11/19 tasks completed
+**Total:** 12/19 tasks completed
 
 ---
 
@@ -464,8 +464,32 @@ oat_generated: false
 
 ### Task p04-t01: Write Build Verifier procedure
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 23aa43d3
+
+**Outcome:**
+
+- Authored Step 4 (Build Verifier) body in SKILL.md (~70 insertions) replacing the placeholder.
+- Install/build commands specified per repo shape (monorepo: root `pnpm install` + `pnpm --filter`; single-package: root; nested-standalone: inside `<appRoot>`).
+- Four known failure patterns with explicit classifications: `ERR_PNPM_NO_MATCHING_VERSION` (surface-only), `fumadocs-mdx: command not found` + missing node_modules (auto-fix by rerunning install once, then escalate), Turbopack "inferred workspace root" (benign if FP-11 applied), FP-10 tsconfig churn (flag as regression).
+- Unknown-error stop: last 40 lines of stderr surfaced; flow halts before Inspector/Walkthrough.
+- `Verification Result` contract emitted with `installSucceeded`, `buildSucceeded`, `knownIssues[]`, `unrecognizedError`, and captured logs.
+- Skip-if-scaffold-failed guard in place: if `Scaffold Result.scaffoldSucceeded !== true`, Build Verifier skips entirely.
+- Cross-reference added: FP-13 is a Scaffold Runner concern, not Build Verifier.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (70 insertions, 1 deletion)
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md`
+- Result: pass on first try
+
+**Notes / Decisions:**
+
+- **Retry bound for auto-fix.** The `fumadocs-mdx + missing node_modules` auto-fix retries install once and then escalates. Rationale: two attempts is enough to recover from a transient install skip, and an infinite retry loop masks real dependency problems.
+- **MkDocs note.** Build Verifier as authored is Fumadocs-specific (pnpm-based). MkDocs has separate tooling (`pip install`, `mkdocs build`) and is covered by the MkDocs Minimum Contract in p05-t02. Called out in 4a to prevent confusion.
 
 ---
 
