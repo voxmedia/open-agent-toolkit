@@ -662,7 +662,76 @@ Inside 3d, patches run in this order:
 
 ### Step 4: Build Verifier
 
-(Body authored in p04-t01.)
+Install dependencies and build the scaffolded docs app. Classify failures against a small list of known patterns. Auto-fix only when there is a single known-correct remedy; surface everything else with context and stop the flow.
+
+Print `[4/7] Verifying build…` at the start of this step.
+
+Skip this step entirely if `Scaffold Result.scaffoldSucceeded !== true` — a failed scaffold produces an undefined state; installing and building on top of it makes things worse.
+
+**4a. Install dependencies.**
+
+Command varies by repo shape (from Preflight Result) and framework (Fumadocs only uses pnpm; MkDocs uses Python tooling — handled in the MkDocs Minimum Contract, Step 6):
+
+- `monorepo`: run `pnpm install` at `$REPO_ROOT`.
+- `single-package`: run `pnpm install` at `$REPO_ROOT`.
+- `nested-standalone`: run `pnpm install` inside `<appRoot>` (`cd <appRoot> && pnpm install`). The nested lockfile means install must happen at the app root, not repo root.
+
+For Fumadocs, capture both stdout and stderr. Print a start line (`Installing dependencies…`) and a completion line with duration.
+
+**4b. Build.**
+
+Command varies by shape:
+
+- `monorepo`: `pnpm --filter {appName} build` at `$REPO_ROOT`.
+- `single-package`: `pnpm build` at `$REPO_ROOT`.
+- `nested-standalone`: `pnpm build` inside `<appRoot>`.
+
+Capture both stdout and stderr. Print a start line (`Building {appName}…`) and a completion line with duration.
+
+**4c. Classify failures against known patterns.**
+
+Inspect the captured install and build output. For each known pattern below, check whether the output matches; if yes, apply the specified handling. Patterns are disjoint — match the first one that fits; do not cascade.
+
+- **`ERR_PNPM_NO_MATCHING_VERSION` on `@open-agent-toolkit/*`.**
+  - Detection: `ERR_PNPM_NO_MATCHING_VERSION` appears in install stderr, and the failing package is under the `@open-agent-toolkit/` scope.
+  - Handling: **surface-only, do not auto-fix.** This typically indicates a local pnpm registry link drift that the user needs to resolve (rebuild/link the workspace packages). Surface the verbatim error, explain the cause in one sentence, and suggest the user re-run after resolving their local package state. Do not retry.
+- **`fumadocs-mdx: command not found` accompanied by a "node_modules missing" warning.**
+  - Detection: build stderr contains `fumadocs-mdx: command not found` AND the output contains a warning about missing `node_modules` or skipped install.
+  - Handling: **auto-fix by rerunning install.** Re-run 4a once, then re-run 4b. If the second attempt still fails with the same pattern, escalate to surface-only — do not loop.
+- **Turbopack "inferred workspace root" warning.**
+  - Detection: build stdout/stderr contains the Next.js/Turbopack inferred-root warning about multiple lockfiles.
+  - Handling: **benign if FP-11 patch was applied** (check `patchesApplied` for `status: 'applied'` on `FP-11/*`). If FP-11 was applied and the warning still appears, flag as an inconsistency in the Inspection stage, but do not fail the build. If FP-11 was not applied (e.g., shape was not `nested-standalone`), the warning shouldn't appear; if it does, flag it for the user because something unexpected is going on.
+- **FP-10 tsconfig rewrite churn.**
+  - Detection: build stdout contains repeated "Rewriting tsconfig..." lines (the historical FP-10 symptom prior to PR #27).
+  - Handling: **flag as regression.** PR #27 is supposed to have fixed this; if it still happens, add to `knownIssues[]` with note "FP-10 regression suspected — report to CLI maintainers". Build may still succeed, so do not halt the flow on this alone.
+
+**4d. Unknown-error stop.**
+
+If install or build fails with output that does not match any known pattern above:
+
+- **Stop the flow.** Do not proceed to Post-Scaffold Inspector (Step 5) or Walkthrough (Step 6).
+- Surface the last 40 lines of captured stderr verbatim.
+- Print the command that failed and the working directory it ran in.
+- Tell the user: `Build Verifier stopped on an unrecognized error. Resolve the error and re-run this skill.`
+
+**Auto-fix discipline.** Auto-fix is narrow by design — it applies only when there is a **single known-correct answer**. Everything else is surfaced. The goal is to save the user time on truly deterministic retries (like the `fumadocs-mdx` + missing-node_modules combination) without masking real failures under speculative "try again" loops.
+
+**Cross-reference.** FP-13 (template-content sub-findings) is **not** a Build Verifier concern — FP-13 is handled entirely by the Scaffold Runner post-patches (Step 3d). The Build Verifier does not inspect markdown content or re-apply FP-13 patches; it only classifies install/build failures.
+
+**4e. Emit the Verification Result.**
+
+Record internally for the Post-Scaffold Inspector and Walkthrough:
+
+```
+Verification Result:
+  installSucceeded: boolean
+  buildSucceeded: boolean
+  knownIssues: Array<{ pattern, severity: 'benign' | 'flagged' | 'surface-only' | 'auto-fixed', detail }>
+  unrecognizedError: { command, cwd, stderrTail } | null
+  logs: { install: { stdout, stderr }, build: { stdout, stderr } }
+```
+
+The Walkthrough references `knownIssues[]` when narrating what the user just saw; the Inspector uses it to correlate drift findings with build-time warnings.
 
 ### Step 5: Post-Scaffold Inspector
 
