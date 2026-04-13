@@ -735,7 +735,93 @@ The Walkthrough references `knownIssues[]` when narrating what the user just saw
 
 ### Step 5: Post-Scaffold Inspector
 
-(Body authored in p04-t02.)
+Read the post-scaffold configuration back, verify its paths, detect drift between config and filesystem, handle nested-standalone dual-config, and collect the `requireForProjectCompletion` opt-in before the Walkthrough. This is the **only** component that writes to `.oat/config.json` — Preflight and Input Gatherer are read-only; Scaffold Runner writes via the CLI.
+
+Print `[5/7] Inspecting config…` at the start of this step.
+
+Skip this step if `Verification Result.buildSucceeded !== true` — inspecting a broken scaffold invites the user to act on inaccurate state.
+
+**5a. Read parent `.oat/config.json` and parse `documentation`.**
+
+Read `$REPO_ROOT/.oat/config.json` after scaffold. The CLI wrote (or updated) the `documentation` section with `root`, `tooling`, `config`, and `index` fields. Parse the section into an `InspectionState` object:
+
+```
+InspectionState (parent):
+  configPath: $REPO_ROOT/.oat/config.json
+  documentation: OatDocumentationConfig | null
+  issues: []   // populated by 5b–5d
+```
+
+If the `documentation` section is missing or malformed after a successful CLI invocation, that's a severe skill-versus-CLI mismatch — flag it loudly in `issues[]` with `severity: 'critical'` and surface to the user before continuing. Do not try to fabricate a section.
+
+**5b. Verify paths per field.**
+
+For each field in `documentation`, check that the referenced path exists and has the expected type:
+
+- `root`: must be a directory that exists on disk (absolute or resolved-relative to `$REPO_ROOT`).
+- `index`: must be a file that exists on disk (Fumadocs: `<appRoot>/index.md`; MkDocs: `<appRoot>/docs/index.md`). The generated root `index.md` is part of the contract even though it's regenerated every build.
+- `config`: MkDocs only — must be a file that exists on disk (`<appRoot>/mkdocs.yml`). For Fumadocs, this field is absent; no check needed.
+- `tooling.framework`: must match the Input Result `framework`. Mismatch is surprising and indicates drift.
+- `tooling.lint` / `tooling.format`: must match Input Result values.
+
+For each check that fails, append an entry to `issues[]`:
+
+```
+{ field: 'documentation.root', severity: 'critical', detail: 'path does not exist: ...' }
+```
+
+**5c. Nested-standalone dual-config handling.**
+
+If `repoShape === 'nested-standalone'`, the docs app may have its own `.oat/config.json` (inherited or copied from the parent during scaffold). Check for `<appRoot>/.oat/config.json`:
+
+- If present: parse it as a second `InspectionState (nested)` record. Verify its paths relative to its own root. Note this explicitly for the Walkthrough — the user may be confused about why there are two configs; the Walkthrough (Section D) explains it.
+- If absent: this is the common case; record nothing and move on.
+
+The parent config describes the repo's docs; the nested config (when present) scopes OAT operations executed from inside the docs app. Do **not** try to reconcile the two or rewrite one to match the other — they serve different scopes by design. Surface what you found; let the user decide.
+
+**5d. Drift detection (config ↔ filesystem ↔ patches).**
+
+Beyond basic path existence, check for drift between the config and what the Scaffold Runner actually did:
+
+- If `Scaffold Result.patchesApplied` contains an FP-11 wrapper-replacement entry (Path B), confirm that the config does not reference the old wrapper path. Config referencing `createDocsConfig` would be stale; record as `driftFinding`.
+- For every `status: 'refused'` entry in `patchesApplied`, surface the refusal here (the Scaffold Runner recorded a `suggestedFix`; repeat it). These are the main user-actionable items from the inspection.
+- If Turbopack "inferred workspace root" was flagged in `Verification Result.knownIssues` despite FP-11 having been applied, record a `driftFinding` — FP-11's patch should have suppressed the warning.
+
+Each drift finding appends to `issues[]` with `severity: 'warning'` (user should address) or `severity: 'info'` (worth mentioning but not blocking).
+
+**5e. `requireForProjectCompletion` opt-in prompt.**
+
+This is a project-completion gate: when set to `true` on the `documentation` section, OAT project workflows check that the docs are up-to-date before marking a project complete. Default is `false`.
+
+Before asking, explain what it does:
+
+```
+OAT projects can optionally require that docs are updated before completion.
+If enabled, `oat-project-complete` won't mark a project done until the
+`oat docs analyze` report shows no open recommendations.
+
+Enable this for {appName}? (default: no)
+```
+
+If user opts in (`yes`), write `documentation.requireForProjectCompletion: true` to `$REPO_ROOT/.oat/config.json` using the **atomic config write** pattern (read → mutate → write, preserving all other fields). Do not rewrite fields the CLI owns — only mutate `requireForProjectCompletion`.
+
+If user opts out (default), record the decision in `InspectionState.issues` as `{ severity: 'info', detail: 'requireForProjectCompletion remains false (not opted in)' }` and move on; do not write to the config.
+
+**Write-once discipline:** 5e is the only point in this skill where `.oat/config.json` is mutated outside of the CLI's own writes. Preflight is read-only (Step 1). Input Gatherer is read-only (Step 2). Scaffold Runner's writes flow through the CLI (Step 3c). Post-patches (Step 3d) mutate scaffold output files, not the config. If you find yourself about to write `.oat/config.json` anywhere else, stop — it belongs here.
+
+**5f. Emit the Inspection Result.**
+
+Record for the Walkthrough:
+
+```
+Inspection Result:
+  parent: InspectionState
+  nested: InspectionState | null    // only present if nested-standalone + nested config exists
+  issues: Array<{ field?, severity: 'critical' | 'warning' | 'info', detail, suggestedFix? }>
+  requireForProjectCompletion: boolean   // final value after 5e
+```
+
+The Walkthrough's Section D (Configuration readback) references `issues[]` verbatim — format it so it reads cleanly when printed to the user.
 
 ### Step 6: Educational Walkthrough
 
