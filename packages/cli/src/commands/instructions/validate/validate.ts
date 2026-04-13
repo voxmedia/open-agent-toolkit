@@ -46,11 +46,12 @@ export function createInstructionsValidateCommand(
         const context = dependencies.buildCommandContext(
           readGlobalOptions(command),
         );
+        const strategy = resolveInstructionSyncStrategy(options.strategy);
 
         try {
           const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
           const entries = await dependencies.scanInstructionFiles(repoRoot, {
-            strategy: resolveInstructionSyncStrategy(options.strategy),
+            strategy,
           });
           const payload = buildInstructionsPayload({
             mode: 'validate',
@@ -63,7 +64,11 @@ export function createInstructionsValidateCommand(
           } else {
             context.logger.info(formatInstructionsReport(payload, repoRoot));
             if (payload.status === 'drift') {
-              context.logger.info('Fix with: oat instructions sync');
+              const fixCommand =
+                strategy === DEFAULT_INSTRUCTION_SYNC_STRATEGY
+                  ? 'Fix with: oat instructions sync'
+                  : `Fix with: oat instructions sync --strategy ${strategy}`;
+              context.logger.info(fixCommand);
             }
           }
 

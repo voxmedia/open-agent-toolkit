@@ -180,4 +180,25 @@ describe('createInstructionsValidateCommand', () => {
       strategy: 'symlink',
     });
   });
+
+  it('includes the selected non-default strategy in drift guidance', async () => {
+    const { command, capture } = createHarness({
+      entries: [
+        {
+          agentsPath: '/tmp/workspace/docs/AGENTS.md',
+          claudePath: '/tmp/workspace/docs/CLAUDE.md',
+          status: 'missing',
+          detail: 'CLAUDE.md missing',
+        },
+      ],
+    });
+
+    await runValidateCommand(command, {
+      commandArgs: ['--strategy', 'symlink'],
+    });
+
+    expect(capture.info).toContain(
+      'Fix with: oat instructions sync --strategy symlink',
+    );
+  });
 });
