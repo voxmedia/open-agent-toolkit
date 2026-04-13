@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t02
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -32,9 +32,9 @@ oat_template_name: implementation
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
 | Phase 4 | completed   | 11    | 11/11     |
-| Phase 5 | in_progress | 2     | 0/2       |
+| Phase 5 | in_progress | 2     | 1/2       |
 
-**Total:** 17/19 tasks completed
+**Total:** 18/19 tasks completed
 
 ---
 
@@ -657,6 +657,31 @@ Pending execution of review-fix tasks `p05-t01` through `p05-t02` added from the
 - Converted both Important findings from `final-review-2026-04-13-v2.md` into Phase 5 fix tasks.
 - Review cycle count exceeds the normal cap; continued because the user explicitly requested processing this review artifact.
 - A clean final re-review is required after Phase 5 completes.
+
+### Task p05-t01: (review) Surface unreadable Claude files during validation
+
+**Status:** completed
+**Commit:** f1083d06
+
+**Outcome (required when completed):**
+
+- Changed pointer/copy validation so non-`ENOENT` `CLAUDE.md` read failures produce `content_mismatch` entries instead of disappearing from scan results.
+- Added regression coverage for an unreadable Claude file that throws `EACCES` during validation.
+- Verified the instruction utility test suite after the scanner fix.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - records unreadable Claude file errors as explicit validation mismatches
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - adds unreadable-Claude regression coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept `ENOENT` mapped to `missing` and only widened the non-`ENOENT` branch so unreadable files remain visible without changing missing-file semantics.
 
 ---
 
