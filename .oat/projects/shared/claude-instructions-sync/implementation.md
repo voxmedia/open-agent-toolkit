@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t04
+oat_current_task_id: p04-t05
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -31,9 +31,9 @@ oat_template_name: implementation
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 3/11      |
+| Phase 4 | in_progress | 11    | 4/11      |
 
-**Total:** 9/17 tasks completed
+**Total:** 10/17 tasks completed
 
 ---
 
@@ -421,6 +421,33 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 **Notes / Decisions:**
 
 - Kept `ENOENT` on `CLAUDE.md` reads mapped to `missing` so existing validate semantics stay stable.
+
+### Task p04-t04: (review) Update instructions help text for strategy-aware drift repair
+
+**Status:** completed
+**Commit:** 8052c197
+
+**Outcome (required when completed):**
+
+- Refreshed the `instructions validate` and `instructions sync` descriptions so they describe strategy-aware sync integrity and repair instead of pointer-only behavior.
+- Updated the help-output coverage to reflect the new command wording consistently.
+- Adjusted the instructions command description test to assert the new stable wording contract.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/validate/validate.ts` - updated validate command description
+- `packages/cli/src/commands/instructions/sync/sync.ts` - updated sync command description
+- `packages/cli/src/commands/help-snapshots.test.ts` - refreshed help-output expectations
+- `packages/cli/src/commands/instructions/index.test.ts` - updated stable description assertions
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/index.test.ts packages/cli/src/commands/help-snapshots.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Switched the `instructions --help` assertion to an exact string expectation because the wrapped multi-line descriptions were brittle under the inline-snapshot serializer.
 
 ---
 
