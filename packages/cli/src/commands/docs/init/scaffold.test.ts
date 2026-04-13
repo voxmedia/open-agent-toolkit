@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { OAT_VERSION } from '@shared/oat-version';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { scaffoldDocsApp } from './scaffold';
@@ -305,7 +306,7 @@ describe('scaffoldDocsApp', () => {
     expect(packageJson.scripts['predev']).toContain('docs generate-index');
     expect(packageJson.scripts['prebuild']).toContain('docs generate-index');
     expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
-      '^0.0.24',
+      `^${OAT_VERSION}`,
     );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
@@ -366,7 +367,7 @@ describe('scaffoldDocsApp', () => {
       await readFile(join(result.appRoot, 'package.json'), 'utf8'),
     ) as { devDependencies: Record<string, string> };
     expect(packageJson.devDependencies['@open-agent-toolkit/cli']).toBe(
-      '^0.0.24',
+      `^${OAT_VERSION}`,
     );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
     expect(packageJson.devDependencies['markdownlint-cli2']).toBeUndefined();
@@ -570,7 +571,7 @@ describe('scaffoldDocsApp', () => {
         join(pkgDir, 'package.json'),
         JSON.stringify({
           name: `@open-agent-toolkit/${pkg}`,
-          version: '0.0.24',
+          version: OAT_VERSION,
         }),
         'utf8',
       );

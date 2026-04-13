@@ -4,6 +4,7 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import type { Manifest } from '@manifest/index';
+import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -53,7 +54,7 @@ interface RunDoctorArgs {
 function defaultManifest(): Manifest {
   return {
     version: 1,
-    oatVersion: '0.0.24',
+    oatVersion: OAT_VERSION,
     entries: [],
     lastUpdated: '2026-02-14T00:00:00.000Z',
   };

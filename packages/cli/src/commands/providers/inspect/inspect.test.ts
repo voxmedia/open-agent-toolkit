@@ -5,6 +5,7 @@ import {
 } from '@commands/__tests__/helpers';
 import type { Manifest, ManifestEntry } from '@manifest/index';
 import type { ProviderAdapter } from '@providers/shared';
+import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -54,7 +55,7 @@ function createAdapter(
 function createManifest(entries: ManifestEntry[]): Manifest {
   return {
     version: 1,
-    oatVersion: '0.0.24',
+    oatVersion: OAT_VERSION,
     entries,
     lastUpdated: '2026-02-14T00:00:00.000Z',
   };

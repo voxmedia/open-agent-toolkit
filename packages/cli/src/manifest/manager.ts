@@ -3,14 +3,13 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 import { CliError } from '@errors/index';
+import { OAT_VERSION } from '@shared/oat-version';
 
 import {
   type Manifest,
   type ManifestEntry,
   ManifestSchema,
 } from './manifest.types';
-
-const OAT_VERSION = '0.0.24';
 
 function formatIssuePath(path: (string | number)[]): string {
   if (path.length === 0) {

@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { OAT_VERSION } from '@shared/oat-version';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { scaffoldDocsApp } from './scaffold';
@@ -71,7 +72,7 @@ describe('scaffold integration', () => {
           join(pkgDir, 'package.json'),
           JSON.stringify({
             name: `@open-agent-toolkit/${pkg}`,
-            version: '0.0.24',
+            version: OAT_VERSION,
           }),
           'utf8',
         );

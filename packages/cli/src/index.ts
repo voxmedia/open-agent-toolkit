@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
+import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { createProgram } from './app/create-program';
 import { registerCommands } from './commands';
@@ -29,12 +30,22 @@ export async function main(argv: string[] = process.argv): Promise<void> {
   await program.parseAsync(normalizeArgv(argv));
 }
 
-function isEntrypoint(): boolean {
-  if (!process.argv[1]) {
+export function isEntrypoint(
+  argv: string[] = process.argv,
+  entrypointUrl: string = import.meta.url,
+): boolean {
+  if (!argv[1]) {
     return false;
   }
 
-  return import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+  const entrypointPath = fileURLToPath(entrypointUrl);
+  const argvPath = resolve(argv[1]);
+
+  try {
+    return realpathSync(entrypointPath) === realpathSync(argvPath);
+  } catch {
+    return entrypointUrl === pathToFileURL(argvPath).href;
+  }
 }
 
 if (isEntrypoint()) {

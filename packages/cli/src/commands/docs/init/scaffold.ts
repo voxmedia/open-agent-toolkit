@@ -3,6 +3,7 @@ import { basename, dirname, join } from 'node:path';
 
 import type { OatDocumentationConfig } from '@config/oat-config';
 import { dirExists, ensureDir, fileExists } from '@fs/io';
+import { OAT_VERSION } from '@shared/oat-version';
 
 import type {
   DocsFormatMode,
@@ -110,7 +111,7 @@ const OAT_DEP_PACKAGES = [
   'docs-theme',
   'docs-transforms',
 ] as const;
-const DEFAULT_OAT_PUBLISHED_VERSION = '0.0.24';
+const DEFAULT_OAT_PUBLISHED_VERSION = OAT_VERSION;
 const PUBLIC_PACKAGE_VERSIONS_FILE = 'public-package-versions.json';
 
 export async function detectIsOatRepo(repoRoot: string): Promise<boolean> {
@@ -120,17 +121,6 @@ export async function detectIsOatRepo(repoRoot: string): Promise<boolean> {
     }
   }
   return true;
-}
-
-async function readCliVersion(assetsRoot: string): Promise<string> {
-  const cliRoot = dirname(assetsRoot);
-  try {
-    const content = await readFile(join(cliRoot, 'package.json'), 'utf8');
-    const pkg = JSON.parse(content) as { version?: string };
-    return pkg.version ?? DEFAULT_OAT_PUBLISHED_VERSION;
-  } catch {
-    return DEFAULT_OAT_PUBLISHED_VERSION;
-  }
 }
 
 async function readBundledOatPackageVersions(
@@ -149,6 +139,17 @@ async function readBundledOatPackageVersions(
     );
   } catch {
     return {};
+  }
+}
+
+async function readCliVersion(assetsRoot: string): Promise<string> {
+  const cliRoot = dirname(assetsRoot);
+  try {
+    const content = await readFile(join(cliRoot, 'package.json'), 'utf8');
+    const pkg = JSON.parse(content) as { version?: string };
+    return pkg.version ?? DEFAULT_OAT_PUBLISHED_VERSION;
+  } catch {
+    return DEFAULT_OAT_PUBLISHED_VERSION;
   }
 }
 

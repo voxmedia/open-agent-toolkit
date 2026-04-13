@@ -1,4 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { parseAsyncMock, createProgramMock, registerCommandsMock } = vi.hoisted(
   () => ({
@@ -16,7 +21,7 @@ vi.mock('./commands', () => ({
   registerCommands: registerCommandsMock,
 }));
 
-import { main, normalizeArgv } from './index';
+import { isEntrypoint, main, normalizeArgv } from './index';
 
 describe('normalizeArgv', () => {
   it('strips pnpm sentinel -- after script path', () => {
@@ -53,5 +58,38 @@ describe('main', () => {
       'all',
       '--dry-run',
     ]);
+  });
+});
+
+describe('isEntrypoint', () => {
+  let tempDir: string | null = null;
+
+  afterEach(async () => {
+    if (tempDir) {
+      await rm(tempDir, { recursive: true, force: true });
+      tempDir = null;
+    }
+  });
+
+  it('returns true when argv points at a symlinked entrypoint', async () => {
+    tempDir = await mkdtemp(join(tmpdir(), 'oat-entrypoint-'));
+    const targetPath = join(tempDir, 'dist-index.js');
+    const linkPath = join(tempDir, 'oat');
+
+    await writeFile(targetPath, '#!/usr/bin/env node\n', 'utf8');
+    await symlink(targetPath, linkPath);
+
+    expect(
+      isEntrypoint(['node', linkPath], pathToFileURL(targetPath).href),
+    ).toBe(true);
+  });
+
+  it('returns false when argv points at a different file', () => {
+    expect(
+      isEntrypoint(
+        ['node', '/tmp/not-the-entrypoint.js'],
+        pathToFileURL('/tmp/actual-entrypoint.js').href,
+      ),
+    ).toBe(false);
   });
 });
