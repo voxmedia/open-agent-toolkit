@@ -26,16 +26,16 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | completed   | 11    | 11/11     |
-| Phase 5 | completed   | 2     | 2/2       |
-| Phase 6 | in_progress | 2     | 1/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 2     | 2/2       |
+| Phase 4 | completed | 11    | 11/11     |
+| Phase 5 | completed | 2     | 2/2       |
+| Phase 6 | completed | 2     | 2/2       |
 
-**Total:** 20/21 tasks completed
+**Total:** 21/21 tasks completed
 
 ---
 
@@ -717,12 +717,12 @@ oat_template_name: implementation
 
 ## Phase 6: Review Fixes From Final Re-Review V3
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
 
 ### Phase Summary (fill when phase is complete)
 
-- Closed the broken-`AGENTS.md` symlink validation gap and still need to preserve non-default strategy guidance in `validate`.
+- Closed the broken-`AGENTS.md` symlink validation gap and preserved non-default strategy guidance in `validate`.
 - A clean final re-review is required after Phase 6 completes.
 
 **Key files touched:**
@@ -738,7 +738,15 @@ oat_template_name: implementation
 - Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
 - Result: pass
 - Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/validate/validate.test.ts`
-- Result: pending
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
 
 **Notes / Decisions:**
 
@@ -772,7 +780,34 @@ oat_template_name: implementation
 
 ### Task p06-t02: (review) Preserve selected strategy in validate fix guidance
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** ea6e13c3
+
+**Outcome (required when completed):**
+
+- `oat instructions validate` now preserves the selected non-default strategy in its drift fix guidance.
+- Added command coverage for strategy-aware repair guidance when validation reports drift.
+- Verified the validate command tests plus direct CLI lint/type-check/build after the fix.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/validate/validate.ts` - derives the strategy once and includes it in non-default repair guidance
+- `packages/cli/src/commands/instructions/validate/validate.test.ts` - adds drift guidance coverage for `--strategy symlink`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/validate/validate.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept default pointer guidance unchanged and only appended `--strategy <value>` for non-default modes, so the plain fix command remains concise for the common case.
 
 ---
 
@@ -953,7 +988,7 @@ Track test execution during implementation.
 | 2     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.utils.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check` | yes    | 0      | n/a      |
 | 3     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm build:docs`                                                                                                                                                                                                                                                                       | yes    | 0      | n/a      |
 | 4     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`                                                                                                                                                                                                                                    | yes    | 0      | n/a      |
-| final | `pnpm lint`; `pnpm type-check`; `pnpm build`; `pnpm test`; `pnpm release:validate`                                                                                                                                                                                                                                                                                                                                                                             | yes    | 0      | n/a      |
+| final | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/validate/validate.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/cli build`; `pnpm release:validate`                                                  | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 

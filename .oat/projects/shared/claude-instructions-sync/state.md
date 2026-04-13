@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t02
-oat_last_commit: 9a22b47d
+oat_current_task: null
+oat_last_commit: ea6e13c3
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -30,7 +30,7 @@ oat_template_name: state
 
 ## Current Phase
 
-Implementing Phase 6 review fixes from the latest final re-review
+Implementation tasks complete; awaiting final re-review
 
 ## Artifacts
 
@@ -68,7 +68,8 @@ Implementing Phase 6 review fixes from the latest final re-review
 - ✓ `p05-t02` completed
 - ✓ Final re-review received (`final-review-2026-04-13-v3.md`)
 - ✓ `p06-t01` completed
-- ⧗ `p06-t02` in progress
+- ✓ `p06-t02` completed
+- ⧗ Awaiting final re-review
 
 ## Blockers
 
@@ -76,4 +77,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 6 review fixes, then re-run the final code review
+Run final code review and process the result

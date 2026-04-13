@@ -750,14 +750,14 @@ git commit -m "fix(p06-t02): preserve validate sync strategy guidance"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status      | Date       | Artifact                                       |
-| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
-| p01    | code     | pending     | -          | -                                              |
-| p02    | code     | pending     | -          | -                                              |
-| p03    | code     | pending     | -          | -                                              |
-| final  | code     | fixes_added | 2026-04-13 | reviews/archived/final-review-2026-04-13-v3.md |
-| spec   | artifact | pending     | -          | -                                              |
-| design | artifact | pending     | -          | -                                              |
+| Scope  | Type     | Status          | Date       | Artifact                                       |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending         | -          | -                                              |
+| p02    | code     | pending         | -          | -                                              |
+| p03    | code     | pending         | -          | -                                              |
+| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v3.md |
+| spec   | artifact | pending         | -          | -                                              |
+| design | artifact | pending         | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -783,7 +783,7 @@ git commit -m "fix(p06-t02): preserve validate sync strategy guidance"
 
 **Total: 21 tasks**
 
-Final re-review v3 findings were converted into Phase 6 fix tasks. Re-run final code review before merge.
+Final re-review v3 findings were fixed. Re-run final code review before merge.
 
 ---
 
