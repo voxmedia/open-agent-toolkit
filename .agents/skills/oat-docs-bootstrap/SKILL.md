@@ -888,7 +888,55 @@ Narrate the three surfaces with audience + time discipline:
 
 End with: "Three surfaces, three audiences, three lifetimes. Root `AGENTS.md` = repo-wide pointer. Docs-app `AGENTS.md` = future agents working inside the docs app. `contributing.md` = humans. Keeping them separate keeps each one useful."
 
-_(Sections E–G authored in p05-t02; Exit summary in p05-t03.)_
+#### Section E (Fumadocs only) — Framework deep dive
+
+Skip this section entirely when `framework === 'mkdocs'`; the MkDocs equivalent (with its Minimum Contract) is Section F.
+
+Narrate how the Fumadocs scaffold actually works, grounded in files the user can open alongside you:
+
+- **`app/layout.tsx` — `DocsLayout` renders the chrome.** The `<DocsLayout>` component from `@open-agent-toolkit/docs-theme` wraps every docs page with the top nav, sidebar, and search UI. It accepts a `branding` prop with `title`, `logo`, etc. **Runtime insight (worth knowing):** the compiled theme bundle only forwards `branding.title` into the nav header chrome — it doesn't use it for page metadata, social cards, or browser tab titles. That's why FP-12's patches also add `export const metadata = { title, description }` to `layout.tsx`: the chrome title and the document title are two separate concerns, and the scaffold only wired the first.
+- **`next.config.js` — `createMDX()` picks up `docs/`.** The Fumadocs MDX pipeline uses `@open-agent-toolkit/docs-config`'s `createDocsConfig()` wrapper, which under the hood calls `createMDX()` with the docs directory hardcoded to `docs/`. MDX files are compiled at build time; frontmatter becomes typed metadata accessible from layouts and listings.
+- **FlexSearch static indexing.** Search is client-side — on build, Fumadocs scans every MDX file under `docs/` and emits a precomputed FlexSearch index that loads alongside the first route. No server; no search API call. That's also why renaming a page without a redirect loses deep links silently: the old index entry stops existing at the next build, and the new one doesn't know the old slug.
+- **`@open-agent-toolkit/docs-theme` branding.** The theme package centralizes the nav/sidebar/footer look and forwards only a small surface of props. Don't expect `branding` to influence metadata; use the FP-12 `metadata` export for that.
+- **FP-11 Turbopack root.** If your repo is `nested-standalone` (docs app has its own lockfile inside the monorepo), Next's Turbopack infers the wrong workspace root and warns about multiple lockfiles. The FP-11 patch sets `turbopack: { root: __dirname }` either via `createDocsConfig` passthrough or (if the passthrough isn't available) by replacing the wrapper with an explicit `createMDX()` config. Check `patchesApplied` to see which code path your scaffold used.
+
+End with: "Fumadocs gives you a typed MDX pipeline with client-side search and code-owned chrome. Branding is one layer (nav only); metadata is a separate, explicit concern. Most page-level edits are frontmatter + Markdown; only layout/theme changes go in `app/`."
+
+#### Section F (MkDocs only) — Lean summary with Minimum Contract
+
+Skip this section entirely when `framework === 'fumadocs'`.
+
+Narrate the minimum mental model a user needs to work productively in MkDocs, then **mark clearly** what is in scope for this skill vs. what is not. MkDocs has a sprawling ecosystem (Material theme, plugin catalog, Python env specifics) that a scaffold-time walkthrough cannot cover without ballooning beyond usefulness.
+
+In scope (required — share these):
+
+- **`mkdocs.yml` is the root config.** Site name, nav, theme, plugins, Markdown extensions — all in one YAML file. The CLI scaffolded one tuned for the OAT conventions.
+- **Material theme provides the default UI.** Light/dark toggle, responsive sidebar, search UI. Config lives under `theme:` in `mkdocs.yml`.
+- **Plugins are pip-installed and named in `mkdocs.yml`.** The scaffold's `requirements.txt` pins the plugins currently wired in. Adding a new plugin = add to both files.
+- **Python environment via `requirements.txt` + `setup-docs.sh`.** The scaffold provides a `setup-docs.sh` that creates a venv, installs `requirements.txt`, and is idempotent on re-run. Use it; the skill assumes you will.
+- **The shared concepts still apply.** The `## Contents` contract (Section C), the two `index.md` model (Section B — note for MkDocs the generated artifact is the `nav:` section of `mkdocs.yml`, not a root `index.md`), and the three agent-instruction surfaces (Section D) all transfer directly.
+
+Deferred (out of scope for this skill — point, don't teach):
+
+- **Material theme internals.** Customizing palettes beyond light/dark, component overrides, template extensions. See the Material docs.
+- **Plugin authoring.** Writing your own MkDocs plugin. See the MkDocs plugin docs.
+- **Python env debugging.** Venv activation issues, dependency conflicts, pip resolution failures. General Python tooling help.
+- **MkDocs-specific Markdown extensions beyond the shared set.** Admonitions, tabs, content tabs, abbreviations, etc. See Material's Markdown extension docs.
+- **Deployment patterns** (GitHub Pages, Netlify, self-hosted). Framework-agnostic; outside the bootstrap scope.
+
+End with: "That's the Minimum Contract. Everything on the deferred list has good upstream docs; this skill's job is to get you productive inside OAT's conventions. For the Material deep-dive, the MkDocs plugin ecosystem, or deployment, look at the linked references."
+
+#### Section G (both frameworks) — The OAT docs ecosystem
+
+Introduce the three tools the user will use after scaffold, ordered by when they'll meet each one:
+
+- **`oat-project-document`** — runs during OAT project workflows. When a project wraps up (or at phase boundaries), this skill reads `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md` and proposes evidence-backed documentation updates. No speculation: every proposed update traces back to a source artifact. The user approves the updates before they land. This is the primary way project-derived docs stay current without requiring the user to hand-write them.
+- **`oat docs analyze`** — read-only audit of the docs surface. Checks the `## Contents` contract (every dir has `index.md`; every `index.md` has `## Contents`; every link resolves), surfaces drift between filesystem and config, and flags orphaned pages. Produces a report at `.oat/repo/analysis/` — never mutates content. Run it periodically, and before changes to doc-heavy areas.
+- **`oat docs apply`** — executes approved analyze recommendations. Creates a branch, runs the fixes, syncs derived navigation artifacts, and (optionally) opens a PR. Will not make unapproved changes or invent new conventions. This is the intended path for any bulk content change; hand-editing a dozen pages at once skips the safety net.
+
+End with: "`oat-project-document` fills docs from project artifacts. `oat docs analyze` tells you where the docs are drifting. `oat docs apply` fixes approved drift with a safety net. Together they're the reason hand-authoring docs from scratch isn't the expected path in OAT."
+
+_(Exit summary in p05-t03.)_
 
 ### Step 7: Optional Content Kickoff
 
