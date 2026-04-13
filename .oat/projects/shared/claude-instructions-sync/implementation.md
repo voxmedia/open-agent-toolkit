@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t09
+oat_current_task_id: p04-t10
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -31,9 +31,9 @@ oat_template_name: implementation
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 8/11      |
+| Phase 4 | in_progress | 11    | 9/11      |
 
-**Total:** 14/17 tasks completed
+**Total:** 15/17 tasks completed
 
 ---
 
@@ -548,6 +548,32 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 **Notes / Decisions:**
 
 - Kept the message focused on the partial state rather than trying to auto-rollback the already-created `AGENTS.md`.
+
+### Task p04-t09: (review) Guard against AGENTS races during stray adoption
+
+**Status:** completed
+**Commit:** 7fb190e1
+
+**Outcome (required when completed):**
+
+- Added a pre-adoption existence check so sync bails out if canonical `AGENTS.md` appears after the scan classified the directory as stray.
+- Kept the guard scoped to the stray-adoption write path, so normal sync and re-sync behavior are unchanged.
+- Added command coverage that asserts the race fails before any destructive write/remove operations happen.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.types.ts` - extended sync dependencies with `lstat`
+- `packages/cli/src/commands/instructions/sync/sync.ts` - added the stray adoption race guard
+- `packages/cli/src/commands/instructions/sync/sync.test.ts` - added a race regression test
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The guard intentionally tells the operator to re-run sync so the directory is reclassified from live filesystem state.
 
 ---
 
