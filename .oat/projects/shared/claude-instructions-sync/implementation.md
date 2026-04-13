@@ -26,18 +26,18 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | completed   | 11    | 11/11     |
-| Phase 5 | completed   | 2     | 2/2       |
-| Phase 6 | completed   | 2     | 2/2       |
-| Phase 7 | completed   | 1     | 1/1       |
-| Phase 8 | in_progress | 1     | 0/1       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 2     | 2/2       |
+| Phase 4 | completed | 11    | 11/11     |
+| Phase 5 | completed | 2     | 2/2       |
+| Phase 6 | completed | 2     | 2/2       |
+| Phase 7 | completed | 1     | 1/1       |
+| Phase 8 | completed | 1     | 1/1       |
 
-**Total:** 22/23 tasks completed
+**Total:** 23/23 tasks completed
 
 ---
 
@@ -889,13 +889,13 @@ oat_template_name: implementation
 
 ## Phase 8: Review Fix From Final Re-Review V5
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
 
 ### Phase Summary (fill when phase is complete)
 
-- Pending the final remaining review-fix task from `final-review-2026-04-13-v5.md`.
-- Need to classify unreadable Claude-only files as explicit drift instead of adoptable strays.
+- Fixed the final remaining review-fix task from `final-review-2026-04-13-v5.md`.
+- Unreadable Claude-only files now surface as explicit drift instead of adoptable strays.
 - A clean final re-review is required after Phase 8 completes.
 
 **Key files touched:**
@@ -909,7 +909,15 @@ oat_template_name: implementation
 **Verification:**
 
 - Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
-- Result: pending
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
 
 **Notes / Decisions:**
 
@@ -918,7 +926,38 @@ oat_template_name: implementation
 
 ### Task p08-t01: (review) Treat unreadable Claude-only files as non-adoptable drift
 
-**Status:** pending
+**Status:** completed
+**Commit:** e74164c3
+
+**Outcome (required when completed):**
+
+- Unreadable Claude-only files and broken Claude-only symlinks are now classified as drift instead of adoptable strays.
+- Sync dry-run/apply now reports unreadable Claude-only sources as manual-repair skips instead of planning impossible adoption work.
+- Verified the utility/sync suites, direct CLI lint/type-check/build, and release validation after the fix.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - differentiates readable Claude-only adoption candidates from unreadable Claude-only drift
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - adds broken/unreadable Claude-only coverage
+- `packages/cli/src/commands/instructions/sync/sync.ts` - skips unreadable Claude-only entries with manual-repair guidance
+- `packages/cli/src/commands/instructions/sync/sync.test.ts` - adds dry-run coverage for unreadable Claude-only skip behavior
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept readable Claude-only files on the existing `stray` adoption path and only diverted unreadable cases into `content_mismatch` drift so normal adoption behavior stays unchanged.
 
 ---
 

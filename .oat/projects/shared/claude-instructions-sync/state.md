@@ -1,6 +1,6 @@
 ---
-oat_current_task: p08-t01
-oat_last_commit: c233b153
+oat_current_task: null
+oat_last_commit: e74164c3
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -30,7 +30,7 @@ oat_template_name: state
 
 ## Current Phase
 
-Implementing Phase 8 review fix from the latest final re-review
+Implementation tasks complete; awaiting final re-review
 
 ## Artifacts
 
@@ -72,7 +72,8 @@ Implementing Phase 8 review fix from the latest final re-review
 - ✓ Final re-review received (`final-review-2026-04-13-v4.md`)
 - ✓ `p07-t01` completed
 - ✓ Final re-review received (`final-review-2026-04-13-v5.md`)
-- ⧗ `p08-t01` in progress
+- ✓ `p08-t01` completed
+- ⧗ Awaiting final re-review
 
 ## Blockers
 
