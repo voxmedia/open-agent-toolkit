@@ -855,6 +855,39 @@ git commit -m "fix(p09-t01): surface unreadable instruction symlink targets"
 
 ---
 
+## Phase 10: Review Fix From Final Re-Review V7
+
+### Task p10-t01: (review) Preserve paired unreadable `CLAUDE.md` symlink targets as drift
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.ts`
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: paired unreadable `CLAUDE.md` symlink targets can still validate as healthy when a sibling canonical `AGENTS.md` exists under `--strategy symlink`.
+Location: `packages/cli/src/commands/instructions/instructions.utils.ts:286`
+
+**Step 2: Implement fix**
+
+Handle `brokenClaudePath` before normal paired `CLAUDE.md` validation so unreadable or broken symlink targets are always reported as explicit drift, and add regression coverage for the paired symlink case.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+Expected: Utility and sync tests pass with paired unreadable `CLAUDE.md` symlink coverage
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/instructions/instructions.utils.ts \
+  packages/cli/src/commands/instructions/instructions.utils.test.ts
+git commit -m "fix(p10-t01): preserve paired unreadable claude symlinks"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -866,7 +899,7 @@ git commit -m "fix(p09-t01): surface unreadable instruction symlink targets"
 | p01    | code     | pending         | -          | -                                              |
 | p02    | code     | pending         | -          | -                                              |
 | p03    | code     | pending         | -          | -                                              |
-| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v6.md |
+| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v7.md |
 | spec   | artifact | pending         | -          | -                                              |
 | design | artifact | pending         | -          | -                                              |
 
@@ -894,10 +927,11 @@ git commit -m "fix(p09-t01): surface unreadable instruction symlink targets"
 - Phase 7: 1 task - surface dangling canonical AGENTS symlinks as drift
 - Phase 8: 1 task - classify unreadable Claude-only drift as manual repair
 - Phase 9: 1 task - surface unreadable instruction symlink target failures
+- Phase 10: 1 task - preserve paired unreadable Claude symlink targets as drift
 
-**Total: 24 tasks**
+**Total: 25 tasks**
 
-Final re-review v6 findings were fixed. Re-run final code review before merge.
+Final re-review v7 findings were fixed. Re-run final code review before merge.
 
 ---
 

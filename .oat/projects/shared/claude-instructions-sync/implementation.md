@@ -26,19 +26,20 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 2     | 2/2       |
-| Phase 4 | completed | 11    | 11/11     |
-| Phase 5 | completed | 2     | 2/2       |
-| Phase 6 | completed | 2     | 2/2       |
-| Phase 7 | completed | 1     | 1/1       |
-| Phase 8 | completed | 1     | 1/1       |
-| Phase 9 | completed | 1     | 1/1       |
+| Phase    | Status    | Tasks | Completed |
+| -------- | --------- | ----- | --------- |
+| Phase 1  | completed | 2     | 2/2       |
+| Phase 2  | completed | 2     | 2/2       |
+| Phase 3  | completed | 2     | 2/2       |
+| Phase 4  | completed | 11    | 11/11     |
+| Phase 5  | completed | 2     | 2/2       |
+| Phase 6  | completed | 2     | 2/2       |
+| Phase 7  | completed | 1     | 1/1       |
+| Phase 8  | completed | 1     | 1/1       |
+| Phase 9  | completed | 1     | 1/1       |
+| Phase 10 | completed | 1     | 1/1       |
 
-**Total:** 24/24 tasks completed
+**Total:** 25/25 tasks completed
 
 ---
 
@@ -973,6 +974,141 @@ oat_template_name: implementation
 
 ---
 
+## Phase 9: Review Fix From Final Re-Review V6
+
+**Status:** completed
+**Started:** 2026-04-13
+
+### Phase Summary (fill when phase is complete)
+
+- Fixed the final remaining review-fix task from `final-review-2026-04-13-v6.md`.
+- Non-`ENOENT` instruction symlink target failures now remain visible as drift instead of silently disappearing.
+- A clean final re-review is required after Phase 9 completes.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts`
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- `packages/cli/src/commands/instructions/sync/sync.ts`
+- `packages/cli/src/commands/instructions/sync/sync.test.ts`
+- `.oat/projects/shared/claude-instructions-sync/{plan,implementation,state}.md`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Preserved error-code-specific drift detail so operators can distinguish missing targets from other unreadable symlink target failures.
+- Kept sync in manual-repair mode for unreadable instruction sources rather than attempting unsafe automatic repair.
+
+### Task p09-t01: (review) Preserve non-ENOENT instruction symlink target failures as drift
+
+**Status:** completed
+**Commit:** 5b91da2c
+
+**Outcome (required when completed):**
+
+- Scan state now preserves non-`ENOENT` target failures for instruction symlinks and reports them as explicit drift.
+- Sync dry-run/apply now keeps manual-repair guidance aligned for unreadable instruction source paths.
+- Verified the utility/sync suites, direct CLI lint/type-check/build, and release validation after the change.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - preserves non-`ENOENT` instruction symlink target failures in scan state
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - adds unreadable instruction symlink target coverage
+- `packages/cli/src/commands/instructions/sync/sync.ts` - keeps manual-repair guidance aligned for unreadable instruction sources
+- `packages/cli/src/commands/instructions/sync/sync.test.ts` - adds sync coverage for unreadable instruction symlink targets
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the fix additive by preserving existing `ENOENT` handling while extending the same drift path to other target-access failures such as `EACCES`.
+
+---
+
+## Phase 10: Review Fix From Final Re-Review V7
+
+**Status:** completed
+**Started:** 2026-04-13
+
+### Phase Summary (fill when phase is complete)
+
+- Fixed the remaining paired-`CLAUDE.md` symlink gap from `final-review-2026-04-13-v7.md`.
+- Paired unreadable `CLAUDE.md` symlink targets now surface as drift instead of validating as healthy under `--strategy symlink`.
+- A clean final re-review is required after Phase 10 completes.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts`
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- `.oat/projects/shared/claude-instructions-sync/{plan,implementation,state}.md`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the fix localized to scan classification so the existing symlink-repair path can still rewrite drifted `CLAUDE.md` files from canonical `AGENTS.md`.
+
+### Task p10-t01: (review) Preserve paired unreadable `CLAUDE.md` symlink targets as drift
+
+**Status:** completed
+**Commit:** 6b8cc03e
+
+**Outcome (required when completed):**
+
+- Paired unreadable `CLAUDE.md` symlink targets now short-circuit to explicit drift before normal paired symlink validation runs.
+- Added regression coverage for a sibling `AGENTS.md` plus unreadable `CLAUDE.md` symlink target under `--strategy symlink`.
+- Verified the focused utility/sync tests plus direct CLI type-check/build after the fix.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - handles paired unreadable `CLAUDE.md` symlink targets before normal validation
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - adds paired unreadable `CLAUDE.md` symlink regression coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Left sync behavior unchanged because once the state is correctly classified as drift, existing force-repair behavior can already replace the bad symlink from canonical content.
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.
@@ -1141,6 +1277,29 @@ Chronological log of implementation progress.
 - Continued past the nominal review-cycle cap because the review still surfaced an actionable correctness defect
 
 **Next:** Complete Phase 7 review fix, then re-run final code review and process it via `oat-project-review-receive`.
+
+### Review Received: final
+
+**Date:** 2026-04-13
+**Review artifact:** `reviews/archived/final-review-2026-04-13-v7.md`
+**Review cycle:** 9 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p10-t01`
+
+**Disposition summary:**
+
+- Converted the paired unreadable `CLAUDE.md` symlink finding into a single fix task
+- Deferred findings: none
+- Continued past the nominal review-cycle cap because the review still surfaced an actionable correctness defect
+
+**Next:** Complete Phase 10 review fix, then re-run final code review and process it via `oat-project-review-receive`.
 
 ---
 
