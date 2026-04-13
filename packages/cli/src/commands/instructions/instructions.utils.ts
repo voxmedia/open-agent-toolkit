@@ -186,10 +186,7 @@ async function scanInstructionDirectories(
         entryStats = await dependencies.stat(entryPath);
       } catch (error) {
         const errorCode = getErrorCode(error);
-        if (
-          errorCode === 'ENOENT' &&
-          (entry.name === 'AGENTS.md' || entry.name === 'CLAUDE.md')
-        ) {
+        if (errorCode === 'ENOENT' && entry.name === 'CLAUDE.md') {
           recordInstructionFile(
             directoryEntries,
             currentDirectory,

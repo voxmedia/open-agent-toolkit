@@ -340,6 +340,27 @@ describe('instructions utils', () => {
     );
   });
 
+  it('does not treat broken AGENTS symlinks as valid canonical instructions', async () => {
+    const repoRoot = await createRepoRoot();
+    const docsDir = join(repoRoot, 'docs');
+
+    await mkdir(docsDir, { recursive: true });
+    await symlink('missing-AGENTS.md', join(docsDir, 'AGENTS.md'));
+    await writeFile(join(docsDir, 'CLAUDE.md'), '@AGENTS.md\n', 'utf8');
+
+    const entries = await scanInstructionFiles(repoRoot);
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      agentsPath: null,
+      status: 'stray',
+      detail: 'CLAUDE.md found without AGENTS.md',
+    });
+    expect(relative(repoRoot, entries[0]?.claudePath ?? '')).toBe(
+      'docs/CLAUDE.md',
+    );
+  });
+
   it('skips directory symlinks during traversal', async () => {
     const repoRoot = await createRepoRoot();
 
