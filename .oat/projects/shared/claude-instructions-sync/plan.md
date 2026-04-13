@@ -622,20 +622,80 @@ git commit -m "fix(p04-t11): surface broken claude symlinks"
 
 ---
 
+## Phase 5: Review Fixes From Independent Final Re-Review
+
+### Task p05-t01: (review) Surface unreadable Claude files during validation
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.ts`
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: non-`ENOENT` `CLAUDE.md` read failures in pointer/copy-mode validation can be omitted from scan results entirely.
+Location: `packages/cli/src/commands/instructions/instructions.utils.ts:351`
+
+**Step 2: Implement fix**
+
+Record non-`ENOENT` `CLAUDE.md` read failures as `content_mismatch` entries with explicit detail text, and add regression coverage for an unreadable Claude file.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+Expected: Utility tests pass with unreadable-Claude coverage
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/instructions/instructions.utils.ts \
+  packages/cli/src/commands/instructions/instructions.utils.test.ts
+git commit -m "fix(p05-t01): report unreadable claude files"
+```
+
+### Task p05-t02: (review) Correct troubleshooting preview guidance
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/reference/troubleshooting.md`
+
+**Step 1: Understand the issue**
+
+Review finding: the troubleshooting page tells users to run `oat instructions sync` to preview changes, but preview requires `--dry-run`.
+Location: `apps/oat-docs/docs/reference/troubleshooting.md:32`
+
+**Step 2: Implement fix**
+
+Update the troubleshooting guidance so preview uses `oat instructions sync --dry-run`, and keep apply/force guidance explicit and non-destructive.
+
+**Step 3: Verify**
+
+Run: `pnpm build:docs`
+Expected: Docs build passes with corrected preview guidance
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/reference/troubleshooting.md
+git commit -m "docs(p05-t02): fix troubleshooting preview command"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date       | Artifact                                    |
-| ------ | -------- | ------- | ---------- | ------------------------------------------- |
-| p01    | code     | pending | -          | -                                           |
-| p02    | code     | pending | -          | -                                           |
-| p03    | code     | pending | -          | -                                           |
-| final  | code     | passed  | 2026-04-13 | reviews/archived/final-review-2026-04-13.md |
-| spec   | artifact | pending | -          | -                                           |
-| design | artifact | pending | -          | -                                           |
+| Scope  | Type     | Status      | Date       | Artifact                                       |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending     | -          | -                                              |
+| p02    | code     | pending     | -          | -                                              |
+| p03    | code     | pending     | -          | -                                              |
+| final  | code     | fixes_added | 2026-04-13 | reviews/archived/final-review-2026-04-13-v2.md |
+| spec   | artifact | pending     | -          | -                                              |
+| design | artifact | pending     | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -656,10 +716,11 @@ git commit -m "fix(p04-t11): surface broken claude symlinks"
 - Phase 2: 2 tasks - implement sync strategies and Claude-only adoption
 - Phase 3: 2 tasks - finish nested-flow coverage and user-facing docs
 - Phase 4: 11 tasks - address final review fixes before re-review
+- Phase 5: 2 tasks - address independent final re-review findings
 
-**Total: 17 tasks**
+**Total: 19 tasks**
 
-Final review passed. Project is ready for finalization before merge.
+Independent final re-review findings were converted into fix tasks. Complete Phase 5, then re-run final code review before merge.
 
 ---
 

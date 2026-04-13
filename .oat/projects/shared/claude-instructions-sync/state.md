@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p05-t01
 oat_last_commit: 0bc386c7
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -7,7 +7,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-11T00:03:02.886Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-13T19:52:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-13T20:14:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_template: false
 oat_template_name: state
@@ -24,13 +24,13 @@ oat_template_name: state
 
 # Project State: claude-instructions-sync
 
-**Status:** Ready for finalization
+**Status:** Implementing
 **Started:** 2026-04-10
 **Last Updated:** 2026-04-13
 
 ## Current Phase
 
-Implementation complete; final re-review passed
+Implementation resumed for Phase 5 review-fix execution
 
 ## Artifacts
 
@@ -64,6 +64,7 @@ Implementation complete; final re-review passed
 - ✓ `p04-t10` completed
 - ✓ `p04-t11` completed
 - ✓ Final re-review passed (`final-review-2026-04-13.md`)
+- → Review fix tasks queued: `p05-t01` through `p05-t02`
 
 ## Blockers
 
@@ -71,4 +72,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-pr-final` or the next finalization step
+Execute `p05-t01` through `p05-t02`, update the final review row to `fixes_completed`, then re-run final code review

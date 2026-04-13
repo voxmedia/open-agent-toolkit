@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-pr-final
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -26,14 +26,15 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 2     | 2/2       |
-| Phase 4 | completed | 11    | 11/11     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | completed   | 2     | 2/2       |
+| Phase 4 | completed   | 11    | 11/11     |
+| Phase 5 | in_progress | 2     | 0/2       |
 
-**Total:** 17/17 tasks completed
+**Total:** 17/19 tasks completed
 
 ---
 
@@ -631,6 +632,34 @@ oat_template_name: implementation
 
 ---
 
+## Phase 5: Review Fixes From Independent Final Re-Review
+
+**Status:** in_progress
+**Started:** 2026-04-13
+
+### Phase Summary (fill when phase is complete)
+
+Pending execution of review-fix tasks `p05-t01` through `p05-t02` added from the independent final re-review.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts`
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- `apps/oat-docs/docs/reference/troubleshooting.md`
+- `.oat/projects/shared/claude-instructions-sync/{plan,implementation,state}.md`
+
+**Verification:**
+
+- Review receive bookkeeping only. No code changes executed yet.
+
+**Notes / Decisions:**
+
+- Converted both Important findings from `final-review-2026-04-13-v2.md` into Phase 5 fix tasks.
+- Review cycle count exceeds the normal cap; continued because the user explicitly requested processing this review artifact.
+- A clean final re-review is required after Phase 5 completes.
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -739,7 +768,30 @@ Chronological log of implementation progress.
 - Converted all Minor findings to fix tasks per user direction
 - Deferred findings: none
 
-**Next:** Final re-review passed on 2026-04-13. The project is ready for finalization and PR preparation.
+**Next:** Execute Phase 5 via the `oat-project-implement` skill starting at `p05-t01`, then update the review row to `fixes_completed` and re-run final code review.
+
+### Review Received: final
+
+**Date:** 2026-04-13
+**Review artifact:** `reviews/archived/final-review-2026-04-13-v2.md`
+**Review cycle:** 4 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p05-t01`, `p05-t02`
+
+**Disposition summary:**
+
+- Converted both Important findings to fix tasks
+- Deferred findings: none
+- Continued past the nominal review-cycle cap because the user explicitly requested processing this review artifact
+
+**Next:** Execute Phase 5 via the `oat-project-implement` skill starting at `p05-t01`, then update the review row to `fixes_completed` and re-run final code review.
 
 ---
 
