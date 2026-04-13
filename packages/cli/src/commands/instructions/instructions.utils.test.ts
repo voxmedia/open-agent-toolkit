@@ -161,11 +161,14 @@ describe('instructions utils', () => {
     await writeFile(join(repoRoot, 'docs', 'AGENTS.md'), '# docs\n', 'utf8');
     await symlink('AGENTS.md', join(repoRoot, 'docs', 'CLAUDE.md'));
 
-    const entries = await scanInstructionFiles(repoRoot, {
-      lstat: fsLstat,
-      readlink: fsReadlink,
-      strategy: 'symlink',
-    });
+    const entries = await scanInstructionFiles(
+      repoRoot,
+      { strategy: 'symlink' },
+      {
+        lstat: fsLstat,
+        readlink: fsReadlink,
+      },
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -181,11 +184,14 @@ describe('instructions utils', () => {
     await writeFile(join(repoRoot, 'docs', 'AGENTS.md'), '# docs\n', 'utf8');
     await symlink('AGENTS.md', join(repoRoot, 'docs', 'CLAUDE.md'));
 
-    const entries = await scanInstructionFiles(repoRoot, {
-      lstat: fsLstat,
-      readlink: fsReadlink,
-      strategy: 'copy',
-    });
+    const entries = await scanInstructionFiles(
+      repoRoot,
+      { strategy: 'copy' },
+      {
+        lstat: fsLstat,
+        readlink: fsReadlink,
+      },
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -202,17 +208,20 @@ describe('instructions utils', () => {
     await writeFile(join(docsDir, 'AGENTS.md'), '# docs\n', 'utf8');
     await writeFile(join(docsDir, 'CLAUDE.md'), '# docs\n', 'utf8');
 
-    const entries = await scanInstructionFiles(repoRoot, {
-      lstat: fsLstat,
-      readFile: async (path, encoding) => {
-        if (path === join(docsDir, 'AGENTS.md')) {
-          throw Object.assign(new Error('gone'), { code: 'ENOENT' });
-        }
+    const entries = await scanInstructionFiles(
+      repoRoot,
+      { strategy: 'copy' },
+      {
+        lstat: fsLstat,
+        readFile: async (path, encoding) => {
+          if (path === join(docsDir, 'AGENTS.md')) {
+            throw Object.assign(new Error('gone'), { code: 'ENOENT' });
+          }
 
-        return fsReadFile(path, encoding);
+          return fsReadFile(path, encoding);
+        },
       },
-      strategy: 'copy',
-    });
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -229,15 +238,18 @@ describe('instructions utils', () => {
     await writeFile(join(docsDir, 'AGENTS.md'), '# docs\n', 'utf8');
     await symlink('AGENTS.md', join(docsDir, 'CLAUDE.md'));
 
-    const entries = await scanInstructionFiles(repoRoot, {
-      lstat: fsLstat,
-      readlink: async () => {
-        throw Object.assign(new Error('permission denied'), {
-          code: 'EACCES',
-        });
+    const entries = await scanInstructionFiles(
+      repoRoot,
+      { strategy: 'symlink' },
+      {
+        lstat: fsLstat,
+        readlink: async () => {
+          throw Object.assign(new Error('permission denied'), {
+            code: 'EACCES',
+          });
+        },
       },
-      strategy: 'symlink',
-    });
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -279,28 +291,33 @@ describe('instructions utils', () => {
       join(repoRoot, 'broken-link'),
     );
 
-    const entries = await scanInstructionFiles(repoRoot, {
-      readdir: async (path, options) => {
-        if (path === join(repoRoot, 'bad-dir')) {
-          throw Object.assign(new Error('permission denied'), {
-            code: 'EACCES',
-          });
-        }
-        return fsReaddir(path, options);
+    const entries = await scanInstructionFiles(
+      repoRoot,
+      {
+        debug: (message) => {
+          debugLogs.push(message);
+        },
       },
-      readFile: fsReadFile,
-      stat: async (path) => {
-        if (path === join(repoRoot, 'broken-link')) {
-          throw Object.assign(new Error('permission denied'), {
-            code: 'EACCES',
-          });
-        }
-        return fsStat(path);
+      {
+        readdir: async (path, options) => {
+          if (path === join(repoRoot, 'bad-dir')) {
+            throw Object.assign(new Error('permission denied'), {
+              code: 'EACCES',
+            });
+          }
+          return fsReaddir(path, options);
+        },
+        readFile: fsReadFile,
+        stat: async (path) => {
+          if (path === join(repoRoot, 'broken-link')) {
+            throw Object.assign(new Error('permission denied'), {
+              code: 'EACCES',
+            });
+          }
+          return fsStat(path);
+        },
       },
-      debug: (message) => {
-        debugLogs.push(message);
-      },
-    });
+    );
 
     expect(relative(repoRoot, entries[0]?.agentsPath ?? '')).toBe(
       'good/AGENTS.md',

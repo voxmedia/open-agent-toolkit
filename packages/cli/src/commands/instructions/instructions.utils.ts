@@ -7,6 +7,7 @@ import type {
   InstructionEntry,
   InstructionsJsonPayload,
   InstructionsMode,
+  InstructionsScanOptions,
   InstructionsScanDependencies,
   InstructionsStatus,
   InstructionsSummary,
@@ -118,6 +119,7 @@ function recordInstructionFile(
 async function scanInstructionDirectories(
   repoRoot: string,
   dependencies: InstructionsScanDependencies,
+  debug?: (message: string) => void,
 ): Promise<Map<string, InstructionDirectoryEntry>> {
   const queue = [repoRoot];
   const directoryEntries = new Map<string, InstructionDirectoryEntry>();
@@ -135,7 +137,7 @@ async function scanInstructionDirectories(
       });
     } catch (error) {
       const errorCode = getErrorCode(error);
-      dependencies.debug?.(
+      debug?.(
         `Skipping directory scan for ${toPosixPath(currentDirectory)} (${errorCode ?? 'unknown error'})`,
       );
       continue;
@@ -177,7 +179,7 @@ async function scanInstructionDirectories(
         entryStats = await dependencies.stat(entryPath);
       } catch (error) {
         const errorCode = getErrorCode(error);
-        dependencies.debug?.(
+        debug?.(
           `Skipping symlink target stat for ${toPosixPath(entryPath)} (${errorCode ?? 'unknown error'})`,
         );
         continue;
@@ -206,9 +208,10 @@ async function scanInstructionDirectories(
 
 export async function scanInstructionFiles(
   repoRoot: string,
+  options: InstructionsScanOptions = {},
   overrides: Partial<InstructionsScanDependencies> = {},
 ): Promise<InstructionEntry[]> {
-  const strategy = resolveInstructionSyncStrategy(overrides.strategy);
+  const strategy = resolveInstructionSyncStrategy(options.strategy);
   const dependencies: InstructionsScanDependencies = {
     lstat,
     readdir,
@@ -221,6 +224,7 @@ export async function scanInstructionFiles(
   const instructionDirectories = await scanInstructionDirectories(
     repoRoot,
     dependencies,
+    options.debug,
   );
   const entries: InstructionEntry[] = [];
 

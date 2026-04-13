@@ -54,6 +54,11 @@ export interface InstructionsJsonPayload {
   actions: InstructionActionRecord[];
 }
 
+export interface InstructionsScanOptions {
+  strategy?: InstructionSyncStrategy;
+  debug?: (message: string) => void;
+}
+
 export interface InstructionsScanDependencies {
   readdir: (
     path: string,
@@ -63,8 +68,6 @@ export interface InstructionsScanDependencies {
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
   readlink: (path: string) => Promise<string>;
   stat: (path: string) => Promise<Stats>;
-  strategy?: InstructionSyncStrategy;
-  debug?: (message: string) => void;
 }
 
 export interface InstructionsValidateCommandDependencies {
@@ -72,6 +75,7 @@ export interface InstructionsValidateCommandDependencies {
   resolveProjectRoot: (cwd: string) => Promise<string>;
   scanInstructionFiles: (
     repoRoot: string,
+    options?: InstructionsScanOptions,
     overrides?: Partial<InstructionsScanDependencies>,
   ) => Promise<InstructionEntry[]>;
 }
