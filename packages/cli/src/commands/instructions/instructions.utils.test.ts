@@ -194,6 +194,58 @@ describe('instructions utils', () => {
     expect(entries[0]?.detail).toContain('expected hard copy');
   });
 
+  it('reports AGENTS.md read failures separately when validating copy strategy', async () => {
+    const repoRoot = await createRepoRoot();
+    const docsDir = join(repoRoot, 'docs');
+
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(join(docsDir, 'AGENTS.md'), '# docs\n', 'utf8');
+    await writeFile(join(docsDir, 'CLAUDE.md'), '# docs\n', 'utf8');
+
+    const entries = await scanInstructionFiles(repoRoot, {
+      lstat: fsLstat,
+      readFile: async (path, encoding) => {
+        if (path === join(docsDir, 'AGENTS.md')) {
+          throw Object.assign(new Error('gone'), { code: 'ENOENT' });
+        }
+
+        return fsReadFile(path, encoding);
+      },
+      strategy: 'copy',
+    });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      status: 'content_mismatch',
+      detail: 'unable to read AGENTS.md (ENOENT)',
+    });
+  });
+
+  it('reports CLAUDE symlink target read failures separately', async () => {
+    const repoRoot = await createRepoRoot();
+    const docsDir = join(repoRoot, 'docs');
+
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(join(docsDir, 'AGENTS.md'), '# docs\n', 'utf8');
+    await symlink('AGENTS.md', join(docsDir, 'CLAUDE.md'));
+
+    const entries = await scanInstructionFiles(repoRoot, {
+      lstat: fsLstat,
+      readlink: async () => {
+        throw Object.assign(new Error('permission denied'), {
+          code: 'EACCES',
+        });
+      },
+      strategy: 'symlink',
+    });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      status: 'content_mismatch',
+      detail: 'unable to read CLAUDE.md symlink target (EACCES)',
+    });
+  });
+
   it('skips directory symlinks during traversal', async () => {
     const repoRoot = await createRepoRoot();
 

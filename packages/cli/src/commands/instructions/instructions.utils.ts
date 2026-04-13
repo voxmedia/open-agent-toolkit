@@ -239,74 +239,9 @@ export async function scanInstructionFiles(
       continue;
     }
 
+    let claudeStats;
     try {
-      const claudeStats = await dependencies.lstat(claudePath);
-
-      if (strategy === 'symlink') {
-        if (!claudeStats.isSymbolicLink()) {
-          entries.push({
-            agentsPath,
-            claudePath,
-            status: 'content_mismatch',
-            detail: getInvalidInstructionDetail(strategy),
-          });
-          continue;
-        }
-
-        const claudeTarget = await dependencies.readlink(claudePath);
-        const resolvedTarget = resolve(dirname(claudePath), claudeTarget);
-        if (resolvedTarget === agentsPath) {
-          entries.push({
-            agentsPath,
-            claudePath,
-            status: 'ok',
-            detail: getValidInstructionDetail(strategy),
-          });
-        } else {
-          entries.push({
-            agentsPath,
-            claudePath,
-            status: 'content_mismatch',
-            detail: getInvalidInstructionDetail(strategy),
-          });
-        }
-        continue;
-      }
-
-      if (claudeStats.isSymbolicLink()) {
-        entries.push({
-          agentsPath,
-          claudePath,
-          status: 'content_mismatch',
-          detail: getInvalidInstructionDetail(strategy),
-        });
-        continue;
-      }
-
-      const claudeContent = await dependencies.readFile(claudePath, 'utf8');
-      const expectedContent =
-        strategy === 'copy'
-          ? await dependencies.readFile(agentsPath, 'utf8')
-          : EXPECTED_CLAUDE_CONTENT;
-
-      if (
-        normalizeLineEndings(claudeContent) ===
-        normalizeLineEndings(expectedContent)
-      ) {
-        entries.push({
-          agentsPath,
-          claudePath,
-          status: 'ok',
-          detail: getValidInstructionDetail(strategy),
-        });
-      } else {
-        entries.push({
-          agentsPath,
-          claudePath,
-          status: 'content_mismatch',
-          detail: getInvalidInstructionDetail(strategy),
-        });
-      }
+      claudeStats = await dependencies.lstat(claudePath);
     } catch (error) {
       const errorCode = getErrorCode(error);
       if (errorCode === 'ENOENT') {
@@ -324,6 +259,118 @@ export async function scanInstructionFiles(
           detail: `unable to read CLAUDE.md (${errorCode ?? 'unknown error'})`,
         });
       }
+      continue;
+    }
+
+    if (strategy === 'symlink') {
+      if (!claudeStats.isSymbolicLink()) {
+        entries.push({
+          agentsPath,
+          claudePath,
+          status: 'content_mismatch',
+          detail: getInvalidInstructionDetail(strategy),
+        });
+        continue;
+      }
+
+      let claudeTarget: string;
+      try {
+        claudeTarget = await dependencies.readlink(claudePath);
+      } catch (error) {
+        const errorCode = getErrorCode(error);
+        entries.push({
+          agentsPath,
+          claudePath,
+          status: 'content_mismatch',
+          detail: `unable to read CLAUDE.md symlink target (${errorCode ?? 'unknown error'})`,
+        });
+        continue;
+      }
+
+      const resolvedTarget = resolve(dirname(claudePath), claudeTarget);
+      if (resolvedTarget === agentsPath) {
+        entries.push({
+          agentsPath,
+          claudePath,
+          status: 'ok',
+          detail: getValidInstructionDetail(strategy),
+        });
+      } else {
+        entries.push({
+          agentsPath,
+          claudePath,
+          status: 'content_mismatch',
+          detail: getInvalidInstructionDetail(strategy),
+        });
+      }
+      continue;
+    }
+
+    if (claudeStats.isSymbolicLink()) {
+      entries.push({
+        agentsPath,
+        claudePath,
+        status: 'content_mismatch',
+        detail: getInvalidInstructionDetail(strategy),
+      });
+      continue;
+    }
+
+    let claudeContent: string;
+    try {
+      claudeContent = await dependencies.readFile(claudePath, 'utf8');
+    } catch (error) {
+      const errorCode = getErrorCode(error);
+      if (errorCode === 'ENOENT') {
+        entries.push({
+          agentsPath,
+          claudePath,
+          status: 'missing',
+          detail: 'CLAUDE.md missing',
+        });
+      }
+      continue;
+    }
+
+    const expectedContent =
+      strategy === 'copy'
+        ? await (async () => {
+            try {
+              return await dependencies.readFile(agentsPath, 'utf8');
+            } catch (error) {
+              const errorCode = getErrorCode(error);
+              entries.push({
+                agentsPath,
+                claudePath,
+                status: 'content_mismatch',
+                detail: `unable to read AGENTS.md (${errorCode ?? 'unknown error'})`,
+              });
+              return null;
+            }
+          })()
+        : EXPECTED_CLAUDE_CONTENT;
+
+    if (expectedContent === null) {
+      continue;
+    }
+
+    if (
+      normalizeLineEndings(claudeContent) ===
+      normalizeLineEndings(expectedContent)
+    ) {
+      entries.push({
+        agentsPath,
+        claudePath,
+        status: 'ok',
+        detail: getValidInstructionDetail(strategy),
+      });
+    } else {
+      entries.push({
+        agentsPath,
+        claudePath,
+        status: 'content_mismatch',
+        detail: getInvalidInstructionDetail(strategy),
+      });
     }
   }
 
