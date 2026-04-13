@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
@@ -221,16 +221,40 @@ Input Result:
   conflictResolution?: 'replace' | 'second-app' | 'abort' | 'repair'
 ```
 
+**Conflict Resolution Contract (what each `conflictResolution` value means):**
+
+When Preflight surfaces existing docs setup, the user picks one of four resolutions. Each resolution has a precise definition in terms of allowed mutations, preserved state, and stop conditions. The Scaffold Runner reads this resolution and adjusts its behavior accordingly; it never reinvents resolution semantics.
+
+- **`replace`** — Treat the existing setup as disposable.
+  - **Allowed mutations:** Remove the existing docs app directory (`<appRoot>`). Remove the `documentation` section from `.oat/config.json` before the CLI writes its own. Remove the `## Documentation` section from root `AGENTS.md` before the CLI upserts. Proceed with scaffold as if greenfield.
+  - **Preserved state:** Everything outside the existing docs app directory, the `documentation` section of `.oat/config.json`, and the root `AGENTS.md` `## Documentation` section. Git history is preserved (deletions are tracked normally).
+  - **Stop conditions:** If the existing docs app directory contains uncommitted changes, refuse and surface a focused error. User must commit or stash before `replace` can proceed.
+- **`second-app`** — Add a new docs app alongside the existing one.
+  - **Allowed mutations:** Create a new docs app at a **different** target directory (the Input Gatherer must collect a non-conflicting `targetDir`). Add a second `documentation` entry — **however**, the current `OatDocumentationConfig` shape (see `packages/cli/src/config/oat-config.ts`) only supports a single `documentation` object, so `second-app` requires either (a) the CLI gaining multi-docs support or (b) the skill refusing with an explanation. Until multi-docs support lands, this option is **functionally a deferred feature**; the Input Gatherer surfaces the limitation and offers the other three resolutions instead.
+  - **Preserved state:** All existing docs setup.
+  - **Stop conditions:** If multi-docs support is unavailable (current state), refuse with explanation and redirect user to the other options.
+- **`abort`** — Stop the flow without any mutation.
+  - **Allowed mutations:** None.
+  - **Preserved state:** Everything.
+  - **Stop conditions:** Immediately exit the skill with a summary of what was detected and why the user chose to abort. No CLI invocation.
+- **`repair`** — Attempt to fix the existing setup in place rather than replacing it.
+  - **Allowed mutations:** Run `oat docs analyze` against the existing docs app and surface its recommendations. Optionally proceed to `oat docs apply` if the user confirms. The bootstrap skill **does not** directly modify the existing docs app files; it delegates to the analyze/apply skills.
+  - **Preserved state:** Existing docs app directory, `documentation` config section, root `AGENTS.md` section — all preserved unless analyze/apply recommends changes and the user approves them.
+  - **Stop conditions:** If the existing setup is too broken for analyze to make meaningful recommendations (e.g., `documentation.index` points at a missing file), analyze will report that; the skill surfaces the report and asks the user whether to escalate to `replace`.
+
+**Pre-scaffold invariant:** No matter which resolution is chosen, the Scaffold Runner never executes `oat docs init` until the resolution's "allowed mutations" have completed successfully and the state matches what the CLI expects for that resolution (e.g., empty target directory for `replace`). If any mutation fails, the flow stops before scaffold.
+
 **Design Decisions:**
 
 - **One question at a time.** Preserves the discovery-phase principle of incremental validation. Each answer can inform the next default (e.g., site name defaults to repo name, which then informs package name suggestion).
 - **Coherence check is the last step before scaffold.** Explicit buy-in on the final inputs prevents "I said X but didn't realize it meant Y" regret.
 - **The site-name question is framed as "what's this documentation for?"** rather than "what's the display title?" This surfaces the product/project mental model rather than asking users to reverse-engineer the title from the package name.
 - **Conflict resolution happens here, not in Preflight.** Preflight detects; Input Gatherer resolves. This means the user sees conflicts in context with the rest of their inputs.
+- **`second-app` is honestly scoped.** Rather than pretend the skill can support multi-docs today, the Input Gatherer surfaces the limitation up front and redirects. When `OatDocumentationConfig` gains multi-docs support, this resolution becomes fully functional without skill changes beyond removing the refusal.
 
 ### Scaffold Runner
 
-**Purpose:** Execute `oat docs init` with the collected inputs and apply post-scaffold patches for the CLI gaps (FP-11, FP-12, FP-15).
+**Purpose:** Execute `oat docs init` with the collected inputs and apply post-scaffold patches for the CLI gaps (FP-11, FP-12, FP-13, FP-15).
 
 **Responsibilities:**
 
@@ -243,9 +267,26 @@ Input Result:
   - Add `export const metadata = { title, description }` to `layout.tsx` (site metadata gap from FP-12 sub-finding C)
 - If nested-standalone and the CLI hasn't fixed FP-11, apply Turbopack root patch:
   - Set `turbopack: { root: __dirname }` in `next.config.js` (either via the `createDocsConfig` passthrough if that landed, or by replacing the wrapper with explicit `createMDX()` + hand config)
+- If the CLI hasn't fixed FP-13 (scaffolded template content inaccuracies), apply template-content patches to the scaffolded files. All four sub-findings from discovery are in scope for the Scaffold Runner; each has a specific target and idempotency check:
+  - **Sub-finding A — Empty `description:` frontmatter on sibling pages.** Target: `docs/getting-started.md:3` and `docs/contributing.md:3`. If `description: ''`, replace with a static default that describes the page's own purpose (e.g., `'Set up the local environment and preview the docs site.'` and `'Authoring conventions and navigation rules for this docs site.'`). No templating — these are per-page descriptions, not site-level.
+  - **Sub-finding B — Bare install/build commands lack working-directory context.** Target: `docs/getting-started.md:15-33`. Replace the bare `pnpm install` / `pnpm dev` / `pnpm build` block with shape-aware commands. For nested-standalone, prefix with `cd <appRoot> &&`. For monorepo, use `pnpm --filter <appName>`. For single-package, the bare form is fine. The skill knows the shape from Preflight and the app name from Input Gatherer, so it renders the correct variant.
+  - **Sub-finding C — False `docs:lint` claim in `contributing.md`.** Target: `docs/contributing.md:31`. If `lint=none` (the scaffold default), narrow the claim — replace "Run Markdown formatting and linting as configured for this docs app." with "Run Markdown formatting as configured for this docs app." If `lint=markdownlint-cli2`, leave the original claim intact.
+  - **Sub-finding D — Generated root `index.md` lacks a "do not hand-edit" warning.** Target: `docs/contributing.md` (append a "Generated files" section) and the generated `index.md` at the docs app root (prepend a header comment). The contributing.md section explains the two-`index.md` situation in two sentences and names the generated path. The header comment in the generated file reads `<!-- generated by oat docs generate-index; do not hand-edit. Source: docs/index.md -->` and is added to the first post-scaffold run of the prebuild script, detected and preserved idempotently on subsequent builds.
 - If the CLI hasn't scaffolded a docs-app `AGENTS.md` (FP-15 fix not yet landed), write one at the docs app root using a task-framed template. The template is owned by the skill (not by the CLI templates dir) while this patch is in force, and is migrated to the CLI templates once the CLI gains the capability.
 - Capture CLI stdout/stderr for the Build Verifier and Walkthrough
 - Reject if CLI returns non-zero; preserve CLI error text verbatim for the user
+
+**Capability Detection (required before applying any fallback patch):**
+
+Post-patch fallbacks must be deterministic and idempotent. Before applying any patch, the Scaffold Runner runs a capability probe and a file-shape check:
+
+- **CLI capability probes:** Parse `oat docs init --help` once at the start of the Scaffold Run step. Look for `--site-name` / `--title` (FP-12), `--turbopack-root` or similar (FP-11), and AGENTS.md scaffolding flags (FP-15). Each probe records a boolean capability flag. If the probe fails (e.g., CLI older than the probe format), default to "fallback active" for that capability.
+- **File-shape checks before applying FP-12 patches:** For each target file (`app/layout.tsx`, `docs/index.md`, `docs/getting-started.md`, `docs/contributing.md`), read the file and verify it matches the expected scaffold shape (e.g., `layout.tsx` contains the `DocsLayout` import and `branding={{` marker; `index.md` contains `# {{SITE_NAME}}` or an already-patched equivalent). If the file has drifted from both the scaffold shape AND the patched shape (i.e., the user has edited it beyond recognition), **refuse the patch and surface a focused error** describing what was expected, what was found, and that the user should restore or manually apply the change.
+- **File-shape checks before applying FP-11 Turbopack patch:** Inspect `next.config.js`. If it uses `createDocsConfig()` and `@open-agent-toolkit/docs-config` supports the passthrough (FP-11 fix landed), pass `turbopack: { root: __dirname }` through. If the passthrough isn't supported, replace the wrapper with an explicit `createMDX()` + hand-written Next config — but only if the file matches the scaffold shape. If the user has already replaced the wrapper, preserve their version and only add `turbopack: { root: __dirname }` if absent.
+- **File-shape checks before applying FP-13 patches:** For each sub-finding target, verify the scaffold marker is still present (e.g., `description: ''` for sub-finding A). If the file has already been patched (marker absent, new content present) or if the user has edited beyond the scaffold shape, skip the patch silently for that file and record a note in `patchesApplied[]` indicating "skipped — user-edited" or "skipped — already patched."
+- **FP-15 detection:** Check for the existence of `<appRoot>/AGENTS.md`. If present, **never overwrite** — even if content is stale. Record a `driftFinding` in the Inspector output so the Walkthrough can surface "your AGENTS.md appears to be older than this version of the skill; consider re-generating" without destructive action.
+
+**Refuse-and-surface contract:** When any file-shape check fails in an ambiguous way (drift beyond both scaffold and patched shape), the Scaffold Runner does not proceed with the patch and does not silently continue. It records a `patchesApplied[]` entry with status `refused`, an explanation, and a suggested manual fix. The Walkthrough reports this to the user at the end so they can act.
 
 **AGENTS.md template (FP-15 fallback) — content requirements:**
 
@@ -293,7 +334,7 @@ Input Result:
 Verification Result:
   buildSucceeded: boolean
   knownIssues: Array<{
-    issueId: 'FP-11-turbopack' | 'FP-13-cwd-commands' | ...
+    issueId: 'FP-11-turbopack' | 'install-retry-after-version-error' | ...
     description: string
     autoFixed: boolean
     remediation?: string
@@ -303,6 +344,8 @@ Verification Result:
     stderr: string
   }>
 ```
+
+**Note on FP-13 vs Build Verifier:** FP-13 is a template-content correctness issue handled by the Scaffold Runner (see its responsibilities and Capability Detection section), **not** a build failure. The Build Verifier does not watch for FP-13 symptoms because the Scaffold Runner has already patched the relevant files before build runs. If a Build Verifier test inadvertently regresses on a missed FP-13 patch, the symptom would manifest as something else (e.g., a user report after a fresh contributor follows `getting-started.md` in a nested-standalone repo) and should be handled by tightening the Scaffold Runner's coverage, not by expanding the Build Verifier's pattern list.
 
 **Design Decisions:**
 
@@ -366,11 +409,36 @@ Inspection Result:
   - **`docs/contributing.md`** — human-authoring conventions (frontmatter requirements, Markdown features like GFM alerts / mermaid / code blocks), the nav contract summary, and the pointer to `oat docs apply` for bulk changes.
 - Framework-specific deep dive:
   - **Fumadocs:** How `DocsLayout` renders chrome, how `createMDX` picks up `docs/`, how search indexing works, how the docs-theme package provides branding
-  - **MkDocs:** Lean summary with explicit "needs elaboration" marker — this section should note what's NOT covered so future skill work can fill it in
+  - **MkDocs:** Lean summary (see "MkDocs Minimum Contract" below for the required boundary)
 - Explain the OAT docs ecosystem:
   - `oat-project-document` skill auto-populates docs during OAT workflows
   - `oat docs analyze` audits the docs structure against the contract
   - `oat docs apply` executes approved analyze recommendations
+
+**MkDocs Minimum Contract (acceptance boundary for the lean path):**
+
+"Lean" and "needs elaboration" are not the same as "skip." The MkDocs path must meet a defined minimum before it can ship. Anything beyond the minimum is explicitly deferred with a marker so future work can fill it in without rewriting the shared scaffolding.
+
+**Required in the MkDocs path:**
+
+- **Scaffold:** Same CLI invocation as Fumadocs, with `--framework mkdocs`. All Input Gatherer fields apply (site name, package name, target dir, description, lint, format).
+- **Build verification:** Run `pnpm --dir <appRoot> run docs:build` (which invokes `mkdocs build` via `setup-docs.sh`). Pass = exit code 0. Skip `pnpm install` step if the Python requirements are satisfied; otherwise follow the scaffold's `setup-docs.sh` Python-environment bootstrap.
+- **Config inspection (Section A):** Read back `.oat/config.json` `documentation` section. For MkDocs, verify `root`, `tooling: 'mkdocs'`, `config` (path to `mkdocs.yml`), and `index`. The `config` field is MkDocs-specific and must be present.
+- **Two-sources situation (Section B adapted):** Explain that `docs/index.md` is the authored content map (with `## Contents`), and `mkdocs.yml`'s `nav:` section is the generated navigation — regenerated by `oat docs nav sync` from `docs/**/index.md` `## Contents` entries. The footgun framing is the same as Fumadocs (don't hand-edit the generated artifact), just with a different generated target.
+- **`## Contents` contract (Section C):** Same as Fumadocs. The contract is framework-agnostic.
+- **Agent instruction surfaces (Section D):** All three surfaces (root `AGENTS.md` section, docs-app `AGENTS.md`, `contributing.md`). Task-framed AGENTS.md content is mostly framework-agnostic; the MkDocs variant differs only where framework-specific tooling is named (e.g., "run `mkdocs build`" vs "run `pnpm build`").
+- **Framework summary (Section F):** One paragraph explaining: `mkdocs.yml` is the root config; Material theme provides the default UI; MkDocs plugins (search, git-revision-date, etc.) are declared in `mkdocs.yml`; Python environment is managed via `requirements.txt` + `setup-docs.sh`. This paragraph is the lean summary — not the elaborated deep dive.
+- **Analyze/apply (Section G):** Same as Fumadocs. The analyze/apply tooling is framework-agnostic.
+
+**Explicitly deferred (labeled "needs elaboration"):**
+
+- Deep explanation of Material theme internals, theme overrides, or custom theme authoring
+- Plugin configuration patterns and custom plugin authoring
+- Python environment debugging (virtualenv issues, pip conflicts, Python version compatibility)
+- MkDocs-specific Markdown extensions beyond the shared set (GFM alerts, mermaid, code blocks)
+- MkDocs deployment patterns (GitHub Pages, custom hosts) beyond what `mkdocs build` produces
+
+Deferred content is visibly marked in the Walkthrough so users know they're getting the lean version and where to look for more (MkDocs official docs, linked at the end of Section F).
 
 **Design Decisions:**
 
