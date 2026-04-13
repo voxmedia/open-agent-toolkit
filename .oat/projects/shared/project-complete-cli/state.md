@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: null
+oat_current_task: p01-t02
+oat_last_commit: bcde8b93
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -18,7 +18,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-13T18:17:21.000Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-13T21:51:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-13T21:54:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -30,7 +30,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress.
+Implementation in progress; `p01-t01` complete and `p01-t02` is next.
 
 ## Artifacts
 
@@ -45,7 +45,8 @@ Implementation in progress.
 - ✓ Discovery completed
 - ✓ Quick-mode plan generated
 - ✓ Implementation started
-- ⧗ Executing `p01-t01`
+- ✓ `p01-t01` completed
+- ⧗ Executing `p01-t02`
 
 ## Blockers
 
@@ -53,4 +54,4 @@ None
 
 ## Next Milestone
 
-Complete `p01-t01`: codify the canonical completed `state.md` contract in tests.
+Complete `p01-t02`: implement the CLI-owned completion-state mutator.

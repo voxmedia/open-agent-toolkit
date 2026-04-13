@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -26,11 +26,11 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 0/2       |
+| Phase 1 | in_progress | 2     | 1/2       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 1     | 0/1       |
 
-**Total:** 0/5 tasks completed
+**Total:** 1/5 tasks completed
 
 ---
 
@@ -60,8 +60,33 @@ oat_generated: false
 
 ### Task p01-t01: Codify the canonical completed `state.md` contract in tests
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `bcde8b93`
+
+**Outcome (required):**
+
+- Added a pure `renderCompletedProjectState()` helper that rewrites the canonical completion frontmatter and markdown sections for project `state.md`
+- Locked the baseline contract to the current `oat-project-complete` behavior for lifecycle state, completion timestamps, status text, current phase, progress, and next milestone
+- Filtered in-progress progress bullets out of the completed-state rendering while preserving already-complete workflow bullets
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/complete-state/state-utils.ts` - added the pure completion-state mutator and deterministic section/frontmatter updates
+- `packages/cli/src/commands/project/complete-state/state-utils.test.ts` - codified the baseline completed-state contract in a focused unit test
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/complete-state/state-utils.test.ts`
+- Result: Fails as expected for RED, but the package test wrapper also surfaced unrelated existing repo failures in `project/list`, `project/status`, and `fs/assets`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state/state-utils.test.ts`
+- Result: Pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: Fails for unrelated existing `@open-agent-toolkit/control-plane` resolution errors in `src/commands/project/list.ts` and `src/commands/project/status.ts`
+
+**Notes / Decisions:**
+
+- Used the shared frontmatter helpers rather than ad hoc YAML editing so later command integration can reuse the same repo-local pattern
+- Switched section replacement to index-based slicing after a first regex attempt leaked old section content into the rendered output
 
 **Notes:**
 
