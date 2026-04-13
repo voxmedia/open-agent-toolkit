@@ -82,6 +82,7 @@ export interface InstructionsValidateCommandDependencies {
 }
 
 export interface InstructionsSyncCommandDependencies extends InstructionsValidateCommandDependencies {
+  lstat: (path: string) => Promise<Stats>;
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
   removeFile: (path: string) => Promise<void>;
   symlinkFile: (target: string, path: string) => Promise<void>;

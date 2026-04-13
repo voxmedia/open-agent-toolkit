@@ -1,4 +1,4 @@
-import { readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { lstat, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
@@ -38,6 +38,7 @@ export async function removeInstructionFile(
 function defaultDependencies(): InstructionsSyncCommandDependencies {
   return {
     buildCommandContext,
+    lstat,
     readFile,
     removeFile: removeInstructionFile,
     resolveProjectRoot,
@@ -77,6 +78,12 @@ function getSyncedDetail(strategy: InstructionSyncStrategy): string {
 
 function getAgentsPath(entry: InstructionEntry): string {
   return entry.agentsPath ?? join(dirname(entry.claudePath), 'AGENTS.md');
+}
+
+function getErrorCode(error: unknown): string | null {
+  return error && typeof error === 'object' && 'code' in error
+    ? String(error.code)
+    : null;
 }
 
 function wrapStrayResyncError(
@@ -182,6 +189,21 @@ async function applySyncActions(
     const isAgentsAction = action.target === agentsPath;
 
     if (isAgentsAction) {
+      try {
+        await dependencies.lstat(agentsPath);
+        throw new CliError(
+          `Canonical AGENTS.md appeared during sync at ${agentsPath}; re-run to reclassify before adopting stray CLAUDE.md`,
+          2,
+        );
+      } catch (error) {
+        if (error instanceof CliError) {
+          throw error;
+        }
+        if (getErrorCode(error) !== 'ENOENT') {
+          throw error;
+        }
+      }
+
       const adoptedContent = await dependencies.readFile(
         entry.claudePath,
         'utf8',

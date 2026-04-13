@@ -23,6 +23,7 @@ interface HarnessOptions {
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
+  lstat: ReturnType<typeof vi.fn>;
   readFile: ReturnType<typeof vi.fn>;
   removeFile: ReturnType<typeof vi.fn>;
   scanInstructionFiles: ReturnType<typeof vi.fn>;
@@ -40,6 +41,9 @@ function createHarness(options: HarnessOptions = {}): {
   });
 
   const writeFile = vi.fn(async () => undefined);
+  const lstat = vi.fn(async () => {
+    throw Object.assign(new Error('missing'), { code: 'ENOENT' });
+  });
   const readFile = vi.fn(async () => '# canonical instructions\n');
   const removeFile = vi.fn(async () => undefined);
   const symlinkFile = vi.fn(async () => undefined);
@@ -55,6 +59,7 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: false,
       logger: capture.logger,
     }),
+    lstat,
     readFile,
     removeFile,
     resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
@@ -66,6 +71,7 @@ function createHarness(options: HarnessOptions = {}): {
   return {
     capture,
     command,
+    lstat,
     readFile,
     removeFile,
     scanInstructionFiles,
@@ -361,6 +367,32 @@ describe('createInstructionsSyncCommand', () => {
     expect(removeFile).toHaveBeenCalledWith('/tmp/workspace/docs/CLAUDE.md');
     expect(capture.error).toContain(
       'Adopted stray instructions into /tmp/workspace/docs/AGENTS.md, but failed to regenerate /tmp/workspace/docs/CLAUDE.md: permission denied',
+    );
+    expect(process.exitCode).toBe(2);
+  });
+
+  it('fails when canonical AGENTS.md appears before stray adoption is applied', async () => {
+    const { command, capture, lstat, removeFile, writeFile } = createHarness({
+      entries: [
+        {
+          agentsPath: null,
+          claudePath: '/tmp/workspace/docs/CLAUDE.md',
+          status: 'stray',
+          detail: 'CLAUDE.md found without AGENTS.md',
+        },
+      ],
+    });
+
+    lstat.mockResolvedValueOnce({
+      isFile: () => true,
+    });
+
+    await runSyncCommand(command);
+
+    expect(removeFile).not.toHaveBeenCalled();
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(capture.error).toContain(
+      'Canonical AGENTS.md appeared during sync at /tmp/workspace/docs/AGENTS.md; re-run to reclassify before adopting stray CLAUDE.md',
     );
     expect(process.exitCode).toBe(2);
   });
