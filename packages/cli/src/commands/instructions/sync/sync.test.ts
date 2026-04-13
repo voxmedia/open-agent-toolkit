@@ -337,6 +337,34 @@ describe('createInstructionsSyncCommand', () => {
     );
   });
 
+  it('reports partial stray adoption when Claude regeneration fails after AGENTS.md is written', async () => {
+    const { command, capture, readFile, removeFile, writeFile } = createHarness(
+      {
+        entries: [
+          {
+            agentsPath: null,
+            claudePath: '/tmp/workspace/docs/CLAUDE.md',
+            status: 'stray',
+            detail: 'CLAUDE.md found without AGENTS.md',
+          },
+        ],
+      },
+    );
+
+    readFile.mockResolvedValueOnce('# stray claude instructions\n');
+    writeFile
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('permission denied'));
+
+    await runSyncCommand(command);
+
+    expect(removeFile).toHaveBeenCalledWith('/tmp/workspace/docs/CLAUDE.md');
+    expect(capture.error).toContain(
+      'Adopted stray instructions into /tmp/workspace/docs/AGENTS.md, but failed to regenerate /tmp/workspace/docs/CLAUDE.md: permission denied',
+    );
+    expect(process.exitCode).toBe(2);
+  });
+
   it('apply (default) without --force leaves mismatches skipped and exits 1', async () => {
     const { command, writeFile } = createHarness({
       entries: [

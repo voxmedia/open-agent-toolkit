@@ -79,6 +79,18 @@ function getAgentsPath(entry: InstructionEntry): string {
   return entry.agentsPath ?? join(dirname(entry.claudePath), 'AGENTS.md');
 }
 
+function wrapStrayResyncError(
+  error: unknown,
+  agentsPath: string,
+  claudePath: string,
+): CliError {
+  const message = error instanceof Error ? error.message : String(error);
+  return new CliError(
+    `Adopted stray instructions into ${agentsPath}, but failed to regenerate ${claudePath}: ${message}`,
+    error instanceof CliError ? error.exitCode : 2,
+  );
+}
+
 function planSyncActions({
   entries,
   force,
@@ -186,22 +198,29 @@ async function applySyncActions(
       throw new CliError(`Unable to resolve AGENTS.md for ${action.target}`, 2);
     }
 
-    if (action.type === 'update') {
-      await dependencies.removeFile(action.target);
-    }
+    try {
+      if (action.type === 'update') {
+        await dependencies.removeFile(action.target);
+      }
 
-    if (strategy === 'symlink') {
-      const symlinkTarget = relative(dirname(action.target), agentsPath);
-      await dependencies.symlinkFile(symlinkTarget, action.target);
-    } else if (strategy === 'copy') {
-      const agentsContent = await dependencies.readFile(agentsPath, 'utf8');
-      await dependencies.writeFile(action.target, agentsContent, 'utf8');
-    } else {
-      await dependencies.writeFile(
-        action.target,
-        EXPECTED_CLAUDE_CONTENT,
-        'utf8',
-      );
+      if (strategy === 'symlink') {
+        const symlinkTarget = relative(dirname(action.target), agentsPath);
+        await dependencies.symlinkFile(symlinkTarget, action.target);
+      } else if (strategy === 'copy') {
+        const agentsContent = await dependencies.readFile(agentsPath, 'utf8');
+        await dependencies.writeFile(action.target, agentsContent, 'utf8');
+      } else {
+        await dependencies.writeFile(
+          action.target,
+          EXPECTED_CLAUDE_CONTENT,
+          'utf8',
+        );
+      }
+    } catch (error) {
+      if (entry.status === 'stray') {
+        throw wrapStrayResyncError(error, agentsPath, action.target);
+      }
+      throw error;
     }
 
     appliedActions.push({
