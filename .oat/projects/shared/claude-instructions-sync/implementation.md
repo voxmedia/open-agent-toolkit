@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t10
+oat_current_task_id: p04-t11
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -31,9 +31,9 @@ oat_template_name: implementation
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 9/11      |
+| Phase 4 | in_progress | 11    | 10/11     |
 
-**Total:** 15/17 tasks completed
+**Total:** 16/17 tasks completed
 
 ---
 
@@ -574,6 +574,30 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 **Notes / Decisions:**
 
 - The guard intentionally tells the operator to re-run sync so the directory is reclassified from live filesystem state.
+
+### Task p04-t10: (review) Remove redundant post-sync guard
+
+**Status:** completed
+**Commit:** f5b1d46b
+
+**Outcome (required when completed):**
+
+- Removed the redundant `action.type !== 'skip'` condition from post-sync entry reconciliation.
+- Preserved existing sync behavior because `result === 'applied'` already excludes skipped actions.
+- Verified the sync command test suite after the cleanup.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/sync/sync.ts` - simplified the applied-action guard in `getPostSyncEntries`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the change behavior-neutral and limited to the dead guard called out by review.
 
 ---
 
