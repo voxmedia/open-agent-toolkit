@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p02-t02
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,10 +27,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | in_progress | 2     | 1/2       |
-| Phase 3 | pending     | 1     | 0/1       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 1     | 0/1       |
 
-**Total:** 3/5 tasks completed
+**Total:** 4/5 tasks completed
 
 ---
 
@@ -133,8 +133,36 @@ oat_generated: false
 
 ## Phase 2: Add CLI delegation and integrate the skill
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-13
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Added a shell-callable `oat project complete-state` command that can update a project `state.md` into the canonical completed lifecycle shape
+- Replaced the inline `sed`/`awk` lifecycle mutation block in `oat-project-complete` with delegation to the new CLI command while leaving the rest of the closeout flow intact
+
+**Key files touched:**
+
+- `packages/cli/src/commands/project/complete-state/index.ts` - owns the command surface for completion-state mutation
+- `packages/cli/src/commands/project/complete-state/index.test.ts` - verifies command behavior and error handling
+- `.agents/skills/oat-project-complete/SKILL.md` - delegates lifecycle mutation to the CLI instead of editing `state.md` inline
+- `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` - locks the skill contract onto the new CLI delegation path
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state/index.test.ts src/commands/project/complete-state/state-utils.test.ts`
+- Result: Pass
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Result: Pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: Fails for unrelated existing `@open-agent-toolkit/control-plane` resolution errors in `src/commands/project/list.ts` and `src/commands/project/status.ts`
+
+**Notes / Decisions:**
+
+- Help snapshot expectations were updated, but the full `help-snapshots.test.ts` suite remains blocked by the unrelated control-plane package resolution issue in `project/list` and `project/status`
+- The skill now treats the CLI command as the source of truth for completion-state formatting, which removes duplicated shell mutation logic from the workflow layer
 
 ### Task p02-t01: Add a shell-callable CLI command for completion-state mutation
 
@@ -174,15 +202,37 @@ oat_generated: false
 
 ### Task p02-t02: Delegate `oat-project-complete` state mutation to the CLI
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `d647e7a0`
+
+**Outcome (required):**
+
+- Replaced the inline lifecycle mutation block in `oat-project-complete` with `oat project complete-state`
+- Added a review-skill contract assertion so the completion skill stays delegated to the CLI path
+
+**Files changed:**
+
+- `.agents/skills/oat-project-complete/SKILL.md` - delegates Step 5 to the CLI command and documents CLI ownership of the canonical state mutation
+- `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` - asserts the CLI delegation path remains in the skill contract
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Result: Pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: Fails for unrelated existing `@open-agent-toolkit/control-plane` resolution errors in `src/commands/project/list.ts` and `src/commands/project/status.ts`
+
+**Notes / Decisions:**
+
+- Kept the surrounding archive, PR-description, and pointer-clear flow in the skill untouched so only the state mutation path changed
+- Passed `--archived` only when completion will archive a shared project, matching the existing skill semantics
 
 ---
 
 ## Phase 3: Focused verification and artifact alignment
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-13
 
 ### Task p03-t01: Run targeted verification and close the contract gap cleanly
 
