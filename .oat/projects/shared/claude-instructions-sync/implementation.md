@@ -33,9 +33,9 @@ oat_template_name: implementation
 | Phase 3 | completed   | 2     | 2/2       |
 | Phase 4 | completed   | 11    | 11/11     |
 | Phase 5 | completed   | 2     | 2/2       |
-| Phase 6 | in_progress | 2     | 0/2       |
+| Phase 6 | in_progress | 2     | 1/2       |
 
-**Total:** 19/21 tasks completed
+**Total:** 20/21 tasks completed
 
 ---
 
@@ -722,8 +722,7 @@ oat_template_name: implementation
 
 ### Phase Summary (fill when phase is complete)
 
-- Pending both review-fix tasks added from `final-review-2026-04-13-v3.md`.
-- Need to close the broken-`AGENTS.md` symlink validation gap and preserve non-default strategy guidance in `validate`.
+- Closed the broken-`AGENTS.md` symlink validation gap and still need to preserve non-default strategy guidance in `validate`.
 - A clean final re-review is required after Phase 6 completes.
 
 **Key files touched:**
@@ -737,7 +736,7 @@ oat_template_name: implementation
 **Verification:**
 
 - Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
-- Result: pending
+- Result: pass
 - Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/validate/validate.test.ts`
 - Result: pending
 
@@ -748,11 +747,32 @@ oat_template_name: implementation
 
 ### Task p06-t01: (review) Reject broken AGENTS symlinks as healthy canonical instructions
 
-**Status:** pending
+**Status:** completed
+**Commit:** 9a22b47d
+
+**Outcome (required when completed):**
+
+- Stopped preserving dangling `AGENTS.md` symlinks as canonical scan entries during traversal.
+- Added regression coverage for a broken canonical `AGENTS.md` symlink paired with pointer `CLAUDE.md`.
+- Verified the instruction utility suite after the scanner change.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - only preserves broken `CLAUDE.md` symlinks for scan visibility
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - adds a dangling-`AGENTS.md` regression case
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Classified the broken canonical symlink by omission from the canonical scan set, which causes the existing `stray` path to surface the bad state without inventing a new status.
 
 ### Task p06-t02: (review) Preserve selected strategy in validate fix guidance
 
-**Status:** pending
+**Status:** in_progress
 
 ---
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: 90b46e2b
+oat_current_task: p06-t02
+oat_last_commit: 9a22b47d
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -67,8 +67,8 @@ Implementing Phase 6 review fixes from the latest final re-review
 - ✓ `p05-t01` completed
 - ✓ `p05-t02` completed
 - ✓ Final re-review received (`final-review-2026-04-13-v3.md`)
-- ⧗ `p06-t01` in progress
-- ⧖ `p06-t02` pending
+- ✓ `p06-t01` completed
+- ⧗ `p06-t02` in progress
 
 ## Blockers
 
