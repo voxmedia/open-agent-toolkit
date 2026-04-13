@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t02
 oat_generated: false
 ---
 
@@ -30,10 +30,10 @@ oat_generated: false
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 4     | 4/4       |
 | Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | in_progress | 3     | 0/3       |
+| Phase 5 | in_progress | 3     | 1/3       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 13/19 tasks completed
+**Total:** 14/19 tasks completed
 
 ---
 
@@ -556,8 +556,32 @@ oat_generated: false
 
 ### Task p05-t01: Write Walkthrough Sections A-D
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bc8125f5
+
+**Outcome:**
+
+- Authored the opening of Step 6 + Sections A–D of the Walkthrough in SKILL.md (~64 insertions).
+- Opening discipline: chunked-conversation framing, skip-if-broken guards, per-section "Ready for the next?" pause with `skip to summary` escape, and audience discipline spelled out (Walkthrough = setup-time, AGENTS.md = runtime; don't duplicate).
+- **Section A (config):** grounded in `Inspection Result.parent.documentation`, not generic field docs; narrates only the fields present on their config (skipping MkDocs-only fields for Fumadocs users).
+- **Section B (two `index.md` files):** prevents FP-13/D footgun explicitly; explains authored source vs. generated map; instructs how to tell them apart by location + the `<!-- generated -->` banner.
+- **Section C (`## Contents` contract):** shows the user their own `docs/index.md`'s `## Contents` as the concrete example; spells out why tooling breaks when the contract isn't followed.
+- **Section D (three agent surfaces):** labels root `AGENTS.md` / docs-app `AGENTS.md` / `docs/contributing.md` by audience + lifetime; calls out the docs-app AGENTS.md's six-months-from-now framing so it's clear this Walkthrough doesn't duplicate its content.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (64 insertions, 1 deletion)
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md`
+- Result: pass (after one `oxfmt --write` pass during the lint-staged hook)
+
+**Notes / Decisions:**
+
+- **Section A avoids reciting generic field docs.** Instead of "`root` is the docs app directory (string, required, ...)" I wrote it as "the scaffolded app directory; downstream tools like `oat-project-document` use this to find 'the docs' without the user having to tell them." The field reference is implicit; the why-you-care is explicit.
+- **"Skip to summary" escape hatch.** Every section ends with a pause prompt. The user can bail to the Exit summary without reading all four sections. Rationale: forcing someone to read an educational walkthrough they don't want teaches them the opposite lesson.
+- **Commit-message length.** Original commit message exceeded the 100-char commitlint limit; shortened the header to just the scope+phase description; the body of the message now lives in this implementation entry.
 
 ---
 
