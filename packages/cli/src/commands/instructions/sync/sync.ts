@@ -273,7 +273,6 @@ function getPostSyncEntries(
 
     if (
       action?.result === 'applied' &&
-      action.type !== 'skip' &&
       (entry.status !== 'stray' || adoptedAction?.result === 'applied')
     ) {
       return {
