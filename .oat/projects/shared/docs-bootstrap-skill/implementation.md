@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p05-t03
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -30,10 +30,10 @@ oat_generated: false
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 4     | 4/4       |
 | Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | in_progress | 3     | 2/3       |
-| Phase 6 | pending     | 3     | 0/3       |
+| Phase 5 | completed   | 3     | 3/3       |
+| Phase 6 | in_progress | 3     | 0/3       |
 
-**Total:** 15/19 tasks completed
+**Total:** 16/19 tasks completed
 
 ---
 
@@ -551,8 +551,34 @@ oat_generated: false
 
 ## Phase 5: Educational Walkthrough + Optional Content Kickoff
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
+**Completed:** 2026-04-13
+
+### Phase Summary
+
+**Outcome:**
+
+- Steps 6 (Walkthrough, Sections A–G) and 7 (Optional Content Kickoff + Exit summary) of SKILL.md authored end-to-end (~222 net insertions).
+- **Walkthrough structure:** chunked-conversation framing with per-section pause prompts and a `skip to summary` escape. Audience discipline spelled out (Walkthrough = setup-time; `AGENTS.md` = runtime).
+- **Sections A–D (both frameworks):** config readback (Section A), two-`index.md` model (Section B, FP-13/D footgun prevention), `## Contents` contract with live example (Section C), three agent-instruction surfaces with audience + lifetime discipline (Section D).
+- **Sections E–G:** Fumadocs deep dive with runtime insight about `DocsLayout.branding.title` (Section E), MkDocs Minimum Contract with visible in-scope/deferred lists (Section F), OAT docs ecosystem introduction ordered by user encounter (Section G).
+- **Optional Content Kickoff** delegates to `oat-docs-analyze` + `oat-docs-apply` on yes; hands off with specific commands on no.
+- **Exit summary** is a scannable block: app + location + patches + build + inspection + where-things-live + next-steps + AGENTS.md reminder.
+
+**Key files touched:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` — Steps 6 and 7 authored end-to-end across three tasks
+
+**Verification:**
+
+- `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md` — pass across all three tasks (p05-t01 required one oxfmt auto-fix pass in the lint-staged hook; p05-t02 and p05-t03 passed on first try)
+
+**Notes / Decisions:**
+
+- **Walkthrough doesn't duplicate `AGENTS.md` content.** Setup-time narration vs. runtime reference serve different audiences at different times. Section D makes this explicit.
+- **Framework gating in Walkthrough.** Section E skips for MkDocs; Section F skips for Fumadocs; all others are shared. Makes the Walkthrough path deterministic and keeps framework-specific content from leaking into the other.
+- **Exit summary stays at `####` under Step 7.** The skill's banner and step indicators are 7-step; the Exit summary is the output of Step 7, not a new pipeline phase. Structural correction called out in p05-t03 notes.
 
 ### Task p05-t01: Write Walkthrough Sections A-D
 
@@ -617,15 +643,39 @@ oat_generated: false
 
 ### Task p05-t03: Write Optional Content Kickoff + Exit summary
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e6b80b4b
+
+**Outcome:**
+
+- Authored Step 7 (Optional Content Kickoff) body + the Exit summary in SKILL.md (~109 net insertions).
+- **Step 7 flow:** 7a offers the option plainly, 7b delegates to `oat-docs-analyze` + `oat-docs-apply` on yes (never re-implements their logic), 7c hands off with actionable commands on no.
+- **Decline path is specific:** the exact skill names the user should invoke later, not "run analyze later."
+- **Exit summary** is a single scannable block: App + Location + Framework + Config, Created files count, Patches applied (per-FP), Build status + known issues, Inspection (config paths, drift, `requireForProjectCompletion`), Where things live, Next-step commands, and an AGENTS.md reminder.
+- **Framework-specific dev commands** rendered per shape + framework (Fumadocs monorepo/nested-standalone/single-package, MkDocs any-shape).
+- **Structure correction:** initially drafted Exit summary as "Step 8" but corrected to `#### Exit summary` under Step 7 — the skill's Progress Indicators and banner are 7-step, and the Exit summary is the output of Step 7, not a new pipeline phase.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (109 insertions, 3 deletions)
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md`
+- Result: pass on first try
+
+**Notes / Decisions:**
+
+- **Exit summary nesting.** Step numbering is authoritative at 7. The Exit summary is a `####` subsection of Step 7, not a Step 8. This matches the Progress Indicators spec at the top of SKILL.md and the `[7/7]` step indicator format. Future edits should keep the 7-step structure.
+- **Patch status reporting.** Exit summary distinguishes between `skipped` (because the CLI handled it) and `n/a` (because the gate didn't apply). The user should know when the CLI has caught up with the skill — that's the ratchet discipline surfacing in the output.
+- **"Reminder" line.** The single-sentence reminder about `<appRoot>/AGENTS.md` is intentionally the last line before the next-step commands. It's the bridge between "the skill just ran" (setup-time) and "you'll work in this docs app later" (runtime) — the same audience-discipline pattern Section D spelled out.
 
 ---
 
 ## Phase 6: Finalization
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-13
 
 ### Task p06-t01: Coherence pass + tightening
 
