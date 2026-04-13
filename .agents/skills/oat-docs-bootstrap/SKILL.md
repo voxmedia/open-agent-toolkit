@@ -187,7 +187,74 @@ Preflight Result:
 
 ### Step 2: Input Gatherer
 
-(Body authored in p02-t02; Conflict Resolution Contract authored in p02-t03.)
+Collect the inputs needed to invoke `oat docs init` and apply post-scaffold patches. The skill asks for richer inputs than the CLI prompts for — most importantly, a **site name** separate from the package/app name (the FP-12 workaround). Ask one question at a time, surfacing defaults from the Preflight Result, and end with a coherence check before scaffold.
+
+Print `[2/7] Gathering inputs…` at the start of this step.
+
+**2a. Resolve Preflight conflicts (if any).**
+
+If `conflicts[]` from Preflight is non-empty, present them together and collect a `conflictResolution`. See the **Conflict Resolution Contract** sub-procedure below for the exact semantics of each option. Do not proceed to input questions until the user has chosen a resolution.
+
+If `conflicts[]` is empty, skip conflict handling and go to 2b.
+
+**2b. Ask for inputs, one at a time.**
+
+Each question includes plain-language context explaining what the value affects. Defaults come from the Preflight Result. Ask sequentially — each answer can inform the next default.
+
+- **Framework.** `"Which docs framework? Fumadocs (Next.js, primary path) or MkDocs (Python, lean path)?"` Default: `fumadocs`.
+- **Site name.** `"What's the name of the product or project these docs are for?"` Default: `defaults.siteName` (humanized repo name). Explain: "This becomes the display title — what shows up in the site header, browser tab, and page headings. It is **not** the package name." This is the FP-12 workaround — distinct from `appName`.
+- **Package / app name.** `"What should the docs package be called?"` Default: `defaults.appName`. Explain: "This becomes the `package.json` `name`, the directory name, and the pnpm filter (e.g., `pnpm --filter {appName} dev`). It does **not** show up in the UI."
+- **Target directory.** `"Where should the docs app live?"` Default: `defaults.targetDir`. Explain: "Relative to repo root. Monorepos typically use `apps/{appName}`; single-package repos use `{appName}` as a subdirectory."
+- **Site description.** `"One-sentence description of the docs site?"` Default: empty. Explain: "Used for search previews, social cards, and page metadata. Optional but strongly recommended."
+- **Lint mode.** `"Markdown linting — `markdownlint-cli2`or`none`?"` Default: `none`.
+- **Format mode.** `"Markdown formatting — `oxfmt`or`none`?"` Default: `oxfmt`.
+
+**2c. Validate inputs.**
+
+- `appName`: no spaces, no uppercase, no leading/trailing hyphens, matches `^[a-z0-9][a-z0-9-]*[a-z0-9]$` or single lowercase char. Reject and re-prompt on failure.
+- `siteName`: non-empty after trim. Reject empty.
+- `targetDir`: must be relative (no leading `/`, no `..`), must be writable based on the chosen `conflictResolution` (e.g., `replace` requires the path to be empty-after-cleanup; `second-app` requires a fresh path that doesn't overlap with an existing docs app).
+- `framework`: must be `fumadocs` or `mkdocs`.
+- `lint`: must be `none` or `markdownlint-cli2`.
+- `format`: must be `none` or `oxfmt`.
+
+**2d. Coherence check.**
+
+Before proceeding to scaffold, summarize what the user chose and confirm:
+
+```
+Here's what I'll scaffold:
+
+  Framework:       {framework}
+  Display title:   {siteName} Documentation   ← shown in header / tab / page headings
+  Package name:    {appName}                   ← used by pnpm filter / directory name
+  Target dir:      {targetDir}                 ← relative to repo root
+  Description:     {siteDescription | "(none)"}
+  Lint:            {lint}
+  Format:          {format}
+
+Does this look right? (yes / adjust)
+```
+
+If `adjust`, ask which field to change and loop back to the question for that field. Re-show the coherence check after the adjustment. Continue looping until the user confirms `yes`.
+
+**2e. Emit the Input Result.**
+
+Record internally for the Scaffold Runner:
+
+```
+Input Result:
+  framework: 'fumadocs' | 'mkdocs'
+  siteName: string            // FP-12 workaround: display title distinct from appName
+  appName: string
+  targetDir: string
+  siteDescription: string
+  lint: 'none' | 'markdownlint-cli2'
+  format: 'oxfmt' | 'none'
+  conflictResolution: 'replace' | 'second-app' | 'abort' | 'repair' | null
+```
+
+(Body of the Conflict Resolution Contract sub-procedure authored in p02-t03.)
 
 ### Step 3: Scaffold Runner
 
