@@ -254,7 +254,91 @@ Input Result:
   conflictResolution: 'replace' | 'second-app' | 'abort' | 'repair' | null
 ```
 
-(Body of the Conflict Resolution Contract sub-procedure authored in p02-t03.)
+#### Conflict Resolution Contract (sub-procedure)
+
+When Preflight (Step 1) records non-empty `conflicts[]`, present them to the user together and collect exactly one resolution. Each resolution below has a precise definition in terms of **allowed mutations**, **preserved state**, and **stop conditions**. The Scaffold Runner (Step 3) reads the chosen resolution and adjusts its behavior; it never reinvents these semantics.
+
+Resolution options:
+
+- **`replace`** — Treat the existing docs setup as disposable and scaffold fresh.
+  - **Allowed mutations (executed by this sub-procedure before Scaffold Runner begins):**
+    - Remove the existing docs app directory (`existingDocs.docsAppPath`), if present on disk.
+    - Remove the `documentation` section from `$REPO_ROOT/.oat/config.json`, if present. The CLI will rewrite it during init.
+    - Remove the `## Documentation` section from `$REPO_ROOT/AGENTS.md`, if present. The CLI upserts its own.
+  - **Preserved state:** Everything outside the three touchpoints above. Git history is preserved — deletions are tracked normally and remain recoverable via `git revert` / `git checkout`.
+  - **Stop conditions:**
+    - If the existing docs app directory contains **uncommitted changes** (tracked or untracked), **refuse** and surface a focused error: `Refusing to replace {docsAppPath}: it contains uncommitted changes. Commit or stash before choosing 'replace'.` The user must resolve the working tree before retrying.
+    - If any allowed mutation fails (e.g., permission error removing the directory), **stop the flow before Scaffold Runner** — partial cleanup leaves an inconsistent state that the CLI cannot recover from.
+- **`second-app`** — Add a new docs app alongside the existing one (currently a **deferred feature**).
+  - **Allowed mutations:** None. This resolution is not functional in the current CLI.
+  - **Preserved state:** Everything.
+  - **Stop conditions:** The current `OatDocumentationConfig` shape (`packages/cli/src/config/oat-config.ts`) supports a single `documentation` object. Until the CLI gains multi-docs support, **refuse with an explicit explanation** and redirect the user to the other three resolutions:
+
+    ```
+    'second-app' isn't available yet: the OAT config schema currently supports a single
+    documentation section, so adding a second docs app would overwrite the first's config.
+
+    Pick another resolution:
+      - replace — remove the existing docs app and scaffold fresh at the same path
+      - abort   — exit without changes; keep the existing setup as-is
+      - repair  — run `oat docs analyze` on the existing setup and decide from there
+
+    (When the CLI schema adds multi-docs support, 'second-app' becomes available without
+    any further changes to this skill.)
+    ```
+
+    Re-prompt for a resolution; do not allow `second-app` to proceed.
+
+- **`abort`** — Stop the flow without any mutation.
+  - **Allowed mutations:** None.
+  - **Preserved state:** Everything.
+  - **Stop conditions:** Print a compact summary of what was detected and exit immediately. No CLI invocation, no post-patches, no Walkthrough. Example summary:
+
+    ```
+    Aborting docs bootstrap. Nothing was changed.
+
+    Detected:
+      - {existing-config / existing-app-dir / existing-agents-section as applicable}
+
+    To revisit later, rerun this skill; Preflight is idempotent.
+    ```
+
+- **`repair`** — Fix the existing setup in place rather than replacing it. Delegate to the docs-analysis pack.
+  - **Allowed mutations (by this sub-procedure):** None directly. The bootstrap skill does not modify existing docs app files. It hands off to `oat-docs-analyze` (read-only audit) and, with user approval, to `oat-docs-apply` (applies approved recommendations).
+  - **Preserved state:** Existing docs app directory, the `documentation` config section, the root `AGENTS.md` `## Documentation` section — all preserved unless analyze surfaces a recommendation and the user approves it via apply.
+  - **Stop conditions:**
+    - Invoke `oat-docs-analyze` and surface its report to the user. If analyze cannot produce meaningful recommendations (e.g., `documentation.index` points at a missing file, or the app directory is empty), **stop the flow before Scaffold Runner**, report what analyze found, and ask the user whether to escalate to `replace`.
+    - If analyze + apply complete cleanly, the existing setup is now the target — **do not proceed to Scaffold Runner**; exit with a summary that points at the repaired app. Scaffolding on top of a repaired app would re-introduce the conflicts Preflight surfaced.
+
+**Presentation pattern:**
+
+Print the conflict summary once, then ask for a resolution. Example:
+
+```
+Preflight detected existing docs setup:
+  - existing-config: .oat/config.json has a `documentation` section pointing at apps/docs
+  - existing-app-dir: apps/docs exists on disk (clean working tree)
+  - existing-agents-section: AGENTS.md has a ## Documentation section
+
+How should I proceed?
+  1. replace    — remove the existing docs app and scaffold fresh at the same path
+  2. second-app — (deferred) add a new docs app alongside; not available in current CLI
+  3. abort      — exit without changes
+  4. repair     — run `oat docs analyze` / `oat docs apply` on the existing setup
+
+Choose:
+```
+
+Record the user's choice as `conflictResolution` in the Input Result. If the user chose `second-app`, loop back to the prompt after surfacing the refusal message; do not emit `conflictResolution: 'second-app'`.
+
+**Pre-scaffold invariant:**
+
+No matter which resolution the user picks, the Scaffold Runner (Step 3) **never** invokes `oat docs init` until:
+
+1. The chosen resolution's "Allowed mutations" have **completed successfully**, and
+2. The working-tree state **matches what the CLI expects** for that resolution (e.g., for `replace`: the target directory is empty or absent, the `documentation` config section is cleared, the root `AGENTS.md` `## Documentation` section is cleared; for `abort` / `repair`: the skill has already exited).
+
+If any mutation fails or any invariant check fails, **stop the flow before scaffold** and surface the error. A partial resolution followed by a scaffold produces a worse end state than either doing nothing or completing the resolution cleanly.
 
 ### Step 3: Scaffold Runner
 
