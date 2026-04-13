@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-03
+oat_last_updated: 2026-04-13
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
 # Implementation: docs-bootstrap-skill
 
-**Started:** 2026-04-03
-**Last Updated:** 2026-04-03
+**Started:** 2026-04-13
+**Last Updated:** 2026-04-13
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -18,90 +18,182 @@ oat_generated: false
 >
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
 > - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
+> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews`.
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 4     | 0/4       |
+| Phase 2 | pending | 3     | 0/3       |
+| Phase 3 | pending | 4     | 0/4       |
+| Phase 4 | pending | 2     | 0/2       |
+| Phase 5 | pending | 3     | 0/3       |
+| Phase 6 | pending | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-04-03
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/19 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 1: Skill scaffolding + shared assets
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p01-t01: Create oat-docs-bootstrap skill skeleton
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t02: Author docs-app AGENTS.md bridge template (FP-15)
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t03: Add canonical example at apps/oat-docs/AGENTS.md
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t04: Refresh provider views
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Preflight + Input Gatherer procedures
+
+**Status:** pending
+**Started:** -
+
+### Task p02-t01: Write Preflight Detector procedure
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Write Input Gatherer procedure
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t03: Write Conflict Resolution Contract procedure
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Scaffold Runner
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Write Scaffold Runner CLI invocation procedure
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Write Capability Detection procedure
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t03: Write site-identity patches (FP-12 title + FP-15 AGENTS.md)
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t04: Write scaffold-integrity patches (FP-11 Turbopack + FP-13 content)
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Build Verifier + Post-Scaffold Inspector
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Write Build Verifier procedure
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t02: Write Post-Scaffold Inspector procedure
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Educational Walkthrough + Optional Content Kickoff
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Write Walkthrough Sections A-D
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t02: Write Walkthrough Sections E-G (incl. MkDocs Minimum Contract)
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t03: Write Optional Content Kickoff + Exit summary
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 6: Finalization
+
+**Status:** pending
+**Started:** -
+
+### Task p06-t01: Coherence pass + tightening
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t02: Manual E2E walkthrough — nested-standalone (Fumadocs)
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t03: Manual E2E smoke test — monorepo (Fumadocs)
 
 **Status:** pending
 **Commit:** -
@@ -123,38 +215,20 @@ oat_generated: false
 
 Chronological log of implementation progress.
 
-### 2026-04-03
+### 2026-04-13
 
-**Session Start:** {time}
+**Session Start:** plan generation (pre-implementation)
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [ ] p01-t01: scaffold oat-docs-bootstrap skill skeleton — pending
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Plan generated (19 tasks across 6 phases); implementation not yet started
 
 **Decisions:**
 
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-04-03
-
-**Session Start:** {time}
-
-{Continue log...}
+- HiLL checkpoints proposed at p03 and p05 (implement skill to confirm/update)
+- Monorepo smoke test in scope for this project; deep monorepo feedback deferred to follow-up project
 
 ---
 
@@ -174,32 +248,37 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
+| 5     | -         | -      | -      | -        |
+| 6     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- (to be filled during implementation)
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- (to be filled)
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` — main skill entrypoint
+- `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` — FP-15 bridge template
+- `apps/oat-docs/AGENTS.md` — canonical example instantiation
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- (to be filled after p06 manual walkthroughs)
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- (to be filled)
 
 ## References
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
