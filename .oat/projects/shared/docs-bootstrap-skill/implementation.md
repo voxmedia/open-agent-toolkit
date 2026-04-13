@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p02-t02
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -27,13 +27,13 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 4     | 4/4       |
-| Phase 2 | in_progress | 3     | 1/3       |
+| Phase 2 | in_progress | 3     | 2/3       |
 | Phase 3 | pending     | 4     | 0/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 5/19 tasks completed
+**Total:** 6/19 tasks completed
 
 ---
 
@@ -223,8 +223,23 @@ oat_generated: false
 
 ### Task p02-t02: Write Input Gatherer procedure
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a4dddf30
+
+**Outcome:**
+
+- Authored Step 2 (Input Gatherer) body in SKILL.md covering conflict resolution handoff, one-at-a-time questions, input validation, coherence check, and Input Result contract (~68 insertions).
+- Each question explains what the value affects downstream; FP-12 site-name is explicitly framed as distinct from package name.
+- Validation rules specify exact regex for appName, required non-empty for siteName, relative-path + writable-per-resolution for targetDir, enum for framework/lint/format.
+- Coherence check shows the user a rendered preview including the templated "{siteName} Documentation" display title.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (68 insertions, 1 deletion)
+
+**Verification:**
+
+- `pnpm oxfmt --check` ran with minor autoformatting applied during commit (within staged-files hook); final committed file is format-clean.
 
 ---
 
