@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 4     | 4/4       |
 | Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | in_progress | 4     | 0/4       |
+| Phase 3 | in_progress | 4     | 1/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 7/19 tasks completed
+**Total:** 8/19 tasks completed
 
 ---
 
@@ -304,8 +304,32 @@ oat_generated: false
 
 ### Task p03-t01: Write Scaffold Runner CLI invocation procedure
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6d42e372
+
+**Outcome:**
+
+- Authored Step 3 (Scaffold Runner) opening + phases 3a (flag assembly), 3b (Capability Detection hook), 3c (CLI invocation), 3d (post-patch hook) in SKILL.md (~97 net insertions).
+- Base flags always passed: `--yes --framework --name --target-dir --description --lint --format`; capability-gated flags (`--site-name`) only added when Capability Probe reports support (self-ratcheting as CLI fixes land).
+- Stop-on-non-zero contract explicit: surface CLI stderr verbatim + exit code + exact flags passed; do not apply post-patches on failure; do not proceed to Build Verifier.
+- `appRoot` resolved from `$REPO_ROOT/.oat/config.json` `documentation.root` (authoritative), not inferred from `targetDir` alone — survives CLI path normalization differences.
+- Emits structured `Scaffold Result` for downstream sub-procedures (Walkthrough, Post-Scaffold Inspector).
+- Pre-scaffold invariant restated: Conflict Resolution mutations must have completed before CLI invocation.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (97 insertions, 1 deletion)
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md`
+- Result: pass (after one reformat pass + stray-fence cleanup — see Notes)
+
+**Notes / Decisions:**
+
+- **`appRoot` resolution source.** Plan said "Scaffold Runner emits `appRoot`"; I chose to resolve it by reading back `.oat/config.json` `documentation.root` rather than reusing the pre-scaffold `targetDir` input. Rationale: the CLI may normalize paths (resolve relative → absolute, trim trailing slash), and downstream patches need to operate on the exact path the CLI wrote.
+- **`createdFiles[]` requires Preflight's read-only snapshot.** The "enumerate files that did not exist before 3c" contract implicitly relies on Preflight having captured the pre-scaffold file set. I did not retro-fit Preflight to capture this explicitly — a minimal directory listing at the target path in Step 1 is sufficient and already implicit in the "Preflight is read-only" contract.
+- **Stray fence artifact.** My initial edit nested a code block inside an indented list item. oxfmt's autofix closed the nested fence but left an unbalanced fence at EOF. Resolved by removing the spurious closing fence. Not a design concern; flag to myself for the remaining Step 3 tasks — avoid 4-space-indented fenced blocks.
 
 ---
 
