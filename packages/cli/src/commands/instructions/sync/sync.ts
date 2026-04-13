@@ -28,13 +28,18 @@ interface PlanSyncActionsArgs {
   strategy: InstructionSyncStrategy;
 }
 
+export async function removeInstructionFile(
+  path: string,
+  remove: typeof rm = rm,
+): Promise<void> {
+  await remove(path, { force: true });
+}
+
 function defaultDependencies(): InstructionsSyncCommandDependencies {
   return {
     buildCommandContext,
     readFile,
-    removeFile: async (path: string) => {
-      await rm(path, { force: true, recursive: true });
-    },
+    removeFile: removeInstructionFile,
     resolveProjectRoot,
     scanInstructionFiles,
     symlinkFile: async (target: string, path: string) => {

@@ -12,7 +12,7 @@ import { CliError } from '@errors/cli-error';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createInstructionsSyncCommand } from './sync';
+import { createInstructionsSyncCommand, removeInstructionFile } from './sync';
 
 interface HarnessOptions {
   entries?: InstructionEntry[];
@@ -106,6 +106,16 @@ describe('createInstructionsSyncCommand', () => {
 
   afterEach(() => {
     process.exitCode = originalExitCode;
+  });
+
+  it('removeInstructionFile only uses force when deleting a file target', async () => {
+    const remove = vi.fn(async () => undefined);
+
+    await removeInstructionFile('/tmp/workspace/CLAUDE.md', remove);
+
+    expect(remove).toHaveBeenCalledWith('/tmp/workspace/CLAUDE.md', {
+      force: true,
+    });
   });
 
   it('dry-run plans create actions and prints apply guidance', async () => {
