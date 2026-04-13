@@ -254,41 +254,19 @@ Rules:
 
 ### Step 5: Set Lifecycle Complete
 
-Update `state.md` frontmatter to add/update `oat_lifecycle: complete` and set completion timestamps:
+Delegate the canonical `state.md` completion mutation to the CLI:
 
 ```bash
-STATE_FILE="${PROJECT_PATH}/state.md"
-NOW_UTC=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-# Check if oat_lifecycle already exists
-if grep -q "^oat_lifecycle:" "$STATE_FILE"; then
-  # Update existing (portable approach using temp file)
-  sed 's/^oat_lifecycle:.*/oat_lifecycle: complete/' "$STATE_FILE" > "$STATE_FILE.tmp"
-  mv "$STATE_FILE.tmp" "$STATE_FILE"
-else
-  # Add after oat_phase_status line using awk (more portable for multi-line inserts)
-  awk '/^oat_phase_status:/ {print; print "oat_lifecycle: complete"; next} 1' "$STATE_FILE" > "$STATE_FILE.tmp"
-  mv "$STATE_FILE.tmp" "$STATE_FILE"
+COMPLETE_STATE_ARGS=("$PROJECT_PATH")
+if [[ "$SHOULD_ARCHIVE" == "true" && "$IS_SHARED_PROJECT" == "true" ]]; then
+  COMPLETE_STATE_ARGS+=("--archived")
 fi
 
-# Set completion and state-updated timestamps
-sed -E "s/^oat_project_completed:.*/oat_project_completed: \"$NOW_UTC\"/" "$STATE_FILE" > "$STATE_FILE.tmp"
-mv "$STATE_FILE.tmp" "$STATE_FILE"
-sed -E "s/^oat_project_state_updated:.*/oat_project_state_updated: \"$NOW_UTC\"/" "$STATE_FILE" > "$STATE_FILE.tmp"
-mv "$STATE_FILE.tmp" "$STATE_FILE"
+oat project complete-state "${COMPLETE_STATE_ARGS[@]}"
 ```
 
-Then update the markdown body in `state.md` so the completion state is explicit and does not rely on reference lookups:
-
-- Set `**Status:** Complete`
-- Set `**Last Updated:**` to the completion date in `YYYY-MM-DD`
-- In `## Current Phase`, replace the body with:
-  - `Lifecycle complete; archived locally` when the project is archived in Step 8
-  - `Lifecycle complete` when the project is completed without archive
-- In `## Progress`, preserve the existing completed workflow/review bullets and add `- ✓ Project lifecycle complete` if it is not already present
-- In `## Next Milestone`, replace the body with `None. Project complete.`
-
-Do not infer these body mutations from other archived projects. Apply them directly as part of this skill.
+The CLI command owns both the frontmatter completion fields and the canonical markdown body updates for `state.md`.
+It must set `oat_lifecycle: complete`, completion timestamps, `**Status:** Complete`, `**Last Updated:**`, the canonical `## Current Phase` body, normalized `## Progress`, and `## Next Milestone`.
 
 ### Step 6: Clear Active Project Pointer
 

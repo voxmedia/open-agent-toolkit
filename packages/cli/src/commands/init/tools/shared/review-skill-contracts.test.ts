@@ -75,6 +75,23 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('delegates project completion state mutation to the CLI command', () => {
+    const skillPath = repoFilePath(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const content = readFileSync(skillPath, 'utf8');
+
+    expect(content).toContain(
+      'oat project complete-state "${COMPLETE_STATE_ARGS[@]}"',
+    );
+    expect(content).toContain(
+      'The CLI command owns both the frontmatter completion fields and the canonical markdown body updates for `state.md`.',
+    );
+    expect(content).not.toContain(
+      'sed \'s/^oat_lifecycle:.*/oat_lifecycle: complete/\' "$STATE_FILE" > "$STATE_FILE.tmp"',
+    );
+  });
+
   it('defines runtime-safe summary handling during pr-final and completion', () => {
     const prFinalPath = repoFilePath(
       '.agents/skills/oat-project-pr-final/SKILL.md',
