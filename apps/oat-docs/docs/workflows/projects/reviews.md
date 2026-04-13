@@ -53,8 +53,8 @@ Status progression in `plan.md` Reviews table:
 
 - Critical/Important: address before pass.
 - Medium: address by default; defer only with explicit approval and recorded rationale/disposition.
-- Minor (non-final scopes): auto-deferred by default with rationale; do not block review completion.
-- Minor (final scope): not auto-deferred; require explicit user disposition (defer vs convert), and explain each minor in plain language before asking.
+- Minor (non-final scopes): do not auto-defer by default. Convert when likely future cleanup or when the fix is trivial; defer only with recorded rationale.
+- Minor (final scope): not auto-deferred; require explicit user disposition (defer vs convert), and recommend convert when likely future cleanup or trivial to fix.
 
 ## Auto-review at checkpoints
 

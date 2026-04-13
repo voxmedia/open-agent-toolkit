@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.3.0
+version: 1.4.0
 description: Use when review findings from oat-project-review-provide need closure. Converts review artifacts into actionable plan tasks.
 disable-model-invocation: true
 user-invocable: true
@@ -175,7 +175,7 @@ For each finding, build a structured register entry:
 - For non-final scopes:
   - Mark the review as `passed` in the plan.md Reviews table (if plan.md exists)
   - No fix tasks are added
-  - Minor findings may be auto-deferred by default (Step 9)
+  - Minor findings still follow the Step 9 recommendation/disposition rules before routing onward
   - Route user to normal next action
 - For `final` scope:
   - Do not mark `passed` until both gates are complete:
@@ -502,9 +502,13 @@ If any Medium is proposed for deferral:
 Minor findings handling is scope-aware:
 
 - If `scope != final`:
-  - Minor findings are auto-deferred by default.
-  - Record them in implementation.md under "Deferred Findings".
-  - Do not block review completion on minor disposition.
+  - Minor findings are not auto-deferred just because they are non-functional.
+  - Default to converting a Minor finding to a task when either of these is true:
+    - it is likely future cleanup (better than even chance that the team will need to address it later), or
+    - the fix scope is `Negligible` or `Minor`.
+  - Only propose deferral when the finding is genuinely low-probability cleanup, blocked by another change, duplicated elsewhere, explicitly out of scope, or fixing now would create disproportionate churn/risk.
+  - If deferred, record rationale in implementation.md under "Deferred Findings".
+  - Do not block review completion on minor disposition once each finding has been converted or explicitly deferred with rationale.
 
 - If `scope == final`:
   - Minor findings are NOT auto-deferred silently.
@@ -512,6 +516,9 @@ Minor findings handling is scope-aware:
     - what the issue is,
     - potential user/maintainer impact,
     - why fixing now vs deferring is reasonable.
+  - Recommendation default:
+    - recommend `convert` when the finding is likely future cleanup or the fix scope is `Negligible`/`Minor`;
+    - recommend `defer` only when the finding is unlikely to matter soon, blocked, duplicated, or high-churn to address now.
   - Keep explanations concise (1-3 sentences per minor) and include file/line when available.
   - Ask user explicitly:
 
