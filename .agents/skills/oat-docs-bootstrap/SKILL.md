@@ -82,11 +82,108 @@ Provide lightweight progress feedback so the user can tell what's happening at e
 
 ### Step 0: Resolve Active Project and Environment
 
-(Body authored in p02-t01.)
+Bootstrap the skill's working context. This step is purely read-only and establishes what the rest of the skill operates on.
+
+**0a. Resolve repo root and CLI binary:**
+
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+CLI_CMD="oat"
+if ! command -v oat >/dev/null 2>&1; then
+  # Fall back to the workspace CLI if there's no installed binary
+  if [ -f "$REPO_ROOT/package.json" ] && grep -q '"cli"' "$REPO_ROOT/package.json"; then
+    CLI_CMD="pnpm run cli --"
+  fi
+fi
+```
+
+**0b. Read active OAT project context (optional):**
+
+The skill can be invoked outside an active OAT project (e.g., a fresh repo with no project tracking). If an active project exists, surface it so the Educational Walkthrough can link to it; if not, proceed without. Do not block on active-project state — docs bootstrap is scoped to the repo, not to a project.
+
+**0c. Print the banner:**
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OAT ▸ DOCS BOOTSTRAP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
 ### Step 1: Preflight Detector
 
-(Body authored in p02-t01.)
+Inspect the working tree before any mutation. Determine the repo shape, detect existing docs setup, and surface conflicts that require user decisions later. This step is strictly read-only; any fix or prompt flows through the Input Gatherer (Step 2).
+
+Print `[1/7] Preflight…` at the start of this step.
+
+**1a. Detect repo shape.**
+
+Check in order; the first match wins:
+
+1. If `pnpm-workspace.yaml` exists at `$REPO_ROOT` → **`monorepo`**
+2. If `$REPO_ROOT/package.json` has a non-empty `workspaces` field (array or `{packages: []}`) → **`monorepo`**
+3. If both `$REPO_ROOT/apps/` and `$REPO_ROOT/packages/` directories exist → **`monorepo`**
+4. Otherwise → **`single-package`**
+
+Once `single-package` is identified, apply the nested-standalone heuristic: if the user will place the docs app in a subdirectory of the repo (the common case for single-package repos) and that subdirectory will have its own `pnpm-lock.yaml` after scaffold + install, treat the shape as **`nested-standalone`**. This is a single-package shape with its own docs-app lockfile, which affects the Turbopack root patch (FP-11) and the install command pattern.
+
+In practice: for Fumadocs, any single-package repo with a target subdirectory is `nested-standalone`. For MkDocs, the shape stays `single-package` because MkDocs doesn't have the Turbopack concern.
+
+**1b. Detect existing docs setup.**
+
+Read (do not modify):
+
+- `$REPO_ROOT/.oat/config.json`, extract the `documentation` section if present. Record `configDocumentation` (the parsed object) or `null`.
+- Presence of an existing docs app directory. Inference sources: the `root` field of `configDocumentation` if present; common locations like `apps/docs`, `apps/*-docs`, `documentation/`, `docs/` at repo root (for single-package). Record `docsAppPath` (the absolute path) or `null`.
+- `$REPO_ROOT/AGENTS.md` (if it exists): scan for a `## Documentation` section. Record `agentsMdSection: true | false`.
+
+**1c. Identify conflicts.**
+
+Build `conflicts: []` by adding an entry for each finding:
+
+- If `configDocumentation` is non-null → `{ kind: 'existing-config', detail: <summary of what's there> }`
+- If `docsAppPath` exists on disk → `{ kind: 'existing-app-dir', detail: <path + whether it has uncommitted changes> }`
+- If `agentsMdSection` is true → `{ kind: 'existing-agents-section', detail: <what the section says> }`
+
+Conflicts are **recorded**, not **resolved**. Resolution happens in Step 2 (Input Gatherer). Preflight remains single-purpose.
+
+**1d. Resolve defaults for the Input Gatherer.**
+
+Derive:
+
+- `repoName`: `basename($REPO_ROOT)`
+- `siteName` default: humanized form of `repoName` (e.g., `cyclone-app` → `Cyclone App`, `vox_mobile` → `Vox Mobile`, `docs` → `Docs`). Do not append " Documentation" here — that's a concern of the scaffold, not of the default.
+- `appName` default:
+  - If shape is `monorepo`: `{repoName}-docs` (e.g., `open-agent-toolkit-docs`)
+  - If shape is `single-package` or `nested-standalone`: `docs`
+- `targetDir` default:
+  - If shape is `monorepo`: `apps/{appName}`
+  - If shape is `single-package`: `{appName}` (subdirectory of repo root)
+  - If shape is `nested-standalone`: same as single-package (`{appName}`)
+
+**1e. Emit the Preflight Result.**
+
+Record internally (not persisted to disk) for the Input Gatherer and downstream components:
+
+```
+Preflight Result:
+  repoShape: 'monorepo' | 'single-package' | 'nested-standalone'
+  repoName: string
+  existingDocs:
+    configDocumentation: OatDocumentationConfig | null
+    docsAppPath: absolute-path-string | null
+    agentsMdSection: boolean
+  conflicts: Array<{ kind, detail }>
+  defaults:
+    appName: string
+    targetDir: string
+    siteName: string
+```
+
+**Design discipline:**
+
+- **Read-only invariant.** Preflight never writes files, never modifies config, never runs scaffold. Every fix or prompt flows through later components.
+- **Conflict surfacing is a list, not a branch.** Preflight returns all conflicts found; the Input Gatherer presents them together. This keeps Preflight single-purpose and predictable.
+- **`nested-standalone` is a first-class shape** distinct from `single-package`. The CLI conflates them, but the skill treats them separately because Turbopack root (FP-11), build command patterns, and nested `.oat/config.json` handling all differ.
 
 ### Step 2: Input Gatherer
 
