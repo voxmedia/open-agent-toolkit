@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t02
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,11 +29,11 @@ oat_generated: false
 | Phase 1 | completed   | 4     | 4/4       |
 | Phase 2 | completed   | 3     | 3/3       |
 | Phase 3 | completed   | 4     | 4/4       |
-| Phase 4 | in_progress | 2     | 1/2       |
-| Phase 5 | pending     | 3     | 0/3       |
+| Phase 4 | completed   | 2     | 2/2       |
+| Phase 5 | in_progress | 3     | 0/3       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 12/19 tasks completed
+**Total:** 13/19 tasks completed
 
 ---
 
@@ -459,8 +459,32 @@ oat_generated: false
 
 ## Phase 4: Build Verifier + Post-Scaffold Inspector
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
+**Completed:** 2026-04-13
+
+### Phase Summary
+
+**Outcome:**
+
+- Steps 4 and 5 of SKILL.md authored end-to-end (~157 net insertions): Build Verifier with four known-failure patterns + narrow auto-fix discipline, and Post-Scaffold Inspector with config path verification, dual-config (nested-standalone) handling, drift detection, and `requireForProjectCompletion` opt-in.
+- Defensive skip guards in both: Build Verifier skips if scaffold failed; Inspector skips if build failed. Prevents acting on undefined state.
+- Write-once discipline documented: only Inspector (5e) writes to `.oat/config.json` outside of CLI-managed writes.
+- Cross-component contracts (`Verification Result`, `Inspection Result`) emitted in structured form for Walkthrough (Step 6) to consume.
+
+**Key files touched:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` — Steps 4 and 5 authored end-to-end
+
+**Verification:**
+
+- `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md` — pass on both tasks first try
+
+**Notes / Decisions:**
+
+- Auto-fix is deliberately narrow (one case: `fumadocs-mdx + missing node_modules`); everything else surfaces with context. Prevents masking real failures under speculative retries.
+- MkDocs explicitly called out as deferred to the MkDocs Minimum Contract in Step 6 (p05-t02) — Build Verifier as-authored is Fumadocs/pnpm-specific.
+- Inspector treats parent + nested configs as distinct scopes by design; does not reconcile.
 
 ### Task p04-t01: Write Build Verifier procedure
 
@@ -495,15 +519,40 @@ oat_generated: false
 
 ### Task p04-t02: Write Post-Scaffold Inspector procedure
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a36254ab
+
+**Outcome:**
+
+- Authored Step 5 (Post-Scaffold Inspector) body in SKILL.md (~87 insertions) replacing the placeholder.
+- Five sub-steps: 5a read parent config, 5b path verification per field, 5c nested-standalone dual-config, 5d drift detection, 5e `requireForProjectCompletion` opt-in, 5f emit Inspection Result.
+- Drift detection correlates `patchesApplied` + `Verification Result.knownIssues` with config state — surfacing inconsistencies to the user with `suggestedFix` (carried from Scaffold Runner) rather than silently auto-fixing.
+- `requireForProjectCompletion` prompt explains behavior before asking; default is `no` (opt-in, not opt-out).
+- **Write-once discipline** spelled out: only 5e writes to `.oat/config.json` outside of CLI-managed writes. Preflight/Input Gatherer are read-only; Scaffold Runner writes via CLI; post-patches mutate scaffold outputs, not config.
+- Skip-if-build-failed guard: don't inspect a broken scaffold.
+- Nested-standalone handling explicit: don't reconcile parent and nested configs — they serve different scopes by design.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (87 insertions, 1 deletion)
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md`
+- Result: pass on first try
+
+**Notes / Decisions:**
+
+- **`severity: 'critical'` vs. `'warning'` vs. `'info'`.** Three-tier severity makes it easy for the Walkthrough to decide what to surface prominently vs. mention in passing vs. include in a summary list.
+- **Atomic config write.** 5e writes `requireForProjectCompletion` via read-mutate-write, preserving all other fields. Called out explicitly so future edits don't regress to blind overwrites.
+- **Missing `documentation` section after successful scaffold** is treated as critical — rare but possible under skill-CLI version mismatch. Surfaced loudly rather than silently recovered.
 
 ---
 
 ## Phase 5: Educational Walkthrough + Optional Content Kickoff
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-13
 
 ### Task p05-t01: Write Walkthrough Sections A-D
 
