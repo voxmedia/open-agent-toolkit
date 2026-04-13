@@ -579,19 +579,18 @@ describe('help output snapshots', () => {
       Manage OAT project workflows
 
       Options:
-        -h, --help              display help for command
+        -h, --help                               display help for command
 
       Commands:
-        archive                 Manage archived project data
-        complete-state [options] <project-path>  Update a project state.md to the
-                                                 completed lifecycle shape
-        list                    List tracked OAT projects
-        new [options] <name>    Create or update an OAT project scaffold
-        open [options] <name>   Open or switch to an OAT project
-        pause [options] [name]  Pause an OAT project
-        set-mode <mode>         Set project implementation execution mode
-        status                  Show the current OAT project state
-        help [command]          display help for command
+        archive                                  Manage archived project data
+        complete-state [options] <project-path>  Update a project state.md to the completed lifecycle shape
+        list                                     List tracked OAT projects
+        new [options] <name>                     Create or update an OAT project scaffold
+        open [options] <name>                    Open or switch to an OAT project
+        pause [options] [name]                   Pause an OAT project
+        set-mode <mode>                          Set project implementation execution mode
+        status                                   Show the current OAT project state
+        help [command]                           display help for command
       "
     `);
   });
