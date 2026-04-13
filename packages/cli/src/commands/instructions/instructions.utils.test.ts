@@ -320,7 +320,7 @@ describe('instructions utils', () => {
     });
   });
 
-  it('surfaces broken Claude symlinks without sibling AGENTS.md as stray', async () => {
+  it('surfaces broken Claude symlinks without sibling AGENTS.md as drift', async () => {
     const repoRoot = await createRepoRoot();
     const docsDir = join(repoRoot, 'docs');
 
@@ -332,12 +332,42 @@ describe('instructions utils', () => {
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
       agentsPath: null,
-      status: 'stray',
-      detail: 'CLAUDE.md found without AGENTS.md',
+      claudePath: join(docsDir, 'CLAUDE.md'),
+      status: 'content_mismatch',
+      detail: 'broken CLAUDE.md symlink',
     });
-    expect(relative(repoRoot, entries[0]?.claudePath ?? '')).toBe(
-      'docs/CLAUDE.md',
+  });
+
+  it('surfaces unreadable Claude-only files as drift instead of stray adoption', async () => {
+    const repoRoot = await createRepoRoot();
+    const docsDir = join(repoRoot, 'docs');
+
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      join(docsDir, 'CLAUDE.md'),
+      '# stray claude instructions\n',
+      'utf8',
     );
+
+    const entries = await scanInstructionFiles(repoRoot, undefined, {
+      readFile: async (path, encoding) => {
+        if (path === join(docsDir, 'CLAUDE.md')) {
+          throw Object.assign(new Error('permission denied'), {
+            code: 'EACCES',
+          });
+        }
+
+        return fsReadFile(path, encoding);
+      },
+    });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      agentsPath: null,
+      claudePath: join(docsDir, 'CLAUDE.md'),
+      status: 'content_mismatch',
+      detail: 'unable to read CLAUDE.md (EACCES)',
+    });
   });
 
   it('surfaces broken AGENTS symlinks as canonical drift when Claude exists', async () => {

@@ -36,6 +36,7 @@ interface BuildInstructionsPayloadArgs {
 interface InstructionDirectoryEntry {
   agentsPath?: string;
   brokenAgentsPath?: string;
+  brokenClaudePath?: string;
   claudePath?: string;
 }
 
@@ -121,6 +122,7 @@ function recordInstructionFile(
     current.brokenAgentsPath = undefined;
   } else {
     current.claudePath = entryPath;
+    current.brokenClaudePath = undefined;
   }
   directoryEntries.set(directoryPath, current);
 }
@@ -189,12 +191,10 @@ async function scanInstructionDirectories(
       } catch (error) {
         const errorCode = getErrorCode(error);
         if (errorCode === 'ENOENT' && entry.name === 'CLAUDE.md') {
-          recordInstructionFile(
-            directoryEntries,
-            currentDirectory,
-            entry.name,
-            entryPath,
-          );
+          const current = directoryEntries.get(currentDirectory) ?? {};
+          current.claudePath = entryPath;
+          current.brokenClaudePath = entryPath;
+          directoryEntries.set(currentDirectory, current);
           continue;
         }
         if (errorCode === 'ENOENT' && entry.name === 'AGENTS.md') {
@@ -256,6 +256,7 @@ export async function scanInstructionFiles(
   for (const [directoryPath, directoryEntry] of instructionDirectories) {
     const agentsPath = directoryEntry.agentsPath ?? null;
     const brokenAgentsPath = directoryEntry.brokenAgentsPath ?? null;
+    const brokenClaudePath = directoryEntry.brokenClaudePath ?? null;
     const claudePath =
       directoryEntry.claudePath ?? join(directoryPath, 'CLAUDE.md');
 
@@ -269,7 +270,28 @@ export async function scanInstructionFiles(
       continue;
     }
 
+    if (!agentsPath && brokenClaudePath) {
+      entries.push({
+        agentsPath: null,
+        claudePath,
+        status: 'content_mismatch',
+        detail: 'broken CLAUDE.md symlink',
+      });
+      continue;
+    }
+
     if (!agentsPath) {
+      try {
+        await dependencies.readFile(claudePath, 'utf8');
+      } catch (error) {
+        entries.push({
+          agentsPath: null,
+          claudePath,
+          status: 'content_mismatch',
+          detail: `unable to read CLAUDE.md (${getErrorCode(error) ?? 'unknown'})`,
+        });
+        continue;
+      }
       entries.push({
         agentsPath: null,
         claudePath,

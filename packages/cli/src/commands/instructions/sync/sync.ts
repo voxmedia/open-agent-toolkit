@@ -94,6 +94,14 @@ function hasUnreadableCanonicalAgents(entry: InstructionEntry): boolean {
   );
 }
 
+function hasUnreadableClaudeSource(entry: InstructionEntry): boolean {
+  return (
+    entry.agentsPath === null &&
+    (entry.detail === 'broken CLAUDE.md symlink' ||
+      entry.detail.startsWith('unable to read CLAUDE.md'))
+  );
+}
+
 function wrapStrayResyncError(
   error: unknown,
   agentsPath: string,
@@ -141,6 +149,16 @@ function planSyncActions({
     }
 
     if (entry.status !== 'content_mismatch') {
+      continue;
+    }
+
+    if (hasUnreadableClaudeSource(entry)) {
+      actions.push({
+        type: 'skip',
+        target: entry.claudePath,
+        reason: 'CLAUDE.md unreadable; repair manually',
+        result: 'skipped',
+      });
       continue;
     }
 

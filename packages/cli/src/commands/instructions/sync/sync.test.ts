@@ -201,6 +201,40 @@ describe('createInstructionsSyncCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('dry-run reports unreadable Claude-only files as manual-repair skips', async () => {
+    const { command, capture } = createHarness({
+      entries: [
+        {
+          agentsPath: null,
+          claudePath: '/tmp/workspace/docs/CLAUDE.md',
+          status: 'content_mismatch',
+          detail: 'broken CLAUDE.md symlink',
+        },
+      ],
+      json: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--json'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      mode: 'dry-run',
+      status: 'drift',
+      summary: { scanned: 1, contentMismatch: 1, skipped: 1 },
+      actions: [
+        {
+          type: 'skip',
+          target: '/tmp/workspace/docs/CLAUDE.md',
+          reason: 'CLAUDE.md unreadable; repair manually',
+          result: 'skipped',
+        },
+      ],
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it('dry-run with --force plans update actions', async () => {
     const { command, capture } = createHarness({
       entries: [
