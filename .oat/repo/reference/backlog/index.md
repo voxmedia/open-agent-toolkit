@@ -4,6 +4,7 @@
 
 ## Curated Overview
 
+- `bl-28ce` captures the next likely ergonomics step after shipping instruction sync: persist the default `pointer|symlink|copy` strategy in config and expose it during guided setup, without conflating it with provider-sync `defaultStrategy`.
 - The newly shipped instruction-sync feature now has an explicit follow-on item: `bl-c745` captures option analysis for users who want some Claude-only `CLAUDE.md` files to remain non-adoptable instead of being promoted into canonical `AGENTS.md`.
 - `bl-42f9` tracks the only in-progress backlog item and is currently being delivered through the active `local-project-management` project.
 - Workflow backlog work is now concentrated on the remaining completion-state helper cleanup (`bl-0ace`), configurable lifecycle follow-through (`bl-fb3f`), and a Jira-oriented backlog refinement flow.
@@ -29,6 +30,7 @@
 | bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback                              | open        | medium   | initiative | L        |
 | bl-0ace | Move oat-project-complete state mutations into a CLI helper                                     | in_progress | medium   | feature    | M        |
 | bl-cbdd | Optional Codex prompt-wrapper generation for synced OAT skills                                  | open        | medium   | feature    | M        |
+| bl-28ce | Persist instruction sync strategy in config and expose it in init                               | open        | medium   | feature    | M        |
 | bl-f9bd | Staleness + knowledge drift upgrades                                                            | open        | medium   | feature    | L        |
 | bl-71a1 | Memory system + provider enhancements                                                           | open        | low      | initiative | XL       |
 | bl-931d | Optimize control-plane `listProjects()` summary path                                            | open        | low      | task       | M        |
