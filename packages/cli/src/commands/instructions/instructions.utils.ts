@@ -36,7 +36,9 @@ interface BuildInstructionsPayloadArgs {
 interface InstructionDirectoryEntry {
   agentsPath?: string;
   brokenAgentsPath?: string;
+  brokenAgentsErrorCode?: string;
   brokenClaudePath?: string;
+  brokenClaudeErrorCode?: string;
   claudePath?: string;
 }
 
@@ -120,9 +122,11 @@ function recordInstructionFile(
   if (entryName === 'AGENTS.md') {
     current.agentsPath = entryPath;
     current.brokenAgentsPath = undefined;
+    current.brokenAgentsErrorCode = undefined;
   } else {
     current.claudePath = entryPath;
     current.brokenClaudePath = undefined;
+    current.brokenClaudeErrorCode = undefined;
   }
   directoryEntries.set(directoryPath, current);
 }
@@ -190,16 +194,18 @@ async function scanInstructionDirectories(
         entryStats = await dependencies.stat(entryPath);
       } catch (error) {
         const errorCode = getErrorCode(error);
-        if (errorCode === 'ENOENT' && entry.name === 'CLAUDE.md') {
+        if (entry.name === 'CLAUDE.md') {
           const current = directoryEntries.get(currentDirectory) ?? {};
           current.claudePath = entryPath;
           current.brokenClaudePath = entryPath;
+          current.brokenClaudeErrorCode = errorCode ?? 'unknown error';
           directoryEntries.set(currentDirectory, current);
           continue;
         }
-        if (errorCode === 'ENOENT' && entry.name === 'AGENTS.md') {
+        if (entry.name === 'AGENTS.md') {
           const current = directoryEntries.get(currentDirectory) ?? {};
           current.brokenAgentsPath = entryPath;
+          current.brokenAgentsErrorCode = errorCode ?? 'unknown error';
           directoryEntries.set(currentDirectory, current);
           continue;
         }
@@ -256,7 +262,11 @@ export async function scanInstructionFiles(
   for (const [directoryPath, directoryEntry] of instructionDirectories) {
     const agentsPath = directoryEntry.agentsPath ?? null;
     const brokenAgentsPath = directoryEntry.brokenAgentsPath ?? null;
+    const brokenAgentsErrorCode =
+      directoryEntry.brokenAgentsErrorCode ?? 'unknown error';
     const brokenClaudePath = directoryEntry.brokenClaudePath ?? null;
+    const brokenClaudeErrorCode =
+      directoryEntry.brokenClaudeErrorCode ?? 'unknown error';
     const claudePath =
       directoryEntry.claudePath ?? join(directoryPath, 'CLAUDE.md');
 
@@ -265,7 +275,10 @@ export async function scanInstructionFiles(
         agentsPath: brokenAgentsPath,
         claudePath,
         status: 'content_mismatch',
-        detail: 'broken AGENTS.md symlink',
+        detail:
+          brokenAgentsErrorCode === 'ENOENT'
+            ? 'broken AGENTS.md symlink'
+            : `unreadable AGENTS.md symlink target (${brokenAgentsErrorCode})`,
       });
       continue;
     }
@@ -275,7 +288,10 @@ export async function scanInstructionFiles(
         agentsPath: null,
         claudePath,
         status: 'content_mismatch',
-        detail: 'broken CLAUDE.md symlink',
+        detail:
+          brokenClaudeErrorCode === 'ENOENT'
+            ? 'broken CLAUDE.md symlink'
+            : `unreadable CLAUDE.md symlink target (${brokenClaudeErrorCode})`,
       });
       continue;
     }

@@ -370,6 +370,63 @@ describe('instructions utils', () => {
     });
   });
 
+  it('surfaces unreadable AGENTS symlink targets as canonical drift', async () => {
+    const repoRoot = await createRepoRoot();
+    const docsDir = join(repoRoot, 'docs');
+
+    await mkdir(docsDir, { recursive: true });
+    await symlink('target.md', join(docsDir, 'AGENTS.md'));
+    await writeFile(join(docsDir, 'CLAUDE.md'), '@AGENTS.md\n', 'utf8');
+
+    const entries = await scanInstructionFiles(repoRoot, undefined, {
+      stat: async (path) => {
+        if (path === join(docsDir, 'AGENTS.md')) {
+          throw Object.assign(new Error('permission denied'), {
+            code: 'EACCES',
+          });
+        }
+
+        return fsStat(path);
+      },
+    });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      agentsPath: join(docsDir, 'AGENTS.md'),
+      claudePath: join(docsDir, 'CLAUDE.md'),
+      status: 'content_mismatch',
+      detail: 'unreadable AGENTS.md symlink target (EACCES)',
+    });
+  });
+
+  it('surfaces unreadable Claude-only symlink targets as drift', async () => {
+    const repoRoot = await createRepoRoot();
+    const docsDir = join(repoRoot, 'docs');
+
+    await mkdir(docsDir, { recursive: true });
+    await symlink('target.md', join(docsDir, 'CLAUDE.md'));
+
+    const entries = await scanInstructionFiles(repoRoot, undefined, {
+      stat: async (path) => {
+        if (path === join(docsDir, 'CLAUDE.md')) {
+          throw Object.assign(new Error('permission denied'), {
+            code: 'EACCES',
+          });
+        }
+
+        return fsStat(path);
+      },
+    });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      agentsPath: null,
+      claudePath: join(docsDir, 'CLAUDE.md'),
+      status: 'content_mismatch',
+      detail: 'unreadable CLAUDE.md symlink target (EACCES)',
+    });
+  });
+
   it('surfaces broken AGENTS symlinks as canonical drift when Claude exists', async () => {
     const repoRoot = await createRepoRoot();
     const docsDir = join(repoRoot, 'docs');

@@ -90,6 +90,7 @@ function hasUnreadableCanonicalAgents(entry: InstructionEntry): boolean {
   return (
     entry.agentsPath !== null &&
     (entry.detail === 'broken AGENTS.md symlink' ||
+      entry.detail.startsWith('unreadable AGENTS.md symlink target') ||
       entry.detail.startsWith('unable to read AGENTS.md'))
   );
 }
@@ -98,6 +99,7 @@ function hasUnreadableClaudeSource(entry: InstructionEntry): boolean {
   return (
     entry.agentsPath === null &&
     (entry.detail === 'broken CLAUDE.md symlink' ||
+      entry.detail.startsWith('unreadable CLAUDE.md symlink target') ||
       entry.detail.startsWith('unable to read CLAUDE.md'))
   );
 }
