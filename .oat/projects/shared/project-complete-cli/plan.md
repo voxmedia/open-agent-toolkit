@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-04-13
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = no explicit HiLL pauses in-plan)
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
@@ -255,13 +255,13 @@ git commit -m "chore(p03-t01): verify project complete cli flow"
 
 {Keep both code + artifact rows below. Add additional code rows as needed, and keep artifact rows mode-appropriate for the current project.}
 
-| Scope | Type     | Status   | Date       | Artifact                                      |
-| ----- | -------- | -------- | ---------- | --------------------------------------------- |
-| p01   | code     | pending  | -          | -                                             |
-| p02   | code     | pending  | -          | -                                             |
-| p03   | code     | pending  | -          | -                                             |
-| final | code     | pending  | -          | -                                             |
-| plan  | artifact | received | 2026-04-13 | reviews/artifact-plan-review-2026-04-13-v2.md |
+| Scope | Type     | Status  | Date       | Artifact                                               |
+| ----- | -------- | ------- | ---------- | ------------------------------------------------------ |
+| p01   | code     | pending | -          | -                                                      |
+| p02   | code     | pending | -          | -                                                      |
+| p03   | code     | pending | -          | -                                                      |
+| final | code     | pending | -          | -                                                      |
+| plan  | artifact | passed  | 2026-04-13 | reviews/archived/artifact-plan-review-2026-04-13-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

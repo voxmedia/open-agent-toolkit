@@ -58,8 +58,6 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
-
 ### Task p01-t01: Codify the canonical completed `state.md` contract in tests
 
 **Status:** pending
@@ -143,6 +141,28 @@ oat_generated: false
 - No plan tasks were added because this was an artifact review
 
 **Next:** Re-run `oat-project-review-provide artifact plan` to confirm the plan is ready for implementation, or proceed to implementation if the current artifact edits are sufficient.
+
+---
+
+### Artifact Review Received: plan (re-review v2)
+
+**Date:** 2026-04-13
+**Review artifact:** reviews/archived/artifact-plan-review-2026-04-13-v2.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**Actions taken:**
+
+- Removed the duplicate `p01-t01` placeholder heading from `implementation.md`
+- Updated the `oat_plan_hill_phases` frontmatter comment in `plan.md` to match the current quick-mode intent
+- Marked the `plan | artifact` review row as `passed` and archived the re-review artifact
+
+**Next:** Start implementation with `oat-project-implement`.
 
 ---
 
