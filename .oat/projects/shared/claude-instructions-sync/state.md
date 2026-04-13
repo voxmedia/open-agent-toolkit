@@ -1,22 +1,22 @@
 ---
 oat_current_task: null
-oat_last_commit: e87cd8df
+oat_last_commit: b07218d1
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/46' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-11T00:03:02.886Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-13T22:05:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-13T22:16:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_template: false
 oat_template_name: state
@@ -30,7 +30,7 @@ oat_template_name: state
 
 ## Current Phase
 
-Implementation complete; final review passed
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -80,6 +80,8 @@ Implementation complete; final review passed
 - ✓ Final re-review received (`final-review-2026-04-13-v8.md`)
 - ✓ `p11-t01` completed
 - ✓ Final re-review passed (`final-review-2026-04-13-v9.md`)
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -87,4 +89,7 @@ None
 
 ## Next Milestone
 
-Proceed to the next lifecycle step when ready
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
