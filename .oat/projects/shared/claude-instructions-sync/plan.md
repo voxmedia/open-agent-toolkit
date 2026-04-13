@@ -787,14 +787,14 @@ git commit -m "fix(p07-t01): surface dangling canonical instruction symlinks"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status      | Date       | Artifact                                       |
-| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
-| p01    | code     | pending     | -          | -                                              |
-| p02    | code     | pending     | -          | -                                              |
-| p03    | code     | pending     | -          | -                                              |
-| final  | code     | fixes_added | 2026-04-13 | reviews/archived/final-review-2026-04-13-v4.md |
-| spec   | artifact | pending     | -          | -                                              |
-| design | artifact | pending     | -          | -                                              |
+| Scope  | Type     | Status          | Date       | Artifact                                       |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending         | -          | -                                              |
+| p02    | code     | pending         | -          | -                                              |
+| p03    | code     | pending         | -          | -                                              |
+| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v4.md |
+| spec   | artifact | pending         | -          | -                                              |
+| design | artifact | pending         | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -821,7 +821,7 @@ git commit -m "fix(p07-t01): surface dangling canonical instruction symlinks"
 
 **Total: 22 tasks**
 
-Final re-review v4 findings were converted into Phase 7 fix work. Re-run final code review before merge.
+Final re-review v4 findings were fixed. Re-run final code review before merge.
 
 ---
 

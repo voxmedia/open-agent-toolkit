@@ -26,17 +26,17 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | completed   | 11    | 11/11     |
-| Phase 5 | completed   | 2     | 2/2       |
-| Phase 6 | completed   | 2     | 2/2       |
-| Phase 7 | in_progress | 1     | 0/1       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 2     | 2/2       |
+| Phase 4 | completed | 11    | 11/11     |
+| Phase 5 | completed | 2     | 2/2       |
+| Phase 6 | completed | 2     | 2/2       |
+| Phase 7 | completed | 1     | 1/1       |
 
-**Total:** 21/22 tasks completed
+**Total:** 22/22 tasks completed
 
 ---
 
@@ -814,13 +814,13 @@ oat_template_name: implementation
 
 ## Phase 7: Review Fix From Final Re-Review V4
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
 
 ### Phase Summary (fill when phase is complete)
 
-- Pending the final remaining review-fix task from `final-review-2026-04-13-v4.md`.
-- Need to surface dangling canonical `AGENTS.md` symlinks as drift even when no `CLAUDE.md` sibling exists.
+- Fixed the final remaining review-fix task from `final-review-2026-04-13-v4.md`.
+- Dangling canonical `AGENTS.md` symlinks now surface as drift even when no `CLAUDE.md` sibling exists.
 - A clean final re-review is required after Phase 7 completes.
 
 **Key files touched:**
@@ -834,7 +834,15 @@ oat_template_name: implementation
 **Verification:**
 
 - Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
-- Result: pending
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
 
 **Notes / Decisions:**
 
@@ -843,7 +851,38 @@ oat_template_name: implementation
 
 ### Task p07-t01: (review) Surface dangling canonical AGENTS symlinks without sibling Claude files
 
-**Status:** pending
+**Status:** completed
+**Commit:** c233b153
+
+**Outcome (required when completed):**
+
+- Scanner state now preserves dangling canonical `AGENTS.md` symlinks as explicit drift entries even without sibling `CLAUDE.md`.
+- Sync dry-run/apply now reports unreadable canonical `AGENTS.md` files as manual-repair skips instead of silently doing nothing.
+- Verified the utility/sync suites, direct CLI lint/type-check/build, and release validation after the change.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - records broken canonical `AGENTS.md` symlinks in the scan model
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - adds broken-canonical coverage with and without sibling `CLAUDE.md`
+- `packages/cli/src/commands/instructions/sync/sync.ts` - skips unreadable canonical `AGENTS.md` entries with manual-repair guidance
+- `packages/cli/src/commands/instructions/sync/sync.test.ts` - adds dry-run coverage for the manual-repair skip path
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Represented dangling canonical links as `content_mismatch` drift rather than a new status so reporting and JSON payloads remain compatible with the existing command surface.
 
 ---
 
@@ -1047,7 +1086,7 @@ Track test execution during implementation.
 | 2     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.utils.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check` | yes    | 0      | n/a      |
 | 3     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm build:docs`                                                                                                                                                                                                                                                                       | yes    | 0      | n/a      |
 | 4     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`                                                                                                                                                                                                                                    | yes    | 0      | n/a      |
-| final | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/validate/validate.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/cli build`; `pnpm release:validate`                                                  | yes    | 0      | n/a      |
+| final | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/cli build`; `pnpm release:validate`                                                                                                           | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
