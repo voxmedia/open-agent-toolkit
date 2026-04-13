@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 1     | 1/1       |
 
-**Total:** 4/5 tasks completed
+**Total:** 5/5 tasks completed
 
 ---
 
@@ -231,13 +231,57 @@ oat_generated: false
 
 ## Phase 3: Focused verification and artifact alignment
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-13
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Ran the focused completion-state verification set across the mutator, command surface, cleanup drift guard, and skill-contract coverage
+- Updated `BL-0ace` to record the landed CLI command path and delegation shape so the backlog item matches the implemented design
+
+**Key files touched:**
+
+- `.oat/repo/reference/backlog/items/project-complete-cli-helper.md` - now reflects the landed `project/complete-state` command shape
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state/index.test.ts src/commands/project/complete-state/state-utils.test.ts src/commands/cleanup/project/project.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Result: Pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: Fails for unrelated existing `@open-agent-toolkit/control-plane` resolution errors in `src/commands/project/list.ts` and `src/commands/project/status.ts`
+
+**Notes / Decisions:**
+
+- Kept the final task scoped to focused verification plus backlog-note alignment; no extra code changes were needed after the command and skill delegation landed
+- The remaining type-check failure is external to this project scope and predates the completion-state work
 
 ### Task p03-t01: Run targeted verification and close the contract gap cleanly
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `951232c9`
+
+**Outcome (required):**
+
+- Ran the focused verification matrix for the completion-state flow and confirmed all targeted suites pass
+- Updated `BL-0ace` so the implementation note describes the landed `oat project complete-state` command and the skill delegation path
+
+**Files changed:**
+
+- `.oat/repo/reference/backlog/items/project-complete-cli-helper.md` - added the landed command/helper note and refreshed the item timestamp
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state/index.test.ts src/commands/project/complete-state/state-utils.test.ts src/commands/cleanup/project/project.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Result: Pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: Fails for unrelated existing `@open-agent-toolkit/control-plane` resolution errors in `src/commands/project/list.ts` and `src/commands/project/status.ts`
+
+**Notes / Decisions:**
+
+- Treated the backlog item as the minimal artifact-alignment surface for this final task because the implemented command shape is now settled
+- Left the unrelated type-check failure documented rather than expanding scope into the control-plane package issue
 
 ---
 
@@ -351,24 +395,30 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Added a CLI-owned completion-state mutator and `oat project complete-state` command for canonical `state.md` lifecycle completion updates
+- Updated `oat-project-complete` to delegate Step 5 to the CLI command instead of hardcoding `state.md` mutation logic in shell
+- Recorded the landed command/helper shape back into `BL-0ace`
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Completing a project can now use a stable CLI path for lifecycle state updates, including the archived vs non-archived completed-state text
+- The workflow skill no longer has to encode the `state.md` formatting contract inline
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/project/complete-state/state-utils.ts` - pure completion-state rendering contract
+- `packages/cli/src/commands/project/complete-state/index.ts` - shell-callable command surface for project completion-state updates
+- `.agents/skills/oat-project-complete/SKILL.md` - delegates lifecycle state mutation to the CLI
+- `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` - protects the delegation contract
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state/index.test.ts src/commands/project/complete-state/state-utils.test.ts src/commands/cleanup/project/project.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts` - pass
+- `pnpm --filter @open-agent-toolkit/cli type-check` - fails for unrelated existing `@open-agent-toolkit/control-plane` resolution errors in `src/commands/project/list.ts` and `src/commands/project/status.ts`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- No meaningful design delta from the quick plan; cleanup-path reuse stayed deferred because it was not necessary to land the CLI-owned completion-state path
 
 ## References
 
