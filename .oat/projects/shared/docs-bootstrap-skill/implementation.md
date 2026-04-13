@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,13 +27,13 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 4     | 4/4       |
-| Phase 2 | in_progress | 3     | 2/3       |
-| Phase 3 | pending     | 4     | 0/4       |
+| Phase 2 | completed   | 3     | 3/3       |
+| Phase 3 | in_progress | 4     | 0/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 6/19 tasks completed
+**Total:** 7/19 tasks completed
 
 ---
 
@@ -190,8 +190,32 @@ oat_generated: false
 
 ## Phase 2: Preflight + Input Gatherer procedures
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
+**Completed:** 2026-04-13
+
+### Phase Summary
+
+**Outcome:**
+
+- Steps 0, 1, and 2 of SKILL.md authored end-to-end (~252 net insertions across three tasks): environment bootstrap (CLI binary resolution, banner), deterministic Preflight detection (4-rule cascade for shape, read-only conflict surfacing, defaults), and full Input Gatherer (conflict-resolution handoff, one-question-at-a-time flow, validation, coherence check, Input Result contract, Conflict Resolution Contract sub-procedure).
+- All four conflict resolutions (`replace`, `second-app`, `abort`, `repair`) specified with allowed mutations, preserved state, and explicit stop conditions. The pre-scaffold invariant is stated as a hard contract the Scaffold Runner will read.
+- FP-12 site-name workaround is embedded in the Input Gatherer questions (siteName distinct from appName, framed as "what's this documentation for?").
+- `nested-standalone` is a first-class shape alongside `monorepo` and `single-package`, with defaults resolved per shape.
+
+**Key files touched:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` — Steps 0, 1, 2 authored (including Conflict Resolution Contract sub-procedure)
+
+**Verification:**
+
+- `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md` — pass across all three tasks
+
+**Notes / Decisions:**
+
+- Preflight remains strictly read-only; all fixes/prompts flow through Input Gatherer. This keeps Preflight single-purpose and makes restart-after-interruption trivially idempotent.
+- Conflict Resolution lives as a `####` sub-procedure under Step 2 rather than its own numbered step — it's a contract referenced by 2a, not a new pipeline stage.
+- `second-app` is honestly scoped as deferred with a redirect. No skill changes needed when CLI schema gains multi-docs support beyond removing the refusal branch.
 
 ### Task p02-t01: Write Preflight Detector procedure
 
@@ -245,15 +269,38 @@ oat_generated: false
 
 ### Task p02-t03: Write Conflict Resolution Contract procedure
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d5b090d9
+
+**Outcome:**
+
+- Authored the Conflict Resolution Contract as a dedicated sub-procedure under Step 2 of SKILL.md (~85 insertions).
+- Four resolutions fully specified — `replace`, `second-app`, `abort`, `repair` — each with allowed mutations, preserved state, and explicit stop conditions.
+- `second-app` refusal message includes a concrete explanation (single-documentation config schema), enumerates the alternatives, and notes the no-skill-change path when the CLI adds multi-docs support (matching the design's "honestly scoped" principle).
+- `replace` uncommitted-changes guard is phrased as a concrete error the user can act on (`Commit or stash before choosing 'replace'.`).
+- Pre-scaffold invariant reiterated at the end of the sub-procedure: Scaffold Runner cannot proceed until mutations have completed and working-tree state matches CLI expectations; partial resolution + scaffold is worse than either doing nothing or completing the resolution cleanly.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (85 insertions, 1 deletion)
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- **Placement:** The sub-procedure is authored as a `####` section under Step 2 rather than a separate numbered Step. It's a contract referenced by 2a (conflict resolution handoff), not a new pipeline stage.
+- **`repair` exit semantics:** When analyze + apply complete cleanly, the skill exits without proceeding to Scaffold Runner. Rationale: scaffolding on top of a just-repaired app would re-introduce the conflicts Preflight surfaced. The user's explicit choice was "repair, don't replace."
+- **`second-app` loopback:** The skill re-prompts after surfacing the refusal rather than emitting `conflictResolution: 'second-app'`. The Input Result contract only stores resolvable values, keeping downstream logic simple.
 
 ---
 
 ## Phase 3: Scaffold Runner
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-13
 
 ### Task p03-t01: Write Scaffold Runner CLI invocation procedure
 
