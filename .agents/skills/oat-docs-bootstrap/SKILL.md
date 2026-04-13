@@ -547,6 +547,106 @@ Procedure when gate passes:
 
 When the CLI eventually scaffolds `AGENTS.md` natively and `agentsMdScaffoldFlag` becomes `true`, the bridge template in this skill can be retired (or folded back into the skill as a reference for how the CLI's template evolved).
 
+##### Scaffold-integrity patches (FP-11 + FP-13)
+
+These patches close the "scaffold works but produces inaccurate or incomplete output" gaps. They run after the site-identity patches so FP-13 sub-findings operate on the correct `{siteName}` text.
+
+**FP-11: Turbopack root patch.**
+
+Gate: run **only if** `repoShape === 'nested-standalone'` AND `framework === 'fumadocs'` AND `capabilities.turbopackRootFlag === false`. Monorepo and single-package shapes do not hit the multi-lockfile warning; MkDocs has no Turbopack concern. If any gate is unmet, record `{ id: 'FP-11', status: 'skipped', reason: '<gate that failed>' }`.
+
+Two code paths, selected by the file-shape classification of `<appRoot>/next.config.js` from Capability Detection (3b):
+
+- **Path A — `createDocsConfig` passthrough.** If `<appRoot>/next.config.js` is in scaffold shape using `createDocsConfig()` AND `@open-agent-toolkit/docs-config` exposes a `turbopack` passthrough option (determined by reading the installed package's type declarations or `package.json` exports), pass `{ root: __dirname }` through:
+
+  ```js
+  // <!-- FP-11 patch: turbopack root passthrough -->
+  export default createDocsConfig({
+    turbopack: { root: __dirname },
+  });
+  // <!-- /FP-11 patch -->
+  ```
+
+  Idempotency: if the marker is already present, skip with `status: 'skipped'`.
+
+- **Path B — wrapper replacement.** If the passthrough isn't supported (the `@open-agent-toolkit/docs-config` version installed is older than the one that added it), replace the `createDocsConfig()` wrapper with an explicit `createMDX()` + hand-written Next config. Preserve any user-authored edits the wrapper had accumulated (by diffing against the known scaffold shape before replacing):
+
+  ```js
+  // <!-- FP-11 patch: wrapper replaced for turbopack root -->
+  import createMDX from 'fumadocs-mdx/next';
+
+  const withMDX = createMDX();
+
+  /** @type {import('next').NextConfig} */
+  const config = {
+    reactStrictMode: true,
+    turbopack: { root: __dirname },
+  };
+
+  export default withMDX(config);
+  // <!-- /FP-11 patch -->
+  ```
+
+  Before replacing, snapshot the original `next.config.js` to `next.config.js.pre-fp11.bak` in the same directory so the user can inspect the prior state. Record the backup path in `patchesApplied` so the Walkthrough can mention it.
+
+  Idempotency: if the marker is present, skip; if the wrapper replacement has already happened but without the marker (indicating a user-customized variant), classify as `drift` and refuse.
+
+**FP-13: template-content patches.**
+
+Four sub-findings, each with its own gate, target, and idempotency check. All sub-findings apply to Fumadocs; MkDocs handling lives in the Walkthrough's MkDocs Minimum Contract (Step 6, p05-t02) because the MkDocs scaffold's content layout differs and doesn't share these specific gaps.
+
+- **Sub-finding A: Empty `description:` frontmatter.** Targets: `<appRoot>/docs/getting-started.md:3` and `<appRoot>/docs/contributing.md:3`.
+  - Gate: the target line matches `description: ''` (scaffold shape).
+  - Patch: replace with static defaults:
+    - `getting-started.md`: `description: 'Set up the local environment and preview the docs site.'`
+    - `contributing.md`: `description: 'Authoring conventions and navigation rules for this docs site.'`
+  - Wrap each edit with `<!-- FP-13 patch: description-A -->` / `<!-- /FP-13 patch -->` on the line above.
+  - Idempotency: marker present = skip.
+  - Rationale: these are per-page descriptions, not site-level — do not template on `{siteDescription}`; use static text that describes the page's own purpose.
+
+- **Sub-finding B: Bare install/build commands lack working-directory context.** Target: `<appRoot>/docs/getting-started.md` (the install/build code block, per scaffold lines 15-33 or nearest equivalent after FP-12 patches).
+  - Gate: the block contains a bare `pnpm install` / `pnpm dev` / `pnpm build` sequence with no `--filter` or `cd` prefix (scaffold shape).
+  - Patch: rewrite the block per `repoShape`:
+    - `monorepo`: prefix each command with `pnpm --filter {appName}` (e.g., `pnpm --filter {appName} install`, `... dev`, `... build`).
+    - `nested-standalone`: prefix each command with `cd {appDir} && ` (e.g., `cd apps/docs && pnpm install`).
+    - `single-package`: leave bare form — it works correctly from repo root.
+  - Wrap the entire rewritten block with `<!-- FP-13 patch: commands-B -->` / `<!-- /FP-13 patch -->`.
+  - Idempotency: marker present = skip. If the block has drifted (not bare, not already patched), classify as `drift` and refuse.
+
+- **Sub-finding C: False `docs:lint` claim.** Target: `<appRoot>/docs/contributing.md` line describing the `docs:lint` script (near line 31 per scaffold, may have shifted).
+  - Gate: `lint === 'none'` (Input Result) AND the line contains the exact scaffold string "Run Markdown formatting and linting as configured for this docs app."
+  - Patch: replace with "Run Markdown formatting as configured for this docs app." (dropping "and linting").
+  - If `lint === 'markdownlint-cli2'`, the original claim is accurate — skip with `status: 'skipped', reason: 'linting is configured'`.
+  - Wrap with `<!-- FP-13 patch: lint-claim-C -->` / `<!-- /FP-13 patch -->`.
+  - Idempotency: marker present = skip.
+
+- **Sub-finding D: Generated `index.md` lacks "do not hand-edit" warning.** Two sub-targets:
+  - **D.1 — `contributing.md` explanatory section.** Append a "Generated files" section to `<appRoot>/docs/contributing.md` (before any closing References section if present). Two sentences:
+
+    ```markdown
+    <!-- FP-13 patch: generated-files-D -->
+
+    ## Generated files
+
+    The root-level `index.md` at `<appRoot>/index.md` is regenerated from `docs/index.md` and its `## Contents` sections on every `predev` / `prebuild`. Do not hand-edit it; edit the authored source under `docs/` instead.
+
+    <!-- /FP-13 patch -->
+    ```
+
+    Idempotency: marker present = skip.
+
+  - **D.2 — Generated `index.md` header comment.** This runs at scaffold time only if `<appRoot>/index.md` exists after the CLI completes (the generate-index script may or may not have run as part of `init`). Prepend the following on the first post-scaffold run:
+
+    ```markdown
+    <!-- generated by oat docs generate-index; do not hand-edit. Source: docs/index.md -->
+    ```
+
+    Detect on subsequent runs (both skill re-invocations and normal `predev`/`prebuild`) and preserve idempotently: if the comment is already present at the top of the file, the `generate-index` command and the skill both leave it alone.
+
+    If `<appRoot>/index.md` does not exist after scaffold (the script didn't run), record `{ id: 'FP-13/D.2', status: 'skipped', reason: 'index.md not yet generated; will be added on first prebuild' }` and instead add a one-time hook: modify `<appRoot>/package.json` to wrap the `prebuild`/`predev` script to prepend the header comment to the generated file on first run. This hook is labeled with the marker `<!-- FP-13 patch: generated-header-D2 -->` inside the resulting generated file.
+
+**Refuse-and-surface.** Every patch above respects the drift classification from Capability Detection. If a target was classified `drift`, the patch was already recorded as `refused` in 3b — skip here and do not re-check.
+
 ##### Post-patch ordering
 
 Inside 3d, patches run in this order:
