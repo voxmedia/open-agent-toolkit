@@ -293,6 +293,26 @@ describe('instructions utils', () => {
     });
   });
 
+  it('surfaces broken Claude symlinks without sibling AGENTS.md as stray', async () => {
+    const repoRoot = await createRepoRoot();
+    const docsDir = join(repoRoot, 'docs');
+
+    await mkdir(docsDir, { recursive: true });
+    await symlink('missing-AGENTS.md', join(docsDir, 'CLAUDE.md'));
+
+    const entries = await scanInstructionFiles(repoRoot);
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      agentsPath: null,
+      status: 'stray',
+      detail: 'CLAUDE.md found without AGENTS.md',
+    });
+    expect(relative(repoRoot, entries[0]?.claudePath ?? '')).toBe(
+      'docs/CLAUDE.md',
+    );
+  });
+
   it('skips directory symlinks during traversal', async () => {
     const repoRoot = await createRepoRoot();
 

@@ -186,6 +186,18 @@ async function scanInstructionDirectories(
         entryStats = await dependencies.stat(entryPath);
       } catch (error) {
         const errorCode = getErrorCode(error);
+        if (
+          errorCode === 'ENOENT' &&
+          (entry.name === 'AGENTS.md' || entry.name === 'CLAUDE.md')
+        ) {
+          recordInstructionFile(
+            directoryEntries,
+            currentDirectory,
+            entry.name,
+            entryPath,
+          );
+          continue;
+        }
         debug?.(
           `Skipping symlink target stat for ${toPosixPath(entryPath)} (${errorCode ?? 'unknown error'})`,
         );
