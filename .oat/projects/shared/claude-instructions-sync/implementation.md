@@ -26,16 +26,17 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 2     | 2/2       |
-| Phase 4 | completed | 11    | 11/11     |
-| Phase 5 | completed | 2     | 2/2       |
-| Phase 6 | completed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | completed   | 2     | 2/2       |
+| Phase 4 | completed   | 11    | 11/11     |
+| Phase 5 | completed   | 2     | 2/2       |
+| Phase 6 | completed   | 2     | 2/2       |
+| Phase 7 | in_progress | 1     | 0/1       |
 
-**Total:** 21/21 tasks completed
+**Total:** 21/22 tasks completed
 
 ---
 
@@ -811,6 +812,41 @@ oat_template_name: implementation
 
 ---
 
+## Phase 7: Review Fix From Final Re-Review V4
+
+**Status:** in_progress
+**Started:** 2026-04-13
+
+### Phase Summary (fill when phase is complete)
+
+- Pending the final remaining review-fix task from `final-review-2026-04-13-v4.md`.
+- Need to surface dangling canonical `AGENTS.md` symlinks as drift even when no `CLAUDE.md` sibling exists.
+- A clean final re-review is required after Phase 7 completes.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts`
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- `packages/cli/src/commands/instructions/sync/sync.ts`
+- `packages/cli/src/commands/instructions/sync/sync.test.ts`
+- `.oat/projects/shared/claude-instructions-sync/{plan,implementation,state}.md`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pending
+
+**Notes / Decisions:**
+
+- Received the v4 re-review artifact and converted the remaining Important finding into a single Phase 7 task.
+- Continuing automatically because implementation is still active and the finding is a bounded correctness gap.
+
+### Task p07-t01: (review) Surface dangling canonical AGENTS symlinks without sibling Claude files
+
+**Status:** pending
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -967,6 +1003,29 @@ Chronological log of implementation progress.
 - Continued past the nominal review-cycle cap because implementation is still active and the review surfaced actionable correctness gaps
 
 **Next:** Complete Phase 6 review fixes, then re-run final code review and process it via `oat-project-review-receive`.
+
+### Review Received: final
+
+**Date:** 2026-04-13
+**Review artifact:** `reviews/archived/final-review-2026-04-13-v4.md`
+**Review cycle:** 6 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p07-t01`
+
+**Disposition summary:**
+
+- Converted the dangling-canonical-`AGENTS.md` finding into a single fix task
+- Deferred findings: none
+- Continued past the nominal review-cycle cap because the review still surfaced an actionable correctness defect
+
+**Next:** Complete Phase 7 review fix, then re-run final code review and process it via `oat-project-review-receive`.
 
 ---
 

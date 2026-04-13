@@ -744,20 +744,57 @@ git commit -m "fix(p06-t02): preserve validate sync strategy guidance"
 
 ---
 
+## Phase 7: Review Fix From Final Re-Review V4
+
+### Task p07-t01: (review) Surface dangling canonical AGENTS symlinks without sibling Claude files
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.ts`
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Modify: `packages/cli/src/commands/instructions/sync/sync.ts`
+- Modify: `packages/cli/src/commands/instructions/sync/sync.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: a dangling canonical `AGENTS.md` symlink with no sibling `CLAUDE.md` disappears from validation and sync dry-run output entirely.
+Location: `packages/cli/src/commands/instructions/instructions.utils.ts:189`
+
+**Step 2: Implement fix**
+
+Classify dangling canonical `AGENTS.md` symlinks as explicit drift entries even when no `CLAUDE.md` sibling exists, and make sync report that the canonical file is unreadable and requires manual repair instead of silently doing nothing.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+Expected: Utility and sync tests pass with dangling-canonical coverage
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/instructions/instructions.utils.ts \
+  packages/cli/src/commands/instructions/instructions.utils.test.ts \
+  packages/cli/src/commands/instructions/sync/sync.ts \
+  packages/cli/src/commands/instructions/sync/sync.test.ts
+git commit -m "fix(p07-t01): surface dangling canonical instruction symlinks"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                       |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------- |
-| p01    | code     | pending         | -          | -                                              |
-| p02    | code     | pending         | -          | -                                              |
-| p03    | code     | pending         | -          | -                                              |
-| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v3.md |
-| spec   | artifact | pending         | -          | -                                              |
-| design | artifact | pending         | -          | -                                              |
+| Scope  | Type     | Status      | Date       | Artifact                                       |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending     | -          | -                                              |
+| p02    | code     | pending     | -          | -                                              |
+| p03    | code     | pending     | -          | -                                              |
+| final  | code     | fixes_added | 2026-04-13 | reviews/archived/final-review-2026-04-13-v4.md |
+| spec   | artifact | pending     | -          | -                                              |
+| design | artifact | pending     | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -780,10 +817,11 @@ git commit -m "fix(p06-t02): preserve validate sync strategy guidance"
 - Phase 4: 11 tasks - address final review fixes before re-review
 - Phase 5: 2 tasks - address independent final re-review findings
 - Phase 6: 2 tasks - address final re-review v3 findings
+- Phase 7: 1 task - surface dangling canonical AGENTS symlinks as drift
 
-**Total: 21 tasks**
+**Total: 22 tasks**
 
-Final re-review v3 findings were fixed. Re-run final code review before merge.
+Final re-review v4 findings were converted into Phase 7 fix work. Re-run final code review before merge.
 
 ---
 
