@@ -296,6 +296,33 @@ oat_generated: false
 
 ---
 
+### Review Received: final
+
+**Date:** 2026-04-13
+**Review artifact:** reviews/archived/final-review-2026-04-13.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 6
+
+**New tasks added:** none
+
+**Deferred Findings:**
+
+- `m1` Keep current generic exit-code-1 handling for non-`CliError` mutator invariants; behavior is correct and explicit exit classification can be revisited separately.
+- `m2` Keep the current blank-line section parser assumption; OAT-generated `state.md` files already follow that format.
+- `m3` Leave the in-memory lifecycle guard as-is; tightening or removing it is cleanup, not a release blocker.
+- `m4` Keep the existing `process.exitCode` test pattern for consistency with neighboring command tests.
+- `m5` Leave `--archived` semantics as a caller contract; the skill already gates the flag on shared-project archive flow.
+- `m6` Leave the negative regression assertion narrow; the positive CLI-delegation assertion already protects the intended behavior.
+
+**Next:** Run `oat-project-pr-final`.
+
+---
+
 ### Artifact Review Received: plan
 
 **Date:** 2026-04-13
