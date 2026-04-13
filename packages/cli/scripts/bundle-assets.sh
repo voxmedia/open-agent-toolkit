@@ -15,6 +15,7 @@ SKILLS=(
   oat-docs
   oat-docs-analyze
   oat-docs-apply
+  oat-docs-bootstrap
   oat-doctor
   oat-repo-maintainability-review
   oat-idea-ideate

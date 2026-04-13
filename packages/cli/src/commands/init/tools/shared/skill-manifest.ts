@@ -82,6 +82,7 @@ export const DOCS_SKILLS = [
   'oat-agent-instructions-apply',
   'oat-docs-analyze',
   'oat-docs-apply',
+  'oat-docs-bootstrap',
 ] as const;
 
 export const DOCS_SCRIPTS = ['resolve-tracking.sh'] as const;
