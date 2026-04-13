@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-review-receive
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-04-11
-oat_current_task_id: null
+oat_last_updated: 2026-04-13
+oat_current_task_id: p04-t01
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -12,7 +12,7 @@ oat_template_name: implementation
 # Implementation: claude-instructions-sync
 
 **Started:** 2026-04-10
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-13
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,13 +26,14 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | completed   | 2     | 2/2       |
+| Phase 4 | in_progress | 11    | 0/11      |
 
-**Total:** 6/6 tasks completed
+**Total:** 6/17 tasks completed
 
 ---
 
@@ -323,6 +324,32 @@ oat_template_name: implementation
 
 ---
 
+## Phase 4: Review Fixes From Final Review
+
+**Status:** in_progress
+**Started:** 2026-04-13
+
+### Phase Summary (fill when phase is complete)
+
+Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the manual final code review.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/instructions/*`
+- `apps/oat-docs/docs/provider-sync/scope-and-surface.md`
+- `.oat/projects/shared/claude-instructions-sync/{plan,implementation,state}.md`
+
+**Verification:**
+
+- Review receive bookkeeping only. No code changes executed yet.
+
+**Notes / Decisions:**
+
+- Converted all accepted Medium and Minor findings from `final-review-2026-04-11-v2.md` into queued plan tasks.
+- A clean final re-review is required after Phase 4 completes.
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -410,6 +437,31 @@ Chronological log of implementation progress.
 
 ---
 
+### Review Received: final
+
+**Date:** 2026-04-13
+**Review artifact:** `reviews/archived/final-review-2026-04-11-v2.md`
+**Review cycle:** 2 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 3
+- Minor: 8
+
+**New tasks added:** `p04-t01`, `p04-t02`, `p04-t03`, `p04-t04`, `p04-t05`, `p04-t06`, `p04-t07`, `p04-t08`, `p04-t09`, `p04-t10`, `p04-t11`
+
+**Disposition summary:**
+
+- Converted all Medium findings to fix tasks
+- Converted all Minor findings to fix tasks per user direction
+- Deferred findings: none
+
+**Next:** Execute Phase 4 via the `oat-project-implement` skill starting at `p04-t01`, then update the review row to `fixes_completed` and re-run final code review.
+
+---
+
 ## Deviations from Plan
 
 Document any deviations from the original plan.
@@ -449,6 +501,7 @@ Track test execution during implementation.
 **Verification performed:**
 
 - Phase 1 through Phase 3 verification passed, including the full CLI package test suite and docs build
+- Final review receive bookkeeping completed; Phase 4 review-fix execution is now pending
 
 **Design deltas (if any):**
 
