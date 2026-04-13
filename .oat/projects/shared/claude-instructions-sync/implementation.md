@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t07
+oat_current_task_id: p04-t08
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -31,9 +31,9 @@ oat_template_name: implementation
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 6/11      |
+| Phase 4 | in_progress | 11    | 7/11      |
 
-**Total:** 12/17 tasks completed
+**Total:** 13/17 tasks completed
 
 ---
 
@@ -497,6 +497,32 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 **Notes / Decisions:**
 
 - Kept the command entrypoints unchanged from the caller perspective by preserving `scanInstructionFiles(repoRoot, { strategy })`.
+
+### Task p04-t07: (review) Harden symlink validation against canonical path differences
+
+**Status:** completed
+**Commit:** eb25b0e0
+
+**Outcome (required when completed):**
+
+- Canonicalized both symlink targets and `AGENTS.md` paths before validating symlink-mode instruction entries.
+- Added a regression test that scans a repo through an alias path while `CLAUDE.md` points at the canonical absolute `AGENTS.md` target.
+- Preserved existing symlink-mode behavior for normal relative links while eliminating the raw-string false negative.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.types.ts` - added `realpath` to the injected scan dependency contract
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - canonicalized symlink target comparison
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - added alias-root regression coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Used `realpath(...).catch(() => originalPath)` so validation still degrades predictably if canonicalization itself fails.
 
 ---
 
