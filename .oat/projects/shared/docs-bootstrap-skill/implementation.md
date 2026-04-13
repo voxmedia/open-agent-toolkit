@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 1/4       |
+| Phase 1 | in_progress | 4     | 2/4       |
 | Phase 2 | pending     | 3     | 0/3       |
 | Phase 3 | pending     | 4     | 0/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 1/19 tasks completed
+**Total:** 2/19 tasks completed
 
 ---
 
@@ -74,8 +74,30 @@ oat_generated: false
 
 ### Task p01-t02: Author docs-app AGENTS.md bridge template (FP-15)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5478b745
+
+**Outcome:**
+
+- Created `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` with the 8 required task-framed sections from discovery FP-15.
+- Every non-intro section starts with "When you need to..." — task framing is self-filtering for the "still relevant 6 months later" litmus test.
+- All four required placeholders present and used contextually: `{{SITE_NAME}}`, `{{APP_DIR}}`, `{{REPO_NAME}}`, `{{GENERATE_INDEX_CMD}}`.
+- "What not to do" section consolidates the footgun warnings (generated file hand-edits, invented nav conventions, bypass of analyze/apply, deprecated overview.md, partial site-name edits).
+- "Reference" section points at peer docs (`contributing.md`, `getting-started.md`, root AGENTS.md) and the tooling surfaces (`oat docs analyze`, `oat docs apply`, `oat-project-document`, the generate-index command).
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` — new template, 61 lines
+
+**Verification:**
+
+- Run: `pnpm oxfmt --check '.agents/skills/oat-docs-bootstrap/assets/*'`
+- Result: skipped by oxfmt because the `.template` extension is outside its `.md` matcher. Formatting of the rendered `AGENTS.md` output happens at skill-runtime when the template is instantiated. Self-reviewed content against the discovery FP-15 content requirements and the audience litmus test.
+
+**Notes / Decisions:**
+
+- Framework-specific content is intentionally kept out of the template (no Fumadocs-only or MkDocs-only sections). The template is framework-agnostic; the skill's Walkthrough handles framework-specific deep-dive content in its own Sections E/F.
+- The "reference" entry for `{{GENERATE_INDEX_CMD}}` is worded as a command reference rather than a usage instruction — users don't typically need to invoke it manually (it runs via `predev`/`prebuild`), and the "don't hand-edit generated output" rule already appears in "What not to do".
 
 ---
 
