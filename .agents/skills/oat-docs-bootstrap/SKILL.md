@@ -370,9 +370,55 @@ Do not pass flags the CLI doesn't advertise. Never assume a flag exists because 
 
 **3b. Run Capability Detection.**
 
-(Capability Detection sub-procedure body authored in p03-t02.)
+Before CLI invocation, probe the installed CLI to discover which FP-12 / FP-11 / FP-13 / FP-15 gaps it has already closed. Post-patches must never run blindly — they must be gated on both a CLI-level capability probe **and** a file-shape check on the specific target file. This self-ratcheting keeps the skill correct as CLI fixes land upstream.
 
-The probe runs once before CLI invocation and produces a `capabilities` record that both 3a (flag assembly above) and the post-patch sub-procedures (3c / 3d) consume.
+**CLI help probe.** Run `$CLI_CMD docs init --help` exactly once, capture stdout, and grep the flag list for known markers. Record boolean capability flags on the `capabilities` object:
+
+- `siteNameFlag` — `true` if `--site-name` (or equivalent alias like `--title`) appears in the help output. Implies FP-12 upstream fix has landed.
+- `turbopackRootFlag` — `true` if a flag for forwarding a Turbopack root (or a `--framework-config` passthrough that accepts `turbopack.root`) appears. Implies FP-11 fix has landed in some form.
+- `agentsMdScaffoldFlag` — `true` if the help output mentions `AGENTS.md` scaffolding or the CLI's scaffold template list includes `AGENTS.md`. Implies FP-15 fix has landed.
+
+If the `--help` invocation fails (non-zero exit or empty stdout), treat all capabilities as `false` and record a warning in `Scaffold Result.cliLogs.stderr` — do not guess. Assuming a capability that doesn't exist leads to a broken scaffold; assuming absence just means an extra post-patch runs unnecessarily.
+
+**File-shape checks per patch target.** After the CLI writes the scaffold (3c completes), but before 3d applies any patch, read the target file and classify it as one of three states: `scaffold-shape` (unmodified CLI output, patch is safe), `patched-shape` (already patched by a previous skill run, patch is a no-op), or `drift` (neither — the file has been hand-edited or third-party-modified).
+
+For each patch, the classification rule is:
+
+- **FP-12 targets** — the patch sets display-title references in four files:
+  - `<appRoot>/app/layout.tsx` (Fumadocs only): scaffold shape has `DocsLayout` with `branding: { title: '{appName}' }` (the CLI writes the package name); patched shape has `branding: { title: '{siteName}' }` surrounded by `<!-- FP-12 patch -->` markers.
+  - `<appRoot>/docs/index.md`: scaffold shape has frontmatter `title: '{appName}'` and `# {appName}` H1; patched shape substitutes `{siteName}` in both positions.
+  - `<appRoot>/docs/getting-started.md`: scaffold shape has a body reference to `{appName}`; patched shape uses `{siteName}`.
+  - `<appRoot>/docs/contributing.md`: scaffold shape has `# {appName}` H1; patched shape uses `{siteName}`.
+  - Classification: if the marker string (`appName` where expected in scaffold shape, `siteName` where expected in patched shape) matches exactly, the file is in that shape. If neither pattern matches (e.g., the user already renamed things manually), classify as `drift`.
+- **FP-11 target** — `<appRoot>/next.config.js` (Fumadocs, nested-standalone only):
+  - Scaffold shape: single-line `export default createDocsConfig()` or near-equivalent with no `turbopack` option.
+  - Patched shape (via passthrough): `createDocsConfig({ turbopack: { root: __dirname } })` plus `<!-- FP-11 patch -->` marker comment.
+  - Patched shape (via wrapper replacement): explicit `createMDX()` + hand-written config with `turbopack: { root: __dirname }` and the `<!-- FP-11 patch -->` marker.
+  - Classification: pattern-match on the wrapper call or the `createMDX()` import; any other shape is `drift`.
+- **FP-13 targets** — the four sub-findings (empty descriptions, bare commands, false lint claim, generated-file warning) each target a specific line or section (see design.md). Scaffold shape for each is "unchanged CLI scaffold output"; patched shape has the `<!-- FP-13 patch -->` marker comment adjacent to the rewrite.
+- **FP-15 target** — `<appRoot>/AGENTS.md`:
+  - Scaffold shape: file **does not exist** (current CLI doesn't scaffold it).
+  - Patched shape: file exists and begins with `# AGENTS —` (the template's H1 form).
+  - Any other state (file exists but has a different H1, file was hand-written) classifies as `drift`.
+
+**Refuse-and-surface contract.** If any target classifies as `drift`, the associated patch **does not run**. Instead, record an entry in `Scaffold Result.patchesApplied` with `status: 'refused'`, the target path, the observed shape snippet, and a suggested manual fix for the user. Example:
+
+```
+patchesApplied:
+  - id: FP-12/layout.tsx
+    status: refused
+    target: /abs/path/apps/docs/app/layout.tsx
+    reason: drift — expected `branding: { title: 'docs' }` (scaffold) or patched-shape marker; found neither
+    suggestedFix: manually set `DocsLayout.branding.title` to {siteName} and ensure `export const metadata = { title, description }` is present
+```
+
+Continue with remaining patches; one `refused` entry does not stop the flow. The Post-Scaffold Inspector (Step 5) surfaces the refused list to the user so they can address it manually.
+
+**Probe ordering.**
+
+- The CLI help probe runs **before** `oat docs init` (3c) so its result can feed flag assembly (3a).
+- The file-shape checks run **after** `oat docs init` (3c) so they operate on the actual scaffold output.
+- The post-patch sub-procedures (3d, site-identity and scaffold-integrity) read the combined `capabilities` record and target classifications to decide whether to apply each patch.
 
 **3c. Invoke the CLI.**
 
