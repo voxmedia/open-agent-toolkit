@@ -39,6 +39,7 @@ Notable inspection commands introduced in the current CLI surface:
 - `oat config dump --json` - merged config with source attribution
 - `oat project status --json` - full parsed state for the active tracked project
 - `oat project list --json` - summary state for tracked projects under the configured projects root
+- `oat project complete-state <project-path>` - apply the canonical completed-state mutation to a project's `state.md`; used by `oat-project-complete` during lifecycle closeout
 
 ## `oat config` surface flags
 

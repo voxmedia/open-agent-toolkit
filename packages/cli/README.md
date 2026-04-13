@@ -34,6 +34,7 @@ Additional useful entry points:
 - `oat config dump --json`
 - `oat project status --json`
 - `oat project list --json`
+- `oat project complete-state /path/to/project`
 - `oat project archive sync`
 - `oat doctor`
 
@@ -44,6 +45,7 @@ Use these commands when you want structured runtime/project state out of the CLI
 - `oat config dump --json` - emit merged OAT config with per-key source attribution
 - `oat project status --json` - emit the active project's full parsed control-plane state
 - `oat project list --json` - emit summary state for tracked projects under the configured projects root
+- `oat project complete-state <project-path>` - emit the canonical completed lifecycle shape into a tracked project's `state.md`
 
 ## Requirements
 
