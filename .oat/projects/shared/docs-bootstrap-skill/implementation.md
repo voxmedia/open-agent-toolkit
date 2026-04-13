@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p01-t03
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 2/4       |
+| Phase 1 | in_progress | 4     | 3/4       |
 | Phase 2 | pending     | 3     | 0/3       |
 | Phase 3 | pending     | 4     | 0/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 2/19 tasks completed
+**Total:** 3/19 tasks completed
 
 ---
 
@@ -103,8 +103,30 @@ oat_generated: false
 
 ### Task p01-t03: Add canonical example at apps/oat-docs/AGENTS.md
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0d9ed0e2
+
+**Outcome:**
+
+- Created `apps/oat-docs/AGENTS.md` (61 lines) as the canonical example of a scaffolded docs-app AGENTS.md in this repo.
+- Rendered the p01-t02 template with resolved placeholder values: `{{SITE_NAME}}` → `OAT Documentation`, `{{APP_DIR}}` → `apps/oat-docs`, `{{REPO_NAME}}` → `open-agent-toolkit`, `{{GENERATE_INDEX_CMD}}` → `pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
+- Adapted the "Reference" section to the actual layout of `apps/oat-docs/`: `docs/quickstart.md` (not `docs/getting-started.md`) and `docs/contributing/` directory (not `docs/contributing.md` file). This keeps the canonical example valid for its own context without diluting the template's portability.
+- Noted in the Reference section that the root `AGENTS.md` typically includes a `## Documentation` section for scaffolded docs apps and called out that the user can add one if missing (the root AGENTS.md in this repo currently lacks the section because `apps/oat-docs/` predates the scaffold convention).
+
+**Files changed:**
+
+- `apps/oat-docs/AGENTS.md` — new canonical example
+
+**Verification:**
+
+- Run: `pnpm oxfmt --check apps/oat-docs/AGENTS.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- **Divergence from strict template fidelity:** The plan's Step 2 said "keep it a faithful instantiation." I diverged by replacing `docs/getting-started.md` with `docs/quickstart.md` and `docs/contributing.md` with `docs/contributing/` because the template's assumed paths don't exist in `apps/oat-docs/`. A strict template instantiation would produce broken references, which defeats the point of a canonical example. The template itself still points at the scaffold-standard paths; only this instantiation is adapted.
+- **Follow-up consideration (not scope of this task):** The root `AGENTS.md` in this repo could be updated to include the `## Documentation` section that `oat docs init` would auto-add for a scaffolded docs app. Deferred — not required for the skill to function, and adding it would be scope creep for this task.
+- **Follow-up consideration (not scope of this task):** `apps/oat-docs/` diverges from the scaffold convention in a few ways (`quickstart.md` instead of `getting-started.md`; `contributing/` directory instead of `contributing.md` file). Aligning it is a separate migration task.
 
 ---
 
