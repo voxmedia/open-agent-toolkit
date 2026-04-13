@@ -8,7 +8,7 @@ scope_estimate: M
 labels: ['workflow', 'cli']
 assignee: null
 created: '2026-03-21T00:28:34Z'
-updated: '2026-03-31T20:07:10Z'
+updated: '2026-04-13T22:01:21Z'
 associated_issues: []
 oat_template: true
 oat_template_name: backlog-item
@@ -35,3 +35,5 @@ The `archive-sync-closeout-config` project now owns completion-time archive side
 - warning-tolerant completion behavior when AWS CLI is missing or unusable
 
 This reduces the amount of archive/S3 logic the skill must carry directly. Any remaining state/body-mutation cleanup should build on this CLI-owned behavior rather than reintroducing skill-local archive logic.
+
+The completion-state mutation now lives under `packages/cli/src/commands/project/complete-state/`: `state-utils.ts` owns the canonical `state.md` rendering contract and `index.ts` exposes `oat project complete-state <project-path>`. `oat-project-complete` delegates Step 5 to that command and passes `--archived` only when the closeout flow will archive a shared project locally.
