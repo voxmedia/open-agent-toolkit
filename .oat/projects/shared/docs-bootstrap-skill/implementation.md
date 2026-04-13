@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p01-t04
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,23 +24,53 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 3/4       |
-| Phase 2 | pending     | 3     | 0/3       |
-| Phase 3 | pending     | 4     | 0/4       |
-| Phase 4 | pending     | 2     | 0/2       |
-| Phase 5 | pending     | 3     | 0/3       |
-| Phase 6 | pending     | 3     | 0/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 4     | 4/4       |
+| Phase 2 | pending   | 3     | 0/3       |
+| Phase 3 | pending   | 4     | 0/4       |
+| Phase 4 | pending   | 2     | 0/2       |
+| Phase 5 | pending   | 3     | 0/3       |
+| Phase 6 | pending   | 3     | 0/3       |
 
-**Total:** 3/19 tasks completed
+**Total:** 4/19 tasks completed
 
 ---
 
 ## Phase 1: Skill scaffolding + shared assets
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
+**Completed:** 2026-04-13
+
+### Phase Summary
+
+**Outcome:**
+
+- Scaffolded the `oat-docs-bootstrap` skill directory (`.agents/skills/oat-docs-bootstrap/`) with a canonical-format `SKILL.md` skeleton (Mode Assertion, Progress Indicators, Process outline with placeholder Step 0–7 headings).
+- Authored the FP-15 bridge `AGENTS.md.template` at `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` with 8 task-framed sections honoring the audience-discipline litmus test.
+- Instantiated the canonical example at `apps/oat-docs/AGENTS.md`, adapted to the existing docs-app layout (quickstart vs getting-started; contributing/ dir vs file).
+- Provider views (`claude`, `cursor`) refreshed via `oat sync --scope all`; both now report `in_sync` for the new skill.
+
+**Key files touched:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` — new skeleton
+- `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` — FP-15 bridge template
+- `apps/oat-docs/AGENTS.md` — canonical example
+- `.claude/skills/oat-docs-bootstrap` — provider symlink
+- `.cursor/skills/oat-docs-bootstrap` — provider symlink
+- `.oat/sync/manifest.json` — updated to track the new skill
+
+**Verification:**
+
+- `pnpm oxfmt --check` passed on SKILL.md and canonical example
+- `oat status --scope all` reports the new skill in sync across providers that support it
+
+**Notes / Decisions:**
+
+- Used `assets/` subdirectory (not `references/`) because the template is output by the skill, not read-only guidance.
+- Adapted the canonical example to actually-existing paths in `apps/oat-docs/` rather than a strict template instantiation; broken references would defeat the point of an example.
+- Root `AGENTS.md` does not currently have a `## Documentation` section; deferred as a follow-up (not required for skill function).
 
 ### Task p01-t01: Create oat-docs-bootstrap skill skeleton
 
@@ -132,8 +162,29 @@ oat_generated: false
 
 ### Task p01-t04: Refresh provider views
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 172f5c53
+
+**Outcome:**
+
+- Before: `oat status --scope all` reported `oat-docs-bootstrap` as `missing` for `claude` and `cursor` providers.
+- After `oat sync --scope all`: both provider views report `in_sync`. Symlinks created at `.claude/skills/oat-docs-bootstrap` and `.cursor/skills/oat-docs-bootstrap` pointing at the canonical skill directory.
+- `.oat/sync/manifest.json` updated to include the new skill entry.
+
+**Files changed:**
+
+- `.claude/skills/oat-docs-bootstrap` → symlink to `../../.agents/skills/oat-docs-bootstrap`
+- `.cursor/skills/oat-docs-bootstrap` → symlink to `../../.agents/skills/oat-docs-bootstrap`
+- `.oat/sync/manifest.json` — skill entry added
+
+**Verification:**
+
+- Run: `oat status --scope all`
+- Result: both provider views report `✓ in_sync` for `oat-docs-bootstrap`
+
+**Notes / Decisions:**
+
+- `copilot` provider was already in sync via symlink propagation; only `claude` and `cursor` needed the explicit sync.
 
 ---
 
