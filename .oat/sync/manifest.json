@@ -1261,7 +1261,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-04-10T17:49:13.733Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-docs-bootstrap",
+      "providerPath": ".claude/skills/oat-docs-bootstrap",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-04-13T20:51:35.796Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-docs-bootstrap",
+      "providerPath": ".cursor/skills/oat-docs-bootstrap",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-04-13T20:51:35.799Z"
     }
   ],
-  "lastUpdated": "2026-04-10T17:49:13.733Z"
+  "lastUpdated": "2026-04-13T20:51:35.799Z"
 }
