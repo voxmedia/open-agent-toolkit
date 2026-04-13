@@ -350,7 +350,7 @@ Print `[3/7] Scaffolding…` at the start of this step.
 
 **3a. Assemble CLI flags.**
 
-Build the flag list deterministically from the Input Result (Step 2e) and the Capability Detection result (3b, authored in p03-t02). Non-interactive mode is mandatory — the skill owns the interactive flow; the CLI runs headless.
+Build the flag list deterministically from the Input Result (Step 2e) and the Capability Detection result (Step 3b). Non-interactive mode is mandatory — the skill owns the interactive flow; the CLI runs headless.
 
 Base flags (always passed):
 
@@ -1050,4 +1050,37 @@ End the skill with the summary. Do not prompt for more input — the user knows 
 
 ## Success Criteria
 
-(Expanded in p06-t01.)
+A successful `oat-docs-bootstrap` run satisfies every invariant below. Any failure of an invariant either blocks progression (critical) or is surfaced to the user in the Exit summary with a `suggestedFix` (warning) so the user knows what to address.
+
+**Pipeline invariants:**
+
+- Preflight ran read-only — no files mutated, no config written, no scaffold invoked.
+- Input Gatherer collected the full Input Result (framework, siteName, appName, targetDir, siteDescription, lint, format) plus any `conflictResolution` required by Preflight conflicts; all inputs validated before scaffold.
+- Conflict Resolution Contract's "Allowed mutations" completed for the chosen resolution; pre-scaffold invariant satisfied before `oat docs init` ran.
+- Scaffold Runner invoked `oat docs init` non-interactively with capability-gated flags; CLI exited zero; `Scaffold Result.appRoot` resolved from `.oat/config.json` (not from input alone).
+- Capability Detection produced a deterministic `capabilities` record before scaffold (for flag gating) and classified each patch target after scaffold (scaffold-shape / patched-shape / drift).
+- Every applied post-patch is labeled with a marker comment (`<!-- FP-NN patch -->` or `/* FP-NN patch */`) and is idempotent; no patch ran without passing both its capability gate and its file-shape check.
+- Build Verifier ran install + build with commands matching `repoShape`; failures classified against known patterns; unknown errors halted the flow before Inspector/Walkthrough.
+- Post-Scaffold Inspector verified every `documentation.*` path against disk; drift findings recorded with `suggestedFix`; nested-standalone dual-config surfaced without reconciliation.
+- `requireForProjectCompletion` decision collected from user; written to `.oat/config.json` only on opt-in; never silently default-true.
+- Walkthrough narrated setup-time context, not AGENTS.md runtime content; skipped framework-irrelevant sections; paused between sections with a `skip to summary` escape.
+- Optional Content Kickoff delegated to `oat-docs-analyze` + `oat-docs-apply` on accept; handed off with specific commands on decline.
+- Exit summary printed with actual values (not placeholders) for app, framework, patches applied, build status, inspection findings, and next-step commands.
+
+**Ratcheting invariants:**
+
+- When a CLI capability is detected as present (`capabilities.{flag} === true`), the corresponding post-patch is **skipped** — not applied redundantly. The skill self-ratchets as CLI fixes land.
+- Every patch's `status` is recorded in `Scaffold Result.patchesApplied` as `applied` / `skipped` / `refused` with a `reason`. The Exit summary surfaces this so the user sees which CLI gaps the skill had to cover vs. which the CLI handled directly.
+- When `capabilities.agentsMdScaffoldFlag === true` (CLI has added native AGENTS.md scaffolding), the FP-15 bridge in this skill is skipped and can be retired from the assets directory.
+
+**Stop-on-broken-state invariants:**
+
+- If `Scaffold Result.scaffoldSucceeded !== true`: Build Verifier is skipped; Inspector is skipped; Walkthrough is skipped; Exit summary reports the CLI error verbatim.
+- If `Verification Result.buildSucceeded !== true`: Inspector is skipped; Walkthrough is skipped; Exit summary reports the unclassified failure.
+- If `Inspection Result.issues` contains any `severity: 'critical'`: Walkthrough is skipped; Exit summary surfaces the critical finding.
+
+**Audience-discipline invariants:**
+
+- The Walkthrough narrates setup-time concepts; it does not recite the docs-app AGENTS.md word-for-word.
+- The docs-app AGENTS.md (FP-15 bridge or CLI-native) contains only guidance that would still be useful six months after scaffold — no "how this was set up" content.
+- The three agent-instruction surfaces (root `AGENTS.md` `## Documentation`, docs-app `AGENTS.md`, `docs/contributing.md`) are kept distinct by audience + lifetime; the Walkthrough's Section D makes this explicit to the user.
