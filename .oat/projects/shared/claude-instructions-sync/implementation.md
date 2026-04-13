@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -31,9 +31,9 @@ oat_template_name: implementation
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 0/11      |
+| Phase 4 | in_progress | 11    | 1/11      |
 
-**Total:** 6/17 tasks completed
+**Total:** 7/17 tasks completed
 
 ---
 
@@ -347,6 +347,31 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 
 - Converted all accepted Medium and Minor findings from `final-review-2026-04-11-v2.md` into queued plan tasks.
 - A clean final re-review is required after Phase 4 completes.
+
+### Task p04-t01: (review) Remove recursive deletion from instruction cleanup
+
+**Status:** completed
+**Commit:** 9b700e65
+
+**Outcome (required when completed):**
+
+- Narrowed the file-removal helper used by instruction sync so it only passes `force: true` to `rm`.
+- Exposed the helper as a small unit boundary so deletion options are directly testable.
+- Added targeted sync-command coverage that locks in the non-recursive delete contract.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/sync/sync.ts` - extracted `removeInstructionFile` and removed the recursive delete option
+- `packages/cli/src/commands/instructions/sync/sync.test.ts` - added a focused assertion for the helper’s delete options
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Used a helper extraction instead of an indirect behavior test so the safety constraint is explicit and stable.
 
 ---
 
