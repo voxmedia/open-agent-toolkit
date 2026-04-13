@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -33,7 +33,7 @@ oat_generated: false
 | Phase 5 | pending   | 3     | 0/3       |
 | Phase 6 | pending   | 3     | 0/3       |
 
-**Total:** 4/19 tasks completed
+**Total:** 5/19 tasks completed
 
 ---
 
@@ -190,13 +190,34 @@ oat_generated: false
 
 ## Phase 2: Preflight + Input Gatherer procedures
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-13
 
 ### Task p02-t01: Write Preflight Detector procedure
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** db505de3
+
+**Outcome:**
+
+- Authored Step 0 (Resolve Active Project and Environment) and Step 1 (Preflight Detector) bodies in SKILL.md (~99 net insertions).
+- Step 0 bootstraps repo-root + CLI-binary resolution (supports both installed `oat` binary and `pnpm run cli --` workspace fallback); makes active-project context optional.
+- Step 1 specifies deterministic shape detection (4-rule cascade: pnpm-workspace → package.json workspaces → apps+packages dirs → single-package), with the nested-standalone heuristic applied only for Fumadocs on single-package shapes with a subdirectory target.
+- Existing-docs detection is read-only and surfaces 3 conflict kinds (`existing-config`, `existing-app-dir`, `existing-agents-section`) as a list.
+- Defaults are explicit: `siteName` = humanized repoName (without " Documentation" suffix — the scaffold handles that); `appName` = `{repo}-docs` (monorepo) or `docs` (other); `targetDir` = `apps/{appName}` or `{appName}`.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (99 insertions, 2 deletions)
+
+**Verification:**
+
+- `pnpm oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md` — pass
+
+**Notes / Decisions:**
+
+- `siteName` default drops " Documentation" appendix: the scaffold template already appends it. The skill's default should be the product name alone.
+- Nested-standalone heuristic stated in prose ("for Fumadocs, any single-package repo with a subdirectory target is nested-standalone; for MkDocs, stays single-package"). This is deterministic enough for the Capability Detection step later.
 
 ---
 
