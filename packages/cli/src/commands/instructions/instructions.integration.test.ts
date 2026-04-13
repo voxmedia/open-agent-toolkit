@@ -313,6 +313,45 @@ describe('instructions command integration', () => {
     expect(payload.status).toBe('ok');
   });
 
+  it('adopts stray CLAUDE.md into AGENTS.md and rewrites Claude as a hard copy', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    await mkdir(join(root, 'docs'), { recursive: true });
+    await writeFile(
+      join(root, 'docs', 'CLAUDE.md'),
+      '# stray claude instructions\n',
+      'utf8',
+    );
+
+    const syncApply = await runCli(root, [
+      'instructions',
+      'sync',
+      '--strategy',
+      'copy',
+    ]);
+    expect(syncApply.exitCode).toBe(0);
+
+    await expect(
+      readFile(join(root, 'docs', 'AGENTS.md'), 'utf8'),
+    ).resolves.toBe('# stray claude instructions\n');
+    await expect(
+      readFile(join(root, 'docs', 'CLAUDE.md'), 'utf8'),
+    ).resolves.toBe('# stray claude instructions\n');
+    expect(
+      (await lstat(join(root, 'docs', 'CLAUDE.md'))).isSymbolicLink(),
+    ).toBe(false);
+
+    const validate = await runCli(
+      root,
+      ['instructions', 'validate', '--strategy', 'copy', '--json'],
+      ['--json'],
+    );
+    expect(validate.exitCode).toBe(0);
+    const payload = JSON.parse(validate.stdout);
+    expect(payload.status).toBe('ok');
+  });
+
   it('syncs a nested mixed-state project tree while excluding node_modules', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
