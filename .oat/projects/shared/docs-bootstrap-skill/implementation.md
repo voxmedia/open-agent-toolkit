@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p03-t02
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 4     | 4/4       |
 | Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | in_progress | 4     | 1/4       |
+| Phase 3 | in_progress | 4     | 2/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 8/19 tasks completed
+**Total:** 9/19 tasks completed
 
 ---
 
@@ -335,8 +335,31 @@ oat_generated: false
 
 ### Task p03-t02: Write Capability Detection procedure
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 960e8794
+
+**Outcome:**
+
+- Expanded Step 3b (Capability Detection) in SKILL.md (~48 net insertions) replacing the placeholder.
+- CLI help probe specified: single `--help` invocation, parse flags for `siteNameFlag`, `turbopackRootFlag`, `agentsMdScaffoldFlag`; probe failure is recorded as warning + all caps false (never guessed).
+- File-shape checks specified per patch target (FP-12 four files, FP-11 `next.config.js`, FP-13 four sub-findings, FP-15 `AGENTS.md`) with explicit scaffold-shape vs. patched-shape markers.
+- Refuse-and-surface contract: ambiguous drift records `status: 'refused'` in `patchesApplied` with target, reason, and suggested manual fix; flow continues, Post-Scaffold Inspector surfaces the refused list.
+- Probe ordering clarified: CLI help probe runs before `oat docs init` (feeds flag assembly); file-shape checks run after scaffold (operate on actual output).
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (48 insertions, 2 deletions)
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md`
+- Result: pass on first try (no nested-fence artifacts this time)
+
+**Notes / Decisions:**
+
+- **FP-15 scaffold shape is "does not exist".** Called out explicitly because absence is a legitimate classification — the CLI does not scaffold `AGENTS.md` today, so "no file at path" is the expected state and the patch writes the bridge template. If the user already hand-authored `AGENTS.md`, classification is `drift` and the patch refuses (never overwrites).
+- **Both CLI capability and file-shape must gate each patch.** The design was permissive — I tightened to require both: even if CLI hasn't added `--site-name`, a file that already has patched-shape markers must be treated as a no-op, not re-patched.
+- **Mention of `--framework-config` passthrough.** FP-11 detection looks for both a dedicated `--turbopack-root`-style flag and a generic passthrough. Rationale: the CLI team could ship either design; capturing both avoids having to re-edit the skill when the fix lands.
 
 ---
 
