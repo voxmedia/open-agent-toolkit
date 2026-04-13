@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t02
+oat_current_task_id: p04-t03
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -31,9 +31,9 @@ oat_template_name: implementation
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 1/11      |
+| Phase 4 | in_progress | 11    | 2/11      |
 
-**Total:** 7/17 tasks completed
+**Total:** 8/17 tasks completed
 
 ---
 
@@ -372,6 +372,30 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 **Notes / Decisions:**
 
 - Used a helper extraction instead of an indirect behavior test so the safety constraint is explicit and stable.
+
+### Task p04-t02: (review) Add copy-strategy stray adoption integration coverage
+
+**Status:** completed
+**Commit:** a7f25b85
+
+**Outcome (required when completed):**
+
+- Added an end-to-end integration case for stray adoption under `--strategy copy`.
+- Verified that the adopted `AGENTS.md` content and regenerated `CLAUDE.md` copy stay byte-for-byte aligned.
+- Added a strategy-specific validate pass so copy-mode adoption is covered through both sync and validation.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.integration.test.ts` - added the copy-strategy stray adoption integration scenario
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.integration.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Reused the existing pointer/symlink stray fixture shape so the three strategy variants stay parallel and readable.
 
 ---
 
