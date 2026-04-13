@@ -747,9 +747,9 @@ Chronological log of implementation progress.
 
 Document any deviations from the original plan.
 
-| Task | Planned | Actual | Reason |
-| ---- | ------- | ------ | ------ |
-| -    | -       | -      | -      |
+| Task                     | Planned                                 | Actual                                             | Reason                                                                                                             |
+| ------------------------ | --------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| post-plan release policy | No explicit public-package version work | Bumped all public packages to `0.0.23` in lockstep | `packages/cli` changed and repo policy requires synchronized version bumps before `pnpm release:validate` can pass |
 
 ## Test Results
 
@@ -761,6 +761,7 @@ Track test execution during implementation.
 | 2     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.utils.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check` | yes    | 0      | n/a      |
 | 3     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm build:docs`                                                                                                                                                                                                                                                                       | yes    | 0      | n/a      |
 | 4     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`                                                                                                                                                                                                                                    | yes    | 0      | n/a      |
+| final | `pnpm lint`; `pnpm type-check`; `pnpm build`; `pnpm test`; `pnpm release:validate`                                                                                                                                                                                                                                                                                                                                                                             | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
@@ -774,6 +775,7 @@ Track test execution during implementation.
 - `oat instructions sync` now creates or repairs `CLAUDE.md` as a pointer file, file symlink, or hard copy based on the selected strategy
 - `oat instructions sync` now adopts Claude-only stray files into canonical `AGENTS.md` content before regenerating Claude
 - Nested project trees are now covered end to end, including excluded directories and mixed valid/drifted/adoptable states
+- Public package metadata for the shipped CLI/docs packages was bumped in lockstep to `0.0.23` to satisfy release policy
 
 **Key files / modules:**
 
@@ -783,6 +785,7 @@ Track test execution during implementation.
 **Verification performed:**
 
 - Phase 1 through Phase 4 targeted verification passed, including the full CLI package test suite and docs build earlier in the implementation
+- Final repo verification passed: `pnpm lint`, `pnpm type-check`, `pnpm build`, `pnpm test`, and `pnpm release:validate`
 - Final review receive bookkeeping completed, all Phase 4 review-fix tasks were implemented, and the project is ready for final re-review
 
 **Design deltas (if any):**

@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: dd650ccc
+oat_last_commit: 0bc386c7
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-11T00:03:02.886Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-13T19:46:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-13T19:49:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_template: false
 oat_template_name: state
