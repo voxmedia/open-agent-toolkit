@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,37 +26,42 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 1/2       |
-| Phase 2 | pending     | 2     | 0/2       |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | in_progress | 2     | 0/2       |
 | Phase 3 | pending     | 1     | 0/1       |
 
-**Total:** 1/5 tasks completed
+**Total:** 2/5 tasks completed
 
 ---
 
 ## Phase 1: Capture and implement the completion-state contract
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-13
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added a pure project `state.md` completion mutator under the CLI so the contract no longer lives only in shell snippets
+- Covered the baseline completion rendering and edge cases for lifecycle upsert behavior, archived vs non-archived current-phase text, and progress bullet normalization
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/project/complete-state/state-utils.ts` - owns deterministic frontmatter and markdown section updates for completed project state
+- `packages/cli/src/commands/project/complete-state/state-utils.test.ts` - locks the baseline and edge-case completion-state contract in focused unit tests
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state/state-utils.test.ts src/commands/cleanup/project/project.test.ts`
+- Result: Pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: Fails for unrelated existing `@open-agent-toolkit/control-plane` resolution errors in `src/commands/project/list.ts` and `src/commands/project/status.ts`
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Used direct `vitest run` for task-local verification because the package `test -- ...` wrapper currently pulls in unrelated failing suites from elsewhere in the CLI package
+- Did not force reuse in `cleanup/project/project.utils.ts`; the cleanup path only needs a minimal lifecycle frontmatter upsert, while the new mutator owns the fuller completion-state contract
 
 ### Task p01-t01: Codify the canonical completed `state.md` contract in tests
 
@@ -96,8 +101,29 @@ oat_generated: false
 
 ### Task p01-t02: Implement the CLI-owned completion-state mutator
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `696a3810`
+
+**Outcome (required):**
+
+- Added edge-case coverage for existing `oat_lifecycle` replacement, missing completed-progress bullets, and archived completion text
+- Hardened the mutator to rewrite sections deterministically without leaking old body content between markdown sections
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/complete-state/state-utils.test.ts` - added the p01-t02 edge-case coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state/state-utils.test.ts src/commands/cleanup/project/project.test.ts`
+- Result: Pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: Fails for unrelated existing `@open-agent-toolkit/control-plane` resolution errors in `src/commands/project/list.ts` and `src/commands/project/status.ts`
+
+**Notes / Decisions:**
+
+- Kept cleanup-path reuse deferred because it would broaden a narrow mutator task without reducing meaningful duplication yet
+- Promoted the section-rewrite logic from regex matching to index-based slicing to keep markdown updates stable across adjacent headings
 
 **Notes:**
 
@@ -107,8 +133,8 @@ oat_generated: false
 
 ## Phase 2: Add CLI delegation and integrate the skill
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-13
 
 ### Task p02-t01: Add a shell-callable CLI command for completion-state mutation
 
