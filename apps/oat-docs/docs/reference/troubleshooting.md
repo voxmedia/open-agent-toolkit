@@ -29,9 +29,9 @@ Expected for native-read skill mappings. Codex can read canonical skills without
 
 ## `instructions validate` reports `missing`, `content_mismatch`, or `stray`
 
-- Run `oat instructions sync` to preview changes.
-- Run `oat instructions sync --strategy pointer|symlink|copy` to create or repair the expected `CLAUDE.md` shape.
-- If mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --force`.
+- Run `oat instructions sync --dry-run` to preview changes.
+- Run `oat instructions sync --strategy pointer|symlink|copy` to apply the expected `CLAUDE.md` shape.
+- If mismatched `CLAUDE.md` files should be overwritten, run `oat instructions sync --force` (or combine it with `--strategy` if needed).
 - If `stray` is reported, `oat instructions sync` will adopt the Claude-only file into `AGENTS.md` and then regenerate `CLAUDE.md`.
 - Re-run `oat instructions validate` and confirm status is `ok`.
 
