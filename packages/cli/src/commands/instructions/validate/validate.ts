@@ -33,7 +33,9 @@ export function createInstructionsValidateCommand(
   };
 
   return new Command('validate')
-    .description('Validate AGENTS.md to CLAUDE.md pointer integrity')
+    .description(
+      'Validate AGENTS.md/CLAUDE.md sync integrity for the selected strategy',
+    )
     .addOption(
       new Option('--strategy <strategy>', 'Sync strategy')
         .choices([...INSTRUCTION_SYNC_STRATEGIES])

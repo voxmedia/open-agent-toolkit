@@ -16,7 +16,7 @@ describe('instructions command', () => {
     );
     const sync = command.commands.find((entry) => entry.name() === 'sync');
 
-    expect(validate?.description()).toContain('pointer');
+    expect(validate?.description()).toContain('selected strategy');
     expect(sync?.description()).toContain('drift');
   });
 });

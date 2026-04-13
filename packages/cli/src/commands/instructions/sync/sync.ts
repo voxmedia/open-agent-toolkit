@@ -260,7 +260,9 @@ export function createInstructionsSyncCommand(
   };
 
   return new Command('sync')
-    .description('Repair AGENTS.md to CLAUDE.md pointer drift')
+    .description(
+      'Repair AGENTS.md/CLAUDE.md sync drift using the selected strategy',
+    )
     .option('--dry-run', 'Preview sync changes without applying')
     .option('--force', 'Overwrite mismatched CLAUDE.md files')
     .addOption(
