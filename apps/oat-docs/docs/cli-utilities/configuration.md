@@ -82,6 +82,7 @@ Common keys in `.oat/config.json`:
 - `archive.s3Uri` — base S3 archive prefix
 - `archive.s3SyncOnComplete` — upload archived projects to S3 during completion
 - `archive.summaryExportPath` — export `summary.md` into a durable tracked directory during completion
+- `archive.wrapUpExportPath` — optional tracked destination for `oat-wrap-up` reports; when unset, the skill falls back to `.oat/repo/reference/wrap-ups`
 - `tools.<pack>` — whether a bundled tool pack is currently installed in the repo or user scopes after lifecycle reconciliation
 
 Tool-pack state example:
@@ -99,6 +100,7 @@ Archive example:
 oat config set archive.s3Uri s3://example-bucket/oat-archive
 oat config set archive.s3SyncOnComplete true
 oat config set archive.summaryExportPath .oat/repo/reference/project-summaries
+oat config set archive.wrapUpExportPath .oat/repo/reference/wrap-ups
 ```
 
 With those values configured:
@@ -107,6 +109,7 @@ With those values configured:
 - completion also attempts an S3 upload when AWS CLI is available and configured, storing dated snapshots such as `<archive.s3Uri>/<repo-slug>/projects/20260401-my-project/`
 - completion also copies `summary.md` into `<archive.summaryExportPath>/20260401-my-project.md`
 - `oat project archive sync` can later pull archive data back down from S3 and materialize the latest snapshot into the local bare archive path `.oat/projects/archived/<project>/`
+- `oat-wrap-up` can write tracked reports into `<archive.wrapUpExportPath>/YYYY-MM-DD-wrap-up-<label>.md`; if the key is unset, the skill uses `.oat/repo/reference/wrap-ups/`
 
 ## Repo-local and user state
 

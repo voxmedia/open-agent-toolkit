@@ -21,7 +21,7 @@ For detailed `.oat/` tree semantics, see:
 - Local runtime config (per-developer state): `.oat/config.local.json`
 - Active idea: `activeIdea` in `.oat/config.local.json` (repo) or `~/.oat/config.json` (user)
 - Projects root config: `projects.root` in `.oat/config.json` (read via `oat config get projects.root`)
-- Archive config: `archive.s3Uri`, `archive.s3SyncOnComplete`, and `archive.summaryExportPath` in `.oat/config.json`
+- Archive config: `archive.s3Uri`, `archive.s3SyncOnComplete`, `archive.summaryExportPath`, and `archive.wrapUpExportPath` in `.oat/config.json`
 - Project manifests/config: `.oat/sync/`
 
 Config discovery via CLI:
@@ -60,6 +60,7 @@ Archive sync surfaces:
 - Archive sync command: `oat project archive sync` or `oat project archive sync <project-name>`
 - Remote archive snapshot shape: `<archive.s3Uri>/<repo-slug>/projects/YYYYMMDD-<project-name>/`
 - Summary export target: `<repo>/<archive.summaryExportPath>/YYYYMMDD-<project-name>.md` when configured
+- Wrap-up export target: `<repo>/<archive.wrapUpExportPath>/YYYY-MM-DD-wrap-up-<label>.md` when configured; otherwise `oat-wrap-up` falls back to `<repo>/.oat/repo/reference/wrap-ups/`
 
 ## Ideas — project level (gitignored)
 

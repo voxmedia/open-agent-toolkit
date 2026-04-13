@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-04-10 (workflow-friction project landed workflow preference config + review-receive drift fix)
+**Last Updated:** 2026-04-13 (workflow-friction project landed workflow preference config + review-receive drift fix; wrap-up skill docs synced)
 
 ## Canonical References
 
@@ -49,6 +49,8 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - PR skills:
   - `oat-project-pr-progress`
   - `oat-project-pr-final`
+- Reporting:
+  - `oat-wrap-up` (generate date-ranged shipping digests from local OAT summaries and merged PR metadata, with tracked report output under `archive.wrapUpExportPath` or the default `.oat/repo/reference/wrap-ups/`)
 - Retroactive capture:
   - `oat-project-capture` (create full OAT project from untracked work on an existing branch using conversation context + commit history)
 - Reconciliation:
@@ -167,7 +169,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat init --scope project` prompts for provider selection in interactive mode.
   - `oat sync --scope project` performs config-aware provider activation and mismatch remediation (interactive prompt in TTY mode, warning + remediation guidance in non-interactive mode).
 - Non-sync config model:
-  - Shared repo settings live in `.oat/config.json`, including `projects.root`, `worktrees.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, `tools.*`, and `workflow.*`.
+  - Shared repo settings live in `.oat/config.json`, including `projects.root`, `worktrees.root`, `git.defaultBranch`, `documentation.*`, `archive.*` (including `archive.wrapUpExportPath` for `oat-wrap-up` report output), `tools.*`, and `workflow.*`.
   - Repo-local state lives in `.oat/config.local.json`, including `activeProject`, `lastPausedProject`, repo-scoped `activeIdea`, and repo-scoped `workflow.*` overrides.
   - User-level state lives in `~/.oat/config.json` and includes global `activeIdea` fallback plus personal `workflow.*` defaults.
   - `oat config describe` exposes shared repo, repo-local, user, and sync/provider config ownership from one command surface.
@@ -191,7 +193,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 
 ### Tool Metadata
 
-- 51 skills total; all `oat-*` skills versioned at 1.2.0+ with `version:` frontmatter (research skills at 1.0.0).
+- 52 skills total; all `oat-*` skills include semver `version:` frontmatter. Mature lifecycle skills are mostly at `1.2.x`, while newer additions such as `oat-wrap-up` may still be at `1.0.x`.
 - Most skills define `allowed-tools` in frontmatter as an advisory tool scope (provider-dependent).
   - Read-only skills (e.g., `oat-project-progress`, `oat-project-review-provide`) omit `Write`/`Edit`.
   - Write skills (e.g., `oat-project-discover` → `oat-project-implement`, `oat-project-review-receive`, PR skills) include `Write` and `Bash(git:*)`.

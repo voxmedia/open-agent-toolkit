@@ -56,6 +56,7 @@ Archive lifecycle settings live here as shared repo config:
 - `archive.s3Uri`
 - `archive.s3SyncOnComplete`
 - `archive.summaryExportPath`
+- `archive.wrapUpExportPath`
 
 Tool-pack installation state also lives here as shared repo config:
 
@@ -69,7 +70,7 @@ Tool-pack installation state also lives here as shared repo config:
 
 Use `oat config get tools.<pack>` when you need an explicit installed-capability signal for workflows or troubleshooting.
 
-When archive settings are configured, completion uploads dated archive snapshots to S3 and exports dated summary snapshots into the configured summary reference directory.
+When archive settings are configured, completion uploads dated archive snapshots to S3, exports dated summary snapshots into the configured summary reference directory, and lets `oat-wrap-up` write tracked wrap-up reports into the configured wrap-up directory.
 
 Use these reference pages for file ownership and schema details:
 

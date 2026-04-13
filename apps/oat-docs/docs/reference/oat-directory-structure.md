@@ -107,6 +107,7 @@ Current schema keys:
 | `archive.s3Uri`                             | `string`   | -                        | Base S3 URI for repo-scoped archived project sync, for example `s3://bucket/oat-archive`                                                                                                  |
 | `archive.s3SyncOnComplete`                  | `boolean`  | `false`                  | When `true`, `oat-project-complete` uploads the archived project to the configured S3 archive after local archive succeeds                                                                |
 | `archive.summaryExportPath`                 | `string`   | -                        | Repo-relative directory where completion exports `summary.md` as a dated snapshot like `20260401-<project-name>.md` for durable tracked reference                                         |
+| `archive.wrapUpExportPath`                  | `string`   | -                        | Repo-relative directory where `oat-wrap-up` writes dated reports like `20260413-wrap-up-past-week.md`; when unset, the skill falls back to `.oat/repo/reference/wrap-ups/`                |
 
 All `documentation.*` keys are managed via `oat config get/set` and are set automatically by `oat docs init`.
 The `git.defaultBranch` key is auto-detected during `oat init` and can be overridden via `oat config set git.defaultBranch <branch>`.

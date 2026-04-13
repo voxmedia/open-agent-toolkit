@@ -22,6 +22,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Run or receive reviews: `oat-project-review-provide`, `oat-project-review-receive`, or the non-project review variants
 - Manage the repo backlog and reference docs: `oat-pjm-add-backlog-item`, `oat-pjm-update-repo-reference`, `oat-pjm-review-backlog`
 - Work on docs surfaces: `oat-docs-analyze`, `oat-docs-apply`, and `oat-project-document`
+- Generate a shipping digest or scheduled recap: `oat-wrap-up`
 - Research a topic in depth: `deep-research`
 - Analyze an artifact, codebase, or document: `analyze`
 - Compare options with domain-aware dimensions: `compare`
@@ -62,6 +63,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `oat-project-pr-progress`
     - `oat-project-pr-final`
     - `oat-project-document`
+    - `oat-wrap-up`
     - `oat-project-complete`
 
 === "Ideas"
