@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p05-t02
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -26,15 +26,15 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | completed   | 11    | 11/11     |
-| Phase 5 | in_progress | 2     | 1/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 2     | 2/2       |
+| Phase 4 | completed | 11    | 11/11     |
+| Phase 5 | completed | 2     | 2/2       |
 
-**Total:** 18/19 tasks completed
+**Total:** 19/19 tasks completed
 
 ---
 
@@ -639,7 +639,9 @@ oat_template_name: implementation
 
 ### Phase Summary (fill when phase is complete)
 
-Pending execution of review-fix tasks `p05-t01` through `p05-t02` added from the independent final re-review.
+- Completed both review-fix tasks added from the independent final re-review.
+- Restored validation visibility for unreadable `CLAUDE.md` files in pointer/copy mode.
+- Corrected the troubleshooting docs so preview guidance uses `--dry-run` instead of the mutating default command.
 
 **Key files touched:**
 
@@ -650,11 +652,14 @@ Pending execution of review-fix tasks `p05-t01` through `p05-t02` added from the
 
 **Verification:**
 
-- Review receive bookkeeping only. No code changes executed yet.
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pass
+- Run: `pnpm build:docs`
+- Result: pass
 
 **Notes / Decisions:**
 
-- Converted both Important findings from `final-review-2026-04-13-v2.md` into Phase 5 fix tasks.
+- Converted both Important findings from `final-review-2026-04-13-v2.md` into Phase 5 fix tasks and completed them in this phase.
 - Review cycle count exceeds the normal cap; continued because the user explicitly requested processing this review artifact.
 - A clean final re-review is required after Phase 5 completes.
 
@@ -682,6 +687,30 @@ Pending execution of review-fix tasks `p05-t01` through `p05-t02` added from the
 **Notes / Decisions:**
 
 - Kept `ENOENT` mapped to `missing` and only widened the non-`ENOENT` branch so unreadable files remain visible without changing missing-file semantics.
+
+### Task p05-t02: (review) Correct troubleshooting preview guidance
+
+**Status:** completed
+**Commit:** 90b46e2b
+
+**Outcome (required when completed):**
+
+- Updated the troubleshooting docs so preview guidance uses `oat instructions sync --dry-run`.
+- Clarified that apply and force flows are separate from preview and can be combined with `--strategy` as needed.
+- Verified the docs build after the content change.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/reference/troubleshooting.md` - corrected preview/apply guidance for instruction sync troubleshooting
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the fix narrowly scoped to the misleading preview instructions so the troubleshooting flow stays consistent with the existing command surface.
 
 ---
 
@@ -793,7 +822,7 @@ Chronological log of implementation progress.
 - Converted all Minor findings to fix tasks per user direction
 - Deferred findings: none
 
-**Next:** Execute Phase 5 via the `oat-project-implement` skill starting at `p05-t01`, then update the review row to `fixes_completed` and re-run final code review.
+**Next:** Phase 5 review fixes are complete. Re-run final code review and process it via `oat-project-review-receive`.
 
 ### Review Received: final
 
@@ -816,7 +845,7 @@ Chronological log of implementation progress.
 - Deferred findings: none
 - Continued past the nominal review-cycle cap because the user explicitly requested processing this review artifact
 
-**Next:** Execute Phase 5 via the `oat-project-implement` skill starting at `p05-t01`, then update the review row to `fixes_completed` and re-run final code review.
+**Next:** Phase 5 review fixes are complete. Re-run final code review and process it via `oat-project-review-receive`.
 
 ---
 

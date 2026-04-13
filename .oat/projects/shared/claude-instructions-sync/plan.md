@@ -688,14 +688,14 @@ git commit -m "docs(p05-t02): fix troubleshooting preview command"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status      | Date       | Artifact                                       |
-| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
-| p01    | code     | pending     | -          | -                                              |
-| p02    | code     | pending     | -          | -                                              |
-| p03    | code     | pending     | -          | -                                              |
-| final  | code     | fixes_added | 2026-04-13 | reviews/archived/final-review-2026-04-13-v2.md |
-| spec   | artifact | pending     | -          | -                                              |
-| design | artifact | pending     | -          | -                                              |
+| Scope  | Type     | Status          | Date       | Artifact                                       |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending         | -          | -                                              |
+| p02    | code     | pending         | -          | -                                              |
+| p03    | code     | pending         | -          | -                                              |
+| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v2.md |
+| spec   | artifact | pending         | -          | -                                              |
+| design | artifact | pending         | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -720,7 +720,7 @@ git commit -m "docs(p05-t02): fix troubleshooting preview command"
 
 **Total: 19 tasks**
 
-Independent final re-review findings were converted into fix tasks. Complete Phase 5, then re-run final code review before merge.
+Independent final re-review findings were fixed. Re-run final code review before merge.
 
 ---
 
