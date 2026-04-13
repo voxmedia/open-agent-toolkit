@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t05
+oat_current_task_id: p04-t06
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -31,9 +31,9 @@ oat_template_name: implementation
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 4/11      |
+| Phase 4 | in_progress | 11    | 5/11      |
 
-**Total:** 10/17 tasks completed
+**Total:** 11/17 tasks completed
 
 ---
 
@@ -448,6 +448,29 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 **Notes / Decisions:**
 
 - Switched the `instructions --help` assertion to an exact string expectation because the wrapped multi-line descriptions were brittle under the inline-snapshot serializer.
+
+### Task p04-t05: (review) Refresh provider-sync scope docs for strategy-aware instructions
+
+**Status:** completed
+**Commit:** c32e27ad
+
+**Outcome (required when completed):**
+
+- Updated the provider-sync scope page so it describes project-scoped instruction sync integrity rather than pointer-only checks.
+- Refreshed the adjacent CLI command summary to mention pointer, symlink, copy, and Claude-only adoption behavior.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/provider-sync/scope-and-surface.md` - replaced stale pointer-only wording with current strategy-aware instruction sync language
+
+**Verification:**
+
+- Run: `pnpm build:docs`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the change narrowly scoped to the stale wording called out by review instead of revising the page more broadly.
 
 ---
 
