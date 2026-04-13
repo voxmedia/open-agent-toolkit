@@ -293,6 +293,33 @@ describe('instructions utils', () => {
     });
   });
 
+  it('reports unreadable CLAUDE files as content mismatch', async () => {
+    const repoRoot = await createRepoRoot();
+    const docsDir = join(repoRoot, 'docs');
+
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(join(docsDir, 'AGENTS.md'), '# docs\n', 'utf8');
+    await writeFile(join(docsDir, 'CLAUDE.md'), '@AGENTS.md\n', 'utf8');
+
+    const entries = await scanInstructionFiles(repoRoot, undefined, {
+      readFile: async (path, encoding) => {
+        if (path === join(docsDir, 'CLAUDE.md')) {
+          throw Object.assign(new Error('permission denied'), {
+            code: 'EACCES',
+          });
+        }
+
+        return fsReadFile(path, encoding);
+      },
+    });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      status: 'content_mismatch',
+      detail: 'unable to read CLAUDE.md (EACCES)',
+    });
+  });
+
   it('surfaces broken Claude symlinks without sibling AGENTS.md as stray', async () => {
     const repoRoot = await createRepoRoot();
     const docsDir = join(repoRoot, 'docs');

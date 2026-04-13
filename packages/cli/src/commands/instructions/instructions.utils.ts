@@ -357,6 +357,13 @@ export async function scanInstructionFiles(
           status: 'missing',
           detail: 'CLAUDE.md missing',
         });
+      } else {
+        entries.push({
+          agentsPath,
+          claudePath,
+          status: 'content_mismatch',
+          detail: `unable to read CLAUDE.md (${errorCode ?? 'unknown error'})`,
+        });
       }
       continue;
     }
