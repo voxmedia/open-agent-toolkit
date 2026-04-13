@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p09-t01
 oat_last_commit: e74164c3
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -30,7 +30,7 @@ oat_template_name: state
 
 ## Current Phase
 
-Implementation tasks complete; awaiting final re-review
+Implementing Phase 9 review fix from the latest final re-review
 
 ## Artifacts
 
@@ -73,7 +73,8 @@ Implementation tasks complete; awaiting final re-review
 - ✓ `p07-t01` completed
 - ✓ Final re-review received (`final-review-2026-04-13-v5.md`)
 - ✓ `p08-t01` completed
-- ⧗ Awaiting final re-review
+- ✓ Final re-review received (`final-review-2026-04-13-v6.md`)
+- ⧗ `p09-t01` in progress
 
 ## Blockers
 

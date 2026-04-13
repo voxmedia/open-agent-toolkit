@@ -818,20 +818,57 @@ git commit -m "fix(p08-t01): classify unreadable claude-only drift"
 
 ---
 
+## Phase 9: Review Fix From Final Re-Review V6
+
+### Task p09-t01: (review) Preserve non-ENOENT instruction symlink target failures as drift
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.ts`
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Modify: `packages/cli/src/commands/instructions/sync/sync.ts`
+- Modify: `packages/cli/src/commands/instructions/sync/sync.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: the scanner only preserves `ENOENT` instruction symlink target failures, so other target errors like `EACCES` can disappear from validation or be misclassified.
+Location: `packages/cli/src/commands/instructions/instructions.utils.ts:189`
+
+**Step 2: Implement fix**
+
+Preserve any `AGENTS.md` or `CLAUDE.md` symlink target failure as explicit drift with the error code in detail text, and keep sync/manual-repair handling aligned for those cases.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+Expected: Utility and sync tests pass with non-ENOENT symlink-failure coverage
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/instructions/instructions.utils.ts \
+  packages/cli/src/commands/instructions/instructions.utils.test.ts \
+  packages/cli/src/commands/instructions/sync/sync.ts \
+  packages/cli/src/commands/instructions/sync/sync.test.ts
+git commit -m "fix(p09-t01): surface unreadable instruction symlink targets"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                       |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------- |
-| p01    | code     | pending         | -          | -                                              |
-| p02    | code     | pending         | -          | -                                              |
-| p03    | code     | pending         | -          | -                                              |
-| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v5.md |
-| spec   | artifact | pending         | -          | -                                              |
-| design | artifact | pending         | -          | -                                              |
+| Scope  | Type     | Status      | Date       | Artifact                                       |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending     | -          | -                                              |
+| p02    | code     | pending     | -          | -                                              |
+| p03    | code     | pending     | -          | -                                              |
+| final  | code     | fixes_added | 2026-04-13 | reviews/archived/final-review-2026-04-13-v6.md |
+| spec   | artifact | pending     | -          | -                                              |
+| design | artifact | pending     | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -856,10 +893,11 @@ git commit -m "fix(p08-t01): classify unreadable claude-only drift"
 - Phase 6: 2 tasks - address final re-review v3 findings
 - Phase 7: 1 task - surface dangling canonical AGENTS symlinks as drift
 - Phase 8: 1 task - classify unreadable Claude-only drift as manual repair
+- Phase 9: 1 task - surface unreadable instruction symlink target failures
 
-**Total: 23 tasks**
+**Total: 24 tasks**
 
-Final re-review v5 findings were fixed. Re-run final code review before merge.
+Final re-review v6 findings were converted into Phase 9 fix work. Re-run final code review before merge.
 
 ---
 
