@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 6b8cc03e
+oat_last_commit: 8cc6ada1
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -77,6 +77,8 @@ Implementation tasks complete; awaiting final re-review
 - ✓ `p09-t01` completed
 - ✓ Final re-review received (`final-review-2026-04-13-v7.md`)
 - ✓ `p10-t01` completed
+- ✓ Final re-review received (`final-review-2026-04-13-v8.md`)
+- ✓ `p11-t01` completed
 - ⧗ Awaiting final re-review
 
 ## Blockers

@@ -888,6 +888,38 @@ git commit -m "fix(p10-t01): preserve paired unreadable claude symlinks"
 
 ---
 
+## Phase 11: Review Fix From Final Re-Review V8
+
+### Task p11-t01: (review) Restore p10 task-scoped commit traceability
+
+**Files:**
+
+- Modify: `.oat/projects/shared/claude-instructions-sync/plan.md`
+- Modify: `.oat/projects/shared/claude-instructions-sync/implementation.md`
+- Modify: `.oat/projects/shared/claude-instructions-sync/state.md`
+
+**Step 1: Understand the issue**
+
+Review finding: the p10 implementation landed in commit `6b8cc03e`, but that commit subject is labeled `p09`, so task-scoped OAT commit discovery can miss the p10 fix even though the code is correct.
+Location: `.oat/projects/shared/claude-instructions-sync/implementation.md:1084`
+
+**Step 2: Implement fix**
+
+Create a dedicated task-scoped marker commit for the p10 implementation without rewriting history, then update project tracking so p10 points at the correctly scoped commit and Phase 11 records the traceability repair.
+
+**Step 3: Verify**
+
+Run: `git log --oneline -n 3`
+Expected: Recent history includes a `fix(p10-t01): preserve paired unreadable claude symlinks` commit that OAT task discovery can match
+
+**Step 4: Commit**
+
+```bash
+git commit --allow-empty -m "fix(p10-t01): preserve paired unreadable claude symlinks"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -899,7 +931,7 @@ git commit -m "fix(p10-t01): preserve paired unreadable claude symlinks"
 | p01    | code     | pending         | -          | -                                              |
 | p02    | code     | pending         | -          | -                                              |
 | p03    | code     | pending         | -          | -                                              |
-| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v7.md |
+| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v8.md |
 | spec   | artifact | pending         | -          | -                                              |
 | design | artifact | pending         | -          | -                                              |
 
@@ -928,10 +960,11 @@ git commit -m "fix(p10-t01): preserve paired unreadable claude symlinks"
 - Phase 8: 1 task - classify unreadable Claude-only drift as manual repair
 - Phase 9: 1 task - surface unreadable instruction symlink target failures
 - Phase 10: 1 task - preserve paired unreadable Claude symlink targets as drift
+- Phase 11: 1 task - restore p10 task-scoped commit traceability
 
-**Total: 25 tasks**
+**Total: 26 tasks**
 
-Final re-review v7 findings were fixed. Re-run final code review before merge.
+Final re-review v8 findings were fixed. Re-run final code review before merge.
 
 ---
 

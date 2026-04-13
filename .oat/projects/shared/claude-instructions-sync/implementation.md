@@ -38,8 +38,9 @@ oat_template_name: implementation
 | Phase 8  | completed | 1     | 1/1       |
 | Phase 9  | completed | 1     | 1/1       |
 | Phase 10 | completed | 1     | 1/1       |
+| Phase 11 | completed | 1     | 1/1       |
 
-**Total:** 25/25 tasks completed
+**Total:** 26/26 tasks completed
 
 ---
 
@@ -1081,7 +1082,7 @@ oat_template_name: implementation
 ### Task p10-t01: (review) Preserve paired unreadable `CLAUDE.md` symlink targets as drift
 
 **Status:** completed
-**Commit:** 6b8cc03e
+**Commit:** 8cc6ada1
 
 **Outcome (required when completed):**
 
@@ -1106,6 +1107,60 @@ oat_template_name: implementation
 **Notes / Decisions:**
 
 - Left sync behavior unchanged because once the state is correctly classified as drift, existing force-repair behavior can already replace the bad symlink from canonical content.
+
+---
+
+## Phase 11: Review Fix From Final Re-Review V8
+
+**Status:** completed
+**Started:** 2026-04-13
+
+### Phase Summary (fill when phase is complete)
+
+- Closed the final remaining lifecycle traceability gap from `final-review-2026-04-13-v8.md`.
+- Added a dedicated `p10-t01` marker commit so OAT task-scoped commit discovery can locate the paired-`CLAUDE.md` symlink fix without rewriting history.
+- A clean final re-review is required after Phase 11 completes.
+
+**Key files touched:**
+
+- `.oat/projects/shared/claude-instructions-sync/plan.md`
+- `.oat/projects/shared/claude-instructions-sync/implementation.md`
+- `.oat/projects/shared/claude-instructions-sync/state.md`
+
+**Verification:**
+
+- Run: `git log --oneline -n 3`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Used an explicit marker commit instead of rewriting `6b8cc03e`, which preserves branch history while restoring task-scoped traceability for p10.
+
+### Task p11-t01: (review) Restore p10 task-scoped commit traceability
+
+**Status:** completed
+**Commit:** 8cc6ada1
+
+**Outcome (required when completed):**
+
+- Recent commit history now includes a correctly scoped `fix(p10-t01): preserve paired unreadable claude symlinks` marker commit.
+- Updated implementation tracking so the p10 task points at the correctly scoped commit for OAT discovery.
+- Kept product code unchanged because the v8 review identified lifecycle traceability, not functional drift.
+
+**Files changed:**
+
+- `.oat/projects/shared/claude-instructions-sync/plan.md` - adds the Phase 11 traceability-repair task
+- `.oat/projects/shared/claude-instructions-sync/implementation.md` - updates p10 commit tracking and records Phase 11 completion
+- `.oat/projects/shared/claude-instructions-sync/state.md` - records the additional received review/fix milestone
+
+**Verification:**
+
+- Run: `git log --oneline -n 3`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Intentionally reused the `p10-t01` commit subject for the marker commit because the goal was to restore p10 task discovery rather than introduce a new product change.
 
 ---
 
@@ -1300,6 +1355,29 @@ Chronological log of implementation progress.
 - Continued past the nominal review-cycle cap because the review still surfaced an actionable correctness defect
 
 **Next:** Complete Phase 10 review fix, then re-run final code review and process it via `oat-project-review-receive`.
+
+### Review Received: final
+
+**Date:** 2026-04-13
+**Review artifact:** `reviews/archived/final-review-2026-04-13-v8.md`
+**Review cycle:** 10 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `p11-t01`
+
+**Disposition summary:**
+
+- Converted the traceability finding into a lifecycle repair task
+- Deferred findings: none
+- Continued past the nominal review-cycle cap because the review still surfaced a concrete merge-gating issue
+
+**Next:** Complete Phase 11 review fix, then re-run final code review and process it via `oat-project-review-receive`.
 
 ---
 
