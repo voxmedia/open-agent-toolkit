@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -24,28 +24,51 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 4     | 0/4       |
-| Phase 2 | pending | 3     | 0/3       |
-| Phase 3 | pending | 4     | 0/4       |
-| Phase 4 | pending | 2     | 0/2       |
-| Phase 5 | pending | 3     | 0/3       |
-| Phase 6 | pending | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 4     | 1/4       |
+| Phase 2 | pending     | 3     | 0/3       |
+| Phase 3 | pending     | 4     | 0/4       |
+| Phase 4 | pending     | 2     | 0/2       |
+| Phase 5 | pending     | 3     | 0/3       |
+| Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 0/19 tasks completed
+**Total:** 1/19 tasks completed
 
 ---
 
 ## Phase 1: Skill scaffolding + shared assets
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-13
 
 ### Task p01-t01: Create oat-docs-bootstrap skill skeleton
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 139500dc
+
+**Outcome:**
+
+- Scaffolded `.agents/skills/oat-docs-bootstrap/SKILL.md` with canonical frontmatter (name, version 1.0.0, description, argument-hint, disable-model-invocation, user-invocable, allowed-tools) matching the `oat-project-quick-start` shape.
+- Populated Mode Assertion with concrete BLOCKED/ALLOWED activities (including the FP-15 AGENTS.md fabrication exception) and a Self-Correction Protocol covering four failure modes.
+- Populated Progress Indicators with a banner + seven compact step indicators matching the 7-component pipeline.
+- Added Process section headings (Step 0–7) as placeholders, each annotated with the plan task that will author its body.
+- Created `assets/` subdirectory for FP-15 bridge template (populated in p01-t02).
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` — new skeleton
+- `.agents/skills/oat-docs-bootstrap/assets/` — directory scaffolded (empty for now)
+
+**Verification:**
+
+- Run: `pnpm oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Used `assets/` rather than `references/` for the template subdirectory because the template is _output_ by the skill (written to consumer repos), not _read_ for guidance. Existing skills use `references/` for read-only lookup content; this is a semantically different case.
+- Allowed-tools set matches `oat-project-quick-start` (Read, Write, Bash, Glob, Grep, AskUserQuestion) plus `Edit` since the skill needs to apply file-shape patches during post-scaffold work.
 
 ---
 

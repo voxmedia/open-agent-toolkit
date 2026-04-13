@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-04-13
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p03', 'p05']
+oat_plan_hill_phases: ['p06']
+oat_auto_review_at_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -29,7 +30,7 @@ oat_template: false
 ## Planning Checklist
 
 - [x] Defer HiLL checkpoint confirmation to oat-project-implement
-- [x] Set `oat_plan_hill_phases` in frontmatter (proposed: `['p03', 'p05']`; implement skill will confirm/update)
+- [x] Confirmed at implement start: `oat_plan_hill_phases: ['p06']` (stop after final phase only), `oat_auto_review_at_checkpoints: true`
 
 ---
 
