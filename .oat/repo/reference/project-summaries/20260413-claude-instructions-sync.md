@@ -1,9 +1,15 @@
 ---
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-04-13
 oat_generated: true
 oat_generated_at: 2026-04-13
 oat_summary_status: complete
 oat_summary_source: implementation
-oat_last_updated: 2026-04-13
+oat_summary_last_task: p11-t01
+oat_summary_revision_count: 0
+oat_summary_includes_revisions: []
 ---
 
 # Project Summary: claude-instructions-sync
