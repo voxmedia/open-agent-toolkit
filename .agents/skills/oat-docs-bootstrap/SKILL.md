@@ -825,7 +825,70 @@ The Walkthrough's Section D (Configuration readback) references `issues[]` verba
 
 ### Step 6: Educational Walkthrough
 
-(Body authored in p05-t01 (Sections A–D) and p05-t02 (Sections E–G).)
+Narrate the scaffolded docs app as a chunked conversation, not a wall of text. The Walkthrough's job is to turn the user from "I ran a scaffold" into "I know how this docs app works". It is **not** a re-explanation of the CLI's output, nor a recitation of the AGENTS.md content — both are live files the user can read; the Walkthrough contextualizes them.
+
+Print `[6/7] Walkthrough…` at the start of this step.
+
+Skip this step if `Verification Result.buildSucceeded !== true` OR `Inspection Result.issues` contains any `severity: 'critical'` — narrating a broken scaffold teaches the wrong model.
+
+**Format discipline.** Each section below is a short spoken-style chunk (3–6 short paragraphs), references concrete paths from the `Scaffold Result` / `Inspection Result`, and ends with a single-sentence "what this means for you" takeaway. After each section, pause and check the user wants to continue: `Ready for the next section? (yes / skip to summary)`. If the user says `skip to summary`, jump directly to Step 7's Exit summary.
+
+**Audience discipline.** The Walkthrough is a **setup-time** narration — it runs once, now. The docs-app `AGENTS.md` (FP-15 bridge or CLI-scaffolded) is the **runtime** reference future agents will read when working inside the docs app. These are different audiences at different times; the Walkthrough does not duplicate the AGENTS.md content. If you find yourself reading AGENTS.md content aloud, stop — point the user at the file path instead.
+
+#### Section A (both frameworks) — Your OAT documentation config
+
+Ground this section in the `Inspection Result.parent.documentation` object read back in Step 5, not in generic field documentation. The user just saw the scaffold write this; the Walkthrough tells them what it means.
+
+Narrate each field actually present in their config (skip fields that are absent — don't teach MkDocs-only fields to a Fumadocs user):
+
+- **`documentation.root`** — the scaffolded app directory. Downstream tools (`oat-project-document`, `oat docs analyze`, `oat docs apply`) use this to find "the docs" without the user having to tell them.
+- **`documentation.tooling`** — framework + lint + format. `oat docs analyze` uses `framework` to pick the right rule set; the tooling values also get echoed into the `## Documentation` section the CLI wrote into root `AGENTS.md`.
+- **`documentation.index`** — the authored `docs/index.md`. This is the content map (not the generated root `index.md` — that's Section B). Tools read this to understand top-level navigation intent.
+- **`documentation.config`** (MkDocs only) — path to `mkdocs.yml`. Present for MkDocs because its chrome/nav is YAML-configured; absent for Fumadocs because chrome is code.
+- **`documentation.requireForProjectCompletion`** — the opt-in collected in Step 5e. If `true`, `oat-project-complete` will block project completion until `oat docs analyze` reports no open recommendations. Explain whichever value is set on this project.
+
+End with: "This config is how every OAT docs tool finds your docs. Editing it by hand is supported — but changes to `root` or `config` paths need to match reality on disk."
+
+#### Section B (both frameworks) — The two `index.md` files
+
+This section prevents the footgun from FP-13 sub-finding D: users silently hand-edit the generated `index.md` and wonder why their edits vanish on the next build.
+
+Narrate:
+
+- **The authored source** at `<appRoot>/docs/index.md`. This is the file the user edits. It has frontmatter (`title`, `description`) and a `## Contents` section listing direct children of the docs root. It is the top of a fractal: every directory has its own `index.md`, each with its own `## Contents`.
+- **The generated map** at `<appRoot>/index.md` (when Fumadocs — the path differs for MkDocs; use the `documentation.index` path resolved by the Inspector if it differs). Regenerated on every `predev` / `prebuild` by the `oat docs generate-index` command. Machine-shaped: rolls up every `## Contents` section in the tree into a single searchable map that tools consume. **Hand-edits are silently clobbered.**
+- **How to tell them apart when opening a file.** If the file sits inside `docs/`, it's authored. If it sits at `<appRoot>/index.md` (outside `docs/`), it's generated — and if Scaffold-integrity FP-13/D.2 patched it, the first line is a `<!-- generated … -->` banner confirming so.
+
+End with: "Always edit `docs/index.md` and the `## Contents` sections. Never edit the root-level `index.md` — your edits will disappear next build."
+
+#### Section C (both frameworks) — The `## Contents` contract
+
+This section explains why tooling works at all — the contract every OAT docs tool relies on.
+
+Narrate:
+
+- **Every directory under `docs/` has an `index.md`.** No exceptions, no `overview.md`, no README-as-index. Missing `index.md`s are the first thing `oat docs analyze` flags.
+- **Every `index.md` has a `## Contents` section.** The section is a plain Markdown bulleted list of links to the direct children of that directory — both subdirectory `index.md`s and leaf pages.
+- **The `## Contents` section is the machine-readable local map.** It's what `oat docs nav sync` reads to regenerate framework nav, what `oat docs generate-index` reads to roll up the tree, and what `oat docs analyze` reads to find orphaned pages.
+- **Anything not listed in `## Contents` is invisible to the tooling.** Adding a Markdown file is not enough — it must also appear under the parent `index.md`'s `## Contents`.
+
+Show the user their own `docs/index.md` `## Contents` as a concrete example (read the file and paste the relevant 5–15 lines). Then note: "That's the pattern. Every directory you create from now on follows the same shape."
+
+End with: "`## Contents` is how navigation stays in sync with filesystem. If the nav tooling seems confused, the answer is almost always 'check the nearest `## Contents`'."
+
+#### Section D (both frameworks) — Three agent-instruction surfaces
+
+The docs app is surrounded by three separate places agents and humans are expected to read. Each has a distinct audience and a distinct time. Conflating them is the source of most "why isn't AGENTS.md helping me?" confusion.
+
+Narrate the three surfaces with audience + time discipline:
+
+1. **Root `AGENTS.md` `## Documentation` section** — the repo-wide pointer. A 4-line breadcrumb every agent working anywhere in the repo reads first. Written/updated by `oat docs init` (or `oat docs apply`). Purpose: "docs live here; here's the framework; here's the config path." Not a tutorial — a signpost.
+2. **Docs-app `AGENTS.md`** at `<appRoot>/AGENTS.md` — the ongoing reference for agents who are **working inside the docs app**, not setting it up. This is the FP-15 bridge file (or CLI-scaffolded equivalent if `capabilities.agentsMdScaffoldFlag === true`). Task-framed sections: "When you need to add a new page", "When you need to restructure navigation", "When you need to audit or bulk-edit docs". **Audience discipline:** this file exists for the agent working on docs content **six months from now**, not for the agent running this skill today. Everything in it should still be useful at that time. If content would only matter at setup time, it belongs in this Walkthrough, not in `AGENTS.md`.
+3. **`docs/contributing.md`** — human-authoring conventions. Markdown feature reference (code blocks, mermaid, GFM alerts), frontmatter requirements, linting/formatting commands (if enabled). Not agent instructions — human reference. Agents working with docs content may read it for the Markdown feature list, but its primary audience is a human contributor.
+
+End with: "Three surfaces, three audiences, three lifetimes. Root `AGENTS.md` = repo-wide pointer. Docs-app `AGENTS.md` = future agents working inside the docs app. `contributing.md` = humans. Keeping them separate keeps each one useful."
+
+_(Sections E–G authored in p05-t02; Exit summary in p05-t03.)_
 
 ### Step 7: Optional Content Kickoff
 
