@@ -283,9 +283,9 @@ export async function scanInstructionFiles(
       continue;
     }
 
-    if (!agentsPath && brokenClaudePath) {
+    if (brokenClaudePath) {
       entries.push({
-        agentsPath: null,
+        agentsPath,
         claudePath,
         status: 'content_mismatch',
         detail:

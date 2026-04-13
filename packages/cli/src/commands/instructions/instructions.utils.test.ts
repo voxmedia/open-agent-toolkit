@@ -427,6 +427,39 @@ describe('instructions utils', () => {
     });
   });
 
+  it('surfaces unreadable paired Claude symlink targets as drift for symlink strategy', async () => {
+    const repoRoot = await createRepoRoot();
+    const docsDir = join(repoRoot, 'docs');
+
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(join(docsDir, 'AGENTS.md'), '# docs\n', 'utf8');
+    await symlink('AGENTS.md', join(docsDir, 'CLAUDE.md'));
+
+    const entries = await scanInstructionFiles(
+      repoRoot,
+      { strategy: 'symlink' },
+      {
+        stat: async (path) => {
+          if (path === join(docsDir, 'CLAUDE.md')) {
+            throw Object.assign(new Error('permission denied'), {
+              code: 'EACCES',
+            });
+          }
+
+          return fsStat(path);
+        },
+      },
+    );
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      agentsPath: join(docsDir, 'AGENTS.md'),
+      claudePath: join(docsDir, 'CLAUDE.md'),
+      status: 'content_mismatch',
+      detail: 'unreadable CLAUDE.md symlink target (EACCES)',
+    });
+  });
+
   it('surfaces broken AGENTS symlinks as canonical drift when Claude exists', async () => {
     const repoRoot = await createRepoRoot();
     const docsDir = join(repoRoot, 'docs');
