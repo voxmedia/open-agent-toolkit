@@ -7,7 +7,7 @@ description: 'Scope boundaries and design principles for canonical-to-provider a
 
 The provider interop CLI in `packages/cli` manages canonical agent assets under `.agents/` and reconciles provider-specific views.
 
-This capability is intentionally independent from OAT workflow artifacts. Teams can adopt provider interoperability usage (`status`, `sync`, `providers ...`) plus optional instruction-pointer integrity checks (`instructions validate/sync`) without using discovery/spec/design/plan/implement project workflows.
+This capability is intentionally independent from OAT workflow artifacts. Teams can adopt provider interoperability usage (`status`, `sync`, `providers ...`) plus optional project-scoped instruction sync integrity checks (`instructions validate/sync`) without using discovery/spec/design/plan/implement project workflows.
 
 ## Scope
 
@@ -53,7 +53,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 ## Non-interop namespaces in the same CLI
 
 - `oat project new <name>` (workflow/project scaffolding)
-- `oat instructions validate` / `oat instructions sync` (AGENTS.md to CLAUDE.md pointer integrity)
+- `oat instructions validate` / `oat instructions sync` (AGENTS.md/CLAUDE.md pointer, symlink, or copy integrity plus Claude-only adoption)
 - `oat internal validate-oat-skills` (internal maintenance)
 
 ## Reference artifacts
