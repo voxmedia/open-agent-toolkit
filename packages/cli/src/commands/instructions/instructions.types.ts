@@ -65,6 +65,7 @@ export interface InstructionsScanDependencies {
     options: { withFileTypes: true },
   ) => Promise<Dirent[]>;
   lstat: (path: string) => Promise<Stats>;
+  realpath: (path: string) => Promise<string>;
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
   readlink: (path: string) => Promise<string>;
   stat: (path: string) => Promise<Stats>;

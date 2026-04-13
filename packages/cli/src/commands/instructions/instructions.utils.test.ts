@@ -3,6 +3,7 @@ import {
   readdir as fsReaddir,
   readFile as fsReadFile,
   readlink as fsReadlink,
+  realpath as fsRealpath,
   stat as fsStat,
   mkdir,
   mkdtemp,
@@ -166,6 +167,37 @@ describe('instructions utils', () => {
       { strategy: 'symlink' },
       {
         lstat: fsLstat,
+        realpath: fsRealpath,
+        readlink: fsReadlink,
+      },
+    );
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      status: 'ok',
+      detail: 'symlink valid',
+    });
+  });
+
+  it('accepts symlink targets that resolve through a canonical root path', async () => {
+    const repoRoot = await createRepoRoot();
+    const aliasRoot = join(tmpdir(), `oat-instructions-alias-${Date.now()}`);
+
+    await mkdir(join(repoRoot, 'docs'), { recursive: true });
+    await writeFile(join(repoRoot, 'docs', 'AGENTS.md'), '# docs\n', 'utf8');
+    await symlink(
+      join(repoRoot, 'docs', 'AGENTS.md'),
+      join(repoRoot, 'docs', 'CLAUDE.md'),
+    );
+    await symlink(repoRoot, aliasRoot);
+    tempDirs.push(aliasRoot);
+
+    const entries = await scanInstructionFiles(
+      aliasRoot,
+      { strategy: 'symlink' },
+      {
+        lstat: fsLstat,
+        realpath: fsRealpath,
         readlink: fsReadlink,
       },
     );
@@ -189,6 +221,7 @@ describe('instructions utils', () => {
       { strategy: 'copy' },
       {
         lstat: fsLstat,
+        realpath: fsRealpath,
         readlink: fsReadlink,
       },
     );
@@ -213,6 +246,7 @@ describe('instructions utils', () => {
       { strategy: 'copy' },
       {
         lstat: fsLstat,
+        realpath: fsRealpath,
         readFile: async (path, encoding) => {
           if (path === join(docsDir, 'AGENTS.md')) {
             throw Object.assign(new Error('gone'), { code: 'ENOENT' });
@@ -243,6 +277,7 @@ describe('instructions utils', () => {
       { strategy: 'symlink' },
       {
         lstat: fsLstat,
+        realpath: fsRealpath,
         readlink: async () => {
           throw Object.assign(new Error('permission denied'), {
             code: 'EACCES',

@@ -1,4 +1,11 @@
-import { lstat, readdir, readFile, readlink, stat } from 'node:fs/promises';
+import {
+  lstat,
+  readdir,
+  readFile,
+  readlink,
+  realpath,
+  stat,
+} from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 
 import type {
@@ -214,6 +221,7 @@ export async function scanInstructionFiles(
   const strategy = resolveInstructionSyncStrategy(options.strategy);
   const dependencies: InstructionsScanDependencies = {
     lstat,
+    realpath,
     readdir,
     readFile,
     readlink,
@@ -292,7 +300,12 @@ export async function scanInstructionFiles(
       }
 
       const resolvedTarget = resolve(dirname(claudePath), claudeTarget);
-      if (resolvedTarget === agentsPath) {
+      const [canonicalTarget, canonicalAgentsPath] = await Promise.all([
+        dependencies.realpath(resolvedTarget).catch(() => resolvedTarget),
+        dependencies.realpath(agentsPath).catch(() => agentsPath),
+      ]);
+
+      if (canonicalTarget === canonicalAgentsPath) {
         entries.push({
           agentsPath,
           claudePath,
