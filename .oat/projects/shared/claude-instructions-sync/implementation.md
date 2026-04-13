@@ -26,17 +26,18 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 2     | 2/2       |
-| Phase 4 | completed | 11    | 11/11     |
-| Phase 5 | completed | 2     | 2/2       |
-| Phase 6 | completed | 2     | 2/2       |
-| Phase 7 | completed | 1     | 1/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | completed   | 2     | 2/2       |
+| Phase 4 | completed   | 11    | 11/11     |
+| Phase 5 | completed   | 2     | 2/2       |
+| Phase 6 | completed   | 2     | 2/2       |
+| Phase 7 | completed   | 1     | 1/1       |
+| Phase 8 | in_progress | 1     | 0/1       |
 
-**Total:** 22/22 tasks completed
+**Total:** 22/23 tasks completed
 
 ---
 
@@ -883,6 +884,41 @@ oat_template_name: implementation
 **Notes / Decisions:**
 
 - Represented dangling canonical links as `content_mismatch` drift rather than a new status so reporting and JSON payloads remain compatible with the existing command surface.
+
+---
+
+## Phase 8: Review Fix From Final Re-Review V5
+
+**Status:** in_progress
+**Started:** 2026-04-13
+
+### Phase Summary (fill when phase is complete)
+
+- Pending the final remaining review-fix task from `final-review-2026-04-13-v5.md`.
+- Need to classify unreadable Claude-only files as explicit drift instead of adoptable strays.
+- A clean final re-review is required after Phase 8 completes.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts`
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- `packages/cli/src/commands/instructions/sync/sync.ts`
+- `packages/cli/src/commands/instructions/sync/sync.test.ts`
+- `.oat/projects/shared/claude-instructions-sync/{plan,implementation,state}.md`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pending
+
+**Notes / Decisions:**
+
+- Received the v5 re-review artifact and converted the remaining Medium finding into a single Phase 8 task.
+- Continuing automatically because the project is still active and the fix stays within the existing instruction drift model.
+
+### Task p08-t01: (review) Treat unreadable Claude-only files as non-adoptable drift
+
+**Status:** pending
 
 ---
 

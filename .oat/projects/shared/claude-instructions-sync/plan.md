@@ -781,20 +781,57 @@ git commit -m "fix(p07-t01): surface dangling canonical instruction symlinks"
 
 ---
 
+## Phase 8: Review Fix From Final Re-Review V5
+
+### Task p08-t01: (review) Treat unreadable Claude-only files as non-adoptable drift
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.ts`
+- Modify: `packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Modify: `packages/cli/src/commands/instructions/sync/sync.ts`
+- Modify: `packages/cli/src/commands/instructions/sync/sync.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: a dangling `CLAUDE.md` symlink without sibling `AGENTS.md` is classified as an adoptable stray even though sync apply cannot read the source content.
+Location: `packages/cli/src/commands/instructions/instructions.utils.ts:191`
+
+**Step 2: Implement fix**
+
+Classify unreadable Claude-only files and broken Claude-only symlinks as explicit drift instead of adoptable `stray`, and make sync report manual-repair guidance for that state.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts packages/cli/src/commands/instructions/sync/sync.test.ts`
+Expected: Utility and sync tests pass with unreadable-Claude-only coverage
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/instructions/instructions.utils.ts \
+  packages/cli/src/commands/instructions/instructions.utils.test.ts \
+  packages/cli/src/commands/instructions/sync/sync.ts \
+  packages/cli/src/commands/instructions/sync/sync.test.ts
+git commit -m "fix(p08-t01): classify unreadable claude-only drift"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                       |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------- |
-| p01    | code     | pending         | -          | -                                              |
-| p02    | code     | pending         | -          | -                                              |
-| p03    | code     | pending         | -          | -                                              |
-| final  | code     | fixes_completed | 2026-04-13 | reviews/archived/final-review-2026-04-13-v4.md |
-| spec   | artifact | pending         | -          | -                                              |
-| design | artifact | pending         | -          | -                                              |
+| Scope  | Type     | Status      | Date       | Artifact                                       |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending     | -          | -                                              |
+| p02    | code     | pending     | -          | -                                              |
+| p03    | code     | pending     | -          | -                                              |
+| final  | code     | fixes_added | 2026-04-13 | reviews/archived/final-review-2026-04-13-v5.md |
+| spec   | artifact | pending     | -          | -                                              |
+| design | artifact | pending     | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -818,10 +855,11 @@ git commit -m "fix(p07-t01): surface dangling canonical instruction symlinks"
 - Phase 5: 2 tasks - address independent final re-review findings
 - Phase 6: 2 tasks - address final re-review v3 findings
 - Phase 7: 1 task - surface dangling canonical AGENTS symlinks as drift
+- Phase 8: 1 task - classify unreadable Claude-only drift as manual repair
 
-**Total: 22 tasks**
+**Total: 23 tasks**
 
-Final re-review v4 findings were fixed. Re-run final code review before merge.
+Final re-review v5 findings were converted into Phase 8 fix work. Re-run final code review before merge.
 
 ---
 
