@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t11
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -26,14 +26,14 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 10/11     |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 2     | 2/2       |
+| Phase 4 | completed | 11    | 11/11     |
 
-**Total:** 16/17 tasks completed
+**Total:** 17/17 tasks completed
 
 ---
 
@@ -326,12 +326,14 @@ oat_template_name: implementation
 
 ## Phase 4: Review Fixes From Final Review
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
 
 ### Phase Summary (fill when phase is complete)
 
-Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the manual final code review.
+- Completed all 11 review-fix tasks added from the manual final code review.
+- Tightened instruction sync/apply behavior around cleanup, adoption, diagnostics, and symlink validation.
+- Updated the provider-sync docs and command help text to reflect strategy-aware instruction repair behavior.
 
 **Key files touched:**
 
@@ -341,11 +343,14 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 
 **Verification:**
 
-- Review receive bookkeeping only. No code changes executed yet.
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pass
 
 **Notes / Decisions:**
 
-- Converted all accepted Medium and Minor findings from `final-review-2026-04-11-v2.md` into queued plan tasks.
+- Converted all accepted Medium and Minor findings from `final-review-2026-04-11-v2.md` into fix tasks and completed them in Phase 4.
 - A clean final re-review is required after Phase 4 completes.
 
 ### Task p04-t01: (review) Remove recursive deletion from instruction cleanup
@@ -599,6 +604,31 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 
 - Kept the change behavior-neutral and limited to the dead guard called out by review.
 
+### Task p04-t11: (review) Detect broken Claude symlinks during instruction scans
+
+**Status:** completed
+**Commit:** dd650ccc
+
+**Outcome (required when completed):**
+
+- Preserved broken instruction symlinks during discovery when the target stat fails with `ENOENT`.
+- Ensured later classification can report broken `CLAUDE.md` links as actionable entries instead of dropping the directory entirely.
+- Added regression coverage for a Claude-only broken symlink directory and verified the utility test suite.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/instructions.utils.ts` - preserved broken instruction symlink candidates during directory scanning
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts` - added coverage for broken Claude symlinks surfacing as stray entries
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Limited the scan-time preservation to `ENOENT` so broken symlinks are retained without changing how other symlink stat failures are logged and skipped.
+
 ---
 
 ## Orchestration Runs
@@ -709,7 +739,7 @@ Chronological log of implementation progress.
 - Converted all Minor findings to fix tasks per user direction
 - Deferred findings: none
 
-**Next:** Execute Phase 4 via the `oat-project-implement` skill starting at `p04-t01`, then update the review row to `fixes_completed` and re-run final code review.
+**Next:** Phase 4 review fixes are complete. Re-run final code review and process the result via `oat-project-review-receive`.
 
 ---
 
@@ -730,12 +760,13 @@ Track test execution during implementation.
 | 1     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/validate/validate.test.ts packages/cli/src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`                                                                                                                                   | yes    | 0      | n/a      |
 | 2     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.utils.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check` | yes    | 0      | n/a      |
 | 3     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.integration.test.ts`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm build:docs`                                                                                                                                                                                                                                                                       | yes    | 0      | n/a      |
+| 4     | `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/instructions.utils.test.ts`                                                                                                                                                                                                                                    | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Instruction scan state, command contract work, strategy-aware `CLAUDE.md` repair behavior, Claude-only stray adoption, nested coverage, and user-facing docs
+- Instruction scan state, command contract work, strategy-aware `CLAUDE.md` repair behavior, Claude-only stray adoption, nested coverage, user-facing docs, and final review-fix hardening
 
 **Behavioral changes (user-facing):**
 
@@ -751,8 +782,8 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Phase 1 through Phase 3 verification passed, including the full CLI package test suite and docs build
-- Final review receive bookkeeping completed; Phase 4 review-fix execution is now pending
+- Phase 1 through Phase 4 targeted verification passed, including the full CLI package test suite and docs build earlier in the implementation
+- Final review receive bookkeeping completed, all Phase 4 review-fix tasks were implemented, and the project is ready for final re-review
 
 **Design deltas (if any):**
 
