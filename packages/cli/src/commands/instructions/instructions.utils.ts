@@ -35,6 +35,7 @@ interface BuildInstructionsPayloadArgs {
 
 interface InstructionDirectoryEntry {
   agentsPath?: string;
+  brokenAgentsPath?: string;
   claudePath?: string;
 }
 
@@ -117,6 +118,7 @@ function recordInstructionFile(
   const current = directoryEntries.get(directoryPath) ?? {};
   if (entryName === 'AGENTS.md') {
     current.agentsPath = entryPath;
+    current.brokenAgentsPath = undefined;
   } else {
     current.claudePath = entryPath;
   }
@@ -195,6 +197,12 @@ async function scanInstructionDirectories(
           );
           continue;
         }
+        if (errorCode === 'ENOENT' && entry.name === 'AGENTS.md') {
+          const current = directoryEntries.get(currentDirectory) ?? {};
+          current.brokenAgentsPath = entryPath;
+          directoryEntries.set(currentDirectory, current);
+          continue;
+        }
         debug?.(
           `Skipping symlink target stat for ${toPosixPath(entryPath)} (${errorCode ?? 'unknown error'})`,
         );
@@ -247,8 +255,19 @@ export async function scanInstructionFiles(
 
   for (const [directoryPath, directoryEntry] of instructionDirectories) {
     const agentsPath = directoryEntry.agentsPath ?? null;
+    const brokenAgentsPath = directoryEntry.brokenAgentsPath ?? null;
     const claudePath =
       directoryEntry.claudePath ?? join(directoryPath, 'CLAUDE.md');
+
+    if (!agentsPath && brokenAgentsPath) {
+      entries.push({
+        agentsPath: brokenAgentsPath,
+        claudePath,
+        status: 'content_mismatch',
+        detail: 'broken AGENTS.md symlink',
+      });
+      continue;
+    }
 
     if (!agentsPath) {
       entries.push({

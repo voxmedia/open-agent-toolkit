@@ -86,6 +86,14 @@ function getErrorCode(error: unknown): string | null {
     : null;
 }
 
+function hasUnreadableCanonicalAgents(entry: InstructionEntry): boolean {
+  return (
+    entry.agentsPath !== null &&
+    (entry.detail === 'broken AGENTS.md symlink' ||
+      entry.detail.startsWith('unable to read AGENTS.md'))
+  );
+}
+
 function wrapStrayResyncError(
   error: unknown,
   agentsPath: string,
@@ -133,6 +141,23 @@ function planSyncActions({
     }
 
     if (entry.status !== 'content_mismatch') {
+      continue;
+    }
+
+    if (hasUnreadableCanonicalAgents(entry)) {
+      const unreadableAgentsPath = entry.agentsPath;
+      if (!unreadableAgentsPath) {
+        throw new CliError(
+          `Unable to resolve unreadable AGENTS.md path for ${entry.claudePath}`,
+          2,
+        );
+      }
+      actions.push({
+        type: 'skip',
+        target: unreadableAgentsPath,
+        reason: 'canonical AGENTS.md unreadable; repair manually',
+        result: 'skipped',
+      });
       continue;
     }
 

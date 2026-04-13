@@ -167,6 +167,40 @@ describe('createInstructionsSyncCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('dry-run reports unreadable canonical AGENTS.md files as manual-repair skips', async () => {
+    const { command, capture } = createHarness({
+      entries: [
+        {
+          agentsPath: '/tmp/workspace/docs/AGENTS.md',
+          claudePath: '/tmp/workspace/docs/CLAUDE.md',
+          status: 'content_mismatch',
+          detail: 'broken AGENTS.md symlink',
+        },
+      ],
+      json: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--json'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      mode: 'dry-run',
+      status: 'drift',
+      summary: { scanned: 1, contentMismatch: 1, skipped: 1 },
+      actions: [
+        {
+          type: 'skip',
+          target: '/tmp/workspace/docs/AGENTS.md',
+          reason: 'canonical AGENTS.md unreadable; repair manually',
+          result: 'skipped',
+        },
+      ],
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it('dry-run with --force plans update actions', async () => {
     const { command, capture } = createHarness({
       entries: [

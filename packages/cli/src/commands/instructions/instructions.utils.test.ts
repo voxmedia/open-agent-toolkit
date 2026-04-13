@@ -340,7 +340,7 @@ describe('instructions utils', () => {
     );
   });
 
-  it('does not treat broken AGENTS symlinks as valid canonical instructions', async () => {
+  it('surfaces broken AGENTS symlinks as canonical drift when Claude exists', async () => {
     const repoRoot = await createRepoRoot();
     const docsDir = join(repoRoot, 'docs');
 
@@ -352,13 +352,29 @@ describe('instructions utils', () => {
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
-      agentsPath: null,
-      status: 'stray',
-      detail: 'CLAUDE.md found without AGENTS.md',
+      agentsPath: join(docsDir, 'AGENTS.md'),
+      claudePath: join(docsDir, 'CLAUDE.md'),
+      status: 'content_mismatch',
+      detail: 'broken AGENTS.md symlink',
     });
-    expect(relative(repoRoot, entries[0]?.claudePath ?? '')).toBe(
-      'docs/CLAUDE.md',
-    );
+  });
+
+  it('surfaces broken AGENTS symlinks as canonical drift without Claude siblings', async () => {
+    const repoRoot = await createRepoRoot();
+    const docsDir = join(repoRoot, 'docs');
+
+    await mkdir(docsDir, { recursive: true });
+    await symlink('missing-AGENTS.md', join(docsDir, 'AGENTS.md'));
+
+    const entries = await scanInstructionFiles(repoRoot);
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      agentsPath: join(docsDir, 'AGENTS.md'),
+      claudePath: join(docsDir, 'CLAUDE.md'),
+      status: 'content_mismatch',
+      detail: 'broken AGENTS.md symlink',
+    });
   });
 
   it('skips directory symlinks during traversal', async () => {
