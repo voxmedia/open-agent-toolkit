@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p06-t01
+oat_current_task_id: p06-t02
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3 | completed   | 4     | 4/4       |
 | Phase 4 | completed   | 2     | 2/2       |
 | Phase 5 | completed   | 3     | 3/3       |
-| Phase 6 | in_progress | 3     | 0/3       |
+| Phase 6 | in_progress | 3     | 1/3       |
 
-**Total:** 16/19 tasks completed
+**Total:** 17/19 tasks completed
 
 ---
 
@@ -679,8 +679,39 @@ oat_generated: false
 
 ### Task p06-t01: Coherence pass + tightening
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 202bac6b
+
+**Outcome:**
+
+- Scanned SKILL.md end-to-end for structure, cross-reference, terminology, and banner consistency.
+- **Findings:**
+  - Heading hierarchy clean: `#` title, `##` top-level sections (Prerequisites / Mode Assertion / Progress Indicators / Process / Success Criteria), `###` Steps 0–7, `####` sub-procedures / Walkthrough sections / Exit summary, `#####` patch sub-sections.
+  - Step names match `[N/7]` progress indicators (Preflight → Preflight Detector; Gathering inputs → Input Gatherer; etc.).
+  - "post-patch" vs. "post-scaffold" usage checked — both are legitimate with distinct meanings (noun for the edits; adjective for timing). No consolidation needed.
+  - `Scaffold Result` / `Verification Result` / `Inspection Result` terminology consistent across components.
+- **Fixes applied:**
+  - Removed stale plan-task reference from line 353 ("(3b, authored in p03-t02)" → "(Step 3b)") so skill reads cleanly without needing to look up plan context.
+  - Placeholder "(Expanded in p06-t01.)" replaced with the full Success Criteria section.
+- **Success Criteria expansion** covers four invariant groups:
+  - Pipeline invariants (read-only Preflight, validated Input Result, Conflict Resolution mutations before scaffold, capability-gated flags, labeled idempotent patches, classified build failures, per-field config verification, explicit `requireForProjectCompletion` decision, audience-disciplined Walkthrough, specific-command handoff in Content Kickoff, Exit summary with real values).
+  - Ratcheting invariants (skip patches when capability present; record `applied`/`skipped`/`refused` with reason; FP-15 retirable when CLI ships native AGENTS.md scaffolding).
+  - Stop-on-broken-state invariants (scaffold failure / build failure / critical inspection issue each cascade skip downstream steps).
+  - Audience-discipline invariants (Walkthrough ≠ AGENTS.md; three surfaces distinct; six-months-from-now framing for docs-app AGENTS.md).
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (35 insertions, 2 deletions)
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-docs-bootstrap/SKILL.md`
+- Result: pass on first try
+
+**Notes / Decisions:**
+
+- **No scope changes.** The coherence pass surfaced no issues that would require rethinking skill structure; only the stale cross-ref needed cleanup. Success Criteria expansion stays descriptive (invariants, not new behavior).
+- **Banner numbering held at 7.** Confirmed Step 0 (Resolve Active Project and Environment) is intentionally outside the `[N/7]` progress count — it's bookkeeping that runs before the "Preflight" banner step. Step 0's only user-facing output is the main banner print.
 
 ---
 
