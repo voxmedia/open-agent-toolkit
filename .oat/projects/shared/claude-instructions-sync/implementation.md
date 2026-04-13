@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-13
-oat_current_task_id: p04-t08
+oat_current_task_id: p04-t09
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -31,9 +31,9 @@ oat_template_name: implementation
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 11    | 7/11      |
+| Phase 4 | in_progress | 11    | 8/11      |
 
-**Total:** 13/17 tasks completed
+**Total:** 14/17 tasks completed
 
 ---
 
@@ -523,6 +523,31 @@ Pending execution of review-fix tasks `p04-t01` through `p04-t11` added from the
 **Notes / Decisions:**
 
 - Used `realpath(...).catch(() => originalPath)` so validation still degrades predictably if canonicalization itself fails.
+
+### Task p04-t08: (review) Surface partial stray-adoption failures clearly
+
+**Status:** completed
+**Commit:** b419fd61
+
+**Outcome (required when completed):**
+
+- Wrapped post-adoption Claude regeneration failures with an explicit error that confirms `AGENTS.md` was already created.
+- Limited the new error wrapping to the stray-adoption resync path so normal sync failures keep their existing behavior.
+- Added regression coverage for the partial-adoption failure case and verified the command exits with an error.
+
+**Files changed:**
+
+- `packages/cli/src/commands/instructions/sync/sync.ts` - wrapped stray resync failures with a clearer `CliError`
+- `packages/cli/src/commands/instructions/sync/sync.test.ts` - added a partial-adoption failure regression test
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- packages/cli/src/commands/instructions/sync/sync.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the message focused on the partial state rather than trying to auto-rollback the already-created `AGENTS.md`.
 
 ---
 
