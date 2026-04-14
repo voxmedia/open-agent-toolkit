@@ -302,7 +302,7 @@ Keep both code and artifact rows below. For quick-mode projects, retain `spec` a
 | ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
 | p01    | code     | pending         | -          | -                                                   |
 | p02    | code     | fixes_completed | 2026-04-14 | reviews/archived/p02-review-2026-04-13.md           |
-| final  | code     | fixes_completed | 2026-04-14 | reviews/archived/final-review-2026-04-14.md         |
+| final  | code     | passed          | 2026-04-14 | reviews/final-review-2026-04-14-rerun.md            |
 | spec   | artifact | passed          | 2026-04-13 | n/a (quick mode)                                    |
 | design | artifact | passed          | 2026-04-13 | n/a (quick mode)                                    |
 | plan   | artifact | fixes_completed | 2026-04-13 | reviews/archived/artifact-plan-review-2026-04-13.md |

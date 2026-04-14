@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-review-provide
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
 oat_last_updated: 2026-04-14
 oat_current_task_id: null
@@ -446,7 +446,7 @@ Track test execution during implementation.
 
 - `m2` - Core-scope defense-in-depth cleanup remains deferred because `oat tools install` hard-pins core to user scope today, so the review concern is theoretical for this command path and does not justify reopening the shipped fix.
 
-**Next:** Run `oat-project-review-provide` for the final code re-review, then process any resulting findings if needed.
+**Next:** Final code re-review passed with no findings. The project is ready for final PR/completion flow.
 
 ## References
 
