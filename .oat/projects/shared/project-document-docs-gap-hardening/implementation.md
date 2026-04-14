@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p03-t04
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 5     | 3/5       |
+| Phase 3 | in_progress | 5     | 4/5       |
 
-**Total:** 7/9 tasks completed
+**Total:** 8/9 tasks completed
 
 ---
 
@@ -234,8 +234,25 @@ oat_generated: false
 
 ### Task p03-t04: (review) Wire or remove the unused docs-audience field
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 758d4afa
+
+**Outcome (required when completed):**
+
+- Threaded the audience signal through the coverage-gap and recommendation schema so the Step 3 audience field is now consumed downstream instead of being dead metadata.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-document/SKILL.md` - removed the unused "likely docs audience" wording and added audience to the coverage-gap finding / recommendation schema
+
+**Verification:**
+
+- Run: `rg -n "audience|docs surface versus" .agents/skills/oat-project-document/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Chose to wire the field through rather than remove audience entirely because it gives the skill a clearer basis for choosing the right docs home.
 
 ---
 
@@ -306,6 +323,30 @@ oat_generated: false
 
 - Finish the remaining four review-fix tasks
 - Run `pnpm release:validate` after the review fixes are complete
+
+**Blockers:**
+
+- None
+
+### 2026-04-14
+
+**Session Start:** 20:06 UTC
+
+- [x] p03-t04: (review) Wire or remove the unused docs-audience field - `758d4afa`
+- [ ] p03-t05: (review) Add lifecycle cross-link in docs workflows page - next
+
+**What changed (high level):**
+
+- Resolved the contract asymmetry around the audience field by carrying it into the coverage-gap and recommendation schema.
+
+**Decisions:**
+
+- Kept the audience concept because it helps explain why a page belongs in a developer, operator, or integrator-oriented docs area.
+
+**Follow-ups / TODO:**
+
+- Add the lifecycle cross-link in docs workflows
+- Run `pnpm release:validate` after the remaining fixes land
 
 **Blockers:**
 
