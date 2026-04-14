@@ -7,28 +7,28 @@ oat_hill_checkpoints: ['p02'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p02'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-13T23:54:19.127Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-14T15:41:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-14T16:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: tool-install-ux
 
-**Status:** Ready For Final PR
+**Status:** PR Ready
 **Started:** 2026-04-13
 **Last Updated:** 2026-04-14
 
 ## Current Phase
 
-Implementation complete and final code re-review passed
+Implementation complete, final code re-review passed, and the final PR artifact is ready
 
 ## Artifacts
 
@@ -53,6 +53,7 @@ Implementation complete and final code re-review passed
 - ✓ `prev1-t03` complete
 - ✓ Review-fix phase complete
 - ✓ Final code re-review passed
+- ✓ Final PR artifact written
 
 ## Blockers
 
@@ -60,4 +61,4 @@ None
 
 ## Next Milestone
 
-Prepare the final PR or complete the project lifecycle
+Push the branch and open the final PR from the generated project PR artifact
