@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p02-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,12 +16,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | in_progress | 2     | 1/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
 
-**Total:** 3/4 tasks completed
+**Total:** 4/4 tasks completed
 
 ---
 
@@ -150,8 +150,61 @@ oat_generated: false
 
 ### Task p02-t02: Run focused validation and release guardrails
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c4b2cf8a
+
+**Outcome (required):**
+
+- Ran the focused regression suite covering compute-plan, sync, install auto-sync, and Codex extension behavior
+- Passed publishable-package release validation after bumping the lockstep public version to `0.0.37`
+- Completed the final implementation task and phase 2
+
+**Files changed:**
+
+- `packages/cli/package.json` - bumped the CLI public package version to `0.0.37`
+- `packages/control-plane/package.json` - kept public packages in lockstep for release validation
+- `packages/docs-config/package.json` - kept public packages in lockstep for release validation
+- `packages/docs-theme/package.json` - kept public packages in lockstep for release validation
+- `packages/docs-transforms/package.json` - kept public packages in lockstep for release validation
+- `packages/cli/assets/public-package-versions.json` - updated bundled public package version metadata
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/providers/codex/codec/sync-extension.test.ts`
+- Result: Pass
+- Run: `pnpm release:validate`
+- Result: Pass after the lockstep version bump
+
+**Notes / Decisions:**
+
+- Release validation required a version bump because this branch changes shipped CLI behavior
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Partial install-triggered sync now scopes provider-view planning and Codex extension planning to the installed canonical set
+- Docs-only installs no longer cause unrelated Codex-managed roles to be removed or configured as stale
+- The publishable-package contract is satisfied for the shipped CLI change
+
+**Key files touched:**
+
+- `packages/cli/src/commands/sync/index.ts` - Codex extension scope wiring
+- `packages/cli/src/commands/sync/sync.types.ts` - sync dependency contract updates
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` - partial-sync preservation of unrelated managed roles
+- `packages/cli/src/providers/codex/codec/sync-extension.test.ts` - partial-sync regression coverage
+- `packages/cli/package.json` - CLI version bump to `0.0.37`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/providers/codex/codec/sync-extension.test.ts`
+- Result: Pass
+- Run: `pnpm release:validate`
+- Result: Pass
+
+**Notes / Decisions:**
+
+- Final review should inspect both provider-view scoping and Codex partial-sync preservation
 
 ---
 
@@ -171,7 +224,7 @@ oat_generated: false
 - [x] p01-t01: Reproduce and lock down the planning gap - `ca70fab2`
 - [x] p01-t02: Scope provider entry generation and removals to installed canonical paths - `a8ad1a2f`
 - [x] p02-t01: Prevent unrelated Codex config and provider writes during docs install - `e2b50bfc`
-- [ ] p02-t02: Run focused validation and release guardrails - next
+- [x] p02-t02: Run focused validation and release guardrails - `c4b2cf8a`
 
 **What changed (high level):**
 
@@ -199,16 +252,43 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                                                                                                | Passed | Failed | Coverage                 |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------ |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test -- --run packages/cli/src/engine/compute-plan.test.ts packages/cli/src/commands/sync/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts` | yes    | no     | package-level + targeted |
-| 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/providers/codex/codec/sync-extension.test.ts`                                                                                                 | yes    | no     | targeted                 |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                            | Passed | Failed | Coverage                 |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | ------------------------ |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- --run packages/cli/src/engine/compute-plan.test.ts packages/cli/src/commands/sync/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts`                                                                                                                                             | yes    | no     | package-level + targeted |
+| 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/providers/codex/codec/sync-extension.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/providers/codex/codec/sync-extension.test.ts`; `pnpm release:validate` | yes    | no     | targeted + release       |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Pending implementation
+- Install-triggered sync now scopes planner entries to the canonical paths passed by the installer instead of only scoping removals
+- Codex partial-sync planning preserves unrelated managed roles and `.codex/config.toml` entries during docs-only installs
+- The CLI package and public package metadata were bumped to `0.0.37` to satisfy the publishable-package release contract
+
+**Behavioral changes (user-facing):**
+
+- `oat tools install docs` can no longer fan out unrelated provider-view additions from existing canonical content during auto-sync
+- Docs-only installs no longer update Codex managed-role config for unrelated agents
+
+**Key files / modules:**
+
+- `packages/cli/src/engine/compute-plan.ts` - install-triggered canonical scoping in the sync planner
+- `packages/cli/src/commands/sync/index.ts` - sync orchestration for scoped Codex extension planning
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` - partial-sync Codex role/config preservation
+- `packages/cli/src/commands/sync/index.test.ts` - sync command regression coverage
+- `packages/cli/src/providers/codex/codec/sync-extension.test.ts` - Codex extension partial-sync regression coverage
+
+**Verification performed:**
+
+- `pnpm --filter @open-agent-toolkit/cli test -- --run packages/cli/src/engine/compute-plan.test.ts packages/cli/src/commands/sync/index.test.ts`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/providers/codex/codec/sync-extension.test.ts`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/providers/codex/codec/sync-extension.test.ts`
+- `pnpm release:validate`
+
+**Design deltas (if any):**
+
+- No design artifact was needed in quick mode; the implementation followed the discovery and plan directly
 
 ## References
 
