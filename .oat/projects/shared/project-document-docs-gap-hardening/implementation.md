@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p03-t03
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 5     | 2/5       |
+| Phase 3 | in_progress | 5     | 3/5       |
 
-**Total:** 6/9 tasks completed
+**Total:** 7/9 tasks completed
 
 ---
 
@@ -210,8 +210,25 @@ oat_generated: false
 
 ### Task p03-t03: (review) Harmonize coverage-state terminology casing
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d8a71e55
+
+**Outcome (required when completed):**
+
+- Normalized the three coverage-state labels in `oat-project-document` so they use the same casing as the equivalent states in `oat-docs-analyze`.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-document/SKILL.md` - changed `Adequately covered` / `Thin coverage` / `No coverage` to the lowercase form used by the docs-analysis skill
+
+**Verification:**
+
+- Run: `rg -n "adequately covered|thin coverage|no coverage" .agents/skills/oat-project-document/SKILL.md .agents/skills/oat-docs-analyze/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the harmonization minimal and textual only; no recommendation logic changed.
 
 ---
 
@@ -289,6 +306,31 @@ oat_generated: false
 
 - Finish the remaining four review-fix tasks
 - Run `pnpm release:validate` after the review fixes are complete
+
+**Blockers:**
+
+- None
+
+### 2026-04-14
+
+**Session Start:** 20:05 UTC
+
+- [x] p03-t03: (review) Harmonize coverage-state terminology casing - `d8a71e55`
+- [ ] p03-t04: (review) Wire or remove the unused docs-audience field - next
+
+**What changed (high level):**
+
+- Brought `oat-project-document` coverage-state labels into casing alignment with `oat-docs-analyze`.
+
+**Decisions:**
+
+- Chose the smallest possible fix because the review finding was about terminology drift, not behavior.
+
+**Follow-ups / TODO:**
+
+- Resolve the unused docs-audience field
+- Add the lifecycle cross-link in docs workflows
+- Run `pnpm release:validate` after the remaining fixes land
 
 **Blockers:**
 
