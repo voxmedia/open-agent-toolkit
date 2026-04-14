@@ -120,4 +120,18 @@ describe('codex sync extension', () => {
       partialPlan.operations.find((op) => op.target === 'config')?.action,
     ).toBe('skip');
   });
+
+  it('is a no-op for partial sync scopes with no codex-managed agent content', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+
+    const partialPlan = await computeCodexProjectExtensionPlan(
+      root,
+      [],
+      ['.agents/skills/oat-docs-analyze'],
+    );
+
+    expect(partialPlan.operations).toEqual([]);
+    expect(partialPlan.managedRoles).toEqual([]);
+  });
 });

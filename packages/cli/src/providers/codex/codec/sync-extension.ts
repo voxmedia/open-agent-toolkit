@@ -193,6 +193,8 @@ export async function computeCodexProjectExtensionPlan(
   canonicalEntries: CanonicalEntry[],
   allowedCanonicalPaths?: string[],
 ): Promise<CodexExtensionPlan> {
+  const isPartialSync =
+    allowedCanonicalPaths !== undefined && allowedCanonicalPaths.length > 0;
   const desiredRoles = await desiredRolesFromCanonical(
     canonicalEntries.filter((entry) =>
       canonicalPathAllowed(scopeRoot, entry, allowedCanonicalPaths),
@@ -202,14 +204,25 @@ export async function computeCodexProjectExtensionPlan(
   const desiredRoleNames = new Set(desiredRoles.map((role) => role.roleName));
   const existingConfigPath = configPath(scopeRoot);
   const existingConfigContent = await readOptionalFile(existingConfigPath);
-  const staleRoles =
-    allowedCanonicalPaths && allowedCanonicalPaths.length > 0
-      ? []
-      : await collectStaleManagedRoles(
-          scopeRoot,
-          existingConfigContent,
-          desiredRoleNames,
-        );
+  const staleRoles = isPartialSync
+    ? []
+    : await collectStaleManagedRoles(
+        scopeRoot,
+        existingConfigContent,
+        desiredRoleNames,
+      );
+
+  if (
+    isPartialSync &&
+    desiredRoles.length === 0 &&
+    existingConfigContent === null
+  ) {
+    return {
+      operations: [],
+      managedRoles: [],
+      aggregateConfigHash: hashContent(''),
+    };
+  }
 
   const operations: CodexExtensionWriteOperation[] = [];
 
