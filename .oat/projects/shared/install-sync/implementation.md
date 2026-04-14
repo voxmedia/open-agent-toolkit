@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -18,16 +18,16 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 1/2       |
-| Phase 2 | pending     | 2     | 0/2       |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | in_progress | 2     | 0/2       |
 
-**Total:** 1/4 tasks completed
+**Total:** 2/4 tasks completed
 
 ---
 
 ## Phase 1: Scope Install-Triggered Sync
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-14
 
 ### Task p01-t01: Reproduce and lock down the planning gap
@@ -62,19 +62,61 @@ oat_generated: false
 
 ### Task p01-t02: Scope provider entry generation and removals to installed canonical paths
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a8ad1a2f
 
-**Notes:**
+**Outcome (required):**
 
-- Keep the fix in the sync engine rather than pack-specific install code
+- Scoped sync entry generation to the canonical paths passed by install-triggered sync
+- Locked the planner behavior so unrelated canonical skills no longer produce provider sync operations during pack installs
+- Completed phase 1 of the implementation plan
+
+**Files changed:**
+
+- `packages/cli/src/engine/compute-plan.ts` - filtered planned sync entries by the install-triggered canonical scope
+- `packages/cli/src/engine/compute-plan.test.ts` - added regression coverage for unrelated canonical additions
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts`
+- Result: Pass
+
+**Notes / Decisions:**
+
+- Kept the canonical-path gate near `canonicalRelativePath` generation so all provider mappings share the same scoping rule
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Install-triggered sync now carries a general canonical-scope contract instead of a removal-only filter
+- The sync planner excludes unrelated canonical entries when install scope is present
+- Phase 1 established the core planner behavior needed before addressing Codex-specific side effects
+
+**Key files touched:**
+
+- `packages/cli/src/engine/compute-plan.ts` - planner contract and scoped entry filtering
+- `packages/cli/src/engine/compute-plan.test.ts` - planner regression coverage
+- `packages/cli/src/commands/sync/index.ts` - sync command plumbing for canonical scope
+- `packages/cli/src/commands/sync/index.test.ts` - command-level forwarding coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- --run packages/cli/src/engine/compute-plan.test.ts packages/cli/src/commands/sync/index.test.ts`
+- Result: Pass, with Vitest expanding to the full CLI package suite on the first run
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts`
+- Result: Pass
+
+**Notes / Decisions:**
+
+- No checkpoint pause after phase 1 because `oat_plan_hill_phases` is set to `["p02"]`
 
 ---
 
 ## Phase 2: Scope Command-Level Side Effects
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-04-14
 
 ### Task p02-t01: Prevent unrelated Codex config and provider writes during docs install
 
@@ -104,7 +146,8 @@ oat_generated: false
 **Session Start:** 22:16 UTC
 
 - [x] p01-t01: Reproduce and lock down the planning gap - `ca70fab2`
-- [ ] p01-t02: Scope provider entry generation and removals to installed canonical paths - next
+- [x] p01-t02: Scope provider entry generation and removals to installed canonical paths - `a8ad1a2f`
+- [ ] p02-t01: Prevent unrelated Codex config and provider writes during docs install - next
 
 **What changed (high level):**
 
@@ -132,10 +175,10 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                       | Passed | Failed | Coverage      |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test -- --run packages/cli/src/engine/compute-plan.test.ts packages/cli/src/commands/sync/index.test.ts` | yes    | no     | package-level |
-| 2     | -                                                                                                                                               | -      | -      | -             |
+| Phase | Tests Run                                                                                                                                                                                                                                | Passed | Failed | Coverage                 |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------ |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- --run packages/cli/src/engine/compute-plan.test.ts packages/cli/src/commands/sync/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts` | yes    | no     | package-level + targeted |
+| 2     | -                                                                                                                                                                                                                                        | -      | -      | -                        |
 
 ## Final Summary (for PR/docs)
 
