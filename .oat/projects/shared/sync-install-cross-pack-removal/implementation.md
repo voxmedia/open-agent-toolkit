@@ -282,7 +282,10 @@ oat_generated: false
 
 - User chose to convert `m2` and `m4` into fix tasks and defer `m1` and `m3`.
 
-**Next:** Request a final re-review via `oat-project-review-provide code final`, then run `oat-project-review-receive`.
+**Re-review result:** passed
+**Passing artifact:** reviews/archived/final-review-2026-04-14-20260414T154441Z.md
+
+**Next:** Final review passed. Proceed to PR creation.
 
 ## Implementation Log
 
