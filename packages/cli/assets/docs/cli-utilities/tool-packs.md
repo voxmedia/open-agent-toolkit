@@ -73,10 +73,14 @@ Key behavior:
 
 - Same pack selection and install flow as `oat init tools`
 - Pack-oriented install subcommands: `core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`
+- Interactive installs show each pack's current install location in the picker so already-installed packs are visible before you submit
+- User-scope follow-up choices are prepopulated from the current install state for user-eligible packs (`ideas`, `docs`, `utility`, `research`)
+- If a user-eligible pack is already installed in both project and user scope, the installer asks whether to keep both installs or normalize the pack to user scope before it makes any cleanup changes
+- Changing a user-eligible pack from project scope to user scope, or back again, is treated as a migration: the old canonical copy is removed so the pack ends in the selected scope instead of accumulating duplicate installs
 - Tracks installed vs bundled skill versions and reports outdated skills
 - Records installed pack state in shared repo config as `tools.<pack>: true` so other OAT workflows can detect installed capabilities without relying on filesystem heuristics
 - Interactive runs can prompt to update selected outdated skills
-- Auto-sync runs automatically after successful install (provider views are updated)
+- Successful installs report the final scope chosen for each pack, including `project + user` when both installs are preserved, and auto-sync every scope touched by the install or migration
 - Install-triggered auto-sync limits removal planning to the canonical entries from the pack that was just installed, so stale manifest drift in unrelated packs does not delete other provider views
 - Use `--no-sync` to skip auto-sync
 
