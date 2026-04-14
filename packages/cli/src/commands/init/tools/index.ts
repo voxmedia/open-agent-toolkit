@@ -58,7 +58,10 @@ import {
   type InstallIdeasOptions,
   type InstallIdeasResult,
 } from './ideas/install-ideas';
-import { buildPackInstallStateMap } from './install-state';
+import {
+  buildPackInstallStateMap,
+  type PackInstallState,
+} from './install-state';
 import { createInitToolsProjectManagementCommand } from './project-management';
 import {
   installProjectManagement as defaultInstallProjectManagement,
@@ -173,20 +176,6 @@ function formatVersionForDisplay(version: string | null): string {
   return version ?? '(unversioned)';
 }
 
-const PACK_CHOICES: MultiSelectChoice<ToolPack>[] = [
-  { label: 'Core [user]', value: 'core', checked: true },
-  { label: 'Ideas [project|user]', value: 'ideas', checked: true },
-  { label: 'Docs [project|user]', value: 'docs', checked: true },
-  {
-    label: 'Project Management [project]',
-    value: 'project-management',
-    checked: false,
-  },
-  { label: 'Workflows [project]', value: 'workflows', checked: true },
-  { label: 'Utility [project|user]', value: 'utility', checked: true },
-  { label: 'Research [project|user]', value: 'research', checked: true },
-];
-
 const ALL_TOOL_PACKS = [
   'core',
   'ideas',
@@ -275,6 +264,7 @@ const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
 ]);
 
 type PackScopeMap = Record<ToolPack, InstallScope>;
+type PackInstallStateMap = Record<ToolPack, PackInstallState>;
 
 function isUserEligiblePack(pack: ToolPack): pack is UserEligiblePack {
   return USER_ELIGIBLE_PACKS.has(pack);
@@ -285,7 +275,7 @@ async function loadInstalledPackStates(
   userRoot: string,
   assetsRoot: string,
   dependencies: InitToolsDependencies,
-) {
+): Promise<PackInstallStateMap> {
   const [projectTools, userTools] = await Promise.all([
     dependencies.scanTools({
       scope: 'project',
@@ -303,6 +293,80 @@ async function loadInstalledPackStates(
     ...projectTools,
     ...userTools,
   ]);
+}
+
+function formatInstalledLocation(
+  location: PackInstallState['location'],
+): string {
+  switch (location) {
+    case 'project':
+      return 'project';
+    case 'user':
+      return 'user';
+    case 'both':
+      return 'project + user';
+    default:
+      return 'not installed';
+  }
+}
+
+function buildPackChoices(
+  installedPackStates: PackInstallStateMap,
+): MultiSelectChoice<ToolPack>[] {
+  return [
+    {
+      label: `Core [user]${installedPackStates.core.location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates.core.location)})`}`,
+      value: 'core',
+      checked: true,
+    },
+    {
+      label: `Ideas [project|user]${installedPackStates.ideas.location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates.ideas.location)})`}`,
+      value: 'ideas',
+      checked: true,
+    },
+    {
+      label: `Docs [project|user]${installedPackStates.docs.location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates.docs.location)})`}`,
+      value: 'docs',
+      checked: true,
+    },
+    {
+      label: `Project Management [project]${installedPackStates['project-management'].location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates['project-management'].location)})`}`,
+      value: 'project-management',
+      checked: false,
+    },
+    {
+      label: `Workflows [project]${installedPackStates.workflows.location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates.workflows.location)})`}`,
+      value: 'workflows',
+      checked: true,
+    },
+    {
+      label: `Utility [project|user]${installedPackStates.utility.location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates.utility.location)})`}`,
+      value: 'utility',
+      checked: true,
+    },
+    {
+      label: `Research [project|user]${installedPackStates.research.location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates.research.location)})`}`,
+      value: 'research',
+      checked: true,
+    },
+  ];
+}
+
+function buildUserScopeChoices(
+  packs: UserEligiblePack[],
+  installedPackStates: PackInstallStateMap,
+): MultiSelectChoice<UserEligiblePack>[] {
+  return packs.map((pack) => {
+    const location = installedPackStates[pack].location;
+    return {
+      label:
+        location === 'not-installed'
+          ? pack
+          : `${pack} (current: ${formatInstalledLocation(location)})`,
+      value: pack,
+      checked: location === 'user',
+    };
+  });
 }
 
 export function consumeInitToolsRunMetadata(): InitToolsRunMetadata | null {
@@ -330,6 +394,7 @@ async function removePackFromScope(
 async function resolvePackScopes(
   context: CommandContext,
   selections: ToolPack[],
+  installedPackStates: PackInstallStateMap,
   dependencies: InitToolsDependencies,
 ): Promise<PackScopeMap> {
   const scopes: Partial<PackScopeMap> = {};
@@ -379,11 +444,7 @@ async function resolvePackScopes(
   const userScopePacks =
     (await dependencies.selectManyWithAbort(
       'Which packs should install at user scope? (unselected go to project scope)',
-      eligiblePacks.map((pack) => ({
-        label: pack,
-        value: pack,
-        checked: false,
-      })),
+      buildUserScopeChoices(eligiblePacks, installedPackStates),
       { interactive: context.interactive },
     )) ?? [];
 
@@ -516,10 +577,23 @@ export async function runInitTools(
   lastRunInitToolsMetadata = null;
 
   try {
+    const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+    const userRoot = dependencies.resolveScopeRoot(
+      'user',
+      context.cwd,
+      context.home,
+    );
+    const assetsRoot = await dependencies.resolveAssetsRoot();
+    const initialPackStates = await loadInstalledPackStates(
+      projectRoot,
+      userRoot,
+      assetsRoot,
+      dependencies,
+    );
     const selectedPacks: ToolPack[] = context.interactive
       ? ((await dependencies.selectManyWithAbort(
           'Select tool packs to install',
-          PACK_CHOICES,
+          buildPackChoices(initialPackStates),
           { interactive: context.interactive },
         )) ?? [])
       : ['core', 'ideas', 'docs', 'workflows', 'utility', 'research'];
@@ -536,29 +610,16 @@ export async function runInitTools(
       return [];
     }
 
-    const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
-    const userRoot = dependencies.resolveScopeRoot(
-      'user',
-      context.cwd,
-      context.home,
-    );
     const packScopes = await resolvePackScopes(
       context,
       selectedPacks,
+      initialPackStates,
       dependencies,
     );
 
     function packRoot(pack: ToolPack): string {
       return packScopes[pack] === 'user' ? userRoot : projectRoot;
     }
-
-    const assetsRoot = await dependencies.resolveAssetsRoot();
-    const initialPackStates = await loadInstalledPackStates(
-      projectRoot,
-      userRoot,
-      assetsRoot,
-      dependencies,
-    );
     const outdatedSkills: OutdatedSkillRecord[] = [];
     const affectedScopes = new Set<ConcreteScope>();
 

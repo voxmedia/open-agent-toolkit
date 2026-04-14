@@ -333,6 +333,84 @@ describe('createInitToolsCommand', () => {
     ).toBe(true);
   });
 
+  it('annotates already-installed packs in the main pack selection prompt', async () => {
+    const { command, selectManyWithAbort } = createHarness({
+      interactive: true,
+      packSelection: [['ideas', 'docs', 'research'], ['docs']],
+      toolsByScope: {
+        project: [
+          createScannedTool('oat-idea-new', 'ideas', 'project'),
+          createScannedTool('analyze', 'research', 'project'),
+        ],
+        user: [
+          createScannedTool('oat-docs-analyze', 'docs', 'user'),
+          createScannedTool('analyze', 'research', 'user'),
+          createScannedTool('oat-docs', 'core', 'user'),
+        ],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
+      value: string;
+      label: string;
+    }>;
+    expect(choices.find((choice) => choice.value === 'ideas')?.label).toContain(
+      '(installed: project)',
+    );
+    expect(choices.find((choice) => choice.value === 'docs')?.label).toContain(
+      '(installed: user)',
+    );
+    expect(
+      choices.find((choice) => choice.value === 'research')?.label,
+    ).toContain('(installed: project + user)');
+  });
+
+  it('prechecks user-scope follow-up choices from current install location and labels both-scope packs clearly', async () => {
+    const { command, selectManyWithAbort } = createHarness({
+      interactive: true,
+      packSelection: [['ideas', 'docs', 'research'], ['docs']],
+      toolsByScope: {
+        project: [
+          createScannedTool('oat-idea-new', 'ideas', 'project'),
+          createScannedTool('analyze', 'research', 'project'),
+        ],
+        user: [
+          createScannedTool('oat-docs-analyze', 'docs', 'user'),
+          createScannedTool('analyze', 'research', 'user'),
+          createScannedTool('oat-docs', 'core', 'user'),
+        ],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const choices = selectManyWithAbort.mock.calls[1]?.[1] as Array<{
+      value: string;
+      label: string;
+      checked?: boolean;
+    }>;
+    expect(choices.find((choice) => choice.value === 'ideas')).toEqual(
+      expect.objectContaining({
+        label: 'ideas (current: project)',
+        checked: false,
+      }),
+    );
+    expect(choices.find((choice) => choice.value === 'docs')).toEqual(
+      expect.objectContaining({
+        label: 'docs (current: user)',
+        checked: true,
+      }),
+    );
+    expect(choices.find((choice) => choice.value === 'research')).toEqual(
+      expect.objectContaining({
+        label: 'research (current: project + user)',
+        checked: false,
+      }),
+    );
+  });
+
   it('non-interactive installs everything to project scope (core always user)', async () => {
     const {
       command,
