@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -12,155 +12,136 @@ oat_generated: false
 **Started:** 2026-04-14
 **Last Updated:** 2026-04-14
 
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
-
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 3/3 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Reproduce And Patch Sync Removal
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-14
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- `oat tools install <pack>` now carries the canonical entries it just installed into the follow-up sync run.
+- The sync command uses that install-time context only to narrow the removal pass, so stale manifest entries outside the installed set are preserved instead of being deleted.
+- Direct full `oat sync` deletion behavior remains unchanged.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/tools/install/index.ts` - forwarded install-time canonical filters into auto-sync
+- `packages/cli/src/commands/sync/index.ts` - accepted the internal install filter and passed it to planning
+- `packages/cli/src/engine/compute-plan.ts` - limited removal planning to the install-scoped canonical set when provided
+- `packages/cli/src/commands/tools/shared/install-sync-context.ts` - recorded canonical entries for each installed pack
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- compute-plan.test.ts auto-sync.test.ts sync/index.test.ts tools/install/index.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli build`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli exec oxfmt --check ...`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- The fix stayed on the install-triggered path instead of changing global removal semantics, because the engine integration suite already relies on direct sync removing intentionally deleted canonical content.
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Reproduce stale-manifest removal behavior
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** -
 
-**Outcome (required when completed):**
+**Outcome:**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Confirmed the root bug is the removal pass in `computeSyncPlan`: manifest entries for active providers are scheduled for removal whenever their canonical path is absent from the current scan.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/engine/compute-plan.test.ts` - added a regression scenario modeling docs-only canonical content plus stale workflow manifest state
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- compute-plan.test.ts`
+- Result: pass after fix; the new case would have failed under the original full-removal behavior
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- Existing engine integration coverage for intentional canonical deletion ruled out a global planner behavior change.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- Commander repeatable-option parsing needed an explicit default in the hidden sync option; fixed during test-driven wiring.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Implement conservative removal guard
 
-**Status:** pending
+**Status:** completed
 **Commit:** -
 
-**Notes:**
+**Outcome:**
 
-- {Notes will be added during implementation}
+- Added an install-scoped canonical-path filter to the sync command and planner removal pass.
+- Recorded installed canonical entries from tool-pack commands so the post-install sync has precise scope information.
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Verify install-path behavior and summarize asymmetry
 
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
+**Status:** completed
 **Commit:** -
 
----
+**Outcome:**
 
-## Orchestration Runs
-
-> This section is used by `oat-project-subagent-implement` to log parallel execution runs.
-> Each run appends a new subsection — never overwrite prior entries.
-> For single-thread execution (via `oat-project-implement`), this section remains empty.
-
-<!-- orchestration-runs-start -->
-<!-- orchestration-runs-end -->
+- Added forwarding tests for the install hook, auto-sync helper, and sync command hidden option.
+- Remaining asymmetry: install-triggered sync now preserves stale manifest entries outside the installed canonical set rather than pruning them. Those stale entries remain until the matching canonical content is restored or a full sync/removal path cleans them up intentionally.
 
 ---
 
 ## Implementation Log
 
-Chronological log of implementation progress.
-
 ### 2026-04-14
 
-**Session Start:** {time}
+**Session Start:** 19:05 UTC
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Reproduce stale-manifest removal behavior
+- [x] p01-t02: Implement conservative removal guard
+- [x] p01-t03: Verify install-path behavior and summarize asymmetry
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Install-triggered sync now filters removals to the canonical entries installed in that invocation.
+- Tool-pack installers record canonical install targets for the post-install sync hook.
+- Regression coverage now exercises the planner seam and the install-to-sync forwarding path.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Preserved direct `oat sync` deletion semantics and scoped the behavioral change only to install-triggered auto-sync.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Consider a separate stale-manifest pruning workflow if install-triggered preservation leaves too much drift behind.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None
 
-**Session End:** {time}
-
----
-
-### 2026-04-14
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** 00:25 UTC
 
 ---
 
 ## Deviations from Plan
-
-Document any deviations from the original plan.
 
 | Task | Planned | Actual | Reason |
 | ---- | ------- | ------ | ------ |
@@ -168,38 +149,40 @@ Document any deviations from the original plan.
 
 ## Test Results
 
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                     | Passed | Failed | Coverage |
+| ----- | --------------------------------------------- | ------ | ------ | -------- |
+| 1     | 4 targeted suites + CLI build + release check | yes    | 0      | targeted |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Install-triggered tool-pack sync no longer deletes unrelated provider-view files because of stale manifest entries.
+- The sync planner now accepts an internal removal filter passed from the install command.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Running `oat tools install docs` in a worktree with stale manifest mappings preserves unrelated provider views instead of planning their removal.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/tools/shared/install-sync-context.ts` - canonical install target tracking
+- `packages/cli/src/commands/tools/install/index.ts` - auto-sync forwarding
+- `packages/cli/src/commands/sync/index.ts` - hidden install filter handling
+- `packages/cli/src/engine/compute-plan.ts` - removal filter application
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Targeted CLI Vitest run
+- CLI package build
+- `oxfmt --check` on changed files
+- `pnpm release:validate`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- No design artifact was needed; the implementation followed the quick-plan decision to keep the change conservative and local to install-triggered sync.
 
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`

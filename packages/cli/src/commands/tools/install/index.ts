@@ -10,28 +10,36 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
+import { getInstalledCanonicalPaths as getInstallSyncCanonicalPaths } from '@commands/tools/shared/install-sync-context';
 import type { Command } from 'commander';
 
 const defaultSyncDependencies: AutoSyncDependencies = {
-  runSync: async ({ scope, cwd }) => {
+  runSync: async ({ scope, cwd, installedCanonicalPaths }) => {
+    const syncArgs = [
+      ...process.execArgv,
+      process.argv[1]!,
+      'sync',
+      '--scope',
+      scope,
+    ];
+    for (const canonicalPath of installedCanonicalPaths ?? []) {
+      syncArgs.push('--install-canonical', canonicalPath);
+    }
+
     await new Promise<void>((resolve, reject) => {
-      execFile(
-        process.execPath,
-        [...process.execArgv, process.argv[1]!, 'sync', '--scope', scope],
-        { cwd },
-        (error) => {
-          if (error) reject(error);
-          else resolve();
-        },
-      );
+      execFile(process.execPath, syncArgs, { cwd }, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
     });
   },
 };
 
 export function createToolsInstallCommand(
   syncDependencies: AutoSyncDependencies = defaultSyncDependencies,
+  createBaseCommand: () => Command = createInitToolsCommand,
 ): Command {
-  const cmd = createInitToolsCommand();
+  const cmd = createBaseCommand();
   cmd.name('install');
   cmd.option('--no-sync', 'Skip auto-sync after install');
 
@@ -44,6 +52,7 @@ export function createToolsInstallCommand(
     const globalOptions = readGlobalOptions(actionCommand);
     const context = buildCommandContext(globalOptions);
     const scopes = resolveConcreteScopes(context.scope);
+    const installedCanonicalPaths = getInstallSyncCanonicalPaths(actionCommand);
 
     await autoSync(
       scopes,
@@ -51,6 +60,7 @@ export function createToolsInstallCommand(
       context.home,
       context.logger,
       syncDependencies,
+      { installedCanonicalPaths },
     );
   });
 

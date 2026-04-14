@@ -4,6 +4,10 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import {
+  canonicalPathsForPack,
+  setInstalledCanonicalPaths,
+} from '@commands/tools/shared/install-sync-context';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -113,5 +117,8 @@ export function createInitToolsCoreCommand(
         readGlobalOptions(command),
       );
       await runInitToolsCore(context, options, dependencies);
+      if (process.exitCode === 0 || process.exitCode === undefined) {
+        setInstalledCanonicalPaths(command, canonicalPathsForPack('core'));
+      }
     });
 }

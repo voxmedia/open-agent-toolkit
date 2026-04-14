@@ -8,6 +8,10 @@ import {
   type PromptContext,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import {
+  canonicalPathsForPack,
+  setInstalledCanonicalPaths,
+} from '@commands/tools/shared/install-sync-context';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -148,5 +152,8 @@ export function createInitToolsIdeasCommand(
         readGlobalOptions(command),
       );
       await runInitToolsIdeas(context, options, dependencies);
+      if (process.exitCode === 0 || process.exitCode === undefined) {
+        setInstalledCanonicalPaths(command, canonicalPathsForPack('ideas'));
+      }
     });
 }

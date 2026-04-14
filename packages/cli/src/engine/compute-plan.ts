@@ -24,6 +24,7 @@ interface ComputeSyncPlanArgs {
   scope: EngineScope;
   config: SyncConfig;
   scopeRoot?: string;
+  allowedRemovalCanonicalPaths?: string[];
 }
 
 function buildUpLevels(depth: number): string[] {
@@ -275,12 +276,20 @@ export async function computeSyncPlan({
   scope,
   config,
   scopeRoot: explicitScopeRoot,
+  allowedRemovalCanonicalPaths,
 }: ComputeSyncPlanArgs): Promise<SyncPlan> {
   const entries: SyncPlanEntry[] = [];
   const removals: RemovalSyncPlanEntry[] = [];
   const scopeRoot = resolveScopeRoot(canonical, explicitScopeRoot);
   const seenCanonicalKeys = new Set<string>();
   const activeProviderNames = new Set<string>();
+  const removalFilter = allowedRemovalCanonicalPaths
+    ? new Set(
+        allowedRemovalCanonicalPaths.map((canonicalPath) =>
+          normalize(canonicalPath),
+        ),
+      )
+    : null;
 
   for (const adapter of adapters) {
     for (const mapping of getSyncMappings(adapter, scope)) {
@@ -373,6 +382,12 @@ export async function computeSyncPlan({
 
     const canonicalKey = `${normalize(manifestEntry.canonicalPath)}::${manifestEntry.provider}`;
     if (seenCanonicalKeys.has(canonicalKey)) {
+      continue;
+    }
+    if (
+      removalFilter &&
+      !removalFilter.has(normalize(manifestEntry.canonicalPath))
+    ) {
       continue;
     }
 

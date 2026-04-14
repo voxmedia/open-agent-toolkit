@@ -6,6 +6,7 @@ export interface AutoSyncDependencies {
     scope: ConcreteScope;
     cwd: string;
     home: string;
+    installedCanonicalPaths?: string[];
   }) => Promise<void>;
 }
 
@@ -21,6 +22,7 @@ export async function autoSync(
   home: string,
   logger: CliLogger,
   dependencies: AutoSyncDependencies,
+  options?: { installedCanonicalPaths?: string[] },
 ): Promise<AutoSyncResult> {
   if (scopes.length === 0) {
     return { synced: false, scopes: [], error: null };
@@ -28,7 +30,12 @@ export async function autoSync(
 
   try {
     for (const scope of scopes) {
-      await dependencies.runSync({ scope, cwd, home });
+      await dependencies.runSync({
+        scope,
+        cwd,
+        home,
+        installedCanonicalPaths: options?.installedCanonicalPaths,
+      });
     }
     logger.info('Auto-sync completed.');
     return { synced: true, scopes, error: null };

@@ -4,6 +4,10 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import {
+  canonicalPathsForPack,
+  setInstalledCanonicalPaths,
+} from '@commands/tools/shared/install-sync-context';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -91,6 +95,13 @@ export function createInitToolsProjectManagementCommand(
             context.logger.error(message);
           }
           process.exitCode = 1;
+        }
+
+        if (process.exitCode === 0 || process.exitCode === undefined) {
+          setInstalledCanonicalPaths(
+            command,
+            canonicalPathsForPack('project-management'),
+          );
         }
       },
     );

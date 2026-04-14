@@ -6,7 +6,7 @@ associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: { OAT_HILL_CHECKPOINTS } # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: quick # spec-driven | quick | import
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-14T00:13:00.279Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-14T00:13:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-14T00:25:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: sync-install-cross-pack-removal
 
-**Status:** Plan Complete
+**Status:** Implementation Complete
 **Started:** 2026-04-14
 **Last Updated:** 2026-04-14
 
 ## Current Phase
 
-Plan - Quick workflow discovery captured and implementation plan ready
+Implement - fix and regression coverage completed, ready for review
 
 ## Artifacts
 
@@ -36,13 +36,14 @@ Plan - Quick workflow discovery captured and implementation plan ready
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
 - ✓ Discovery completed
 - ✓ Quick plan generated
-- ⧗ Ready for implementation
+- ✓ Implementation completed
+- ⧗ Ready for review
 
 ## Blockers
 
@@ -50,4 +51,4 @@ None
 
 ## Next Milestone
 
-Implement the sync-planning fix and regression test
+Run review and prepare merge

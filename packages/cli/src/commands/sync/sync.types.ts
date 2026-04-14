@@ -104,6 +104,7 @@ export interface SyncCommandDependencies {
     scope: ConcreteScope;
     config: SyncConfig;
     scopeRoot: string;
+    allowedRemovalCanonicalPaths?: string[];
   }) => Promise<SyncPlan>;
   executeSyncPlan: (
     plan: SyncPlan,

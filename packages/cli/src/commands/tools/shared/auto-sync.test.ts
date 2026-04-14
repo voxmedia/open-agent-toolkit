@@ -88,4 +88,26 @@ describe('autoSync', () => {
       error: null,
     });
   });
+
+  it('forwards installed canonical paths to sync', async () => {
+    const synced: Array<{ scope: string; installedCanonicalPaths?: string[] }> =
+      [];
+    const deps: AutoSyncDependencies = {
+      runSync: async ({ scope, installedCanonicalPaths }) => {
+        synced.push({ scope, installedCanonicalPaths });
+      },
+    };
+    const capture = createLoggerCapture();
+
+    await autoSync(['project'], '/cwd', '/home', capture.logger, deps, {
+      installedCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
+    });
+
+    expect(synced).toEqual([
+      {
+        scope: 'project',
+        installedCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
+      },
+    ]);
+  });
 });

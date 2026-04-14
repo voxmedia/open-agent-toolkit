@@ -621,6 +621,25 @@ describe('createSyncCommand', () => {
     });
   });
 
+  it('forwards install-triggered canonical filters into computeSyncPlan', async () => {
+    const { command, computeSyncPlan } = createHarness();
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: [
+        '--dry-run',
+        '--install-canonical',
+        '.agents/skills/oat-docs-analyze',
+      ],
+    });
+
+    expect(computeSyncPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedRemovalCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
+      }),
+    );
+  });
+
   it('includes codex extension operations in dry-run JSON output', async () => {
     const { capture, command, computeCodexProjectExtensionPlan } =
       createHarness({

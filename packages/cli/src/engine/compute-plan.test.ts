@@ -182,6 +182,39 @@ describe('computeSyncPlan', () => {
     });
   });
 
+  it('skips removals for stale manifest entries outside install-triggered canonical filters', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'oat-docs-analyze'), {
+      recursive: true,
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'oat-docs-analyze')],
+      adapters: [createTestAdapter()],
+      manifest: {
+        ...createEmptyManifest(),
+        entries: [
+          {
+            canonicalPath: '.agents/skills/oat-project-new',
+            providerPath: '.claude/skills/oat-project-new',
+            provider: 'claude',
+            contentType: 'skill',
+            strategy: 'symlink',
+            contentHash: null,
+            lastSynced: new Date().toISOString(),
+          },
+        ],
+      },
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+      allowedRemovalCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
+    });
+
+    expect(plan.removals).toEqual([]);
+  });
+
   it('filters out nativeRead mappings', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
     tempDirs.push(root);

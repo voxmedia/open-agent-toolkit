@@ -22,6 +22,10 @@ import {
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
+  canonicalPathsForPacks,
+  setInstalledCanonicalPaths,
+} from '@commands/tools/shared/install-sync-context';
+import {
   type OatConfig,
   readOatConfig,
   resolveLocalPaths,
@@ -670,6 +674,10 @@ export function createInitToolsCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      await runInitTools(context, dependencies);
+      const selectedPacks = await runInitTools(context, dependencies);
+      setInstalledCanonicalPaths(
+        command,
+        canonicalPathsForPacks(selectedPacks),
+      );
     });
 }

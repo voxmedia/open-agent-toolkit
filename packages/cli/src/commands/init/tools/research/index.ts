@@ -10,6 +10,11 @@ import {
   selectManyWithAbort,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import {
+  canonicalAgentPaths,
+  canonicalSkillPaths,
+  setInstalledCanonicalPaths,
+} from '@commands/tools/shared/install-sync-context';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -18,6 +23,7 @@ import {
   installResearch as defaultInstallResearch,
   type InstallResearchOptions,
   type InstallResearchResult,
+  RESEARCH_AGENTS,
   RESEARCH_SKILLS,
 } from './install-research';
 
@@ -96,6 +102,7 @@ async function runInitToolsResearch(
   context: CommandContext,
   options: InitToolsResearchOptions,
   dependencies: InitToolsResearchDependencies,
+  command: Command,
 ): Promise<void> {
   try {
     const scope = resolveScope(context);
@@ -153,6 +160,10 @@ async function runInitToolsResearch(
       skills: selectedSkills,
       force: options.force,
     });
+    setInstalledCanonicalPaths(command, [
+      ...canonicalSkillPaths(selectedSkills),
+      ...canonicalAgentPaths(RESEARCH_AGENTS),
+    ]);
 
     reportSuccess(
       context,
@@ -189,6 +200,6 @@ export function createInitToolsResearchCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      await runInitToolsResearch(context, options, dependencies);
+      await runInitToolsResearch(context, options, dependencies, command);
     });
 }

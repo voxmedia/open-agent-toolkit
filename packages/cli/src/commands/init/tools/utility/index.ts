@@ -10,6 +10,10 @@ import {
   selectManyWithAbort,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import {
+  canonicalSkillPaths,
+  setInstalledCanonicalPaths,
+} from '@commands/tools/shared/install-sync-context';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -93,6 +97,7 @@ async function runInitToolsUtility(
   context: CommandContext,
   options: InitToolsUtilityOptions,
   dependencies: InitToolsUtilityDependencies,
+  command: Command,
 ): Promise<void> {
   try {
     const scope = resolveScope(context);
@@ -150,6 +155,7 @@ async function runInitToolsUtility(
       skills: selectedSkills,
       force: options.force,
     });
+    setInstalledCanonicalPaths(command, canonicalSkillPaths(selectedSkills));
 
     reportSuccess(
       context,
@@ -186,6 +192,6 @@ export function createInitToolsUtilityCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      await runInitToolsUtility(context, options, dependencies);
+      await runInitToolsUtility(context, options, dependencies, command);
     });
 }
