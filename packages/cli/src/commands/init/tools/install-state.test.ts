@@ -39,7 +39,12 @@ describe('resolvePackInstallLocation', () => {
 });
 
 describe('buildPackInstallStateMap', () => {
-  const packs = ['core', 'ideas', 'docs'] satisfies readonly PackName[];
+  const packs = [
+    'core',
+    'ideas',
+    'docs',
+    'research',
+  ] satisfies readonly PackName[];
 
   it('aggregates installed packs across project and user scopes', () => {
     const result = buildPackInstallStateMap(packs, [
@@ -79,5 +84,17 @@ describe('buildPackInstallStateMap', () => {
     });
     expect(result.core.location).toBe('not-installed');
     expect(result.ideas.location).toBe('not-installed');
+  });
+
+  it('treats agent-only entries as installed pack content', () => {
+    const result = buildPackInstallStateMap(packs, [
+      createTool('research', 'user', 'skeptical-evaluator.md', 'agent'),
+    ]);
+
+    expect(result.research).toEqual({
+      project: false,
+      user: true,
+      location: 'user',
+    });
   });
 });
