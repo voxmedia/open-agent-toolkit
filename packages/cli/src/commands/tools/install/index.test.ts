@@ -193,20 +193,15 @@ describe('createToolsInstallCommand', () => {
 
   it('passes installed canonical paths from the action command into auto-sync', async () => {
     const runSync = vi.fn(async () => {});
-    const command = createToolsInstallCommand(
-      { runSync },
-      {},
-      () =>
-        new Command('tools').addCommand(
-          new Command('docs').action(
-            async (_options, actionCommand: Command) => {
-              setInstalledCanonicalPaths(actionCommand, [
-                '.agents/skills/oat-docs-analyze',
-              ]);
-              process.exitCode = 0;
-            },
-          ),
-        ),
+    const command = createToolsInstallCommand({ runSync }, {}, () =>
+      new Command('tools').addCommand(
+        new Command('docs').action(async (_options, actionCommand: Command) => {
+          setInstalledCanonicalPaths(actionCommand, [
+            '.agents/skills/oat-docs-analyze',
+          ]);
+          process.exitCode = 0;
+        }),
+      ),
     );
 
     const program = new Command()

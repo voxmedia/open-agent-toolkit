@@ -22,13 +22,13 @@ import {
   selectWithAbort,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
-import { scanTools } from '@commands/tools/shared/scan-tools';
-import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
-import type { ToolInfo } from '@commands/tools/shared/types';
 import {
   canonicalPathsForPacks,
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
+import { scanTools } from '@commands/tools/shared/scan-tools';
+import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
+import type { ToolInfo } from '@commands/tools/shared/types';
 import {
   type OatConfig,
   readOatConfig,
