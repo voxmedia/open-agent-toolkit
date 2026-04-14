@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-14
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
@@ -145,19 +145,142 @@ git commit -m "test(p01-t03): cover install-triggered sync guard"
 
 ---
 
+## Phase 2: Review Fixes
+
+### Task p02-t01: (review) Add paired regression coverage for install-scoped removal filtering
+
+**Files:**
+
+- Modify: `packages/cli/src/engine/compute-plan.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: The new regression test only proves the post-fix filtered behavior. It does not show that the exact same fixture would schedule a removal when the install-scoped filter is absent.
+Location: `packages/cli/src/engine/compute-plan.test.ts:185`
+
+**Step 2: Implement fix**
+
+Add a paired assertion or parameterized test that exercises the same `manifest` + `canonical` fixture with and without `allowedRemovalCanonicalPaths`, and assert removal length `1` vs `0`.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- compute-plan.test.ts`
+Expected: The paired regression proves the pre-fix bug shape and the filtered post-fix behavior.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/engine/compute-plan.test.ts
+git commit -m "test(p02-t01): strengthen install-sync regression coverage"
+```
+
+---
+
+### Task p02-t02: (review) Fix cancel-path install filter stamping for pack-level init handlers
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/core/index.ts`
+- Modify: `packages/cli/src/commands/init/tools/ideas/index.ts`
+- Modify: `packages/cli/src/commands/init/tools/workflows/index.ts`
+- Modify: `packages/cli/src/commands/init/tools/project-management/index.ts`
+- Modify: `packages/cli/src/commands/init/tools/ideas/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Several pack-level init handlers still stamp installed canonical paths after a `--force` overwrite confirmation is declined, so auto-sync can claim a pack was installed when nothing was written.
+Location: `packages/cli/src/commands/init/tools/core/index.ts:115`, `packages/cli/src/commands/init/tools/ideas/index.ts:150`, `packages/cli/src/commands/init/tools/workflows/index.ts:144`, `packages/cli/src/commands/init/tools/project-management/index.ts:52`
+
+**Step 2: Implement fix**
+
+Mirror the docs/utility/research success-path behavior so `setInstalledCanonicalPaths(...)` only runs after a real install completes, or gate it on a returned `didInstall` boolean from the inner handler.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- ideas/index.test.ts`
+Expected: Cancelling overwrite confirmation leaves installed canonical paths empty and does not stamp a pack as installed.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/core/index.ts packages/cli/src/commands/init/tools/ideas/index.ts packages/cli/src/commands/init/tools/workflows/index.ts packages/cli/src/commands/init/tools/project-management/index.ts packages/cli/src/commands/init/tools/ideas/index.test.ts
+git commit -m "fix(p02-t02): gate install filters on successful pack init"
+```
+
+---
+
+### Task p02-t03: (review) Validate hidden install-scoped canonical paths
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/sync/index.ts`
+- Modify: `packages/cli/src/commands/sync/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: The hidden `--install-canonical` option accepts arbitrary strings, allowing unsupported values to silently narrow removals.
+Location: `packages/cli/src/commands/sync/index.ts:345`
+
+**Step 2: Implement fix**
+
+Validate `--install-canonical` entries against the canonical install path shape used by tool packs, and reject invalid values with a CLI error.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- sync/index.test.ts`
+Expected: Valid install-scoped values still pass through, and invalid values fail fast.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/sync/index.ts packages/cli/src/commands/sync/index.test.ts
+git commit -m "fix(p02-t03): validate install canonical filters"
+```
+
+---
+
+### Task p02-t04: (review) Make provider coupling explicit in compute-plan regression tests
+
+**Files:**
+
+- Modify: `packages/cli/src/engine/compute-plan.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: The regression test relies on `createTestAdapter()` defaulting to the same provider name as the manifest entry, so it could pass for the wrong reason if that default drifts.
+Location: `packages/cli/src/engine/compute-plan.test.ts:185`
+
+**Step 2: Implement fix**
+
+Use an explicit provider name in the test adapter or add an inline assertion/comment that makes the provider alignment intentional and visible in the test.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- compute-plan.test.ts`
+Expected: The regression test still passes with explicit provider alignment.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/engine/compute-plan.test.ts
+git commit -m "test(p02-t04): make provider alignment explicit"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                           |
-| ------ | -------- | -------- | ---------- | ---------------------------------- |
-| p01    | code     | pending  | -          | -                                  |
-| p02    | code     | pending  | -          | -                                  |
-| final  | code     | received | 2026-04-14 | reviews/final-review-2026-04-14.md |
-| spec   | artifact | pending  | -          | -                                  |
-| design | artifact | pending  | -          | -                                  |
+| Scope  | Type     | Status      | Date       | Artifact                                    |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------- |
+| p01    | code     | pending     | -          | -                                           |
+| p02    | code     | pending     | -          | -                                           |
+| final  | code     | fixes_added | 2026-04-14 | reviews/archived/final-review-2026-04-14.md |
+| spec   | artifact | pending     | -          | -                                           |
+| design | artifact | pending     | -          | -                                           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -175,10 +298,11 @@ git commit -m "test(p01-t03): cover install-triggered sync guard"
 **Summary:**
 
 - Phase 1: 3 tasks - reproduce the stale-manifest removal, patch the planner conservatively, and verify install-path behavior
+- Phase 2: 4 tasks - address final review gaps in regression coverage, cancel-path filter stamping, hidden option validation, and test provider coupling
 
-**Total: 3 tasks**
+**Total: 7 tasks**
 
-Ready for code review and merge.
+Review fixes queued. Resume implementation at `p02-t01`.
 
 ---
 

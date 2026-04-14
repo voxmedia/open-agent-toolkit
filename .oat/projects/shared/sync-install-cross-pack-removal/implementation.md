@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: null
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -17,8 +17,9 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | pending  | 4     | 0/4       |
 
-**Total:** 3/3 tasks completed
+**Total:** 3/7 tasks completed
 
 ---
 
@@ -109,6 +110,63 @@ oat_generated: false
 
 ---
 
+## Phase 2: Review Fixes
+
+**Status:** pending
+**Started:** 2026-04-14
+
+### Task p02-t01: (review) Add paired regression coverage for install-scoped removal filtering
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: (review) Fix cancel-path install filter stamping for pack-level init handlers
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t03: (review) Validate hidden install-scoped canonical paths
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t04: (review) Make provider coupling explicit in compute-plan regression tests
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Review Received: final
+
+**Date:** 2026-04-14
+**Review artifact:** reviews/archived/final-review-2026-04-14.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 4
+
+**New tasks added:** p02-t01, p02-t02, p02-t03, p02-t04
+
+**Deferred Findings:**
+
+- `m1` Plan commit convention drift: deferred as acceptable bookkeeping history because the combined `fix(cli):` commit is still readable and conventional.
+- `m3` `install-sync-context.ts` location/import direction: deferred because it is a non-behavioral cleanup and would add churn without changing the review target.
+
+**Explicit Final Minor Disposition:**
+
+- User chose to convert `m2` and `m4` into fix tasks and defer `m1` and `m3`.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update the review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+
 ## Implementation Log
 
 ### 2026-04-14
@@ -132,6 +190,7 @@ oat_generated: false
 **Follow-ups / TODO:**
 
 - Consider a separate stale-manifest pruning workflow if install-triggered preservation leaves too much drift behind.
+- Execute review-fix tasks p02-t01 through p02-t04 from the 2026-04-14 final re-review.
 
 **Blockers:**
 
@@ -152,6 +211,7 @@ oat_generated: false
 | Phase | Tests Run                                     | Passed | Failed | Coverage |
 | ----- | --------------------------------------------- | ------ | ------ | -------- |
 | 1     | 4 targeted suites + CLI build + release check | yes    | 0      | targeted |
+| 2     | review receipt only                           | n/a    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
