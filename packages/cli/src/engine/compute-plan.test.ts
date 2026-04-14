@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
 import { createEmptyManifest } from '@manifest/manager';
@@ -182,38 +182,52 @@ describe('computeSyncPlan', () => {
     });
   });
 
-  it('skips removals for stale manifest entries outside install-triggered canonical filters', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
-    tempDirs.push(root);
-    await mkdir(join(root, '.agents', 'skills', 'oat-docs-analyze'), {
-      recursive: true,
-    });
-
-    const plan = await computeSyncPlan({
-      canonical: [createCanonicalEntry(root, 'skill', 'oat-docs-analyze')],
-      adapters: [createTestAdapter()],
-      manifest: {
-        ...createEmptyManifest(),
-        entries: [
-          {
-            canonicalPath: '.agents/skills/oat-project-new',
-            providerPath: '.claude/skills/oat-project-new',
-            provider: 'claude',
-            contentType: 'skill',
-            strategy: 'symlink',
-            contentHash: null,
-            lastSynced: new Date().toISOString(),
-          },
-        ],
-      },
-      scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
-      scopeRoot: root,
+  it.each([
+    {
+      allowedRemovalCanonicalPaths: undefined,
+      expectedRemovals: ['.claude/skills/oat-project-new'],
+    },
+    {
       allowedRemovalCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
-    });
+      expectedRemovals: [],
+    },
+  ])(
+    'scopes stale manifest removals to install-triggered canonical filters ($allowedRemovalCanonicalPaths)',
+    async ({ allowedRemovalCanonicalPaths, expectedRemovals }) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await mkdir(join(root, '.agents', 'skills', 'oat-docs-analyze'), {
+        recursive: true,
+      });
 
-    expect(plan.removals).toEqual([]);
-  });
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'oat-docs-analyze')],
+        adapters: [createTestAdapter()],
+        manifest: {
+          ...createEmptyManifest(),
+          entries: [
+            {
+              canonicalPath: '.agents/skills/oat-project-new',
+              providerPath: '.claude/skills/oat-project-new',
+              provider: 'claude',
+              contentType: 'skill',
+              strategy: 'symlink',
+              contentHash: null,
+              lastSynced: new Date().toISOString(),
+            },
+          ],
+        },
+        scope: 'project',
+        config: DEFAULT_SYNC_CONFIG,
+        scopeRoot: root,
+        allowedRemovalCanonicalPaths,
+      });
+
+      expect(
+        plan.removals.map((entry) => relative(root, entry.providerPath)),
+      ).toEqual(expectedRemovals);
+    },
+  );
 
   it('filters out nativeRead mappings', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
