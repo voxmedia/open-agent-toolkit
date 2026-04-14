@@ -516,6 +516,27 @@ describe('createInitToolsCommand', () => {
     );
   });
 
+  it('reports final per-pack scopes instead of a coarse shared scope label', async () => {
+    const { command, capture } = createHarness({
+      interactive: true,
+      packSelection: [['core', 'ideas', 'docs'], ['ideas']],
+      toolsByScope: {
+        project: [createScannedTool('oat-docs-analyze', 'docs', 'project')],
+        user: [createScannedTool('oat-docs', 'core', 'user')],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain(
+      'Installed tool packs: core (user), ideas (user), docs (project)',
+    );
+    expect(output).not.toContain('User-eligible pack scope:');
+    expect(output).toContain('Run: oat sync --scope user');
+    expect(output).toContain('Also run: oat sync --scope project');
+  });
+
   it('migrates user-eligible packs from project to user scope by removing project canonical content', async () => {
     const { command, installIdeas, removeDirectory, removeFile } =
       createHarness({
@@ -783,9 +804,7 @@ describe('createInitToolsCommand', () => {
     const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
     expect(body).toMatch(/\*\*core\*\*.*_\(user scope\)_/);
     expect(body).toContain('`~/.agents/skills/`');
-    expect(capture.info.join('\n')).toContain(
-      'Also run: oat sync --scope user',
-    );
+    expect(capture.info.join('\n')).toContain('Run: oat sync --scope user');
   });
 
   it('does not call upsertAgentsMdSection when no packs are selected', async () => {

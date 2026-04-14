@@ -458,23 +458,28 @@ async function resolvePackScopes(
 
 function reportSuccess(
   context: CommandContext,
-  selectedPacks: ToolPack[],
-  utilityScope: InstallScope,
+  packs: PackScopeInfo[],
+  syncScopes: ConcreteScope[],
 ): void {
   if (context.json) {
     context.logger.json({
       status: 'ok',
-      selectedPacks,
-      utilityScope,
+      installedPacks: packs,
+      syncScopes,
     });
     return;
   }
 
-  context.logger.info(`Installed tool packs: ${selectedPacks.join(', ')}`);
-  context.logger.info(`User-eligible pack scope: ${utilityScope}`);
-  context.logger.info('Run: oat sync --scope project');
-  if (utilityScope === 'user') {
-    context.logger.info('Also run: oat sync --scope user');
+  context.logger.info(
+    `Installed tool packs: ${packs.map(({ pack, scope }) => `${pack} (${scope})`).join(', ')}`,
+  );
+  syncScopes.forEach((scope, index) => {
+    context.logger.info(
+      `${index === 0 ? 'Run' : 'Also run'}: oat sync --scope ${scope}`,
+    );
+  });
+  if (syncScopes.length === 0) {
+    context.logger.info('No sync needed.');
   }
 }
 
@@ -854,13 +859,11 @@ export async function runInitTools(
     }
     await dependencies.writeOatConfig(projectRoot, { ...config, tools });
 
-    const hasUserScope = selectedPacks.some(
-      (pack) => packScopes[pack] === 'user',
-    );
+    const affectedScopesList = [...affectedScopes];
     lastRunInitToolsMetadata = {
-      affectedScopes: [...affectedScopes],
+      affectedScopes: affectedScopesList,
     };
-    reportSuccess(context, selectedPacks, hasUserScope ? 'user' : 'project');
+    reportSuccess(context, packScopeInfo, affectedScopesList);
     process.exitCode = 0;
     return selectedPacks;
   } catch (error) {

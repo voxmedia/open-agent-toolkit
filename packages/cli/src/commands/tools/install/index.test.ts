@@ -154,7 +154,7 @@ function createHarness() {
     },
   );
 
-  return { command, syncScopes, installDocs };
+  return { capture, command, syncScopes, installDocs };
 }
 
 async function runCommand(
@@ -230,12 +230,15 @@ describe('createToolsInstallCommand', () => {
   });
 
   it('auto-syncs both the removed scope and target scope for pack migrations', async () => {
-    const { command, installDocs, syncScopes } = createHarness();
+    const { capture, command, installDocs, syncScopes } = createHarness();
 
     await runCommand(command, [], ['--scope', 'user']);
 
     expect(installDocs).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(capture.info.join('\n')).toContain(
+      'Installed tool packs: docs (user)',
     );
     expect(syncScopes).toEqual(['project', 'user']);
   });
