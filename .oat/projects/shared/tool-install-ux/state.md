@@ -1,13 +1,13 @@
 ---
-oat_current_task: p02-t02
-oat_last_commit: d88e12d6
+oat_current_task: null
+oat_last_commit: 99dc97ff
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: ['p02'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-13T23:54:19.127Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-14T00:42:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-14T00:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: tool-install-ux
 
-**Status:** Implementation In Progress
+**Status:** Implementation Complete
 **Started:** 2026-04-13
 **Last Updated:** 2026-04-14
 
 ## Current Phase
 
-Implementation - Phase 2 in progress; final HiLL checkpoint remains Phase 2 with auto-review enabled
+Implementation complete; final HiLL checkpoint review is now due
 
 ## Artifacts
 
@@ -46,7 +46,8 @@ Implementation - Phase 2 in progress; final HiLL checkpoint remains Phase 2 with
 - ✓ `p01-t01` complete
 - ✓ `p01-t02` complete
 - ✓ `p02-t01` complete
-- ⧗ Executing `p02-t02`
+- ✓ `p02-t02` complete
+- ⧗ Running final review checkpoint
 
 ## Blockers
 
@@ -54,4 +55,4 @@ None
 
 ## Next Milestone
 
-Complete `p02-t02`, then trigger the final Phase 2 review checkpoint
+Record the final review artifact and mark the final checkpoint complete

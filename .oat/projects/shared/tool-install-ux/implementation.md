@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p02-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | in_progress | 2     | 1/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 2     | 2/2       |
 
-**Total:** 3/4 tasks completed
+**Total:** 4/4 tasks completed
 
 ---
 
@@ -134,8 +134,38 @@ oat_generated: false
 
 ## Phase 2: Improve Interactive Install UX And Reporting
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-14
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- The interactive installer now shows live installed-state labels in both prompts, including current scope for already-installed packs and explicit `project + user` labeling for duplicated installs.
+- The success summary now reports final per-pack scope outcomes and the exact sync scopes touched by the install, replacing the old single shared-scope summary.
+- Final regression coverage now exercises prompt labels/defaults and the command-path summary output together.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/init/tools/index.ts` - prompt builders and final success reporting
+- `packages/cli/src/commands/init/tools/index.test.ts` - prompt-shape and mixed-scope summary regressions
+- `packages/cli/src/commands/tools/install/index.test.ts` - command-path summary coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: fails outside this task because unrelated suites cannot resolve `@open-agent-toolkit/control-plane`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: fails outside this task because `src/commands/project/list.ts` and `src/commands/project/status.ts` cannot resolve `@open-agent-toolkit/control-plane`
+
+**Notes / Decisions:**
+
+- Summary output reports final pack scopes plus affected sync scopes instead of trying to describe all user-eligible packs with one aggregate label.
+- Both-scope installs remain visible in the prompt label; changing that to a true three-state selection remains outside this fix.
 
 ### Task p02-t01: Show existing install location and prepopulate prompt defaults
 
@@ -166,8 +196,35 @@ oat_generated: false
 
 ### Task p02-t02: Improve post-install summary and final regression coverage
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 99dc97ff
+
+**Outcome (required when completed):**
+
+- Replaced the coarse post-install summary with per-pack final scope reporting and exact sync-scope instructions.
+- Added a mixed-scope summary regression in the init command harness and updated the `oat tools install` command-path test to assert the new output shape.
+- Re-ran the package-level verification sweep and recorded the unchanged unrelated `@open-agent-toolkit/control-plane` failures separately from the new focused regressions.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/tools/index.ts` - pack-aware success reporting and sync-scope output
+- `packages/cli/src/commands/init/tools/index.test.ts` - mixed-scope summary regression
+- `packages/cli/src/commands/tools/install/index.test.ts` - install command summary assertion
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: fails outside this task because unrelated suites cannot resolve `@open-agent-toolkit/control-plane`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: fails outside this task because `src/commands/project/list.ts` and `src/commands/project/status.ts` cannot resolve `@open-agent-toolkit/control-plane`
+
+**Notes / Decisions:**
+
+- Keep the summary aligned with actual final pack scopes rather than reporting transition arrows or migration history.
 
 ---
 
@@ -193,7 +250,7 @@ Chronological log of implementation progress.
 - [x] p01-t01: Derive pack installation state across project and user scopes - `6f551c4e`
 - [x] p01-t02: Treat scope changes as migrations for user-eligible packs - `dfe447a9`
 - [x] p02-t01: Show existing install location and prepopulate prompt defaults - `d88e12d6`
-- [ ] p02-t02: Improve post-install summary and final regression coverage - in progress
+- [x] p02-t02: Improve post-install summary and final regression coverage - `99dc97ff`
 
 **What changed (high level):**
 
@@ -212,8 +269,8 @@ Chronological log of implementation progress.
 - Validate behavior for packs currently installed in both project and user scopes
 - Decide whether final summary output should list all pack scopes or only changed ones
 - Update interactive pack labels and checked defaults to reflect current install location
-- Improve install summary output once Phase 2 reporting work starts
 - Run final checkpoint review after Phase 2 is complete
+- Record final review artifact and update checkpoint status
 
 **Blockers:**
 
@@ -235,10 +292,10 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                              | Passed  | Failed | Coverage                                                                                                        |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ | --------------------------------------------------------------------------------------------------------------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm --filter @open-agent-toolkit/cli type-check` | partial | 2      | Full-package `test` / `type-check` blocked by unrelated `@open-agent-toolkit/control-plane` resolution failures |
-| 2     | -                                                                                                                                                                                                                                                                                      | -       | -      | -                                                                                                               |
+| Phase | Tests Run                                                                                                                                                                                                                                                                              | Passed  | Failed | Coverage                                                                                                                                         |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm --filter @open-agent-toolkit/cli type-check` | partial | 2      | Full-package `test` / `type-check` blocked by unrelated `@open-agent-toolkit/control-plane` resolution failures                                  |
+| 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm --filter @open-agent-toolkit/cli type-check` | partial | 2      | Focused regressions pass; full-package `test` / `type-check` remain blocked by unrelated `@open-agent-toolkit/control-plane` resolution failures |
 
 ## Final Summary (for PR/docs)
 
@@ -247,17 +304,23 @@ Track test execution during implementation.
 - Pack install state aggregation across project and user scopes
 - Canonical scope-migration cleanup for user-eligible packs
 - Affected-scope-aware auto-sync for `oat tools install`
+- Installed-state labels and defaults in the interactive pack prompts
+- Per-pack final scope summaries and exact sync-scope reporting
 
 **Behavioral changes (user-facing):**
 
 - Reinstalling a user-eligible pack at a new scope now cleans up the old canonical copy before auto-sync runs
 - `oat tools install` now auto-syncs both scopes touched by a migration instead of only the CLI-level scope
+- The main pack picker now shows where each pack is already installed
+- The user-scope follow-up now defaults existing user installs on and labels both-scope installs explicitly
+- Post-install output now reports final scopes pack-by-pack instead of one shared scope label
 
 **Key files / modules:**
 
 - `packages/cli/src/commands/init/tools/index.ts` - interactive install flow and migration cleanup
 - `packages/cli/src/commands/tools/install/index.ts` - post-install auto-sync scope selection
 - `packages/cli/src/commands/init/tools/install-state.ts` - pack install-state derivation
+- `packages/cli/src/commands/tools/install/index.test.ts` - install wrapper regression coverage
 
 **Verification performed:**
 
