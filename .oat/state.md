@@ -1,41 +1,28 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-04-13
+oat_generated_at: 2026-04-14
 ---
 
 # OAT Repo State Dashboard
 
-**Generated:** 2026-04-13
+**Generated:** 2026-04-14
 
 ## Active Project
 
-**tool-install-ux** (`.oat/projects/shared/tool-install-ux`)
-
-## Active Project Summary
-
-| Field        | Value         |
-| ------------ | ------------- |
-| Mode         | quick         |
-| Phase        | plan          |
-| Status       | complete      |
-| HiLL Gate    | n/a           |
-| Current Task | -             |
-| Docs Updated | ⚠ not yet run |
-
-Details: `.oat/projects/shared/tool-install-ux/state.md`
+_(not set)_
 
 ## Knowledge Status
 
 | Field         | Value      |
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
-| Age           | 11 days    |
-| Files Changed | 248        |
+| Age           | 12 days    |
+| Files Changed | 284        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-implement** - Start implementation
+**oat-project-open** - Select an existing project to continue work
 
 ## Quick Commands
 
@@ -53,4 +40,3 @@ Details: `.oat/projects/shared/tool-install-ux/state.md`
 - **docs-bootstrap-skill** - discovery
 - **docs-readability-reorg** - implement
 - **remote-project-management** - discovery
-- **tool-install-ux** - plan
