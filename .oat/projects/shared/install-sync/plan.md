@@ -198,7 +198,7 @@ git commit -m "test(p02-t02): verify install sync scoping"
 | ------ | -------- | -------- | ---------- | ------------------------------------- |
 | p01    | code     | pending  | -          | -                                     |
 | p02    | code     | pending  | -          | -                                     |
-| final  | code     | received | 2026-04-14 | reviews/final-review-2026-04-14-v2.md |
+| final  | code     | received | 2026-04-14 | reviews/final-review-2026-04-14-v3.md |
 | spec   | artifact | pending  | -          | -                                     |
 | design | artifact | pending  | -          | -                                     |
 
