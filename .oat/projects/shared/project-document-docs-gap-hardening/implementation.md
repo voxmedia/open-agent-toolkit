@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p03-t02
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 5     | 1/5       |
+| Phase 3 | in_progress | 5     | 2/5       |
 
-**Total:** 5/9 tasks completed
+**Total:** 6/9 tasks completed
 
 ---
 
@@ -186,8 +186,25 @@ oat_generated: false
 
 ### Task p03-t02: (review) Add success criteria for capability coverage guarantees
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bfdbb90c
+
+**Outcome (required when completed):**
+
+- Updated the `## Success Criteria` section so it explicitly guarantees capability coverage classification and `CREATE` recommendations when no existing docs surface fits.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-document/SKILL.md` - added success criteria bullets for coverage-state classification and missing-surface `CREATE` guidance
+
+**Verification:**
+
+- Run: `sed -n '537,555p' .agents/skills/oat-project-document/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the new bullets phrased in the same vocabulary already used by the body of the skill contract so the success criteria read like a concise audit list rather than a reworded duplicate.
 
 ---
 
@@ -272,6 +289,32 @@ oat_generated: false
 
 - Finish the remaining four review-fix tasks
 - Run `pnpm release:validate` after the review fixes are complete
+
+**Blockers:**
+
+- None
+
+### 2026-04-14
+
+**Session Start:** 20:04 UTC
+
+- [x] p03-t02: (review) Add success criteria for capability coverage guarantees - `bfdbb90c`
+- [ ] p03-t03: (review) Harmonize coverage-state terminology casing - next
+
+**What changed (high level):**
+
+- Brought the skill’s success criteria into line with the new capability-coverage contract.
+
+**Decisions:**
+
+- Treated the review finding as contract-audit cleanup rather than changing any implementation behavior.
+
+**Follow-ups / TODO:**
+
+- Harmonize the coverage terminology casing
+- Resolve the unused docs-audience field
+- Add the lifecycle cross-link in docs workflows
+- Run `pnpm release:validate` after the remaining fixes land
 
 **Blockers:**
 
