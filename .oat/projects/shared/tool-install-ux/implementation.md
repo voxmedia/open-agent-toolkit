@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: prev1-t02
+oat_current_task_id: prev1-t03
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | in_progress | 3     | 1/3       |
+| Phase 3 | in_progress | 3     | 2/3       |
 
-**Total:** 5/7 tasks completed
+**Total:** 6/7 tasks completed
 
 ---
 
@@ -264,8 +264,27 @@ oat_generated: false
 
 ### Task prev1-t02: (review) Reduce duplicate install-state scans in the installer
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7eeb0b00
+
+**Outcome (required when completed):**
+
+- Removed the second project/user scan after installation and now derive the persisted `tools` config from the original install-state scan plus the selected pack set.
+- Added a regression that proves the installer only scans each scope once while still preserving already-installed unselected packs in config output.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/tools/index.ts` - single-pass installed-tool config derivation
+- `packages/cli/src/commands/init/tools/index.test.ts` - scan-count and config-persistence regression
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/install-state.test.ts src/commands/init/tools/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The config write now treats any selected pack as installed on success and preserves previously installed but unselected packs from the initial scan.
 
 ---
 
