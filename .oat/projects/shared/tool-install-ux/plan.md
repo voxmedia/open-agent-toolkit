@@ -198,13 +198,14 @@ Track reviews here after running the oat-project-review-provide and oat-project-
 
 Keep both code and artifact rows below. Add additional code rows as needed, but do not delete `spec` or `design`.
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                   |
+| ------ | -------- | -------- | ---------- | ------------------------------------------ |
+| p01    | code     | pending  | -          | -                                          |
+| p02    | code     | pending  | -          | -                                          |
+| final  | code     | pending  | -          | -                                          |
+| spec   | artifact | pending  | -          | -                                          |
+| design | artifact | pending  | -          | -                                          |
+| plan   | artifact | received | 2026-04-13 | reviews/artifact-plan-review-2026-04-13.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
