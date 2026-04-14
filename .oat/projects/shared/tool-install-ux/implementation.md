@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: prev1-t01
+oat_current_task_id: prev1-t02
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 2     | 2/2       |
 | Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | in_progress | 3     | 0/3       |
+| Phase 3 | in_progress | 3     | 1/3       |
 
-**Total:** 4/7 tasks completed
+**Total:** 5/7 tasks completed
 
 ---
 
@@ -236,8 +236,29 @@ oat_generated: false
 
 ### Task prev1-t01: (review) Preserve both-scope installs unless the user explicitly changes them
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b554221d
+
+**Outcome (required when completed):**
+
+- Changed the user-scope follow-up so packs already installed in both scopes stay checked by default and immediately branch into an explicit keep-both vs. user-only follow-up instead of silently normalizing to project.
+- When a user keeps a pack in both scopes, the installer now refreshes both canonical roots in the same run and reports the final pack location as `project + user`.
+- Tightened outdated-skill selection keys and reporting so dual-scope installs still produce unambiguous interactive update choices.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/tools/index.ts` - both-scope follow-up prompt, dual-root install handling, and final scope reporting
+- `packages/cli/src/commands/init/tools/index.test.ts` - both-scope default-submit regression, prompt expectations, and AGENTS summary coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The explicit follow-up only appears when a pack is already installed in both scopes and remains checked for user scope; unchecking still means normalize to project.
+- Outdated-skill prompts now key selections by `skill + targetRoot` so dual-root installs do not collide.
 
 ---
 
