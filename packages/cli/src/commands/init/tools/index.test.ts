@@ -15,6 +15,53 @@ interface HarnessOptions {
   interactive?: boolean;
   packSelection?: Array<string[] | null>;
   scopeSelection?: Array<'project' | 'user' | null>;
+  toolsByScope?: Partial<
+    Record<
+      'project' | 'user',
+      Array<{
+        name: string;
+        type: 'skill' | 'agent';
+        scope: 'project' | 'user';
+        version: string | null;
+        bundledVersion: string | null;
+        pack:
+          | 'core'
+          | 'ideas'
+          | 'docs'
+          | 'workflows'
+          | 'utility'
+          | 'project-management'
+          | 'research'
+          | 'custom';
+        status: 'current' | 'outdated' | 'newer' | 'not-bundled';
+      }>
+    >
+  >;
+}
+
+function createScannedTool(
+  name: string,
+  pack:
+    | 'core'
+    | 'ideas'
+    | 'docs'
+    | 'workflows'
+    | 'utility'
+    | 'project-management'
+    | 'research'
+    | 'custom',
+  scope: 'project' | 'user',
+  type: 'skill' | 'agent' = 'skill',
+) {
+  return {
+    name,
+    type,
+    scope,
+    version: '1.0.0',
+    bundledVersion: '1.0.0',
+    pack,
+    status: 'current' as const,
+  };
 }
 
 function createHarness(options: HarnessOptions = {}) {
@@ -25,6 +72,21 @@ function createHarness(options: HarnessOptions = {}) {
     ]),
   ];
   const scopeSelection = [...(options.scopeSelection ?? ['project'])];
+  const toolsByScope = options.toolsByScope ?? {
+    project: [
+      createScannedTool('oat-idea-new', 'ideas', 'project'),
+      createScannedTool('oat-docs-analyze', 'docs', 'project'),
+      createScannedTool('oat-project-new', 'workflows', 'project'),
+      createScannedTool('oat-review-provide', 'utility', 'project'),
+      createScannedTool(
+        'oat-pjm-add-backlog-item',
+        'project-management',
+        'project',
+      ),
+      createScannedTool('analyze', 'research', 'project'),
+    ],
+    user: [createScannedTool('oat-docs', 'core', 'user')],
+  };
 
   const selectManyWithAbort = vi.fn(
     async (_message: string, _choices: MultiSelectChoice<string>[]) => {
@@ -123,6 +185,10 @@ function createHarness(options: HarnessOptions = {}) {
   const resolveLocalPaths = vi.fn(
     (config: { localPaths?: string[] }) => config.localPaths ?? [],
   );
+  const scanTools = vi.fn(
+    async (scanOptions: { scope: 'project' | 'user' }) =>
+      toolsByScope[scanOptions.scope] ?? [],
+  );
   const upsertAgentsMdSection = vi.fn(async () => ({
     action: 'updated' as const,
   }));
@@ -142,6 +208,7 @@ function createHarness(options: HarnessOptions = {}) {
     resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
     resolveScopeRoot: vi.fn((_scope: 'project' | 'user', _cwd, home) => home),
     resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+    scanTools,
     selectManyWithAbort,
     selectWithAbort,
     installCore,
@@ -179,6 +246,7 @@ function createHarness(options: HarnessOptions = {}) {
     readOatConfig,
     writeOatConfig,
     resolveLocalPaths,
+    scanTools,
     upsertAgentsMdSection,
   };
 }

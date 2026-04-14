@@ -21,6 +21,9 @@ import {
   selectWithAbort,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { scanTools } from '@commands/tools/shared/scan-tools';
+import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
+import type { ToolInfo } from '@commands/tools/shared/types';
 import {
   canonicalPathsForPacks,
   setInstalledCanonicalPaths,
@@ -54,6 +57,7 @@ import {
   type InstallIdeasOptions,
   type InstallIdeasResult,
 } from './ideas/install-ideas';
+import { buildPackInstallStateMap } from './install-state';
 import { createInitToolsProjectManagementCommand } from './project-management';
 import {
   installProjectManagement as defaultInstallProjectManagement,
@@ -96,6 +100,7 @@ interface InitToolsDependencies {
   resolveProjectRoot: (cwd: string) => Promise<string>;
   resolveScopeRoot: (scope: InstallScope, cwd: string, home: string) => string;
   resolveAssetsRoot: () => Promise<string>;
+  scanTools: (options: ScanToolsOptions) => Promise<ToolInfo[]>;
   selectManyWithAbort: <T extends string>(
     message: string,
     choices: MultiSelectChoice<T>[],
@@ -170,11 +175,22 @@ const PACK_CHOICES: MultiSelectChoice<ToolPack>[] = [
   { label: 'Research [project|user]', value: 'research', checked: true },
 ];
 
+const ALL_TOOL_PACKS = [
+  'core',
+  'ideas',
+  'docs',
+  'workflows',
+  'utility',
+  'project-management',
+  'research',
+] as const satisfies readonly ToolPack[];
+
 const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveScopeRoot,
   resolveAssetsRoot,
+  scanTools,
   selectManyWithAbort,
   selectWithAbort,
   installCore: defaultInstallCore,
@@ -202,6 +218,31 @@ const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
 ]);
 
 type PackScopeMap = Record<ToolPack, InstallScope>;
+
+async function loadInstalledPackStates(
+  projectRoot: string,
+  userRoot: string,
+  assetsRoot: string,
+  dependencies: InitToolsDependencies,
+) {
+  const [projectTools, userTools] = await Promise.all([
+    dependencies.scanTools({
+      scope: 'project',
+      scopeRoot: projectRoot,
+      assetsRoot,
+    }),
+    dependencies.scanTools({
+      scope: 'user',
+      scopeRoot: userRoot,
+      assetsRoot,
+    }),
+  ]);
+
+  return buildPackInstallStateMap(ALL_TOOL_PACKS, [
+    ...projectTools,
+    ...userTools,
+  ]);
+}
 
 async function resolvePackScopes(
   context: CommandContext,
@@ -620,10 +661,16 @@ export async function runInitTools(
       );
     }
 
+    const installedPackStates = await loadInstalledPackStates(
+      projectRoot,
+      userRoot,
+      assetsRoot,
+      dependencies,
+    );
     const config = await dependencies.readOatConfig(projectRoot);
     const tools = { ...config.tools };
-    for (const pack of selectedPacks) {
-      tools[pack] = true;
+    for (const pack of ALL_TOOL_PACKS) {
+      tools[pack] = installedPackStates[pack].location !== 'not-installed';
     }
     await dependencies.writeOatConfig(projectRoot, { ...config, tools });
 
