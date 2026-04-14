@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,23 +26,25 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 1/2       |
-| Phase 2 | pending     | 2     | 0/2       |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | in_progress | 2     | 0/2       |
 
-**Total:** 1/4 tasks completed
+**Total:** 2/4 tasks completed
 
 ---
 
 ## Phase 1: Detect Pack Location And Enforce Scope Changes
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- To be filled during implementation
+- Added migration cleanup for user-eligible packs so reinstalling a pack at the opposite scope removes stale canonical content from the old scope before the new install runs.
+- Propagated the actual affected scope set into `oat tools install` auto-sync, so scope migrations sync both the cleaned-up scope and the destination scope instead of only the CLI-level scope.
+- Added focused regressions covering project-to-user migrations, both-to-project normalization, and the `tools install` post-action hook.
 
 **Key files touched:**
 
@@ -52,12 +54,19 @@ oat_generated: false
 
 **Verification:**
 
-- Run: `pnpm test packages/cli/src/commands/init/tools/index.test.ts packages/cli/src/commands/tools/install/index.test.ts`
-- Result: pending
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: fails outside this task because unrelated suites cannot resolve `@open-agent-toolkit/control-plane`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: fails outside this task because `src/commands/project/list.ts` and `src/commands/project/status.ts` cannot resolve `@open-agent-toolkit/control-plane`
 
 **Notes / Decisions:**
 
-- Treat scope changes as migrations unless implementation exposes a blocker.
+- Scope migration cleanup is limited to user-eligible packs; project-only packs remain project-scoped and are never moved.
+- Research migration cleanup removes both skills and bundled agents because user-scope agents are not surfaced by the canonical scan.
 
 ### Task p01-t01: Derive pack installation state across project and user scopes
 
@@ -90,10 +99,34 @@ oat_generated: false
 
 ### Task p01-t02: Treat scope changes as migrations for user-eligible packs
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** dfe447a9
 
-**Notes:**
+**Outcome (required when completed):**
+
+- Added scope-migration cleanup for user-eligible packs so reinstalling a pack at a new scope removes the old canonical copy before the new install runs.
+- Recorded affected scopes during installs and passed that metadata into `oat tools install` post-action auto-sync so migrations sync both sides.
+- Added regressions for ideas and research migrations plus a command-level test proving the wrapper syncs the removed scope and target scope.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/tools/index.ts` - scope-migration cleanup, affected-scope tracking, and install metadata handoff
+- `packages/cli/src/commands/init/tools/index.test.ts` - migration regressions for user-eligible packs and research agent cleanup
+- `packages/cli/src/commands/tools/install/index.ts` - consume install metadata for targeted post-install auto-sync
+- `packages/cli/src/commands/tools/install/index.test.ts` - wrapper-level affected-scope sync coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: fails outside this task because unrelated suites cannot resolve `@open-agent-toolkit/control-plane`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: fails outside this task because `src/commands/project/list.ts` and `src/commands/project/status.ts` cannot resolve `@open-agent-toolkit/control-plane`
+
+**Notes / Decisions:**
 
 - Keep project-only packs (`workflows`, `project-management`) out of migration logic.
 
@@ -101,7 +134,7 @@ oat_generated: false
 
 ## Phase 2: Improve Interactive Install UX And Reporting
 
-**Status:** pending
+**Status:** in_progress
 **Started:** -
 
 ### Task p02-t01: Show existing install location and prepopulate prompt defaults
@@ -138,7 +171,8 @@ Chronological log of implementation progress.
 **Session Start:** 23:54 UTC
 
 - [x] p01-t01: Derive pack installation state across project and user scopes - `6f551c4e`
-- [ ] p01-t02: Treat scope changes as migrations for user-eligible packs - in progress
+- [x] p01-t02: Treat scope changes as migrations for user-eligible packs - `dfe447a9`
+- [ ] p02-t01: Show existing install location and prepopulate prompt defaults - in progress
 
 **What changed (high level):**
 
@@ -156,7 +190,8 @@ Chronological log of implementation progress.
 
 - Validate behavior for packs currently installed in both project and user scopes
 - Decide whether final summary output should list all pack scopes or only changed ones
-- Implement actual canonical cleanup and affected-scope sync behavior in `p01-t02`
+- Update interactive pack labels and checked defaults to reflect current install location
+- Improve install summary output once Phase 2 reporting work starts
 
 **Blockers:**
 
@@ -178,29 +213,35 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                                                                                                                                                                                                              | Passed  | Failed | Coverage                                                                                                        |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ | --------------------------------------------------------------------------------------------------------------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm --filter @open-agent-toolkit/cli type-check` | partial | 2      | Full-package `test` / `type-check` blocked by unrelated `@open-agent-toolkit/control-plane` resolution failures |
+| 2     | -                                                                                                                                                                                                                                                                                      | -       | -      | -                                                                                                               |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Planning artifacts only; implementation not started
+- Pack install state aggregation across project and user scopes
+- Canonical scope-migration cleanup for user-eligible packs
+- Affected-scope-aware auto-sync for `oat tools install`
 
 **Behavioral changes (user-facing):**
 
-- None yet
+- Reinstalling a user-eligible pack at a new scope now cleans up the old canonical copy before auto-sync runs
+- `oat tools install` now auto-syncs both scopes touched by a migration instead of only the CLI-level scope
 
 **Key files / modules:**
 
-- `plan.md` - execution plan
-- `discovery.md` - scope, assumptions, and risks
+- `packages/cli/src/commands/init/tools/index.ts` - interactive install flow and migration cleanup
+- `packages/cli/src/commands/tools/install/index.ts` - post-install auto-sync scope selection
+- `packages/cli/src/commands/init/tools/install-state.ts` - pack install-state derivation
 
 **Verification performed:**
 
-- None yet
+- Focused Vitest coverage for install flow and wrapper hook
+- Package lint pass
+- Package `test` / `type-check` attempted and blocked by unrelated `@open-agent-toolkit/control-plane` resolution errors
 
 **Design deltas (if any):**
 
