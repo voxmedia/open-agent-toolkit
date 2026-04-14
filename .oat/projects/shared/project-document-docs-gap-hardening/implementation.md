@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p03-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 5     | 4/5       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 5     | 5/5       |
 
-**Total:** 8/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -153,8 +153,34 @@ oat_generated: false
 
 ## Phase 3: Review Fixes
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-14
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Closed the final review feedback with targeted fixes for release policy compliance, contract clarity, and docs discoverability.
+- Left the project in an explicit awaiting-re-review posture rather than implying the review had already passed.
+
+**Key files touched:**
+
+- `packages/cli/package.json` - lockstep version bump
+- `packages/control-plane/package.json` - lockstep version bump
+- `packages/docs-config/package.json` - lockstep version bump
+- `packages/docs-theme/package.json` - lockstep version bump
+- `packages/docs-transforms/package.json` - lockstep version bump
+- `.agents/skills/oat-project-document/SKILL.md` - review-driven contract fixes
+- `apps/oat-docs/docs/docs-tooling/workflows.md` - lifecycle cross-link
+
+**Verification:**
+
+- Run: `rg -n '"version"' packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the review fixes tightly scoped to the received findings and tracked the review row as `fixes_completed` instead of `passed`.
 
 ### Task p03-t01: (review) Bump lockstep public package versions
 
@@ -258,8 +284,25 @@ oat_generated: false
 
 ### Task p03-t05: (review) Add lifecycle cross-link in docs workflows page
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 554e968a
+
+**Outcome (required when completed):**
+
+- Added a direct lifecycle pointer from the docs-workflows page so readers can see where `oat-project-document` runs in the tracked project flow.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/docs-tooling/workflows.md` - added the post-implementation lifecycle cross-link
+
+**Verification:**
+
+- Run: `rg -n "project lifecycle|post-implementation flow" apps/oat-docs/docs/docs-tooling/workflows.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Kept the link inline with the existing bullet so the discoverability fix stays lightweight.
 
 ---
 
@@ -429,12 +472,12 @@ oat_generated: false
 
 - User chose to convert all minor findings to tasks during final review receive.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
+**Next:** Request re-review now that all review-fix tasks are complete.
 
-After the fix tasks are complete:
+After the re-review runs:
 
-- Update the review row status to `fixes_completed`
-- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+- If the final review passes, proceed to final verification/PR flow
+- If new findings are raised, route them back through `oat-project-review-receive`
 
 ---
 
@@ -474,6 +517,7 @@ After the fix tasks are complete:
 
 - `git diff --check -- .agents/skills/oat-project-document/SKILL.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/docs-tooling/workflows.md .oat/projects/shared/project-document-docs-gap-hardening`
 - `git diff --stat -- .agents/skills/oat-project-document/SKILL.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/docs-tooling/workflows.md`
+- `rg -n '"version"' packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json`
 
 **Design deltas (if any):**
 
