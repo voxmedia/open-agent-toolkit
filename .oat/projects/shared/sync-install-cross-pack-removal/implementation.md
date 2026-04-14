@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p02-t02
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -17,9 +17,9 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 1/4       |
+| Phase 2 | in_progress | 4     | 2/4       |
 
-**Total:** 4/7 tasks completed
+**Total:** 5/7 tasks completed
 
 ---
 
@@ -141,8 +141,31 @@ oat_generated: false
 
 ### Task p02-t02: (review) Fix cancel-path install filter stamping for pack-level init handlers
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bc74b077
+
+**Outcome:**
+
+- Pack-level init handlers now record install-scoped canonical paths only when a real install completes.
+- Cancelled overwrite confirmations no longer stamp a pack as installed for the follow-up sync.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/tools/core/index.ts` - gated core pack canonical stamping on successful install completion
+- `packages/cli/src/commands/init/tools/ideas/index.ts` - returned install success state so cancelled force confirmations skip canonical stamping
+- `packages/cli/src/commands/init/tools/workflows/index.ts` - returned install success state so cancelled force confirmations skip canonical stamping
+- `packages/cli/src/commands/init/tools/project-management/index.ts` - tracked successful install completion before stamping canonical paths
+- `packages/cli/src/commands/init/tools/ideas/index.test.ts` - asserted cancelled overwrite confirmation leaves installed canonical paths empty
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- ideas/index.test.ts workflows/index.test.ts core/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- I kept the change local to the pack handlers instead of changing the shared install-sync context API.
+- The focused negative-path test lives in `ideas/index.test.ts`, matching the review recommendation, while the touched workflow and core command tests remained green.
 
 ### Task p02-t03: (review) Validate hidden install-scoped canonical paths
 
