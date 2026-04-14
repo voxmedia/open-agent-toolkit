@@ -21,7 +21,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Retroactively capture existing work: `oat-project-capture`
 - Run or receive reviews: `oat-project-review-provide`, `oat-project-review-receive`, or the non-project review variants
 - Manage the repo backlog and reference docs: `oat-pjm-add-backlog-item`, `oat-pjm-update-repo-reference`, `oat-pjm-review-backlog`
-- Work on docs surfaces: `oat-docs-analyze`, `oat-docs-apply`, and `oat-project-document`
+- Work on docs surfaces: `oat-docs-bootstrap` (guided bootstrap of a new docs app), `oat-docs-analyze`, `oat-docs-apply`, and `oat-project-document`
 - Generate a shipping digest or scheduled recap: `oat-wrap-up`
 - Research a topic in depth: `deep-research`
 - Analyze an artifact, codebase, or document: `analyze`
@@ -75,6 +75,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 
 === "Docs and instructions"
 
+    - `oat-docs-bootstrap`
     - `oat-docs-analyze`
     - `oat-docs-apply`
     - `oat-agent-instructions-analyze`

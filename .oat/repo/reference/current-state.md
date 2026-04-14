@@ -95,8 +95,9 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - This closes the primary cause of cross-agent state drift: when a subagent ran a receive skill in isolation, it used to leave project tracking files dirty for the original agent to discover on return. The required commit is scoped (no `git add -A`) and worktree-aware.
 - `oat-project-implement` bookkeeping commits carry CRITICAL / DO NOT SKIP callouts across all four required commit points (per-task, review-fix completion, phase boundary, implementation complete).
 
-### Documentation Analysis (Utility)
+### Documentation Analysis & Bootstrap (Utility)
 
+- `oat-docs-bootstrap` (guided docs-app onramp wrapping `oat docs init`: preflight detection, input gathering with distinct site/app names, capability-gated post-patches for FP-11/12/13/15/16/17 gaps, build verification, config inspection, and a seven-section educational walkthrough)
 - `oat-docs-analyze` (evaluate documentation structure, navigation, and coverage against the OAT docs app contract; severity-rated analysis artifacts)
 - `oat-docs-apply` (apply approved docs analysis findings: branch, update docs, optionally open PR)
 

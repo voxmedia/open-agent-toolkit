@@ -30,6 +30,8 @@ and **MkDocs Material**.
 
 Use `oat docs init` to scaffold a docs app that follows the OAT docs contract.
 
+> **Consider the `oat-docs-bootstrap` skill instead.** The skill wraps `oat docs init` with preflight detection, richer input gathering (site name distinct from package name), capability-gated post-patches that close open CLI gaps (site-title metadata, Turbopack root, template-content fixes, docs-app `AGENTS.md` bridge, `## Contents` link extensions, `contributing.md` three-surfaces cleanup), build verification, config inspection, and a seven-section educational walkthrough. See [Add Docs to a Repo §3a](add-docs-to-a-repo.md#3a-preferred-the-oat-docs-bootstrap-skill-guided) for the full flow. The CLI documented here remains the authoritative surface for flags and is the right choice when you need a deterministic, non-interactive scaffold (CI, automation).
+
 Key behavior:
 
 - prompts for framework choice (Fumadocs or MkDocs) in interactive mode

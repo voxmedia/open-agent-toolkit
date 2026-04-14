@@ -52,6 +52,36 @@ quickstart, the docs pair is the part you need immediately.
 
 ## 3. Scaffold the docs app
 
+Two paths — pick one:
+
+### 3a. Preferred: the `oat-docs-bootstrap` skill (guided)
+
+```text
+/oat-docs-bootstrap
+```
+
+The docs-bootstrap skill wraps `oat docs init` with a seven-step guided flow: preflight detection (repo shape + existing-setup conflict surfacing), richer input gathering (including a site name distinct from the package name), the CLI invocation itself, labeled post-patches for open CLI gaps, install + build verification, post-scaffold config inspection, and a chunked educational walkthrough.
+
+What the skill adds over the raw CLI:
+
+- **Preflight + conflict resolution.** Detects existing `documentation` config / docs app dir / root `AGENTS.md` section and walks a deliberate resolution choice (replace, abort, repair, or deferred second-app) before any mutation.
+- **Richer inputs.** Asks for a **site name** separate from the package name, so `createDocsConfig()` / layout branding / page metadata all converge on the same display title.
+- **Post-scaffold patches for open CLI gaps.** Applied only when capability detection shows the CLI hasn't closed the gap. Each patch is labeled (e.g., `<!-- FP-12 patch -->`) so it can be removed deterministically when the upstream fix lands:
+  - **FP-11** — Turbopack `root` for nested-standalone Fumadocs apps (suppresses the multiple-lockfile warning)
+  - **FP-12** — `export const metadata = { title, description }` in `app/layout.tsx` (the only thing that populates page `<title>`, meta description, and Open Graph — `DocsLayout.branding.title` only renders nav chrome, and `createDocsConfig()` ignores `title` / `description` entirely)
+  - **FP-13** — five scaffold-content fixes (empty per-page `description:` frontmatter, bare install/build commands missing `--filter` or `cd`-prefix for monorepo/nested shapes, false `docs:lint` claim when `lint=none`, missing "do not hand-edit" header on generated `index.md`, Node version line that doesn't match the consuming repo's `.nvmrc` / `engines.node`)
+  - **FP-15** — writes a task-framed `<appRoot>/AGENTS.md` bridge file when the CLI hasn't scaffolded one. The bridge is the docs app's runtime agent reference (separate audience from `docs/contributing.md`)
+  - **FP-16** — rewrites `docs/index.md` `## Contents` links to the `.md`-suffixed form that `@open-agent-toolkit/docs-transforms` normalizes at build time (agent-friendlier than extension-less; routes correctly)
+  - **FP-17** — trims `docs/contributing.md`'s "Agent guidance" section to a one-line pointer at the docs-app `AGENTS.md`, restoring the three-surfaces separation
+- **Build verification.** Runs install + build, classifies failures against known patterns, stops on unknown errors rather than guessing.
+- **Config inspection.** Reads `.oat/config.json` back, verifies paths exist on disk, handles the nested-standalone dual-config case, and collects the `requireForProjectCompletion` opt-in explicitly.
+- **Educational walkthrough.** Seven sections covering the `documentation` config, the two-`index.md` model, the `## Contents` contract (with extension discipline), the three agent-instruction surfaces (root `AGENTS.md` pointer / docs-app `AGENTS.md` / `docs/contributing.md`), Fumadocs internals (or MkDocs Minimum Contract), and the OAT docs ecosystem (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`).
+- **Optional content kickoff.** Hands off to `oat-docs-analyze` + `oat-docs-apply` if you want to populate initial repo-specific content immediately.
+
+Capability-gated: every post-patch self-ratchets off as CLI fixes land upstream. The skill's labeled markers (`<!-- FP-NN patch -->`) are how you find them later when the CLI catches up.
+
+### 3b. Direct CLI (deterministic / non-interactive)
+
 ```bash
 oat docs init --app-name my-docs
 ```
@@ -75,6 +105,8 @@ oat docs init --app-name my-docs --framework fumadocs --yes
 # MkDocs (non-interactive)
 oat docs init --app-name my-docs --framework mkdocs --yes
 ```
+
+Use 3b when you want a fully headless scaffold (CI, automation) and can accept the raw CLI output without the guided post-patches.
 
 ## 3a. Migrating from MkDocs (optional)
 

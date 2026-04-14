@@ -23,6 +23,10 @@ Install the workflow skills with `oat tools install docs` (preferred) or
 
 ### Skills
 
+- `oat-docs-bootstrap` is the guided onramp for adding a docs app to a repo —
+  wraps `oat docs init` with preflight detection, richer input gathering (site
+  name distinct from package name), labeled post-patches for open CLI gaps,
+  build verification, config inspection, and an educational walkthrough
 - `oat-docs-analyze` evaluates a docs surface for structure, drift, coverage,
   contributor guidance, and docs-app contract issues
 - `oat-docs-apply` consumes the analysis artifact and applies only approved,
@@ -45,7 +49,7 @@ skills.
 
 ## Typical flow
 
-1. Bootstrap a docs app with `oat docs init` (choose Fumadocs or MkDocs)
+1. Bootstrap a docs app with `oat-docs-bootstrap` (preferred — guided, includes post-scaffold patches and walkthrough) or `oat docs init` directly (CLI-only / non-interactive workflows)
 2. (Optional) If migrating from MkDocs: `oat docs migrate --docs-dir docs --config mkdocs.yml --apply`
 3. Author docs so every directory has an `index.md` with a `## Contents` section
 4. Keep local `## Contents` sections current

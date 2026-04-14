@@ -146,5 +146,6 @@ Projects live in `.oat/projects/<scope>/<project>/` with:
 
 ### Docs Pack Workflows
 
+- `oat-docs-bootstrap` - Guide users through bootstrapping a docs app end-to-end: preflight, input gathering, scaffold (via `oat docs init`) with capability-gated post-patches, build verification, config inspection, and educational walkthrough.
 - `oat-docs-analyze` - Analyze a docs surface for `index.md` contract coverage, nav drift, and docs app readiness.
 - `oat-docs-apply` - Apply approved docs-analysis recommendations with branch, nav-sync, and PR workflow support.
