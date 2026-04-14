@@ -104,7 +104,7 @@ export interface SyncCommandDependencies {
     scope: ConcreteScope;
     config: SyncConfig;
     scopeRoot: string;
-    allowedRemovalCanonicalPaths?: string[];
+    allowedCanonicalPaths?: string[];
   }) => Promise<SyncPlan>;
   executeSyncPlan: (
     plan: SyncPlan,
@@ -114,6 +114,7 @@ export interface SyncCommandDependencies {
   computeCodexProjectExtensionPlan: (
     scopeRoot: string,
     canonicalEntries: CanonicalEntry[],
+    allowedCanonicalPaths?: string[],
   ) => Promise<CodexExtensionPlan>;
   toCodexExtensionOperations: (
     plan: CodexExtensionPlan,

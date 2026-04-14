@@ -271,6 +271,7 @@ async function computePlans(
       codexExtensionPlan = await dependencies.computeCodexProjectExtensionPlan(
         scopeRoot,
         canonical,
+        allowedCanonicalPaths,
       );
       codexExtension = {
         operations: dependencies.toCodexExtensionOperations(codexExtensionPlan),
@@ -334,12 +335,12 @@ function logNonInteractiveMismatchGuidance(
 async function runSyncCommand(
   context: CommandContext,
   dependencies: SyncCommandDependencies,
-  allowedRemovalCanonicalPaths?: string[],
+  allowedCanonicalPaths?: string[],
 ): Promise<void> {
   const scopePlans = await computePlans(
     context,
     dependencies,
-    allowedRemovalCanonicalPaths,
+    allowedCanonicalPaths,
   );
   logNonInteractiveMismatchGuidance(context, scopePlans);
 

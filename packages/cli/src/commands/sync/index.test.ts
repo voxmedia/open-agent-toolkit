@@ -708,6 +708,49 @@ describe('createSyncCommand', () => {
     });
   });
 
+  it('forwards install-triggered canonical filters into codex extension planning', async () => {
+    const { command, computeCodexProjectExtensionPlan } = createHarness({
+      adapters: [createCodexAdapter()],
+      canonicalEntries: [
+        {
+          name: 'oat-docs-analyze',
+          type: 'skill',
+          canonicalPath: '/tmp/workspace/.agents/skills/oat-docs-analyze',
+          isFile: false,
+        },
+        {
+          name: 'skeptical-evaluator.md',
+          type: 'agent',
+          canonicalPath: '/tmp/workspace/.agents/agents/skeptical-evaluator.md',
+          isFile: true,
+        },
+      ],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [createCodexAdapter()],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: [
+        '--dry-run',
+        '--install-canonical',
+        '.agents/skills/oat-docs-analyze',
+      ],
+    });
+
+    expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      expect.any(Array),
+      ['.agents/skills/oat-docs-analyze'],
+    );
+  });
+
   it('applies codex extension plan during apply (default) when codex operations are pending', async () => {
     const {
       command,

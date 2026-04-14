@@ -75,4 +75,49 @@ describe('codex sync extension', () => {
       true,
     );
   });
+
+  it('does not remove unrelated managed roles during partial install-triggered sync', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalFile = join(canonicalDir, 'skeptical-evaluator.md');
+    await writeFile(
+      canonicalFile,
+      canonicalAgentFileContent('skeptical-evaluator'),
+    );
+
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'agents', 'skeptical-evaluator.toml'),
+      '# OAT managed role: skeptical-evaluator\ndeveloper_instructions = "review"\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents.skeptical-evaluator]\ndescription = "skeptical-evaluator description"\nconfig_file = "agents/skeptical-evaluator.toml"\n\n[features]\nmulti_agent = true\n',
+      'utf8',
+    );
+
+    const partialPlan = await computeCodexProjectExtensionPlan(
+      root,
+      [
+        {
+          name: 'skeptical-evaluator.md',
+          type: 'agent',
+          canonicalPath: canonicalFile,
+          isFile: true,
+        },
+      ],
+      ['.agents/skills/oat-docs-analyze'],
+    );
+
+    expect(partialPlan.operations.some((op) => op.action === 'remove')).toBe(
+      false,
+    );
+    expect(
+      partialPlan.operations.find((op) => op.target === 'config')?.action,
+    ).toBe('skip');
+  });
 });

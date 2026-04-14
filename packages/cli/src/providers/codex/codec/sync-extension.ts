@@ -58,6 +58,23 @@ function toRelativePath(scopeRoot: string, absolutePath: string): string {
   return relative(scopeRoot, absolutePath).replaceAll('\\', '/');
 }
 
+function canonicalPathAllowed(
+  scopeRoot: string,
+  canonicalEntry: CanonicalEntry,
+  allowedCanonicalPaths?: string[],
+): boolean {
+  if (!allowedCanonicalPaths?.length) {
+    return true;
+  }
+
+  const allowedSet = new Set(allowedCanonicalPaths);
+  const relativeCanonicalPath = toRelativePath(
+    scopeRoot,
+    canonicalEntry.canonicalPath,
+  );
+  return allowedSet.has(relativeCanonicalPath);
+}
+
 async function readOptionalFile(path: string): Promise<string | null> {
   if (!(await fileExists(path))) {
     return null;
@@ -174,19 +191,25 @@ async function collectStaleManagedRoles(
 export async function computeCodexProjectExtensionPlan(
   scopeRoot: string,
   canonicalEntries: CanonicalEntry[],
+  allowedCanonicalPaths?: string[],
 ): Promise<CodexExtensionPlan> {
   const desiredRoles = await desiredRolesFromCanonical(
-    canonicalEntries,
+    canonicalEntries.filter((entry) =>
+      canonicalPathAllowed(scopeRoot, entry, allowedCanonicalPaths),
+    ),
     scopeRoot,
   );
   const desiredRoleNames = new Set(desiredRoles.map((role) => role.roleName));
   const existingConfigPath = configPath(scopeRoot);
   const existingConfigContent = await readOptionalFile(existingConfigPath);
-  const staleRoles = await collectStaleManagedRoles(
-    scopeRoot,
-    existingConfigContent,
-    desiredRoleNames,
-  );
+  const staleRoles =
+    allowedCanonicalPaths && allowedCanonicalPaths.length > 0
+      ? []
+      : await collectStaleManagedRoles(
+          scopeRoot,
+          existingConfigContent,
+          desiredRoleNames,
+        );
 
   const operations: CodexExtensionWriteOperation[] = [];
 
