@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p02-t03
+oat_current_task_id: p02-t04
 oat_generated: false
 ---
 
@@ -17,9 +17,9 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 2/4       |
+| Phase 2 | in_progress | 4     | 3/4       |
 
-**Total:** 5/7 tasks completed
+**Total:** 6/7 tasks completed
 
 ---
 
@@ -169,8 +169,28 @@ oat_generated: false
 
 ### Task p02-t03: (review) Validate hidden install-scoped canonical paths
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** be8b904f
+
+**Outcome:**
+
+- Added validation for the hidden `--install-canonical` sync option so only canonical `.agents/...` paths are accepted.
+- Invalid values now fail before sync planning runs, which prevents unsupported manual narrowing of removals.
+
+**Files changed:**
+
+- `packages/cli/src/commands/sync/index.ts` - validated hidden install-scoped canonical paths and raised a CLI error for malformed values
+- `packages/cli/src/commands/sync/index.test.ts` - covered both valid forwarding and invalid-path rejection
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- sync/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- I validated in the command action instead of the Commander arg parser so the failure stays an explicit CLI error path.
+- The accepted path shape covers `.agents/skills/*`, `.agents/agents/*`, and `.agents/rules/*`, matching the internal canonical namespaces used by sync.
 
 ### Task p02-t04: (review) Make provider coupling explicit in compute-plan regression tests
 
