@@ -1,6 +1,6 @@
 ---
 name: oat-docs
-version: 1.0.0
+version: 1.0.1
 description: Use when a user asks questions about OAT workflows, CLI commands, skill authoring, configuration, or project lifecycle. Answers questions by reading locally-bundled OAT documentation.
 argument-hint: '[question]'
 disable-model-invocation: false
@@ -161,13 +161,15 @@ Would you like me to:
 To create a new OAT project, you have two main approaches:
 
 1. **Quick mode** (recommended for most tasks):
-   oat-project-quick-start <project-name>
+   oat-project-quick-start <project-name> "project description"
 
 2. **Spec-driven mode** (for complex features):
    oat-project-new <project-name>
 
 Quick mode goes straight from discovery to plan. Spec-driven mode adds
-formal spec and design phases.
+formal spec and design phases. If you invoke quick mode with only a
+project name, it should ask you for the missing project description
+before discovery starts.
 
 Both create a project directory under your projects root
 (default: .oat/projects/shared/<project-name>/) with standard artifacts:

@@ -162,6 +162,25 @@ function validateQuickStartSemantics(
         'Quick-start must limit follow-up questions to the minimum needed to remove blockers',
     });
   }
+
+  if (
+    !(
+      /(project description|project brief)/i.test(content) &&
+      /(project name alone|bare .*project-name|only a bare .*project-name)/i.test(
+        content,
+      ) &&
+      /(ask the user|ask for)/i.test(content) &&
+      /(do not infer requirements from the project name alone|not enough context to start discovery)/i.test(
+        content,
+      )
+    )
+  ) {
+    findings.push({
+      file: skillPath,
+      message:
+        'Quick-start must treat a bare project name as insufficient input, ask for a project description, and avoid inferring scope from the repo',
+    });
+  }
 }
 
 async function listChangedSkillFiles(

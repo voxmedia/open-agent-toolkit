@@ -104,7 +104,7 @@ When `autoReviewAtCheckpoints` is enabled (via `.oat/config.json` or `plan.md` f
 
 ### Quick lane diagram
 
-1. `oat-project-quick-start` (adaptive discovery — well-understood requests synthesize quickly, exploratory requests invest in solution space exploration)
+1. `oat-project-quick-start` (adaptive discovery — provide a project name and optional description; if only the name is provided, quick-start asks for the missing description before discovery. Well-understood requests synthesize quickly, exploratory requests invest in solution space exploration)
 2. Decision point: straight to plan, optional lightweight `design.md`, or promote to spec-driven
 3. Implement:
    - `oat-project-implement` (sequential)

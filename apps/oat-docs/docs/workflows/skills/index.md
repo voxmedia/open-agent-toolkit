@@ -14,7 +14,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 
 ## Key Skills by Use Case
 
-- Start a new tracked project: `oat-project-new` or `oat-project-quick-start`
+- Start a new tracked project: `oat-project-new` or `oat-project-quick-start` (quick start accepts a project name plus optional description; if you omit the description it should ask before discovery begins)
 - Resume an existing project: `oat-project-open` and `oat-project-progress`
 - Execute a ready plan: `oat-project-implement`
 - Import an existing plan: `oat-project-import-plan`

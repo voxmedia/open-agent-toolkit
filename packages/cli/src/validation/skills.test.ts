@@ -634,7 +634,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.3');
   });
 
   it('reports missing quick-start-specific discovery guidance', async () => {
@@ -681,6 +681,11 @@ describe('validateOatSkills', () => {
         message:
           'Quick-start must limit follow-up questions to the minimum needed to remove blockers',
       }),
+      expect.objectContaining({
+        file: skillPath,
+        message:
+          'Quick-start must treat a bare project name as insufficient input, ask for a project description, and avoid inferring scope from the repo',
+      }),
     ]);
   });
 
@@ -711,6 +716,9 @@ describe('validateOatSkills', () => {
         'Populate `discovery.md` from the current session context when enough detail already exists.',
         'Only ask the minimum follow-up questions required to unblock planning.',
         'If startup Q&A is needed, record that discussion and the resulting decisions back into discovery.md before finalizing plan.md.',
+        'A bare project name alone is not enough context to start discovery.',
+        'Ask the user for a short project description when only the project name was provided.',
+        'Do not infer requirements from the repo before that description is available.',
       ].join('\n'),
     );
 

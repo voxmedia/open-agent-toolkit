@@ -1,8 +1,8 @@
 ---
 name: oat-project-quick-start
-version: 1.3.1
+version: 1.3.3
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
-argument-hint: '<project-name>'
+argument-hint: '<project-name> ["project description"]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -83,7 +83,11 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 If no valid active project exists:
 
-- Read `{project-name}` from `$ARGUMENTS`, or ask user.
+- Resolve startup input from `$ARGUMENTS` before doing any discovery work:
+  - Accept `{project-name}` plus an optional `{project-description}`.
+  - If `$ARGUMENTS` contains only a bare `{project-name}` (for example a slug or short title) without a substantive description, ask the user for a short project description before scanning the repo or drafting discovery.
+  - Do not infer requirements from the project name alone or go exploring the codebase to guess what the project means.
+  - If neither field is available, ask for both the project name and a short project description. One or two sentences is enough for the description.
 - Create project via the same scaffolding path used by `oat-project-new`:
 
 ```bash
@@ -115,6 +119,8 @@ If `"$PROJECT_PATH/discovery.md"` is missing, create it from `.oat/templates/dis
 #### 2a: Assess Request Ambiguity
 
 Before asking questions, classify the request:
+
+- Base this classification on the user's project description plus session context. A bare project name by itself is not enough context to start discovery.
 
 - **Well-understood** — the user has a clear mental model, requirements are specific, approach is obvious. Examples: "add a CLI flag for verbose output", "rename X to Y across the codebase."
   → Synthesize `discovery.md` from available session context quickly when enough detail is already available. Ask only the minimum additional questions needed to remove blockers for a quality plan.
