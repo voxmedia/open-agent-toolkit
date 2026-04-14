@@ -26,6 +26,8 @@ Tracks managed mappings so the CLI can:
 - avoid deleting unmanaged provider content
 - execute scoped removals only for managed entries
 
+Install-triggered auto-sync narrows that removal scope further: after `oat tools install <pack>`, the follow-up sync only plans removals for canonical entries from the installed pack. This protects unrelated provider views if the current worktree has stale manifest entries for other packs whose canonical assets are missing locally.
+
 For transformed mappings such as project-scoped rules, the manifest stores hashes for the rendered provider output that was actually written, not the canonical source markdown. This keeps drift detection aligned with the on-disk managed file.
 
 ## Drift states

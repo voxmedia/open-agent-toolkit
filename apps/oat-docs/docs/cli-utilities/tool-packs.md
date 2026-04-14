@@ -77,6 +77,7 @@ Key behavior:
 - Records installed pack state in shared repo config as `tools.<pack>: true` so other OAT workflows can detect installed capabilities without relying on filesystem heuristics
 - Interactive runs can prompt to update selected outdated skills
 - Auto-sync runs automatically after successful install (provider views are updated)
+- Install-triggered auto-sync limits removal planning to the canonical entries from the pack that was just installed, so stale manifest drift in unrelated packs does not delete other provider views
 - Use `--no-sync` to skip auto-sync
 
 ### `oat tools update`
@@ -163,6 +164,8 @@ Key behavior:
 All mutation commands (`install`, `update`, `remove`) automatically run `oat sync --scope <scope>` after successful operations. This ensures provider views stay in sync with canonical assets without manual intervention.
 
 Use `--no-sync` on any mutation command to skip this step.
+
+For `oat tools install`, the follow-up sync still refreshes provider views immediately, but its removal pass is scoped to the canonical entries that were just installed. This avoids deleting unrelated provider views when a worktree has stale manifest entries for packs whose canonical content is absent locally.
 
 ## Legacy commands
 
