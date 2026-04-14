@@ -1,22 +1,22 @@
 ---
 oat_current_task: null
-oat_last_commit: 2347366b
+oat_last_commit: a68516ba
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: pr_open
 oat_execution_mode: single-thread
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
-oat_pr_status: null
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/51
 oat_project_created: '2026-04-14T18:50:48Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-14T20:49:00Z'
+oat_project_state_updated: '2026-04-14T21:06:00Z'
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation complete - final review v3 is closed after `p03-t08`, under the user's explicit override of the 3-cycle review guard, and the project is ready for PR flow.
+Implementation - PR open, awaiting human review.
 
 ## Artifacts
 
@@ -60,6 +60,9 @@ Implementation complete - final review v3 is closed after `p03-t08`, under the u
 - ✓ Final re-review v3 received
 - ✓ Review-fix task `p03-t08` completed
 - ✓ Final review passed under explicit user override after resolving the sole negligible hygiene finding
+- ✓ Project summary generated
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -67,4 +70,7 @@ None
 
 ## Next Milestone
 
-Run the PR flow next.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
