@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: null
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 1     | 1/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 2     | 1/2       |
 
-**Total:** 5/5 tasks completed
+**Total:** 5/6 tasks completed
 
 ---
 
@@ -211,7 +211,7 @@ oat_generated: false
 
 ## Phase 3: Review Fixes
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-04-14
 
 ### Task p03-t01: (review) Prevent empty-role partial sync from creating codex config
@@ -247,9 +247,9 @@ oat_generated: false
 
 **Outcome (what changed):**
 
-- The final review fix eliminated the last install-scope leak in Codex extension planning
-- Skills-only install sync no longer creates a fresh `.codex/config.toml` in projects with no Codex-managed agent content
-- All planned implementation and review-fix tasks are now complete pending final re-review
+- The first review-fix task eliminated the fresh-project install-scope leak in Codex extension planning
+- Final re-review found a remaining existing-config variant where zero-role partial sync still updates user Codex config
+- Phase 3 is back in progress with one additional review-fix task
 
 **Key files touched:**
 
@@ -265,7 +265,18 @@ oat_generated: false
 
 **Notes / Decisions:**
 
-- Review-fix work stayed inside the Codex extension planner and test surface called out in the plan
+- Review-fix work remains scoped to the Codex extension planner and test surface called out in the plan
+
+---
+
+### Task p03-t02: (review) Avoid mutating existing user Codex config on zero-role partial sync
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Final re-review found that skills-only partial sync still updates an existing user `.codex/config.toml` when the scoped install contains zero Codex-managed agents
 
 ---
 
@@ -289,6 +300,26 @@ No Medium or Minor findings were deferred in this review-receive run.
 
 ---
 
+### Review Received: final
+
+**Date:** 2026-04-14
+**Review artifact:** `reviews/archived/final-review-2026-04-14-v3.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p03-t02`
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+No Medium or Minor findings were deferred in this review-receive run.
+
+---
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -307,11 +338,13 @@ No Medium or Minor findings were deferred in this review-receive run.
 - [x] p02-t01: Prevent unrelated Codex config and provider writes during docs install - `e2b50bfc`
 - [x] p02-t02: Run focused validation and release guardrails - `c4b2cf8a`
 - [x] p03-t01: (review) Prevent empty-role partial sync from creating codex config - `7f0dbac7`
+- [ ] p03-t02: (review) Avoid mutating existing user Codex config on zero-role partial sync - next
 
 **What changed (high level):**
 
 - Scoped install-triggered sync behavior across planner, provider views, and Codex extension generation
-- Closed the final review fix that still allowed empty-role partial sync to create `.codex/config.toml`
+- Closed the fresh-project zero-role partial-sync gap in Codex config creation
+- Final re-review added one more narrowly scoped fix for existing user Codex config mutation
 
 **Decisions:**
 
@@ -319,7 +352,7 @@ No Medium or Minor findings were deferred in this review-receive run.
 
 **Follow-ups / TODO:**
 
-- Final re-review to confirm the review fix passes
+- Implement `p03-t02` and request final re-review again
 
 **Blockers:**
 
@@ -348,14 +381,14 @@ No Medium or Minor findings were deferred in this review-receive run.
 
 - Install-triggered sync now scopes planner entries to the canonical paths passed by the installer instead of only scoping removals
 - Codex partial-sync planning preserves unrelated managed roles and `.codex/config.toml` entries during docs-only installs
-- Skills-only install scopes no longer create a fresh `.codex/config.toml` when no Codex-managed agent belongs to the installed pack
+- Fresh projects with no existing Codex config no longer create `.codex/config.toml` when no Codex-managed agent belongs to the installed pack
 - The CLI package and public package metadata were bumped to `0.0.37` to satisfy the publishable-package release contract
 
 **Behavioral changes (user-facing):**
 
 - `oat tools install docs` can no longer fan out unrelated provider-view additions from existing canonical content during auto-sync
 - Docs-only installs no longer update Codex managed-role config for unrelated agents
-- Docs-only installs no longer create `.codex/config.toml` in projects that have no scoped Codex-managed agents
+- Docs-only installs no longer create `.codex/config.toml` in fresh projects that have no scoped Codex-managed agents
 
 **Key files / modules:**
 

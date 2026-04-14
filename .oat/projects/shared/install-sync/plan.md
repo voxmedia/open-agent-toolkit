@@ -194,13 +194,13 @@ git commit -m "test(p02-t02): verify install sync scoping"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                              |
-| ------ | -------- | -------- | ---------- | ------------------------------------- |
-| p01    | code     | pending  | -          | -                                     |
-| p02    | code     | pending  | -          | -                                     |
-| final  | code     | received | 2026-04-14 | reviews/final-review-2026-04-14-v3.md |
-| spec   | artifact | pending  | -          | -                                     |
-| design | artifact | pending  | -          | -                                     |
+| Scope  | Type     | Status      | Date       | Artifact                                       |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending     | -          | -                                              |
+| p02    | code     | pending     | -          | -                                              |
+| final  | code     | fixes_added | 2026-04-14 | reviews/archived/final-review-2026-04-14-v3.md |
+| spec   | artifact | pending     | -          | -                                              |
+| design | artifact | pending     | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -212,9 +212,9 @@ git commit -m "test(p02-t02): verify install sync scoping"
 
 - Phase 1: 2 tasks - scope install-triggered sync planning to the canonical paths passed by install
 - Phase 2: 2 tasks - scope Codex side effects and verify the CLI package changes end to end
-- Phase 3: 1 task - close the final review gap in partial Codex config creation
+- Phase 3: 2 tasks - close the final review gaps in partial Codex config creation and existing-config mutation
 
-**Total: 5 tasks**
+**Total: 6 tasks**
 
 Ready for implementation, review, and a follow-up PR.
 
@@ -248,6 +248,36 @@ Expected: Partial-sync Codex planning no longer creates `.codex/config.toml` for
 ```bash
 git add packages/cli/src/providers/codex/codec/sync-extension.ts packages/cli/src/providers/codex/codec/sync-extension.test.ts packages/cli/src/commands/sync/index.test.ts packages/cli/src/commands/tools/install/index.test.ts
 git commit -m "fix(p03-t01): keep codex config scoped to install content"
+```
+
+---
+
+### Task p03-t02: (review) Avoid mutating existing user Codex config on zero-role partial sync
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: skills-only partial sync still updates an existing user `.codex/config.toml` even when the allowed canonical scope contains zero Codex-managed agents.
+Location: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+
+**Step 2: Implement fix**
+
+Treat partial sync with zero desired Codex roles as a no-op when there is no existing OAT-managed Codex state to reconcile. Preserve the existing partial-sync rule that unrelated managed roles stay untouched, and avoid adding `agents = { }` or `features.multi_agent = true` to user config for skills-only install scopes.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/engine/compute-plan.test.ts`
+Expected: Partial-sync Codex planning no longer updates existing user config for skills-only install scopes, and the targeted regressions pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/providers/codex/codec/sync-extension.ts packages/cli/src/providers/codex/codec/sync-extension.test.ts
+git commit -m "fix(p03-t02): avoid codex config updates on zero-role partial sync"
 ```
 
 ---
