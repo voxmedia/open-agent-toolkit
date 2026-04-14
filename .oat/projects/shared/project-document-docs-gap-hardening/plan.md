@@ -315,14 +315,14 @@ git commit -m "fix(p03-t05): add lifecycle cross-link for project-document"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                              |
-| ------ | -------- | -------- | ---------- | ------------------------------------- |
-| p01    | code     | pending  | -          | -                                     |
-| p02    | code     | pending  | -          | -                                     |
-| p03    | code     | pending  | -          | -                                     |
-| final  | code     | received | 2026-04-14 | reviews/final-review-2026-04-14-v3.md |
-| spec   | artifact | pending  | -          | -                                     |
-| design | artifact | pending  | -          | -                                     |
+| Scope  | Type     | Status      | Date       | Artifact                                       |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending     | -          | -                                              |
+| p02    | code     | pending     | -          | -                                              |
+| p03    | code     | pending     | -          | -                                              |
+| final  | code     | fixes_added | 2026-04-14 | reviews/archived/final-review-2026-04-14-v3.md |
+| spec   | artifact | pending     | -          | -                                              |
+| design | artifact | pending     | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -395,15 +395,44 @@ git commit -m "chore(p03-t07): sync public package version asset"
 
 ---
 
+### Task p03-t08: (review) Commit the untracked quick-mode discovery artifact
+
+**Files:**
+
+- Modify: `.oat/projects/shared/project-document-docs-gap-hardening/discovery.md`
+
+**Step 1: Understand the issue**
+
+Review finding: The quick-mode `discovery.md` artifact exists on disk and is referenced by project artifacts, but it was never committed on the branch.
+Location: `.oat/projects/shared/project-document-docs-gap-hardening/discovery.md`
+
+**Step 2: Implement fix**
+
+Stage and commit the existing `discovery.md` file so the quick-mode artifact set is complete in branch history and the project references do not dangle in the PR.
+
+**Step 3: Verify**
+
+Run: `git status --short .oat/projects/shared/project-document-docs-gap-hardening/discovery.md`
+Expected: The file is staged or clean rather than untracked.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/project-document-docs-gap-hardening/discovery.md
+git commit -m "chore(p03-t08): commit quick-mode discovery artifact"
+```
+
+---
+
 **Summary:**
 
 - Phase 1: 2 tasks - harden `oat-project-document` so it detects undocumented capability surfaces and can recommend new docs files.
 - Phase 2: 2 tasks - update OAT docs and verify the workflow/project artifacts.
-- Phase 3: 7 tasks - address final review findings across package-version policy, skill contract polish, docs discoverability, and final PR hygiene.
+- Phase 3: 8 tasks - address final review findings across package-version policy, skill contract polish, docs discoverability, final PR hygiene, and artifact tracking completeness.
 
-**Total: 11 tasks**
+**Total: 12 tasks**
 
-Ready for final hygiene fix execution and re-review.
+Ready for the final artifact-tracking fix and review closure.
 
 ---
 

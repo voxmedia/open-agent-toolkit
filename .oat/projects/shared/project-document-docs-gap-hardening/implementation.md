@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: null
+oat_current_task_id: p03-t08
 oat_generated: false
 ---
 
@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 7     | 7/7       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 8     | 7/8       |
 
-**Total:** 11/11 tasks completed
+**Total:** 11/12 tasks completed
 
 ---
 
 ## Phase 1: Skill Hardening
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-04-14
 
 ### Phase Summary (fill when phase is complete)
@@ -222,6 +222,26 @@ oat_generated: false
 
 ---
 
+### Task p03-t08: (review) Commit the untracked quick-mode discovery artifact
+
+**Status:** pending
+**Commit:** -
+
+**Outcome (required when completed):**
+
+- Stage and commit the existing quick-mode `discovery.md` artifact so the branch contains the full artifact set referenced by the rest of the project files.
+
+**Files changed:**
+
+- `.oat/projects/shared/project-document-docs-gap-hardening/discovery.md` - track the existing discovery artifact in git
+
+**Verification:**
+
+- Run: `git status --short .oat/projects/shared/project-document-docs-gap-hardening/discovery.md`
+- Result: pending
+
+---
+
 ### Review Received: final
 
 **Date:** 2026-04-14
@@ -246,6 +266,34 @@ oat_generated: false
 - None
 
 **Next:** Request the closing final re-review. If it comes back clean, update the final review row to `passed` and continue to PR flow.
+
+### Review Received: final (v3)
+
+**Date:** 2026-04-14
+**Review artifact:** reviews/archived/final-review-2026-04-14-v3.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1
+
+**New tasks added:** p03-t08
+
+**Minor disposition (final-scope explicit choice):**
+
+- `m1` -> converted to task `p03-t08`
+
+**Deferred Findings (Medium):**
+
+- None
+
+**Cycle-limit override:**
+
+- User explicitly approved continuing past the 3-cycle review guard to commit the untracked `discovery.md` artifact and proceed.
+
+**Next:** Execute `p03-t08`, then close the review cycle and proceed to PR flow without another automated review round.
 
 ### Task p03-t01: (review) Bump lockstep public package versions
 
@@ -503,6 +551,30 @@ oat_generated: false
 **Follow-ups / TODO:**
 
 - Re-run final review closure after the hygiene fixes land
+
+**Blockers:**
+
+- None
+
+### 2026-04-14
+
+**Session Start:** 20:45 UTC
+
+- [x] final re-review v3 received - PASS with 1 minor artifact-tracking finding
+- [ ] p03-t08: (review) Commit the untracked quick-mode discovery artifact - next
+
+**What changed (high level):**
+
+- Converted the final remaining hygiene issue into a negligible review-fix task after explicit user override of the 3-cycle review guard.
+
+**Decisions:**
+
+- Treat the review loop as explicitly extended by user direction because the remaining issue is branch-history hygiene, not product or package correctness.
+
+**Follow-ups / TODO:**
+
+- Execute `p03-t08`
+- Close the final review row and proceed to PR flow
 
 **Blockers:**
 
