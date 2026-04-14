@@ -196,13 +196,14 @@ describe('computeSyncPlan', () => {
     async ({ allowedRemovalCanonicalPaths, expectedRemovals }) => {
       const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
       tempDirs.push(root);
+      const claudeAdapter = createTestAdapter({ name: 'claude' });
       await mkdir(join(root, '.agents', 'skills', 'oat-docs-analyze'), {
         recursive: true,
       });
 
       const plan = await computeSyncPlan({
         canonical: [createCanonicalEntry(root, 'skill', 'oat-docs-analyze')],
-        adapters: [createTestAdapter()],
+        adapters: [claudeAdapter],
         manifest: {
           ...createEmptyManifest(),
           entries: [
