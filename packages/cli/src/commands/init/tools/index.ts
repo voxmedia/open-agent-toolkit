@@ -1,3 +1,4 @@
+import { rm, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import {
@@ -36,6 +37,7 @@ import {
 } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import type { ConcreteScope } from '@shared/types';
 import { Command } from 'commander';
 
 import { createInitToolsCoreCommand } from './core';
@@ -46,7 +48,6 @@ import {
 } from './core/install-core';
 import { createInitToolsDocsCommand } from './docs';
 import {
-  DOCS_SKILLS,
   installDocs as defaultInstallDocs,
   type InstallDocsOptions,
   type InstallDocsResult,
@@ -69,14 +70,19 @@ import {
   installResearch as defaultInstallResearch,
   type InstallResearchOptions,
   type InstallResearchResult,
-  RESEARCH_SKILLS,
 } from './research/install-research';
+import {
+  DOCS_SKILLS,
+  IDEA_SKILLS,
+  RESEARCH_AGENTS,
+  RESEARCH_SKILLS,
+  UTILITY_SKILLS,
+} from './shared/skill-manifest';
 import { createInitToolsUtilityCommand } from './utility';
 import {
   installUtility as defaultInstallUtility,
   type InstallUtilityOptions,
   type InstallUtilityResult,
-  UTILITY_SKILLS,
 } from './utility/install-utility';
 import { createInitToolsWorkflowsCommand } from './workflows';
 import {
@@ -95,7 +101,7 @@ export type ToolPack =
   | 'project-management'
   | 'research';
 
-interface InitToolsDependencies {
+export interface InitToolsDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
   resolveScopeRoot: (scope: InstallScope, cwd: string, home: string) => string;
@@ -131,6 +137,8 @@ interface InitToolsDependencies {
     destination: string,
     force: boolean,
   ) => Promise<'copied' | 'updated' | 'skipped'>;
+  removeDirectory: (target: string) => Promise<void>;
+  removeFile: (target: string) => Promise<void>;
   addLocalPaths: (
     repoRoot: string,
     paths: string[],
@@ -155,6 +163,10 @@ interface OutdatedSkillRecord {
   installed: string | null;
   bundled: string | null;
   targetRoot: string;
+}
+
+interface InitToolsRunMetadata {
+  affectedScopes: ConcreteScope[];
 }
 
 function formatVersionForDisplay(version: string | null): string {
@@ -185,6 +197,35 @@ const ALL_TOOL_PACKS = [
   'research',
 ] as const satisfies readonly ToolPack[];
 
+type UserEligiblePack = Extract<
+  ToolPack,
+  'ideas' | 'docs' | 'utility' | 'research'
+>;
+
+const USER_ELIGIBLE_PACK_MEMBERS: Record<
+  UserEligiblePack,
+  { skills: readonly string[]; agents: readonly string[] }
+> = {
+  ideas: {
+    skills: IDEA_SKILLS,
+    agents: [],
+  },
+  docs: {
+    skills: DOCS_SKILLS,
+    agents: [],
+  },
+  utility: {
+    skills: UTILITY_SKILLS,
+    agents: [],
+  },
+  research: {
+    skills: RESEARCH_SKILLS,
+    agents: RESEARCH_AGENTS,
+  },
+};
+
+let lastRunInitToolsMetadata: InitToolsRunMetadata | null = null;
+
 const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   buildCommandContext,
   resolveProjectRoot,
@@ -201,6 +242,22 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   installProjectManagement: defaultInstallProjectManagement,
   installResearch: defaultInstallResearch,
   copyDirWithStatus,
+  removeDirectory: async (target) => {
+    await rm(target, { recursive: true, force: true });
+  },
+  removeFile: async (target) => {
+    try {
+      await unlink(target);
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !('code' in error) ||
+        error.code !== 'ENOENT'
+      ) {
+        throw error;
+      }
+    }
+  },
   addLocalPaths,
   applyGitignore,
   readOatConfig,
@@ -218,6 +275,10 @@ const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
 ]);
 
 type PackScopeMap = Record<ToolPack, InstallScope>;
+
+function isUserEligiblePack(pack: ToolPack): pack is UserEligiblePack {
+  return USER_ELIGIBLE_PACKS.has(pack);
+}
 
 async function loadInstalledPackStates(
   projectRoot: string,
@@ -244,6 +305,28 @@ async function loadInstalledPackStates(
   ]);
 }
 
+export function consumeInitToolsRunMetadata(): InitToolsRunMetadata | null {
+  const metadata = lastRunInitToolsMetadata;
+  lastRunInitToolsMetadata = null;
+  return metadata;
+}
+
+async function removePackFromScope(
+  pack: UserEligiblePack,
+  root: string,
+  dependencies: InitToolsDependencies,
+): Promise<void> {
+  const members = USER_ELIGIBLE_PACK_MEMBERS[pack];
+
+  for (const skill of members.skills) {
+    await dependencies.removeDirectory(join(root, '.agents', 'skills', skill));
+  }
+
+  for (const agent of members.agents) {
+    await dependencies.removeFile(join(root, '.agents', 'agents', agent));
+  }
+}
+
 async function resolvePackScopes(
   context: CommandContext,
   selections: ToolPack[],
@@ -263,9 +346,7 @@ async function resolvePackScopes(
     scopes.core = 'user';
   }
 
-  const eligiblePacks = selections.filter((pack) =>
-    USER_ELIGIBLE_PACKS.has(pack),
-  );
+  const eligiblePacks = selections.filter((pack) => isUserEligiblePack(pack));
 
   if (eligiblePacks.length === 0) {
     return scopes as PackScopeMap;
@@ -432,6 +513,8 @@ export async function runInitTools(
   context: CommandContext,
   dependencies: InitToolsDependencies,
 ): Promise<ToolPack[]> {
+  lastRunInitToolsMetadata = null;
+
   try {
     const selectedPacks: ToolPack[] = context.interactive
       ? ((await dependencies.selectManyWithAbort(
@@ -445,6 +528,7 @@ export async function runInitTools(
       selectedPacks.push('project-management');
     }
     if (selectedPacks.length === 0) {
+      lastRunInitToolsMetadata = { affectedScopes: [] };
       if (!context.json) {
         context.logger.info('No tool packs selected.');
       }
@@ -469,10 +553,39 @@ export async function runInitTools(
     }
 
     const assetsRoot = await dependencies.resolveAssetsRoot();
+    const initialPackStates = await loadInstalledPackStates(
+      projectRoot,
+      userRoot,
+      assetsRoot,
+      dependencies,
+    );
     const outdatedSkills: OutdatedSkillRecord[] = [];
+    const affectedScopes = new Set<ConcreteScope>();
+
+    for (const pack of selectedPacks) {
+      if (!isUserEligiblePack(pack)) {
+        continue;
+      }
+
+      const desiredScope = packScopes[pack];
+      const currentLocation = initialPackStates[pack].location;
+      if (desiredScope === 'user') {
+        if (currentLocation === 'project' || currentLocation === 'both') {
+          await removePackFromScope(pack, projectRoot, dependencies);
+          affectedScopes.add('project');
+        }
+        continue;
+      }
+
+      if (currentLocation === 'user' || currentLocation === 'both') {
+        await removePackFromScope(pack, userRoot, dependencies);
+        affectedScopes.add('user');
+      }
+    }
 
     if (selectedPacks.includes('core')) {
       // Core pack always installs at user scope, regardless of userEligibleScope
+      affectedScopes.add('user');
       const coreResult = await dependencies.installCore({
         assetsRoot,
         targetRoot: userRoot,
@@ -484,6 +597,7 @@ export async function runInitTools(
 
     if (selectedPacks.includes('ideas')) {
       const targetRoot = packRoot('ideas');
+      affectedScopes.add(packScopes.ideas);
       const ideasResult = await dependencies.installIdeas({
         assetsRoot,
         targetRoot,
@@ -495,6 +609,7 @@ export async function runInitTools(
 
     if (selectedPacks.includes('docs')) {
       const targetRoot = packRoot('docs');
+      affectedScopes.add(packScopes.docs);
       const docsResult = await dependencies.installDocs({
         assetsRoot,
         targetRoot,
@@ -506,6 +621,7 @@ export async function runInitTools(
     }
 
     if (selectedPacks.includes('workflows')) {
+      affectedScopes.add('project');
       const workflowsResult = await dependencies.installWorkflows({
         assetsRoot,
         targetRoot: projectRoot,
@@ -570,6 +686,7 @@ export async function runInitTools(
 
     if (selectedPacks.includes('utility')) {
       const targetRoot = packRoot('utility');
+      affectedScopes.add(packScopes.utility);
       const utilityResult = await dependencies.installUtility({
         assetsRoot,
         targetRoot,
@@ -582,6 +699,7 @@ export async function runInitTools(
 
     if (selectedPacks.includes('project-management')) {
       const targetRoot = projectRoot;
+      affectedScopes.add('project');
       const projectManagementResult =
         await dependencies.installProjectManagement({
           assetsRoot,
@@ -594,6 +712,7 @@ export async function runInitTools(
 
     if (selectedPacks.includes('research')) {
       const targetRoot = packRoot('research');
+      affectedScopes.add(packScopes.research);
       const researchResult = await dependencies.installResearch({
         assetsRoot,
         targetRoot,
@@ -677,10 +796,14 @@ export async function runInitTools(
     const hasUserScope = selectedPacks.some(
       (pack) => packScopes[pack] === 'user',
     );
+    lastRunInitToolsMetadata = {
+      affectedScopes: [...affectedScopes],
+    };
     reportSuccess(context, selectedPacks, hasUserScope ? 'user' : 'project');
     process.exitCode = 0;
     return selectedPacks;
   } catch (error) {
+    lastRunInitToolsMetadata = null;
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
       context.logger.json({ status: 'error', message });

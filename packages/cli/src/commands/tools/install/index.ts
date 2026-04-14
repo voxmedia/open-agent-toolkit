@@ -1,7 +1,11 @@
 import { execFile } from 'node:child_process';
 
 import { buildCommandContext } from '@app/command-context';
-import { createInitToolsCommand } from '@commands/init/tools';
+import {
+  consumeInitToolsRunMetadata,
+  createInitToolsCommand,
+  type InitToolsDependencies,
+} from '@commands/init/tools';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
@@ -37,9 +41,13 @@ const defaultSyncDependencies: AutoSyncDependencies = {
 
 export function createToolsInstallCommand(
   syncDependencies: AutoSyncDependencies = defaultSyncDependencies,
-  createBaseCommand: () => Command = createInitToolsCommand,
+  initOverrides: Partial<InitToolsDependencies> = {},
+  createBaseCommand?: () => Command,
 ): Command {
-  const cmd = createBaseCommand();
+  const cmd =
+    createBaseCommand === undefined
+      ? createInitToolsCommand(initOverrides)
+      : createBaseCommand();
   cmd.name('install');
   cmd.option('--no-sync', 'Skip auto-sync after install');
 
@@ -50,8 +58,14 @@ export function createToolsInstallCommand(
     if (opts.sync === false) return;
 
     const globalOptions = readGlobalOptions(actionCommand);
-    const context = buildCommandContext(globalOptions);
-    const scopes = resolveConcreteScopes(context.scope);
+    const buildContext =
+      initOverrides.buildCommandContext ?? buildCommandContext;
+    const context = buildContext(globalOptions);
+    const metadata = consumeInitToolsRunMetadata();
+    const scopes =
+      metadata === null
+        ? resolveConcreteScopes(context.scope)
+        : metadata.affectedScopes;
     const installedCanonicalPaths = getInstallSyncCanonicalPaths(actionCommand);
 
     await autoSync(

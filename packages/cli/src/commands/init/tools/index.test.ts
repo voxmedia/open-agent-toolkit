@@ -170,6 +170,8 @@ function createHarness(options: HarnessOptions = {}) {
     skippedAgents: [],
   }));
   const copyDirWithStatus = vi.fn(async () => 'updated' as const);
+  const removeDirectory = vi.fn(async () => {});
+  const removeFile = vi.fn(async () => {});
   const addLocalPaths = vi.fn(async (_repoRoot: string, paths: string[]) => ({
     added: paths,
     alreadyPresent: [] as string[],
@@ -219,6 +221,8 @@ function createHarness(options: HarnessOptions = {}) {
     installProjectManagement,
     installResearch,
     copyDirWithStatus,
+    removeDirectory,
+    removeFile,
     addLocalPaths,
     applyGitignore,
     readOatConfig,
@@ -241,6 +245,8 @@ function createHarness(options: HarnessOptions = {}) {
     installProjectManagement,
     installResearch,
     copyDirWithStatus,
+    removeDirectory,
+    removeFile,
     addLocalPaths,
     applyGitignore,
     readOatConfig,
@@ -429,6 +435,54 @@ describe('createInitToolsCommand', () => {
     );
     expect(installResearch).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+  });
+
+  it('migrates user-eligible packs from project to user scope by removing project canonical content', async () => {
+    const { command, installIdeas, removeDirectory, removeFile } =
+      createHarness({
+        interactive: true,
+        packSelection: [['ideas'], ['ideas']],
+        toolsByScope: {
+          project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
+          user: [],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(removeDirectory).toHaveBeenCalledWith(
+      '/tmp/workspace/.agents/skills/oat-idea-new',
+    );
+    expect(removeDirectory).toHaveBeenCalledTimes(4);
+    expect(removeFile).not.toHaveBeenCalled();
+  });
+
+  it('normalizes a both-scopes install to project by removing user canonical content and agents', async () => {
+    const { command, installResearch, removeDirectory, removeFile } =
+      createHarness({
+        interactive: true,
+        packSelection: [['research'], []],
+        toolsByScope: {
+          project: [createScannedTool('analyze', 'research', 'project')],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(removeDirectory).toHaveBeenCalledWith(
+      '/tmp/home/.agents/skills/analyze',
+    );
+    expect(removeDirectory).toHaveBeenCalledTimes(5);
+    expect(removeFile).toHaveBeenCalledWith(
+      '/tmp/home/.agents/agents/skeptical-evaluator.md',
     );
   });
 
