@@ -155,7 +155,7 @@ git commit -m "test(p01-t03): cover install-triggered sync guard"
 | ------ | -------- | -------- | ---------- | ---------------------------------- |
 | p01    | code     | pending  | -          | -                                  |
 | p02    | code     | pending  | -          | -                                  |
-| final  | code     | received | 2026-04-13 | reviews/final-review-2026-04-13.md |
+| final  | code     | received | 2026-04-14 | reviews/final-review-2026-04-14.md |
 | spec   | artifact | pending  | -          | -                                  |
 | design | artifact | pending  | -          | -                                  |
 
