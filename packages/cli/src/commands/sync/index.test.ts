@@ -640,6 +640,20 @@ describe('createSyncCommand', () => {
     );
   });
 
+  it('rejects invalid install-triggered canonical filters', async () => {
+    const { command, computeSyncPlan } = createHarness();
+
+    await expect(
+      runSyncCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--dry-run', '--install-canonical', '../../etc/passwd'],
+      }),
+    ).rejects.toMatchObject({
+      message: 'Invalid --install-canonical path: ../../etc/passwd',
+    });
+    expect(computeSyncPlan).not.toHaveBeenCalled();
+  });
+
   it('includes codex extension operations in dry-run JSON output', async () => {
     const { capture, command, computeCodexProjectExtensionPlan } =
       createHarness({

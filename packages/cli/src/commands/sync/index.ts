@@ -18,6 +18,7 @@ import {
   saveSyncConfig,
 } from '@config/index';
 import { computeSyncPlan, executeSyncPlan, scanCanonical } from '@engine/index';
+import { CliError } from '@errors/index';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { loadManifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
@@ -79,6 +80,25 @@ function defaultDependencies(): SyncCommandDependencies {
     applyCodexProjectExtensionPlan,
     formatSyncPlan,
   };
+}
+
+const INSTALL_CANONICAL_PATH_PATTERN =
+  /^\.agents\/(skills|agents|rules)\/[^/\\]+$/;
+
+function validateInstallCanonicalPaths(
+  paths: string[] | undefined,
+): string[] | undefined {
+  if (!paths?.length) {
+    return undefined;
+  }
+
+  for (const path of paths) {
+    if (!INSTALL_CANONICAL_PATH_PATTERN.test(path)) {
+      throw new CliError(`Invalid --install-canonical path: ${path}`, 1);
+    }
+  }
+
+  return paths;
 }
 
 function hasProviderMismatches(mismatches: SyncProviderMismatches): boolean {
@@ -359,7 +379,7 @@ export function createSyncCommand(
       await runSyncCommand(
         context,
         dependencies,
-        options.installCanonical?.length ? options.installCanonical : undefined,
+        validateInstallCanonicalPaths(options.installCanonical),
       );
     });
 }
