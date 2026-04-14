@@ -201,6 +201,97 @@ git commit -m "fix(cli): clarify install scope summaries (p02-t02)"
 
 ---
 
+## Phase rev1: Review Fixes
+
+### Task prev1-t01: (review) Preserve both-scope installs unless the user explicitly changes them
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/index.ts`
+- Modify: `packages/cli/src/commands/init/tools/index.test.ts`
+- Modify: `packages/cli/src/commands/tools/install/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: packs already installed in both scopes still fall back to the unchecked project-side checkbox state, so default submit can remove the user copy without an explicit choice.
+Location: `packages/cli/src/commands/init/tools/index.ts:351-364`
+
+**Step 2: Implement fix**
+
+Update the follow-up scope prompt so a `both`-installed pack does not silently normalize to project on default submit. Preserve both unless the user makes an explicit scope change, or introduce an explicit both-state follow-up that forces a deliberate choice.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`
+Expected: both-scope prompt behavior is covered and default submit no longer removes the user copy implicitly
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/init/tools/index.test.ts packages/cli/src/commands/tools/install/index.test.ts
+git commit -m "fix(cli): preserve both-scope installs on default submit (prev1-t01)"
+```
+
+---
+
+### Task prev1-t02: (review) Reduce duplicate install-state scans in the installer
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/index.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: the installer scans both project and user scopes once to drive prompt state and again after writes to refresh config booleans.
+Location: `packages/cli/src/commands/init/tools/index.ts`
+
+**Step 2: Implement fix**
+
+Reduce duplicate install-state scanning without changing install semantics. Reuse prompt-time state where safe or collapse the config refresh into a single equivalent post-write pass.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/install-state.test.ts src/commands/init/tools/index.test.ts`
+Expected: install-state behavior remains correct and no prompt/config regressions are introduced
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/init/tools/install-state.test.ts packages/cli/src/commands/init/tools/index.test.ts
+git commit -m "fix(cli): reduce duplicate install-state scans (prev1-t02)"
+```
+
+---
+
+### Task prev1-t03: (review) Add direct agent-only install-state coverage
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/install-state.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `buildPackInstallStateMap()` does not have a direct unit test covering a pack seen only through an agent entry.
+Location: `packages/cli/src/commands/init/tools/install-state.test.ts:41-82`
+
+**Step 2: Implement fix**
+
+Add a focused test case that covers a bundled pack detected only via an agent entry so pack-state aggregation remains locked for non-skill assets.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/install-state.test.ts`
+Expected: agent-only aggregation behavior is covered directly
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/install-state.test.ts
+git commit -m "test(cli): cover agent-only install-state aggregation (prev1-t03)"
+```
+
+---
+
 ## Reviews
 
 Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.
@@ -211,7 +302,7 @@ Keep both code and artifact rows below. For quick-mode projects, retain `spec` a
 | ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
 | p01    | code     | pending         | -          | -                                                   |
 | p02    | code     | received        | 2026-04-13 | reviews/p02-review-2026-04-13.md                    |
-| final  | code     | received        | 2026-04-14 | reviews/final-review-2026-04-14.md                  |
+| final  | code     | fixes_added     | 2026-04-14 | reviews/archived/final-review-2026-04-14.md         |
 | spec   | artifact | passed          | 2026-04-13 | n/a (quick mode)                                    |
 | design | artifact | passed          | 2026-04-13 | n/a (quick mode)                                    |
 | plan   | artifact | fixes_completed | 2026-04-13 | reviews/archived/artifact-plan-review-2026-04-13.md |
@@ -233,8 +324,9 @@ Keep both code and artifact rows below. For quick-mode projects, retain `spec` a
 
 - Phase 1: 2 tasks - derive current pack location and enforce scope migration behavior
 - Phase 2: 2 tasks - improve interactive prompt state and reporting regressions
+- Phase rev1: 3 tasks - address final review follow-up fixes and coverage gaps
 
-**Total planned tasks: 4**
+**Total planned tasks: 7**
 
 Ready for execution via `oat-project-implement`.
 

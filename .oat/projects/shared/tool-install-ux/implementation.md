@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -24,12 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | in_progress | 3     | 0/3       |
 
-**Total:** 4/4 tasks completed
+**Total:** 4/7 tasks completed
 
 ---
 
@@ -228,6 +229,32 @@ oat_generated: false
 
 ---
 
+## Phase 3: Review Fixes
+
+**Status:** in_progress
+**Started:** 2026-04-14
+
+### Task prev1-t01: (review) Preserve both-scope installs unless the user explicitly changes them
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task prev1-t02: (review) Reduce duplicate install-state scans in the installer
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task prev1-t03: (review) Add direct agent-only install-state coverage
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -251,6 +278,9 @@ Chronological log of implementation progress.
 - [x] p01-t02: Treat scope changes as migrations for user-eligible packs - `dfe447a9`
 - [x] p02-t01: Show existing install location and prepopulate prompt defaults - `d88e12d6`
 - [x] p02-t02: Improve post-install summary and final regression coverage - `99dc97ff`
+- [ ] prev1-t01: (review) Preserve both-scope installs unless the user explicitly changes them - pending
+- [ ] prev1-t02: (review) Reduce duplicate install-state scans in the installer - pending
+- [ ] prev1-t03: (review) Add direct agent-only install-state coverage - pending
 
 **What changed (high level):**
 
@@ -271,6 +301,7 @@ Chronological log of implementation progress.
 - Update interactive pack labels and checked defaults to reflect current install location
 - Run final checkpoint review after Phase 2 is complete
 - Record final review artifact and update checkpoint status
+- Execute the final review follow-up tasks after receiving the final review artifact
 
 **Blockers:**
 
@@ -296,6 +327,7 @@ Track test execution during implementation.
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm --filter @open-agent-toolkit/cli type-check` | partial | 2      | Full-package `test` / `type-check` blocked by unrelated `@open-agent-toolkit/control-plane` resolution failures                                  |
 | 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm --filter @open-agent-toolkit/cli type-check` | partial | 2      | Focused regressions pass; full-package `test` / `type-check` remain blocked by unrelated `@open-agent-toolkit/control-plane` resolution failures |
+| 3     | -                                                                                                                                                                                                                                                                                      | -       | -      | -                                                                                                                                                |
 
 ## Final Summary (for PR/docs)
 
@@ -331,6 +363,31 @@ Track test execution during implementation.
 **Design deltas (if any):**
 
 - No design artifact was used in this quick-mode project
+
+## Review Received: final
+
+**Date:** 2026-04-14
+**Review artifact:** `reviews/archived/final-review-2026-04-14.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 3
+
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`
+
+**Deferred Findings (Minor):**
+
+- `m2` - Core-scope defense-in-depth cleanup remains deferred because `oat tools install` hard-pins core to user scope today, so the review concern is theoretical for this command path and does not justify reopening the shipped fix.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update the `final` review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
 
 ## References
 
