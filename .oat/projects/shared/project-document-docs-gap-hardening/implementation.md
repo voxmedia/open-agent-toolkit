@@ -397,6 +397,33 @@ oat_generated: false
 
 ### 2026-04-14
 
+**Session Start:** 20:07 UTC
+
+- [x] p03-t05: (review) Add lifecycle cross-link in docs workflows page - `554e968a`
+- [x] Verification: `pnpm release:validate`
+- [x] Verification: `pnpm test`
+- [x] Verification: `pnpm lint`
+- [x] Verification: `pnpm type-check`
+- [x] Verification: `pnpm build`
+
+**What changed (high level):**
+
+- Finished the final review-fix queue and cleared the verification gates required before re-review.
+
+**Decisions:**
+
+- Kept the project in `fixes_completed` state pending a fresh final review instead of treating verification success as review closure.
+
+**Follow-ups / TODO:**
+
+- Request final re-review
+
+**Blockers:**
+
+- None
+
+### 2026-04-14
+
 **Session Start:** 20:05 UTC
 
 - [x] p03-t03: (review) Harmonize coverage-state terminology casing - `d8a71e55`
@@ -518,6 +545,11 @@ After the re-review runs:
 - `git diff --check -- .agents/skills/oat-project-document/SKILL.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/docs-tooling/workflows.md .oat/projects/shared/project-document-docs-gap-hardening`
 - `git diff --stat -- .agents/skills/oat-project-document/SKILL.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/docs-tooling/workflows.md`
 - `rg -n '"version"' packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json`
+- `pnpm release:validate`
+- `pnpm test`
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm build`
 
 **Design deltas (if any):**
 

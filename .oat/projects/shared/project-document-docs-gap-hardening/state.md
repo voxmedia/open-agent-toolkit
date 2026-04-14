@@ -52,6 +52,8 @@ Implementation in progress - all review-fix tasks are complete and the project i
 - ✓ Review-fix task `p03-t03` completed
 - ✓ Review-fix task `p03-t04` completed
 - ✓ Review-fix task `p03-t05` completed
+- ✓ Release validation passed
+- ✓ Workspace tests, lint, type-check, and build passed
 - ⧗ Awaiting final re-review
 
 ## Blockers
