@@ -67,5 +67,4 @@ Theme toggle is included in the layout. Mermaid diagrams re-render on mode switc
 
 ## Agent guidance
 
-- Treat `index.md` plus its `## Contents` section as the local discovery source of truth.
-- Prefer linking to source files and commands explicitly when documenting behavior.
+See `AGENTS.md` in this directory for how agents should work inside this docs app. This `contributing.md` covers human authoring conventions; `AGENTS.md` covers agent runtime discipline (adding pages, restructuring nav, audit/apply, three agent-instruction surfaces). Keeping those concerns separate keeps each file useful to its audience.

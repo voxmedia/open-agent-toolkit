@@ -371,6 +371,41 @@ This diverges from two established conventions in the same repo:
 
 **Skill implication:** Adds a new FP-16 sub-section to the scaffold-integrity patches in Step 3d, a new entry in Capability Detection (3b), frontmatter description update (add FP-16 to the list of covered gaps), and guidance updates across AGENTS.md template + Walkthrough Sections C and E.
 
+#### FP-13/E: Scaffold `docs/getting-started.md` hardcodes "Node.js 22+" that diverges from the consuming repo
+
+**Discovered:** 2026-04-14, during p06-t03 smoke test (via `oat-docs-analyze` findings on Cyclone sandbox).
+
+**Problem:** The scaffold's Prerequisites list hardcodes `Node.js 22+`, but consuming repos typically pin a specific Node version via `.nvmrc` or `package.json` `engines.node`. Cyclone pins `20.19.0`. After scaffold, the docs app's `pnpm install` emits an Unsupported engine warning because the scaffold's `package.json` (or its transitive dependencies) expect a version the repo doesn't provide. More importantly, the documentation lies to contributors: it tells them "you need Node 22+" when in fact the repo requires Node 20.19.0. New contributors following the getting-started guide will either run the wrong Node version or hit noisy install warnings with no context.
+
+**Fix needed:** Two-track, same pattern as FP-16:
+
+1. **Scaffold template fix (upstream, cheap).** Change `.oat/templates/docs-app-fuma/docs/getting-started.md:12` from a hardcoded major version to language that defers to the consuming repo's pin. Example: `- Node.js 20+ (or whatever your repo's '.nvmrc' / 'package.json engines.node' pins — match that)`. This makes the template less wrong by default and directs users to the authoritative source.
+2. **Skill-level bridge patch (FP-13/E).** Add to the skill's scaffold-integrity patches in Step 3d — read `.nvmrc` / `package.json` `engines.node` at scaffold time, and if a version is detected that differs from the scaffold's default, rewrite the Prerequisites bullet. Falls back to leaving the template default when neither source is present.
+
+**Skill implication:** New sub-finding E under FP-13 in the scaffold-integrity patches; corresponding entry in Capability Detection target list. Same self-ratcheting pattern as the other FP-13 sub-findings — the capability-gate skips when the CLI fix has landed AND the scaffold matches the detected version.
+
+#### FP-17: Scaffold `docs/contributing.md` has an "Agent guidance" section that duplicates the docs-app AGENTS.md
+
+**Discovered:** 2026-04-14, during p06-t03 smoke test.
+
+**Problem:** The scaffold template at `.oat/templates/docs-app-fuma/docs/contributing.md:68-72` writes a `## Agent guidance` section with a short bulleted list ("treat index.md as truth", "prefer linking to source files"). Prior to FP-15, this section was the only agent-oriented surface in the scaffold. With FP-15 scaffolding a dedicated docs-app `AGENTS.md`, the `contributing.md` section now duplicates a role that rightfully belongs to `AGENTS.md`. This violates the three-surfaces discipline the skill's Walkthrough Section D teaches:
+
+- `docs/contributing.md` → human authoring conventions (Markdown features, frontmatter requirements, linting).
+- `<appRoot>/AGENTS.md` → agent runtime reference (how to add pages, restructure nav, audit/apply, three-surfaces).
+- Root `AGENTS.md` `## Documentation` section → repo-wide pointer.
+
+The scaffold's duplication introduces two distinct risks:
+
+1. **Divergence.** When the docs-app `AGENTS.md` evolves (e.g., adds guidance about `.md` link extensions, or adopts new tooling patterns), `contributing.md`'s truncated "Agent guidance" doesn't follow — so an agent reading `contributing.md` sees stale rules.
+2. **Audience confusion.** `contributing.md`'s primary audience is humans authoring content; mixing agent-specific bullets in there dilutes the reading experience and makes the document harder to maintain.
+
+**Fix needed:** Two-track:
+
+1. **Scaffold template fix (upstream).** Replace the `## Agent guidance` section body with a one-paragraph pointer to the docs-app `AGENTS.md`, explaining the separation of concerns. One-line change to `.oat/templates/docs-app-fuma/docs/contributing.md`.
+2. **Skill-level bridge patch (FP-17).** Add to the skill's scaffold-integrity patches in Step 3d — detect the scaffold-shape "Agent guidance" section post-scaffold and rewrite to the pointer form. Gated by a drift check: if the user has edited the section beyond the default bullets, classify as `drift` and refuse (don't collapse user-authored content).
+
+**Skill implication:** New FP-17 sub-section in scaffold-integrity patches; new entry in Capability Detection target list; frontmatter description update; new `##### Scaffold-integrity patches` header (FP-11 + FP-13 + FP-16 + FP-17).
+
 ## Key Decisions
 
 1. **Approach:** Guided wrapper skill that calls `oat docs init` with flags rather than reimplementing scaffold logic.
@@ -422,13 +457,14 @@ This diverges from two established conventions in the same repo:
   - **Likelihood:** Medium
   - **Impact:** Medium
   - **Mitigation Ideas:** Prioritize fixes that block the skill flow; defer nice-to-haves
-  - **Status:** FP-1..FP-10 resolved via PR #27 (`4d66f0d`). FP-11..FP-16 still open:
+  - **Status:** FP-1..FP-10 resolved via PR #27 (`4d66f0d`). FP-11..FP-17 still open:
     - FP-11: `createDocsConfig` Next config passthrough + scaffold `turbopack.root` for nested standalone apps
-    - FP-12: Incoherent site-title story across scaffold / docs-config / layout metadata
-    - FP-13: Scaffolded template content inaccuracies and footguns (4 sub-findings)
+    - FP-12: Incoherent site-title story across scaffold / docs-config / layout metadata (tightened 2026-04-14 with explicit anti-pattern guidance after smoke test showed sandbox agents default to patching `next.config.js`)
+    - FP-13: Scaffolded template content inaccuracies and footguns (5 sub-findings, including sub-finding E: Node version mismatch with consuming repo)
     - FP-14: Post-bootstrap config verification missing (skill-level, not CLI)
     - FP-15: No dedicated `AGENTS.md` scaffolded inside the docs app (CLI + canonical-example gap in `apps/oat-docs/`)
     - FP-16: Scaffolded `docs/index.md` `## Contents` uses extension-less links (agent-hostile; CLI template fix + skill bridge patch)
+    - FP-17: Scaffolded `docs/contributing.md` `## Agent guidance` section duplicates docs-app AGENTS.md (three-surfaces violation; CLI template fix + skill bridge patch)
 
 ## Blockers
 
