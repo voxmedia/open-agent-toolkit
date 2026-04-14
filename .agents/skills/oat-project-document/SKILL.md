@@ -1,6 +1,6 @@
 ---
 name: oat-project-document
-version: 1.2.0
+version: 1.3.0
 description: Run when implementation is complete and documentation needs updating. Analyzes project artifacts to produce documentation update recommendations, then applies approved changes before project completion.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: true
@@ -195,9 +195,9 @@ These will be verified against actual code in Step 3.
 - Quick-mode projects may lack spec.md and design.md — extract what's available
 - If only plan.md exists (no implementation.md), the project may not have started implementation yet — still proceed, but note that documentation recommendations will be based on planned work rather than verified implementation
 
-### Step 3: Verify Against Code
+### Step 3: Verify Against Code and Build a Capability Inventory
 
-Read source files referenced in artifacts to confirm what actually shipped.
+Read source files referenced in artifacts to confirm what actually shipped, then do a targeted capability-discovery pass so the skill can catch newly introduced documentation surfaces rather than only updating already-documented ones.
 
 **For each referenced source file:**
 
@@ -211,11 +211,31 @@ Read source files referenced in artifacts to confirm what actually shipped.
 
 - Add code-verified details that artifacts didn't capture
 - Note any discrepancies between artifacts and code (informational — include in delta plan as context, not as blocking issues)
+- Organize the verified implementation into **capability areas** (for example: new app surface, CI/CD pipeline, release automation flow, deployment target, integration surface, CLI/config workflow)
+
+**Targeted capability discovery pass:**
+
+After verifying artifact-referenced files, inspect the strongest adjacent signals for newly shipped capability surfaces even when the exact docs target does not already exist.
+
+Prioritize evidence from:
+
+- new apps/packages/directories called out by the artifacts
+- workflow/config files tied to shipped behavior (`.github/workflows`, release configs, deploy configs, mobile build/release files, etc.)
+- entrypoints, route registration files, service modules, and schemas that define user- or operator-facing behavior
+- package manifests and scripts that expose new setup, release, or operational workflows
+
+For each significant capability area, capture:
+
+- capability name
+- concrete repo evidence proving it shipped
+- likely audience (`developer`, `operator`, `integrator`, `end user`)
+- likely docs audience and whether the capability represents a new docs surface versus an addition to an existing surface
 
 **Scope control:**
 
-- Focus on files directly referenced in artifacts — don't scan the entire codebase
-- If artifacts reference many files (>20), prioritize: new files first, then modified files with the most changes
+- Start with files directly referenced in artifacts, then inspect only the highest-signal adjacent files needed to understand the shipped capability areas
+- Do not scan the entire codebase blindly; stay anchored to the implementation areas surfaced by the project artifacts
+- If artifacts reference many files (>20), prioritize: new files first, then modified files with the most changes, then only the adjacent files needed to confirm docs impact
 - Read file contents, not just check existence — the skill needs to understand what the code does to make good documentation recommendations
 
 ### Step 4: Discover Documentation Surfaces
@@ -228,6 +248,8 @@ Scan the repository for all documentation and instruction surfaces.
    - Read the docs tooling config (e.g., `$DOCS_CONFIG`) to understand nav structure
    - List all files in `$DOCS_ROOT` recursively
    - Read existing docs files that could be affected by the project
+   - Identify the parent section or directory where each uncovered capability area would naturally live
+   - Note when no existing page or directory is a good fit — this is a strong signal for a `CREATE` recommendation, not a reason to force the content into an unrelated existing page
 
 2. **Root README.md:**
    - Always check — read current content
@@ -270,7 +292,37 @@ Scan the repository for all documentation and instruction surfaces.
 
 Compare "what was built" (from Steps 2-3) against "what's documented" (from Step 4) to produce recommendations.
 
-**5a. Documentation surface assessment:**
+**5a. Capability coverage assessment (required):**
+
+Before recommending file-level edits, evaluate coverage for each significant capability area in the "what was built" model.
+
+For each capability area, classify the documentation state as:
+
+- **Adequately covered** — existing docs already explain the shipped behavior accurately
+- **Thin coverage** — the area is mentioned, but important setup, workflow, or usage details are missing
+- **No coverage** — no existing docs surface meaningfully covers the capability
+
+For each capability with **thin coverage** or **no coverage**, determine the best docs home:
+
+- **Expand an existing page** when a clear, discoverable page already owns the topic
+- **Create a new page** when the topic is distinct enough to deserve its own entrypoint
+- **Create a new docs directory** (with `index.md` entrypoint, where that is the local convention) when the shipped work introduces a new top-level capability area with multiple likely subtopics
+
+Bias rules:
+
+- If a docs app exists and the shipped work represents a new major capability area, do **not** default to stuffing the information into `README.md`, `roadmap.md`, or `current-state.md`
+- Examples that often warrant `CREATE` recommendations: new mobile apps, CI/CD and release automation, new deployment targets, new integration surfaces, or new operator workflows
+- If no existing docs section is a natural fit, prefer recommending a new page or directory rather than forcing an `UPDATE` on a loosely related page
+
+Each coverage-gap finding should capture:
+
+- capability area
+- current docs state (`thin coverage` or `no coverage`)
+- evidence proving the capability shipped
+- suggested docs location (`existing page`, `new page`, or `new directory`)
+- why that location is the right home
+
+**5b. Documentation surface assessment:**
 
 For each documentation surface relevant to the project, determine one of:
 
@@ -283,6 +335,7 @@ For each documentation surface relevant to the project, determine one of:
   - Proposed file path
   - Proposed content outline (section headings, key points)
   - Why this warrants a new file (evidence)
+  - If inside a docs app, note any parent index/nav follow-on work that will be needed
 
 - **SPLIT:** Existing doc would become too large with additions. Specify:
   - Current file path and approximate size
@@ -291,7 +344,13 @@ For each documentation surface relevant to the project, determine one of:
 
 - **No change:** Surface is already accurate — skip from delta plan.
 
-**5b. Instruction surface assessment (strong signals only):**
+When deciding between `UPDATE` and `CREATE`, prefer `CREATE` if:
+
+- the capability currently has **no coverage**
+- the docs app has no discoverable home for that topic
+- the proposed addition would otherwise bury a new major workflow inside an unrelated page
+
+**5c. Instruction surface assessment (strong signals only):**
 
 Only recommend instruction changes when there is a clear trigger:
 
@@ -305,14 +364,16 @@ Only recommend instruction changes when there is a clear trigger:
 
 If no strong signal is present for an instruction surface, skip it.
 
-**5c. Per recommendation, capture:**
+**5d. Per recommendation, capture:**
 
 ```
 - Target: {file path — existing or proposed}
 - Action: {UPDATE | CREATE | SPLIT}
 - Summary: {1-2 sentences on what changes and why}
-- Evidence: {artifact reference — e.g., "spec.md §3", "plan.md p02-t03", "implementation.md p01-t01 outcome"}
+- Evidence: {artifact/code reference — e.g., "spec.md §3", "plan.md p02-t03", "implementation.md p01-t01 outcome", "workflow file X proves release automation shipped"}
 - Content guidance: {specific content to add or outline for new files}
+- Coverage state: {adequately covered | thin coverage | no coverage}
+- Parent docs impact: {parent index/nav updates needed, or "none"}
 ```
 
 ### Step 6: Present Delta Plan
@@ -378,7 +439,8 @@ Execute the approved documentation updates.
 2. **CREATE:**
    - Create parent directories if needed (`mkdir -p`)
    - Write the new file with the content outlined in the recommendation
-   - For docs directory files: follow the existing docs conventions (e.g., index.md structure for MkDocs)
+   - For docs directory files: follow the existing docs conventions for entrypoints and local navigation (for example, `index.md` entrypoints and `## Contents` sections where that is the local pattern)
+   - If the recommendation created a new docs directory, add the required entrypoint file for that directory as part of the same change
 
 3. **SPLIT:**
    - Create the new file with the content being moved
@@ -475,7 +537,9 @@ Next steps:
 ## Success Criteria
 
 - All documentation surfaces relevant to the project are scanned
+- Significant capability areas from the "what was built" model are classified as `adequately covered`, `thin coverage`, or `no coverage` before file-level recommendations are chosen
 - Recommendations are evidence-based (every recommendation cites artifact/code sources)
+- `CREATE` actions are recommended when no existing docs surface is a natural fit, including new docs pages or directories when the shipped work introduces a new capability area
 - Interactive approval flow works correctly (all/individual/skip)
 - `--auto` mode applies all changes without user interaction
 - New files and splits are handled correctly
