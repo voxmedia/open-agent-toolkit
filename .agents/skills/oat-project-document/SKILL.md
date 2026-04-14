@@ -229,7 +229,7 @@ For each significant capability area, capture:
 - capability name
 - concrete repo evidence proving it shipped
 - likely audience (`developer`, `operator`, `integrator`, `end user`)
-- likely docs audience and whether the capability represents a new docs surface versus an addition to an existing surface
+- whether the capability represents a new docs surface versus an addition to an existing surface
 
 **Scope control:**
 
@@ -319,6 +319,7 @@ Each coverage-gap finding should capture:
 - capability area
 - current docs state (`thin coverage` or `no coverage`)
 - evidence proving the capability shipped
+- likely audience
 - suggested docs location (`existing page`, `new page`, or `new directory`)
 - why that location is the right home
 
@@ -371,6 +372,7 @@ If no strong signal is present for an instruction surface, skip it.
 - Action: {UPDATE | CREATE | SPLIT}
 - Summary: {1-2 sentences on what changes and why}
 - Evidence: {artifact/code reference — e.g., "spec.md §3", "plan.md p02-t03", "implementation.md p01-t01 outcome", "workflow file X proves release automation shipped"}
+- Audience: {developer | operator | integrator | end user}
 - Content guidance: {specific content to add or outline for new files}
 - Coverage state: {adequately covered | thin coverage | no coverage}
 - Parent docs impact: {parent index/nav updates needed, or "none"}
