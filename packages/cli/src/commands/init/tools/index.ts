@@ -491,6 +491,23 @@ async function resolvePackScopes(
   return scopes as PackScopeMap;
 }
 
+function buildInstalledToolsConfig(
+  selectedPacks: ToolPack[],
+  installedPackStates: PackInstallStateMap,
+  existingTools: OatConfig['tools'],
+): OatConfig['tools'] {
+  const selectedPackSet = new Set(selectedPacks);
+  const tools = { ...existingTools };
+
+  for (const pack of ALL_TOOL_PACKS) {
+    tools[pack] =
+      selectedPackSet.has(pack) ||
+      installedPackStates[pack].location !== 'not-installed';
+  }
+
+  return tools;
+}
+
 function reportSuccess(
   context: CommandContext,
   packs: PackScopeInfo[],
@@ -930,17 +947,12 @@ export async function runInitTools(
       );
     }
 
-    const installedPackStates = await loadInstalledPackStates(
-      projectRoot,
-      userRoot,
-      assetsRoot,
-      dependencies,
-    );
     const config = await dependencies.readOatConfig(projectRoot);
-    const tools = { ...config.tools };
-    for (const pack of ALL_TOOL_PACKS) {
-      tools[pack] = installedPackStates[pack].location !== 'not-installed';
-    }
+    const tools = buildInstalledToolsConfig(
+      selectedPacks,
+      initialPackStates,
+      config.tools,
+    );
     await dependencies.writeOatConfig(projectRoot, { ...config, tools });
 
     const affectedScopesList = [...affectedScopes];

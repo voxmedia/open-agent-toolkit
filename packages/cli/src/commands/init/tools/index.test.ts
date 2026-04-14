@@ -765,24 +765,30 @@ describe('createInitToolsCommand', () => {
     );
   });
 
-  it('records installed tool packs in shared config', async () => {
-    const { command, writeOatConfig } = createHarness({
-      interactive: false,
+  it('records installed tool packs in shared config without rescanning scopes', async () => {
+    const { command, scanTools, writeOatConfig } = createHarness({
+      interactive: true,
+      packSelection: [['docs']],
+      toolsByScope: {
+        project: [createScannedTool('oat-project-new', 'workflows', 'project')],
+        user: [createScannedTool('oat-docs', 'core', 'user')],
+      },
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
+    expect(scanTools).toHaveBeenCalledTimes(2);
     expect(writeOatConfig).toHaveBeenCalledWith(
       '/tmp/workspace',
       expect.objectContaining({
         tools: {
           core: true,
-          ideas: true,
+          ideas: false,
           docs: true,
           workflows: true,
-          utility: true,
-          'project-management': true,
-          research: true,
+          utility: false,
+          'project-management': false,
+          research: false,
         },
       }),
     );
