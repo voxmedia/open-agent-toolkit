@@ -338,6 +338,39 @@ The result is that first-time users have a `.oat/config.json` they didn't write,
 
 **Skill implication:** Adds a distinct component (Post-Scaffold Inspector) to the skill pipeline between Build Verifier and Educational Walkthrough. The Inspector output becomes the opening material for the Walkthrough so the teaching is grounded in the user's actual config state.
 
+#### FP-16: Scaffolded `docs/index.md` `## Contents` uses extension-less links (agent-hostile)
+
+**Discovered:** 2026-04-14, during p06-t03 smoke test.
+
+**Problem:** The CLI scaffold template at `.oat/templates/docs-app-fuma/docs/index.md:12-13` (source; bundled into `packages/cli/assets/templates/docs-app-fuma/docs/index.md` by `packages/cli/scripts/bundle-assets.sh`) writes `## Contents` links in extension-less form:
+
+```markdown
+- [Getting Started](getting-started) - ...
+- [Contributing](contributing) - ...
+```
+
+This diverges from two established conventions in the same repo:
+
+1. **Live docs convention.** `apps/oat-docs/docs/index.md` uses `.md`-suffixed links throughout (`[Quickstart](quickstart.md)`, `[Provider Sync](provider-sync/index.md)`, etc.). The live docs have been edited by hand to this form because it's what humans and agents gravitate toward.
+2. **Build pipeline support.** `packages/docs-transforms/src/remark-links.ts` is a remark plugin that explicitly strips `.md` and converts `dir/index.md` → `dir` at build time for Fumadocs routing. The test suite covers both forms. So `.md`-suffixed authored links route correctly; the transform handles the normalization.
+
+**Why it matters for agents:** An AI agent grepping `## Contents` for "what's linked from here?" needs to follow each link to inspect the target file. With extension-less links, the agent has to infer that `[getting-started](getting-started)` means `docs/getting-started.md` — which works when the convention is stable, but breaks as soon as someone renames, moves, or introduces a subdirectory. With `.md`-suffixed links, the agent can open the file directly with zero inference. `oat docs analyze` already treats `## Contents` as the authoritative local map; agents depending on that map work more reliably when the links are grep-able paths.
+
+**Why it matters for humans:** Hand-editing the scaffold output produces files that diverge from the rendered example (the CLI says one thing; the actual docs you're modeling after say another). This is exactly the kind of "the scaffold and the canonical example disagree" footgun that FP-13 is supposed to eliminate.
+
+**Fix needed:** Two-track:
+
+1. **CLI scaffold template fix (upstream).** One-line edit to `packages/cli/assets/templates/docs-app-fuma/docs/index.md` so `## Contents` uses `.md`-suffixed links from the start. Same change pattern as FP-13 template-content patches.
+2. **Skill-level bridge patch (FP-16).** Add to the skill's scaffold-integrity patches in Step 3d — detect extension-less links in the scaffolded `docs/index.md` `## Contents` post-scaffold and rewrite them to `.md`-suffixed. Gated by a capability check that skips when the CLI template has been fixed upstream (same self-ratcheting pattern as FP-11 / FP-12 / FP-13).
+
+**Related guidance updates:**
+
+- **AGENTS.md bridge template.** "When you need to add a new page" should explicitly call out `.md`-suffixed links in `## Contents` and explain that the build pipeline handles Fumadocs routing normalization. "What not to do" should add a bullet forbidding extension-less links in authored `## Contents`.
+- **Walkthrough Section C.** Drop any framing that suggests extension-less is the authored convention — it was based on the broken scaffold, not the real practice. Show `.md`-suffixed as the single correct form; mention the `remark-links` transform handles Fumadocs routing.
+- **Related finding — `.md` vs `.mdx` default.** Fumadocs compiles both; prefer `.md` for plain content because it's friendlier to linting, grep, and agent tooling. Reach for `.mdx` only when embedding JSX components. Update AGENTS.md template "When you need to add a new page" step 1 and SKILL.md Walkthrough Section E.
+
+**Skill implication:** Adds a new FP-16 sub-section to the scaffold-integrity patches in Step 3d, a new entry in Capability Detection (3b), frontmatter description update (add FP-16 to the list of covered gaps), and guidance updates across AGENTS.md template + Walkthrough Sections C and E.
+
 ## Key Decisions
 
 1. **Approach:** Guided wrapper skill that calls `oat docs init` with flags rather than reimplementing scaffold logic.
@@ -389,12 +422,13 @@ The result is that first-time users have a `.oat/config.json` they didn't write,
   - **Likelihood:** Medium
   - **Impact:** Medium
   - **Mitigation Ideas:** Prioritize fixes that block the skill flow; defer nice-to-haves
-  - **Status:** FP-1..FP-10 resolved via PR #27 (`4d66f0d`). FP-11..FP-15 still open:
+  - **Status:** FP-1..FP-10 resolved via PR #27 (`4d66f0d`). FP-11..FP-16 still open:
     - FP-11: `createDocsConfig` Next config passthrough + scaffold `turbopack.root` for nested standalone apps
     - FP-12: Incoherent site-title story across scaffold / docs-config / layout metadata
     - FP-13: Scaffolded template content inaccuracies and footguns (4 sub-findings)
     - FP-14: Post-bootstrap config verification missing (skill-level, not CLI)
     - FP-15: No dedicated `AGENTS.md` scaffolded inside the docs app (CLI + canonical-example gap in `apps/oat-docs/`)
+    - FP-16: Scaffolded `docs/index.md` `## Contents` uses extension-less links (agent-hostile; CLI template fix + skill bridge patch)
 
 ## Blockers
 

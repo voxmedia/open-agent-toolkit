@@ -9,5 +9,5 @@ Use this file as the map to the repository's central documentation site. The sit
 
 ## Contents
 
-- [Getting Started](getting-started) - Set up the local docs toolchain and preview the site.
-- [Contributing](contributing) - Authoring conventions and navigation rules.
+- [Getting Started](getting-started.md) - Set up the local docs toolchain and preview the site.
+- [Contributing](contributing.md) - Authoring conventions and navigation rules.

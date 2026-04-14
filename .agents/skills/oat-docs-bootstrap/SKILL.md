@@ -10,7 +10,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 
 # Docs Bootstrap
 
-Bootstrap a docs app in this repo and guide the user through understanding how it works. Wraps `oat docs init` with preflight detection, richer input gathering, labeled post-patches for open CLI gaps (FP-11 Turbopack root, FP-12 site-title coherence, FP-13 template content, FP-15 docs-app AGENTS.md), build verification, post-scaffold config inspection, and an educational walkthrough covering the `index.md` + `## Contents` navigation contract, scaffolded agent-instruction surfaces, and the OAT docs ecosystem (`oat-project-document`, `oat docs analyze`, `oat docs apply`).
+Bootstrap a docs app in this repo and guide the user through understanding how it works. Wraps `oat docs init` with preflight detection, richer input gathering, labeled post-patches for open CLI gaps (FP-11 Turbopack root, FP-12 site-title coherence, FP-13 template content, FP-15 docs-app AGENTS.md, FP-16 `## Contents` link extensions), build verification, post-scaffold config inspection, and an educational walkthrough covering the `index.md` + `## Contents` navigation contract, scaffolded agent-instruction surfaces, and the OAT docs ecosystem (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`).
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ Bootstrap a docs app in this repo and guide the user through understanding how i
 
 - No reimplementing CLI scaffold logic (the CLI remains the source of truth for template rendering, version resolution, and configuration writes)
 - No fabricating files the CLI does not create, with one documented exception: the FP-15 bridge AGENTS.md, which is written only when the CLI has not scaffolded one and whose content is migrated upstream when the CLI fix lands
-- No expanding scope into content authoring (that's `oat docs analyze` / `oat docs apply` / `oat-project-document`)
+- No expanding scope into content authoring (that's `oat-docs-analyze` / `oat-docs-apply` / `oat-project-document`)
 - No silent failures — every error has a surfaced remediation
 
 **ALLOWED Activities:**
@@ -36,7 +36,7 @@ Bootstrap a docs app in this repo and guide the user through understanding how i
 - Inspecting repo state read-only before any mutation
 - Prompting the user for richer inputs than the CLI asks for (notably a site name separate from the package/app name)
 - Invoking `oat docs init` non-interactively with collected flags
-- Applying labeled, idempotent post-patches for open CLI gaps (FP-11/FP-12/FP-13/FP-15) only when capability detection shows the CLI has not addressed them
+- Applying labeled, idempotent post-patches for open CLI gaps (FP-11/FP-12/FP-13/FP-15/FP-16) only when capability detection shows the CLI has not addressed them
 - Running install + build and classifying failures against known patterns
 - Reading `.oat/config.json` back to verify paths and prompting for `requireForProjectCompletion`
 - Narrating the scaffolded output as a chunked educational walkthrough
@@ -281,7 +281,7 @@ Resolution options:
     Pick another resolution:
       - replace — remove the existing docs app and scaffold fresh at the same path
       - abort   — exit without changes; keep the existing setup as-is
-      - repair  — run `oat docs analyze` on the existing setup and decide from there
+      - repair  — run `oat-docs-analyze` on the existing setup and decide from there
 
     (When the CLI schema adds multi-docs support, 'second-app' becomes available without
     any further changes to this skill.)
@@ -324,7 +324,7 @@ How should I proceed?
   1. replace    — remove the existing docs app and scaffold fresh at the same path
   2. second-app — (deferred) add a new docs app alongside; not available in current CLI
   3. abort      — exit without changes
-  4. repair     — run `oat docs analyze` / `oat docs apply` on the existing setup
+  4. repair     — run `oat-docs-analyze` / `oat-docs-apply` on the existing setup
 
 Choose:
 ```
@@ -370,13 +370,15 @@ Do not pass flags the CLI doesn't advertise. Never assume a flag exists because 
 
 **3b. Run Capability Detection.**
 
-Before CLI invocation, probe the installed CLI to discover which FP-12 / FP-11 / FP-13 / FP-15 gaps it has already closed. Post-patches must never run blindly — they must be gated on both a CLI-level capability probe **and** a file-shape check on the specific target file. This self-ratcheting keeps the skill correct as CLI fixes land upstream.
+Before CLI invocation, probe the installed CLI to discover which FP-11 / FP-12 / FP-13 / FP-15 / FP-16 gaps it has already closed. Post-patches must never run blindly — they must be gated on both a CLI-level capability probe **and** a file-shape check on the specific target file. This self-ratcheting keeps the skill correct as CLI fixes land upstream.
 
 **CLI help probe.** Run `$CLI_CMD docs init --help` exactly once, capture stdout, and grep the flag list for known markers. Record boolean capability flags on the `capabilities` object:
 
 - `siteNameFlag` — `true` if `--site-name` (or equivalent alias like `--title`) appears in the help output. Implies FP-12 upstream fix has landed.
 - `turbopackRootFlag` — `true` if a flag for forwarding a Turbopack root (or a `--framework-config` passthrough that accepts `turbopack.root`) appears. Implies FP-11 fix has landed in some form.
 - `agentsMdScaffoldFlag` — `true` if the help output mentions `AGENTS.md` scaffolding or the CLI's scaffold template list includes `AGENTS.md`. Implies FP-15 fix has landed.
+
+For FP-16, there is no CLI-level help-probe marker; the capability is detected purely by file-shape check on the scaffolded `docs/index.md` (see below). When the CLI scaffold template is fixed upstream, the file-shape check will classify as `patched-shape` and the FP-16 patch will skip automatically.
 
 If the `--help` invocation fails (non-zero exit or empty stdout), treat all capabilities as `false` and record a warning in `Scaffold Result.cliLogs.stderr` — do not guess. Assuming a capability that doesn't exist leads to a broken scaffold; assuming absence just means an extra post-patch runs unnecessarily.
 
@@ -396,6 +398,10 @@ For each patch, the classification rule is:
   - Patched shape (via wrapper replacement): explicit `createMDX()` + hand-written config with `turbopack: { root: __dirname }` and the `<!-- FP-11 patch -->` marker.
   - Classification: pattern-match on the wrapper call or the `createMDX()` import; any other shape is `drift`.
 - **FP-13 targets** — the four sub-findings (empty descriptions, bare commands, false lint claim, generated-file warning) each target a specific line or section (see design.md). Scaffold shape for each is "unchanged CLI scaffold output"; patched shape has the `<!-- FP-13 patch -->` marker comment adjacent to the rewrite.
+- **FP-16 target** — `<appRoot>/docs/index.md` `## Contents` section (Fumadocs only):
+  - Scaffold shape: `## Contents` list items have extension-less link targets, e.g. `- [Getting Started](getting-started) - ...`. Detect by regex-matching bulleted list items where the link target is a slug (no file extension, no trailing slash) that corresponds to a real `.md` file in the same directory (or an `index.md` inside a matching subdirectory).
+  - Patched shape: `## Contents` list items have `.md`-suffixed link targets (e.g. `- [Getting Started](getting-started.md) - ...`) with a `<!-- FP-16 patch -->` / `<!-- /FP-16 patch -->` marker wrapping the whole `## Contents` block.
+  - Drift: neither scaffold nor patched shape — likely user-edited with mixed or inconsistent extensions. Record as `refused` with a suggested manual fix ("normalize all `## Contents` links to `.md`-suffixed form so the `docs-transforms` remark-links plugin handles routing").
 - **FP-15 target** — `<appRoot>/AGENTS.md`:
   - Scaffold shape: file **does not exist** (current CLI doesn't scaffold it).
   - Patched shape: file exists and begins with `# AGENTS —` (the template's H1 form).
@@ -547,7 +553,7 @@ Procedure when gate passes:
 
 When the CLI eventually scaffolds `AGENTS.md` natively and `agentsMdScaffoldFlag` becomes `true`, the bridge template in this skill can be retired (or folded back into the skill as a reference for how the CLI's template evolved).
 
-##### Scaffold-integrity patches (FP-11 + FP-13)
+##### Scaffold-integrity patches (FP-11 + FP-13 + FP-16)
 
 These patches close the "scaffold works but produces inaccurate or incomplete output" gaps. They run after the site-identity patches so FP-13 sub-findings operate on the correct `{siteName}` text.
 
@@ -644,6 +650,33 @@ Four sub-findings, each with its own gate, target, and idempotency check. All su
     Detect on subsequent runs (both skill re-invocations and normal `predev`/`prebuild`) and preserve idempotently: if the comment is already present at the top of the file, the `generate-index` command and the skill both leave it alone.
 
     If `<appRoot>/index.md` does not exist after scaffold (the script didn't run), record `{ id: 'FP-13/D.2', status: 'skipped', reason: 'index.md not yet generated; will be added on first prebuild' }` and instead add a one-time hook: modify `<appRoot>/package.json` to wrap the `prebuild`/`predev` script to prepend the header comment to the generated file on first run. This hook is labeled with the marker `<!-- FP-13 patch: generated-header-D2 -->` inside the resulting generated file.
+
+**FP-16: `## Contents` link-extension patch.**
+
+Gate: run **only if** `framework === 'fumadocs'` AND the Capability Detection file-shape check classified `<appRoot>/docs/index.md` as `scaffold-shape` for FP-16 (extension-less `## Contents` links on real `.md` targets). If the scaffold has been fixed upstream and the file is already `patched-shape` (links are `.md`-suffixed), skip with `status: 'skipped', reason: 'CLI scaffold uses .md-suffixed links'`.
+
+Target: `<appRoot>/docs/index.md` `## Contents` section. For each list item whose link target is extension-less:
+
+- If the target corresponds to a sibling `.md` file (e.g., `getting-started` → `getting-started.md`), rewrite to append `.md`.
+- If the target corresponds to a sibling subdirectory with an `index.md` (e.g., `reference` → `reference/`, with `reference/index.md`), rewrite to `reference/index.md`.
+- Leave absolute URLs, anchors (`#section`), and already-suffixed links untouched.
+
+Wrap the rewritten `## Contents` block with markers:
+
+```markdown
+<!-- FP-16 patch: .md-suffixed ## Contents -->
+
+## Contents
+
+- [Getting Started](getting-started.md) - Set up the local docs toolchain and preview the site.
+- [Contributing](contributing.md) - Authoring conventions and navigation rules.
+
+<!-- /FP-16 patch -->
+```
+
+Idempotency: if the marker `<!-- FP-16 patch: .md-suffixed ## Contents -->` is already present, skip with `status: 'skipped'`. If the `## Contents` section has drifted (mixed extensions, non-bulleted structure, extra prose between items), classify as `drift` per Capability Detection and record `refused` — do not attempt a partial rewrite.
+
+**Rationale.** The `@open-agent-toolkit/docs-transforms` remark-links plugin strips `.md` / `dir/index.md` at build time for Fumadocs routing, so `.md`-suffixed authored links render correctly. `.md`-suffixed form is what `apps/oat-docs` uses in practice and is what agents can follow via direct file open without path inference. Extension-less links are the scaffold's historical form but are agent-hostile; FP-16 normalizes to the correct convention. When the CLI scaffold template is fixed upstream, the file-shape check will skip this patch automatically.
 
 **Refuse-and-surface.** Every patch above respects the drift classification from Capability Detection. If a target was classified `drift`, the patch was already recorded as `refused` in 3b — skip here and do not re-check.
 
@@ -798,7 +831,7 @@ Before asking, explain what it does:
 ```
 OAT projects can optionally require that docs are updated before completion.
 If enabled, `oat-project-complete` won't mark a project done until the
-`oat docs analyze` report shows no open recommendations.
+`oat-docs-analyze` report shows no open recommendations.
 
 Enable this for {appName}? (default: no)
 ```
@@ -841,11 +874,11 @@ Ground this section in the `Inspection Result.parent.documentation` object read 
 
 Narrate each field actually present in their config (skip fields that are absent — don't teach MkDocs-only fields to a Fumadocs user):
 
-- **`documentation.root`** — the scaffolded app directory. Downstream tools (`oat-project-document`, `oat docs analyze`, `oat docs apply`) use this to find "the docs" without the user having to tell them.
-- **`documentation.tooling`** — framework + lint + format. `oat docs analyze` uses `framework` to pick the right rule set; the tooling values also get echoed into the `## Documentation` section the CLI wrote into root `AGENTS.md`.
+- **`documentation.root`** — the scaffolded app directory. Downstream tools (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`) use this to find "the docs" without the user having to tell them.
+- **`documentation.tooling`** — framework + lint + format. `oat-docs-analyze` uses `framework` to pick the right rule set; the tooling values also get echoed into the `## Documentation` section the CLI wrote into root `AGENTS.md`.
 - **`documentation.index`** — the authored `docs/index.md`. This is the content map (not the generated root `index.md` — that's Section B). Tools read this to understand top-level navigation intent.
 - **`documentation.config`** (MkDocs only) — path to `mkdocs.yml`. Present for MkDocs because its chrome/nav is YAML-configured; absent for Fumadocs because chrome is code.
-- **`documentation.requireForProjectCompletion`** — the opt-in collected in Step 5e. If `true`, `oat-project-complete` will block project completion until `oat docs analyze` reports no open recommendations. Explain whichever value is set on this project.
+- **`documentation.requireForProjectCompletion`** — the opt-in collected in Step 5e. If `true`, `oat-project-complete` will block project completion until `oat-docs-analyze` reports no open recommendations. Explain whichever value is set on this project.
 
 End with: "This config is how every OAT docs tool finds your docs. Editing it by hand is supported — but changes to `root` or `config` paths need to match reality on disk."
 
@@ -867,14 +900,15 @@ This section explains why tooling works at all — the contract every OAT docs t
 
 Narrate:
 
-- **Every directory under `docs/` has an `index.md`.** No exceptions, no `overview.md`, no README-as-index. Missing `index.md`s are the first thing `oat docs analyze` flags.
+- **Every directory under `docs/` has an `index.md`.** No exceptions, no `overview.md`, no README-as-index. Missing `index.md`s are the first thing `oat-docs-analyze` flags.
 - **Every `index.md` has a `## Contents` section.** The section is a plain Markdown bulleted list of links to the direct children of that directory — both subdirectory `index.md`s and leaf pages.
-- **The `## Contents` section is the machine-readable local map.** It's what `oat docs nav sync` reads to regenerate framework nav, what `oat docs generate-index` reads to roll up the tree, and what `oat docs analyze` reads to find orphaned pages.
+- **Link targets use `.md` extensions.** Leaf pages link as `[Title](page.md)`; subdirectories link as `[Section](subdir/index.md)`. The `@open-agent-toolkit/docs-transforms` remark-links plugin normalizes these at build time for Fumadocs routing (`.md` stripped; `dir/index.md` collapsed to `dir`). `.md`-suffixed authored links render correctly **and** let agents follow each link to the target file without path inference — the best of both worlds.
+- **The `## Contents` section is the machine-readable local map.** It's what `oat docs nav sync` reads to regenerate framework nav, what `oat docs generate-index` reads to roll up the tree, and what `oat-docs-analyze` reads to find orphaned pages.
 - **Anything not listed in `## Contents` is invisible to the tooling.** Adding a Markdown file is not enough — it must also appear under the parent `index.md`'s `## Contents`.
 
-Show the user their own `docs/index.md` `## Contents` as a concrete example (read the file and paste the relevant 5–15 lines). Then note: "That's the pattern. Every directory you create from now on follows the same shape."
+Show the user their own `docs/index.md` `## Contents` as a concrete example (read the file and paste the relevant 5–15 lines). If `patchesApplied` includes an `FP-16` entry with `status: 'applied'`, mention it — the skill rewrote the scaffold's extension-less links to `.md`-suffixed form so agents can follow them. Then note: "That's the pattern. Every directory you create from now on follows the same shape — `.md`-suffixed links, bulleted list, dash-separated summary per entry."
 
-End with: "`## Contents` is how navigation stays in sync with filesystem. If the nav tooling seems confused, the answer is almost always 'check the nearest `## Contents`'."
+End with: "`## Contents` is how navigation stays in sync with filesystem. If the nav tooling seems confused, the answer is almost always 'check the nearest `## Contents`'. Always author with `.md` extensions; the build pipeline handles routing."
 
 #### Section D (both frameworks) — Three agent-instruction surfaces
 
@@ -882,7 +916,7 @@ The docs app is surrounded by three separate places agents and humans are expect
 
 Narrate the three surfaces with audience + time discipline:
 
-1. **Root `AGENTS.md` `## Documentation` section** — the repo-wide pointer. A 4-line breadcrumb every agent working anywhere in the repo reads first. Written/updated by `oat docs init` (or `oat docs apply`). Purpose: "docs live here; here's the framework; here's the config path." Not a tutorial — a signpost.
+1. **Root `AGENTS.md` `## Documentation` section** — the repo-wide pointer. A 4-line breadcrumb every agent working anywhere in the repo reads first. Written/updated by `oat docs init` (or `oat-docs-apply`). Purpose: "docs live here; here's the framework; here's the config path." Not a tutorial — a signpost.
 2. **Docs-app `AGENTS.md`** at `<appRoot>/AGENTS.md` — the ongoing reference for agents who are **working inside the docs app**, not setting it up. This is the FP-15 bridge file (or CLI-scaffolded equivalent if `capabilities.agentsMdScaffoldFlag === true`). Task-framed sections: "When you need to add a new page", "When you need to restructure navigation", "When you need to audit or bulk-edit docs". **Audience discipline:** this file exists for the agent working on docs content **six months from now**, not for the agent running this skill today. Everything in it should still be useful at that time. If content would only matter at setup time, it belongs in this Walkthrough, not in `AGENTS.md`.
 3. **`docs/contributing.md`** — human-authoring conventions. Markdown feature reference (code blocks, mermaid, GFM alerts), frontmatter requirements, linting/formatting commands (if enabled). Not agent instructions — human reference. Agents working with docs content may read it for the Markdown feature list, but its primary audience is a human contributor.
 
@@ -895,12 +929,12 @@ Skip this section entirely when `framework === 'mkdocs'`; the MkDocs equivalent 
 Narrate how the Fumadocs scaffold actually works, grounded in files the user can open alongside you:
 
 - **`app/layout.tsx` — `DocsLayout` renders the chrome.** The `<DocsLayout>` component from `@open-agent-toolkit/docs-theme` wraps every docs page with the top nav, sidebar, and search UI. It accepts a `branding` prop with `title`, `logo`, etc. **Runtime insight (worth knowing):** the compiled theme bundle only forwards `branding.title` into the nav header chrome — it doesn't use it for page metadata, social cards, or browser tab titles. That's why FP-12's patches also add `export const metadata = { title, description }` to `layout.tsx`: the chrome title and the document title are two separate concerns, and the scaffold only wired the first.
-- **`next.config.js` — `createMDX()` picks up `docs/`.** The Fumadocs MDX pipeline uses `@open-agent-toolkit/docs-config`'s `createDocsConfig()` wrapper, which under the hood calls `createMDX()` with the docs directory hardcoded to `docs/`. MDX files are compiled at build time; frontmatter becomes typed metadata accessible from layouts and listings.
-- **FlexSearch static indexing.** Search is client-side — on build, Fumadocs scans every MDX file under `docs/` and emits a precomputed FlexSearch index that loads alongside the first route. No server; no search API call. That's also why renaming a page without a redirect loses deep links silently: the old index entry stops existing at the next build, and the new one doesn't know the old slug.
+- **`next.config.js` — `createMDX()` picks up `docs/`.** The Fumadocs MDX pipeline uses `@open-agent-toolkit/docs-config`'s `createDocsConfig()` wrapper, which under the hood calls `createMDX()` with the docs directory hardcoded to `docs/`. Both `.md` and `.mdx` files are compiled at build time; frontmatter becomes typed metadata accessible from layouts and listings. **Default to `.md`** for plain content pages — agents, linters, grep rules, and the `remark-links` plugin all handle `.md` more predictably than `.mdx`. Reach for `.mdx` only when a page actually needs a JSX component inline (an embedded `<Callout>`, an interactive widget, a custom layout). FlexSearch indexes them identically.
+- **FlexSearch static indexing.** Search is client-side — on build, Fumadocs scans every `.md`/`.mdx` file under `docs/` and emits a precomputed FlexSearch index that loads alongside the first route. No server; no search API call. That's also why renaming a page without a redirect loses deep links silently: the old index entry stops existing at the next build, and the new one doesn't know the old slug.
 - **`@open-agent-toolkit/docs-theme` branding.** The theme package centralizes the nav/sidebar/footer look and forwards only a small surface of props. Don't expect `branding` to influence metadata; use the FP-12 `metadata` export for that.
 - **FP-11 Turbopack root.** If your repo is `nested-standalone` (docs app has its own lockfile inside the monorepo), Next's Turbopack infers the wrong workspace root and warns about multiple lockfiles. The FP-11 patch sets `turbopack: { root: __dirname }` either via `createDocsConfig` passthrough or (if the passthrough isn't available) by replacing the wrapper with an explicit `createMDX()` config. Check `patchesApplied` to see which code path your scaffold used.
 
-End with: "Fumadocs gives you a typed MDX pipeline with client-side search and code-owned chrome. Branding is one layer (nav only); metadata is a separate, explicit concern. Most page-level edits are frontmatter + Markdown; only layout/theme changes go in `app/`."
+End with: "Fumadocs gives you a typed MDX-capable pipeline with client-side search and code-owned chrome. Prefer `.md` for plain content, reach for `.mdx` only when you need embedded components. Branding is one layer (nav only); metadata is a separate, explicit concern. Most page-level edits are frontmatter + Markdown; only layout/theme changes go in `app/`."
 
 #### Section F (MkDocs only) — Lean summary with Minimum Contract
 
@@ -931,10 +965,10 @@ End with: "That's the Minimum Contract. Everything on the deferred list has good
 Introduce the three tools the user will use after scaffold, ordered by when they'll meet each one:
 
 - **`oat-project-document`** — runs during OAT project workflows. When a project wraps up (or at phase boundaries), this skill reads `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md` and proposes evidence-backed documentation updates. No speculation: every proposed update traces back to a source artifact. The user approves the updates before they land. This is the primary way project-derived docs stay current without requiring the user to hand-write them.
-- **`oat docs analyze`** — read-only audit of the docs surface. Checks the `## Contents` contract (every dir has `index.md`; every `index.md` has `## Contents`; every link resolves), surfaces drift between filesystem and config, and flags orphaned pages. Produces a report at `.oat/repo/analysis/` — never mutates content. Run it periodically, and before changes to doc-heavy areas.
-- **`oat docs apply`** — executes approved analyze recommendations. Creates a branch, runs the fixes, syncs derived navigation artifacts, and (optionally) opens a PR. Will not make unapproved changes or invent new conventions. This is the intended path for any bulk content change; hand-editing a dozen pages at once skips the safety net.
+- **`oat-docs-analyze`** — read-only audit of the docs surface. Checks the `## Contents` contract (every dir has `index.md`; every `index.md` has `## Contents`; every link resolves), surfaces drift between filesystem and config, and flags orphaned pages. Produces a report at `.oat/repo/analysis/` — never mutates content. Run it periodically, and before changes to doc-heavy areas.
+- **`oat-docs-apply`** — executes approved analyze recommendations. Creates a branch, runs the fixes, syncs derived navigation artifacts, and (optionally) opens a PR. Will not make unapproved changes or invent new conventions. This is the intended path for any bulk content change; hand-editing a dozen pages at once skips the safety net.
 
-End with: "`oat-project-document` fills docs from project artifacts. `oat docs analyze` tells you where the docs are drifting. `oat docs apply` fixes approved drift with a safety net. Together they're the reason hand-authoring docs from scratch isn't the expected path in OAT."
+End with: "`oat-project-document` fills docs from project artifacts. `oat-docs-analyze` tells you where the docs are drifting. `oat-docs-apply` fixes approved drift with a safety net. Together they're the reason hand-authoring docs from scratch isn't the expected path in OAT."
 
 ### Step 7: Optional Content Kickoff
 
