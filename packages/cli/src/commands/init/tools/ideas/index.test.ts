@@ -3,6 +3,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { getInstalledCanonicalPaths } from '@commands/tools/shared/install-sync-context';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -192,6 +193,15 @@ describe('createInitToolsIdeasCommand', () => {
     expect(installIdeas).not.toHaveBeenCalled();
     expect(capture.info.at(-1)).toContain('Cancelled');
     expect(process.exitCode).toBe(0);
+    expect(getInstalledCanonicalPaths(command)).toEqual([]);
+  });
+
+  it('records installed canonical paths only after a successful install', async () => {
+    const { command } = createHarness();
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    expect(getInstalledCanonicalPaths(command)).not.toEqual([]);
   });
 
   it('text output shows counts and sync reminder', async () => {

@@ -70,7 +70,7 @@ async function runInitToolsCore(
   context: CommandContext,
   options: InitToolsCoreOptions,
   dependencies: InitToolsCoreDependencies,
-): Promise<void> {
+): Promise<boolean> {
   try {
     // Core pack always installs at user scope
     const targetRoot = dependencies.resolveScopeRoot(
@@ -88,6 +88,7 @@ async function runInitToolsCore(
 
     reportSuccess(context, targetRoot, result);
     process.exitCode = 0;
+    return true;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
@@ -96,6 +97,7 @@ async function runInitToolsCore(
       context.logger.error(message);
     }
     process.exitCode = 1;
+    return false;
   }
 }
 
@@ -116,8 +118,8 @@ export function createInitToolsCoreCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      await runInitToolsCore(context, options, dependencies);
-      if (process.exitCode === 0 || process.exitCode === undefined) {
+      const didInstall = await runInitToolsCore(context, options, dependencies);
+      if (didInstall) {
         setInstalledCanonicalPaths(command, canonicalPathsForPack('core'));
       }
     });

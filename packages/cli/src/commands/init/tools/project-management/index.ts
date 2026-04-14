@@ -51,6 +51,7 @@ export function createInitToolsProjectManagementCommand(
     .option('--force', 'Overwrite existing files where applicable')
     .action(
       async (options: InitToolsProjectManagementOptions, command: Command) => {
+        let didInstall = false;
         try {
           const context = dependencies.buildCommandContext(
             readGlobalOptions(command),
@@ -82,6 +83,7 @@ export function createInitToolsProjectManagementCommand(
             );
             context.logger.info('Run: oat sync --scope project');
           }
+          didInstall = true;
           process.exitCode = 0;
         } catch (error) {
           const message =
@@ -97,7 +99,7 @@ export function createInitToolsProjectManagementCommand(
           process.exitCode = 1;
         }
 
-        if (process.exitCode === 0 || process.exitCode === undefined) {
+        if (didInstall) {
           setInstalledCanonicalPaths(
             command,
             canonicalPathsForPack('project-management'),

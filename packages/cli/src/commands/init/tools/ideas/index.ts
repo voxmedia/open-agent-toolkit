@@ -94,7 +94,7 @@ async function runInitToolsIdeas(
   context: CommandContext,
   options: InitToolsIdeasOptions,
   dependencies: InitToolsIdeasDependencies,
-): Promise<void> {
+): Promise<boolean> {
   try {
     const scope = resolveInstallScope(context);
     const targetRoot =
@@ -112,7 +112,7 @@ async function runInitToolsIdeas(
           context.logger.info('Cancelled: no files were overwritten.');
         }
         process.exitCode = 0;
-        return;
+        return false;
       }
     }
 
@@ -125,6 +125,7 @@ async function runInitToolsIdeas(
 
     reportSuccess(context, scope, targetRoot, assetsRoot, result);
     process.exitCode = 0;
+    return true;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
@@ -133,6 +134,7 @@ async function runInitToolsIdeas(
       context.logger.error(message);
     }
     process.exitCode = 1;
+    return false;
   }
 }
 
@@ -151,8 +153,12 @@ export function createInitToolsIdeasCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      await runInitToolsIdeas(context, options, dependencies);
-      if (process.exitCode === 0 || process.exitCode === undefined) {
+      const didInstall = await runInitToolsIdeas(
+        context,
+        options,
+        dependencies,
+      );
+      if (didInstall) {
         setInstalledCanonicalPaths(command, canonicalPathsForPack('ideas'));
       }
     });
