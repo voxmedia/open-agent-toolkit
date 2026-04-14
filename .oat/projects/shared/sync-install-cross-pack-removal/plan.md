@@ -274,13 +274,13 @@ git commit -m "test(p02-t04): make provider alignment explicit"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status      | Date       | Artifact                                    |
-| ------ | -------- | ----------- | ---------- | ------------------------------------------- |
-| p01    | code     | pending     | -          | -                                           |
-| p02    | code     | pending     | -          | -                                           |
-| final  | code     | fixes_added | 2026-04-14 | reviews/archived/final-review-2026-04-14.md |
-| spec   | artifact | pending     | -          | -                                           |
-| design | artifact | pending     | -          | -                                           |
+| Scope  | Type     | Status          | Date       | Artifact                                    |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------- |
+| p01    | code     | pending         | -          | -                                           |
+| p02    | code     | pending         | -          | -                                           |
+| final  | code     | fixes_completed | 2026-04-14 | reviews/archived/final-review-2026-04-14.md |
+| spec   | artifact | pending         | -          | -                                           |
+| design | artifact | pending         | -          | -                                           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -302,7 +302,7 @@ git commit -m "test(p02-t04): make provider alignment explicit"
 
 **Total: 7 tasks**
 
-Review fixes queued. Resume implementation at `p02-t01`.
+All plan tasks are complete. Awaiting final re-review.
 
 ---
 

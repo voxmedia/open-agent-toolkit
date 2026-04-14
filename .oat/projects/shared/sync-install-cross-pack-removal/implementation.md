@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p02-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,12 +14,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 3/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 4     | 4/4       |
 
-**Total:** 6/7 tasks completed
+**Total:** 7/7 tasks completed
 
 ---
 
@@ -112,8 +112,51 @@ oat_generated: false
 
 ## Phase 2: Review Fixes
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-14
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- The planner regression now proves both the unfiltered removal behavior and the install-filtered preservation behavior on the same stale-manifest fixture.
+- Pack-level init handlers only stamp install-scoped canonical paths after a real install succeeds, so cancelled overwrite confirmations do not affect follow-up sync behavior.
+- The hidden `--install-canonical` option now validates its inputs, and the regression test makes the provider alignment explicit instead of relying on a helper default.
+
+**Key files touched:**
+
+- `packages/cli/src/engine/compute-plan.test.ts` - strengthened the install-sync regression and made the provider name explicit
+- `packages/cli/src/commands/init/tools/core/index.ts` - gated canonical stamping on successful install completion
+- `packages/cli/src/commands/init/tools/ideas/index.ts` - gated canonical stamping on successful install completion
+- `packages/cli/src/commands/init/tools/workflows/index.ts` - gated canonical stamping on successful install completion
+- `packages/cli/src/commands/init/tools/project-management/index.ts` - gated canonical stamping on successful install completion
+- `packages/cli/src/commands/init/tools/ideas/index.test.ts` - covered the cancelled overwrite path
+- `packages/cli/src/commands/sync/index.ts` - validated hidden install-scoped canonical paths
+- `packages/cli/src/commands/sync/index.test.ts` - covered invalid hidden-path rejection
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- compute-plan.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- ideas/index.test.ts workflows/index.test.ts core/index.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- sync/index.test.ts`
+- Result: pass
+- Run: `pnpm test`
+- Result: pass
+- Run: `pnpm lint`
+- Result: pass
+- Run: `pnpm type-check`
+- Result: pass
+- Run: `pnpm build`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+
+**Notes / Decisions:**
+
+- I kept the cancel-path fix local to the pack handlers instead of changing shared install-sync state shape.
+- Hidden install-path validation lives in the command action so malformed values fail as an explicit CLI error.
 
 ### Task p02-t01: (review) Add paired regression coverage for install-scoped removal filtering
 
@@ -194,8 +237,25 @@ oat_generated: false
 
 ### Task p02-t04: (review) Make provider coupling explicit in compute-plan regression tests
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 10475e45
+
+**Outcome:**
+
+- The stale-manifest regression now declares its provider alignment explicitly instead of depending on `createTestAdapter()` default behavior.
+
+**Files changed:**
+
+- `packages/cli/src/engine/compute-plan.test.ts` - bound the regression fixture to an explicit `claude` adapter instance
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- compute-plan.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- I kept the hardening local to the reviewed regression instead of changing the shared test helper default.
 
 ---
 
@@ -222,12 +282,7 @@ oat_generated: false
 
 - User chose to convert `m2` and `m4` into fix tasks and defer `m1` and `m3`.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
-
-After the fix tasks are complete:
-
-- Update the review row status to `fixes_completed`
-- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+**Next:** Request a final re-review via `oat-project-review-provide code final`, then run `oat-project-review-receive`.
 
 ## Implementation Log
 
@@ -238,12 +293,17 @@ After the fix tasks are complete:
 - [x] p01-t01: Reproduce stale-manifest removal behavior
 - [x] p01-t02: Implement conservative removal guard
 - [x] p01-t03: Verify install-path behavior and summarize asymmetry
+- [x] p02-t01: Add paired regression coverage for install-scoped removal filtering
+- [x] p02-t02: Fix cancel-path install filter stamping for pack-level init handlers
+- [x] p02-t03: Validate hidden install-scoped canonical paths
+- [x] p02-t04: Make provider coupling explicit in compute-plan regression tests
 
 **What changed (high level):**
 
 - Install-triggered sync now filters removals to the canonical entries installed in that invocation.
 - Tool-pack installers record canonical install targets for the post-install sync hook.
 - Regression coverage now exercises the planner seam and the install-to-sync forwarding path.
+- Review-fix follow-up tightened the regression baseline, gated canceled pack installs from stamping canonical filters, and validated the hidden install filter option.
 
 **Decisions:**
 
@@ -252,7 +312,7 @@ After the fix tasks are complete:
 **Follow-ups / TODO:**
 
 - Consider a separate stale-manifest pruning workflow if install-triggered preservation leaves too much drift behind.
-- Execute review-fix tasks p02-t01 through p02-t04 from the 2026-04-14 final re-review.
+- Request a final re-review now that p02-t01 through p02-t04 are complete.
 
 **Blockers:**
 
@@ -270,10 +330,10 @@ After the fix tasks are complete:
 
 ## Test Results
 
-| Phase | Tests Run                                     | Passed | Failed | Coverage |
-| ----- | --------------------------------------------- | ------ | ------ | -------- |
-| 1     | 4 targeted suites + CLI build + release check | yes    | 0      | targeted |
-| 2     | review receipt only                           | n/a    | 0      | n/a      |
+| Phase | Tests Run                                              | Passed | Failed | Coverage             |
+| ----- | ------------------------------------------------------ | ------ | ------ | -------------------- |
+| 1     | 4 targeted suites + CLI build + release check          | yes    | 0      | targeted             |
+| 2     | targeted suites + repo verification + release validate | yes    | 0      | targeted + full repo |
 
 ## Final Summary (for PR/docs)
 
@@ -281,6 +341,7 @@ After the fix tasks are complete:
 
 - Install-triggered tool-pack sync no longer deletes unrelated provider-view files because of stale manifest entries.
 - The sync planner now accepts an internal removal filter passed from the install command.
+- Review-fix follow-up added the missing regression baseline, prevented canceled pack installs from stamping install filters, and validated hidden install-filter inputs.
 
 **Behavioral changes (user-facing):**
 
@@ -296,8 +357,10 @@ After the fix tasks are complete:
 **Verification performed:**
 
 - Targeted CLI Vitest run
-- CLI package build
-- `oxfmt --check` on changed files
+- Full workspace test run
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm build`
 - `pnpm release:validate`
 
 **Design deltas (if any):**
