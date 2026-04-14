@@ -27,6 +27,11 @@ Install the workflow skills with `oat tools install docs` (preferred) or
   contributor guidance, and docs-app contract issues
 - `oat-docs-apply` consumes the analysis artifact and applies only approved,
   evidence-backed recommendations
+- `oat-project-document` performs post-implementation docs sync for a tracked project,
+  including finding missing coverage for newly shipped capability areas and
+  recommending new docs pages or directories when existing docs do not provide
+  a natural home. See the [project lifecycle post-implementation flow](../workflows/projects/lifecycle.md#post-implementation-flow)
+  for where this runs in the tracked project flow.
 
 ## Contract model
 
