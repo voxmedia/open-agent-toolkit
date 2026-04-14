@@ -9,7 +9,20 @@ oat_generated_at: 2026-04-15
 
 ## Active Project
 
-_(not set)_
+**install-sync** (`.oat/projects/shared/install-sync`)
+
+## Active Project Summary
+
+| Field        | Value         |
+| ------------ | ------------- |
+| Mode         | quick         |
+| Phase        | plan          |
+| Status       | complete      |
+| HiLL Gate    | n/a           |
+| Current Task | -             |
+| Docs Updated | ⚠ not yet run |
+
+Details: `.oat/projects/shared/install-sync/state.md`
 
 ## Last Paused Project
 
@@ -26,7 +39,7 @@ _(not set)_
 
 ## Recommended Next Step
 
-**oat project open npm-publish** - Resume paused project or open a different one
+**oat-project-implement** - Start implementation
 
 ## Quick Commands
 
@@ -42,4 +55,5 @@ _(not set)_
 ## Available Projects
 
 - **docs-readability-reorg** - implement
+- **install-sync** - plan
 - **remote-project-management** - discovery
