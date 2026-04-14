@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p03-t06
 oat_last_commit: 554e968a
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -16,7 +16,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-04-14T18:50:48Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-14T20:07:28Z'
+oat_project_state_updated: '2026-04-14T20:23:00Z'
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress - all review-fix tasks are complete and the project is awaiting re-review.
+Implementation in progress - final re-review returned two minor hygiene findings, now queued as review-fix tasks `p03-t06` and `p03-t07`.
 
 ## Artifacts
 
@@ -54,7 +54,9 @@ Implementation in progress - all review-fix tasks are complete and the project i
 - ✓ Review-fix task `p03-t05` completed
 - ✓ Release validation passed
 - ✓ Workspace tests, lint, type-check, and build passed
-- ⧗ Awaiting final re-review
+- ✓ Final re-review received
+- ⧗ Review-fix task `p03-t06` queued
+- ⧗ Review-fix task `p03-t07` queued
 
 ## Blockers
 
@@ -62,4 +64,4 @@ None
 
 ## Next Milestone
 
-Run final re-review, then continue to verification and PR flow if it passes.
+Execute `p03-t06` and `p03-t07`, then request the closing final re-review.

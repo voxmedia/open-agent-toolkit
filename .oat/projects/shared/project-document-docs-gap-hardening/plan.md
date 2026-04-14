@@ -315,14 +315,14 @@ git commit -m "fix(p03-t05): add lifecycle cross-link for project-document"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                              |
-| ------ | -------- | -------- | ---------- | ------------------------------------- |
-| p01    | code     | pending  | -          | -                                     |
-| p02    | code     | pending  | -          | -                                     |
-| p03    | code     | pending  | -          | -                                     |
-| final  | code     | received | 2026-04-14 | reviews/final-review-2026-04-14-v2.md |
-| spec   | artifact | pending  | -          | -                                     |
-| design | artifact | pending  | -          | -                                     |
+| Scope  | Type     | Status      | Date       | Artifact                                       |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending     | -          | -                                              |
+| p02    | code     | pending     | -          | -                                              |
+| p03    | code     | pending     | -          | -                                              |
+| final  | code     | fixes_added | 2026-04-14 | reviews/archived/final-review-2026-04-14-v2.md |
+| spec   | artifact | pending     | -          | -                                              |
+| design | artifact | pending     | -          | -                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -337,15 +337,73 @@ git commit -m "fix(p03-t05): add lifecycle cross-link for project-document"
 
 ## Implementation Complete
 
+### Task p03-t06: (review) Commit the lifecycle docs update that is still only in the working tree
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+
+**Step 1: Understand the issue**
+
+Review finding: The Phase 2 lifecycle docs update was reviewed from the working tree but never landed in a commit, so it will not ship with the branch.
+Location: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+
+**Step 2: Implement fix**
+
+Stage and commit the already-implemented lifecycle docs change so the documented `oat-project-document` behavior is actually present in branch history before PR creation.
+
+**Step 3: Verify**
+
+Run: `git diff --cached -- apps/oat-docs/docs/workflows/projects/lifecycle.md`
+Expected: The staged diff contains the lifecycle wording about checking for missing coverage of newly shipped capability areas.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/workflows/projects/lifecycle.md
+git commit -m "docs(p03-t06): commit lifecycle coverage-scan docs update"
+```
+
+---
+
+### Task p03-t07: (review) Commit the regenerated public package versions asset
+
+**Files:**
+
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Step 1: Understand the issue**
+
+Review finding: The generated public-package versions asset reflects the `0.0.36` lockstep bump but was left uncommitted.
+Location: `packages/cli/assets/public-package-versions.json`
+
+**Step 2: Implement fix**
+
+Stage and commit the regenerated asset so CLI scaffolding consumers receive the same public package versions as the package manifests.
+
+**Step 3: Verify**
+
+Run: `cat packages/cli/assets/public-package-versions.json`
+Expected: The asset shows the current lockstep public package versions, including `0.0.36`.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/assets/public-package-versions.json
+git commit -m "chore(p03-t07): sync public package version asset"
+```
+
+---
+
 **Summary:**
 
 - Phase 1: 2 tasks - harden `oat-project-document` so it detects undocumented capability surfaces and can recommend new docs files.
 - Phase 2: 2 tasks - update OAT docs and verify the workflow/project artifacts.
-- Phase 3: 5 tasks - address final review findings across package-version policy, skill contract polish, and docs discoverability.
+- Phase 3: 7 tasks - address final review findings across package-version policy, skill contract polish, docs discoverability, and final PR hygiene.
 
-**Total: 9 tasks**
+**Total: 11 tasks**
 
-Ready for code review and merge.
+Ready for final hygiene fix execution and re-review.
 
 ---
 

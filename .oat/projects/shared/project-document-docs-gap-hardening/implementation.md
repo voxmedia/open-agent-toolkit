@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: null
+oat_current_task_id: p03-t06
 oat_generated: false
 ---
 
@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 5     | 5/5       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 7     | 5/7       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/11 tasks completed
 
 ---
 
 ## Phase 1: Skill Hardening
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-04-14
 
 ### Phase Summary (fill when phase is complete)
@@ -181,6 +181,71 @@ oat_generated: false
 **Notes / Decisions:**
 
 - Kept the review fixes tightly scoped to the received findings and tracked the review row as `fixes_completed` instead of `passed`.
+
+### Task p03-t06: (review) Commit the lifecycle docs update that is still only in the working tree
+
+**Status:** pending
+**Commit:** -
+
+**Outcome (required when completed):**
+
+- Stage and commit the lifecycle docs wording that was previously implemented but left out of branch history.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/workflows/projects/lifecycle.md` - commit the existing capability-coverage lifecycle wording
+
+**Verification:**
+
+- Run: `git diff --cached -- apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- Result: pending
+
+---
+
+### Task p03-t07: (review) Commit the regenerated public package versions asset
+
+**Status:** pending
+**Commit:** -
+
+**Outcome (required when completed):**
+
+- Stage and commit the regenerated public package versions asset so it matches the `0.0.36` lockstep package bump.
+
+**Files changed:**
+
+- `packages/cli/assets/public-package-versions.json` - sync generated public package versions
+
+**Verification:**
+
+- Run: `cat packages/cli/assets/public-package-versions.json`
+- Result: pending
+
+---
+
+### Review Received: final
+
+**Date:** 2026-04-14
+**Review artifact:** reviews/archived/final-review-2026-04-14-v2.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** p03-t06, p03-t07
+
+**Minor disposition (final-scope explicit choice):**
+
+- `m1` -> converted to task `p03-t06`
+- `m2` -> converted to task `p03-t07`
+
+**Deferred Findings (Medium):**
+
+- None
+
+**Next:** Execute fix tasks via the `oat-project-implement` flow, then update the final review row to `fixes_completed` and request the closing re-review.
 
 ### Task p03-t01: (review) Bump lockstep public package versions
 
@@ -417,6 +482,31 @@ oat_generated: false
 **Follow-ups / TODO:**
 
 - Request final re-review
+
+### 2026-04-14
+
+**Session Start:** 20:23 UTC
+
+- [x] final re-review received - PASS with 2 minor hygiene findings
+- [ ] p03-t06: (review) Commit the lifecycle docs update that is still only in the working tree - next
+
+**What changed (high level):**
+
+- Converted the two final-scope minor hygiene findings into explicit review-fix tasks instead of deferring them.
+
+**Decisions:**
+
+- Treated the final-scope minor findings as fix-now work because both are low-churn and directly affect what ships in the PR diff.
+
+**Follow-ups / TODO:**
+
+- Execute `p03-t06`
+- Execute `p03-t07`
+- Re-run final review closure after the hygiene fixes land
+
+**Blockers:**
+
+- None
 
 **Blockers:**
 
