@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: prev1-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | in_progress | 3     | 2/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 3     | 3/3       |
 
-**Total:** 6/7 tasks completed
+**Total:** 7/7 tasks completed
 
 ---
 
@@ -231,7 +231,7 @@ oat_generated: false
 
 ## Phase 3: Review Fixes
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-14
 
 ### Task prev1-t01: (review) Preserve both-scope installs unless the user explicitly changes them
@@ -290,8 +290,26 @@ oat_generated: false
 
 ### Task prev1-t03: (review) Add direct agent-only install-state coverage
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a7648401
+
+**Outcome (required when completed):**
+
+- Added a direct unit test proving pack-state aggregation treats a research pack seen only through an agent entry as installed content.
+- Closed the last review-fix gap without broadening the install-state helper beyond its existing pack scan inputs.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/tools/install-state.test.ts` - agent-only regression coverage
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/install-state.test.ts src/commands/init/tools/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Research remains the clearest regression target here because it is the pack that contributes bundled agent content today.
 
 ---
 
@@ -367,7 +385,7 @@ Track test execution during implementation.
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm --filter @open-agent-toolkit/cli type-check` | partial | 2      | Full-package `test` / `type-check` blocked by unrelated `@open-agent-toolkit/control-plane` resolution failures                                  |
 | 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm --filter @open-agent-toolkit/cli type-check` | partial | 2      | Focused regressions pass; full-package `test` / `type-check` remain blocked by unrelated `@open-agent-toolkit/control-plane` resolution failures |
-| 3     | -                                                                                                                                                                                                                                                                                      | -       | -      | -                                                                                                                                                |
+| 3     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/install-state.test.ts src/commands/init/tools/index.test.ts`                                                                                                                                            | yes     | 0      | Review-fix coverage passes, including agent-only aggregation and the single-pass scan regression                                                 |
 
 ## Final Summary (for PR/docs)
 
@@ -378,6 +396,8 @@ Track test execution during implementation.
 - Affected-scope-aware auto-sync for `oat tools install`
 - Installed-state labels and defaults in the interactive pack prompts
 - Per-pack final scope summaries and exact sync-scope reporting
+- Explicit keep-both handling for packs already installed in project and user scope
+- Single-pass installed-tool config persistence plus direct agent-only aggregation coverage
 
 **Behavioral changes (user-facing):**
 
@@ -385,13 +405,17 @@ Track test execution during implementation.
 - `oat tools install` now auto-syncs both scopes touched by a migration instead of only the CLI-level scope
 - The main pack picker now shows where each pack is already installed
 - The user-scope follow-up now defaults existing user installs on and labels both-scope installs explicitly
+- Packs already installed in both scopes now require an explicit keep-both vs. user-only decision instead of defaulting to project cleanup
 - Post-install output now reports final scopes pack-by-pack instead of one shared scope label
+- The installer no longer rescans both scopes after writing files just to refresh config booleans
 
 **Key files / modules:**
 
 - `packages/cli/src/commands/init/tools/index.ts` - interactive install flow and migration cleanup
+- `packages/cli/src/commands/init/tools/index.test.ts` - interactive install regressions and config-write coverage
 - `packages/cli/src/commands/tools/install/index.ts` - post-install auto-sync scope selection
 - `packages/cli/src/commands/init/tools/install-state.ts` - pack install-state derivation
+- `packages/cli/src/commands/init/tools/install-state.test.ts` - direct aggregation coverage
 - `packages/cli/src/commands/tools/install/index.test.ts` - install wrapper regression coverage
 
 **Verification performed:**
@@ -422,12 +446,7 @@ Track test execution during implementation.
 
 - `m2` - Core-scope defense-in-depth cleanup remains deferred because `oat tools install` hard-pins core to user scope today, so the review concern is theoretical for this command path and does not justify reopening the shipped fix.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
-
-After the fix tasks are complete:
-
-- Update the `final` review row status to `fixes_completed`
-- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+**Next:** Run `oat-project-review-provide` for the final code re-review, then process any resulting findings if needed.
 
 ## References
 

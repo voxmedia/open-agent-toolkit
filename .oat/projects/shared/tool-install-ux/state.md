@@ -1,13 +1,13 @@
 ---
-oat_current_task: prev1-t03
-oat_last_commit: 7eeb0b00
+oat_current_task: null
+oat_last_commit: a7648401
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: ['p02'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['p02'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-13T23:54:19.127Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-14T15:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-14T15:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: tool-install-ux
 
-**Status:** Implementation In Progress
+**Status:** Awaiting Re-review
 **Started:** 2026-04-13
 **Last Updated:** 2026-04-14
 
 ## Current Phase
 
-Implementation resumed for final review fixes
+Implementation complete; review fixes are ready for re-review
 
 ## Artifacts
 
@@ -50,7 +50,8 @@ Implementation resumed for final review fixes
 - ✓ Phase 2 review checkpoint recorded
 - ✓ `prev1-t01` complete
 - ✓ `prev1-t02` complete
-- ⧗ Executing `prev1-t03`
+- ✓ `prev1-t03` complete
+- ✓ Review-fix phase complete
 
 ## Blockers
 
@@ -58,4 +59,4 @@ None
 
 ## Next Milestone
 
-Execute `prev1-t03` via `oat-project-implement`, then close the review-fix phase and request re-review
+Run the final code re-review and process any remaining findings if present
