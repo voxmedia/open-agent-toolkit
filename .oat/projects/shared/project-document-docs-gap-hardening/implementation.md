@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p03-t08
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 8     | 7/8       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 8     | 8/8       |
 
-**Total:** 11/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ---
 
 ## Phase 1: Skill Hardening
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-14
 
 ### Phase Summary (fill when phase is complete)
@@ -224,12 +224,12 @@ oat_generated: false
 
 ### Task p03-t08: (review) Commit the untracked quick-mode discovery artifact
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2347366b
 
 **Outcome (required when completed):**
 
-- Stage and commit the existing quick-mode `discovery.md` artifact so the branch contains the full artifact set referenced by the rest of the project files.
+- Staged and committed the existing quick-mode `discovery.md` artifact so the branch contains the full artifact set referenced by the rest of the project files.
 
 **Files changed:**
 
@@ -238,7 +238,7 @@ oat_generated: false
 **Verification:**
 
 - Run: `git status --short .oat/projects/shared/project-document-docs-gap-hardening/discovery.md`
-- Result: pending
+- Result: pass
 
 ---
 
@@ -293,7 +293,7 @@ oat_generated: false
 
 - User explicitly approved continuing past the 3-cycle review guard to commit the untracked `discovery.md` artifact and proceed.
 
-**Next:** Execute `p03-t08`, then close the review cycle and proceed to PR flow without another automated review round.
+**Next:** `p03-t08` is complete. Under the explicit user override for the 3-cycle guard, this final review is closed and the project proceeds to PR flow without another automated re-review.
 
 ### Task p03-t01: (review) Bump lockstep public package versions
 
@@ -561,7 +561,7 @@ oat_generated: false
 **Session Start:** 20:45 UTC
 
 - [x] final re-review v3 received - PASS with 1 minor artifact-tracking finding
-- [ ] p03-t08: (review) Commit the untracked quick-mode discovery artifact - next
+- [x] p03-t08: (review) Commit the untracked quick-mode discovery artifact - `2347366b`
 
 **What changed (high level):**
 
@@ -573,7 +573,6 @@ oat_generated: false
 
 **Follow-ups / TODO:**
 
-- Execute `p03-t08`
 - Close the final review row and proceed to PR flow
 
 **Blockers:**
