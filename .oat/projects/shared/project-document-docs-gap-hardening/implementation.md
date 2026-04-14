@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 5     | 0/5       |
+| Phase 3 | in_progress | 5     | 1/5       |
 
-**Total:** 4/9 tasks completed
+**Total:** 5/9 tasks completed
 
 ---
 
@@ -158,8 +158,29 @@ oat_generated: false
 
 ### Task p03-t01: (review) Bump lockstep public package versions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3ec16476
+
+**Outcome (required when completed):**
+
+- Bumped the five lockstep public packages to `0.0.36` so the skill/docs change set satisfies the publishable-package version policy.
+
+**Files changed:**
+
+- `packages/cli/package.json` - bumped public package version
+- `packages/control-plane/package.json` - bumped public package version
+- `packages/docs-config/package.json` - bumped public package version
+- `packages/docs-theme/package.json` - bumped public package version
+- `packages/docs-transforms/package.json` - bumped public package version
+
+**Verification:**
+
+- Run: `rg -n '"version"' packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json`
+- Result: pass; all five packages now show `0.0.36`
+
+**Notes / Decisions:**
+
+- Also repaired plan frontmatter drift so the implementation plan is explicitly runnable (`oat_status: complete`) and the repo-level auto-review preference is recorded in plan frontmatter.
 
 ---
 
@@ -230,6 +251,31 @@ oat_generated: false
 **Blockers:**
 
 - Local `pnpm run cli -- ...` path is failing in this worktree, so verification must avoid depending on that path.
+
+### 2026-04-14
+
+**Session Start:** 20:00 UTC
+
+- [x] p03-t01: (review) Bump lockstep public package versions - `3ec16476`
+- [ ] p03-t02: (review) Add success criteria for capability coverage guarantees - next
+
+**What changed (high level):**
+
+- Applied the lockstep package version bump required by AGENTS for shipped skill/docs changes.
+- Repaired plan frontmatter so the implementation run is on a valid, explicit configuration.
+
+**Decisions:**
+
+- Recorded `oat_auto_review_at_checkpoints: true` in the plan because repo config already enables it and the field was previously missing from this project plan.
+
+**Follow-ups / TODO:**
+
+- Finish the remaining four review-fix tasks
+- Run `pnpm release:validate` after the review fixes are complete
+
+**Blockers:**
+
+- None
 
 ### Review Received: final
 
