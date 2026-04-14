@@ -12,23 +12,23 @@ oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/50 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-13T23:54:19.127Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-14T16:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-14T16:58:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: tool-install-ux
 
-**Status:** PR Ready
+**Status:** PR Open
 **Started:** 2026-04-13
 **Last Updated:** 2026-04-14
 
 ## Current Phase
 
-Implementation complete, final code re-review passed, and the final PR artifact is ready
+Implementation complete, final code re-review passed, and the project PR is open
 
 ## Artifacts
 
@@ -54,6 +54,8 @@ Implementation complete, final code re-review passed, and the final PR artifact 
 - ✓ Review-fix phase complete
 - ✓ Final code re-review passed
 - ✓ Final PR artifact written
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -61,4 +63,7 @@ None
 
 ## Next Milestone
 
-Push the branch and open the final PR from the generated project PR artifact
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
