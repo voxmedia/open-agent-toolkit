@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: null
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -16,12 +16,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | complete | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 1     | 0/1       |
 
-**Total:** 4/4 tasks completed
+**Total:** 4/5 tasks completed
 
 ---
 
@@ -208,6 +209,42 @@ oat_generated: false
 
 ---
 
+## Phase 3: Review Fixes
+
+**Status:** in_progress
+**Started:** 2026-04-14
+
+### Task p03-t01: (review) Prevent empty-role partial sync from creating codex config
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Final auto-review found that skills-only install scopes can still create a fresh `.codex/config.toml` when no Codex-managed agent belongs to the installed pack
+
+---
+
+### Review Received: final
+
+**Date:** 2026-04-14
+**Review artifact:** `reviews/archived/final-review-2026-04-14.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p03-t01`
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+No Medium or Minor findings were deferred in this review-receive run.
+
+---
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -225,6 +262,7 @@ oat_generated: false
 - [x] p01-t02: Scope provider entry generation and removals to installed canonical paths - `a8ad1a2f`
 - [x] p02-t01: Prevent unrelated Codex config and provider writes during docs install - `e2b50bfc`
 - [x] p02-t02: Run focused validation and release guardrails - `c4b2cf8a`
+- [ ] p03-t01: (review) Prevent empty-role partial sync from creating codex config - next
 
 **What changed (high level):**
 

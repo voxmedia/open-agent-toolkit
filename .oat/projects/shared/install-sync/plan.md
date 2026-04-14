@@ -194,13 +194,13 @@ git commit -m "test(p02-t02): verify install sync scoping"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                           |
-| ------ | -------- | -------- | ---------- | ---------------------------------- |
-| p01    | code     | pending  | -          | -                                  |
-| p02    | code     | pending  | -          | -                                  |
-| final  | code     | received | 2026-04-14 | reviews/final-review-2026-04-14.md |
-| spec   | artifact | pending  | -          | -                                  |
-| design | artifact | pending  | -          | -                                  |
+| Scope  | Type     | Status      | Date       | Artifact                                    |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------- |
+| p01    | code     | pending     | -          | -                                           |
+| p02    | code     | pending     | -          | -                                           |
+| final  | code     | fixes_added | 2026-04-14 | reviews/archived/final-review-2026-04-14.md |
+| spec   | artifact | pending     | -          | -                                           |
+| design | artifact | pending     | -          | -                                           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -212,10 +212,43 @@ git commit -m "test(p02-t02): verify install sync scoping"
 
 - Phase 1: 2 tasks - scope install-triggered sync planning to the canonical paths passed by install
 - Phase 2: 2 tasks - scope Codex side effects and verify the CLI package changes end to end
+- Phase 3: 1 task - close the final review gap in partial Codex config creation
 
-**Total: 4 tasks**
+**Total: 5 tasks**
 
 Ready for implementation, review, and a follow-up PR.
+
+---
+
+## Phase 3: Review Fixes
+
+### Task p03-t01: (review) Prevent empty-role partial sync from creating codex config
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: partial install-triggered sync still creates `.codex/config.toml` when the allowed canonical scope contains no agent content.
+Location: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+
+**Step 2: Implement fix**
+
+Make `computeCodexProjectExtensionPlan` a true no-op for partial sync when the allowed canonical scope yields zero desired Codex roles and there is no existing managed Codex state to reconcile. Preserve the existing partial-sync rule that unrelated managed roles must not be treated as stale.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts`
+Expected: Partial-sync Codex planning no longer creates `.codex/config.toml` for skills-only install scopes, and targeted regressions pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/providers/codex/codec/sync-extension.ts packages/cli/src/providers/codex/codec/sync-extension.test.ts packages/cli/src/commands/sync/index.test.ts packages/cli/src/commands/tools/install/index.test.ts
+git commit -m "fix(p03-t01): keep codex config scoped to install content"
+```
 
 ---
 
