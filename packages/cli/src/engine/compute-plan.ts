@@ -269,6 +269,17 @@ function entryContentTypeMatches(
   return entry.type === contentType;
 }
 
+function canonicalPathAllowed(
+  relativeCanonicalPath: string,
+  canonicalFilter: Set<string> | null,
+): boolean {
+  if (!canonicalFilter) {
+    return true;
+  }
+
+  return canonicalFilter.has(normalize(relativeCanonicalPath));
+}
+
 export async function computeSyncPlan({
   canonical,
   adapters,
@@ -308,6 +319,9 @@ export async function computeSyncPlan({
         }
 
         const relativeCanonicalPath = canonicalRelativePath(canonicalEntry);
+        if (!canonicalPathAllowed(relativeCanonicalPath, canonicalFilter)) {
+          continue;
+        }
         if (!entryInsideMapping(canonicalEntry, mapping.canonicalDir)) {
           continue;
         }

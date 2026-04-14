@@ -230,6 +230,34 @@ describe('computeSyncPlan', () => {
     },
   );
 
+  it('scopes install-triggered sync entries to the allowed canonical paths', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'oat-docs-analyze'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.agents', 'skills', 'analyze'), {
+      recursive: true,
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [
+        createCanonicalEntry(root, 'skill', 'oat-docs-analyze'),
+        createCanonicalEntry(root, 'skill', 'analyze'),
+      ],
+      adapters: [createTestAdapter({ name: 'claude' })],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+      allowedCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
+    });
+
+    expect(plan.entries.map((entry) => entry.canonical.name)).toEqual([
+      'oat-docs-analyze',
+    ]);
+  });
+
   it('filters out nativeRead mappings', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
     tempDirs.push(root);
