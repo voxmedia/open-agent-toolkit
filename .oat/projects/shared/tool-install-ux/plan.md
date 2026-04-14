@@ -20,9 +20,9 @@ oat_generated: false
 
 **Architecture:** Extend the existing interactive installer to derive pack install state from project and user canonical content, use that state to drive prompt defaults and summaries, and reconcile opposite-scope installs when the user changes a pack’s location.
 
-**Tech Stack:** TypeScript CLI commands, Commander, existing OAT tool install and sync utilities, Vitest command tests
+**Tech Stack:** TypeScript CLI commands, Commander, existing OAT tool install and sync utilities, Vitest command tests, and `packages/cli/AGENTS.md` conventions for domain-local tests and imports
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Commit Convention:** `fix(cli): {description} ({task_id})` - e.g., `fix(cli): derive installed pack scopes (p01-t01)` for repo-style scopes with OAT task traceability
 
 ## Planning Checklist
 
@@ -38,37 +38,38 @@ oat_generated: false
 **Files:**
 
 - Modify: `packages/cli/src/commands/init/tools/index.ts`
-- Modify: `packages/cli/src/commands/tools/shared/scan-tools.ts` (only if pack-state aggregation belongs there)
+- Create: `packages/cli/src/commands/init/tools/install-state.ts`
+- Create: `packages/cli/src/commands/init/tools/install-state.test.ts`
 - Modify: `packages/cli/src/commands/init/tools/index.test.ts`
 
 **Step 1: Write test (RED)**
 
 Add or update command tests that model packs installed in project scope, user scope, both scopes, and not installed.
 
-Run: `pnpm test packages/cli/src/commands/init/tools/index.test.ts`
+Run: `pnpm test packages/cli/src/commands/init/tools/install-state.test.ts packages/cli/src/commands/init/tools/index.test.ts`
 Expected: Test fails (RED)
 
 **Step 2: Implement (GREEN)**
 
 Implement runtime pack-state resolution so the installer can answer, per pack, whether it is currently installed at project scope, user scope, both, or neither.
 
-Run: `pnpm test packages/cli/src/commands/init/tools/index.test.ts`
+Run: `pnpm test packages/cli/src/commands/init/tools/install-state.test.ts packages/cli/src/commands/init/tools/index.test.ts`
 Expected: Test passes (GREEN)
 
 **Step 3: Refactor**
 
-Keep the pack-state logic in one place and avoid duplicating pack membership rules already present in tool scanning.
+Keep the pack-state logic in one install-domain helper, reuse existing tool-scan outputs where possible, and follow `packages/cli/AGENTS.md` file-local import conventions.
 
 **Step 4: Verify**
 
-Run: `pnpm test packages/cli/src/commands/init/tools/index.test.ts`
+Run: `pnpm test packages/cli/src/commands/init/tools/install-state.test.ts packages/cli/src/commands/init/tools/index.test.ts`
 Expected: No errors
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/tools/shared/scan-tools.ts packages/cli/src/commands/init/tools/index.test.ts
-git commit -m "fix(p01-t01): derive installed pack scopes"
+git add packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/init/tools/install-state.ts packages/cli/src/commands/init/tools/install-state.test.ts packages/cli/src/commands/init/tools/index.test.ts
+git commit -m "fix(cli): derive installed pack scopes (p01-t01)"
 ```
 
 ---
@@ -78,16 +79,22 @@ git commit -m "fix(p01-t01): derive installed pack scopes"
 **Files:**
 
 - Modify: `packages/cli/src/commands/init/tools/index.ts`
-- Create or modify: `packages/cli/src/commands/tools/install/index.test.ts`
+- Create: `packages/cli/src/commands/tools/install/index.test.ts`
 - Modify: `packages/cli/src/commands/init/tools/index.test.ts`
 
 **Step 1: Write test (RED)**
 
-Add regressions showing that when a user reselects a user-eligible pack into the opposite scope, the installer cleans up the old canonical copy and triggers sync for every affected scope.
+Add regressions showing that:
+
+- when a user reselects a user-eligible pack into the opposite scope, the installer cleans up the old canonical copy and triggers sync for every affected scope
+- when a pack is already installed in both scopes and the user explicitly selects one side, the installer normalizes to the selected scope and reports cleanup of the opposite-scope canonical content
+
+Run: `pnpm test packages/cli/src/commands/init/tools/index.test.ts packages/cli/src/commands/tools/install/index.test.ts`
+Expected: Test fails (RED)
 
 **Step 2: Implement (GREEN)**
 
-Implement migration behavior so the pack ends in the selected scope instead of remaining installed in both scopes by accident. Ensure reporting and config writes stay coherent after the move.
+Implement migration behavior so the pack ends in the selected scope instead of remaining installed in both scopes by accident. When a pack already exists in both scopes, normalize to the user-selected scope and make the cleanup explicit in reporting and tests.
 
 **Step 3: Refactor**
 
@@ -95,14 +102,14 @@ Reuse existing removal and install helpers where practical and keep project-only
 
 **Step 4: Verify**
 
-Run: `pnpm test packages/cli/src/commands/init/tools/index.test.ts packages/cli/src/commands/tools/install/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
 Expected: Relevant install and auto-sync regressions pass
 
 **Step 5: Commit**
 
 ```bash
 git add packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/init/tools/index.test.ts packages/cli/src/commands/tools/install/index.test.ts
-git commit -m "fix(p01-t02): migrate pack installs between scopes"
+git commit -m "fix(cli): migrate pack installs between scopes (p01-t02)"
 ```
 
 ---
@@ -147,7 +154,7 @@ Expected: Prompt regression coverage passes
 
 ```bash
 git add packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/init/tools/index.test.ts
-git commit -m "feat(p02-t01): prepopulate pack install scope prompts"
+git commit -m "fix(cli): prepopulate pack install scope prompts (p02-t01)"
 ```
 
 ---
@@ -180,14 +187,14 @@ Make prompt and report formatting reusable enough to keep future pack additions 
 
 **Step 4: Verify**
 
-Run: `pnpm test packages/cli/src/commands/init/tools/index.test.ts packages/cli/src/commands/tools/install/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
 Expected: All new behavior remains covered
 
 **Step 5: Commit**
 
 ```bash
 git add packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/init/tools/index.test.ts packages/cli/src/commands/tools/install/index.test.ts
-git commit -m "feat(p02-t02): clarify install scope summaries"
+git commit -m "fix(cli): clarify install scope summaries (p02-t02)"
 ```
 
 ---
@@ -196,16 +203,16 @@ git commit -m "feat(p02-t02): clarify install scope summaries"
 
 Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.
 
-Keep both code and artifact rows below. Add additional code rows as needed, but do not delete `spec` or `design`.
+Keep both code and artifact rows below. For quick-mode projects, retain `spec` and `design` rows for table stability and mark them not applicable through the Artifact column.
 
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| p02    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| spec   | artifact | pending  | -          | -                                          |
-| design | artifact | pending  | -          | -                                          |
-| plan   | artifact | received | 2026-04-13 | reviews/artifact-plan-review-2026-04-13.md |
+| Scope  | Type     | Status          | Date       | Artifact                                            |
+| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                   |
+| p02    | code     | pending         | -          | -                                                   |
+| final  | code     | pending         | -          | -                                                   |
+| spec   | artifact | passed          | 2026-04-13 | n/a (quick mode)                                    |
+| design | artifact | passed          | 2026-04-13 | n/a (quick mode)                                    |
+| plan   | artifact | fixes_completed | 2026-04-13 | reviews/archived/artifact-plan-review-2026-04-13.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -225,9 +232,9 @@ Keep both code and artifact rows below. Add additional code rows as needed, but 
 - Phase 1: 2 tasks - derive current pack location and enforce scope migration behavior
 - Phase 2: 2 tasks - improve interactive prompt state and reporting regressions
 
-**Total: 4 tasks**
+**Total planned tasks: 4**
 
-Ready for code review and merge.
+Ready for execution via `oat-project-implement`.
 
 ---
 

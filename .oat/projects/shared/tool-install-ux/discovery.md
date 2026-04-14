@@ -85,6 +85,8 @@ The request is well-understood. No divergent design study is needed before plann
 1. **Scope semantics:** Changing a user-eligible pack from one scope to the other should behave as a migration, not an additive second install.
 2. **State source:** Current install location should be inferred from canonical content on disk, not from new config metadata.
 3. **UX target:** The interactive installer should show current install location, indicate already-installed packs, and preselect user-scope choices based on actual state.
+4. **Mixed-scope normalization:** If a pack is already installed in both scopes and the user explicitly selects one scope during install, normalize the pack to the selected scope and report cleanup of the opposite-scope canonical content.
+5. **Summary output:** Post-install reporting should list the final per-pack scope outcome instead of collapsing mixed results into a single overall scope label.
 
 ## Constraints
 
@@ -112,8 +114,7 @@ The request is well-understood. No divergent design study is needed before plann
 
 ## Open Questions
 
-- **Mixed scope packs:** If a user has the same pack installed in both scopes today, should the installer preserve both until explicit cleanup, or normalize to the newly selected scope during install?
-- **Summary output:** Should post-install output list per-pack final scopes, or only list packs whose scope changed during the operation?
+None at discovery time. Remaining implementation choices should stay within the decisions above.
 
 ## Assumptions
 
@@ -125,7 +126,7 @@ The request is well-understood. No divergent design study is needed before plann
 - **False migration cleanup:** Removing the opposite-scope canonical copy could surprise users who intentionally keep the same pack in both scopes.
   - **Likelihood:** Medium
   - **Impact:** Medium
-  - **Mitigation Ideas:** Cover the `both` state explicitly in implementation and tests, and make the migration rule deliberate in command output.
+  - **Mitigation Ideas:** Cover the `both` state explicitly in implementation and tests, and make the normalization rule deliberate in command output.
 - **Prompt/state drift:** The prompt could show stale or incomplete install-state information if pack aggregation logic is incomplete.
   - **Likelihood:** Medium
   - **Impact:** Medium
