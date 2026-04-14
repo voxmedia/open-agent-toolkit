@@ -80,8 +80,7 @@ Key behavior:
 - Tracks installed vs bundled skill versions and reports outdated skills
 - Records installed pack state in shared repo config as `tools.<pack>: true` so other OAT workflows can detect installed capabilities without relying on filesystem heuristics
 - Interactive runs can prompt to update selected outdated skills
-- Successful installs report the final scope chosen for each pack, including `project + user` when both installs are preserved
-- Auto-sync runs automatically after successful install (provider views are updated)
+- Successful installs report the final scope chosen for each pack, including `project + user` when both installs are preserved, and auto-sync every scope touched by the install or migration
 - Install-triggered auto-sync limits removal planning to the canonical entries from the pack that was just installed, so stale manifest drift in unrelated packs does not delete other provider views
 - Use `--no-sync` to skip auto-sync
 
