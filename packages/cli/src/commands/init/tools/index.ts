@@ -95,6 +95,7 @@ import {
 } from './workflows/install-workflows';
 
 type InstallScope = 'project' | 'user';
+type PackInstallTarget = InstallScope | 'both';
 export type ToolPack =
   | 'core'
   | 'ideas'
@@ -166,6 +167,7 @@ interface OutdatedSkillRecord {
   installed: string | null;
   bundled: string | null;
   targetRoot: string;
+  selectionKey: string;
 }
 
 interface InitToolsRunMetadata {
@@ -263,7 +265,7 @@ const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
   'research',
 ]);
 
-type PackScopeMap = Record<ToolPack, InstallScope>;
+type PackScopeMap = Record<ToolPack, PackInstallTarget>;
 type PackInstallStateMap = Record<ToolPack, PackInstallState>;
 
 function isUserEligiblePack(pack: ToolPack): pack is UserEligiblePack {
@@ -364,9 +366,34 @@ function buildUserScopeChoices(
           ? pack
           : `${pack} (current: ${formatInstalledLocation(location)})`,
       value: pack,
-      checked: location === 'user',
+      checked: location === 'user' || location === 'both',
     };
   });
+}
+
+async function resolveBothScopeTarget(
+  pack: UserEligiblePack,
+  dependencies: InitToolsDependencies,
+  interactive: boolean,
+): Promise<'both' | 'user'> {
+  const selection = await dependencies.selectWithAbort(
+    `${pack} is currently installed in project and user scope. Keep both installs or normalize to user scope?`,
+    [
+      {
+        label: 'Keep project + user (recommended)',
+        value: 'both',
+        description: 'Preserve both installed copies',
+      },
+      {
+        label: 'User only',
+        value: 'user',
+        description: 'Remove the project-scoped copy',
+      },
+    ],
+    { interactive },
+  );
+
+  return selection ?? 'both';
 }
 
 export function consumeInitToolsRunMetadata(): InitToolsRunMetadata | null {
@@ -450,7 +477,15 @@ async function resolvePackScopes(
 
   const userScopeSet = new Set(userScopePacks);
   for (const pack of eligiblePacks) {
-    scopes[pack] = userScopeSet.has(pack) ? 'user' : 'project';
+    if (!userScopeSet.has(pack)) {
+      scopes[pack] = 'project';
+      continue;
+    }
+
+    scopes[pack] =
+      installedPackStates[pack].location === 'both'
+        ? await resolveBothScopeTarget(pack, dependencies, context.interactive)
+        : 'user';
   }
 
   return scopes as PackScopeMap;
@@ -471,7 +506,7 @@ function reportSuccess(
   }
 
   context.logger.info(
-    `Installed tool packs: ${packs.map(({ pack, scope }) => `${pack} (${scope})`).join(', ')}`,
+    `Installed tool packs: ${packs.map(({ pack, scope }) => `${pack} (${formatInstalledLocation(scope)})`).join(', ')}`,
   );
   syncScopes.forEach((scope, index) => {
     context.logger.info(
@@ -494,7 +529,7 @@ function reportOutdatedSkills(
   context.logger.info('Outdated skills:');
   for (const skill of outdatedSkills) {
     context.logger.info(
-      `  ${skill.name}  ${formatVersionForDisplay(skill.installed)} -> ${formatVersionForDisplay(skill.bundled)}`,
+      `  ${skill.name} (${skill.targetRoot})  ${formatVersionForDisplay(skill.installed)} -> ${formatVersionForDisplay(skill.bundled)}`,
     );
   }
 }
@@ -531,11 +566,13 @@ const PACK_DESCRIPTIONS: Record<ToolPack, string> = {
 
 interface PackScopeInfo {
   pack: ToolPack;
-  scope: InstallScope;
+  scope: PackInstallTarget;
 }
 
 export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
-  const userPacks = packs.filter((p) => p.scope === 'user');
+  const userPacks = packs.filter(
+    (p) => p.scope === 'user' || p.scope === 'both',
+  );
   const hasWorkflows = packs.some((p) => p.pack === 'workflows');
 
   const lines = [
@@ -557,7 +594,12 @@ export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
   lines.push('', '### Installed Packs', '');
 
   for (const { pack, scope } of packs) {
-    const suffix = scope === 'user' ? ' _(user scope)_' : '';
+    const suffix =
+      scope === 'user'
+        ? ' _(user scope)_'
+        : scope === 'both'
+          ? ' _(project + user scope)_'
+          : '';
     lines.push(`- **${pack}** — ${PACK_DESCRIPTIONS[pack]}${suffix}`);
   }
 
@@ -625,6 +667,12 @@ export async function runInitTools(
     function packRoot(pack: ToolPack): string {
       return packScopes[pack] === 'user' ? userRoot : projectRoot;
     }
+
+    function packTargets(pack: ToolPack): string[] {
+      return packScopes[pack] === 'both'
+        ? [projectRoot, userRoot]
+        : [packRoot(pack)];
+    }
     const outdatedSkills: OutdatedSkillRecord[] = [];
     const affectedScopes = new Set<ConcreteScope>();
 
@@ -635,6 +683,10 @@ export async function runInitTools(
 
       const desiredScope = packScopes[pack];
       const currentLocation = initialPackStates[pack].location;
+      if (desiredScope === 'both') {
+        continue;
+      }
+
       if (desiredScope === 'user') {
         if (currentLocation === 'project' || currentLocation === 'both') {
           await removePackFromScope(pack, projectRoot, dependencies);
@@ -657,32 +709,46 @@ export async function runInitTools(
         targetRoot: userRoot,
       });
       for (const skill of coreResult.outdatedSkills) {
-        outdatedSkills.push({ ...skill, targetRoot: userRoot });
+        outdatedSkills.push({
+          ...skill,
+          targetRoot: userRoot,
+          selectionKey: `${skill.name}:${userRoot}`,
+        });
       }
     }
 
     if (selectedPacks.includes('ideas')) {
-      const targetRoot = packRoot('ideas');
-      affectedScopes.add(packScopes.ideas);
-      const ideasResult = await dependencies.installIdeas({
-        assetsRoot,
-        targetRoot,
-      });
-      for (const skill of ideasResult.outdatedSkills) {
-        outdatedSkills.push({ ...skill, targetRoot });
+      for (const targetRoot of packTargets('ideas')) {
+        affectedScopes.add(targetRoot === userRoot ? 'user' : 'project');
+        const ideasResult = await dependencies.installIdeas({
+          assetsRoot,
+          targetRoot,
+        });
+        for (const skill of ideasResult.outdatedSkills) {
+          outdatedSkills.push({
+            ...skill,
+            targetRoot,
+            selectionKey: `${skill.name}:${targetRoot}`,
+          });
+        }
       }
     }
 
     if (selectedPacks.includes('docs')) {
-      const targetRoot = packRoot('docs');
-      affectedScopes.add(packScopes.docs);
-      const docsResult = await dependencies.installDocs({
-        assetsRoot,
-        targetRoot,
-        skills: [...DOCS_SKILLS],
-      });
-      for (const skill of docsResult.outdatedSkills) {
-        outdatedSkills.push({ ...skill, targetRoot });
+      for (const targetRoot of packTargets('docs')) {
+        affectedScopes.add(targetRoot === userRoot ? 'user' : 'project');
+        const docsResult = await dependencies.installDocs({
+          assetsRoot,
+          targetRoot,
+          skills: [...DOCS_SKILLS],
+        });
+        for (const skill of docsResult.outdatedSkills) {
+          outdatedSkills.push({
+            ...skill,
+            targetRoot,
+            selectionKey: `${skill.name}:${targetRoot}`,
+          });
+        }
       }
     }
 
@@ -693,7 +759,11 @@ export async function runInitTools(
         targetRoot: projectRoot,
       });
       for (const skill of workflowsResult.outdatedSkills) {
-        outdatedSkills.push({ ...skill, targetRoot: projectRoot });
+        outdatedSkills.push({
+          ...skill,
+          targetRoot: projectRoot,
+          selectionKey: `${skill.name}:${projectRoot}`,
+        });
       }
 
       const resolvedRoot =
@@ -751,15 +821,20 @@ export async function runInitTools(
     }
 
     if (selectedPacks.includes('utility')) {
-      const targetRoot = packRoot('utility');
-      affectedScopes.add(packScopes.utility);
-      const utilityResult = await dependencies.installUtility({
-        assetsRoot,
-        targetRoot,
-        skills: [...UTILITY_SKILLS],
-      });
-      for (const skill of utilityResult.outdatedSkills) {
-        outdatedSkills.push({ ...skill, targetRoot });
+      for (const targetRoot of packTargets('utility')) {
+        affectedScopes.add(targetRoot === userRoot ? 'user' : 'project');
+        const utilityResult = await dependencies.installUtility({
+          assetsRoot,
+          targetRoot,
+          skills: [...UTILITY_SKILLS],
+        });
+        for (const skill of utilityResult.outdatedSkills) {
+          outdatedSkills.push({
+            ...skill,
+            targetRoot,
+            selectionKey: `${skill.name}:${targetRoot}`,
+          });
+        }
       }
     }
 
@@ -772,20 +847,29 @@ export async function runInitTools(
           targetRoot,
         });
       for (const skill of projectManagementResult.outdatedSkills) {
-        outdatedSkills.push({ ...skill, targetRoot });
+        outdatedSkills.push({
+          ...skill,
+          targetRoot,
+          selectionKey: `${skill.name}:${targetRoot}`,
+        });
       }
     }
 
     if (selectedPacks.includes('research')) {
-      const targetRoot = packRoot('research');
-      affectedScopes.add(packScopes.research);
-      const researchResult = await dependencies.installResearch({
-        assetsRoot,
-        targetRoot,
-        skills: [...RESEARCH_SKILLS],
-      });
-      for (const skill of researchResult.outdatedSkills) {
-        outdatedSkills.push({ ...skill, targetRoot });
+      for (const targetRoot of packTargets('research')) {
+        affectedScopes.add(targetRoot === userRoot ? 'user' : 'project');
+        const researchResult = await dependencies.installResearch({
+          assetsRoot,
+          targetRoot,
+          skills: [...RESEARCH_SKILLS],
+        });
+        for (const skill of researchResult.outdatedSkills) {
+          outdatedSkills.push({
+            ...skill,
+            targetRoot,
+            selectionKey: `${skill.name}:${targetRoot}`,
+          });
+        }
       }
     }
 
@@ -797,8 +881,8 @@ export async function runInitTools(
           (await dependencies.selectManyWithAbort(
             'Update outdated skills?',
             outdatedSkills.map((skill) => ({
-              label: `${skill.name} (${skill.installed} -> ${skill.bundled})`,
-              value: skill.name,
+              label: `${skill.name} (${skill.targetRoot}) (${skill.installed} -> ${skill.bundled})`,
+              value: skill.selectionKey,
               checked: true,
             })),
             { interactive: context.interactive },
@@ -806,7 +890,7 @@ export async function runInitTools(
 
         const selectedSet = new Set(selectedNames);
         const selectedOutdated = outdatedSkills.filter((skill) =>
-          selectedSet.has(skill.name),
+          selectedSet.has(skill.selectionKey),
         );
         const updatedNames = await updateOutdatedSkills(
           selectedOutdated,

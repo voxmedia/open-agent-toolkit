@@ -14,7 +14,7 @@ interface HarnessOptions {
   scope?: Scope;
   interactive?: boolean;
   packSelection?: Array<string[] | null>;
-  scopeSelection?: Array<'project' | 'user' | null>;
+  scopeSelection?: Array<string | null>;
   toolsByScope?: Partial<
     Record<
       'project' | 'user',
@@ -97,9 +97,9 @@ function createHarness(options: HarnessOptions = {}) {
     },
   );
   const selectWithAbort = vi.fn(
-    async (_message: string, _choices: SelectChoice<'project' | 'user'>[]) => {
+    async (_message: string, _choices: SelectChoice<string>[]) => {
       const next = scopeSelection.shift();
-      return next === undefined ? 'project' : next;
+      return next === undefined ? (choices[0]?.value ?? null) : next;
     },
   );
 
@@ -406,8 +406,38 @@ describe('createInitToolsCommand', () => {
     expect(choices.find((choice) => choice.value === 'research')).toEqual(
       expect.objectContaining({
         label: 'research (current: project + user)',
-        checked: false,
+        checked: true,
       }),
+    );
+  });
+
+  it('defaults both-scope installs to keep both and updates both roots when the user keeps them', async () => {
+    const { command, installResearch, removeDirectory, removeFile, capture } =
+      createHarness({
+        interactive: true,
+        packSelection: [['research'], ['research']],
+        scopeSelection: ['both'],
+        toolsByScope: {
+          project: [createScannedTool('analyze', 'research', 'project')],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(installResearch).toHaveBeenCalledTimes(2);
+    expect(installResearch).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installResearch).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).toContain(
+      'Installed tool packs: research (project + user)',
     );
   });
 
@@ -618,7 +648,7 @@ describe('createInitToolsCommand', () => {
       copyDirWithStatus,
     } = createHarness({
       interactive: true,
-      packSelection: [['workflows'], ['oat-project-new']],
+      packSelection: [['workflows'], ['oat-project-new:/tmp/workspace']],
     });
 
     installWorkflows.mockResolvedValueOnce({
@@ -716,7 +746,7 @@ describe('createInitToolsCommand', () => {
     await runCommand(command, [], ['--scope', 'all']);
 
     expect(capture.info.join('\n')).toContain(
-      'oat-project-new  (unversioned) -> 1.1.0',
+      'oat-project-new (/tmp/workspace)  (unversioned) -> 1.1.0',
     );
   });
 
@@ -869,6 +899,18 @@ describe('buildToolPacksSectionBody', () => {
     expect(body).toContain('### Workflow Execution Continuation');
     expect(body).toContain('oat-project-subagent-implement');
     expect(body).not.toMatch(/\*\*workflows\*\*.*user scope/);
+  });
+
+  it('marks both-scope packs distinctly and still lists the user skills directory note', () => {
+    const body = buildToolPacksSectionBody([
+      { pack: 'research', scope: 'both' },
+      { pack: 'workflows', scope: 'project' },
+    ]);
+
+    expect(body).toContain(
+      '**research** — Research, analysis, verification, and synthesis _(project + user scope)_',
+    );
+    expect(body).toContain('`~/.agents/skills/`');
   });
 
   it('omits workflow continuation guidance when workflows pack is not selected', () => {
