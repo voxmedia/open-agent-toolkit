@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | in_progress | 2     | 0/2       |
+| Phase 2 | in_progress | 2     | 1/2       |
 
-**Total:** 2/4 tasks completed
+**Total:** 3/4 tasks completed
 
 ---
 
@@ -135,18 +135,38 @@ oat_generated: false
 ## Phase 2: Improve Interactive Install UX And Reporting
 
 **Status:** in_progress
-**Started:** -
+**Started:** 2026-04-14
 
 ### Task p02-t01: Show existing install location and prepopulate prompt defaults
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d88e12d6
+
+**Outcome (required when completed):**
+
+- Replaced the static pack picker labels with live install-state labels so already-installed packs show their current scope in the main selection prompt.
+- Prepopulated the user-scope follow-up with existing user installs checked by default and labeled each choice with its current location.
+- Labeled both-scope installs explicitly in the follow-up prompt so the normalization behavior is visible before submit.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/tools/index.ts` - dynamic pack-choice and user-scope-choice builders driven by installed pack state
+- `packages/cli/src/commands/init/tools/index.test.ts` - prompt-shape regressions for installed-state labels and defaults
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Packs installed in both scopes remain explicit in the prompt label (`current: project + user`) and default to the project-side checkbox state until the user chooses otherwise.
 
 ---
 
 ### Task p02-t02: Improve post-install summary and final regression coverage
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---
@@ -172,7 +192,8 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Derive pack installation state across project and user scopes - `6f551c4e`
 - [x] p01-t02: Treat scope changes as migrations for user-eligible packs - `dfe447a9`
-- [ ] p02-t01: Show existing install location and prepopulate prompt defaults - in progress
+- [x] p02-t01: Show existing install location and prepopulate prompt defaults - `d88e12d6`
+- [ ] p02-t02: Improve post-install summary and final regression coverage - in progress
 
 **What changed (high level):**
 
@@ -192,6 +213,7 @@ Chronological log of implementation progress.
 - Decide whether final summary output should list all pack scopes or only changed ones
 - Update interactive pack labels and checked defaults to reflect current install location
 - Improve install summary output once Phase 2 reporting work starts
+- Run final checkpoint review after Phase 2 is complete
 
 **Blockers:**
 
