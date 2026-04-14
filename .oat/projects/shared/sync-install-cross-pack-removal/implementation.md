@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -14,12 +14,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | in_progress | 4     | 1/4       |
 
-**Total:** 3/7 tasks completed
+**Total:** 4/7 tasks completed
 
 ---
 
@@ -112,13 +112,32 @@ oat_generated: false
 
 ## Phase 2: Review Fixes
 
-**Status:** pending
+**Status:** in_progress
 **Started:** 2026-04-14
 
 ### Task p02-t01: (review) Add paired regression coverage for install-scoped removal filtering
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1b16516e
+
+**Outcome:**
+
+- Added a paired regression on the exact stale-manifest fixture the review called out.
+- The test now proves the same inputs schedule a removal without the install filter and skip removal when the installed canonical path is supplied.
+
+**Files changed:**
+
+- `packages/cli/src/engine/compute-plan.test.ts` - converted the install-scoped regression into a paired fixture with filtered and unfiltered expectations
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- compute-plan.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The stricter regression fit the existing planner behavior, so no production code changes were needed for this task.
+- Tightening the expectation exposed a missing `relative(...)` import in the test, which was fixed as part of the same task.
 
 ### Task p02-t02: (review) Fix cancel-path install filter stamping for pack-level init handlers
 
