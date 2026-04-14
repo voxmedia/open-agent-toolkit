@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -19,9 +19,9 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | in_progress | 2     | 0/2       |
+| Phase 2 | in_progress | 2     | 1/2       |
 
-**Total:** 2/4 tasks completed
+**Total:** 3/4 tasks completed
 
 ---
 
@@ -120,8 +120,31 @@ oat_generated: false
 
 ### Task p02-t01: Prevent unrelated Codex config and provider writes during docs install
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e2b50bfc
+
+**Outcome (required):**
+
+- Partial install-triggered sync now forwards canonical scope into Codex extension planning
+- Codex extension planning no longer treats unrelated managed roles as stale during partial install sync
+- Added targeted regression coverage for the Codex partial-sync path
+
+**Files changed:**
+
+- `packages/cli/src/commands/sync/index.ts` - forwarded install-triggered canonical scope into Codex extension planning
+- `packages/cli/src/commands/sync/sync.types.ts` - updated dependency signatures for canonical-scoped sync and Codex extension planning
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` - filtered desired roles and disabled stale-role removal during partial install sync
+- `packages/cli/src/commands/sync/index.test.ts` - added regression coverage for Codex extension scoping
+- `packages/cli/src/providers/codex/codec/sync-extension.test.ts` - verified partial sync preserves unrelated managed roles/config
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/providers/codex/codec/sync-extension.test.ts`
+- Result: Pass
+
+**Notes / Decisions:**
+
+- Used the conservative partial-sync rule: when install scope is present, Codex extension planning does not remove stale managed roles outside that scope
 
 ---
 
@@ -147,7 +170,8 @@ oat_generated: false
 
 - [x] p01-t01: Reproduce and lock down the planning gap - `ca70fab2`
 - [x] p01-t02: Scope provider entry generation and removals to installed canonical paths - `a8ad1a2f`
-- [ ] p02-t01: Prevent unrelated Codex config and provider writes during docs install - next
+- [x] p02-t01: Prevent unrelated Codex config and provider writes during docs install - `e2b50bfc`
+- [ ] p02-t02: Run focused validation and release guardrails - next
 
 **What changed (high level):**
 
@@ -178,7 +202,7 @@ oat_generated: false
 | Phase | Tests Run                                                                                                                                                                                                                                | Passed | Failed | Coverage                 |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------ |
 | 1     | `pnpm --filter @open-agent-toolkit/cli test -- --run packages/cli/src/engine/compute-plan.test.ts packages/cli/src/commands/sync/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts` | yes    | no     | package-level + targeted |
-| 2     | -                                                                                                                                                                                                                                        | -      | -      | -                        |
+| 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/providers/codex/codec/sync-extension.test.ts`                                                                                                 | yes    | no     | targeted                 |
 
 ## Final Summary (for PR/docs)
 
