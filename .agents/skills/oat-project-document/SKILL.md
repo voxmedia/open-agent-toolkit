@@ -298,9 +298,9 @@ Before recommending file-level edits, evaluate coverage for each significant cap
 
 For each capability area, classify the documentation state as:
 
-- **Adequately covered** — existing docs already explain the shipped behavior accurately
-- **Thin coverage** — the area is mentioned, but important setup, workflow, or usage details are missing
-- **No coverage** — no existing docs surface meaningfully covers the capability
+- **adequately covered** — existing docs already explain the shipped behavior accurately
+- **thin coverage** — the area is mentioned, but important setup, workflow, or usage details are missing
+- **no coverage** — no existing docs surface meaningfully covers the capability
 
 For each capability with **thin coverage** or **no coverage**, determine the best docs home:
 
