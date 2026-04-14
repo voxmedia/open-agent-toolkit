@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p03-t06
+oat_current_task_id: p03-t07
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 7     | 5/7       |
+| Phase 3 | in_progress | 7     | 6/7       |
 
-**Total:** 9/11 tasks completed
+**Total:** 10/11 tasks completed
 
 ---
 
@@ -184,12 +184,12 @@ oat_generated: false
 
 ### Task p03-t06: (review) Commit the lifecycle docs update that is still only in the working tree
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 692cf539
 
 **Outcome (required when completed):**
 
-- Stage and commit the lifecycle docs wording that was previously implemented but left out of branch history.
+- Staged and committed the lifecycle docs wording that was previously implemented but left out of branch history.
 
 **Files changed:**
 
@@ -198,7 +198,7 @@ oat_generated: false
 **Verification:**
 
 - Run: `git diff --cached -- apps/oat-docs/docs/workflows/projects/lifecycle.md`
-- Result: pending
+- Result: pass
 
 ---
 
@@ -488,7 +488,8 @@ oat_generated: false
 **Session Start:** 20:23 UTC
 
 - [x] final re-review received - PASS with 2 minor hygiene findings
-- [ ] p03-t06: (review) Commit the lifecycle docs update that is still only in the working tree - next
+- [x] p03-t06: (review) Commit the lifecycle docs update that is still only in the working tree - `692cf539`
+- [ ] p03-t07: (review) Commit the regenerated public package versions asset - next
 
 **What changed (high level):**
 
