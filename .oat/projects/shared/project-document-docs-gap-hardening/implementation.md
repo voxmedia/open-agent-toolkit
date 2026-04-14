@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p03-t07
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 7     | 6/7       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 7     | 7/7       |
 
-**Total:** 10/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ---
 
 ## Phase 1: Skill Hardening
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-14
 
 ### Phase Summary (fill when phase is complete)
@@ -204,12 +204,12 @@ oat_generated: false
 
 ### Task p03-t07: (review) Commit the regenerated public package versions asset
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ec013c74
 
 **Outcome (required when completed):**
 
-- Stage and commit the regenerated public package versions asset so it matches the `0.0.36` lockstep package bump.
+- Staged and committed the regenerated public package versions asset so it matches the `0.0.36` lockstep package bump.
 
 **Files changed:**
 
@@ -218,7 +218,7 @@ oat_generated: false
 **Verification:**
 
 - Run: `cat packages/cli/assets/public-package-versions.json`
-- Result: pending
+- Result: pass
 
 ---
 
@@ -245,7 +245,7 @@ oat_generated: false
 
 - None
 
-**Next:** Execute fix tasks via the `oat-project-implement` flow, then update the final review row to `fixes_completed` and request the closing re-review.
+**Next:** Request the closing final re-review. If it comes back clean, update the final review row to `passed` and continue to PR flow.
 
 ### Task p03-t01: (review) Bump lockstep public package versions
 
@@ -489,11 +489,12 @@ oat_generated: false
 
 - [x] final re-review received - PASS with 2 minor hygiene findings
 - [x] p03-t06: (review) Commit the lifecycle docs update that is still only in the working tree - `692cf539`
-- [ ] p03-t07: (review) Commit the regenerated public package versions asset - next
+- [x] p03-t07: (review) Commit the regenerated public package versions asset - `ec013c74`
 
 **What changed (high level):**
 
 - Converted the two final-scope minor hygiene findings into explicit review-fix tasks instead of deferring them.
+- Landed both hygiene fixes so the branch history now includes the lifecycle docs update and the regenerated CLI public-package version asset.
 
 **Decisions:**
 
@@ -501,23 +502,11 @@ oat_generated: false
 
 **Follow-ups / TODO:**
 
-- Execute `p03-t06`
-- Execute `p03-t07`
 - Re-run final review closure after the hygiene fixes land
 
 **Blockers:**
 
 - None
-
-**Blockers:**
-
-- None
-
-### 2026-04-14
-
-**Session Start:** 20:05 UTC
-
-- [x] p03-t03: (review) Harmonize coverage-state terminology casing - `d8a71e55`
 - [ ] p03-t04: (review) Wire or remove the unused docs-audience field - next
 
 **What changed (high level):**
