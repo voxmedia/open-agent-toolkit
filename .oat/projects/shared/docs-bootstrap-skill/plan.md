@@ -776,17 +776,31 @@ Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) 
 
 | Scope  | Type     | Status          | Date       | Artifact                                                |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                       |
-| p02    | code     | pending         | -          | -                                                       |
-| p03    | code     | pending         | -          | -                                                       |
-| p04    | code     | pending         | -          | -                                                       |
-| p05    | code     | pending         | -          | -                                                       |
-| p06    | code     | pending         | -          | -                                                       |
-| final  | code     | pending         | -          | -                                                       |
-| spec   | artifact | pending         | -          | -                                                       |
+| p01    | code     | deferred        | 2026-04-14 | rolling hands-on review; see note below                 |
+| p02    | code     | deferred        | 2026-04-14 | rolling hands-on review; see note below                 |
+| p03    | code     | deferred        | 2026-04-14 | rolling hands-on review; see note below                 |
+| p04    | code     | deferred        | 2026-04-14 | rolling hands-on review; see note below                 |
+| p05    | code     | deferred        | 2026-04-14 | rolling hands-on review; see note below                 |
+| p06    | code     | deferred        | 2026-04-14 | rolling hands-on review; see note below                 |
+| final  | code     | deferred        | 2026-04-14 | rolling hands-on review; see note below                 |
+| spec   | artifact | n/a             | -          | quick mode (no spec)                                    |
 | design | artifact | fixes_completed | 2026-04-13 | `reviews/archived/artifact-design-review-2026-04-13.md` |
 
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+**Review deferral rationale (code reviews p01–p06 + final):**
+
+The default plan had `oat_plan_hill_phases: ['p06']` + `oat_auto_review_at_checkpoints: true`, which would have triggered an auto-review subagent at the final phase boundary. The user deferred this in favor of rolling hands-on review substituted throughout implementation:
+
+- Every commit landed with concrete feedback from the user.
+- Phase 5 (Walkthrough) was driven through real-time dialog about audience discipline, three-surfaces separation, and setup-time vs. runtime framing.
+- Phase 6 (finalization + smoke test) surfaced real findings from `oat-docs-analyze` against a monorepo sandbox. Those findings drove two follow-up fix commits (FP-16 + FP-17 + FP-13/E + FP-12 tightening) rather than a separate review cycle.
+- PR reviewers provide the next layer of formal review.
+
+Known untested surfaces that follow-up work should address:
+
+- FP-11 (Turbopack root) — nested-standalone-specific; not exercised (see `implementation.md` p06-t02 entry).
+- Deep monorepo friction patterns — deferred during discovery; intentional follow-up project.
+
+**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed` (`deferred` used here for reviews explicitly skipped with rationale)
 
 **Meaning:**
 

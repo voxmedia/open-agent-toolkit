@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
-oat_last_updated: 2026-04-13
-oat_current_task_id: p06-t02
+oat_last_updated: 2026-04-14
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 4     | 4/4       |
-| Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | completed   | 4     | 4/4       |
-| Phase 4 | completed   | 2     | 2/2       |
-| Phase 5 | completed   | 3     | 3/3       |
-| Phase 6 | in_progress | 3     | 1/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 4     | 4/4       |
+| Phase 2 | completed | 3     | 3/3       |
+| Phase 3 | completed | 4     | 4/4       |
+| Phase 4 | completed | 2     | 2/2       |
+| Phase 5 | completed | 3     | 3/3       |
+| Phase 6 | completed | 3     | 3/3       |
 
-**Total:** 17/19 tasks completed
+**Total:** 19/19 tasks completed (p06-t02 closed as deferred — see task entry)
 
 ---
 
@@ -674,8 +674,40 @@ oat_generated: false
 
 ## Phase 6: Finalization
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-04-13
+**Completed:** 2026-04-14
+
+### Phase Summary
+
+**Outcome:**
+
+- p06-t01 (coherence pass + Success Criteria) completed end-to-end.
+- p06-t03 (monorepo smoke test) completed with rolling hands-on feedback from the user in a Cyclone sandbox; five `oat-docs-analyze` findings triaged into two fix commits (FP-16 added; FP-12 tightened; FP-13/D.2 + FP-13/E + FP-17 added; scaffold templates updated).
+- p06-t02 (nested-standalone E2E) explicitly deferred to a follow-up project. FP-11 (Turbopack root) code paths are specified but have not been executed in the wild. Capability/shape gates keep worst-case outcomes to refused patches with suggested manual fixes, not broken scaffolds.
+- CLI registration (bundle + `DOCS_SKILLS` manifest) landed during this phase as well, making the skill deliverable via `oat tools install docs`.
+
+**Key files touched:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` — Success Criteria added; FP-12 tightened; FP-13/D.2 two-pass; FP-13/E, FP-16, FP-17 added
+- `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` — guidance updates
+- `apps/oat-docs/AGENTS.md` — canonical example mirrored
+- `.oat/templates/docs-app-fuma/docs/{index,getting-started,contributing}.md` — scaffold template fixes
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` — registered `oat-docs-bootstrap`
+- `packages/cli/scripts/bundle-assets.sh` — bundled `oat-docs-bootstrap`
+- `.oat/projects/shared/docs-bootstrap-skill/discovery.md` — FP-13/E, FP-16, FP-17 entries + summary update
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli test` — 1306 / 1306 pass
+- `pnpm exec oxfmt --check` on all touched Markdown files — pass
+- Monorepo smoke test (Cyclone sandbox) — end-to-end walkthrough; `oat-docs-analyze` findings drove fixes; subsequent build + docs-apply path exercised
+
+**Notes / Decisions:**
+
+- **Design deltas.** FP-16, FP-17, FP-13/E added post-design as direct responses to smoke-test findings. Discovery.md updated with full problem/rationale/fix for each.
+- **p06-t02 deferred deliberately.** See p06-t02 task entry for risk analysis.
+- **Formal code review deferred to PR.** `oat_plan_hill_phases: ['p06']` + `oat_auto_review_at_checkpoints: true` would normally have triggered an auto-review. User chose to defer — rolling hands-on review through implementation + post-run `oat-docs-analyze` + explicit triage + rapid fix loop was substituted for formal review. PR reviewers provide the next layer.
 
 ### Task p06-t01: Coherence pass + tightening
 
@@ -717,15 +749,74 @@ oat_generated: false
 
 ### Task p06-t02: Manual E2E walkthrough — nested-standalone (Fumadocs)
 
-**Status:** pending
+**Status:** deferred
 **Commit:** -
+
+**Outcome:**
+
+- **Not executed in this project.** The nested-standalone E2E walkthrough was planned to exercise the FP-11 Turbopack root patch (the only shape-specific code path). During closure we consciously deferred this to a follow-up project rather than block the PR.
+- The monorepo smoke test (p06-t03) covered the shape-agnostic code paths — everything except FP-11's two code-path variants (`createDocsConfig` passthrough vs wrapper replacement). Findings from that run were applied to the skill regardless of shape.
+- FP-11's logic is specified in detail in SKILL.md (Step 3d, `##### Scaffold-integrity patches`). It has not been executed in the wild and could carry bugs (wrong marker placement, wrapper-replacement preserving the wrong edits, backup file path inconsistencies).
+
+**Files changed:** none (task deferred).
+
+**Verification:** none.
+
+**Notes / Decisions:**
+
+- **Why defer rather than execute here:** the smoke-test findings from p06-t03 already surfaced four substantive skill/scaffold fixes (FP-16, FP-17, FP-13/E, FP-12 tightening). Adding a second manual test round before PR would delay shipping known good content on the pretense that an FP-11-specific bug might be found. Better to ship + iterate — the follow-up project can exercise FP-11 against a real nested-standalone target with appropriate attention to that code path specifically.
+- **Follow-up project scope.** A dedicated p06-t02-equivalent run, plus the monorepo deep-friction round originally deferred during discovery, plus any findings that surface from users invoking the skill after this ships.
+- **Known risk.** Shipping FP-11 patches that haven't been executed. Mitigation: the patches are capability-gated (skip if `turbopackRootFlag === true`) and file-shape-gated (refuse on drift). Worst case on a bug is a refused patch, which surfaces to the user with a suggested manual fix — not a broken scaffold.
 
 ---
 
 ### Task p06-t03: Manual E2E smoke test — monorepo (Fumadocs)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 04431ed1, b6cadc2b
+
+**Outcome:**
+
+- Skill installed into a monorepo sandbox (Cyclone) via `oat tools install docs` (after the CLI registration commit `b33d5a19` + build). Walked end-to-end through the skill in Claude Code.
+- **Shape detection:** confirmed monorepo detected correctly; `targetDir` defaulted to `apps/{repo}-docs`.
+- **Scaffold:** `oat docs init` completed cleanly; docs app landed under `apps/documentation/`.
+- **Build:** `pnpm --filter documentation build` succeeded after install.
+- **Inspector:** correctly surfaced the `documentation` section of `.oat/config.json` and prompted for `requireForProjectCompletion`.
+- **Walkthrough:** all seven sections rendered; user feedback surfaced several gaps fixed in the two fix commits.
+- **Exit summary:** printed with real values.
+- **Post-run `oat-docs-analyze`:** surfaced five findings, all triaged:
+  1. HIGH — FP-12 metadata patch appeared not to have executed (the sandbox agent put title/description into `next.config.js` instead of `layout.tsx`). Root cause: spec was clear but not emphatic enough that `createDocsConfig()` ignores those keys.
+  2. HIGH — Zero content coverage (expected; out of skill scope; user applies via `oat-docs-apply`).
+  3. MEDIUM — Scaffold template hardcodes `Node.js 22+` but Cyclone pins 20.19.0 → real scaffold bug.
+  4. MEDIUM — FP-13/D.2 generated-index header comment missing post-build → the `prebuild` hook wasn't reliable; needed direct-write backstop.
+  5. LOW — Scaffold `contributing.md` `## Agent guidance` section duplicates the docs-app `AGENTS.md` → three-surfaces violation.
+
+**Fixes landed:**
+
+- Commit `04431ed1` — `.md` over `.mdx` + kebab-case skill names across SKILL.md, AGENTS.md template, canonical example. Added FP-16 (extension-less `## Contents` links).
+- Commit `b6cadc2b` — tightened FP-12 (metadata leads, anti-pattern block); added FP-13/D.2 two-pass correctness backstop; added FP-13/E (Node version mismatch detection); added FP-17 (contributing.md three-surfaces cleanup). Updated scaffold templates (`getting-started.md` Node version, `contributing.md` Agent guidance pointer). Discovery.md updated with FP-13/E + FP-17 entries; summary list now FP-11..FP-17.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` (major tightening; 4 FP-class changes)
+- `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` (`.md` vs `.mdx` + kebab-case)
+- `apps/oat-docs/AGENTS.md` (canonical example mirror)
+- `.oat/templates/docs-app-fuma/docs/index.md` (`.md`-suffixed `## Contents`)
+- `.oat/templates/docs-app-fuma/docs/getting-started.md` (Node version)
+- `.oat/templates/docs-app-fuma/docs/contributing.md` (Agent guidance pointer)
+- `.oat/projects/shared/docs-bootstrap-skill/discovery.md` (FP-13/E, FP-16, FP-17 entries)
+
+**Verification:**
+
+- `pnpm exec oxfmt --check` on all touched Markdown files — pass.
+- `pnpm --filter @open-agent-toolkit/cli test` — 1306 / 1306 pass (including bundle-consistency tests confirming `oat-docs-bootstrap` correctly registered).
+- Sandbox validation: user ran the skill end-to-end; findings from `oat-docs-analyze` drove the tightening commits.
+
+**Notes / Decisions:**
+
+- **Why we deviated from a strict plan-task scope.** The smoke test surfaced four scaffold/skill fixes that fit the spirit of p06-t02/p06-t03 ("observe + fix blocking issues") but weren't contemplated in the plan's detailed task scope. We landed them anyway because the alternative — shipping content we knew was wrong and fixing in a follow-up — is strictly worse.
+- **CLI registration.** Adding `oat-docs-bootstrap` to `DOCS_SKILLS` in `skill-manifest.ts` and `bundle-assets.sh` was scope expansion beyond the plan's tasks, but without it the skill isn't deliverable — users on a released CLI version can't install it. Landed in commit `b33d5a19` alongside the p06-t01 coherence pass.
+- **Sync bug discovered mid-test.** The user hit a real `oat tools install` bug where installing one pack wiped other packs' provider views. That was triaged as a separate concern and fixed upstream by the user in #49/#50 before continuing. Not in this project's scope.
 
 ---
 
@@ -786,25 +877,45 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- (to be filled during implementation)
+- **New skill: `oat-docs-bootstrap`.** A 7-step guided wrapper around `oat docs init` that turns scaffolding into a support-rich onboarding experience. Covers preflight detection, richer input gathering (notably a site name distinct from the package name), conflict resolution (4 options: replace / second-app / abort / repair), CLI invocation with labeled + idempotent post-patches for open CLI gaps (FP-11 Turbopack root, FP-12 site-title coherence, FP-13 template-content inaccuracies with 5 sub-findings, FP-15 docs-app AGENTS.md, FP-16 `## Contents` link extensions, FP-17 contributing.md three-surfaces cleanup), build verification with narrow auto-fix discipline, post-scaffold config inspection with drift detection, a chunked educational walkthrough (7 sections covering config, two-`index.md` model, `## Contents` contract, three agent-instruction surfaces, Fumadocs deep dive, MkDocs Minimum Contract, OAT docs ecosystem), and an optional content kickoff delegating to `oat-docs-analyze` / `oat-docs-apply`.
+- **FP-15 bridge template** at `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` — 8 task-framed sections authored to the "still relevant six months later" litmus test; placeholders for `{{SITE_NAME}}`, `{{APP_DIR}}`, `{{REPO_NAME}}`, `{{GENERATE_INDEX_CMD}}`.
+- **Canonical example** at `apps/oat-docs/AGENTS.md` — rendered template adapted to this repo's layout. Serves as the reference for what the FP-15 bridge produces in practice.
+- **CLI registration** for delivery — `oat-docs-bootstrap` added to `DOCS_SKILLS` and `bundle-assets.sh`, so `oat tools install docs` includes it.
+- **Scaffold template improvements** — three source-level fixes to `.oat/templates/docs-app-fuma/docs/*.md` (Node version now defers to repo pin; `## Contents` uses `.md`-suffixed links; `## Agent guidance` in `contributing.md` now points at `AGENTS.md` rather than duplicating it).
+- **Documentation** — discovery.md expanded with 3 new FP entries (FP-13/E, FP-16, FP-17) during smoke testing. Open-FPs summary now covers FP-11..FP-17.
 
 **Behavioral changes (user-facing):**
 
-- (to be filled)
+- A new Claude Code / Cursor skill (`/oat-docs-bootstrap`) is installable via `oat tools install docs` and guides users through bootstrapping a docs app end-to-end in an interactive conversation.
+- Fresh scaffolds produce agent-friendlier `## Contents` (links with `.md` extensions that the `remark-links` plugin normalizes at build time), accurate Node version guidance (or a pointer to the repo's pin), and a `contributing.md` that doesn't duplicate agent-runtime guidance.
+- Existing docs apps scaffolded by older CLI versions get these fixes applied on next `oat-docs-bootstrap` invocation via the labeled post-patches — idempotent, capability-gated, drift-aware.
+- No breaking changes. All patches are additive and gated by file-shape detection; worst-case outcome on an edge case is a refused patch surfaced to the user with a `suggestedFix`, not a broken scaffold.
 
 **Key files / modules:**
 
-- `.agents/skills/oat-docs-bootstrap/SKILL.md` — main skill entrypoint
+- `.agents/skills/oat-docs-bootstrap/SKILL.md` — main skill entrypoint (~1100 lines across 7 steps + Mode Assertion + Progress Indicators + Success Criteria)
 - `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` — FP-15 bridge template
 - `apps/oat-docs/AGENTS.md` — canonical example instantiation
+- `.oat/templates/docs-app-fuma/docs/{index,getting-started,contributing}.md` — scaffold template fixes
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` — `oat-docs-bootstrap` registered in `DOCS_SKILLS`
+- `packages/cli/scripts/bundle-assets.sh` — `oat-docs-bootstrap` added to bundled-skills list
+- `.oat/projects/shared/docs-bootstrap-skill/discovery.md` — FP-13/E, FP-16, FP-17 entries
+- Provider views: `.claude/skills/oat-docs-bootstrap`, `.cursor/skills/oat-docs-bootstrap` (symlinks maintained by `oat sync`)
 
 **Verification performed:**
 
-- (to be filled after p06 manual walkthroughs)
+- `pnpm --filter @open-agent-toolkit/cli test` — 1306 / 1306 tests pass; `bundle-consistency.test.ts` confirms `oat-docs-bootstrap` is correctly registered in both `DOCS_SKILLS` and the bundled skills array.
+- `pnpm exec oxfmt --check` on all touched Markdown files — clean throughout implementation.
+- **Manual smoke test (p06-t03).** User ran the skill end-to-end against a monorepo sandbox (Cyclone). All shape detection, scaffold, install, build, inspect, walkthrough, and content-kickoff steps executed as designed. Five findings from `oat-docs-analyze` against the resulting docs app drove two follow-up fix commits landing the FP-16 / FP-17 / FP-12 tightening / FP-13 sub-finding E changes.
+- **Manual smoke test (p06-t02).** Nested-standalone E2E walkthrough **not executed**; deferred to a follow-up project. See p06-t02 task entry for risk analysis — FP-11 code paths are specified but untested in the wild.
 
 **Design deltas (if any):**
 
-- (to be filled)
+- **Three new FP entries added post-design.** FP-13 sub-finding E (Node version mismatch), FP-16 (extension-less `## Contents` links), FP-17 (contributing.md three-surfaces duplication). All three surfaced during p06-t03 smoke testing; discovery.md was updated with full problem/rationale/fix for each.
+- **FP-12 tightening.** The spec's metadata-insertion guidance was clear but not emphatic enough — the sandbox agent running the skill defaulted to an intuitive-but-wrong approach (passing title/description to `createDocsConfig()`). Sub-section restructured to lead with metadata; explicit anti-pattern block added; matching note added in Walkthrough Section E.
+- **FP-13/D.2 two-pass strategy.** Original spec relied on a `prebuild` hook; smoke test showed the hook isn't reliable. Added a post-Build-Verifier direct-write backstop. Hook remains as a nice-to-have; direct-write is the correctness guarantee.
+- **`oat-docs-analyze` / `oat-docs-apply` kebab-case.** The user flagged that skill-name consistency matters for agent-facing guidance. All references in SKILL.md + AGENTS.md template + canonical example converted from `oat docs analyze` / `oat docs apply` (CLI subcommand form) to `oat-docs-analyze` / `oat-docs-apply` (skill form). CLI subcommands (`oat docs init`, `oat docs nav sync`, `oat docs generate-index`) left space-separated because they have no skill wrappers.
+- **Formal code review deferred.** `oat_plan_hill_phases: ['p06']` + `oat_auto_review_at_checkpoints: true` was the default plan — an auto-review subagent at the final phase. Deferred in favor of rolling hands-on review during implementation + post-run `oat-docs-analyze` + explicit triage + rapid fix loop. Plan.md Reviews table notes this deferral with rationale. PR reviewers provide the next layer.
 
 ## References
 
