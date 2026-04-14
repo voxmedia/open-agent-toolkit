@@ -635,7 +635,7 @@ describe('createSyncCommand', () => {
 
     expect(computeSyncPlan).toHaveBeenCalledWith(
       expect.objectContaining({
-        allowedRemovalCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
+        allowedCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
       }),
     );
   });

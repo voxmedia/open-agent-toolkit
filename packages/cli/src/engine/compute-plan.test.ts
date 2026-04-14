@@ -184,16 +184,16 @@ describe('computeSyncPlan', () => {
 
   it.each([
     {
-      allowedRemovalCanonicalPaths: undefined,
+      allowedCanonicalPaths: undefined,
       expectedRemovals: ['.claude/skills/oat-project-new'],
     },
     {
-      allowedRemovalCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
+      allowedCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
       expectedRemovals: [],
     },
   ])(
-    'scopes stale manifest removals to install-triggered canonical filters ($allowedRemovalCanonicalPaths)',
-    async ({ allowedRemovalCanonicalPaths, expectedRemovals }) => {
+    'scopes stale manifest removals to install-triggered canonical filters ($allowedCanonicalPaths)',
+    async ({ allowedCanonicalPaths, expectedRemovals }) => {
       const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
       tempDirs.push(root);
       const claudeAdapter = createTestAdapter({ name: 'claude' });
@@ -221,7 +221,7 @@ describe('computeSyncPlan', () => {
         scope: 'project',
         config: DEFAULT_SYNC_CONFIG,
         scopeRoot: root,
-        allowedRemovalCanonicalPaths,
+        allowedCanonicalPaths,
       });
 
       expect(

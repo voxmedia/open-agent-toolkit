@@ -218,7 +218,7 @@ async function maybeResolveProviderMismatches(
 async function computePlans(
   context: CommandContext,
   dependencies: SyncCommandDependencies,
-  allowedRemovalCanonicalPaths?: string[],
+  allowedCanonicalPaths?: string[],
 ): Promise<ScopeSyncPlan[]> {
   const scopePlans: ScopeSyncPlan[] = [];
 
@@ -259,7 +259,7 @@ async function computePlans(
       scope,
       config: resolved.config,
       scopeRoot,
-      allowedRemovalCanonicalPaths,
+      allowedCanonicalPaths,
     });
 
     let codexExtensionPlan: ScopeSyncPlan['codexExtensionPlan'];
