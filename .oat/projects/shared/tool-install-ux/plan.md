@@ -210,7 +210,7 @@ Keep both code and artifact rows below. For quick-mode projects, retain `spec` a
 | Scope  | Type     | Status          | Date       | Artifact                                            |
 | ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
 | p01    | code     | pending         | -          | -                                                   |
-| p02    | code     | pending         | -          | -                                                   |
+| p02    | code     | received        | 2026-04-13 | reviews/p02-review-2026-04-13.md                    |
 | final  | code     | pending         | -          | -                                                   |
 | spec   | artifact | passed          | 2026-04-13 | n/a (quick mode)                                    |
 | design | artifact | passed          | 2026-04-13 | n/a (quick mode)                                    |

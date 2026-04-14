@@ -4,7 +4,7 @@ oat_last_commit: 99dc97ff
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: ['p02'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['p02'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
 oat_phase_status: complete # Status: in_progress | complete | pr_open
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation complete; final HiLL checkpoint review is now due
+Implementation complete; Phase 2 checkpoint review recorded
 
 ## Artifacts
 
@@ -47,7 +47,7 @@ Implementation complete; final HiLL checkpoint review is now due
 - ✓ `p01-t02` complete
 - ✓ `p02-t01` complete
 - ✓ `p02-t02` complete
-- ⧗ Running final review checkpoint
+- ✓ Phase 2 review checkpoint recorded
 
 ## Blockers
 
@@ -55,4 +55,4 @@ None
 
 ## Next Milestone
 
-Record the final review artifact and mark the final checkpoint complete
+Run `oat-project-review-receive` if you want to turn the recorded p02 review finding into a follow-up fix task
