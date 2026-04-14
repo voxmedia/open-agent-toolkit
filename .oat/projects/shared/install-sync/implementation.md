@@ -340,6 +340,7 @@ No Medium or Minor findings were deferred in this review-receive run.
 | 1     | `pnpm --filter @open-agent-toolkit/cli test -- --run packages/cli/src/engine/compute-plan.test.ts packages/cli/src/commands/sync/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts`                                                                                                                                             | yes    | no     | package-level + targeted |
 | 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/providers/codex/codec/sync-extension.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/providers/codex/codec/sync-extension.test.ts`; `pnpm release:validate` | yes    | no     | targeted + release       |
 | 3     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts`                                                                                          | yes    | no     | targeted                 |
+| Final | `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm build`; `pnpm --filter @open-agent-toolkit/cli run build`                                                                                                                                                                                                                                                                         | yes    | no     | full workspace           |
 
 ## Final Summary (for PR/docs)
 
@@ -371,10 +372,16 @@ No Medium or Minor findings were deferred in this review-receive run.
 - `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/providers/codex/codec/sync-extension.test.ts`
 - `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/providers/codex/codec/sync-extension.test.ts`
 - `pnpm release:validate`
+- `pnpm test`
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm build`
+- `pnpm --filter @open-agent-toolkit/cli run build`
 
 **Design deltas (if any):**
 
 - No design artifact was needed in quick mode; the implementation followed the discovery and plan directly
+- `pnpm build` and `pnpm type-check` both exited successfully, but Turborepo replayed a stale cached CLI build log with an older `cp` failure line; a direct CLI build confirmed the current branch builds cleanly
 
 ## References
 
