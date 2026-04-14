@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-13
-oat_current_task_id: p01-t01
+oat_last_updated: 2026-04-14
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
 # Implementation: tool-install-ux
 
 **Started:** 2026-04-13
-**Last Updated:** 2026-04-13
+**Last Updated:** 2026-04-14
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,10 +26,10 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 0/2       |
+| Phase 1 | in_progress | 2     | 1/2       |
 | Phase 2 | pending     | 2     | 0/2       |
 
-**Total:** 0/4 tasks completed
+**Total:** 1/4 tasks completed
 
 ---
 
@@ -61,18 +61,36 @@ oat_generated: false
 
 ### Task p01-t01: Derive pack installation state across project and user scopes
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6f551c4e
 
-**Notes:**
+**Outcome (required when completed):**
 
-- Derive pack installation state before mutating prompt defaults or reporting.
+- Added an install-domain helper that summarizes pack presence across project and user scopes as `project`, `user`, `both`, or `not-installed`.
+- Wired the installer to derive shared `tools` config booleans from scanned canonical state rather than assuming every selected pack is installed.
+- Added focused tests covering pack-state aggregation and kept the command harness compatible with scan-based state lookup.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/tools/install-state.ts` - pack install-state aggregation helper
+- `packages/cli/src/commands/init/tools/install-state.test.ts` - install-state unit coverage
+- `packages/cli/src/commands/init/tools/index.ts` - installer integration for scan-based installed-pack state
+- `packages/cli/src/commands/init/tools/index.test.ts` - harness support for scanned tool state
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/install-state.test.ts src/commands/init/tools/index.test.ts`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Used package-local `vitest run` paths because the root `pnpm test <path>` form routes through Turbo and does not accept file paths directly.
 
 ---
 
 ### Task p01-t02: Treat scope changes as migrations for user-eligible packs
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes:**
@@ -119,23 +137,26 @@ Chronological log of implementation progress.
 
 **Session Start:** 23:54 UTC
 
-- [ ] p01-t01: Derive pack installation state across project and user scopes
-- [ ] p01-t02: Treat scope changes as migrations for user-eligible packs
+- [x] p01-t01: Derive pack installation state across project and user scopes - `6f551c4e`
+- [ ] p01-t02: Treat scope changes as migrations for user-eligible packs - in progress
 
 **What changed (high level):**
 
 - Quick-start project scaffolded for the install-scope and install-location UX issue
 - Discovery and implementation plan captured without entering spec-driven workflow
+- Added install-state aggregation utilities and integrated scan-based installed-pack detection into the installer
 
 **Decisions:**
 
 - Treat scope changes as migrations unless implementation exposes a blocker
 - Keep the separate provider-view deletion bug out of scope for this project
+- Use package-local Vitest invocation for file-scoped checks because the repo root test command is Turbo-backed
 
 **Follow-ups / TODO:**
 
 - Validate behavior for packs currently installed in both project and user scopes
 - Decide whether final summary output should list all pack scopes or only changed ones
+- Implement actual canonical cleanup and affected-scope sync behavior in `p01-t02`
 
 **Blockers:**
 

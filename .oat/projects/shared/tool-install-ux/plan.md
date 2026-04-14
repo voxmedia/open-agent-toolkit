@@ -5,6 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-04-13
 oat_phase: plan
 oat_phase_status: complete
+oat_plan_hill_phases: ['p02']
+oat_auto_review_at_checkpoints: true
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
