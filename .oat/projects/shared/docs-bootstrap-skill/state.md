@@ -7,28 +7,28 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/52' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-03T23:16:42.973Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-14T14:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-14T15:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: docs-bootstrap-skill
 
-**Status:** Implementation complete — ready for PR
+**Status:** PR open — awaiting human review
 **Started:** 2026-04-03
 **Last Updated:** 2026-04-14
 
 ## Current Phase
 
-Implementation complete. 19/19 plan tasks closed (p06-t02 deferred to follow-up project for FP-11 nested-standalone E2E coverage; all other tasks executed). Four post-smoke-test fixes landed (FP-16, FP-17, FP-13/E, FP-12 tightening). CLI registration (bundle + `DOCS_SKILLS` manifest) complete. Formal code reviews deferred in favor of rolling hands-on review substituted throughout implementation; PR reviewers provide the next layer. Ready for `oat-project-pr-final`.
+Implementation — PR open, awaiting human review. PR: https://github.com/voxmedia/open-agent-toolkit/pull/52
 
 ## Artifacts
 
@@ -46,8 +46,10 @@ Implementation complete. 19/19 plan tasks closed (p06-t02 deferred to follow-up 
 - ✓ Plan complete
 - ✓ Implementation complete (19/19 tasks; p06-t02 deferred as explicit follow-up)
 - ✓ Monorepo smoke test complete (p06-t03 in Cyclone sandbox; 5 findings triaged, 2 fix commits landed)
+- ✓ PR created
 - ⧗ Nested-standalone E2E (FP-11 live coverage) deferred to follow-up project
 - ⧗ Formal code review deferred to PR review (rolling hands-on review substituted during implementation)
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -55,7 +57,10 @@ None
 
 ## Next Milestone
 
-Run `oat-project-pr-final` to open the PR. Publishable-package version bumps required (packages/cli, packages/docs-config, packages/docs-theme, packages/docs-transforms — lockstep); `pnpm release:validate` must pass before PR is final.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
 
 ## Reviews
 
