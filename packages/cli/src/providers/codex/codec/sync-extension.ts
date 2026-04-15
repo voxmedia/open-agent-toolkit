@@ -212,15 +212,11 @@ export async function computeCodexProjectExtensionPlan(
         desiredRoleNames,
       );
 
-  if (
-    isPartialSync &&
-    desiredRoles.length === 0 &&
-    existingConfigContent === null
-  ) {
+  if (isPartialSync && desiredRoles.length === 0) {
     return {
       operations: [],
       managedRoles: [],
-      aggregateConfigHash: hashContent(''),
+      aggregateConfigHash: hashContent(existingConfigContent ?? ''),
     };
   }
 

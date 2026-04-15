@@ -116,14 +116,29 @@ describe('codex sync extension', () => {
     expect(partialPlan.operations.some((op) => op.action === 'remove')).toBe(
       false,
     );
-    expect(
-      partialPlan.operations.find((op) => op.target === 'config')?.action,
-    ).toBe('skip');
+    expect(partialPlan.operations).toEqual([]);
   });
 
   it('is a no-op for partial sync scopes with no codex-managed agent content', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);
+
+    const partialPlan = await computeCodexProjectExtensionPlan(
+      root,
+      [],
+      ['.agents/skills/oat-docs-analyze'],
+    );
+
+    expect(partialPlan.operations).toEqual([]);
+    expect(partialPlan.managedRoles).toEqual([]);
+  });
+
+  it('does not update an existing user codex config during zero-role partial sync', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(join(root, '.codex', 'config.toml'), 'model = "gpt-5"\n');
 
     const partialPlan = await computeCodexProjectExtensionPlan(
       root,
