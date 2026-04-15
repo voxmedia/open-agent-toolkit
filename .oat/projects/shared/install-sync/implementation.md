@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-14
-oat_current_task_id: p03-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 2     | 1/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 2     | 2/2       |
 
-**Total:** 5/6 tasks completed
+**Total:** 6/6 tasks completed
 
 ---
 
@@ -211,7 +211,7 @@ oat_generated: false
 
 ## Phase 3: Review Fixes
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-14
 
 ### Task p03-t01: (review) Prevent empty-role partial sync from creating codex config
@@ -247,9 +247,9 @@ oat_generated: false
 
 **Outcome (what changed):**
 
-- The first review-fix task eliminated the fresh-project install-scope leak in Codex extension planning
-- Final re-review found a remaining existing-config variant where zero-role partial sync still updates user Codex config
-- Phase 3 is back in progress with one additional review-fix task
+- Phase 3 closed both remaining install-scope leaks in Codex extension planning
+- Zero-role partial sync is now a no-op for both fresh projects and projects with existing user Codex config
+- All implementation and review-fix tasks are complete pending final re-review
 
 **Key files touched:**
 
@@ -259,24 +259,44 @@ oat_generated: false
 **Verification:**
 
 - Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts`
-- Result: Red, then green
+- Result: Red, then green across both review-fix tasks
 - Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts`
-- Result: Pass
+- Result: Pass after `p03-t01`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/engine/compute-plan.test.ts`
+- Result: Pass after `p03-t02`
 
 **Notes / Decisions:**
 
-- Review-fix work remains scoped to the Codex extension planner and test surface called out in the plan
+- Review-fix work stayed scoped to the Codex extension planner and test surface called out in the plan
 
 ---
 
 ### Task p03-t02: (review) Avoid mutating existing user Codex config on zero-role partial sync
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b38f55ba
 
-**Notes:**
+**Outcome (required):**
 
-- Final re-review found that skills-only partial sync still updates an existing user `.codex/config.toml` when the scoped install contains zero Codex-managed agents
+- Added a focused regression for the existing-config zero-role partial-sync case from the final re-review
+- Made zero-role partial sync a true no-op even when `.codex/config.toml` already exists with user-managed settings
+- Preserved the rule that partial sync does not touch unrelated managed Codex roles outside the install scope
+
+**Files changed:**
+
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` - return a no-op plan for all zero-role partial-sync cases and preserve the existing config hash
+- `packages/cli/src/providers/codex/codec/sync-extension.test.ts` - verify zero-role partial sync does not rewrite an existing user Codex config
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts`
+- Result: Fail first, then pass after the planner fix
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/engine/compute-plan.test.ts`
+- Result: Pass
+
+**Notes / Decisions:**
+
+- Zero desired Codex roles in a partial install-triggered sync now always means there is no scoped Codex work to apply
 
 ---
 
@@ -314,7 +334,7 @@ No Medium or Minor findings were deferred in this review-receive run.
 
 **New tasks added:** `p03-t02`
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
+**Next:** Request final re-review for the completed fix task.
 
 No Medium or Minor findings were deferred in this review-receive run.
 
@@ -338,13 +358,13 @@ No Medium or Minor findings were deferred in this review-receive run.
 - [x] p02-t01: Prevent unrelated Codex config and provider writes during docs install - `e2b50bfc`
 - [x] p02-t02: Run focused validation and release guardrails - `c4b2cf8a`
 - [x] p03-t01: (review) Prevent empty-role partial sync from creating codex config - `7f0dbac7`
-- [ ] p03-t02: (review) Avoid mutating existing user Codex config on zero-role partial sync - next
+- [x] p03-t02: (review) Avoid mutating existing user Codex config on zero-role partial sync - `b38f55ba`
 
 **What changed (high level):**
 
 - Scoped install-triggered sync behavior across planner, provider views, and Codex extension generation
 - Closed the fresh-project zero-role partial-sync gap in Codex config creation
-- Final re-review added one more narrowly scoped fix for existing user Codex config mutation
+- Closed the existing-config zero-role partial-sync gap in Codex config mutation
 
 **Decisions:**
 
@@ -352,7 +372,7 @@ No Medium or Minor findings were deferred in this review-receive run.
 
 **Follow-ups / TODO:**
 
-- Implement `p03-t02` and request final re-review again
+- Request final re-review to confirm phase 3 passes cleanly
 
 **Blockers:**
 
@@ -373,6 +393,7 @@ No Medium or Minor findings were deferred in this review-receive run.
 | 1     | `pnpm --filter @open-agent-toolkit/cli test -- --run packages/cli/src/engine/compute-plan.test.ts packages/cli/src/commands/sync/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts`                                                                                                                                             | yes    | no     | package-level + targeted |
 | 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/providers/codex/codec/sync-extension.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/providers/codex/codec/sync-extension.test.ts`; `pnpm release:validate` | yes    | no     | targeted + release       |
 | 3     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts`                                                                                          | yes    | no     | targeted                 |
+| 3b    | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/engine/compute-plan.test.ts`                                                          | yes    | no     | targeted                 |
 | Final | `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm build`; `pnpm --filter @open-agent-toolkit/cli run build`                                                                                                                                                                                                                                                                         | yes    | no     | full workspace           |
 
 ## Final Summary (for PR/docs)
@@ -381,14 +402,14 @@ No Medium or Minor findings were deferred in this review-receive run.
 
 - Install-triggered sync now scopes planner entries to the canonical paths passed by the installer instead of only scoping removals
 - Codex partial-sync planning preserves unrelated managed roles and `.codex/config.toml` entries during docs-only installs
-- Fresh projects with no existing Codex config no longer create `.codex/config.toml` when no Codex-managed agent belongs to the installed pack
+- Zero-role partial sync no longer creates or updates `.codex/config.toml` when no Codex-managed agent belongs to the installed pack
 - The CLI package and public package metadata were bumped to `0.0.37` to satisfy the publishable-package release contract
 
 **Behavioral changes (user-facing):**
 
 - `oat tools install docs` can no longer fan out unrelated provider-view additions from existing canonical content during auto-sync
 - Docs-only installs no longer update Codex managed-role config for unrelated agents
-- Docs-only installs no longer create `.codex/config.toml` in fresh projects that have no scoped Codex-managed agents
+- Docs-only installs no longer create or rewrite `.codex/config.toml` when the scoped install contains no Codex-managed agents
 
 **Key files / modules:**
 
@@ -410,6 +431,7 @@ No Medium or Minor findings were deferred in this review-receive run.
 - `pnpm type-check`
 - `pnpm build`
 - `pnpm --filter @open-agent-toolkit/cli run build`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/tools/install/index.test.ts src/engine/compute-plan.test.ts`
 
 **Design deltas (if any):**
 
