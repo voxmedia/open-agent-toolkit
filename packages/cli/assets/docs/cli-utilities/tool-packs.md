@@ -144,6 +144,10 @@ Key behavior:
 The `docs` pack contains active documentation and instruction-governance
 workflows:
 
+- **oat-docs-bootstrap** — Guide users through bootstrapping a docs app
+  end-to-end: preflight detection, input gathering, scaffold (via `oat docs
+init`) with capability-gated post-patches, build verification, config
+  inspection, and an educational walkthrough.
 - **oat-docs-analyze** — Analyze a docs surface for contract coverage, nav
   drift, stale claims, and coverage gaps.
 - **oat-docs-apply** — Apply only approved, evidence-backed docs-analysis
