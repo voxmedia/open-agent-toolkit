@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.4.1
+version: 1.4.2
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -312,13 +312,21 @@ The archive-side effects in this step are CLI-owned. Follow the canonical behavi
 
 ```bash
 ARCHIVED_ROOT=".oat/projects/archived"
+ARCHIVE_RELATIVE_PATH=".oat/projects/archived/${PROJECT_NAME}"
 PRIMARY_REPO_ARCHIVE=""
-LOCAL_ARCHIVED_ROOT=".oat/projects/archived"
+ARCHIVE_PATH_IS_GITIGNORED="false"
 USE_PRIMARY_REPO_ARCHIVE="false"
 
-# Heuristic: if this checkout is a worktree and the primary repo archive parent
-# exists, use that durable archive path as the canonical archive destination.
-if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+# First decide whether the archive destination is local-only in this checkout.
+# If the archive path is tracked here, keep the archive on the current worktree
+# and branch so the completion commit and PR carry the archived project.
+if git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH" 2>/dev/null; then
+  ARCHIVE_PATH_IS_GITIGNORED="true"
+fi
+
+# Only fall back to the primary checkout when the archive destination is
+# gitignored/local-only in the current worktree.
+if [[ "$ARCHIVE_PATH_IS_GITIGNORED" == "true" ]] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null || true)
   GIT_DIR=$(git rev-parse --git-dir 2>/dev/null || true)
   if [[ -n "$GIT_COMMON_DIR" && -n "$GIT_DIR" && "$GIT_COMMON_DIR" != "$GIT_DIR" ]]; then
@@ -328,7 +336,7 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
       USE_PRIMARY_REPO_ARCHIVE="true"
       ARCHIVED_ROOT="$PRIMARY_REPO_ARCHIVE"
     else
-      echo "Warning: Running in a worktree, but the primary repo archive path is unavailable: $PRIMARY_REPO_ARCHIVE"
+      echo "Warning: Running in a worktree with a local-only archive path, but the primary repo archive path is unavailable: $PRIMARY_REPO_ARCHIVE"
       echo "A worktree-local archive may be deleted when the worktree is removed and is not a durable archive."
       echo "Require explicit confirmation before proceeding with local-only archive."
     fi
@@ -336,7 +344,7 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 fi
 
 if [[ "$USE_PRIMARY_REPO_ARCHIVE" != "true" ]]; then
-  ARCHIVED_ROOT="$LOCAL_ARCHIVED_ROOT"
+  ARCHIVED_ROOT=".oat/projects/archived"
 fi
 
 mkdir -p "$ARCHIVED_ROOT"
@@ -365,6 +373,7 @@ echo "Project archived to $ARCHIVE_PATH"
 - Ask the user explicitly: "Primary repo archive path is unavailable, so this archive may be lost when the worktree is deleted. Continue with local-only archive anyway?"
 - If the user declines, skip archiving and continue the completion flow without archive.
 - Resolve the durable repo root from `git rev-parse --git-common-dir` and `git rev-parse --git-dir`, matching the CLI helper in `packages/cli/src/commands/project/archive/archive-utils.ts`. Do not rely on a `main` checkout or default-branch naming.
+- Apply this guard only when `git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH"` reports that the archive destination is local-only in the current checkout.
 
 **Git handling after archive:**
 
@@ -378,7 +387,7 @@ This stages the deletions from the shared directory. The archived copy is preser
 
 **Worktree archive target (required when available):**
 
-If running from a git worktree, the primary repo archive directory is the canonical/durable archive destination.
+If running from a git worktree, prefer the primary repo archive directory only when the archive destination is local-only/gitignored in the current checkout.
 
 Reference path:
 

@@ -92,6 +92,24 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('keeps version-controlled archives on the current worktree during completion', () => {
+    const skillPath = repoFilePath(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const content = readFileSync(skillPath, 'utf8');
+
+    expect(content).toContain('ARCHIVE_RELATIVE_PATH');
+    expect(content).toContain(
+      'git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH"',
+    );
+    expect(content).toContain(
+      'If `.oat/projects/archived/` is version controlled on the current branch, archive in the current checkout instead.',
+    );
+    expect(content).not.toContain(
+      'If running from a git worktree, the primary repo archive directory is the canonical/durable archive destination.',
+    );
+  });
+
   it('defines runtime-safe summary handling during pr-final and completion', () => {
     const prFinalPath = repoFilePath(
       '.agents/skills/oat-project-pr-final/SKILL.md',
