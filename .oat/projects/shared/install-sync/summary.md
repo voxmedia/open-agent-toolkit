@@ -21,7 +21,7 @@ The fix made the install-triggered canonical path list the authoritative scope f
 
 The same scope now flows through sync orchestration into Codex extension planning. Partial install-triggered sync no longer treats unrelated managed Codex roles as stale, and zero-role partial sync is a true no-op for both fresh projects and projects that already have a user-managed `.codex/config.toml`.
 
-The project also added focused regression coverage at the engine, sync-command, install-command, and Codex extension layers. The rebased branch carries the required lockstep public-package release bump to `0.0.39` across the five publishable packages, with `pnpm release:validate` passing on top of `origin/main`.
+The project also added focused regression coverage at the engine, sync-command, install-command, and Codex extension layers. The rebased branch carries the required lockstep public-package release bump to `0.0.40` across the five publishable packages, with `pnpm release:validate` passing on top of `origin/main`.
 
 ## Key Decisions
 
@@ -32,7 +32,7 @@ The project also added focused regression coverage at the engine, sync-command, 
 
 ## Design Deltas
 
-The quick-mode discovery targeted planner scoping, provider-view scoping, Codex extension scoping, and regression coverage. The implemented branch matched that shape closely. The only notable delta came after rebasing onto a newer `main`: the lockstep public package version advanced to `0.0.39` instead of the originally planned `0.0.37`.
+The quick-mode discovery targeted planner scoping, provider-view scoping, Codex extension scoping, and regression coverage. The implemented branch matched that shape closely. The only notable delta came after rebasing onto newer upstream releases: the lockstep public package version advanced to `0.0.40` instead of the originally planned `0.0.37`.
 
 ## Tradeoffs Made
 
@@ -44,7 +44,7 @@ The branch also accepted OAT tracking churn from repeated review cycles and the 
 
 Future work that adds install-triggered side effects should thread `installedCanonicalPaths` all the way through the affected planner path instead of treating install scope as a removal-only filter. The Codex extension planner is now part of that contract.
 
-Because public package versions already moved on `main`, follow-up branches in this area should bump from `0.0.39` rather than reusing the pre-rebase `0.0.37` numbers recorded in earlier review artifacts.
+Because public package versions already moved on `main`, follow-up branches in this area should bump from `0.0.40` rather than reusing the pre-rebase `0.0.37` numbers recorded in earlier review artifacts.
 
 ## Follow-up Items
 
