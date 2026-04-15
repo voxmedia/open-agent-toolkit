@@ -157,12 +157,12 @@ oat_generated: false
 **Outcome (required):**
 
 - Ran the focused regression suite covering compute-plan, sync, install auto-sync, and Codex extension behavior
-- Passed publishable-package release validation after bumping the lockstep public version to `0.0.37`
+- Passed publishable-package release validation after bumping the lockstep public version to `0.0.39`
 - Completed the final implementation task and phase 2
 
 **Files changed:**
 
-- `packages/cli/package.json` - bumped the CLI public package version to `0.0.37`
+- `packages/cli/package.json` - bumped the CLI public package version to `0.0.39`
 - `packages/control-plane/package.json` - kept public packages in lockstep for release validation
 - `packages/docs-config/package.json` - kept public packages in lockstep for release validation
 - `packages/docs-theme/package.json` - kept public packages in lockstep for release validation
@@ -194,7 +194,7 @@ oat_generated: false
 - `packages/cli/src/commands/sync/sync.types.ts` - sync dependency contract updates
 - `packages/cli/src/providers/codex/codec/sync-extension.ts` - partial-sync preservation of unrelated managed roles
 - `packages/cli/src/providers/codex/codec/sync-extension.test.ts` - partial-sync regression coverage
-- `packages/cli/package.json` - CLI version bump to `0.0.37`
+- `packages/cli/package.json` - CLI version bump to `0.0.39`
 
 **Verification:**
 
@@ -340,6 +340,31 @@ No Medium or Minor findings were deferred in this review-receive run.
 
 ---
 
+### Review Received: final
+
+**Date:** 2026-04-14
+**Review artifact:** `reviews/archived/final-review-2026-04-14-v5.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** none
+
+**Resolution:** Final review marked `passed` after resolving both minor bookkeeping findings during review receive:
+
+- Updated implementation notes to reflect the rebased lockstep public package version `0.0.39`
+- Updated project state to reflect implementation complete instead of awaiting re-review
+
+No Medium or Minor findings remain deferred after this review-receive run.
+
+**Next:** Generate the final PR via `oat-project-pr-final`.
+
+---
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -372,7 +397,7 @@ No Medium or Minor findings were deferred in this review-receive run.
 
 **Follow-ups / TODO:**
 
-- Request final re-review to confirm phase 3 passes cleanly
+- Generate the final PR artifact and open the PR
 
 **Blockers:**
 
@@ -403,7 +428,7 @@ No Medium or Minor findings were deferred in this review-receive run.
 - Install-triggered sync now scopes planner entries to the canonical paths passed by the installer instead of only scoping removals
 - Codex partial-sync planning preserves unrelated managed roles and `.codex/config.toml` entries during docs-only installs
 - Zero-role partial sync no longer creates or updates `.codex/config.toml` when no Codex-managed agent belongs to the installed pack
-- The CLI package and public package metadata were bumped to `0.0.37` to satisfy the publishable-package release contract
+- The CLI package and public package metadata were bumped to `0.0.39` to satisfy the publishable-package release contract
 
 **Behavioral changes (user-facing):**
 
