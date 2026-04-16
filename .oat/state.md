@@ -13,14 +13,14 @@ oat_generated_at: 2026-04-23
 
 ## Active Project Summary
 
-| Field        | Value                 |
-| ------------ | --------------------- |
-| Mode         | { OAT_WORKFLOW_MODE } |
-| Phase        | { OAT_PHASE }         |
-| Status       | in_progress           |
-| HiLL Gate    | n/a                   |
-| Current Task | -                     |
-| Docs Updated | ⚠ not yet run         |
+| Field        | Value         |
+| ------------ | ------------- |
+| Mode         | spec-driven   |
+| Phase        | design        |
+| Status       | complete      |
+| HiLL Gate    | n/a           |
+| Current Task | -             |
+| Docs Updated | ⚠ not yet run |
 
 Details: `.oat/projects/shared/collaborative-design-workflow/state.md`
 
@@ -35,7 +35,7 @@ Details: `.oat/projects/shared/collaborative-design-workflow/state.md`
 
 ## Recommended Next Step
 
-**oat-project-progress** - Check current progress
+**oat-project-plan** - Create implementation plan from design
 
 ## Quick Commands
 
@@ -50,7 +50,7 @@ Details: `.oat/projects/shared/collaborative-design-workflow/state.md`
 
 ## Available Projects
 
-- **collaborative-design-workflow** - { OAT_PHASE }
+- **collaborative-design-workflow** - design
 - **docs-bootstrap-skill** - discovery
 - **docs-readability-reorg** - implement
 - **remote-project-management** - discovery
