@@ -1,45 +1,28 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-04-15
+oat_generated_at: 2026-04-16
 ---
 
 # OAT Repo State Dashboard
 
-**Generated:** 2026-04-15
+**Generated:** 2026-04-16
 
 ## Active Project
 
-**install-sync** (`.oat/projects/shared/install-sync`)
-
-## Active Project Summary
-
-| Field        | Value         |
-| ------------ | ------------- |
-| Mode         | quick         |
-| Phase        | plan          |
-| Status       | complete      |
-| HiLL Gate    | n/a           |
-| Current Task | -             |
-| Docs Updated | ⚠ not yet run |
-
-Details: `.oat/projects/shared/install-sync/state.md`
-
-## Last Paused Project
-
-**npm-publish** (`.oat/projects/shared/npm-publish`)
+_(not set)_
 
 ## Knowledge Status
 
 | Field         | Value      |
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
-| Age           | 13 days    |
-| Files Changed | 291        |
+| Age           | 14 days    |
+| Files Changed | 293        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-implement** - Start implementation
+**oat-project-open** - Select an existing project to continue work
 
 ## Quick Commands
 
@@ -55,5 +38,4 @@ Details: `.oat/projects/shared/install-sync/state.md`
 ## Available Projects
 
 - **docs-readability-reorg** - implement
-- **install-sync** - plan
 - **remote-project-management** - discovery
