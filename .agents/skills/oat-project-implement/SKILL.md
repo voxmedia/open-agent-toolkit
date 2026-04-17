@@ -29,7 +29,7 @@ Do not enter checkpoint review, final review, revise, or PR-final handoff with d
 
 ## Progress Indicators (User-Facing)
 
-When executing this skill, provide lightweight progress feedback so the user can tell what’s happening after they confirm.
+When executing this skill, provide lightweight progress feedback so the user can tell what's happening after they confirm.
 
 - Print a phase banner once at start using horizontal separators, e.g.:
 
@@ -39,13 +39,13 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 - For each task, announce a compact header before doing work:
   - `OAT ▸ IMPLEMENT {task_id}: {task_name}`
-- Before multi-step “bookkeeping” work (updating artifacts/state, verification, committing, dashboard refresh), print 2–5 short step indicators, e.g.:
+- Before multi-step "bookkeeping" work (updating artifacts/state, verification, committing, dashboard refresh), print 2–5 short step indicators, e.g.:
   - `[1/4] Updating implementation.md + state.md…`
   - `[2/4] Running verification…`
   - `[3/4] Committing…`
   - `[4/4] Refreshing dashboard…`
 - For long-running operations (tests/lint/type-check/build, reviews, large diffs), print a start line and a completion line (duration optional).
-- Keep it concise; don’t print a line for every shell command.
+- Keep it concise; don't print a line for every shell command.
 
 **BLOCKED Activities:**
 
@@ -498,106 +498,65 @@ When the current schedule entry is a multi-phase group, execute as follows.
 
 7.  **Bookkeeping commit** after the group completes. Then HiLL checkpoint check.
 
-### Step 7: Update Implementation State
+### Step 7: Artifact Updates After Each Phase (or Group)
 
-After each task:
+After each phase (sequential) or each parallel group (multi-phase) completes, update the tracking artifacts before moving on.
 
-**Update frontmatter:**
+**`implementation.md`:**
 
-```yaml
-oat_current_task_id: { next_task_id } # e.g., p01-t02
-oat_last_updated: { today }
-```
-
-**Update task entry:**
+Append a new entry to the `## Orchestration Runs` section between the `<!-- orchestration-runs-start -->` and `<!-- orchestration-runs-end -->` markers. Format:
 
 ```markdown
-### Task {task_id}: {Task Name}
+### Run {N} — {YYYY-MM-DD HH:MM}
 
-**Status:** completed
-**Commit:** {sha}
+**Branch:** {orchestration-branch}
+**Tier:** {1 | 2}
+**Policy:** merge-strategy=merge, retry-limit={N}
+**Phases:** {N} executed, {N} passed, {N} failed, {N} stopped
 
-**Outcome (required):**
+#### Phase Outcomes
 
-- {2-5 bullets describing what materially changed}
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- | ------- | -------- | -------- |
+| pNN   | {status}    | {pass  | fail}          | N/{limit}   | {merged | excluded | stopped} |
 
-**Files changed:**
+#### Parallel Groups
 
-- `{path}` - {why}
+- Group {N} [{phase list}]: worktree-based, merged in order
+- {singleton phases}: sequential
 
-**Verification:**
+#### Outstanding Items
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas}
+- {None | list of excluded phases with review paths and worktree paths}
 ```
 
-**Update progress overview table.**
+Append only — never overwrite prior run entries.
 
-Keep project state in sync after each task (recommended source of truth for “where are we?” across sessions):
+**`plan.md` review table:**
 
-- Update `"$PROJECT_PATH/state.md"` frontmatter:
-  - `oat_phase: implement`
-  - `oat_phase_status: in_progress`
-  - `oat_current_task: {next_task_id}`
-  - `oat_last_commit: {sha}`
-  - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+For each phase that completed:
 
-**Bookkeeping commit (required):**
+- Pass on first try → set phase row to `passed` with date + review artifact path.
+- Pass after fixes → set to `fixes_added` → `fixes_completed` → `passed` (match existing lifecycle).
+- Fix-loop exhausted → leave at `fixes_added` with "excluded" note in the artifact link.
+- `final` review row is never touched by this skill.
 
-**DO NOT SKIP.** This commit prevents state drift across sessions.
+**`state.md`:**
 
-After the code commit (Step 6) and state updates above, commit all modified OAT tracking files:
+- Update `oat_current_task` to the next un-run task ID (or the final task if run complete).
+- Update `oat_last_commit` to the bookkeeping commit SHA about to be made.
+- Update `oat_project_state_updated` to current ISO 8601 UTC timestamp.
+- If `oat_execution_mode: subagent-driven` is present, remove the key.
+- If the user supplied a `--retry-limit` override, persist as `oat_orchestration_retry_limit`.
+
+**Bookkeeping commit (mandatory):**
 
 ```bash
-git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
-git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for {task_id}"
+git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md
+git commit -m "chore(oat): bookkeeping after {pNN} {pass|fail}"
 ```
 
-Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
-
-**If executing review-generated tasks** (task title prefixed with `(review)`):
-
-- Ensure `implementation.md` stays accurate:
-  - The “Review Received” section reflects whether findings were deferred vs converted to tasks
-  - The “Next” line is updated once review fix tasks are complete (don’t leave “Next: execute fix tasks” after they’re done)
-- Keep `plan.md` internally consistent:
-  - If `## Implementation Complete` contains phase/task totals, update totals when review fix tasks are added (via `oat-project-review-receive`) or removed.
-- Review status lifecycle:
-  - When review-generated fix tasks are added, the Reviews table should be `fixes_added`.
-  - After all fix tasks are implemented, update the Reviews table to `fixes_completed` (not `passed`).
-  - Only set `passed` after a re-review is run and processed via `oat-project-review-receive` with no Critical/Important findings.
-
-**Review-fix completion bookkeeping (required):**
-
-- When you complete the last outstanding review-fix task:
-  1. Update the relevant `plan.md` `## Reviews` row from `fixes_added` → `fixes_completed` and set Date to `{today}`.
-     - If multiple rows are `fixes_added`, ask the user which scope you just addressed (or choose the matching phase if obvious).
-  2. Update `plan.md` `## Implementation Complete` totals (phase counts + total tasks) so summaries reflect the additional fix work.
-  3. Update `implementation.md` so it’s unambiguous that tasks are complete and the project is awaiting re-review:
-     - `oat_current_task_id: null` (reviews are not tasks)
-     - “Next” guidance should say “request re-review” (not “execute fix tasks”).
-  4. Update `{PROJECT_PATH}/state.md` to reflect the correct “awaiting re-review” posture:
-     - `oat_phase: implement`
-     - `oat_phase_status: in_progress` (until the re-review passes)
-     - `oat_current_task: null`
-     - `oat_project_state_updated: “{ISO 8601 UTC timestamp}”`
-
-  **Bookkeeping commit (required):**
-
-  **DO NOT SKIP.** This commit prevents state drift across sessions.
-
-  After completing the review-fix checklist above, commit all modified OAT tracking files:
-
-  ```bash
-  git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
-  git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for {task_id}"
-  ```
-
-  Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
+Then check HiLL checkpoint — if the phase ID is in `oat_plan_hill_phases`, pause for user approval before continuing.
 
 ### Step 8: Check Plan Phase Completion
 
@@ -656,7 +615,7 @@ When pausing:
 
 **Phase summaries (required):**
 
-- When a plan phase completes (p01, p02, etc.), update the “Phase Summary” section in `implementation.md` for that phase:
+- When a plan phase completes (p01, p02, etc.), update the "Phase Summary" section in `implementation.md` for that phase:
   - Outcome (behavior-level)
   - Key files touched (paths)
   - Verification run
@@ -739,7 +698,7 @@ Options:
 
 When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` task):
 
-**Update “Final Summary” (required):**
+**Update "Final Summary" (required):**
 
 - Before requesting final review / running `oat-project-pr-final`, update the `## Final Summary (for PR/docs)` section in `"$PROJECT_PATH/implementation.md"`:
   - What shipped (capabilities, behavior-level)
@@ -919,13 +878,13 @@ To run in a separate session use: oat-project-review-provide code final
   - `oat_phase_status: complete`
   - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
   - Append `"implement"` to `oat_hill_completed` (only if configured as a HiLL gate)
-- Update state content to “Implementation complete”.
+- Update state content to "Implementation complete".
 - Update `"$PROJECT_PATH/plan.md"`:
   - Set the `final` review row status to `passed` (if not already)
   - Ensure `## Implementation Complete` totals reflect any review fix tasks that were added
 - Update `"$PROJECT_PATH/implementation.md"`:
   - Ensure `oat_current_task_id: null`
-  - Ensure the “Review Received” section reflects completed fixes and points to the next action (PR) rather than “execute fix tasks”
+  - Ensure the "Review Received" section reflects completed fixes and points to the next action (PR) rather than "execute fix tasks"
 
 ### Step 15: Prompt for Next Steps
 
