@@ -323,16 +323,6 @@
       "lastSynced": "2026-02-21T19:45:11.272Z"
     },
     {
-      "canonicalPath": ".agents/skills/oat-project-subagent-implement",
-      "providerPath": ".claude/skills/oat-project-subagent-implement",
-      "provider": "claude",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.272Z"
-    },
-    {
       "canonicalPath": ".agents/skills/oat-repo-knowledge-index",
       "providerPath": ".claude/skills/oat-repo-knowledge-index",
       "provider": "claude",
@@ -665,16 +655,6 @@
     {
       "canonicalPath": ".agents/skills/oat-project-spec",
       "providerPath": ".cursor/skills/oat-project-spec",
-      "provider": "cursor",
-      "contentType": "skill",
-      "strategy": "symlink",
-      "contentHash": null,
-      "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.276Z"
-    },
-    {
-      "canonicalPath": ".agents/skills/oat-project-subagent-implement",
-      "providerPath": ".cursor/skills/oat-project-subagent-implement",
       "provider": "cursor",
       "contentType": "skill",
       "strategy": "symlink",
@@ -1303,5 +1283,5 @@
       "lastSynced": "2026-04-17T19:51:00.334Z"
     }
   ],
-  "lastUpdated": "2026-04-17T19:51:00.334Z"
+  "lastUpdated": "2026-04-17T20:40:55.261Z"
 }
