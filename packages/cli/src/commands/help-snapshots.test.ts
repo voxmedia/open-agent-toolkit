@@ -591,7 +591,7 @@ describe('help output snapshots', () => {
         new [options] <name>                     Create or update an OAT project scaffold
         open [options] <name>                    Open or switch to an OAT project
         pause [options] [name]                   Pause an OAT project
-        set-mode <mode>                          Set project implementation execution mode
+        set-mode <mode>                          [deprecated] No-op. Execution mode is no longer selectable.
         status                                   Show the current OAT project state
         validate-plan [options]                  Validate plan.md parallelism metadata against the plan phase list
         help [command]                           display help for command
@@ -654,10 +654,10 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat project set-mode [options] <mode>
 
-      Set project implementation execution mode
+      [deprecated] No-op. Execution mode is no longer selectable.
 
       Arguments:
-        mode        Execution mode: single-thread or subagent-driven
+        mode        Ignored. Execution mode is no longer selectable.
 
       Options:
         -h, --help  display help for command
