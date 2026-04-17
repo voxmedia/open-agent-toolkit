@@ -289,47 +289,54 @@ Initialize project state so other skills (e.g., `oat-project-progress`) reflect 
   - `oat_current_task: p01-t01`
   - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
-### Step 5: Execute Current Task
+### Step 5: Per-Phase Execution
 
-For the current task in plan.md:
+For each phase `pNN` in the plan (or each phase in the current parallel group), the orchestrator dispatches phase-level work as follows.
 
-**5a. Announce task:**
+**Tier 1 dispatch (native subagents):**
 
-```
-Starting {task_id}: {Task Name}
-Files: {file list}
-```
+1. Build the Phase Scope block:
 
-**5b. Follow steps exactly:**
+   ```
+   project: {PROJECT_PATH}
+   phase: {pNN}
+   mode: implement
+   artifact_paths:
+     plan: {PROJECT_PATH}/plan.md
+     design: {PROJECT_PATH}/design.md
+     spec: {PROJECT_PATH}/spec.md
+     implementation: {PROJECT_PATH}/implementation.md
+     discovery: {PROJECT_PATH}/discovery.md
+   commit_convention: {from plan.md header}
+   workflow_mode: {from state.md or plan.md frontmatter}
+   ```
 
-- Read each step from plan
-- Execute as specified
-- Run verification commands
+2. Dispatch `oat-phase-implementer` (Tier 1 via provider-native subagent mechanism) with the Phase Scope block as input.
 
-**5c. Apply TDD discipline:**
+3. Receive the structured summary (DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED).
 
-1. Write test first (if applicable)
-2. Run tests → expect red
-3. Write implementation
-4. Run tests → expect green
-5. Refactor if needed
+**Tier 2 dispatch (inline fallback):**
 
-**5d. Handle issues:**
+If Tier 2 is selected, do not dispatch. Instead:
 
-- If step unclear → ask user
-- If verification fails → debug and retry
-- If blocked → mark task as blocked, note reason
+1. Read `.agents/agents/oat-phase-implementer.md` for the phase-execution process.
+2. Execute that process yourself against the same Phase Scope.
+3. Produce an equivalent summary in your own context.
 
-### Step 6: Commit Task
+#### Handling Implementer Status
 
-After task verification passes:
+- **DONE:** Proceed to phase review (Step below).
+- **DONE_WITH_CONCERNS:** Read the concerns block. If any concern is correctness-related (bug, wrong behavior, missing requirement), address it before review — re-dispatch implementer with a targeted fix instruction. If concerns are advisory (e.g., "this file is getting large"), note them in `implementation.md` and proceed to review.
+- **NEEDS_CONTEXT:** Provide the missing context (usually an artifact path or a cross-phase reference) and re-dispatch. This counts toward the retry limit.
+- **BLOCKED:** STOP the run. Surface the block to the user with:
+  - Phase ID
+  - What the implementer reported as blocking
+  - Recommended next step (plan fix, external resolution, user guidance)
+    Do not proceed to subsequent phases while a phase is blocked.
 
-```bash
-git add {files from plan}
-git commit -m "{commit message from plan}"
-```
+#### Dispatch Retry (Transient Failures)
 
-Store commit SHA for implementation.md.
+If a Tier 1 dispatch fails (agent did not resolve, returned empty, etc.), retry exactly once. If the second attempt also fails, treat the phase as `failed` via the same mechanism as fix-loop retry exhaustion (see Step 7 below). Tier is never silently downgraded.
 
 ### Step 7: Update Implementation State
 
