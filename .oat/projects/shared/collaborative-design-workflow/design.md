@@ -15,7 +15,7 @@ This design reworks three OAT skills (`oat-project-design`, `oat-project-quick-s
 
 The change is bounded to skill prompts, templates, and `AGENTS.md` workflow-triage prose. **No CLI/control-plane code changes are required** — the OAT runtime is unchanged. The implementation is essentially a coordinated edit of four `.agents/skills/*/SKILL.md` files plus their template counterparts in `.oat/templates/` plus `AGENTS.md`, with a release-validation pass to confirm the lockstep version bump.
 
-The design pattern is drawn from Obra Superpowers' `brainstorming` skill (section-by-section presentation with incremental validation, divergent thinking at decision points), augmented with OAT-native concepts (mode choice, requirements gate for quick-start, reliable non-interactive fallback for unattended agent-orchestrated runs). Source files for all referenced Superpowers skills are checked into `reference/` for reproducibility.
+The design pattern is drawn from Obra Superpowers' `brainstorming` skill (section-by-section presentation with incremental validation, one approach-level divergent-thinking moment before section drafting — matching Superpowers' actual flow rather than speculatively inventing per-section divergence), augmented with OAT-native concepts (mode choice, requirements gate for quick-start, reliable non-interactive fallback for unattended agent-orchestrated runs). Several passages of skill prose are lifted verbatim from Superpowers (MIT licensed); attribution is consolidated in a repo-root `NOTICES.md` (see FR14). Source files for all referenced Superpowers skills are checked into `reference/` for reproducibility.
 
 A sub-project decomposition advisory was considered (Component 2 in earlier drafts) and dropped from scope: detection of multi-subsystem requests already happens organically during `oat-project-discover`. The corresponding gap — a graceful hand-off mechanism when decomposition is the right call — belongs to its own follow-up project (tracked in `discovery.md` Deferred Ideas as the codified split-escape-hatch). Component 2's slot is preserved as a removed-stub in this design for ID stability.
 
@@ -37,7 +37,9 @@ The change is **prompt-only / docs-only**. The OAT runtime is untouched. Affecte
 ├── spec.md                              ← (verify; no change expected)
 └── design.md                            ← (verify; no change expected)
 
-AGENTS.md                                ← workflow triage prose update
+AGENTS.md                                ← workflow triage prose update + single NOTICES.md reference
+
+NOTICES.md                               ← NEW: consolidated attribution for borrowed external prose (Superpowers)
 
 packages/
 ├── cli/package.json                     ← lockstep version bump
@@ -82,14 +84,20 @@ There are no new packages, no new MCP servers, no new external dependencies, and
                     │  Sub-step C: Requirements        │
                     │              confirmation        │
                     │              ─────► writes spec.md
+                    │  Sub-step C.5: Approach          │
+                    │              reaffirmation       │
+                    │              (one divergent      │
+                    │               moment per run —   │
+                    │               Superpowers prose) │
                     │  Sub-step D: Section iterator    │
                     │   ┌────────────────────────────┐ │
                     │   │ COLLABORATIVE branch       │ │
                     │   │  for each section:         │ │
-                    │   │   - draft                  │ │
-                    │   │   - if real decision pt:   │ │
-                    │   │     present 2-3 options    │ │
+                    │   │   - draft (scale depth)    │ │
                     │   │   - present + validate     │ │
+                    │   │   - revise on feedback     │ │
+                    │   │  (no scripted per-section  │ │
+                    │   │   options step)            │ │
                     │   └────────────────────────────┘ │
                     │   ┌────────────────────────────┐ │
                     │   │ DRAFT-AND-REVIEW branch    │ │
@@ -169,8 +177,13 @@ For the **spec-driven workflow with new design skill**:
       - In collaborative: iterate with user until confirmed.
       - In draft: write spec.md, mark complete, present alongside design at user-review gate.
       - Output: spec.md (oat_status: complete, oat_ready_for: oat-project-design).
+   c.5 Approach reaffirmation (one divergent moment, Superpowers-aligned):
+      - Read discovery.md Solution Space / Chosen Direction.
+      - If exists: one-sentence summary + confirm/revisit prompt.
+      - If not: invoke Superpowers' 2-3-approaches prose inline.
+      - Record confirmed approach in design.md Overview.
    d. Section iterator:
-      - Collaborative: per-section draft → present → (if real decision pt) options → validate → next.
+      - Collaborative: per-section draft (scaled to complexity) → present → validate → revise on feedback → next. No scripted per-section options step.
       - Draft: draft all sections in one pass.
       - Output: design.md with all sections.
    e. Self-review: silent placeholder/consistency/scope/ambiguity pass; fix inline.
@@ -344,6 +357,59 @@ Commit:
 - **Commit `spec.md` separately from `design.md`.** Keeps the commit history clean and lets HiLL gate reviewers fetch the spec independently if they want.
 - **No new template fields required.** Verification during implementation: walk the existing spec template against this flow and confirm.
 
+### Component 3.5: Approach reaffirmation before section drafting (Superpowers-aligned)
+
+**Purpose:** Fulfill FR3 by having one divergent-thinking moment at the approach level before section-by-section drafting, matching Superpowers' `brainstorming` checklist item 4 ("Propose 2-3 approaches"). This is the sole divergent moment in the skill.
+
+**Responsibilities:**
+
+- After requirements confirmation (Component 3), before the section iterator (Component 4) runs.
+- Read `discovery.md`'s `## Solution Space` section.
+- If a Chosen Direction exists: summarize it in one sentence and ask the user to confirm or redirect.
+- If no Solution Space exists (well-understood quick-start-style requests that bypassed discovery Step 9): invoke the 2-3-approaches pattern inline using Superpowers' exact prose.
+- Record the confirmed approach in `design.md`'s Overview before the section iterator begins.
+
+**Interfaces:**
+
+```
+# Step 3.5: Approach Reaffirmation (one divergent moment)
+
+Read "$PROJECT_PATH/discovery.md" — look for "## Solution Space" section
+with a "### Chosen Direction" sub-section.
+
+IF Chosen Direction exists:
+  Present to user:
+    "Based on discovery, we're designing around [Approach N — one-line summary].
+     Confirming this is still the right direction before I draft the design?"
+  Use AskUserQuestion:
+    1. Yes — proceed with this approach
+    2. Revisit — I want to explore alternatives again
+  If "Revisit": invoke the 2-3-approaches block below.
+
+IF no Chosen Direction (or Solution Space section absent):
+  Invoke Superpowers' 2-3-approaches pattern inline. Use their exact
+  prose in the skill file:
+
+    > Propose 2-3 different approaches with trade-offs.
+    > Present options conversationally with your recommendation and reasoning.
+    > Lead with your recommended option and explain why.
+    > (— from Obra Superpowers brainstorming skill, MIT licensed; attribution in NOTICES.md)
+
+  Ask user to choose. Document the chosen approach in design.md's
+  Overview section.
+
+Continue to Component 4 (section iterator).
+```
+
+**Dependencies:** `AskUserQuestion`, Read on `discovery.md`.
+
+**Design Decisions:**
+
+- **One divergent moment per run.** Not per-section. Matches Superpowers' pattern exactly.
+- **Reaffirmation, not re-derivation.** If discovery already did the work, we don't redo it — we confirm and move on. Avoids triple-asking the same approach question.
+- **Escape hatch for well-understood requests.** If someone went `oat-project-discover → oat-project-design` and discovery skipped Step 9 (because the request was well-understood enough not to need solution-space exploration), design invokes the 2-3-approaches pattern inline so it always happens exactly once before drafting.
+- **Prose is lifted from Superpowers, not paraphrased.** FR14 covers the attribution mechanism (repo-root `NOTICES.md`).
+
 ### Component 4: Section iterator (collaborative branch)
 
 **Purpose:** Implement the section-by-section design presentation with optional divergent-options branching at real decision points.
@@ -352,14 +418,13 @@ Commit:
 
 - Iterate over the design section list in order: architecture → components → data models → APIs → security → performance → error handling → testing (with requirement-to-test mapping) → deployment → migrations → phases → risks.
 - For each section:
-  1. Draft a candidate.
-  2. Decide whether this section involves a real architectural decision (per the heuristic in Component 5).
-  3. If yes: present 2-3 approaches with tradeoffs, lead with recommendation, ask user to choose.
-  4. Present the section (with chosen approach if applicable) and ask "Does this look right, or should we adjust before continuing?"
-  5. Incorporate any feedback inline. Re-present if substantively changed.
-  6. Move to next section.
+  1. Draft a candidate, scaling depth to complexity (Superpowers' prose, lifted verbatim into the skill: "Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced").
+  2. Present the section and ask "Does this look right, or should we adjust before continuing?" (Superpowers' exact phrasing.)
+  3. Incorporate any feedback inline. Re-present if substantively changed. "Be ready to go back and clarify if something doesn't make sense" (Superpowers' exact phrasing — this is where organic divergent thinking fires: if the user pushes back, the agent naturally explores alternatives in that exchange).
+  4. Mark section approved. Move to next section.
 - Track which sections have been approved (so re-runs don't redo finalized sections).
 - Sections that are not applicable to the project (e.g., "no migrations needed") are presented as a single sentence rather than a multi-paragraph N/A.
+- **No scripted per-section "present 2-3 options" step.** This was removed when FR3 was aligned with Superpowers' actual pattern (one approach-level divergent moment, handled by Component 3.5 before this iterator runs). Divergent thinking during sections happens organically in response to user feedback, not on a schedule.
 
 **Interfaces:**
 
@@ -380,17 +445,9 @@ For SECTION in [
   "Implementation Phases",
   "Risks and Mitigation"
 ]; do
-  - Draft section content based on spec.md + knowledge base
-  - Determine if this section involves a real architectural decision (see Component 5)
-
-  - If real decision:
-    Present:
-      "We have a few options for [section topic]:
-       - Option A (recommended): … because …
-       - Option B: … tradeoff vs A …
-       - Option C: … tradeoff vs A …
-       Which direction fits?"
-    Use AskUserQuestion. Capture choice.
+  - Draft section content based on spec.md + knowledge base.
+    Scale depth to complexity (a few sentences if straightforward,
+    up to 200-300 words if nuanced — Superpowers' exact language).
 
   - Present section to user:
       "Here's what I have for [section]: [content]
@@ -398,9 +455,12 @@ For SECTION in [
     Use AskUserQuestion (free-text or multi-choice with refinement options).
 
   - On feedback: revise inline; re-present if substantive.
+    Be ready to go back and clarify if something doesn't make sense.
   - Mark section approved.
 done
 ```
+
+**No per-section options step.** Divergent thinking fires organically: if the user pushes back on a section, the agent explores alternatives in that exchange. There is no scripted "Option A / Option B / Option C" step baked into the iterator.
 
 **Dependencies:**
 
@@ -414,63 +474,11 @@ done
 - **Approved sections persist.** If the user requests changes mid-iteration, only the affected section is re-drafted, not the whole document.
 - **Commit after every section, or batch?** Commit after the full design.md is finalized (matches existing Step 22 commit pattern). Mid-iteration state lives in the in-progress design.md frontmatter (`oat_status: in_progress`).
 
-### Component 5: "Real architectural decision point" heuristic
+### Component 5: (removed — per-section decision-point heuristic deferred)
 
-**Purpose:** Specify, in skill prompt language, when to invoke the divergent options pattern (FR3) and when to suppress it.
+Originally specified a prose heuristic for deciding when to present 2-3 architectural options inside a design section (the "real decision point" heuristic). Removed when FR3 was rewritten to align with Obra Superpowers' actual `brainstorming` skill pattern: one approach-level divergent moment before section drafting (see Component 3.5, Approach Reaffirmation), then section-by-section presentation with no scripted per-section options step. Section-level divergence happens organically when the user pushes back on a drafted section.
 
-**Responsibilities:**
-
-- Be concrete enough that the LLM follows it consistently.
-- Include positive examples (cases where 2-3 options should be presented).
-- Include negative examples (cases where presenting options would be perfunctory).
-- Include a guardrail against fabricating false alternatives.
-
-**Interfaces:**
-
-This is prose embedded in the skill text. Proposed wording:
-
-```markdown
-## Heuristic: When to Present 2-3 Approaches Inside a Section
-
-**Present options when at least one of these is true:**
-
-- The section involves a **structural choice** with multiple viable answers
-  (e.g., "monolith vs split service", "library vs subprocess", "shared vs
-  per-feature DB schema").
-- The section involves a **convention vacuum** — there is no clear
-  precedent in `.oat/repo/knowledge/conventions.md` or `architecture.md`
-  for the exact pattern.
-- The section involves a **tradeoff with externally-facing implications**
-  (API style: REST vs gRPC; sync vs async; single endpoint vs many).
-
-**Present a single path (with confirm-or-redirect) when any of these is true:**
-
-- Convention dictates the choice (e.g., "use the existing test runner";
-  "follow the conventions in conventions.md for component naming").
-- Discovery already settled this (e.g., "Approach 1 was selected in the
-  Solution Space section of discovery.md").
-- The choice is trivial or naming-only (e.g., "we'll call this function
-  `validateInput`").
-
-**Negative examples — do NOT do these:**
-
-- Inventing alternatives just to satisfy the pattern (e.g., for a function
-  name: "Option A: `validate`. Option B: `verify`. Option C: `check`." —
-  none of these are real architectural decisions).
-- Presenting "do it this way vs don't do it at all" as a fake choice.
-- Re-presenting an alternative that discovery already rejected.
-
-**When in doubt, present a single recommended path with the rationale,
-and let the user redirect if they disagree.**
-```
-
-**Dependencies:** None — this is documentation embedded in the skill prompt.
-
-**Design Decisions:**
-
-- **Heuristic includes both positive and negative examples.** The positive list alone is too easy to over-apply; the negative list is what prevents perfunctory option-invention.
-- **"When in doubt, single path" is the default.** Reduces the rate of false-positive option presentations.
-- **Heuristic lives in the design skill, not in a separate doc.** Co-located with the section iterator step where it's used.
+With no per-section judgment call, no heuristic is needed, and there is nothing to calibrate. Related NFR7 was removed in spec.md. Component 5's slot is intentionally preserved (rather than renumbered) to avoid cross-reference churn — do not reuse this slot in this project.
 
 ### Component 6: Design self-review
 
@@ -852,6 +860,73 @@ Use this discovery artifact to drive the next workflow step:
 - **Keep workflow numbering and labels.** Don't churn the workflow-option list; just tighten the prose under "Full spec-driven."
 - **Mention spec.md still exists as artifact.** Avoids the confusion of "wait, where did spec go?".
 
+### Component 13: Repo-root `NOTICES.md` for borrowed external prose
+
+**Purpose:** Satisfy FR14. Consolidate attribution for external prose lifted into OAT skills into a single repo-root file so skill files themselves stay clean (zero skill-file bloat), and establish a durable convention for future borrowings.
+
+**Responsibilities:**
+
+- Create `NOTICES.md` at the repo root.
+- Record the Obra Superpowers attribution as the first entry.
+- Establish a format future borrowings can append to.
+- Add a single reference from `AGENTS.md` so contributors know where to record future borrowings.
+
+**Interfaces:**
+
+Proposed `NOTICES.md` content (created during implementation):
+
+```markdown
+# NOTICES
+
+This file records attribution for externally-sourced prose incorporated
+into this repository. When you adapt or lift prose from an external
+project into a skill, template, or doc, add an entry here — do not
+add attribution footers to the skill files themselves.
+
+## Obra Superpowers
+
+**Source:** https://github.com/obra/superpowers
+**License:** MIT
+**Version referenced:** 5.0.7
+
+### `brainstorming` skill
+
+Source file: `skills/brainstorming/SKILL.md`
+
+Passages adapted or lifted verbatim into OAT:
+
+- "Exploring approaches" (4 lines) — used in `oat-project-design` Component 3.5 (approach reaffirmation)
+- "Presenting the design" (5 lines) — used in `oat-project-design` Component 4 (section iterator)
+- "Design for isolation and clarity" (4 lines) — used as a principle in `oat-project-design`
+- Self-review four-check template — used in `oat-project-design` Component 6
+- User-review gate phrasing — used in `oat-project-design` Component 7
+
+Consumer OAT skills: `oat-project-design`, `oat-project-quick-start`
+(via lightweight-design mode choice inheriting the same prose).
+
+The MIT license does not require in-derived-work attribution notices;
+this record is kept for transparency and to make the provenance
+discoverable without reading the `oat-project-design` history.
+```
+
+Proposed `AGENTS.md` addition (single sentence in an appropriate section):
+
+```markdown
+## External Attributions
+
+Prose adapted from external projects is tracked in the repo-root
+`NOTICES.md`. When borrowing from an external source, add an entry there.
+```
+
+**Dependencies:** None. One new file at repo root; one paragraph addition to `AGENTS.md`.
+
+**Design Decisions:**
+
+- **Consolidated, not per-skill.** One entry per external source, listing all consumer OAT skills. Future borrowings append to the same entry or add a new one. Keeps the file easy to scan and avoids duplication if multiple skills borrow from the same source.
+- **Skill files themselves stay clean.** No HTML-comment footers, no attribution subsections, no frontmatter license fields. Zero skill-file bloat. A reader who wants provenance knows to consult `NOTICES.md`.
+- **Format includes what was borrowed, not just that something was borrowed.** Listing the specific passages (with one-line descriptors) makes the record useful for future contributors deciding whether a change affects a borrowed passage.
+- **AGENTS.md reference is one sentence.** Short enough not to dominate, findable via full-text search.
+
 ## Data Models
 
 **No new data models or schemas.**
@@ -936,28 +1011,29 @@ The dogfooding step (NFR4 acceptance criterion) is the only "performance" verifi
 
 ### Requirement-to-Test Mapping
 
-| ID   | Verification                                                 | Key Scenarios                                                                                                                                                                                                                                          |
-| ---- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| FR1  | manual: prose inspection + dogfood                           | Mode-choice prompt fires for interactive context; `--mode` arg overrides; both options present in prompt                                                                                                                                               |
-| FR2  | manual: dogfood real OAT change with collaborative mode      | All sections presented one at a time with validation; section length scales to complexity; N/A sections shown as one-liner                                                                                                                             |
-| FR3  | manual: dogfood + heuristic prose inspection                 | Real architectural decision triggers 2-3 options; convention-driven choice presents single path; no false-positive options for trivial choices                                                                                                         |
-| FR4  | manual: skill prose + spec.md shape verification             | Requirements confirmation runs in both modes; spec.md produced with valid Requirement Index in both modes                                                                                                                                              |
-| FR5  | manual: prose inspection + dogfood                           | Self-review fires after sections drafted, before HiLL; four named checks visible in skill prose; fixes happen inline                                                                                                                                   |
-| FR6  | manual: skill prose inspection                               | HiLL prompt language matches new wording; mentions `oat-project-review-provide` for optional independent review                                                                                                                                        |
-| FR7  | —                                                            | _(removed — deferred to follow-up split-escape-hatch project)_                                                                                                                                                                                         |
-| FR8  | manual: dogfood with `--mode draft`                          | Draft mode produces full design.md and spec.md without per-section prompts; self-review still runs; user-review gate fires once                                                                                                                        |
-| FR9  | integration: pipe stdin / non-TTY + unattended agent dogfood | `oat-project-design` with no TTY auto-falls-back to draft mode; banner emitted; no prompt blocks. End-to-end: a Claude agent orchestrator runs `discover → design → plan → implement` with `OAT_NON_INTERACTIVE=1` set and completes without blocking. |
-| FR10 | manual: skill description + AGENTS.md inspection             | Spec skill description reflects standalone status; closing output mentions design as optional next step; AGENTS.md prose updated                                                                                                                       |
-| FR11 | manual: dogfood quick-start straight-to-plan                 | Requirements gate fires before plan; bypass flag works; addition path updates discovery.md and re-presents                                                                                                                                             |
-| FR12 | manual: dogfood quick-start lightweight design               | Mode-choice fires at top of Step 2.75; reduced section set preserved in both modes                                                                                                                                                                     |
-| FR13 | manual: skill prose + template inspection                    | Discovery Step 11 + 12 + 15 + Next Steps template all route to design                                                                                                                                                                                  |
-| NFR1 | integration: existing project regression                     | Pick one existing project in `.oat/projects/shared/*` with completed spec.md + design.md; run `oat-project-plan` against it; verify it succeeds                                                                                                        |
-| NFR2 | integration: synthetic state with both HiLL configs          | Construct state.md with both `"spec"` and `"design"` in `oat_hill_checkpoints`; run design; verify both appended to `oat_hill_completed` on approval                                                                                                   |
-| NFR3 | integration: `pnpm release:validate`                         | Command exits 0 in implementation PR                                                                                                                                                                                                                   |
-| NFR4 | manual: dogfood timing comparison                            | Run new design skill on a small OAT change; compare prompt count + wall-clock time vs current design                                                                                                                                                   |
-| NFR5 | manual: line count                                           | `wc -l .agents/skills/oat-project-design/SKILL.md` ≤ 700                                                                                                                                                                                               |
-| NFR6 | manual: dogfood quick-start straight-to-plan                 | Verify single-prompt requirements gate; verify bypass flag                                                                                                                                                                                             |
-| NFR7 | manual: prose inspection + dogfood iteration                 | Heuristic prose includes positive + negative examples; dogfood doesn't produce perfunctory options                                                                                                                                                     |
+| ID   | Verification                                                 | Key Scenarios                                                                                                                                                                                                                                                                 |
+| ---- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR1  | manual: prose inspection + dogfood                           | Mode-choice prompt fires for interactive context; `--mode` arg overrides; both options present in prompt                                                                                                                                                                      |
+| FR2  | manual: dogfood real OAT change with collaborative mode      | All sections presented one at a time with validation; section length scales to complexity; N/A sections shown as one-liner                                                                                                                                                    |
+| FR3  | manual: dogfood + Superpowers-prose inspection               | Approach reaffirmation fires once before section drafting; if discovery Solution Space exists, one-sentence summary + confirm prompt; if not, 2-3-approaches block invoked inline with Superpowers' exact prose; no per-section options step anywhere in collaborative branch |
+| FR4  | manual: skill prose + spec.md shape verification             | Requirements confirmation runs in both modes; spec.md produced with valid Requirement Index in both modes                                                                                                                                                                     |
+| FR5  | manual: prose inspection + dogfood                           | Self-review fires after sections drafted, before HiLL; four named checks visible in skill prose; fixes happen inline                                                                                                                                                          |
+| FR6  | manual: skill prose inspection                               | HiLL prompt language matches new wording; mentions `oat-project-review-provide` for optional independent review                                                                                                                                                               |
+| FR7  | —                                                            | _(removed — deferred to follow-up split-escape-hatch project)_                                                                                                                                                                                                                |
+| FR8  | manual: dogfood with `--mode draft`                          | Draft mode produces full design.md and spec.md without per-section prompts; self-review still runs; user-review gate fires once                                                                                                                                               |
+| FR9  | integration: pipe stdin / non-TTY + unattended agent dogfood | `oat-project-design` with no TTY auto-falls-back to draft mode; banner emitted; no prompt blocks. End-to-end: a Claude agent orchestrator runs `discover → design → plan → implement` with `OAT_NON_INTERACTIVE=1` set and completes without blocking.                        |
+| FR10 | manual: skill description + AGENTS.md inspection             | Spec skill description reflects standalone status; closing output mentions design as optional next step; AGENTS.md prose updated                                                                                                                                              |
+| FR11 | manual: dogfood quick-start straight-to-plan                 | Requirements gate fires before plan; bypass flag works; addition path updates discovery.md and re-presents                                                                                                                                                                    |
+| FR12 | manual: dogfood quick-start lightweight design               | Mode-choice fires at top of Step 2.75; reduced section set preserved in both modes                                                                                                                                                                                            |
+| FR13 | manual: skill prose + template inspection                    | Discovery Step 11 + 12 + 15 + Next Steps template all route to design                                                                                                                                                                                                         |
+| FR14 | manual: file-exists + format inspection                      | `NOTICES.md` exists at repo root; format matches spec (source project, skill, file path, license, consumer skills); AGENTS.md references it once; no in-skill attribution footers anywhere                                                                                    |
+| NFR1 | integration: existing project regression                     | Pick one existing project in `.oat/projects/shared/*` with completed spec.md + design.md; run `oat-project-plan` against it; verify it succeeds                                                                                                                               |
+| NFR2 | integration: synthetic state with both HiLL configs          | Construct state.md with both `"spec"` and `"design"` in `oat_hill_checkpoints`; run design; verify both appended to `oat_hill_completed` on approval                                                                                                                          |
+| NFR3 | integration: `pnpm release:validate`                         | Command exits 0 in implementation PR                                                                                                                                                                                                                                          |
+| NFR4 | manual: dogfood timing comparison                            | Run new design skill on a small OAT change; compare prompt count + wall-clock time vs current design                                                                                                                                                                          |
+| NFR5 | manual: line count                                           | `wc -l .agents/skills/oat-project-design/SKILL.md` ≤ 700                                                                                                                                                                                                                      |
+| NFR6 | manual: dogfood quick-start straight-to-plan                 | Verify single-prompt requirements gate; verify bypass flag                                                                                                                                                                                                                    |
+| NFR7 | —                                                            | _(removed — heuristic no longer needed after FR3 aligned with Superpowers)_                                                                                                                                                                                                   |
 
 ### Unit Tests
 
@@ -1039,7 +1115,8 @@ No application monitoring; this is a CLI-tool change. The user's own use of the 
 
 **Tasks:**
 
-- Rework `oat-project-design/SKILL.md` — add Components 1, 3, 4, 5, 6, 7 (mode choice with non-interactive fallback, requirements confirmation, section iterator with collaborative branch, draft-and-review branch, decision-point heuristic, self-review, reworded HiLL prompt). Component 2 is removed/reserved — do not implement anything in that slot.
+- Rework `oat-project-design/SKILL.md` — add Components 1, 3, 3.5, 4, 6, 7 (mode choice with non-interactive fallback, requirements confirmation, approach reaffirmation — one divergent moment — using Superpowers' exact prose, section iterator with collaborative branch + draft-and-review branch, self-review, reworded HiLL prompt). Components 2 and 5 are removed/reserved — do not implement anything in those slots.
+- Create repo-root `NOTICES.md` documenting borrowed Superpowers prose (FR14). Reference it from `AGENTS.md` once.
 - Extend `oat-project-quick-start/SKILL.md` — add Components 8-9 (requirements gate, mode-choice for lightweight design).
 - Update `oat-project-spec/SKILL.md` — Component 10 (description + closing-output edits).
 - Update `oat-project-discover/SKILL.md` — Component 11 (Step 11 + 12 + 15 routing edits).
@@ -1128,10 +1205,8 @@ No application monitoring; this is a CLI-tool change. The user's own use of the 
 
 ## Risks and Mitigation
 
-- **Risk: Divergent "2-3 options" at decision points becomes perfunctory or formulaic.**
-  - **Probability:** Medium-High | **Impact:** Medium
-  - **Mitigation:** Component 5 heuristic prose explicitly includes negative examples ("don't invent alternatives for convention-driven choices"). Dogfooding in Phase 3 validates the heuristic.
-  - **Contingency:** Iterate on the heuristic prose post-merge based on dogfooding feedback. If perfunctory options persist, consider adding a "decision point assessment" sub-step that explicitly justifies presenting options.
+- **Risk: (removed — was "divergent 2-3 options at decision points becomes perfunctory")**
+  - Mitigated structurally by aligning FR3 with Superpowers' actual pattern: one approach-level divergent moment (Component 3.5) rather than per-section. No per-section judgment call means no perfunctory-options failure mode can occur. The single approach-level moment has clear invocation logic (Solution Space exists or doesn't) that doesn't depend on prose heuristics.
 
 - **Risk: Reworked design skill becomes too long to maintain.**
   - **Probability:** Medium | **Impact:** Medium
@@ -1161,7 +1236,7 @@ No application monitoring; this is a CLI-tool change. The user's own use of the 
 - **Risk: Collaborative mode feels slow on simple projects.**
   - **Probability:** Medium | **Impact:** Medium
   - **Mitigation:** FR2 acceptance criterion (section depth scales to complexity, N/A sections are one-liners). NFR4 dogfood-comparison validation.
-  - **Contingency:** If collaborative is reported as too slow, sharpen the heuristic to default to one-liner sections more aggressively.
+  - **Contingency:** If collaborative is reported as too slow, sharpen the skill's "scale section depth to complexity" language to default to one-liner sections more aggressively.
 
 - **Risk: Self-review introduces a long pause that confuses the user.**
   - **Probability:** Low | **Impact:** Low
@@ -1197,6 +1272,8 @@ No application monitoring; this is a CLI-tool change. The user's own use of the 
   - `.oat/templates/discovery.md`
 - Touched docs:
   - `AGENTS.md`
+- New files:
+  - `NOTICES.md` (repo root) — consolidated attribution for borrowed Superpowers prose (FR14)
 - Touched package files (lockstep version bumps):
   - `packages/cli/package.json`
   - `packages/control-plane/package.json`

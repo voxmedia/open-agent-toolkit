@@ -87,16 +87,17 @@ See `discovery.md` for the decision trail and `reference/comparative-analysis.md
   - Section length scales to complexity: a few sentences for straightforward sections, up to 200-300 words for nuanced ones. Not-applicable sections (e.g., "no data migrations needed") are presented as a one-line statement rather than skipped silently.
 - **Priority:** P0
 
-**FR3: Collaborative mode presents 2-3 approaches at real decision points**
+**FR3: Design skill reaffirms approach-level direction before section drafting (Superpowers-aligned pattern)**
 
-- **Description:** When a section involves a genuine architectural decision (multiple viable patterns, component boundary tradeoffs, data-model choice not dictated by convention, API style choice), the design skill must present 2-3 distinct approaches with tradeoffs and a recommendation, and elicit user direction before proceeding.
+- **Description:** The design skill has one divergent-thinking moment per run — at the approach level, before section-by-section design presentation — matching the pattern in Obra Superpowers' `brainstorming` skill (`reference/superpowers-brainstorming.md` checklist item 4). There is **no** per-section "present 2-3 options" pattern inside design sections. Divergent thinking during section presentation happens organically in response to user feedback ("if something doesn't make sense, go back and clarify"), not through a scripted per-section heuristic.
 - **Acceptance Criteria:**
-  - Approaches presented are genuinely distinct (not minor variations).
-  - Each approach lists concrete tradeoffs and a "when this is the right choice" framing.
-  - The agent leads with its recommendation and reasoning.
-  - When there is no real decision point (convention-driven, already decided in discovery, trivial), the agent presents a single path with a confirm-or-redirect prompt rather than inventing alternatives.
-  - The skill prompt includes a concrete heuristic and examples for when to invoke the divergent pattern vs. when to suppress it.
+  - After requirements confirmation (FR4), before section drafting: read `discovery.md`'s `## Solution Space` section.
+  - **If a Chosen Direction exists:** summarize it in one sentence ("We're designing around [Approach 1 from discovery] — confirming this is still the right direction before we start on architecture.") and wait for user confirmation or redirect.
+  - **If no `## Solution Space` section exists** (well-understood requests that bypassed discovery Step 9): invoke Superpowers' 2-3-approaches pattern inline using the exact borrowed prose ("Propose 2-3 different approaches with trade-offs. Present options conversationally with your recommendation and reasoning. Lead with your recommended option and explain why.") Document the chosen approach in `design.md`'s Overview before continuing.
+  - **During section-by-section presentation (FR2):** no scripted options step fires per section. The skill may naturally discuss tradeoffs within a section where relevant, but does not present structured "Option A / Option B / Option C" lists unless the user pushes back and the agent needs to explore alternatives in response.
 - **Priority:** P0
+
+_Superpowers attribution: the approach-level pattern and the exact prose borrowed are from `obra/superpowers` `brainstorming` skill (MIT licensed). Consolidated attribution is in the repo-root `NOTICES.md` (see FR14)._
 
 **FR4: Design skill confirms requirements and produces `spec.md` as a byproduct**
 
@@ -186,6 +187,18 @@ Originally: "Design skill runs a sub-project decomposition sanity check." Droppe
   - The reduced section set is preserved in both modes (architecture, components, data flow, testing; skip security/performance/deployment/migration; data models / APIs / error handling remain optional).
 - **Priority:** P1
 
+**FR14: Repo-root `NOTICES.md` created / updated for borrowed external prose**
+
+- **Description:** Because several passages of skill prose are lifted verbatim from Obra Superpowers (`brainstorming` skill — "Exploring approaches," "Presenting the design," "Design for isolation and clarity," self-review checks, user-review gate wording), the implementation PR must create a `NOTICES.md` at the repo root that records this attribution. Skill files themselves contain no in-file attribution — provenance lives in `NOTICES.md` and in this project's artifacts.
+- **Acceptance Criteria:**
+  - `NOTICES.md` created at repo root (or updated if one is added by a concurrent project).
+  - Content lists: source project (Obra Superpowers), source skill (`brainstorming`), source file path (`github.com/obra/superpowers/skills/brainstorming/SKILL.md`), license (MIT), list of OAT skills that borrow from it (`oat-project-design`, `oat-project-quick-start`).
+  - Format is one consolidated entry — not per-skill.
+  - The `NOTICES.md` file is durable: future borrowings from other external projects append to the same file.
+  - Touched OAT skills contain no in-file attribution comments or footers (zero skill-file bloat).
+  - `AGENTS.md` references `NOTICES.md` once so contributors know where to record future borrowings.
+- **Priority:** P0
+
 **FR13: `oat-project-discover` routing language updated**
 
 - **Description:** `oat-project-discover` Step 15 output and its `Next Steps` template language no longer route users automatically to `oat-project-spec`. Instead, route to `oat-project-design` with `oat-project-spec` mentioned as an optional alternative for "not ready to design yet" users.
@@ -254,14 +267,9 @@ Originally: "Design skill runs a sub-project decomposition sanity check." Droppe
   - Gate can be bypassed via flag / env var for truly no-ceremony usage.
 - **Priority:** P1
 
-**NFR7: Heuristic for "real architectural decision point" is concrete enough to be followed reliably**
+**NFR7: (removed — deferred/no-longer-applicable)**
 
-- **Description:** The skill prompt language for deciding when to present 2-3 options must be specific enough that different runs of the skill on similar projects produce similar outcomes.
-- **Acceptance Criteria:**
-  - Skill prompt lists 3-5 concrete examples of "present options" cases and 3-5 examples of "confirm single path" cases.
-  - A negative example is included ("Do not invent alternatives for convention-driven choices like which test runner to use when the codebase already uses one").
-  - Dogfooding during design/implementation validates that the heuristic doesn't produce perfunctory option-invention.
-- **Priority:** P1
+Originally: "Heuristic for 'real architectural decision point' is concrete enough to be followed reliably." Removed when FR3 was rewritten to match Superpowers' actual pattern (one approach-level divergent moment; no per-section heuristic). With no per-section judgment call, no heuristic is needed, and there is nothing to calibrate. NFR7 is intentionally left numbered to preserve stable IDs; do not reuse this ID for new requirements in this project.
 
 ## Constraints
 
@@ -355,28 +363,29 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 
 ## Requirement Index
 
-| ID   | Description                                                                        | Priority | Verification                                                                 | Planned Tasks     |
-| ---- | ---------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- | ----------------- |
-| FR1  | Design skill offers mode choice at start                                           | P0       | manual: runtime prompt + argument flow                                       | TBD - see plan.md |
-| FR2  | Collaborative mode presents sections incrementally with validation                 | P0       | manual: dogfood run + skill prose inspection                                 | TBD - see plan.md |
-| FR3  | Collaborative mode presents 2-3 approaches at real decision points                 | P0       | manual: dogfood + heuristic-prose inspection                                 | TBD - see plan.md |
-| FR4  | Design skill confirms requirements and produces spec.md as byproduct               | P0       | manual: skill prose + spec.md shape verification                             | TBD - see plan.md |
-| FR5  | Design skill runs self-review before user-review gate                              | P1       | manual: skill prose inspection + dogfood                                     | TBD - see plan.md |
-| FR6  | HiLL approval prompt explicitly invites artifact review                            | P1       | manual: skill prose inspection                                               | TBD - see plan.md |
-| FR7  | _(removed — see FR7 stub above; deferred to follow-up split-escape-hatch project)_ | —        | —                                                                            | —                 |
-| FR8  | Draft-and-review mode produces complete design in one pass                         | P0       | manual: dogfood in `--mode draft`                                            | TBD - see plan.md |
-| FR9  | Non-interactive context falls back to Draft-and-review (unattended-agent enabler)  | P0       | integration: run skill in piped stdin / TTY-off + agent-orchestrator dogfood | TBD - see plan.md |
-| FR10 | `oat-project-spec` repositioned as standalone utility                              | P0       | manual: skill description + AGENTS.md inspection                             | TBD - see plan.md |
-| FR11 | Quick-start straight-to-plan gains conversational requirements gate                | P1       | manual: dogfood well-understood request                                      | TBD - see plan.md |
-| FR12 | Quick-start lightweight design offers mode choice                                  | P1       | manual: dogfood both modes                                                   | TBD - see plan.md |
-| FR13 | `oat-project-discover` routing language updated                                    | P0       | manual: skill prose + template inspection                                    | TBD - see plan.md |
-| NFR1 | Backward compatibility with spec.md / design.md artifact contract                  | P0       | integration: `oat-project-plan` on existing proj                             | TBD - see plan.md |
-| NFR2 | HiLL semantics preserved across folded spec-HiLL-in-design-HiLL                    | P0       | integration: synthetic state with both HiLLs                                 | TBD - see plan.md |
-| NFR3 | `pnpm release:validate` passes                                                     | P0       | perf + integration: command exit 0                                           | TBD - see plan.md |
-| NFR4 | Collaborative mode does not meaningfully slow design for simple projects           | P1       | manual: empirical wall-clock comparison                                      | TBD - see plan.md |
-| NFR5 | Skill files remain readable (design skill ≤ 700 lines)                             | P2       | manual: line count inspection                                                | TBD - see plan.md |
-| NFR6 | Quick-start minimal-ceremony contract preserved for simple requests                | P1       | manual: dogfood well-understood request                                      | TBD - see plan.md |
-| NFR7 | "Real architectural decision point" heuristic is concrete enough to follow         | P1       | manual: prose inspection + dogfood iteration                                 | TBD - see plan.md |
+| ID   | Description                                                                                   | Priority | Verification                                                                 | Planned Tasks     |
+| ---- | --------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- | ----------------- |
+| FR1  | Design skill offers mode choice at start                                                      | P0       | manual: runtime prompt + argument flow                                       | TBD - see plan.md |
+| FR2  | Collaborative mode presents sections incrementally with validation                            | P0       | manual: dogfood run + skill prose inspection                                 | TBD - see plan.md |
+| FR3  | Design skill reaffirms approach-level direction before section drafting (Superpowers-aligned) | P0       | manual: dogfood + skill prose inspection (exact Superpowers prose borrowed)  | TBD - see plan.md |
+| FR4  | Design skill confirms requirements and produces spec.md as byproduct                          | P0       | manual: skill prose + spec.md shape verification                             | TBD - see plan.md |
+| FR5  | Design skill runs self-review before user-review gate                                         | P1       | manual: skill prose inspection + dogfood                                     | TBD - see plan.md |
+| FR6  | HiLL approval prompt explicitly invites artifact review                                       | P1       | manual: skill prose inspection                                               | TBD - see plan.md |
+| FR7  | _(removed — see FR7 stub above; deferred to follow-up split-escape-hatch project)_            | —        | —                                                                            | —                 |
+| FR8  | Draft-and-review mode produces complete design in one pass                                    | P0       | manual: dogfood in `--mode draft`                                            | TBD - see plan.md |
+| FR9  | Non-interactive context falls back to Draft-and-review (unattended-agent enabler)             | P0       | integration: run skill in piped stdin / TTY-off + agent-orchestrator dogfood | TBD - see plan.md |
+| FR10 | `oat-project-spec` repositioned as standalone utility                                         | P0       | manual: skill description + AGENTS.md inspection                             | TBD - see plan.md |
+| FR11 | Quick-start straight-to-plan gains conversational requirements gate                           | P1       | manual: dogfood well-understood request                                      | TBD - see plan.md |
+| FR12 | Quick-start lightweight design offers mode choice                                             | P1       | manual: dogfood both modes                                                   | TBD - see plan.md |
+| FR13 | `oat-project-discover` routing language updated                                               | P0       | manual: skill prose + template inspection                                    | TBD - see plan.md |
+| FR14 | Repo-root `NOTICES.md` created for borrowed Superpowers prose                                 | P0       | manual: file exists, format matches spec, AGENTS.md references it            | TBD - see plan.md |
+| NFR1 | Backward compatibility with spec.md / design.md artifact contract                             | P0       | integration: `oat-project-plan` on existing proj                             | TBD - see plan.md |
+| NFR2 | HiLL semantics preserved across folded spec-HiLL-in-design-HiLL                               | P0       | integration: synthetic state with both HiLLs                                 | TBD - see plan.md |
+| NFR3 | `pnpm release:validate` passes                                                                | P0       | perf + integration: command exit 0                                           | TBD - see plan.md |
+| NFR4 | Collaborative mode does not meaningfully slow design for simple projects                      | P1       | manual: empirical wall-clock comparison                                      | TBD - see plan.md |
+| NFR5 | Skill files remain readable (design skill ≤ 700 lines)                                        | P2       | manual: line count inspection                                                | TBD - see plan.md |
+| NFR6 | Quick-start minimal-ceremony contract preserved for simple requests                           | P1       | manual: dogfood well-understood request                                      | TBD - see plan.md |
+| NFR7 | _(removed — heuristic no longer needed after FR3 aligned with Superpowers' pattern)_          | —        | —                                                                            | —                 |
 
 ## Open Questions
 
@@ -407,9 +416,8 @@ These questions are flagged for resolution in `oat-project-design`:
 
 ## Risks
 
-- **Risk: Divergent "2-3 options" at decision points becomes perfunctory.**
-  - **Likelihood:** Medium–High | **Impact:** Medium
-  - **Mitigation:** Heuristic prose with explicit "don't invent options for convention-driven choices" negative example (NFR7); dogfooding during implementation.
+- **Risk: (removed — was "divergent 2-3 options becomes perfunctory")**
+  - Mitigated structurally by FR3 alignment with Superpowers: no per-section heuristic, so no scripted per-section options invention is possible. The single approach-level divergence point has clear invocation criteria (Solution Space exists or doesn't).
 
 - **Risk: Folded spec+design skill becomes bloated and unmaintainable.**
   - **Likelihood:** Medium | **Impact:** Medium
