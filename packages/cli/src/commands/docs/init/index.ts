@@ -33,6 +33,10 @@ import {
   getDefaultDocsAppName,
   resolveDocsInitOptions,
 } from './resolve-options';
+import {
+  patchRootPackageJson,
+  type RootPackagePatchResult,
+} from './root-package';
 import { scaffoldDocsApp } from './scaffold';
 
 interface DocsInitCommandOptions {
@@ -42,6 +46,7 @@ interface DocsInitCommandOptions {
   description?: string;
   lint?: DocsLintMode;
   format?: DocsFormatMode;
+  rootPatch?: boolean;
   yes?: boolean;
 }
 
@@ -73,6 +78,54 @@ interface DocsInitDependencies {
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
 }
 
+function logRootPackagePatch(
+  context: CommandContext,
+  result: RootPackagePatchResult,
+): void {
+  if (result.status === 'disabled') {
+    context.logger.info('Skipped root package.json patch (--no-root-patch).');
+    return;
+  }
+
+  if (result.diff) {
+    context.logger.info('');
+    context.logger.info('Root package.json diff:');
+    context.logger.info(result.diff);
+  }
+
+  if (result.status === 'applied') {
+    context.logger.info(
+      'Updated the root Turbo build scripts to exclude the docs app from the default build and added `build:docs`.',
+    );
+  } else if (result.status === 'dry-run') {
+    context.logger.info(
+      'Dry run: the root Turbo build script patch was previewed but not written.',
+    );
+    context.logger.info('Run without --dry-run to apply these changes.');
+  } else if (result.status === 'already-configured') {
+    context.logger.info(
+      'Root package.json already excludes the docs app from the default Turbo build and exposes `build:docs`.',
+    );
+  } else if (result.status === 'skipped') {
+    for (const warning of result.warnings) {
+      context.logger.warn(warning);
+    }
+
+    if (result.manualSnippet) {
+      context.logger.info('');
+      context.logger.info(
+        'Recommended manual Turbo script snippet for the repo root:',
+      );
+      context.logger.info(result.manualSnippet);
+    }
+    return;
+  }
+
+  for (const warning of result.warnings) {
+    context.logger.warn(warning);
+  }
+}
+
 const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
   buildCommandContext,
   resolveAssetsRoot,
@@ -84,6 +137,12 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
     const result = await scaffoldDocsApp({
       assetsRoot,
       ...options,
+    });
+    const rootPackagePatch = await patchRootPackageJson({
+      repoRoot: context.cwd,
+      appName: options.appName,
+      dryRun: context.dryRun,
+      enabled: options.rootPatch,
     });
 
     const config = await readOatConfig(context.cwd);
@@ -99,6 +158,7 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
         ...options,
         createdFiles: result.createdFiles,
         appRoot: result.appRoot,
+        rootPackagePatch,
       });
       return;
     }
@@ -109,6 +169,7 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
     context.logger.info(`  App name: ${options.appName}`);
     context.logger.info(`  Lint: ${options.lint}`);
     context.logger.info(`  Format: ${options.format}`);
+    logRootPackagePatch(context, rootPackagePatch);
   },
   upsertAgentsMdSection,
   readOatConfig,
@@ -154,6 +215,7 @@ async function runDocsInitCommand(
       providedSiteDescription: options.description,
       providedLint: options.lint,
       providedFormat: options.format,
+      providedRootPatch: options.rootPatch,
       inputWithDefault: dependencies.inputWithDefault,
       selectWithAbort: dependencies.selectWithAbort,
     });
@@ -277,6 +339,7 @@ export function createDocsInitCommand(
         'none',
       ]),
     )
+    .option('--no-root-patch', 'Skip patching the consumer root package.json')
     .option('--yes', 'Accept defaults without prompting')
     .action(async (options: DocsInitCommandOptions, command: Command) => {
       const context = dependencies.buildCommandContext(

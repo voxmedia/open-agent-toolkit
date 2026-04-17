@@ -20,6 +20,7 @@ export interface DocsInitResolvedOptions {
   siteDescription: string;
   lint: DocsLintMode;
   format: DocsFormatMode;
+  rootPatch: boolean;
 }
 
 export interface ResolveDocsInitOptionsInput {
@@ -33,6 +34,7 @@ export interface ResolveDocsInitOptionsInput {
   providedSiteDescription?: string;
   providedLint?: DocsLintMode;
   providedFormat?: DocsFormatMode;
+  providedRootPatch?: boolean;
   inputWithDefault: (
     message: string,
     defaultValue: string,
@@ -216,6 +218,7 @@ export async function resolveDocsInitOptions(
     siteDescription,
     lint,
     format,
+    rootPatch: input.providedRootPatch ?? true,
   };
 }
 

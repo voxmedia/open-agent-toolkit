@@ -491,6 +491,7 @@ describe('help output snapshots', () => {
         --lint <mode>            Markdown lint mode (choices: "none",
                                  "markdownlint-cli2")
         --format <mode>          Markdown format mode (choices: "oxfmt", "none")
+        --no-root-patch          Skip patching the consumer root package.json
         --yes                    Accept defaults without prompting
         -h, --help               display help for command
       "

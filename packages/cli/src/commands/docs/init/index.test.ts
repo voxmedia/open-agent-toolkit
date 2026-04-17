@@ -19,7 +19,7 @@ function createHarness(options: { interactive?: boolean } = {}) {
   const command = createDocsInitCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: 'all' as Scope,
-      dryRun: false,
+      dryRun: globalOptions.dryRun ?? false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',
@@ -48,6 +48,7 @@ async function runCommand(
 ): Promise<void> {
   const program = new Command()
     .name('oat')
+    .option('--dry-run')
     .option('--json')
     .option('--verbose')
     .option('--cwd <path>')
@@ -344,6 +345,31 @@ describe('createDocsInitCommand', () => {
     expect(output).toContain('pnpm install');
     expect(output).toContain('pnpm --filter my-docs build');
   });
+
+  it('passes --no-root-patch through option resolution', async () => {
+    const { command, runDocsInit } = createHarness({ interactive: false });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'my-docs',
+      '--target-dir',
+      'apps/my-docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+      '--no-root-patch',
+      '--yes',
+    ]);
+
+    expect(runDocsInit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ rootPatch: false }),
+      '/tmp/assets',
+    );
+  });
 });
 
 describe('buildDocsSectionBody', () => {
@@ -357,6 +383,7 @@ describe('buildDocsSectionBody', () => {
       siteDescription: 'My docs',
       lint: 'none',
       format: 'oxfmt',
+      rootPatch: true,
     };
 
     const body = buildDocsSectionBody(options);
@@ -377,6 +404,7 @@ describe('buildDocsSectionBody', () => {
       siteDescription: '',
       lint: 'none',
       format: 'none',
+      rootPatch: true,
     };
 
     const body = buildDocsSectionBody(options);

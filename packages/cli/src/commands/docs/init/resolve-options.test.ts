@@ -97,6 +97,7 @@ describe('docs init option resolution', () => {
       siteDescription: 'Project documentation',
       lint: 'none',
       format: 'oxfmt',
+      rootPatch: true,
     });
     expect(inputWithDefault).toHaveBeenCalledTimes(3);
     expect(selectWithAbort).toHaveBeenCalledTimes(3);
@@ -124,6 +125,7 @@ describe('docs init option resolution', () => {
       siteDescription: '',
       lint: 'none',
       format: 'oxfmt',
+      rootPatch: true,
     });
     expect(inputWithDefault).not.toHaveBeenCalled();
     expect(selectWithAbort).not.toHaveBeenCalled();
@@ -144,6 +146,7 @@ describe('docs init option resolution', () => {
       providedSiteDescription: 'My docs',
       providedLint: 'none',
       providedFormat: 'oxfmt',
+      providedRootPatch: false,
       inputWithDefault,
       selectWithAbort,
     });
@@ -157,6 +160,7 @@ describe('docs init option resolution', () => {
       siteDescription: 'My docs',
       lint: 'none',
       format: 'oxfmt',
+      rootPatch: false,
     });
     expect(inputWithDefault).not.toHaveBeenCalled();
     expect(selectWithAbort).not.toHaveBeenCalled();
@@ -195,6 +199,7 @@ describe('docs init option resolution', () => {
       siteDescription: 'My docs',
       lint: 'markdownlint-cli2',
       format: 'oxfmt',
+      rootPatch: true,
     });
     expect(inputWithDefault).not.toHaveBeenCalled();
     expect(selectWithAbort).not.toHaveBeenCalled();
