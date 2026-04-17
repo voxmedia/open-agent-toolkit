@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-complete
 oat_blockers: []
 oat_last_updated: 2026-04-17
-oat_current_task_id: p01-t01
-oat_generated: false
+oat_current_task_id: null
+oat_generated: true
 ---
 
 # Implementation: subagent-implement-refactor
@@ -12,194 +12,225 @@ oat_generated: false
 **Started:** 2026-04-17
 **Last Updated:** 2026-04-17
 
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+**Next:** Documentation sync via `oat-project-document`, then PR.
+
+> This implementation was executed via Superpowers `subagent-driven-development` (not `oat-project-implement`) to avoid self-modification of the skill under active development. See discovery.md decision #10 for rationale. OAT artifacts are used for record-keeping; Superpowers for execution.
+
+---
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 3     | 3/3       |
+| p02   | complete | 3     | 3/3       |
+| p03   | complete | 9     | 9/9       |
+| p04   | complete | 4     | 4/4       |
+| p05   | complete | 4     | 4/4       |
+| p06   | complete | 2     | 2/2       |
+| p07   | complete | 5     | 5/5       |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-04-17
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
+**Total:** 30/30 tasks completed
 
 ---
 
 ## Orchestration Runs
 
-> This section is used by `oat-project-subagent-implement` to log parallel execution runs.
-> Each run appends a new subsection — never overwrite prior entries.
-> For single-thread execution (via `oat-project-implement`), this section remains empty.
+_Each run from `oat-project-implement` appends an entry below with:_
+_- Run header (number, timestamp, branch, tier, policy, phase counts)_
+_- Phase Outcomes table_
+_- Parallel Groups list_
+_- Outstanding Items_
 
 <!-- orchestration-runs-start -->
+
+### Run 1 — 2026-04-17
+
+**Branch:** subagent-implement-analysis
+**Tier:** 1 (Claude Code native subagents via Superpowers)
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 7 executed, 7 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p01   | DONE               | pass   | 0              | merged      |
+| p02   | DONE               | pass   | 0              | merged      |
+| p03   | DONE               | pass   | 0              | merged      |
+| p04   | DONE               | pass   | 0              | merged      |
+| p05   | DONE               | pass   | 0              | merged      |
+| p06   | DONE               | pass   | 0              | merged      |
+| p07   | DONE_WITH_CONCERNS | pass   | 1              | merged      |
+
+#### Parallel Groups
+
+- (none — all phases executed sequentially)
+
+#### Outstanding Items
+
+Note: executed via Superpowers subagent-driven-development (not oat-project-implement) because the implementation modifies oat-project-implement itself (self-modification risk). See discovery.md decision #10. The "Run 1" entry above maps Superpowers phase execution to the OAT phase structure for historical record.
+
+p07 fix iteration: post-phase review (via `.oat/repo/reviews/ad-hoc-review-2026-04-17-subagent-implement-analysis.md`) identified 4 findings (validate-plan YAML error handling, set-mode `--json` contract, oat_execution_mode routing in workflow skills, skill contract test reconciliation). All addressed in fix commits 83d56e9a, cdfaa9f9, 73ee33e0, 70bf133d.
+
 <!-- orchestration-runs-end -->
 
 ---
 
-## Implementation Log
+## Completed Phases
 
-Chronological log of implementation progress.
+### Phase p01: Foundation
 
-### 2026-04-17
+**Status:** complete
+**Commits:**
 
-**Session Start:** {time}
+- `33543582` — `feat(agents): add oat-phase-implementer agent definition`
+- `28711d91` — `fix(agents): address code-review findings on oat-phase-implementer`
+- `4ee26812` — `chore(oat): scaffold subagent-implement-refactor project`
+- `def8ff66` — `chore(agents): sync provider views for oat-phase-implementer`
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+**Outcome:** `oat-phase-implementer` canonical agent created with DONE/DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED status protocol, read-once artifact discipline, per-task commits with self-review between tasks. Provider views synced to `.codex/agents/`. OAT project scaffolded for tracking.
 
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
+**Notes:** An early code-review finding on the agent file was addressed in a fix commit before proceeding to p02.
 
 ---
 
-### 2026-04-17
+### Phase p02: Validator CLI
 
-**Session Start:** {time}
+**Status:** complete
+**Commits:**
 
-{Continue log...}
+- `07ffcf22` — `test(oat-project-implement): add plan fixtures for validator`
+- `7123c86c` — `feat(cli): add oat project validate-plan command`
+- `aca6efc5` — `test(cli): unit tests for validateParallelGroups`
+
+**Outcome:** `oat project validate-plan` CLI command created with pure validation logic (`validateParallelGroups`, `extractPhaseIdsFromPlan`), Commander-based CLI wrapper registered in the project command group, four test fixtures (sequential, parallel, invalid-unknown-phase, invalid-singleton-group) as project directories, and a full Vitest unit test suite covering all valid and invalid cases.
 
 ---
 
-## Deviations from Plan
+### Phase p03: Skill Evolution
 
-Document any deviations from the original plan.
+**Status:** complete
+**Commits:**
 
-| Task | Planned | Actual | Reason |
-| ---- | ------- | ------ | ------ |
-| -    | -       | -      | -      |
+- `20277e09` — `feat(oat-project-implement): add capability detection and tier selection`
+- `eadf5125` — `feat(oat-project-implement): replace inline task loop with phase-subagent dispatch`
+- `369bd1fc` — `feat(oat-project-implement): add phase reviewer dispatch and fix loop`
+- `ddc29732` — `feat(oat-project-implement): add parallelism metadata validation + schedule build`
+- `b57a66f1` — `feat(oat-project-implement): add parallel group orchestration`
+- `8cb6c800` — `feat(oat-project-implement): unify per-phase artifact updates`
+- `1d1263d3` — `feat(oat-project-implement): add resumption detection`
+- `b1e27ee8` — `feat(oat-project-implement): bump version to 2.0.0`
+- `e0958d44` — `feat(oat-project-implement): add --dry-run mode`
 
-## Test Results
+**Outcome:** `oat-project-implement` fully evolved from v1.3.0 to v2.0.0 with phase-subagent dispatch (two-tier capability detection), bounded fix loop, plan metadata validation delegation to CLI, parallel group orchestration with worktrees and ordered fan-in, merge-conflict escalation protocol, unified artifact updates at phase granularity, resumption detection, and dry-run mode.
 
-Track test execution during implementation.
+---
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+### Phase p04: Templates and Sibling Skills
+
+**Status:** complete
+**Commits:**
+
+- `9392ae98` — `feat(templates): add oat_plan_parallel_groups to plan template`
+- `e6c52adf` — `feat(templates): simplify orchestration-runs block`
+- `680885b0` — `chore(templates): remove oat_execution_mode from state template`
+- `edb7f8b7` — `feat(oat-project-plan): add optional parallel-group authoring step`
+
+**Outcome:** Plan template gains `oat_plan_parallel_groups` field with documentation. Implementation template's orchestration-runs block simplified to phase-level format. State template no longer carries `oat_execution_mode`. `oat-project-plan` gains an optional parallel-group authoring step that proposes groups when phases have disjoint file boundaries, never inferring silently.
+
+---
+
+### Phase p05: Runtime Cleanup
+
+**Status:** complete
+**Commits:**
+
+- `03db5d39` — `refactor(control-plane): remove oat-project-subagent-implement redirect`
+- `5b348011` — `chore(cli): remove oat-project-subagent-implement from bundled assets`
+- `dd8806fb` — `chore(cli): remove oat-project-subagent-implement from skill manifest`
+- `ca6948fb` — `refactor(cli): deprecate 'oat project set-mode' to a no-op`
+
+**Outcome:** Control-plane router now returns `oat-project-implement` unconditionally; execution mode is no longer a routing decision. `oat-project-subagent-implement` removed from bundle assets and skill manifest. `oat project set-mode` deprecated to no-op with deprecation notice.
+
+---
+
+### Phase p06: Removal and Docs
+
+**Status:** complete
+**Commits:**
+
+- `ccd28abb` — `chore(skills): remove deprecated oat-project-subagent-implement`
+- `2cf1a4f4` — `docs: remove oat-project-subagent-implement references`
+
+**Outcome:** `oat-project-subagent-implement` skill directory fully deleted. All markdown references outside `.superpowers/` and `.oat/projects/` cleaned up.
+
+---
+
+### Phase p07: Shell Tests and Release
+
+**Status:** complete (with fix iteration)
+**Commits:**
+
+- `9185f958` — `test(oat-project-implement): add plan validation test script`
+- `37065110` — `chore(release): bump public packages for phase-subagent evolution`
+- `02c21f0a` — `chore: revert unintended changes to oat-project-complete and oat-project-pr-final`
+- `c967b0b4` — `chore(skills): bump versions for skills touched by doc cleanup`
+- `7a55d6a9` — `chore(release): sync bundled public-package-versions.json to 0.0.41`
+- `e38e4b03` — `chore(backlog): retag reasoning-budget backlog item` _(unrelated; on branch)_
+- `83d56e9a` — `fix(cli): validate-plan fails on malformed YAML frontmatter` _(review fix)_
+- `cdfaa9f9` — `fix(cli): preserve --json contract on deprecated set-mode` _(review fix)_
+- `73ee33e0` — `fix(skills): remove oat_execution_mode routing from workflow skills` _(review fix)_
+- `70bf133d` — `fix(tests): reconcile skill contract tests with current content` _(review fix)_
+
+**Outcome:** Shell test script added covering all four fixture directories. All five public packages bumped to 0.0.41 in lockstep. Skill versions bumped. `pnpm release:validate` passed. Post-implementation code review produced four findings (all Critical/Important) which were addressed in fix commits, then re-review confirmed passing.
+
+---
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- New `oat-phase-implementer` canonical agent for phase-level implementation execution
+- `oat-project-implement` v2.0.0 with phase-subagent dispatch, two-tier capability detection, bounded fix loop, plan-declared parallelism, merge-conflict escalation, resumption detection, and dry-run mode
+- `oat project validate-plan` CLI command with unit tests and fixtures
+- `oat-project-subagent-implement` deprecated and fully removed
+- Plan template gains `oat_plan_parallel_groups` field; implementation template simplified; state template cleaned up
+- `oat-project-plan` gains optional parallel-group authoring step
+- `oat project set-mode` deprecated to no-op
+- Control-plane router simplified (no more execution-mode redirect)
+- Lockstep public package bump to v0.0.41
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat-project-implement` now dispatches each plan phase as a subagent (fresh context per phase) rather than running all tasks inline in the orchestrator
+- Plans can declare `oat_plan_parallel_groups` to run phases concurrently in worktrees
+- `--dry-run` mode previews the execution schedule without making changes
+- `oat project set-mode` now prints a deprecation notice and is a no-op
+- `oat-project-subagent-implement` is removed; its functionality is now built into `oat-project-implement`
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/agents/oat-phase-implementer.md` — new canonical phase-execution agent
+- `.agents/skills/oat-project-implement/SKILL.md` — evolved to v2.0.0
+- `packages/cli/src/commands/project/validate-plan/` — new CLI command + tests
+- `.oat/templates/plan.md` — `oat_plan_parallel_groups` field added
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm build`, `pnpm lint`, `pnpm type-check`, `pnpm test` — all pass
+- `pnpm release:validate` — passes
+- `bash .agents/skills/oat-project-implement/tests/test-plan-validation.sh` — 4/4 pass
+- Ad-hoc code review via `.oat/repo/reviews/ad-hoc-review-2026-04-17-subagent-implement-analysis.md`; all Critical/Important findings resolved
 
-**Design deltas (if any):**
+**Design deltas:**
 
-- {what changed vs design.md and why}
+- No material deviations from the Superpowers spec/design. The execution tooling (Superpowers vs. `oat-project-implement`) is as documented in discovery.md decision #10.
 
 ## References
 
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+- Discovery: `discovery.md`
+- Review artifact: `.oat/repo/reviews/ad-hoc-review-2026-04-17-subagent-implement-analysis.md`
