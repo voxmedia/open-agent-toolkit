@@ -903,7 +903,6 @@ describe('buildToolPacksSectionBody', () => {
     expect(body).toContain('`~/.agents/skills/`');
     expect(body).toContain('**workflows**');
     expect(body).toContain('### Workflow Execution Continuation');
-    expect(body).toContain('oat-project-subagent-implement');
     expect(body).not.toMatch(/\*\*workflows\*\*.*user scope/);
   });
 

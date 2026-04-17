@@ -4,7 +4,7 @@ version: 1.2.0
 description: Use when you need parallel execution across eligible plan phases/tasks using autonomous worktrees, review gates, and deterministic merge-back.
 argument-hint: '[--dry-run] [--merge-strategy <merge|cherry-pick>] [--retry-limit <N>]'
 disable-model-invocation: true
-user-invocable: true
+user-invocable: false
 allowed-tools: Read, Write, Bash, Glob, Grep, Task
 ---
 
