@@ -12,14 +12,27 @@ const DEFAULT_DEPENDENCIES: SetModeDependencies = {
   buildCommandContext,
 };
 
+const DEPRECATION_MESSAGE =
+  'Execution mode is no longer user-selectable; oat-project-implement is the single execution skill. No changes were made. This command will be removed in a future release.';
+
 async function runSetMode(
   _modeArg: string,
   context: CommandContext,
 ): Promise<void> {
+  if (context.json) {
+    context.logger.json({
+      status: 'deprecated',
+      command: 'oat project set-mode',
+      message: DEPRECATION_MESSAGE,
+      noop: true,
+    });
+    process.exitCode = 0;
+    return;
+  }
+
   context.logger.warn(
     "[deprecated] 'oat project set-mode' is a no-op.\n" +
-      'Execution mode is no longer user-selectable; oat-project-implement is the single execution skill.\n' +
-      '(No changes were made. This command will be removed in a future release.)',
+      `${DEPRECATION_MESSAGE}`,
   );
   process.exitCode = 0;
 }

@@ -97,4 +97,24 @@ describe('oat project set-mode (deprecated no-op)', () => {
 
     expect(process.exitCode).toBe(0);
   });
+
+  it('emits machine-readable JSON deprecation payload when --json is set', async () => {
+    const { command, capture } = createHarness({ cwd: '/tmp' });
+    await runCommand(command, ['single-thread'], ['--json']);
+
+    expect(process.exitCode).toBe(0);
+    expect(capture.jsonPayloads).toHaveLength(1);
+    const payload = capture.jsonPayloads[0] as Record<string, unknown>;
+    expect(payload['status']).toBe('deprecated');
+    expect(payload['command']).toBe('oat project set-mode');
+    expect(payload['noop']).toBe(true);
+    expect(typeof payload['message']).toBe('string');
+  });
+
+  it('does not emit warn when --json is set', async () => {
+    const { command, capture } = createHarness({ cwd: '/tmp' });
+    await runCommand(command, ['single-thread'], ['--json']);
+
+    expect(capture.warn).toHaveLength(0);
+  });
 });
