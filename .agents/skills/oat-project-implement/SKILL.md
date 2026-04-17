@@ -133,6 +133,35 @@ Report the selected tier to the user:
 
 **Legacy state migration:** If `state.md` contains `oat_execution_mode: subagent-driven`, silently ignore it. On the next bookkeeping write, remove that key. Do not redirect to `oat-project-subagent-implement` — that skill is deprecated.
 
+### Dry-Run Mode
+
+When the skill is invoked with `--dry-run`:
+
+1. Perform Steps 0–2 fully (resolve project, capability detection, read plan, validate metadata, build schedule).
+2. Skip all phase dispatches, merges, and artifact writes.
+3. Output the execution plan:
+
+   ```
+   OAT ▸ IMPLEMENT (dry-run)
+
+   Project:   {PROJECT_PATH}
+   Tier:      {1 | 2}
+   Retry:     {N}
+
+   Schedule:
+     [1] p01 (sequential)
+     [2] p02, p03 (parallel group, worktrees)
+     [3] p04 (sequential)
+
+   Worktrees that would be created:
+     - {project-name}/p02
+     - {project-name}/p03
+
+   No commits, no artifact writes.
+   ```
+
+4. Exit without modifying any files.
+
 ### Step 1: Check Plan Complete
 
 ```bash
