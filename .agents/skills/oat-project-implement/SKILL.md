@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 1.3.0
+version: 1.3.1
 description: Use when plan.md is ready for execution. Implements plan tasks sequentially with TDD discipline and state tracking.
 disable-model-invocation: true
 user-invocable: true
@@ -23,6 +23,9 @@ Execute the implementation plan task-by-task with full state tracking.
 
 **CRITICAL — Bookkeeping commits are mandatory, not optional.**
 After every code commit and after every phase/review-fix completion, you MUST commit the OAT tracking files (`implementation.md`, `state.md`, `plan.md`) as a separate bookkeeping commit. Do not defer, batch, or skip these commits under the reasoning that they "aren't related to the implementation." Skipping a bookkeeping commit is the primary cause of cross-session state drift and will cause the next implementation run to fail bookkeeping cross-checks. If bookkeeping commits feel frequent, that is the intended design — they are cheap and they prevent drift.
+
+**CRITICAL — Review boundaries require a committed artifact baseline.**
+Do not enter checkpoint review, final review, revise, or PR-final handoff with dirty core project artifacts (`discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`, `state.md`, plus `.oat/state.md` when refreshed). If one of those boundaries is next and artifact bookkeeping is still uncommitted, stop and create the bookkeeping commit first.
 
 ## Progress Indicators (User-Facing)
 
@@ -640,6 +643,8 @@ All must pass before proceeding.
 ### Step 14: Trigger Final Review
 
 **At the final plan phase boundary, a code review is required before PR.**
+
+Before requesting final review, ensure the latest project-artifact bookkeeping is already committed. Review should evaluate the implementation state as it actually stands on the branch, not a half-tracked working tree.
 
 Check if final review already completed (preferred source of truth: plan.md Reviews table):
 

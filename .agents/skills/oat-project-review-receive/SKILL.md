@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.4.0
+version: 1.4.1
 description: Use when review findings from oat-project-review-provide need closure. Converts review artifacts into actionable plan tasks.
 disable-model-invocation: true
 user-invocable: true
@@ -18,6 +18,8 @@ Turn review output into plan changes and a clear next action. This closes the fe
 ## Prerequisites
 
 **Required:** An active review artifact exists in the top level of `{PROJECT_PATH}/reviews/` (not in `reviews/archived/`).
+
+This skill assumes the reviewed project artifacts were already committed before the review ran. If you discover untracked core project artifacts here, treat that as earlier workflow drift and include them in the bookkeeping fix instead of leaving the project partially tracked.
 
 ## Mode Assertion
 
@@ -434,6 +436,8 @@ git diff --cached --quiet || git commit -m "chore(oat): record review findings a
 ```
 
 Do not use `git add -A` or glob patterns that reach outside `"$PROJECT_PATH/reviews/"`. Do not include unrelated implementation or code files in this commit. Do not defer this commit without explicit user approval — if deferred, clearly state in the summary that bookkeeping is uncommitted so the original agent knows to commit on return.
+
+If the project itself is still untracked because earlier lifecycle steps never committed the initial artifact set, widen this bookkeeping commit to include the untracked core project artifacts (`discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`, `state.md`, plus `.oat/state.md` when relevant). Do not leave the project tree partially tracked after receive-review finishes.
 
 **Note on archived review paths:** When `reviews/archived/` matches a `localPaths` pattern (the default setup), the archived file is gitignored and `git add "$PROJECT_PATH/reviews/"` will only stage the deletion of the original (now-moved) top-level review file. When `reviews/archived/` is tracked, both the deletion and the new archived location are staged. Both cases are safe — the command handles them uniformly.
 

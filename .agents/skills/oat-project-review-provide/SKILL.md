@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.0
+version: 1.3.1
 description: Use when completed work in an active OAT project needs a quality gate before merge. Performs a lifecycle-scoped review after a task, phase, or full implementation, unlike oat-review-provide.
 disable-model-invocation: true
 user-invocable: true
@@ -18,6 +18,8 @@ Produce an independent review artifact that verifies requirements/design alignme
 ## Prerequisites
 
 **Required:** Active project with at least one completed task.
+
+**Required:** Core project artifacts are already committed before the review begins. Review should not be the first step that notices an untracked project tree or pending bookkeeping-only artifact edits.
 
 ## Mode Assertion
 
@@ -218,7 +220,27 @@ TARGET_BRANCH="${TARGET_BRANCH:-$CURRENT_BRANCH}"  # from user scope, worktree c
 
    - If user chooses option 1: run `git checkout {TARGET_BRANCH}`, then proceed.
    - If user chooses option 2: set `INLINE_ONLY=true` — skip artifact write (Step 7/8) and output review findings directly in the session. The user can manually save the output.
-   - If user chooses option 3: stop and suggest `oat-worktree-bootstrap-auto`.
+
+### Step 1.6: Enforce Committed Artifact Baseline
+
+Before gathering review context, inspect the core project artifacts:
+
+- `"$PROJECT_PATH/discovery.md"`
+- `"$PROJECT_PATH/spec.md"`
+- `"$PROJECT_PATH/design.md"`
+- `"$PROJECT_PATH/plan.md"`
+- `"$PROJECT_PATH/implementation.md"`
+- `"$PROJECT_PATH/state.md"`
+- `.oat/state.md` (when it exists and was refreshed as part of the project workflow)
+
+If any of those files are untracked or modified only because the previous workflow step did not finish its bookkeeping commit:
+
+- Stop and tell the user to commit the pending artifact bookkeeping first, or resume the originating workflow skill so it can do that commit.
+- Do not write a review artifact against that half-tracked state.
+
+If the review is intentionally inline-only and the user explicitly wants to inspect an uncommitted artifact state, say so clearly in the output and skip writing the review artifact to disk.
+
+- If user chooses option 3: stop and suggest `oat-worktree-bootstrap-auto`.
 
 ### Step 2: Validate Artifacts Exist (Mode-Aware)
 

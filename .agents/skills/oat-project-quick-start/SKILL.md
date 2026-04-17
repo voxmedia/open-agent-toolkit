@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 1.3.3
+version: 1.3.4
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 disable-model-invocation: true
@@ -70,6 +70,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - After any write to `discovery.md`, `design.md`, `plan.md`, `implementation.md`, or project `state.md`, ensure the artifact is saved immediately and remains tracked in git.
 - If the skill is about to pause for user input or stop after mutating artifacts, commit the changed artifacts before waiting. Do not leave discovery/design updates only in the working tree.
 - Quick-start handoff is not complete until the changed project artifacts and regenerated `.oat/state.md` dashboard have been committed.
+- This applies to downstream lifecycle boundaries too: implementation, review, revise, and PR skills must inherit a committed artifact baseline, not an untracked project tree.
 
 ## Process
 
