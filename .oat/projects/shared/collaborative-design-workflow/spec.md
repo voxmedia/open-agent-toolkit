@@ -24,7 +24,7 @@ OAT's spec-driven workflow (discovery → spec → design → plan) and quick-st
 - `oat-project-quick-start` has a useful section-by-section interactive pattern in Step 2.75 (lightweight design), but this pattern is only reachable when the user opts into lightweight design — which itself is auto-bypassed for well-understood requests. As a result, most quick-start runs produce a plan without ever experiencing the collaborative pattern.
 - The standalone `oat-project-spec` phase creates a hard boundary between discovery and design: discovery builds understanding through conversation, then hands off to spec (which drafts formalized requirements cold), which hands off to design (which drafts technical sections cold). Each boundary resets conversational context.
 
-The target experience is drawn from Obra's Superpowers `brainstorming` skill: section-by-section presentation with incremental validation, divergent "2-3 approaches" at real decision points, and a single continuous conversation from initial request to written design. Users want this _by default_, but also want a **draft-and-review escape hatch** for sessions where they'd rather have the agent draft the full design and have them (or a peer reviewer like Codex/Opus) critique it holistically.
+The target experience is drawn from Obra's Superpowers `brainstorming` skill: section-by-section presentation with incremental validation, one "Propose 2-3 approaches" divergent-thinking moment before section drafting begins (matching Superpowers' actual flow — checklist item 4, not per-section), and a single continuous conversation from initial request to written design. Section-level divergent thinking fires organically when users push back on drafted sections, per Superpowers' "be ready to go back and clarify if something doesn't make sense." Users want this _by default_, but also want a **draft-and-review escape hatch** for sessions where they'd rather have the agent draft the full design and have them (or a peer reviewer like Codex/Opus) critique it holistically.
 
 The change is bounded: rework `oat-project-design`, `oat-project-quick-start`, and `oat-project-spec`; touch `oat-project-discover` only to update routing language; leave plan/implement/review skills alone.
 
@@ -35,7 +35,7 @@ See `discovery.md` for the decision trail and `reference/comparative-analysis.md
 ### Primary Goals
 
 - Make design feel like a collaborative conversation by default, using section-by-section presentation with user validation at each step.
-- Introduce divergent thinking (2-3 approaches with tradeoffs + recommendation) at real architectural decision points _inside_ the design skill, not only at the project level in discovery.
+- Add one approach-level divergent-thinking moment inside the design skill (Approach Reaffirmation), matching Obra Superpowers' actual `brainstorming` pattern. This confirms discovery's Chosen Direction in one sentence, or invokes the 2-3-approaches pattern inline if no Solution Space exists. No per-section scripted options step — section-level divergent thinking fires organically on user pushback.
 - Fold spec authoring into the design skill's conversational flow so users experience one continuous conversation, with `spec.md` produced as a byproduct (not a separate phase).
 - Preserve a **draft-and-review** escape hatch mode for users who prefer holistic review, either directly or via independent peer review.
 - Apply the same collaborative/draft-and-review mode choice to quick-start's lightweight design path.
