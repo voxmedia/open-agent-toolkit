@@ -593,6 +593,7 @@ describe('help output snapshots', () => {
         pause [options] [name]                   Pause an OAT project
         set-mode <mode>                          Set project implementation execution mode
         status                                   Show the current OAT project state
+        validate-plan [options]                  Validate plan.md parallelism metadata against the plan phase list
         help [command]                           display help for command
       "
     `);
