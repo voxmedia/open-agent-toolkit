@@ -6,6 +6,7 @@ oat_last_updated: YYYY-MM-DD
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
@@ -31,6 +32,22 @@ oat_template_name: plan
 
 - [ ] Confirmed HiLL checkpoints with user
 - [ ] Set `oat_plan_hill_phases` in frontmatter
+- [ ] Evaluated phases for parallelism opportunities
+- [ ] Set `oat_plan_parallel_groups` in frontmatter
+
+---
+
+## Parallelism
+
+Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+
+```yaml
+oat_plan_parallel_groups: [['p02', 'p03']]
+```
+
+Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
+
+Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
 
 ---
 
