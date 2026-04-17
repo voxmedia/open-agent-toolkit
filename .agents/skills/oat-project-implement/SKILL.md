@@ -154,6 +154,44 @@ Read `"$PROJECT_PATH/plan.md"` completely to understand:
 - Verification commands
 - Commit messages
 
+### Step 2.1: Validate Parallelism Metadata
+
+Invoke the CLI validator to check plan.md parallelism metadata:
+
+```bash
+oat project validate-plan --project-path "${PROJECT_PATH}"
+```
+
+(If `oat` is not in PATH, use: `pnpm run cli -- project validate-plan --project-path "${PROJECT_PATH}"`)
+
+The command validates:
+
+- `oat_plan_parallel_groups` is either missing / empty (meaning fully sequential, no check needed) or a nested array of phase ID strings.
+- Every referenced phase ID exists in the plan.
+- No phase ID appears in more than one group.
+- No singleton groups (each group must contain at least 2 phases).
+
+**Reactions:**
+
+- Exit code 0 → validation passed; continue to Step 2.2.
+- Non-zero exit code → STOP immediately. Surface the validator's stderr output to the user. Do not silently fall back to sequential — the plan must be fixed first.
+
+The validation contract is enforced by the CLI command and unit-tested there; the skill is just the consumer.
+
+### Step 2.2: Build Execution Schedule
+
+From the phase list and the validated parallel groups, build an execution schedule:
+
+- Phases not listed in any group form singleton entries (run sequentially).
+- Each parallel group forms a multi-phase entry (run concurrently in worktrees).
+- Schedule entries execute in plan order.
+
+Example:
+
+- Plan phases: p01, p02, p03, p04, p05
+- `oat_plan_parallel_groups: [["p02", "p03"], ["p04", "p05"]]`
+- Schedule: `[p01]` → `[p02, p03]` (group) → `[p04, p05]` (group)
+
 ### Step 2.5: Confirm Plan HiLL Checkpoints
 
 Read `oat_plan_hill_phases` from `"$PROJECT_PATH/plan.md"` frontmatter when present and validate it.
