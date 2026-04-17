@@ -8,6 +8,7 @@ type RootPackagePatchReason =
   | 'missing-package-json'
   | 'no-build-script'
   | 'non-turbo-build-script'
+  | 'ambiguous-shell-build-script'
   | 'existing-filter-flags'
   | 'existing-build-docs-script'
   | 'disabled';
@@ -54,7 +55,11 @@ const DEFAULT_DEPENDENCIES: RootPackagePatchDependencies = {
 };
 
 function runsTurboBuild(script: string): boolean {
-  return /\bturbo\s+(?:run\s+)?build\b/.test(script);
+  return /^turbo\s+(?:run\s+)?build(?:\s+.*)?$/.test(script.trim());
+}
+
+function hasShellComposition(script: string): boolean {
+  return /&&|\|\||[;|`]|[$][(]/.test(script);
 }
 
 function removeFilterFlags(script: string): string {
@@ -262,6 +267,18 @@ export async function patchRootPackageJson(
       manualSnippet: buildManualSnippet(options.appName),
       warnings: [
         'Skipped root package.json patch: scripts.build does not run a Turbo build command, so OAT left it unchanged.',
+      ],
+    };
+  }
+
+  if (hasShellComposition(currentBuildScript)) {
+    return {
+      status: 'skipped',
+      reason: 'ambiguous-shell-build-script',
+      packageJsonPath,
+      manualSnippet: buildManualSnippet(options.appName),
+      warnings: [
+        'Skipped root package.json patch: scripts.build wraps the Turbo build in a larger shell expression, so OAT left it unchanged rather than rewriting the full command.',
       ],
     };
   }

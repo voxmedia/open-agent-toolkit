@@ -218,6 +218,39 @@ describe('patchRootPackageJson', () => {
     expect(packageJson.scripts['build:docs']).toBeUndefined();
   });
 
+  it('skips composite shell build scripts that wrap Turbo in a larger command', async () => {
+    const repoRoot = await createRepo({
+      name: 'consumer-repo',
+      private: true,
+      scripts: {
+        build: 'turbo run build && pnpm lint',
+      },
+    });
+
+    const result = await patchRootPackageJson({
+      repoRoot,
+      appName: 'consumer-docs',
+      dryRun: false,
+      enabled: true,
+    });
+
+    expect(result.status).toBe('skipped');
+    expect(result.reason).toBe('ambiguous-shell-build-script');
+    expect(result.manualSnippet).toContain(
+      `"build": "turbo run build --filter='!consumer-docs'"`,
+    );
+    expect(result.manualSnippet).toContain(
+      '"build:docs": "turbo run build --filter=consumer-docs..."',
+    );
+    expect(result.warnings[0]).toContain('larger shell expression');
+
+    const packageJson = JSON.parse(
+      await readFile(join(repoRoot, 'package.json'), 'utf8'),
+    ) as { scripts: Record<string, string> };
+    expect(packageJson.scripts.build).toBe('turbo run build && pnpm lint');
+    expect(packageJson.scripts['build:docs']).toBeUndefined();
+  });
+
   it('shows the diff without mutating on dry-run', async () => {
     const repoRoot = await createRepo({
       name: 'consumer-repo',
