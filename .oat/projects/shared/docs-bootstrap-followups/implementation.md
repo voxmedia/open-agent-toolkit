@@ -351,7 +351,7 @@ After the fix tasks are complete:
 ### Task p03-t04: (review) Harden workflow artifact-commit guidance before review transitions
 
 **Status:** completed
-**Commit:** 83c5baf2
+**Commit:** 83c5baf2, 78e48574
 
 **Outcome:**
 
@@ -370,10 +370,21 @@ After the fix tasks are complete:
 
 - Run: `rg -n "artifact|commit|review|tracked|state drift|baseline" .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md`
 - Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+- Run: `pnpm build`
+- Result: pass
 
 **Notes / Decisions:**
 
 - Review-provide was added to the write set because the underlying failure appears there, even though the initial task list named only quick-start, implement, and review-receive.
+- The quick-start contract test required an explicit expectation bump after the skill version changed.
 
 ---
 
@@ -400,6 +411,7 @@ This project is running in single-thread implementation mode. No orchestration r
 - Reconciled `implementation.md` with the actual delivered work and removed scaffold placeholders (`71508625`).
 - Tightened the remaining review-driven edge-case coverage and accepted the `turbo build` shorthand (`64862eaa`).
 - Hardened workflow artifact-commit guidance before review boundaries (`83c5baf2`).
+- Aligned the quick-start skill validation test with the new version contract (`78e48574`).
 - All review-fix tasks are complete; project is awaiting final re-review.
 
 ## Deviations from Plan
@@ -410,11 +422,11 @@ This project is running in single-thread implementation mode. No orchestration r
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                             | Passed | Failed | Coverage                                                        |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | --------------------------------------------------------------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test`                                                                                                                          | Yes    | 0      | CLI docs-init coverage plus workspace test suite                |
-| 2     | `pnpm --filter @open-agent-toolkit/cli lint`, `pnpm --filter @open-agent-toolkit/cli type-check`, `pnpm release:validate`                                             | Yes    | 0      | Required release policy validation                              |
-| 3     | `pnpm --filter @open-agent-toolkit/cli test -- root-package`, `pnpm --filter @open-agent-toolkit/cli test -- root-package index-generate`, skill guidance grep checks | Yes    | 0      | Review-fix regression coverage and workflow-contract validation |
+| Phase | Tests Run                                                                                                                                                                                                  | Passed | Failed | Coverage                                                                                     |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------------------------------------------------------------------------------------------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test`                                                                                                                                                               | Yes    | 0      | CLI docs-init coverage plus workspace test suite                                             |
+| 2     | `pnpm --filter @open-agent-toolkit/cli lint`, `pnpm --filter @open-agent-toolkit/cli type-check`, `pnpm release:validate`                                                                                  | Yes    | 0      | Required release policy validation                                                           |
+| 3     | `pnpm --filter @open-agent-toolkit/cli test -- root-package`, `pnpm --filter @open-agent-toolkit/cli test -- root-package index-generate`, skill guidance grep checks, full CLI verification, `pnpm build` | Yes    | 0      | Review-fix regression coverage, workflow-contract validation, and final handoff verification |
 
 ## Final Summary (for PR/docs)
 
@@ -446,6 +458,7 @@ This project is running in single-thread implementation mode. No orchestration r
 - `pnpm release:validate`
 - `pnpm --filter @open-agent-toolkit/cli test -- root-package`
 - `pnpm --filter @open-agent-toolkit/cli test -- root-package index-generate`
+- `pnpm build`
 
 **Design deltas (if any):**
 
