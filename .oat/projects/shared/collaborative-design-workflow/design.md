@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-plan
 oat_blockers: []
-oat_last_updated: 2026-04-14
+oat_last_updated: 2026-04-17
 oat_generated: false
 oat_template: false
 ---
@@ -15,7 +15,9 @@ This design reworks three OAT skills (`oat-project-design`, `oat-project-quick-s
 
 The change is bounded to skill prompts, templates, and `AGENTS.md` workflow-triage prose. **No CLI/control-plane code changes are required** — the OAT runtime is unchanged. The implementation is essentially a coordinated edit of four `.agents/skills/*/SKILL.md` files plus their template counterparts in `.oat/templates/` plus `AGENTS.md`, with a release-validation pass to confirm the lockstep version bump.
 
-The design pattern is drawn from Obra Superpowers' `brainstorming` skill (section-by-section presentation with incremental validation, divergent thinking at decision points), augmented with OAT-native concepts (mode choice, requirements gate for quick-start, sub-project decomposition advisory). Source files for all referenced Superpowers skills are checked into `reference/` for reproducibility.
+The design pattern is drawn from Obra Superpowers' `brainstorming` skill (section-by-section presentation with incremental validation, divergent thinking at decision points), augmented with OAT-native concepts (mode choice, requirements gate for quick-start, reliable non-interactive fallback for unattended agent-orchestrated runs). Source files for all referenced Superpowers skills are checked into `reference/` for reproducibility.
+
+A sub-project decomposition advisory was considered (Component 2 in earlier drafts) and dropped from scope: detection of multi-subsystem requests already happens organically during `oat-project-discover`. The corresponding gap — a graceful hand-off mechanism when decomposition is the right call — belongs to its own follow-up project (tracked in `discovery.md` Deferred Ideas as the codified split-escape-hatch). Component 2's slot is preserved as a removed-stub in this design for ID stability.
 
 ## Architecture
 
@@ -49,7 +51,7 @@ There are no new packages, no new MCP servers, no new external dependencies, and
 
 **Key Components:**
 
-- **`oat-project-design` (reworked):** Now hosts mode choice, sub-project decomposition advisory, requirements confirmation (folded from spec), section iterator (collaborative branch), draft-and-review branch, design self-review, reworded HiLL prompt.
+- **`oat-project-design` (reworked):** Now hosts mode choice (with non-interactive fallback for unattended agent-orchestrated runs), requirements confirmation (folded from spec), section iterator (collaborative branch), draft-and-review branch, design self-review, reworded HiLL prompt.
 - **`oat-project-quick-start` (extended):** Gains requirements-gate sub-step on straight-to-plan path, and mode-choice prompt in lightweight design (Step 2.75).
 - **`oat-project-spec` (repositioned):** Description and closing-output prose updated for standalone-utility role; mechanics unchanged.
 - **`oat-project-discover` (light edits):** Step 15 output text and HiLL prompt language route to `oat-project-design` instead of `oat-project-spec`.
@@ -71,8 +73,12 @@ There are no new packages, no new MCP servers, no new external dependencies, and
                     ┌──────────────────────────────────┐
                     │ oat-project-design (REWORKED)    │
                     │                                  │
-                    │  Sub-step A: Decomposition check │
-                    │  Sub-step B: Mode choice         │
+                    │  Sub-step A: Mode choice         │
+                    │              (TTY / env-var      │
+                    │               fallback for       │
+                    │               unattended runs)   │
+                    │  Sub-step B: (removed — was      │
+                    │              decomposition)      │
                     │  Sub-step C: Requirements        │
                     │              confirmation        │
                     │              ─────► writes spec.md
@@ -150,10 +156,13 @@ For the **spec-driven workflow with new design skill**:
      (was: oat-project-spec)
 
 2. User runs oat-project-design.
-   a. Decomposition advisory: "Does this look like one plan?" → user confirms / requests split.
-   b. Mode choice: collaborative (default) | draft (escape hatch).
-      - Non-interactive context → auto-falls-back to draft.
+   a. Mode choice: collaborative (default) | draft (escape hatch).
+      - Non-interactive context → auto-falls-back to draft
+        (enables unattended agent-orchestrated full-workflow runs).
       - --mode flag → overrides.
+      - OAT_NON_INTERACTIVE=1 env var → forces draft.
+   b. (Removed — was sub-project decomposition advisory;
+       detection happens in discovery; split-escape-hatch is a follow-up project.)
    c. Requirements confirmation:
       - Read discovery.md.
       - Draft FRs / NFRs / acceptance criteria / Requirement Index.
@@ -258,44 +267,18 @@ Multi-choice:
 - **Both env var and skill argument supported.** Argument takes precedence (more local). Env var supports session-wide preference (e.g., a user who always wants draft).
 - **Mode is announced explicitly.** The skill emits "Running in collaborative mode" or "Running in draft-and-review mode" so the user knows what to expect.
 
-### Component 2: `oat-project-design` sub-project decomposition advisory
+### Component 2: (removed — sub-project decomposition advisory deferred)
 
-**Purpose:** Catch the failure mode of trying to design a multi-subsystem project as a single plan, before any other work happens.
+Originally specified as a soft advisory prompt at the top of the design skill that would ask "does this look like one plan's worth of work?" and help the user decompose multi-subsystem requests. Dropped from this project's scope during discovery review (see `discovery.md` Question 10).
 
-**Responsibilities:**
+**Why removed:** Detection of multi-subsystem requests already happens organically during `oat-project-discover`'s solution-space exploration — a separate advisory at the top of design was redundant with how discovery naturally surfaces scope. What OAT actually lacks is not a _detection_ step but a _graceful hand-off mechanism_ with two flavors:
 
-- Once mode is resolved, present a brief advisory prompt.
-- If the user signals decomposition is needed, help them identify the sub-projects, route them back to `oat-project-new` per sub-project, and exit cleanly.
-- Otherwise, proceed.
+1. **Decompose-and-park:** Create N new projects, seed each with a brief discovery summary; user picks one now, others wait.
+2. **Brainstorm-broadly-execute-one:** Do a rich cross-cutting discovery in the current conversation, generate full `discovery.md` for each sub-project with cross-references, then pick one to make active.
 
-**Interfaces:**
+That hand-off mechanism is its own design problem (natural home: `oat-project-discover` or a new `oat-project-split` skill) and tracked as a follow-up project in `discovery.md` Deferred Ideas.
 
-```
-# Step 2: Sub-Project Decomposition Sanity Check
-
-Read discovery.md. Based on the scope described, ask:
-
-> "Quick sanity check: does this look like a single plan's worth of work
->  (one cohesive feature, ~1-3 days of implementation), or does it span
->  multiple independent subsystems that should each be their own project?"
-
-Multi-choice via AskUserQuestion:
-  1. Single plan — proceed with design
-  2. Multiple subsystems — let's decompose first
-
-If "Multiple subsystems":
-  - Help the user list 2-N independent sub-project scopes.
-  - For each, suggest: `oat-project-new <sub-project-name> --mode spec-driven`
-  - Exit the skill cleanly with a summary.
-```
-
-**Dependencies:** `AskUserQuestion`.
-
-**Design Decisions:**
-
-- **Soft advisory, not blocking.** Most projects pre-scoped via discovery don't need a check. A blocking gate would add friction to the common case.
-- **Comes after mode choice.** Mode choice is the first thing the user sees; decomposition is contextual to "okay, we're designing".
-- **Decomposition exit is clean.** Skill ends with a clear "next step is to run `oat-project-new` for sub-project A, then this design skill again". No partial state left behind.
+The Component 2 slot is intentionally preserved (rather than renumbered) to avoid cascading cross-reference churn. Do not reuse this slot for a new component in this project.
 
 ### Component 3: Requirements confirmation sub-step (folded from `oat-project-spec`)
 
@@ -499,7 +482,7 @@ and let the user redirect if they disagree.**
 - Run four named checks:
   1. **Placeholder scan:** Any "TBD", "TODO", incomplete sections, vague requirements? Fix inline.
   2. **Internal consistency:** Do any sections contradict each other? Does the architecture match component descriptions? Does the data model match the API design?
-  3. **Scope check:** Is this focused enough for a single implementation plan, or did it accidentally bloat? (Cross-reference Component 2 sub-project decomposition advisory.)
+  3. **Scope check:** Is this focused enough for a single implementation plan, or did it accidentally bloat? If genuine multi-subsystem scope surfaces here, escalate to the user — they may want to split into multiple projects (follow-up split-escape-hatch work, not this skill's responsibility).
   4. **Ambiguity check:** Could any requirement or design statement be interpreted two different ways? If so, pick one and make it explicit.
 - Fix issues inline; do not recurse on self-review.
 
@@ -940,41 +923,41 @@ The dogfooding step (NFR4 acceptance criterion) is the only "performance" verifi
 
 **New error scenarios introduced:**
 
-| Scenario                                                                                                      | Handling                                                                                                                                                 |
-| ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mode-choice prompt times out / no user response                                                               | Fall back to draft mode; emit a banner. Same as non-interactive path.                                                                                    |
-| `--mode` argument has invalid value                                                                           | Skill emits an error and lists valid values; exits without modifying any artifacts.                                                                      |
-| Sub-project decomposition advisory: user requests decomposition but provides no sub-project list              | Skill prompts again; if user is unable to decompose, skill exits cleanly with "design halted; please scope this manually" message. No artifacts touched. |
-| Self-review surfaces issues that can't be fixed inline (e.g., contradictions requiring user input)            | Surface to user as a question; pause for response; re-attempt fix. If still unresolvable, escalate via "Open Questions" section in design.md.            |
-| Quick-start requirements gate: user requests addition that contradicts a discovery decision                   | Surface as a clarifying question; capture in discovery.md as a Decision Update; re-present.                                                              |
-| Folded HiLL: project state has `"spec"` in `oat_hill_checkpoints` but spec was previously approved standalone | The standalone approval already added `"spec"` to `oat_hill_completed`. Design HiLL only adds `"design"` (not duplicate-add `"spec"`).                   |
+| Scenario                                                                                                      | Handling                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Mode-choice prompt times out / no user response                                                               | Fall back to draft mode; emit a banner. Same as non-interactive path.                                                                                                                                                                                                                                  |
+| `--mode` argument has invalid value                                                                           | Skill emits an error and lists valid values; exits without modifying any artifacts.                                                                                                                                                                                                                    |
+| Self-review surfaces issues that can't be fixed inline (e.g., contradictions requiring user input)            | Surface to user as a question; pause for response; re-attempt fix. If still unresolvable, escalate via "Open Questions" section in design.md.                                                                                                                                                          |
+| Self-review surfaces genuine multi-subsystem scope                                                            | Escalate to user with a recommendation to split into multiple projects. Design skill does not itself orchestrate the split (that's the follow-up split-escape-hatch project); exit cleanly if user agrees to split, or document the scope concern and proceed if user chooses to continue as one plan. |
+| Quick-start requirements gate: user requests addition that contradicts a discovery decision                   | Surface as a clarifying question; capture in discovery.md as a Decision Update; re-present.                                                                                                                                                                                                            |
+| Folded HiLL: project state has `"spec"` in `oat_hill_checkpoints` but spec was previously approved standalone | The standalone approval already added `"spec"` to `oat_hill_completed`. Design HiLL only adds `"design"` (not duplicate-add `"spec"`).                                                                                                                                                                 |
 
 ## Testing Strategy
 
 ### Requirement-to-Test Mapping
 
-| ID   | Verification                                            | Key Scenarios                                                                                                                                        |
-| ---- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FR1  | manual: prose inspection + dogfood                      | Mode-choice prompt fires for interactive context; `--mode` arg overrides; both options present in prompt                                             |
-| FR2  | manual: dogfood real OAT change with collaborative mode | All sections presented one at a time with validation; section length scales to complexity; N/A sections shown as one-liner                           |
-| FR3  | manual: dogfood + heuristic prose inspection            | Real architectural decision triggers 2-3 options; convention-driven choice presents single path; no false-positive options for trivial choices       |
-| FR4  | manual: skill prose + spec.md shape verification        | Requirements confirmation runs in both modes; spec.md produced with valid Requirement Index in both modes                                            |
-| FR5  | manual: prose inspection + dogfood                      | Self-review fires after sections drafted, before HiLL; four named checks visible in skill prose; fixes happen inline                                 |
-| FR6  | manual: skill prose inspection                          | HiLL prompt language matches new wording; mentions `oat-project-review-provide` for optional independent review                                      |
-| FR7  | manual: skill prose inspection + dogfood                | Decomposition advisory fires once at top of design; soft (non-blocking); decomposition path exits cleanly                                            |
-| FR8  | manual: dogfood with `--mode draft`                     | Draft mode produces full design.md and spec.md without per-section prompts; self-review still runs; user-review gate fires once                      |
-| FR9  | integration: pipe stdin / non-TTY                       | `oat-project-design` with no TTY auto-falls-back to draft mode; banner emitted; no prompt blocks                                                     |
-| FR10 | manual: skill description + AGENTS.md inspection        | Spec skill description reflects standalone status; closing output mentions design as optional next step; AGENTS.md prose updated                     |
-| FR11 | manual: dogfood quick-start straight-to-plan            | Requirements gate fires before plan; bypass flag works; addition path updates discovery.md and re-presents                                           |
-| FR12 | manual: dogfood quick-start lightweight design          | Mode-choice fires at top of Step 2.75; reduced section set preserved in both modes                                                                   |
-| FR13 | manual: skill prose + template inspection               | Discovery Step 11 + 12 + 15 + Next Steps template all route to design                                                                                |
-| NFR1 | integration: existing project regression                | Pick one existing project in `.oat/projects/shared/*` with completed spec.md + design.md; run `oat-project-plan` against it; verify it succeeds      |
-| NFR2 | integration: synthetic state with both HiLL configs     | Construct state.md with both `"spec"` and `"design"` in `oat_hill_checkpoints`; run design; verify both appended to `oat_hill_completed` on approval |
-| NFR3 | integration: `pnpm release:validate`                    | Command exits 0 in implementation PR                                                                                                                 |
-| NFR4 | manual: dogfood timing comparison                       | Run new design skill on a small OAT change; compare prompt count + wall-clock time vs current design                                                 |
-| NFR5 | manual: line count                                      | `wc -l .agents/skills/oat-project-design/SKILL.md` ≤ 700                                                                                             |
-| NFR6 | manual: dogfood quick-start straight-to-plan            | Verify single-prompt requirements gate; verify bypass flag                                                                                           |
-| NFR7 | manual: prose inspection + dogfood iteration            | Heuristic prose includes positive + negative examples; dogfood doesn't produce perfunctory options                                                   |
+| ID   | Verification                                                 | Key Scenarios                                                                                                                                                                                                                                          |
+| ---- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| FR1  | manual: prose inspection + dogfood                           | Mode-choice prompt fires for interactive context; `--mode` arg overrides; both options present in prompt                                                                                                                                               |
+| FR2  | manual: dogfood real OAT change with collaborative mode      | All sections presented one at a time with validation; section length scales to complexity; N/A sections shown as one-liner                                                                                                                             |
+| FR3  | manual: dogfood + heuristic prose inspection                 | Real architectural decision triggers 2-3 options; convention-driven choice presents single path; no false-positive options for trivial choices                                                                                                         |
+| FR4  | manual: skill prose + spec.md shape verification             | Requirements confirmation runs in both modes; spec.md produced with valid Requirement Index in both modes                                                                                                                                              |
+| FR5  | manual: prose inspection + dogfood                           | Self-review fires after sections drafted, before HiLL; four named checks visible in skill prose; fixes happen inline                                                                                                                                   |
+| FR6  | manual: skill prose inspection                               | HiLL prompt language matches new wording; mentions `oat-project-review-provide` for optional independent review                                                                                                                                        |
+| FR7  | —                                                            | _(removed — deferred to follow-up split-escape-hatch project)_                                                                                                                                                                                         |
+| FR8  | manual: dogfood with `--mode draft`                          | Draft mode produces full design.md and spec.md without per-section prompts; self-review still runs; user-review gate fires once                                                                                                                        |
+| FR9  | integration: pipe stdin / non-TTY + unattended agent dogfood | `oat-project-design` with no TTY auto-falls-back to draft mode; banner emitted; no prompt blocks. End-to-end: a Claude agent orchestrator runs `discover → design → plan → implement` with `OAT_NON_INTERACTIVE=1` set and completes without blocking. |
+| FR10 | manual: skill description + AGENTS.md inspection             | Spec skill description reflects standalone status; closing output mentions design as optional next step; AGENTS.md prose updated                                                                                                                       |
+| FR11 | manual: dogfood quick-start straight-to-plan                 | Requirements gate fires before plan; bypass flag works; addition path updates discovery.md and re-presents                                                                                                                                             |
+| FR12 | manual: dogfood quick-start lightweight design               | Mode-choice fires at top of Step 2.75; reduced section set preserved in both modes                                                                                                                                                                     |
+| FR13 | manual: skill prose + template inspection                    | Discovery Step 11 + 12 + 15 + Next Steps template all route to design                                                                                                                                                                                  |
+| NFR1 | integration: existing project regression                     | Pick one existing project in `.oat/projects/shared/*` with completed spec.md + design.md; run `oat-project-plan` against it; verify it succeeds                                                                                                        |
+| NFR2 | integration: synthetic state with both HiLL configs          | Construct state.md with both `"spec"` and `"design"` in `oat_hill_checkpoints`; run design; verify both appended to `oat_hill_completed` on approval                                                                                                   |
+| NFR3 | integration: `pnpm release:validate`                         | Command exits 0 in implementation PR                                                                                                                                                                                                                   |
+| NFR4 | manual: dogfood timing comparison                            | Run new design skill on a small OAT change; compare prompt count + wall-clock time vs current design                                                                                                                                                   |
+| NFR5 | manual: line count                                           | `wc -l .agents/skills/oat-project-design/SKILL.md` ≤ 700                                                                                                                                                                                               |
+| NFR6 | manual: dogfood quick-start straight-to-plan                 | Verify single-prompt requirements gate; verify bypass flag                                                                                                                                                                                             |
+| NFR7 | manual: prose inspection + dogfood iteration                 | Heuristic prose includes positive + negative examples; dogfood doesn't produce perfunctory options                                                                                                                                                     |
 
 ### Unit Tests
 
@@ -989,8 +972,9 @@ The dogfooding step (NFR4 acceptance criterion) is the only "performance" verifi
 
 ### End-to-End Tests
 
-- **Dogfood E2E (Collaborative):** Use the new design skill to design a real OAT change (suggest: a small enhancement to one of the OAT skills not in this PR's scope, like adding a single optional argument to `oat-project-open`). Verify the skill prompts for mode → decomposition advisory → mode-choice → requirements confirmation → section-by-section validation with at least one divergent options moment → self-review → user-review gate → HiLL approval. Verify both spec.md and design.md are produced.
+- **Dogfood E2E (Collaborative):** Use the new design skill to design a real OAT change (suggest: a small enhancement to one of the OAT skills not in this PR's scope, like adding a single optional argument to `oat-project-open`). Verify the skill prompts for mode → requirements confirmation → section-by-section validation with at least one divergent options moment → self-review → user-review gate → HiLL approval. Verify both spec.md and design.md are produced.
 - **Dogfood E2E (Draft-and-review):** Same as above but invoked with `--mode draft`. Verify no per-section prompts, only the user-review gate at the end.
+- **Dogfood E2E (Unattended agent orchestration — FR9 enabler):** With `OAT_NON_INTERACTIVE=1` set, have a Claude agent orchestrator run `discover → design → plan → implement` end-to-end on a real small OAT change. Verify no skill blocks on prompts, all artifacts are produced, and the final result is indistinguishable from an interactive run (minus the section-by-section validation loops).
 - **Dogfood E2E (Quick-start with requirements gate):** Run `oat-project-quick-start` with a well-understood request (e.g., "add `--verbose` flag to `oat-project-open`"). Verify the auto-advance path now hits the requirements gate before plan generation.
 - **Dogfood E2E (Quick-start lightweight design with mode choice):** Run `oat-project-quick-start` with an exploratory request, choose lightweight design, verify mode-choice prompt fires, run through both branches in separate sessions.
 - **Dogfood E2E (Spec standalone):** Run `oat-project-spec` after a discovery to verify the standalone path still works and the closing output points at design as the optional next step.
@@ -1055,7 +1039,7 @@ No application monitoring; this is a CLI-tool change. The user's own use of the 
 
 **Tasks:**
 
-- Rework `oat-project-design/SKILL.md` — add Components 1-7 (mode choice, decomposition advisory, requirements confirmation, section iterator with collaborative branch, draft-and-review branch, decision-point heuristic, self-review, reworded HiLL prompt).
+- Rework `oat-project-design/SKILL.md` — add Components 1, 3, 4, 5, 6, 7 (mode choice with non-interactive fallback, requirements confirmation, section iterator with collaborative branch, draft-and-review branch, decision-point heuristic, self-review, reworded HiLL prompt). Component 2 is removed/reserved — do not implement anything in that slot.
 - Extend `oat-project-quick-start/SKILL.md` — add Components 8-9 (requirements gate, mode-choice for lightweight design).
 - Update `oat-project-spec/SKILL.md` — Component 10 (description + closing-output edits).
 - Update `oat-project-discover/SKILL.md` — Component 11 (Step 11 + 12 + 15 routing edits).

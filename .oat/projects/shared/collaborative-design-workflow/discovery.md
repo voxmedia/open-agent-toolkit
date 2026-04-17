@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-spec
 oat_blockers: []
-oat_last_updated: 2026-04-14
+oat_last_updated: 2026-04-17
 oat_generated: false
 ---
 
@@ -88,8 +88,8 @@ See `reference/comparative-analysis.md` for the full side-by-side analysis of Su
 ### Question 10: Should the design skill add a sub-project decomposition check?
 
 **Q:** Superpowers' brainstorming skill opens with: "if the request describes multiple independent subsystems (e.g., 'build a platform with chat, file storage, billing, and analytics'), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first." (`superpowers-brainstorming.md:73-74`). OAT doesn't have an explicit equivalent. Worth adding?
-**A:** Low-cost, high-value addition. A one-line scope check at the top of design ("confirm this is scoped to one plan; if not, propose sub-projects") is essentially free to add and catches a class of error OAT currently doesn't prevent.
-**Decision:** Add a sub-project decomposition sanity check as a small step at the top of the design skill — before the mode-choice prompt. Flag as a design-time enhancement, not a blocker.
+**A:** Considered but ultimately dropped from this project's scope. Detection of "this is really N sub-projects" already happens organically during `oat-project-discover` (the solution-space exploration naturally surfaces multi-subsystem scope). What OAT actually lacks is not a _detection_ step but a _graceful hand-off mechanism_ — a codified escape hatch that, when decomposition is the right call, can create multiple seeded projects (either with brief summaries for each to pick up later, or via an expanded cross-cutting brainstorm now with richer per-project discovery files and one chosen for immediate execution). That hand-off mechanism is its own design problem and deserves a separate project.
+**Decision:** Do not add a sub-project decomposition advisory step to the design skill. Detection continues to happen naturally in discovery. A codified split-escape-hatch is tracked in Deferred Ideas as a follow-up project.
 
 ## Solution Space
 
@@ -200,35 +200,9 @@ Three genuinely distinct strategies for incorporating Superpowers' collaborative
 
 **Summary:** Add a brief in-conversation requirements confirmation before plan generation on the quick-start → straight-to-plan path. No artifact. Keep quick-start fast.
 
-### Option D: Sub-project decomposition check — required step vs soft advisory
+### Option D: Design self-review — subagent-dispatched vs inline
 
-**Description:** Superpowers' brainstorming skill treats multi-subsystem detection as a required up-front check that blocks further work until decomposition happens. Should OAT's design skill adopt the same stance?
-
-**Pros (required):**
-
-- Prevents wasted effort on an un-decomposable spec.
-- Matches Superpowers' rigor.
-
-**Pros (soft advisory):**
-
-- Flags the concern without adding friction to well-scoped projects.
-- Treats the user as capable of making the call.
-
-**Cons (required):**
-
-- Most OAT projects are pre-scoped via discovery and don't need a blocking check.
-
-**Cons (soft advisory):**
-
-- A truly multi-subsystem project might slip through.
-
-**Chosen:** Soft advisory. Present the check as a short "does this look like one plan's worth of work?" question at the top of design, with an explicit option to split — but don't block.
-
-**Summary:** Sub-project decomposition is a sanity-check step, not a blocking gate.
-
-### Option E: Design self-review — subagent-dispatched vs inline
-
-**Description:** Superpowers' spec self-review (`superpowers-brainstorming.md:116-124`) is a fresh-eyes inline pass by the same agent. The project has an additional option: dispatch the existing `oat-project-review-provide` skill or a new subagent to review the design before HiLL.
+**Description:** Superpowers' spec self-review (`superpowers-brainstorming.md:116-124`) is a fresh-eyes inline pass by the same agent. The project has an additional option: dispatch the existing `oat-project-review-provide` skill or a new subagent to review the design before HiLL. (Previously labeled Option E; renumbered to D after sub-project decomposition was dropped from scope.)
 
 **Pros (inline):**
 
@@ -263,8 +237,9 @@ Three genuinely distinct strategies for incorporating Superpowers' collaborative
 6. **Divergent thinking applies at two levels:** Project-level (existing — discovery's 2–3 approaches, `oat-project-discover` Step 9) and decision-level (new — inside design, at real architectural decision points). Both present recommendation + alternatives with explicit user buy-in. A "real decision point" heuristic must be spelled out in the design skill to prevent perfunctory option-invention.
 7. **Discovery skill is largely untouched.** Existing gray-area multi-select, solution-space exploration, and approach recommendation work well. Only doc-level tweaks: (a) `Next Steps` template stops auto-routing to `oat-project-spec`, (b) Step 15 output references the new design-skill entry point.
 8. **Design skill inherits Superpowers-style self-review + user-review gate:** After drafting (in either mode), run a fresh-eyes self-review (placeholder/consistency/scope/ambiguity) with inline fixes. Then soften the HiLL approval prompt to explicitly invite the user to read the committed artifact: "Design written and committed to `<path>`. Please review it and let me know if you want changes before moving to planning."
-9. **Sub-project decomposition sanity check at top of design:** A soft advisory step — "Does this look like one plan's worth of work, or should it be split?" — not a blocking gate.
-10. **YAGNI principle made explicit:** Add "YAGNI ruthlessly — remove unnecessary features from all designs" as a principle in the design skill's guardrails, matching Superpowers' explicit stance.
+9. **YAGNI principle made explicit:** Add "YAGNI ruthlessly — remove unnecessary features from all designs" as a principle in the design skill's guardrails, matching Superpowers' explicit stance.
+
+_(A tenth decision — a sub-project decomposition advisory at the top of design — was considered and dropped; see Question 10 above. Detection already happens organically in discovery; a codified split-escape-hatch belongs in its own follow-up project — tracked in Deferred Ideas.)_
 
 ## Constraints
 
@@ -319,10 +294,14 @@ Three genuinely distinct strategies for incorporating Superpowers' collaborative
 - **Adopting Superpowers' visual companion.** Deferred — infrastructure-heavy, not core to this project.
 - **Deleting `oat-project-spec`.** Deferred permanently; the standalone use case has real (if narrow) value.
 - **Adopting Superpowers' rigid-vs-flexible skill labels.** Deferred — nice-to-have.
+- **Codified sub-project split escape hatch (follow-up project).** When discovery surfaces that a request is really N loosely-related sub-projects, offer a structured hand-off with two modes:
+  - **Option A — Decompose and park:** Create N new projects, seed each with a brief discovery summary distilled from the parent conversation. User picks one to continue with now; others sit ready for full discovery when picked up later. Clean separation, no cross-project context preserved.
+  - **Option B — Brainstorm broadly, execute one:** Stay in the current conversation and do rich cross-cutting discovery covering all sub-projects. Generate full `discovery.md` for each, with cross-references noting inter-project dependencies. Pick one to make active; others sit with richer context for later.
+    Natural home is `oat-project-discover` (where multi-subsystem scope is typically detected) or a new dedicated skill like `oat-project-split`. Out of scope for the collaborative-design-workflow project but worth its own project.
 
 ## Open Questions
 
-- **Mode choice default when skill is invoked non-interactively (e.g., from automation):** Collaborative mode requires user prompts. Decision: fall back to draft-and-review automatically when no TTY is detected, with a banner at the top of the generated design.md noting the mode. Design phase should confirm the TTY-detection mechanism.
+- **Mode choice default when skill is invoked non-interactively (e.g., agent-orchestrated end-to-end OAT runs, CI pipelines, scheduled triggers):** Collaborative mode requires user prompts. The automation use case — a Claude agent running `discover → design → plan → implement` unattended — needs the skill to complete without blocking. Decision: fall back to draft-and-review automatically when no TTY is detected (or `OAT_NON_INTERACTIVE=1` is set), with a banner at the top of the generated design.md noting the mode. Design phase should confirm the TTY-detection mechanism and how agent orchestrators should signal non-interactive intent.
 - **HiLL checkpoint semantics for folded spec-in-design:** If a project's state has `"spec"` in `oat_hill_checkpoints`, how is that interpreted when spec is no longer a distinct phase? Decision: treat as satisfied by the design HiLL (append both to `oat_hill_completed`). Design phase should confirm no state-migration logic is required.
 - **Template changes required for `spec.md` when authored from inside design:** Does the existing `spec.md` template need any structural change to support being generated as a byproduct rather than authored directly? Likely no structural change — the existing template sections map directly to what the folded flow produces. Design phase should confirm by walking through the template against the new authoring sequence.
 - **Interaction between quick-start's "well-understood" auto-advance and the new requirements gate:** Does every straight-to-plan path hit the gate, or only the ones that previously would have hit lightweight design? Decision (tentative): every straight-to-plan path hits the gate. Design phase should confirm and spell out the exact trigger condition.
@@ -332,7 +311,6 @@ Three genuinely distinct strategies for incorporating Superpowers' collaborative
     Design phase to refine this into skill-prompt-ready language.
 - **Skill version bump strategy:** If we touch `oat-project-design`, `oat-project-quick-start`, `oat-project-spec`, and `oat-project-discover` in the same PR, each needs a version bump. Are these coordinated (minor bump across all) or independent? Design phase should recommend.
 - **Backward-compatibility messaging:** Existing users who invoke `oat-project-spec` as part of their flow will find it no longer auto-advances to design. Do we need a one-time deprecation notice / migration note in the skill output? Design phase should specify the exact wording.
-- **Sub-project decomposition check placement:** Before mode choice, or inside collaborative mode only? (Design phase.)
 - **Self-review timing vs HiLL gate:** Run self-review before or after the HiLL prompt? Before makes sense (self-review is a quality-improvement pass; HiLL is the approval gate). Design phase to confirm.
 
 ## Assumptions
@@ -344,7 +322,7 @@ Three genuinely distinct strategies for incorporating Superpowers' collaborative
 - HiLL checkpoint configuration rarely includes both `spec` and `design` simultaneously in practice. Folding spec's HiLL into design's HiLL doesn't lose practical capability for most users.
 - Users who prefer the draft-and-review pattern today won't resist it remaining available — they just want it off by default so the collaborative experience is the norm.
 - Adding ~1 runtime prompt to the design skill does not meaningfully degrade the experience for users who'd rather skip it; the mode-flag escape hatch handles those cases.
-- TTY detection is reliable enough to gate the non-interactive fallback. (Alternative: check for an `OAT_NON_INTERACTIVE` env var.)
+- TTY detection is reliable enough to gate the non-interactive fallback for the automation use case (agent-orchestrated unattended OAT runs, CI, scheduled triggers). `OAT_NON_INTERACTIVE=1` is the explicit signal for contexts where TTY detection is unreliable.
 - The "real architectural decision point" heuristic can be captured in skill-prompt language that LLMs will follow reliably without hallucinating options.
 
 ## Risks

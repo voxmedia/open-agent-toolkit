@@ -403,13 +403,22 @@ The following are drawn directly from the source material above and map to the K
 
 **Small but real improvement** over OAT's current HiLL prompt which is framed as approval rather than review-invitation.
 
-### 6.5 Sub-project decomposition check
+### 6.5 Sub-project decomposition check — considered, deferred
 
 **Source:** `superpowers-brainstorming.md:73-74`, `superpowers-writing-plans.md:22-23`
 
-**Adapt:** If design reveals the project actually covers multiple independent subsystems, the skill should flag it — "this should be broken into sub-projects" — rather than produce a design covering everything.
+**Pattern in Superpowers:** If a request actually covers multiple independent subsystems, the skill flags this immediately — "this should be broken into sub-projects" — rather than produce a design covering everything.
 
-**Minor enhancement.** OAT discovery implicitly handles this via "out of scope" but doesn't have an explicit scope-check. Could add a short step at the top of design ("confirm this is scoped to one plan"). Include as an open question rather than a required decision.
+**Initial OAT adaptation proposal:** Add a soft advisory prompt at the top of the reworked design skill, asking "does this look like one plan's worth of work, or multiple subsystems?"
+
+**Ultimately dropped from this project's scope.** During discovery review, the user observed that multi-subsystem detection already happens organically during `oat-project-discover` — the solution-space exploration naturally surfaces when something is three loosely-related things. A redundant advisory at the top of design would mostly be noise.
+
+**What OAT actually lacks** is not _detection_ but a _graceful hand-off mechanism_ when decomposition is the right call. That mechanism deserves its own follow-up project and has two distinct flavors:
+
+- **Decompose-and-park:** Create N new projects, seed each with a brief discovery summary distilled from the parent conversation. User picks one now, others wait.
+- **Brainstorm-broadly-execute-one:** Do rich cross-cutting discovery in the current conversation, generate full `discovery.md` per sub-project with cross-references, pick one to make active.
+
+Natural home for the hand-off: `oat-project-discover` or a new `oat-project-split` skill. Tracked in `discovery.md` Deferred Ideas. See §9 summary table below for the final adoption decision.
 
 ### 6.6 YAGNI callout
 
@@ -543,28 +552,28 @@ Per AGENTS.md:
 
 ## 9. Summary Table — "What Are We Actually Adopting?"
 
-| Pattern                                                      | Source                                                                 | Adopting?               | Why                                                             |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------- |
-| Section-by-section design presentation with validation       | Brainstorming §"Presenting the design"                                 | **Yes**                 | Core of the collaborative experience                            |
-| Scale section depth to complexity                            | Brainstorming §"Presenting the design"                                 | **Yes**                 | Prevents collaborative mode feeling bloated for small changes   |
-| 2-3 approaches at design-decision points                     | Brainstorming §"Exploring approaches" (applied inside design)          | **Yes**                 | Fills the "divergent thinking only at project level" gap        |
-| "Lead with recommendation"                                   | Brainstorming §"Exploring approaches"                                  | **Already aligned**     | OAT discovery Step 9a matches                                   |
-| Design self-review (placeholder/consistency/scope/ambiguity) | Brainstorming §"Spec Self-Review"                                      | **Yes**                 | Travels with spec-authoring-folded-into-design                  |
-| Explicit user-review gate phrasing                           | Brainstorming §"User Review Gate"                                      | **Yes**                 | Improves HiLL prompt language                                   |
-| Sub-project decomposition check                              | Brainstorming §"Understanding the idea" / writing-plans §"Scope Check" | **Yes (minor)**         | Add a short scope-sanity check at top of design                 |
-| YAGNI callout                                                | Brainstorming §"Key Principles"                                        | **Yes (trivial)**       | One-line principle addition                                     |
-| Mode choice (collaborative / draft-and-review)               | OAT-specific                                                           | **Yes**                 | Preserves escape hatch                                          |
-| Quick-start requirements conversational gate                 | OAT-specific                                                           | **Yes**                 | Partial fix for the "well-understood auto-skip" assumption hole |
-| Spec skill as standalone utility                             | OAT-specific (decoupling)                                              | **Yes**                 | Preserves the "formalize without designing" use case            |
-| "Every project requires design" hard gate                    | Brainstorming §HARD-GATE + anti-pattern                                | **No**                  | Breaks quick-start's reason to exist                            |
-| Single-skill fusion (discovery+spec+design)                  | Brainstorming overall                                                  | **No**                  | Breaks artifact contract; discovery boundary is load-bearing    |
-| Visual companion                                             | Brainstorming §Visual Companion                                        | **No**                  | Separate initiative; out of scope                               |
-| Bite-sized TDD plan format                                   | Writing-plans §Bite-Sized Task Granularity                             | **No (out of scope)**   | Would improve plan skills but not in this project               |
-| No-placeholders explicit list                                | Writing-plans §No Placeholders                                         | **No (out of scope)**   | Plan-skill concern                                              |
-| Verification-before-completion discipline                    | Verification-before-completion skill                                   | **No (out of scope)**   | Separate initiative                                             |
-| Subagent-dispatched spec reviewer                            | Brainstorming spec-reviewer prompt                                     | **No**                  | OAT already has `oat-project-review-provide`                    |
-| Skill priority system (process > implementation)             | Using-superpowers                                                      | **No**                  | OAT workflow triage serves equivalent role                      |
-| Rigid vs flexible skill labels                               | Using-superpowers                                                      | **No (trivial future)** | Nice-to-have, not essential                                     |
+| Pattern                                                      | Source                                                                 | Adopting?               | Why                                                                                        |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------ |
+| Section-by-section design presentation with validation       | Brainstorming §"Presenting the design"                                 | **Yes**                 | Core of the collaborative experience                                                       |
+| Scale section depth to complexity                            | Brainstorming §"Presenting the design"                                 | **Yes**                 | Prevents collaborative mode feeling bloated for small changes                              |
+| 2-3 approaches at design-decision points                     | Brainstorming §"Exploring approaches" (applied inside design)          | **Yes**                 | Fills the "divergent thinking only at project level" gap                                   |
+| "Lead with recommendation"                                   | Brainstorming §"Exploring approaches"                                  | **Already aligned**     | OAT discovery Step 9a matches                                                              |
+| Design self-review (placeholder/consistency/scope/ambiguity) | Brainstorming §"Spec Self-Review"                                      | **Yes**                 | Travels with spec-authoring-folded-into-design                                             |
+| Explicit user-review gate phrasing                           | Brainstorming §"User Review Gate"                                      | **Yes**                 | Improves HiLL prompt language                                                              |
+| Sub-project decomposition check                              | Brainstorming §"Understanding the idea" / writing-plans §"Scope Check" | **No (deferred)**       | Detection already happens in discovery; codified split-escape-hatch is a follow-up project |
+| YAGNI callout                                                | Brainstorming §"Key Principles"                                        | **Yes (trivial)**       | One-line principle addition                                                                |
+| Mode choice (collaborative / draft-and-review)               | OAT-specific                                                           | **Yes**                 | Preserves escape hatch                                                                     |
+| Quick-start requirements conversational gate                 | OAT-specific                                                           | **Yes**                 | Partial fix for the "well-understood auto-skip" assumption hole                            |
+| Spec skill as standalone utility                             | OAT-specific (decoupling)                                              | **Yes**                 | Preserves the "formalize without designing" use case                                       |
+| "Every project requires design" hard gate                    | Brainstorming §HARD-GATE + anti-pattern                                | **No**                  | Breaks quick-start's reason to exist                                                       |
+| Single-skill fusion (discovery+spec+design)                  | Brainstorming overall                                                  | **No**                  | Breaks artifact contract; discovery boundary is load-bearing                               |
+| Visual companion                                             | Brainstorming §Visual Companion                                        | **No**                  | Separate initiative; out of scope                                                          |
+| Bite-sized TDD plan format                                   | Writing-plans §Bite-Sized Task Granularity                             | **No (out of scope)**   | Would improve plan skills but not in this project                                          |
+| No-placeholders explicit list                                | Writing-plans §No Placeholders                                         | **No (out of scope)**   | Plan-skill concern                                                                         |
+| Verification-before-completion discipline                    | Verification-before-completion skill                                   | **No (out of scope)**   | Separate initiative                                                                        |
+| Subagent-dispatched spec reviewer                            | Brainstorming spec-reviewer prompt                                     | **No**                  | OAT already has `oat-project-review-provide`                                               |
+| Skill priority system (process > implementation)             | Using-superpowers                                                      | **No**                  | OAT workflow triage serves equivalent role                                                 |
+| Rigid vs flexible skill labels                               | Using-superpowers                                                      | **No (trivial future)** | Nice-to-have, not essential                                                                |
 
 ---
 
