@@ -42,9 +42,11 @@ If `mode: fix`, the block also includes:
 
 ## Mode Contract
 
+If `workflow_mode` is absent or unrecognized, default to `spec-driven`.
+
 Use workflow mode to determine required artifact reads:
 
-- **spec-driven**: read `plan.md` (your phase section), `design.md`, `spec.md`. Optionally `implementation.md` to see prior phases.
+- **spec-driven**: read `plan.md` (your phase section), `design.md`, `spec.md`. Optionally `implementation.md` to see prior phases. Optionally `discovery.md` if spec sections are ambiguous and you need upstream context.
 - **quick**: read `plan.md`, `discovery.md`. Read `spec.md` / `design.md` only if present.
 - **import**: read `plan.md`, `references/imported-plan.md` if present. Read `spec.md` / `design.md` only if present.
 
@@ -91,7 +93,7 @@ After each task's commit, before starting the next task, do a brief self-review:
 - Did I avoid overbuilding (YAGNI)?
 - Does the current state allow the next task to begin cleanly?
 
-If you find a defect, fix it in the same task's scope (amend the task's commit with `git commit --amend` if you have not moved on yet, or add a fix commit within the task boundary). If you cannot fix it cleanly, escalate via the report format (DONE_WITH_CONCERNS).
+If you find a defect, fix it and add a follow-up commit within the task boundary using the plan's commit convention with a `fix` type (e.g., `fix({task-id}): {brief fix description}`). Do not amend the prior commit — keep history append-only. If you cannot fix it cleanly, escalate via the report format (DONE_WITH_CONCERNS).
 
 #### Step 4: Phase-Wide Self-Review
 
@@ -154,11 +156,21 @@ For each Critical and Important finding, in order:
 1. Read the code location cited in the finding.
 2. Apply the fix using the reviewer's guidance.
 3. Run the task's verification commands (or phase-level commands) to verify the fix.
-4. Commit the fix with a message: `fix({phase-id}): {brief description of fix}`.
+4. Commit the fix using the project's commit convention from the dispatch input, with type `fix` and the phase-id included per the plan's convention (for example: `fix({phase-id}): {brief description}` when the convention is `{type}({scope}): {description}`).
 
 Do not expand scope beyond addressing the listed findings. Do not re-implement tasks that were not flagged.
 
-#### Step 3: Return Fix Summary
+#### Step 3: Self-Verify Fixes
+
+After all fixes are applied, before returning:
+
+- Re-run the phase's verification commands (tests, lint, type-check) to confirm no regressions.
+- For each finding, verify the fix actually addresses the cited issue — re-read the fixed code and trace through the reviewer's stated concern.
+- Confirm no files were modified outside the phase's boundary.
+
+If a fix introduces a regression or doesn't address its finding, either re-fix within scope or escalate via DONE_WITH_CONCERNS.
+
+#### Step 4: Return Fix Summary
 
 ```
 ## Phase {phase-id} Fix Report
@@ -213,3 +225,6 @@ Do not expand scope beyond addressing the listed findings. Do not re-implement t
 - [ ] Self-review performed between tasks and at phase end
 - [ ] Compact summary returned with status, task outcomes, files changed, and any concerns
 - [ ] In `fix` mode: only listed findings addressed; no scope expansion
+- [ ] In `fix` mode: all cited Critical/Important findings addressed, no scope expansion
+- [ ] In `fix` mode: self-verification step completed — phase verification commands re-run, no regressions
+- [ ] In `fix` mode: no files modified outside the phase's boundary
