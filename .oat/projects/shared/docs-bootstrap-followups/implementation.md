@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-17
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -19,9 +19,9 @@ oat_generated: false
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 2     | 2/2       |
 | Phase 3 | complete    | 4     | 4/4       |
-| Phase 4 | in_progress | 2     | 0/2       |
+| Phase 4 | in_progress | 2     | 1/2       |
 
-**Total:** 8/10 tasks completed
+**Total:** 9/10 tasks completed
 
 ## Review Received: final
 
@@ -420,7 +420,8 @@ After the fix tasks are complete:
 
 **Outcome (what changed):**
 
-- Pending. This phase captures the remaining final re-review gaps before the branch can return for one more code review pass.
+- `p04-t01` tightened the safe auto-patch boundary so only single-command Turbo builds are mutated.
+- `p04-t02` remains pending to refresh the repo dashboard after the latest bookkeeping changes.
 
 **Key files expected:**
 
@@ -431,21 +432,23 @@ After the fix tasks are complete:
 **Verification target:**
 
 - Run: `pnpm --filter @open-agent-toolkit/cli test -- root-package`
-- Result: pending
+- Result: pass for `p04-t01`; pending rerun after `p04-t02` if dashboard refresh touches related state generation
 
 **Notes / Decisions:**
 
-- The composite-shell script gap is product code and needs a normal review-fix task.
+- Composite shell expressions such as `turbo run build && pnpm lint` are now treated as ambiguous and skipped with manual guidance.
 - The stale repo dashboard is tracked as a follow-up so the next implementation pass closes the lifecycle drift explicitly.
 
 ### Task p04-t01: (review) Skip ambiguous composite Turbo shell build scripts during root patching
 
-**Status:** pending
-**Commit:** pending
+**Status:** completed
+**Commit:** 0d59f346
 
 **Outcome:**
 
-- Pending.
+- Root build-script patching now requires a plain single-command Turbo build before it mutates `scripts.build`.
+- Composite shell expressions are skipped with a dedicated warning reason and a manual snippet instead of being rewritten.
+- Added regression coverage for `turbo run build && pnpm lint`.
 
 ### Task p04-t02: (review) Refresh the repo dashboard after review bookkeeping
 
@@ -484,6 +487,7 @@ This project is running in single-thread implementation mode. No orchestration r
 - Aligned the quick-start skill validation test with the new version contract (`78e48574`).
 - All review-fix tasks are complete; project is awaiting final re-review.
 - Received the delegated final re-review, archived `final-review-2026-04-17.md`, and added `p04-t01` / `p04-t02` for the remaining gaps.
+- Completed `p04-t01` by skipping composite shell Turbo build scripts instead of patching full shell expressions (`0d59f346`).
 
 ## Deviations from Plan
 
@@ -498,6 +502,7 @@ This project is running in single-thread implementation mode. No orchestration r
 | 1     | `pnpm --filter @open-agent-toolkit/cli test`                                                                                                                                                               | Yes    | 0      | CLI docs-init coverage plus workspace test suite                                             |
 | 2     | `pnpm --filter @open-agent-toolkit/cli lint`, `pnpm --filter @open-agent-toolkit/cli type-check`, `pnpm release:validate`                                                                                  | Yes    | 0      | Required release policy validation                                                           |
 | 3     | `pnpm --filter @open-agent-toolkit/cli test -- root-package`, `pnpm --filter @open-agent-toolkit/cli test -- root-package index-generate`, skill guidance grep checks, full CLI verification, `pnpm build` | Yes    | 0      | Review-fix regression coverage, workflow-contract validation, and final handoff verification |
+| 4     | `pnpm --filter @open-agent-toolkit/cli test -- root-package`                                                                                                                                               | Yes    | 0      | Final re-review regression coverage for composite shell build-script detection               |
 
 ## Final Summary (for PR/docs)
 
