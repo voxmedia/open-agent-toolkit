@@ -139,7 +139,7 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-import-plan');
   });
 
-  it('uses subagent implementation when execution mode is subagent-driven', () => {
+  it('uses oat-project-implement regardless of execution mode', () => {
     const state = makeState({
       phase: 'plan',
       phaseStatus: 'complete',
@@ -151,7 +151,7 @@ describe('recommendSkill', () => {
       }),
     });
 
-    expect(recommendSkill(state).skill).toBe('oat-project-subagent-implement');
+    expect(recommendSkill(state).skill).toBe('oat-project-implement');
   });
 
   it('applies the HiLL override before normal routing', () => {

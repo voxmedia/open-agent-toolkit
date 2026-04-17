@@ -268,14 +268,7 @@ function getWorkflowRoutes(
 
 function normalizeImplementationSkill(
   skill: string,
-  state: Omit<ProjectState, 'recommendation'>,
+  _state: Omit<ProjectState, 'recommendation'>,
 ): string {
-  if (
-    skill === 'oat-project-implement' &&
-    state.executionMode === 'subagent-driven'
-  ) {
-    return 'oat-project-subagent-implement';
-  }
-
   return skill;
 }
