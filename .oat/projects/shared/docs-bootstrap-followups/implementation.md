@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-17
-oat_current_task_id: p03-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,13 +14,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 4     | 3/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 4     | 4/4       |
 
-**Total:** 7/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ## Review Received: final
 
@@ -36,7 +36,7 @@ oat_generated: false
 
 **New tasks added:** `p03-t01`, `p03-t02`, `p03-t03`, `p03-t04`
 
-**Next:** Continue the review-fix tasks via `oat-project-implement`, starting with `p03-t04`.
+**Next:** Request final re-review via `oat-project-review-provide code final`, then process it with `oat-project-review-receive`.
 
 After the fix tasks are complete:
 
@@ -234,8 +234,36 @@ After the fix tasks are complete:
 
 ## Phase 3: Review fixes and workflow hardening
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-17
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Closed the final review findings with targeted fixes for ambiguous Turbo filters, implementation-artifact drift, shorthand Turbo detection, and workflow artifact-commit guidance.
+- Left the project in an explicit awaiting-re-review state instead of pointing at a nonexistent next task.
+- Hardened the lifecycle documentation so future review flows start from a committed artifact baseline.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/docs/init/root-package.ts` - safe filter handling and shorthand Turbo detection.
+- `packages/cli/src/commands/docs/init/root-package.test.ts` - review-driven edge-case coverage.
+- `packages/cli/src/commands/docs/index-generate/index.test.ts` - stale-output overwrite resilience.
+- `.agents/skills/oat-project-quick-start/SKILL.md` - artifact-commit guidance before handoff.
+- `.agents/skills/oat-project-review-provide/SKILL.md` - committed artifact baseline before review.
+- `.agents/skills/oat-project-review-receive/SKILL.md` - widened bookkeeping guidance for untracked project artifacts.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- root-package index-generate`
+- Result: pass
+- Run: `rg -n "artifact|commit|review|tracked|state drift|baseline" .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- `oat-project-review-provide` was included in this task because it is the lifecycle boundary where uncommitted project artifacts create the most confusion.
 
 ### Task p03-t01: (review) Fix ambiguous Turbo filter handling in root build patching
 
@@ -322,8 +350,30 @@ After the fix tasks are complete:
 
 ### Task p03-t04: (review) Harden workflow artifact-commit guidance before review transitions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 83c5baf2
+
+**Outcome:**
+
+- Quick-start, implement, review-provide, and review-receive now state explicitly that review boundaries require a committed project-artifact baseline.
+- Review-provide now treats untracked or bookkeeping-only core artifact changes as a stop condition instead of silently reviewing against half-tracked state.
+- Review-receive now documents how to widen its bookkeeping commit when an earlier workflow failed to commit the initial project artifact set.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-quick-start/SKILL.md` - clarified committed-artifact handoff requirements.
+- `.agents/skills/oat-project-implement/SKILL.md` - added explicit pre-review artifact-baseline guidance.
+- `.agents/skills/oat-project-review-provide/SKILL.md` - added committed-artifact prerequisite and enforcement step.
+- `.agents/skills/oat-project-review-receive/SKILL.md` - documented widened bookkeeping for previously untracked project artifacts.
+
+**Verification:**
+
+- Run: `rg -n "artifact|commit|review|tracked|state drift|baseline" .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Review-provide was added to the write set because the underlying failure appears there, even though the initial task list named only quick-start, implement, and review-receive.
 
 ---
 
@@ -349,7 +399,8 @@ This project is running in single-thread implementation mode. No orchestration r
 - Implemented `p03-t01` to skip ambiguous user-authored Turbo filters safely (`f0b28e6f`).
 - Reconciled `implementation.md` with the actual delivered work and removed scaffold placeholders (`71508625`).
 - Tightened the remaining review-driven edge-case coverage and accepted the `turbo build` shorthand (`64862eaa`).
-- Advanced the implementation pointer to `p03-t04`.
+- Hardened workflow artifact-commit guidance before review boundaries (`83c5baf2`).
+- All review-fix tasks are complete; project is awaiting final re-review.
 
 ## Deviations from Plan
 
@@ -359,11 +410,11 @@ This project is running in single-thread implementation mode. No orchestration r
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                 | Passed | Failed | Coverage                                         |
-| ----- | ------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------ |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test`                                                                              | Yes    | 0      | CLI docs-init coverage plus workspace test suite |
-| 2     | `pnpm --filter @open-agent-toolkit/cli lint`, `pnpm --filter @open-agent-toolkit/cli type-check`, `pnpm release:validate` | Yes    | 0      | Required release policy validation               |
-| 3     | `pnpm --filter @open-agent-toolkit/cli test -- root-package`                                                              | Yes    | 0      | Added ambiguous-filter regression case           |
+| Phase | Tests Run                                                                                                                                                             | Passed | Failed | Coverage                                                        |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | --------------------------------------------------------------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test`                                                                                                                          | Yes    | 0      | CLI docs-init coverage plus workspace test suite                |
+| 2     | `pnpm --filter @open-agent-toolkit/cli lint`, `pnpm --filter @open-agent-toolkit/cli type-check`, `pnpm release:validate`                                             | Yes    | 0      | Required release policy validation                              |
+| 3     | `pnpm --filter @open-agent-toolkit/cli test -- root-package`, `pnpm --filter @open-agent-toolkit/cli test -- root-package index-generate`, skill guidance grep checks | Yes    | 0      | Review-fix regression coverage and workflow-contract validation |
 
 ## Final Summary (for PR/docs)
 
@@ -371,7 +422,7 @@ This project is running in single-thread implementation mode. No orchestration r
 
 - Consumer monorepos bootstrapped with `oat docs init` now get safer root Turbo build behavior, including docs-only build support and structured skip/apply guidance.
 - Generated docs indexes now carry an AUTOGENERATED warning, and new Fumadocs scaffolds include the same warning before the first regenerate.
-- Final review follow-up work has started, including a safety fix for pre-existing Turbo filter flags.
+- Final review follow-up work is complete, including the safety fix for pre-existing Turbo filter flags and the workflow artifact-commit hardening.
 
 **Behavioral changes (user-facing):**
 
@@ -394,11 +445,13 @@ This project is running in single-thread implementation mode. No orchestration r
 - `pnpm --filter @open-agent-toolkit/cli type-check`
 - `pnpm release:validate`
 - `pnpm --filter @open-agent-toolkit/cli test -- root-package`
+- `pnpm --filter @open-agent-toolkit/cli test -- root-package index-generate`
 
 **Design deltas (if any):**
 
 - The review fix for existing Turbo filters chose a conservative skip-with-guidance path instead of attempting to preserve or merge arbitrary filter expressions automatically.
 - Turbo shorthand support was added without changing the canonical manual-snippet form, which remains easier to recognize in docs and output.
+- Review-provide was added to the workflow hardening scope because commit hygiene has to be enforced where reviews actually begin.
 
 ## References
 
