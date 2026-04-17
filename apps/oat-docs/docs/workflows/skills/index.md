@@ -52,7 +52,6 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `oat-project-plan`
     - `oat-project-plan-writing`
     - `oat-project-implement`
-    - `oat-project-subagent-implement`
     - `oat-project-progress`
     - `oat-project-next`
     - `oat-project-capture`

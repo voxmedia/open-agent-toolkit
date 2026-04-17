@@ -228,38 +228,38 @@ Routing matrix by mode:
 
 **Spec-Driven mode (`oat_workflow_mode: spec-driven`):**
 
-| oat_phase | oat_phase_status | Next Skill                                                                                                                                                                                                                                                                                                  |
-| --------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| discovery | in_progress      | Continue `oat-project-discover`                                                                                                                                                                                                                                                                             |
-| discovery | complete         | `oat-project-spec`                                                                                                                                                                                                                                                                                          |
-| spec      | in_progress      | Continue `oat-project-spec`                                                                                                                                                                                                                                                                                 |
-| spec      | complete         | `oat-project-design`                                                                                                                                                                                                                                                                                        |
-| design    | in_progress      | Continue `oat-project-design`                                                                                                                                                                                                                                                                               |
-| design    | complete         | `oat-project-plan`                                                                                                                                                                                                                                                                                          |
-| plan      | in_progress      | Continue `oat-project-plan`                                                                                                                                                                                                                                                                                 |
-| plan      | complete         | `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement`                                                                                                                                                                                              |
-| implement | in_progress      | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement`. If artifacts appear out of sync with recent commits (e.g., `implementation.md` has fewer completed tasks than commits suggest), also mention `oat-project-reconcile` as an option. |
-| implement | complete         | Ready for final review / PR                                                                                                                                                                                                                                                                                 |
+| oat_phase | oat_phase_status | Next Skill                                                                                                                                                                                                           |
+| --------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| discovery | in_progress      | Continue `oat-project-discover`                                                                                                                                                                                      |
+| discovery | complete         | `oat-project-spec`                                                                                                                                                                                                   |
+| spec      | in_progress      | Continue `oat-project-spec`                                                                                                                                                                                          |
+| spec      | complete         | `oat-project-design`                                                                                                                                                                                                 |
+| design    | in_progress      | Continue `oat-project-design`                                                                                                                                                                                        |
+| design    | complete         | `oat-project-plan`                                                                                                                                                                                                   |
+| plan      | in_progress      | Continue `oat-project-plan`                                                                                                                                                                                          |
+| plan      | complete         | `oat-project-implement`                                                                                                                                                                                              |
+| implement | in_progress      | Continue `oat-project-implement`. If artifacts appear out of sync with recent commits (e.g., `implementation.md` has fewer completed tasks than commits suggest), also mention `oat-project-reconcile` as an option. |
+| implement | complete         | Ready for final review / PR                                                                                                                                                                                          |
 
 **Quick mode (`oat_workflow_mode: quick`):**
 
-| oat_phase | oat_phase_status | Next Skill                                                                                                                                                                                                                 |
-| --------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| discovery | in_progress      | Continue `oat-project-discover`                                                                                                                                                                                            |
-| discovery | complete         | `oat-project-plan`                                                                                                                                                                                                         |
-| plan      | in_progress      | Continue `oat-project-plan`                                                                                                                                                                                                |
-| plan      | complete         | `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement`                                                                                                             |
-| implement | in_progress      | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |
-| implement | complete         | Ready for final review / PR                                                                                                                                                                                                |
+| oat_phase | oat_phase_status | Next Skill                                                                                                                          |
+| --------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| discovery | in_progress      | Continue `oat-project-discover`                                                                                                     |
+| discovery | complete         | `oat-project-plan`                                                                                                                  |
+| plan      | in_progress      | Continue `oat-project-plan`                                                                                                         |
+| plan      | complete         | `oat-project-implement`                                                                                                             |
+| implement | in_progress      | Continue `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |
+| implement | complete         | Ready for final review / PR                                                                                                         |
 
 **Import mode (`oat_workflow_mode: import`):**
 
-| oat_phase | oat_phase_status | Next Skill                                                                                                                                                                                                                 |
-| --------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| plan      | in_progress      | Continue `oat-project-import-plan`                                                                                                                                                                                         |
-| plan      | complete         | `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement`                                                                                                             |
-| implement | in_progress      | Continue `oat-project-subagent-implement` when `oat_execution_mode: subagent-driven`, otherwise `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |
-| implement | complete         | Ready for final review / PR                                                                                                                                                                                                |
+| oat_phase | oat_phase_status | Next Skill                                                                                                                          |
+| --------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| plan      | in_progress      | Continue `oat-project-import-plan`                                                                                                  |
+| plan      | complete         | `oat-project-implement`                                                                                                             |
+| implement | in_progress      | Continue `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |
+| implement | complete         | Ready for final review / PR                                                                                                         |
 
 **If blockers exist:**
 
@@ -290,8 +290,7 @@ Workflow:
   oat-project-spec              - Create specification from discovery
   oat-project-design            - Create technical design from spec
   oat-project-plan              - Create implementation plan from design (spec-driven mode)
-  oat-project-implement         - Execute implementation plan
-  oat-project-subagent-implement - Execute implementation plan with subagent orchestration
+  oat-project-implement         - Execute implementation plan (sequential or parallel)
   oat-project-reconcile         - Reconcile manual/human commits with plan tasks
 
 Status:

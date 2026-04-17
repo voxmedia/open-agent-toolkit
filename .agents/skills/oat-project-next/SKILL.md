@@ -231,7 +231,7 @@ Otherwise, look up the target skill from the routing table for the current `oat_
 | plan          | complete     | tier 1        | `oat-project-implement` \* |
 | implement     | in_progress  | —             | `oat-project-implement` \* |
 
-\* When `oat_execution_mode: subagent-driven`, use `oat-project-subagent-implement` instead.
+\* `oat-project-implement` handles both sequential and parallel execution.
 
 ### Step 4: Check for Unprocessed Reviews (Review Safety Check)
 
@@ -261,7 +261,7 @@ Apply the following checks in priority order. Stop at the first match:
 **5.1: Incomplete revision tasks**
 
 Grep plan.md for `p-revN` phases. If any `p-revN` tasks exist with status != completed in implementation.md:
-→ Route to `oat-project-implement` (or `oat-project-subagent-implement` if subagent-driven)
+→ Route to `oat-project-implement`
 → Announce: "Revision tasks pending — continuing implementation"
 
 **5.2: Unprocessed reviews**

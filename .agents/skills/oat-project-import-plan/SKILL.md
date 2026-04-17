@@ -212,8 +212,7 @@ Report:
 - active project pointer path
 - dashboard refresh status
 - next options:
-  - `oat-project-implement` (sequential, default)
-  - `oat-project-subagent-implement` (parallel with autonomous review gates)
+  - `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)
 
 ## Success Criteria
 

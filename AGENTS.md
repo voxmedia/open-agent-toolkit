@@ -127,7 +127,7 @@ For multi-session or complex development tasks, use the structured agent project
 
 ### Execution Continuation
 
-This rule applies only to OAT project lifecycle execution, such as `oat-project-implement`, `oat-project-subagent-implement`, and OAT project review/receive flows. It does not apply to non-OAT tasks or ad-hoc work outside the OAT project workflow.
+This rule applies only to OAT project lifecycle execution, such as `oat-project-implement`, and OAT project review/receive flows. It does not apply to non-OAT tasks or ad-hoc work outside the OAT project workflow.
 
 When executing an OAT project implementation or OAT project review workflow, do not stop at task boundaries, phase boundaries, or other clean checkpoints unless:
 

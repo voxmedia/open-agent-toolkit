@@ -41,21 +41,15 @@ Subagent definitions live in `.agents/agents/` and are available in Claude Code 
 
 For details on available subagents and how to use them, see [`.agents/docs/subagents-guide.md`](docs/subagents-guide.md).
 
-For parallel implementation using subagent orchestration, use `oat-project-subagent-implement` as an alternative to sequential `oat-project-implement`.
-
 ### Subagent implementation workflow
 
-- Use `oat-project-implement` for sequential execution.
-- Use `oat-project-subagent-implement` for parallel execution with autonomous review gates.
-- Persist project mode with `oat project set-mode <single-thread|subagent-driven>`.
+`oat-project-implement` is the single execution skill. Declare `oat_plan_parallel_groups` in `plan.md` frontmatter to run eligible phases in parallel worktrees; omit it (or leave it empty) for fully sequential execution.
 
 ```mermaid
 flowchart TD
-  P["Plan complete"] --> M["oat project set-mode <mode>"]
-  M -->|single-thread| SI["oat-project-implement"]
-  M -->|subagent-driven| DI["oat-project-implement (redirect)"]
-  DI --> PSI["oat-project-subagent-implement"]
-  P --> PSI
+  P["Plan complete"] --> I["oat-project-implement"]
+  I -->|oat_plan_parallel_groups declared| PAR["Parallel worktree dispatch"]
+  I -->|no parallel groups| SEQ["Sequential execution"]
 ```
 
 ## Documentation

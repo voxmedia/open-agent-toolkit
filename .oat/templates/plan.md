@@ -18,7 +18,7 @@ oat_template_name: plan
 
 # Implementation Plan: {Project Name}
 
-> Execute this plan using `oat-project-implement` (sequential) or `oat-project-subagent-implement` (parallel), with phase checkpoints and review gates.
+> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
 
 **Goal:** {Brief goal statement from spec}
 

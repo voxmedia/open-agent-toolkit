@@ -226,7 +226,7 @@ Append to `implementation.md` under `## Implementation Log`:
 
 **Orchestrator integration:**
 
-- When invoked by `oat-project-subagent-implement`, the baseline policy is passed through from the orchestration run policy.
+- When invoked by `oat-project-implement` in parallel mode, the baseline policy is passed through from the orchestration run policy.
 - The orchestrator may set `--baseline-policy allow-failing` for exploratory runs and `strict` for production-quality execution.
 - The bootstrap skill does not interpret HiLL checkpoints — that responsibility belongs to the orchestrator.
 

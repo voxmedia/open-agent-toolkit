@@ -356,8 +356,7 @@ Report:
 - total phases/tasks generated
 - first task ID
 - next options:
-  - `oat-project-implement` (sequential, default)
-  - `oat-project-subagent-implement` (parallel with autonomous review gates)
+  - `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)
 - dashboard location: `.oat/state.md` (confirm it was regenerated)
 
 ## Success Criteria

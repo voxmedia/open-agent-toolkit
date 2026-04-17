@@ -13,7 +13,7 @@ OAT lifecycle order:
 2. Spec (`oat-project-spec`)
 3. Design (`oat-project-design`)
 4. Plan (`oat-project-plan`)
-5. Implement (`oat-project-implement` or `oat-project-subagent-implement`)
+5. Implement (`oat-project-implement`)
 6. Review loop (`oat-project-review-provide` / `oat-project-review-receive`)
 7. Summary (`oat-project-summary`) — generates `summary.md` as institutional memory; `oat-project-pr-final` and `oat-project-complete` auto-refresh it when missing or stale
 8. PR (`oat-project-pr-progress` / `oat-project-pr-final`) — sets `pr_open` status
@@ -90,9 +90,7 @@ When `autoReviewAtCheckpoints` is enabled (via `.oat/config.json` or `plan.md` f
 ## Implementation modes
 
 - **Sequential (default):** `oat-project-implement`
-- **Parallel/subagent-driven:** `oat-project-subagent-implement`
-- Use `oat project set-mode <single-thread|subagent-driven>` to persist mode in project state.
-- `oat-project-implement` remains the canonical consumer and redirects when mode is `subagent-driven`.
+- **Parallel:** `oat-project-implement` with `oat_plan_parallel_groups` declared in `plan.md` frontmatter
 
 ## Review receive behavior
 
@@ -106,18 +104,14 @@ When `autoReviewAtCheckpoints` is enabled (via `.oat/config.json` or `plan.md` f
 
 1. `oat-project-quick-start` (adaptive discovery — provide a project name and optional description; if only the name is provided, quick-start asks for the missing description before discovery. Well-understood requests synthesize quickly, exploratory requests invest in solution space exploration)
 2. Decision point: straight to plan, optional lightweight `design.md`, or promote to spec-driven
-3. Implement:
-   - `oat-project-implement` (sequential)
-   - `oat-project-subagent-implement` (parallel/subagent-driven)
+3. Implement: `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)
 4. `oat-project-review-provide` / `oat-project-pr-final`
 5. Optional `oat-project-promote-spec-driven` to backfill spec-driven lifecycle artifacts in-place
 
 ### Import lane diagram
 
 1. `oat-project-import-plan`
-2. Implement:
-   - `oat-project-implement` (sequential)
-   - `oat-project-subagent-implement` (parallel/subagent-driven)
+2. Implement: `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)
 3. `oat-project-review-provide` / `oat-project-pr-final`
 4. Optional `oat-project-promote-spec-driven` to switch project mode to spec-driven lifecycle
 
@@ -128,10 +122,8 @@ When `autoReviewAtCheckpoints` is enabled (via `.oat/config.json` or `plan.md` f
 ```mermaid
 flowchart LR
   D["Discover"] --> S["Spec"] --> G["Design"] --> P["Plan"]
-  P --> I1["Implement (oat-project-implement)"]
-  P --> I2["Implement (oat-project-subagent-implement)"]
-  I1 --> R["Review"] --> PR["PR"] --> Doc["Docs (optional)"] --> C["Complete"]
-  I2 --> R
+  P --> I["Implement (oat-project-implement)"]
+  I --> R["Review"] --> PR["PR"] --> Doc["Docs (optional)"] --> C["Complete"]
 ```
 
 ### Quick lane
@@ -142,10 +134,8 @@ flowchart LR
   D -->|Straight to plan| P["Plan"]
   D -->|Lightweight design| LD["Design (quick)"] --> P
   D -->|Promote| SD["→ Spec-Driven lane"]
-  P --> QI1["Implement (oat-project-implement)"]
-  P --> QI2["Implement (oat-project-subagent-implement)"]
-  QI1 --> QR["Review / PR"]
-  QI2 --> QR
+  P --> QI["Implement (oat-project-implement)"]
+  QI --> QR["Review / PR"]
 ```
 
 ### Import lane
@@ -153,9 +143,7 @@ flowchart LR
 ```mermaid
 flowchart LR
   I["Import Plan"] --> II1["Implement (oat-project-implement)"]
-  I --> II2["Implement (oat-project-subagent-implement)"]
   II1 --> IR["Review / PR"]
-  II2 --> IR
 ```
 
 ### Capture lane
