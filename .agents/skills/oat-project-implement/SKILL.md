@@ -145,6 +145,33 @@ cat "$PROJECT_PATH/plan.md" | head -10 | grep "oat_status:"
 
 **If not complete:** Block and ask user to finish plan first.
 
+### Step 1.5: Resumption Detection
+
+If `{PROJECT_PATH}/implementation.md` already contains orchestration run entries, we may be resuming an interrupted run.
+
+1. Read `implementation.md` and find the most recent `### Run N` entry.
+2. Compare its phases-passed / phases-failed / phases-stopped counts against the plan's phase list.
+3. If there are phases in the plan that are not yet covered by any run entry, those are the resume targets.
+4. Read `state.md` for `oat_current_task` to cross-check the expected resume point.
+5. Read `git log` to verify the most recent bookkeeping commit matches the last reported state.
+
+**Detected state reconciliation:**
+
+- If there is an in-flight phase (implementer committed but no review verdict in implementation.md), re-dispatch the reviewer for that phase's current HEAD.
+- If there are un-cleaned worktrees from a prior parallel group, list them and ask the user whether to resume or clean up:
+
+  ```
+  Found un-cleaned worktrees from a prior run:
+    - ../worktrees/{name}/p02 — verdict was: excluded
+    - ../worktrees/{name}/p03 — verdict was: pass, not merged
+
+  Resume (merge pending verdicts into orchestration branch) or clean up?
+  ```
+
+6. Once resume target is identified, continue from that phase with the normal per-phase flow.
+
+**On first-ever invocation** (no prior run entries), skip resumption detection and proceed to Step 2.
+
 ### Step 2: Read Plan Document
 
 Read `"$PROJECT_PATH/plan.md"` completely to understand:
