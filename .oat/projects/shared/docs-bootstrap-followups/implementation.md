@@ -1,9 +1,9 @@
 ---
 oat_status: complete
-oat_ready_for: null
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-17
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -14,13 +14,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 4     | 4/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | complete    | 4     | 4/4       |
+| Phase 4 | in_progress | 2     | 0/2       |
 
-**Total:** 8/8 tasks completed
+**Total:** 8/10 tasks completed
 
 ## Review Received: final
 
@@ -37,6 +38,30 @@ oat_generated: false
 **New tasks added:** `p03-t01`, `p03-t02`, `p03-t03`, `p03-t04`
 
 **Next:** Request final re-review via `oat-project-review-provide code final`, then process it with `oat-project-review-receive`.
+
+After the fix tasks are complete:
+
+- Update the review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final`
+- Run `oat-project-review-receive` to record the re-review outcome
+
+---
+
+## Review Received: final
+
+**Date:** 2026-04-17
+**Review artifact:** `reviews/archived/final-review-2026-04-17.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p04-t01`, `p04-t02`
+
+**Next:** Execute the new review-fix tasks via `oat-project-implement`, starting from `p04-t01`.
 
 After the fix tasks are complete:
 
@@ -386,6 +411,51 @@ After the fix tasks are complete:
 - Review-provide was added to the write set because the underlying failure appears there, even though the initial task list named only quick-start, implement, and review-receive.
 - The quick-start contract test required an explicit expectation bump after the skill version changed.
 
+## Phase 4: Final re-review follow-ups
+
+**Status:** in_progress
+**Started:** 2026-04-17
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Pending. This phase captures the remaining final re-review gaps before the branch can return for one more code review pass.
+
+**Key files expected:**
+
+- `packages/cli/src/commands/docs/init/root-package.ts` - tighten the safe-auto-patch boundary for root build scripts.
+- `packages/cli/src/commands/docs/init/root-package.test.ts` - lock in the composite-shell skip behavior.
+- `.oat/state.md` - refresh the repo dashboard after project bookkeeping.
+
+**Verification target:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- root-package`
+- Result: pending
+
+**Notes / Decisions:**
+
+- The composite-shell script gap is product code and needs a normal review-fix task.
+- The stale repo dashboard is tracked as a follow-up so the next implementation pass closes the lifecycle drift explicitly.
+
+### Task p04-t01: (review) Skip ambiguous composite Turbo shell build scripts during root patching
+
+**Status:** pending
+**Commit:** pending
+
+**Outcome:**
+
+- Pending.
+
+### Task p04-t02: (review) Refresh the repo dashboard after review bookkeeping
+
+**Status:** pending
+**Commit:** pending
+
+**Outcome:**
+
+- Pending.
+
 ---
 
 ## Orchestration Runs
@@ -413,6 +483,7 @@ This project is running in single-thread implementation mode. No orchestration r
 - Hardened workflow artifact-commit guidance before review boundaries (`83c5baf2`).
 - Aligned the quick-start skill validation test with the new version contract (`78e48574`).
 - All review-fix tasks are complete; project is awaiting final re-review.
+- Received the delegated final re-review, archived `final-review-2026-04-17.md`, and added `p04-t01` / `p04-t02` for the remaining gaps.
 
 ## Deviations from Plan
 

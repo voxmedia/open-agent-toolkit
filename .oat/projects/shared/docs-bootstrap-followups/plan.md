@@ -342,14 +342,14 @@ Track review artifacts here if a review pass is requested after implementation.
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                           |
-| ------ | -------- | -------- | ---------- | ---------------------------------- |
-| p01    | code     | pending  | -          | -                                  |
-| p02    | code     | pending  | -          | -                                  |
-| p03    | code     | pending  | -          | -                                  |
-| final  | code     | received | 2026-04-17 | reviews/final-review-2026-04-17.md |
-| spec   | artifact | pending  | -          | -                                  |
-| design | artifact | pending  | -          | -                                  |
+| Scope  | Type     | Status      | Date       | Artifact                                    |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------- |
+| p01    | code     | pending     | -          | -                                           |
+| p02    | code     | pending     | -          | -                                           |
+| p03    | code     | pending     | -          | -                                           |
+| final  | code     | fixes_added | 2026-04-17 | reviews/archived/final-review-2026-04-17.md |
+| spec   | artifact | pending     | -          | -                                           |
+| design | artifact | pending     | -          | -                                           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -362,6 +362,68 @@ Track review artifacts here if a review pass is requested after implementation.
 
 ---
 
+## Phase 4: Final re-review follow-ups
+
+### Task p04-t01: (review) Skip ambiguous composite Turbo shell build scripts during root patching
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/docs/init/root-package.ts`
+- Modify: `packages/cli/src/commands/docs/init/root-package.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: the root-package patcher still treats composite shell scripts such as `turbo run build && pnpm lint` as if they were a single safe Turbo build command, then appends the docs exclusion filter to the end of the whole shell expression.
+Location: `packages/cli/src/commands/docs/init/root-package.ts`
+
+**Step 2: Implement fix**
+
+Restrict automatic root build patching to clear single-command Turbo build scripts. Detect shell composition operators or other ambiguous shell wrappers and skip automatic mutation with a dedicated warning/manual snippet instead of rewriting the command.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test -- root-package`
+Expected: composite shell build scripts are skipped with the correct warning path, and simple Turbo build scripts still patch successfully.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/docs/init/root-package.ts packages/cli/src/commands/docs/init/root-package.test.ts
+git commit -m "fix(p04-t01): skip composite turbo build scripts"
+```
+
+---
+
+### Task p04-t02: (review) Refresh the repo dashboard after review bookkeeping
+
+**Files:**
+
+- Modify: `.oat/state.md`
+- Modify: `.oat/projects/shared/docs-bootstrap-followups/state.md`
+
+**Step 1: Understand the issue**
+
+Review finding: the repo dashboard still reports this project as plan-complete and recommends the wrong lifecycle state because `.oat/state.md` was not refreshed after the latest project bookkeeping updates.
+Location: `.oat/state.md`
+
+**Step 2: Implement fix**
+
+Refresh the repo dashboard from the current project state after review bookkeeping so the active project summary, current task, and recommended next step match the live project artifacts.
+
+**Step 3: Verify**
+
+Run: `sed -n '1,80p' .oat/state.md`
+Expected: the active project summary shows implementation in progress for `docs-bootstrap-followups` and the next step remains `oat-project-implement`.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/state.md .oat/projects/shared/docs-bootstrap-followups/state.md
+git commit -m "chore(p04-t02): refresh repo dashboard state"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -369,10 +431,11 @@ Track review artifacts here if a review pass is requested after implementation.
 - Phase 1: 2 tasks - add safe Turbo root patching and explain the result through the bootstrap flow
 - Phase 2: 2 tasks - add generated-index warnings and finish release/version verification
 - Phase 3: 4 tasks - address review findings and harden workflow artifact commit guidance
+- Phase 4: 2 tasks - close the final re-review gaps around composite shell build scripts and repo dashboard drift
 
-**Total: 8 tasks**
+**Total: 10 tasks**
 
-Ready for code review and merge.
+Additional review-fix work is queued before the next final re-review.
 
 ---
 
