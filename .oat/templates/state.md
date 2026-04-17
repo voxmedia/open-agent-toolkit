@@ -8,7 +8,7 @@ oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: { OAT_PHASE } # Current phase: discovery | spec | design | plan | implement
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-oat_execution_mode: single-thread # single-thread | subagent-driven
+# oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
