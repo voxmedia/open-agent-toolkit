@@ -342,14 +342,14 @@ Track review artifacts here if a review pass is requested after implementation.
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                    |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------- |
-| p01    | code     | pending         | -          | -                                           |
-| p02    | code     | pending         | -          | -                                           |
-| p03    | code     | pending         | -          | -                                           |
-| final  | code     | fixes_completed | 2026-04-17 | reviews/archived/final-review-2026-04-17.md |
-| spec   | artifact | pending         | -          | -                                           |
-| design | artifact | pending         | -          | -                                           |
+| Scope  | Type     | Status   | Date       | Artifact                              |
+| ------ | -------- | -------- | ---------- | ------------------------------------- |
+| p01    | code     | pending  | -          | -                                     |
+| p02    | code     | pending  | -          | -                                     |
+| p03    | code     | pending  | -          | -                                     |
+| final  | code     | received | 2026-04-17 | reviews/final-review-2026-04-17-v2.md |
+| spec   | artifact | pending  | -          | -                                     |
+| design | artifact | pending  | -          | -                                     |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
