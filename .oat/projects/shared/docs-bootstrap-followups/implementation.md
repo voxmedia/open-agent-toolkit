@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-17
-oat_current_task_id: p04-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,14 +14,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | complete    | 4     | 4/4       |
-| Phase 4 | in_progress | 2     | 1/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 4     | 4/4       |
+| Phase 4 | complete | 2     | 2/2       |
 
-**Total:** 9/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ## Review Received: final
 
@@ -61,7 +61,7 @@ After the fix tasks are complete:
 
 **New tasks added:** `p04-t01`, `p04-t02`
 
-**Next:** Execute the new review-fix tasks via `oat-project-implement`, starting from `p04-t01`.
+**Next:** Request a final re-review via `oat-project-review-provide code final`, then process it with `oat-project-review-receive`.
 
 After the fix tasks are complete:
 
@@ -413,7 +413,7 @@ After the fix tasks are complete:
 
 ## Phase 4: Final re-review follow-ups
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-17
 
 ### Phase Summary
@@ -421,23 +421,27 @@ After the fix tasks are complete:
 **Outcome (what changed):**
 
 - `p04-t01` tightened the safe auto-patch boundary so only single-command Turbo builds are mutated.
-- `p04-t02` remains pending to refresh the repo dashboard after the latest bookkeeping changes.
+- `p04-t02` refreshed the repo dashboard from the updated project state so `.oat/state.md` now reflects the live implementation posture.
 
 **Key files expected:**
 
 - `packages/cli/src/commands/docs/init/root-package.ts` - tighten the safe-auto-patch boundary for root build scripts.
 - `packages/cli/src/commands/docs/init/root-package.test.ts` - lock in the composite-shell skip behavior.
-- `.oat/state.md` - refresh the repo dashboard after project bookkeeping.
+- `.oat/state.md` - refreshed from the live project state after review-fix bookkeeping.
 
 **Verification target:**
 
 - Run: `pnpm --filter @open-agent-toolkit/cli test -- root-package`
-- Result: pass for `p04-t01`; pending rerun after `p04-t02` if dashboard refresh touches related state generation
+- Result: pass
+- Run: `pnpm run cli -- state refresh`
+- Result: pass
+- Run: `sed -n '1,80p' .oat/state.md`
+- Result: pass
 
 **Notes / Decisions:**
 
 - Composite shell expressions such as `turbo run build && pnpm lint` are now treated as ambiguous and skipped with manual guidance.
-- The stale repo dashboard is tracked as a follow-up so the next implementation pass closes the lifecycle drift explicitly.
+- The stale repo dashboard was fixed by regenerating `.oat/state.md` from the updated project state rather than hand-editing the dashboard.
 
 ### Task p04-t01: (review) Skip ambiguous composite Turbo shell build scripts during root patching
 
@@ -452,12 +456,13 @@ After the fix tasks are complete:
 
 ### Task p04-t02: (review) Refresh the repo dashboard after review bookkeeping
 
-**Status:** pending
-**Commit:** pending
+**Status:** completed
+**Commit:** 87774fa0
 
 **Outcome:**
 
-- Pending.
+- Refreshed `.oat/state.md` after the latest project bookkeeping so the active project summary no longer points at the stale plan-phase state.
+- Confirmed the dashboard now reports `implement / in_progress` and the current project context from the latest review-fix pass.
 
 ---
 
@@ -488,6 +493,7 @@ This project is running in single-thread implementation mode. No orchestration r
 - All review-fix tasks are complete; project is awaiting final re-review.
 - Received the delegated final re-review, archived `final-review-2026-04-17.md`, and added `p04-t01` / `p04-t02` for the remaining gaps.
 - Completed `p04-t01` by skipping composite shell Turbo build scripts instead of patching full shell expressions (`0d59f346`).
+- Completed `p04-t02` by regenerating `.oat/state.md` from the latest project state so the repo dashboard reflects the final review-fix posture (`87774fa0`).
 
 ## Deviations from Plan
 
@@ -503,6 +509,7 @@ This project is running in single-thread implementation mode. No orchestration r
 | 2     | `pnpm --filter @open-agent-toolkit/cli lint`, `pnpm --filter @open-agent-toolkit/cli type-check`, `pnpm release:validate`                                                                                  | Yes    | 0      | Required release policy validation                                                           |
 | 3     | `pnpm --filter @open-agent-toolkit/cli test -- root-package`, `pnpm --filter @open-agent-toolkit/cli test -- root-package index-generate`, skill guidance grep checks, full CLI verification, `pnpm build` | Yes    | 0      | Review-fix regression coverage, workflow-contract validation, and final handoff verification |
 | 4     | `pnpm --filter @open-agent-toolkit/cli test -- root-package`                                                                                                                                               | Yes    | 0      | Final re-review regression coverage for composite shell build-script detection               |
+| 4     | `pnpm run cli -- state refresh`, `sed -n '1,80p' .oat/state.md`                                                                                                                                            | Yes    | 0      | Repo dashboard regeneration from live project state                                          |
 
 ## Final Summary (for PR/docs)
 
