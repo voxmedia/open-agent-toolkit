@@ -649,14 +649,16 @@ On "confirm": continue to Step 3.
 
 ### Component 9: Quick-start mode-choice for lightweight design (FR12)
 
-**Purpose:** Apply the same mode-choice pattern from Component 1 to quick-start's lightweight design path (current Step 2.75).
+**Purpose:** Apply the same mode-choice pattern from Component 1 to quick-start's lightweight design path, and make quick-start's lightweight collaborative mode share the **exact same Superpowers-aligned prose** as the full design skill's section iterator (Component 4). The lightweight design path differs from full design in _scope and ceremony_, not in interaction style.
 
 **Responsibilities:**
 
 - Fire at the top of Step 2.75 if the user chose "Lightweight design first" at Step 2.5.
 - Use the same mechanics as Component 1 (TTY check, env var, skill argument, default to collaborative).
-- Branch the rest of Step 2.75 into collaborative (existing pattern) or draft (new one-pass behavior).
-- In draft mode: draft the lightweight design's reduced section set in one pass, run a scaled-down self-review, present at user-review gate.
+- Collaborative branch: uses Component 4's exact Superpowers-borrowed prose (scale section depth to complexity; "ask after each section whether it looks right so far"; "be ready to go back and clarify if something doesn't make sense"). The current Step 2.75 prose at `oat-project-quick-start/SKILL.md:244-251` gets **replaced** with this canonical borrowed version during implementation — we do not preserve the old OAT-synthesized wording.
+- Draft-and-review branch: drafts the reduced section set in one pass, runs Component 6's full 4-check self-review, presents user-review gate (Component 7's wording adapted for quick-start).
+- Run the **same** self-review as full design — not a "scaled-down" version. Scope and ambiguity checks at quick-start scale usually surface nothing, but running them is free and keeps skill behavior uniform.
+- Produce `design.md` only — **no** `spec.md`. Requirements stay implicit in `discovery.md`'s Key Decisions. The Requirement Index that full design's spec.md produces is the formal artifact distinguishing full flow from lightweight; lightweight by design does not have it.
 
 **Interfaces:**
 
@@ -667,7 +669,7 @@ DESIGN_MODE="${OAT_DESIGN_MODE:-${ARG_MODE:-}}"
 
 if [ -z "$DESIGN_MODE" ]; then
   if [ -t 0 ]; then
-    AskUserQuestion:
+    AskUserQuestion (same prompt text as Component 1):
       "How would you like to work through the lightweight design?"
         1. Collaborative (recommended) — section-by-section
         2. Draft-and-review — full draft up front
@@ -679,26 +681,56 @@ fi
 # Quick-start Step 2.75: Lightweight Design (BRANCHED)
 
 if [ "$DESIGN_MODE" = "collaborative" ]; then
-  # EXISTING behavior — incremental validation per
-  # oat-project-quick-start/SKILL.md:244-251
-  ...
+  # REPLACES existing oat-project-quick-start/SKILL.md:244-251 prose.
+  # Uses Component 4's exact Superpowers-borrowed prose — same
+  # "scale each section to its complexity" / "ask after each section
+  # whether it looks right so far" / "be ready to go back and clarify"
+  # language. Lighter feel comes naturally from smaller scope, not
+  # from different prose.
+  for SECTION in [required sections + any applicable optional sections]; do
+    Draft, scaled to complexity (Superpowers' exact prose).
+    Present: "Here's what I have for [section]: [content]. Does this
+      look right, or should we adjust before continuing?"
+    Revise on feedback. Mark approved. Move on.
+  done
 else  # draft
-  # NEW behavior — one-pass draft
   Draft all required sections (Overview, Architecture, Component Design,
     Testing Strategy) and any applicable optional sections (Data Models,
-    API Design, Error Handling).
-  Run scaled-down self-review (placeholder + consistency only — scope and
-    ambiguity are less likely to bite at quick-start scale).
-  Present user-review gate:
-    "Lightweight design written and committed to {path}. Please review …"
+    API Design, Error Handling) in one pass.
+  Run Component 6's 4-check self-review.
+  Present Component 7's user-review gate wording.
 fi
+
+# In both modes: produce design.md only. No spec.md.
 ```
 
-**Dependencies:** Same as Component 1.
+**Dependencies:** Same as Component 1 + Components 4, 6, 7 (shares their prose).
 
 **Design Decisions:**
 
+- **Same Superpowers prose as full design.** Collaborative mode reads identically across full and quick-start. Attribution covered by the single NOTICES.md entry (Component 13 / FR14) which lists both skills as consumers.
+- **"Lighter feel" is emergent, not designed.** Quick-start projects have smaller scope → sections naturally come out shorter under Superpowers' "scale to complexity" rule. No separate lightweight prose needed.
+- **Same 4-check self-review.** Running all four checks at quick-start scale costs nothing and keeps skill behavior uniform. No per-skill variants.
 - **Reduced section set preserved in both modes.** Quick-start's lighter touch (no security/performance/deployment/migration sections by default) applies to both collaborative and draft branches.
+- **No spec.md produced.** Distinguishes lightweight from full. Users who want a Requirement Index + formal FR/NFR traceability should use the full spec-driven workflow or promote via Step 2.5.
+- **No requirements-confirmation gate fires here.** Component 8's requirements gate fires only on the straight-to-plan path (because there's no design conversation to surface requirements organically). In lightweight design, the section-by-section conversation itself is the confirmation; an additional gate would be redundant.
+
+**How full-flow-with-design and quick-start-with-lightweight-design differ — a reader's guide:**
+
+| Dimension         | Full spec-driven                                                                                         | Quick-start + lightweight design                                                                 |
+| ----------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Discovery depth   | Dedicated `oat-project-discover` — ~10 clarifying Qs, gray-area multi-select, solution-space exploration | Adaptive depth inside quick-start — can be brief for well-understood, can expand for exploratory |
+| Section count     | 12 sections                                                                                              | 4 required + up to 3 optional (no security/performance/deployment/migration)                     |
+| `spec.md`         | Produced (folded into design conversation)                                                               | Not produced                                                                                     |
+| Requirement Index | Full FR/NFR/Priority/Verification table                                                                  | None                                                                                             |
+| HiLL gates        | Opt-in per phase                                                                                         | Disabled by default                                                                              |
+| Phase boundaries  | 4 phases with explicit handoffs                                                                          | 1 continuous skill                                                                               |
+| Interaction style | Superpowers-aligned                                                                                      | **Same** Superpowers-aligned prose                                                               |
+| Self-review       | Same 4 checks                                                                                            | **Same** 4 checks                                                                                |
+| User-review gate  | Same wording + HiLL                                                                                      | Same wording (no HiLL blocker)                                                                   |
+
+The choice between the two is about **scope and ceremony**, not interaction style. That's intentional: users shouldn't have to re-learn a pattern when their project complexity changes.
+
 - **Scaled-down self-review.** At quick-start scale, only placeholder + consistency checks are run; scope and ambiguity are less likely to be issues.
 - **Same env-var / skill-arg surface as full design.** Reduces cognitive load — one mode-choice convention for both skills.
 

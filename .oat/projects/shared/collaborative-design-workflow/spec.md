@@ -177,14 +177,17 @@ Originally: "Design skill runs a sub-project decomposition sanity check." Droppe
   - A flag / env var can bypass the gate for truly no-ceremony usage (e.g., `OAT_NO_REQUIREMENTS_GATE=1` or a skill argument).
 - **Priority:** P1
 
-**FR12: Quick-start lightweight design path offers the mode choice**
+**FR12: Quick-start lightweight design path offers the mode choice and uses identical Superpowers-aligned prose**
 
-- **Description:** The quick-start Step 2.75 (lightweight design) must offer the same Collaborative / Draft-and-review mode choice as the full design skill, scaled down to match quick-start's lighter section set.
+- **Description:** The quick-start Step 2.75 (lightweight design) must offer the same Collaborative / Draft-and-review mode choice as the full design skill, using **the exact same Superpowers-borrowed prose** as Component 4 (section iterator) and Component 6 (self-review). The lightweight path differs from full design in scope and ceremony, not interaction style. No separate "lightweight prose" exists — Superpowers' "scale each section to its complexity" language produces the lighter feel naturally when quick-start's smaller scope is fed into it.
 - **Acceptance Criteria:**
-  - Mode choice prompt fires at the top of Step 2.75 (before sections are drafted).
-  - Collaborative mode matches the existing incremental-validation pattern in `oat-project-quick-start/SKILL.md:244-251`.
-  - Draft-and-review mode drafts the full lightweight design in one pass, runs self-review, and invokes the user-review gate.
+  - Mode choice prompt fires at the top of Step 2.75 (before sections are drafted) — same prompt text as FR1.
+  - Collaborative mode replaces the existing prose in `oat-project-quick-start/SKILL.md:244-251` with the canonical Superpowers-borrowed prose used in `oat-project-design` (see FR2, FR3). The old OAT-synthesized wording is not preserved.
+  - Draft-and-review mode drafts the reduced section set in one pass, runs Component 6's full 4-check self-review (not a scaled-down variant), and invokes the user-review gate.
   - The reduced section set is preserved in both modes (architecture, components, data flow, testing; skip security/performance/deployment/migration; data models / APIs / error handling remain optional).
+  - **No `spec.md` produced.** Requirements stay implicit in `discovery.md`'s Key Decisions. Users who need a Requirement Index / formal FR/NFR traceability should use the full spec-driven workflow (or promote via Step 2.5).
+  - Non-interactive fallback (FR9) applies identically — force draft mode without prompts.
+  - Consumer of Superpowers prose is recorded in `NOTICES.md` (FR14) alongside `oat-project-design`.
 - **Priority:** P1
 
 **FR14: Repo-root `NOTICES.md` created / updated for borrowed external prose**
