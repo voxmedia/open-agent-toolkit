@@ -9,10 +9,10 @@ labels:
   - workflow/implementation
   - provider/codex
   - provider/anthropic
-  - topic/model-selection
+  - topic/reasoning-budget
 assignee: null
 created: '2026-04-17T20:34:12Z'
-updated: '2026-04-17T20:34:12Z'
+updated: '2026-04-17T20:47:57Z'
 associated_issues: []
 oat_template: true
 oat_template_name: backlog-item
