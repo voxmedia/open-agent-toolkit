@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-17
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 4     | 0/4       |
+| Phase 3 | in_progress | 4     | 1/4       |
 
-**Total:** 4/8 tasks completed
+**Total:** 5/8 tasks completed
 
 ## Review Received: final
 
@@ -46,7 +46,7 @@ oat_generated: false
 
 **New tasks added:** `p03-t01`, `p03-t02`, `p03-t03`, `p03-t04`
 
-**Next:** Execute the review-fix tasks via the `oat-project-implement` skill.
+**Next:** Continue the review-fix tasks via the `oat-project-implement` skill, starting with `p03-t02`.
 
 After the fix tasks are complete:
 
@@ -130,6 +130,46 @@ After the fix tasks are complete:
 
 ---
 
+## Phase 3: Review fixes and workflow hardening
+
+**Status:** in_progress
+**Started:** 2026-04-17
+
+### Task p03-t01: (review) Fix ambiguous Turbo filter handling in root build patching
+
+**Status:** completed
+**Commit:** f0b28e6f
+
+**Outcome (required when completed):**
+
+- `oat docs init` now skips the root-package patch when `scripts.build` already includes user-authored Turbo `--filter` flags.
+- The skip path preserves the consumer's existing build script unchanged and returns a manual snippet instead of rewriting filter semantics.
+- Root-package tests now cover the ambiguous-filter case so the skip behavior is locked in.
+
+**Files changed:**
+
+- `packages/cli/src/commands/docs/init/root-package.ts` - detect existing filter flags and skip unsafe automatic patching.
+- `packages/cli/src/commands/docs/init/root-package.test.ts` - cover the ambiguous-filter skip path.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- root-package`
+- Result: pass
+
+**Notes / Decisions:**
+
+- OAT's own exclude filter remains patchable on reruns; only unexpected pre-existing filter flags force the skip path.
+- Full implementation-artifact backfill remains tracked as `p03-t02`.
+
+---
+
+### Task p03-t02: (review) Reconcile implementation artifacts for PR-ready project state
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -169,6 +209,35 @@ Chronological log of implementation progress.
 - {Blocker description} - {status: resolved/pending}
 
 **Session End:** {time}
+
+---
+
+### 2026-04-17
+
+**Session Start:** 11:29
+
+- [x] p03-t01: (review) Fix ambiguous Turbo filter handling in root build patching - `f0b28e6f`
+- [ ] p03-t02: (review) Reconcile implementation artifacts for PR-ready project state - next
+
+**What changed (high level):**
+
+- Added a safe skip path when a consumer root Turbo build script already carries `--filter` flags.
+- Preserved existing root build commands unchanged in the ambiguous case and returned a manual snippet instead.
+- Added focused regression coverage for the new skip behavior.
+
+**Decisions:**
+
+- Treating pre-existing Turbo filters as ambiguous is safer than trying to merge or strip them automatically.
+
+**Follow-ups / TODO:**
+
+- Backfill the implementation artifact and remove remaining placeholders under `p03-t02`.
+
+**Blockers:**
+
+- None
+
+**Session End:** 11:31
 
 ---
 
