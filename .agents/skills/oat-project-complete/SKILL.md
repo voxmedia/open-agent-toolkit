@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.4.2
+version: 1.4.3
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -310,23 +310,40 @@ Archive happens after PR description generation (so artifacts are readable at tr
 
 The archive-side effects in this step are CLI-owned. Follow the canonical behavior from `packages/cli/src/commands/project/archive/archive-utils.ts` rather than inventing separate S3 or summary-export logic inside the skill.
 
+**Anti-pattern (do NOT do this):** Running `git check-ignore` on the
+`.oat/projects/archived` directory itself to decide durability. A common
+gitignore shape for this repo is `.oat/projects/archived/**`, which leaves the
+directory visible in the tree while ignoring every file placed inside. A
+directory-level check reports "not ignored" and produces the inverse of the
+intended decision — archiving in the worktree when the archive must actually
+go to the primary repo. Always probe a representative path **inside** the
+archive directory (the project subpath or a probe filename), matching the CLI
+helper at `packages/cli/src/commands/project/archive/archive-utils.ts`.
+
 ```bash
 ARCHIVED_ROOT=".oat/projects/archived"
+# ARCHIVE_RELATIVE_PATH is the contents-level probe: a hypothetical file that
+# would live inside the archive directory. This is the same probe shape the
+# CLI helper uses — do not simplify this to the directory itself.
 ARCHIVE_RELATIVE_PATH=".oat/projects/archived/${PROJECT_NAME}"
 PRIMARY_REPO_ARCHIVE=""
-ARCHIVE_PATH_IS_GITIGNORED="false"
+ARCHIVE_CONTENTS_TRACKED="true"
 USE_PRIMARY_REPO_ARCHIVE="false"
 
-# First decide whether the archive destination is local-only in this checkout.
-# If the archive path is tracked here, keep the archive on the current worktree
-# and branch so the completion commit and PR carry the archived project.
+# Will a newly-archived file at ${ARCHIVE_RELATIVE_PATH} actually be tracked in
+# this checkout? Probe a representative path INSIDE the directory, not the
+# directory itself. A `.oat/projects/archived/**` gitignore pattern leaves the
+# directory visible in the tree but ignores everything placed inside, so a
+# directory-level check reports "tracked" and gives the inverse of the
+# intended answer.
 if git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH" 2>/dev/null; then
-  ARCHIVE_PATH_IS_GITIGNORED="true"
+  ARCHIVE_CONTENTS_TRACKED="false"
 fi
 
-# Only fall back to the primary checkout when the archive destination is
-# gitignored/local-only in the current worktree.
-if [[ "$ARCHIVE_PATH_IS_GITIGNORED" == "true" ]] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+# Fall back to the primary checkout whenever archive contents are local-only
+# in the current worktree, regardless of whether the archive directory itself
+# happens to exist in the tree.
+if [[ "$ARCHIVE_CONTENTS_TRACKED" == "false" ]] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null || true)
   GIT_DIR=$(git rev-parse --git-dir 2>/dev/null || true)
   if [[ -n "$GIT_COMMON_DIR" && -n "$GIT_DIR" && "$GIT_COMMON_DIR" != "$GIT_DIR" ]]; then
@@ -373,7 +390,7 @@ echo "Project archived to $ARCHIVE_PATH"
 - Ask the user explicitly: "Primary repo archive path is unavailable, so this archive may be lost when the worktree is deleted. Continue with local-only archive anyway?"
 - If the user declines, skip archiving and continue the completion flow without archive.
 - Resolve the durable repo root from `git rev-parse --git-common-dir` and `git rev-parse --git-dir`, matching the CLI helper in `packages/cli/src/commands/project/archive/archive-utils.ts`. Do not rely on a `main` checkout or default-branch naming.
-- Apply this guard only when `git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH"` reports that the archive destination is local-only in the current checkout.
+- Apply this guard only when `git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH"` reports that the archive **contents** are local-only in the current checkout. `$ARCHIVE_RELATIVE_PATH` must be a path **inside** the archive directory (the project subpath), never the directory itself — see the anti-pattern note above the bash block.
 
 **Git handling after archive:**
 
@@ -387,7 +404,7 @@ This stages the deletions from the shared directory. The archived copy is preser
 
 **Worktree archive target (required when available):**
 
-If running from a git worktree, prefer the primary repo archive directory only when the archive destination is local-only/gitignored in the current checkout.
+If running from a git worktree, prefer the primary repo archive directory whenever a newly-archived file inside `.oat/projects/archived/` would be local-only in the current checkout.
 
 Reference path:
 
@@ -399,7 +416,8 @@ PRIMARY_REPO_ARCHIVE="${PRIMARY_REPO_ROOT}/.oat/projects/archived"
 
 Guidance:
 
-- In a worktree, only prefer `PRIMARY_REPO_ARCHIVE` when the archive destination is local-only/gitignored in the current checkout. If `.oat/projects/archived/` is version controlled on the current branch, archive in the current checkout instead.
+- In a worktree, prefer `PRIMARY_REPO_ARCHIVE` whenever `git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH"` reports the archive **contents** as ignored — regardless of whether the archive directory itself happens to exist in the tree. Only archive in the current checkout when a hypothetical file at `.oat/projects/archived/<project>/state.md` would actually be tracked here.
+- Do not check `git check-ignore` on `.oat/projects/archived` (the directory itself). A `.oat/projects/archived/**` ignore pattern leaves the directory unignored while ignoring all contents, so a directory-level check reports "tracked" and an agent can mistakenly archive in the worktree.
 - Do not treat the worktree-local archive as durable.
 - If forced to use a local-only archive, warn and require explicit user confirmation.
 - Always write the dated `archive.summaryExportPath` copy into the current checkout (`repoRoot`), even when the project archive itself is written to the primary checkout.

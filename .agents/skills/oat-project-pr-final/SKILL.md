@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-version: 1.3.2
+version: 1.3.3
 description: Use when an active OAT project has completed all phases and is ready for final merge to main. Generates the final OAT lifecycle PR description from artifacts and review status, then creates the PR automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -255,6 +255,7 @@ Local path exclusion:
 
 - Read `.oat/config.json` and extract `localPaths` (glob patterns for gitignored directories).
 - Do **not** include References links to any path that matches a `localPaths` pattern — those paths are gitignored and will not exist on the remote.
+- Evaluate the match against the actual **file or subpath** you are about to link (e.g. `.oat/projects/<proj>/pr/project-pr-2026-04-01.md`), not against the parent directory. A pattern like `.oat/**/pr` is shorthand for "everything under this directory is local-only"; a directory-level `git check-ignore` on `.oat/projects/<proj>/pr` can report "not ignored" even when every file inside is local-only, so a directory-level check will produce a broken reference link.
 - Common matches: `.oat/projects/**/reviews/archived`, `.oat/projects/**/pr`. Active `reviews/` paths remain eligible for References when they are tracked; only archived review paths should be treated as local-only by default.
 
 Example link context:

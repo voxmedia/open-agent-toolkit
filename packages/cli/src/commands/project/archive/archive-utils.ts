@@ -221,6 +221,13 @@ function isExitCode(error: unknown, code: number): boolean {
   );
 }
 
+// archiveProjectPath must be the contents-level probe path
+// (.oat/projects/archived/<projectName>), not the archive directory itself
+// (.oat/projects/archived). A `.oat/projects/archived/**` gitignore pattern
+// leaves the directory visible in the tree while ignoring every file placed
+// inside — a directory-level check reports "not ignored" and produces the
+// inverse of the intended durability decision. Keep the probe inside the
+// directory; the `oat-project-complete` skill documents the same invariant.
 async function isGitignoredArchivePath(
   repoRoot: string,
   archiveProjectPath: string,
