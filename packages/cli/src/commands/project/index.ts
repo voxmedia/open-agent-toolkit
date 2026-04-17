@@ -8,6 +8,7 @@ import { createProjectOpenCommand } from './open';
 import { createProjectPauseCommand } from './pause';
 import { createProjectSetModeCommand } from './set-mode';
 import { createProjectStatusCommand } from './status';
+import { createProjectValidatePlanCommand } from './validate-plan';
 
 export function createProjectCommand(): Command {
   return new Command('project')
@@ -19,5 +20,6 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectOpenCommand())
     .addCommand(createProjectPauseCommand())
     .addCommand(createProjectSetModeCommand())
-    .addCommand(createProjectStatusCommand());
+    .addCommand(createProjectStatusCommand())
+    .addCommand(createProjectValidatePlanCommand());
 }
