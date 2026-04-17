@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.0
+version: 1.2.1
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -47,7 +47,7 @@ Planning-time default:
 Runtime routing note:
 
 - Keep `oat_ready_for` canonical as `oat-project-implement`.
-- Use `oat_execution_mode` in `state.md` (`single-thread` or `subagent-driven`) to choose sequential vs subagent implementation flow at runtime.
+- Declare parallelism via `oat_plan_parallel_groups` in plan.md frontmatter (empty = sequential; nested arrays of phase IDs = parallel groups). `oat-project-implement` reads this field to choose sequential vs worktree-isolated parallel execution.
 
 Additional frontmatter keys (`oat_phase`, `oat_phase_status`, `oat_blockers`, `oat_last_updated`, `oat_generated`, `oat_template`, `oat_import_reference`, `oat_import_source_path`, `oat_import_provider`) are set by calling skills as needed.
 

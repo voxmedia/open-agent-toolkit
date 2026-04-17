@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.2
+version: 1.0.3
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -101,15 +101,14 @@ ls -d "$PROJECTS_ROOT"/*/ 2>/dev/null
 
 Read `"$PROJECT_PATH/state.md"` frontmatter and extract:
 
-| Field                  | Used For                                                                                |
-| ---------------------- | --------------------------------------------------------------------------------------- |
-| `oat_phase`            | Current lifecycle position (discovery, spec, design, plan, implement)                   |
-| `oat_phase_status`     | Phase completion state (in_progress, complete, pr_open)                                 |
-| `oat_workflow_mode`    | Routing table selection (spec-driven, quick, import). Default: `spec-driven`            |
-| `oat_execution_mode`   | Implementation skill variant (single-thread, subagent-driven). Default: `single-thread` |
-| `oat_hill_checkpoints` | Which phases require HiLL approval                                                      |
-| `oat_hill_completed`   | Which HiLL gates have been passed                                                       |
-| `oat_blockers`         | Informational warnings (not routing gates)                                              |
+| Field                  | Used For                                                                     |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `oat_phase`            | Current lifecycle position (discovery, spec, design, plan, implement)        |
+| `oat_phase_status`     | Phase completion state (in_progress, complete, pr_open)                      |
+| `oat_workflow_mode`    | Routing table selection (spec-driven, quick, import). Default: `spec-driven` |
+| `oat_hill_checkpoints` | Which phases require HiLL approval                                           |
+| `oat_hill_completed`   | Which HiLL gates have been passed                                            |
+| `oat_blockers`         | Informational warnings (not routing gates)                                   |
 
 **If state.md is missing or unreadable:** Report error and suggest running the relevant phase skill directly. STOP.
 

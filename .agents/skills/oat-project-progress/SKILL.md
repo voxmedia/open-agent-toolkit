@@ -1,6 +1,6 @@
 ---
 name: oat-project-progress
-version: 1.2.1
+version: 1.2.2
 description: Use when resuming work, checking status, or unsure which OAT skill to run next. Evaluates project progress and routes to the appropriate next step.
 disable-model-invocation: true
 user-invocable: true
@@ -180,11 +180,6 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 - `quick`
 - `import`
 
-Read `oat_execution_mode` from `state.md` frontmatter:
-
-- `single-thread` (default if missing)
-- `subagent-driven`
-
 **HiLL override (apply before phase routing):**
 
 - If current `oat_phase` is listed in `oat_hill_checkpoints` **and** not listed in `oat_hill_completed`, the phase's HiLL gate is still pending.
@@ -272,7 +267,7 @@ Address blocker before continuing.
 Execution-mode note:
 
 - Keep `oat_ready_for` in `plan.md` canonical (`oat-project-implement`).
-- Runtime routing at plan completion is controlled by `oat_execution_mode` in `state.md`.
+- Runtime execution is handled by `oat-project-implement`; parallelism is declared in plan.md via `oat_plan_parallel_groups`.
 
 ### Step 6: Show Available Skills
 
