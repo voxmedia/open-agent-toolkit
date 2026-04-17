@@ -338,6 +338,56 @@ If Tier 2 is selected, do not dispatch. Instead:
 
 If a Tier 1 dispatch fails (agent did not resolve, returned empty, etc.), retry exactly once. If the second attempt also fails, treat the phase as `failed` via the same mechanism as fix-loop retry exhaustion (see Step 7 below). Tier is never silently downgraded.
 
+### Per-Phase Review
+
+After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness concerns), dispatch the reviewer for the phase.
+
+**Dispatch:**
+
+- Use the same tier that was selected at start.
+- Tier 1: dispatch `oat-reviewer` via provider-native subagent mechanism with Review Scope:
+
+  ```
+  project: {PROJECT_PATH}
+  type: code
+  scope: {pNN}
+  commits: {base_sha}..{head_sha}
+  files_changed: {list from implementer's report}
+  workflow_mode: {from state.md}
+  artifact_paths: {same as Phase Scope}
+  tasks_in_scope: {list of pNN-tNN IDs in the phase}
+  ```
+
+- Tier 2: inline — read `.agents/agents/oat-reviewer.md` and perform the review yourself.
+
+**Verdict outcomes:**
+
+Parse the reviewer's confirmation for verdict + finding severities. Map to pass / fail:
+
+- **pass:** zero Critical and zero Important findings.
+- **fail:** one or more Critical or Important findings.
+
+Medium / Minor findings do not block the phase but are recorded.
+
+#### Bounded Fix Loop
+
+On reviewer verdict `fail`, run a bounded fix loop.
+
+1. Read `oat_orchestration_retry_limit` from `state.md` frontmatter (default: `2`, range 0–5).
+2. For each retry (up to the limit):
+   a. Dispatch `oat-phase-implementer` in `fix` mode (Tier 1) OR read the agent and apply fixes inline (Tier 2), with: - `review_artifact`: the path written by the reviewer - `findings`: the Critical + Important findings list - `prior_summary`: the last implementer summary
+   b. Receive the fix summary.
+   c. Re-dispatch the reviewer with the updated commit range.
+   d. Parse the new verdict.
+   e. If pass → exit the loop successfully.
+   f. If fail and retries remain → continue.
+   g. If fail and retries exhausted → exit the loop with terminal verdict `failed`.
+
+**Terminal `failed` handling:**
+
+- **Sequential mode:** STOP the run. Surface to user with phase ID, unresolved findings, review artifact path. Do not proceed to subsequent phases.
+- **Parallel group mode:** mark the phase `excluded`. Do not merge its worktree. Continue the remaining phases in the group. Report in Outstanding Items after the group completes.
+
 ### Step 7: Update Implementation State
 
 After each task:
