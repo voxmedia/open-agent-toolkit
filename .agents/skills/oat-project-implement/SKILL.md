@@ -426,6 +426,78 @@ On reviewer verdict `fail`, run a bounded fix loop.
 - **Sequential mode:** STOP the run. Surface to user with phase ID, unresolved findings, review artifact path. Do not proceed to subsequent phases.
 - **Parallel group mode:** mark the phase `excluded`. Do not merge its worktree. Continue the remaining phases in the group. Report in Outstanding Items after the group completes.
 
+### Parallel Group Execution
+
+When the current schedule entry is a multi-phase group, execute as follows.
+
+**Tier 2 degradation:** If Tier 2 was selected at skill start, Tier 2 cannot run concurrent subagents. Degrade the entire group to sequential inline execution — run each phase in the group sequentially on the orchestration branch. Do not create worktrees. Proceed through the per-phase loop (dispatch / review / fix-loop / bookkeeping) for each phase in plan order.
+
+**Tier 1 parallel execution:**
+
+1.  **Bootstrap worktrees:** for each phase in the group, invoke `oat-worktree-bootstrap-auto` with branch name `{project-name}/{pNN}` and base = orchestration branch.
+    - If **any** bootstrap fails, cancel any worktrees that bootstrapped successfully for this group and degrade the whole group to sequential inline execution. Log the degradation reason to `implementation.md` Outstanding Items.
+
+2.  **Concurrent dispatch:** for each successfully bootstrapped worktree, dispatch `oat-phase-implementer` (with the worktree as working directory) concurrently. Each dispatch runs the per-phase loop internally (implementer → reviewer → fix-loop).
+
+3.  **Wait for all phases:** do not proceed until every phase in the group reports a terminal verdict (pass or excluded).
+
+4.  **Fan-in reconciliation (merge back in plan order):**
+
+    For each phase in the group, in plan order (p02 before p03, etc.), if its verdict is pass:
+
+    a. Attempt `git merge --no-ff {project-name}/{pNN} -m "merge({pNN}): {summary from implementer}"`.
+    b. If merge produces conflicts, abort the merge and attempt cherry-pick of the phase's commits.
+    c. If cherry-pick also produces conflicts, dispatch an inline conflict-resolution subagent via the Task tool. The orchestrator MUST NOT read the conflicted files itself — delegate to the subagent. Use this dispatch shape:
+
+        ```
+        Task (general-purpose subagent):
+          description: "Resolve merge conflict for phase {pNN}"
+          prompt: |
+            You are resolving a git merge conflict during parallel-phase fan-in.
+
+            Phase: {pNN}
+            Orchestration branch: {orchestration-branch}
+            Worktree: {worktree-path}
+            Conflicted files: {list from git status}
+            Project artifacts:
+              plan:   {PROJECT_PATH}/plan.md
+              design: {PROJECT_PATH}/design.md
+              spec:   {PROJECT_PATH}/spec.md
+
+            Steps:
+            1. Read each conflicted file. Parse conflict markers (<<<<<<<, =======, >>>>>>>).
+            2. Read the project artifacts to understand intent from both sides.
+            3. Apply a resolution that preserves intent from both sides where possible.
+            4. Remove conflict markers. Save files.
+            5. Stage resolved files with `git add <files>`.
+            6. Run integration verification: `pnpm test && pnpm lint && pnpm type-check`.
+            7. If all pass: commit with `merge({pNN}): resolved conflict during fan-in`.
+            8. If any step fails: do NOT commit. Return with the appropriate status.
+
+            Return format (end of response):
+              status: RESOLVED | UNRESOLVABLE | VERIFICATION_FAILED
+              reasoning: <2-4 sentence summary of what you did or why you stopped>
+              commit: <sha if RESOLVED, else null>
+        ```
+
+    d. Parse the subagent's return status: - `RESOLVED` → subagent has committed the merge; orchestrator proceeds to integration verification (Step 5) and the next phase in the group. - `UNRESOLVABLE` or `VERIFICATION_FAILED` → STOP the run. Surface to user with phase ID, conflicting files, worktree path, subagent's reasoning summary. Do not merge remaining phases.
+
+    **Tier 2 (inline) exception:** In Tier 2 runs, parallel groups already degrade to sequential, so fan-in conflicts don't arise from this code path. If a conflict ever surfaces in Tier 2 (e.g., from another operation), the orchestrator resolves inline since the whole run is already inline — consistent with Tier 2 semantics.
+
+5.  **Integration verification after each merge:**
+
+    After each successful merge, run project verification (tests, lint, type-check). If verification fails:
+    - Attempt a tractable fix (missing import, trivial type error). If the fix succeeds and verification passes, commit the fix.
+    - If the fix is not tractable → revert the merge, STOP the run. Surface to user.
+
+6.  **Worktree cleanup:**
+
+    For phases that merged successfully and passed integration verification, clean up the worktree using the existing worktree cleanup mechanism (e.g., `git worktree remove`).
+
+    For phases that were excluded (fix-loop exhausted), preserve the worktree and log its path in `implementation.md` Outstanding Items.
+
+7.  **Bookkeeping commit** after the group completes. Then HiLL checkpoint check.
+
 ### Step 7: Update Implementation State
 
 After each task:
