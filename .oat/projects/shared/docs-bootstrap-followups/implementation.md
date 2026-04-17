@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-implement
+oat_ready_for: oat-project-document
 oat_blockers: []
 oat_last_updated: 2026-04-17
 oat_current_task_id: null
@@ -68,6 +68,33 @@ After the fix tasks are complete:
 - Update the review row status to `fixes_completed`
 - Re-run `oat-project-review-provide code final`
 - Run `oat-project-review-receive` to record the re-review outcome
+
+---
+
+## Review Received: final
+
+**Date:** 2026-04-17
+**Review artifact:** `reviews/archived/final-review-2026-04-17-v2.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** none
+
+**Deferred Findings (Minor):**
+
+- `m1` `hasShellComposition` does not catch a single `&` background operator.
+  - Disposition: deferred
+  - Rationale: real but unusually niche package.json shape; not required to ship the current docs-bootstrap fixes safely.
+- `m2` hand-rolled unified diff helper remains owned maintenance surface.
+  - Disposition: deferred
+  - Rationale: no correctness or release risk, localized code, and already covered by the current test surface.
+
+**Next:** Final review passed. Proceed to `oat-project-document`, then continue to PR preparation.
 
 ---
 

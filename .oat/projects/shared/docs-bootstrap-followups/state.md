@@ -7,7 +7,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-16T22:11:06.285Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-17T20:18:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-17T21:27:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: docs-bootstrap-followups
 
-**Status:** Awaiting final re-review
+**Status:** Implementation complete; ready for documentation sync
 **Started:** 2026-04-16
 **Last Updated:** 2026-04-17
 
 ## Current Phase
 
-Implementation - all review-fix tasks are complete and the project is awaiting a final re-review
+Implementation complete - final code review passed and the next lifecycle step is documentation sync
 
 ## Artifacts
 
@@ -52,7 +52,8 @@ Implementation - all review-fix tasks are complete and the project is awaiting a
 - ✓ Completed `p03-t04`
 - ✓ Completed `p04-t01`
 - ✓ Completed `p04-t02`
-- ⧗ Awaiting final re-review
+- ✓ Final review passed
+- ⧗ Ready for `oat-project-document`
 
 ## Blockers
 
@@ -60,4 +61,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-review-provide code final`, then `oat-project-review-receive`
+Run `oat-project-document`, then continue to PR preparation
