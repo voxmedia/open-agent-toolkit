@@ -103,7 +103,10 @@ describe('review skill contracts', () => {
       'git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH"',
     );
     expect(content).toContain(
-      'If `.oat/projects/archived/` is version controlled on the current branch, archive in the current checkout instead.',
+      'Only archive in the current checkout when a hypothetical file at `.oat/projects/archived/<project>/state.md` would actually be tracked here.',
+    );
+    expect(content).toContain(
+      'Do not check `git check-ignore` on `.oat/projects/archived` (the directory itself).',
     );
     expect(content).not.toContain(
       'If running from a git worktree, the primary repo archive directory is the canonical/durable archive destination.',
