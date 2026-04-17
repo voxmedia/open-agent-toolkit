@@ -97,19 +97,40 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
 
-### Step 0.5: Execution Mode Redirect Guard
+### Step 0.5: Capability Detection and Tier Selection
 
-Read execution mode from `"$PROJECT_PATH/state.md"` frontmatter:
+Detect whether native subagent dispatch is available. The detection logic follows the same pattern used by `oat-project-review-provide` but produces a two-tier outcome (no fresh-session tier — this skill runs autonomously and cannot block on user-initiated fresh sessions mid-run).
 
-```bash
-EXEC_MODE=$(grep "^oat_execution_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
-EXEC_MODE="${EXEC_MODE:-single-thread}"
+Detection logic:
+
+- If the host is Claude Code, check Task-tool availability with `subagent_type: "oat-phase-implementer"` and `subagent_type: "oat-reviewer"`. Available → Tier 1.
+- If the host is Cursor, use Cursor-native invocation. Available → Tier 1.
+- If the host is Codex multi-agent, verify `[features] multi_agent = true` and whether `spawn_agent` requires explicit authorization.
+  - Available without auth → Tier 1.
+  - Available with auth required → ask the user once at skill start:
+
+    ```
+    Delegate phase implementation and review to subagents for this run?
+    (This authorizes spawn_agent for both oat-phase-implementer and
+    oat-reviewer across every phase in this run.)
+    ```
+
+    - Approved → Tier 1.
+    - Declined → Tier 2.
+
+- If the host does not resolve either agent → Tier 2.
+
+Report the selected tier to the user:
+
+```
+[0/N] Checking subagent availability…
+  → oat-phase-implementer + oat-reviewer: {available | authorization required | not resolved}
+  → Selected: Tier {1 | 2} — {Subagents | Inline}
 ```
 
-If `EXEC_MODE` is `subagent-driven`:
+**Tier is locked for the remainder of the run.** Subsequent phase dispatches use the same tier. No mid-run re-evaluation or downgrade.
 
-- Tell the user: `Execution mode is subagent-driven. Use oat-project-subagent-implement instead.`
-- STOP (do not proceed with sequential implementation)
+**Legacy state migration:** If `state.md` contains `oat_execution_mode: subagent-driven`, silently ignore it. On the next bookkeeping write, remove that key. Do not redirect to `oat-project-subagent-implement` — that skill is deprecated.
 
 ### Step 1: Check Plan Complete
 
