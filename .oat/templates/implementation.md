@@ -112,11 +112,16 @@ oat_template_name: implementation
 
 ## Orchestration Runs
 
-> This section is used by `oat-project-subagent-implement` to log parallel execution runs.
-> Each run appends a new subsection — never overwrite prior entries.
-> For single-thread execution (via `oat-project-implement`), this section remains empty.
+_Each run from `oat-project-implement` appends an entry below with:_
+_- Run header (number, timestamp, branch, tier, policy, phase counts)_
+_- Phase Outcomes table_
+_- Parallel Groups list_
+_- Outstanding Items_
 
 <!-- orchestration-runs-start -->
+
+_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
 <!-- orchestration-runs-end -->
 
 ---
