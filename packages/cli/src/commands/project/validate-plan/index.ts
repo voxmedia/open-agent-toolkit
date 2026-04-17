@@ -4,34 +4,12 @@ import { join } from 'node:path';
 import { buildCommandContext } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { Command } from 'commander';
-import YAML from 'yaml';
 
 import {
   extractPhaseIdsFromPlan,
+  parseFrontmatterFromContent,
   validateParallelGroups,
 } from './validate-plan';
-
-const FRONTMATTER_PATTERN = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
-
-function parseFrontmatterFromContent(content: string): Record<string, unknown> {
-  const match = content.match(FRONTMATTER_PATTERN);
-  if (!match?.[1]) {
-    return {};
-  }
-  try {
-    const parsed: unknown = YAML.parse(match[1]);
-    if (
-      parsed !== null &&
-      typeof parsed === 'object' &&
-      !Array.isArray(parsed)
-    ) {
-      return parsed as Record<string, unknown>;
-    }
-    return {};
-  } catch {
-    return {};
-  }
-}
 
 export function createProjectValidatePlanCommand(): Command {
   return new Command('validate-plan')
@@ -57,8 +35,15 @@ export function createProjectValidatePlanCommand(): Command {
         return;
       }
 
-      const frontmatter = parseFrontmatterFromContent(content);
-      const groups = frontmatter['oat_plan_parallel_groups'];
+      const frontmatterResult = parseFrontmatterFromContent(content);
+
+      if (frontmatterResult.kind === 'invalid') {
+        context.logger.error(frontmatterResult.message);
+        process.exitCode = 1;
+        return;
+      }
+
+      const groups = frontmatterResult.data['oat_plan_parallel_groups'];
       const phaseIds = extractPhaseIdsFromPlan(content);
       const result = validateParallelGroups(groups, phaseIds);
 
