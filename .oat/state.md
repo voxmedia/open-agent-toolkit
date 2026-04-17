@@ -1,11 +1,11 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-04-16
+oat_generated_at: 2026-04-17
 ---
 
 # OAT Repo State Dashboard
 
-**Generated:** 2026-04-16
+**Generated:** 2026-04-17
 
 ## Active Project
 
@@ -16,8 +16,8 @@ oat_generated_at: 2026-04-16
 | Field        | Value         |
 | ------------ | ------------- |
 | Mode         | quick         |
-| Phase        | plan          |
-| Status       | complete      |
+| Phase        | implement     |
+| Status       | in_progress   |
 | HiLL Gate    | n/a           |
 | Current Task | -             |
 | Docs Updated | ⚠ not yet run |
@@ -29,13 +29,13 @@ Details: `.oat/projects/shared/docs-bootstrap-followups/state.md`
 | Field         | Value      |
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
-| Age           | 14 days    |
-| Files Changed | 290        |
+| Age           | 15 days    |
+| Files Changed | 296        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-implement** - Start implementation
+**oat-project-implement** - Continue implementation
 
 ## Quick Commands
 
@@ -50,6 +50,6 @@ Details: `.oat/projects/shared/docs-bootstrap-followups/state.md`
 
 ## Available Projects
 
-- **docs-bootstrap-followups** - plan
+- **docs-bootstrap-followups** - implement
 - **docs-readability-reorg** - implement
 - **remote-project-management** - discovery

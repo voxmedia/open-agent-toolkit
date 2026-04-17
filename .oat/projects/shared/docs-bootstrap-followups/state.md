@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t02
+oat_current_task: null
 oat_last_commit: 0d59f346
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-16T22:11:06.285Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-17T20:15:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-17T20:17:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: docs-bootstrap-followups
 
-**Status:** Review follow-up implementation in progress
+**Status:** Awaiting final re-review
 **Started:** 2026-04-16
 **Last Updated:** 2026-04-17
 
 ## Current Phase
 
-Implementation - `p04-t01` is complete and execution should continue with the final dashboard refresh task `p04-t02`
+Implementation - all review-fix tasks are complete and the project is awaiting a final re-review
 
 ## Artifacts
 
@@ -51,7 +51,8 @@ Implementation - `p04-t01` is complete and execution should continue with the fi
 - ✓ Completed `p03-t03`
 - ✓ Completed `p03-t04`
 - ✓ Completed `p04-t01`
-- ⧗ Current task: `p04-t02`
+- ✓ Completed `p04-t02`
+- ⧗ Awaiting final re-review
 
 ## Blockers
 
@@ -59,4 +60,4 @@ None
 
 ## Next Milestone
 
-Execute `p04-t02` via `oat-project-implement`, then re-run `oat-project-review-provide code final`
+Run `oat-project-review-provide code final`, then `oat-project-review-receive`
