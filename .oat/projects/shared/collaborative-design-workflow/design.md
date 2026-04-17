@@ -393,7 +393,6 @@ IF no Chosen Direction (or Solution Space section absent):
     > Propose 2-3 different approaches with trade-offs.
     > Present options conversationally with your recommendation and reasoning.
     > Lead with your recommended option and explain why.
-    > (— from Obra Superpowers brainstorming skill, MIT licensed; attribution in NOTICES.md)
 
   Ask user to choose. Document the chosen approach in design.md's
   Overview section.
@@ -409,6 +408,28 @@ Continue to Component 4 (section iterator).
 - **Reaffirmation, not re-derivation.** If discovery already did the work, we don't redo it — we confirm and move on. Avoids triple-asking the same approach question.
 - **Escape hatch for well-understood requests.** If someone went `oat-project-discover → oat-project-design` and discovery skipped Step 9 (because the request was well-understood enough not to need solution-space exploration), design invokes the 2-3-approaches pattern inline so it always happens exactly once before drafting.
 - **Prose is lifted from Superpowers, not paraphrased.** FR14 covers the attribution mechanism (repo-root `NOTICES.md`).
+
+### Component 3.75: YAGNI guardrail insertion point
+
+**Purpose:** Give the implementer a concrete, named place to insert the YAGNI principle into `oat-project-design/SKILL.md` so the principle isn't quietly lost between spec and skill rewrite.
+
+**Responsibilities:**
+
+When rewriting `oat-project-design/SKILL.md`, add this exact bullet to the skill's top-level guardrails section (near the existing "ALLOWED Activities" / "BLOCKED Activities" block, or in a named "Principles" subsection if one exists):
+
+> **YAGNI ruthlessly** — remove unnecessary features from all designs. If a section drafts a capability the spec doesn't require, cut it. If a component boundary is there "in case we need it later," cut it. (Lifted from Obra Superpowers' brainstorming skill Key Principles — attribution recorded in repo-root `NOTICES.md`.)
+
+Applies in both Collaborative and Draft-and-review modes. The section iterator (Component 4) treats YAGNI as a pass applied while drafting each section; the self-review (Component 6) uses it as a lens for the scope check.
+
+**Interfaces:** None — prose insertion only.
+
+**Dependencies:** None.
+
+**Design Decisions:**
+
+- **Named component, not scattered mention.** The reviewer flagged that YAGNI is an upstream requirement (spec.md Secondary Goals, discovery.md Decision 9) without a concrete design insertion point. Making it a named component prevents implementers from missing it.
+- **Principle, not process.** No extra prompt or check fires because of YAGNI — it's a framing the agent applies while drafting. No behavioral surface to test separately.
+- **Superpowers-lifted phrasing.** Attribution lives only in `NOTICES.md` (FR14/Component 13) — no in-skill attribution. The parenthetical "Lifted from Obra Superpowers' brainstorming skill Key Principles" is for THIS design artifact's reader, not for the skill file itself. The rewritten skill text includes only the first sentence ("YAGNI ruthlessly — remove unnecessary features from all designs.") plus the implementer's elaboration.
 
 ### Component 4: Section iterator (collaborative branch)
 
@@ -526,29 +547,48 @@ Apply fixes inline. Do not re-run self-review. Move to user-review gate.
 - **Inline fixes only.** Don't loop on re-reviewing the same content.
 - **Scope-creep escalation.** If the self-review surfaces real scope creep, escalate to the user — but this is rare and should not normally fire.
 
-### Component 7: Reworded user-review gate (HiLL prompt)
+### Component 7: Reworded user-review gate (HiLL prompt) — commits BEFORE the gate
 
-**Purpose:** Replace the current HiLL approval prompt language with an explicit invitation to read the artifact.
+**Purpose:** Replace the current HiLL approval prompt language with an explicit invitation to read the artifact, and reorder the flow so the artifact is written and committed BEFORE the user is invited to review it — matching Superpowers' brainstorming flow exactly (the borrowed prose says "written and committed," so the flow must actually have committed by the time the prompt fires).
+
+**Ordering change from current OAT design skill:** The existing `oat-project-design` skill commits AFTER HiLL approval (current Step 22). This component REORDERS so commit happens BEFORE the user-review gate. The semantic shift: "committed" no longer means "approved" — it means "written to disk and tracked." If the user requests changes after review, the skill revises the artifact and makes a NEW commit. The extra commit on revise is acceptable and keeps the artifact reviewable out-of-band (e.g., by a peer reviewer like Codex/Opus).
 
 **Responsibilities:**
 
-- After self-review, if `"design"` is in `oat_hill_checkpoints`, prompt the user with the reworded language.
+- After self-review (Component 6), **commit the artifacts first** (spec.md + design.md + state.md), then present the user-review gate.
+- If `"design"` is in `oat_hill_checkpoints`, prompt the user with the reworded language.
 - Preserve all existing HiLL mechanics (state.md frontmatter updates, `oat_hill_completed` append, optional independent-review path via `oat-project-review-provide`).
 - Handle the folded spec-HiLL case: if `"spec"` is also in `oat_hill_checkpoints`, append both to `oat_hill_completed` on approval.
+- On change requests: revise affected section(s), re-run self-review, make a NEW commit, re-present the gate.
 
 **Interfaces:**
 
 ```
-# Step 6: User-Review Gate (formerly Step 19 HiLL Gate)
+# Step 6: User-Review Gate (commit-first ordering; Superpowers-aligned)
 
-Read state.md frontmatter:
+# Step 6a: Commit the drafted artifacts FIRST.
+# This happens whether or not a HiLL gate is configured, so the artifact
+# is always reviewable out-of-band before approval.
+
+git add "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
+git diff --cached --quiet || git commit -m "docs: draft design for {project-name} (awaiting review)"
+
+# Step 6b: Read state.md frontmatter.
+Read state.md:
   - oat_hill_checkpoints
   - oat_hill_completed
+
+# Step 6c: If no HiLL gate configured, skip prompt (artifact still committed).
+
+If neither "design" nor "spec" is in oat_hill_checkpoints:
+  → No user-review prompt fires. Artifact is committed. Skill exits.
+
+# Step 6d: Otherwise, present the user-review gate prompt.
 
 If "design" is in oat_hill_checkpoints (or "spec" is in oat_hill_checkpoints
 and was not already completed via the standalone oat-project-spec skill):
 
-  Prompt:
+  Prompt (Superpowers-borrowed wording — now accurate because of Step 6a):
     > "Design written and committed to {design.md path}.
     >  spec.md (with confirmed requirements) is at {spec.md path}.
     >  Please review them and let me know if you want to make any changes
@@ -558,28 +598,34 @@ and was not already completed via the standalone oat-project-spec skill):
     >  independent reviewer pass first."
 
   Wait for user response:
-    - Approval → continue to Step 7 (state update + commit).
-    - Change requests → revise the relevant section(s); re-run self-review;
-      re-prompt.
-
-If neither "design" nor "spec" is in oat_hill_checkpoints, skip user-review
-gate (still produce artifacts but no approval blocking).
+    - Approval → continue to Step 7 (HiLL state update + final commit of any
+      approval-side metadata).
+    - Change requests → revise the relevant section(s), re-run self-review,
+      make a NEW commit ("docs: revise design after user review feedback"),
+      re-present the prompt.
 
 On approval, update state.md:
   - Append "design" to oat_hill_completed.
   - If "spec" was in oat_hill_checkpoints and not previously completed,
     append "spec" too.
+  - Commit the state.md update:
+      git add "$PROJECT_PATH/state.md"
+      git commit -m "chore(oat): mark design HiLL approved for {project-name}"
 ```
 
 **Dependencies:**
 
 - Existing HiLL state-update mechanics (current `oat-project-design/SKILL.md:346-403`).
 - `oat-project-review-provide` (referenced as optional path; no changes required to that skill).
+- Git commit access from within the skill (already present in current `oat-project-design`).
 
 **Design Decisions:**
 
-- **Folded HiLL append.** A single approval covers both spec and design HiLL when both are configured. This is the cleanest semantics — no migration logic needed for existing projects.
-- **Reword, don't restructure.** Same gate, different prompt. Preserves familiarity for existing users while delivering the Superpowers-style invitation.
+- **Commit before gate.** Matches Superpowers. Keeps the "written and committed" prompt wording literally accurate. Lets peer reviewers (Codex/Opus) fetch a committed artifact without racing the skill.
+- **Revise → new commit.** If the user requests changes, a second commit captures the revision. This is the chosen tradeoff for commit-first ordering; the extra commit is a small cost for cleaner semantics.
+- **Folded HiLL append.** A single approval covers both spec and design HiLL when both are configured. No migration logic needed for existing projects.
+- **No-HiLL path still commits.** Even when no HiLL checkpoint is configured, the artifact is committed — consistent behavior across HiLL-on / HiLL-off configurations.
+- **Reword + reorder, don't restructure.** The gate itself still lives where it did; only the prompt wording and the commit point move. Approval still gates progression to `oat-project-plan`.
 - **Independent review path mention.** Existing `oat-project-review-provide` integration is still mentioned in the prompt, satisfying the "Codex/Opus review" use case from discovery.
 
 ### Component 8: Quick-start requirements gate (FR11)
@@ -589,20 +635,27 @@ On approval, update state.md:
 **Responsibilities:**
 
 - Fire after Step 2.5 if the user chooses (or auto-advances to) "Straight to plan", and before Step 3 (plan generation).
+- **Non-interactive fallback (FR9 contract):** If the skill is invoked without a TTY or with `OAT_NON_INTERACTIVE=1` set, the gate auto-confirms — prints a one-line banner ("Requirements gate auto-confirmed in non-interactive mode.") and proceeds to Step 3 without blocking. This preserves the unattended-agent orchestration enabler. The `OAT_NO_REQUIREMENTS_GATE=1` / `--no-requirements-gate` bypass remains available for interactive users who want to suppress the gate explicitly.
 - Extract requirements from `discovery.md` (Key Decisions, Success Criteria, Constraints).
-- Present as a one-screen bullet list.
-- Wait for confirm / add / redirect.
-- On addition: append to discovery.md, re-present.
-- On bypass flag: skip silently.
+- Present as a one-screen bullet list (one confirmation turn — no loop).
+- On confirm: continue to Step 3.
+- On minor addition (user adds a requirement that fits current scope): capture inline, update `discovery.md`, proceed — do NOT re-present the list.
+- On material redirect (user wants to change scope in a way that wasn't captured in discovery): exit the gate cleanly and route the user to either Step 2.75 (lightweight design first) or back to Step 2 (expand discovery). Do NOT loop inside the gate. Per NFR6, the gate is a single-turn checkpoint — looping would undermine quick-start's minimal-ceremony contract.
 
 **Interfaces:**
 
 ```
 # Quick-start Step 2.6: Requirements Gate (NEW)
 
-# Bypass check
+# Non-interactive fallback (FR9 contract — same as design skill's mode choice)
+if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+  echo "Requirements gate auto-confirmed in non-interactive mode."
+  continue  # proceed to Step 3 without prompting
+fi
+
+# Interactive bypass (power-user opt-out)
 if [ "${OAT_NO_REQUIREMENTS_GATE:-}" = "1" ] || [ "$ARG_NO_GATE" = "1" ]; then
-  continue  # skip gate
+  continue  # skip gate silently
 fi
 
 # Extract requirements from discovery
@@ -611,7 +664,7 @@ Read discovery.md sections:
   - Success Criteria
   - Constraints
 
-Format as bullet list and present:
+Format as bullet list and present (SINGLE TURN — no loop):
   > "Before I generate the plan, here are the requirements I'm building against:
   >
   >    Key decisions:
@@ -620,18 +673,23 @@ Format as bullet list and present:
   >
   >    Success criteria:
   >    - [criterion 1]
-  >    - [criterion 2]
   >
   >    Constraints:
   >    - [constraint 1]
   >
-  >  Does this match what you want, or should we adjust?"
+  >  Does this match what you want?"
 
-Use AskUserQuestion (free-text + multi-choice "confirm | add | redirect").
+Use AskUserQuestion (multi-choice):
+  1. Yes — proceed to plan generation
+  2. Add a minor requirement that still fits this scope (I'll capture it and proceed)
+  3. Scope needs redirecting — let's rework discovery or produce a lightweight design first
 
-On "add": prompt for additions, update discovery.md, re-present.
-On "redirect": prompt for redirection, update discovery.md, re-present.
-On "confirm": continue to Step 3.
+On choice 1: continue to Step 3.
+On choice 2: prompt once for the addition, append to discovery.md, proceed to Step 3 (no re-present).
+On choice 3: exit the gate cleanly. Present follow-up choice:
+  a. Produce a lightweight design first (run Step 2.75)
+  b. Expand discovery (return to Step 2)
+Route the user accordingly. Do not loop back into the gate.
 ```
 
 **Dependencies:**
@@ -639,12 +697,14 @@ On "confirm": continue to Step 3.
 - `AskUserQuestion`.
 - Read + Edit on discovery.md.
 - Optional bypass via env var or skill argument.
+- Non-interactive signal (`OAT_NON_INTERACTIVE` or TTY absence) — same mechanism as Component 1.
 
 **Design Decisions:**
 
 - **No artifact written.** Conversational only. Keeps quick-start fast.
-- **Bypass flag exists but is undocumented in the default UX.** Users who want to suppress the gate can; new users see it by default.
-- **Re-present after edits.** If the user adds requirements, the new list is shown again — catches secondary assumptions surfaced by the first pass.
+- **Single-turn gate.** One prompt. If the user materially redirects scope, route out to lightweight design or discovery — don't loop inside the gate. This is what keeps quick-start materially lighter than the full spec-driven flow (NFR6).
+- **Non-interactive contract matches FR9.** Orchestrators running the full OAT workflow unattended never hit a blocking prompt; the gate no-ops with a banner. `OAT_NO_REQUIREMENTS_GATE` remains for interactive users who want to suppress the gate; `OAT_NON_INTERACTIVE=1` (shared across skills) is the canonical unattended-mode signal.
+- **Minor addition stays in-gate; material redirect routes out.** Prevents the gate from silently expanding into lightweight-design territory.
 - **Position: between Step 2.5 (design depth choice) and Step 3 (plan generation).** Numbered as Step 2.6 to slot naturally.
 
 ### Component 9: Quick-start mode-choice for lightweight design (FR12)
@@ -731,7 +791,7 @@ fi
 
 The choice between the two is about **scope and ceremony**, not interaction style. That's intentional: users shouldn't have to re-learn a pattern when their project complexity changes.
 
-- **Scaled-down self-review.** At quick-start scale, only placeholder + consistency checks are run; scope and ambiguity are less likely to be issues.
+- **Full 4-check self-review (not scaled down).** Quick-start draft mode runs the same self-review as full design (Component 6). This was the earlier proposal; per spec.md FR12 the skill runs all four checks. Removed the "scaled-down" variant to eliminate spec/design drift.
 - **Same env-var / skill-arg surface as full design.** Reduces cognitive load — one mode-choice convention for both skills.
 
 ### Component 10: `oat-project-spec` repositioning

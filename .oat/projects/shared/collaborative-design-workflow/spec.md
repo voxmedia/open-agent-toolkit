@@ -168,13 +168,17 @@ Originally: "Design skill runs a sub-project decomposition sanity check." Droppe
 
 **FR11: Quick-start straight-to-plan path gains a conversational requirements gate**
 
-- **Description:** On the quick-start → straight-to-plan path (including the auto-advance case for well-understood requests), the skill must insert a brief in-conversation requirements-confirmation gate before generating the plan.
+- **Description:** On the quick-start → straight-to-plan path (including the auto-advance case for well-understood requests), the skill must insert a brief in-conversation requirements-confirmation gate before generating the plan. The gate is a **single conversational turn** — not an iterative loop — so quick-start stays materially lighter than the full spec-driven flow (NFR6). In non-interactive contexts it auto-confirms to preserve the unattended-agent orchestration contract (FR9).
 - **Acceptance Criteria:**
-  - Before plan generation, a one-screen bullet list of requirements (extracted from discovery) is presented.
-  - The user confirms, redirects, or adds. Any additions are captured in discovery.md and re-presented.
-  - No artifact is written for the gate — it is purely conversational.
+  - Before plan generation, a one-screen bullet list of requirements (extracted from discovery.md Key Decisions / Success Criteria / Constraints) is presented.
+  - The gate is a single prompt turn. Three outcomes:
+    1. **Confirm** → proceed to Step 3 (plan generation).
+    2. **Minor addition that fits scope** → capture inline, append to discovery.md, proceed to Step 3 without re-presenting.
+    3. **Material redirect (scope change)** → exit the gate cleanly and route the user to either Step 2.75 (lightweight design first) or back to Step 2 (expand discovery). Do NOT loop inside the gate.
+  - No artifact is written for the gate itself — it is purely conversational (any additions captured under outcome 2 land in discovery.md, which is tracked by other steps).
   - The gate fires on both the auto-advance path (well-understood requests) and the explicit "Straight to plan" choice at Step 2.5.
-  - A flag / env var can bypass the gate for truly no-ceremony usage (e.g., `OAT_NO_REQUIREMENTS_GATE=1` or a skill argument).
+  - **Non-interactive fallback (FR9 contract):** If `OAT_NON_INTERACTIVE=1` is set or no TTY is present, the gate auto-confirms — prints a one-line banner ("Requirements gate auto-confirmed in non-interactive mode.") and proceeds to Step 3. Never blocks orchestration.
+  - Interactive bypass (`OAT_NO_REQUIREMENTS_GATE=1` env var or `--no-requirements-gate` skill argument) remains for interactive users who want to suppress the prompt.
 - **Priority:** P1
 
 **FR12: Quick-start lightweight design path offers the mode choice and uses identical Superpowers-aligned prose**

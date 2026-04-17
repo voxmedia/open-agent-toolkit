@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-15
+oat_last_updated: 2026-04-17
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -10,7 +10,44 @@ oat_generated: false
 # Implementation: collaborative-design-workflow
 
 **Started:** 2026-04-15
-**Last Updated:** 2026-04-15
+**Last Updated:** 2026-04-17
+
+## Review History (pre-implementation)
+
+### Review Received: design (artifact) — 2026-04-17
+
+**Review artifact:** `reviews/archived/artifact-design-review-2026-04-17.md`
+
+**Findings:** 0 Critical, 3 Important, 2 Medium, 1 Minor.
+
+**Dispositions — all `resolve_in_artifact` (applied directly to design.md / spec.md):**
+
+- `I1` QS requirements gate blocks unattended runs → Component 8 + FR11 updated to auto-confirm on `OAT_NON_INTERACTIVE=1` or no TTY, matching FR9 contract.
+- `I2` QS gate iterative loop → Component 8 rewritten as single-turn; material redirect routes to lightweight design or discovery.
+- `I3` In-skill attribution in Component 3.5 prose → attribution line removed; provenance remains only in `NOTICES.md` per FR14.
+- `M1` QS self-review inconsistency → stale "Scaled-down self-review" bullet at former design.md:734 deleted; spec's full 4-check requirement is canonical.
+- `M2` HiLL gate says "written and committed" before commit → Component 7 reordered to commit artifacts BEFORE the user-review prompt, matching Superpowers exactly. Revise-after-review creates a second commit.
+- `m1` YAGNI insertion point → new Component 3.75 added with the exact guardrail text to insert into `oat-project-design/SKILL.md`.
+
+**Status:** passed.
+
+### Review Received: plan (artifact) — 2026-04-17
+
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-04-17.md`
+
+**Findings:** 2 Critical, 2 Important, 1 Medium, 0 Minor.
+
+**Dispositions:**
+
+- `C1` Plan body is still template content → `rejected_with_rationale`. Plan authoring is the next explicit step of this project, to be done in the next session. Findings will be addressed naturally when the plan is authored from design's Phase 1-4 — not retrofitted onto the scaffold now.
+- `C2` Plan doesn't translate design's implementation phases → `rejected_with_rationale`. Same rationale as C1; resolved by plan authoring.
+- `I1` (plan review) Plan task verification missing FR/NFR checks → `rejected_with_rationale`. Same rationale; real verification steps will be encoded when plan tasks are authored, using design.md §Testing Strategy Requirement-to-Test Mapping as the source.
+- `I2` (plan review) Spec/design inconsistency unresolved → `resolve_in_artifact`. Same underlying fix as design review `M1` (scaled-down bullet deleted at former design.md:734). Implementer has unambiguous source of truth: spec.md FR12 specifies full 4-check self-review.
+- `M1` (plan review) Reviews table missing plan row → already resolved prior to this receive pass (row added alongside review generation).
+
+**Status:** passed (rejected-with-rationale items tracked here; no fix tasks added to plan.md).
+
+**Note for plan authoring (next session):** When plan.md is authored, explicitly address C1/C2/I1 by deriving all phases from design.md §Implementation Phases (1-4) and encoding per-task verification against design.md §Testing Strategy §Requirement-to-Test Mapping.
 
 > This document is used to resume interrupted implementation sessions.
 >
