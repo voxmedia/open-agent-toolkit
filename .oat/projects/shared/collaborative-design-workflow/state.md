@@ -6,7 +6,7 @@ associated_issues: []
 oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
-oat_phase: design
+oat_phase: plan
 oat_phase_status: complete
 oat_execution_mode: single-thread
 oat_workflow_mode: spec-driven
@@ -16,13 +16,13 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-17T18:00:00Z'
+oat_project_state_updated: '2026-04-17T20:00:00Z'
 oat_generated: false
 ---
 
 # Project State: collaborative-design-workflow
 
-**Status:** Design review received (both design + plan artifact reviews processed); ready for plan authoring
+**Status:** Plan complete — ready for oat-project-implement
 **Started:** 2026-04-14
 **Last Updated:** 2026-04-17
 
@@ -42,10 +42,12 @@ Design — Discovery, spec, and design artifacts complete. Ready for handoff to 
 ## Progress
 
 - ✓ Discovery complete (10 clarifying Q&A, solution space with 3 approaches, 5 options considered, 10 key decisions)
-- ✓ Spec complete (13 FRs + 7 NFRs with Requirement Index, all linked to discovery decisions)
-- ✓ Design complete (12 components, full architecture, data flow, testing strategy with requirement-to-test mapping, 4 implementation phases, 9 risks with mitigation/contingency)
+- ✓ Spec complete (14 FRs + 7 NFRs with Requirement Index mapped to plan tasks; FR7 + NFR7 removed as intentional stubs)
+- ✓ Design complete (11 active components + 2 removed stubs; Superpowers-aligned section iterator; commit-first user-review gate)
+- ✓ Design + plan artifact reviews received and processed (design → passed, plan → passed via resolve_in_artifact + rejected_with_rationale)
+- ✓ Plan complete (31 tasks across 4 phases)
 - ✓ Reference materials preserved (Superpowers source files + comparative analysis grounded in actual file content)
-- ⧗ Awaiting user review + branch refresh + plan phase in fresh session
+- ⧗ Awaiting oat-project-implement
 
 ## Blockers
 
@@ -53,4 +55,4 @@ None.
 
 ## Next Milestone
 
-Author plan.md from design.md §Implementation Phases (Phases 1-4). C1/C2/I1 from the plan-artifact review were rejected with rationale ("plan authoring is the next step, findings resolved naturally there"); plan authoring is now the active next action. Then proceed to oat-project-implement.
+Begin implementation via `oat-project-implement` (sequential) or `oat-project-subagent-implement` (parallel). 31 tasks across 4 phases (p01: design skill, p02: companions + NOTICES, p03: lockstep + release:validate, p04: dogfood + PR). HiLL checkpoint selection is deferred to implementation start per the plan-writing contract.
