@@ -1,10 +1,11 @@
 ---
 name: oat-project-implement
-version: 1.3.1
-description: Use when plan.md is ready for execution. Implements plan tasks sequentially with TDD discipline and state tracking.
+version: 2.0.0
+description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
+argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion, Task
 ---
 
 # Implementation Phase
