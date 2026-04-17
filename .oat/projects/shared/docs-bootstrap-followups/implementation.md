@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-17
-oat_current_task_id: p03-t03
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -18,9 +18,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 4     | 2/4       |
+| Phase 3 | in_progress | 4     | 3/4       |
 
-**Total:** 6/8 tasks completed
+**Total:** 7/8 tasks completed
 
 ## Review Received: final
 
@@ -36,7 +36,7 @@ oat_generated: false
 
 **New tasks added:** `p03-t01`, `p03-t02`, `p03-t03`, `p03-t04`
 
-**Next:** Continue the review-fix tasks via `oat-project-implement`, starting with `p03-t03`.
+**Next:** Continue the review-fix tasks via `oat-project-implement`, starting with `p03-t04`.
 
 After the fix tasks are complete:
 
@@ -293,8 +293,30 @@ After the fix tasks are complete:
 
 ### Task p03-t03: (review) Broaden Turbo detection and tighten review-driven edge-case coverage
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 64862eaa
+
+**Outcome:**
+
+- Root build detection now accepts both `turbo run build` and the shorthand `turbo build`.
+- The existing-`build:docs` partial-patch path now exposes its warning reason explicitly and is covered by tests.
+- Generated-index tests now prove a stale on-disk `index.md` is overwritten cleanly with a single warning header.
+
+**Files changed:**
+
+- `packages/cli/src/commands/docs/init/root-package.ts` - broadened Turbo detection and exposed the existing `build:docs` warning reason.
+- `packages/cli/src/commands/docs/init/root-package.test.ts` - added shorthand Turbo and existing `build:docs` coverage.
+- `packages/cli/src/commands/docs/index-generate/index.test.ts` - proved stale on-disk output is overwritten cleanly.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- root-package index-generate`
+- Result: pass
+
+**Notes / Decisions:**
+
+- `turbo run build` remains the canonical manual snippet form, but detection now accepts the shorthand without rewriting it.
+- The stronger generate-index test uses a real temporary file to prove overwrite behavior rather than assuming it from repeated in-memory writes.
 
 ---
 
@@ -326,7 +348,8 @@ This project is running in single-thread implementation mode. No orchestration r
 - Received final code review and converted findings into Phase 3 fix tasks.
 - Implemented `p03-t01` to skip ambiguous user-authored Turbo filters safely (`f0b28e6f`).
 - Reconciled `implementation.md` with the actual delivered work and removed scaffold placeholders (`71508625`).
-- Advanced the implementation pointer to `p03-t03`.
+- Tightened the remaining review-driven edge-case coverage and accepted the `turbo build` shorthand (`64862eaa`).
+- Advanced the implementation pointer to `p03-t04`.
 
 ## Deviations from Plan
 
@@ -375,6 +398,7 @@ This project is running in single-thread implementation mode. No orchestration r
 **Design deltas (if any):**
 
 - The review fix for existing Turbo filters chose a conservative skip-with-guidance path instead of attempting to preserve or merge arbitrary filter expressions automatically.
+- Turbo shorthand support was added without changing the canonical manual-snippet form, which remains easier to recognize in docs and output.
 
 ## References
 
