@@ -9,7 +9,20 @@ oat_generated_at: 2026-04-16
 
 ## Active Project
 
-_(not set)_
+**docs-bootstrap-followups** (`.oat/projects/shared/docs-bootstrap-followups`)
+
+## Active Project Summary
+
+| Field        | Value         |
+| ------------ | ------------- |
+| Mode         | quick         |
+| Phase        | plan          |
+| Status       | complete      |
+| HiLL Gate    | n/a           |
+| Current Task | -             |
+| Docs Updated | ⚠ not yet run |
+
+Details: `.oat/projects/shared/docs-bootstrap-followups/state.md`
 
 ## Knowledge Status
 
@@ -17,12 +30,12 @@ _(not set)_
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
 | Age           | 14 days    |
-| Files Changed | 293        |
+| Files Changed | 290        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-open** - Select an existing project to continue work
+**oat-project-implement** - Start implementation
 
 ## Quick Commands
 
@@ -37,5 +50,6 @@ _(not set)_
 
 ## Available Projects
 
+- **docs-bootstrap-followups** - plan
 - **docs-readability-reorg** - implement
 - **remote-project-management** - discovery
