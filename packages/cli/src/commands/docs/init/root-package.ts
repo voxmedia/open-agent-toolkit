@@ -54,7 +54,7 @@ const DEFAULT_DEPENDENCIES: RootPackagePatchDependencies = {
 };
 
 function runsTurboBuild(script: string): boolean {
-  return /\bturbo\s+run\s+build\b/.test(script);
+  return /\bturbo\s+(?:run\s+)?build\b/.test(script);
 }
 
 function removeFilterFlags(script: string): string {
@@ -261,7 +261,7 @@ export async function patchRootPackageJson(
       packageJsonPath,
       manualSnippet: buildManualSnippet(options.appName),
       warnings: [
-        'Skipped root package.json patch: scripts.build does not run `turbo run build`, so OAT left it unchanged.',
+        'Skipped root package.json patch: scripts.build does not run a Turbo build command, so OAT left it unchanged.',
       ],
     };
   }
@@ -332,6 +332,7 @@ export async function patchRootPackageJson(
 
   return {
     status: options.dryRun ? 'dry-run' : 'applied',
+    reason: warnings.length > 0 ? 'existing-build-docs-script' : undefined,
     packageJsonPath,
     diff,
     manualSnippet:

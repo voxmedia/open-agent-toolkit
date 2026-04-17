@@ -61,6 +61,35 @@ describe('patchRootPackageJson', () => {
     );
   });
 
+  it('accepts the Turbo shorthand build form', async () => {
+    const repoRoot = await createRepo({
+      name: 'consumer-repo',
+      private: true,
+      scripts: {
+        build: 'turbo build --cache-dir=.turbo',
+      },
+    });
+
+    const result = await patchRootPackageJson({
+      repoRoot,
+      appName: 'consumer-docs',
+      dryRun: false,
+      enabled: true,
+    });
+
+    expect(result.status).toBe('applied');
+
+    const packageJson = JSON.parse(
+      await readFile(join(repoRoot, 'package.json'), 'utf8'),
+    ) as { scripts: Record<string, string> };
+    expect(packageJson.scripts.build).toBe(
+      "turbo build --cache-dir=.turbo --filter='!consumer-docs'",
+    );
+    expect(packageJson.scripts['build:docs']).toBe(
+      'turbo build --cache-dir=.turbo --filter=consumer-docs...',
+    );
+  });
+
   it('skips with a warning when scripts.build is missing', async () => {
     const repoRoot = await createRepo({
       name: 'consumer-repo',
@@ -108,13 +137,50 @@ describe('patchRootPackageJson', () => {
 
     expect(result.status).toBe('skipped');
     expect(result.reason).toBe('non-turbo-build-script');
-    expect(result.warnings[0]).toContain('does not run `turbo run build`');
+    expect(result.warnings[0]).toContain('does not run a Turbo build command');
 
     const packageJson = JSON.parse(
       await readFile(join(repoRoot, 'package.json'), 'utf8'),
     ) as { scripts: Record<string, string> };
     expect(packageJson.scripts.build).toBe('next build');
     expect(packageJson.scripts['build:docs']).toBeUndefined();
+  });
+
+  it('keeps an existing build:docs script and surfaces the warning reason', async () => {
+    const repoRoot = await createRepo({
+      name: 'consumer-repo',
+      private: true,
+      scripts: {
+        build: 'turbo run build --cache-dir=.turbo',
+        'build:docs': 'pnpm --filter consumer-docs build',
+      },
+    });
+
+    const result = await patchRootPackageJson({
+      repoRoot,
+      appName: 'consumer-docs',
+      dryRun: false,
+      enabled: true,
+    });
+
+    expect(result.status).toBe('applied');
+    expect(result.reason).toBe('existing-build-docs-script');
+    expect(result.warnings[0]).toContain(
+      'Left scripts["build:docs"] unchanged',
+    );
+    expect(result.manualSnippet).toContain(
+      '"build:docs": "turbo run build --cache-dir=.turbo --filter=consumer-docs..."',
+    );
+
+    const packageJson = JSON.parse(
+      await readFile(join(repoRoot, 'package.json'), 'utf8'),
+    ) as { scripts: Record<string, string> };
+    expect(packageJson.scripts.build).toBe(
+      "turbo run build --cache-dir=.turbo --filter='!consumer-docs'",
+    );
+    expect(packageJson.scripts['build:docs']).toBe(
+      'pnpm --filter consumer-docs build',
+    );
   });
 
   it('skips when scripts.build already includes user-authored Turbo filters', async () => {
