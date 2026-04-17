@@ -1,6 +1,6 @@
 ---
 name: oat-doctor
-version: 1.0.0
+version: 1.0.1
 description: Use when you need to diagnose your OAT setup, check for outdated skills, identify misconfigurations, or get a summary of installed tools and config. Runs health checks and recommends corrective actions.
 argument-hint: '[--summary]'
 disable-model-invocation: true
