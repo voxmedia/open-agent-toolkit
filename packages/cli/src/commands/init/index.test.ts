@@ -971,12 +971,9 @@ config_file = "agents/reviewer.toml"
     const hookPath = join(root, '.git', 'hooks', 'pre-commit');
     const hookContents = await readFile(hookPath, 'utf8');
 
-    expect(hookContents).toContain(
-      'if ! oat status --scope project >/dev/null 2>&1; then',
-    );
-    expect(hookContents).toContain(
-      "oat: project provider views are out of sync - run 'oat status --scope project' or 'oat sync --scope project'",
-    );
+    expect(hookContents).toContain('oat status --scope project --hook');
+    // Non-blocking: never aborts the commit on a non-zero status exit.
+    expect(hookContents).toContain('|| true');
   });
 
   it('installs hook when .git/hooks is a symlinked directory', async () => {

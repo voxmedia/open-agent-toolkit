@@ -7,9 +7,16 @@ description: 'Pre-commit hooks and safety contracts for provider sync mutations.
 
 ## Optional pre-commit drift warning hook
 
-`oat init` can install a pre-commit hook that warns when project provider views appear out of sync.
+`oat init` can install a pre-commit hook that checks project provider sync state on every commit by invoking `oat status --scope project --hook`.
 
-OAT installs that hook into Git's currently active hook directory. When a consumer repo keeps hooks in a repo-managed folder such as `.githooks/`, Git must be configured to use that path before install, or OAT must configure it during the hook prompt flow.
+The hook distinguishes two states so unmanaged files are not reported the same as true drift:
+
+- **Warning (managed drift or missing):** a manifest-tracked provider entry has drifted or is missing. Emits `oat: managed provider views are out of sync - run 'oat sync --scope project'` to stderr.
+- **Info (unmanaged strays only):** provider files exist inside a managed directory but are not in the manifest. Emits `oat: unmanaged provider files detected - run 'oat status --scope project' to review` to stderr. Not treated as drift.
+
+The hook is non-blocking: it never fails the commit, even when managed drift is detected.
+
+OAT installs the hook into Git's currently active hook directory. When a consumer repo keeps hooks in a repo-managed folder such as `.githooks/`, Git must be configured to use that path before install, or OAT must configure it during the hook prompt flow.
 
 ## Safety contracts
 

@@ -18,6 +18,7 @@ import {
   HOOK_DRIFT_WARNING,
   HOOK_MARKER_END,
   HOOK_MARKER_START,
+  HOOK_STRAY_INFO,
   installHook,
   isHookInstalled,
   runHookCheck,
@@ -51,6 +52,17 @@ describe('git hook', () => {
     const content = await readFile(hookPath, 'utf8');
     expect(content).toContain(HOOK_MARKER_START);
     expect(content).toContain(HOOK_MARKER_END);
+  });
+
+  it('installHook writes snippet that invokes --hook mode', async () => {
+    const root = await createProjectRoot('oat-hook-snippet-');
+
+    const hookPath = await installHook(root);
+
+    const content = await readFile(hookPath, 'utf8');
+    expect(content).toContain('oat status --scope project --hook');
+    // Snippet must not abort the commit when oat reports issues.
+    expect(content).toContain('|| true');
   });
 
   it('installHook preserves existing hook content', async () => {
@@ -125,28 +137,62 @@ describe('git hook', () => {
     expect(await isHookInstalled(root)).toBe(true);
   });
 
-  it('runHookCheck returns drift warnings', async () => {
+  it('runHookCheck warns on managed drift', async () => {
     const warn = vi.fn();
+    const info = vi.fn();
     const result = await runHookCheck('/tmp/workspace', {
-      runStatusCommand: async () => false,
+      runStatusCommand: async () => 'managed_drift',
       warn,
+      info,
     });
 
-    expect(result.inSync).toBe(false);
+    expect(result.status).toBe('managed_drift');
     expect(warn).toHaveBeenCalledWith(HOOK_DRIFT_WARNING);
+    expect(info).not.toHaveBeenCalled();
   });
 
-  it('runHookCheck does not block when status check fails', async () => {
+  it('runHookCheck emits info for stray-only state', async () => {
     const warn = vi.fn();
+    const info = vi.fn();
+    const result = await runHookCheck('/tmp/workspace', {
+      runStatusCommand: async () => 'stray_only',
+      warn,
+      info,
+    });
+
+    expect(result.status).toBe('stray_only');
+    expect(info).toHaveBeenCalledWith(HOOK_STRAY_INFO);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('runHookCheck is silent when in sync', async () => {
+    const warn = vi.fn();
+    const info = vi.fn();
+    const result = await runHookCheck('/tmp/workspace', {
+      runStatusCommand: async () => 'in_sync',
+      warn,
+      info,
+    });
+
+    expect(result.status).toBe('in_sync');
+    expect(warn).not.toHaveBeenCalled();
+    expect(info).not.toHaveBeenCalled();
+  });
+
+  it('runHookCheck falls back to managed_drift when status check fails', async () => {
+    const warn = vi.fn();
+    const info = vi.fn();
     const result = await runHookCheck('/tmp/workspace', {
       runStatusCommand: async () => {
         throw new Error('status failed');
       },
       warn,
+      info,
     });
 
-    expect(result.inSync).toBe(false);
+    expect(result.status).toBe('managed_drift');
     expect(warn).toHaveBeenCalledWith(HOOK_DRIFT_WARNING);
+    expect(info).not.toHaveBeenCalled();
   });
 
   it('installHook resolves symlinked .git directory', async () => {

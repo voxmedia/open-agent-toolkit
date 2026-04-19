@@ -242,7 +242,21 @@ async function runStatusCommand(
 
   program.addCommand(command);
 
-  await program.parseAsync([...argv, 'status'], {
+  // Subcommand-specific flags (e.g. `--hook`) must follow the `status`
+  // subcommand name. Split `argv` into parent-level globals and subcommand
+  // flags so both are routed to the right parser.
+  const subcommandOnlyFlags = new Set(['--hook']);
+  const parentArgs: string[] = [];
+  const subArgs: string[] = [];
+  for (const arg of argv) {
+    if (subcommandOnlyFlags.has(arg)) {
+      subArgs.push(arg);
+    } else {
+      parentArgs.push(arg);
+    }
+  }
+
+  await program.parseAsync([...parentArgs, 'status', ...subArgs], {
     from: 'user',
   });
 }
@@ -640,5 +654,139 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'project']);
 
     expect(process.exitCode).toBe(1);
+  });
+
+  describe('--hook mode', () => {
+    const DRIFT_WARNING =
+      "oat: managed provider views are out of sync - run 'oat sync --scope project'";
+    const STRAY_INFO =
+      "oat: unmanaged provider files detected - run 'oat status --scope project' to review";
+
+    it('is silent and exits 0 when all in sync', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [
+          {
+            canonical: '.agents/skills/skill-one',
+            provider: 'claude',
+            providerPath: '.claude/skills/skill-one',
+            state: { status: 'in_sync' },
+          },
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--hook']);
+
+      expect(capture.info).toHaveLength(0);
+      expect(capture.warn).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('warns and exits 1 on managed drift', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [
+          {
+            canonical: '.agents/skills/skill-one',
+            provider: 'claude',
+            providerPath: '.claude/skills/skill-one',
+            state: { status: 'drifted', reason: 'modified' },
+          },
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--hook']);
+
+      expect(capture.warn).toContain(DRIFT_WARNING);
+      expect(capture.info).toHaveLength(0);
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('warns and exits 1 on missing managed entry', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [
+          {
+            canonical: '.agents/skills/skill-one',
+            provider: 'claude',
+            providerPath: '.claude/skills/skill-one',
+            state: { status: 'missing' },
+          },
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--hook']);
+
+      expect(capture.warn).toContain(DRIFT_WARNING);
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('emits info and exits 0 when only strays exist', async () => {
+      const { capture, command } = createHarness({
+        interactive: false,
+        driftReports: [],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/stray-skill',
+            state: { status: 'stray' },
+          },
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--hook']);
+
+      expect(capture.info).toContain(STRAY_INFO);
+      expect(capture.warn).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('prefers drift warning when both drift and strays exist', async () => {
+      const { capture, command } = createHarness({
+        interactive: false,
+        driftReports: [
+          {
+            canonical: '.agents/skills/skill-one',
+            provider: 'claude',
+            providerPath: '.claude/skills/skill-one',
+            state: { status: 'drifted', reason: 'modified' },
+          },
+        ],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/stray-skill',
+            state: { status: 'stray' },
+          },
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--hook']);
+
+      expect(capture.warn).toContain(DRIFT_WARNING);
+      expect(capture.info).not.toContain(STRAY_INFO);
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('suppresses the status table and adoption prompts', async () => {
+      const { capture, command, selectManyWithAbort } = createHarness({
+        interactive: true,
+        driftReports: [],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/stray-one',
+            state: { status: 'stray' },
+          },
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--hook']);
+
+      // Status table goes via logger.info. In --hook mode we emit exactly
+      // the stray info line — no table, no remediation prompt.
+      expect(capture.info).toEqual([STRAY_INFO]);
+      expect(selectManyWithAbort).not.toHaveBeenCalled();
+    });
   });
 });

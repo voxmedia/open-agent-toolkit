@@ -3,8 +3,6 @@ pnpm exec lint-staged
 
 # >>> oat pre-commit hook >>>
 if command -v oat >/dev/null 2>&1; then
-  if ! oat status --scope project >/dev/null 2>&1; then
-    echo "oat: project provider views are out of sync - run 'oat status --scope project' or 'oat sync --scope project'" >&2
-  fi
+  oat status --scope project --hook || true
 fi
 # <<< oat pre-commit hook <<<

@@ -30,7 +30,12 @@ import {
   detectDrift,
   detectStrays,
 } from '@drift/index';
-import { type CanonicalEntry, scanCanonical } from '@engine/index';
+import {
+  type CanonicalEntry,
+  HOOK_DRIFT_WARNING,
+  HOOK_STRAY_INFO,
+  scanCanonical,
+} from '@engine/index';
 import {
   normalizeToPosixPath,
   resolveProjectRoot,
@@ -474,6 +479,7 @@ async function collectScopeReports(
 async function runStatusCommand(
   context: CommandContext,
   dependencies: StatusDependencies,
+  options: { hook?: boolean } = {},
 ): Promise<void> {
   const reports: DriftReport[] = [];
   const scopeCollections: ScopeReportCollection[] = [];
@@ -490,6 +496,19 @@ async function runStatusCommand(
 
   const summary = summarizeReports(reports);
   const hasIssues = summary.total > 0 && summary.inSync !== summary.total;
+
+  if (options.hook) {
+    if (summary.drifted > 0 || summary.missing > 0) {
+      context.logger.warn(HOOK_DRIFT_WARNING);
+      process.exitCode = 1;
+    } else if (summary.stray > 0) {
+      context.logger.info(HOOK_STRAY_INFO);
+      process.exitCode = 0;
+    } else {
+      process.exitCode = 0;
+    }
+    return;
+  }
 
   if (context.json) {
     const payload: StatusJsonPayload = {
@@ -637,10 +656,16 @@ export function createStatusCommand(
 
   return new Command('status')
     .description('Report provider sync and drift status')
-    .action(async (_options, command: Command) => {
+    .option(
+      '--hook',
+      'Emit a minimal pre-commit message: warn on managed drift, info on strays',
+    )
+    .action(async (options: { hook?: boolean }, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      await runStatusCommand(context, dependencies);
+      await runStatusCommand(context, dependencies, {
+        hook: Boolean(options.hook),
+      });
     });
 }

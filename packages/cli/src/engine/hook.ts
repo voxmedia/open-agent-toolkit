@@ -17,8 +17,12 @@ const execFileAsync = promisify(execFile);
 export const HOOK_MARKER_START = '# >>> oat pre-commit hook >>>';
 export const HOOK_MARKER_END = '# <<< oat pre-commit hook <<<';
 export const HOOK_DRIFT_WARNING =
-  "oat: project provider views are out of sync - run 'oat status --scope project' or 'oat sync --scope project'";
+  "oat: managed provider views are out of sync - run 'oat sync --scope project'";
+export const HOOK_STRAY_INFO =
+  "oat: unmanaged provider files detected - run 'oat status --scope project' to review";
 export const REPO_GITHOOKS_PATH = '.githooks';
+
+export type HookStatus = 'in_sync' | 'managed_drift' | 'stray_only';
 
 export interface HookInstallInfo {
   hookPath: string;
@@ -27,8 +31,9 @@ export interface HookInstallInfo {
 }
 
 interface RunHookCheckOptions {
-  runStatusCommand?: (cwd: string) => Promise<boolean>;
+  runStatusCommand?: (cwd: string) => Promise<HookStatus>;
   warn?: (message: string) => void;
+  info?: (message: string) => void;
 }
 
 function escapeRegExp(value: string): string {
@@ -39,9 +44,7 @@ function createHookSnippet(options: { includeShebang?: boolean } = {}): string {
   const lines = [
     HOOK_MARKER_START,
     'if command -v oat >/dev/null 2>&1; then',
-    '  if ! oat status --scope project >/dev/null 2>&1; then',
-    `    echo "${HOOK_DRIFT_WARNING}" >&2`,
-    '  fi',
+    '  oat status --scope project --hook || true',
     'fi',
     HOOK_MARKER_END,
   ];
@@ -305,38 +308,62 @@ export async function uninstallHook(projectRoot: string): Promise<void> {
   await writeFile(hookPath, next, 'utf8');
 }
 
-async function runStatusCommandDefault(cwd: string): Promise<boolean> {
+async function runStatusCommandDefault(cwd: string): Promise<HookStatus> {
   try {
-    await execFileAsync('oat', ['status', '--scope', 'project'], { cwd });
-    return true;
+    const { stdout } = await execFileAsync(
+      'oat',
+      ['status', '--scope', 'project', '--json'],
+      { cwd },
+    );
+    const payload = JSON.parse(stdout) as {
+      summary?: { drifted?: number; missing?: number; stray?: number };
+    };
+    const summary = payload.summary ?? {};
+    const drifted = summary.drifted ?? 0;
+    const missing = summary.missing ?? 0;
+    const stray = summary.stray ?? 0;
+    if (drifted + missing > 0) {
+      return 'managed_drift';
+    }
+    if (stray > 0) {
+      return 'stray_only';
+    }
+    return 'in_sync';
   } catch {
-    return false;
+    // On any failure (oat missing, JSON parse error, unexpected exit), fall
+    // back to treating the state as managed drift so the operator notices.
+    return 'managed_drift';
   }
 }
 
 export async function runHookCheck(
   cwd: string,
   options: RunHookCheckOptions = {},
-): Promise<{ inSync: boolean }> {
+): Promise<{ status: HookStatus }> {
   const runStatusCommand = options.runStatusCommand ?? runStatusCommandDefault;
   const warn =
     options.warn ??
     ((message: string) => {
       process.stderr.write(`${message}\n`);
     });
+  const info =
+    options.info ??
+    ((message: string) => {
+      process.stderr.write(`${message}\n`);
+    });
 
-  let inSync = false;
+  let status: HookStatus;
   try {
-    // Default impl already returns boolean on failures, but this catch
-    // protects custom injected implementations from escaping exceptions.
-    inSync = await runStatusCommand(cwd);
+    status = await runStatusCommand(cwd);
   } catch {
-    inSync = false;
+    status = 'managed_drift';
   }
 
-  if (!inSync) {
+  if (status === 'managed_drift') {
     warn(HOOK_DRIFT_WARNING);
+  } else if (status === 'stray_only') {
+    info(HOOK_STRAY_INFO);
   }
 
-  return { inSync };
+  return { status };
 }

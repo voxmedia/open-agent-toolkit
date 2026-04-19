@@ -15,13 +15,14 @@ export {
   HOOK_DRIFT_WARNING,
   HOOK_MARKER_END,
   HOOK_MARKER_START,
+  HOOK_STRAY_INFO,
   installHook,
   isHookInstalled,
   REPO_GITHOOKS_PATH,
   runHookCheck,
   uninstallHook,
 } from './hook';
-export type { HookInstallInfo } from './hook';
+export type { HookInstallInfo, HookStatus } from './hook';
 export {
   hasMarker,
   insertMarker,

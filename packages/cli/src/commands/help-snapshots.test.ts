@@ -31,34 +31,34 @@ describe('help output snapshots', () => {
       Open Agent Toolkit CLI for provider interoperability
 
       Options:
-        -V, --version    output the version number
-        --json           Output a single JSON document
-        --verbose        Enable verbose debug output
-        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
-                         default: "all")
-        --cwd <path>     Override working directory
-        -h, --help       display help for command
+        -V, --version     output the version number
+        --json            Output a single JSON document
+        --verbose         Enable verbose debug output
+        --scope <scope>   Limit execution scope (choices: "project", "user", "all",
+                          default: "all")
+        --cwd <path>      Override working directory
+        -h, --help        display help for command
 
       Commands:
-        backlog          Manage file-backed backlog items and indexes
-        init [options]   Initialize canonical directories, manifest, and tool packs
-        status           Report provider sync and drift status
-        sync [options]   Sync canonical content to provider views
-        config           Read and write OAT config values
-        local            Manage local-only paths (gitignored, worktree-synced)
-        providers        Inspect provider capabilities and paths
-        remove           Remove installed skills and managed provider views
-        repo             Repository-level analysis and insight tools
-        doctor           Run environment and setup diagnostics
-        cleanup          Cleanup OAT project and artifact hygiene issues
-        docs             OAT documentation bootstrap and maintenance commands
-        instructions     Manage AGENTS.md and CLAUDE.md instruction file integrity
-        index            OAT index generation commands
-        project          Manage OAT project workflows
-        state            OAT repo state commands
-        tools            Manage OAT tool packs (install, update, remove, list)
-        internal         Internal OAT maintenance commands
-        help [command]   display help for command
+        backlog           Manage file-backed backlog items and indexes
+        init [options]    Initialize canonical directories, manifest, and tool packs
+        status [options]  Report provider sync and drift status
+        sync [options]    Sync canonical content to provider views
+        config            Read and write OAT config values
+        local             Manage local-only paths (gitignored, worktree-synced)
+        providers         Inspect provider capabilities and paths
+        remove            Remove installed skills and managed provider views
+        repo              Repository-level analysis and insight tools
+        doctor            Run environment and setup diagnostics
+        cleanup           Cleanup OAT project and artifact hygiene issues
+        docs              OAT documentation bootstrap and maintenance commands
+        instructions      Manage AGENTS.md and CLAUDE.md instruction file integrity
+        index             OAT index generation commands
+        project           Manage OAT project workflows
+        state             OAT repo state commands
+        tools             Manage OAT tool packs (install, update, remove, list)
+        internal          Internal OAT maintenance commands
+        help [command]    display help for command
       "
     `);
   });
@@ -156,6 +156,8 @@ describe('help output snapshots', () => {
       Report provider sync and drift status
 
       Options:
+        --hook      Emit a minimal pre-commit message: warn on managed drift, info on
+                    strays
         -h, --help  display help for command
       "
     `);
