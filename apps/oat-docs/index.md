@@ -49,6 +49,7 @@
     - [Workflow & Projects](workflows/projects/index.md) — Lifecycle, project artifacts, reviews, PR flow, and repository analysis for tracked OAT projects.
     - [Project Artifacts](workflows/projects/artifacts.md) — Project artifact contracts: state.md, spec.md, design.md, plan.md, and implementation.md.
     - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflows/projects/hill-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
+    - [Implementation Execution](workflows/projects/implementation-execution.md) — Phase-subagent dispatch, tier detection, bounded fix loop, plan-declared parallelism, and dry-run mode in oat-project-implement v2.0.
     - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.
     - [PR Flow](workflows/projects/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.
     - [Repository Analysis](workflows/projects/repo-analysis.md) — Repository-level analysis commands for collecting and triaging PR review comments.
