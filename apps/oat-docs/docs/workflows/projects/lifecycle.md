@@ -34,12 +34,8 @@ OAT lifecycle order:
 ```mermaid
 flowchart LR
   D["Discovery"] --> S["Spec"] --> G["Design"] --> P["Plan"]
-  P --> M{"Implementation mode"}
-  M --> I1["Sequential"]
-  M --> I2["Subagent-driven"]
-  I1 --> R["Review loop"]
-  I2 --> R
-  R --> PR["PR flow"]
+  P --> I["Implement (oat-project-implement)"]
+  I --> R["Review loop"] --> PR["PR flow"]
   PR --> DOC["Docs sync (optional)"]
   DOC --> C["Complete"]
 ```
@@ -89,8 +85,17 @@ When `autoReviewAtCheckpoints` is enabled (via `.oat/config.json` or `plan.md` f
 
 ## Implementation modes
 
-- **Sequential (default):** `oat-project-implement`
-- **Parallel:** `oat-project-implement` with `oat_plan_parallel_groups` declared in `plan.md` frontmatter
+`oat-project-implement` v2.0 dispatches one subagent per phase (not per task). Capability detection at skill start selects a tier, locked for the run:
+
+- **Tier 1 (subagents):** native subagent dispatch via Claude Code, Cursor, or Codex with spawn authorization.
+- **Tier 2 (inline):** orchestrator reads the agent files and executes the process itself when subagents are unavailable or authorization is declined.
+
+Within either tier, parallelism is expressed as plan metadata:
+
+- **Sequential (default):** plans with no `oat_plan_parallel_groups` field, or with an empty array. Phases run in plan order on the orchestration branch.
+- **Parallel groups:** phases listed together in `oat_plan_parallel_groups` run concurrently in worktrees (Tier 1 only) and merge back to the orchestration branch in plan order. Groups themselves execute sequentially.
+
+See [Implementation Execution](implementation-execution.md) for the full execution model — tier detection, bounded fix loop, fan-in, merge-conflict handling, dry-run, and resumption.
 
 ## Review receive behavior
 

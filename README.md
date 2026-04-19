@@ -39,6 +39,7 @@ Useful next commands:
 - `pnpm run cli -- config dump --json`
 - `pnpm run cli -- project status --json`
 - `pnpm run cli -- project list --json`
+- `pnpm run cli -- project validate-plan --project-path <path>`
 
 For local repo development:
 

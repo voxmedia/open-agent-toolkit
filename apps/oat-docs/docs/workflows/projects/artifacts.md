@@ -34,6 +34,40 @@ Mode-sensitive notes:
 
 Artifacts are the project system of record; automation and routing should derive from these files, not memory.
 
+### plan.md frontmatter
+
+`plan.md` carries frontmatter that the implementation skill consumes. Notable fields:
+
+- `oat_plan_hill_phases` — list of phase IDs to pause at for HiLL checkpoints.
+- `oat_plan_parallel_groups` — declares which phases may execute concurrently in worktrees. See below.
+
+#### oat_plan_parallel_groups
+
+Declare phase groups that run in parallel during `oat-project-implement`:
+
+```yaml
+oat_plan_parallel_groups: [['p02', 'p03'], ['p04', 'p05']]
+```
+
+Each inner array is a group of phases that execute concurrently in their own worktrees and merge back to the orchestration branch in plan order. Phases not listed in any group run sequentially.
+
+**Semantics:**
+
+- Empty or missing field → fully sequential, no worktrees created (default).
+- Each group must contain **2 or more** phases — singleton groups are rejected.
+- Every phase ID must exist in the plan body.
+- No phase may appear in more than one group.
+- Parallelism is only honored at Tier 1 (native subagents). Tier 2 degrades parallel groups to sequential inline execution.
+
+**Authoring responsibility:**
+
+- `oat-project-plan` proposes parallel groups when phases have file-disjoint task sets; it never infers parallelism silently.
+- Phases listed in a group should have no file-level overlap. Overlap will produce merge conflicts during fan-in that stop the run.
+
+**Validation:**
+
+Before dispatching, `oat-project-implement` invokes `oat project validate-plan --project-path "${PROJECT_PATH}"`. Non-zero exit blocks the run. See [CLI Reference](../../reference/cli-reference.md) and [Implementation Execution](implementation-execution.md) for details.
+
 ## Reference artifacts
 
 - `.oat/templates/*.md`
