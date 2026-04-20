@@ -4,6 +4,7 @@
 
 ## Curated Overview
 
+- `bl-7e68` captures a small but user-facing workflow paper cut: quick-mode recovery already works through `oat-project-quick-start`, but the `oat-project-plan` handoff is easy to read as a dead end. The fix is routing/copy clarity, not a workflow redesign.
 - `bl-0738` now captures the tighter follow-up from the phase-subagent refactor discussion: keep the model fixed, define portable reasoning-budget guidance for phase dispatch, map it cleanly across Codex and Claude-family providers, and defer any CLI schedule-preview ergonomics unless the manual policy proves confusing in practice.
 - `bl-28ce` captures the next likely ergonomics step after shipping instruction sync: persist the default `pointer|symlink|copy` strategy in config and expose it during guided setup, without conflating it with provider-sync `defaultStrategy`.
 - The newly shipped instruction-sync feature now has an explicit follow-on item: `bl-c745` captures option analysis for users who want some Claude-only `CLAUDE.md` files to remain non-adoptable instead of being promoted into canonical `AGENTS.md`.
@@ -28,6 +29,7 @@
 | bl-c745 | Add per-CLAUDE.md adoption opt-out for instruction sync                                         | open        | medium   | feature    | M        |
 | bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote)            | open        | medium   | feature    | L        |
 | bl-ff5d | Backlog Refinement Flow (Jira ticket generation)                                                | open        | medium   | feature    | L        |
+| bl-7e68 | Clarify quick-mode resume routing from oat-project-plan                                         | open        | medium   | feature    | S        |
 | bl-0738 | Define reasoning-budget guidance for phase-subagent dispatch                                    | open        | medium   | feature    | S        |
 | bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback                              | open        | medium   | initiative | L        |
 | bl-0ace | Move oat-project-complete state mutations into a CLI helper                                     | in_progress | medium   | feature    | M        |
