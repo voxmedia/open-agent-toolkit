@@ -107,6 +107,7 @@ Detection logic:
 - If the host is Claude Code, check Task-tool availability with `subagent_type: "oat-phase-implementer"` and `subagent_type: "oat-reviewer"`. Available → Tier 1.
 - If the host is Cursor, use Cursor-native invocation. Available → Tier 1.
 - If the host is Codex multi-agent, verify `[features] multi_agent = true` and whether `spawn_agent` requires explicit authorization.
+  - Codex Tier 1 dispatches for `oat-phase-implementer` and `oat-reviewer` must use self-contained scope packets and fresh context. Do not rely on forked full-thread context when pinning a specialized OAT role.
   - Available without auth → Tier 1.
   - Available with auth required → ask the user once at skill start:
 
@@ -452,6 +453,8 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   artifact_paths: {same as Phase Scope}
   tasks_in_scope: {list of pNN-tNN IDs in the phase}
   ```
+
+  - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
 
 - Tier 2: inline — read `.agents/agents/oat-reviewer.md` and perform the review yourself.
 
