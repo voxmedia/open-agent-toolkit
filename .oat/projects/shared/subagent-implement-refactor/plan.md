@@ -437,20 +437,87 @@ Add the integration shell test, bump all five public packages in lockstep, run r
 
 ## Reviews
 
-| Scope  | Type     | Status | Date       | Artifact                                                                    |
-| ------ | -------- | ------ | ---------- | --------------------------------------------------------------------------- |
-| p01    | code     | passed | 2026-04-17 | `.oat/repo/reviews/ad-hoc-review-2026-04-17-subagent-implement-analysis.md` |
-| p02    | code     | passed | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p03    | code     | passed | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p04    | code     | passed | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p05    | code     | passed | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p06    | code     | passed | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p07    | code     | passed | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| final  | code     | passed | 2026-04-19 | `reviews/archived/final-review-2026-04-19.md`                               |
-| spec   | artifact | passed | 2026-04-17 | _(backfill — artifact created post-implementation)_                         |
-| design | artifact | passed | 2026-04-17 | _(backfill — artifact created post-implementation)_                         |
+| Scope  | Type     | Status  | Date       | Artifact                                                                    |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------------------------------- |
+| p01    | code     | passed  | 2026-04-17 | `.oat/repo/reviews/ad-hoc-review-2026-04-17-subagent-implement-analysis.md` |
+| p02    | code     | passed  | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
+| p03    | code     | passed  | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
+| p04    | code     | passed  | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
+| p05    | code     | passed  | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
+| p06    | code     | passed  | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
+| p07    | code     | passed  | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
+| p-rev1 | code     | pending | 2026-04-20 | _(inline revision feedback — PR-scope fixes pending)_                       |
+| final  | code     | passed  | 2026-04-19 | `reviews/archived/final-review-2026-04-19.md`                               |
+| spec   | artifact | passed  | 2026-04-17 | _(backfill — artifact created post-implementation)_                         |
+| design | artifact | passed  | 2026-04-17 | _(backfill — artifact created post-implementation)_                         |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+
+---
+
+## Phase p-rev1: Revision 1
+
+Source: inline feedback (2026-04-20)
+
+### Task prev1-t01: (revision) Make Codex review dispatch explicitly no-fork and artifact-driven
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/assets/docs/workflows/projects/implementation-execution.md`
+
+**Step 1:** Update Codex Tier 1 review-dispatch guidance so `oat-reviewer` receives a self-contained Review Scope packet and does **not** rely on forked full-thread context. State explicitly that Codex pinned-role dispatch must use fresh context / `fork_context: false`, because the reviewer is expected to reconstruct context from git state and OAT artifacts.
+
+**Step 2: Verify**
+Run: `rg -n "fork_context|fresh context|Review Scope|artifact-driven|Codex" .agents/skills/oat-project-implement/SKILL.md packages/cli/assets/docs/workflows/projects/implementation-execution.md`
+Expected: Codex guidance explicitly prefers self-contained review packets and does not imply full-thread forked context for `oat-reviewer`.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md packages/cli/assets/docs/workflows/projects/implementation-execution.md
+git commit -m "fix(oat-project-implement): make codex review dispatch no-fork"
+```
+
+### Task prev1-t02: (revision) Add Codex reviewer timeout fallback guidance
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/assets/docs/workflows/projects/implementation-execution.md`
+
+**Step 1:** Add concrete reviewer return-path handling for Codex Tier 1 dispatch: wait once, poll once more if needed, then send a concise "return now with current findings" instruction before falling back inline if the reviewer still does not conclude cleanly.
+
+**Step 2: Verify**
+Run: `rg -n "wait_agent|return now|current findings|fallback inline|timeout" .agents/skills/oat-project-implement/SKILL.md packages/cli/assets/docs/workflows/projects/implementation-execution.md`
+Expected: The reviewer dispatch flow documents a bounded timeout / nudge / fallback sequence for Codex-hosted review subagents.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md packages/cli/assets/docs/workflows/projects/implementation-execution.md
+git commit -m "fix(oat-project-implement): add codex reviewer timeout fallback"
+```
+
+### Task prev1-t03: (revision) Tighten plan verification command guidance for scoped test execution
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `.oat/templates/plan.md`
+
+**Step 1:** Update planning guidance so verification commands prefer the exact runner invocation that scopes to the intended target, rather than package-level shortcuts that may execute the full suite. Call out that task-level verification should be validated against actual tool behavior when a file- or test-scoped command is claimed.
+
+**Step 2: Verify**
+Run: `rg -n "verification command|scoped|targeted|full suite|exact runner" .agents/skills/oat-project-plan/SKILL.md .oat/templates/plan.md`
+Expected: Plan-authoring guidance requires exact, behaviorally correct verification commands for scoped tests.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-plan/SKILL.md .oat/templates/plan.md
+git commit -m "fix(oat-project-plan): tighten scoped verification guidance"
+```
 
 ---
 
@@ -465,8 +532,9 @@ Add the integration shell test, bump all five public packages in lockstep, run r
 - Phase p05: 4 tasks — control-plane router cleanup, bundle asset removal, manifest cleanup, set-mode deprecation
 - Phase p06: 2 tasks — skill deletion, doc reference cleanup
 - Phase p07: 5 tasks — shell test, package lockstep bump, skill version bumps, release:validate + full suite, final review fixes
+- Phase p-rev1: 3 tasks — Codex no-fork review dispatch, reviewer timeout fallback, scoped verification guidance
 
-**Total: 30 tasks across 7 phases**
+**Total: 33 tasks across 8 phases**
 
 Executed via Superpowers `subagent-driven-development` to avoid self-modification of the skill under active development. See discovery.md decision #10 for rationale.
 

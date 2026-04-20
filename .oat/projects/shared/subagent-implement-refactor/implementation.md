@@ -1,18 +1,33 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-complete
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-04-17
-oat_current_task_id: null
+oat_last_updated: 2026-04-20
+oat_current_task_id: prev1-t01
 oat_generated: true
 ---
 
 # Implementation: subagent-implement-refactor
 
 **Started:** 2026-04-17
-**Last Updated:** 2026-04-17
+**Last Updated:** 2026-04-20
 
-**Next:** PR flow — final review passed 2026-04-19 with zero findings.
+**Next:** Execute revision phase `p-rev1` starting at `prev1-t01`, then update PR #58.
+
+## Revision Received: Inline Feedback
+
+**Date:** 2026-04-20
+**Source:** inline conversation during PR dogfooding
+
+**Changes requested:**
+
+- Make Codex `oat-reviewer` dispatch explicitly artifact-driven with no forked full-thread context.
+- Add a bounded timeout / nudge / inline-fallback path when Codex review subagents do not return cleanly.
+- Tighten plan-authoring guidance so task verification commands use exact scoped runner invocations rather than shortcuts that can execute the full package suite.
+
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`
+
+**Next:** Execute revision tasks via `oat-project-implement`.
 
 ## Review Received: final
 
@@ -38,17 +53,18 @@ oat_generated: true
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 3     | 3/3       |
-| p02   | complete | 3     | 3/3       |
-| p03   | complete | 9     | 9/9       |
-| p04   | complete | 4     | 4/4       |
-| p05   | complete | 4     | 4/4       |
-| p06   | complete | 2     | 2/2       |
-| p07   | complete | 5     | 5/5       |
+| Phase  | Status      | Tasks | Completed |
+| ------ | ----------- | ----- | --------- |
+| p01    | complete    | 3     | 3/3       |
+| p02    | complete    | 3     | 3/3       |
+| p03    | complete    | 9     | 9/9       |
+| p04    | complete    | 4     | 4/4       |
+| p05    | complete    | 4     | 4/4       |
+| p06    | complete    | 2     | 2/2       |
+| p07    | complete    | 5     | 5/5       |
+| p-rev1 | in_progress | 3     | 0/3       |
 
-**Total:** 30/30 tasks completed
+**Total:** 30/33 tasks completed
 
 ---
 
