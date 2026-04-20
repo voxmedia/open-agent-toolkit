@@ -23,6 +23,8 @@ At skill start, `oat-project-implement` detects whether the host supports native
 - **Codex multi-agent:** Tier 1 if `spawn_agent` is allowed without authorization, or after an explicit single prompt at skill start if authorization is required. Codex subagent dispatch should use self-contained scope packets with fresh context; do not assume pinned OAT roles can also inherit the full parent thread.
 - **Authorization declined or agents do not resolve:** Tier 2 (inline). The orchestrator reads `.agents/agents/oat-phase-implementer.md` and `.agents/agents/oat-reviewer.md` as reference and executes that process itself.
 
+The approval decision covers both phase implementation and checkpoint review for the run. The orchestrator should not drift into a mixed mode based on conversational emphasis alone; if Tier 1 was not approved, stay inline throughout unless the user explicitly requests mixed execution.
+
 The selected tier is reported to the user and locked for the remainder of the run:
 
 ```
@@ -38,7 +40,7 @@ For each phase in the plan (whether sequential or inside a parallel group):
 1. **Dispatch `oat-phase-implementer`** with a Phase Scope block (project path, phase id, artifact paths, commit convention, workflow mode).
 2. **Receive the summary:** `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED`.
    - `BLOCKED` stops the run and surfaces the blocker to the user.
-3. **Dispatch `oat-reviewer`** with a Review Scope block (phase id, commit range, files changed). In Codex, pass this as a self-contained packet and keep fresh context (`fork_context: false`) so the reviewer reads git/OAT artifacts directly instead of inheriting the orchestration thread. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
+3. **Dispatch `oat-reviewer`** with a Review Scope block (phase id, commit range, optional files-changed hint). The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet and keep fresh context (`fork_context: false`) so the reviewer reads git/OAT artifacts directly instead of inheriting the orchestration thread. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
 4. **Parse the verdict:** zero Critical + zero Important findings → `pass`; otherwise `fail`.
 5. **On fail, run the bounded fix loop** (see below).
 6. **Update artifacts** (`implementation.md`, `plan.md` review row, `state.md`) and make the mandatory bookkeeping commit.

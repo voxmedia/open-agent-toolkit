@@ -122,6 +122,8 @@ Detection logic:
 
 - If the host does not resolve either agent → Tier 2.
 
+**Approval scope rule:** this Tier selection applies to both phase implementation and checkpoint review. Do not infer a mixed mode from conversational emphasis on review checkpoints. If the user has not explicitly approved Tier 1 for the run, stay Tier 2 throughout. Mixed mode is only valid when the user explicitly requests it.
+
 Report the selected tier to the user:
 
 ```
@@ -130,7 +132,7 @@ Report the selected tier to the user:
   → Selected: Tier {1 | 2} — {Subagents | Inline}
 ```
 
-**Tier is locked for the remainder of the run.** Subsequent phase dispatches use the same tier. No mid-run re-evaluation or downgrade.
+**Tier is locked for the remainder of the run.** Subsequent phase implementation and review dispatches use the same tier. No mid-run re-evaluation or downgrade unless the user explicitly asks to change execution mode.
 
 **Legacy state migration:** If `state.md` contains `oat_execution_mode: subagent-driven`, silently ignore it. On the next bookkeeping write, remove that key. Do not redirect to `oat-project-subagent-implement` — that skill is deprecated.
 
@@ -448,13 +450,14 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   type: code
   scope: {pNN}
   commits: {base_sha}..{head_sha}
-  files_changed: {list from implementer's report}
+  files_changed: {optional hint from implementer's report}
   workflow_mode: {from state.md}
   artifact_paths: {same as Phase Scope}
   tasks_in_scope: {list of pNN-tNN IDs in the phase}
   ```
 
   - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
+  - Treat the commit range as authoritative for review scope. `files_changed` is optional orientation metadata only.
   - If a Codex reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the Tier 1 review dispatch as failed for this phase and perform the review inline instead of waiting indefinitely.
 
 - Tier 2: inline — read `.agents/agents/oat-reviewer.md` and perform the review yourself.
