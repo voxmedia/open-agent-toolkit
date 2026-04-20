@@ -35,8 +35,8 @@ You will be given a "Review Scope" block including:
 - **project**: Path to project directory (e.g., `.oat/projects/shared/my-feature/`)
 - **type**: `code` or `artifact`
 - **scope**: What to review (`pNN-tNN` task, `pNN` phase, `pNN-pMM` contiguous phase range, `final`, `BASE..HEAD` range, or an artifact name like `spec` / `design`)
-- **commits/range**: Git commits or SHA range for changed files
-- **files_changed**: List of files modified in scope
+- **commits/range**: Git commits or SHA range for changed files. For code review, this is the authoritative review surface.
+- **files_changed**: Optional orientation hint listing files believed to be modified in scope. If this disagrees with the commit range, trust the commit range.
 - **workflow_mode**: `spec-driven` | `quick` | `import` (default to `spec-driven` if absent)
 - **artifact_paths**: Paths to available artifacts (spec/design/plan/implementation/discovery/import reference)
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope)

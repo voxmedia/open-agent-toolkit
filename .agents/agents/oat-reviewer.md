@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.0.0
+version: 1.0.1
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes review artifact to disk.
 tools: Read, Bash, Grep, Glob, Write
 color: yellow
