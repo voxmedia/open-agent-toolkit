@@ -271,12 +271,13 @@ For each task, include:
 - **Files:** Exact paths for create/modify/delete
 - **Signatures:** Interface definitions, function signatures, type declarations
 - **Test cases:** Test file paths and test descriptions (pseudocode OK for test bodies)
-- **Commands:** Exact verification commands
+- **Commands:** Exact verification commands that match the claimed scope. If the task says "run this file" or "run this test target," use the real runner invocation that actually scopes to that target rather than a shortcut that may execute the full package suite.
 - **Commit:** Conventional commit message with task ID (e.g., `feat(p01-t03): ...`)
 
 **Avoid:**
 - Vague instructions ("update the file")
 - Missing verification steps
+- Verification shortcuts that claim file-scoped coverage but actually run a broader suite
 - Bundled unrelated changes
 - Full implementation code (leave that for oat-project-implement)
 

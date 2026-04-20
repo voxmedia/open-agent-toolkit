@@ -71,7 +71,7 @@ describe('{feature}', () => {
 });
 ```
 
-Run: `pnpm test {path/to/file.test.ts}`
+Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
 Expected: Test fails (RED)
 
 **Step 2: Implement (GREEN)**
@@ -81,8 +81,10 @@ Expected: Test fails (RED)
 // Implementation code or interface signatures
 ```
 
-Run: `pnpm test {path/to/file.test.ts}`
+Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
 Expected: Test passes (GREEN)
+
+Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
 
 **Step 3: Refactor**
 
@@ -124,6 +126,8 @@ git commit -m "feat(p01-t01): {description}"
 
 Run: `{verification command}`
 Expected: {output}
+
+Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
 
 **Step 5: Commit**
 
