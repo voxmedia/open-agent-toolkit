@@ -4,13 +4,18 @@ import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
 import {
   CORE_SKILLS,
   DOCS_SKILLS,
+  DOCS_SCRIPTS,
   IDEA_SKILLS,
   PROJECT_MANAGEMENT_SKILLS,
+  PROJECT_MANAGEMENT_SCRIPTS,
+  PROJECT_MANAGEMENT_TEMPLATES,
   RESEARCH_AGENTS,
   RESEARCH_SKILLS,
   UTILITY_SKILLS,
   WORKFLOW_AGENTS,
   WORKFLOW_SKILLS,
+  WORKFLOW_SCRIPTS,
+  WORKFLOW_TEMPLATES,
 } from '@commands/init/tools/shared/skill-manifest';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
@@ -59,6 +64,11 @@ interface BundledPackMember {
   type: 'skill' | 'agent';
 }
 
+interface BundledPackAssets {
+  templates: readonly string[];
+  scripts: readonly string[];
+}
+
 const BUNDLED_PACK_MEMBERS: Record<PackName, BundledPackMember[]> = {
   core: CORE_SKILLS.map((name) => ({ name, type: 'skill' })),
   ideas: IDEA_SKILLS.map((name) => ({ name, type: 'skill' })),
@@ -83,6 +93,42 @@ const BUNDLED_PACK_MEMBERS: Record<PackName, BundledPackMember[]> = {
     })),
   ],
 };
+
+const BUNDLED_PACK_ASSETS: Record<PackName, BundledPackAssets> = {
+  core: {
+    templates: [],
+    scripts: [],
+  },
+  ideas: {
+    templates: [],
+    scripts: [],
+  },
+  docs: {
+    templates: [],
+    scripts: DOCS_SCRIPTS,
+  },
+  workflows: {
+    templates: WORKFLOW_TEMPLATES,
+    scripts: WORKFLOW_SCRIPTS,
+  },
+  utility: {
+    templates: [],
+    scripts: [],
+  },
+  'project-management': {
+    templates: PROJECT_MANAGEMENT_TEMPLATES,
+    scripts: PROJECT_MANAGEMENT_SCRIPTS,
+  },
+  research: {
+    templates: [],
+    scripts: [],
+  },
+};
+
+interface PackAssetTarget {
+  pack: PackName;
+  scopeRoot: string;
+}
 
 export async function updateTools(
   target: UpdateTarget,
@@ -167,6 +213,32 @@ export async function updateTools(
     result.updated.push(tool);
   }
 
+  for (const assetTarget of resolvePackAssetTargets(target, allTools)) {
+    const assets = BUNDLED_PACK_ASSETS[assetTarget.pack];
+
+    for (const template of assets.templates) {
+      const source = join(assetsRoot, 'templates', template);
+      const destination = join(
+        assetTarget.scopeRoot,
+        '.oat',
+        'templates',
+        template,
+      );
+      await dependencies.copyFileWithStatus(source, destination, true);
+    }
+
+    for (const script of assets.scripts) {
+      const source = join(assetsRoot, 'scripts', script);
+      const destination = join(
+        assetTarget.scopeRoot,
+        '.oat',
+        'scripts',
+        script,
+      );
+      await dependencies.copyFileWithStatus(source, destination, true);
+    }
+  }
+
   return result;
 }
 
@@ -231,6 +303,52 @@ function getBundledPackMembers(
   return BUNDLED_PACK_MEMBERS[pack].filter(
     (member) => scope === 'project' || member.type === 'skill',
   );
+}
+
+function resolvePackAssetTargets(
+  target: UpdateTarget,
+  installedEntries: ToolEntry[],
+): PackAssetTarget[] {
+  if (target.kind === 'name') {
+    return [];
+  }
+
+  const entriesByScope = new Map<ConcreteScope, ToolEntry[]>();
+
+  for (const entry of installedEntries) {
+    const scopeEntries = entriesByScope.get(entry.tool.scope) ?? [];
+    scopeEntries.push(entry);
+    entriesByScope.set(entry.tool.scope, scopeEntries);
+  }
+
+  const targets: PackAssetTarget[] = [];
+
+  for (const scopeEntries of entriesByScope.values()) {
+    const scopeRoot = scopeEntries[0]?.scopeRoot;
+    if (!scopeRoot) continue;
+
+    const installedPacks = new Set(
+      scopeEntries
+        .map((entry) => entry.tool.pack)
+        .filter((pack): pack is PackName => pack !== 'custom'),
+    );
+    const packsToExpand =
+      target.kind === 'pack'
+        ? installedPacks.has(target.pack)
+          ? [target.pack]
+          : []
+        : [...installedPacks];
+
+    for (const pack of packsToExpand) {
+      const assets = BUNDLED_PACK_ASSETS[pack];
+      if (assets.templates.length === 0 && assets.scripts.length === 0) {
+        continue;
+      }
+      targets.push({ pack, scopeRoot });
+    }
+  }
+
+  return targets;
 }
 
 function buildEntryKey(tool: ToolInfo): string {
