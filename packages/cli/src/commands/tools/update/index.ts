@@ -18,6 +18,7 @@ import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
+import { fileExists } from '@fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
 
@@ -37,6 +38,7 @@ const defaultDependencies: UpdateToolsDependencies = {
   resolveAssetsRoot,
   copyDirWithStatus,
   copyFileWithStatus,
+  fileExists,
 };
 
 const defaultSyncDependencies: AutoSyncDependencies = {

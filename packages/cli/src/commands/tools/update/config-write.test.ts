@@ -103,6 +103,7 @@ describe('createToolsUpdateCommand config writes', () => {
       resolveAssetsRoot: vi.fn(async () => '/assets'),
       copyDirWithStatus: vi.fn(async () => 'updated' as const),
       copyFileWithStatus: vi.fn(async () => 'updated' as const),
+      fileExists: vi.fn(async () => true),
     };
 
     const command = createToolsUpdateCommand(dependencies, {

@@ -33,10 +33,12 @@ function createTool(overrides: Partial<ToolInfo> = {}): ToolInfo {
 
 function createDeps(
   toolsByScope: Record<string, ToolInfo[]> = {},
+  missingPaths: string[] = [],
 ): UpdateToolsDependencies & {
   copies: Array<{ source: string; dest: string }>;
 } {
   const copies: Array<{ source: string; dest: string }> = [];
+  const missing = new Set(missingPaths);
   return {
     copies,
     scanTools: async (options) => toolsByScope[options.scope] ?? [],
@@ -51,6 +53,7 @@ function createDeps(
       copies.push({ source, dest });
       return 'updated';
     },
+    fileExists: async (path) => !missing.has(path),
   };
 }
 
@@ -434,6 +437,45 @@ describe('updateTools', () => {
     expect(
       deps.copies.some(
         (copy) => copy.source === `/assets/scripts/${DOCS_SCRIPTS[0]}`,
+      ),
+    ).toBe(true);
+  });
+
+  it('skips pack scripts that are not bundled in assets', async () => {
+    const tool = createTool({
+      name: 'oat-project-new',
+      pack: 'workflows',
+      status: 'current',
+      version: '1.0.0',
+      bundledVersion: '1.0.0',
+    });
+    const deps = createDeps({ project: [tool] }, [
+      '/assets/scripts/generate-oat-state.sh',
+      '/assets/scripts/generate-thin-index.sh',
+    ]);
+
+    await updateTools(
+      { kind: 'pack', pack: 'workflows' },
+      ['project'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(
+      deps.copies.some(
+        (copy) => copy.source === '/assets/scripts/generate-oat-state.sh',
+      ),
+    ).toBe(false);
+    expect(
+      deps.copies.some(
+        (copy) => copy.source === '/assets/scripts/generate-thin-index.sh',
+      ),
+    ).toBe(false);
+    expect(
+      deps.copies.some(
+        (copy) => copy.source === '/assets/scripts/resolve-tracking.sh',
       ),
     ).toBe(true);
   });

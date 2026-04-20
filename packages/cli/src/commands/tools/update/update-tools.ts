@@ -52,6 +52,7 @@ export interface UpdateToolsDependencies {
     destination: string,
     force: boolean,
   ) => Promise<CopyStatus>;
+  fileExists: (path: string) => Promise<boolean>;
 }
 
 interface ToolEntry {
@@ -229,6 +230,9 @@ export async function updateTools(
 
     for (const script of assets.scripts) {
       const source = join(assetsRoot, 'scripts', script);
+      if (!(await dependencies.fileExists(source))) {
+        continue;
+      }
       const destination = join(
         assetTarget.scopeRoot,
         '.oat',
