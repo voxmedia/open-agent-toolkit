@@ -455,6 +455,7 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   ```
 
   - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
+  - If a Codex reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the Tier 1 review dispatch as failed for this phase and perform the review inline instead of waiting indefinitely.
 
 - Tier 2: inline — read `.agents/agents/oat-reviewer.md` and perform the review yourself.
 
