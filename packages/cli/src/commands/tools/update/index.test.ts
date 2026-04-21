@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatUpdatedToolMessage, shouldRefreshCoreDocs } from './index';
+import {
+  buildSyncSubprocessArgs,
+  formatUpdatedToolMessage,
+  shouldRefreshCoreDocs,
+} from './index';
 import type { UpdateResult, UpdateTarget } from './update-tools';
 
 function createResult(overrides: Partial<UpdateResult> = {}): UpdateResult {
@@ -93,5 +97,29 @@ describe('formatUpdatedToolMessage', () => {
         false,
       ),
     ).toBe('Updated: oat-idea-new (1.0.0 -> 2.0.0)');
+  });
+});
+
+describe('buildSyncSubprocessArgs', () => {
+  it('passes the target project through --cwd instead of relying on child process cwd', () => {
+    expect(
+      buildSyncSubprocessArgs(
+        '/repo/packages/cli/src/index.ts',
+        ['--import', 'tsx/loader'],
+        {
+          cwd: '/tmp/project',
+          scope: 'project',
+        },
+      ),
+    ).toEqual([
+      '--import',
+      'tsx/loader',
+      '/repo/packages/cli/src/index.ts',
+      '--cwd',
+      '/tmp/project',
+      '--scope',
+      'project',
+      'sync',
+    ]);
   });
 });

@@ -41,13 +41,32 @@ const defaultDependencies: UpdateToolsDependencies = {
   fileExists,
 };
 
+export function buildSyncSubprocessArgs(
+  entrypoint: string,
+  execArgv: string[],
+  options: { cwd: string; scope: 'project' | 'user' },
+): string[] {
+  return [
+    ...execArgv,
+    entrypoint,
+    '--cwd',
+    options.cwd,
+    '--scope',
+    options.scope,
+    'sync',
+  ];
+}
+
 const defaultSyncDependencies: AutoSyncDependencies = {
   runSync: async ({ scope, cwd }) => {
     await new Promise<void>((resolve, reject) => {
       execFile(
         process.execPath,
-        [...process.execArgv, process.argv[1]!, 'sync', '--scope', scope],
-        { cwd },
+        buildSyncSubprocessArgs(process.argv[1]!, process.execArgv, {
+          cwd,
+          scope,
+        }),
+        { cwd: process.cwd() },
         (error) => {
           if (error) reject(error);
           else resolve();
