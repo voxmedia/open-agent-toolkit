@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.1
+version: 2.0.2
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -109,12 +109,12 @@ Detection logic:
 - If the host is Codex multi-agent, verify `[features] multi_agent = true` and whether `spawn_agent` requires explicit authorization.
   - Codex Tier 1 dispatches for `oat-phase-implementer` and `oat-reviewer` must use self-contained scope packets and fresh context. Do not rely on forked full-thread context when pinning a specialized OAT role.
   - Available without auth → Tier 1.
-  - Available with auth required → ask the user once at skill start:
+  - Available with auth required → fail closed. You MUST ask the user once at skill start before selecting Tier 2 or starting implementation work:
 
     ```
-    Delegate phase implementation and review to subagents for this run?
-    (This authorizes spawn_agent for both oat-phase-implementer and
-    oat-reviewer across every phase in this run.)
+    This OAT implementation skill normally delegates phase implementation and review to subagents. Authorize subagent delegation for this run?
+
+    Yes authorizes both oat-phase-implementer and oat-reviewer across every phase in this run.
     ```
 
     - Approved → Tier 1.
@@ -124,15 +124,36 @@ Detection logic:
 
 **Approval scope rule:** this Tier selection applies to both phase implementation and checkpoint review. Do not infer a mixed mode from conversational emphasis on review checkpoints. If the user has not explicitly approved Tier 1 for the run, stay Tier 2 throughout. Mixed mode is only valid when the user explicitly requests it.
 
+**Codex fail-closed rule:** after this skill is invoked, "user did not separately ask for subagents" is not a valid Tier 2 reason. If Codex can spawn agents but requires explicit user authorization, the implementation MUST NOT continue until the delegation question above is answered. Tier 2 is allowed only when:
+
+- `user declined delegation`
+- `spawn_agent unavailable`
+- `required agent role unresolved`
+
 Report the selected tier to the user:
 
 ```
 [0/N] Checking subagent availability…
   → oat-phase-implementer + oat-reviewer: {available | authorization required | not resolved}
   → Selected: Tier {1 | 2} — {Subagents | Inline}
+  → Reason: {authorized | available without auth | user declined delegation | spawn_agent unavailable | required agent role unresolved}
 ```
 
+**Hard pre-work guard:** before any code edit, test run, or implementation commit, print the selected tier and reason. If Tier 2 is selected, the reason must be one of the three allowed Tier 2 reasons above. Do not run tests, edit files, or create implementation commits until Step 0.5 has completed and the tier report has been printed.
+
 **Tier is locked for the remainder of the run.** Subsequent phase implementation and review dispatches use the same tier. No mid-run re-evaluation or downgrade unless the user explicitly asks to change execution mode.
+
+**Recovery if Step 0.5 was skipped:** If implementation work has already started inline before completing Step 0.5, STOP immediately. Preserve any work in progress, complete or revert to a clean task boundary, and re-run Step 0.5 before continuing. Do not silently continue in Tier 2.
+
+**Codex authorization example:**
+
+```
+User invokes: $oat-project-implement
+Detected: Codex multi-agent support available; explicit authorization required.
+Expected: ask "This OAT implementation skill normally delegates phase implementation and review to subagents. Authorize subagent delegation for this run?"
+If approved: Selected: Tier 1 — Subagents
+Forbidden: Selected: Tier 2 — Inline because the user did not separately mention subagents.
+```
 
 **Legacy state migration:** If `state.md` contains `oat_execution_mode: subagent-driven`, silently ignore it. On the next bookkeeping write, remove that key. Do not redirect to `oat-project-subagent-implement` — that skill is deprecated.
 
