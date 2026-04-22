@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.3
+version: 2.0.4
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -133,11 +133,13 @@ Detection logic:
 Report the selected tier to the user:
 
 ```
-[0/N] Checking subagent availability…
+[preflight] Checking subagent availability…
   → oat-phase-implementer + oat-reviewer: {available | authorization required | not resolved}
   → Selected: Tier {1 | 2} — {Subagents | Inline}
   → Reason: {authorized | available without auth | user declined delegation | spawn_agent unavailable | required agent role unresolved}
 ```
+
+Do not print `[0/N]` for this preflight step. The implementation denominator is not established by capability detection; use the literal `[preflight]` label above.
 
 **Hard pre-work guard:** before any code edit, test run, or implementation commit, print the selected tier and reason. If Tier 2 is selected, the reason must be one of the three allowed Tier 2 reasons above. Do not run tests, edit files, or create implementation commits until Step 0.5 has completed and the tier report has been printed.
 

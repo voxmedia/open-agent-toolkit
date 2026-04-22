@@ -28,7 +28,7 @@ The approval decision covers both phase implementation and checkpoint review for
 The selected tier is reported to the user and locked for the remainder of the run:
 
 ```
-[0/N] Checking subagent availability…
+[preflight] Checking subagent availability…
   → oat-phase-implementer + oat-reviewer: available
   → Selected: Tier 1 — Subagents
 ```
