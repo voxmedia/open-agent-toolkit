@@ -42,6 +42,7 @@ export const WORKFLOW_SKILLS = [
 
 export const WORKFLOW_AGENTS = [
   'oat-codebase-mapper.md',
+  'oat-phase-implementer.md',
   'oat-reviewer.md',
 ] as const;
 

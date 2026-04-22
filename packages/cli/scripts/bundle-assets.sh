@@ -68,7 +68,7 @@ for skill in "${SKILLS[@]}"; do
   cp -RL "${REPO_ROOT}/.agents/skills/${skill}" "${ASSETS}/skills/"
 done
 
-for agent in oat-codebase-mapper.md oat-reviewer.md skeptical-evaluator.md; do
+for agent in oat-codebase-mapper.md oat-phase-implementer.md oat-reviewer.md skeptical-evaluator.md; do
   cp "${REPO_ROOT}/.agents/agents/${agent}" "${ASSETS}/agents/"
 done
 

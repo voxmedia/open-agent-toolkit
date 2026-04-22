@@ -9,7 +9,11 @@ import { IDEA_SKILLS } from '../ideas/install-ideas';
 import { PROJECT_MANAGEMENT_SKILLS } from '../project-management/install-project-management';
 import { RESEARCH_SKILLS } from '../research/install-research';
 import { UTILITY_SKILLS } from '../utility/install-utility';
-import { WORKFLOW_SKILLS } from '../workflows/install-workflows';
+import {
+  WORKFLOW_AGENTS,
+  WORKFLOW_SKILLS,
+} from '../workflows/install-workflows';
+import { RESEARCH_AGENTS } from './skill-manifest';
 
 /**
  * Parse the SKILLS=(...) bash array from bundle-assets.sh.
@@ -34,6 +38,21 @@ function parseBundleSkills(): string[] {
     .filter((line) => line.length > 0 && !line.startsWith('#'));
 }
 
+function parseBundleAgents(): string[] {
+  const scriptPath = join(
+    import.meta.dirname,
+    '../../../../../scripts/bundle-assets.sh',
+  );
+  const content = readFileSync(scriptPath, 'utf8');
+  const match = content.match(/for agent in ([\s\S]*?); do/);
+  if (!match)
+    throw new Error('Could not parse agent list from bundle-assets.sh');
+  return match[1]
+    .split(/\s+/)
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
+
 function isUserInvocableSkill(skillName: string): boolean {
   const skillPath = join(
     import.meta.dirname,
@@ -47,6 +66,7 @@ function isUserInvocableSkill(skillName: string): boolean {
 
 describe('bundle-assets.sh consistency', () => {
   const bundleSkills = parseBundleSkills();
+  const bundleAgents = parseBundleAgents();
   const repoSkillsRoot = join(
     import.meta.dirname,
     '../../../../../../../.agents/skills',
@@ -131,6 +151,26 @@ describe('bundle-assets.sh consistency', () => {
     expect(
       missing,
       `Missing from bundle-assets.sh SKILLS array: ${missing.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('bundles every workflow agent', () => {
+    const missing = WORKFLOW_AGENTS.filter(
+      (agent) => !bundleAgents.includes(agent),
+    );
+    expect(
+      missing,
+      `Missing from bundle-assets.sh agent list: ${missing.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('bundles every research agent', () => {
+    const missing = RESEARCH_AGENTS.filter(
+      (agent) => !bundleAgents.includes(agent),
+    );
+    expect(
+      missing,
+      `Missing from bundle-assets.sh agent list: ${missing.join(', ')}`,
     ).toEqual([]);
   });
 
