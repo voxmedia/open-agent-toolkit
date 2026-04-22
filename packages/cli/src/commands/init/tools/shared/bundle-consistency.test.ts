@@ -1,4 +1,12 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -24,11 +32,7 @@ import { RESEARCH_AGENTS } from './skill-manifest';
  * the bundled asset on the next `pnpm build`.
  */
 function parseBundleSkills(): string[] {
-  const scriptPath = join(
-    import.meta.dirname,
-    '../../../../../scripts/bundle-assets.sh',
-  );
-  const content = readFileSync(scriptPath, 'utf8');
+  const content = readFileSync(getBundleScriptPath(), 'utf8');
   const match = content.match(/SKILLS=\(\s*([\s\S]*?)\)/);
   if (!match)
     throw new Error('Could not parse SKILLS array from bundle-assets.sh');
@@ -39,11 +43,7 @@ function parseBundleSkills(): string[] {
 }
 
 function parseBundleAgents(): string[] {
-  const scriptPath = join(
-    import.meta.dirname,
-    '../../../../../scripts/bundle-assets.sh',
-  );
-  const content = readFileSync(scriptPath, 'utf8');
+  const content = readFileSync(getBundleScriptPath(), 'utf8');
   const match = content.match(/for agent in ([\s\S]*?); do/);
   if (!match)
     throw new Error('Could not parse agent list from bundle-assets.sh');
@@ -51,6 +51,10 @@ function parseBundleAgents(): string[] {
     .split(/\s+/)
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
+}
+
+function getBundleScriptPath(): string {
+  return join(import.meta.dirname, '../../../../../scripts/bundle-assets.sh');
 }
 
 function isUserInvocableSkill(skillName: string): boolean {
@@ -198,5 +202,29 @@ describe('bundle-assets.sh consistency', () => {
         .filter((skill) => !WORKFLOW_SKILLS.includes(skill))
         .join(', ')}`,
     ).toEqual(expect.arrayContaining(workflowLifecycleSkills));
+  });
+
+  it('does not bundle skill test directories', () => {
+    const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
+
+    try {
+      execFileSync('bash', [getBundleScriptPath()], {
+        env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+        stdio: 'pipe',
+      });
+
+      expect(
+        existsSync(
+          join(assetsRoot, 'skills', 'oat-project-implement', 'tests'),
+        ),
+      ).toBe(false);
+      expect(
+        existsSync(
+          join(assetsRoot, 'skills', 'oat-project-implement', 'SKILL.md'),
+        ),
+      ).toBe(true);
+    } finally {
+      rmSync(assetsRoot, { recursive: true, force: true });
+    }
   });
 });
