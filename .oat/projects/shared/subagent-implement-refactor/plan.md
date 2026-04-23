@@ -572,14 +572,41 @@ Mark `p-rev1` complete in the project artifacts, update the Reviews table to sho
 
 **Step 3: Verify**
 
-Run: `rg "oat_current_task.*prev1-t01" .oat/projects/shared/subagent-implement-refactor`
-Expected: no matches remain after reconciliation.
+Run: `rg -n "oat_current_task(_id)?: .*prev1-t01" .oat/projects/shared/subagent-implement-refactor/state.md .oat/projects/shared/subagent-implement-refactor/implementation.md`
+Expected: no matches remain in live bookkeeping files after reconciliation.
 
 **Step 4: Commit**
 
 ```bash
 git add .oat/projects/shared/subagent-implement-refactor/plan.md .oat/projects/shared/subagent-implement-refactor/implementation.md .oat/projects/shared/subagent-implement-refactor/state.md
 git commit -m "fix(prev2-t02): reconcile p-rev1 project tracking"
+```
+
+### Task prev2-t03: (review) Mark final review fixes completed
+
+**Files:**
+
+- Modify: `.oat/projects/shared/subagent-implement-refactor/plan.md`
+
+**Step 1: Understand the issue**
+
+Review follow-up: after the `prev2-t01` and `prev2-t02` fixes land, the project review ledger still needs a bookkeeping update so the active `final` review row reflects that fixes were applied and a re-review is pending.
+Location: `.oat/projects/shared/subagent-implement-refactor/plan.md:450`
+
+**Step 2: Implement fix**
+
+Update the `final` review row to `fixes_completed` with the `reviews/final-review-2026-04-23-r2.md` pointer so the active review state matches the branch history before the next re-review.
+
+**Step 3: Verify**
+
+Run: `rg -n "final\\s+\\| code\\s+\\| fixes_completed|final-review-2026-04-23-r2.md" .oat/projects/shared/subagent-implement-refactor/plan.md`
+Expected: the active `final` review row is marked `fixes_completed` and references the re-review artifact.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/subagent-implement-refactor/plan.md
+git commit -m "fix(prev2-t03): mark final review fixes completed"
 ```
 
 ---
@@ -596,9 +623,9 @@ git commit -m "fix(prev2-t02): reconcile p-rev1 project tracking"
 - Phase p06: 2 tasks — skill deletion, doc reference cleanup
 - Phase p07: 5 tasks — shell test, package lockstep bump, skill version bumps, release:validate + full suite, final review fixes
 - Phase p-rev1: 3 tasks — Codex no-fork review dispatch, reviewer timeout fallback, scoped verification guidance
-- Phase p-rev2: 2 tasks — workflow install test regression fix, p-rev1 bookkeeping reconciliation
+- Phase p-rev2: 3 tasks — workflow install test regression fix, p-rev1 bookkeeping reconciliation, final review row marked fixes_completed
 
-**Total: 35 tasks across 9 phases**
+**Total: 36 tasks across 9 phases**
 
 Executed via Superpowers `subagent-driven-development` to avoid self-modification of the skill under active development. See discovery.md decision #10 for rationale.
 

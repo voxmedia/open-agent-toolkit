@@ -61,7 +61,7 @@ oat_generated: true
 - Medium: 0
 - Minor: 2
 
-**New tasks added:** `prev2-t01`, `prev2-t02`
+**New tasks added:** `prev2-t01`, `prev2-t02`, `prev2-t03`
 
 **Deferred Findings (Minor):**
 
@@ -71,7 +71,6 @@ oat_generated: true
 
 Next:
 
-- Update the review row status to `fixes_completed`
 - Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
 
 ---
@@ -88,9 +87,9 @@ Next:
 | p06    | complete | 2     | 2/2       |
 | p07    | complete | 5     | 5/5       |
 | p-rev1 | complete | 3     | 3/3       |
-| p-rev2 | complete | 2     | 2/2       |
+| p-rev2 | complete | 3     | 3/3       |
 
-**Total:** 35/35 tasks completed
+**Total:** 36/36 tasks completed
 
 ---
 
