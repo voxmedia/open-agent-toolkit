@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev2-t01
-oat_last_commit: e09d6fc6
+oat_current_task: null
+oat_last_commit: 2ec5858b
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: []
@@ -15,13 +15,13 @@ oat_pr_status: open
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/58
 oat_project_created: '2026-04-17T17:00:18.129Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-23T21:13:35Z'
+oat_project_state_updated: '2026-04-23T22:09:50Z'
 oat_generated: false
 ---
 
 # Project State: subagent-implement-refactor
 
-**Status:** In progress — final re-review fix tasks queued
+**Status:** In progress — final re-review fixes applied, re-review pending
 **Started:** 2026-04-17
 **Last Updated:** 2026-04-23
 
@@ -57,8 +57,8 @@ Implementation — review-fix phase `p-rev2` is active.
 - ✓ Summary generated
 - ✓ Rebased onto origin/main (0.0.44 lockstep bump)
 - ✓ PR created — https://github.com/voxmedia/open-agent-toolkit/pull/58
-- ⧗ Revision 1 tracking still needs reconciliation
-- ⧗ Revision 2 queued — final review fixes
+- ✓ Revision 1 tracking reconciled (commits `d1a5dd34`, `7a975f0b`, `13f3623e`)
+- ✓ Revision 2 fix tasks completed — final re-review pending
 
 ## Blockers
 
@@ -66,7 +66,7 @@ None
 
 ## Next Milestone
 
-Final review fix tasks are active for PR #58.
+Final review fix tasks are complete for PR #58.
 
-- Next: run `oat-project-implement`
-- After revision tasks complete: push updates to PR #58 and continue with `oat-project-revise` or `oat-project-complete` as appropriate
+- Next: run `oat-project-review-provide code final`
+- After re-review passes: push updates to PR #58 and continue with `oat-project-revise` or `oat-project-complete` as appropriate

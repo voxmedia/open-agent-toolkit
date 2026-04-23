@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-23
-oat_current_task_id: prev2-t01
+oat_current_task_id: null
 oat_generated: true
 ---
 
@@ -12,7 +12,7 @@ oat_generated: true
 **Started:** 2026-04-17
 **Last Updated:** 2026-04-23
 
-**Next:** Execute review-fix phase `p-rev2` starting at `prev2-t01`, then re-review final scope and update PR #58.
+**Next:** Re-run final-scope review for `p-rev2`, then update PR #58.
 
 ## Revision Received: Inline Feedback
 
@@ -27,7 +27,7 @@ oat_generated: true
 
 **New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`
 
-**Next:** Execute revision tasks via `oat-project-implement`.
+**Disposition:** Complete — `prev1-t01`, `prev1-t02`, and `prev1-t03` landed in commits `d1a5dd34`, `7a975f0b`, and `13f3623e`, then were validated by the 2026-04-23 final delta review.
 
 ## Review Received: final
 
@@ -67,9 +67,9 @@ oat_generated: true
 
 - `m2` Legacy `autoReviewAtCheckpoints` is no longer illustrated by this repo's `.oat/config.json`. Deferred because the migrated repo config is allowed to use the new workflow key and does not need to double as a legacy fallback example.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
+**Disposition:** Fix tasks added and completed in `p-rev2`.
 
-After the fix tasks are complete:
+Next:
 
 - Update the review row status to `fixes_completed`
 - Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
@@ -78,19 +78,19 @@ After the fix tasks are complete:
 
 ## Progress Overview
 
-| Phase  | Status      | Tasks | Completed |
-| ------ | ----------- | ----- | --------- |
-| p01    | complete    | 3     | 3/3       |
-| p02    | complete    | 3     | 3/3       |
-| p03    | complete    | 9     | 9/9       |
-| p04    | complete    | 4     | 4/4       |
-| p05    | complete    | 4     | 4/4       |
-| p06    | complete    | 2     | 2/2       |
-| p07    | complete    | 5     | 5/5       |
-| p-rev1 | in_progress | 3     | 0/3       |
-| p-rev2 | in_progress | 2     | 0/2       |
+| Phase  | Status   | Tasks | Completed |
+| ------ | -------- | ----- | --------- |
+| p01    | complete | 3     | 3/3       |
+| p02    | complete | 3     | 3/3       |
+| p03    | complete | 9     | 9/9       |
+| p04    | complete | 4     | 4/4       |
+| p05    | complete | 4     | 4/4       |
+| p06    | complete | 2     | 2/2       |
+| p07    | complete | 5     | 5/5       |
+| p-rev1 | complete | 3     | 3/3       |
+| p-rev2 | complete | 2     | 2/2       |
 
-**Total:** 30/35 tasks completed
+**Total:** 35/35 tasks completed
 
 ---
 
@@ -244,6 +244,19 @@ p07 fix iteration: post-phase review (via `.oat/repo/reviews/ad-hoc-review-2026-
 - `70bf133d` — `fix(tests): reconcile skill contract tests with current content` _(review fix)_
 
 **Outcome:** Shell test script added covering all four fixture directories. All five public packages bumped to 0.0.41 in lockstep. Skill versions bumped. `pnpm release:validate` passed. Post-implementation code review produced four findings (all Critical/Important) which were addressed in fix commits, then re-review confirmed passing.
+
+---
+
+### Phase p-rev1: Revision 1
+
+**Status:** complete
+**Commits:**
+
+- `d1a5dd34` — `fix(oat-project-implement): make codex review dispatch no-fork`
+- `7a975f0b` — `fix(oat-project-implement): add codex reviewer timeout fallback`
+- `13f3623e` — `fix(oat-project-plan): tighten scoped verification guidance`
+
+**Outcome:** Codex review dispatch guidance now requires self-contained Review Scope packets with fresh-context / `fork_context: false` semantics, Codex reviewer handling has a bounded timeout / nudge / inline-fallback path, and planning guidance now requires exact runner invocations for scoped verification commands.
 
 ---
 
