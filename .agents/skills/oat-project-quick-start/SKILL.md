@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 1.3.5
+version: 1.3.6
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 disable-model-invocation: true
@@ -301,6 +301,16 @@ Plan requirements — apply `oat-project-plan-writing` canonical format invarian
 - Required sections: `## Reviews`, `## Implementation Complete`, `## References`
 - Review table preservation rules (never delete existing rows)
 
+Required parallelism pass before finalizing the plan:
+
+- Evaluate adjacent phases for phase-level parallelism before treating the plan as complete.
+- Set `oat_plan_parallel_groups` whenever phases can run independently in isolated worktrees with disjoint write boundaries and independent verification.
+- Keep dependent tasks in the same phase when they must run sequentially.
+- Do not declare parallel groups when phases share a fragile migration, require the same generated artifact, or one phase's tests depend on another phase's behavior.
+- Add a short `## Parallelism` section to `plan.md` explaining the dependency and write-set reasoning, including why groups were declared or why the plan remains sequential.
+- Quick mode is not "sequential by default." A quick-start plan is sequential only when the dependency and write-set analysis says it should be.
+- When a task claims scoped verification, prefer the exact runner invocation that truly scopes to the intended file, test, or target instead of package-level shortcuts that may execute the full suite.
+
 ### Step 4: Sync Project State
 
 Update `"$PROJECT_PATH/state.md"`:
@@ -355,8 +365,9 @@ Report:
 - workflow mode (`quick`)
 - total phases/tasks generated
 - first task ID
+- execution shape summary (sequential or declared parallel groups)
 - next options:
-  - `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)
+  - `oat-project-implement`
 - dashboard location: `.oat/state.md` (confirm it was regenerated)
 
 ## Success Criteria
