@@ -731,11 +731,11 @@ We chose option 2 because it composes cleanly with ADR-015, leverages existing C
 
 #### Decision
 
-1. **Introduce `workflow.*` as a dedicated preference namespace** with six keys shipped in this project: `hillCheckpointDefault`, `archiveOnComplete`, `createPrOnComplete`, `postImplementSequence`, `reviewExecutionModel`, `autoNarrowReReviewScope`.
+1. **Introduce `workflow.*` as a dedicated preference namespace** with six keys shipped in this project: `hillCheckpointDefault`, `archiveOnComplete`, `createPrOnComplete`, `postImplementSequence`, `reviewExecutionModel`, `autoNarrowReReviewScope`. Later dogfooding moved the checkpoint lifecycle review preference into the same namespace as `autoReviewAtHillCheckpoints`, with legacy fallback from top-level `autoReviewAtCheckpoints`.
 
 2. **Refactor `getConfigValue()` to delegate to `resolveEffectiveConfig()`** for all keys, not just workflow keys. This deletes ~150 lines of duplicated per-key if-else resolution and gives every existing key the 3-layer precedence model. Source labels change from `config.json`/`config.local.json` to `shared`/`local`/`user` for consistency with `oat config dump`.
 
-3. **Add `--shared`/`--local`/`--user` surface flags to `oat config set`** with per-key restrictions: structural keys remain shared-only; state keys remain local-only except `activeIdea` which also accepts user; workflow keys accept all three surfaces; `autoReviewAtCheckpoints` remains shared-only pending a broader behavioral-key expansion.
+3. **Add `--shared`/`--local`/`--user` surface flags to `oat config set`** with per-key restrictions: structural keys remain shared-only; state keys remain local-only except `activeIdea` which also accepts user; workflow keys accept all three surfaces. Top-level `autoReviewAtCheckpoints` is retained only as a compatibility fallback for `workflow.autoReviewAtHillCheckpoints`.
 
 4. **Establish a "correct surface" rule for workflow preferences:** if a preference's correctness depends on other per-repo settings (e.g., `postImplementSequence: docs-pr` depends on `documentation.requireForProjectCompletion`), the preference belongs at shared scope. Pure personal preferences (e.g., `hillCheckpointDefault` for interruption tolerance) belong at user scope. Document this explicitly in the configuration guide so other users don't hit the cross-repo foot-gun.
 

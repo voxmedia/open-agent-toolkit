@@ -1,6 +1,6 @@
 ---
 name: oat-doctor
-version: 1.0.1
+version: 1.0.2
 description: Use when you need to diagnose your OAT setup, check for outdated skills, identify misconfigurations, or get a summary of installed tools and config. Runs health checks and recommends corrective actions.
 argument-hint: '[--summary]'
 disable-model-invocation: true
@@ -263,7 +263,7 @@ Read config key descriptions from `~/.oat/docs/reference/file-locations.md` and 
 - **documentation.config:** Path to docs config file (e.g., mkdocs.yml).
 - **documentation.tooling:** Docs tooling in use (e.g., mkdocs, fumadocs).
 - **documentation.requireForProjectCompletion:** Whether docs update is required before project completion.
-- **autoReviewAtCheckpoints:** When true, completing a plan phase checkpoint auto-triggers a subagent code review. Default false. Can be overridden per-project via `oat_auto_review_at_checkpoints` in plan.md frontmatter.
+- **workflow.autoReviewAtHillCheckpoints:** When true, completing a HiLL checkpoint auto-triggers the lifecycle review. Default unset. This does not control Tier 1 per-phase `oat-reviewer` gates. Can be overridden per-project via `oat_auto_review_at_hill_checkpoints` in plan.md frontmatter. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks.
 - **worktrees.root:** Base directory for git worktrees. Used by worktree-bootstrap skills.
 
 ## Sync Status

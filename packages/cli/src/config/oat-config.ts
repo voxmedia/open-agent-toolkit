@@ -41,6 +41,7 @@ export interface OatWorkflowConfig {
   createPrOnComplete?: boolean;
   postImplementSequence?: WorkflowPostImplementSequence;
   reviewExecutionModel?: WorkflowReviewExecutionModel;
+  autoReviewAtHillCheckpoints?: boolean;
   autoNarrowReReviewScope?: boolean;
 }
 
@@ -99,6 +100,10 @@ function normalizeWorkflowConfig(
   ) {
     next.reviewExecutionModel =
       parsed.reviewExecutionModel as WorkflowReviewExecutionModel;
+  }
+
+  if (typeof parsed.autoReviewAtHillCheckpoints === 'boolean') {
+    next.autoReviewAtHillCheckpoints = parsed.autoReviewAtHillCheckpoints;
   }
 
   if (typeof parsed.autoNarrowReReviewScope === 'boolean') {

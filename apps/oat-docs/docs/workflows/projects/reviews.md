@@ -56,9 +56,11 @@ Status progression in `plan.md` Reviews table:
 - Minor (non-final scopes): do not auto-defer by default. Convert when likely future cleanup or when the fix is trivial; defer only with recorded rationale.
 - Minor (final scope): not auto-deferred; require explicit user disposition (defer vs convert), and recommend convert when likely future cleanup or trivial to fix.
 
-## Auto-review at checkpoints
+## Auto-review at HiLL checkpoints
 
-When `autoReviewAtCheckpoints` is enabled (via `oat config set autoReviewAtCheckpoints true` or per-project in `plan.md` frontmatter), completing a plan phase checkpoint automatically spawns a subagent review. The review scope covers every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase checkpoint reviews use inclusive phase-range scopes such as `p02-p03`. The final phase checkpoint triggers a `code final` review.
+When `workflow.autoReviewAtHillCheckpoints` is enabled (for example, `oat config set workflow.autoReviewAtHillCheckpoints true --user`) or per-project `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review. The review scope covers every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase checkpoint reviews use inclusive phase-range scopes such as `p02-p03`. The final phase checkpoint triggers a `code final` review.
+
+This is separate from Tier 1 phase gate reviews. Tier 1 implementation always runs `oat-reviewer` after each phase; `workflow.autoReviewAtHillCheckpoints` only controls the additional lifecycle review when a HiLL checkpoint is reached. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks.
 
 Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` auto-converts all findings to fix tasks without user prompts (Minor findings that are clearly out of scope are deferred with a note).
 

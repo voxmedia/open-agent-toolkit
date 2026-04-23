@@ -24,9 +24,9 @@
     ".oat/**/reviews/archived",
     ".oat/ideas"
   ],
-  "autoReviewAtCheckpoints": true,
   "workflow": {
     "archiveOnComplete": true,
-    "postImplementSequence": "docs-pr"
+    "postImplementSequence": "docs-pr",
+    "autoReviewAtHillCheckpoints": true
   }
 }

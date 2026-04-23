@@ -50,6 +50,7 @@ type ConfigKey =
   | 'tools.workflows'
   | 'workflow.archiveOnComplete'
   | 'workflow.autoNarrowReReviewScope'
+  | 'workflow.autoReviewAtHillCheckpoints'
   | 'workflow.createPrOnComplete'
   | 'workflow.hillCheckpointDefault'
   | 'workflow.postImplementSequence'
@@ -129,6 +130,7 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.createPrOnComplete',
   'workflow.postImplementSequence',
   'workflow.reviewExecutionModel',
+  'workflow.autoReviewAtHillCheckpoints',
   'workflow.autoNarrowReReviewScope',
   'worktrees.root',
 ];
@@ -178,7 +180,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set autoReviewAtCheckpoints <true|false>',
     description:
-      'Controls whether OAT automatically runs review gates at configured phase checkpoints.',
+      'Deprecated compatibility alias for workflow.autoReviewAtHillCheckpoints. Prefer `oat config set workflow.autoReviewAtHillCheckpoints <true|false>`.',
   },
   {
     key: 'documentation.root',
@@ -462,6 +464,19 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'Default execution model for the final review step in oat-project-implement: "subagent" dispatches a review subagent, "inline" runs the review in-context, "fresh-session" prints guidance for running the review in a separate session (with an escape hatch to subagent/inline). When unset, the skill prompts. Resolution: env > local > shared > user > default.',
   },
   {
+    key: 'workflow.autoReviewAtHillCheckpoints',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'boolean',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set workflow.autoReviewAtHillCheckpoints <true|false>',
+    description:
+      'Automatically run the extra lifecycle review when a HiLL checkpoint is reached. This does not control Tier 1 per-phase oat-reviewer gates. When unset, the skill prompts. Resolution: env > local > shared > user > legacy autoReviewAtCheckpoints > default.',
+  },
+  {
     key: 'workflow.autoNarrowReReviewScope',
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
@@ -546,6 +561,7 @@ const WORKFLOW_ENUM_VALUES = {
 const WORKFLOW_BOOLEAN_KEYS = new Set<ConfigKey>([
   'workflow.archiveOnComplete',
   'workflow.createPrOnComplete',
+  'workflow.autoReviewAtHillCheckpoints',
   'workflow.autoNarrowReReviewScope',
 ]);
 
@@ -609,11 +625,11 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
     return;
   }
 
-  // autoReviewAtCheckpoints is currently shared-only. Multi-surface support
-  // for behavioral keys is out of scope for p01-t04 (workflow.* keys only).
+  // Legacy alias remains shared-only. The preferred multi-surface key is
+  // workflow.autoReviewAtHillCheckpoints.
   if (key === 'autoReviewAtCheckpoints' && surface !== 'shared') {
     throw new Error(
-      `Cannot set 'autoReviewAtCheckpoints' at '${surface}' scope. This key is currently shared-only.`,
+      `Cannot set 'autoReviewAtCheckpoints' at '${surface}' scope. This legacy key is shared-only; use workflow.autoReviewAtHillCheckpoints for local/user overrides.`,
     );
   }
 

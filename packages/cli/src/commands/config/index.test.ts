@@ -801,6 +801,73 @@ describe('oat config', () => {
       });
     });
 
+    it('sets workflow.autoReviewAtHillCheckpoints at user level', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.autoReviewAtHillCheckpoints',
+        'true',
+        '--user',
+      ]);
+
+      const raw = await readFile(join(home, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: { autoReviewAtHillCheckpoints: true },
+      });
+
+      const { command: getCmd, capture: getCap } = createHarness({
+        cwd: root,
+        home,
+      });
+      await runCommand(
+        getCmd,
+        ['get', 'workflow.autoReviewAtHillCheckpoints'],
+        ['--json'],
+      );
+      expect(getCap.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.autoReviewAtHillCheckpoints',
+        value: 'true',
+        source: 'user',
+      });
+    });
+
+    it('workflow.autoReviewAtHillCheckpoints overrides legacy autoReviewAtCheckpoints', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const h1 = createHarness({ cwd: root, home });
+
+      await runCommand(h1.command, [
+        'set',
+        'autoReviewAtCheckpoints',
+        'true',
+        '--shared',
+      ]);
+
+      const h2 = createHarness({ cwd: root, home });
+      await runCommand(h2.command, [
+        'set',
+        'workflow.autoReviewAtHillCheckpoints',
+        'false',
+        '--shared',
+      ]);
+
+      const h3 = createHarness({ cwd: root, home });
+      await runCommand(
+        h3.command,
+        ['get', 'workflow.autoReviewAtHillCheckpoints'],
+        ['--json'],
+      );
+      expect(h3.capture.jsonPayloads[0]).toMatchObject({
+        value: 'false',
+        source: 'shared',
+      });
+    });
+
     it('local overrides shared overrides user for workflow keys (full chain)', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
@@ -858,7 +925,7 @@ describe('oat config', () => {
   });
 
   describe('workflow preference catalog', () => {
-    it('describe lists all six workflow preference keys under Workflow Preferences group', async () => {
+    it('describe lists all seven workflow preference keys under Workflow Preferences group', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
 
@@ -870,6 +937,7 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('workflow.createPrOnComplete');
       expect(capture.info[0]).toContain('workflow.postImplementSequence');
       expect(capture.info[0]).toContain('workflow.reviewExecutionModel');
+      expect(capture.info[0]).toContain('workflow.autoReviewAtHillCheckpoints');
       expect(capture.info[0]).toContain('workflow.autoNarrowReReviewScope');
       expect(process.exitCode).toBe(0);
     });

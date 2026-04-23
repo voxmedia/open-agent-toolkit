@@ -441,6 +441,7 @@ describe('oat-config', () => {
             createPrOnComplete: true,
             postImplementSequence: 'pr',
             reviewExecutionModel: 'subagent',
+            autoReviewAtHillCheckpoints: true,
             autoNarrowReReviewScope: false,
           },
         }),
@@ -454,6 +455,7 @@ describe('oat-config', () => {
         createPrOnComplete: true,
         postImplementSequence: 'pr',
         reviewExecutionModel: 'subagent',
+        autoReviewAtHillCheckpoints: true,
         autoNarrowReReviewScope: false,
       });
     });
@@ -504,6 +506,7 @@ describe('oat-config', () => {
             archiveOnComplete: false,
             postImplementSequence: 'docs-pr',
             reviewExecutionModel: 'inline',
+            autoReviewAtHillCheckpoints: false,
           },
         }),
         'utf8',
@@ -515,6 +518,7 @@ describe('oat-config', () => {
         archiveOnComplete: false,
         postImplementSequence: 'docs-pr',
         reviewExecutionModel: 'inline',
+        autoReviewAtHillCheckpoints: false,
       });
     });
 
@@ -529,6 +533,7 @@ describe('oat-config', () => {
             hillCheckpointDefault: 'final',
             createPrOnComplete: true,
             reviewExecutionModel: 'fresh-session',
+            autoReviewAtHillCheckpoints: true,
           },
         }),
         'utf8',
@@ -539,6 +544,7 @@ describe('oat-config', () => {
         hillCheckpointDefault: 'final',
         createPrOnComplete: true,
         reviewExecutionModel: 'fresh-session',
+        autoReviewAtHillCheckpoints: true,
       });
     });
 
@@ -567,6 +573,7 @@ describe('oat-config', () => {
           createPrOnComplete: true,
           postImplementSequence: 'docs-pr',
           reviewExecutionModel: 'subagent',
+          autoReviewAtHillCheckpoints: true,
           autoNarrowReReviewScope: true,
         },
       });
@@ -578,6 +585,7 @@ describe('oat-config', () => {
         createPrOnComplete: true,
         postImplementSequence: 'docs-pr',
         reviewExecutionModel: 'subagent',
+        autoReviewAtHillCheckpoints: true,
         autoNarrowReReviewScope: true,
       });
     });

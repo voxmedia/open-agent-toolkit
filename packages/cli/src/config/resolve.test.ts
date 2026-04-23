@@ -262,6 +262,10 @@ describe('resolveEffectiveConfig', () => {
         value: null,
         source: 'default',
       });
+      expect(result.resolved['workflow.autoReviewAtHillCheckpoints']).toEqual({
+        value: null,
+        source: 'default',
+      });
       expect(result.resolved['workflow.autoNarrowReReviewScope']).toEqual({
         value: null,
         source: 'default',
@@ -283,6 +287,7 @@ describe('resolveEffectiveConfig', () => {
               workflow: {
                 hillCheckpointDefault: 'final',
                 archiveOnComplete: true,
+                autoReviewAtHillCheckpoints: true,
               },
             }) satisfies UserConfig,
         },
@@ -293,6 +298,10 @@ describe('resolveEffectiveConfig', () => {
         source: 'user',
       });
       expect(result.resolved['workflow.archiveOnComplete']).toEqual({
+        value: true,
+        source: 'user',
+      });
+      expect(result.resolved['workflow.autoReviewAtHillCheckpoints']).toEqual({
         value: true,
         source: 'user',
       });
@@ -358,6 +367,57 @@ describe('resolveEffectiveConfig', () => {
       });
       // archiveOnComplete only set in shared → still resolves from shared
       expect(result.resolved['workflow.archiveOnComplete']).toEqual({
+        value: false,
+        source: 'shared',
+      });
+    });
+
+    it('uses legacy shared autoReviewAtCheckpoints as fallback for workflow.autoReviewAtHillCheckpoints', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              autoReviewAtCheckpoints: true,
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.autoReviewAtHillCheckpoints']).toEqual({
+        value: true,
+        source: 'shared',
+      });
+    });
+
+    it('workflow.autoReviewAtHillCheckpoints overrides legacy autoReviewAtCheckpoints', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              autoReviewAtCheckpoints: true,
+              workflow: { autoReviewAtHillCheckpoints: false },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { autoReviewAtHillCheckpoints: true },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.autoReviewAtHillCheckpoints']).toEqual({
         value: false,
         source: 'shared',
       });

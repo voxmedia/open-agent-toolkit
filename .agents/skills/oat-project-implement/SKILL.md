@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.4
+version: 2.0.5
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -333,21 +333,24 @@ When user confirms/changes:
 - Update `"$PROJECT_PATH/plan.md"` frontmatter `oat_plan_hill_phases` to the confirmed value before executing tasks.
 - Keep the value stable for the rest of the run unless the user explicitly requests a change.
 
-#### Auto-Review at Checkpoints (Touchpoint A)
+#### Auto-Review at HiLL Checkpoints (Touchpoint A)
 
 After checkpoint behavior is confirmed, resolve auto-review preference:
 
-1. Read `.oat/config.json` `autoReviewAtCheckpoints` (default: `false`)
-2. **If config explicitly `true`:** Skip the prompt. Write `oat_auto_review_at_checkpoints: true` to plan.md frontmatter. Print: "Auto-review at checkpoints: enabled (from config)."
-3. **If config `false` or absent:** Add one question after the checkpoint choice:
+1. Read `workflow.autoReviewAtHillCheckpoints` via `oat config get workflow.autoReviewAtHillCheckpoints`. This uses local > shared > user resolution and falls back to legacy `.oat/config.json` `autoReviewAtCheckpoints` when the workflow key is unset.
+2. **If config explicitly `true`:** Skip the prompt. Write `oat_auto_review_at_hill_checkpoints: true` to plan.md frontmatter. Print: "Auto-review at HiLL checkpoints: enabled (from workflow.autoReviewAtHillCheckpoints)."
+3. **If config explicitly `false`:** Skip the prompt. Write `oat_auto_review_at_hill_checkpoints: false` to plan.md frontmatter. Print: "Auto-review at HiLL checkpoints: disabled (from workflow.autoReviewAtHillCheckpoints)."
+4. **If config is unset:** Add one question after the checkpoint choice:
    ```
-   4. Auto-review at checkpoints?
-      - yes: automatically spawn a subagent code review when a checkpoint phase completes
-      - no (default): manual review triggering (current behavior)
+   4. Auto-review at HiLL checkpoints?
+      - yes: automatically run the lifecycle review when a HiLL checkpoint phase completes
+      - no (default): manual lifecycle review triggering
    ```
-4. Write `oat_auto_review_at_checkpoints: true|false` to plan.md frontmatter alongside `oat_plan_hill_phases`.
+5. Write `oat_auto_review_at_hill_checkpoints: true|false` to plan.md frontmatter alongside `oat_plan_hill_phases`.
 
-**On resume:** If `oat_auto_review_at_checkpoints` is already present in plan.md frontmatter, skip Touchpoint A entirely — do not re-ask, do not re-read config, do not print the auto-review note. The stored value is authoritative.
+This setting controls only the extra `oat-project-review-provide` lifecycle review at HiLL checkpoints. It does not control Tier 1 phase gate reviews; Tier 1 always runs `oat-reviewer` after each phase.
+
+**On resume:** If `oat_auto_review_at_hill_checkpoints` is already present in plan.md frontmatter, skip Touchpoint A entirely — do not re-ask, do not re-read config, do not print the auto-review note. The stored value is authoritative. If only legacy `oat_auto_review_at_checkpoints` is present, treat it as authoritative for this run and write the new `oat_auto_review_at_hill_checkpoints` key on the next plan frontmatter update.
 
 ### Step 3: Check Implementation State
 
@@ -666,11 +669,11 @@ At the end of each plan phase (p01, p02, etc.), check `oat_plan_hill_phases` in 
 
 **Key semantic: listed phases are where you stop AFTER completing them, not before.** `["p03"]` means "complete p03, then pause" — not "pause before starting p03."
 
-**Auto-review at checkpoints (Touchpoint B):**
+**Auto-review at HiLL checkpoints (Touchpoint B):**
 
 Before pausing at a checkpoint, check if auto-review is enabled:
 
-1. Read `oat_auto_review_at_checkpoints` from plan.md frontmatter. If not present, fall back to `.oat/config.json` `autoReviewAtCheckpoints` (default: `false`).
+1. Read `oat_auto_review_at_hill_checkpoints` from plan.md frontmatter. If not present, fall back to legacy `oat_auto_review_at_checkpoints`. If neither is present, fall back to `oat config get workflow.autoReviewAtHillCheckpoints` (which itself falls back to legacy `.oat/config.json` `autoReviewAtCheckpoints` when unset).
 
 2. If enabled and this is a checkpoint phase:
    a. **Determine review scope:** Find the highest completed implementation phase already covered by a **`passed`** code-review row in plan.md Reviews table. Count only whole-phase scopes: `pNN` or `pNN-pMM`. Ignore task scopes (`pNN-tNN`) and rows with `fixes_added` or `fixes_completed` because those reviews did not pass and must be re-covered. Scope = every implementation phase after that passed coverage through the current phase, inclusive. If no earlier passed whole-phase review exists, start from the first implementation phase. Use `pNN-pMM` when the scope spans multiple phases. If this is the final implementation phase checkpoint, use scope `final`.

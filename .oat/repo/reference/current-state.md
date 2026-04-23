@@ -178,9 +178,9 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat config set` accepts mutually exclusive `--shared`/`--local`/`--user` surface flags with per-key restrictions (structural keys shared-only, state keys local-only except `activeIdea` which also accepts user, workflow keys accept all three).
   - Tool-pack lifecycle commands now persist pack availability in `tools.<pack>` so workflows can use an explicit config signal instead of inferring installed capability from filesystem artifacts alone.
 - Workflow preferences (`workflow.*`):
-  - Six user-facing workflow preference keys skip repetitive prompts in project lifecycle skills when set: `workflow.hillCheckpointDefault`, `workflow.archiveOnComplete`, `workflow.createPrOnComplete`, `workflow.postImplementSequence`, `workflow.reviewExecutionModel`, `workflow.autoNarrowReReviewScope`.
+  - Seven user-facing workflow preference keys skip repetitive prompts in project lifecycle skills when set: `workflow.hillCheckpointDefault`, `workflow.archiveOnComplete`, `workflow.createPrOnComplete`, `workflow.postImplementSequence`, `workflow.reviewExecutionModel`, `workflow.autoReviewAtHillCheckpoints`, `workflow.autoNarrowReReviewScope`.
   - Skills check the relevant preference before prompting. When set, they print `"<preference>: <value> (from <key>)"` so the user can see the preference was used; when unset, they prompt as before (backward compatible).
-  - Skill integrations: `oat-project-implement` (hillCheckpoint, postImplementSequence, reviewExecutionModel), `oat-project-complete` (archive, createPr), `oat-project-review-provide` (autoNarrow).
+  - Skill integrations: `oat-project-implement` (hillCheckpoint, autoReviewAtHillCheckpoints, postImplementSequence, reviewExecutionModel), `oat-project-complete` (archive, createPr), `oat-project-review-provide` (autoNarrow).
   - Cross-surface guidance: preferences whose correctness depends on other per-repo settings (e.g., `postImplementSequence` depends on `documentation.requireForProjectCompletion`) belong at shared scope; purely personal preferences (e.g., `hillCheckpointDefault`) belong at user scope.
 - Supported providers: Claude Code, Cursor, Codex CLI, GitHub Copilot, Gemini CLI.
 - Codex TOML sync:

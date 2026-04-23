@@ -84,6 +84,7 @@ const DEFAULT_WORKFLOW_CONFIG = {
     createPrOnComplete: null,
     postImplementSequence: null,
     reviewExecutionModel: null,
+    autoReviewAtHillCheckpoints: null,
     autoNarrowReReviewScope: null,
   },
 } satisfies Record<string, unknown>;
@@ -159,6 +160,17 @@ export async function resolveEffectiveConfig(
         source: 'default',
       };
     }
+  }
+
+  const hillAutoReview = resolved['workflow.autoReviewAtHillCheckpoints'];
+  if (
+    hillAutoReview?.source === 'default' &&
+    shared.autoReviewAtCheckpoints !== undefined
+  ) {
+    resolved['workflow.autoReviewAtHillCheckpoints'] = {
+      value: shared.autoReviewAtCheckpoints,
+      source: 'shared',
+    };
   }
 
   return {

@@ -137,13 +137,14 @@ Workflow preferences let power users answer repetitive confirmation prompts once
 
 ### Preference keys
 
-All six workflow preference keys live under the `workflow.*` namespace:
+All seven workflow preference keys live under the `workflow.*` namespace:
 
 - `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement`: pause after every phase or only after the last phase. When unset, the skill prompts.
 - `workflow.archiveOnComplete` — boolean. Skip the "Archive after completion?" prompt in `oat-project-complete`. When unset, the skill prompts.
 - `workflow.createPrOnComplete` — boolean. Skip the "Open a PR?" prompt in `oat-project-complete`; when true, completion auto-triggers PR creation. When unset, the skill prompts.
 - `workflow.postImplementSequence` — `wait`, `summary`, `pr`, or `docs-pr`. Controls what `oat-project-implement` chains after final review passes. `wait` stops without auto-chaining, `summary` runs only `oat-project-summary`, `pr` runs `oat-project-pr-final` (which auto-generates summary), `docs-pr` runs `oat-project-document` then `oat-project-pr-final`. When unset, the skill prompts.
 - `workflow.reviewExecutionModel` — `subagent`, `inline`, or `fresh-session`. Default final-review execution model in `oat-project-implement`. `subagent` and `inline` run automatically. `fresh-session` is a soft preference: the skill prints guidance to run the review in another session but still offers escape hatches to `subagent` or `inline` if you change your mind. When unset, the skill prompts.
+- `workflow.autoReviewAtHillCheckpoints` — boolean. Automatically run the extra lifecycle review when a HiLL checkpoint is reached. This does not control Tier 1 per-phase `oat-reviewer` gates, which run after each phase in Tier 1 regardless of this setting. When unset, the skill prompts.
 - `workflow.autoNarrowReReviewScope` — boolean. Auto-narrow re-review scope to fix-task commits only in `oat-project-review-provide`. When unset, the skill prompts.
 
 ### Three-layer resolution
@@ -165,6 +166,7 @@ oat config set workflow.archiveOnComplete true --user
 oat config set workflow.createPrOnComplete true --user
 oat config set workflow.postImplementSequence pr --user
 oat config set workflow.reviewExecutionModel subagent --user
+oat config set workflow.autoReviewAtHillCheckpoints true --user
 oat config set workflow.autoNarrowReReviewScope true --user
 
 # Shared repo: team decision for this repo
@@ -186,6 +188,7 @@ Some preferences are **genuinely personal** — their correct value is the same 
 
 - `workflow.hillCheckpointDefault` — your personal tolerance for mid-implementation interruption
 - `workflow.reviewExecutionModel` — depends on your provider environment (Claude Code, Cursor, Codex), not the repo
+- `workflow.autoReviewAtHillCheckpoints` — your preference for automatic lifecycle review at HiLL checkpoints. Shared/local config can still override this when a repo should behave differently.
 - `workflow.autoNarrowReReviewScope` — pure personal workflow preference, no per-repo interaction
 
 Other preferences **depend on per-repo configuration** to be safe. These should be set at `--shared` (in each repo where they apply), not `--user`:
@@ -202,6 +205,7 @@ Other preferences **depend on per-repo configuration** to be safe. These should 
 # Personal defaults (apply everywhere)
 oat config set workflow.hillCheckpointDefault final --user
 oat config set workflow.reviewExecutionModel subagent --user
+oat config set workflow.autoReviewAtHillCheckpoints true --user
 oat config set workflow.autoNarrowReReviewScope true --user
 
 # Per-repo team decisions (set in each repo where they apply)
@@ -217,9 +221,17 @@ oat config set workflow.archiveOnComplete false --local  # "I don't want to arch
 
 ### Relationship to `autoReviewAtCheckpoints`
 
-The existing `autoReviewAtCheckpoints` key (top-level in `.oat/config.json`) was **not** migrated under the `workflow.*` namespace to preserve backward compatibility. It remains shared-scope-only and controls whether `oat-project-implement` auto-triggers code reviews at plan phase checkpoints. That is a separate behavioral toggle from the workflow preferences above — it affects when reviews happen, not which prompt-skipping defaults apply.
+`workflow.autoReviewAtHillCheckpoints` is the preferred key. It controls whether `oat-project-implement` runs the extra lifecycle review when a configured HiLL checkpoint is reached.
 
-If you enable both, you get a near-uninterrupted lifecycle: auto-review runs at checkpoints, fix tasks are converted automatically, and the workflow preferences skip every remaining confirmation prompt.
+This does not control Tier 1 phase gate reviews. Tier 1 always runs `oat-reviewer` after each phase. The workflow key only controls the additional `oat-project-review-provide` lifecycle review at HiLL checkpoints.
+
+The legacy top-level `.oat/config.json` key `autoReviewAtCheckpoints` is still read as a fallback for backward compatibility. Prefer the workflow key for new config:
+
+```bash
+oat config set workflow.autoReviewAtHillCheckpoints true --user
+```
+
+If you enable this plus the other workflow preferences, you get a near-uninterrupted lifecycle: lifecycle review runs at HiLL checkpoints, fix tasks are converted automatically, and the workflow preferences skip every remaining confirmation prompt.
 
 ## Provider sync config is different
 
