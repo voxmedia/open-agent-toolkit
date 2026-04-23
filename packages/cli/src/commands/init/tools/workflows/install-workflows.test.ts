@@ -88,7 +88,7 @@ describe('installWorkflows', () => {
 
     expect(result.copiedSkills).toHaveLength(WORKFLOW_SKILLS.length);
     expect(result.outdatedSkills).toEqual([]);
-    expect(result.copiedAgents).toHaveLength(2);
+    expect(result.copiedAgents).toHaveLength(WORKFLOW_AGENTS.length);
     expect(result.copiedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
     expect(result.copiedScripts).toHaveLength(3);
     expect(result.projectsRootInitialized).toBe(true);
@@ -268,7 +268,7 @@ describe('installWorkflows', () => {
     expect(second.copiedScripts).toEqual([]);
     expect(second.skippedSkills).toHaveLength(WORKFLOW_SKILLS.length);
     expect(second.outdatedSkills).toEqual([]);
-    expect(second.skippedAgents).toHaveLength(2);
+    expect(second.skippedAgents).toHaveLength(WORKFLOW_AGENTS.length);
     expect(second.skippedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
     expect(second.skippedScripts).toHaveLength(3);
   });
@@ -294,7 +294,7 @@ describe('installWorkflows', () => {
 
     expect(result.updatedSkills).toHaveLength(WORKFLOW_SKILLS.length);
     expect(result.outdatedSkills).toEqual([]);
-    expect(result.updatedAgents).toHaveLength(2);
+    expect(result.updatedAgents).toHaveLength(WORKFLOW_AGENTS.length);
     expect(result.updatedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
     expect(result.updatedScripts).toHaveLength(3);
   });
