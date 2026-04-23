@@ -1,41 +1,28 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-04-19
+oat_generated_at: 2026-04-23
 ---
 
 # OAT Repo State Dashboard
 
-**Generated:** 2026-04-19
+**Generated:** 2026-04-23
 
 ## Active Project
 
-**subagent-implement-refactor** (`.oat/projects/shared/subagent-implement-refactor`)
-
-## Active Project Summary
-
-| Field        | Value                 |
-| ------------ | --------------------- |
-| Mode         | { OAT_WORKFLOW_MODE } |
-| Phase        | implement             |
-| Status       | complete              |
-| HiLL Gate    | n/a                   |
-| Current Task | -                     |
-| Docs Updated | ✓ complete            |
-
-Details: `.oat/projects/shared/subagent-implement-refactor/state.md`
+_(not set)_
 
 ## Knowledge Status
 
 | Field         | Value      |
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
-| Age           | 17 days    |
-| Files Changed | 348        |
+| Age           | 21 days    |
+| Files Changed | 356        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-pr-final** - Generate final PR description (final review passed)
+**oat-project-open** - Select an existing project to continue work
 
 ## Quick Commands
 
@@ -52,4 +39,3 @@ Details: `.oat/projects/shared/subagent-implement-refactor/state.md`
 
 - **docs-readability-reorg** - implement
 - **remote-project-management** - discovery
-- **subagent-implement-refactor** - implement
