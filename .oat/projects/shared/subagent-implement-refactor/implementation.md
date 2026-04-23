@@ -2,17 +2,17 @@
 oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-04-20
-oat_current_task_id: prev1-t01
+oat_last_updated: 2026-04-23
+oat_current_task_id: prev2-t01
 oat_generated: true
 ---
 
 # Implementation: subagent-implement-refactor
 
 **Started:** 2026-04-17
-**Last Updated:** 2026-04-20
+**Last Updated:** 2026-04-23
 
-**Next:** Execute revision phase `p-rev1` starting at `prev1-t01`, then update PR #58.
+**Next:** Execute review-fix phase `p-rev2` starting at `prev2-t01`, then re-review final scope and update PR #58.
 
 ## Revision Received: Inline Feedback
 
@@ -49,6 +49,31 @@ oat_generated: true
 
 > This implementation was executed via Superpowers `subagent-driven-development` (not `oat-project-implement`) to avoid self-modification of the skill under active development. See discovery.md decision #10 for rationale. OAT artifacts are used for record-keeping; Superpowers for execution.
 
+## Review Received: final
+
+**Date:** 2026-04-23
+**Review artifact:** `reviews/archived/final-review-2026-04-23.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** `prev2-t01`, `prev2-t02`
+
+**Deferred Findings (Minor):**
+
+- `m2` Legacy `autoReviewAtCheckpoints` is no longer illustrated by this repo's `.oat/config.json`. Deferred because the migrated repo config is allowed to use the new workflow key and does not need to double as a legacy fallback example.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update the review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+
 ---
 
 ## Progress Overview
@@ -63,8 +88,9 @@ oat_generated: true
 | p06    | complete    | 2     | 2/2       |
 | p07    | complete    | 5     | 5/5       |
 | p-rev1 | in_progress | 3     | 0/3       |
+| p-rev2 | in_progress | 2     | 0/2       |
 
-**Total:** 30/33 tasks completed
+**Total:** 30/35 tasks completed
 
 ---
 

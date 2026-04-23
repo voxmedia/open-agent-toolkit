@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-04-17
+oat_last_updated: 2026-04-23
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: []
@@ -437,19 +437,19 @@ Add the integration shell test, bump all five public packages in lockstep, run r
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                                    |
-| ------ | -------- | -------- | ---------- | --------------------------------------------------------------------------- |
-| p01    | code     | passed   | 2026-04-17 | `.oat/repo/reviews/ad-hoc-review-2026-04-17-subagent-implement-analysis.md` |
-| p02    | code     | passed   | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p03    | code     | passed   | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p04    | code     | passed   | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p05    | code     | passed   | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p06    | code     | passed   | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p07    | code     | passed   | 2026-04-17 | _(inline via Superpowers review gate)_                                      |
-| p-rev1 | code     | pending  | 2026-04-20 | _(inline revision feedback — PR-scope fixes pending)_                       |
-| final  | code     | received | 2026-04-23 | `reviews/final-review-2026-04-23.md` (prior passed 2026-04-19 in archived/) |
-| spec   | artifact | passed   | 2026-04-17 | _(backfill — artifact created post-implementation)_                         |
-| design | artifact | passed   | 2026-04-17 | _(backfill — artifact created post-implementation)_                         |
+| Scope  | Type     | Status      | Date       | Artifact                                                                             |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------------------------------------------------ |
+| p01    | code     | passed      | 2026-04-17 | `.oat/repo/reviews/ad-hoc-review-2026-04-17-subagent-implement-analysis.md`          |
+| p02    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                               |
+| p03    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                               |
+| p04    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                               |
+| p05    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                               |
+| p06    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                               |
+| p07    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                               |
+| p-rev1 | code     | pending     | 2026-04-20 | _(inline revision feedback — PR-scope fixes pending)_                                |
+| final  | code     | fixes_added | 2026-04-23 | `reviews/archived/final-review-2026-04-23.md` (prior passed 2026-04-19 in archived/) |
+| spec   | artifact | passed      | 2026-04-17 | _(backfill — artifact created post-implementation)_                                  |
+| design | artifact | passed      | 2026-04-17 | _(backfill — artifact created post-implementation)_                                  |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -521,6 +521,68 @@ git commit -m "fix(oat-project-plan): tighten scoped verification guidance"
 
 ---
 
+## Phase p-rev2: Review Fixes for 2026-04-23 Final Re-Review
+
+Source: `reviews/archived/final-review-2026-04-23.md`
+
+### Task prev2-t01: (review) Fix workflow-agent install test regression
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `WORKFLOW_AGENTS` now includes `oat-phase-implementer.md`, but `install-workflows.test.ts` still hardcodes agent count `2` in three assertions.
+Location: `packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts:91,271,297`
+
+**Step 2: Implement fix**
+
+Replace the three literal agent-count assertions with `WORKFLOW_AGENTS.length` so the test matches the manifest-driven install behavior and stays resilient to future workflow-agent additions.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: all CLI vitest assertions pass, including the workflow install tests.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts
+git commit -m "fix(prev2-t01): fix workflow-agent install test coverage"
+```
+
+### Task prev2-t02: (review) Reconcile stale p-rev1 tracking
+
+**Files:**
+
+- Modify: `.oat/projects/shared/subagent-implement-refactor/plan.md`
+- Modify: `.oat/projects/shared/subagent-implement-refactor/implementation.md`
+- Modify: `.oat/projects/shared/subagent-implement-refactor/state.md`
+
+**Step 1: Understand the issue**
+
+Review finding: the project artifacts still show `p-rev1` as pending/in progress even though the three revision commits landed on 2026-04-20.
+Location: `.oat/projects/shared/subagent-implement-refactor/state.md:2,8`, `.oat/projects/shared/subagent-implement-refactor/plan.md:449`
+
+**Step 2: Implement fix**
+
+Mark `p-rev1` complete in the project artifacts, update the Reviews table to show the phase as passed with the correct review pointer, and refresh `implementation.md` progress/phase bookkeeping so the OAT lifecycle matches the actual branch history.
+
+**Step 3: Verify**
+
+Run: `rg "oat_current_task.*prev1-t01" .oat/projects/shared/subagent-implement-refactor`
+Expected: no matches remain after reconciliation.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/subagent-implement-refactor/plan.md .oat/projects/shared/subagent-implement-refactor/implementation.md .oat/projects/shared/subagent-implement-refactor/state.md
+git commit -m "fix(prev2-t02): reconcile p-rev1 project tracking"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -533,8 +595,9 @@ git commit -m "fix(oat-project-plan): tighten scoped verification guidance"
 - Phase p06: 2 tasks — skill deletion, doc reference cleanup
 - Phase p07: 5 tasks — shell test, package lockstep bump, skill version bumps, release:validate + full suite, final review fixes
 - Phase p-rev1: 3 tasks — Codex no-fork review dispatch, reviewer timeout fallback, scoped verification guidance
+- Phase p-rev2: 2 tasks — workflow install test regression fix, p-rev1 bookkeeping reconciliation
 
-**Total: 33 tasks across 8 phases**
+**Total: 35 tasks across 9 phases**
 
 Executed via Superpowers `subagent-driven-development` to avoid self-modification of the skill under active development. See discovery.md decision #10 for rationale.
 
