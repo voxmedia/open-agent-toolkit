@@ -437,19 +437,19 @@ Add the integration shell test, bump all five public packages in lockstep, run r
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                                              |
-| ------ | -------- | ----------- | ---------- | ------------------------------------------------------------------------------------- |
-| p01    | code     | passed      | 2026-04-17 | `.oat/repo/reviews/ad-hoc-review-2026-04-17-subagent-implement-analysis.md`           |
-| p02    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
-| p03    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
-| p04    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
-| p05    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
-| p06    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
-| p07    | code     | passed      | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
-| p-rev1 | code     | passed      | 2026-04-23 | `reviews/archived/final-review-2026-04-23.md` (delta review confirmed revision fixes) |
-| final  | code     | fixes_added | 2026-04-23 | `reviews/archived/final-review-2026-04-23.md` (prior passed 2026-04-19 in archived/)  |
-| spec   | artifact | passed      | 2026-04-17 | _(backfill — artifact created post-implementation)_                                   |
-| design | artifact | passed      | 2026-04-17 | _(backfill — artifact created post-implementation)_                                   |
+| Scope  | Type     | Status          | Date       | Artifact                                                                              |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------- |
+| p01    | code     | passed          | 2026-04-17 | `.oat/repo/reviews/ad-hoc-review-2026-04-17-subagent-implement-analysis.md`           |
+| p02    | code     | passed          | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
+| p03    | code     | passed          | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
+| p04    | code     | passed          | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
+| p05    | code     | passed          | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
+| p06    | code     | passed          | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
+| p07    | code     | passed          | 2026-04-17 | _(inline via Superpowers review gate)_                                                |
+| p-rev1 | code     | passed          | 2026-04-23 | `reviews/archived/final-review-2026-04-23.md` (delta review confirmed revision fixes) |
+| final  | code     | fixes_completed | 2026-04-23 | `reviews/final-review-2026-04-23-r2.md` (prior passed 2026-04-19 in archived/)        |
+| spec   | artifact | passed          | 2026-04-17 | _(backfill — artifact created post-implementation)_                                   |
+| design | artifact | passed          | 2026-04-17 | _(backfill — artifact created post-implementation)_                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
