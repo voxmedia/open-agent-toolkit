@@ -196,7 +196,7 @@ Use `AskUserQuestion` to present this choice.
 
 - Update `discovery.md` frontmatter:
   - `oat_status: complete`
-  - `oat_ready_for: oat-project-spec`
+  - `oat_ready_for: oat-project-design`
   - `oat_last_updated: {today}`
 - Update `state.md`:
   - `oat_workflow_mode: spec-driven`
@@ -211,7 +211,7 @@ git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md" ".oat/state.md"
 git diff --cached --quiet || git commit -m "chore(oat): promote quick-start discovery for {project-name}"
 ```
 
-- Inform the user: "Discovery is complete. Run `oat-project-spec` next to formalize requirements."
+- Inform the user: "Discovery is complete. Run `oat-project-design` next — it will confirm requirements and produce both `spec.md` and `design.md` in one collaborative pass. If you'd rather formalize requirements without designing yet, `oat-project-spec` remains available as an optional standalone step."
 - Stop here. Do not generate a plan.
 
 ### Step 2.6: Requirements Gate (Straight-to-Plan Path)
