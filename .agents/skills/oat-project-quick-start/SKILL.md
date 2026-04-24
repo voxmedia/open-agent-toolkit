@@ -170,7 +170,7 @@ git diff --cached --quiet || git commit -m "chore(oat): capture quick-start disc
 
 ### Step 2.5: Decision Point — Design Depth
 
-**Auto-advance rule:** If the request was classified as **well-understood** in Step 2a and discovery surfaced no architecture decisions, component boundary questions, or unexpected complexity, skip this decision point entirely and continue directly to Step 3. This preserves the minimal-ceremony contract for straightforward requests.
+**Auto-advance rule:** If the request was classified as **well-understood** in Step 2a and discovery surfaced no architecture decisions, component boundary questions, or unexpected complexity, skip this decision point entirely and continue directly to Step 2.6 (the requirements gate still fires before plan generation). This preserves the minimal-ceremony contract for straightforward requests.
 
 **Otherwise**, present the user with a choice about how to proceed:
 
@@ -188,9 +188,9 @@ Use `AskUserQuestion` to present this choice.
 - If discovery surfaced architecture choices, component boundaries, or data model questions → recommend "Lightweight design first"
 - If discovery revealed the scope is larger or more complex than initially expected → recommend "Promote to spec-driven"
 
-**If user chooses "Straight to plan":** continue to Step 3.
+**If user chooses "Straight to plan":** continue to Step 2.6 (requirements gate), then Step 3.
 
-**If user chooses "Lightweight design first":** execute Step 2.75 before continuing to Step 3.
+**If user chooses "Lightweight design first":** execute Step 2.75 before continuing to Step 3. The Step 2.6 requirements gate is skipped — Step 2.75's in-conversation design validation covers that ground.
 
 **If user chooses "Promote to spec-driven":**
 
@@ -213,6 +213,57 @@ git diff --cached --quiet || git commit -m "chore(oat): promote quick-start disc
 
 - Inform the user: "Discovery is complete. Run `oat-project-spec` next to formalize requirements."
 - Stop here. Do not generate a plan.
+
+### Step 2.6: Requirements Gate (Straight-to-Plan Path)
+
+Fires only when the straight-to-plan path was chosen at Step 2.5 (explicit choice or auto-advance). Skip when the user selected "Lightweight design first" (Step 2.75 handles its own in-conversation confirmation) or "Promote to spec-driven".
+
+Single conversational turn — no loop inside the gate. If the user materially redirects scope, route OUT to lightweight design or back to discovery.
+
+```
+# Non-interactive fallback FIRST (FR9 contract; same signal as design mode choice).
+if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+  echo "Requirements gate auto-confirmed in non-interactive mode."
+  # proceed to Step 3
+fi
+
+# Interactive bypass (power-user opt-out).
+if [ "${OAT_NO_REQUIREMENTS_GATE:-}" = "1" ] || [ "$ARG_NO_GATE" = "1" ]; then
+  # proceed to Step 3 silently
+fi
+
+# Extract requirements from discovery.md:
+#   - Key Decisions
+#   - Success Criteria
+#   - Constraints
+# Format as bullet list and present (SINGLE TURN):
+#
+#   > "Before I generate the plan, here are the requirements I'm building against:
+#   >
+#   >    Key decisions:
+#   >    - [decision 1]
+#   >    - [decision 2]
+#   >
+#   >    Success criteria:
+#   >    - [criterion 1]
+#   >
+#   >    Constraints:
+#   >    - [constraint 1]
+#   >
+#   >  Does this match what you want?"
+
+# AskUserQuestion multi-choice:
+#   1. Yes — proceed to plan generation
+#   2. Add a minor requirement that still fits this scope (capture inline, proceed — no re-present)
+#   3. Scope needs redirecting — rework discovery or produce a lightweight design first
+#
+# On choice 1: continue to Step 3.
+# On choice 2: prompt once for the addition, append to discovery.md, proceed to Step 3 (do NOT re-present).
+# On choice 3: exit the gate cleanly. Present follow-up choice:
+#   a. Produce a lightweight design first (run Step 2.75)
+#   b. Expand discovery (return to Step 2)
+# Route the user accordingly. Do NOT loop back into the gate.
+```
 
 ### Step 2.75a: Lightweight Design Mode Choice
 
@@ -327,57 +378,6 @@ Before proceeding to plan generation or pausing for validation, persist the desi
 ```bash
 git add "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
 git diff --cached --quiet || git commit -m "chore(oat): capture quick-start design for {project-name}"
-```
-
-### Step 2.6: Requirements Gate (Straight-to-Plan Path)
-
-Fires only when the straight-to-plan path was chosen at Step 2.5 (explicit choice or auto-advance). Skip when the user selected "Lightweight design first" (Step 2.75 handles its own in-conversation confirmation) or "Promote to spec-driven".
-
-Single conversational turn — no loop inside the gate. If the user materially redirects scope, route OUT to lightweight design or back to discovery.
-
-```
-# Non-interactive fallback FIRST (FR9 contract; same signal as design mode choice).
-if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
-  echo "Requirements gate auto-confirmed in non-interactive mode."
-  # proceed to Step 3
-fi
-
-# Interactive bypass (power-user opt-out).
-if [ "${OAT_NO_REQUIREMENTS_GATE:-}" = "1" ] || [ "$ARG_NO_GATE" = "1" ]; then
-  # proceed to Step 3 silently
-fi
-
-# Extract requirements from discovery.md:
-#   - Key Decisions
-#   - Success Criteria
-#   - Constraints
-# Format as bullet list and present (SINGLE TURN):
-#
-#   > "Before I generate the plan, here are the requirements I'm building against:
-#   >
-#   >    Key decisions:
-#   >    - [decision 1]
-#   >    - [decision 2]
-#   >
-#   >    Success criteria:
-#   >    - [criterion 1]
-#   >
-#   >    Constraints:
-#   >    - [constraint 1]
-#   >
-#   >  Does this match what you want?"
-
-# AskUserQuestion multi-choice:
-#   1. Yes — proceed to plan generation
-#   2. Add a minor requirement that still fits this scope (capture inline, proceed — no re-present)
-#   3. Scope needs redirecting — rework discovery or produce a lightweight design first
-#
-# On choice 1: continue to Step 3.
-# On choice 2: prompt once for the addition, append to discovery.md, proceed to Step 3 (do NOT re-present).
-# On choice 3: exit the gate cleanly. Present follow-up choice:
-#   a. Produce a lightweight design first (run Step 2.75)
-#   b. Expand discovery (return to Step 2)
-# Route the user accordingly. Do NOT loop back into the gate.
 ```
 
 ### Step 3: Generate Plan Directly
