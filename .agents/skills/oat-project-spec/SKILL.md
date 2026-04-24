@@ -1,7 +1,7 @@
 ---
 name: oat-project-spec
-version: 1.2.0
-description: Use when discovery is complete and the project needs a formal requirements baseline. Transforms discovery output into structured specification artifacts.
+version: 2.0.0
+description: Optional standalone skill for formalizing requirements into a structured spec.md when discovery is complete but you're not ready to design yet. Independent of the design workflow — oat-project-design confirms requirements automatically and does not require this skill to be run first.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
@@ -450,7 +450,7 @@ Ready for design phase"
 ### Step 21: Output Summary
 
 ```
-Specification phase complete for {project-name}.
+Specification artifact created for {project-name}.
 
 Created:
 - {N} functional requirements
@@ -458,7 +458,12 @@ Created:
 - High-level design approach
 - Success metrics
 
-Next: Create detailed design with the oat-project-design skill
+Note: This skill is optional in the default workflow. `oat-project-design`
+will confirm requirements automatically when run after discovery.
+
+If you want to proceed to design now, run: `oat-project-design`
+If you're parking the project here, the spec.md is committed and ready
+to pick up later.
 ```
 
 ## Success Criteria
