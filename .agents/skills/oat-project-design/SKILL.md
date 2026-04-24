@@ -451,38 +451,71 @@ Silent agent-side quality pass — no user prompt fires here. After all sections
 
 Apply fixes inline. Do not re-run self-review. Continue to Step 6 (User-Review Gate).
 
-### Step 19: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)
+### Step 6: User-Review Gate (commit-first ordering)
 
-Read `"$PROJECT_PATH/state.md"` frontmatter:
+The drafted artifacts are committed FIRST, then the user-review gate prompts the user to read the committed artifact. This keeps the "written and committed" prompt wording literally accurate and lets peer reviewers fetch a committed artifact without racing the skill.
+
+**Step 6a: Commit drafted artifacts FIRST (before user-review gate)**
+
+Even when no HiLL checkpoint is configured, the artifact is committed — consistent behavior across HiLL-on / HiLL-off configurations. "Committed" no longer means "approved" — it means "written to disk and tracked."
+
+```bash
+# Update design.md frontmatter for the draft commit:
+#   oat_status: in_progress
+#   oat_ready_for: null
+#   oat_last_updated: {today}
+
+git add "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
+git diff --cached --quiet || git commit -m "docs: draft design for {project-name} (awaiting review)"
+```
+
+**Step 6b: Read state.md frontmatter**
+
+Read `"$PROJECT_PATH/state.md"`:
 
 - `oat_hill_checkpoints`
 - `oat_hill_completed`
 
-If `"design"` is in `oat_hill_checkpoints`, require explicit user approval before advancing.
+**Step 6c: If no HiLL gate configured, skip prompt (artifact still committed)**
 
-**Approval prompt (required):**
+If neither `"design"` nor `"spec"` is in `oat_hill_checkpoints`: no user-review prompt fires; artifact is committed. Skip to Step 7.
 
-- "Design artifact is ready. Approve design and unlock `oat-project-plan`?"
+**Step 6d: If HiLL gate configured, present the user-review prompt**
 
-**Optional independent review path:**
+If `"design"` is in `oat_hill_checkpoints` (or `"spec"` is in `oat_hill_checkpoints` and was not already completed via the standalone `oat-project-spec` skill):
 
-- If user wants fresh-context artifact review first, run:
-  - `oat-project-review-provide artifact design`
+```
+Prompt (required wording):
 
-**If user does not approve yet:**
+  > "Design written and committed to {design.md path}.
+  >  spec.md (with confirmed requirements) is at {spec.md path}.
+  >  Please review them and let me know if you want to make any changes
+  >  before we move to planning.
+  >
+  >  Optional: run `oat-project-review-provide artifact design` for an
+  >  independent reviewer pass first."
 
-- Keep design frontmatter as:
-  - `oat_status: in_progress`
-  - `oat_ready_for: null`
-- Keep project state as in-progress for design.
-- Do **not** append `"design"` to `oat_hill_completed`.
-- Stop and report: "Design draft saved; awaiting HiLL approval."
+Wait for user response:
 
-If design is not configured as a HiLL checkpoint, or user explicitly approves, continue to Step 20.
+- Approval → continue to Step 7.
+- Change requests → revise the relevant section(s), re-run Step 5
+  (Self-Review), then MAKE A NEW COMMIT:
+    git add "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md"
+    git commit -m "docs: revise design after user review feedback"
+  Re-present this prompt.
+- If user does not approve yet (wants to pause without explicit change
+  requests): keep design frontmatter as oat_status: in_progress /
+  oat_ready_for: null; do not append "design" to oat_hill_completed;
+  stop and report: "Design draft committed; awaiting HiLL approval."
+```
 
-### Step 20: Mark Design Complete
+### Step 7: Approval — Mark Design Complete and Update HiLL State
 
-Update frontmatter:
+On approval (either explicit user approval when HiLL gate fired, or automatic when no HiLL gate is configured):
+
+**Step 7a: Mark design.md complete**
+
+Update `design.md` frontmatter:
 
 ```yaml
 ---
@@ -493,19 +526,20 @@ oat_last_updated: { today }
 ---
 ```
 
-### Step 21: Update Project State
+**Step 7b: Update project state.md**
 
 Update `"$PROJECT_PATH/state.md"`:
 
 **Frontmatter updates:**
 
 - `oat_current_task: null`
-- `oat_last_commit: {commit_sha_from_step_22}`
+- `oat_last_commit: {commit_sha_from_step_6a_or_revision}`
 - `oat_blockers: []`
 - `oat_phase: design`
 - `oat_phase_status: complete`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
-- **If** `"design"` is in `oat_hill_checkpoints`: append `"design"` to `oat_hill_completed` array
+- **If** `"design"` is in `oat_hill_checkpoints`: append `"design"` to `oat_hill_completed` array.
+- **If** `"spec"` is in `oat_hill_checkpoints` and not previously completed via the standalone spec skill: append `"spec"` too (folded HiLL — a single approval covers both).
 
 **Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
 
@@ -519,32 +553,19 @@ Design - Ready for implementation planning
 ## Progress
 
 - ✓ Discovery complete
-- ✓ Specification complete
+- ✓ Specification complete (folded into design)
 - ✓ Design complete
 - ⧗ Awaiting implementation plan
 ```
 
-### Step 22: Commit Design
-
-**Note:** This shows what users will do when USING oat-project-design.
-During implementation of OAT itself, use standard commit format.
+**Step 7c: Commit the approval-side metadata**
 
 ```bash
-git add "$PROJECT_PATH/"
-git commit -m "docs: complete design for {project-name}
-
-Architecture:
-- {N} components
-- {Key architectural decision}
-
-Implementation:
-- {N} phases planned
-- {Estimated complexity}
-
-Ready for implementation planning"
+git add "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
+git diff --cached --quiet || git commit -m "chore(oat): mark design complete for {project-name}"
 ```
 
-### Step 23: Output Summary
+### Step 8: Output Summary
 
 ```
 Design phase complete for {project-name}.
