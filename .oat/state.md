@@ -16,7 +16,7 @@ oat_generated_at: 2026-04-23
 | Field        | Value         |
 | ------------ | ------------- |
 | Mode         | spec-driven   |
-| Phase        | design        |
+| Phase        | plan          |
 | Status       | complete      |
 | HiLL Gate    | n/a           |
 | Current Task | -             |
@@ -35,7 +35,7 @@ Details: `.oat/projects/shared/collaborative-design-workflow/state.md`
 
 ## Recommended Next Step
 
-**oat-project-plan** - Create implementation plan from design
+**oat-project-implement** - Begin implementation from the refreshed plan
 
 ## Quick Commands
 
@@ -50,7 +50,7 @@ Details: `.oat/projects/shared/collaborative-design-workflow/state.md`
 
 ## Available Projects
 
-- **collaborative-design-workflow** - design
+- **collaborative-design-workflow** - plan
 - **docs-bootstrap-skill** - discovery
 - **docs-readability-reorg** - implement
 - **remote-project-management** - discovery
