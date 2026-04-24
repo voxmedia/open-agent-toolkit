@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t02
-oat_last_commit: be724b93
+oat_current_task: p04-t10
+oat_last_commit: 6f1d1351
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: ['p04']
@@ -15,7 +15,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-24T14:45:00Z'
+oat_project_state_updated: '2026-04-24T15:00:00Z'
 oat_generated: false
 oat_orchestration_retry_limit: 2
 ---
@@ -28,7 +28,7 @@ oat_orchestration_retry_limit: 2
 
 ## Current Phase
 
-Implementation — p04 in progress. Agent-executable subset complete (p04-t01 scaffold, p04-t04 FR9 audit, p04-t08 NFR1 audit, p04-t09 NFR2 audit). Interactive dogfood (t02/t03/t05/t06/t07) deferred to the user's separate-repo dogfood pass. PR creation (t10) and final review (t11) pending user confirmation. 28/35 tasks complete.
+Implementation — p01-p03 complete on this branch (24/35 tasks strictly done). p04 dogfood and regression work (t01-t09) is being validated via the user's separate-repo dogfood pass rather than here; the transient `dogfood-collab-design-verify` scaffold was created and then removed because it was no longer needed. Next on this branch: PR creation (t10) and final review (t11), both pending user confirmation.
 
 ## Artifacts
 
@@ -53,7 +53,7 @@ Implementation — p04 in progress. Agent-executable subset complete (p04-t01 sc
 - ✓ p02 implemented + reviewed (pass) + merged (`a6eba84d`) — companion skills + AGENTS + NOTICES + designMode, 10 tasks
 - ✓ p03 base tasks (p03-t01/t02) implemented + reviewed (pass) — 5 public packages bumped 0.0.50→0.0.51, `pnpm release:validate` clean
 - ✓ p01-p03 range review (2026-04-24) returned changes_requested — 3 fix tasks added (p03-t03, p03-t04, p03-t05), implemented, re-reviewed (pass)
-- ⧗ p04 in progress — scaffold (t01) + FR9/NFR1/NFR2 audits (t04/t08/t09) complete; interactive dogfood (t02/t03/t05/t06/t07) deferred to user's separate-repo pass; PR (t10) + final review (t11) pending user confirmation
+- ⧗ p04 in progress — dogfood and regression work (t01-t09) deferred to user's separate-repo pass (FR9/NFR1/NFR2 prose-level evidence recorded but not runtime-verified here); PR (t10) + final review (t11) pending user confirmation
 
 ## Blockers
 
@@ -61,4 +61,4 @@ None.
 
 ## Next Milestone
 
-User runs interactive dogfood (t02/t03/t05/t06/t07) in a separate repo via this install. When returning, agent drives PR creation (t10) with migration note, then final review + merge (t11). HiLL auto-review fires on p04 completion (scope: final).
+User runs dogfood (t01-t09 scope) in a separate repo via this install. When returning, agent drives PR creation (t10) with migration note, then final review + merge (t11). HiLL auto-review fires on p04 completion (scope: final).
