@@ -1,7 +1,7 @@
 ---
 name: oat-project-design
-version: 1.2.0
-description: Use when discovery and specification are complete and implementation-ready decisions are needed. Produces detailed technical design artifacts, including architecture and interfaces.
+version: 2.0.0
+description: Use when discovery is complete and implementation-ready decisions are needed. Runs a collaborative, section-by-section conversation by default (with a draft-and-review escape hatch and non-interactive fallback), confirms requirements and produces both `spec.md` and `design.md`, and commits artifacts before the user-review gate.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
@@ -273,7 +273,7 @@ Create traceability matrix in spec.md "Requirement Index" section:
 
 **Verification column format:** `method: pointer` — method is `unit` / `integration` / `e2e` / `manual` / `perf`; pointer is a brief scope hint (e.g., `unit: auth token validation`).
 
-**Step 2k: Quality Gate (merged into Component 6 self-review)**
+**Step 2k: Quality Gate (merged into Step 5 self-review)**
 
 The prior standalone-spec quality gate (completeness / quality / boundary checks) now merges into Step 5 (Design Self-Review) — those checks run once against both `spec.md` and `design.md` together rather than twice.
 
