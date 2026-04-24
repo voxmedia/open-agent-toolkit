@@ -2,7 +2,8 @@
 id: bl-7e68
 title: 'Clarify quick-mode resume routing from oat-project-plan'
 status: open # open | in_progress | closed | wont_do
-priority: medium # urgent | high | medium | low | none
+priority: high # urgent | high | medium | low | none
+priority_reviewed: '2026-04-24'
 scope: feature # idea | task | feature | initiative
 scope_estimate: S # XS | S | M | L | XL | XXL
 labels:
@@ -11,7 +12,7 @@ labels:
   - topic/ux
 assignee: null
 created: '2026-04-20T18:23:29Z'
-updated: '2026-04-20T18:23:29Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues: []
 oat_template: true
 oat_template_name: backlog-item

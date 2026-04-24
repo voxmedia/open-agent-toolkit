@@ -3,12 +3,13 @@ id: bl-ff5d
 title: 'Backlog Refinement Flow (Jira ticket generation)'
 status: open
 priority: medium
+priority_reviewed: '2026-04-24'
 scope: feature
 scope_estimate: L
 labels: ['workflow', 'jira']
 assignee: null
 created: '2026-01-29T00:00:00Z'
-updated: '2026-01-29T00:00:00Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues: []
 ---
 

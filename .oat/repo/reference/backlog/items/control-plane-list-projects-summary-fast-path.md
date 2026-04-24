@@ -3,12 +3,13 @@ id: bl-931d
 title: 'Optimize control-plane `listProjects()` summary path'
 status: open
 priority: low
+priority_reviewed: '2026-04-24'
 scope: task
 scope_estimate: M
 labels: ['control-plane', 'performance']
 assignee: null
 created: '2026-04-10T02:05:20Z'
-updated: '2026-04-10T02:05:20Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues:
   - type: project
     ref: 'control-plane-state-parsing'

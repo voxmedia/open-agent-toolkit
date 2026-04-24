@@ -1,14 +1,17 @@
 ---
 id: bl-cbdd
 title: 'Optional Codex prompt-wrapper generation for synced OAT skills'
-status: open
+status: closed
 priority: medium
+priority_reviewed: '2026-04-24'
 scope: feature
 scope_estimate: M
 labels: ['tooling', 'codex']
 assignee: null
 created: '2026-02-14T00:00:00Z'
-updated: '2026-02-14T00:00:00Z'
+updated: '2026-04-24T00:00:00Z'
+closed: '2026-04-24T00:00:00Z'
+closed_reason: wont_do
 associated_issues: []
 ---
 
@@ -31,3 +34,7 @@ Links:
 - Users can opt into generating thin `.codex/prompts` wrappers during Codex sync.
 - Generated wrappers stay minimal and do not duplicate workflow logic.
 - Repositories that do not enable the feature do not receive Codex-specific files.
+
+## Closure Note (2026-04-24)
+
+Closed as won't-do. Codex has deprecated `.codex/prompts/` as a first-class invocation path for agent packs, so shipping opt-in prompt wrappers targeting that directory is no longer a forward-compatible approach. If a replacement Codex surface emerges that warrants OAT skill wrappers, that would be captured as a new item with fresh assumptions rather than reviving this one.

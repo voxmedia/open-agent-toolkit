@@ -3,6 +3,7 @@ id: bl-28ce
 title: 'Persist instruction sync strategy in config and expose it in init'
 status: open # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
+priority_reviewed: '2026-04-24'
 scope: feature # idea | task | feature | initiative
 scope_estimate: M # XS | S | M | L | XL | XXL
 labels:
@@ -12,7 +13,7 @@ labels:
   - onboarding
 assignee: null
 created: '2026-04-13T22:45:46Z'
-updated: '2026-04-13T22:45:46Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues: []
 oat_template: true
 oat_template_name: backlog-item

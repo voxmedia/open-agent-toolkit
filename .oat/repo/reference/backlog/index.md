@@ -4,40 +4,39 @@
 
 ## Curated Overview
 
-- `bl-7e68` captures a small but user-facing workflow paper cut: quick-mode recovery already works through `oat-project-quick-start`, but the `oat-project-plan` handoff is easy to read as a dead end. The fix is routing/copy clarity, not a workflow redesign.
-- `bl-0738` now captures the tighter follow-up from the phase-subagent refactor discussion: keep the model fixed, define portable reasoning-budget guidance for phase dispatch, map it cleanly across Codex and Claude-family providers, and defer any CLI schedule-preview ergonomics unless the manual policy proves confusing in practice.
-- `bl-28ce` captures the next likely ergonomics step after shipping instruction sync: persist the default `pointer|symlink|copy` strategy in config and expose it during guided setup, without conflating it with provider-sync `defaultStrategy`.
-- The newly shipped instruction-sync feature now has an explicit follow-on item: `bl-c745` captures option analysis for users who want some Claude-only `CLAUDE.md` files to remain non-adoptable instead of being promoted into canonical `AGENTS.md`.
-- `bl-42f9` tracks the only in-progress backlog item and is currently being delivered through the active `local-project-management` project.
-- Workflow backlog work is now concentrated on the remaining completion-state helper cleanup (`bl-0ace`), configurable lifecycle follow-through (`bl-fb3f`), and a Jira-oriented backlog refinement flow.
-- `bl-ea64` moved to completed history after the archive-sync-closeout-config project shipped S3-backed archive sync, completion-time archive upload/export behavior, and related config discoverability improvements.
-- Planned follow-on investments cluster around provider ergonomics (`bl-cbdd`), review collaboration (`bl-9fb8`), dependency analysis (`bl-3327`), and ideas-to-project promotion (`bl-b3f7`).
-- Longer-horizon backlog work now includes explicit entries for freshness hardening (`bl-f9bd`) and memory/provider-enhancement work (`bl-71a1`).
-- Control-plane follow-through now has an explicit low-priority item: `bl-931d` tracks a possible `listProjects()` summary fast path, but only if real performance measurements show the current full-state assembly is too expensive.
-- `bl-281c` captures the broader follow-up from PR #38: migrate read-only skills to `oat project status --json` (instead of manual file parsing) and fix the cloud-environment gap by adding `npx @open-agent-toolkit/cli` fallback when `oat` isn't installed. This was intentionally kept out of the workflow-friction project to avoid scope creep.
-- `bl-af93` captures a small-but-sharp CLI gap discovered while dogfooding workflow preferences: there's no `oat config unset <key>` command, so users cannot remove a config value without hand-editing JSON. Especially load-bearing for enum workflow keys (`hillCheckpointDefault`, `postImplementSequence`, `reviewExecutionModel`) where no value represents "prompt me again" — once set, the user is stuck unless they edit `~/.oat/config.json` directly.
+**Review pass: 2026-04-24.** Three items closed (`bl-42f9`, `bl-fb3f`, `bl-cbdd`), two new items added (`bl-8487`, `bl-b5af`), and all remaining items carry a `priority_reviewed: '2026-04-24'` stamp in their frontmatter. Full review artifact: `.oat/repo/reviews/backlog-and-roadmap-review-2026-04-24.md`.
+
+- **Top strategic item — `bl-281c`** (now **high** priority): migrate read-only skills to `oat project status --json` and add `npx @open-agent-toolkit/cli` fallback for cloud environments. Retires per-skill bootstrap duplication, enables cloud-env parity, and produces the measurement baseline that gates `bl-931d`.
+- **Quick-win batch (now high priority):** `bl-af93` (`oat config unset`), `bl-7e68` (quick-mode routing clarity), and `bl-b5af` (configurable staleness threshold). All S-sized, independent, and addressable as a single "workflow friction polish" PR set. `bl-af93` fixes a dogfooded gap where enum workflow keys have no CLI "unset" path.
+- **In-progress tail — `bl-0ace`:** completion-state CLI helper is ~95% shipped via `oat project complete-state`; remaining work is verifying skill delegation and closing out tests.
+- **Instruction sync polish — `bl-28ce`, `bl-c745`:** follow-ons to the shipped instruction-sync feature. `bl-28ce` persists the default `pointer|symlink|copy` strategy; `bl-c745` adds a per-path / per-file opt-out so Claude-only `CLAUDE.md` files aren't auto-promoted. Best treated as a small bundled effort since both touch the same surface.
+- **Model-selection guidance — `bl-0738`:** recast from "reasoning budget" to "per-phase model selection" to match actual harness constraints — Claude Code exposes only model choice (`haiku|sonnet|opus`), not thinking budget; Codex auto-chooses `reasoning_effort`. Scope is documentation, agent defaults, and surfaced rationale, not behavior change.
+- **Brainstorming direction — `bl-8487` (new, deferred):** elevate brainstorming to a first-class mode with three outcome paths (inline / idea / project), modeled on the Superpowers brainstorming skill. Deferred behind the collaborative design project. `bl-b3f7` (narrow idea-to-project promotion) will likely be absorbed by this.
+- **Staleness work — `bl-b5af` (new, medium) + `bl-f9bd` (deferred, low):** extracted the user-configurable threshold config key as its own quick-win item; left the fuller diff-based detection + hard-blocking work deferred under `bl-f9bd`.
+- **Remote PR review — `bl-9fb8`:** completes the review/PR loop story (posting findings, responding, summarizing) once the core loop priorities are clear.
+- **Deferred / low priority:** `bl-3327` (dependency intelligence — no active demand, keep as directional), `bl-ff5d` (Jira refinement flow — narrow audience, keep ad hoc), `bl-71a1` (memory system — roadmap Phase 10, blocked behind Phase 8/9 proven usage), `bl-931d` (listProjects fast path — conditional on `bl-281c` producing a measurement baseline).
+- **Closed this pass:** `bl-42f9` (PM workflow family — shipped via `oat-pjm-*` skills + `oat backlog/cleanup` CLI + `localPaths` config), `bl-fb3f` (lifecycle follow-through — shipped via the subagent-implement-refactor project), `bl-cbdd` (Codex prompt wrapper — won't-do because `.codex/prompts/` was deprecated).
 
 <!-- OAT BACKLOG-INDEX -->
 
-| ID      | Title                                                                                           | Status      | Priority | Scope      | Estimate |
-| ------- | ----------------------------------------------------------------------------------------------- | ----------- | -------- | ---------- | -------- |
-| bl-42f9 | Add first-class OAT project/repo management workflow family (oat-pjm-_ or oat-repo-reference-_) | in_progress | high     | initiative | XL       |
-| bl-af93 | Add `oat config unset <key>` command for removing config values                                 | open        | medium   | feature    | S        |
-| bl-fb3f | Add configurable autonomous project lifecycle follow-through                                    | open        | medium   | feature    | L        |
-| bl-3327 | Add dependency intelligence skill family                                                        | open        | medium   | feature    | L        |
-| bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new                                   | open        | medium   | feature    | L        |
-| bl-c745 | Add per-CLAUDE.md adoption opt-out for instruction sync                                         | open        | medium   | feature    | M        |
-| bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote)            | open        | medium   | feature    | L        |
-| bl-ff5d | Backlog Refinement Flow (Jira ticket generation)                                                | open        | medium   | feature    | L        |
-| bl-7e68 | Clarify quick-mode resume routing from oat-project-plan                                         | open        | medium   | feature    | S        |
-| bl-0738 | Define reasoning-budget guidance for phase-subagent dispatch                                    | open        | medium   | feature    | S        |
-| bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback                              | open        | medium   | initiative | L        |
-| bl-0ace | Move oat-project-complete state mutations into a CLI helper                                     | in_progress | medium   | feature    | M        |
-| bl-cbdd | Optional Codex prompt-wrapper generation for synced OAT skills                                  | open        | medium   | feature    | M        |
-| bl-28ce | Persist instruction sync strategy in config and expose it in init                               | open        | medium   | feature    | M        |
-| bl-f9bd | Staleness + knowledge drift upgrades                                                            | open        | medium   | feature    | L        |
-| bl-71a1 | Memory system + provider enhancements                                                           | open        | low      | initiative | XL       |
-| bl-931d | Optimize control-plane `listProjects()` summary path                                            | open        | low      | task       | M        |
+| ID      | Title                                                                                | Status      | Priority | Scope      | Estimate |
+| ------- | ------------------------------------------------------------------------------------ | ----------- | -------- | ---------- | -------- |
+| bl-af93 | Add `oat config unset <key>` command for removing config values                      | open        | high     | feature    | S        |
+| bl-7e68 | Clarify quick-mode resume routing from oat-project-plan                              | open        | high     | feature    | S        |
+| bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback                   | open        | high     | initiative | L        |
+| bl-b5af | Add configurable staleness threshold to oat config                                   | open        | medium   | feature    | S        |
+| bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote) | open        | medium   | feature    | L        |
+| bl-ff5d | Backlog Refinement Flow (Jira ticket generation)                                     | open        | medium   | feature    | L        |
+| bl-0738 | Define per-phase model selection guidance for phase-subagent dispatch                | open        | medium   | feature    | S        |
+| bl-0ace | Move oat-project-complete state mutations into a CLI helper                          | in_progress | medium   | feature    | M        |
+| bl-28ce | Persist instruction sync strategy in config and expose it in init                    | open        | medium   | feature    | M        |
+| bl-3327 | Add dependency intelligence skill family                                             | open        | low      | feature    | L        |
+| bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new                        | open        | low      | feature    | L        |
+| bl-c745 | Add per-CLAUDE.md adoption opt-out for instruction sync                              | open        | low      | feature    | M        |
+| bl-f9bd | Deeper staleness detection and strict-mode enforcement                               | open        | low      | feature    | L        |
+| bl-8487 | Elevate brainstorming to a first-class mode with three outcome paths                 | open        | low      | initiative | L        |
+| bl-71a1 | Memory system + provider enhancements                                                | open        | low      | initiative | XL       |
+| bl-931d | Optimize control-plane `listProjects()` summary path                                 | open        | low      | task       | M        |
 
 <!-- END OAT BACKLOG-INDEX -->
 

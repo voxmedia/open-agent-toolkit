@@ -3,12 +3,13 @@ id: bl-0ace
 title: 'Move oat-project-complete state mutations into a CLI helper'
 status: in_progress
 priority: medium
+priority_reviewed: '2026-04-24'
 scope: feature
 scope_estimate: M
 labels: ['workflow', 'cli']
 assignee: null
 created: '2026-03-21T00:28:34Z'
-updated: '2026-04-13T22:01:21Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues: []
 oat_template: true
 oat_template_name: backlog-item

@@ -2,13 +2,14 @@
 id: bl-af93
 title: 'Add `oat config unset <key>` command for removing config values'
 status: open
-priority: medium
+priority: high
+priority_reviewed: '2026-04-24'
 scope: feature
 scope_estimate: S
 labels: [cli, config, workflow-preferences, ux]
 assignee: null
 created: '2026-04-10T00:00:00Z'
-updated: '2026-04-10T00:00:00Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues: []
 oat_template: false
 ---

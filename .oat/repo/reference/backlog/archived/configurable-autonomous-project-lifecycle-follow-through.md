@@ -1,17 +1,22 @@
 ---
 id: bl-fb3f
 title: 'Add configurable autonomous project lifecycle follow-through'
-status: open
+status: closed
 priority: medium
+priority_reviewed: '2026-04-24'
 scope: feature
 scope_estimate: L
 labels: ['automation', 'workflow', 'project-management']
 assignee: null
 created: '2026-03-22T00:27:02Z'
-updated: '2026-03-22T00:27:02Z'
+updated: '2026-04-24T00:00:00Z'
+closed: '2026-04-24T00:00:00Z'
+closed_reason: completed
 associated_issues:
   - type: project
     ref: 'local-project-management'
+  - type: project
+    ref: 'subagent-implement-refactor'
 ---
 
 ## Description
@@ -34,3 +39,7 @@ This should be implemented as explicit lifecycle policy rather than ad hoc chain
 - The lifecycle model defines how project documentation participates in finalization, either as an explicit phase or a configurable required step, and the chosen behavior is documented.
 - OAT configuration can express terminal lifecycle ordering for actions such as documentation, final PR creation, and project completion.
 - Lifecycle commands respect the configured automation policy and remain safe when a required prerequisite fails or needs human input.
+
+## Closure Note (2026-04-24)
+
+Closed as completed. The `subagent-implement-refactor` project (shipped 2026-04-23) delivered the phase-subagent execution model for `oat-project-implement`, which folds review/fix cycles into each phase boundary, supports bounded fix loops, and honors `workflow.autoReviewAtHillCheckpoints` for optional HiLL checkpoint review. Combined with `workflow.postImplementSequence` (supporting `docs-pr` for auto documentation → PR flow) and `documentation.requireForProjectCompletion`, the three original acceptance criteria are now covered. Any remaining automation gaps (e.g., auto-complete after PR merge) are small enough to become their own targeted items when surfaced by dogfooding.

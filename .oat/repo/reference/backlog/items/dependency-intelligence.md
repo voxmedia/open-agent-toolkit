@@ -2,13 +2,14 @@
 id: bl-3327
 title: 'Add dependency intelligence skill family'
 status: open
-priority: medium
+priority: low
+priority_reviewed: '2026-04-24'
 scope: feature
 scope_estimate: L
 labels: ['skills', 'dependencies']
 assignee: null
 created: '2026-02-14T00:00:00Z'
-updated: '2026-02-14T00:00:00Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues: []
 ---
 

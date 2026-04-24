@@ -3,12 +3,13 @@ id: bl-9fb8
 title: 'Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote)'
 status: open
 priority: medium
+priority_reviewed: '2026-04-24'
 scope: feature
 scope_estimate: L
 labels: ['skills', 'review']
 assignee: null
 created: '2026-02-14T00:00:00Z'
-updated: '2026-02-23T00:00:00Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues: []
 ---
 

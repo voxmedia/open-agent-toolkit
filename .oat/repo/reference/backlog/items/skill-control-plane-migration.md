@@ -2,13 +2,14 @@
 id: bl-281c
 title: 'Migrate skills to control-plane-backed CLI with cloud-env fallback'
 status: open
-priority: medium
+priority: high
+priority_reviewed: '2026-04-24'
 scope: initiative
 scope_estimate: L
 labels: [skills, control-plane, cli, refactor, cloud]
 assignee: null
 created: '2026-04-10T00:00:00Z'
-updated: '2026-04-10T00:00:00Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues: []
 oat_template: false
 ---
@@ -69,3 +70,7 @@ This pattern (or a shell helper sourced by skills) should be documented and appl
 - [ ] A smoke test confirms migrated skills work in an environment without global `oat` installed (cloud-env parity)
 - [ ] Skills that both read and write state are explicitly left untouched in this pass and tracked separately
 - [ ] Documentation updated to describe the invocation pattern and when to use control-plane CLI commands vs direct file reads
+
+## Priority Review (2026-04-24)
+
+Bumped to **high**. Delivers three compounding values at once: cloud-environment parity (implicit blocker for remote agent use), determinism/reduced duplication in skill bootstrap, and lower token usage per skill invocation. Also produces the measurement baseline that gates `bl-931d`. This is the top strategic item in the current backlog.

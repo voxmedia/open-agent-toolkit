@@ -2,13 +2,14 @@
 id: bl-b3f7
 title: 'Add idea promotion and auto-discovery flow to oat-project-new'
 status: open
-priority: medium
+priority: low
+priority_reviewed: '2026-04-24'
 scope: feature
 scope_estimate: L
 labels: ['skills', 'ideas']
 assignee: null
 created: '2026-02-14T00:00:00Z'
-updated: '2026-02-14T00:00:00Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues: []
 ---
 
@@ -37,3 +38,7 @@ Links:
 - The ideas backlog is updated when an idea is promoted to a project.
 - Users can still create a brand new project without any idea connection.
 - Discovery auto-triggering remains optional.
+
+## Priority Review (2026-04-24)
+
+Dropped to low. This is the narrow "idea → project" promotion path. The broader "brainstorming as a first-class mode with three outcome paths" direction is now tracked separately in `bl-8487` and is likely to supersede or absorb this item once the collaborative design project ships. Revisit scope once `bl-8487` moves out of deferred.

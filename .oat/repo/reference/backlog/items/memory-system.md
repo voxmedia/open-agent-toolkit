@@ -3,12 +3,13 @@ id: bl-71a1
 title: 'Memory system + provider enhancements'
 status: open
 priority: low
+priority_reviewed: '2026-04-24'
 scope: initiative
 scope_estimate: XL
 labels: ['tooling', 'memory']
 assignee: null
 created: '2026-03-15T22:59:28Z'
-updated: '2026-03-15T22:59:28Z'
+updated: '2026-04-24T00:00:00Z'
 associated_issues: []
 ---
 
