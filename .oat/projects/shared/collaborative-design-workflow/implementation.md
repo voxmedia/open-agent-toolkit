@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-23
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -87,6 +87,26 @@ Resolution order in both mode-choice pseudocode blocks (Component 1 Step 1.5 and
 
 Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within p02's disjoint write-set vs p01). Parallel group `[['p01', 'p02']]` and HiLL phases `['p04']` both confirmed by user in the same session.
 
+### Review Received: p01-p03 (code range) — 2026-04-24
+
+**Review artifact:** `reviews/archived/p01-p03-review-2026-04-24.md`
+
+**Findings:** 0 Critical, 2 Important, 0 Medium, 1 Minor.
+
+**Finding disposition:**
+
+- `I1` Quick-start Step 2.6 placement bypasses FR11 gate → `convert_to_task` → **p03-t03**.
+- `I2` Quick-start promotion routes to `oat-project-spec` (FR10 violation) → `convert_to_task` → **p03-t04**.
+- `m1` Discover Step 14 commit template says "specification phase" → `convert_to_task` → **p03-t05** (scope Negligible; related to I2).
+
+**New tasks added:** p03-t03, p03-t04, p03-t05.
+
+**Note:** The range review upgraded `I1` from Medium (p02 individual review) to Important — correctly, since FR11 gate placement is binding. `I2` (FR10 routing) was not caught by the p02 individual review but was surfaced by the integration-level range read.
+
+**Review cycle:** 2 of 3 for the p01-p03 range (prior cycles: p01, p02, p03 individual reviews).
+
+**Next:** Execute fix tasks via `oat-project-implement` starting from p03-t03. After the fix tasks complete, update the `p01-p03` review row to `fixes_completed` and re-run `oat-project-review-provide code p01-p03` (scoped to fix tasks only) then `oat-project-review-receive` to reach `passed`.
+
 > This document is used to resume interrupted implementation sessions.
 >
 > Conventions:
@@ -99,14 +119,14 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ## Progress Overview
 
-| Phase                                           | Status    | Tasks | Completed |
-| ----------------------------------------------- | --------- | ----- | --------- |
-| Phase 1 (p01): oat-project-design rework        | completed | 9     | 9/9       |
-| Phase 2 (p02): Companion skills + AGENTS + CLI  | completed | 10    | 10/10     |
-| Phase 3 (p03): Lockstep version bumps + release | completed | 2     | 2/2       |
-| Phase 4 (p04): Dogfood + regressions + PR       | pending   | 11    | 0/11      |
+| Phase                                            | Status      | Tasks | Completed |
+| ------------------------------------------------ | ----------- | ----- | --------- |
+| Phase 1 (p01): oat-project-design rework         | completed   | 9     | 9/9       |
+| Phase 2 (p02): Companion skills + AGENTS + CLI   | completed   | 10    | 10/10     |
+| Phase 3 (p03): Lockstep version + 3 review fixes | in_progress | 5     | 2/5       |
+| Phase 4 (p04): Dogfood + regressions + PR        | pending     | 11    | 0/11      |
 
-**Total:** 21/32 tasks completed
+**Total:** 21/35 tasks completed (+3 review-fix tasks added from p01-p03 range review)
 
 ---
 
@@ -221,12 +241,13 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ---
 
-## Phase 3 (p03): Lockstep version bumps + release validation
+## Phase 3 (p03): Lockstep version bumps + release validation (+ p01-p03 review fixes)
 
-**Status:** completed
+**Status:** in_progress (base tasks complete; 3 review-fix tasks added from p01-p03 range review 2026-04-24)
 **Started:** 2026-04-23
-**Completed:** 2026-04-23
-**Commits:** `965114ce..ee0024cf` (2 task commits)
+**Base tasks completed:** 2026-04-23 (2/2: p03-t01, p03-t02)
+**Review fixes pending:** p03-t03, p03-t04, p03-t05 (0/3)
+**Commits so far:** `965114ce..ee0024cf` (2 base commits)
 
 ### Phase Summary
 

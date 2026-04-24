@@ -931,6 +931,97 @@ git add {amended files}
 git commit -m "chore(p03-t02): fix release:validate issue"
 ```
 
+### Task p03-t03: (review) Move quick-start Step 2.6 between Step 2.5 and Step 3 (FR11 gate placement)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding (`I1` from `reviews/archived/p01-p03-review-2026-04-24.md`): Step 2.5 instructs the straight-to-plan branch to "continue to Step 3" at `SKILL.md:191`, but Step 2.6 (the requirements gate) is physically defined at `SKILL.md:332`. Document order does not match the intended control flow. An agent following the skill literally could skip the FR11 confirmation gate.
+
+Binding spec reference: spec.md FR11 ("gate must fire before plan generation for both explicit and auto-advance straight-to-plan paths"). Design.md §Component 8 explicitly places the gate "after Step 2.5 and before Step 3".
+
+**Step 2: Implement fix**
+
+Relocate the current Step 2.6 (requirements confirmation gate) block so it sits immediately after Step 2.5 and before the lightweight-design block (formerly Step 2.75 / Step 2.75a). Renumber subsequent steps as needed so that document order matches control flow: Step 2.5 → Step 2.6 (gate) → Step 2.75 (lightweight design) → Step 3.
+
+Update any cross-references (e.g., "Step 2.6 fires before Step 3") so line/step references still point at the relocated block.
+
+**Step 3: Verify**
+
+- `grep -n "Step 2\\.[567]\\b\\|Step 3\\b" .agents/skills/oat-project-quick-start/SKILL.md` — confirm order is 2.5 → 2.6 → 2.75 → 3.
+- No orphaned "See Step N" references.
+- `pnpm lint` + `pnpm format` pass on the touched file.
+- The straight-to-plan and auto-advance branches in Step 2.5 both terminate at Step 2.6 (not Step 3).
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-quick-start/SKILL.md
+git commit -m "fix(p03-t03): move quick-start Step 2.6 between Step 2.5 and Step 3"
+```
+
+### Task p03-t04: (review) Route quick-start promotion to `oat-project-design` (FR10)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding (`I2` from `reviews/archived/p01-p03-review-2026-04-24.md`): The "Promote to spec-driven" branch still writes `oat_ready_for: oat-project-spec` (`SKILL.md:197`) and instructs the user to run `oat-project-spec` next (`SKILL.md:214`). Under the new workflow, FR10 repositions `oat-project-spec` as optional/standalone, and default discovery→design routing is the canonical path. Quick-start promotion is the last place that still enters the old pre-update pipeline.
+
+Binding spec reference: spec.md FR10 ("oat-project-spec is optional and independent; default path continues to oat-project-design"). The updated `.oat/templates/discovery.md` (p02-t07) already encodes this routing for spec-driven mode.
+
+**Step 2: Implement fix**
+
+In the quick-start promotion branch:
+
+- Change `oat_ready_for: oat-project-spec` → `oat_ready_for: oat-project-design`.
+- Change the user-facing "Next steps" prose at SKILL.md:214 (and any other spot in the branch) from "run `oat-project-spec`" to "run `oat-project-design`" as the default promotion route.
+- Retain a brief note that `oat-project-spec` remains available for users who want to formalize spec.md separately before designing.
+
+**Step 3: Verify**
+
+- `grep -n "oat-project-spec\\|oat_ready_for" .agents/skills/oat-project-quick-start/SKILL.md` — promotion branch now routes to `oat-project-design`; spec mentioned only as optional.
+- `pnpm lint` + `pnpm format` pass.
+- Cross-check with `.oat/templates/discovery.md` — both surfaces name `oat-project-design` as the default promotion target.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-quick-start/SKILL.md
+git commit -m "fix(p03-t04): route quick-start promotion to oat-project-design (FR10)"
+```
+
+### Task p03-t05: (review) Update discover Step 14 commit template to reference design phase
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-discover/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding (`m1` from `reviews/archived/p01-p03-review-2026-04-24.md`): `oat-project-discover` Step 14's example commit body footer still reads "Ready for specification phase", while Step 15 correctly routes users to `oat-project-design`. Prose drift that contradicts the updated routing one step below.
+
+**Step 2: Implement fix**
+
+Change the Step 14 example commit footer at `SKILL.md:386` from "Ready for specification phase" to "Ready for design phase" (or equivalent wording consistent with Step 15's routing). Only touch the example commit footer text.
+
+**Step 3: Verify**
+
+- `grep -n "specification phase\\|design phase" .agents/skills/oat-project-discover/SKILL.md` — footer now says "design phase".
+- `pnpm format` passes.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-discover/SKILL.md
+git commit -m "fix(p03-t05): update discover Step 14 commit template to design phase"
+```
+
 ---
 
 ## Phase 4 (p04): Dogfood + regressions + PR
@@ -1150,18 +1241,18 @@ When review is `passed`, merge PR. Standard release pipeline picks up the versio
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope   | Type     | Status   | Date       | Artifact                                              |
-| ------- | -------- | -------- | ---------- | ----------------------------------------------------- |
-| p01     | code     | passed   | 2026-04-23 | reviews/p01-review-2026-04-23.md                      |
-| p02     | code     | passed   | 2026-04-23 | reviews/p02-review-2026-04-23.md                      |
-| p03     | code     | passed   | 2026-04-23 | reviews/p03-review-2026-04-23.md                      |
-| p01-p03 | code     | received | 2026-04-24 | reviews/p01-p03-review-2026-04-24.md                  |
-| p04     | code     | pending  | -          | -                                                     |
-| final   | code     | pending  | -          | -                                                     |
-| spec    | artifact | pending  | -          | -                                                     |
-| design  | artifact | passed   | 2026-04-17 | reviews/archived/artifact-design-review-2026-04-17.md |
-| plan    | artifact | passed   | 2026-04-17 | reviews/archived/artifact-plan-review-2026-04-17.md   |
-| stale   | artifact | passed   | 2026-04-23 | reviews/staleness-review-2026-04-23.md                |
+| Scope   | Type     | Status      | Date       | Artifact                                              |
+| ------- | -------- | ----------- | ---------- | ----------------------------------------------------- |
+| p01     | code     | passed      | 2026-04-23 | reviews/archived/p01-review-2026-04-23.md             |
+| p02     | code     | passed      | 2026-04-23 | reviews/archived/p02-review-2026-04-23.md             |
+| p03     | code     | passed      | 2026-04-23 | reviews/archived/p03-review-2026-04-23.md             |
+| p01-p03 | code     | fixes_added | 2026-04-24 | reviews/archived/p01-p03-review-2026-04-24.md         |
+| p04     | code     | pending     | -          | -                                                     |
+| final   | code     | pending     | -          | -                                                     |
+| spec    | artifact | pending     | -          | -                                                     |
+| design  | artifact | passed      | 2026-04-17 | reviews/archived/artifact-design-review-2026-04-17.md |
+| plan    | artifact | passed      | 2026-04-17 | reviews/archived/artifact-plan-review-2026-04-17.md   |
+| stale   | artifact | passed      | 2026-04-23 | reviews/staleness-review-2026-04-23.md                |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1180,10 +1271,10 @@ When review is `passed`, merge PR. Standard release pipeline picks up the versio
 
 - Phase 1 (p01): 9 tasks — `oat-project-design` rework
 - Phase 2 (p02): 10 tasks — companion skill edits + AGENTS.md + NOTICES.md + CLI config extension (FR15)
-- Phase 3 (p03): 2 tasks — lockstep version bumps + release validation
+- Phase 3 (p03): 5 tasks — lockstep version bumps + release validation + 3 review fixes from p01-p03 range review (p03-t03, p03-t04, p03-t05)
 - Phase 4 (p04): 11 tasks — dogfood + regressions + PR
 
-**Total: 32 tasks**
+**Total: 35 tasks** (32 original + 3 review fixes)
 
 Ready for code review and merge.
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: ee0024cf
+oat_current_task: p03-t03
+oat_last_commit: b2d9cb71
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: ['p04']
@@ -15,7 +15,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-23T23:15:00Z'
+oat_project_state_updated: '2026-04-24T13:30:00Z'
 oat_generated: false
 oat_orchestration_retry_limit: 2
 ---
@@ -28,7 +28,7 @@ oat_orchestration_retry_limit: 2
 
 ## Current Phase
 
-Implementation — p01, p02, p03 complete (21/32 tasks done). All 5 public packages bumped 0.0.50→0.0.51, `pnpm release:validate` passes. Next: p04 (dogfood + regressions + PR) with HiLL checkpoint auto-review on completion.
+Implementation — p01-p03 range code review (2026-04-24) returned `changes_requested` with 2 Important + 1 Minor findings; 3 fix tasks added to p03 (p03-t03, p03-t04, p03-t05). Base p03 tasks (p03-t01/t02) are done; 21/35 tasks complete. Next: execute the 3 fix tasks, then re-review, then proceed to p04.
 
 ## Artifacts
 
@@ -51,7 +51,8 @@ Implementation — p01, p02, p03 complete (21/32 tasks done). All 5 public packa
 - ✓ Reference materials preserved (Superpowers source files + comparative analysis grounded in actual file content)
 - ✓ p01 implemented + reviewed (pass) + merged (`e996cd5e`) — `oat-project-design` rework, 9 tasks
 - ✓ p02 implemented + reviewed (pass) + merged (`a6eba84d`) — companion skills + AGENTS + NOTICES + designMode, 10 tasks
-- ✓ p03 implemented + reviewed (pass) — 5 public packages bumped 0.0.50→0.0.51, `pnpm release:validate` clean
+- ✓ p03 base tasks (p03-t01/t02) implemented + reviewed (pass) — 5 public packages bumped 0.0.50→0.0.51, `pnpm release:validate` clean
+- ⧗ p01-p03 range review (2026-04-24) returned changes_requested — 3 fix tasks added (p03-t03, p03-t04, p03-t05)
 - ⧗ p04 (dogfood + regressions + PR) pending — HiLL checkpoint + auto-review enabled
 
 ## Blockers
@@ -60,4 +61,4 @@ None.
 
 ## Next Milestone
 
-Run p04 sequentially: 11 tasks covering dogfood follow-up project scaffold, 6 dogfood live-behavior tests (FR1-FR6 + NFR4, FR8, FR9, FR10, FR11, FR12), 2 regression checks (NFR1, NFR2), PR creation, and final code review. HiLL checkpoint fires here with auto-review.
+Execute p03-t03 (move quick-start Step 2.6), p03-t04 (route quick-start promotion to `oat-project-design`), p03-t05 (update discover Step 14 template) via `oat-project-implement`. Then re-review `p01-p03` scoped to the fix tasks. On re-review `passed`, proceed to p04 (dogfood + regressions + PR).
