@@ -214,6 +214,34 @@ git diff --cached --quiet || git commit -m "chore(oat): promote quick-start disc
 - Inform the user: "Discovery is complete. Run `oat-project-spec` next to formalize requirements."
 - Stop here. Do not generate a plan.
 
+### Step 2.75a: Lightweight Design Mode Choice
+
+Resolve the interaction mode before drafting. Same mechanics as the full `oat-project-design` skill (Component 1): argument precedes env var, config fallback, non-interactive fallback to draft.
+
+```
+DESIGN_MODE="${ARG_MODE:-${OAT_DESIGN_MODE:-}}"
+if [ -z "$DESIGN_MODE" ]; then
+  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+    DESIGN_MODE="draft"
+    echo "Non-interactive context detected. Falling back to draft-and-review mode."
+  else
+    # Consult persisted preference (FR15 / Component 14) before prompting
+    CONFIG_MODE=$(oat config get workflow.designMode 2>/dev/null || echo "")
+    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "draft" ]; then
+      DESIGN_MODE="$CONFIG_MODE"
+      echo "Using workflow.designMode = ${DESIGN_MODE} from config."
+    else
+      # AskUserQuestion (SAME prompt text as oat-project-design Step 1.5):
+      #   "How would you like to work through the lightweight design?"
+      #     1. Collaborative (recommended) — section-by-section, one approach confirmation before drafting
+      #     2. Draft-and-review — full draft up front, you review holistically
+      :
+    fi
+  fi
+fi
+echo "Running in ${DESIGN_MODE} mode."
+```
+
 ### Step 2.75: Lightweight Design (Optional)
 
 Produce a focused `design.md` covering only what's needed for a quality plan. This is NOT the full spec-driven design — it's a quick architectural sketch.
