@@ -58,16 +58,69 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 ### Step 1: Check Specification Complete
 
+Specification is OPTIONAL in the default workflow. This skill folds requirements confirmation into Step 2 below and produces `spec.md` as a byproduct.
+
+If `"$PROJECT_PATH/spec.md"` already exists (e.g., the user ran the standalone `oat-project-spec` skill first), validate it and reuse it:
+
 ```bash
-cat "$PROJECT_PATH/spec.md" | head -10 | grep "oat_status:"
+if [ -f "$PROJECT_PATH/spec.md" ]; then
+  cat "$PROJECT_PATH/spec.md" | head -10 | grep "oat_status:"
+fi
 ```
 
-**Required frontmatter:**
+**If `spec.md` exists, required frontmatter:**
 
 - `oat_status: complete`
 - `oat_ready_for: oat-project-design`
 
-**If not complete:** Block and ask user to finish specification first.
+**If `spec.md` exists but is incomplete:** Block and ask user to finish the standalone spec skill first, OR delete the draft and let this skill regenerate it from discovery.
+
+**If `spec.md` does not exist:** That is the default path. Skip to Step 1.5 (mode resolution); Step 2 (Requirements Confirmation) will produce it from `discovery.md`.
+
+### Step 1.5: Resolve Interaction Mode
+
+Resolve whether to run the design phase in Collaborative (section-by-section) or Draft-and-review (full draft up front) mode. Argument precedes env var. Non-interactive context forces draft. Persisted config preference is consulted before prompting the user.
+
+```bash
+# 1. Check for explicit override (argument wins over env var — FR1)
+DESIGN_MODE="${ARG_MODE:-${OAT_DESIGN_MODE:-}}"
+
+# 2. If no override, check for non-interactive signals before anything else
+if [ -z "$DESIGN_MODE" ]; then
+  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+    DESIGN_MODE="draft"
+    echo "Non-interactive context detected. Falling back to draft-and-review mode."
+  else
+    # 3. Consult persisted preference (FR15 / Component 14) before prompting
+    CONFIG_MODE=$(oat config get workflow.designMode 2>/dev/null || echo "")
+    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "draft" ]; then
+      DESIGN_MODE="$CONFIG_MODE"
+      echo "Using workflow.designMode = ${DESIGN_MODE} from config."
+    else
+      # 4. Interactive: prompt via AskUserQuestion
+      #    Question: "How would you like to work through the design?"
+      #    Multi-choice:
+      #      1. Collaborative (recommended) — section-by-section, with one approach
+      #         confirmation before drafting
+      #      2. Draft-and-review — full draft up front, you review holistically
+      # Result populates DESIGN_MODE
+      :
+    fi
+  fi
+fi
+
+echo "Running in ${DESIGN_MODE} mode."
+```
+
+**Resolution order (FR1 + FR15):**
+
+1. `--mode` argument (`ARG_MODE`)
+2. `OAT_DESIGN_MODE` env var
+3. `OAT_NON_INTERACTIVE=1` or no TTY → forces `draft`
+4. `workflow.designMode` from effective config
+5. Interactive prompt (default: Collaborative)
+
+Runtime/context signals always outrank persisted preferences.
 
 ### Step 2: Read Specification Document
 
