@@ -436,10 +436,20 @@ IF DESIGN_MODE == "draft":
     mode was selected via non-interactive fallback, not when the user
     explicitly chose draft mode interactively.)
   Write the complete design.md.
-  Continue to Step 5 (Self-Review, Component 6) and Step 6 (User-Review
-    Gate, Component 7). The user-review gate is the sole point of user
-    interaction in draft mode.
+  Continue to Step 5 (Self-Review) and Step 6 (User-Review Gate).
+  The user-review gate is the sole point of user interaction in draft mode.
 ```
+
+### Step 5: Design Self-Review
+
+Silent agent-side quality pass — no user prompt fires here. After all sections are drafted (in either mode), look at `design.md` and `spec.md` with fresh eyes and run four named checks. Fix issues inline; do not recurse on self-review.
+
+1. **Placeholder scan** — Search `design.md` and `spec.md` for `TBD`, `TODO`, `FIXME`, `...`, and placeholder sections that just say "Not applicable" without elaboration. Fix inline.
+2. **Internal consistency** — Does the architecture description match the component design? Do the API request/response shapes match the data models? Does the testing strategy cover the requirements? Fix inline.
+3. **Scope check** — Did the design grow beyond what discovery scoped? If out-of-scope items crept in, move them to discovery.md "Deferred Ideas". If genuine multi-subsystem scope surfaces, escalate to the user — they may want to split into multiple projects (follow-up split-escape-hatch work, not this skill's responsibility).
+4. **Ambiguity check** — Could any requirement or design statement be interpreted two ways? Pick one and make it explicit.
+
+Apply fixes inline. Do not re-run self-review. Continue to Step 6 (User-Review Gate).
 
 ### Step 19: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)
 
