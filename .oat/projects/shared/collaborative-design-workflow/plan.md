@@ -6,6 +6,7 @@ oat_last_updated: 2026-04-23
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p04'] # final phase only, per user selection 2026-04-23
+oat_auto_review_at_hill_checkpoints: true # from workflow.autoReviewAtHillCheckpoints
 oat_plan_parallel_groups: [['p01', 'p02']] # p01 design-skill edits and p02 companion-skill/docs/CLI edits have disjoint write sets (confirmed 2026-04-23)
 oat_plan_source: spec-driven
 oat_import_reference: null

@@ -7,6 +7,8 @@ oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
+<!-- Implementation run started 2026-04-23: Tier 1 (subagents), parallel group [[p01, p02]], HiLL ['p04'], auto-review at HiLL enabled. -->
+
 # Implementation: collaborative-design-workflow
 
 **Started:** 2026-04-15
@@ -97,95 +99,65 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                                           | Status  | Tasks | Completed |
+| ----------------------------------------------- | ------- | ----- | --------- |
+| Phase 1 (p01): oat-project-design rework        | pending | 9     | 0/9       |
+| Phase 2 (p02): Companion skills + AGENTS + CLI  | pending | 10    | 0/10      |
+| Phase 3 (p03): Lockstep version bumps + release | pending | 2     | 0/2       |
+| Phase 4 (p04): Dogfood + regressions + PR       | pending | 11    | 0/11      |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-04-15
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/32 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 1 (p01): oat-project-design rework
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Phase Summary (fill when phase is complete)
+
+_Phase implementer appends per-task entries here during execution._
+
+---
+
+## Phase 2 (p02): Companion skill edits + AGENTS + NOTICES
 
 **Status:** pending
-**Commit:** -
+**Started:** -
+
+### Phase Summary (fill when phase is complete)
+
+_Phase implementer appends per-task entries here during execution._
+
+---
+
+## Phase 3 (p03): Lockstep version bumps + release validation
+
+**Status:** pending
+**Started:** -
+
+### Phase Summary (fill when phase is complete)
+
+_Phase implementer appends per-task entries here during execution._
+
+---
+
+## Phase 4 (p04): Dogfood + regressions + PR
+
+**Status:** pending
+**Started:** -
+
+### Phase Summary (fill when phase is complete)
+
+_Phase implementer appends per-task entries here during execution._
 
 ---
 
 ## Orchestration Runs
 
-> This section is used by `oat-project-subagent-implement` to log parallel execution runs.
+> This section is used by `oat-project-implement` to log execution runs (including parallel groups).
 > Each run appends a new subsection — never overwrite prior entries.
-> For single-thread execution (via `oat-project-implement`), this section remains empty.
 
 <!-- orchestration-runs-start -->
 <!-- orchestration-runs-end -->

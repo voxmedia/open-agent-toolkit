@@ -1,13 +1,13 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: ['p04']
 oat_hill_completed: []
 oat_parallel_execution: true
-oat_phase: plan
-oat_phase_status: complete
+oat_phase: implement
+oat_phase_status: in_progress
 oat_workflow_mode: spec-driven
 oat_workflow_origin: native
 oat_docs_updated: null
@@ -15,8 +15,9 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-23T22:00:00Z'
+oat_project_state_updated: '2026-04-23T22:05:00Z'
 oat_generated: false
+oat_orchestration_retry_limit: 2
 ---
 
 # Project State: collaborative-design-workflow
@@ -27,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Plan — Discovery, spec, design, and plan artifacts complete. Branch rebased onto `origin/main` after PR #58; plan refreshed for `oat-project-implement` v2; scope expanded to include `workflow.designMode` CLI config extension (FR15 / Component 14 / p02-t10); parallel group `[['p01', 'p02']]` and HiLL `['p04']` confirmed.
+Implementation — Tier 1 (subagents) orchestration in progress. Parallel group `[['p01', 'p02']]` dispatches first; p03 and p04 follow sequentially. HiLL `['p04']` (final phase), auto-review at HiLL enabled.
 
 ## Artifacts
 
@@ -48,7 +49,7 @@ Plan — Discovery, spec, design, and plan artifacts complete. Branch rebased on
 - ✓ Post-PR #58 staleness review complete; spec/design/plan/state refreshed for `oat-project-implement` v2
 - ✓ Parallel group `[['p01', 'p02']]` confirmed; HiLL phases `['p04']` selected; touched skills align on v2.0.0 major bump
 - ✓ Reference materials preserved (Superpowers source files + comparative analysis grounded in actual file content)
-- ⧗ Awaiting oat-project-implement
+- ⧗ oat-project-implement running (Tier 1 subagents)
 
 ## Blockers
 
@@ -56,4 +57,4 @@ None.
 
 ## Next Milestone
 
-Begin implementation via `oat-project-implement`. Parallel group `[['p01', 'p02']]` confirmed; p03 and p04 remain sequential. HiLL gates fire at `['p04']` (final phase only). 32 tasks across 4 phases (p01: design skill rework, 9 tasks; p02: companions + AGENTS + NOTICES + FR15 CLI config, 10 tasks; p03: lockstep release-validate, 2 tasks; p04: dogfood + regressions + PR, 11 tasks).
+Execute parallel group `[['p01', 'p02']]` via `oat-phase-implementer` in isolated worktrees, then merge back in plan order. Continue sequentially through p03 (lockstep release-validate) and p04 (dogfood + PR + final review). HiLL gate fires after p04 completes.
