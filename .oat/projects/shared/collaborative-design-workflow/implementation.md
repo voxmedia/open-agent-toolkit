@@ -130,14 +130,14 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ## Progress Overview
 
-| Phase                                            | Status    | Tasks | Completed |
-| ------------------------------------------------ | --------- | ----- | --------- |
-| Phase 1 (p01): oat-project-design rework         | completed | 9     | 9/9       |
-| Phase 2 (p02): Companion skills + AGENTS + CLI   | completed | 10    | 10/10     |
-| Phase 3 (p03): Lockstep version + 3 review fixes | completed | 5     | 5/5       |
-| Phase 4 (p04): Dogfood + regressions + PR        | pending   | 11    | 0/11      |
+| Phase                                            | Status      | Tasks | Completed                                                                         |
+| ------------------------------------------------ | ----------- | ----- | --------------------------------------------------------------------------------- |
+| Phase 1 (p01): oat-project-design rework         | completed   | 9     | 9/9                                                                               |
+| Phase 2 (p02): Companion skills + AGENTS + CLI   | completed   | 10    | 10/10                                                                             |
+| Phase 3 (p03): Lockstep version + 3 review fixes | completed   | 5     | 5/5                                                                               |
+| Phase 4 (p04): Dogfood + regressions + PR        | in_progress | 11    | 4/11 (agent-executable: t01, t04, t08, t09; interactive deferred to user dogfood) |
 
-**Total:** 24/35 tasks completed
+**Total:** 28/35 tasks completed (interactive dogfood t02/t03/t05/t06/t07 + PR t10/t11 remain)
 
 ---
 
@@ -300,12 +300,56 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ## Phase 4 (p04): Dogfood + regressions + PR
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress (agent-executable subset complete: t01, t04, t08, t09; interactive dogfood t02/t03/t05/t06/t07 deferred to user's separate-repo dogfood; PR t10/t11 pending user confirm)
+**Started:** 2026-04-24
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-_Phase implementer appends per-task entries here during execution._
+**Agent-executable subset (2026-04-24):**
+
+- `p04-t01` **completed** (`be724b93`) — Scaffolded `.oat/projects/shared/dogfood-collab-design-verify` with realistic discovery for "add `--verbose` flag to `oat-project-open`". Active project restored to collaborative-design-workflow after scaffold.
+- `p04-t04` **audit pass** — FR9 non-interactive conformance audit against the new skill prose. Three entry points verified against FR9 acceptance criteria:
+  - `oat-project-design/SKILL.md:92-118` (Step 1.5) — `OAT_NON_INTERACTIVE=1 || ! -t 0` forces `DESIGN_MODE="draft"` with banner before the config check (runtime signal outranks persisted preference per FR15).
+  - `oat-project-quick-start/SKILL.md:225-226` (Step 2.6 gate) — `OAT_NON_INTERACTIVE=1` triggers auto-confirm banner and proceeds to Step 3. Fires before the `OAT_NO_REQUIREMENTS_GATE` bypass check.
+  - `oat-project-quick-start/SKILL.md:275-276` (Step 2.75a lightweight design mode) — identical non-interactive block to Step 1.5.
+  - Draft mode also appends a per-FR9 banner to `design.md` when selected via non-interactive fallback (`oat-project-design/SKILL.md:430-437`) to distinguish auto-fallback from explicit user choice.
+  - **Deferred:** live runtime verification (i.e., actually running the skill under `OAT_NON_INTERACTIVE=1`) is covered by the user's separate-repo dogfood since the skill's user-interaction model can't be faithfully exercised in this session. Conformance audit here verifies prose-level FR9 compliance only.
+- `p04-t08` **audit pass** — NFR1 (backward compatibility with artifact contract). Evidence:
+  - Neither `oat-project-plan` nor `oat-project-plan-writing` was modified in this PR (`git log main..HEAD -- .agents/skills/oat-project-plan/ .agents/skills/oat-project-plan-writing/` returns empty).
+  - `.oat/templates/spec.md` section list matches existing `remote-project-management/spec.md` verbatim (15 sections: Phase Guardrails → References).
+  - `.oat/templates/design.md` section list matches existing `remote-project-management/design.md` verbatim (17 sections: Overview → References).
+  - Frontmatter shape unchanged (`oat_status`, `oat_ready_for`, `oat_blockers`, `oat_last_updated`, `oat_generated`).
+- `p04-t09` **audit pass** — NFR2 (HiLL semantics with both `spec` + `design` checkpoints). Evidence at `oat-project-design/SKILL.md:540-544` (Step 7b):
+  - `If "design" in oat_hill_checkpoints → append "design" to oat_hill_completed`.
+  - `If "spec" in oat_hill_checkpoints and not previously completed via standalone spec skill → append "spec" too (folded HiLL)`.
+  - AC1 (both configured): both get appended on approval → ✓
+  - AC2 (only `design`): behavior unchanged → ✓
+  - AC3 (only `spec`, user runs design directly): Step 6d's OR-gate condition fires → explicit approval still required → ✓
+  - AC4 (no state-migration logic needed): confirmed — the folded HiLL logic handles existing state transparently, no pre-processing step.
+
+**Deferred to user (interactive):**
+
+- `p04-t02` Dogfood full design **collaborative** mode (FR1, FR2, FR3, FR4, FR5, FR6 + NFR4) — live run required to observe section-by-section validation prompts and NFR4 wall-clock.
+- `p04-t03` Dogfood full design **draft** mode (FR8).
+- `p04-t05` Dogfood quick-start requirements gate (FR11) — requires a live run to exercise auto-advance / `OAT_NO_REQUIREMENTS_GATE` bypass / `OAT_NON_INTERACTIVE` auto-confirm paths.
+- `p04-t06` Dogfood quick-start lightweight design mode choice (FR12).
+- `p04-t07` Dogfood `oat-project-spec` standalone (FR10).
+
+These will be covered by the user's separate-repo dogfood pass (`/oat-project-design` and `/oat-project-quick-start` invoked in a live interactive session against a real feature).
+
+**Pending user confirmation:**
+
+- `p04-t10` Push branch + open PR with migration note.
+- `p04-t11` Final `oat-project-review-provide code final` + receive + merge.
+
+**Key files touched (p04 agent-executable subset):**
+
+- `.oat/projects/shared/dogfood-collab-design-verify/` (new — discovery + scaffold files)
+
+**Verification:**
+
+- `git log --oneline main..HEAD` — all expected commits present.
+- `pnpm release:validate` still clean (no changes in this phase).
 
 ---
 
