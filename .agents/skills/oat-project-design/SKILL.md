@@ -13,7 +13,13 @@ Transform specification requirements into a detailed technical design with archi
 
 ## Prerequisites
 
-**Required:** Complete specification document. If missing, run the `oat-project-spec` skill first.
+**Required:** Completed discovery (`discovery.md` with `oat_status: complete`). Specification is optional — this skill folds requirements confirmation into its flow and produces `spec.md` as a byproduct (see Step 2). If the user already ran `oat-project-spec` standalone, that spec is reused.
+
+## Principles
+
+- **YAGNI ruthlessly** — remove unnecessary features from all designs.
+  If a section drafts a capability the spec doesn't require, cut it.
+  If a component boundary is there "in case we need it later", cut it.
 
 ## Progress Indicators (User-Facing)
 
