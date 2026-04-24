@@ -220,9 +220,14 @@ Fires only when the straight-to-plan path was chosen at Step 2.5 (explicit choic
 
 Single conversational turn — no loop inside the gate. If the user materially redirects scope, route OUT to lightweight design or back to discovery.
 
+> **Tool availability is not the same as interactivity.** If `AskUserQuestion` is unavailable but chat is available, present this gate as a plain chat message and wait for the user's reply. Do not auto-confirm just because the structured question tool is missing.
+
 ```
-# Non-interactive fallback FIRST (FR9 contract; same signal as design mode choice).
-if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+# Explicit non-interactive fallback FIRST (FR9 contract; same signal as
+# design mode choice). Lack of AskUserQuestion alone is NOT non-interactive
+# — if chat with the user is available, present the gate as a plain chat
+# message and wait for their reply instead.
+if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || no_user_response_channel_exists; then
   echo "Requirements gate auto-confirmed in non-interactive mode."
   # proceed to Step 3
 fi
@@ -267,12 +272,14 @@ fi
 
 ### Step 2.75a: Lightweight Design Mode Choice
 
-Resolve the interaction mode before drafting. Same mechanics as the full `oat-project-design` skill (Component 1): argument precedes env var, config fallback, non-interactive fallback to draft.
+Resolve the interaction mode before drafting. Same mechanics as the full `oat-project-design` skill (Component 1): argument precedes env var, config fallback, **explicit** non-interactive fallback to draft.
+
+> **Tool availability is not the same as interactivity.** If `AskUserQuestion` is unavailable but chat is available, ask the mode-choice question as a plain chat message and wait for the user's reply. Only fall back to draft when `OAT_NON_INTERACTIVE=1` is set or there is no user-response channel at all.
 
 ```
 DESIGN_MODE="${ARG_MODE:-${OAT_DESIGN_MODE:-}}"
 if [ -z "$DESIGN_MODE" ]; then
-  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || no_user_response_channel_exists; then
     DESIGN_MODE="draft"
     echo "Non-interactive context detected. Falling back to draft-and-review mode."
   else
@@ -282,10 +289,15 @@ if [ -z "$DESIGN_MODE" ]; then
       DESIGN_MODE="$CONFIG_MODE"
       echo "Using workflow.designMode = ${DESIGN_MODE} from config."
     else
-      # AskUserQuestion (SAME prompt text as oat-project-design Step 1.5):
-      #   "How would you like to work through the lightweight design?"
+      # Prefer AskUserQuestion for structured multi-choice when available.
+      # If AskUserQuestion is unavailable, ask the same question as a plain
+      # chat message and wait for the user's reply. Do NOT switch to draft
+      # mode just because the structured tool is missing.
+      #
+      # Prompt (SAME text as oat-project-design Step 1.5):
+      #   "How would you like to work through the lightweight design?
       #     1. Collaborative (recommended) — section-by-section, one approach confirmation before drafting
-      #     2. Draft-and-review — full draft up front, you review holistically
+      #     2. Draft-and-review — full draft up front, you review holistically"
       :
     fi
   fi

@@ -85,15 +85,20 @@ fi
 
 ### Step 1.5: Resolve Interaction Mode
 
-Resolve whether to run the design phase in Collaborative (section-by-section) or Draft-and-review (full draft up front) mode. Argument precedes env var. Non-interactive context forces draft. Persisted config preference is consulted before prompting the user.
+Resolve whether to run the design phase in Collaborative (section-by-section) or Draft-and-review (full draft up front) mode. Argument precedes env var. An **explicit** non-interactive signal forces draft. Persisted config preference is consulted before prompting the user.
+
+> **Tool availability is not the same as interactivity.** If the structured `AskUserQuestion` tool is unavailable but the assistant can still exchange normal chat messages with the user, run Collaborative mode using plain chat prompts. Use Draft-and-review only for explicit non-interactive execution (`OAT_NON_INTERACTIVE=1`) or when no user-response channel exists at all (e.g., a CI job with stdin fully redirected from `/dev/null` and no agent-side user turn).
 
 ```bash
 # 1. Check for explicit override (argument wins over env var — FR1)
 DESIGN_MODE="${ARG_MODE:-${OAT_DESIGN_MODE:-}}"
 
-# 2. If no override, check for non-interactive signals before anything else
+# 2. If no override, check for EXPLICIT non-interactive signals only.
+#    Lack of a structured question tool (e.g., AskUserQuestion unavailable)
+#    is NOT a non-interactive signal by itself — if normal chat with the
+#    user is available, the session is still interactive.
 if [ -z "$DESIGN_MODE" ]; then
-  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || no_user_response_channel_exists; then
     DESIGN_MODE="draft"
     echo "Non-interactive context detected. Falling back to draft-and-review mode."
   else
@@ -103,12 +108,18 @@ if [ -z "$DESIGN_MODE" ]; then
       DESIGN_MODE="$CONFIG_MODE"
       echo "Using workflow.designMode = ${DESIGN_MODE} from config."
     else
-      # 4. Interactive: prompt via AskUserQuestion
-      #    Question: "How would you like to work through the design?"
-      #    Multi-choice:
-      #      1. Collaborative (recommended) — section-by-section, with one approach
-      #         confirmation before drafting
-      #      2. Draft-and-review — full draft up front, you review holistically
+      # 4. Interactive: prompt the user.
+      #    - Prefer AskUserQuestion for structured multi-choice when it is
+      #      available.
+      #    - If AskUserQuestion is unavailable, ask the same question as a
+      #      plain chat message and wait for the user's reply. Do NOT switch
+      #      to draft mode just because the structured tool is missing.
+      #
+      #    Question: "How would you like to work through the design?
+      #       1. Collaborative (recommended) — section-by-section, with one approach
+      #          confirmation before drafting
+      #       2. Draft-and-review — full draft up front, you review holistically"
+      #
       # Result populates DESIGN_MODE
       :
     fi
@@ -122,11 +133,13 @@ echo "Running in ${DESIGN_MODE} mode."
 
 1. `--mode` argument (`ARG_MODE`)
 2. `OAT_DESIGN_MODE` env var
-3. `OAT_NON_INTERACTIVE=1` or no TTY → forces `draft`
+3. **Explicit** non-interactive signal (`OAT_NON_INTERACTIVE=1`, or the runtime truly cannot pause for any user response) → forces `draft`
 4. `workflow.designMode` from effective config
 5. Interactive prompt (default: Collaborative)
 
-Runtime/context signals always outrank persisted preferences.
+Runtime/context signals always outrank persisted preferences. **Missing `AskUserQuestion` is not a non-interactive signal** — fall through to the plain-chat prompt path instead.
+
+**Recovery — draft mode entered by mistake:** If the agent drafted and committed the full design in draft mode because `AskUserQuestion` was unavailable but normal chat was available, do **not** mark the design complete. Treat the committed draft as a starting point and walk it section by section with the user via plain chat — present each section, ask for confirmation or changes, revise and commit on feedback, then move to the next section. Only after the section-by-section pass approves the full artifact should Step 6's user-review gate be considered satisfied.
 
 ### Step 2: Requirements Confirmation (folded spec authoring)
 
@@ -407,7 +420,10 @@ IF DESIGN_MODE == "collaborative":
     Not-applicable sections: state as a single sentence, not empty (e.g.,
       "No database migrations required.").
 
-    Present (AskUserQuestion — free-text or multi-choice with refinement):
+    Present (via AskUserQuestion when available, or as a plain chat
+      message when it is not — chat-based prompts are valid interactive
+      prompts; do not downgrade to draft mode just because AskUserQuestion
+      is missing):
       "Here's what I have for [section]: [content].
        Does this look right, or should we adjust before continuing?"
 
