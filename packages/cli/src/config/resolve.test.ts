@@ -270,6 +270,10 @@ describe('resolveEffectiveConfig', () => {
         value: null,
         source: 'default',
       });
+      expect(result.resolved['workflow.designMode']).toEqual({
+        value: null,
+        source: 'default',
+      });
     });
 
     it('resolves workflow key from user when set only at user level', async () => {
@@ -420,6 +424,86 @@ describe('resolveEffectiveConfig', () => {
       expect(result.resolved['workflow.autoReviewAtHillCheckpoints']).toEqual({
         value: false,
         source: 'shared',
+      });
+    });
+
+    it('resolves workflow.designMode with local > shared > user precedence', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: { designMode: 'collaborative' },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: { designMode: 'draft' },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { designMode: 'collaborative' },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.designMode']).toEqual({
+        value: 'draft',
+        source: 'local',
+      });
+    });
+
+    it('resolves workflow.designMode from shared when local unset', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: { designMode: 'draft' },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { designMode: 'collaborative' },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.designMode']).toEqual({
+        value: 'draft',
+        source: 'shared',
+      });
+    });
+
+    it('resolves workflow.designMode from user when no other surface set', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { designMode: 'collaborative' },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.designMode']).toEqual({
+        value: 'collaborative',
+        source: 'user',
       });
     });
   });

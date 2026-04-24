@@ -608,5 +608,106 @@ describe('oat-config', () => {
         createPrOnComplete: true,
       });
     });
+
+    it('accepts workflow.designMode "collaborative"', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: { designMode: 'collaborative' },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow).toEqual({ designMode: 'collaborative' });
+    });
+
+    it('accepts workflow.designMode "draft"', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: { designMode: 'draft' },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow).toEqual({ designMode: 'draft' });
+    });
+
+    it('drops invalid workflow.designMode values silently', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: { designMode: 'xyz', archiveOnComplete: true },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow).toEqual({ archiveOnComplete: true });
+    });
+
+    it('leaves workflow.designMode undefined when missing', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: { hillCheckpointDefault: 'final' },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow?.designMode).toBeUndefined();
+    });
+
+    it('round-trips workflow.designMode in shared config', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await writeOatConfig(repoRoot, {
+        version: 1,
+        workflow: { designMode: 'draft' },
+      });
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow).toEqual({ designMode: 'draft' });
+    });
+
+    it('round-trips workflow.designMode in local config', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await writeOatLocalConfig(repoRoot, {
+        version: 1,
+        workflow: { designMode: 'collaborative' },
+      });
+
+      const config = await readOatLocalConfig(repoRoot);
+      expect(config.workflow).toEqual({ designMode: 'collaborative' });
+    });
+
+    it('round-trips workflow.designMode in user config', async () => {
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-dm-'));
+      tempDirs.push(userConfigDir);
+
+      await writeUserConfig(userConfigDir, {
+        version: 1,
+        workflow: { designMode: 'draft' },
+      });
+
+      const userConfig = await readUserConfig(userConfigDir);
+      expect(userConfig.workflow).toEqual({ designMode: 'draft' });
+    });
   });
 });

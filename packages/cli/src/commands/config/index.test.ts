@@ -925,7 +925,7 @@ describe('oat config', () => {
   });
 
   describe('workflow preference catalog', () => {
-    it('describe lists all seven workflow preference keys under Workflow Preferences group', async () => {
+    it('describe lists all eight workflow preference keys under Workflow Preferences group', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
 
@@ -939,6 +939,7 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('workflow.reviewExecutionModel');
       expect(capture.info[0]).toContain('workflow.autoReviewAtHillCheckpoints');
       expect(capture.info[0]).toContain('workflow.autoNarrowReReviewScope');
+      expect(capture.info[0]).toContain('workflow.designMode');
       expect(process.exitCode).toBe(0);
     });
 

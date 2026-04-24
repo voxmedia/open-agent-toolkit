@@ -577,7 +577,7 @@ describe('scaffoldProject', () => {
     );
     expect(discoveryTemplate).toMatch(/quick mode|plan\.md/i);
     expect(discoveryTemplate).toMatch(
-      /design\.md.*optional|optional.*design\.md/i,
+      /design\.md[\s\S]*optional|optional[\s\S]*design\.md/i,
     );
   });
 
