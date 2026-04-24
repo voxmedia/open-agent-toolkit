@@ -270,14 +270,25 @@ Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
 - Dependencies (captured in discovery instead)
 - Risks and Mitigation (captured in discovery instead)
 
-**Present design incrementally for validation:**
+**Draft the design based on `DESIGN_MODE` (resolved in Step 2.75a):**
 
-1. Draft architecture overview → present to user for validation
-2. Draft component design → present to user for validation
-3. Draft data flow + testing approach → present to user for validation
-4. Finalize `design.md`
-
-After each chunk, ask: "Does this look right, or should we adjust before continuing?"
+```
+IF DESIGN_MODE == "collaborative":
+  For SECTION in [Overview, Architecture, Component Design, Testing Strategy
+                  (required); Data Models, API Design, Error Handling
+                  (include only when relevant); SKIP Security, Performance,
+                  Deployment, Migration]:
+    Draft section content. Scale each section to its complexity:
+      a few sentences if straightforward, up to 200-300 words if nuanced.
+    Not-applicable sections: state as a single sentence, not empty.
+    Present:
+      "Here's what I have for [section]: [content].
+       Does this look right, or should we adjust before continuing?"
+    Use AskUserQuestion for the validation prompt.
+    Revise inline on feedback. Be ready to go back and clarify if something
+      doesn't make sense. Re-present if substantive.
+    Mark section approved. Move to next.
+```
 
 If `design.md` or `state.md` was updated before one of these validation pauses, commit those artifact changes before waiting for the user response.
 
