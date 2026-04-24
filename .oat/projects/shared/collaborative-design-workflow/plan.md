@@ -1154,7 +1154,7 @@ When review is `passed`, merge PR. Standard release pipeline picks up the versio
 | ------ | -------- | ------- | ---------- | ----------------------------------------------------- |
 | p01    | code     | passed  | 2026-04-23 | reviews/p01-review-2026-04-23.md                      |
 | p02    | code     | passed  | 2026-04-23 | reviews/p02-review-2026-04-23.md                      |
-| p03    | code     | pending | -          | -                                                     |
+| p03    | code     | passed  | 2026-04-23 | reviews/p03-review-2026-04-23.md                      |
 | p04    | code     | pending | -          | -                                                     |
 | final  | code     | pending | -          | -                                                     |
 | spec   | artifact | pending | -          | -                                                     |

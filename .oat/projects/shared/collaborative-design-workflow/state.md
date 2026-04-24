@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: a6eba84d
+oat_current_task: p04-t01
+oat_last_commit: ee0024cf
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: ['p04']
@@ -15,7 +15,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-23T22:45:00Z'
+oat_project_state_updated: '2026-04-23T23:15:00Z'
 oat_generated: false
 oat_orchestration_retry_limit: 2
 ---
@@ -28,7 +28,7 @@ oat_orchestration_retry_limit: 2
 
 ## Current Phase
 
-Implementation — p01 and p02 complete (19/32 tasks done via Tier 1 parallel group, both merged). Next: p03 (lockstep version + release-validate) then p04 (dogfood + PR). HiLL gate fires after p04.
+Implementation — p01, p02, p03 complete (21/32 tasks done). All 5 public packages bumped 0.0.50→0.0.51, `pnpm release:validate` passes. Next: p04 (dogfood + regressions + PR) with HiLL checkpoint auto-review on completion.
 
 ## Artifacts
 
@@ -51,8 +51,8 @@ Implementation — p01 and p02 complete (19/32 tasks done via Tier 1 parallel gr
 - ✓ Reference materials preserved (Superpowers source files + comparative analysis grounded in actual file content)
 - ✓ p01 implemented + reviewed (pass) + merged (`e996cd5e`) — `oat-project-design` rework, 9 tasks
 - ✓ p02 implemented + reviewed (pass) + merged (`a6eba84d`) — companion skills + AGENTS + NOTICES + designMode, 10 tasks
-- ⧗ p03 (lockstep version bumps + release-validate) pending
-- ⧗ p04 (dogfood + regressions + PR) pending
+- ✓ p03 implemented + reviewed (pass) — 5 public packages bumped 0.0.50→0.0.51, `pnpm release:validate` clean
+- ⧗ p04 (dogfood + regressions + PR) pending — HiLL checkpoint + auto-review enabled
 
 ## Blockers
 
@@ -60,4 +60,4 @@ None.
 
 ## Next Milestone
 
-Run p03 sequentially: lockstep version bumps across the 5 public packages + `pnpm release:validate`. Then p04 (dogfood + regressions + PR) with HiLL checkpoint auto-review on completion.
+Run p04 sequentially: 11 tasks covering dogfood follow-up project scaffold, 6 dogfood live-behavior tests (FR1-FR6 + NFR4, FR8, FR9, FR10, FR11, FR12), 2 regression checks (NFR1, NFR2), PR creation, and final code review. HiLL checkpoint fires here with auto-review.

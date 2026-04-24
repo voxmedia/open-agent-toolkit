@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-23
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -103,10 +103,10 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 | ----------------------------------------------- | --------- | ----- | --------- |
 | Phase 1 (p01): oat-project-design rework        | completed | 9     | 9/9       |
 | Phase 2 (p02): Companion skills + AGENTS + CLI  | completed | 10    | 10/10     |
-| Phase 3 (p03): Lockstep version bumps + release | pending   | 2     | 0/2       |
+| Phase 3 (p03): Lockstep version bumps + release | completed | 2     | 2/2       |
 | Phase 4 (p04): Dogfood + regressions + PR       | pending   | 11    | 0/11      |
 
-**Total:** 19/32 tasks completed
+**Total:** 21/32 tasks completed
 
 ---
 
@@ -223,12 +223,41 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ## Phase 3 (p03): Lockstep version bumps + release validation
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-04-23
+**Completed:** 2026-04-23
+**Commits:** `965114ce..ee0024cf` (2 task commits)
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-_Phase implementer appends per-task entries here during execution._
+**Outcome (what changed):**
+
+- All 5 public packages bumped 0.0.50 → 0.0.51 in lockstep: `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms`.
+- `pnpm release:validate` passes (all 5 tarballs validated).
+- Bundled `packages/cli/assets/public-package-versions.json` regenerated to 0.0.51.
+
+**Key files touched:**
+
+- `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` (version bumps)
+- `packages/cli/assets/public-package-versions.json` (regenerated)
+- `pnpm-lock.yaml` unchanged (workspace:\* pins, no drift)
+
+**Verification:**
+
+- `pnpm release:validate` exits 0; all 5 tarballs validated.
+- Review (code scope p03): passed (0 critical, 0 important, 3 minor informational).
+
+**Notes / Decisions:**
+
+- Manifest regen landed in p03-t02 rather than being bundled with p03-t01; explicitly authorized by plan p03-t02 Step 2 ("amend ... and commit as a new task").
+- Pre-existing working-tree drift on `.oat/config.json` (tools block) is unrelated to this implementation run; correctly left untouched.
+
+### Task Outcomes
+
+| Task    | Status    | Commit   | Verification       | Notes                                                                        |
+| ------- | --------- | -------- | ------------------ | ---------------------------------------------------------------------------- |
+| p03-t01 | completed | 965114ce | lockfile stable    | 5 public packages bumped 0.0.50 → 0.0.51; pnpm-lock unchanged (workspace:\*) |
+| p03-t02 | completed | ee0024cf | release:validate 0 | Manifest regenerated; full release validation passed                         |
 
 ---
 
@@ -255,7 +284,7 @@ _Phase implementer appends per-task entries here during execution._
 **Branch:** collaborative-design
 **Tier:** 1 (subagents)
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases executed this entry:** 2 executed (p01, p02), 2 passed, 0 failed, 0 stopped
+**Phases executed:** 3 executed (p01, p02, p03), 3 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
@@ -263,10 +292,12 @@ _Phase implementer appends per-task entries here during execution._
 | ----- | ---------------------- | ------ | -------------- | ----------- |
 | p01   | DONE                   | pass   | 0/2            | merged      |
 | p02   | DONE_WITH_CONCERNS (3) | pass   | 0/2            | merged      |
+| p03   | DONE_WITH_CONCERNS (3) | pass   | 0/2            | inline      |
 
 #### Parallel Groups
 
 - Group 1 [p01, p02]: worktree-based, merged in plan order (p01 first: `e996cd5e`; p02: `a6eba84d`).
+- p03: sequential, inline on orchestration branch.
 
 #### Outstanding Items
 
@@ -274,6 +305,7 @@ _Phase implementer appends per-task entries here during execution._
 - Minor (p02 review): `oat-project-discover` Step 14 commit template retains "Ready for specification phase" residual. Low-risk fixup.
 - Minor (p02 review): `oat-project-quick-start` line-count delta is 102 (not 101); still within spec NFR5 "~100" approximation.
 - Minor (p01 review): 2 polish notes recorded in review artifact.
+- Minor (p03 review): 3 informational notes (manifest split rationale, lockfile stability, no gitignore conflict).
 
 <!-- orchestration-runs-end -->
 
