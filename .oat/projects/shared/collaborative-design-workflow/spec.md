@@ -51,7 +51,7 @@ See `discovery.md` for the decision trail and `reference/comparative-analysis.md
 
 ## Non-Goals
 
-- No changes to `oat-project-plan`, `oat-project-plan-writing`, `oat-project-implement`, `oat-project-subagent-implement`, or any post-design skill.
+- No behavioral changes to `oat-project-plan`, `oat-project-plan-writing`, `oat-project-implement`, or any post-design skill. Plan metadata must still be refreshed to match the current `oat-project-implement` v2 contract.
 - No deletion of `oat-project-spec` — it persists as a standalone utility.
 - No merging of `spec.md` and `design.md` into a single artifact. Authorship merges; artifacts remain distinct.
 - No changes to `oat-project-import-plan` or the import workflow.
@@ -69,12 +69,13 @@ See `discovery.md` for the decision trail and `reference/comparative-analysis.md
 
 **FR1: Design skill offers mode choice at start**
 
-- **Description:** The `oat-project-design` skill must present a mode-choice prompt at the top of its flow, letting the user choose between **Collaborative** (section-by-section with options at decision points) and **Draft-and-review** (full draft generated up front, user reviews holistically). An optional skill argument (e.g., `--mode collaborative|draft`) must be supported as an override.
+- **Description:** The `oat-project-design` skill must present a mode-choice prompt at the top of its flow, letting the user choose between **Collaborative** (section-by-section with one approach confirmation before drafting) and **Draft-and-review** (full draft generated up front, user reviews holistically). An optional skill argument (e.g., `--mode collaborative|draft`) must be supported as an override. Prompt is skipped when an override is present, when non-interactive context is detected, or when `workflow.designMode` is configured (FR15).
 - **Acceptance Criteria:**
   - Runtime prompt presents both options with a recommendation (default: Collaborative).
   - Optional argument `--mode collaborative` or `--mode draft` skips the prompt and forces the mode.
   - If the user picks Draft-and-review, the skill proceeds to FR8 behavior.
   - If the user picks Collaborative (or the default), the skill proceeds to FR2 behavior.
+  - When no argument/env-var override is set and the context is interactive, the skill consults `workflow.designMode` via `oat config get` and uses it as the selection (skipping the prompt) if configured; otherwise prompts.
 - **Priority:** P0
 
 **FR2: Collaborative mode presents sections incrementally with validation**
@@ -216,11 +217,23 @@ Originally: "Design skill runs a sub-project decomposition sanity check." Droppe
   - Discovery HiLL approval prompt (Step 11) language updated to reflect the new downstream (unlock `oat-project-design` rather than `oat-project-spec`).
 - **Priority:** P0
 
+**FR15: Persisted design-mode preference via `workflow.designMode` config**
+
+- **Description:** The `.oat/config.json` and `~/.oat/config.json` schema must support a new `workflow.designMode: "collaborative" | "draft"` key. Both `oat-project-design` (full) and `oat-project-quick-start` (lightweight design) consult this persisted preference via `oat config get workflow.designMode` when no explicit override is provided. The separation is deliberate: `OAT_NON_INTERACTIVE=1` is a **runtime context signal** ("no human here") that forces draft and auto-confirms gates; `workflow.designMode` is a **persisted preference** ("I always prefer draft") that only governs mode selection — the user still gets requirements gates, clarifying questions, and HiLL prompts when present.
+- **Acceptance Criteria:**
+  - `OatWorkflowConfig` gains a `designMode?: 'collaborative' | 'draft'` field in `packages/cli/src/config/oat-config.ts`, validated identically to `hillCheckpointDefault` (invalid values are dropped with a warning; missing is OK).
+  - Existing configs without the key continue to load and resolve unchanged (backward compat).
+  - `oat config get workflow.designMode`, `oat config set workflow.designMode <value>`, `oat config list`, and `oat config describe workflow.designMode` all surface the key.
+  - The mode-choice resolution order in both `oat-project-design` and `oat-project-quick-start` Step 2.75a becomes: (1) `--mode` argument → (2) `OAT_DESIGN_MODE` env var → (3) `OAT_NON_INTERACTIVE=1` or no TTY forces `draft` → (4) `workflow.designMode` from effective config → (5) default `collaborative`. Runtime/context signals always outrank persisted preferences.
+  - CLI tests cover: schema validation accepts `collaborative`/`draft`, rejects other values; merge precedence (user config < repo config) works; missing key leaves effective config silent on the field.
+  - `.oat/config.json` schema documentation in CLI docs updated.
+- **Priority:** P0
+
 ### Non-Functional Requirements
 
 **NFR1: Backward compatibility with artifact contract**
 
-- **Description:** `spec.md` and `design.md` produced by the new flow must remain parseable by all existing downstream skills (`oat-project-plan`, `oat-project-plan-writing`, `oat-project-implement`, `oat-project-subagent-implement`, `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-pr-progress`, `oat-project-pr-final`, `oat-project-revise`, `oat-project-reconcile`).
+- **Description:** `spec.md` and `design.md` produced by the new flow must remain parseable by all existing downstream skills (`oat-project-plan`, `oat-project-plan-writing`, `oat-project-implement`, `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-pr-progress`, `oat-project-pr-final`, `oat-project-revise`, `oat-project-reconcile`).
 - **Acceptance Criteria:**
   - All existing sections of `spec.md` continue to be produced.
   - All existing sections of `design.md` continue to be producible (though some may be replaced with "N/A" one-liners where not applicable).
@@ -260,9 +273,9 @@ Originally: "Design skill runs a sub-project decomposition sanity check." Droppe
 
 - **Description:** The rework must not produce a single monolithic skill file that is impractical to reason about.
 - **Acceptance Criteria:**
-  - The reworked `oat-project-design/SKILL.md` should not exceed 700 lines. (Current is ~460 lines; budget ~240 more for mode choice, requirements confirmation, self-review, user-review gate rewording, decomposition check, YAGNI principle, heuristic examples, draft-and-review branch.)
+  - The reworked `oat-project-design/SKILL.md` should not exceed 700 lines. (Current is ~461 lines after rebasing onto PR #58; budget ~239 more for mode choice, requirements confirmation, self-review, user-review gate rewording, YAGNI principle, approach reaffirmation, and draft-and-review branch.)
   - New substeps are named and numbered consistently with existing conventions.
-  - Long decision-point heuristics live in a single named sub-step, not scattered.
+  - Approach reaffirmation lives in a single named sub-step; there is no per-section decision-point heuristic to maintain.
 - **Priority:** P2
 
 **NFR6: Existing quick-start minimal-ceremony contract preserved for truly simple requests**
@@ -317,7 +330,7 @@ The core of the change is a rework of `oat-project-design/SKILL.md` that replace
 1. **Preamble (new sub-step):** Mode choice prompt (with non-interactive fallback for unattended agent orchestration).
 2. **Requirements confirmation (new — absorbed from `oat-project-spec`):** Formalize FRs/NFRs from discovery, confirm with user, write `spec.md`.
 3. **Design sections (reworked):**
-   - _Collaborative mode:_ Iterate over the existing section list (architecture → components → data models → APIs → security → performance → error handling → testing → deployment → migrations → phases → risks), drafting one at a time, presenting, validating, moving on. At genuine architectural decision points, present 2-3 approaches with a recommendation before proceeding.
+   - _Collaborative mode:_ Iterate over the existing section list (architecture → components → data models → APIs → security → performance → error handling → testing → deployment → migrations → phases → risks), drafting one at a time, presenting, validating, moving on. The single 2-3 approaches moment happens before section drafting in Approach Reaffirmation, not inside each section.
    - _Draft-and-review mode:_ Draft all sections in one pass, then proceed.
 4. **Self-review (new):** Placeholder / consistency / scope / ambiguity check; fix inline.
 5. **User-review gate (reworded):** Explicitly invite artifact review before approval.
@@ -344,7 +357,7 @@ Companion changes in `oat-project-discover`:
 - **Mode-choice preamble** — Runtime prompt + argument / env-var override + non-interactive fallback.
 - **Requirements-confirmation sub-step** — Absorbs the core authoring logic from `oat-project-spec` Steps 6-16 (draft FRs/NFRs, refine with user, populate Requirement Index, run quality checklist).
 - **Section iterator (Collaborative mode)** — Per-section draft / present / validate loop with optional divergent-options branch.
-- **"Real decision point" heuristic** — Prose in the skill prompt with concrete examples.
+- **Approach reaffirmation** — One pre-section divergent-thinking moment using discovery's chosen direction or Superpowers' 2-3-approaches prose when discovery lacks a Solution Space.
 - **Draft-and-review branch** — Alternative path that drafts all sections in one pass.
 - **Design self-review** — Fresh-eyes pass with four named checks.
 - **User-review gate** — Reworded HiLL prompt.
@@ -370,29 +383,30 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 
 ## Requirement Index
 
-| ID   | Description                                                                                   | Priority | Verification                                                                 | Planned Tasks                               |
-| ---- | --------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- | ------------------------------------------- |
-| FR1  | Design skill offers mode choice at start                                                      | P0       | manual: runtime prompt + argument flow                                       | p01-t01, p04-t02, p04-t03                   |
-| FR2  | Collaborative mode presents sections incrementally with validation                            | P0       | manual: dogfood run + skill prose inspection                                 | p01-t05, p04-t02                            |
-| FR3  | Design skill reaffirms approach-level direction before section drafting (Superpowers-aligned) | P0       | manual: dogfood + skill prose inspection (exact Superpowers prose borrowed)  | p01-t03, p04-t02                            |
-| FR4  | Design skill confirms requirements and produces spec.md as byproduct                          | P0       | manual: skill prose + spec.md shape verification                             | p01-t02, p04-t02                            |
-| FR5  | Design skill runs self-review before user-review gate                                         | P1       | manual: skill prose inspection + dogfood                                     | p01-t07, p04-t02                            |
-| FR6  | HiLL approval prompt explicitly invites artifact review                                       | P1       | manual: skill prose inspection                                               | p01-t08, p04-t02                            |
-| FR7  | _(removed — see FR7 stub above; deferred to follow-up split-escape-hatch project)_            | —        | —                                                                            | —                                           |
-| FR8  | Draft-and-review mode produces complete design in one pass                                    | P0       | manual: dogfood in `--mode draft`                                            | p01-t06, p04-t03                            |
-| FR9  | Non-interactive context falls back to Draft-and-review (unattended-agent enabler)             | P0       | integration: run skill in piped stdin / TTY-off + agent-orchestrator dogfood | p01-t01, p02-t01, p04-t04                   |
-| FR10 | `oat-project-spec` repositioned as standalone utility                                         | P0       | manual: skill description + AGENTS.md inspection                             | p02-t06, p02-t08, p04-t07                   |
-| FR11 | Quick-start straight-to-plan gains conversational requirements gate                           | P1       | manual: dogfood well-understood request                                      | p02-t01, p04-t05                            |
-| FR12 | Quick-start lightweight design offers mode choice                                             | P1       | manual: dogfood both modes                                                   | p02-t02, p02-t03, p02-t04, p02-t05, p04-t06 |
-| FR13 | `oat-project-discover` routing language updated                                               | P0       | manual: skill prose + template inspection                                    | p02-t07                                     |
-| FR14 | Repo-root `NOTICES.md` created for borrowed Superpowers prose                                 | P0       | manual: file exists, format matches spec, AGENTS.md references it            | p02-t08, p02-t09                            |
-| NFR1 | Backward compatibility with spec.md / design.md artifact contract                             | P0       | integration: `oat-project-plan` on existing proj                             | p04-t08                                     |
-| NFR2 | HiLL semantics preserved across folded spec-HiLL-in-design-HiLL                               | P0       | integration: synthetic state with both HiLLs                                 | p01-t08, p04-t09                            |
-| NFR3 | `pnpm release:validate` passes                                                                | P0       | perf + integration: command exit 0                                           | p03-t01, p03-t02                            |
-| NFR4 | Collaborative mode does not meaningfully slow design for simple projects                      | P1       | manual: empirical wall-clock comparison                                      | p04-t02                                     |
-| NFR5 | Skill files remain readable (design skill ≤ 700 lines)                                        | P2       | manual: line count inspection                                                | p01-t09                                     |
-| NFR6 | Quick-start minimal-ceremony contract preserved for simple requests                           | P1       | manual: dogfood well-understood request                                      | p02-t01, p04-t05                            |
-| NFR7 | _(removed — heuristic no longer needed after FR3 aligned with Superpowers' pattern)_          | —        | —                                                                            | —                                           |
+| ID   | Description                                                                                   | Priority | Verification                                                                     | Planned Tasks                               |
+| ---- | --------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------- | ------------------------------------------- |
+| FR1  | Design skill offers mode choice at start                                                      | P0       | manual: runtime prompt + argument flow                                           | p01-t01, p04-t02, p04-t03                   |
+| FR2  | Collaborative mode presents sections incrementally with validation                            | P0       | manual: dogfood run + skill prose inspection                                     | p01-t05, p04-t02                            |
+| FR3  | Design skill reaffirms approach-level direction before section drafting (Superpowers-aligned) | P0       | manual: dogfood + skill prose inspection (exact Superpowers prose borrowed)      | p01-t03, p04-t02                            |
+| FR4  | Design skill confirms requirements and produces spec.md as byproduct                          | P0       | manual: skill prose + spec.md shape verification                                 | p01-t02, p04-t02                            |
+| FR5  | Design skill runs self-review before user-review gate                                         | P1       | manual: skill prose inspection + dogfood                                         | p01-t07, p04-t02                            |
+| FR6  | HiLL approval prompt explicitly invites artifact review                                       | P1       | manual: skill prose inspection                                                   | p01-t08, p04-t02                            |
+| FR7  | _(removed — see FR7 stub above; deferred to follow-up split-escape-hatch project)_            | —        | —                                                                                | —                                           |
+| FR8  | Draft-and-review mode produces complete design in one pass                                    | P0       | manual: dogfood in `--mode draft`                                                | p01-t06, p04-t03                            |
+| FR9  | Non-interactive context falls back to Draft-and-review (unattended-agent enabler)             | P0       | integration: run skill in piped stdin / TTY-off + agent-orchestrator dogfood     | p01-t01, p02-t01, p04-t04                   |
+| FR10 | `oat-project-spec` repositioned as standalone utility                                         | P0       | manual: skill description + AGENTS.md inspection                                 | p02-t06, p02-t08, p04-t07                   |
+| FR11 | Quick-start straight-to-plan gains conversational requirements gate                           | P1       | manual: dogfood well-understood request                                          | p02-t01, p04-t05                            |
+| FR12 | Quick-start lightweight design offers mode choice                                             | P1       | manual: dogfood both modes                                                       | p02-t02, p02-t03, p02-t04, p02-t05, p04-t06 |
+| FR13 | `oat-project-discover` routing language updated                                               | P0       | manual: skill prose + template inspection                                        | p02-t07                                     |
+| FR14 | Repo-root `NOTICES.md` created for borrowed Superpowers prose                                 | P0       | manual: file exists, format matches spec, AGENTS.md references it                | p02-t08, p02-t09                            |
+| FR15 | Persisted `workflow.designMode` config + skills read it                                       | P0       | unit: CLI config schema/validation; integration: skills consult `oat config get` | p02-t10, p01-t01, p02-t03, p04-t02          |
+| NFR1 | Backward compatibility with spec.md / design.md artifact contract                             | P0       | integration: `oat-project-plan` on existing proj                                 | p04-t08                                     |
+| NFR2 | HiLL semantics preserved across folded spec-HiLL-in-design-HiLL                               | P0       | integration: synthetic state with both HiLLs                                     | p01-t08, p04-t09                            |
+| NFR3 | `pnpm release:validate` passes                                                                | P0       | perf + integration: command exit 0                                               | p03-t01, p03-t02                            |
+| NFR4 | Collaborative mode does not meaningfully slow design for simple projects                      | P1       | manual: empirical wall-clock comparison                                          | p04-t02                                     |
+| NFR5 | Skill files remain readable (design skill ≤ 700 lines)                                        | P2       | manual: line count inspection                                                    | p01-t09                                     |
+| NFR6 | Quick-start minimal-ceremony contract preserved for simple requests                           | P1       | manual: dogfood well-understood request                                          | p02-t01, p04-t05                            |
+| NFR7 | _(removed — heuristic no longer needed after FR3 aligned with Superpowers' pattern)_          | —        | —                                                                                | —                                           |
 
 ## Open Questions
 
@@ -418,7 +432,7 @@ These questions are flagged for resolution in `oat-project-design`:
 - The existing `spec.md` template's sections map directly to what the folded authoring flow will produce; no structural template changes are required.
 - Users who prefer draft-and-review won't resist it remaining available — they want it off by default.
 - Adding ~1 runtime prompt to design does not meaningfully degrade experience.
-- The "real decision point" heuristic can be captured in skill-prompt language that LLMs will follow reliably.
+- The single approach-level reaffirmation can be captured in skill-prompt language that LLMs will follow reliably.
 - HiLL checkpoint configuration rarely includes both `"spec"` and `"design"` simultaneously. Folding spec's HiLL into design's HiLL is not a meaningful loss.
 
 ## Risks
@@ -476,7 +490,7 @@ These questions are flagged for resolution in `oat-project-design`:
   - `.agents/skills/oat-project-discover/SKILL.md` (v1.3.0)
   - `.agents/skills/oat-project-spec/SKILL.md` (v1.2.0)
   - `.agents/skills/oat-project-design/SKILL.md` (v1.2.0)
-  - `.agents/skills/oat-project-quick-start/SKILL.md` (v1.3.3)
+  - `.agents/skills/oat-project-quick-start/SKILL.md` (v1.3.6)
 - Templates: `.oat/templates/{discovery,spec,design}.md`
 - Project conventions: `AGENTS.md`
 - Knowledge Base: `.oat/repo/knowledge/project-index.md`

@@ -210,7 +210,8 @@ For the **quick-start workflow**:
       - Extract requirements from discovery.
       - Present as one-screen bullet list.
       - User confirms / adds / redirects.
-      - On addition: update discovery.md, re-present.
+      - On minor addition: append to discovery.md and proceed (single-turn gate, no re-present).
+      - On material redirect: exit the gate and route to Step 2 or Step 2.75.
       - Bypass via --no-requirements-gate flag or OAT_NO_REQUIREMENTS_GATE env var.
 
 3b. If "Lightweight design first" chosen:
@@ -244,17 +245,25 @@ For the **quick-start workflow**:
 ```
 # Inside oat-project-design SKILL.md (Step 1.5: Resolve Interaction Mode)
 
-# 1. Check for explicit override
-DESIGN_MODE="${OAT_DESIGN_MODE:-${ARG_MODE:-}}"
+# 1. Check for explicit override (argument wins over env var — FR1)
+DESIGN_MODE="${ARG_MODE:-${OAT_DESIGN_MODE:-}}"
 
-# 2. If no override, check interactivity
+# 2. If no override, check for non-interactive signals before anything else
 if [ -z "$DESIGN_MODE" ]; then
-  if [ -t 0 ]; then
-    # Interactive: prompt via AskUserQuestion
-    # Result populates DESIGN_MODE
-  else
+  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
     DESIGN_MODE="draft"
     echo "Non-interactive context detected. Falling back to draft-and-review mode."
+  else
+    # 3. Consult persisted preference before prompting (FR15)
+    CONFIG_MODE=$(oat config get workflow.designMode 2>/dev/null || echo "")
+    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "draft" ]; then
+      DESIGN_MODE="$CONFIG_MODE"
+      echo "Using workflow.designMode = ${DESIGN_MODE} from config."
+    else
+      # 4. Interactive: prompt via AskUserQuestion
+      # Result populates DESIGN_MODE
+      :
+    fi
   fi
 fi
 ```
@@ -264,7 +273,7 @@ Then in the AskUserQuestion prompt:
 ```
 Question: "How would you like to work through the design?"
 Multi-choice:
-  1. Collaborative (recommended) — section-by-section, with options at decision points
+  1. Collaborative (recommended) — section-by-section, with one approach confirmation before drafting
   2. Draft-and-review — full draft up front, you review holistically
 ```
 
@@ -433,7 +442,7 @@ Applies in both Collaborative and Draft-and-review modes. The section iterator (
 
 ### Component 4: Section iterator (collaborative branch)
 
-**Purpose:** Implement the section-by-section design presentation with optional divergent-options branching at real decision points.
+**Purpose:** Implement the section-by-section design presentation. Divergent thinking for the initial approach happens before this iterator in Component 3.5; this component does not add a scripted per-section options branch.
 
 **Responsibilities:**
 
@@ -725,16 +734,22 @@ Route the user accordingly. Do not loop back into the gate.
 ```
 # Quick-start Step 2.75a: Lightweight Design Mode Choice (NEW)
 
-DESIGN_MODE="${OAT_DESIGN_MODE:-${ARG_MODE:-}}"
+DESIGN_MODE="${ARG_MODE:-${OAT_DESIGN_MODE:-}}"
 
 if [ -z "$DESIGN_MODE" ]; then
-  if [ -t 0 ]; then
-    AskUserQuestion (same prompt text as Component 1):
-      "How would you like to work through the lightweight design?"
-        1. Collaborative (recommended) — section-by-section
-        2. Draft-and-review — full draft up front
-  else
+  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
     DESIGN_MODE="draft"
+  else
+    # Same config-first resolution as Component 1 (FR15)
+    CONFIG_MODE=$(oat config get workflow.designMode 2>/dev/null || echo "")
+    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "draft" ]; then
+      DESIGN_MODE="$CONFIG_MODE"
+    else
+      AskUserQuestion (same prompt text as Component 1):
+        "How would you like to work through the lightweight design?"
+          1. Collaborative (recommended) — section-by-section
+          2. Draft-and-review — full draft up front
+    fi
   fi
 fi
 
@@ -1019,6 +1034,76 @@ Prose adapted from external projects is tracked in the repo-root
 - **Format includes what was borrowed, not just that something was borrowed.** Listing the specific passages (with one-line descriptors) makes the record useful for future contributors deciding whether a change affects a borrowed passage.
 - **AGENTS.md reference is one sentence.** Short enough not to dominate, findable via full-text search.
 
+### Component 14: `workflow.designMode` config extension (FR15)
+
+**Purpose:** Give users a persisted place to express "I always prefer draft mode" (or collaborative) without exporting an env var from their shell rc every time. Separates _persisted preference_ (this) from _runtime context signal_ (`OAT_NON_INTERACTIVE`).
+
+**Responsibilities:**
+
+- Extend `OatWorkflowConfig` (`packages/cli/src/config/oat-config.ts`) with a `designMode?: 'collaborative' | 'draft'` field.
+- Validate identically to the existing `hillCheckpointDefault` enum (whitelist of valid values, invalid values dropped silently, missing is OK for backward compat).
+- Surface the key through the existing `oat config` command family (`get`, `set`, `list`, `describe`) — no new command.
+- Both mode-choice pseudocode blocks (Component 1 step 3, Component 9 step 3) read it via `oat config get workflow.designMode`, falling back to the interactive prompt only when unset.
+
+**Interfaces:**
+
+```ts
+// packages/cli/src/config/oat-config.ts — addition mirrors existing shape
+
+export type WorkflowDesignMode = 'collaborative' | 'draft';
+
+export interface OatWorkflowConfig {
+  hillCheckpointDefault?: WorkflowHillCheckpointDefault;
+  archiveOnComplete?: boolean;
+  createPrOnComplete?: boolean;
+  postImplementSequence?: WorkflowPostImplementSequence;
+  reviewExecutionModel?: WorkflowReviewExecutionModel;
+  autoReviewAtHillCheckpoints?: boolean;
+  autoNarrowReReviewScope?: boolean;
+  designMode?: WorkflowDesignMode; // NEW
+}
+
+const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
+  'collaborative',
+  'draft',
+];
+
+// In normalizeWorkflowConfig:
+if (
+  typeof parsed.designMode === 'string' &&
+  (VALID_DESIGN_MODES as readonly string[]).includes(parsed.designMode)
+) {
+  next.designMode = parsed.designMode as WorkflowDesignMode;
+}
+```
+
+Tests mirror `hillCheckpointDefault` coverage: valid values accepted, invalid dropped, merge precedence (user config < repo config) respected, missing key leaves the effective config silent on the field.
+
+Skill consumption (both `oat-project-design` Step 1.5 and `oat-project-quick-start` Step 2.75a use the same pattern, shown in Component 1 / Component 9 pseudocode):
+
+```bash
+CONFIG_MODE=$(oat config get workflow.designMode 2>/dev/null || echo "")
+if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "draft" ]; then
+  DESIGN_MODE="$CONFIG_MODE"
+fi
+```
+
+`oat config get <key>` already exists (`packages/cli/src/commands/config/index.ts`); the new field becomes readable through it automatically once the schema accepts it.
+
+**Dependencies:**
+
+- Existing `oat config` command family (no new commands).
+- `resolveEffectiveConfig` (`packages/cli/src/config/resolve.ts`) — no functional change needed; the new field flows through as any other `OatWorkflowConfig` field.
+
+**Design Decisions:**
+
+- **Enum, not boolean.** Mirrors `hillCheckpointDefault` (`"every" | "final"`) and leaves room for future values (e.g., `"ask"` as an explicit "always prompt, even in non-interactive?" — out of scope now but shape supports it).
+- **Config is preference; env var is context.** Runtime signals (`OAT_NON_INTERACTIVE`, no TTY) always outrank this setting. Humans who want draft by default set the config once; orchestrators keep using the env var for true unattended runs. Users who never orchestrate agents never hit the env var.
+- **Resolution order stays explicit.** Argument → env var override → non-interactive context → config → default. Documented in spec FR15 and Environment Variables table below.
+- **No new CLI command.** The existing `oat config get/set/list/describe` surface picks up the new field once the schema allows it — zero new command files.
+- **No implicit override of non-interactive behavior.** `workflow.designMode: "collaborative"` does NOT force prompting in a no-TTY context. Non-interactive context always wins (otherwise an orchestrator that inherited a user's "I prefer collaborative" config would deadlock on a prompt).
+- **Backward compat by construction.** Missing field = silent default = existing configs unchanged. Same idempotent shape as every other `OatWorkflowConfig` addition.
+
 ## Data Models
 
 **No new data models or schemas.**
@@ -1059,11 +1144,11 @@ oat-project-discover   # unchanged
 
 Environment variables:
 
-| Variable                   | Used by                                                      | Purpose                                                                 |
-| -------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| `OAT_DESIGN_MODE`          | `oat-project-design`, `oat-project-quick-start` (Step 2.75a) | Force `collaborative` or `draft` mode without an explicit prompt        |
-| `OAT_NO_REQUIREMENTS_GATE` | `oat-project-quick-start` (Step 2.6)                         | Set to `1` to bypass the requirements gate on the straight-to-plan path |
-| `OAT_NON_INTERACTIVE`      | `oat-project-design`, `oat-project-quick-start`              | Set to `1` to force draft mode regardless of TTY detection              |
+| Variable                   | Used by                                                      | Purpose                                                                                                                                                                                                                                                                                        |
+| -------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OAT_DESIGN_MODE`          | `oat-project-design`, `oat-project-quick-start` (Step 2.75a) | Force `collaborative` or `draft` mode without an explicit prompt                                                                                                                                                                                                                               |
+| `OAT_NO_REQUIREMENTS_GATE` | `oat-project-quick-start` (Step 2.6)                         | Set to `1` to bypass the requirements gate on the straight-to-plan path                                                                                                                                                                                                                        |
+| `OAT_NON_INTERACTIVE`      | `oat-project-design`, `oat-project-quick-start`              | Canonical unattended-mode signal. When `1`, forces draft mode, auto-confirms the requirements gate, and suppresses clarifying-question prompts. Orchestrators should export this; interactive users who just want a persisted mode preference should use `workflow.designMode` instead (FR15). |
 
 ## Security Considerations
 
@@ -1096,36 +1181,37 @@ The dogfooding step (NFR4 acceptance criterion) is the only "performance" verifi
 | `--mode` argument has invalid value                                                                           | Skill emits an error and lists valid values; exits without modifying any artifacts.                                                                                                                                                                                                                    |
 | Self-review surfaces issues that can't be fixed inline (e.g., contradictions requiring user input)            | Surface to user as a question; pause for response; re-attempt fix. If still unresolvable, escalate via "Open Questions" section in design.md.                                                                                                                                                          |
 | Self-review surfaces genuine multi-subsystem scope                                                            | Escalate to user with a recommendation to split into multiple projects. Design skill does not itself orchestrate the split (that's the follow-up split-escape-hatch project); exit cleanly if user agrees to split, or document the scope concern and proceed if user chooses to continue as one plan. |
-| Quick-start requirements gate: user requests addition that contradicts a discovery decision                   | Surface as a clarifying question; capture in discovery.md as a Decision Update; re-present.                                                                                                                                                                                                            |
+| Quick-start requirements gate: user requests addition that contradicts a discovery decision                   | Treat as a material redirect (FR11 outcome 3): exit the gate cleanly and route user to Step 2 (expand discovery) or Step 2.75 (lightweight design). Do not loop inside the gate.                                                                                                                       |
 | Folded HiLL: project state has `"spec"` in `oat_hill_checkpoints` but spec was previously approved standalone | The standalone approval already added `"spec"` to `oat_hill_completed`. Design HiLL only adds `"design"` (not duplicate-add `"spec"`).                                                                                                                                                                 |
 
 ## Testing Strategy
 
 ### Requirement-to-Test Mapping
 
-| ID   | Verification                                                 | Key Scenarios                                                                                                                                                                                                                                                                 |
-| ---- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FR1  | manual: prose inspection + dogfood                           | Mode-choice prompt fires for interactive context; `--mode` arg overrides; both options present in prompt                                                                                                                                                                      |
-| FR2  | manual: dogfood real OAT change with collaborative mode      | All sections presented one at a time with validation; section length scales to complexity; N/A sections shown as one-liner                                                                                                                                                    |
-| FR3  | manual: dogfood + Superpowers-prose inspection               | Approach reaffirmation fires once before section drafting; if discovery Solution Space exists, one-sentence summary + confirm prompt; if not, 2-3-approaches block invoked inline with Superpowers' exact prose; no per-section options step anywhere in collaborative branch |
-| FR4  | manual: skill prose + spec.md shape verification             | Requirements confirmation runs in both modes; spec.md produced with valid Requirement Index in both modes                                                                                                                                                                     |
-| FR5  | manual: prose inspection + dogfood                           | Self-review fires after sections drafted, before HiLL; four named checks visible in skill prose; fixes happen inline                                                                                                                                                          |
-| FR6  | manual: skill prose inspection                               | HiLL prompt language matches new wording; mentions `oat-project-review-provide` for optional independent review                                                                                                                                                               |
-| FR7  | —                                                            | _(removed — deferred to follow-up split-escape-hatch project)_                                                                                                                                                                                                                |
-| FR8  | manual: dogfood with `--mode draft`                          | Draft mode produces full design.md and spec.md without per-section prompts; self-review still runs; user-review gate fires once                                                                                                                                               |
-| FR9  | integration: pipe stdin / non-TTY + unattended agent dogfood | `oat-project-design` with no TTY auto-falls-back to draft mode; banner emitted; no prompt blocks. End-to-end: a Claude agent orchestrator runs `discover → design → plan → implement` with `OAT_NON_INTERACTIVE=1` set and completes without blocking.                        |
-| FR10 | manual: skill description + AGENTS.md inspection             | Spec skill description reflects standalone status; closing output mentions design as optional next step; AGENTS.md prose updated                                                                                                                                              |
-| FR11 | manual: dogfood quick-start straight-to-plan                 | Requirements gate fires before plan; bypass flag works; addition path updates discovery.md and re-presents                                                                                                                                                                    |
-| FR12 | manual: dogfood quick-start lightweight design               | Mode-choice fires at top of Step 2.75; reduced section set preserved in both modes                                                                                                                                                                                            |
-| FR13 | manual: skill prose + template inspection                    | Discovery Step 11 + 12 + 15 + Next Steps template all route to design                                                                                                                                                                                                         |
-| FR14 | manual: file-exists + format inspection                      | `NOTICES.md` exists at repo root; format matches spec (source project, skill, file path, license, consumer skills); AGENTS.md references it once; no in-skill attribution footers anywhere                                                                                    |
-| NFR1 | integration: existing project regression                     | Pick one existing project in `.oat/projects/shared/*` with completed spec.md + design.md; run `oat-project-plan` against it; verify it succeeds                                                                                                                               |
-| NFR2 | integration: synthetic state with both HiLL configs          | Construct state.md with both `"spec"` and `"design"` in `oat_hill_checkpoints`; run design; verify both appended to `oat_hill_completed` on approval                                                                                                                          |
-| NFR3 | integration: `pnpm release:validate`                         | Command exits 0 in implementation PR                                                                                                                                                                                                                                          |
-| NFR4 | manual: dogfood timing comparison                            | Run new design skill on a small OAT change; compare prompt count + wall-clock time vs current design                                                                                                                                                                          |
-| NFR5 | manual: line count                                           | `wc -l .agents/skills/oat-project-design/SKILL.md` ≤ 700                                                                                                                                                                                                                      |
-| NFR6 | manual: dogfood quick-start straight-to-plan                 | Verify single-prompt requirements gate; verify bypass flag                                                                                                                                                                                                                    |
-| NFR7 | —                                                            | _(removed — heuristic no longer needed after FR3 aligned with Superpowers)_                                                                                                                                                                                                   |
+| ID   | Verification                                                 | Key Scenarios                                                                                                                                                                                                                                                                            |
+| ---- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR1  | manual: prose inspection + dogfood                           | Mode-choice prompt fires for interactive context; `--mode` arg overrides; both options present in prompt                                                                                                                                                                                 |
+| FR2  | manual: dogfood real OAT change with collaborative mode      | All sections presented one at a time with validation; section length scales to complexity; N/A sections shown as one-liner                                                                                                                                                               |
+| FR3  | manual: dogfood + Superpowers-prose inspection               | Approach reaffirmation fires once before section drafting; if discovery Solution Space exists, one-sentence summary + confirm prompt; if not, 2-3-approaches block invoked inline with Superpowers' exact prose; no per-section options step anywhere in collaborative branch            |
+| FR4  | manual: skill prose + spec.md shape verification             | Requirements confirmation runs in both modes; spec.md produced with valid Requirement Index in both modes                                                                                                                                                                                |
+| FR5  | manual: prose inspection + dogfood                           | Self-review fires after sections drafted, before HiLL; four named checks visible in skill prose; fixes happen inline                                                                                                                                                                     |
+| FR6  | manual: skill prose inspection                               | HiLL prompt language matches new wording; mentions `oat-project-review-provide` for optional independent review                                                                                                                                                                          |
+| FR7  | —                                                            | _(removed — deferred to follow-up split-escape-hatch project)_                                                                                                                                                                                                                           |
+| FR8  | manual: dogfood with `--mode draft`                          | Draft mode produces full design.md and spec.md without per-section prompts; self-review still runs; user-review gate fires once                                                                                                                                                          |
+| FR9  | integration: pipe stdin / non-TTY + unattended agent dogfood | `oat-project-design` with no TTY auto-falls-back to draft mode; banner emitted; no prompt blocks. End-to-end: a Claude agent orchestrator runs `discover → design → plan → implement` with `OAT_NON_INTERACTIVE=1` set and completes without blocking.                                   |
+| FR10 | manual: skill description + AGENTS.md inspection             | Spec skill description reflects standalone status; closing output mentions design as optional next step; AGENTS.md prose updated                                                                                                                                                         |
+| FR11 | manual: dogfood quick-start straight-to-plan                 | Requirements gate fires before plan; bypass flag works; minor-addition path appends to discovery.md and proceeds without re-presenting; material-redirect path exits cleanly                                                                                                             |
+| FR12 | manual: dogfood quick-start lightweight design               | Mode-choice fires at top of Step 2.75; reduced section set preserved in both modes                                                                                                                                                                                                       |
+| FR13 | manual: skill prose + template inspection                    | Discovery Step 11 + 12 + 15 + Next Steps template all route to design                                                                                                                                                                                                                    |
+| FR14 | manual: file-exists + format inspection                      | `NOTICES.md` exists at repo root; format matches spec (source project, skill, file path, license, consumer skills); AGENTS.md references it once; no in-skill attribution footers anywhere                                                                                               |
+| FR15 | unit + integration: CLI config + skill pseudocode            | `OatWorkflowConfig` accepts `designMode: "collaborative" \| "draft"`; rejects others; missing key backward-compat; `oat config get/set/describe workflow.designMode` works; both design skills consult it with correct resolution order (arg > env > non-interactive > config > default) |
+| NFR1 | integration: existing project regression                     | Pick one existing project in `.oat/projects/shared/*` with completed spec.md + design.md; run `oat-project-plan` against it; verify it succeeds                                                                                                                                          |
+| NFR2 | integration: synthetic state with both HiLL configs          | Construct state.md with both `"spec"` and `"design"` in `oat_hill_checkpoints`; run design; verify both appended to `oat_hill_completed` on approval                                                                                                                                     |
+| NFR3 | integration: `pnpm release:validate`                         | Command exits 0 in implementation PR                                                                                                                                                                                                                                                     |
+| NFR4 | manual: dogfood timing comparison                            | Run new design skill on a small OAT change; compare prompt count + wall-clock time vs current design                                                                                                                                                                                     |
+| NFR5 | manual: line count                                           | `wc -l .agents/skills/oat-project-design/SKILL.md` ≤ 700                                                                                                                                                                                                                                 |
+| NFR6 | manual: dogfood quick-start straight-to-plan                 | Verify single-prompt requirements gate; verify bypass flag                                                                                                                                                                                                                               |
+| NFR7 | —                                                            | _(removed — heuristic no longer needed after FR3 aligned with Superpowers)_                                                                                                                                                                                                              |
 
 ### Unit Tests
 
@@ -1170,7 +1256,7 @@ Standard git revert. Because this is prompt-only / docs-only, there is no migrat
 
 ### Configuration
 
-No new configuration files. New env vars (`OAT_DESIGN_MODE`, `OAT_NO_REQUIREMENTS_GATE`, `OAT_NON_INTERACTIVE`) are documented in this design and in the relevant skill prose.
+No new configuration files. New env vars (`OAT_DESIGN_MODE`, `OAT_NO_REQUIREMENTS_GATE`, `OAT_NON_INTERACTIVE`) are documented in this design and in the relevant skill prose. One new workflow config key (`workflow.designMode`) is added to `OatWorkflowConfig` per FR15 / Component 14; it is optional, backward-compatible, and flows through the existing `.oat/config.json` + `~/.oat/config.json` merge.
 
 ### Monitoring
 
@@ -1196,7 +1282,7 @@ No application monitoring; this is a CLI-tool change. The user's own use of the 
 - **HiLL prompt wording final copy:** The proposed Component 7 wording is illustrative. Implementation should confirm the exact phrasing matches OAT's voice elsewhere in the codebase.
 - **Quick-start requirements-gate UX scope:** Component 8 lists `confirm | add | redirect` as multi-choice options. Implementation should verify this matches `AskUserQuestion`'s UX patterns and refine if needed.
 - **Section iterator implementation: per-section commit or one final commit?** Component 4 design decision is "final commit only". Implementation should verify this aligns with existing `oat-project-design` commit pattern.
-- **Version-bump strategy:** All four touched skills get a minor bump? Major bump for any of them? Implementation should propose a coordinated bump strategy in the PR.
+- **Version-bump strategy:** Resolved (2026-04-23) — all four touched skills bump to **2.0.0** (major) in lockstep. Coordinated release signals the behavioral change; untouched project-workflow skills retain their current versions per the PR-scoped bump rule.
 - **Should `AGENTS.md` workflow triage retain "Spec" anywhere?** Component 12 proposes dropping the explicit "Discovery → Spec → Design" listing. Implementation should sanity-check there isn't another reference elsewhere in `AGENTS.md` or `apps/oat-docs/docs/` that still implies the old shape.
 
 ## Implementation Phases
@@ -1359,7 +1445,7 @@ No application monitoring; this is a CLI-tool change. The user's own use of the 
   - `.agents/skills/oat-project-discover/SKILL.md` (current v1.3.0)
   - `.agents/skills/oat-project-spec/SKILL.md` (current v1.2.0)
   - `.agents/skills/oat-project-design/SKILL.md` (current v1.2.0)
-  - `.agents/skills/oat-project-quick-start/SKILL.md` (current v1.3.3)
+  - `.agents/skills/oat-project-quick-start/SKILL.md` (current v1.3.6)
 - Touched template files:
   - `.oat/templates/discovery.md`
 - Touched docs:

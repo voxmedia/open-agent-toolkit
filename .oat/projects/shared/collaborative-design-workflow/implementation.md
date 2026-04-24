@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-17
+oat_last_updated: 2026-04-23
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -48,6 +48,42 @@ oat_generated: false
 **Status:** passed (rejected-with-rationale items tracked here; no fix tasks added to plan.md).
 
 **Note for plan authoring (next session):** When plan.md is authored, explicitly address C1/C2/I1 by deriving all phases from design.md §Implementation Phases (1-4) and encoding per-task verification against design.md §Testing Strategy §Requirement-to-Test Mapping.
+
+### Review Received: staleness (artifact) — 2026-04-23
+
+**Review artifact:** `reviews/staleness-review-2026-04-23.md`
+
+**Trigger:** rebase onto `origin/main` after PR #58 (`feat(oat): evolve oat-project-implement to phase-subagent model`).
+
+**Dispositions — all `resolve_in_artifact`:**
+
+- `S1` plan/state still routed to removed `oat-project-subagent-implement` → plan.md + state.md updated to name `oat-project-implement` only.
+- `S2` plan lacked `oat_plan_parallel_groups` contract → frontmatter gained `[['p01', 'p02']]` (proposed pending user confirmation) and a `## Parallelism` section documenting the decision.
+- Secondary rebase cleanups — removed legacy `oat_execution_mode: single-thread` from state.md; refreshed quick-start source version (v1.3.3 → v1.3.6) to match rebased skill.
+
+**Status:** passed.
+
+### Post-Staleness Session Fixes — 2026-04-23
+
+Follow-up corrections applied mid-session (not a separate review artifact):
+
+- **Mode override precedence** (design.md + plan.md, 4 pseudocode blocks): `DESIGN_MODE="${OAT_DESIGN_MODE:-${ARG_MODE:-}}"` → `DESIGN_MODE="${ARG_MODE:-${OAT_DESIGN_MODE:-}}"` so an explicit `--mode` argument takes precedence over the env var (matches the design decision).
+- **Explicit `OAT_NON_INTERACTIVE=1` check** (same 4 blocks): added `[ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]` guard before prompting, so the canonical unattended-mode signal forces draft regardless of TTY detection (matches FR9 contract in spec.md).
+- **FR11 alignment** (design.md Step 2.6 prose, error-handling table, and test-mapping row): minor addition path now "appends and proceeds" with no re-present; contradiction case treated as material redirect (FR11 outcome 3) and routed out of the gate.
+- **Mode-choice prompt language** (design.md + plan.md prompt text): "options at decision points" → "one approach confirmation before drafting" to match the post-review decision that there is no scripted per-section options step.
+- **Coordinated version bump** (plan.md p01-t09, p02-t05, p02-t06 Step 3, p02-t07 Step 3): touched skills bumped to **2.0.0 (major)** in lockstep instead of minor bumps — aligns `oat-project-design`, `oat-project-quick-start`, `oat-project-spec`, and `oat-project-discover` on a consistent major version that signals the behavioral change.
+
+### Scope Expansion — 2026-04-23 (FR15 / Component 14 / p02-t10)
+
+Mid-session design discussion surfaced that `OAT_NON_INTERACTIVE` was conflating two independent axes: (a) runtime context signal — "no human is here" (forces draft + auto-confirms gates + skips clarifying questions), and (b) persisted preference — "I always prefer draft mode" (only governs mode selection, keeps other prompts active).
+
+Added a new **FR15** to spec.md: persisted `workflow.designMode: "collaborative" | "draft"` config key in `.oat/config.json` / `~/.oat/config.json`. New **Component 14** in design.md covers the CLI schema extension (mirrors `hillCheckpointDefault` shape). New **task p02-t10** in plan.md implements it.
+
+Resolution order in both mode-choice pseudocode blocks (Component 1 Step 1.5 and Component 9 Step 2.75a) is now: (1) `--mode` argument → (2) `OAT_DESIGN_MODE` env var → (3) `OAT_NON_INTERACTIVE=1` or no TTY → (4) `workflow.designMode` config → (5) default `collaborative`. Runtime/context signals always outrank persisted preferences.
+
+`OAT_NON_INTERACTIVE` prose updated in design.md §Environment Variables to reframe it as "canonical unattended-mode signal" covering all gates, with an explicit pointer to `workflow.designMode` for users who just want a persisted mode preference.
+
+Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within p02's disjoint write-set vs p01). Parallel group `[['p01', 'p02']]` and HiLL phases `['p04']` both confirmed by user in the same session.
 
 > This document is used to resume interrupted implementation sessions.
 >

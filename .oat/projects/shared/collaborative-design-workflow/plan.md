@@ -2,10 +2,11 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-04-17
+oat_last_updated: 2026-04-23
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # will be confirmed at oat-project-implement start
+oat_plan_hill_phases: ['p04'] # final phase only, per user selection 2026-04-23
+oat_plan_parallel_groups: [['p01', 'p02']] # p01 design-skill edits and p02 companion-skill/docs/CLI edits have disjoint write sets (confirmed 2026-04-23)
 oat_plan_source: spec-driven
 oat_import_reference: null
 oat_import_source_path: null
@@ -15,7 +16,7 @@ oat_generated: false
 
 # Implementation Plan: collaborative-design-workflow
 
-> Execute this plan using `oat-project-implement` (sequential) or `oat-project-subagent-implement` (parallel), with phase checkpoints and review gates.
+> Execute this plan using `oat-project-implement` — sequential by default, with p01 and p02 declared as a parallel group through `oat_plan_parallel_groups`.
 
 **Goal:** Rework three OAT skills (`oat-project-design`, `oat-project-quick-start`, `oat-project-spec`) and lightly touch a fourth (`oat-project-discover`) so the design phase feels like a collaborative conversation by default — matching the Obra Superpowers `brainstorming` skill's section-by-section validation pattern — with a draft-and-review escape hatch, a non-interactive fallback for unattended agent orchestration, and a single approach-level divergent-thinking moment. Spec authoring folds into design (still produces `spec.md`), and `oat-project-spec` repositions as a standalone utility.
 
@@ -33,6 +34,21 @@ oat_generated: false
 - [x] Plan derived from design.md §Implementation Phases
 - [x] Every FR and NFR from spec.md covered by at least one task
 - [x] Requirement Index in spec.md updated with task mappings
+- [x] Evaluated phases for parallelism opportunities after rebasing onto `oat-project-implement` v2
+- [x] Set `oat_plan_parallel_groups` in frontmatter
+
+## Parallelism
+
+`oat-project-implement` v2 is the only implementation entry point. The old `oat-project-subagent-implement` skill was removed in PR #58; parallel execution is now declared as plan metadata and validated by `oat project validate-plan`.
+
+**Status: Confirmed (2026-04-23).** `[['p01', 'p02']]` is the selected parallel group. p01 and p02 have disjoint write sets:
+
+- `p01` modifies only `.agents/skills/oat-project-design/SKILL.md`.
+- `p02` modifies companion skill/docs/CLI surfaces: `.agents/skills/oat-project-quick-start/SKILL.md`, `.agents/skills/oat-project-spec/SKILL.md`, `.agents/skills/oat-project-discover/SKILL.md`, `.oat/templates/discovery.md`, `AGENTS.md`, `NOTICES.md`, and `packages/cli/src/config/oat-config.ts` + its tests (Component 14 / FR15).
+
+`p03` remains sequential because lockstep package/version updates depend on the final touched-skill set from p01+p02. `p04` remains sequential because dogfood, regression checks, PR creation, and review/merge depend on the completed implementation branch.
+
+**HiLL checkpoints:** `oat_plan_hill_phases: ['p04']` (final phase only, confirmed 2026-04-23). Phases p01-p03 run through without human gates; p04 dogfood/PR work is where the user engages directly.
 
 ---
 
@@ -57,15 +73,23 @@ Add a new "Step 1.5: Resolve Interaction Mode" sub-step immediately after the ex
 Insert pseudocode:
 
 ```
-DESIGN_MODE="${OAT_DESIGN_MODE:-${ARG_MODE:-}}"
+DESIGN_MODE="${ARG_MODE:-${OAT_DESIGN_MODE:-}}"
 if [ -z "$DESIGN_MODE" ]; then
-  if [ -t 0 ]; then
-    # AskUserQuestion: "How would you like to work through the design?"
-    #   1. Collaborative (recommended) — section-by-section, options at decision points
-    #   2. Draft-and-review — full draft up front, you review holistically
-  else
+  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
     DESIGN_MODE="draft"
     echo "Non-interactive context detected. Falling back to draft-and-review mode."
+  else
+    # Consult persisted preference (FR15 / Component 14) before prompting
+    CONFIG_MODE=$(oat config get workflow.designMode 2>/dev/null || echo "")
+    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "draft" ]; then
+      DESIGN_MODE="$CONFIG_MODE"
+      echo "Using workflow.designMode = ${DESIGN_MODE} from config."
+    else
+      # AskUserQuestion: "How would you like to work through the design?"
+      #   1. Collaborative (recommended) — section-by-section, one approach confirmation before drafting
+      #   2. Draft-and-review — full draft up front, you review holistically
+      :
+    fi
   fi
 fi
 echo "Running in ${DESIGN_MODE} mode."
@@ -397,12 +421,12 @@ Find any references to the pre-rework Steps 5-18 that didn't get rewritten (stal
 
 **Step 2: Bump frontmatter version**
 
-Update frontmatter `version:` from `1.2.0` → `1.3.0` (minor bump — behavior change).
+Update frontmatter `version:` from `1.2.0` → `2.0.0` (major bump — behavioral change; aligns all four touched project-workflow skills on 2.0.0 per the coordinated-release decision).
 
 **Step 3: Verify**
 
 - `wc -l .agents/skills/oat-project-design/SKILL.md` ≤ 700 (NFR5 budget).
-- `grep -n "^version:" .agents/skills/oat-project-design/SKILL.md` shows `1.3.0`.
+- `grep -n "^version:" .agents/skills/oat-project-design/SKILL.md` shows `2.0.0`.
 - No orphaned Step references (e.g., "See Step 14" where Step 14 was removed).
 - `pnpm lint && pnpm format --check .agents/skills/oat-project-design/SKILL.md`
 
@@ -410,7 +434,7 @@ Update frontmatter `version:` from `1.2.0` → `1.3.0` (minor bump — behavior 
 
 ```bash
 git add .agents/skills/oat-project-design/SKILL.md
-git commit -m "chore(p01-t09): cleanup oat-project-design and bump version 1.2.0 → 1.3.0"
+git commit -m "chore(p01-t09): cleanup oat-project-design and bump version 1.2.0 → 2.0.0"
 ```
 
 ---
@@ -484,15 +508,22 @@ Insert new "Step 2.75a: Lightweight Design Mode Choice" at the top of the existi
 Insert pseudocode (same mechanics as p01-t01 Component 1):
 
 ```
-DESIGN_MODE="${OAT_DESIGN_MODE:-${ARG_MODE:-}}"
+DESIGN_MODE="${ARG_MODE:-${OAT_DESIGN_MODE:-}}"
 if [ -z "$DESIGN_MODE" ]; then
-  if [ -t 0 ]; then
-    # AskUserQuestion (SAME prompt text as Component 1):
-    #   "How would you like to work through the lightweight design?"
-    #     1. Collaborative (recommended) — section-by-section
-    #     2. Draft-and-review — full draft up front
-  else
+  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
     DESIGN_MODE="draft"
+  else
+    # Consult persisted preference (FR15 / Component 14) before prompting
+    CONFIG_MODE=$(oat config get workflow.designMode 2>/dev/null || echo "")
+    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "draft" ]; then
+      DESIGN_MODE="$CONFIG_MODE"
+    else
+      # AskUserQuestion (SAME prompt text as Component 1):
+      #   "How would you like to work through the lightweight design?"
+      #     1. Collaborative (recommended) — section-by-section
+      #     2. Draft-and-review — full draft up front
+      :
+    fi
   fi
 fi
 ```
@@ -599,11 +630,11 @@ git commit -m "feat(p02-t04): add quick-start lightweight design draft-and-revie
 
 **Step 1: Bump**
 
-Update frontmatter `version:` from `1.3.3` → `1.4.0` (minor bump — behavior change).
+Update frontmatter `version:` from `1.3.6` → `2.0.0` (major bump — behavioral change; aligns all four touched project-workflow skills on 2.0.0 per the coordinated-release decision).
 
 **Step 2: Verify**
 
-- `grep -n "^version:" .agents/skills/oat-project-quick-start/SKILL.md` shows `1.4.0`.
+- `grep -n "^version:" .agents/skills/oat-project-quick-start/SKILL.md` shows `2.0.0`.
 - Total skill length: `wc -l .agents/skills/oat-project-quick-start/SKILL.md` ≤ `current + 100` lines (per constraint in spec).
 - `pnpm lint && pnpm format --check .agents/skills/oat-project-quick-start/SKILL.md`
 
@@ -611,7 +642,7 @@ Update frontmatter `version:` from `1.3.3` → `1.4.0` (minor bump — behavior 
 
 ```bash
 git add .agents/skills/oat-project-quick-start/SKILL.md
-git commit -m "chore(p02-t05): bump oat-project-quick-start version 1.3.3 → 1.4.0"
+git commit -m "chore(p02-t05): bump oat-project-quick-start version 1.3.6 → 2.0.0"
 ```
 
 ### Task p02-t06: Reposition `oat-project-spec` (Component 10)
@@ -634,7 +665,7 @@ Replace the "Next: Create detailed design with the oat-project-design skill" wor
 
 **Step 3: Bump frontmatter version**
 
-`version:` from `1.2.0` → `1.3.0`.
+`version:` from `1.2.0` → `2.0.0` (major bump — behavioral change; aligns all four touched project-workflow skills on 2.0.0 per the coordinated-release decision).
 
 **Step 4: Verify**
 
@@ -667,7 +698,7 @@ git commit -m "feat(p02-t06): reposition oat-project-spec as standalone utility"
 
 **Step 3: Bump frontmatter version**
 
-`.agents/skills/oat-project-discover/SKILL.md` `version:` from `1.3.0` → `1.4.0`.
+`.agents/skills/oat-project-discover/SKILL.md` `version:` from `1.3.0` → `2.0.0` (major bump — behavioral change; aligns all four touched project-workflow skills on 2.0.0 per the coordinated-release decision).
 
 **Step 4: Verify**
 
@@ -740,6 +771,92 @@ Create the file at repo root with the content specified in design.md §Component
 git add NOTICES.md
 git commit -m "docs(p02-t09): add repo-root NOTICES.md for Superpowers attribution"
 ```
+
+### Task p02-t10: Extend `OatWorkflowConfig` with `designMode` (Component 14 / FR15)
+
+**Files:**
+
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Modify: `packages/cli/src/config/oat-config.test.ts`
+- Modify: `packages/cli/src/config/resolve.test.ts` (verify effective-config merge for the new field)
+- Update: CLI config describe surface (grep for `hillCheckpointDefault` in describe/list code paths and mirror).
+
+**Step 1: Add the type and interface field**
+
+In `packages/cli/src/config/oat-config.ts`, add alongside `WorkflowHillCheckpointDefault`:
+
+```ts
+export type WorkflowDesignMode = 'collaborative' | 'draft';
+```
+
+Add `designMode?: WorkflowDesignMode;` to the `OatWorkflowConfig` interface (currently at `oat-config.ts:38-46`).
+
+**Step 2: Add validation to `normalizeWorkflowConfig`**
+
+Mirror the `hillCheckpointDefault` validation block (`oat-config.ts:67-75`):
+
+```ts
+const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
+  'collaborative',
+  'draft',
+];
+
+// In normalizeWorkflowConfig, alongside the other validators:
+if (
+  typeof parsed.designMode === 'string' &&
+  (VALID_DESIGN_MODES as readonly string[]).includes(parsed.designMode)
+) {
+  next.designMode = parsed.designMode as WorkflowDesignMode;
+}
+```
+
+**Step 3: Update the `oat config describe` surface**
+
+Grep for where `hillCheckpointDefault` is surfaced in describe/list output (likely in `packages/cli/src/commands/config/`). Add a parallel entry for `workflow.designMode` with valid values `collaborative` / `draft` and a short description matching FR15.
+
+**Step 4: Tests**
+
+Extend `oat-config.test.ts` to mirror the `hillCheckpointDefault` coverage:
+
+- Valid value (`"collaborative"`) accepted.
+- Valid value (`"draft"`) accepted.
+- Invalid value (`"xyz"`) silently dropped.
+- Missing field leaves the field `undefined` in the normalized config.
+- User config is overridden by repo config when both set the field (merge precedence).
+
+Extend `resolve.test.ts` if needed to confirm `resolveEffectiveConfig` surfaces `workflow.designMode` correctly (should fall out of existing merge logic).
+
+**Step 5: Verify**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test
+pnpm --filter @open-agent-toolkit/cli type-check
+pnpm --filter @open-agent-toolkit/cli lint
+# Smoke test CLI surface:
+pnpm run cli -- config set workflow.designMode draft
+pnpm run cli -- config get workflow.designMode        # → draft
+pnpm run cli -- config describe workflow.designMode   # → includes valid values
+# Reset:
+pnpm run cli -- config unset workflow.designMode 2>/dev/null || \
+  node -e "const fs=require('fs'); const p='.oat/config.json'; const c=JSON.parse(fs.readFileSync(p,'utf8')); delete c.workflow.designMode; fs.writeFileSync(p, JSON.stringify(c,null,2));"
+```
+
+(The `config unset` command may not exist yet; see `bl-af93`. If not, fall back to the node snippet.)
+
+**Step 6: Commit**
+
+```bash
+git add packages/cli/src/config/oat-config.ts \
+        packages/cli/src/config/oat-config.test.ts \
+        packages/cli/src/config/resolve.test.ts \
+        packages/cli/src/commands/config/
+git commit -m "feat(p02-t10): extend OatWorkflowConfig with designMode (FR15)"
+```
+
+**Acceptance:**
+
+- FR15 acceptance criteria met: schema accepts `collaborative`/`draft`, rejects others; `oat config get/set/describe` surfaces the key; existing configs without the key continue to load.
+- Pseudocode in p01-t01 and p02-t02 can now call `oat config get workflow.designMode` at runtime.
 
 ---
 
@@ -820,6 +937,8 @@ git commit -m "chore(p03-t02): fix release:validate issue"
 **Goal:** Behavioral validation of the new flow on a real OAT change, plus NFR1/NFR2 regression tests, plus PR submission with migration-note framing.
 
 **Source:** design.md §Testing Strategy §End-to-End Tests. Spec FRs exercised: FR1-FR14 (behavioral). NFRs: NFR1 (contract preservation), NFR2 (HiLL semantics), NFR4 (wall-clock).
+
+**Execution note for dogfood tasks (p04-t02 through p04-t07):** These tasks are interactive user runs — the human operator invokes each flow live, observes the section-by-section prose and prompt behavior, and reports the pass/fail outcome back to the implementer. The agent should not attempt to auto-execute these behind the user's back; instead, each task should present a clear "what to run" / "what to watch for" recipe, then pause for the user to run it and report back before moving on. Regression tasks (p04-t08, p04-t09) can be run non-interactively if the user prefers.
 
 ### Task p04-t01: Scaffold dogfood follow-up project
 
@@ -1010,7 +1129,7 @@ Invoke `oat-project-review-provide` scoped to the PR's code/doc changes. Indepen
 
 **Step 3: Iterate fixes (if any)**
 
-Execute any fix tasks; re-review; iterate up to the 3-cycle review limit.
+Execute any fix tasks; re-review; iterate within the review-receive workflow's bounded loop.
 
 **Step 4: Merge**
 
@@ -1040,6 +1159,7 @@ When review is `passed`, merge PR. Standard release pipeline picks up the versio
 | spec   | artifact | pending | -          | -                                                     |
 | design | artifact | passed  | 2026-04-17 | reviews/archived/artifact-design-review-2026-04-17.md |
 | plan   | artifact | passed  | 2026-04-17 | reviews/archived/artifact-plan-review-2026-04-17.md   |
+| stale  | artifact | passed  | 2026-04-23 | reviews/staleness-review-2026-04-23.md                |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1057,11 +1177,11 @@ When review is `passed`, merge PR. Standard release pipeline picks up the versio
 **Summary:**
 
 - Phase 1 (p01): 9 tasks — `oat-project-design` rework
-- Phase 2 (p02): 9 tasks — companion skill edits + AGENTS.md + NOTICES.md
+- Phase 2 (p02): 10 tasks — companion skill edits + AGENTS.md + NOTICES.md + CLI config extension (FR15)
 - Phase 3 (p03): 2 tasks — lockstep version bumps + release validation
 - Phase 4 (p04): 11 tasks — dogfood + regressions + PR
 
-**Total: 31 tasks**
+**Total: 32 tasks**
 
 Ready for code review and merge.
 
