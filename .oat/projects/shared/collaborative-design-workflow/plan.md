@@ -1241,18 +1241,18 @@ When review is `passed`, merge PR. Standard release pipeline picks up the versio
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope   | Type     | Status      | Date       | Artifact                                              |
-| ------- | -------- | ----------- | ---------- | ----------------------------------------------------- |
-| p01     | code     | passed      | 2026-04-23 | reviews/archived/p01-review-2026-04-23.md             |
-| p02     | code     | passed      | 2026-04-23 | reviews/archived/p02-review-2026-04-23.md             |
-| p03     | code     | passed      | 2026-04-23 | reviews/archived/p03-review-2026-04-23.md             |
-| p01-p03 | code     | fixes_added | 2026-04-24 | reviews/archived/p01-p03-review-2026-04-24.md         |
-| p04     | code     | pending     | -          | -                                                     |
-| final   | code     | pending     | -          | -                                                     |
-| spec    | artifact | pending     | -          | -                                                     |
-| design  | artifact | passed      | 2026-04-17 | reviews/archived/artifact-design-review-2026-04-17.md |
-| plan    | artifact | passed      | 2026-04-17 | reviews/archived/artifact-plan-review-2026-04-17.md   |
-| stale   | artifact | passed      | 2026-04-23 | reviews/staleness-review-2026-04-23.md                |
+| Scope   | Type     | Status  | Date       | Artifact                                              |
+| ------- | -------- | ------- | ---------- | ----------------------------------------------------- |
+| p01     | code     | passed  | 2026-04-23 | reviews/archived/p01-review-2026-04-23.md             |
+| p02     | code     | passed  | 2026-04-23 | reviews/archived/p02-review-2026-04-23.md             |
+| p03     | code     | passed  | 2026-04-23 | reviews/archived/p03-review-2026-04-23.md             |
+| p01-p03 | code     | passed  | 2026-04-24 | reviews/archived/p01-p03-rereview-2026-04-24.md       |
+| p04     | code     | pending | -          | -                                                     |
+| final   | code     | pending | -          | -                                                     |
+| spec    | artifact | pending | -          | -                                                     |
+| design  | artifact | passed  | 2026-04-17 | reviews/archived/artifact-design-review-2026-04-17.md |
+| plan    | artifact | passed  | 2026-04-17 | reviews/archived/artifact-plan-review-2026-04-17.md   |
+| stale   | artifact | passed  | 2026-04-23 | reviews/staleness-review-2026-04-23.md                |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

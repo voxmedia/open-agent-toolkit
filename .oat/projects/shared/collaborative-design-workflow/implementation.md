@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-23
-oat_current_task_id: p03-t03
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -105,7 +105,18 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 **Review cycle:** 2 of 3 for the p01-p03 range (prior cycles: p01, p02, p03 individual reviews).
 
-**Next:** Execute fix tasks via `oat-project-implement` starting from p03-t03. After the fix tasks complete, update the `p01-p03` review row to `fixes_completed` and re-run `oat-project-review-provide code p01-p03` (scoped to fix tasks only) then `oat-project-review-receive` to reach `passed`.
+**Fix execution (2026-04-24):**
+
+- p03-t03 `(review)` commit `ec0cd9aa` — Step 2.6 relocated between Step 2.5 and Step 2.75 (FR11).
+- p03-t04 `(review)` commit `035b2029` — Quick-start promotion → `oat-project-design` (FR10).
+- p03-t05 `(review)` commit `4b4a6ce8` — Discover Step 14 footer → "Ready for design phase".
+
+**Re-review (scoped to fix tasks only, 2026-04-24):**
+
+- Artifact: `reviews/archived/p01-p03-rereview-2026-04-24.md`.
+- Verdict: **pass** (0 critical, 0 important, 0 minor). All prior findings closed; no regressions, no new findings.
+
+**Next:** Proceed to p04 (dogfood + regressions + PR). HiLL checkpoint auto-review fires after p04 completes — scope will be `final` (covers p04 only; p01-p03 range is already `passed`).
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -119,14 +130,14 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ## Progress Overview
 
-| Phase                                            | Status      | Tasks | Completed |
-| ------------------------------------------------ | ----------- | ----- | --------- |
-| Phase 1 (p01): oat-project-design rework         | completed   | 9     | 9/9       |
-| Phase 2 (p02): Companion skills + AGENTS + CLI   | completed   | 10    | 10/10     |
-| Phase 3 (p03): Lockstep version + 3 review fixes | in_progress | 5     | 2/5       |
-| Phase 4 (p04): Dogfood + regressions + PR        | pending     | 11    | 0/11      |
+| Phase                                            | Status    | Tasks | Completed |
+| ------------------------------------------------ | --------- | ----- | --------- |
+| Phase 1 (p01): oat-project-design rework         | completed | 9     | 9/9       |
+| Phase 2 (p02): Companion skills + AGENTS + CLI   | completed | 10    | 10/10     |
+| Phase 3 (p03): Lockstep version + 3 review fixes | completed | 5     | 5/5       |
+| Phase 4 (p04): Dogfood + regressions + PR        | pending   | 11    | 0/11      |
 
-**Total:** 21/35 tasks completed (+3 review-fix tasks added from p01-p03 range review)
+**Total:** 24/35 tasks completed
 
 ---
 
@@ -243,11 +254,13 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ## Phase 3 (p03): Lockstep version bumps + release validation (+ p01-p03 review fixes)
 
-**Status:** in_progress (base tasks complete; 3 review-fix tasks added from p01-p03 range review 2026-04-24)
+**Status:** completed (2 base tasks + 3 review fixes, all merged; p01-p03 re-review passed)
 **Started:** 2026-04-23
-**Base tasks completed:** 2026-04-23 (2/2: p03-t01, p03-t02)
-**Review fixes pending:** p03-t03, p03-t04, p03-t05 (0/3)
-**Commits so far:** `965114ce..ee0024cf` (2 base commits)
+**Completed:** 2026-04-24
+**Base tasks:** 2/2 (p03-t01, p03-t02) complete
+**Review fixes:** 3/3 (p03-t03, p03-t04, p03-t05) complete
+**Commits:** `965114ce..ee0024cf` (base, 2 commits) + `ec0cd9aa..4b4a6ce8` (review fixes, 3 commits)
+**Re-review verdict:** pass (0 critical, 0 important, 0 minor). Artifact: `reviews/archived/p01-p03-rereview-2026-04-24.md`
 
 ### Phase Summary
 
@@ -275,10 +288,13 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ### Task Outcomes
 
-| Task    | Status    | Commit   | Verification       | Notes                                                                        |
-| ------- | --------- | -------- | ------------------ | ---------------------------------------------------------------------------- |
-| p03-t01 | completed | 965114ce | lockfile stable    | 5 public packages bumped 0.0.50 → 0.0.51; pnpm-lock unchanged (workspace:\*) |
-| p03-t02 | completed | ee0024cf | release:validate 0 | Manifest regenerated; full release validation passed                         |
+| Task    | Status    | Commit   | Verification       | Notes                                                                            |
+| ------- | --------- | -------- | ------------------ | -------------------------------------------------------------------------------- |
+| p03-t01 | completed | 965114ce | lockfile stable    | 5 public packages bumped 0.0.50 → 0.0.51; pnpm-lock unchanged (workspace:\*)     |
+| p03-t02 | completed | ee0024cf | release:validate 0 | Manifest regenerated; full release validation passed                             |
+| p03-t03 | completed | ec0cd9aa | lint+fmt pass      | (review) Moved quick-start Step 2.6 between Step 2.5 and Step 2.75 (FR11 / `I1`) |
+| p03-t04 | completed | 035b2029 | lint+fmt pass      | (review) Quick-start promotion routes to `oat-project-design` (FR10 / `I2`)      |
+| p03-t05 | completed | 4b4a6ce8 | fmt pass           | (review) Discover Step 14 commit footer says "design phase" (`m1`)               |
 
 ---
 
@@ -305,15 +321,16 @@ _Phase implementer appends per-task entries here during execution._
 **Branch:** collaborative-design
 **Tier:** 1 (subagents)
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases executed:** 3 executed (p01, p02, p03), 3 passed, 0 failed, 0 stopped
+**Phases executed:** 3 executed (p01, p02, p03 incl. 3 review-fix tasks after p01-p03 range re-review), 3 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
-| Phase | Implementer            | Review | Fix Iterations | Disposition |
-| ----- | ---------------------- | ------ | -------------- | ----------- |
-| p01   | DONE                   | pass   | 0/2            | merged      |
-| p02   | DONE_WITH_CONCERNS (3) | pass   | 0/2            | merged      |
-| p03   | DONE_WITH_CONCERNS (3) | pass   | 0/2            | inline      |
+| Phase   | Implementer            | Review               | Fix Iterations                                            | Disposition |
+| ------- | ---------------------- | -------------------- | --------------------------------------------------------- | ----------- |
+| p01     | DONE                   | pass                 | 0/2                                                       | merged      |
+| p02     | DONE_WITH_CONCERNS (3) | pass                 | 0/2                                                       | merged      |
+| p03     | DONE_WITH_CONCERNS (3) | pass                 | 0/2                                                       | inline      |
+| p01-p03 | range review (manual)  | fixes_added → passed | fix tasks: 3 added (p03-t03..t05), re-reviewed and passed | inline      |
 
 #### Parallel Groups
 
@@ -322,11 +339,12 @@ _Phase implementer appends per-task entries here during execution._
 
 #### Outstanding Items
 
-- Medium (p02 review): Step 2.6 placement in `oat-project-quick-start` is after Step 2.75 instead of between Step 2.5 and Step 3 as plan specified. Non-blocking; candidate for dogfood fixup in p04.
-- Minor (p02 review): `oat-project-discover` Step 14 commit template retains "Ready for specification phase" residual. Low-risk fixup.
-- Minor (p02 review): `oat-project-quick-start` line-count delta is 102 (not 101); still within spec NFR5 "~100" approximation.
-- Minor (p01 review): 2 polish notes recorded in review artifact.
-- Minor (p03 review): 3 informational notes (manifest split rationale, lockfile stability, no gitignore conflict).
+- ~~Medium (p02 review): Step 2.6 placement in `oat-project-quick-start`.~~ **Resolved** in p03-t03 (upgraded to Important `I1` by p01-p03 range review, then closed by re-review 2026-04-24).
+- ~~Minor (p02 review): `oat-project-discover` Step 14 commit template residual.~~ **Resolved** in p03-t05 (`m1` in range review, closed by re-review).
+- Minor (p02 review): `oat-project-quick-start` line-count delta is 102 (not 101); still within spec NFR5 "~100" approximation. Unchanged post-fixes.
+- Minor (p01 review): 2 polish notes recorded in review artifact. No action needed.
+- Minor (p03 review): 3 informational notes (manifest split rationale, lockfile stability, no gitignore conflict). No action needed.
+- **New (range review `I2`)**: Quick-start promotion routed to `oat-project-spec` (FR10 violation). **Resolved** in p03-t04, closed by re-review.
 
 <!-- orchestration-runs-end -->
 
