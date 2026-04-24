@@ -1,6 +1,6 @@
 ---
 name: oat-project-discover
-version: 1.3.0
+version: 2.0.0
 description: Use when starting a project or when requirements are still unclear. Runs structured discovery to gather requirements, constraints, and context.
 disable-model-invocation: true
 user-invocable: true
@@ -322,7 +322,7 @@ If `"discovery"` is in `oat_hill_checkpoints`, require explicit user approval be
 
 **Approval prompt (required):**
 
-- "Discovery artifact is ready. Approve discovery and unlock `oat-project-spec`?"
+- "Discovery artifact is ready. Approve discovery and unlock `oat-project-design`?"
 
 **Optional independent review path:**
 
@@ -347,7 +347,7 @@ Update frontmatter:
 ```yaml
 ---
 oat_status: complete
-oat_ready_for: oat-project-spec
+oat_ready_for: oat-project-design
 ---
 ```
 
@@ -391,5 +391,9 @@ Ready for specification phase"
 ```
 Discovery phase complete for {project-name}.
 
-Next: Create specification with the oat-project-spec skill
+Next: Create design with the oat-project-design skill (which will confirm
+requirements automatically and produce both spec.md and design.md).
+
+If you'd rather formalize requirements without designing yet, run
+`oat-project-spec` as a standalone step.
 ```
