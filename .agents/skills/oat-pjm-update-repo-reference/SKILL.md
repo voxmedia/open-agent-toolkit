@@ -1,8 +1,7 @@
 ---
 name: oat-pjm-update-repo-reference
-version: 1.0.0
-description: Use when OAT implementation changes and the repo backlog, roadmap, and reference docs need to be synchronized with the file-per-item project-management structure.
-disable-model-invocation: true
+version: 1.1.0
+description: Use when repo reference artifacts need updating — roadmap, decision records, backlog status, or completed history. Frequently invoked at project completion, often chained from `oat-project-document`, to ensure `.oat/repo/reference/` state reflects what shipped.
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 ---
