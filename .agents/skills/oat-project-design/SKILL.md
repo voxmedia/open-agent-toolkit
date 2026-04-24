@@ -421,6 +421,26 @@ IF DESIGN_MODE == "collaborative":
   2-3 options" step (that happened once at Step 2.5 Approach Reaffirmation).
 ```
 
+**Draft-and-review branch:**
+
+```
+IF DESIGN_MODE == "draft":
+  Read spec.md for requirements context; read knowledge base.
+  Draft all applicable sections in one pass using the same section list
+    above. Apply the same "scale each section to its complexity"
+    principle. Not-applicable sections get a single-sentence statement.
+  Do NOT fire per-section validation prompts — this is a one-pass draft.
+  Append a banner to design.md when non-interactive:
+    "Ran in draft-and-review mode — no interactive user present.
+     Review manually before plan generation." (FR9 — applies when the
+    mode was selected via non-interactive fallback, not when the user
+    explicitly chose draft mode interactively.)
+  Write the complete design.md.
+  Continue to Step 5 (Self-Review, Component 6) and Step 6 (User-Review
+    Gate, Component 7). The user-review gate is the sole point of user
+    interaction in draft mode.
+```
+
 ### Step 19: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)
 
 Read `"$PROJECT_PATH/state.md"` frontmatter:
