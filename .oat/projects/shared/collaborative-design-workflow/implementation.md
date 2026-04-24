@@ -315,6 +315,25 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
   - **NFR1 (backward-compat — t08)**: `oat-project-plan` and `oat-project-plan-writing` skills were not modified this PR (`git log main..HEAD -- .agents/skills/oat-project-plan/ .agents/skills/oat-project-plan-writing/` returns empty). `.oat/templates/spec.md` and `.oat/templates/design.md` section lists match existing `remote-project-management/spec.md` and `design.md` verbatim. Frontmatter shape unchanged. Runtime behavior (i.e., running `oat-project-plan` against a pre-rework project end-to-end) unverified.
   - **NFR2 (folded HiLL — t09)**: Step 7b at `oat-project-design/SKILL.md:540-544` includes both `If "design" in oat_hill_checkpoints → append "design"` and `If "spec" in oat_hill_checkpoints and not previously completed → append "spec" too`. Runtime behavior (i.e., actually running the design skill against a synthetic state with both checkpoints and inspecting the resulting `oat_hill_completed`) unverified.
 
+**Dogfood finding — non-interactive semantics (2026-04-24, commit `95c28606`):**
+
+During the user's separate-repo dogfood, an agent running `oat-project-design` saw that `AskUserQuestion` was unavailable, treated that as non-interactive, switched to Draft-and-review mode, and committed the full design in one pass — even though normal chat with the user was available. This violated the intent of FR1 (collaborative by default) and FR9 (non-interactive = no user channel at all, not just no structured tool).
+
+**Fix applied to all three mode-resolution sites:**
+
+- `oat-project-design/SKILL.md` Step 1.5 (+ Step 4 collaborative branch + recovery note).
+- `oat-project-quick-start/SKILL.md` Step 2.6 requirements gate.
+- `oat-project-quick-start/SKILL.md` Step 2.75a lightweight design mode choice.
+
+Changes:
+
+- Added a "Tool availability is not the same as interactivity" callout to each site.
+- Reframed the pseudocode's non-interactive check from `OAT_NON_INTERACTIVE=1 || [ ! -t 0 ]` to `OAT_NON_INTERACTIVE=1 || no_user_response_channel_exists`, with an explicit comment that missing `AskUserQuestion` is NOT a non-interactive signal.
+- Added prose in the prompt branch directing agents to ask via plain chat message when `AskUserQuestion` is unavailable.
+- Added a recovery note in Step 1.5: if draft was entered by mistake while chat was available, walk the committed draft section-by-section via chat and commit revisions — do not mark design complete until the section-by-section pass approves each section.
+
+No skill version bumps required (both skills already bumped 1.x → 2.0.0 earlier in this PR; AGENTS.md rule is one bump per changed skill in the final PR diff).
+
 **Pending user confirmation:**
 
 - `p04-t10` Push branch + open PR with migration note.
@@ -322,7 +341,9 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 **Key files touched (p04 on this repo):**
 
-- None remaining. The transient `dogfood-collab-design-verify` scaffold was removed in this session.
+- `.agents/skills/oat-project-design/SKILL.md` — Step 1.5 reframe + recovery note + Step 4 chat-fallback note.
+- `.agents/skills/oat-project-quick-start/SKILL.md` — Step 2.6 + Step 2.75a reframes.
+- The transient `dogfood-collab-design-verify` scaffold was created and then removed earlier in this session.
 
 **Verification (structural only — not behavioral):**
 
