@@ -343,11 +343,33 @@ Read for architectural context and conventions:
 
 **Purpose:** Ensure design aligns with existing architecture and follows established patterns.
 
-### Step 4: Initialize Design Document
+### Step 4: Section Iterator
 
-Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
+Draft `design.md` section-by-section (Collaborative mode) or in a single pass (Draft-and-review mode). The section list and per-section templates are shared between both branches.
 
-Update frontmatter:
+**Shared section list (in order):**
+
+1. **Overview + Architecture** — System context (how this fits into existing architecture, components it interacts with, boundaries of this change); Key Components (main components, responsibilities, relationships); Data Flow (how data moves through the system, entry/exit points, transformation steps).
+2. **Component Design** — For each component: Purpose (single responsibility), Responsibilities (specific tasks), Interfaces (code signatures following `conventions.md`), Dependencies, Design Decisions (why this approach). Follow patterns from `conventions.md`; use `stack.md` technologies.
+3. **Data Models** — For each entity/model: Schema (fields, types, validation, storage from `architecture.md`); Considerations (align with existing models; follow naming from `conventions.md`; address NFRs).
+4. **API Design** — For each API/interface: Method and path, Request/response schemas, Error handling, Authorization; Considerations (follow API patterns from `architecture.md`; align with `integrations.md`; address security NFRs).
+5. **Security Considerations** — Authentication, Authorization, Data protection (encryption, PII), Input validation, Threat mitigation. Reference `conventions.md` and `concerns.md`.
+6. **Performance Considerations** — Scalability, Caching, Database optimization, Resource limits. Reference `concerns.md`.
+7. **Error Handling** — Error categories and handling, Retry logic, Logging approach (follow `conventions.md`).
+8. **Testing Strategy (with Requirement-to-Test Mapping)** —
+   - **Step a (Requirement-to-Test Mapping):** Pull from spec.md Requirement Index and expand into a table with `ID | Verification | Key Scenarios`. For each requirement: copy the ID, copy the **method** (left side of `method: pointer`) into Verification, use the **pointer** (right side) to seed Key Scenarios, expand scenarios based on component design decisions, note if multiple test levels apply.
+   - **Step b (Test Levels):** Unit tests (scope and coverage target), Integration tests (key scenarios and test environment), E2E tests (critical user paths). Follow `testing.md`.
+   - **Why mapping matters:** Every requirement gets a verification plan; feeds `oat-project-plan` task breakdown; prevents untested-requirement gaps.
+9. **Deployment Strategy** — Build process (from `stack.md`), Deployment steps, Rollback plan, Configuration, Monitoring and alerts.
+10. **Migration Plan** — Database migrations, Data migrations, Breaking changes handling, Rollback strategy. If not applicable, state as a single sentence.
+11. **Implementation Phases** — Break work into manageable phases (1-3 days each). Per-phase structure: Goal, Tasks (high-level), Verification.
+12. **Risks and Mitigation** — For each significant risk: Probability | Impact; Mitigation; Contingency.
+
+**YAGNI check per section:** If the section would draft a capability `spec.md` doesn't require, cut it. If a component boundary is speculative ("in case we need it later"), cut it.
+
+**Before iterating: Initialize `design.md`**
+
+Copy `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`. Update frontmatter:
 
 ```yaml
 ---
@@ -360,238 +382,44 @@ oat_template: false
 ---
 ```
 
-### Step 5: Draft Architecture Overview
+**Collaborative branch:**
 
-Based on spec's high-level design + knowledge base architecture:
-
-**System Context:**
-
-- How this fits into existing architecture
-- What components it interacts with
-- Boundaries of this change
-
-**Key Components:**
-
-- List main components needed
-- Define responsibilities
-- Show relationships
-
-**Data Flow:**
-
-- How data moves through the system
-- Entry points and exit points
-- Transformation steps
-
-Update design.md Architecture section.
-
-### Step 6: Design Components
-
-For each component identified:
-
-**Component Details:**
-
-```markdown
-### {Component Name}
-
-**Purpose:** {Single responsibility}
-
-**Responsibilities:**
-
-- {Specific task 1}
-- {Specific task 2}
-
-**Interfaces:**
-{Code signatures following conventions.md patterns}
-
-**Dependencies:**
-
-- {What it depends on}
-
-**Design Decisions:**
-
-- {Why this approach}
 ```
+IF DESIGN_MODE == "collaborative":
+  Read spec.md for requirements context; read knowledge base.
+  For SECTION in [
+    "Overview + Architecture",
+    "Component Design",
+    "Data Models",
+    "API Design",
+    "Security Considerations",
+    "Performance Considerations",
+    "Error Handling",
+    "Testing Strategy (with Requirement-to-Test Mapping)",
+    "Deployment Strategy",
+    "Migration Plan",
+    "Implementation Phases",
+    "Risks and Mitigation"
+  ]:
+    Draft section content from spec.md + knowledge base. Scale each section
+      to its complexity: a few sentences if straightforward, up to 200-300
+      words if nuanced.
+    Not-applicable sections: state as a single sentence, not empty (e.g.,
+      "No database migrations required.").
 
-Follow patterns from conventions.md. Use stack.md technologies.
+    Present (AskUserQuestion — free-text or multi-choice with refinement):
+      "Here's what I have for [section]: [content].
+       Does this look right, or should we adjust before continuing?"
 
-### Step 7: Define Data Models
+    On feedback: revise inline. Be ready to go back and clarify if
+      something doesn't make sense. Re-present if substantive.
+    Mark section approved. Move to next.
 
-For each entity/model needed:
-
-**Model Schema:**
-
-- Define fields and types
-- Validation rules
-- Storage approach (from architecture.md patterns)
-
-**Considerations:**
-
-- Align with existing models (from architecture.md)
-- Follow naming conventions (from conventions.md)
-- Address NFR requirements (performance, security)
-
-### Step 8: Design APIs
-
-For each API endpoint or interface:
-
-**Specification:**
-
-- Method and path
-- Request/response schemas
-- Error handling approach
-- Authorization requirements
-
-**Considerations:**
-
-- Follow API patterns from architecture.md
-- Align with integrations.md external API patterns
-- Address security NFRs
-
-### Step 9: Address Security Considerations
-
-Based on NFRs + concerns.md:
-
-**Required sections:**
-
-- Authentication approach
-- Authorization model
-- Data protection (encryption, PII)
-- Input validation strategy
-- Threat mitigation
-
-Reference security patterns from conventions.md and concerns.md.
-
-### Step 10: Address Performance Considerations
-
-Based on NFRs + concerns.md:
-
-**Required sections:**
-
-- Scalability approach
-- Caching strategy
-- Database optimization
-- Resource limits
-
-Reference performance patterns from concerns.md.
-
-### Step 11: Define Error Handling
-
-**Error Strategy:**
-
-- Error categories and handling
-- Retry logic
-- Logging approach (follow conventions.md patterns)
-
-### Step 12: Define Testing Strategy
-
-Based on spec success metrics + testing.md:
-
-**Step 12a: Create Requirement-to-Test Mapping**
-
-Pull from spec.md Requirement Index and expand:
-
-| ID          | Verification       | Key Scenarios                            |
-| ----------- | ------------------ | ---------------------------------------- |
-| {from spec} | {method from spec} | {scenarios seeded from pointer + design} |
-
-For each requirement:
-
-1. Copy the ID from spec.md
-2. Copy the **method** (left side of `method: pointer`) into Verification
-3. Use the **pointer** (right side) to seed Key Scenarios
-4. Expand scenarios based on component design decisions
-5. Note if multiple test levels apply (e.g., "unit + integration")
-
-**Step 12b: Define Test Levels**
-
-- Unit tests: scope and coverage target
-- Integration tests: key scenarios and test environment
-- E2E tests: critical user paths
-
-Follow testing patterns from testing.md.
-
-**Why mapping matters:**
-
-- Ensures every requirement has a verification plan
-- Feeds directly into `oat-project-plan` task breakdown
-- Prevents "untested requirements" gaps
-
-### Step 13: Plan Deployment
-
-**Deployment Strategy:**
-
-- Build process (from stack.md)
-- Deployment steps
-- Rollback plan
-- Configuration approach
-- Monitoring and alerts
-
-### Step 14: Plan Migrations
-
-If changes require migrations:
-
-**Migration Plan:**
-
-- Database migrations
-- Data migrations
-- Breaking changes handling
-- Rollback strategy
-
-### Step 15: Identify Implementation Phases
-
-Break work into phases:
-
-**Phase Structure:**
-
-```markdown
-### Phase 1: {Phase Name}
-
-**Goal:** {What this achieves}
-
-**Tasks:**
-
-- {High-level task 1}
-- {High-level task 2}
-
-**Verification:** {How to verify completion}
+  Track which sections have been approved so re-runs don't redo finalized
+  sections. Divergent thinking during sections happens organically in
+  response to user feedback — there is no scripted per-section "present
+  2-3 options" step (that happened once at Step 2.5 Approach Reaffirmation).
 ```
-
-Keep phases manageable (1-3 days of work each).
-
-### Step 16: Document Open Questions
-
-Track unresolved design questions:
-
-- Decisions needing user input
-- Technical uncertainties
-- Performance unknowns
-
-### Step 17: Assess Risks
-
-For each significant risk:
-
-**Risk Assessment:**
-
-```markdown
-- **{Risk Name}:** {Probability} | {Impact}
-  - **Mitigation:** {How to reduce}
-  - **Contingency:** {Backup plan}
-```
-
-### Step 18: Review Design with User
-
-**Review Points:**
-
-1. Architecture aligns with requirements
-2. Component responsibilities clear
-3. Data models cover all entities
-4. APIs meet functional requirements
-5. Security addresses NFRs
-6. Performance addresses NFRs
-7. Testing strategy adequate
-8. Implementation phases reasonable
-
-**Iterate:** Make refinements based on feedback, update `oat_last_updated`.
 
 ### Step 19: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)
 
