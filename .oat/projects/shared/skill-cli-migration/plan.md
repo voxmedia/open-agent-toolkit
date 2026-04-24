@@ -66,18 +66,26 @@ Add a section that documents the pattern exactly as skills will use it:
 
 ```bash
 # Resolve oat CLI with npx fallback, then fetch project state once.
-OAT_CMD=$(command -v oat >/dev/null 2>&1 && echo oat || echo "npx @open-agent-toolkit/cli")
-STATUS_JSON=$("$OAT_CMD" --json project status 2>/dev/null || echo '{}')
+# NOTE: branch on command availability rather than building a quoted command
+# string — `"$OAT_CMD"` with a space would be treated as a single executable
+# name and the fallback would fail with "command not found".
+if command -v oat >/dev/null 2>&1; then
+  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
+else
+  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
+fi
 
 # Extract individual fields from the JSON view (state.md is the source of truth on disk).
-WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode // ""')
-PHASE=$(echo "$STATUS_JSON" | jq -r '.project.phase // ""')
-PHASE_STATUS=$(echo "$STATUS_JSON" | jq -r '.project.phaseStatus // ""')
+# No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
+# the prior `grep | awk` behavior.
+WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
+PHASE=$(echo "$STATUS_JSON" | jq -r '.project.phase')
+PHASE_STATUS=$(echo "$STATUS_JSON" | jq -r '.project.phaseStatus')
 ```
 
 Document the contract:
 
-- Preserve "empty string on failure" semantics that `grep | awk` had.
+- **Null sentinel behavior:** YAML `null` in `state.md` surfaces as the literal string `null` via both the prior `grep | awk` and the new `jq -r` (no `// ""` default). When `STATUS_JSON` is `{}` because `oat` failed, `jq -r` on missing keys also emits `null`, giving a single consistent sentinel across success and error paths. Do **not** add `// ""` defaults — that would break behavior parity.
 - `jq` is the canonical parser; `node -e` is an acceptable fallback if `jq` is unavailable.
 - Fetch JSON once per skill invocation, then extract fields locally.
 - Do **not** use this pattern to write state — state writes stay in their existing skill sections.
@@ -124,8 +132,10 @@ const MIGRATED_FIELDS = [
 
 Assert each path is present (value may be `null`, key must exist) when `status: ok` is returned.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/status.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts`
 Expected: new test fails (RED) only if a field is genuinely missing from output — otherwise GREEN immediately. Confirm by temporarily removing one field from `formatProjectStatusLines` / JSON payload and observing failure.
+
+Path note: `pnpm --filter @open-agent-toolkit/cli exec` runs from `packages/cli/`, so the vitest path must be package-relative (`src/...`), not repo-root-relative (`packages/cli/src/...`).
 
 **Step 2: Implement (GREEN)**
 
@@ -137,7 +147,7 @@ Extract `MIGRATED_FIELDS` to a named constant in the test file so Phase 2/3 task
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/status.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
 Expected: tests pass; type-check clean.
 
 **Step 5: Commit**
@@ -169,7 +179,7 @@ WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" ... | awk '{
 
 **Step 2: Replace with the canonical preamble**
 
-Insert the preamble (from p01-t01) once, before the first field is needed. Replace each `grep | awk` assignment with `jq -r '.project.<field> // ""'` against `STATUS_JSON`. Keep variable names (`PHASE`, `PHASE_STATUS`, `WORKFLOW_MODE`) identical so downstream logic in the skill is untouched.
+Insert the preamble (from p01-t01) once, before the first field is needed. Replace each `grep | awk` assignment with `jq -r '.project.<field>'` against `STATUS_JSON` (no `// ""` default — preserves null-sentinel parity). Keep variable names (`PHASE`, `PHASE_STATUS`, `WORKFLOW_MODE`) identical so downstream logic in the skill is untouched.
 
 Leave **unrelated** grep calls (e.g., `grep` against `project-index.md` or `plan.md`) in place — out of scope.
 
@@ -207,7 +217,7 @@ WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" ... | head -
 
 **Step 2: Replace with the canonical preamble**
 
-Insert the preamble once at the top of the shell block that needs `WORKFLOW_MODE`. Replace the grep line with `WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode // ""')`.
+Insert the preamble once at the top of the shell block that needs `WORKFLOW_MODE`. Replace the grep line with `WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')` (no `// ""` default).
 
 **Step 3: Verify**
 
@@ -274,7 +284,7 @@ DOCS_UPDATED=$(grep "^oat_docs_updated:" "$STATE_FILE" ... | awk '{print $2}' ||
 
 **Step 2: Replace read path only**
 
-Preamble once; replace the grep with `jq -r '.project.docsUpdated // ""'`. Do not touch write paths (`oat_pr_status`, `oat_pr_url`, etc. are still written via existing flow).
+Preamble once; replace the grep with `jq -r '.project.docsUpdated'` (no `// ""` default — preserves null-sentinel parity). Do not touch write paths (`oat_pr_status`, `oat_pr_url`, etc. are still written via existing flow).
 
 **Step 3: Verify**
 
@@ -390,7 +400,9 @@ git commit -m "refactor(p03-t05): oat-project-complete reads state via oat --jso
 
 ### Task p04-t01: Live smoke-test every migrated skill preamble
 
-**Files:** none (verification only).
+**Files:**
+
+- Modify: `.oat/projects/shared/skill-cli-migration/implementation.md` — record the per-skill verification checklist.
 
 **Step 1: Extract the preamble block from each migrated skill**
 
@@ -398,7 +410,7 @@ For every SKILL.md touched in p02/p03, copy the preamble + jq extraction block a
 
 - Exit code is 0 when `oat` resolves and state is valid.
 - Every extracted variable matches the corresponding `grep | awk` output against `state.md`.
-- Empty-string fallback semantics hold when a field is `null` in JSON (e.g. `lastCommit`, `docsUpdated`).
+- Null-sentinel parity holds when a field is `null` in JSON (e.g. `lastCommit`, `docsUpdated`): both `jq -r` and the prior `grep | awk` emit the literal string `null`.
 
 **Step 2: Record results**
 
@@ -415,34 +427,36 @@ git commit -m "chore(p04-t01): verify migrated skill preambles against live proj
 
 ### Task p04-t02: Verify `npx @open-agent-toolkit/cli` fallback branch
 
-**Files:** none (verification only).
+**Files:**
 
-**Step 1: Simulate missing oat**
+- Modify: `.oat/projects/shared/skill-cli-migration/implementation.md` — record the fallback-branch verification result.
+
+**Step 1: Execute the canonical fallback with `oat` removed from `$PATH`**
+
+Run the exact `if command -v oat ... else npx @open-agent-toolkit/cli ...` branch from p01-t01, not a substitute command. This is the only task that exercises the fallback path end-to-end:
 
 ```bash
-env -i PATH="/usr/bin:/bin" HOME="$HOME" bash -lc '
-  OAT_CMD=$(command -v oat >/dev/null 2>&1 && echo oat || echo "npx @open-agent-toolkit/cli")
-  echo "Resolved: $OAT_CMD"
-  # Note: actual --json call may require network or a built package; print resolution alone is the key check.
+env PATH="/usr/bin:/bin" bash -lc '
+  if command -v oat >/dev/null 2>&1; then
+    echo "Unexpected: oat resolved despite trimmed PATH" >&2
+    exit 1
+  fi
+  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo "{}")
+  echo "$STATUS_JSON" | jq -r ".project.workflowMode"
 '
 ```
 
-Expected: `Resolved: npx @open-agent-toolkit/cli`.
+Expected stdout: `quick`. Exit code 0.
 
-**Step 2: Dry-run the fallback against the locally-linked package**
+**Step 2: Record the verification**
 
-If the CLI is available via `pnpm` workspace, run:
-
-```bash
-env PATH="/usr/bin:/bin" pnpm --silent --filter @open-agent-toolkit/cli exec oat --json project status | jq -r '.project.workflowMode'
-```
-
-Expected: `quick`.
+Append a line to `.oat/projects/shared/skill-cli-migration/implementation.md` under the phase-4 section stating the fallback branch was exercised and produced the expected output.
 
 **Step 3: Commit**
 
 ```bash
-git commit --allow-empty -m "chore(p04-t02): verified npx fallback branch for oat --json"
+git add .oat/projects/shared/skill-cli-migration/implementation.md
+git commit -m "chore(p04-t02): verify npx fallback branch for oat --json"
 ```
 
 ---
@@ -483,16 +497,16 @@ git commit -m "chore(p04-t03): lockstep version bump for skill-cli-migration"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| p02    | code     | pending  | -          | -                                          |
-| p03    | code     | pending  | -          | -                                          |
-| p04    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| spec   | artifact | pending  | -          | -                                          |
-| design | artifact | pending  | -          | -                                          |
-| plan   | artifact | received | 2026-04-24 | reviews/artifact-plan-review-2026-04-24.md |
+| Scope  | Type     | Status          | Date       | Artifact                                            |
+| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                   |
+| p02    | code     | pending         | -          | -                                                   |
+| p03    | code     | pending         | -          | -                                                   |
+| p04    | code     | pending         | -          | -                                                   |
+| final  | code     | pending         | -          | -                                                   |
+| spec   | artifact | n/a             | -          | quick mode (no spec artifact)                       |
+| design | artifact | n/a             | -          | quick mode (no design artifact)                     |
+| plan   | artifact | fixes_completed | 2026-04-24 | reviews/archived/artifact-plan-review-2026-04-24.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
