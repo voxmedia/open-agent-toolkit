@@ -122,16 +122,171 @@ echo "Running in ${DESIGN_MODE} mode."
 
 Runtime/context signals always outrank persisted preferences.
 
-### Step 2: Read Specification Document
+### Step 2: Requirements Confirmation (folded spec authoring)
 
-Read `"$PROJECT_PATH/spec.md"` completely to understand:
+<!--
+Requirements-confirmation sub-step.
+The authoring logic below duplicates oat-project-spec Steps 6-16.
+When updating the requirements-authoring prose, update BOTH files.
+-->
 
-- Problem statement and goals
-- All functional requirements (FR)
-- All non-functional requirements (NFR)
-- Constraints and dependencies
-- High-level design proposal
-- Success metrics
+**If `spec.md` already exists with `oat_status: complete`** (produced by the optional standalone `oat-project-spec` skill): read it to understand Problem Statement, FRs/NFRs, Constraints, Dependencies, High-Level Design, Success Metrics, Requirement Index. Then skip to Step 2.5 (Approach Reaffirmation).
+
+**Otherwise** (default path — no `spec.md` yet): author `spec.md` inline by formalizing requirements from `discovery.md`, following the steps below (ported from `oat-project-spec` Steps 6-16).
+
+**Step 2a: Read discovery**
+
+Read `"$PROJECT_PATH/discovery.md"` and extract:
+
+- **Initial Request** → Core problem
+- **Clarifying Questions** → Context and nuances
+- **Key Decisions** → Scope boundaries, FR seeds
+- **Success Criteria** → Goals and NFR seeds
+- **Constraints** → Constraints section
+- **Out of Scope** → Non-Goals
+
+**Step 2b: Initialize spec.md from template**
+
+Copy `.oat/templates/spec.md` → `"$PROJECT_PATH/spec.md"`. Update frontmatter:
+
+```yaml
+---
+oat_status: in_progress
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: { today }
+oat_generated: false
+oat_template: false
+---
+```
+
+**Step 2c: Draft Problem Statement**
+
+Transform from discovery: Initial Request → Core problem; Clarifying Questions → Context; Key Decisions → Scope boundaries. Write 2-4 paragraphs clearly describing the problem being solved.
+
+**Step 2d: Define Goals and Non-Goals**
+
+**Primary Goals:** Must-have outcomes (from Key Decisions + Success Criteria).
+**Secondary Goals:** Nice-to-have outcomes (Success Criteria marked optional).
+**Non-Goals:** Copy from discovery "Out of Scope", adding explicit boundaries and related work intentionally excluded.
+
+**Step 2e: Draft Requirements**
+
+Transform Key Decisions and Success Criteria into structured requirements.
+
+**Functional Requirements (FR):**
+
+```markdown
+**FR1: {Requirement Name}**
+
+- **Description:** {What the system must do}
+- **Acceptance Criteria:**
+  - {Testable criterion 1}
+  - {Testable criterion 2}
+- **Priority:** P0 / P1 / P2
+```
+
+**Non-Functional Requirements (NFR):**
+
+```markdown
+**NFR1: {Requirement Name}**
+
+- **Description:** {Performance, security, usability requirement}
+- **Acceptance Criteria:**
+  - {Measurable criterion}
+- **Priority:** P0 / P1 / P2
+```
+
+**Priorities:**
+
+- **P0:** Must have — blocks launch
+- **P1:** Should have — important but not blocking
+- **P2:** Nice to have — future enhancement
+
+**Step 2f: Iterate with user (collaborative mode only)**
+
+```
+IF DESIGN_MODE == "collaborative":
+  Present draft requirements list to user.
+  Ask (AskUserQuestion): "Are these requirements complete? Anything missing or unclear?"
+  Update spec.md with refinements; update oat_last_updated.
+  Repeat until user confirms completeness.
+
+IF DESIGN_MODE == "draft":
+  Commit the drafted requirements as part of the one-pass draft.
+  The user reviews them holistically at the user-review gate (Step 6).
+```
+
+**Focus areas:** Acceptance criteria testable; priorities clear; edge cases covered; dependencies identified.
+
+**Step 2g: Document Constraints and Dependencies**
+
+Copy from discovery "Constraints" and enrich with technical constraints from knowledge base (architecture.md, concerns.md), business/timeline/resource constraints. Identify dependencies: external systems (integrations.md), existing components (architecture.md), third-party libraries, infrastructure.
+
+**Step 2h: Draft High-Level Design in spec.md**
+
+Transform discovery "Options Considered" into design proposal:
+
+```markdown
+## High-Level Design (Proposed)
+
+{2-3 paragraph overview of chosen approach}
+
+**Key Components:**
+
+- {Component 1} — {Brief description}
+
+**Alternatives Considered:**
+
+- {Alternative 1} — {Why rejected}
+
+**Open Questions:**
+
+- {Question needing resolution}
+```
+
+Keep high-level — detailed design comes in `design.md` below.
+
+**Guardrail:** Do not name specific scripts/files/functions here. Describe components and responsibilities only.
+
+**Step 2i: Define Success Metrics**
+
+Transform "Success Criteria" into measurable metrics (performance, quality, user, business).
+
+**Step 2j: Populate Requirement Index**
+
+Create traceability matrix in spec.md "Requirement Index" section:
+
+| Column        | Content                                       |
+| ------------- | --------------------------------------------- |
+| ID            | FR1, FR2, NFR1, etc. (sequential)             |
+| Description   | Brief 1-sentence summary                      |
+| Priority      | P0/P1/P2 from requirement                     |
+| Verification  | `method: pointer` — how this will be verified |
+| Planned Tasks | Leave as "TBD - see plan.md"                  |
+
+**Verification column format:** `method: pointer` — method is `unit` / `integration` / `e2e` / `manual` / `perf`; pointer is a brief scope hint (e.g., `unit: auth token validation`).
+
+**Step 2k: Quality Gate (merged into Component 6 self-review)**
+
+The prior standalone-spec quality gate (completeness / quality / boundary checks) now merges into Step 5 (Design Self-Review) — those checks run once against both `spec.md` and `design.md` together rather than twice.
+
+**Step 2l: Mark spec.md complete and commit**
+
+Update spec.md frontmatter:
+
+```yaml
+oat_status: complete
+oat_ready_for: oat-project-design
+oat_last_updated: { today }
+```
+
+Commit separately (keeps history clean; lets reviewers fetch spec independently):
+
+```bash
+git add "$PROJECT_PATH/spec.md"
+git commit -m "docs: confirm requirements for {project-name}"
+```
 
 ### Step 3: Read Knowledge Base for Design Context
 
