@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-23
-oat_current_task_id: p01-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -99,36 +99,125 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ## Progress Overview
 
-| Phase                                           | Status  | Tasks | Completed |
-| ----------------------------------------------- | ------- | ----- | --------- |
-| Phase 1 (p01): oat-project-design rework        | pending | 9     | 0/9       |
-| Phase 2 (p02): Companion skills + AGENTS + CLI  | pending | 10    | 0/10      |
-| Phase 3 (p03): Lockstep version bumps + release | pending | 2     | 0/2       |
-| Phase 4 (p04): Dogfood + regressions + PR       | pending | 11    | 0/11      |
+| Phase                                           | Status    | Tasks | Completed |
+| ----------------------------------------------- | --------- | ----- | --------- |
+| Phase 1 (p01): oat-project-design rework        | completed | 9     | 9/9       |
+| Phase 2 (p02): Companion skills + AGENTS + CLI  | completed | 10    | 10/10     |
+| Phase 3 (p03): Lockstep version bumps + release | pending   | 2     | 0/2       |
+| Phase 4 (p04): Dogfood + regressions + PR       | pending   | 11    | 0/11      |
 
-**Total:** 0/32 tasks completed
+**Total:** 19/32 tasks completed
 
 ---
 
 ## Phase 1 (p01): oat-project-design rework
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-04-23
+**Completed:** 2026-04-23
+**Branch:** `collaborative-design-workflow/p01` → merged via `e996cd5e`
+**Commits:** `fc04baa1..7cbfd319` (9 task commits)
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-_Phase implementer appends per-task entries here during execution._
+**Outcome (what changed):**
+
+- `oat-project-design` SKILL transformed from deterministic writer into the collaborative-default skill: Step 1.5 mode-choice preamble, Step 2 requirements confirmation (substeps 2a–2l), Step 2.5 approach reaffirmation, YAGNI principle, Step 4 collaborative + draft branches, Step 5 self-review (4 named checks), Step 6 commit-first user-review gate.
+- Version bumped 1.2.0 → 2.0.0 (coordinated major across all touched skills).
+- FR1, FR2, FR3, FR4, FR5, FR6, FR8 behaviors observable in prose.
+- FR14 (no in-skill Superpowers attribution) preserved — grep returns zero.
+- Mode-choice resolution order: `--mode` arg → `OAT_DESIGN_MODE` env → `OAT_NON_INTERACTIVE=1` / no TTY → `workflow.designMode` config → default collaborative.
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-design/SKILL.md` — entire rework (+345/-216, 590/700 lines final)
+
+**Verification:**
+
+- Per-task: `oxfmt --check`, grep consistency checks.
+- Phase-end: line count 590/700 (NFR5), step numbering continuous, no orphaned "See Step N" refs.
+- Review (code scope p01): passed (0 critical, 0 important, 2 minor).
+
+**Notes / Decisions:**
+
+- YAGNI placement deviated slightly from plan suggestion (new `## Principles` section instead of co-locating with a non-existent "ALLOWED Activities" block). Review classified as Minor — plan explicitly permitted a Principles subsection.
+
+### Task Outcomes
+
+| Task    | Status    | Commit   | Verification | Notes                                                               |
+| ------- | --------- | -------- | ------------ | ------------------------------------------------------------------- |
+| p01-t01 | completed | fc04baa1 | fmt pass     | Step 1.5 mode-choice preamble (Component 1)                         |
+| p01-t02 | completed | 8cc6123b | fmt pass     | Step 2 requirements confirmation, 2a–2l substeps (Component 3)      |
+| p01-t03 | completed | f401cfad | fmt pass     | Step 2.5 approach reaffirmation (Component 3.5)                     |
+| p01-t04 | completed | f6be947f | fmt pass     | YAGNI bullet in new Principles section (Component 3.75)             |
+| p01-t05 | completed | 01c3b3fb | fmt pass     | Step 4 collaborative branch (Component 4)                           |
+| p01-t06 | completed | c52b23d2 | fmt pass     | Step 4 draft-and-review branch                                      |
+| p01-t07 | completed | 8c3cd66c | fmt pass     | Step 5 design self-review, 4 named checks (Component 6)             |
+| p01-t08 | completed | 2fa56d3b | fmt pass     | Step 6 commit-first user-review gate (Component 7); M1 ordering fix |
+| p01-t09 | completed | 7cbfd319 | fmt+lint     | Version 1.2.0 → 2.0.0, line count 590/700                           |
 
 ---
 
 ## Phase 2 (p02): Companion skill edits + AGENTS + NOTICES
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-04-23
+**Completed:** 2026-04-23
+**Branch:** `collaborative-design-workflow/p02` → merged via `a6eba84d`
+**Commits:** `785cbd46..b9e97c02` (10 task commits)
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-_Phase implementer appends per-task entries here during execution._
+**Outcome (what changed):**
+
+- `oat-project-quick-start`: Step 2.6 requirements gate (single-turn with non-interactive fallback, Component 8 / FR11), Step 2.75a lightweight design mode choice (Component 9 / FR12), Step 2.75 Superpowers-borrowed collaborative prose, draft-and-review branch for lightweight design (FR8 variant). Version 1.3.6 → 2.0.0.
+- `oat-project-spec` repositioned as standalone utility (Component 10 / FR10). Version 1.2.0 → 2.0.0.
+- `oat-project-discover` routing updated to route design from Step 11/12/15 (Component 11 / FR13). Minor version bump.
+- `.oat/templates/discovery.md` updated to match new routing.
+- `AGENTS.md`: workflow triage Step 1 reframed, External Attributions subsection pointing to NOTICES.md (Component 12).
+- `NOTICES.md` created at repo root consolidating Superpowers/Obra attribution (Component 13 / FR14).
+- `OatWorkflowConfig.designMode` schema extension: zod validation, local > shared > user > default precedence, CLI describe/get/set surface, source resolution through `resolveEffectiveConfig` (Component 14 / FR15). 7 new designMode unit tests.
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-quick-start/SKILL.md` (prompt edits, +102 lines, 482/481 soft cap)
+- `.agents/skills/oat-project-spec/SKILL.md` (description + closing-output rewrite)
+- `.agents/skills/oat-project-discover/SKILL.md` (routing)
+- `.oat/templates/discovery.md` (routing template)
+- `AGENTS.md` (workflow triage + External Attributions)
+- `NOTICES.md` (new, repo root)
+- `packages/cli/src/config/oat-config.ts` + `.test.ts` (designMode schema + 7 tests)
+- `packages/cli/src/config/resolve.ts` + `.test.ts` (DEFAULT_WORKFLOW_CONFIG + merge-precedence tests)
+- `packages/cli/src/commands/config/index.ts` + `.test.ts` (describe/catalog surface)
+- `packages/cli/src/commands/project/new/scaffold.test.ts` (regex dotall update for multi-line bullet)
+- `packages/cli/src/validation/skills.test.ts` (version assertion)
+
+**Verification:**
+
+- Per-task: `oxfmt --check`, grep consistency checks, test runs where code was involved.
+- p02-t10 tests: 1366/1366 CLI tests pass; type-check + lint clean.
+- Review (code scope p02): passed (0 critical, 0 important, 1 medium, 2 minor).
+
+**Notes / Decisions:**
+
+- Medium finding: Step 2.6 placement in quick-start is after Step 2.75 rather than between Step 2.5 and Step 3 (as plan specified). Non-blocking; will be addressed in p04 dogfood or as a post-merge fixup if needed.
+- Minor: `oat-project-discover` Step 14 commit template still reads "Ready for specification phase" (residual of old spec-routing). Low-risk fixup.
+- Minor: quick-start line count 482 (i.e., +102 over the 381 baseline); plan's soft cap was +100. Still "~100" per spec NFR5 approximation.
+
+### Task Outcomes
+
+| Task    | Status    | Commit   | Verification | Notes                                                                                    |
+| ------- | --------- | -------- | ------------ | ---------------------------------------------------------------------------------------- |
+| p02-t01 | completed | 785cbd46 | fmt pass     | Step 2.6 requirements gate (Component 8 / FR11)                                          |
+| p02-t02 | completed | a36ace72 | fmt pass     | Step 2.75a lightweight design mode choice (Component 9 / FR12)                           |
+| p02-t03 | completed | c35587bf | fmt pass     | Step 2.75 Superpowers-borrowed collaborative prose                                       |
+| p02-t04 | completed | fd3e322a | fmt pass     | Draft-and-review branch for lightweight design (no spec.md)                              |
+| p02-t05 | completed | b174cbd9 | fmt pass     | Quick-start version 1.3.6 → 2.0.0                                                        |
+| p02-t06 | completed | c34b199b | fmt pass     | `oat-project-spec` standalone repositioning (Component 10 / FR10); version 1.2.0→2.0.0   |
+| p02-t07 | completed | 6968b96c | fmt pass     | `oat-project-discover` Step 11/12/15 routing updates (Component 11 / FR13)               |
+| p02-t08 | completed | c571fa47 | fmt pass     | `AGENTS.md` workflow triage + External Attributions                                      |
+| p02-t09 | completed | 94cb5186 | fmt pass     | `NOTICES.md` created at repo root (FR14)                                                 |
+| p02-t10 | completed | b9e97c02 | 1366/1366    | `workflow.designMode` schema + CLI surface (Component 14 / FR15); full test suite passed |
 
 ---
 
@@ -160,6 +249,32 @@ _Phase implementer appends per-task entries here during execution._
 > Each run appends a new subsection — never overwrite prior entries.
 
 <!-- orchestration-runs-start -->
+
+### Run 1 — 2026-04-23
+
+**Branch:** collaborative-design
+**Tier:** 1 (subagents)
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases executed this entry:** 2 executed (p01, p02), 2 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer            | Review | Fix Iterations | Disposition |
+| ----- | ---------------------- | ------ | -------------- | ----------- |
+| p01   | DONE                   | pass   | 0/2            | merged      |
+| p02   | DONE_WITH_CONCERNS (3) | pass   | 0/2            | merged      |
+
+#### Parallel Groups
+
+- Group 1 [p01, p02]: worktree-based, merged in plan order (p01 first: `e996cd5e`; p02: `a6eba84d`).
+
+#### Outstanding Items
+
+- Medium (p02 review): Step 2.6 placement in `oat-project-quick-start` is after Step 2.75 instead of between Step 2.5 and Step 3 as plan specified. Non-blocking; candidate for dogfood fixup in p04.
+- Minor (p02 review): `oat-project-discover` Step 14 commit template retains "Ready for specification phase" residual. Low-risk fixup.
+- Minor (p02 review): `oat-project-quick-start` line-count delta is 102 (not 101); still within spec NFR5 "~100" approximation.
+- Minor (p01 review): 2 polish notes recorded in review artifact.
+
 <!-- orchestration-runs-end -->
 
 ---

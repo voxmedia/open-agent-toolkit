@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p03-t01
+oat_last_commit: a6eba84d
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: ['p04']
@@ -15,7 +15,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-23T22:05:00Z'
+oat_project_state_updated: '2026-04-23T22:45:00Z'
 oat_generated: false
 oat_orchestration_retry_limit: 2
 ---
@@ -28,7 +28,7 @@ oat_orchestration_retry_limit: 2
 
 ## Current Phase
 
-Implementation — Tier 1 (subagents) orchestration in progress. Parallel group `[['p01', 'p02']]` dispatches first; p03 and p04 follow sequentially. HiLL `['p04']` (final phase), auto-review at HiLL enabled.
+Implementation — p01 and p02 complete (19/32 tasks done via Tier 1 parallel group, both merged). Next: p03 (lockstep version + release-validate) then p04 (dogfood + PR). HiLL gate fires after p04.
 
 ## Artifacts
 
@@ -49,7 +49,10 @@ Implementation — Tier 1 (subagents) orchestration in progress. Parallel group 
 - ✓ Post-PR #58 staleness review complete; spec/design/plan/state refreshed for `oat-project-implement` v2
 - ✓ Parallel group `[['p01', 'p02']]` confirmed; HiLL phases `['p04']` selected; touched skills align on v2.0.0 major bump
 - ✓ Reference materials preserved (Superpowers source files + comparative analysis grounded in actual file content)
-- ⧗ oat-project-implement running (Tier 1 subagents)
+- ✓ p01 implemented + reviewed (pass) + merged (`e996cd5e`) — `oat-project-design` rework, 9 tasks
+- ✓ p02 implemented + reviewed (pass) + merged (`a6eba84d`) — companion skills + AGENTS + NOTICES + designMode, 10 tasks
+- ⧗ p03 (lockstep version bumps + release-validate) pending
+- ⧗ p04 (dogfood + regressions + PR) pending
 
 ## Blockers
 
@@ -57,4 +60,4 @@ None.
 
 ## Next Milestone
 
-Execute parallel group `[['p01', 'p02']]` via `oat-phase-implementer` in isolated worktrees, then merge back in plan order. Continue sequentially through p03 (lockstep release-validate) and p04 (dogfood + PR + final review). HiLL gate fires after p04 completes.
+Run p03 sequentially: lockstep version bumps across the 5 public packages + `pnpm release:validate`. Then p04 (dogfood + regressions + PR) with HiLL checkpoint auto-review on completion.
