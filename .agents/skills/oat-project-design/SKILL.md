@@ -288,6 +288,42 @@ git add "$PROJECT_PATH/spec.md"
 git commit -m "docs: confirm requirements for {project-name}"
 ```
 
+### Step 2.5: Approach Reaffirmation (one divergent moment)
+
+This is the sole divergent-thinking moment in the skill. After requirements are confirmed and before drafting begins, reaffirm the approach-level direction. Do this exactly once per run.
+
+```
+Read "$PROJECT_PATH/discovery.md" — look for "## Solution Space" section
+with a "### Chosen Direction" sub-section.
+
+IF Chosen Direction exists:
+  Present to user:
+    "Based on discovery, we're designing around [Approach N — one-line summary].
+     Confirming this is still the right direction before I draft the design?"
+  Use AskUserQuestion:
+    1. Yes — proceed with this approach
+    2. Revisit — I want to explore alternatives again
+  If "Revisit": invoke the 2-3-approaches block below.
+
+IF no Chosen Direction (or Solution Space section absent):
+  Invoke the 2-3-approaches pattern inline:
+
+    > Propose 2-3 different approaches with trade-offs.
+    > Present options conversationally with your recommendation and reasoning.
+    > Lead with your recommended option and explain why.
+
+  Ask user to choose. Document the chosen approach in design.md's
+  Overview section before section drafting begins.
+
+Record confirmed approach in design.md §Overview before Step 4 (section iterator).
+```
+
+**Key points:**
+
+- One divergent moment per run — not per section. Section-level divergence happens organically when the user pushes back on a drafted section (see Step 4).
+- Reaffirmation, not re-derivation: if discovery already chose a direction, confirm and move on.
+- The 2-3-approaches block handles the case where discovery skipped solution-space exploration (well-understood request).
+
 ### Step 3: Read Knowledge Base for Design Context
 
 Read for architectural context and conventions:
