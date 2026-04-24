@@ -288,6 +288,18 @@ IF DESIGN_MODE == "collaborative":
     Revise inline on feedback. Be ready to go back and clarify if something
       doesn't make sense. Re-present if substantive.
     Mark section approved. Move to next.
+
+IF DESIGN_MODE == "draft":
+  Draft all required sections (Overview, Architecture, Component Design,
+    Testing Strategy) and any applicable optional sections (Data Models,
+    API Design, Error Handling) in ONE pass (same reduced section set).
+  Scale each section to its complexity — no per-section prompts fire.
+  Run the FULL 4-check self-review (placeholder + internal consistency +
+    scope + ambiguity). No scaled-down variant — identical to the full
+    oat-project-design self-review.
+  Present the user-review gate wording (adapted for quick-start:
+    no HiLL gate by default; commits-first is still in effect).
+  Produce design.md only — NO spec.md is written by lightweight design.
 ```
 
 If `design.md` or `state.md` was updated before one of these validation pauses, commit those artifact changes before waiting for the user response.
