@@ -383,7 +383,7 @@ Key decisions:
 - {Decision 1}
 - {Decision 2}
 
-Ready for specification phase"
+Ready for design phase"
 ```
 
 ### Step 15: Output Summary
