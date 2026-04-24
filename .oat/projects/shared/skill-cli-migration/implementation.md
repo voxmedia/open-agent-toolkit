@@ -24,12 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 2     | 0/2       |
+| Phase 2 | pending | 2     | 0/2       |
+| Phase 3 | pending | 5     | 0/5       |
+| Phase 4 | pending | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/12 tasks completed
 
 ---
 
