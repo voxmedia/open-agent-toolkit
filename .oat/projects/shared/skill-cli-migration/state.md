@@ -7,28 +7,28 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/65 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-24T19:34:46.867Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-27T20:55:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-27T20:57:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: skill-cli-migration
 
-**Status:** Implementation complete — PR artifact ready
+**Status:** PR open — awaiting human review
 **Started:** 2026-04-24
 **Last Updated:** 2026-04-27
 
 ## Current Phase
 
-Implement - Complete. Final PR artifact generated; ready to open PR.
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -49,7 +49,8 @@ Implement - Complete. Final PR artifact generated; ready to open PR.
 - ✓ Final re-review passed
 - ✓ Summary generated
 - ✓ Final PR artifact generated
-- ⧗ PR creation pending
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -57,4 +58,7 @@ None
 
 ## Next Milestone
 
-Create the GitHub PR, then record the PR URL in this state artifact.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
