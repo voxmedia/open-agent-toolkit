@@ -59,6 +59,12 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - Use `create-agnostic-skill` when you want a reusable workflow skill that is not OAT-specific.
 - Use existing lifecycle skills as examples for progress banners, prerequisites, and artifact updates.
 
+## Reading project state
+
+Skills that need fields from the active project's `state.md` (e.g. `phase`, `phaseStatus`, `workflowMode`, `docsUpdated`, `lastCommit`) MUST query the CLI's JSON contract instead of hand-parsing YAML with `grep`/`awk`. The canonical inline preamble — including the `npx @open-agent-toolkit/cli` fallback for environments without `oat` on `$PATH` — lives in [`.agents/skills/create-oat-skill/SKILL.md`](https://github.com/open-agent-toolkit/open-agent-toolkit/blob/main/.agents/skills/create-oat-skill/SKILL.md) under the "Reading project state" section. Paste it verbatim and select fields with `jq -r '.project.<field>'` (no `// ""` defaults — YAML `null` surfaces as the literal string `null` to match the prior parser).
+
+The JSON output is a stable contract: the field set consumed by migrated skills is locked by `MIGRATED_FIELDS` in `packages/cli/src/commands/project/status.test.ts`, so removing or renaming any of those keys is a real test failure rather than a silent runtime break. See [CLI Reference](../reference/cli-reference.md) for the full locked field set.
+
 ## Reference artifacts
 
 - `.agents/skills/*/SKILL.md`

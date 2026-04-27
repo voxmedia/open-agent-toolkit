@@ -37,7 +37,7 @@ The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oa
 Notable inspection commands introduced in the current CLI surface:
 
 - `oat config dump --json` - merged config with source attribution
-- `oat project status --json` - full parsed state for the active tracked project
+- `oat project status --json` - full parsed state for the active tracked project. **Stable contract for skills:** the JSON output is a typed read interface for OAT skills; the field set consumed by migrated skills is locked by `MIGRATED_FIELDS` in `packages/cli/src/commands/project/status.test.ts`. Removing or renaming any of `project.{name, path, phase, phaseStatus, workflowMode, docsUpdated, lastCommit, prStatus, prUrl}` is a breaking change and will fail the contract test. See [Writing Skills → Reading project state](../contributing/skills.md#reading-project-state) for the canonical preamble.
 - `oat project list --json` - summary state for tracked projects under the configured projects root
 - `oat project complete-state <project-path>` - apply the canonical completed-state mutation to a project's `state.md`; used by `oat-project-complete` during lifecycle closeout
 - `oat project validate-plan --project-path <path>` - validates `oat_plan_parallel_groups` metadata in `plan.md`; exits non-zero on invalid. See [Implementation Execution](../workflows/projects/implementation-execution.md#validating-plan-metadata).

@@ -243,6 +243,10 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - Plan review tracking:
   - `plan.md` has a `## Reviews` table with status progression documented:
     - `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+- Skill state reads:
+  - Skills read project state via `oat --json project status` with an `npx @open-agent-toolkit/cli` fallback for environments without `oat` on `$PATH`.
+  - Field set consumed by migrated skills is locked by `MIGRATED_FIELDS` in `packages/cli/src/commands/project/status.test.ts`; the canonical inline preamble lives in `.agents/skills/create-oat-skill/SKILL.md` under "Reading project state".
+  - `state.md` remains the source of truth on disk; the JSON view is derived. No `// ""` defaults — YAML `null` surfaces as the literal string `null` for parity with the prior `grep | awk` reads.
 
 ## Canonical Paths (Where Things Live)
 
