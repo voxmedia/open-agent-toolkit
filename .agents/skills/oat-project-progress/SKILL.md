@@ -194,16 +194,6 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 When `oat_phase: implement` and `oat_phase_status: in_progress`, check for artifact drift before recommending next skill:
 
 ```bash
-# Resolve oat CLI with npx fallback, then fetch project state once.
-# NOTE: branch on command availability rather than building a quoted command
-# string — `"$OAT_CMD"` with a space would be treated as a single executable
-# name and the fallback would fail with "command not found".
-if command -v oat >/dev/null 2>&1; then
-  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
-else
-  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
-fi
-
 # Use the project path from Step 4's per-project loop (or ACTIVE_PROJECT_PATH for single-project)
 # Count planned tasks
 PLAN_TASKS=$(grep -cE '^### Task p[0-9]+-t[0-9]+:' "$ACTIVE_PROJECT_PATH/plan.md" 2>/dev/null || echo 0)
@@ -212,8 +202,8 @@ PLAN_TASKS=$(grep -cE '^### Task p[0-9]+-t[0-9]+:' "$ACTIVE_PROJECT_PATH/plan.md
 IMPL_COMPLETED=$(grep -cE '^\*\*Status:\*\* completed' "$ACTIVE_PROJECT_PATH/implementation.md" 2>/dev/null || echo 0)
 
 # Check for commits since last tracked SHA
-LAST_SHA=$(echo "$STATUS_JSON" | jq -r '.project.lastCommit')
-if [ -n "$LAST_SHA" ]; then
+LAST_SHA=$(oat project status --field project.lastCommit 2>/dev/null || echo null)
+if [ -n "$LAST_SHA" ] && [ "$LAST_SHA" != "null" ]; then
   UNTRACKED_COMMITS=$(git rev-list --count "$LAST_SHA"..HEAD 2>/dev/null || echo 0)
 else
   UNTRACKED_COMMITS=0

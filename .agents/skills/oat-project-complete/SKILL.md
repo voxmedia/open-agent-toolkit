@@ -183,20 +183,7 @@ fi
 #### 3.3: Documentation Sync Status
 
 ```bash
-# Resolve oat CLI with npx fallback, then fetch project state once.
-# NOTE: branch on command availability rather than building a quoted command
-# string — `"$OAT_CMD"` with a space would be treated as a single executable
-# name and the fallback would fail with "command not found".
-if command -v oat >/dev/null 2>&1; then
-  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
-else
-  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
-fi
-
-# Extract individual fields from the JSON view (state.md is the source of truth on disk).
-# No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
-# the prior `grep | awk` behavior.
-DOCS_UPDATED=$(echo "$STATUS_JSON" | jq -r '.project.docsUpdated')
+DOCS_UPDATED=$(oat project status --field project.docsUpdated 2>/dev/null || echo null)
 
 # Read policy from config (default: false = soft suggestion)
 REQUIRE_DOCS=$(oat config get documentation.requireForProjectCompletion 2>/dev/null || echo "false")

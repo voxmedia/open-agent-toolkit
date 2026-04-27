@@ -175,32 +175,29 @@ Verify the skill appears in `packages/cli/assets/skills/` after build. If a test
 
 ## Reading project state
 
-Skills that need to read fields from the active project's `state.md` (e.g. `phase`, `phaseStatus`, `workflowMode`, `docsUpdated`, `lastCommit`) MUST query the CLI's JSON contract instead of hand-parsing YAML with `grep`/`awk`. Use the canonical inline preamble below: it resolves `oat` (or falls back to `npx @open-agent-toolkit/cli` when `oat` is not on `$PATH`), fetches the JSON view once, and extracts individual fields with `jq`.
+Skills that need to read fields from the active project's `state.md` (e.g. `phase`, `phaseStatus`, `workflowMode`, `docsUpdated`, `lastCommit`) MUST query the CLI instead of hand-parsing YAML with `grep`/`awk`.
+
+For one field, use `--field`:
 
 ```bash
-# Resolve oat CLI with npx fallback, then fetch project state once.
-# NOTE: branch on command availability rather than building a quoted command
-# string — `"$OAT_CMD"` with a space would be treated as a single executable
-# name and the fallback would fail with "command not found".
-if command -v oat >/dev/null 2>&1; then
-  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
-else
-  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
-fi
+WORKFLOW_MODE=$(oat project status --field project.workflowMode 2>/dev/null || echo null)
+```
 
-# Extract individual fields from the JSON view (state.md is the source of truth on disk).
-# No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
-# the prior `grep | awk` behavior.
-WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
-PHASE=$(echo "$STATUS_JSON" | jq -r '.project.phase')
-PHASE_STATUS=$(echo "$STATUS_JSON" | jq -r '.project.phaseStatus')
+For multiple fields, use `--shell` so the CLI fetches project state once and prints shell-safe assignments:
+
+```bash
+eval "$(oat project status --shell \
+  PHASE=project.phase \
+  PHASE_STATUS=project.phaseStatus \
+  WORKFLOW_MODE=project.workflowMode 2>/dev/null)"
 ```
 
 ### Contract notes
 
-- **Null sentinel behavior:** YAML `null` in `state.md` surfaces as the literal string `null` via both the prior `grep | awk` and the new `jq -r` (no `// ""` default). When `STATUS_JSON` is `{}` because `oat` failed, `jq -r` on missing keys also emits `null`, giving a single consistent sentinel across success and error paths. Do **not** add `// ""` defaults — that would break behavior parity.
-- `jq` is the canonical parser; `node -e` is an acceptable fallback if `jq` is unavailable.
-- Fetch JSON once per skill invocation, then extract fields locally.
+- **Null sentinel behavior:** YAML `null` in `state.md` surfaces as the literal string `null`, matching the prior `grep | awk` behavior. Missing fields also print or assign `null` after project status resolves successfully.
+- `--field <path>` reads arbitrary dot paths from the project status payload. Scalars print as raw values; objects and arrays print as compact JSON.
+- `--shell NAME=path ...` prints shell-safe single-quoted assignments. Variable names must match `[A-Za-z_][A-Za-z0-9_]*`.
+- Skill snippets assume `oat` is available on `PATH`. CI/cloud environments without a global install can provide an `oat` shim backed by `npx @open-agent-toolkit/cli`.
 - Do **not** use this pattern to write state — state writes stay in their existing skill sections.
 
 ## Examples

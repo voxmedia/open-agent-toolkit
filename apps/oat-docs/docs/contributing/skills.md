@@ -61,7 +61,34 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 
 ## Reading project state
 
-Skills that need fields from the active project's `state.md` (e.g. `phase`, `phaseStatus`, `workflowMode`, `docsUpdated`, `lastCommit`) MUST query the CLI's JSON contract instead of hand-parsing YAML with `grep`/`awk`. The canonical inline preamble — including the `npx @open-agent-toolkit/cli` fallback for environments without `oat` on `$PATH` — lives in [`.agents/skills/create-oat-skill/SKILL.md`](https://github.com/open-agent-toolkit/open-agent-toolkit/blob/main/.agents/skills/create-oat-skill/SKILL.md) under the "Reading project state" section. Paste it verbatim and select fields with `jq -r '.project.<field>'` (no `// ""` defaults — YAML `null` surfaces as the literal string `null` to match the prior parser).
+Skills that need fields from the active project's `state.md` (e.g. `phase`, `phaseStatus`, `workflowMode`, `docsUpdated`, `lastCommit`) MUST query the CLI instead of hand-parsing YAML with `grep`/`awk`.
+
+For one field, use `--field`:
+
+```bash
+WORKFLOW_MODE=$(oat project status --field project.workflowMode 2>/dev/null || echo null)
+```
+
+For multiple fields, use `--shell` so the CLI reads project state once and emits shell-safe assignments:
+
+```bash
+eval "$(oat project status --shell \
+  PHASE=project.phase \
+  PHASE_STATUS=project.phaseStatus \
+  WORKFLOW_MODE=project.workflowMode 2>/dev/null)"
+```
+
+Skill snippets assume `oat` is available on `PATH`. Environments without a global install, including CI or cloud runners, can provide an `oat` shim backed by `npx`:
+
+```bash
+mkdir -p .oat/bin
+cat > .oat/bin/oat <<'EOF'
+#!/usr/bin/env bash
+exec npx @open-agent-toolkit/cli "$@"
+EOF
+chmod +x .oat/bin/oat
+export PATH="$PWD/.oat/bin:$PATH"
+```
 
 The JSON output is a stable contract: the field set consumed by migrated skills is locked by `MIGRATED_FIELDS` in `packages/cli/src/commands/project/status.test.ts`, so removing or renaming any of those keys is a real test failure rather than a silent runtime break. See [CLI Reference](../reference/cli-reference.md) for the full locked field set.
 

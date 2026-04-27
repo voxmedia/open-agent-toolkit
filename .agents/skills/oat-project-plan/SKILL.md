@@ -105,20 +105,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ### Step 1: Determine Workflow Mode and Route
 
 ```bash
-# Resolve oat CLI with npx fallback, then fetch project state once.
-# NOTE: branch on command availability rather than building a quoted command
-# string — `"$OAT_CMD"` with a space would be treated as a single executable
-# name and the fallback would fail with "command not found".
-if command -v oat >/dev/null 2>&1; then
-  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
-else
-  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
-fi
-
-# Extract individual fields from the JSON view (state.md is the source of truth on disk).
-# No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
-# the prior `grep | awk` behavior.
-WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
+WORKFLOW_MODE=$(oat project status --field project.workflowMode 2>/dev/null || echo null)
 ```
 
 **Mode: `quick`** — **STOP.** Print:
