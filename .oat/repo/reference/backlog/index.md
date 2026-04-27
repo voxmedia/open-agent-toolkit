@@ -24,12 +24,12 @@
 | --- | --- | --- | --- | --- | --- |
 | bl-af93 | Add `oat config unset <key>` command for removing config values | open | high | feature | S |
 | bl-7e68 | Clarify quick-mode resume routing from oat-project-plan | open | high | feature | S |
-| bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback | open | high | initiative | L |
 | bl-b5af | Add configurable staleness threshold to oat config | open | medium | feature | S |
 | bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote) | open | medium | feature | L |
 | bl-ff5d | Backlog Refinement Flow (Jira ticket generation) | open | medium | feature | L |
 | bl-3a4a | Codified sub-project split escape hatch | open | medium | feature | L |
 | bl-0738 | Define per-phase model selection guidance for phase-subagent dispatch | open | medium | feature | S |
+| bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback | open | medium | initiative | M |
 | bl-0ace | Move oat-project-complete state mutations into a CLI helper | in_progress | medium | feature | M |
 | bl-28ce | Persist instruction sync strategy in config and expose it in init | open | medium | feature | M |
 | bl-53f0 | Project-independent brainstorming mode | open | medium | feature | L |

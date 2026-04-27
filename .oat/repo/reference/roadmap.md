@@ -32,9 +32,9 @@ As of `2026-04-10` on `main`, dogfood workflow baseline and provider-interop CLI
 
 ### Control-plane read-layer follow-through
 
-- Status: Planned
-- Focus: use the new control-plane package as the default read surface for more workflow tooling, and revisit a `listProjects()` summary fast path only if measured performance justifies the added complexity.
-- Related backlog: `bl-931d`
+- Status: In progress (state.md slice shipped 2026-04-27 via skill-cli-migration)
+- Focus: use the new control-plane package as the default read surface for more workflow tooling, and revisit a `listProjects()` summary fast path only if measured performance justifies the added complexity. State.md grep migration for seven OAT lifecycle skills landed via `oat --json project status` with a `npx @open-agent-toolkit/cli` fallback; the JSON field set is now contract-tested. Remaining: plan.md / implementation.md read surfaces, plus the named-candidate skills not covered by the state.md grep scan.
+- Related backlog: `bl-281c` (skill migration; partially shipped, see item for residual scope), `bl-931d`
 
 ### Phase 4 polish: Active project lifecycle state + Repo State Dashboard
 
