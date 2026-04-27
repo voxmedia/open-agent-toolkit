@@ -41,4 +41,4 @@ Links:
 
 ## Priority Review (2026-04-24)
 
-Dropped to low. This is the narrow "idea → project" promotion path. The broader "brainstorming as a first-class mode with three outcome paths" direction is now tracked separately in `bl-8487` and is likely to supersede or absorb this item once the collaborative design project ships. Revisit scope once `bl-8487` moves out of deferred.
+Dropped to low. This is the narrow "idea → project" promotion path. The broader "project-independent brainstorming mode" direction is tracked separately in `bl-53f0` and is likely to supersede or absorb this item once that work is underway. Revisit scope once `bl-53f0` is in flight.

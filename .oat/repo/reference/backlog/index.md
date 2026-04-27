@@ -4,7 +4,7 @@
 
 ## Curated Overview
 
-**Review pass: 2026-04-24.** Three items closed (`bl-42f9`, `bl-fb3f`, `bl-cbdd`), two new items added (`bl-8487`, `bl-b5af`), and all remaining items carry a `priority_reviewed: '2026-04-24'` stamp in their frontmatter. Full review artifact: `.oat/repo/reviews/backlog-and-roadmap-review-2026-04-24.md`.
+**Review pass: 2026-04-24 (updated 2026-04-27).** Three items closed (`bl-42f9`, `bl-fb3f`, `bl-cbdd`). Three new items added: `bl-b5af` (configurable staleness threshold), `bl-53f0` (project-independent brainstorming mode, imported from the `collaborative-design-workflow` project with auto-triggering note synthesized in), and `bl-3a4a` (sub-project split escape hatch, imported from the `collaborative-design-workflow` project). All remaining items carry a `priority_reviewed` stamp. Full review artifact: `.oat/repo/reviews/backlog-and-roadmap-review-2026-04-24.md`.
 
 - **Top strategic item — `bl-281c`** (now **high** priority): migrate read-only skills to `oat project status --json` and add `npx @open-agent-toolkit/cli` fallback for cloud environments. Retires per-skill bootstrap duplication, enables cloud-env parity, and produces the measurement baseline that gates `bl-931d`.
 - **Quick-win batch (now high priority):** `bl-af93` (`oat config unset`), `bl-7e68` (quick-mode routing clarity), and `bl-b5af` (configurable staleness threshold). All S-sized, independent, and addressable as a single "workflow friction polish" PR set. `bl-af93` fixes a dogfooded gap where enum workflow keys have no CLI "unset" path.
@@ -12,7 +12,8 @@
 - **Instruction sync polish — `bl-28ce`, `bl-c745`:** follow-ons to the shipped instruction-sync feature. `bl-28ce` persists the default `pointer|symlink|copy` strategy; `bl-c745` adds a per-path / per-file opt-out so Claude-only `CLAUDE.md` files aren't auto-promoted. Best treated as a small bundled effort since both touch the same surface.
 - **Model-selection guidance — `bl-0738`:** recast from "reasoning budget" to "per-phase model selection" to match actual harness constraints — Claude Code exposes only model choice (`haiku|sonnet|opus`), not thinking budget; Codex auto-chooses `reasoning_effort`. Scope is documentation, agent defaults, and surfaced rationale, not behavior change.
 - **Reference-read wiring — `bl-e582` (needs-discussion):** surfaced by the compound-engineering-plugin research (`docs/research/compound-engineering-plugin-analysis-opus-4-7.md`). `.oat/repo/knowledge/` is wired into seven lifecycle skills; `.oat/repo/reference/` (current-state, decision-record, project-summaries) is effectively write-only. Proposes wiring reference reads into `oat-project-discover`, `oat-project-plan`, and `oat-project-review-provide` with an explicit token-budget contract. Deliberately excludes `oat-repo-maintainability-review` (which should review cold — missing reference docs should surface as a finding, not be backfilled). Optional-pjm caveat: must no-op when the reference tree isn't present.
-- **Brainstorming direction — `bl-8487` (new, deferred):** elevate brainstorming to a first-class mode with three outcome paths (inline / idea / project), modeled on the Superpowers brainstorming skill. Deferred behind the collaborative design project. `bl-b3f7` (narrow idea-to-project promotion) will likely be absorbed by this.
+- **Project-independent brainstorming mode — `bl-53f0` (new, medium):** a Superpowers-style exploratory conversation that auto-triggers from conversational cues, supports five terminal states (ephemeral, scratchpad, idea capture, summarized idea, or project promotion), and starts without requiring project scaffolding. `bl-b3f7` (narrow idea-to-project promotion) will likely be absorbed by this.
+- **Sub-project split escape hatch — `bl-3a4a` (new, medium):** codified hand-off for when `oat-project-discover` surfaces that a request spans N independent subsystems. Two modes: split-and-park (seed child projects, pick one now) or brainstorm-broadly-execute-one (rich cross-cutting discovery, then pick an active child). Parent completes by decomposition and archives immediately. Dropped from `collaborative-design-workflow` scope; tracked here for a future `oat-project-split` skill or `oat-project-discover` extension.
 - **Staleness work — `bl-b5af` (new, medium) + `bl-f9bd` (deferred, low):** extracted the user-configurable threshold config key as its own quick-win item; left the fuller diff-based detection + hard-blocking work deferred under `bl-f9bd`.
 - **Remote PR review — `bl-9fb8`:** completes the review/PR loop story (posting findings, responding, summarizing) once the core loop priorities are clear.
 - **Deferred / low priority:** `bl-3327` (dependency intelligence — no active demand, keep as directional), `bl-ff5d` (Jira refinement flow — narrow audience, keep ad hoc), `bl-71a1` (memory system — roadmap Phase 10, blocked behind Phase 8/9 proven usage), `bl-931d` (listProjects fast path — conditional on `bl-281c` producing a measurement baseline).
@@ -27,15 +28,16 @@
 | bl-b5af | Add configurable staleness threshold to oat config | open | medium | feature | S |
 | bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote) | open | medium | feature | L |
 | bl-ff5d | Backlog Refinement Flow (Jira ticket generation) | open | medium | feature | L |
+| bl-3a4a | Codified sub-project split escape hatch | open | medium | feature | L |
 | bl-0738 | Define per-phase model selection guidance for phase-subagent dispatch | open | medium | feature | S |
 | bl-0ace | Move oat-project-complete state mutations into a CLI helper | in_progress | medium | feature | M |
 | bl-28ce | Persist instruction sync strategy in config and expose it in init | open | medium | feature | M |
+| bl-53f0 | Project-independent brainstorming mode | open | medium | feature | L |
 | bl-e582 | Wire .oat/repo/reference artifacts into lifecycle skill reads | open | medium | feature | M |
 | bl-3327 | Add dependency intelligence skill family | open | low | feature | L |
 | bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new | open | low | feature | L |
 | bl-c745 | Add per-CLAUDE.md adoption opt-out for instruction sync | open | low | feature | M |
 | bl-f9bd | Deeper staleness detection and strict-mode enforcement | open | low | feature | L |
-| bl-8487 | Elevate brainstorming to a first-class mode with three outcome paths | open | low | initiative | L |
 | bl-71a1 | Memory system + provider enhancements | open | low | initiative | XL |
 | bl-931d | Optimize control-plane `listProjects()` summary path | open | low | task | M |
 <!-- END OAT BACKLOG-INDEX -->
