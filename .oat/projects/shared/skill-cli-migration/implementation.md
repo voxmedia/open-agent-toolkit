@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-27
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,11 +27,11 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | pending  | 2     | 0/2       |
+| Phase 2 | complete | 2     | 2/2       |
 | Phase 3 | pending  | 5     | 0/5       |
 | Phase 4 | pending  | 3     | 0/3       |
 
-**Total:** 2/12 tasks completed
+**Total:** 4/12 tasks completed
 
 ## Review Notes
 
@@ -131,13 +131,67 @@ oat_generated: false
 
 ## Phase 2: Migrate pure-read skills
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-04-27
+**Completed:** 2026-04-27
 
-### Task p02-t01: {Task Name}
+### Phase Summary
 
-**Status:** pending
-**Commit:** -
+**Outcome (what changed):**
+
+- `oat-project-progress` and `oat-project-pr-progress` now read project state via `oat --json project status` (with the canonical `npx @open-agent-toolkit/cli` fallback) instead of hand-parsing `state.md` with `grep | awk`.
+- Both skills are version-bumped per AGENTS.md.
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-progress/SKILL.md` — preamble + `LAST_SHA` (and the plan-named PHASE / PHASE_STATUS / WORKFLOW_MODE) sourced from `STATUS_JSON`. Version 1.2.2 → 1.2.3.
+- `.agents/skills/oat-project-pr-progress/SKILL.md` — preamble + `WORKFLOW_MODE` from `STATUS_JSON`. Version 1.2.0 → 1.2.1.
+
+**Verification:**
+
+- `pnpm lint` after each task → pass.
+- Probes (`oat --json project status | jq -r ...` vs the equivalent `grep | awk` against this project's `state.md`) → behavioral parity confirmed (`implement / in_progress / quick`).
+
+**Notes / Decisions:**
+
+- p02-t01 plan named three grep lines that did not actually exist in the skill (only `LAST_SHA` did). The implementer migrated the real grep AND added the plan-named variables alongside `LAST_SHA` so the canonical preamble's contract is fully realized in the file. Reviewer flagged this as Minor; left in to match the plan's intent.
+- p02-t02 preserved the original `WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}` bash fallback. Because `jq -r` emits the literal string `null` (not empty), this bash default no longer fires in the error path — consistent with the plan's "single sentinel `null`" contract. Reviewer flagged as Minor (dead code); left for a follow-up sweep.
+
+### Task p02-t01: Migrate `oat-project-progress` to oat --json
+
+**Status:** completed
+**Commit:** e80f1a58
+
+**Outcome:**
+
+- Skill no longer hand-parses `state.md`; reads `oat_last_commit` (and the canonical PHASE / PHASE_STATUS / WORKFLOW_MODE) from `oat --json project status`.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-progress/SKILL.md`
+
+**Verification:**
+
+- `pnpm lint` → pass; behavioral-parity probe → identical values.
+
+---
+
+### Task p02-t02: Migrate `oat-project-pr-progress` to oat --json
+
+**Status:** completed
+**Commit:** 742092f7
+
+**Outcome:**
+
+- Skill resolves `WORKFLOW_MODE` via `oat --json project status` once; downstream PR-progress logic untouched.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-pr-progress/SKILL.md`
+
+**Verification:**
+
+- `pnpm lint` → pass; probe parity confirmed (`quick` / `quick`).
 
 ---
 
@@ -160,9 +214,10 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Implementer | Review | Fix Iterations | Disposition |
-| ----- | ----------- | ------ | -------------- | ----------- |
-| p01   | DONE        | pass   | 0/2            | merged      |
+| Phase | Implementer            | Review | Fix Iterations | Disposition |
+| ----- | ---------------------- | ------ | -------------- | ----------- |
+| p01   | DONE                   | pass   | 0/2            | merged      |
+| p02   | DONE_WITH_CONCERNS (M) | pass   | 0/2            | merged      |
 
 #### Parallel Groups
 
@@ -184,15 +239,19 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Document the canonical inline preamble pattern — 19b0bd35
 - [x] p01-t02: Lock the JSON contract with a CLI test — 92e6b53c
+- [x] p02-t01: Migrate `oat-project-progress` to oat --json — e80f1a58
+- [x] p02-t02: Migrate `oat-project-pr-progress` to oat --json — 742092f7
 
 **What changed (high level):**
 
 - Canonical preamble pattern documented in `create-oat-skill` so subsequent skills can paste it verbatim.
 - New CLI test locks the JSON contract (`MIGRATED_FIELDS` set) — accidental key removal becomes a real test failure.
+- Two pure-read skills (`oat-project-progress`, `oat-project-pr-progress`) now resolve project state via `oat --json project status` with the canonical `npx` fallback.
 
 **Decisions:**
 
 - Used a `hasPath` walker rather than `toMatchObject` in the contract test to actually fail on missing keys.
+- p02-t01 plan referenced grep lines that didn't exist in the skill; migrated the real grep (`LAST_SHA`) and added the plan-named PHASE/PHASE_STATUS/WORKFLOW_MODE alongside it. Reviewer flagged Minor; not blocking.
 
 ---
 
