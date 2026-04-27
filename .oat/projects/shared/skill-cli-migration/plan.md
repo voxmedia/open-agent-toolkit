@@ -624,7 +624,7 @@ git commit -m "fix(prev1-t04): normalize reconcile preamble indentation"
 | p03    | code     | passed          | 2026-04-27 | reviews/p03-code-review-2026-04-27.md               |
 | p04    | code     | passed          | 2026-04-27 | reviews/p04-code-review-2026-04-27.md               |
 | p-rev1 | code     | passed          | 2026-04-27 | reviews/p-rev1-review-2026-04-27.md                 |
-| final  | code     | fixes_completed | 2026-04-27 | reviews/archived/final-review-2026-04-27.md         |
+| final  | code     | passed          | 2026-04-27 | reviews/final-review-2026-04-27-v2.md               |
 | spec   | artifact | n/a             | -          | quick mode (no spec artifact)                       |
 | design | artifact | n/a             | -          | quick mode (no design artifact)                     |
 | plan   | artifact | fixes_completed | 2026-04-24 | reviews/archived/artifact-plan-review-2026-04-24.md |

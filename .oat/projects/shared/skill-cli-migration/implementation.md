@@ -466,6 +466,8 @@ Track test execution during implementation.
 - End-to-end exercise of the `npx @open-agent-toolkit/cli` fallback branch with `oat` removed from `$PATH` (Run B → `quick`, exit 0).
 - Final code review (auto, Touchpoint B) → pass with 0 Critical, 0 Important, 5 Minor (all carryover, none warrant elevation).
 - p-rev1 review-fix phase: `pnpm lint` passed after every task and for the full phase; phase review passed with 0 Critical, 0 Important, 0 Minor.
+- Final verification after p-rev1: `pnpm test`, `pnpm lint`, `pnpm type-check`, and `pnpm build` all passed.
+- Final re-review (`reviews/final-review-2026-04-27-v2.md`) passed with 0 Critical and 0 Important findings; two deferred Minor follow-ups remain non-blocking.
 
 **Design deltas (if any):**
 
@@ -542,6 +544,27 @@ After the fix tasks are complete:
 
 - p-rev1 review-fix tasks are complete and passed phase review.
 - Final review row is `fixes_completed`; re-run `oat-project-review-provide code final` to confirm final project pass.
+
+## Review Received: final (code, auto re-review)
+
+**Date:** 2026-04-27
+**Review artifact:** `reviews/final-review-2026-04-27-v2.md`
+**Verdict:** pass
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2 deferred (not elevated)
+
+**Disposition:**
+
+- Final re-review passed after p-rev1 fixes.
+- Deferred Minor `m4`: stale p04-t02 plan PATH example remains non-blocking because implementation records the corrected fallback evidence.
+- Deferred Minor `m5`: tracked-but-gitignored `packages/cli/assets/public-package-versions.json` remains a separate repo hygiene follow-up.
+
+**Next:** Run `oat-project-document` then `oat-project-pr-final` per `workflow.postImplementSequence: docs-pr`.
 
 ## References
 

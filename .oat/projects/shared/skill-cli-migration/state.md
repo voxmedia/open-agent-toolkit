@@ -7,7 +7,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-24T19:34:46.867Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-27T20:08:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-27T20:17:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: skill-cli-migration
 
-**Status:** Review fixes complete — awaiting final re-review
+**Status:** Implementation complete — final review passed
 **Started:** 2026-04-24
 **Last Updated:** 2026-04-27
 
 ## Current Phase
 
-Implement - In progress. Final manual review fixes are complete; awaiting final re-review.
+Implement - Complete. Final re-review passed. Ready for post-implementation sequence (`oat-project-document` → `oat-project-pr-final`).
 
 ## Artifacts
 
@@ -36,7 +36,7 @@ Implement - In progress. Final manual review fixes are complete; awaiting final 
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode — no architecture decisions surfaced)
 - **Plan:** `plan.md` (complete — 16 tasks across 5 phases)
-- **Implementation:** `implementation.md` (review fixes complete — 16/16 tasks complete; awaiting final re-review)
+- **Implementation:** `implementation.md` (complete — 16/16 tasks; final re-review passed)
 
 ## Progress
 
@@ -45,7 +45,8 @@ Implement - In progress. Final manual review fixes are complete; awaiting final 
 - ✓ Implementation complete
 - ✓ Final review passed (auto, Touchpoint B)
 - ✓ Final manual review fixes complete (`prev1-t01`-`prev1-t04`)
-- ⧗ Awaiting final re-review
+- ✓ Final re-review passed
+- ⧗ Post-implementation sequence: `oat-project-document` → `oat-project-pr-final`
 
 ## Blockers
 
@@ -53,4 +54,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-review-provide code final` to re-review the completed fixes.
+Run `oat-project-document` then `oat-project-pr-final` per `workflow.postImplementSequence: docs-pr`.
