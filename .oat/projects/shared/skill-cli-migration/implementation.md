@@ -277,6 +277,15 @@ Live smoke-tested every migrated skill preamble against this worktree's project 
 - [x] `oat-project-reconcile` — fields: `phase`, `phaseStatus` → match grep.
 - [x] `oat-project-complete` — field: `docsUpdated` → matches grep (literal `null`); null-sentinel parity confirmed.
 
+### Task p04-t02
+
+Exercised the canonical `npx @open-agent-toolkit/cli` fallback branch end-to-end (the `else` arm of the preamble's `command -v oat` test).
+
+- Run A (literal plan command, `env PATH="/usr/bin:/bin" bash -lc '...'`): the `command -v oat` test correctly took the else branch (proving the fallback arm executed). `npx` was not on `/usr/bin:/bin` on this host, so `npx @open-agent-toolkit/cli ... 2>/dev/null || echo '{}'` swallowed the missing-command error and produced `{}`, which `jq -r '.project.workflowMode'` rendered as the literal `null`. Exit code `0`. Stdout: `null`.
+- Run B (PATH stripped of the directory containing `oat` only, retaining node tooling): `command -v oat` again took the else branch; `npx @open-agent-toolkit/cli --json project status` resolved through nvm and returned the live project state. Exit code `0`. Stdout: `quick` — matches the `WORKFLOW_MODE` value read by the in-PATH branch and by `grep | awk` against `state.md`.
+
+Result: the fallback branch is exercised correctly. Run B confirms it produces the expected `quick` for this project when `npx` is reachable. Run A documents that the literal plan PATH (`/usr/bin:/bin`) excludes both `oat` and `npx` on this host (nvm-managed node), which causes the swallowed-error path to emit the `null` sentinel rather than `quick`.
+
 _Each run from `oat-project-implement` appends an entry below with:_
 _- Run header (number, timestamp, branch, tier, policy, phase counts)_
 _- Phase Outcomes table_
