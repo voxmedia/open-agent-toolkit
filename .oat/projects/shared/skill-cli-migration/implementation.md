@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-27
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete | 2     | 2/2       |
 | Phase 2 | complete | 2     | 2/2       |
 | Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | pending  | 3     | 0/3       |
+| Phase 4 | complete | 3     | 3/3       |
 
-**Total:** 9/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ## Review Notes
 
@@ -299,7 +299,7 @@ _- Outstanding Items_
 **Branch:** feat/skill-cli-migration
 **Tier:** 1
 **Policy:** merge-strategy=sequential, retry-limit=2
-**Phases:** in_progress
+**Phases:** 4 executed, 4 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
@@ -308,6 +308,7 @@ _- Outstanding Items_
 | p01   | DONE                   | pass   | 0/2            | merged      |
 | p02   | DONE_WITH_CONCERNS (M) | pass   | 0/2            | merged      |
 | p03   | DONE_WITH_CONCERNS (M) | pass   | 0/2            | merged      |
+| p04   | DONE_WITH_CONCERNS (M) | pass   | 0/2            | merged      |
 
 #### Parallel Groups
 
