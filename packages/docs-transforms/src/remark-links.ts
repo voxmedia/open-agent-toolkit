@@ -49,6 +49,31 @@ function routePathFromDocsFile(filePath: string): string | null {
   return path.normalize(`/${cleaned}`);
 }
 
+/**
+ * Append a trailing slash to the path portion of a rewritten URL so it works
+ * on static hosts (e.g., S3) where pages live at `<route>/index.html` and
+ * `/foo` returns 403 — only `/foo/` resolves the index file. Skips URLs
+ * whose last segment looks like a file with an extension (e.g., `.png`),
+ * URLs that already end in `/`, and empty paths. Preserves any `#fragment`
+ * or `?query` suffix.
+ *
+ * Assumes markdown slugs are dot-free (kebab-case). A page named
+ * `release-1.0.md` would rewrite to `./release-1.0` and be treated as an
+ * asset by the extension check, leaving it without a trailing slash.
+ */
+function appendTrailingSlash(url: string): string {
+  const suffixIndex = url.search(/[#?]/);
+  const pathPortion = suffixIndex >= 0 ? url.slice(0, suffixIndex) : url;
+  const suffix = suffixIndex >= 0 ? url.slice(suffixIndex) : '';
+
+  if (!pathPortion || pathPortion.endsWith('/')) return url;
+
+  const lastSegment = pathPortion.slice(pathPortion.lastIndexOf('/') + 1);
+  if (/\.[^.]+$/.test(lastSegment)) return url;
+
+  return `${pathPortion}/${suffix}`;
+}
+
 function resolveRelativeDocsLink(
   sourceFilePath: string,
   targetPath: string,
@@ -74,10 +99,11 @@ function resolveRelativeDocsLink(
  * slashes.
  *
  * URL rewriting:
- * - `quickstart.md` from `docs/index.md` → `./quickstart`
+ * - `quickstart.md` from `docs/index.md` → `./quickstart/`
  * - `documentation/commands.md` from `docs/guide/cli-reference.md`
- *   → `../documentation/commands`
- * - `../reference/index.md` from `docs/guide/concepts.md` → `../../reference`
+ *   → `../documentation/commands/`
+ * - `../reference/index.md` from `docs/guide/concepts.md` → `../../reference/`
+ * - `quickstart.md#setup` → `./quickstart/#setup`
  * - Absolute URLs and anchors are left unchanged.
  *
  * Display text cleanup:
@@ -96,35 +122,37 @@ export const remarkLinks: Plugin<[], Root> = function remarkLinks() {
         return;
       }
 
-      // Split off any anchor fragment
-      const hashIndex = url.indexOf('#');
-      const path = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
-      const fragment = hashIndex >= 0 ? url.slice(hashIndex) : '';
+      // Split off any anchor fragment or query string
+      const suffixIndex = url.search(/[#?]/);
+      const path = suffixIndex >= 0 ? url.slice(0, suffixIndex) : url;
+      const fragment = suffixIndex >= 0 ? url.slice(suffixIndex) : '';
 
       const cleaned = cleanMdPath(path);
-      if (cleaned === null) return;
 
-      const rewrittenPath =
-        typeof file?.path === 'string'
-          ? (resolveRelativeDocsLink(file.path, path) ?? cleaned)
-          : cleaned;
+      if (cleaned !== null) {
+        const rewrittenPath =
+          typeof file?.path === 'string'
+            ? (resolveRelativeDocsLink(file.path, path) ?? cleaned)
+            : cleaned;
 
-      // Rewrite URL
-      const prefix =
-        rewrittenPath.startsWith('.') || rewrittenPath.startsWith('/')
-          ? ''
-          : './';
-      node.url = prefix + rewrittenPath + fragment;
+        const prefix =
+          rewrittenPath.startsWith('.') || rewrittenPath.startsWith('/')
+            ? ''
+            : './';
+        node.url = prefix + rewrittenPath + fragment;
 
-      // Clean display text when it's a single inlineCode child with a .md path
-      const firstChild = node.children[0];
-      if (node.children.length === 1 && firstChild?.type === 'inlineCode') {
-        const code = firstChild as InlineCode;
-        const cleanedText = cleanMdPath(code.value);
-        if (cleanedText !== null) {
-          code.value = cleanedText;
+        // Clean display text when it's a single inlineCode child with a .md path
+        const firstChild = node.children[0];
+        if (node.children.length === 1 && firstChild?.type === 'inlineCode') {
+          const code = firstChild as InlineCode;
+          const cleanedText = cleanMdPath(code.value);
+          if (cleanedText !== null) {
+            code.value = cleanedText;
+          }
         }
       }
+
+      node.url = appendTrailingSlash(node.url);
     });
   };
 };
