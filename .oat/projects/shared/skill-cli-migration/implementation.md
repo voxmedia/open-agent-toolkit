@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-27
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2      | complete | 2     | 2/2       |
 | Phase 3      | complete | 5     | 5/5       |
 | Phase 4      | complete | 3     | 3/3       |
-| Review Fixes | pending  | 4     | 0/4       |
+| Review Fixes | complete | 4     | 4/4       |
 
-**Total:** 12/16 tasks completed
+**Total:** 16/16 tasks completed
 
 ## Review Notes
 
@@ -332,6 +332,27 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
+### Run 2 — 2026-04-27 20:08
+
+**Branch:** feat/skill-cli-migration
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase  | Implementer | Review | Fix Iterations | Disposition |
+| ------ | ----------- | ------ | -------------- | ----------- |
+| p-rev1 | DONE        | pass   | 0/2            | merged      |
+
+#### Parallel Groups
+
+- All phases sequential
+
+#### Outstanding Items
+
+- None
+
 ### Run 1 — 2026-04-27 02:07
 
 **Branch:** feat/skill-cli-migration
@@ -378,6 +399,10 @@ Chronological log of implementation progress.
 - [x] p04-t01: Verify migrated skill preambles against live project — d94874f1
 - [x] p04-t02: Verify npx fallback branch for oat --json — a6096b93
 - [x] p04-t03: Lockstep version bump for skill-cli-migration — e07c871e
+- [x] prev1-t01: Fix target-worktree workflow-mode lookup — f10ff87c
+- [x] prev1-t02: Remove inert workflow-mode default — d71ffc2b
+- [x] prev1-t03: Trim unused progress status extractions — 4b115ad0
+- [x] prev1-t04: Normalize reconcile preamble indentation — 4873e5e0
 
 **What changed (high level):**
 
@@ -385,6 +410,7 @@ Chronological log of implementation progress.
 - New CLI test locks the JSON contract (`MIGRATED_FIELDS` set) — accidental key removal becomes a real test failure.
 - Seven skills (2 pure-read in Phase 2, 5 mixed read/write in Phase 3) now resolve project state via `oat --json project status` with the canonical `npx` fallback. No write paths touched; out-of-scope greps preserved.
 - Phase 4: live-smoke verified all 7 migrated preambles, exercised the npx fallback end-to-end, lockstep-bumped 5 public packages 0.0.50 → 0.0.51, and ran the full local check suite (lint, format, type-check, 1357 tests, release:validate) — all pass.
+- Review fixes: preserved target-worktree workflow-mode lookup behavior in `oat-project-review-provide`, removed inert workflow-mode/default cleanup, trimmed unused progress extractions, and documented the reconcile snippet indentation.
 
 **Decisions:**
 
@@ -439,10 +465,11 @@ Track test execution during implementation.
 - Live smoke test of every migrated preamble against this worktree's project state (jq vs grep+awk parity, including null-sentinel parity).
 - End-to-end exercise of the `npx @open-agent-toolkit/cli` fallback branch with `oat` removed from `$PATH` (Run B → `quick`, exit 0).
 - Final code review (auto, Touchpoint B) → pass with 0 Critical, 0 Important, 5 Minor (all carryover, none warrant elevation).
+- p-rev1 review-fix phase: `pnpm lint` passed after every task and for the full phase; phase review passed with 0 Critical, 0 Important, 0 Minor.
 
 **Design deltas (if any):**
 
-- None vs the plan goal. Plan-bookkeeping mismatches (field labels off in p03 task descriptions, PATH-trim recipe in p04-t02) documented in implementation.md and recorded as Minor follow-ups for a future plan revision.
+- None vs the plan goal. The final manual review exposed one path-directed read regression in `oat-project-review-provide`; p-rev1 restored that behavior while leaving the broader JSON migration intact.
 
 ## Review Received: final (code, auto)
 
@@ -497,6 +524,24 @@ After the fix tasks are complete:
 
 - Update the final review row status to `fixes_completed`.
 - Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`.
+
+## Review Received: p-rev1 (code, auto)
+
+**Date:** 2026-04-27
+**Review artifact:** `reviews/p-rev1-review-2026-04-27.md`
+**Verdict:** pass
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Disposition:**
+
+- p-rev1 review-fix tasks are complete and passed phase review.
+- Final review row is `fixes_completed`; re-run `oat-project-review-provide code final` to confirm final project pass.
 
 ## References
 
