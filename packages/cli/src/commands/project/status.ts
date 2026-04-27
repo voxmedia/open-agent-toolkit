@@ -94,7 +94,11 @@ function formatShellAssignment(
     return null;
   }
 
-  const [, name, path] = match;
+  const name = match[1];
+  const path = match[2];
+  if (!name || !path) {
+    return null;
+  }
   const value = formatRawValue(readDotPath(payload, path));
   return `${name}=${shellQuote(value)}`;
 }

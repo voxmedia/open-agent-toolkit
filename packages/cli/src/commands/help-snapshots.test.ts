@@ -592,7 +592,7 @@ describe('help output snapshots', () => {
         open [options] <name>                    Open or switch to an OAT project
         pause [options] [name]                   Pause an OAT project
         set-mode <mode>                          [deprecated] No-op. Execution mode is no longer selectable.
-        status                                   Show the current OAT project state
+        status [options]                         Show the current OAT project state
         validate-plan [options]                  Validate plan.md parallelism metadata against the plan phase list
         help [command]                           display help for command
       "
