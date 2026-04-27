@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-27
-oat_current_task_id: null
+oat_current_task_id: prev2-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 2     | 2/2       |
-| Phase 2      | complete | 2     | 2/2       |
-| Phase 3      | complete | 5     | 5/5       |
-| Phase 4      | complete | 3     | 3/3       |
-| Review Fixes | complete | 4     | 4/4       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 2     | 2/2       |
+| Phase 2      | complete    | 2     | 2/2       |
+| Phase 3      | complete    | 5     | 5/5       |
+| Phase 4      | complete    | 3     | 3/3       |
+| Review Fixes | complete    | 4     | 4/4       |
+| Revision 2   | in_progress | 4     | 0/4       |
 
-**Total:** 16/16 tasks completed
+**Total:** 16/20 tasks completed
 
 ## Review Notes
 
@@ -59,6 +60,24 @@ oat_generated: false
 **No plan fix tasks added** — artifact review; all findings were resolved directly in `plan.md`.
 
 **Next:** Re-run `oat-project-review-provide artifact plan` if a re-review is desired, or proceed to `oat-project-implement` to execute the (now-corrected) plan starting from `p01-t01`.
+
+---
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-04-27
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Add a general `oat project status --field <path>` capability for arbitrary-depth field reads.
+- Add `oat project status --shell NAME=path ...` so skills can fetch multiple fields once without local JSON plumbing.
+- Replace verbose per-skill JSON/fallback preambles with concise CLI-owned field/shell reads.
+- Document that skills assume `oat` is on `PATH`, and document an `npx @open-agent-toolkit/cli`-backed `oat` shim for CI/cloud environments.
+
+**New tasks added:** `prev2-t01`, `prev2-t02`, `prev2-t03`, `prev2-t04`
+
+**Next:** Execute revision tasks via the `oat-project-implement` skill.
 
 ---
 

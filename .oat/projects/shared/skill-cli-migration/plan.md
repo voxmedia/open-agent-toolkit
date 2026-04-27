@@ -615,6 +615,180 @@ git commit -m "fix(prev1-t04): normalize reconcile preamble indentation"
 
 ---
 
+## Phase p-rev2: Revision 2
+
+Source: inline feedback (2026-04-27)
+
+### Task prev2-t01: (revision) Add status field and shell assignment output
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/status.ts`
+- Modify: `packages/cli/src/commands/project/status.test.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts` (if help output changes)
+
+**Step 1: Implement field extraction**
+
+Add `--field <path>` to `oat project status`. The path resolves against the same successful payload shape as `oat --json project status` (`{ status: "ok", project }`) and supports arbitrary dot paths such as `project.workflowMode`, `project.timestamps.stateUpdated`, and `project.recommendation.skill`.
+
+Output contract:
+
+- Existing unset/missing/error project states keep their current non-zero behavior.
+- Missing paths print `null` and exit 0 when project status resolves successfully.
+- Null values print `null`.
+- String/number/boolean values print raw scalar text.
+- Object/array values print compact JSON.
+
+**Step 2: Implement shell output**
+
+Add `--shell NAME=path ...` to print shell-safe assignments from a single project status read, for example:
+
+```bash
+oat project status --shell WORKFLOW_MODE=project.workflowMode PHASE_STATUS=project.phaseStatus
+```
+
+Output contract:
+
+- Variable names must match `[A-Za-z_][A-Za-z0-9_]*`; invalid names exit non-zero.
+- Values are shell-safe single-quoted assignments (`NAME='value'`), including strings with embedded quotes.
+- Null/missing fields assign the literal `null` value (`NAME='null'`).
+- Object/array values assign compact JSON.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts`
+Expected: status command tests pass, including scalar, nested, null, missing, object, invalid shell variable, and unset-project error cases.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/status.ts packages/cli/src/commands/project/status.test.ts packages/cli/src/commands/help-snapshots.test.ts
+git commit -m "feat(prev2-t01): add project status field and shell output"
+```
+
+---
+
+### Task prev2-t02: (revision) Replace verbose skill JSON preambles
+
+**Files:**
+
+- Modify: `.agents/skills/create-oat-skill/SKILL.md`
+- Modify: `.agents/skills/oat-project-progress/SKILL.md`
+- Modify: `.agents/skills/oat-project-pr-progress/SKILL.md`
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-pr-final/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `.agents/skills/oat-project-reconcile/SKILL.md`
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+
+**Step 1: Update canonical skill guidance**
+
+Change the canonical state-read guidance from embedded `oat`/`npx` JSON preambles to the concise `oat project status --field` / `--shell` contract. Document that skills assume `oat` is available on `PATH`; environments without a global install can provide an `oat` shim backed by `npx`.
+
+**Step 2: Sweep migrated skills**
+
+Replace verbose `STATUS_JSON=$(oat --json project status ...); jq -r ...` preambles with one status read per shell block:
+
+```bash
+eval "$(oat project status --shell \
+  PHASE=project.phase \
+  PHASE_STATUS=project.phaseStatus \
+  WORKFLOW_MODE=project.workflowMode)"
+```
+
+Use `--field` for single-field reads when it is clearer. Preserve the target-worktree special case in `oat-project-review-provide`: reads that must validate an adjusted `PROJECT_PATH` should remain path-directed until the CLI supports explicit project path reads.
+
+**Step 3: Verify**
+
+Run: `pnpm lint`
+Expected: lint passes; migrated skill snippets are shorter and no longer contain repeated `command -v oat` / `npx @open-agent-toolkit/cli` fallback preambles.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/create-oat-skill/SKILL.md .agents/skills/oat-project-*.md
+git commit -m "refactor(prev2-t02): use project status shell output in skills"
+```
+
+---
+
+### Task prev2-t03: (revision) Document the oat shim environment contract
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/contributing/skills.md`
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Step 1: Document skill runtime contract**
+
+Document that canonical skill snippets call `oat` directly and rely on the runtime/CI/cloud environment to make `oat` available on `PATH`.
+
+Include the `npx`-backed shim:
+
+```bash
+mkdir -p .oat/bin
+cat > .oat/bin/oat <<'EOF'
+#!/usr/bin/env bash
+exec npx @open-agent-toolkit/cli "$@"
+EOF
+chmod +x .oat/bin/oat
+export PATH="$PWD/.oat/bin:$PATH"
+```
+
+**Step 2: Document CLI read APIs**
+
+Add `oat project status --field <path>` and `oat project status --shell NAME=path ...` to the relevant CLI/reference docs and identify them as preferred skill read APIs.
+
+**Step 3: Verify**
+
+Run: `pnpm lint`
+Expected: lint passes; docs describe both the field/shell APIs and the shim contract.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/contributing/skills.md apps/oat-docs/docs/reference/cli-reference.md
+git commit -m "docs(prev2-t03): document status field reads and oat shim"
+```
+
+---
+
+### Task prev2-t04: (revision) Validate revision and refresh project artifacts
+
+**Files:**
+
+- Modify: `.oat/projects/shared/skill-cli-migration/implementation.md`
+- Modify: `.oat/projects/shared/skill-cli-migration/summary.md`
+- Modify: `.oat/projects/shared/skill-cli-migration/state.md`
+
+**Step 1: Run validation**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm release:validate
+```
+
+Expected: all pass.
+
+**Step 2: Update artifacts**
+
+Record the revision outcome, verification, and final project state. Return project state to `pr_open` after all revision tasks complete.
+
+**Step 3: Commit and push**
+
+```bash
+git add .oat/projects/shared/skill-cli-migration/implementation.md .oat/projects/shared/skill-cli-migration/summary.md .oat/projects/shared/skill-cli-migration/state.md
+git commit -m "chore(prev2-t04): record shell status revision"
+git push
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                            |
@@ -642,8 +816,9 @@ git commit -m "fix(prev1-t04): normalize reconcile preamble indentation"
 - Phase 3: 5 tasks — migrate read path of mixed skills (`oat-project-plan`, `oat-project-pr-final`, `oat-project-review-provide`, `oat-project-reconcile`, `oat-project-complete`)
 - Phase 4: 3 tasks — live smoke-test, npx fallback verification, lockstep version bump + release:validate
 - Review fixes: 4 tasks — target-worktree workflow-mode lookup, workflow-mode default cleanup, progress extraction cleanup, reconcile preamble indentation
+- Revision 2: 4 tasks — add `--field`/`--shell`, sweep skills to concise state reads, document the `oat` shim contract, validate
 
-**Total: 16 tasks**
+**Total: 20 tasks**
 
 Ready for code review and merge.
 
