@@ -21,7 +21,7 @@ OAT has lightweight idea capture (`oat-idea-*`) and full project workflows (`oat
 
 The existing ideas workflow intentionally blocks formal requirements, technical design, and task planning so brainstorming stays lightweight. The collaborative-design-workflow project, meanwhile, imported a Superpowers-style collaborative discovery/design pattern into project workflows. This backlog item tracks the missing middle: a natural brainstorming skill/mode that can start without creating an OAT project, explore an idea with Superpowers-like conversational structure, and then end in the right durable state.
 
-The invocation model should follow the `superpowers:brainstorming` pattern: the skill recognizes from conversational context that brainstorming is warranted ("I've been thinking about X", "what if we did Y") rather than requiring the user to declare intent up front. The session then concludes by offering the outcome choices below.
+The invocation model should be **always-on**: the skill proactively checks whether the current conversation context warrants a brainstorming session and offers it without waiting for explicit invocation — following the `superpowers:brainstorming` pattern. Signals include exploratory phrasing ("I've been thinking about X", "what if we did Y"), open-ended design questions, or any moment where the user is clearly thinking out loud rather than requesting implementation. The session then concludes by offering the outcome choices below.
 
 Possible outcomes from a brainstorming session:
 
@@ -43,7 +43,7 @@ Related context:
 ## Acceptance Criteria
 
 - A project-independent brainstorming skill or mode is defined with explicit entry points, blocked activities, allowed activities, and terminal states.
-- The invocation model follows the Superpowers brainstorming pattern: the skill can auto-trigger from conversational cues rather than requiring explicit invocation.
+- The skill is **always-on**: it proactively offers brainstorming when conversational context signals exploratory intent (open-ended questions, "thinking out loud" phrasing, design uncertainty) rather than waiting for explicit invocation.
 - The workflow supports starting without an active OAT project and without immediately creating an idea artifact.
 - The workflow offers clear capture choices when the conversation becomes worth preserving: inline only, scratchpad, idea discovery, summarized idea, or new OAT project.
 - The workflow can seed a new OAT project discovery from the brainstorming transcript or synthesized summary without requiring the user to restate context.
