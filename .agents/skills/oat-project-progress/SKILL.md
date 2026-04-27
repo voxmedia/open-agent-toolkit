@@ -204,13 +204,6 @@ else
   STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
 fi
 
-# Extract individual fields from the JSON view (state.md is the source of truth on disk).
-# No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
-# the prior `grep | awk` behavior.
-PHASE=$(echo "$STATUS_JSON" | jq -r '.project.phase')
-PHASE_STATUS=$(echo "$STATUS_JSON" | jq -r '.project.phaseStatus')
-WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
-
 # Use the project path from Step 4's per-project loop (or ACTIVE_PROJECT_PATH for single-project)
 # Count planned tasks
 PLAN_TASKS=$(grep -cE '^### Task p[0-9]+-t[0-9]+:' "$ACTIVE_PROJECT_PATH/plan.md" 2>/dev/null || echo 0)
