@@ -7,7 +7,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-24T19:34:46.867Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-27T02:49:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-27T02:57:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: skill-cli-migration
 
-**Status:** Implementation tasks complete; awaiting final review
+**Status:** Implementation complete — final review passed
 **Started:** 2026-04-24
 **Last Updated:** 2026-04-27
 
 ## Current Phase
 
-Implement - Tasks complete (12/12); auto-review (final scope) running before HiLL checkpoint pause.
+Implement - Complete. Final review passed. Awaiting HiLL checkpoint approval before post-implementation chain (`oat-project-document` → `oat-project-pr-final`).
 
 ## Artifacts
 
@@ -36,13 +36,15 @@ Implement - Tasks complete (12/12); auto-review (final scope) running before HiL
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode — no architecture decisions surfaced)
 - **Plan:** `plan.md` (complete — 12 tasks across 4 phases)
-- **Implementation:** `implementation.md` (initialized; first task p01-t01)
+- **Implementation:** `implementation.md` (complete — 12/12 tasks; final review passed)
 
 ## Progress
 
 - ✓ Discovery complete
 - ✓ Plan complete
-- ⧗ Implementation in progress
+- ✓ Implementation complete
+- ✓ Final review passed (auto, Touchpoint B)
+- ⧗ HiLL checkpoint approval, then `oat-project-document` → `oat-project-pr-final`
 
 ## Blockers
 
@@ -50,4 +52,4 @@ None
 
 ## Next Milestone
 
-Auto-review (final scope) → HiLL checkpoint pause → if passed, run `oat-project-document` then `oat-project-pr-final` per `workflow.postImplementSequence: docs-pr`.
+User approves HiLL checkpoint → run `oat-project-document` then `oat-project-pr-final` per `workflow.postImplementSequence: docs-pr`.

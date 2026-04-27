@@ -504,7 +504,7 @@ git commit -m "chore(p04-t03): lockstep version bump for skill-cli-migration"
 | p02    | code     | passed          | 2026-04-27 | reviews/p02-code-review-2026-04-27.md               |
 | p03    | code     | passed          | 2026-04-27 | reviews/p03-code-review-2026-04-27.md               |
 | p04    | code     | passed          | 2026-04-27 | reviews/p04-code-review-2026-04-27.md               |
-| final  | code     | pending         | -          | -                                                   |
+| final  | code     | passed          | 2026-04-27 | reviews/final-code-review-2026-04-27.md             |
 | spec   | artifact | n/a             | -          | quick mode (no spec artifact)                       |
 | design | artifact | n/a             | -          | quick mode (no design artifact)                     |
 | plan   | artifact | fixes_completed | 2026-04-24 | reviews/archived/artifact-plan-review-2026-04-24.md |
