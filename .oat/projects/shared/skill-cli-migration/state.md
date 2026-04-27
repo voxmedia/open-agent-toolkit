@@ -12,23 +12,23 @@ oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-24T19:34:46.867Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-27T20:17:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-27T20:55:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: skill-cli-migration
 
-**Status:** Implementation complete — final review passed
+**Status:** Implementation complete — PR artifact ready
 **Started:** 2026-04-24
 **Last Updated:** 2026-04-27
 
 ## Current Phase
 
-Implement - Complete. Final re-review passed. Ready for post-implementation sequence (`oat-project-document` → `oat-project-pr-final`).
+Implement - Complete. Final PR artifact generated; ready to open PR.
 
 ## Artifacts
 
@@ -37,6 +37,7 @@ Implement - Complete. Final re-review passed. Ready for post-implementation sequ
 - **Design:** N/A (quick mode — no architecture decisions surfaced)
 - **Plan:** `plan.md` (complete — 16 tasks across 5 phases)
 - **Implementation:** `implementation.md` (complete — 16/16 tasks; final re-review passed)
+- **Summary:** `summary.md` (complete)
 
 ## Progress
 
@@ -46,7 +47,9 @@ Implement - Complete. Final re-review passed. Ready for post-implementation sequ
 - ✓ Final review passed (auto, Touchpoint B)
 - ✓ Final manual review fixes complete (`prev1-t01`-`prev1-t04`)
 - ✓ Final re-review passed
-- ⧗ Post-implementation sequence: `oat-project-document` → `oat-project-pr-final`
+- ✓ Summary generated
+- ✓ Final PR artifact generated
+- ⧗ PR creation pending
 
 ## Blockers
 
@@ -54,4 +57,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-document` then `oat-project-pr-final` per `workflow.postImplementSequence: docs-pr`.
+Create the GitHub PR, then record the PR URL in this state artifact.

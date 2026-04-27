@@ -89,7 +89,7 @@ oat_generated: false
 **Notes / Decisions:**
 
 - Used `hasPath` walker rather than `toMatchObject` so a removed key surfaces as a real failure (toMatchObject only checks subset of present keys).
-- Reviewer flagged 1 minor (non-blocking) finding; recorded in `reviews/p01-code-review-2026-04-27.md`.
+- Reviewer flagged 1 minor (non-blocking) finding; recorded in `reviews/archived/p01-code-review-2026-04-27.md`.
 
 ### Task p01-t01: Document the canonical inline preamble pattern
 
@@ -467,7 +467,7 @@ Track test execution during implementation.
 - Final code review (auto, Touchpoint B) → pass with 0 Critical, 0 Important, 5 Minor (all carryover, none warrant elevation).
 - p-rev1 review-fix phase: `pnpm lint` passed after every task and for the full phase; phase review passed with 0 Critical, 0 Important, 0 Minor.
 - Final verification after p-rev1: `pnpm test`, `pnpm lint`, `pnpm type-check`, and `pnpm build` all passed.
-- Final re-review (`reviews/final-review-2026-04-27-v2.md`) passed with 0 Critical and 0 Important findings; two deferred Minor follow-ups remain non-blocking.
+- Final re-review (`reviews/archived/final-review-2026-04-27-v2.md`) passed with 0 Critical and 0 Important findings; two deferred Minor follow-ups remain non-blocking.
 
 **Design deltas (if any):**
 
@@ -476,7 +476,7 @@ Track test execution during implementation.
 ## Review Received: final (code, auto)
 
 **Date:** 2026-04-27
-**Review artifact:** `reviews/final-code-review-2026-04-27.md`
+**Review artifact:** `reviews/archived/final-code-review-2026-04-27.md`
 **Verdict:** pass
 
 **Findings:**
@@ -530,7 +530,7 @@ After the fix tasks are complete:
 ## Review Received: p-rev1 (code, auto)
 
 **Date:** 2026-04-27
-**Review artifact:** `reviews/p-rev1-review-2026-04-27.md`
+**Review artifact:** `reviews/archived/p-rev1-review-2026-04-27.md`
 **Verdict:** pass
 
 **Findings:**
@@ -548,7 +548,7 @@ After the fix tasks are complete:
 ## Review Received: final (code, auto re-review)
 
 **Date:** 2026-04-27
-**Review artifact:** `reviews/final-review-2026-04-27-v2.md`
+**Review artifact:** `reviews/archived/final-review-2026-04-27-v2.md`
 **Verdict:** pass
 
 **Findings:**
