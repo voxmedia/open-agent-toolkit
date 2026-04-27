@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-27
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 2     | 2/2       |
 | Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | pending  | 5     | 0/5       |
+| Phase 3 | complete | 5     | 5/5       |
 | Phase 4 | pending  | 3     | 0/3       |
 
-**Total:** 4/12 tasks completed
+**Total:** 9/12 tasks completed
 
 ## Review Notes
 
@@ -195,6 +195,74 @@ oat_generated: false
 
 ---
 
+## Phase 3: Migrate mixed read/write skills (read path only)
+
+**Status:** complete
+**Started:** 2026-04-27
+**Completed:** 2026-04-27
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Five mixed read/write skills (`oat-project-plan`, `oat-project-pr-final`, `oat-project-review-provide`, `oat-project-reconcile`, `oat-project-complete`) now read project state via `oat --json project status` with the canonical `npx` fallback. Write paths (frontmatter updates, `oat_pr_status` / `oat_pr_url` / `oat_project_completed` writes) are unchanged.
+- Behavioral parity verified live for every migrated field (workflowMode, phase, phaseStatus, docsUpdated, lastCommit).
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-plan/SKILL.md` (1.3.1 → 1.3.2)
+- `.agents/skills/oat-project-pr-final/SKILL.md` (1.3.3 → 1.3.4)
+- `.agents/skills/oat-project-review-provide/SKILL.md` (1.3.1 → 1.3.2; 2 preambles, 4 fields)
+- `.agents/skills/oat-project-reconcile/SKILL.md` (1.0.0 → 1.0.1)
+- `.agents/skills/oat-project-complete/SKILL.md` (1.4.3 → 1.4.4)
+
+**Verification:**
+
+- `pnpm lint` after each commit → pass.
+- Probes for every migrated field (jq vs grep) → identical values.
+
+**Notes / Decisions:**
+
+- The plan's per-task field bookkeeping was off in two places: `oat_docs_updated` was attributed to p03-t02 but actually lives in `oat-project-complete` (migrated under p03-t05); plan-listed `oat_last_commit` greps in p03-t03 / p03-t04 do not exist (those mentions are inside frontmatter write templates). Net coverage: every actual state.md grep migrated exactly once. Reviewer recorded as Minor (plan-bookkeeping); not blocking.
+- p03-t01 dropped the bash `${WORKFLOW_MODE:-spec-driven}` default to match the canonical "no defaults" contract. Downstream logic falls through to spec-driven for any non-`quick`/non-`import` value (including the literal `null` sentinel), so behavior is preserved. Reviewer flagged Minor cross-skill consistency note (p02-t02 kept the bash default).
+
+### Task p03-t01: Migrate `oat-project-plan` read path
+
+**Status:** completed
+**Commit:** 362e2605
+**Files changed:** `.agents/skills/oat-project-plan/SKILL.md`
+**Verification:** `pnpm lint` → pass; `WORKFLOW_MODE` parity confirmed.
+
+### Task p03-t02: Migrate `oat-project-pr-final` read path
+
+**Status:** completed
+**Commit:** 87b1ac90
+**Files changed:** `.agents/skills/oat-project-pr-final/SKILL.md`
+**Verification:** `pnpm lint` → pass; `WORKFLOW_MODE` parity confirmed (only state.md grep present).
+
+### Task p03-t03: Migrate `oat-project-review-provide` read path
+
+**Status:** completed
+**Commit:** e13c6a4c
+**Files changed:** `.agents/skills/oat-project-review-provide/SKILL.md`
+**Verification:** `pnpm lint` → pass; 4 fields across 2 preambles (one per bash block) — all parity confirmed.
+
+### Task p03-t04: Migrate `oat-project-reconcile` read path
+
+**Status:** completed
+**Commit:** 2d86cbc9
+**Files changed:** `.agents/skills/oat-project-reconcile/SKILL.md`
+**Verification:** `pnpm lint` → pass; 2 fields (`oat_phase`, `oat_phase_status`) parity confirmed.
+
+### Task p03-t05: Migrate `oat-project-complete` read path
+
+**Status:** completed
+**Commit:** d613c425
+**Files changed:** `.agents/skills/oat-project-complete/SKILL.md`
+**Verification:** `pnpm lint` → pass; `oat_docs_updated` parity confirmed (downstream `[[ "$DOCS_UPDATED" == "null" ]]` already handles the literal sentinel).
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -218,6 +286,7 @@ _- Outstanding Items_
 | ----- | ---------------------- | ------ | -------------- | ----------- |
 | p01   | DONE                   | pass   | 0/2            | merged      |
 | p02   | DONE_WITH_CONCERNS (M) | pass   | 0/2            | merged      |
+| p03   | DONE_WITH_CONCERNS (M) | pass   | 0/2            | merged      |
 
 #### Parallel Groups
 
@@ -241,17 +310,23 @@ Chronological log of implementation progress.
 - [x] p01-t02: Lock the JSON contract with a CLI test — 92e6b53c
 - [x] p02-t01: Migrate `oat-project-progress` to oat --json — e80f1a58
 - [x] p02-t02: Migrate `oat-project-pr-progress` to oat --json — 742092f7
+- [x] p03-t01: Migrate `oat-project-plan` read path — 362e2605
+- [x] p03-t02: Migrate `oat-project-pr-final` read path — 87b1ac90
+- [x] p03-t03: Migrate `oat-project-review-provide` read path — e13c6a4c
+- [x] p03-t04: Migrate `oat-project-reconcile` read path — 2d86cbc9
+- [x] p03-t05: Migrate `oat-project-complete` read path — d613c425
 
 **What changed (high level):**
 
 - Canonical preamble pattern documented in `create-oat-skill` so subsequent skills can paste it verbatim.
 - New CLI test locks the JSON contract (`MIGRATED_FIELDS` set) — accidental key removal becomes a real test failure.
-- Two pure-read skills (`oat-project-progress`, `oat-project-pr-progress`) now resolve project state via `oat --json project status` with the canonical `npx` fallback.
+- Seven skills (2 pure-read in Phase 2, 5 mixed read/write in Phase 3) now resolve project state via `oat --json project status` with the canonical `npx` fallback. No write paths touched; out-of-scope greps preserved.
 
 **Decisions:**
 
 - Used a `hasPath` walker rather than `toMatchObject` in the contract test to actually fail on missing keys.
 - p02-t01 plan referenced grep lines that didn't exist in the skill; migrated the real grep (`LAST_SHA`) and added the plan-named PHASE/PHASE_STATUS/WORKFLOW_MODE alongside it. Reviewer flagged Minor; not blocking.
+- Phase 3 plan/code mismatches (oat_docs_updated location, missing oat_last_commit greps) flagged by implementer and reviewer — net coverage correct, recorded as plan-bookkeeping issues, not implementation defects.
 
 ---
 

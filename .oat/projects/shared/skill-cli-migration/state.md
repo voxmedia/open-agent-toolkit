@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 742092f7
+oat_current_task: p04-t01
+oat_last_commit: d613c425
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-24T19:34:46.867Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-27T02:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-27T02:38:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - Phase 3 in progress (next: p03-t01).
+Implement - Phase 4 in progress (next: p04-t01).
 
 ## Artifacts
 
@@ -50,4 +50,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 3 — migrate the read paths of `oat-project-plan`, `oat-project-pr-final`, `oat-project-review-provide`, `oat-project-reconcile`, `oat-project-complete`.
+Complete Phase 4 — live smoke-test, npx fallback verification, lockstep version bump, and `pnpm release:validate`. Phase 4 is a HiLL checkpoint — auto-review fires after completion.
