@@ -21,7 +21,7 @@ Quick-mode note: this project has discovery, plan, implementation, review, and v
 - Added a `MIGRATED_FIELDS` contract test in `packages/cli/src/commands/project/status.test.ts` so renamed or removed JSON keys fail tests.
 - Migrated the read paths in `oat-project-progress`, `oat-project-pr-progress`, `oat-project-plan`, `oat-project-pr-final`, `oat-project-review-provide`, `oat-project-reconcile`, and `oat-project-complete`.
 - Preserved path-directed workflow-mode lookup behavior in `oat-project-review-provide` after final review found that target-worktree review routing still needed to validate the requested worktree.
-- Bumped the lockstep public package set from `0.0.50` to `0.0.51` and regenerated public package version metadata.
+- Bumped the lockstep public package set from `0.0.50` to `0.0.53` after rebasing onto an `origin/main` already at `0.0.52`, and regenerated public package version metadata.
 - Published the docs/reference update for the `oat --json project status` contract used by skills.
 
 ## Verification
