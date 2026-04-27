@@ -173,7 +173,6 @@ fi
 # No `// ""` default: YAML `null` surfaces as the literal string `null` to match
 # the prior `grep | awk` behavior.
 WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
-WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
 ```
 
 Read (as available):
