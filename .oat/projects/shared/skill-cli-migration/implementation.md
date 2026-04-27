@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-24
+oat_last_updated: 2026-04-27
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -61,10 +61,10 @@ oat_generated: false
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Pattern documentation and CLI contract lock
 
 **Status:** in_progress
-**Started:** 2026-04-24
+**Started:** 2026-04-27
 
 ### Phase Summary (fill when phase is complete)
 
@@ -124,7 +124,7 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Migrate pure-read skills
 
 **Status:** pending
 **Started:** -
