@@ -257,23 +257,13 @@ If the review is intentionally inline-only and the user explicitly wants to insp
 
 ### Step 2: Validate Artifacts Exist (Mode-Aware)
 
-Resolve workflow mode from state (default `spec-driven`):
+Resolve workflow mode from the resolved project state path:
 
 ```bash
-# Resolve oat CLI with npx fallback, then fetch project state once.
-# NOTE: branch on command availability rather than building a quoted command
-# string — `"$OAT_CMD"` with a space would be treated as a single executable
-# name and the fallback would fail with "command not found".
-if command -v oat >/dev/null 2>&1; then
-  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
-else
-  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
-fi
-
-# Extract individual fields from the JSON view (state.md is the source of truth on disk).
-# No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
-# the prior `grep | awk` behavior.
-WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
+# Step 1.5 may retarget PROJECT_PATH into another worktree. Until
+# `oat project status` supports an explicit project path here without
+# mutating local config, read this mode from the resolved state file.
+WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | head -1 | awk '{print $2}')
 ```
 
 **Required for code review (by mode):**
