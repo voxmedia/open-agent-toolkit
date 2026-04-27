@@ -1,6 +1,6 @@
 ---
 name: create-oat-skill
-version: 1.2.0
+version: 1.2.1
 description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
@@ -172,6 +172,36 @@ pnpm test
 ```
 
 Verify the skill appears in `packages/cli/assets/skills/` after build. If a test asserts the exact skill list for the category (e.g., non-interactive mode expectations), update that test to include the new skill.
+
+## Reading project state
+
+Skills that need to read fields from the active project's `state.md` (e.g. `phase`, `phaseStatus`, `workflowMode`, `docsUpdated`, `lastCommit`) MUST query the CLI's JSON contract instead of hand-parsing YAML with `grep`/`awk`. Use the canonical inline preamble below: it resolves `oat` (or falls back to `npx @open-agent-toolkit/cli` when `oat` is not on `$PATH`), fetches the JSON view once, and extracts individual fields with `jq`.
+
+```bash
+# Resolve oat CLI with npx fallback, then fetch project state once.
+# NOTE: branch on command availability rather than building a quoted command
+# string — `"$OAT_CMD"` with a space would be treated as a single executable
+# name and the fallback would fail with "command not found".
+if command -v oat >/dev/null 2>&1; then
+  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
+else
+  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
+fi
+
+# Extract individual fields from the JSON view (state.md is the source of truth on disk).
+# No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
+# the prior `grep | awk` behavior.
+WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
+PHASE=$(echo "$STATUS_JSON" | jq -r '.project.phase')
+PHASE_STATUS=$(echo "$STATUS_JSON" | jq -r '.project.phaseStatus')
+```
+
+### Contract notes
+
+- **Null sentinel behavior:** YAML `null` in `state.md` surfaces as the literal string `null` via both the prior `grep | awk` and the new `jq -r` (no `// ""` default). When `STATUS_JSON` is `{}` because `oat` failed, `jq -r` on missing keys also emits `null`, giving a single consistent sentinel across success and error paths. Do **not** add `// ""` defaults — that would break behavior parity.
+- `jq` is the canonical parser; `node -e` is an acceptable fallback if `jq` is unavailable.
+- Fetch JSON once per skill invocation, then extract fields locally.
+- Do **not** use this pattern to write state — state writes stay in their existing skill sections.
 
 ## Examples
 
