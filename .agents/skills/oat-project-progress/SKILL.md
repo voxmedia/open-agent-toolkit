@@ -1,6 +1,6 @@
 ---
 name: oat-project-progress
-version: 1.2.2
+version: 1.2.3
 description: Use when resuming work, checking status, or unsure which OAT skill to run next. Evaluates project progress and routes to the appropriate next step.
 disable-model-invocation: true
 user-invocable: true
@@ -194,6 +194,23 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 When `oat_phase: implement` and `oat_phase_status: in_progress`, check for artifact drift before recommending next skill:
 
 ```bash
+# Resolve oat CLI with npx fallback, then fetch project state once.
+# NOTE: branch on command availability rather than building a quoted command
+# string — `"$OAT_CMD"` with a space would be treated as a single executable
+# name and the fallback would fail with "command not found".
+if command -v oat >/dev/null 2>&1; then
+  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
+else
+  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
+fi
+
+# Extract individual fields from the JSON view (state.md is the source of truth on disk).
+# No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
+# the prior `grep | awk` behavior.
+PHASE=$(echo "$STATUS_JSON" | jq -r '.project.phase')
+PHASE_STATUS=$(echo "$STATUS_JSON" | jq -r '.project.phaseStatus')
+WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
+
 # Use the project path from Step 4's per-project loop (or ACTIVE_PROJECT_PATH for single-project)
 # Count planned tasks
 PLAN_TASKS=$(grep -cE '^### Task p[0-9]+-t[0-9]+:' "$ACTIVE_PROJECT_PATH/plan.md" 2>/dev/null || echo 0)
@@ -202,7 +219,7 @@ PLAN_TASKS=$(grep -cE '^### Task p[0-9]+-t[0-9]+:' "$ACTIVE_PROJECT_PATH/plan.md
 IMPL_COMPLETED=$(grep -cE '^\*\*Status:\*\* completed' "$ACTIVE_PROJECT_PATH/implementation.md" 2>/dev/null || echo 0)
 
 # Check for commits since last tracked SHA
-LAST_SHA=$(grep "^oat_last_commit:" "$ACTIVE_PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
+LAST_SHA=$(echo "$STATUS_JSON" | jq -r '.project.lastCommit')
 if [ -n "$LAST_SHA" ]; then
   UNTRACKED_COMMITS=$(git rev-list --count "$LAST_SHA"..HEAD 2>/dev/null || echo 0)
 else
