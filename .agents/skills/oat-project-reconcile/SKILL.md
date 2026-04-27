@@ -1,6 +1,6 @@
 ---
 name: oat-project-reconcile
-version: 1.0.0
+version: 1.0.1
 description: Use when human-implemented commits need to be mapped back to planned tasks. Reconciles implementation.md and state.md after manual work outside the OAT workflow.
 disable-model-invocation: true
 user-invocable: true
@@ -105,8 +105,21 @@ Verify the project is ready for reconciliation:
 2. **Check project phase:**
 
    ```bash
-   PHASE=$(grep "^oat_phase:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
-   PHASE_STATUS=$(grep "^oat_phase_status:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
+   # Resolve oat CLI with npx fallback, then fetch project state once.
+   # NOTE: branch on command availability rather than building a quoted command
+   # string — `"$OAT_CMD"` with a space would be treated as a single executable
+   # name and the fallback would fail with "command not found".
+   if command -v oat >/dev/null 2>&1; then
+     STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
+   else
+     STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
+   fi
+
+   # Extract individual fields from the JSON view (state.md is the source of truth on disk).
+   # No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
+   # the prior `grep | awk` behavior.
+   PHASE=$(echo "$STATUS_JSON" | jq -r '.project.phase')
+   PHASE_STATUS=$(echo "$STATUS_JSON" | jq -r '.project.phaseStatus')
    ```
 
    - If `PHASE` is `implement`: proceed
