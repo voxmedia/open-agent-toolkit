@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-progress
-version: 1.2.0
+version: 1.2.1
 description: Use when an active OAT project needs a mid-project PR for a completed phase (pNN). Generates a phase-scoped progress PR description from OAT artifacts and commit history, with optional PR creation.
 disable-model-invocation: true
 user-invocable: true
@@ -159,7 +159,20 @@ If scope is `range`/`base_sha`, set:
 Resolve workflow mode from `state.md` (default `spec-driven`):
 
 ```bash
-WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | head -1 | awk '{print $2}')
+# Resolve oat CLI with npx fallback, then fetch project state once.
+# NOTE: branch on command availability rather than building a quoted command
+# string — `"$OAT_CMD"` with a space would be treated as a single executable
+# name and the fallback would fail with "command not found".
+if command -v oat >/dev/null 2>&1; then
+  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
+else
+  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
+fi
+
+# Extract workflow mode from the JSON view (state.md is the source of truth on disk).
+# No `// ""` default: YAML `null` surfaces as the literal string `null` to match
+# the prior `grep | awk` behavior.
+WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
 WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
 ```
 
