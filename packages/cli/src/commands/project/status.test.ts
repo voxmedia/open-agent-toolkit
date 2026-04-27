@@ -11,6 +11,35 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createProjectStatusCommand } from './status';
 
+// Fields migrated skills read via jq. Any removal or rename must be a
+// deliberate breaking change, not an accident.
+const MIGRATED_FIELDS = [
+  'project.name',
+  'project.path',
+  'project.phase',
+  'project.phaseStatus',
+  'project.workflowMode',
+  'project.docsUpdated',
+  'project.lastCommit',
+  'project.prStatus',
+  'project.prUrl',
+] as const;
+
+function hasPath(payload: unknown, path: string): boolean {
+  const parts = path.split('.');
+  let cursor: unknown = payload;
+  for (const part of parts) {
+    if (cursor === null || typeof cursor !== 'object') {
+      return false;
+    }
+    if (!Object.prototype.hasOwnProperty.call(cursor, part)) {
+      return false;
+    }
+    cursor = (cursor as Record<string, unknown>)[part];
+  }
+  return true;
+}
+
 interface HarnessOptions {
   cwd: string;
   activeProjectStatus?: 'active' | 'missing' | 'unset';
@@ -168,6 +197,27 @@ describe('oat project status', () => {
       status: 'unset',
     });
     expect(process.exitCode).toBe(1);
+  });
+
+  it('emits every JSON field migrated skills depend on when status is ok', async () => {
+    const cwd = '/repo';
+    const projectPath = '.oat/projects/shared/demo';
+    const { command, capture } = createHarness({
+      cwd,
+      activeProjectPath: projectPath,
+    });
+
+    await runCommand(command, [], ['--json']);
+
+    const payload = capture.jsonPayloads[0];
+    expect(payload).toMatchObject({ status: 'ok' });
+
+    for (const path of MIGRATED_FIELDS) {
+      expect(
+        hasPath(payload, path),
+        `expected JSON payload to expose "${path}" (value may be null)`,
+      ).toBe(true);
+    }
   });
 
   it('prints a text summary without json mode', async () => {
