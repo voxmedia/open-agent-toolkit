@@ -24,6 +24,11 @@ interface ProjectStatusDependencies {
   getProjectState: (projectPath: string) => Promise<ProjectState>;
 }
 
+interface ProjectStatusOptions {
+  field?: string;
+  shell?: string[];
+}
+
 const DEFAULT_DEPENDENCIES: ProjectStatusDependencies = {
   buildCommandContext,
   resolveProjectRoot,
@@ -43,9 +48,61 @@ function formatProjectStatusLines(project: ProjectState): string[] {
   ];
 }
 
+function readDotPath(payload: unknown, path: string): unknown {
+  const parts = path.split('.').filter(Boolean);
+  let cursor: unknown = payload;
+
+  for (const part of parts) {
+    if (cursor === null || typeof cursor !== 'object') {
+      return undefined;
+    }
+    if (!Object.prototype.hasOwnProperty.call(cursor, part)) {
+      return undefined;
+    }
+    cursor = (cursor as Record<string, unknown>)[part];
+  }
+
+  return cursor;
+}
+
+function formatRawValue(value: unknown): string {
+  if (value === null || value === undefined) {
+    return 'null';
+  }
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return String(value);
+  }
+  return JSON.stringify(value);
+}
+
+function shellQuote(value: string): string {
+  return `'${value.split("'").join("'\\''")}'`;
+}
+
+const SHELL_ASSIGNMENT_RE = /^([A-Za-z_][A-Za-z0-9_]*)=(.+)$/;
+
+function formatShellAssignment(
+  assignment: string,
+  payload: unknown,
+): string | null {
+  const match = SHELL_ASSIGNMENT_RE.exec(assignment);
+  if (!match) {
+    return null;
+  }
+
+  const [, name, path] = match;
+  const value = formatRawValue(readDotPath(payload, path));
+  return `${name}=${shellQuote(value)}`;
+}
+
 async function runProjectStatus(
   context: CommandContext,
   dependencies: ProjectStatusDependencies,
+  options: ProjectStatusOptions,
 ): Promise<void> {
   try {
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
@@ -84,9 +141,36 @@ async function runProjectStatus(
     const project = await dependencies.getProjectState(
       join(repoRoot, activeProject.path),
     );
+    const payload = { status: 'ok', project };
+
+    if (options.field) {
+      context.logger.info(formatRawValue(readDotPath(payload, options.field)));
+      process.exitCode = 0;
+      return;
+    }
+
+    if (options.shell?.length) {
+      const lines: string[] = [];
+      for (const assignment of options.shell) {
+        const line = formatShellAssignment(assignment, payload);
+        if (!line) {
+          context.logger.error(
+            `Invalid shell assignment "${assignment}". Expected NAME=path with a shell-safe variable name.`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        lines.push(line);
+      }
+      for (const line of lines) {
+        context.logger.info(line);
+      }
+      process.exitCode = 0;
+      return;
+    }
 
     if (context.json) {
-      context.logger.json({ status: 'ok', project });
+      context.logger.json(payload);
     } else {
       for (const line of formatProjectStatusLines(project)) {
         context.logger.info(line);
@@ -115,10 +199,18 @@ export function createProjectStatusCommand(
 
   return new Command('status')
     .description('Show the current OAT project state')
-    .action(async (_options, command: Command) => {
+    .option(
+      '--field <path>',
+      'Print a single field from the project status payload by dot path',
+    )
+    .option(
+      '--shell <assignment...>',
+      'Print shell-safe NAME=value assignments for one or more NAME=path pairs',
+    )
+    .action(async (options: ProjectStatusOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      await runProjectStatus(context, dependencies);
+      await runProjectStatus(context, dependencies, options);
     });
 }

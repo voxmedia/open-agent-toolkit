@@ -199,6 +199,94 @@ describe('oat project status', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('prints a scalar field by arbitrary dot path', async () => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      activeProjectPath: '.oat/projects/shared/demo',
+    });
+
+    await runCommand(command, ['--field', 'project.workflowMode']);
+
+    expect(capture.info).toEqual(['quick']);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints a nested field by arbitrary dot path', async () => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      activeProjectPath: '.oat/projects/shared/demo',
+    });
+
+    await runCommand(command, ['--field', 'project.timestamps.stateUpdated']);
+
+    expect(capture.info).toEqual(['2026-04-09T22:32:12Z']);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints null for null or missing fields', async () => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      activeProjectPath: '.oat/projects/shared/demo',
+    });
+
+    await runCommand(command, ['--field', 'project.prUrl']);
+    await runCommand(command, ['--field', 'project.doesNotExist']);
+
+    expect(capture.info).toEqual(['null', 'null']);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints object fields as compact json', async () => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      activeProjectPath: '.oat/projects/shared/demo',
+    });
+
+    await runCommand(command, ['--field', 'project.recommendation']);
+
+    expect(capture.info).toEqual([
+      '{"skill":"oat-project-implement","reason":"Continue executing the current implementation plan."}',
+    ]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints shell-safe assignments from one project status read', async () => {
+    const projectState = makeProjectState('.oat/projects/shared/demo');
+    projectState.recommendation.reason = "Don't hand-parse state";
+    const { command, capture, getProjectState } = createHarness({
+      cwd: '/repo',
+      activeProjectPath: '.oat/projects/shared/demo',
+      projectState,
+    });
+
+    await runCommand(command, [
+      '--shell',
+      'WORKFLOW_MODE=project.workflowMode',
+      'PR_URL=project.prUrl',
+      'REASON=project.recommendation.reason',
+    ]);
+
+    expect(getProjectState).toHaveBeenCalledTimes(1);
+    expect(capture.info).toEqual([
+      "WORKFLOW_MODE='quick'",
+      "PR_URL='null'",
+      "REASON='Don'\\''t hand-parse state'",
+    ]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects invalid shell assignment variable names', async () => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      activeProjectPath: '.oat/projects/shared/demo',
+    });
+
+    await runCommand(command, ['--shell', 'bad-name=project.workflowMode']);
+
+    expect(capture.error[0]).toContain('Invalid shell assignment');
+    expect(process.exitCode).toBe(1);
+  });
+
   it('emits every JSON field migrated skills depend on when status is ok', async () => {
     const cwd = '/repo';
     const projectPath = '.oat/projects/shared/demo';
