@@ -263,7 +263,19 @@ oat_generated: false
 
 ---
 
-## Orchestration Runs
+## Phase 4: Validation and version bumps
+
+### Task p04-t01
+
+Live smoke-tested every migrated skill preamble against this worktree's project state. For each skill, copied the preamble + `jq` extraction block(s) into a fresh shell and confirmed exit code 0, behavioral parity vs `grep | awk` on `state.md`, and null-sentinel parity for null fields.
+
+- [x] `oat-project-progress` — fields: `phase`, `phaseStatus`, `workflowMode`, `lastCommit` → all match grep (`implement / in_progress / quick / d613c425`).
+- [x] `oat-project-pr-progress` — field: `workflowMode` → matches grep (`quick`).
+- [x] `oat-project-plan` — field: `workflowMode` → matches grep (`quick`).
+- [x] `oat-project-pr-final` — fields: `workflowMode`, `docsUpdated` → match grep (`quick`, literal `null`); null-sentinel parity confirmed.
+- [x] `oat-project-review-provide` — fields (across 2 preambles): `phase`, `phaseStatus`, `workflowMode` → all match grep.
+- [x] `oat-project-reconcile` — fields: `phase`, `phaseStatus` → match grep.
+- [x] `oat-project-complete` — field: `docsUpdated` → matches grep (literal `null`); null-sentinel parity confirmed.
 
 _Each run from `oat-project-implement` appends an entry below with:_
 _- Run header (number, timestamp, branch, tier, policy, phase counts)_
