@@ -40,12 +40,13 @@ oat_generated: false
 
 Phase-level analysis:
 
-| Phase | Writes                                                                                                                                                                 | Depends on                                   |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| p01   | `create-oat-skill/SKILL.md` (pattern doc), a new cli test file                                                                                                         | —                                            |
-| p02   | `oat-project-progress/SKILL.md`, `oat-project-pr-progress/SKILL.md`                                                                                                    | p01 (canonical preamble doc must land first) |
-| p03   | `oat-project-plan/SKILL.md`, `oat-project-pr-final/SKILL.md`, `oat-project-review-provide/SKILL.md`, `oat-project-reconcile/SKILL.md`, `oat-project-complete/SKILL.md` | p01                                          |
-| p04   | lockstep package `package.json` files, all touched SKILL.md `version:` fields                                                                                          | p02, p03                                     |
+| Phase  | Writes                                                                                                                                                                 | Depends on                                   |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| p01    | `create-oat-skill/SKILL.md` (pattern doc), a new cli test file                                                                                                         | —                                            |
+| p02    | `oat-project-progress/SKILL.md`, `oat-project-pr-progress/SKILL.md`                                                                                                    | p01 (canonical preamble doc must land first) |
+| p03    | `oat-project-plan/SKILL.md`, `oat-project-pr-final/SKILL.md`, `oat-project-review-provide/SKILL.md`, `oat-project-reconcile/SKILL.md`, `oat-project-complete/SKILL.md` | p01                                          |
+| p04    | lockstep package `package.json` files, all touched SKILL.md `version:` fields                                                                                          | p02, p03                                     |
+| p-rev1 | review-fix updates to the migrated skills                                                                                                                              | p04                                          |
 
 p02 and p03 are file-disjoint: every in-scope SKILL.md belongs to exactly one phase and no two tasks write the same file. They could in principle be declared as a parallel group `[['p02', 'p03']]`.
 
@@ -496,6 +497,124 @@ git commit -m "chore(p04-t03): lockstep version bump for skill-cli-migration"
 
 ---
 
+## Phase p-rev1: Final review fixes
+
+### Task prev1-t01: (review) Fix target-worktree workflow-mode lookup
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: after Step 1.5 rewrites `PROJECT_PATH` to a target worktree, the migrated Step 2 `oat --json project status` read can still query the current checkout's active project rather than the resolved target project.
+Location: `.agents/skills/oat-project-review-provide/SKILL.md:268`
+
+**Step 2: Implement fix**
+
+Preserve path-directed behavior for the Step 2 workflow-mode read. Ensure that when `WORKTREE_PATH` / adjusted `PROJECT_PATH` is used, the status lookup is scoped to the target worktree/project before extracting `.project.workflowMode`. If the current CLI cannot query an explicit project path without mutating local config, keep this specific read tied to the adjusted `PROJECT_PATH/state.md` until the JSON API can preserve the old behavior.
+
+**Step 3: Verify**
+
+Run: `pnpm lint`
+Expected: lint passes, and the skill text clearly keeps Step 2 workflow-mode validation aligned with the resolved target project path.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-review-provide/SKILL.md
+git commit -m "fix(prev1-t01): align review workflow-mode lookup with target worktree"
+```
+
+---
+
+### Task prev1-t02: (review) Remove inert workflow-mode default
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-pr-progress/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: `oat-project-pr-progress` still has `WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}` after `jq -r`, while the migrated contract uses the literal `null` sentinel and other skills do not keep this fallback.
+Location: `.agents/skills/oat-project-pr-progress/SKILL.md:176`
+
+**Step 2: Implement fix**
+
+Remove the inert bash fallback or document why this skill intentionally diverges. Prefer removal unless implementation review finds a real downstream need.
+
+**Step 3: Verify**
+
+Run: `pnpm lint`
+Expected: lint passes, and `WORKFLOW_MODE` handling matches the canonical contract.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-pr-progress/SKILL.md
+git commit -m "fix(prev1-t02): remove inert workflow-mode default"
+```
+
+---
+
+### Task prev1-t03: (review) Trim unused progress status extractions
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-progress/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: `PHASE`, `PHASE_STATUS`, and `WORKFLOW_MODE` are extracted in the drift-detection block, but only `LAST_SHA` is consumed there.
+Location: `.agents/skills/oat-project-progress/SKILL.md:210`
+
+**Step 2: Implement fix**
+
+Trim the unused extracted variables, or add a short note if retaining them is necessary for parity/testing. Prefer trimming unless the surrounding block needs the full canonical example.
+
+**Step 3: Verify**
+
+Run: `pnpm lint`
+Expected: lint passes, and the drift-detection block extracts only fields it uses.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-progress/SKILL.md
+git commit -m "fix(prev1-t03): trim unused progress status extractions"
+```
+
+---
+
+### Task prev1-t04: (review) Normalize reconcile preamble indentation
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-reconcile/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: the canonical shell preamble is nested inside a numbered Markdown list, so every line is indented. Bash tolerates it, but it weakens visual consistency with the canonical preamble.
+Location: `.agents/skills/oat-project-reconcile/SKILL.md:108`
+
+**Step 2: Implement fix**
+
+Normalize the fenced shell snippet indentation if it can be done without harming the surrounding Markdown list readability. If Markdown structure requires indentation, add a short note explaining that the indentation is intentional and shell-safe.
+
+**Step 3: Verify**
+
+Run: `pnpm lint`
+Expected: lint passes, and the preamble is either visually normalized or explicitly documented as intentional.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-reconcile/SKILL.md
+git commit -m "fix(prev1-t04): normalize reconcile preamble indentation"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                            |
@@ -504,7 +623,7 @@ git commit -m "chore(p04-t03): lockstep version bump for skill-cli-migration"
 | p02    | code     | passed          | 2026-04-27 | reviews/p02-code-review-2026-04-27.md               |
 | p03    | code     | passed          | 2026-04-27 | reviews/p03-code-review-2026-04-27.md               |
 | p04    | code     | passed          | 2026-04-27 | reviews/p04-code-review-2026-04-27.md               |
-| final  | code     | received        | 2026-04-27 | reviews/final-review-2026-04-27.md                  |
+| final  | code     | fixes_added     | 2026-04-27 | reviews/archived/final-review-2026-04-27.md         |
 | spec   | artifact | n/a             | -          | quick mode (no spec artifact)                       |
 | design | artifact | n/a             | -          | quick mode (no design artifact)                     |
 | plan   | artifact | fixes_completed | 2026-04-24 | reviews/archived/artifact-plan-review-2026-04-24.md |
@@ -521,8 +640,9 @@ git commit -m "chore(p04-t03): lockstep version bump for skill-cli-migration"
 - Phase 2: 2 tasks — migrate pure-read skills (`oat-project-progress`, `oat-project-pr-progress`)
 - Phase 3: 5 tasks — migrate read path of mixed skills (`oat-project-plan`, `oat-project-pr-final`, `oat-project-review-provide`, `oat-project-reconcile`, `oat-project-complete`)
 - Phase 4: 3 tasks — live smoke-test, npx fallback verification, lockstep version bump + release:validate
+- Review fixes: 4 tasks — target-worktree workflow-mode lookup, workflow-mode default cleanup, progress extraction cleanup, reconcile preamble indentation
 
-**Total: 12 tasks**
+**Total: 16 tasks**
 
 Ready for code review and merge.
 

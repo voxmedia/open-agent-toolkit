@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-27
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -24,14 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 3     | 3/3       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 2     | 2/2       |
+| Phase 2      | complete | 2     | 2/2       |
+| Phase 3      | complete | 5     | 5/5       |
+| Phase 4      | complete | 3     | 3/3       |
+| Review Fixes | pending  | 4     | 0/4       |
 
-**Total:** 12/12 tasks completed
+**Total:** 12/16 tasks completed
 
 ## Review Notes
 
@@ -461,6 +462,41 @@ Track test execution during implementation.
 - All 5 minors are clearly out of scope for this PR (plan-bookkeeping cleanup, dead-code sweep, pre-existing repo gitignore quirk). No fix tasks added.
 
 **Next:** Proceed to `oat-project-document` then `oat-project-pr-final` per `workflow.postImplementSequence: docs-pr` (after HiLL checkpoint approval).
+
+## Review Received: final (code, manual)
+
+**Date:** 2026-04-27
+**Review artifact:** `reviews/archived/final-review-2026-04-27.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 5
+
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`, `prev1-t04`
+
+**Disposition map:**
+
+- `I1` — converted to `prev1-t01` to preserve target-worktree workflow-mode validation in `oat-project-review-provide`.
+- `m1` — converted to `prev1-t02` because it is negligible and keeps `WORKFLOW_MODE` handling consistent across migrated skills.
+- `m2` — converted to `prev1-t03` because it is negligible and trims misleading unused status extractions.
+- `m3` — converted to `prev1-t04` because it is negligible and keeps the canonical preamble presentation tidy.
+- `m4` — deferred. The fallback verification command issue is stale plan text; implementation notes already record the corrected Run B evidence.
+- `m5` — deferred. The tracked-but-gitignored manifest is pre-existing repo hygiene across `packages/cli/assets/`, and fixing it should happen in a dedicated cleanup after deciding the asset tracking contract.
+
+**Deferred Findings:**
+
+- Minor `m4`: defer plan-artifact polish for the p04-t02 PATH trim command.
+- Minor `m5`: defer repo hygiene decision for tracked files under ignored `packages/cli/assets/`.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill, starting with `prev1-t01`.
+
+After the fix tasks are complete:
+
+- Update the final review row status to `fixes_completed`.
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`.
 
 ## References
 
