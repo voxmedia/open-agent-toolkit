@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.1
+version: 1.3.2
 description: Use when completed work in an active OAT project needs a quality gate before merge. Performs a lifecycle-scoped review after a task, phase, or full implementation, unlike oat-review-provide.
 disable-model-invocation: true
 user-invocable: true
@@ -122,9 +122,22 @@ If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`.
 Read `state.md` frontmatter to propose the most likely review type and scope:
 
 ```bash
-PHASE=$(grep "^oat_phase:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
-PHASE_STATUS=$(grep "^oat_phase_status:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
-WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | awk '{print $2}')
+# Resolve oat CLI with npx fallback, then fetch project state once.
+# NOTE: branch on command availability rather than building a quoted command
+# string — `"$OAT_CMD"` with a space would be treated as a single executable
+# name and the fallback would fail with "command not found".
+if command -v oat >/dev/null 2>&1; then
+  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
+else
+  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
+fi
+
+# Extract individual fields from the JSON view (state.md is the source of truth on disk).
+# No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
+# the prior `grep | awk` behavior.
+PHASE=$(echo "$STATUS_JSON" | jq -r '.project.phase')
+PHASE_STATUS=$(echo "$STATUS_JSON" | jq -r '.project.phaseStatus')
+WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
 ```
 
 Inference rules (first match wins):
@@ -247,8 +260,20 @@ If the review is intentionally inline-only and the user explicitly wants to insp
 Resolve workflow mode from state (default `spec-driven`):
 
 ```bash
-WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | head -1 | awk '{print $2}')
-WORKFLOW_MODE=${WORKFLOW_MODE:-spec-driven}
+# Resolve oat CLI with npx fallback, then fetch project state once.
+# NOTE: branch on command availability rather than building a quoted command
+# string — `"$OAT_CMD"` with a space would be treated as a single executable
+# name and the fallback would fail with "command not found".
+if command -v oat >/dev/null 2>&1; then
+  STATUS_JSON=$(oat --json project status 2>/dev/null || echo '{}')
+else
+  STATUS_JSON=$(npx @open-agent-toolkit/cli --json project status 2>/dev/null || echo '{}')
+fi
+
+# Extract individual fields from the JSON view (state.md is the source of truth on disk).
+# No `// ""` defaults: YAML `null` surfaces as the literal string `null` to match
+# the prior `grep | awk` behavior.
+WORKFLOW_MODE=$(echo "$STATUS_JSON" | jq -r '.project.workflowMode')
 ```
 
 **Required for code review (by mode):**
