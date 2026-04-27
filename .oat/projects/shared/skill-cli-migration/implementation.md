@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-27
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 2     | 0/2       |
-| Phase 2 | pending | 2     | 0/2       |
-| Phase 3 | pending | 5     | 0/5       |
-| Phase 4 | pending | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | pending  | 2     | 0/2       |
+| Phase 3 | pending  | 5     | 0/5       |
+| Phase 4 | pending  | 3     | 0/3       |
 
-**Total:** 0/12 tasks completed
+**Total:** 2/12 tasks completed
 
 ## Review Notes
 
@@ -63,64 +63,69 @@ oat_generated: false
 
 ## Phase 1: Pattern documentation and CLI contract lock
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-04-27
+**Completed:** 2026-04-27
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Documented the canonical `oat --json project status` preamble in `create-oat-skill/SKILL.md` so future skills consume project state via the CLI rather than hand-parsing `state.md`.
+- Locked the JSON contract with a vitest test that asserts every key migrated skills will read (`MIGRATED_FIELDS`) is present in the `status: ok` payload (value may be `null`).
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `.agents/skills/create-oat-skill/SKILL.md` — added "Reading project state" section + bumped `version: 1.2.0 → 1.2.1`.
+- `packages/cli/src/commands/project/status.test.ts` — added `MIGRATED_FIELDS` constant + contract-presence test using a `hasPath` walker.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- `pnpm lint` → pass (10 tasks, 0 warnings, 0 errors)
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts` → 4/4 pass
+- `pnpm --filter @open-agent-toolkit/cli type-check` → clean
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Used `hasPath` walker rather than `toMatchObject` so a removed key surfaces as a real failure (toMatchObject only checks subset of present keys).
+- Reviewer flagged 1 minor (non-blocking) finding; recorded in `reviews/p01-code-review-2026-04-27.md`.
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Document the canonical inline preamble pattern
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** 19b0bd35
 
-**Outcome (required when completed):**
+**Outcome:**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- `create-oat-skill` skill now ships the canonical preamble (with `command -v oat` branching and no `// ""` defaults) and the contract notes about null-sentinel parity.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `.agents/skills/create-oat-skill/SKILL.md`
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+- `pnpm lint` → pass
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Lock the JSON contract with a CLI test
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 92e6b53c
 
-**Notes:**
+**Outcome:**
 
-- {Notes will be added during implementation}
+- New test asserts each `MIGRATED_FIELDS` path exists in the `status: ok` payload regardless of value (including `null`), preventing accidental key removal in future CLI changes.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/status.test.ts`
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts` → 4/4 pass
+- `pnpm --filter @open-agent-toolkit/cli type-check` → clean
 
 ---
 
@@ -146,7 +151,26 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1 — 2026-04-27 02:07
+
+**Branch:** feat/skill-cli-migration
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** in_progress
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 0/2            | merged      |
+
+#### Parallel Groups
+
+- All phases sequential
+
+#### Outstanding Items
+
+- None
 
 <!-- orchestration-runs-end -->
 
@@ -156,38 +180,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-04-24
+### 2026-04-27
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Document the canonical inline preamble pattern — 19b0bd35
+- [x] p01-t02: Lock the JSON contract with a CLI test — 92e6b53c
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Canonical preamble pattern documented in `create-oat-skill` so subsequent skills can paste it verbatim.
+- New CLI test locks the JSON contract (`MIGRATED_FIELDS` set) — accidental key removal becomes a real test failure.
 
 **Decisions:**
 
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-04-24
-
-**Session Start:** {time}
-
-{Continue log...}
+- Used a `hasPath` walker rather than `toMatchObject` in the contract test to actually fail on missing keys.
 
 ---
 

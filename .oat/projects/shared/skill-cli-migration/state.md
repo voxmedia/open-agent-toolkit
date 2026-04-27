@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p02-t01
+oat_last_commit: 92e6b53c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-24T19:34:46.867Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-27T02:07:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-27T02:14:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - Phase 1 in progress (p01-t01).
+Implement - Phase 2 in progress (next: p02-t01).
 
 ## Artifacts
 
@@ -50,4 +50,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 (pattern documentation + CLI contract test).
+Complete Phase 2 — migrate `oat-project-progress` and `oat-project-pr-progress` to the canonical preamble.
