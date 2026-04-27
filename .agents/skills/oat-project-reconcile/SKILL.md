@@ -104,6 +104,9 @@ Verify the project is ready for reconciliation:
 
 2. **Check project phase:**
 
+   The shell snippet below is indented so it remains inside this numbered list;
+   the leading whitespace is shell-safe when copied.
+
    ```bash
    # Resolve oat CLI with npx fallback, then fetch project state once.
    # NOTE: branch on command availability rather than building a quoted command
