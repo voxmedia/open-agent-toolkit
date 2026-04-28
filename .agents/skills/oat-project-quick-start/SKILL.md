@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.0.0
+version: 2.0.1
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 disable-model-invocation: true

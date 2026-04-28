@@ -1,6 +1,6 @@
 ---
 name: oat-project-design
-version: 2.0.0
+version: 2.0.1
 description: Use when discovery is complete and implementation-ready decisions are needed. Runs a collaborative, section-by-section conversation by default (with a draft-and-review escape hatch and non-interactive fallback), confirms requirements and produces both `spec.md` and `design.md`, and commits artifacts before the user-review gate.
 disable-model-invocation: true
 user-invocable: true
