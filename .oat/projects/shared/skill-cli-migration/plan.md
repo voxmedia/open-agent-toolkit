@@ -799,6 +799,103 @@ git push
 
 ---
 
+### Task prev2-t05: (review) Lock `oat project status --help` snapshot
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: only the parent `project --help` snapshot was updated when `--field`/`--project-path`/`--shell` landed. There is no dedicated `project status --help` snapshot, so future renames or removals of these flags would not be detected by the help-snapshot suite — the public option contract is unlocked.
+Location: `packages/cli/src/commands/help-snapshots.test.ts:592`
+
+**Step 2: Implement fix**
+
+Add a new snapshot test alongside the existing `project --help` case that captures `getCommandByPath(program, ['project', 'status']).helpInformation()`. Follow the existing pattern in the file (same helper, same `toMatchSnapshot()` call). The snapshot must include the new `--field <path>`, `--project-path <path>`, and `--shell <NAME=path...>` lines so any rename, removal, or description drift trips the suite.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts -u`
+Expected: snapshot file regenerates with the new `project status` entry; rerunning without `-u` passes. Inspect the regenerated snapshot to confirm it contains the three new option lines.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/help-snapshots.test.ts packages/cli/src/commands/__snapshots__/help-snapshots.test.ts.snap
+git commit -m "fix(prev2-t05): lock project status --help snapshot"
+```
+
+---
+
+### Task prev2-t06: (review) Reject conflicting `--field` and `--shell`
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/status.ts`
+- Modify: `packages/cli/src/commands/project/status.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `writeProjectStatusOutput` checks `options.field` before `options.shell`. If a caller passes both, only the field is printed and shell assignments are silently dropped. The contract is undocumented and the silent precedence is easy to misuse.
+Location: `packages/cli/src/commands/project/status.ts:182-206`
+
+**Step 2: Implement fix**
+
+Reject the combination explicitly: when both `options.field` and a non-empty `options.shell` are present, write a clear error to stderr (mention both flag names and that they are mutually exclusive) and exit non-zero (use the existing `EXIT_USAGE_ERROR` constant or whatever convention `runProjectStatus` already uses for invalid input). Place the guard before the field-vs-shell branch so neither output path runs in the rejected case.
+
+**Step 3: Implement test**
+
+Add a vitest case in `status.test.ts` asserting that invoking `runProjectStatus` with both `field` and `shell` exits non-zero and emits a stderr message that names both flags. Pattern after the existing `rejects invalid shell assignment variable names` test.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: tests pass; new test guards the conflict; type-check clean.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/status.ts packages/cli/src/commands/project/status.test.ts
+git commit -m "fix(prev2-t06): reject conflicting --field and --shell"
+```
+
+---
+
+### Task prev2-t07: (review) Skip repo root resolution for absolute `--project-path`
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/status.ts`
+- Modify: `packages/cli/src/commands/project/status.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: when `--project-path` is given as an absolute path, `resolveProjectRoot` is still called and its result is unused. If the caller's `cwd` is outside any git checkout, the CLI throws before consulting the absolute path — an avoidable surprise for any non-skill caller (and a latent fragility even for skill callers).
+Location: `packages/cli/src/commands/project/status.ts:120-128`
+
+**Step 2: Implement fix**
+
+Guard `resolveProjectRoot` so it only runs when the project path needs the repo root: skip the call when `options.projectPath` is absolute (use `path.isAbsolute`). Either branch in the existing function or short-circuit before the call. Preserve current behavior for unset and relative `--project-path` (both still resolve via repo root).
+
+**Step 3: Implement test**
+
+Add a vitest case in `status.test.ts` that invokes `runProjectStatus` with an absolute `--project-path` from a `cwd` that is not a git checkout (use `os.tmpdir()` or a fixture path) and asserts the CLI succeeds without raising. Verify the field output matches the absolute project's state.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: tests pass including the new non-repo `cwd` case; existing relative-path tests still pass; type-check clean.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/status.ts packages/cli/src/commands/project/status.test.ts
+git commit -m "fix(prev2-t07): skip repo root for absolute project paths"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                            |
@@ -809,7 +906,7 @@ git push
 | p04    | code     | passed          | 2026-04-27 | reviews/archived/p04-code-review-2026-04-27.md      |
 | p-rev1 | code     | passed          | 2026-04-27 | reviews/archived/p-rev1-review-2026-04-27.md        |
 | final  | code     | passed          | 2026-04-27 | reviews/archived/final-review-2026-04-27-v2.md      |
-| p-rev2 | code     | received        | 2026-04-27 | reviews/p-rev2-review-2026-04-27.md                 |
+| p-rev2 | code     | fixes_added     | 2026-04-27 | reviews/archived/p-rev2-review-2026-04-27.md        |
 | spec   | artifact | n/a             | -          | quick mode (no spec artifact)                       |
 | design | artifact | n/a             | -          | quick mode (no design artifact)                     |
 | plan   | artifact | fixes_completed | 2026-04-24 | reviews/archived/artifact-plan-review-2026-04-24.md |
@@ -828,8 +925,9 @@ git push
 - Phase 4: 3 tasks — live smoke-test, npx fallback verification, lockstep version bump + release:validate
 - Review fixes: 4 tasks — target-worktree workflow-mode lookup, workflow-mode default cleanup, progress extraction cleanup, reconcile preamble indentation
 - Revision 2: 4 tasks — add `--field`/`--shell`, sweep skills to concise state reads, document the `oat` shim contract, validate
+- Revision 2 review fixes: 3 tasks — lock `project status --help` snapshot, reject conflicting `--field`/`--shell`, skip repo root for absolute `--project-path`
 
-**Total: 20 tasks**
+**Total: 23 tasks**
 
 Ready for code review and merge.
 

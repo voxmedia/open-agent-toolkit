@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: null
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-27
-oat_current_task_id: null
+oat_current_task_id: prev2-t05
 oat_generated: false
 ---
 
@@ -24,16 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 2     | 2/2       |
-| Phase 2      | complete | 2     | 2/2       |
-| Phase 3      | complete | 5     | 5/5       |
-| Phase 4      | complete | 3     | 3/3       |
-| Review Fixes | complete | 4     | 4/4       |
-| Revision 2   | complete | 4     | 4/4       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 2     | 2/2       |
+| Phase 2      | complete    | 2     | 2/2       |
+| Phase 3      | complete    | 5     | 5/5       |
+| Phase 4      | complete    | 3     | 3/3       |
+| Review Fixes | complete    | 4     | 4/4       |
+| Revision 2   | complete    | 4     | 4/4       |
+| Rev2 Fixes   | in_progress | 3     | 0/3       |
 
-**Total:** 20/20 tasks completed
+**Total:** 20/23 tasks completed
 
 ## Review Notes
 
@@ -60,6 +61,37 @@ oat_generated: false
 **No plan fix tasks added** — artifact review; all findings were resolved directly in `plan.md`.
 
 **Next:** Re-run `oat-project-review-provide artifact plan` if a re-review is desired, or proceed to `oat-project-implement` to execute the (now-corrected) plan starting from `p01-t01`.
+
+---
+
+### Review Received: p-rev2 (code)
+
+**Date:** 2026-04-27
+**Review artifact:** `reviews/archived/p-rev2-review-2026-04-27.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 5
+
+**Disposition map:**
+
+- `m1` Help-snapshot test missing for `oat project status --help` → **convert** → `prev2-t05`. Public CLI contract for the three new flags should be locked in the same way the parent listing is.
+- `m2` `--field` silently wins when combined with `--shell` → **convert** → `prev2-t06`. Reject the combination explicitly so future skills cannot misuse the precedence.
+- `m3` Empty `--shell` list fall-through is untested → **defer**. Behavior is correct; reviewer flagged optional. Low-probability that commander's variadic semantics regress without a separate signal.
+- `m4` `resolveProjectRoot` runs even for absolute `--project-path` → **convert** → `prev2-t07`. Skill callers always run inside a worktree today, but the unused `repoRoot` call is an avoidable surprise for any non-skill caller.
+- `m5` `SHELL_ASSIGNMENT_RE` accepts `=` inside the dot path → **defer**. Harmless today (returns `null` for non-existent fields); reviewer flagged optional. Tightening the regex or documenting the constraint can ride along with a future status-CLI change.
+
+**Deferred Findings (Minor):**
+
+- `m3` empty `--shell` list test — defer rationale: current behavior correct, no regression signal expected.
+- `m5` `SHELL_ASSIGNMENT_RE` `=`-in-path tolerance — defer rationale: harmless silent `null` today, no real consumer impacted.
+
+**New tasks added:** `prev2-t05`, `prev2-t06`, `prev2-t07`
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill. After completion, update the `p-rev2` Reviews row to `fixes_completed` and re-run `oat-project-review-provide code p-rev2` (re-review will scope to the fix-task commits by default).
 
 ---
 
