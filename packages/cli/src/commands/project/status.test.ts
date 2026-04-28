@@ -89,6 +89,7 @@ function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
   command: Command;
   getProjectState: ReturnType<typeof vi.fn>;
+  resolveActiveProject: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const activeProjectPath =
@@ -96,6 +97,14 @@ function createHarness(options: HarnessOptions): {
   const projectState =
     options.projectState ?? makeProjectState(activeProjectPath);
   const getProjectState = vi.fn(async () => projectState);
+  const resolveActiveProject = vi.fn(async () => ({
+    name:
+      activeProjectPath && options.activeProjectStatus !== 'unset'
+        ? 'demo'
+        : null,
+    path: options.activeProjectStatus === 'unset' ? null : activeProjectPath,
+    status: options.activeProjectStatus ?? 'active',
+  }));
 
   const command = createProjectStatusCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -109,18 +118,11 @@ function createHarness(options: HarnessOptions): {
       logger: capture.logger,
     }),
     resolveProjectRoot: vi.fn(async () => options.cwd),
-    resolveActiveProject: vi.fn(async () => ({
-      name:
-        activeProjectPath && options.activeProjectStatus !== 'unset'
-          ? 'demo'
-          : null,
-      path: options.activeProjectStatus === 'unset' ? null : activeProjectPath,
-      status: options.activeProjectStatus ?? 'active',
-    })),
+    resolveActiveProject,
     getProjectState,
   });
 
-  return { capture, command, getProjectState };
+  return { capture, command, getProjectState, resolveActiveProject };
 }
 
 async function runCommand(
@@ -208,6 +210,51 @@ describe('oat project status', () => {
     await runCommand(command, ['--field', 'project.workflowMode']);
 
     expect(capture.info).toEqual(['quick']);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints a field from an explicit relative project path without active-project lookup', async () => {
+    const cwd = '/repo';
+    const projectPath = '.oat/projects/shared/other';
+    const { command, capture, getProjectState, resolveActiveProject } =
+      createHarness({
+        cwd,
+        activeProjectStatus: 'unset',
+        projectState: makeProjectState(projectPath),
+      });
+
+    await runCommand(command, [
+      '--project-path',
+      projectPath,
+      '--field',
+      'project.path',
+    ]);
+
+    expect(resolveActiveProject).not.toHaveBeenCalled();
+    expect(getProjectState).toHaveBeenCalledWith(join(cwd, projectPath));
+    expect(capture.info).toEqual([projectPath]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints shell assignments from an explicit absolute project path', async () => {
+    const projectPath = '/other-worktree/.oat/projects/shared/demo';
+    const { command, capture, getProjectState, resolveActiveProject } =
+      createHarness({
+        cwd: '/repo',
+        activeProjectPath: '.oat/projects/shared/active',
+        projectState: makeProjectState(projectPath),
+      });
+
+    await runCommand(command, [
+      '--project-path',
+      projectPath,
+      '--shell',
+      'WORKFLOW_MODE=project.workflowMode',
+    ]);
+
+    expect(resolveActiveProject).not.toHaveBeenCalled();
+    expect(getProjectState).toHaveBeenCalledWith(projectPath);
+    expect(capture.info).toEqual(["WORKFLOW_MODE='quick'"]);
     expect(process.exitCode).toBe(0);
   });
 

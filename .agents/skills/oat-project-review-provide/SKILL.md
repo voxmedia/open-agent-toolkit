@@ -248,10 +248,9 @@ If the review is intentionally inline-only and the user explicitly wants to insp
 Resolve workflow mode from the resolved project state path:
 
 ```bash
-# Step 1.5 may retarget PROJECT_PATH into another worktree. Until
-# `oat project status` supports an explicit project path here without
-# mutating local config, read this mode from the resolved state file.
-WORKFLOW_MODE=$(grep "^oat_workflow_mode:" "$PROJECT_PATH/state.md" 2>/dev/null | head -1 | awk '{print $2}')
+# Step 1.5 may retarget PROJECT_PATH into another worktree, so read from the
+# resolved project path instead of the active-project pointer.
+WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
 ```
 
 **Required for code review (by mode):**

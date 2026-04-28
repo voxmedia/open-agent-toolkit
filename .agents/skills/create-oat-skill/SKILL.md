@@ -183,6 +183,12 @@ For one field, use `--field`:
 WORKFLOW_MODE=$(oat project status --field project.workflowMode 2>/dev/null || echo null)
 ```
 
+If the skill is reading a resolved project path instead of the active project pointer, add `--project-path`:
+
+```bash
+WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
 For multiple fields, use `--shell` so the CLI fetches project state once and prints shell-safe assignments:
 
 ```bash
@@ -197,7 +203,19 @@ eval "$(oat project status --shell \
 - **Null sentinel behavior:** YAML `null` in `state.md` surfaces as the literal string `null`, matching the prior `grep | awk` behavior. Missing fields also print or assign `null` after project status resolves successfully.
 - `--field <path>` reads arbitrary dot paths from the project status payload. Scalars print as raw values; objects and arrays print as compact JSON.
 - `--shell NAME=path ...` prints shell-safe single-quoted assignments. Variable names must match `[A-Za-z_][A-Za-z0-9_]*`.
-- Skill snippets assume `oat` is available on `PATH`. CI/cloud environments without a global install can provide an `oat` shim backed by `npx @open-agent-toolkit/cli`.
+- `--project-path <path>` reads from a repo-relative or absolute project path instead of `.oat/config.local.json`'s active project pointer.
+- Skill snippets assume `oat` is available on `PATH`; do not repeat per-skill `command -v oat` fallback blocks. CI/cloud environments without a global install can provide this `npx`-backed shim once per checkout:
+
+  ```bash
+  mkdir -p .oat/bin
+  cat > .oat/bin/oat <<'EOF'
+  #!/usr/bin/env bash
+  exec npx @open-agent-toolkit/cli "$@"
+  EOF
+  chmod +x .oat/bin/oat
+  export PATH="$PWD/.oat/bin:$PATH"
+  ```
+
 - Do **not** use this pattern to write state — state writes stay in their existing skill sections.
 
 ## Examples

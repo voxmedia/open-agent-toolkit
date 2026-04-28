@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import {
   buildCommandContext,
@@ -26,6 +26,7 @@ interface ProjectStatusDependencies {
 
 interface ProjectStatusOptions {
   field?: string;
+  projectPath?: string;
   shell?: string[];
 }
 
@@ -35,6 +36,13 @@ const DEFAULT_DEPENDENCIES: ProjectStatusDependencies = {
   resolveActiveProject,
   getProjectState,
 };
+
+function resolveTargetProjectPath(
+  repoRoot: string,
+  projectPath: string,
+): string {
+  return isAbsolute(projectPath) ? projectPath : join(repoRoot, projectPath);
+}
 
 function formatProjectStatusLines(project: ProjectState): string[] {
   return [
@@ -110,6 +118,15 @@ async function runProjectStatus(
 ): Promise<void> {
   try {
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+
+    if (options.projectPath) {
+      const project = await dependencies.getProjectState(
+        resolveTargetProjectPath(repoRoot, options.projectPath),
+      );
+      writeProjectStatusOutput(context, options, { status: 'ok', project });
+      return;
+    }
+
     const activeProject = await dependencies.resolveActiveProject(repoRoot);
 
     if (activeProject.status === 'unset') {
@@ -145,43 +162,7 @@ async function runProjectStatus(
     const project = await dependencies.getProjectState(
       join(repoRoot, activeProject.path),
     );
-    const payload = { status: 'ok', project };
-
-    if (options.field) {
-      context.logger.info(formatRawValue(readDotPath(payload, options.field)));
-      process.exitCode = 0;
-      return;
-    }
-
-    if (options.shell?.length) {
-      const lines: string[] = [];
-      for (const assignment of options.shell) {
-        const line = formatShellAssignment(assignment, payload);
-        if (!line) {
-          context.logger.error(
-            `Invalid shell assignment "${assignment}". Expected NAME=path with a shell-safe variable name.`,
-          );
-          process.exitCode = 1;
-          return;
-        }
-        lines.push(line);
-      }
-      for (const line of lines) {
-        context.logger.info(line);
-      }
-      process.exitCode = 0;
-      return;
-    }
-
-    if (context.json) {
-      context.logger.json(payload);
-    } else {
-      for (const line of formatProjectStatusLines(project)) {
-        context.logger.info(line);
-      }
-    }
-
-    process.exitCode = 0;
+    writeProjectStatusOutput(context, options, { status: 'ok', project });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
@@ -191,6 +172,48 @@ async function runProjectStatus(
     }
     process.exitCode = 1;
   }
+}
+
+function writeProjectStatusOutput(
+  context: CommandContext,
+  options: ProjectStatusOptions,
+  payload: { status: 'ok'; project: ProjectState },
+): void {
+  if (options.field) {
+    context.logger.info(formatRawValue(readDotPath(payload, options.field)));
+    process.exitCode = 0;
+    return;
+  }
+
+  if (options.shell?.length) {
+    const lines: string[] = [];
+    for (const assignment of options.shell) {
+      const line = formatShellAssignment(assignment, payload);
+      if (!line) {
+        context.logger.error(
+          `Invalid shell assignment "${assignment}". Expected NAME=path with a shell-safe variable name.`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+      lines.push(line);
+    }
+    for (const line of lines) {
+      context.logger.info(line);
+    }
+    process.exitCode = 0;
+    return;
+  }
+
+  if (context.json) {
+    context.logger.json(payload);
+  } else {
+    for (const line of formatProjectStatusLines(payload.project)) {
+      context.logger.info(line);
+    }
+  }
+
+  process.exitCode = 0;
 }
 
 export function createProjectStatusCommand(
@@ -206,6 +229,10 @@ export function createProjectStatusCommand(
     .option(
       '--field <path>',
       'Print a single field from the project status payload by dot path',
+    )
+    .option(
+      '--project-path <path>',
+      'Read status from an explicit project path instead of the active project',
     )
     .option(
       '--shell <assignment...>',

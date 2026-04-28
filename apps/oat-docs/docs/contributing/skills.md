@@ -69,6 +69,12 @@ For one field, use `--field`:
 WORKFLOW_MODE=$(oat project status --field project.workflowMode 2>/dev/null || echo null)
 ```
 
+If the skill is reading a resolved project path instead of the active project pointer, add `--project-path`:
+
+```bash
+WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
 For multiple fields, use `--shell` so the CLI reads project state once and emits shell-safe assignments:
 
 ```bash
@@ -89,6 +95,8 @@ EOF
 chmod +x .oat/bin/oat
 export PATH="$PWD/.oat/bin:$PATH"
 ```
+
+Create the shim once per checkout or CI job instead of putting `command -v oat` fallback branches in every skill. The same snippet also supports setups where `oat` is intentionally provided on `PATH` by `npx`.
 
 The JSON output is a stable contract: the field set consumed by migrated skills is locked by `MIGRATED_FIELDS` in `packages/cli/src/commands/project/status.test.ts`, so removing or renaming any of those keys is a real test failure rather than a silent runtime break. See [CLI Reference](../reference/cli-reference.md) for the full locked field set.
 

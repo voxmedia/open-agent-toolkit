@@ -202,7 +202,7 @@ PLAN_TASKS=$(grep -cE '^### Task p[0-9]+-t[0-9]+:' "$ACTIVE_PROJECT_PATH/plan.md
 IMPL_COMPLETED=$(grep -cE '^\*\*Status:\*\* completed' "$ACTIVE_PROJECT_PATH/implementation.md" 2>/dev/null || echo 0)
 
 # Check for commits since last tracked SHA
-LAST_SHA=$(oat project status --field project.lastCommit 2>/dev/null || echo null)
+LAST_SHA=$(oat project status --project-path "$ACTIVE_PROJECT_PATH" --field project.lastCommit 2>/dev/null || echo null)
 if [ -n "$LAST_SHA" ] && [ "$LAST_SHA" != "null" ]; then
   UNTRACKED_COMMITS=$(git rev-list --count "$LAST_SHA"..HEAD 2>/dev/null || echo 0)
 else
