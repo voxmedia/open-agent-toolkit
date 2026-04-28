@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-27
-oat_current_task_id: prev2-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 2     | 2/2       |
-| Phase 2      | complete    | 2     | 2/2       |
-| Phase 3      | complete    | 5     | 5/5       |
-| Phase 4      | complete    | 3     | 3/3       |
-| Review Fixes | complete    | 4     | 4/4       |
-| Revision 2   | in_progress | 4     | 0/4       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 2     | 2/2       |
+| Phase 2      | complete | 2     | 2/2       |
+| Phase 3      | complete | 5     | 5/5       |
+| Phase 4      | complete | 3     | 3/3       |
+| Review Fixes | complete | 4     | 4/4       |
+| Revision 2   | complete | 4     | 4/4       |
 
-**Total:** 16/20 tasks completed
+**Total:** 20/20 tasks completed
 
 ## Review Notes
 
@@ -584,6 +584,39 @@ After the fix tasks are complete:
 - Deferred Minor `m5`: tracked-but-gitignored `packages/cli/assets/public-package-versions.json` remains a separate repo hygiene follow-up.
 
 **Next:** Run `oat-project-document` then `oat-project-pr-final` per `workflow.postImplementSequence: docs-pr`.
+
+## Revision 2 Complete: status field/shell readability pass
+
+**Date:** 2026-04-27
+
+**Outcome:**
+
+- Added `oat project status --field <path>` for arbitrary-depth single-field reads from the existing status payload.
+- Added `oat project status --shell NAME=path ...` for shell-safe multi-field assignment output from one project state read.
+- Added `oat project status --project-path <path>` for repo-relative or absolute path-directed status reads when a skill has already resolved the target project.
+- Replaced the verbose per-skill `oat`/`npx` JSON preambles in the migrated skills with concise `--field` / `--shell` snippets.
+- Documented the runtime contract that skill snippets call `oat` directly, plus an `npx @open-agent-toolkit/cli`-backed `oat` shim for CI/cloud environments.
+- Removed the remaining path-directed `grep | awk` exception in `oat-project-review-provide` now that explicit project path status reads exist.
+
+**Commits:**
+
+- `9b81be89` — add project status field and shell output
+- `0949dccc` — align status shell implementation
+- `a768f474` — use project status shell output in skills
+- `2e776a76` — support explicit project status paths
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts src/commands/help-snapshots.test.ts` → 54/54 pass
+- `pnpm lint` → pass
+- `pnpm format` → pass
+- `pnpm type-check` → pass
+- `pnpm test` → pass (159 files / 1365 tests; docs build passed)
+- `pnpm release:validate` → pass for 5 public packages at `0.0.53`
+- Live CLI smoke: `oat project status --project-path .oat/projects/shared/skill-cli-migration --field project.workflowMode` → `quick`
+- Live CLI smoke: absolute `--project-path ... --shell WORKFLOW_MODE=project.workflowMode LAST_SHA=project.lastCommit` → shell-safe assignments
+
+**Next:** PR #65 is open with the readability revision included. Await CI and human review; use `oat-project-revise` for additional feedback or `oat-project-complete` after merge approval.
 
 ## References
 

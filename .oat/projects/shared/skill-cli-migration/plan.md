@@ -619,7 +619,7 @@ git commit -m "fix(prev1-t04): normalize reconcile preamble indentation"
 
 Source: inline feedback (2026-04-27)
 
-### Task prev2-t01: (revision) Add status field and shell assignment output
+### Task prev2-t01: (revision) Add status field, project-path, and shell assignment output
 
 **Files:**
 
@@ -654,12 +654,22 @@ Output contract:
 - Null/missing fields assign the literal `null` value (`NAME='null'`).
 - Object/array values assign compact JSON.
 
-**Step 3: Verify**
+**Step 3: Implement explicit project path reads**
+
+Add `--project-path <path>` so skills that already resolved a target project can read that project without mutating or depending on the active-project pointer.
+
+Output contract:
+
+- Repo-relative paths resolve against the current repo root.
+- Absolute paths are passed through unchanged, which preserves cross-worktree review routing.
+- `--project-path` composes with `--field`, `--shell`, and normal text/JSON status output.
+
+**Step 4: Verify**
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts`
-Expected: status command tests pass, including scalar, nested, null, missing, object, invalid shell variable, and unset-project error cases.
+Expected: status command tests pass, including scalar, nested, null, missing, object, invalid shell variable, unset-project, and explicit project-path cases.
 
-**Step 4: Commit**
+**Step 5: Commit**
 
 ```bash
 git add packages/cli/src/commands/project/status.ts packages/cli/src/commands/project/status.test.ts packages/cli/src/commands/help-snapshots.test.ts
@@ -696,12 +706,12 @@ eval "$(oat project status --shell \
   WORKFLOW_MODE=project.workflowMode)"
 ```
 
-Use `--field` for single-field reads when it is clearer. Preserve the target-worktree special case in `oat-project-review-provide`: reads that must validate an adjusted `PROJECT_PATH` should remain path-directed until the CLI supports explicit project path reads.
+Use `--field` for single-field reads when it is clearer. Use `--project-path` for reads that must validate an adjusted `PROJECT_PATH`, such as target-worktree review routing in `oat-project-review-provide`.
 
 **Step 3: Verify**
 
 Run: `pnpm lint`
-Expected: lint passes; migrated skill snippets are shorter and no longer contain repeated `command -v oat` / `npx @open-agent-toolkit/cli` fallback preambles.
+Expected: lint passes; migrated skill snippets are shorter, no longer contain repeated `command -v oat` / `npx @open-agent-toolkit/cli` fallback preambles, and no longer need direct `state.md` parsing for path-directed workflow-mode reads.
 
 **Step 4: Commit**
 
@@ -737,12 +747,12 @@ export PATH="$PWD/.oat/bin:$PATH"
 
 **Step 2: Document CLI read APIs**
 
-Add `oat project status --field <path>` and `oat project status --shell NAME=path ...` to the relevant CLI/reference docs and identify them as preferred skill read APIs.
+Add `oat project status --field <path>`, `oat project status --project-path <path>`, and `oat project status --shell NAME=path ...` to the relevant CLI/reference docs and identify them as preferred skill read APIs.
 
 **Step 3: Verify**
 
 Run: `pnpm lint`
-Expected: lint passes; docs describe both the field/shell APIs and the shim contract.
+Expected: lint passes; docs describe the field/shell/project-path APIs and the shim contract.
 
 **Step 4: Commit**
 
