@@ -380,26 +380,19 @@ Draft `design.md` section-by-section (Collaborative mode) or in a single pass (D
 
 **YAGNI check per section:** If the section would draft a capability `spec.md` doesn't require, cut it. If a component boundary is speculative ("in case we need it later"), cut it.
 
-**Before iterating: Initialize `design.md`**
-
-Copy `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`. Update frontmatter:
-
-```yaml
----
-oat_status: in_progress
-oat_ready_for: null
-oat_blockers: []
-oat_last_updated: { today }
-oat_generated: false
-oat_template: false
----
-```
-
 **Collaborative branch:**
 
 ```
 IF DESIGN_MODE == "collaborative":
   Read spec.md for requirements context; read knowledge base.
+
+  Do NOT create or write to design.md yet — sections are drafted in
+  context and shown to the user inline. design.md is assembled and
+  written to disk only after all sections are approved (see end of
+  this branch). Writing per-section to file is wrong in collaborative
+  mode; it bypasses the per-section review and produces a committed
+  artifact the user never read.
+
   For SECTION in [
     "Overview + Architecture",
     "Component Design",
@@ -414,27 +407,45 @@ IF DESIGN_MODE == "collaborative":
     "Implementation Phases",
     "Risks and Mitigation"
   ]:
-    Draft section content from spec.md + knowledge base. Scale each section
-      to its complexity: a few sentences if straightforward, up to 200-300
-      words if nuanced.
-    Not-applicable sections: state as a single sentence, not empty (e.g.,
-      "No database migrations required.").
+    Draft section content from spec.md + knowledge base. Scale each
+      section to its complexity: a few sentences if straightforward,
+      up to 200-300 words if nuanced.
+    Not-applicable sections: state as a single sentence, not empty
+      (e.g., "No database migrations required.").
 
-    Present (via AskUserQuestion when available, or as a plain chat
-      message when it is not — chat-based prompts are valid interactive
-      prompts; do not downgrade to draft mode just because AskUserQuestion
-      is missing):
-      "Here's what I have for [section]: [content].
-       Does this look right, or should we adjust before continuing?"
+    STEP A — emit the section content as a plain assistant message.
+      Show the full drafted text, not a summary. Do NOT put the section
+      content inside an AskUserQuestion prompt — the question widget is
+      for the confirmation choices only.
 
-    On feedback: revise inline. Be ready to go back and clarify if
-      something doesn't make sense. Re-present if substantive.
+    STEP B — ask for approval (separate message, via AskUserQuestion
+      when available, or as a plain chat message when it is not; do
+      not downgrade to draft mode just because AskUserQuestion is
+      missing):
+      "Does this look right, or should we adjust before continuing?"
+
+    On feedback: revise the draft in context. Re-emit the revised
+      section if the change is substantive. Only the final approved
+      text gets written to design.md.
     Mark section approved. Move to next.
 
-  Track which sections have been approved so re-runs don't redo finalized
-  sections. Divergent thinking during sections happens organically in
-  response to user feedback — there is no scripted per-section "present
-  2-3 options" step (that happened once at Step 2.5 Approach Reaffirmation).
+  Track which sections have been approved so re-runs don't redo
+  finalized sections. Divergent thinking during sections happens
+  organically in response to user feedback — there is no scripted
+  per-section "present 2-3 options" step (that happened once at
+  Step 2.5 Approach Reaffirmation).
+
+  Once ALL sections are approved:
+    Copy `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`.
+    Write each approved section into the corresponding template
+    section. Update frontmatter:
+      oat_status: in_progress
+      oat_ready_for: null
+      oat_blockers: []
+      oat_last_updated: {today}
+      oat_generated: false
+      oat_template: false
+    Continue to Step 5 (Self-Review) and Step 6 (User-Review Gate).
 ```
 
 **Draft-and-review branch:**
@@ -442,8 +453,20 @@ IF DESIGN_MODE == "collaborative":
 ```
 IF DESIGN_MODE == "draft":
   Read spec.md for requirements context; read knowledge base.
-  Draft all applicable sections in one pass using the same section list
-    above. Apply the same "scale each section to its complexity"
+
+  Initialize design.md now (draft-and-review writes first, user
+  reviews the committed file):
+    Copy `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`.
+    Update frontmatter:
+      oat_status: in_progress
+      oat_ready_for: null
+      oat_blockers: []
+      oat_last_updated: {today}
+      oat_generated: false
+      oat_template: false
+
+  Draft all applicable sections in one pass using the same section
+    list above. Apply the same "scale each section to its complexity"
     principle. Not-applicable sections get a single-sentence statement.
   Do NOT fire per-section validation prompts — this is a one-pass draft.
   Append a banner to design.md when non-interactive:
@@ -469,9 +492,14 @@ Apply fixes inline. Do not re-run self-review. Continue to Step 6 (User-Review G
 
 ### Step 6: User-Review Gate (commit-first ordering)
 
-The drafted artifacts are committed FIRST, then the user-review gate prompts the user to read the committed artifact. This keeps the "written and committed" prompt wording literally accurate and lets peer reviewers fetch a committed artifact without racing the skill.
+By the time Step 6 runs, `design.md` already exists on disk regardless of mode:
 
-**Step 6a: Commit drafted artifacts FIRST (before user-review gate)**
+- **Collaborative**: written at the end of the Step 4 approval loop, after all sections were confirmed in chat.
+- **Draft-and-review**: written in Step 4 as the one-pass draft.
+
+Step 6 commits the file and then (if a HiLL gate is configured) presents the user-review prompt. This keeps the "written and committed" prompt wording literally accurate.
+
+**Step 6a: Commit drafted artifacts (before user-review gate)**
 
 Even when no HiLL checkpoint is configured, the artifact is committed — consistent behavior across HiLL-on / HiLL-off configurations. "Committed" no longer means "approved" — it means "written to disk and tracked."
 
