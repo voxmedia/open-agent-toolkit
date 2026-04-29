@@ -76,9 +76,10 @@ function resolveSyncAwsEnv(
 
   // Forward the same precedence into `awsProfile`/`awsRegion` for downstream
   // helpers: prefer flag, fall back to config. Parent env is *not* substituted
-  // here because buildAwsEnv treats parent env as authoritative; passing config
-  // as the fallback is correct because the helper will skip it whenever parent
-  // env already supplies the key.
+  // here because callers will pass the returned `env` (which already has the
+  // flag layered onto a clone of the parent env) as `dependencies.env` to the
+  // helper, so `buildAwsEnv`'s non-clobbering rule preserves "flag > parent
+  // env > config" against `effectiveParent` rather than the raw `process.env`.
   const awsProfile = flagProfile ?? configProfile ?? undefined;
   const awsRegion = flagRegion ?? configRegion ?? undefined;
 
@@ -353,13 +354,16 @@ export function createProjectArchiveCommand(
                 awsRegion,
               } = resolveSyncAwsEnv(dependencies.processEnv, options, config);
 
-              await dependencies.ensureS3ArchiveAccess({
-                mode: 'sync',
-                s3Uri,
-                syncOnComplete: config.archive?.s3SyncOnComplete ?? false,
-                awsProfile,
-                awsRegion,
-              });
+              await dependencies.ensureS3ArchiveAccess(
+                {
+                  mode: 'sync',
+                  s3Uri,
+                  syncOnComplete: config.archive?.s3SyncOnComplete ?? false,
+                  awsProfile,
+                  awsRegion,
+                },
+                { env: awsEnv },
+              );
 
               const projectsRoot = await dependencies.resolveProjectsRoot(
                 repoRoot,

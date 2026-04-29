@@ -30,15 +30,20 @@ export interface EnsureS3ArchiveAccessOptions {
   s3Uri?: string | null;
   syncOnComplete: boolean;
   /**
-   * Config-only AWS profile (e.g., `archive.awsProfile`). This helper applies
-   * the value only when the parent env does not already provide `AWS_PROFILE`,
-   * matching discovery decision #3 ("config does not clobber an explicit shell
-   * env"). Callers that need flag-style overrides must set the env entry
-   * themselves before calling this helper.
+   * Config-only fallback AWS profile (e.g., `archive.awsProfile`). This helper
+   * applies the value only when the parent env does not already provide
+   * `AWS_PROFILE`, matching discovery decision #3 ("config does not clobber an
+   * explicit shell env"). Callers that override via flags must layer the
+   * override into `dependencies.env` (the helper's second argument) —
+   * `buildAwsEnv` is non-clobbering and will not overwrite a value already
+   * present in the parent env. Passing a flag value through this option alone
+   * is not sufficient.
    */
   awsProfile?: string | null;
   /**
-   * Config-only AWS region. Same non-clobbering semantics as `awsProfile`.
+   * Config-only fallback AWS region. Same non-clobbering semantics as
+   * `awsProfile`: flag-style overrides must be layered into
+   * `dependencies.env`, not passed through this option.
    */
   awsRegion?: string | null;
 }

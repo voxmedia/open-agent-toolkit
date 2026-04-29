@@ -42,12 +42,14 @@ function createHarness(options: HarnessOptions = {}): {
     },
   };
 
-  const ensureS3ArchiveAccess = vi.fn(async () => {
-    if (options.preflightError) {
-      throw options.preflightError;
-    }
-    return { ok: true, warnings: [] };
-  });
+  const ensureS3ArchiveAccess = vi.fn(
+    async (_options: unknown, _dependencies?: { env?: NodeJS.ProcessEnv }) => {
+      if (options.preflightError) {
+        throw options.preflightError;
+      }
+      return { ok: true, warnings: [] };
+    },
+  );
 
   const listOutput =
     options.listOutput ??
@@ -154,11 +156,16 @@ describe('oat project archive sync', () => {
 
     await runArchiveSyncCommand(command);
 
-    expect(ensureS3ArchiveAccess).toHaveBeenCalledWith({
-      mode: 'sync',
-      s3Uri: 's3://example-bucket/oat-archive',
-      syncOnComplete: true,
-    });
+    expect(ensureS3ArchiveAccess).toHaveBeenCalledWith(
+      {
+        mode: 'sync',
+        s3Uri: 's3://example-bucket/oat-archive',
+        syncOnComplete: true,
+        awsProfile: undefined,
+        awsRegion: undefined,
+      },
+      expect.any(Object),
+    );
     expect(removeDirectory).toHaveBeenCalledWith(
       join(
         '/tmp/workspace/open-agent-toolkit',
@@ -495,6 +502,7 @@ describe('oat project archive sync', () => {
           awsProfile: 'flag-profile',
           awsRegion: 'flag-region',
         }),
+        expect.any(Object),
       );
 
       const lsCall = execFile.mock.calls.find(
@@ -532,6 +540,7 @@ describe('oat project archive sync', () => {
           awsProfile: 'flag-profile',
           awsRegion: 'flag-region',
         }),
+        expect.any(Object),
       );
 
       const lsCall = execFile.mock.calls.find(
@@ -545,6 +554,31 @@ describe('oat project archive sync', () => {
         AWS_REGION: 'flag-region',
       });
       expect(syncCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'flag-profile',
+        AWS_REGION: 'flag-region',
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('preflight env honors flag over parent shell env', async () => {
+      const { command, ensureS3ArchiveAccess } = createHarness({
+        processEnv: {
+          PATH: '/usr/bin',
+          AWS_PROFILE: 'env-profile',
+          AWS_REGION: 'env-region',
+        },
+      });
+
+      await runArchiveSyncCommand(command, {
+        commandArgs: ['--profile', 'flag-profile', '--region', 'flag-region'],
+      });
+
+      // The preflight `aws sts get-caller-identity` runs inside
+      // ensureS3ArchiveAccess. Asserting that it receives the flag-bearing
+      // env (not the shell env) closes the precedence guarantee end-to-end.
+      const lastCall = ensureS3ArchiveAccess.mock.calls.at(-1);
+      expect(lastCall?.[1]).toBeDefined();
+      expect(lastCall?.[1]?.env).toMatchObject({
         AWS_PROFILE: 'flag-profile',
         AWS_REGION: 'flag-region',
       });
@@ -578,6 +612,7 @@ describe('oat project archive sync', () => {
           awsProfile: 'config-profile',
           awsRegion: 'config-region',
         }),
+        expect.any(Object),
       );
 
       const lsCall = execFile.mock.calls.find(
@@ -618,6 +653,7 @@ describe('oat project archive sync', () => {
           awsProfile: 'config-profile',
           awsRegion: 'config-region',
         }),
+        expect.any(Object),
       );
 
       const lsCall = execFile.mock.calls.find(
@@ -649,6 +685,7 @@ describe('oat project archive sync', () => {
           awsProfile: undefined,
           awsRegion: undefined,
         }),
+        expect.any(Object),
       );
 
       const lsCall = execFile.mock.calls.find(
@@ -688,6 +725,7 @@ describe('oat project archive sync', () => {
           awsProfile: 'config-profile',
           awsRegion: 'config-region',
         }),
+        expect.any(Object),
       );
 
       const syncCall = execFile.mock.calls.find(
