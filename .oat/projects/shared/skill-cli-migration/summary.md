@@ -1,9 +1,9 @@
 ---
 oat_generated: true
-oat_generated_at: '2026-04-28T00:04:08Z'
+oat_generated_at: '2026-04-29T19:23:02Z'
 oat_summary_scope: final
 oat_project: .oat/projects/shared/skill-cli-migration
-oat_source_commit: 2e776a76
+oat_source_commit: f22b37ce
 oat_workflow_mode: quick
 ---
 
@@ -23,6 +23,9 @@ Quick-mode note: this project has discovery, plan, implementation, review, and v
 - Preserved target-worktree review routing by using `--project-path` in path-directed status reads instead of direct `state.md` parsing.
 - Bumped the lockstep public package set from `0.0.50` to `0.0.53` after rebasing onto an `origin/main` already at `0.0.52`, and regenerated public package version metadata.
 - Published the docs/reference update for `oat project status --field`, `--shell`, `--project-path`, and the `npx`-backed `oat` shim contract for CI/cloud environments.
+- Locked the public `oat project status --help` option contract with an inline help-snapshot test (`prev2-t05`).
+- Hardened the CLI by rejecting the conflicting `--field` + `--shell` combination with a clear error and a regression test (`prev2-t06`).
+- Skipped `resolveProjectRoot` when `--project-path` is absolute, so CLI callers from outside any git checkout no longer throw, with a regression test that stubs `resolveProjectRoot` and asserts it is never called (`prev2-t07`).
 
 ## Verification
 
@@ -33,7 +36,7 @@ Quick-mode note: this project has discovery, plan, implementation, review, and v
 - `pnpm build`
 - `pnpm release:validate`
 - Live CLI smoke tests for relative and absolute `--project-path` with `--field` and `--shell`
-- p01, p02, p03, p04, p-rev1, and final code reviews all passed
+- p01, p02, p03, p04, p-rev1, p-rev2, and final code reviews all passed
 
 ## Deferred Follow-Ups
 

@@ -91,7 +91,9 @@ oat_generated: false
 
 **New tasks added:** `prev2-t05`, `prev2-t06`, `prev2-t07`
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill. After completion, update the `p-rev2` Reviews row to `fixes_completed` and re-run `oat-project-review-provide code p-rev2` (re-review will scope to the fix-task commits by default).
+**Re-review (v2):** Run on 2026-04-27 against `2f56797d..HEAD` (3 fix commits + bookkeeping). Verdict: **passed** — 0 critical / 0 important / 0 medium / 0 minor. All three converted findings (m1, m2, m4) are resolved; deferred minors (m3, m5) remain appropriately deferred. Re-review artifact: `reviews/archived/p-rev2-review-2026-04-27-v2.md`. Plan Reviews row updated `fixes_added` → `passed`.
+
+**Next:** No further p-rev2 work. Push branch to refresh PR.
 
 ---
 
