@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-04-28
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_plan_hill_phases: ['p05'] # phases to pause AFTER completing (empty = every phase)
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [['p02', 'p03']]
 oat_plan_source: quick
 oat_import_reference: null
@@ -364,16 +365,16 @@ git commit -m "chore(p05-t02): bump publishable packages for archive AWS profile
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| p05    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | n/a     | -    | -        |
-| design | artifact | n/a     | -    | -        |
+| Scope  | Type     | Status  | Date       | Artifact                              |
+| ------ | -------- | ------- | ---------- | ------------------------------------- |
+| p01    | code     | passed  | 2026-04-28 | reviews/p01-code-review-2026-04-28.md |
+| p02    | code     | pending | -          | -                                     |
+| p03    | code     | pending | -          | -                                     |
+| p04    | code     | pending | -          | -                                     |
+| p05    | code     | pending | -          | -                                     |
+| final  | code     | pending | -          | -                                     |
+| spec   | artifact | n/a     | -          | -                                     |
+| design | artifact | n/a     | -          | -                                     |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.
 
