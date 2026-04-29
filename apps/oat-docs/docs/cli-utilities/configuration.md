@@ -83,6 +83,8 @@ Common keys in `.oat/config.json`:
 - `archive.s3SyncOnComplete` — upload archived projects to S3 during completion
 - `archive.summaryExportPath` — export `summary.md` into a durable tracked directory during completion
 - `archive.wrapUpExportPath` — optional tracked destination for `oat-wrap-up` reports; when unset, the skill falls back to `.oat/repo/reference/wrap-ups`
+- `archive.awsProfile` — optional AWS named profile forwarded as `AWS_PROFILE` to every `aws` invocation in archive flows
+- `archive.awsRegion` — optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows
 - `tools.<pack>` — whether a bundled tool pack is currently installed in the repo or user scopes after lifecycle reconciliation
 
 Tool-pack state example:
@@ -101,6 +103,8 @@ oat config set archive.s3Uri s3://example-bucket/oat-archive
 oat config set archive.s3SyncOnComplete true
 oat config set archive.summaryExportPath .oat/repo/reference/project-summaries
 oat config set archive.wrapUpExportPath .oat/repo/reference/wrap-ups
+oat config set archive.awsProfile work-sso
+oat config set archive.awsRegion us-east-1
 ```
 
 With those values configured:
@@ -110,6 +114,27 @@ With those values configured:
 - completion also copies `summary.md` into `<archive.summaryExportPath>/20260401-my-project.md`
 - `oat project archive sync` can later pull archive data back down from S3 and materialize the latest snapshot into the local bare archive path `.oat/projects/archived/<project>/`
 - `oat-wrap-up` can write tracked reports into `<archive.wrapUpExportPath>/YYYY-MM-DD-wrap-up-<label>.md`; if the key is unset, the skill uses `.oat/repo/reference/wrap-ups/`
+- every `aws` spawn (preflight `aws sts get-caller-identity`, `aws s3 ls`, `aws s3 sync`) inherits `AWS_PROFILE` / `AWS_REGION` from `archive.awsProfile` / `archive.awsRegion` when the parent shell does not already set them
+
+### Credential resolution
+
+Profile and region resolve with the following precedence per `aws` invocation, highest first:
+
+1. CLI flag passed to `oat project archive sync` (`--profile <profile>`, `--region <region>`)
+2. The parent shell's existing `AWS_PROFILE` / `AWS_REGION` env vars
+3. The repo's shared `archive.awsProfile` / `archive.awsRegion` config
+
+If none of the three are present for a given var, OAT does not inject it — the AWS CLI's own resolution chain takes over.
+
+The `oat project archive sync` flags only override for that single invocation:
+
+```bash
+oat project archive sync --profile work-sso --region us-east-1
+```
+
+`oat-project-complete` does not accept per-invocation flags. Set the shared config (or your shell env) ahead of time if completion needs a specific profile.
+
+Raw access keys (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and friends) remain a shell-environment concern. OAT does not expose config keys for them — set them in your shell before running `oat-project-complete` or `oat project archive sync` and they are inherited by the spawned `aws` process unchanged.
 
 ## Repo-local and user state
 

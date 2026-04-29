@@ -57,6 +57,10 @@ Archive lifecycle settings live here as shared repo config:
 - `archive.s3SyncOnComplete`
 - `archive.summaryExportPath`
 - `archive.wrapUpExportPath`
+- `archive.awsProfile`
+- `archive.awsRegion`
+
+`archive.awsProfile` and `archive.awsRegion` are forwarded as `AWS_PROFILE` / `AWS_REGION` env vars into every `aws` spawn that runs during `oat-project-complete` and `oat project archive sync`. The per-invocation `oat project archive sync --profile <profile>` and `--region <region>` flags override the config for a single run; an `AWS_PROFILE` / `AWS_REGION` already set in the parent shell sits between the flag and the config in precedence (flag > shell env > config). Raw access keys (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`) remain a shell-environment concern — there is no config plumbing for them.
 
 Tool-pack installation state also lives here as shared repo config:
 
