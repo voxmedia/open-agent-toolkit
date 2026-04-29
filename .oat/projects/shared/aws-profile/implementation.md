@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-28
@@ -207,24 +207,46 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- New repo config keys `archive.awsProfile` and `archive.awsRegion` (`oat config set archive.awsProfile <profile>` etc.) wired into `OatArchiveConfig`, the config normalizer, the `oat config` whitelist/describe/list/set surface, and the resolver defaults.
+- `oat project archive sync` gains `--profile <profile>` and `--region <region>` flags. Precedence is flag > shell env (existing `AWS_PROFILE` / `AWS_REGION`) > config — implemented end-to-end for the preflight `aws sts get-caller-identity`, the `aws s3 ls`, and the `aws s3 sync` calls.
+- Underlying `archive-utils.ts` learns a non-clobbering `buildAwsEnv` helper that merges `AWS_PROFILE` / `AWS_REGION` into the spawn env from caller-supplied options only when the parent env doesn't already provide them. Helper is package-internal — exported only for reuse by the sibling `archive sync` command, not on the public package surface.
+- `oat-project-complete`'s archive flow (which calls `archiveProjectOnCompletion`) automatically picks up `archive.awsProfile` / `archive.awsRegion` from config without skill text changes — discovery decision #6 honored.
+- Documentation (`apps/oat-docs/docs/cli-utilities/configuration.md` and `config-and-local-state.md`) describes the new keys, the new flags, the precedence chain, and the explicit "raw access keys remain a shell-env concern" stance from discovery decision #1.
+- Lockstep version bump for all five public packages (`cli`, `control-plane`, `docs-config`, `docs-theme`, `docs-transforms`) 0.0.52 → 0.0.53; `pnpm release:validate` passes.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Users can now scope the AWS identity used by `oat-project-complete`'s S3 archive sync per-repo via `oat config set archive.awsProfile <name>` (and optionally `archive.awsRegion`).
+- Users can override either at the per-invocation level via `oat project archive sync --profile <name> --region <region>`.
+- Behavior when no override is set is unchanged: ambient `AWS_PROFILE` / `AWS_REGION` and default credential chain still drive auth.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/config/oat-config.ts` — `OatArchiveConfig` extended; private `trimNonEmptyString` helper folded into the archive normalizer.
+- `packages/cli/src/config/resolve.ts` — resolver defaults for the two new keys.
+- `packages/cli/src/commands/project/archive/archive-utils.ts` — non-clobbering `buildAwsEnv`; threaded through `ensureS3ArchiveAccess` and `archiveProjectOnCompletion`.
+- `packages/cli/src/commands/project/archive/index.ts` — `--profile` / `--region` flags, `resolveSyncAwsEnv`, env threaded to all `aws` execFile callsites including the helper's preflight via `dependencies.env`.
+- `packages/cli/src/commands/config/index.ts` — `ConfigKey` union + `KEY_ORDER` + `CONFIG_CATALOG` entries for both new keys; archive set-handler folds `awsProfile` / `awsRegion` into a shared branch.
+- `apps/oat-docs/docs/cli-utilities/configuration.md` and `config-and-local-state.md` — docs.
+- All five publishable `package.json` files + `packages/cli/assets/public-package-versions.json` — lockstep bump.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- File-scoped vitest passes for every changed test file. Full CLI suite green: 159 files / 1387 tests.
+- `pnpm --filter @open-agent-toolkit/cli lint` clean. `pnpm --filter @open-agent-toolkit/cli type-check` clean.
+- `pnpm --filter oat-docs build` clean.
+- `pnpm release:validate` passes for all five public packages.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Plan p02-t01 Step 1 originally specified that `buildAwsEnv` should override parent-env `AWS_PROFILE` when config supplied a value. The first p02 review flagged this as contradicting discovery decision #3 ("config does not clobber an explicit shell env"); the precedence model was inverted to non-clobbering during the p02 fix loop. The plan body still reflects the original wording (cosmetic carry-over).
+- Plan p05-t02 recommended a minor version bump (0.0.52 → 0.1.0) given the new public CLI surface; the implementer chose patch (0.0.52 → 0.0.53) to match every prior `feat:` lockstep bump in the 0.0.x series. Reviewer concurred.
+
+**Out-of-scope follow-ups (recorded but deferred):**
+
+- Optional `?? undefined` cosmetic in `resolveSyncAwsEnv`.
+- Optional read-then-resolve seam test for empty-string normalization.
+- Plan p02-t01 Step 1 wording still says "overridden when config provides one" — historical drift, behavior is correct.
 
 ## References
 
