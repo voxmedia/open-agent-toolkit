@@ -370,7 +370,7 @@ git commit -m "chore(p05-t02): bump publishable packages for archive AWS profile
 | p01    | code     | passed  | 2026-04-28 | reviews/p01-code-review-2026-04-28.md      |
 | p02    | code     | passed  | 2026-04-28 | reviews/p02-code-review-2026-04-28-rev2.md |
 | p03    | code     | passed  | 2026-04-28 | reviews/p03-code-review-2026-04-28.md      |
-| p04    | code     | pending | -          | -                                          |
+| p04    | code     | passed  | 2026-04-28 | reviews/p04-code-review-2026-04-28-rev2.md |
 | p05    | code     | pending | -          | -                                          |
 | final  | code     | pending | -          | -                                          |
 | spec   | artifact | n/a     | -          | -                                          |
