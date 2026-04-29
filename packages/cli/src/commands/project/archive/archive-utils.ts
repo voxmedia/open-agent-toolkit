@@ -128,8 +128,14 @@ function normalizeS3Uri(s3Uri: string): string {
  * An empty/whitespace value in `opts` is also treated as unset, and we never
  * inject a key when neither source supplies one — so the spawned process sees
  * the same "unset" signal it would have seen without this plumbing.
+ *
+ * Exported as a package-internal helper so the archive sync command (which
+ * also spawns `aws`) can layer flag/env/config precedence and produce the same
+ * env shape without duplicating this logic. This symbol is **not** part of the
+ * public package surface — keep usage limited to files inside
+ * `commands/project/archive/`.
  */
-function buildAwsEnv(
+export function buildAwsEnv(
   parentEnv: NodeJS.ProcessEnv,
   opts: { awsProfile?: string | null; awsRegion?: string | null },
 ): NodeJS.ProcessEnv {

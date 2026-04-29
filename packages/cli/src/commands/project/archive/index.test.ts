@@ -21,6 +21,7 @@ interface HarnessOptions {
   listOutput?: string;
   preflightError?: Error;
   projectsRoot?: string;
+  processEnv?: NodeJS.ProcessEnv;
 }
 
 function createHarness(options: HarnessOptions = {}): {
@@ -76,6 +77,7 @@ function createHarness(options: HarnessOptions = {}): {
     ensureS3ArchiveAccess,
     execFile,
     removeDirectory,
+    ...(options.processEnv ? { processEnv: options.processEnv } : {}),
   });
 
   return {
@@ -467,5 +469,235 @@ describe('oat project archive sync', () => {
       'AWS CLI is required for `oat project archive sync`, but it is not configured for access to `archive.s3Uri`. Configure AWS credentials or profile settings and retry.',
     );
     expect(process.exitCode).toBe(1);
+  });
+
+  describe('--profile and --region precedence', () => {
+    it('flag overrides config', async () => {
+      const { command, ensureS3ArchiveAccess, execFile } = createHarness({
+        config: {
+          version: 1,
+          archive: {
+            s3Uri: 's3://example-bucket/oat-archive',
+            s3SyncOnComplete: true,
+            awsProfile: 'config-profile',
+            awsRegion: 'config-region',
+          },
+        },
+        processEnv: { PATH: '/usr/bin' },
+      });
+
+      await runArchiveSyncCommand(command, {
+        commandArgs: ['--profile', 'flag-profile', '--region', 'flag-region'],
+      });
+
+      expect(ensureS3ArchiveAccess).toHaveBeenCalledWith(
+        expect.objectContaining({
+          awsProfile: 'flag-profile',
+          awsRegion: 'flag-region',
+        }),
+      );
+
+      const lsCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'ls',
+      );
+      const syncCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'sync',
+      );
+      expect(lsCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'flag-profile',
+        AWS_REGION: 'flag-region',
+      });
+      expect(syncCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'flag-profile',
+        AWS_REGION: 'flag-region',
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('flag overrides parent env', async () => {
+      const { command, ensureS3ArchiveAccess, execFile } = createHarness({
+        processEnv: {
+          PATH: '/usr/bin',
+          AWS_PROFILE: 'env-profile',
+          AWS_REGION: 'env-region',
+        },
+      });
+
+      await runArchiveSyncCommand(command, {
+        commandArgs: ['--profile', 'flag-profile', '--region', 'flag-region'],
+      });
+
+      expect(ensureS3ArchiveAccess).toHaveBeenCalledWith(
+        expect.objectContaining({
+          awsProfile: 'flag-profile',
+          awsRegion: 'flag-region',
+        }),
+      );
+
+      const lsCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'ls',
+      );
+      const syncCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'sync',
+      );
+      expect(lsCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'flag-profile',
+        AWS_REGION: 'flag-region',
+      });
+      expect(syncCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'flag-profile',
+        AWS_REGION: 'flag-region',
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('parent env beats config when no flag', async () => {
+      const { command, ensureS3ArchiveAccess, execFile } = createHarness({
+        config: {
+          version: 1,
+          archive: {
+            s3Uri: 's3://example-bucket/oat-archive',
+            s3SyncOnComplete: true,
+            awsProfile: 'config-profile',
+            awsRegion: 'config-region',
+          },
+        },
+        processEnv: {
+          PATH: '/usr/bin',
+          AWS_PROFILE: 'env-profile',
+          AWS_REGION: 'env-region',
+        },
+      });
+
+      await runArchiveSyncCommand(command);
+
+      // ensureS3ArchiveAccess receives the config values; the helper internally
+      // applies non-clobbering merge so parent env wins.
+      expect(ensureS3ArchiveAccess).toHaveBeenCalledWith(
+        expect.objectContaining({
+          awsProfile: 'config-profile',
+          awsRegion: 'config-region',
+        }),
+      );
+
+      const lsCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'ls',
+      );
+      const syncCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'sync',
+      );
+      expect(lsCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'env-profile',
+        AWS_REGION: 'env-region',
+      });
+      expect(syncCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'env-profile',
+        AWS_REGION: 'env-region',
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('uses config when neither flag nor parent env is set', async () => {
+      const { command, ensureS3ArchiveAccess, execFile } = createHarness({
+        config: {
+          version: 1,
+          archive: {
+            s3Uri: 's3://example-bucket/oat-archive',
+            s3SyncOnComplete: true,
+            awsProfile: 'config-profile',
+            awsRegion: 'config-region',
+          },
+        },
+        processEnv: { PATH: '/usr/bin' },
+      });
+
+      await runArchiveSyncCommand(command);
+
+      expect(ensureS3ArchiveAccess).toHaveBeenCalledWith(
+        expect.objectContaining({
+          awsProfile: 'config-profile',
+          awsRegion: 'config-region',
+        }),
+      );
+
+      const lsCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'ls',
+      );
+      const syncCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'sync',
+      );
+      expect(lsCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'config-profile',
+        AWS_REGION: 'config-region',
+      });
+      expect(syncCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'config-profile',
+        AWS_REGION: 'config-region',
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('does not inject AWS_PROFILE/AWS_REGION when neither flag, env, nor config supply them', async () => {
+      const { command, ensureS3ArchiveAccess, execFile } = createHarness({
+        processEnv: { PATH: '/usr/bin' },
+      });
+
+      await runArchiveSyncCommand(command);
+
+      expect(ensureS3ArchiveAccess).toHaveBeenCalledWith(
+        expect.objectContaining({
+          awsProfile: undefined,
+          awsRegion: undefined,
+        }),
+      );
+
+      const lsCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'ls',
+      );
+      const syncCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'sync',
+      );
+      expect(lsCall?.[2]?.env).not.toHaveProperty('AWS_PROFILE');
+      expect(lsCall?.[2]?.env).not.toHaveProperty('AWS_REGION');
+      expect(syncCall?.[2]?.env).not.toHaveProperty('AWS_PROFILE');
+      expect(syncCall?.[2]?.env).not.toHaveProperty('AWS_REGION');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('treats empty/whitespace flag values as not provided', async () => {
+      const { command, ensureS3ArchiveAccess, execFile } = createHarness({
+        config: {
+          version: 1,
+          archive: {
+            s3Uri: 's3://example-bucket/oat-archive',
+            s3SyncOnComplete: true,
+            awsProfile: 'config-profile',
+            awsRegion: 'config-region',
+          },
+        },
+        processEnv: { PATH: '/usr/bin' },
+      });
+
+      await runArchiveSyncCommand(command, {
+        commandArgs: ['--profile', '   ', '--region', ''],
+      });
+
+      // Falls back to config when the flag is whitespace/empty.
+      expect(ensureS3ArchiveAccess).toHaveBeenCalledWith(
+        expect.objectContaining({
+          awsProfile: 'config-profile',
+          awsRegion: 'config-region',
+        }),
+      );
+
+      const syncCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'sync',
+      );
+      expect(syncCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'config-profile',
+        AWS_REGION: 'config-region',
+      });
+      expect(process.exitCode).toBe(0);
+    });
   });
 });
