@@ -179,6 +179,14 @@ function writeProjectStatusOutput(
   options: ProjectStatusOptions,
   payload: { status: 'ok'; project: ProjectState },
 ): void {
+  if (options.field && options.shell?.length) {
+    context.logger.error(
+      '`--field` and `--shell` are mutually exclusive; pass only one.',
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   if (options.field) {
     context.logger.info(formatRawValue(readDotPath(payload, options.field)));
     process.exitCode = 0;

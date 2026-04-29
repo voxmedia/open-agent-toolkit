@@ -334,6 +334,26 @@ describe('oat project status', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('rejects combining --field and --shell', async () => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      activeProjectPath: '.oat/projects/shared/demo',
+    });
+
+    await runCommand(command, [
+      '--field',
+      'project.workflowMode',
+      '--shell',
+      'WORKFLOW_MODE=project.workflowMode',
+    ]);
+
+    expect(capture.info).toEqual([]);
+    expect(capture.error[0]).toContain('--field');
+    expect(capture.error[0]).toContain('--shell');
+    expect(capture.error[0]).toContain('mutually exclusive');
+    expect(process.exitCode).toBe(1);
+  });
+
   it('emits every JSON field migrated skills depend on when status is ok', async () => {
     const cwd = '/repo';
     const projectPath = '.oat/projects/shared/demo';
