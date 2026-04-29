@@ -29,7 +29,17 @@ export interface EnsureS3ArchiveAccessOptions {
   mode: 'completion' | 'sync';
   s3Uri?: string | null;
   syncOnComplete: boolean;
+  /**
+   * Config-only AWS profile (e.g., `archive.awsProfile`). This helper applies
+   * the value only when the parent env does not already provide `AWS_PROFILE`,
+   * matching discovery decision #3 ("config does not clobber an explicit shell
+   * env"). Callers that need flag-style overrides must set the env entry
+   * themselves before calling this helper.
+   */
   awsProfile?: string | null;
+  /**
+   * Config-only AWS region. Same non-clobbering semantics as `awsProfile`.
+   */
   awsRegion?: string | null;
 }
 
@@ -51,7 +61,16 @@ export interface ArchiveProjectOnCompletionOptions {
   s3Uri?: string | null;
   s3SyncOnComplete: boolean;
   summaryExportPath?: string | null;
+  /**
+   * Config-only AWS profile (`archive.awsProfile`). The completion path has no
+   * flag override; this value is forwarded as-is into the env merge, where the
+   * parent env wins if it already supplies `AWS_PROFILE`. Discovery decision #3.
+   */
   awsProfile?: string | null;
+  /**
+   * Config-only AWS region (`archive.awsRegion`). Same non-clobbering semantics
+   * as `awsProfile`.
+   */
   awsRegion?: string | null;
 }
 
@@ -96,12 +115,19 @@ function normalizeS3Uri(s3Uri: string): string {
 }
 
 /**
- * Build the env passed to every `aws` spawn in this module. Layers
- * `AWS_PROFILE`/`AWS_REGION` from the caller's options on top of the supplied
- * parent env. An empty/whitespace value in `opts` is treated as unset (does not
- * clobber a value the parent env already provides), and we never inject a key
- * when neither source supplies one — so the spawned process sees the same
- * "unset" signal it would have seen without this plumbing.
+ * Build the env passed to every `aws` spawn in this module.
+ *
+ * Non-clobbering merge: a non-empty value in `opts` is applied only when
+ * `parentEnv` does not already provide that key (treating empty/whitespace
+ * parent values as unset). If parent env has a non-empty value, it is left
+ * untouched even when `opts` supplies a non-empty value. Callers that need
+ * flag-style overrides must set the env entry themselves before calling this
+ * helper. This matches discovery decision #3 — config does not clobber an
+ * explicit shell env.
+ *
+ * An empty/whitespace value in `opts` is also treated as unset, and we never
+ * inject a key when neither source supplies one — so the spawned process sees
+ * the same "unset" signal it would have seen without this plumbing.
  */
 function buildAwsEnv(
   parentEnv: NodeJS.ProcessEnv,
@@ -109,15 +135,20 @@ function buildAwsEnv(
 ): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...parentEnv };
 
+  const parentHas = (key: 'AWS_PROFILE' | 'AWS_REGION'): boolean => {
+    const value = parentEnv[key];
+    return typeof value === 'string' && value.trim().length > 0;
+  };
+
   const profile =
     typeof opts.awsProfile === 'string' ? opts.awsProfile.trim() : '';
-  if (profile.length > 0) {
+  if (profile.length > 0 && !parentHas('AWS_PROFILE')) {
     env.AWS_PROFILE = profile;
   }
 
   const region =
     typeof opts.awsRegion === 'string' ? opts.awsRegion.trim() : '';
-  if (region.length > 0) {
+  if (region.length > 0 && !parentHas('AWS_REGION')) {
     env.AWS_REGION = region;
   }
 
