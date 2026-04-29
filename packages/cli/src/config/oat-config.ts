@@ -22,6 +22,8 @@ export interface OatArchiveConfig {
   s3SyncOnComplete?: boolean;
   summaryExportPath?: string;
   wrapUpExportPath?: string;
+  awsProfile?: string;
+  awsRegion?: string;
 }
 
 export type WorkflowHillCheckpointDefault = 'every' | 'final';
@@ -188,6 +190,14 @@ function trimPathValue(value: string): string {
   return value.replace(/\/+$/, '').replace(/^\.\//, '').trim();
 }
 
+function trimNonEmptyString(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 function normalizeProjectPath(
   repoRoot: string,
   pathValue: string | null | undefined,
@@ -288,6 +298,14 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
       archive.wrapUpExportPath = normalizeToPosixPath(
         parsed.archive.wrapUpExportPath.trim().replace(/\/+$/, ''),
       );
+    }
+    const awsProfile = trimNonEmptyString(parsed.archive.awsProfile);
+    if (awsProfile !== undefined) {
+      archive.awsProfile = awsProfile;
+    }
+    const awsRegion = trimNonEmptyString(parsed.archive.awsRegion);
+    if (awsRegion !== undefined) {
+      archive.awsRegion = awsRegion;
     }
     if (Object.keys(archive).length > 0) {
       next.archive = archive;

@@ -57,6 +57,8 @@ describe('oat-config', () => {
         s3SyncOnComplete: true,
         summaryExportPath: '.oat/repo/reference/project-summaries',
         wrapUpExportPath: '.oat/repo/reference/wrap-ups',
+        awsProfile: 'work-sso',
+        awsRegion: 'us-east-1',
       },
     });
 
@@ -70,7 +72,77 @@ describe('oat-config', () => {
         s3SyncOnComplete: true,
         summaryExportPath: '.oat/repo/reference/project-summaries',
         wrapUpExportPath: '.oat/repo/reference/wrap-ups',
+        awsProfile: 'work-sso',
+        awsRegion: 'us-east-1',
       },
+    });
+  });
+
+  it('normalizes archive.awsProfile and archive.awsRegion (trim, drop empty, ignore non-string)', async () => {
+    const repoRoot = await createRepoRoot();
+    const configPath = join(repoRoot, '.oat', 'config.json');
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        archive: {
+          s3Uri: 's3://example-bucket/oat-archive',
+          awsProfile: '  work-sso  ',
+          awsRegion: '  us-east-1  ',
+        },
+      }),
+      'utf8',
+    );
+
+    const config = await readOatConfig(repoRoot);
+    expect(config.archive).toEqual({
+      s3Uri: 's3://example-bucket/oat-archive',
+      awsProfile: 'work-sso',
+      awsRegion: 'us-east-1',
+    });
+  });
+
+  it('drops empty archive.awsProfile and archive.awsRegion during normalization', async () => {
+    const repoRoot = await createRepoRoot();
+    const configPath = join(repoRoot, '.oat', 'config.json');
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        archive: {
+          s3Uri: 's3://example-bucket/oat-archive',
+          awsProfile: '   ',
+          awsRegion: '',
+        },
+      }),
+      'utf8',
+    );
+
+    const config = await readOatConfig(repoRoot);
+    expect(config.archive).toEqual({
+      s3Uri: 's3://example-bucket/oat-archive',
+    });
+  });
+
+  it('ignores non-string archive.awsProfile and archive.awsRegion values', async () => {
+    const repoRoot = await createRepoRoot();
+    const configPath = join(repoRoot, '.oat', 'config.json');
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        archive: {
+          s3Uri: 's3://example-bucket/oat-archive',
+          awsProfile: 42,
+          awsRegion: true,
+        },
+      }),
+      'utf8',
+    );
+
+    const config = await readOatConfig(repoRoot);
+    expect(config.archive).toEqual({
+      s3Uri: 's3://example-bucket/oat-archive',
     });
   });
 
