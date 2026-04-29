@@ -599,6 +599,29 @@ describe('help output snapshots', () => {
     `);
   });
 
+  it('project status --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'status',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project status [options]
+
+      Show the current OAT project state
+
+      Options:
+        --field <path>           Print a single field from the project status payload
+                                 by dot path
+        --project-path <path>    Read status from an explicit project path instead of
+                                 the active project
+        --shell <assignment...>  Print shell-safe NAME=value assignments for one or
+                                 more NAME=path pairs
+        -h, --help               display help for command
+      "
+    `);
+  });
+
   it('project complete-state --help matches snapshot', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, [
