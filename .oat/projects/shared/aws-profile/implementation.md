@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-28
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -132,6 +132,7 @@ _- Outstanding Items_
 | p02   | done        | pass   | 1/2            | merged      |
 | p03   | done        | pass   | 0/2            | merged      |
 | p04   | done        | pass   | 1/2            | merged      |
+| p05   | done        | pass   | 0/2            | merged      |
 
 #### Parallel Groups
 
