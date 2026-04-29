@@ -47,6 +47,8 @@ const DEFAULT_SHARED_CONFIG = {
     s3SyncOnComplete: false,
     summaryExportPath: null,
     wrapUpExportPath: null,
+    awsProfile: null,
+    awsRegion: null,
   },
   documentation: {
     root: null,

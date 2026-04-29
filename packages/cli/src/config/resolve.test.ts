@@ -465,4 +465,57 @@ describe('resolveEffectiveConfig', () => {
       source: 'shared',
     });
   });
+
+  it('surfaces archive.awsProfile and archive.awsRegion with source default when unset', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({ version: 1 }) satisfies OatLocalConfig,
+        readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+      },
+    );
+
+    expect(result.resolved['archive.awsProfile']).toEqual({
+      value: null,
+      source: 'default',
+    });
+    expect(result.resolved['archive.awsRegion']).toEqual({
+      value: null,
+      source: 'default',
+    });
+  });
+
+  it('surfaces archive.awsProfile and archive.awsRegion from shared config when set', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () =>
+          ({
+            version: 1,
+            archive: {
+              awsProfile: 'work-sso',
+              awsRegion: 'us-east-1',
+            },
+          }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({ version: 1 }) satisfies OatLocalConfig,
+        readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+      },
+    );
+
+    expect(result.resolved['archive.awsProfile']).toEqual({
+      value: 'work-sso',
+      source: 'shared',
+    });
+    expect(result.resolved['archive.awsRegion']).toEqual({
+      value: 'us-east-1',
+      source: 'shared',
+    });
+  });
 });
