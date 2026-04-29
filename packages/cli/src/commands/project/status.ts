@@ -117,6 +117,12 @@ async function runProjectStatus(
   options: ProjectStatusOptions,
 ): Promise<void> {
   try {
+    if (options.projectPath && isAbsolute(options.projectPath)) {
+      const project = await dependencies.getProjectState(options.projectPath);
+      writeProjectStatusOutput(context, options, { status: 'ok', project });
+      return;
+    }
+
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
 
     if (options.projectPath) {

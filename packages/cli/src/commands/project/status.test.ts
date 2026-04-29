@@ -1,3 +1,4 @@
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -45,6 +46,7 @@ interface HarnessOptions {
   activeProjectStatus?: 'active' | 'missing' | 'unset';
   activeProjectPath?: string | null;
   projectState?: ProjectState;
+  resolveProjectRoot?: () => Promise<string>;
 }
 
 function makeProjectState(path: string): ProjectState {
@@ -90,6 +92,7 @@ function createHarness(options: HarnessOptions): {
   command: Command;
   getProjectState: ReturnType<typeof vi.fn>;
   resolveActiveProject: ReturnType<typeof vi.fn>;
+  resolveProjectRoot: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const activeProjectPath =
@@ -105,6 +108,9 @@ function createHarness(options: HarnessOptions): {
     path: options.activeProjectStatus === 'unset' ? null : activeProjectPath,
     status: options.activeProjectStatus ?? 'active',
   }));
+  const resolveProjectRoot = vi.fn(
+    options.resolveProjectRoot ?? (async () => options.cwd),
+  );
 
   const command = createProjectStatusCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -117,12 +123,18 @@ function createHarness(options: HarnessOptions): {
       interactive: !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
-    resolveProjectRoot: vi.fn(async () => options.cwd),
+    resolveProjectRoot,
     resolveActiveProject,
     getProjectState,
   });
 
-  return { capture, command, getProjectState, resolveActiveProject };
+  return {
+    capture,
+    command,
+    getProjectState,
+    resolveActiveProject,
+    resolveProjectRoot,
+  };
 }
 
 async function runCommand(
@@ -255,6 +267,37 @@ describe('oat project status', () => {
     expect(resolveActiveProject).not.toHaveBeenCalled();
     expect(getProjectState).toHaveBeenCalledWith(projectPath);
     expect(capture.info).toEqual(["WORKFLOW_MODE='quick'"]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reads an absolute --project-path from a cwd outside any git checkout', async () => {
+    const projectPath = '/other-worktree/.oat/projects/shared/demo';
+    const {
+      command,
+      capture,
+      getProjectState,
+      resolveActiveProject,
+      resolveProjectRoot,
+    } = createHarness({
+      cwd: tmpdir(),
+      activeProjectPath: '.oat/projects/shared/active',
+      projectState: makeProjectState(projectPath),
+      resolveProjectRoot: async () => {
+        throw new Error('not inside a git checkout');
+      },
+    });
+
+    await runCommand(command, [
+      '--project-path',
+      projectPath,
+      '--field',
+      'project.path',
+    ]);
+
+    expect(resolveProjectRoot).not.toHaveBeenCalled();
+    expect(resolveActiveProject).not.toHaveBeenCalled();
+    expect(getProjectState).toHaveBeenCalledWith(projectPath);
+    expect(capture.info).toEqual([projectPath]);
     expect(process.exitCode).toBe(0);
   });
 
