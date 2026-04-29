@@ -505,4 +505,185 @@ describe('archive utils', () => {
       ),
     );
   });
+
+  describe('AWS profile/region env plumbing', () => {
+    it('forwards awsProfile + awsRegion env to aws s3 sync during completion', async () => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+      await mkdir(projectPath, { recursive: true });
+
+      const execFile = vi.fn(async () => ({ stdout: '', stderr: '' }));
+      const ensureAccess = vi.fn(async () => ({ ok: true, warnings: [] }));
+
+      await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3Uri: 's3://example-bucket/oat-archive',
+          s3SyncOnComplete: true,
+          awsProfile: 'work-sso',
+          awsRegion: 'us-east-1',
+        },
+        {
+          execFile,
+          ensureS3ArchiveAccess: ensureAccess,
+          env: { PATH: '/usr/bin' },
+          timestamp: () => '2026-04-01T12:34:56Z',
+        },
+      );
+
+      expect(ensureAccess).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mode: 'completion',
+          s3Uri: 's3://example-bucket/oat-archive',
+          syncOnComplete: true,
+          awsProfile: 'work-sso',
+          awsRegion: 'us-east-1',
+        }),
+        expect.anything(),
+      );
+
+      const syncCall = execFile.mock.calls.find(
+        (call) => call[0] === 'aws' && call[1][0] === 's3',
+      );
+      expect(syncCall).toBeDefined();
+      const env = syncCall?.[2]?.env as NodeJS.ProcessEnv;
+      expect(env.AWS_PROFILE).toBe('work-sso');
+      expect(env.AWS_REGION).toBe('us-east-1');
+    });
+
+    it('forwards awsProfile + awsRegion env to ensureS3ArchiveAccess aws spawns', async () => {
+      const execFile = vi.fn(async () => ({ stdout: '', stderr: '' }));
+
+      const result = await ensureS3ArchiveAccess(
+        {
+          mode: 'sync',
+          s3Uri: 's3://example-bucket/oat-archive',
+          syncOnComplete: true,
+          awsProfile: 'work-sso',
+          awsRegion: 'us-east-1',
+        },
+        {
+          execFile,
+          env: { PATH: '/usr/bin' },
+        },
+      );
+
+      expect(result.ok).toBe(true);
+      expect(execFile).toHaveBeenCalledTimes(2);
+
+      const versionCall = execFile.mock.calls.find(
+        (call) => call[0] === 'aws' && call[1][0] === '--version',
+      );
+      const stsCall = execFile.mock.calls.find(
+        (call) => call[0] === 'aws' && call[1][0] === 'sts',
+      );
+
+      expect(versionCall).toBeDefined();
+      expect(stsCall).toBeDefined();
+
+      const versionEnv = versionCall?.[2]?.env as NodeJS.ProcessEnv;
+      expect(versionEnv.AWS_PROFILE).toBe('work-sso');
+      expect(versionEnv.AWS_REGION).toBe('us-east-1');
+
+      const stsEnv = stsCall?.[2]?.env as NodeJS.ProcessEnv;
+      expect(stsEnv.AWS_PROFILE).toBe('work-sso');
+      expect(stsEnv.AWS_REGION).toBe('us-east-1');
+    });
+
+    it('preserves parent-process AWS_PROFILE when no config value is supplied', async () => {
+      const execFile = vi.fn(async () => ({ stdout: '', stderr: '' }));
+
+      await ensureS3ArchiveAccess(
+        {
+          mode: 'sync',
+          s3Uri: 's3://example-bucket/oat-archive',
+          syncOnComplete: true,
+        },
+        {
+          execFile,
+          env: { PATH: '/usr/bin', AWS_PROFILE: 'parent-profile' },
+        },
+      );
+
+      const versionCall = execFile.mock.calls.find(
+        (call) => call[0] === 'aws' && call[1][0] === '--version',
+      );
+      const env = versionCall?.[2]?.env as NodeJS.ProcessEnv;
+      expect(env.AWS_PROFILE).toBe('parent-profile');
+    });
+
+    it('overrides parent-process AWS_PROFILE when config provides a value', async () => {
+      const execFile = vi.fn(async () => ({ stdout: '', stderr: '' }));
+
+      await ensureS3ArchiveAccess(
+        {
+          mode: 'sync',
+          s3Uri: 's3://example-bucket/oat-archive',
+          syncOnComplete: true,
+          awsProfile: 'config-profile',
+        },
+        {
+          execFile,
+          env: { PATH: '/usr/bin', AWS_PROFILE: 'parent-profile' },
+        },
+      );
+
+      const versionCall = execFile.mock.calls.find(
+        (call) => call[0] === 'aws' && call[1][0] === '--version',
+      );
+      const env = versionCall?.[2]?.env as NodeJS.ProcessEnv;
+      expect(env.AWS_PROFILE).toBe('config-profile');
+    });
+
+    it('does not inject AWS_PROFILE when neither config nor parent env supplies one', async () => {
+      const execFile = vi.fn(async () => ({ stdout: '', stderr: '' }));
+
+      await ensureS3ArchiveAccess(
+        {
+          mode: 'sync',
+          s3Uri: 's3://example-bucket/oat-archive',
+          syncOnComplete: true,
+        },
+        {
+          execFile,
+          env: { PATH: '/usr/bin' },
+        },
+      );
+
+      const versionCall = execFile.mock.calls.find(
+        (call) => call[0] === 'aws' && call[1][0] === '--version',
+      );
+      const env = versionCall?.[2]?.env as NodeJS.ProcessEnv;
+      expect('AWS_PROFILE' in env).toBe(false);
+      expect('AWS_REGION' in env).toBe(false);
+    });
+
+    it('treats empty-string awsProfile/awsRegion as unset', async () => {
+      const execFile = vi.fn(async () => ({ stdout: '', stderr: '' }));
+
+      await ensureS3ArchiveAccess(
+        {
+          mode: 'sync',
+          s3Uri: 's3://example-bucket/oat-archive',
+          syncOnComplete: true,
+          awsProfile: '',
+          awsRegion: '',
+        },
+        {
+          execFile,
+          env: { PATH: '/usr/bin', AWS_PROFILE: 'parent-profile' },
+        },
+      );
+
+      const versionCall = execFile.mock.calls.find(
+        (call) => call[0] === 'aws' && call[1][0] === '--version',
+      );
+      const env = versionCall?.[2]?.env as NodeJS.ProcessEnv;
+      expect(env.AWS_PROFILE).toBe('parent-profile');
+      expect('AWS_REGION' in env).toBe(false);
+    });
+  });
 });

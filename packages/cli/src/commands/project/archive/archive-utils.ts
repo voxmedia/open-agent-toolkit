@@ -29,6 +29,8 @@ export interface EnsureS3ArchiveAccessOptions {
   mode: 'completion' | 'sync';
   s3Uri?: string | null;
   syncOnComplete: boolean;
+  awsProfile?: string | null;
+  awsRegion?: string | null;
 }
 
 interface EnsureS3ArchiveAccessDependencies {
@@ -49,6 +51,8 @@ export interface ArchiveProjectOnCompletionOptions {
   s3Uri?: string | null;
   s3SyncOnComplete: boolean;
   summaryExportPath?: string | null;
+  awsProfile?: string | null;
+  awsRegion?: string | null;
 }
 
 interface ArchiveProjectOnCompletionDependencies extends EnsureS3ArchiveAccessDependencies {
@@ -89,6 +93,35 @@ export interface ArchiveSnapshotMetadata {
 
 function normalizeS3Uri(s3Uri: string): string {
   return s3Uri.trim().replace(/\/+$/, '');
+}
+
+/**
+ * Build the env passed to every `aws` spawn in this module. Layers
+ * `AWS_PROFILE`/`AWS_REGION` from the caller's options on top of the supplied
+ * parent env. An empty/whitespace value in `opts` is treated as unset (does not
+ * clobber a value the parent env already provides), and we never inject a key
+ * when neither source supplies one — so the spawned process sees the same
+ * "unset" signal it would have seen without this plumbing.
+ */
+function buildAwsEnv(
+  parentEnv: NodeJS.ProcessEnv,
+  opts: { awsProfile?: string | null; awsRegion?: string | null },
+): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...parentEnv };
+
+  const profile =
+    typeof opts.awsProfile === 'string' ? opts.awsProfile.trim() : '';
+  if (profile.length > 0) {
+    env.AWS_PROFILE = profile;
+  }
+
+  const region =
+    typeof opts.awsRegion === 'string' ? opts.awsRegion.trim() : '';
+  if (region.length > 0) {
+    env.AWS_REGION = region;
+  }
+
+  return env;
 }
 
 function resolveRepoSlug(repoRoot: string): string {
@@ -417,6 +450,8 @@ export async function archiveProjectOnCompletion(
         mode: 'completion',
         s3Uri: options.s3Uri,
         syncOnComplete: options.s3SyncOnComplete,
+        awsProfile: options.awsProfile,
+        awsRegion: options.awsRegion,
       },
       {
         execFile,
@@ -439,7 +474,10 @@ export async function archiveProjectOnCompletion(
         }
         await execFile('aws', syncArgs, {
           cwd: options.repoRoot,
-          env: dependencies.env ?? process.env,
+          env: buildAwsEnv(dependencies.env ?? process.env, {
+            awsProfile: options.awsProfile,
+            awsRegion: options.awsRegion,
+          }),
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -466,7 +504,12 @@ export async function ensureS3ArchiveAccess(
   }
 
   const execFile = dependencies.execFile ?? execFileAsync;
-  const execOptions = { env: dependencies.env ?? process.env };
+  const execOptions = {
+    env: buildAwsEnv(dependencies.env ?? process.env, {
+      awsProfile: options.awsProfile,
+      awsRegion: options.awsRegion,
+    }),
+  };
 
   try {
     await execFile('aws', ['--version'], execOptions);
