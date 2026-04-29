@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-28
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -129,15 +129,16 @@ _- Outstanding Items_
 | Phase | Implementer | Review | Fix Iterations | Disposition |
 | ----- | ----------- | ------ | -------------- | ----------- |
 | p01   | done        | pass   | 0/2            | merged      |
+| p02   | done        | pass   | 1/2            | merged      |
 
 #### Parallel Groups
 
-- Group 1 [p02, p03]: pending — worktree-based, will merge in plan order
+- Group 1 [p02, p03]: degraded to sequential inline — Agent worktree isolation branched from primary repo's `main` instead of orchestration branch HEAD, so neither phase could see p01's commits. Skill's degradation rule applied; running phases sequentially in this checkout instead of parallel worktrees.
 - Singletons: p01 (sequential), p04 (sequential), p05 (sequential)
 
 #### Outstanding Items
 
-- None
+- p02 carried Minor findings: (a) plan p02-t01 Step-1 test description still says "overridden when config provides one" — contradicts implemented behavior; cosmetic drift. (b) Optional completion-path-explicit "both parent env + options" test not yet added; helper-level coverage already pins behavior. Neither blocks.
 
 <!-- orchestration-runs-end -->
 
