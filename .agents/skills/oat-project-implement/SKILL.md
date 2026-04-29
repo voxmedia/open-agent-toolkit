@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.5
+version: 2.0.6
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -525,13 +525,17 @@ When the current schedule entry is a multi-phase group, execute as follows.
 **Tier 1 parallel execution:**
 
 1.  **Bootstrap worktrees:** for each phase in the group, invoke `oat-worktree-bootstrap-auto` with branch name `{project-name}/{pNN}` and base = orchestration branch.
+
+    > ⚠️ **CRITICAL — DO NOT substitute host-native worktree primitives.** Bootstrap MUST go through `oat-worktree-bootstrap-auto` with an explicit `--base` set to the current orchestration branch HEAD (capture `EXPECTED_HEAD=$(git rev-parse HEAD)` from the orchestration cwd before dispatching). Do not use Claude Code's `Agent({ isolation: "worktree" })`, Cursor's equivalent, or any other host-native isolation primitive in lieu of this skill — those mechanisms may use the primary repo's checkout (often `main`) as the base regardless of the orchestrator's current branch, silently producing a worktree that cannot see prior phase commits and forcing the entire group to degrade to sequential.
     - If **any** bootstrap fails, cancel any worktrees that bootstrapped successfully for this group and degrade the whole group to sequential inline execution. Log the degradation reason to `implementation.md` Outstanding Items.
 
-2.  **Concurrent dispatch:** for each successfully bootstrapped worktree, dispatch `oat-phase-implementer` (with the worktree as working directory) concurrently. Each dispatch runs the per-phase loop internally (implementer → reviewer → fix-loop).
+2.  **Verify worktree HEAD before dispatch (base-mismatch gate):** After bootstrap, verify each worktree is at the expected orchestration HEAD. From the orchestration cwd, capture `EXPECTED_HEAD=$(git rev-parse HEAD)` _before_ invoking bootstrap. After bootstrap, for each new worktree path, run `git -C {worktree-path} rev-parse HEAD` and confirm it matches `EXPECTED_HEAD`, or run `git -C {worktree-path} merge-base --is-ancestor "$EXPECTED_HEAD" HEAD` and confirm it succeeds (exit 0). If either check fails for any phase, treat the bootstrap as failed for that phase, cancel any successful sibling worktrees in this group, and degrade the entire group to sequential inline execution — same mechanism as a primary bootstrap failure. Log the mismatch to `implementation.md` Outstanding Items, including the observed and expected SHAs (`expected={EXPECTED_HEAD}, observed={observed-head-sha}, phase={pNN}, worktree={path}`).
 
-3.  **Wait for all phases:** do not proceed until every phase in the group reports a terminal verdict (pass or excluded).
+3.  **Concurrent dispatch:** for each successfully bootstrapped worktree (passing the base-mismatch gate above), dispatch `oat-phase-implementer` (with the worktree as working directory) concurrently. Each dispatch runs the per-phase loop internally (implementer → reviewer → fix-loop).
 
-4.  **Fan-in reconciliation (merge back in plan order):**
+4.  **Wait for all phases:** do not proceed until every phase in the group reports a terminal verdict (pass or excluded).
+
+5.  **Fan-in reconciliation (merge back in plan order):**
 
     For each phase in the group, in plan order (p02 before p03, etc.), if its verdict is pass:
 
@@ -570,23 +574,23 @@ When the current schedule entry is a multi-phase group, execute as follows.
               commit: <sha if RESOLVED, else null>
         ```
 
-    d. Parse the subagent's return status: - `RESOLVED` → subagent has committed the merge; orchestrator proceeds to integration verification (Step 5) and the next phase in the group. - `UNRESOLVABLE` or `VERIFICATION_FAILED` → STOP the run. Surface to user with phase ID, conflicting files, worktree path, subagent's reasoning summary. Do not merge remaining phases.
+    d. Parse the subagent's return status: - `RESOLVED` → subagent has committed the merge; orchestrator proceeds to integration verification (Step 6) and the next phase in the group. - `UNRESOLVABLE` or `VERIFICATION_FAILED` → STOP the run. Surface to user with phase ID, conflicting files, worktree path, subagent's reasoning summary. Do not merge remaining phases.
 
     **Tier 2 (inline) exception:** In Tier 2 runs, parallel groups already degrade to sequential, so fan-in conflicts don't arise from this code path. If a conflict ever surfaces in Tier 2 (e.g., from another operation), the orchestrator resolves inline since the whole run is already inline — consistent with Tier 2 semantics.
 
-5.  **Integration verification after each merge:**
+6.  **Integration verification after each merge:**
 
     After each successful merge, run project verification (tests, lint, type-check). If verification fails:
     - Attempt a tractable fix (missing import, trivial type error). If the fix succeeds and verification passes, commit the fix.
     - If the fix is not tractable → revert the merge, STOP the run. Surface to user.
 
-6.  **Worktree cleanup:**
+7.  **Worktree cleanup:**
 
     For phases that merged successfully and passed integration verification, clean up the worktree using the existing worktree cleanup mechanism (e.g., `git worktree remove`).
 
     For phases that were excluded (fix-loop exhausted), preserve the worktree and log its path in `implementation.md` Outstanding Items.
 
-7.  **Bookkeeping commit** after the group completes. Then HiLL checkpoint check.
+8.  **Bookkeeping commit** after the group completes. Then HiLL checkpoint check.
 
 ### Step 7: Artifact Updates After Each Phase (or Group)
 
