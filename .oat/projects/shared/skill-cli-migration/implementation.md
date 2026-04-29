@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-04-27
-oat_current_task_id: prev2-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 2     | 2/2       |
-| Phase 2      | complete    | 2     | 2/2       |
-| Phase 3      | complete    | 5     | 5/5       |
-| Phase 4      | complete    | 3     | 3/3       |
-| Review Fixes | complete    | 4     | 4/4       |
-| Revision 2   | complete    | 4     | 4/4       |
-| Rev2 Fixes   | in_progress | 3     | 0/3       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 2     | 2/2       |
+| Phase 2      | complete | 2     | 2/2       |
+| Phase 3      | complete | 5     | 5/5       |
+| Phase 4      | complete | 3     | 3/3       |
+| Review Fixes | complete | 4     | 4/4       |
+| Revision 2   | complete | 4     | 4/4       |
+| Rev2 Fixes   | complete | 3     | 3/3       |
 
-**Total:** 20/23 tasks completed
+**Total:** 23/23 tasks completed
 
 ## Review Notes
 
@@ -649,6 +649,75 @@ After the fix tasks are complete:
 - Live CLI smoke: absolute `--project-path ... --shell WORKFLOW_MODE=project.workflowMode LAST_SHA=project.lastCommit` → shell-safe assignments
 
 **Next:** PR #65 is open with the readability revision included. Await CI and human review; use `oat-project-revise` for additional feedback or `oat-project-complete` after merge approval.
+
+## Phase p-rev2: Revision 2 Review Fixes
+
+**Status:** in_progress
+**Started:** 2026-04-29
+
+### Task prev2-t05: (review) Lock `oat project status --help` snapshot
+
+**Status:** completed
+**Commit:** 690a43c6
+
+**Outcome:**
+
+- Added a dedicated `project status --help` inline snapshot adjacent to the existing `project --help` case so any rename/removal of `--field`, `--project-path`, or `--shell` trips the help-snapshot suite.
+
+**Files changed:**
+
+- `packages/cli/src/commands/help-snapshots.test.ts` (inline snapshot generated via `vitest -u`).
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts` → 43/43 pass (re-run without `-u` confirms snapshot matches).
+
+---
+
+### Task prev2-t06: (review) Reject conflicting `--field` and `--shell`
+
+**Status:** completed
+**Commit:** d1cb991c
+
+**Outcome:**
+
+- `writeProjectStatusOutput` now rejects requests that combine `--field` with a non-empty `--shell`: stderr names both flags as mutually exclusive and the process exits 1 before either output path runs. New vitest case (`rejects combining --field and --shell`) guards the contract.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/status.ts`
+- `packages/cli/src/commands/project/status.test.ts`
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts` → 13/13 pass.
+- `pnpm --filter @open-agent-toolkit/cli type-check` → clean.
+
+---
+
+### Task prev2-t07: (review) Skip repo root resolution for absolute `--project-path`
+
+**Status:** completed
+**Commit:** 6ea55e3f
+
+**Outcome:**
+
+- `runProjectStatus` now short-circuits before `resolveProjectRoot` whenever `--project-path` is absolute, so `oat project status --project-path /abs/path` succeeds even when invoked from a `cwd` that is not a git checkout. Relative `--project-path` and unset `--project-path` paths still call `resolveProjectRoot` exactly once.
+- New vitest case `reads an absolute --project-path from a cwd outside any git checkout` simulates a non-repo `cwd` by configuring the harness `resolveProjectRoot` to throw and asserts the CLI succeeds, never calls `resolveProjectRoot`/`resolveActiveProject`, and emits the absolute project's field. Existing relative-path coverage still passes.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/status.ts`
+- `packages/cli/src/commands/project/status.test.ts`
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts` → 14/14 pass.
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts` → 43/43 pass.
+- `pnpm --filter @open-agent-toolkit/cli type-check` → clean.
+- `pnpm lint` → pass (10 tasks, 0 warnings, 0 errors).
+
+---
 
 ## References
 
