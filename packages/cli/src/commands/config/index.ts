@@ -29,6 +29,8 @@ import { createConfigDumpCommand } from './dump';
 type ConfigKey =
   | 'activeIdea'
   | 'activeProject'
+  | 'archive.awsProfile'
+  | 'archive.awsRegion'
   | 'archive.s3SyncOnComplete'
   | 'archive.s3Uri'
   | 'archive.summaryExportPath'
@@ -110,6 +112,8 @@ const KEY_ORDER: ConfigKey[] = [
   'archive.s3SyncOnComplete',
   'archive.summaryExportPath',
   'archive.wrapUpExportPath',
+  'archive.awsProfile',
+  'archive.awsRegion',
   'autoReviewAtCheckpoints',
   'lastPausedProject',
   'documentation.root',
@@ -277,6 +281,30 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set archive.wrapUpExportPath <value>',
     description:
       'Repository-relative directory where the oat-wrap-up skill writes date-ranged shipping digests. When unset, the skill falls back to `.oat/repo/reference/wrap-ups`.',
+  },
+  {
+    key: 'archive.awsProfile',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set archive.awsProfile <value>',
+    description:
+      'AWS named profile forwarded as AWS_PROFILE to every `aws` invocation made by the archive S3 sync (completion + `oat project archive sync`). Precedence: per-invocation flag > existing shell env > this config value.',
+  },
+  {
+    key: 'archive.awsRegion',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set archive.awsRegion <value>',
+    description:
+      'AWS region forwarded as AWS_REGION to every `aws` invocation made by the archive S3 sync (completion + `oat project archive sync`). Precedence: per-invocation flag > existing shell env > this config value.',
   },
   {
     key: 'tools.core',
@@ -856,6 +884,14 @@ async function setConfigValue(
       archive.summaryExportPath = normalizeSharedRoot(rawValue);
     } else if (key === 'archive.wrapUpExportPath') {
       archive.wrapUpExportPath = normalizeSharedRoot(rawValue);
+    } else if (key === 'archive.awsProfile' || key === 'archive.awsRegion') {
+      const subKey = key.slice('archive.'.length) as 'awsProfile' | 'awsRegion';
+      const trimmed = rawValue.trim();
+      if (trimmed === '') {
+        delete archive[subKey];
+      } else {
+        archive[subKey] = trimmed;
+      }
     }
 
     await dependencies.writeOatConfig(repoRoot, {

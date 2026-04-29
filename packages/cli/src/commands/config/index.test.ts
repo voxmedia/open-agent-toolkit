@@ -1104,4 +1104,199 @@ describe('oat config', () => {
     );
     expect(process.exitCode).toBe(0);
   });
+
+  describe('archive.awsProfile + archive.awsRegion', () => {
+    it('sets archive.awsProfile in config.json', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'archive.awsProfile', 'work-sso']);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toEqual({
+        version: 1,
+        archive: { awsProfile: 'work-sso' },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('sets archive.awsRegion in config.json', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'archive.awsRegion', 'us-east-1']);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toEqual({
+        version: 1,
+        archive: { awsRegion: 'us-east-1' },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('trims surrounding whitespace from archive.awsProfile', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'archive.awsProfile', '  work-sso  ']);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toEqual({
+        version: 1,
+        archive: { awsProfile: 'work-sso' },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('removes archive.awsProfile when set to empty string', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          archive: { awsProfile: 'work-sso', s3Uri: 's3://bucket/prefix' },
+        })}\n`,
+        'utf8',
+      );
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'archive.awsProfile', '']);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      const parsed = JSON.parse(raw);
+      expect(parsed.archive.awsProfile).toBeUndefined();
+      // sibling archive keys should remain
+      expect(parsed.archive.s3Uri).toBe('s3://bucket/prefix');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('removes archive.awsRegion when set to empty string', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          archive: { awsRegion: 'us-east-1', s3Uri: 's3://bucket/prefix' },
+        })}\n`,
+        'utf8',
+      );
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'archive.awsRegion', '']);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      const parsed = JSON.parse(raw);
+      expect(parsed.archive.awsRegion).toBeUndefined();
+      expect(parsed.archive.s3Uri).toBe('s3://bucket/prefix');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe archive.awsProfile prints catalog entry with owning command', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'archive.awsProfile']);
+
+      expect(capture.info[0]).toContain('Key: archive.awsProfile');
+      expect(capture.info[0]).toContain('Scope: shared repo');
+      expect(capture.info[0]).toContain('File: .oat/config.json');
+      expect(capture.info[0]).toContain(
+        'Owning command: oat config set archive.awsProfile <value>',
+      );
+      expect(capture.info[0]).toContain('Description:');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe archive.awsProfile in json mode returns structured entry', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'archive.awsProfile'], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'archive.awsProfile',
+        entries: [
+          expect.objectContaining({
+            key: 'archive.awsProfile',
+            file: '.oat/config.json',
+            scope: 'shared repo',
+          }),
+        ],
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe archive.awsRegion prints catalog entry with owning command', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'archive.awsRegion']);
+
+      expect(capture.info[0]).toContain('Key: archive.awsRegion');
+      expect(capture.info[0]).toContain('Scope: shared repo');
+      expect(capture.info[0]).toContain('File: .oat/config.json');
+      expect(capture.info[0]).toContain(
+        'Owning command: oat config set archive.awsRegion <value>',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('list includes archive.awsProfile and archive.awsRegion in whitelisted keys', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          archive: { awsProfile: 'work-sso', awsRegion: 'us-east-1' },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['list']);
+
+      expect(capture.info[0]).toContain('archive.awsProfile');
+      expect(capture.info[0]).toContain('work-sso');
+      expect(capture.info[0]).toContain('archive.awsRegion');
+      expect(capture.info[0]).toContain('us-east-1');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('gets archive.awsProfile from shared config via get', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          archive: { awsProfile: 'work-sso' },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['get', 'archive.awsProfile']);
+
+      expect(capture.info[0]).toBe('work-sso');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('gets archive.awsRegion from shared config via get', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          archive: { awsRegion: 'us-east-1' },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['get', 'archive.awsRegion']);
+
+      expect(capture.info[0]).toBe('us-east-1');
+      expect(process.exitCode).toBe(0);
+    });
+  });
 });
