@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-30
 oat_generated: true
-oat_summary_last_task: p04-tF
+oat_summary_last_task: p04-t16
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -40,13 +40,14 @@ The branch also updates companion workflow skills so discovery routes to design 
 - A post-rebase staleness review was required after PR #58 changed the implementation contract from the removed `oat-project-subagent-implement` flow to `oat-project-implement` v2 with phase-subagent execution and plan-declared parallelism.
 - Dogfood surfaced a real interaction bug: an agent treated missing `AskUserQuestion` as non-interactive even though chat was available. The fix clarified that tool availability and interactivity are separate.
 - The Selective Collaborative revision was added late in the branch, so it was folded into Phase 4 with a second lockstep package bump instead of becoming a separate project/PR.
+- The final p04-tA-tF re-review surfaced one Minor-only NFR5 issue: `oat-project-design/SKILL.md` had reached 701 lines against the 700-line ceiling. p04-t16 removed one redundant picker-taxonomy line, restored the 700-line ceiling, and the user approved lifecycle completion without a separate final-review pass.
 
 ## Verification
 
 - Targeted config tests for `workflow.designMode` passed.
 - Skill validation tests passed, including the Selective Review Pass contract checks.
 - Docs build passed after documentation sync.
-- `pnpm release:validate` passed before rebase; post-rebase validation is rerun against all five public packages at `0.0.54`.
+- Post-rebase validation passed: `pnpm release:validate`, selective skill validation (`28/28`), `pnpm lint`, `pnpm type-check`, `pnpm format`, pre-push version checks, and GitHub `ci` + `release-dry-run`.
 - Artifact-only Selective Collaborative classification dogfood was recorded in `references/selective-review-pass.md`.
 
 ## Follow-up Items
@@ -54,4 +55,3 @@ The branch also updates companion workflow skills so discovery routes to design 
 - Run live Selective Collaborative dogfood for picker taxonomy paths: `Recommended`, `Available / not recommended`, and `Unavailable`.
 - Verify mid-flight "walk me through every remaining section" behavior in a real provider-skill run.
 - Verify the final user-review recap lists sections drafted without live confirmation in a real provider-skill run.
-- Run the final `code final` project review after PR creation, per p04-t11.
