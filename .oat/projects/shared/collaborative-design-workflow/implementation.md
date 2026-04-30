@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-30
-oat_current_task_id: p04-t15
+oat_current_task_id: p04-t11
 oat_generated: false
 ---
 
@@ -341,9 +341,10 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
   - `p04-t12` complete in commit `d42783b2`: quick-start now accepts persisted `workflow.designMode: selective`, maps it to collaborative for lightweight design, explains that Selective Collaborative is only available in full `oat-project-design`, and validation coverage locks the mapping.
   - `p04-t13` complete in commit `0a1cff5a`: Step 1.5 picker copy now uses canonical "high-risk sections live" / "committed file" wording, the four-state taxonomy is visible near the prompt instructions, and validation coverage now asserts routine/needs-eyes classifications, Section Review Plan reveal, all five canonical reference headers, and clearer failure messages.
   - `p04-t14` complete in bookkeeping commit: plan and implementation artifacts now record that documentation closeout intentionally expanded to docs app surfaces, including `design-modes.md`, and that those docs are in-scope coverage for the shipped mode picker/config behavior.
-  - `p04-t15` clarifies that `oat_blockers: []` is intentional; the remaining live selective dogfood checks are post-merge follow-up items, not blockers for PR #68.
+  - `p04-t15` complete in commit `3335eb45`: state/implementation artifacts now explicitly say `oat_blockers: []` is intentional; the remaining live selective dogfood checks are post-merge follow-up items, not blockers for PR #68.
 - Deferred finding: `m3` (`public-package-versions.json` omits `control-plane`) is accepted as out of scope for this PR because it is pre-existing, release validation passes, and changing asset-manifest semantics would broaden the branch.
-- Next task: `p04-t15` (review bookkeeping for deferred dogfood blocker metadata). After `p04-t15`, run targeted re-review, then `p04-t11` final review/merge readiness.
+- `p04-tA-tF` review row set to `fixes_completed`; targeted re-review is required before treating this review scope as `passed`.
+- Next task: `p04-t11` (targeted re-review for p04-tA-tF fixes, then final review/merge readiness).
 
 ### Phase Summary
 
