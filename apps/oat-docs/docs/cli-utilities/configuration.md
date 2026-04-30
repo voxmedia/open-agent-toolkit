@@ -137,8 +137,9 @@ Workflow preferences let power users answer repetitive confirmation prompts once
 
 ### Preference keys
 
-All seven workflow preference keys live under the `workflow.*` namespace:
+All eight workflow preference keys live under the `workflow.*` namespace:
 
+- `workflow.designMode` — `collaborative`, `selective`, or `draft`. Default design interaction mode. `selective` applies only to full `oat-project-design`; quick-start lightweight design treats it as collaborative because quick-start keeps the smaller collaborative/draft choice.
 - `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement`: pause after every phase or only after the last phase. When unset, the skill prompts.
 - `workflow.archiveOnComplete` — boolean. Skip the "Archive after completion?" prompt in `oat-project-complete`. When unset, the skill prompts.
 - `workflow.createPrOnComplete` — boolean. Skip the "Open a PR?" prompt in `oat-project-complete`; when true, completion auto-triggers PR creation. When unset, the skill prompts.
@@ -168,12 +169,15 @@ oat config set workflow.postImplementSequence pr --user
 oat config set workflow.reviewExecutionModel subagent --user
 oat config set workflow.autoReviewAtHillCheckpoints true --user
 oat config set workflow.autoNarrowReReviewScope true --user
+oat config set workflow.designMode selective --user
 
 # Shared repo: team decision for this repo
 oat config set workflow.createPrOnComplete false --shared
+oat config set workflow.designMode collaborative --shared
 
 # Repo-local: personal override for this repo (default when no flag)
 oat config set workflow.hillCheckpointDefault every
+oat config set workflow.designMode draft
 ```
 
 Default (no flag) targets `.oat/config.local.json` for workflow keys. Pass at most one of `--user`, `--shared`, or `--local`. Structural keys (`projects.root`, `worktrees.root`, `git.*`, `documentation.*`, `archive.*`, `tools.*`) are still shared-only regardless of flag.
@@ -187,6 +191,7 @@ Not every workflow preference belongs at user level, even though "set once, appl
 Some preferences are **genuinely personal** — their correct value is the same for you regardless of which repo you're in. These are safe to set at `--user`:
 
 - `workflow.hillCheckpointDefault` — your personal tolerance for mid-implementation interruption
+- `workflow.designMode` — your preferred full-design interaction style. Set `selective` when you usually want low-risk sections drafted silently but high-risk sections reviewed live.
 - `workflow.reviewExecutionModel` — depends on your provider environment (Claude Code, Cursor, Codex), not the repo
 - `workflow.autoReviewAtHillCheckpoints` — your preference for automatic lifecycle review at HiLL checkpoints. Shared/local config can still override this when a repo should behave differently.
 - `workflow.autoNarrowReReviewScope` — pure personal workflow preference, no per-repo interaction

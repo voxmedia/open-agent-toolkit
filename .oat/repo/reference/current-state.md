@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-04-23 (PR #58 landed `oat-project-implement` v2 phase-subagent execution, plan-declared parallelism, and the retired standalone subagent implementation skill)
+**Last Updated:** 2026-04-30 (collaborative-design workflow revision added Selective Collaborative design mode; live picker/elevation/final-recap dogfood is still pending before PR)
 
 ## Canonical References
 
@@ -35,6 +35,8 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat-project-import-plan` (import lane: provider plan -> canonical `plan.md`)
   - `oat-project-promote-spec-driven` (in-place promotion from quick/import to spec-driven lifecycle)
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
+  - `oat-project-design` v2.1.0 supports three full-design modes: collaborative, selective collaborative, and draft-and-review. Selective collaborative prints a Section Review Plan, silently drafts routine sections, presents high-risk/uncertain sections for live review, and recaps silently drafted sections at the user-review gate.
+  - Quick-start lightweight design intentionally remains a two-mode surface (collaborative or draft-and-review). If a quick project promotes to spec-driven, selective collaborative becomes available in full design.
   - Completion closeout now auto-refreshes `summary.md`, always archives locally, can upload archives to S3 via `archive.s3Uri` + `archive.s3SyncOnComplete`, and can export summaries via `archive.summaryExportPath`
 - Idea workflow:
   - `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
@@ -108,6 +110,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat project status` (full active-project state, including recommendation)
   - `oat project list` (structured summary listing for tracked projects)
   - `oat config dump` (fully resolved config with source attribution)
+- `workflow.designMode` accepts `collaborative`, `selective`, or `draft`. Runtime non-interactive signals still force draft mode; `selective` is honored only by full `oat-project-design`.
 - The control plane keeps parsing and recommendation logic package-local while the CLI continues to own config resolution and user-facing formatting.
 
 ### Project Management (Utility)
@@ -267,7 +270,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 3. Move through phases (or run router anytime):
    - `oat-project-progress`
    - `oat-project-spec`
-   - `oat-project-design`
+   - `oat-project-design` (choose collaborative, selective collaborative, or draft-and-review for full spec-driven design)
    - `oat-project-plan`
    - `oat-project-implement`
 4. Final review loop (required before PR):

@@ -23,6 +23,8 @@ OAT lifecycle order:
 
 **Shortcut:** `oat-project-next` reads project state and invokes the correct next skill automatically — use it instead of remembering which skill comes next. Complements `oat-project-progress` (which is read-only diagnostic).
 
+Full spec-driven design supports three interaction modes: collaborative, selective collaborative, and draft-and-review. Selective collaborative drafts routine sections silently and presents high-risk or uncertain sections for live review. Quick-start lightweight design stays simpler and offers only collaborative or draft-and-review. See [Design Modes](design-modes.md) for details.
+
 ## Quick Look
 
 - What it does: explains the end-to-end lifecycle for tracked OAT projects, including alternate quick and import lanes.
@@ -131,6 +133,8 @@ flowchart LR
   I --> R["Review"] --> PR["PR"] --> Doc["Docs (optional)"] --> C["Complete"]
 ```
 
+During the Design step, `oat-project-design` asks how to work through the document unless a mode was selected by argument, environment, or `workflow.designMode`. The three full-design choices are collaborative, selective collaborative, and draft-and-review.
+
 ### Quick lane
 
 ```mermaid
@@ -142,6 +146,8 @@ flowchart LR
   P --> QI["Implement (oat-project-implement)"]
   QI --> QR["Review / PR"]
 ```
+
+Quick lane lightweight design intentionally keeps a smaller collaborative/draft choice. Selective collaborative becomes available only after promotion into the full spec-driven design lane.
 
 ### Import lane
 
