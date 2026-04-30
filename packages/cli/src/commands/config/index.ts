@@ -496,12 +496,12 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
-    type: 'collaborative | draft',
+    type: 'collaborative | selective | draft',
     defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.designMode <value>',
     description:
-      'Persisted preference for oat-project-design and oat-project-quick-start lightweight design: "collaborative" runs section-by-section with validation prompts, "draft" drafts the full design up front for holistic review. When unset, the skill prompts. Runtime signals (OAT_NON_INTERACTIVE=1, no TTY) always outrank this preference. Resolution: arg > env > non-interactive context > local > shared > user > default.',
+      'Persisted preference for oat-project-design: "collaborative" runs every section section-by-section, "selective" drafts routine sections silently and live-reviews high-risk sections, and "draft" drafts the full design up front for holistic review. Quick-start lightweight design supports collaborative/draft only and treats selective as collaborative when encountered. When unset, the skill prompts. Runtime signals (OAT_NON_INTERACTIVE=1, no TTY) always outrank this preference. Resolution: arg > env > non-interactive context > local > shared > user > default.',
   },
   {
     key: 'sync.defaultStrategy',
@@ -570,7 +570,7 @@ const WORKFLOW_ENUM_VALUES = {
   'workflow.hillCheckpointDefault': ['every', 'final'],
   'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
   'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
-  'workflow.designMode': ['collaborative', 'draft'],
+  'workflow.designMode': ['collaborative', 'selective', 'draft'],
 } as const satisfies Partial<Record<ConfigKey, readonly string[]>>;
 
 const WORKFLOW_BOOLEAN_KEYS = new Set<ConfigKey>([

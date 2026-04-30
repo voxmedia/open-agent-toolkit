@@ -506,6 +506,29 @@ describe('resolveEffectiveConfig', () => {
         source: 'user',
       });
     });
+
+    it('resolves workflow.designMode when set to selective', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: { designMode: 'selective' },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.designMode']).toEqual({
+        value: 'selective',
+        source: 'shared',
+      });
+    });
   });
 
   it('surfaces archive.wrapUpExportPath with source default when unset', async () => {

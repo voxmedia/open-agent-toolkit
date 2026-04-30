@@ -641,6 +641,22 @@ describe('oat-config', () => {
       expect(config.workflow).toEqual({ designMode: 'draft' });
     });
 
+    it('accepts workflow.designMode "selective"', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: { designMode: 'selective' },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow).toEqual({ designMode: 'selective' });
+    });
+
     it('drops invalid workflow.designMode values silently', async () => {
       const repoRoot = await createRepoRoot();
       const configPath = join(repoRoot, '.oat', 'config.json');

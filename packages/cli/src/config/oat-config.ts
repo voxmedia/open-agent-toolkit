@@ -34,7 +34,7 @@ export type WorkflowReviewExecutionModel =
   | 'subagent'
   | 'inline'
   | 'fresh-session';
-export type WorkflowDesignMode = 'collaborative' | 'draft';
+export type WorkflowDesignMode = 'collaborative' | 'selective' | 'draft';
 
 export interface OatWorkflowConfig {
   hillCheckpointDefault?: WorkflowHillCheckpointDefault;
@@ -58,6 +58,7 @@ const VALID_REVIEW_EXECUTION_MODELS: readonly WorkflowReviewExecutionModel[] = [
 ];
 const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
   'collaborative',
+  'selective',
   'draft',
 ];
 
