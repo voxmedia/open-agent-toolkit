@@ -25,7 +25,7 @@ The branch also updates companion workflow skills so discovery routes to design 
 - `oat-project-discover` routing updates so default discovery moves to `oat-project-design`.
 - `workflow.designMode` config support for persisted design-mode preference, with `collaborative`, `selective`, and `draft` values.
 - Selective Collaborative mode for full `oat-project-design`: Section Review Plan, conservative `routine` vs `needs-eyes` classification, reference-file heuristic, final recap for silently drafted sections, and prose-contract validation.
-- Public package lockstep version bumps to `0.0.52`, shipped docs updates, and Superpowers attribution in `NOTICES.md`.
+- Public package lockstep version bumps, shipped docs updates, and Superpowers attribution in `NOTICES.md`. After the PR branch rebase onto `origin/main`, the current public package/manifest version is `0.0.54`.
 
 ## Key Decisions
 
@@ -46,7 +46,7 @@ The branch also updates companion workflow skills so discovery routes to design 
 - Targeted config tests for `workflow.designMode` passed.
 - Skill validation tests passed, including the Selective Review Pass contract checks.
 - Docs build passed after documentation sync.
-- `pnpm release:validate` passed for all five public packages at `0.0.52`.
+- `pnpm release:validate` passed before rebase; post-rebase validation is rerun against all five public packages at `0.0.54`.
 - Artifact-only Selective Collaborative classification dogfood was recorded in `references/selective-review-pass.md`.
 
 ## Follow-up Items

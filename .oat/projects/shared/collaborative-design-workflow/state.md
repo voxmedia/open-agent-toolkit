@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t11
-oat_last_commit: 61345019
+oat_last_commit: 52d622a0
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: ['p04']
@@ -15,7 +15,7 @@ oat_pr_status: open
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/68
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-30T18:49:57Z'
+oat_project_state_updated: '2026-04-30T21:55:25Z'
 oat_generated: false
 oat_orchestration_retry_limit: 2
 ---
@@ -28,7 +28,7 @@ oat_orchestration_retry_limit: 2
 
 ## Current Phase
 
-Implementation — PR #68 is open, with p04-tA-tF review fixes complete and the re-review fix implemented. p01-p03 are complete. p04 originally scoped t01-t11 (dogfood + regression + PR + review). On 2026-04-30 the user opened a revision conversation that surfaced a third design mode (Selective Collaborative); revision was folded into p04 rather than spawning a follow-up project (Option A — single PR, single lockstep version-bump cycle). Six revision tasks (p04-tA..tF) were inserted between p04-t09 and p04-t10 and are complete for PR purposes. The `p04-tA-tF` review added four fix tasks (`p04-t12`-`p04-t15`), now implemented; the re-review added one minor NFR5 line-ceiling fix (`p04-t16`), now implemented. The remaining live selective-mode checks are documented as deferred dogfood follow-ups; they are intentionally not blockers for PR #68.
+Implementation — PR #68 is open and rebased onto `origin/main` (`adfa30e3`), with p04-tA-tF review fixes complete and the re-review fix implemented. p01-p03 are complete. p04 originally scoped t01-t11 (dogfood + regression + PR + review). On 2026-04-30 the user opened a revision conversation that surfaced a third design mode (Selective Collaborative); revision was folded into p04 rather than spawning a follow-up project (Option A — single PR, single lockstep version-bump cycle). Six revision tasks (p04-tA..tF) were inserted between p04-t09 and p04-t10 and are complete for PR purposes. The `p04-tA-tF` review added four fix tasks (`p04-t12`-`p04-t15`), now implemented; the re-review added one minor NFR5 line-ceiling fix (`p04-t16`), now implemented. The remaining live selective-mode checks are documented as deferred dogfood follow-ups; they are intentionally not blockers for PR #68.
 
 ## Artifacts
 
@@ -57,7 +57,7 @@ Implementation — PR #68 is open, with p04-tA-tF review fixes complete and the 
 - ✓ p04-tA complete (`d6e80219`) — config type/catalog/resolution now accepts `workflow.designMode: "selective"`
 - ✓ p04-tB/p04-tC complete (`49057a05`) — `oat-project-design` selective flow and `references/selective-review-pass.md` added
 - ✓ p04-tD complete (`e0d50a11`) — skill validation contract covers selective review pass and reference file
-- ✓ p04-tE complete (`9d0dd232`) — lockstep public-package bump to `0.0.52` plus AGENTS.md selective-mode guidance
+- ✓ p04-tE complete — lockstep public-package bump plus AGENTS.md selective-mode guidance. After rebasing onto `origin/main`, the branch's five public package versions and CLI manifest are aligned to `0.0.54`.
 - ✓ p04-tF complete for PR (`468ca6a1`) — classification dogfood table recorded; remaining live picker/elevation/final-recap checks documented as follow-up dogfood
 - ✓ p04-t10 complete — PR #68 opened with migration notes
 - ⧗ p04 in progress — p04-tA-tF re-review fix complete, targeted re-review pending, then final project review (p04-t11)
@@ -77,7 +77,7 @@ Execute p04-tA-tF review fixes:
 - ✓ **p04-tA** (config type extension) complete; unblocks **p04-tB** (skill body update).
 - ✓ **p04-tB** (skill body update) and **p04-tC** (reference file) complete.
 - ✓ **p04-tD** (contract-preservation test) complete.
-- ✓ **p04-tE** (lockstep bump 0.0.51 → 0.0.52 + AGENTS.md docs) complete.
+- ✓ **p04-tE** (lockstep bump + AGENTS.md docs) complete; rebased branch is aligned to `0.0.54`.
 - ✓ **p04-tF** (dogfood selective mode) complete for PR; remaining live picker/elevation/final-recap paths deferred.
 
 PR #68 is open for review.
