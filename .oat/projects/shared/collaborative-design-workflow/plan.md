@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-04-23
+oat_last_updated: 2026-04-30
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p04'] # final phase only, per user selection 2026-04-23
@@ -37,6 +37,7 @@ oat_generated: false
 - [x] Requirement Index in spec.md updated with task mappings
 - [x] Evaluated phases for parallelism opportunities after rebasing onto `oat-project-implement` v2
 - [x] Set `oat_plan_parallel_groups` in frontmatter
+- [x] Revision tasks (p04-tA..tF) added for FR16 + NFR8 (Selective Collaborative mode); land between p04-t09 and p04-t10 so the new mode ships in the same PR (2026-04-30)
 
 ## Parallelism
 
@@ -1181,6 +1182,185 @@ Run the new `oat-project-design` end-to-end against this project.
 - On HiLL approval, `oat_hill_completed` contains BOTH `"spec"` and `"design"`.
 - No state-migration errors surface.
 - spec.md NFR2 acceptance criteria met.
+
+---
+
+## Revision: Selective Collaborative Mode (p04-tA..tF)
+
+**Origin:** Locked in `discovery.md` Revision Q1–Q10 (2026-04-30). Spec extended with FR16 (selective mode + selective review pass + Step 4a contract) and NFR8 (conservative-bias + inspectable + contract-preservation test). Design extended with Component 15. Plan tasks below land before p04-t10 (PR) so the new mode ships in the same PR as the existing v2.0 mode-aware design flow — Option A from the revision triage.
+
+**Lockstep version note:** These tasks DO change shipped behavior (new mode, new config value, new skill content), so the lockstep public-package version bump from p03-t01 (0.0.50 → 0.0.51) needs a follow-on bump (0.0.51 → 0.0.52) covered by p04-tE before PR opens.
+
+**Sequencing:** p04-tA (config type extension) blocks p04-tB (skill body update — references the new type). p04-tC (reference file) is independent of A/B and can run in parallel. p04-tD (contract-preservation test) blocks on p04-tB and p04-tC (test asserts both exist). p04-tE (lockstep bump + AGENTS.md docs) blocks on A-D. p04-tF (dogfood) blocks on A-E.
+
+### Task p04-tA: Extend `WorkflowDesignMode` type to accept `'selective'`
+
+**Files touched:**
+
+- `packages/cli/src/config/oat-config.ts` — extend `WorkflowDesignMode` union from `'collaborative' | 'draft'` to `'collaborative' | 'selective' | 'draft'`. Update `VALID_DESIGN_MODES` constant.
+- `packages/cli/src/commands/config/index.ts` — extend the allow-list at the `'workflow.designMode'` entry from `['collaborative', 'draft']` to `['collaborative', 'selective', 'draft']`.
+- `packages/cli/src/config/oat-config.test.ts` — extend schema-validation tests to assert `'selective'` is accepted; an invalid value (e.g., `'unknown'`) is still rejected.
+- `packages/cli/src/config/resolve.test.ts` — add a test that `'selective'` resolves through the merge chain identically to existing values.
+
+**Acceptance criteria:**
+
+- `pnpm --filter @open-agent-toolkit/cli test` passes.
+- `oat config set workflow.designMode selective` succeeds and persists.
+- `oat config get workflow.designMode` returns `selective`.
+- `oat config list` and `oat config describe workflow.designMode` surface `selective` as a valid value.
+- Existing configs with `collaborative` or `draft` continue to load unchanged (backward compat).
+
+**Verification:** Unit (CLI tests) per FR15/FR16 acceptance criteria.
+
+### Task p04-tB: Add Step 4a contract + picker/iterator/gate updates to `oat-project-design`
+
+**Files touched:**
+
+- `.agents/skills/oat-project-design/SKILL.md`:
+  - **Step 1.5 (Resolve Interaction Mode):** picker becomes 3-choice. Update prompt copy to canonical wording from `discovery.md` Q5. Document the four-state taxonomy (Recommended / Available / Available, not recommended / Unavailable). Resolution order unchanged but now accepts `selective`.
+  - **NEW Step 4a (Selective Review Pass):** insert between Step 4 (mode resolution) and the existing section iterator. Must include the six required clauses (header / classifications / conservative-bias / minimum-live-review / pre-drafting reveal / reference-file pointer). See Component 15 in `design.md` for canonical wording.
+  - **Step 4 collaborative branch:** add the third choice "walk me through every remaining section" to `needs-eyes` confirmation prompts. When chosen, set `DESIGN_MODE` to `collaborative` for the remainder of the run.
+  - **Step 6 user-review gate:** when `DESIGN_MODE == "selective"`, append the final-recap line to the gate prompt: "Drafted without live confirmation: [sections]. Please review those especially carefully."
+  - **Frontmatter version bump:** `2.0.1` → `2.1.0` (additive, mode-choice family).
+
+**Acceptance criteria:**
+
+- Step 4a is present and contains all six contract clauses (verified by p04-tD).
+- Picker copy matches the canonical wording from `discovery.md` Q5.
+- Mid-flight elevation choice is present in every `needs-eyes` confirmation prompt.
+- Final-recap line fires only when the run was in selective mode.
+- Skill body line count stays under NFR5's 700-line ceiling (current ~610; estimated +60 lines from Step 4a + picker + iterator + gate edits = ~670).
+
+**Verification:** Manual prose inspection + p04-tD contract test + p04-tF dogfood.
+
+### Task p04-tC: Create `references/selective-review-pass.md`
+
+**Files touched:**
+
+- `.agents/skills/oat-project-design/references/selective-review-pass.md` (new file).
+
+**Required structural sections (per NFR8 reference-file structural check):**
+
+- `## Signal Set` — concrete description of each per-section signal from FR16, with worked examples (e.g., "API Design with no public-API change → routine; API Design adding a new public endpoint → needs-eyes — public API contract change signal trips it").
+- `## Adequate Grounding` — operational definition of when classification signals are usable (knowledge index OR repo `docs/` OR docs app OR source-level docs are non-thin in the area).
+- `## Recommendation Rules` — picker recommendation thresholds (≥3 routine OR ≥30–40% routine; never recommend draft) and rationale for tuning.
+- `## Edge Cases` — overlapping sections, conflicting signals, sparse discovery, all-flagged collapse, zero-flagged minimum-live-review enforcement, sparse-grounding `Unavailable` handling.
+- `## Dogfood Notes` — initial empty section with a template for per-run classification tables (`Section | Classified As | Expected? | Notes`). p04-tF will populate the first entry.
+
+**Acceptance criteria:**
+
+- File exists at the canonical path.
+- All five required headers are present (verified by p04-tD).
+- Content is concrete enough to be inspectable, not just placeholder prose.
+
+**Verification:** Manual content review + p04-tD structural check.
+
+### Task p04-tD: Add prose-contract test to skills validation harness
+
+**Files touched:**
+
+- `packages/cli/src/validation/skills.test.ts` (or the skill-body-lint module if separate — check at task time).
+
+**Test 1 — Step 4a contract preservation:**
+
+Six regex-based assertions against the contents of `.agents/skills/oat-project-design/SKILL.md`:
+
+1. `### Step 4a: Selective Review Pass` header is present.
+2. Both `routine` and `needs-eyes` appear within the Step 4a section.
+3. Conservative-bias rule: regex matching "any one|any single|any needs-eyes signal" within Step 4a.
+4. Minimum-live-review rule: regex matching "Overview \+ Architecture" within Step 4a in a context that mentions forced/floor/zero-flagged.
+5. Pre-drafting reveal: regex matching "Section Review Plan|Section review plan" or equivalent table-rendering language within Step 4a.
+6. Reference-file pointer: regex matching `references/selective-review-pass.md`.
+
+**Test 2 — Reference file structural check:**
+
+Five regex-based assertions against `.agents/skills/oat-project-design/references/selective-review-pass.md`:
+
+1. `## Signal Set` header.
+2. `## Adequate Grounding` header.
+3. `## Recommendation Rules` header.
+4. `## Edge Cases` header.
+5. `## Dogfood Notes` header.
+
+**Acceptance criteria:**
+
+- Both tests pass when Step 4a + reference file are correctly authored (p04-tB, p04-tC).
+- Both tests fail with clear messages if any required clause/header is missing (validate by deleting + restoring).
+- Tests run as part of the standard `pnpm --filter @open-agent-toolkit/cli test` invocation.
+
+**Verification:** Unit (test passes); negative test (deliberately break the skill body or reference file → test fails).
+
+### Task p04-tE: Lockstep version bump + AGENTS.md docs update
+
+**Files touched:**
+
+- All five lockstep public-package `package.json` files: `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms` — bump `version` from `0.0.51` to `0.0.52`.
+- `.oat/public-package-versions.json` (manifest) — sync to `0.0.52`.
+- `AGENTS.md` — update the workflow triage section's mode descriptions to mention selective collaborative mode. Add the docs note from `discovery.md` Q7: "Selective collaborative mode is only available for full spec-driven design, where the section set is large enough for selective live review to pay off. Quick-start lightweight design keeps the smaller collaborative/draft choice."
+
+**Acceptance criteria:**
+
+- `pnpm release:validate` passes.
+- All five public-package versions are at `0.0.52`.
+- `.oat/public-package-versions.json` reflects `0.0.52`.
+- AGENTS.md reads coherently with three modes explained.
+
+**Verification:** `pnpm release:validate` exit 0 (NFR3).
+
+### Task p04-tF: Dogfood selective collaborative mode
+
+**Pre-conditions:** p04-tA through p04-tE complete.
+
+**Step 1: Run selective mode end-to-end against a real spec**
+
+Use this project's own `spec.md` as the dogfood input (or an alternative real project's spec if a fresher example exists at task time). Run `oat-project-design` with `--mode selective` (or set `workflow.designMode: selective`).
+
+**Step 2: Capture per-section classification table**
+
+Append a per-run table to `.agents/skills/oat-project-design/references/selective-review-pass.md` `## Dogfood Notes` section:
+
+```markdown
+### Dogfood run 2026-MM-DD: collaborative-design-workflow
+
+| Section                 | Classified As | Expected? | Notes        |
+| ----------------------- | ------------- | --------- | ------------ |
+| Overview + Architecture | needs-eyes    | yes       | Forced floor |
+| Component Design        | ...           | ...       | ...          |
+
+...
+```
+
+**Step 3: Identify misclassifications**
+
+For any row where `Expected? = no`, capture in the `Notes` column why the classifier mismatched, and refine the relevant signal in `## Signal Set` if the mismatch was systemic (not just one-off).
+
+**Step 4: Verify picker behavior**
+
+In a separate run, exercise the four-state taxonomy:
+
+- Run against a project where grounding is adequate AND ≥3 sections are routine → expect `Recommended`.
+- Run against a project where grounding is adequate AND <3 routine sections → expect `Available, not recommended` with a "Why not" line citing the count.
+- Run against a project where grounding is broadly thin → expect `Unavailable` with a "Why" reason.
+
+**Step 5: Verify mid-flight elevation**
+
+During a selective-mode run, when the third choice "walk me through every remaining section" is selected, confirm the remaining sections all present per-section confirmation prompts.
+
+**Step 6: Verify final-recap line**
+
+At the user-review gate, confirm the recap line appears with the correct silent-section list.
+
+**Acceptance criteria:**
+
+- At least one full dogfood run is captured in `## Dogfood Notes` with concrete classification data.
+- Four-state taxonomy paths all exercised (Recommended / Available, not recommended / Unavailable; Available is implicitly covered when selective is chosen but not recommended).
+- Mid-flight elevation works as specified.
+- Final-recap line fires correctly.
+- Any misclassifications are recorded; if systemic, the signal set in the reference file is refined.
+
+**Verification:** Manual end-to-end + reference file inspection (FR16, NFR8 acceptance criteria).
+
+---
 
 ### Task p04-t10: Open PR with migration note
 
