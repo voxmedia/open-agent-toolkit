@@ -83,3 +83,24 @@ Template:
 - Missed or overweighted signal:
 - Prose adjustment:
 ```
+
+### Dogfood run 2026-04-30: collaborative-design-workflow
+
+Classification pass run manually against this project's own `spec.md`, `design.md`, `discovery.md`, and `.oat/repo/knowledge/*` context. Grounding was adequate (`project-index.md`, `architecture.md`, `conventions.md`, `stack.md`, and detailed discovery/design artifacts exist). Result: Selective Collaborative would be `recommended` because 3 of 12 sections classify as `routine` while high-risk sections still receive live review.
+
+| Section                                             | Classified As | Expected? | Notes                                                                 |
+| --------------------------------------------------- | ------------- | --------- | --------------------------------------------------------------------- |
+| Overview + Architecture                             | needs-eyes    | yes       | Forced floor; user should see framing before any silent drafting.     |
+| Component Design                                    | needs-eyes    | yes       | Cross-skill workflow semantics and config/skill boundaries changed.   |
+| Data Models                                         | routine       | yes       | No database/domain model changes; config risk covered elsewhere.      |
+| API Design                                          | needs-eyes    | yes       | Public CLI/config surface changes via `workflow.designMode`.          |
+| Security Considerations                             | needs-eyes    | yes       | High-risk-by-default section.                                         |
+| Performance Considerations                          | needs-eyes    | yes       | High-risk-by-default section.                                         |
+| Error Handling                                      | needs-eyes    | yes       | High-risk-by-default section.                                         |
+| Testing Strategy (with Requirement-to-Test Mapping) | needs-eyes    | yes       | New prose-contract validation plus manual dogfood acceptance surface. |
+| Deployment Strategy                                 | routine       | yes       | No deployment-path change; release packaging validated separately.    |
+| Migration Plan                                      | needs-eyes    | yes       | High-risk-by-default section, even when no migration is expected.     |
+| Implementation Phases                               | routine       | yes       | Follows established OAT plan/task structure.                          |
+| Risks and Mitigation                                | needs-eyes    | yes       | New user-facing workflow mode and heuristic failure modes.            |
+
+No classification misfires were identified in this artifact-only pass. Live picker taxonomy, mid-flight elevation, and final recap behavior still require an interactive dogfood run because `oat-project-design` is a provider skill, not an executable CLI command.
