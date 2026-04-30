@@ -1539,6 +1539,38 @@ git add .oat/projects/shared/collaborative-design-workflow/state.md .oat/project
 git commit -m "chore(p04-t15): clarify deferred dogfood blocker disposition"
 ```
 
+### Task p04-t16: (review) Restore `oat-project-design` NFR5 line ceiling
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-design/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: `oat-project-design/SKILL.md` is 701 lines after the picker-copy expansion, while NFR5 keeps the skill at a 700-line ceiling.
+Location: `.agents/skills/oat-project-design/SKILL.md`
+
+**Step 2: Implement fix**
+
+Remove one redundant prose line from the Step 1.5 picker-copy taxonomy, preferably the standalone "Use the four-state taxonomy explicitly:" line because the four labels immediately following it are self-explanatory.
+
+Do not relax NFR5 for this minor cleanup; keep the existing 700-line ceiling intact.
+
+**Step 3: Verify**
+
+Run: `wc -l .agents/skills/oat-project-design/SKILL.md`
+Expected: line count is `700` or lower.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+Expected: selective contract tests still pass.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-design/SKILL.md
+git commit -m "fix(p04-t16): restore design skill line ceiling"
+```
+
 ---
 
 ## Reviews
@@ -1555,7 +1587,7 @@ git commit -m "chore(p04-t15): clarify deferred dogfood blocker disposition"
 | p01-p03   | code     | passed          | 2026-04-24 | reviews/archived/p01-p03-rereview-2026-04-24.md       |
 | p04       | code     | pending         | -          | -                                                     |
 | p04-tA-tF | code     | fixes_completed | 2026-04-30 | reviews/archived/p04-tA-tF-review-2026-04-30.md       |
-| p04-tA-tF | code     | received        | 2026-04-30 | reviews/p04-tA-tF-rereview-2026-04-30.md              |
+| p04-tA-tF | code     | fixes_added     | 2026-04-30 | reviews/archived/p04-tA-tF-rereview-2026-04-30.md     |
 | final     | code     | pending         | -          | -                                                     |
 | spec      | artifact | pending         | -          | -                                                     |
 | design    | artifact | passed          | 2026-04-17 | reviews/archived/artifact-design-review-2026-04-17.md |
@@ -1580,11 +1612,11 @@ git commit -m "chore(p04-t15): clarify deferred dogfood blocker disposition"
 - Phase 1 (p01): 9 tasks — `oat-project-design` rework
 - Phase 2 (p02): 10 tasks — companion skill edits + AGENTS.md + NOTICES.md + CLI config extension (FR15)
 - Phase 3 (p03): 5 tasks — lockstep version bumps + release validation + 3 review fixes from p01-p03 range review (p03-t03, p03-t04, p03-t05)
-- Phase 4 (p04): 15 tasks — dogfood + regressions + PR + selective-mode review fixes
+- Phase 4 (p04): 16 tasks — dogfood + regressions + PR + selective-mode review fixes
 
-**Total: 39 tasks** (32 original + 3 p01-p03 review fixes + 4 selective-mode review fixes)
+**Total: 40 tasks** (32 original + 3 p01-p03 review fixes + 5 selective-mode review fixes)
 
-Ready for selective-mode review fixes, re-review, final review, and merge.
+Ready for p04-t16 line-ceiling fix, re-review, final review, and merge.
 
 ---
 
