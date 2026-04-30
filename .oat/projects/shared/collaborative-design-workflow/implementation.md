@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-30
-oat_current_task_id: p04-t16
+oat_current_task_id: p04-t11
 oat_generated: false
 ---
 
@@ -151,7 +151,9 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 **New tasks added:** p04-t16.
 
-**Next:** Execute p04-t16 via `oat-project-implement`, then re-run `oat-project-review-provide code p04-tA-tF` scoped to the fix task before p04-t11 final review.
+**Fix execution:** p04-t16 complete in commit `61345019`; removed one redundant picker-taxonomy intro line while preserving all four explicit picker states. Verification: `wc -l .agents/skills/oat-project-design/SKILL.md` reports 700, and `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` passed (28 tests).
+
+**Next:** Re-run `oat-project-review-provide code p04-tA-tF` scoped to p04-t16 / fix-task commits, then continue to p04-t11 final review.
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -172,7 +174,7 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 | Phase 3 (p03): Lockstep version + 3 review fixes | completed   | 5     | 5/5                                                                                                                                                                                         |
 | Phase 4 (p04): Dogfood + regressions + PR        | in_progress | 16    | 0/16 truly complete (dogfood t01-t07 deferred to user's separate-repo pass; t08/t09 regression + t04 FR9 had prose audits only; t10 complete; t11 final review pending after t12-t16 fixes) |
 
-**Total:** 24/40 strictly-complete implementation tasks (all of p01, p02, p03 including the 3 review fixes). p04 PR (t10) is complete; selective-mode review fix p04-t16 and final review (t11) remain; dogfood and regressions handled in user's separate-repo pass.
+**Total:** 25/40 strictly-complete implementation tasks (all of p01, p02, p03 including the 3 review fixes, plus p04-t16). p04 PR (t10) is complete; targeted re-review and final review (t11) remain; dogfood and regressions handled in user's separate-repo pass.
 
 ---
 
@@ -358,8 +360,9 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
   - `p04-t15` complete in commit `7708553e`: state/implementation artifacts now explicitly say `oat_blockers: []` is intentional; the remaining live selective dogfood checks are post-merge follow-up items, not blockers for PR #68.
 - Deferred finding: `m3` (`public-package-versions.json` omits `control-plane`) is accepted as out of scope for this PR because it is pre-existing, release validation passes, and changing asset-manifest semantics would broaden the branch.
 - `p04-tA-tF` review row set to `fixes_completed`; targeted re-review is required before treating this review scope as `passed`.
-- `p04-tA-tF` re-review in commit `f4a8f1b7` passed the prior Important/Medium findings and surfaced one new Minor: the design skill is 701 lines vs NFR5's 700-line ceiling. Added p04-t16 for the one-line cleanup.
-- Next task: `p04-t16` (restore design skill line ceiling). After p04-t16, re-review the fix task, then continue to p04-t11 final review/merge readiness.
+- `p04-t16` complete in commit `61345019`: removed one redundant picker-taxonomy intro line from `oat-project-design/SKILL.md`; line count is back to 700 and selective contract tests still pass.
+- `p04-tA-tF` re-review row set to `fixes_completed`; targeted re-review of p04-t16 is required before treating the scope as `passed`.
+- Next task: `p04-t11` (targeted re-review for p04-t16, then final review/merge readiness).
 
 ### Phase Summary
 

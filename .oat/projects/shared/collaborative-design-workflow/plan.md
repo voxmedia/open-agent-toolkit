@@ -1587,7 +1587,7 @@ git commit -m "fix(p04-t16): restore design skill line ceiling"
 | p01-p03   | code     | passed          | 2026-04-24 | reviews/archived/p01-p03-rereview-2026-04-24.md       |
 | p04       | code     | pending         | -          | -                                                     |
 | p04-tA-tF | code     | fixes_completed | 2026-04-30 | reviews/archived/p04-tA-tF-review-2026-04-30.md       |
-| p04-tA-tF | code     | fixes_added     | 2026-04-30 | reviews/archived/p04-tA-tF-rereview-2026-04-30.md     |
+| p04-tA-tF | code     | fixes_completed | 2026-04-30 | reviews/archived/p04-tA-tF-rereview-2026-04-30.md     |
 | final     | code     | pending         | -          | -                                                     |
 | spec      | artifact | pending         | -          | -                                                     |
 | design    | artifact | passed          | 2026-04-17 | reviews/archived/artifact-design-review-2026-04-17.md |
