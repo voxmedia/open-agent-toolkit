@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-plan
 oat_blockers: []
-oat_last_updated: 2026-04-17
+oat_last_updated: 2026-04-30
 oat_generated: false
 oat_template: false
 ---
@@ -1103,6 +1103,114 @@ fi
 - **No new CLI command.** The existing `oat config get/set/list/describe` surface picks up the new field once the schema allows it — zero new command files.
 - **No implicit override of non-interactive behavior.** `workflow.designMode: "collaborative"` does NOT force prompting in a no-TTY context. Non-interactive context always wins (otherwise an orchestrator that inherited a user's "I prefer collaborative" config would deadlock on a prompt).
 - **Backward compat by construction.** Missing field = silent default = existing configs unchanged. Same idempotent shape as every other `OatWorkflowConfig` addition.
+
+### Component 15: Selective Collaborative mode (FR16 + NFR8 — revision 2026-04-30)
+
+**Purpose:** Add a third design mode `selective` between Collaborative and Draft-and-review. The mode runs a **selective review pass** before drafting that classifies each section as `routine` (drafted silently) or `needs-eyes` (presented for live confirmation), with conservative bias and an inspectable Section Review Plan. See `discovery.md` Revision Q1–Q10 for the full mechanism contract.
+
+This component is the consolidated implementation surface for the revision; it touches multiple existing components by reference (Component 1 picker, Component 4 section iterator, Component 7 user-review gate) and adds two new artifacts (Step 4a in the skill body, reference file under `references/`).
+
+**Cross-component touchpoints:**
+
+| Existing component                                   | Change introduced by Component 15                                                                                                                                                                   |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Component 1: mode-choice preamble                    | Picker becomes 3-choice with four-state taxonomy (Recommended / Available / Available, not recommended / Unavailable). "Why" line cites preflight numbers. Resolution order unchanged (FR15).       |
+| Component 4: section iterator (collaborative branch) | Each `needs-eyes` confirmation prompt offers an additional choice "walk me through every remaining section" (mid-flight elevation → falls through to full collaborative for remainder).             |
+| Component 7: user-review gate                        | Gate prompt appends one line: "Drafted without live confirmation: [sections]. Please review those especially carefully." Only fires when the run was in selective mode.                             |
+| Component 14: `workflow.designMode` config           | `WorkflowDesignMode` type extends from `'collaborative' \| 'draft'` to `'collaborative' \| 'selective' \| 'draft'`. Allow-list updated. Quick-start treats `'selective'` as `'collaborative'` (Q7). |
+
+**New artifact 1 — Step 4a in `oat-project-design/SKILL.md` (canonical contract):**
+
+The skill body must include the contract — not just a pointer. Step 4a sits between Step 4 (mode resolution / picker) and the existing section iterator, and runs only when `DESIGN_MODE == "selective"`. The same selective review pass also runs (silently) before the Step 4 picker so the picker can compute the four-state taxonomy.
+
+Required Step 4a clauses (verified by NFR8 contract test):
+
+1. Header `### Step 4a: Selective Review Pass` is present.
+2. Both classifications named: `routine` (drafted silently into `design.md`) and `needs-eyes` (presented live for user confirmation).
+3. Conservative-bias rule stated: any one needs-eyes signal marks the section `needs-eyes`. No signal-weighting, no voting.
+4. Minimum-live-review rule stated: if no section is marked `needs-eyes`, force `Overview + Architecture` to `needs-eyes`.
+5. Pre-drafting reveal stated: render the Section Review Plan table (`Section | Classification | Reason | Signals hit`) and ask "Proceed with this plan, or elevate any routine section?" before any section is drafted.
+6. Reference-file pointer present: cites `references/selective-review-pass.md` for the full signal set, examples, edge cases, recommendation thresholds, and dogfood notes.
+
+**New artifact 2 — `.agents/skills/oat-project-design/references/selective-review-pass.md`:**
+
+Required structural sections (verified by NFR8 reference-file structural check):
+
+- `## Signal Set` — concrete description of each per-section signal from spec.md FR16, with examples of what triggers and what doesn't.
+- `## Adequate Grounding` — operational definition of when classification signals are usable: knowledge index OR repo `docs/` OR docs app (e.g., `apps/oat-docs/`) OR source-level docs are non-thin in the area.
+- `## Recommendation Rules` — picker recommendation thresholds (recommend selective only when Eligible AND ≥3 routine sections OR ≥30–40% routine; never recommend draft) and rationale for tuning thresholds.
+- `## Edge Cases` — overlapping sections, conflicting signals, sparse discovery, all-flagged collapse to collaborative, zero-flagged minimum-live-review enforcement, sparse-grounding `Unavailable` handling.
+- `## Dogfood Notes` — accumulated per-run classification tables (`Section | Classified As | Expected? | Notes`), with signal-refinement history. Grows over time.
+
+**Selective review pass as shared infrastructure:**
+
+The pass runs once before the picker — not only when selective is chosen — so the picker can render the four-state taxonomy. Cost is one pass over `spec.md` plus the knowledge base before the mode prompt fires. The pass returns:
+
+- A per-section `routine | needs-eyes` table with reasons and signals hit.
+- Counts: routine, needs-eyes, total.
+- A grounding-adequacy verdict for the design as a whole (used to gate `Eligible`).
+
+The picker consumes the counts and verdict to compute selective's state:
+
+| Verdict              | Predicted savings                      | Picker state                 |
+| -------------------- | -------------------------------------- | ---------------------------- |
+| Grounding inadequate | n/a                                    | `Unavailable` (with reason)  |
+| Adequate             | ≥3 routine OR ≥30–40% routine          | `Recommended`                |
+| Adequate             | 1–2 routine                            | `Available, not recommended` |
+| Adequate             | 0 routine (collapses to collaborative) | `Available, not recommended` |
+
+**Section Review Plan rendering (canonical):**
+
+```markdown
+Section review plan:
+
+| Section                 | Mode       | Reason                                  |
+| ----------------------- | ---------- | --------------------------------------- |
+| Overview + Architecture | needs-eyes | Forced framing review                   |
+| Component Design        | needs-eyes | New component boundary crosses packages |
+| Data Models             | routine    | Follows existing models; no migration   |
+| ...                     |
+
+Proceed with this plan, or elevate any routine section?
+```
+
+The plan is **ephemeral** — rendered in chat, not persisted in `design.md`. The final-recap line at the user-review gate is what survives in the committed transcript.
+
+**Mid-flight elevation:**
+
+Inside the collaborative branch of the section iterator (Component 4), every `needs-eyes` confirmation prompt offers three choices:
+
+1. Looks right — continue
+2. Adjust — let me give feedback
+3. Walk me through every remaining section — fall through to full collaborative for remaining sections
+
+Choice 3 sets `DESIGN_MODE` to `collaborative` for the remainder of the run; previously-classified `routine` sections that haven't been drafted yet now go through the full per-section confirmation flow. Going the other direction (collaborative → selective mid-flight) is **rejected** as premature complexity.
+
+**Failure modes (resolved per Q3):**
+
+| Condition                                                   | Behavior                                                                                                                                                       |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| All sections flag `needs-eyes`                              | Selective collapses gracefully into collaborative. Emit one-line note: "All sections flagged for live review — running as full collaborative for this design." |
+| Zero sections flag `needs-eyes`                             | Minimum-live-review rule forces `Overview + Architecture` to `needs-eyes`. Selective never goes fully silent.                                                  |
+| Discovery skipped solution-space + grounding broadly absent | Selective is `Unavailable` in the picker with reason. Agent recommends collaborative.                                                                          |
+
+**Test surface (NFR8):**
+
+1. **Prose-contract regex test** in the skills validation harness asserts the six minimum Step 4a clauses against `oat-project-design/SKILL.md`.
+2. **Reference-file structural check** asserts the five required headers in `references/selective-review-pass.md`.
+3. **No fixture-based heuristic tests in v1.** Heuristic correctness is dogfood-driven; per-run classification tables append to the reference file's `## Dogfood Notes` section and feed signal-set refinement.
+
+**Quick-start parity decision (Q7):**
+
+Selective collaborative mode is **not** added to `oat-project-quick-start` lightweight design. Quick-start retains the 2-choice picker. The `WorkflowDesignMode` type accepts `'selective'` for forward-compatibility, but quick-start treats it as `'collaborative'` when reading config/env. When quick-start promotes to spec-driven, selective becomes available because the user enters full `oat-project-design`.
+
+**Design Decisions:**
+
+- **Skill body owns the contract; reference file owns the heuristic.** The split is deliberate: the contract is what tests check and what maintainers must preserve; the heuristic is what evolves through dogfood. Keeping them in separate files lets each evolve at its own pace.
+- **Preflight runs before the picker.** Required so the picker can compute the four-state taxonomy. The cost is acceptable (one pass over spec.md + knowledge base) and the alternative (only running when selective is chosen) prevents the recommendation logic from being honest.
+- **Internal-vs-user-facing naming separation.** User-facing label "Selective collaborative" and config value `'selective'` follow the user's mental model (a flavor of collaborative). Internal noun "selective review pass" and artifact name "Section review plan" stay because they're useful in skill prose. The earlier internal noun "calibration pass" was rejected to avoid a parallel vocabulary.
+- **Recommendation is advisory, not default-selected.** The `(recommended for this design)` tag is a label; the picker has no pre-highlighted choice. Mode is a workflow/friction decision — the user stays in control.
+- **No fixture tests for prose heuristic.** Defer until the classifier becomes a structured CLI helper or schema-backed pass. Until then, dogfood for quality + regex for drift is the pragmatic split.
 
 ## Data Models
 
