@@ -128,8 +128,7 @@ if [ -z "$DESIGN_MODE" ]; then
       #          you'll see which sections will be presented and why
       #       3. Draft-and-review — full draft up front, you review the committed file"
       #    Mark exactly one option "(recommended for this design)". Hide or
-      #    label Selective unavailable when grounding is broadly absent. Use
-      #    the four-state taxonomy explicitly:
+      #    label Selective unavailable when grounding is broadly absent:
       #    - Recommended: "Selective collaborative (recommended for this design)"
       #    - Available: "Selective collaborative (available)"
       #    - Available-not-recommended: "Selective collaborative (available, not recommended)"
