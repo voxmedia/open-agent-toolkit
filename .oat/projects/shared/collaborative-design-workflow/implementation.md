@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-30
-oat_current_task_id: p04-t13
+oat_current_task_id: p04-t14
 oat_generated: false
 ---
 
@@ -339,11 +339,11 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 - `p04-t10` complete on 2026-04-30: branch pushed to `origin/collaborative-design`; PR #68 opened at `https://github.com/voxmedia/open-agent-toolkit/pull/68` with migration notes covering both v2.0 mode-aware design flow and v2.1 Selective Collaborative mode. Local PR body source written to `pr/project-pr-2026-04-30.md` (local-only per repo config).
 - Review received for `p04-tA-tF` on 2026-04-30: artifact `reviews/archived/p04-tA-tF-review-2026-04-30.md` added four review-fix tasks before final review:
   - `p04-t12` complete in commit `d42783b2`: quick-start now accepts persisted `workflow.designMode: selective`, maps it to collaborative for lightweight design, explains that Selective Collaborative is only available in full `oat-project-design`, and validation coverage locks the mapping.
-  - `p04-t13` tightens selective contract-preservation assertions and canonical picker copy.
+  - `p04-t13` complete in commit `0a1cff5a`: Step 1.5 picker copy now uses canonical "high-risk sections live" / "committed file" wording, the four-state taxonomy is visible near the prompt instructions, and validation coverage now asserts routine/needs-eyes classifications, Section Review Plan reveal, all five canonical reference headers, and clearer failure messages.
   - `p04-t14` records that documentation closeout intentionally expanded to docs app surfaces, including `design-modes.md`.
   - `p04-t15` clarifies that `oat_blockers: []` is intentional; the remaining live selective dogfood checks are post-merge follow-up items, not blockers for PR #68.
 - Deferred finding: `m3` (`public-package-versions.json` omits `control-plane`) is accepted as out of scope for this PR because it is pre-existing, release validation passes, and changing asset-manifest semantics would broaden the branch.
-- Next task: `p04-t13` (review fix for selective contract checks and picker copy). After `p04-t13`-`p04-t15`, run targeted re-review, then `p04-t11` final review/merge readiness.
+- Next task: `p04-t14` (review bookkeeping for docs-surface expansion). After `p04-t14`-`p04-t15`, run targeted re-review, then `p04-t11` final review/merge readiness.
 
 ### Phase Summary
 
