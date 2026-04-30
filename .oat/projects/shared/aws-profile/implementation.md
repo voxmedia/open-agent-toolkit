@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-28
-oat_current_task_id: null
+oat_last_updated: 2026-04-30
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -202,6 +202,28 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+
+### Review Received: final (2026-04-30)
+
+**Review artifact:** `reviews/archived/final-review-2026-04-30.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1 (`I1` — PR #67 CI/release-dry-run failing because lockstep versions equal `origin/main`)
+- Medium: 1 (`M1` — stale `state.md` body + `.oat/state.md` dashboard after PR finalization)
+- Minor: 1 (`m1` — plan p02-t01 wording drift)
+
+**Disposition:**
+
+- `I1` → converted to fix task `prev1-t01`
+- `M1` → converted to fix task `prev1-t02`
+- `m1` → converted to fix task `prev1-t03` (user explicitly chose "convert all" rather than defer the carry-over)
+- No deferred Mediums and no deferred Minors for this cycle.
+
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03` (Phase 6 / p-rev1).
+
+**Next:** Execute fix tasks via `oat-project-implement`. After fixes are complete, the implement skill's revision-phase handling will set `oat_phase_status: pr_open` (the PR remains open with new commits). Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`.
 
 ## Final Summary (for PR/docs)
 

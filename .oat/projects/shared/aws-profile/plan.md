@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-04-28
+oat_last_updated: 2026-04-30
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p05'] # phases to pause AFTER completing (empty = every phase)
@@ -363,18 +363,138 @@ git commit -m "chore(p05-t02): bump publishable packages for archive AWS profile
 
 ---
 
+## Phase 6: Review fixes (p-rev1)
+
+Tasks added from the final review on 2026-04-30 (review artifact: `reviews/archived/final-review-2026-04-30.md`). Tasks use the `prev1` prefix per the OAT revision-phase convention; on completion of this phase, `oat-project-implement` should restore `oat_phase_status: pr_open` (it does not advance to a new lifecycle phase — the existing PR #67 simply gets updated commits).
+
+### Task prev1-t01: (review) Rebase onto origin/main and bump packages 0.0.53 → 0.0.54
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json` (regenerated)
+
+**Step 1: Understand the issue**
+
+`origin/main` advanced to `0.0.53` (commit `adfa30e3`) after this branch's last lockstep bump. The PR's merge-context `pnpm release:validate` therefore sees no effective version delta and fails both the `ci` and `release-dry-run` checks (the local checkout's merge-base is still at `0.0.52`, which is why local validate passes). Fix the branch's base relative to current main and bump all five public packages to the next lockstep version.
+
+**Step 2: Sync with origin/main**
+
+```bash
+git fetch origin main
+```
+
+Then either rebase the branch onto `origin/main` (`git rebase origin/main`) or merge `origin/main` into the branch (`git merge origin/main --no-ff`). Pick whichever is cleaner; if rebase produces conflicts that aren't trivially auto-resolvable, fall back to merge. Resolve any conflicts (most likely none since the only overlap is the lockstep package version files).
+
+**Step 3: Bump versions**
+
+Update all five public packages to `0.0.54`:
+
+- `packages/cli/package.json`
+- `packages/control-plane/package.json`
+- `packages/docs-config/package.json`
+- `packages/docs-theme/package.json`
+- `packages/docs-transforms/package.json`
+
+Regenerate `packages/cli/assets/public-package-versions.json` to match (this happens automatically when `bundle-assets.sh` runs during release validation, but verify it lands at `0.0.54` for all entries).
+
+**Step 4: Verify**
+
+Run: `pnpm release:validate`
+Expected: Pass.
+
+If it fails, fix the underlying issue and re-run. Do not bypass with flags.
+
+**Step 5: Commit and push**
+
+```bash
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
+git commit -m "fix(prev1-t01): bump publishable packages to 0.0.54 for current main"
+git push
+```
+
+After push, the PR's `ci` and `release-dry-run` checks should rerun and turn green.
+
+---
+
+### Task prev1-t02: (review) Refresh stale state.md / dashboard human-readable sections
+
+**Files:**
+
+- Modify: `.oat/projects/shared/aws-profile/state.md`
+- Modify: `.oat/state.md` (regenerated)
+
+**Step 1: Understand the issue**
+
+`state.md` frontmatter is correct (`pr_status: open`, `docs_updated: complete`), but the body's "Artifacts" section still says discovery is `in_progress` and plan/implementation are "scaffolded templates." The repo dashboard at `.oat/state.md` similarly recommends `oat-project-document` even though docs are complete. This misleads any fresh OAT session.
+
+**Step 2: Refresh the project state body**
+
+In `.oat/projects/shared/aws-profile/state.md`, update the `## Artifacts` section to reflect actual completion (discovery: complete; plan: complete; implementation: complete; PR: open at #67). Keep the existing frontmatter unchanged.
+
+**Step 3: Regenerate the repo dashboard**
+
+Run: `oat state refresh`
+Expected: `.oat/state.md` updates to reflect that aws-profile has an open PR and docs are complete; recommendation should no longer be `oat-project-document`.
+
+**Step 4: Verify**
+
+Inspect `.oat/state.md` and confirm the dashboard now reports accurate status for aws-profile (PR open, docs complete) and a sensible next-step recommendation (likely `oat-project-revise` or `oat-project-complete`).
+
+**Step 5: Commit**
+
+```bash
+git add .oat/projects/shared/aws-profile/state.md .oat/state.md
+git commit -m "fix(prev1-t02): refresh aws-profile state body + dashboard"
+```
+
+---
+
+### Task prev1-t03: (review) Fix plan p02-t01 wording drift to match shipped non-clobbering precedence
+
+**Files:**
+
+- Modify: `.oat/projects/shared/aws-profile/plan.md`
+
+**Step 1: Understand the issue**
+
+The plan's p02-t01 Step 1 test description (around line 162) still says an existing parent `AWS_PROFILE` is "overridden when config provides one." That is the rejected precedence model. The implementation correctly does the inverse: parent env wins (non-clobbering), per discovery decision #3 and the p02 fix commit `e9f93745`.
+
+**Step 2: Update the wording**
+
+Find the line around p02-t01 Step 1 in `plan.md` that says "Assert that an existing parent-process `AWS_PROFILE` is preserved (not clobbered by an unset config value) and is overridden when config provides one." Rewrite to match shipped behavior:
+
+> Assert that an existing parent-process `AWS_PROFILE` wins over both an unset and a set config value (non-clobbering — config never overrides the shell env). Discovery decision #3.
+
+**Step 3: Verify**
+
+`grep -n "overridden when config provides" .oat/projects/shared/aws-profile/plan.md` should return no matches.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/aws-profile/plan.md
+git commit -m "fix(prev1-t03): align plan p02-t01 wording with shipped non-clobbering precedence"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                            |
-| ------ | -------- | -------- | ---------- | --------------------------------------------------- |
-| p01    | code     | passed   | 2026-04-28 | reviews/archived/p01-code-review-2026-04-28.md      |
-| p02    | code     | passed   | 2026-04-28 | reviews/archived/p02-code-review-2026-04-28-rev2.md |
-| p03    | code     | passed   | 2026-04-28 | reviews/archived/p03-code-review-2026-04-28.md      |
-| p04    | code     | passed   | 2026-04-28 | reviews/archived/p04-code-review-2026-04-28-rev2.md |
-| p05    | code     | passed   | 2026-04-28 | reviews/archived/p05-code-review-2026-04-28.md      |
-| final  | code     | received | 2026-04-30 | reviews/final-review-2026-04-30.md                  |
-| spec   | artifact | n/a      | -          | -                                                   |
-| design | artifact | n/a      | -          | -                                                   |
+| Scope  | Type     | Status      | Date       | Artifact                                            |
+| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01    | code     | passed      | 2026-04-28 | reviews/archived/p01-code-review-2026-04-28.md      |
+| p02    | code     | passed      | 2026-04-28 | reviews/archived/p02-code-review-2026-04-28-rev2.md |
+| p03    | code     | passed      | 2026-04-28 | reviews/archived/p03-code-review-2026-04-28.md      |
+| p04    | code     | passed      | 2026-04-28 | reviews/archived/p04-code-review-2026-04-28-rev2.md |
+| p05    | code     | passed      | 2026-04-28 | reviews/archived/p05-code-review-2026-04-28.md      |
+| final  | code     | fixes_added | 2026-04-30 | reviews/archived/final-review-2026-04-30.md         |
+| spec   | artifact | n/a         | -          | -                                                   |
+| design | artifact | n/a         | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.
 
@@ -391,8 +511,9 @@ Quick mode: spec + design rows remain `n/a` (no spec/design artifacts produced).
 - Phase 3: 1 task — wire new keys into `oat config` set/describe/list.
 - Phase 4: 1 task — add `--profile` / `--region` flags to `oat project archive sync`.
 - Phase 5: 2 tasks — docs and lockstep release validation.
+- Phase 6 (p-rev1): 3 tasks — review fixes for the 2026-04-30 final review (lockstep version refresh, state body refresh, plan wording drift).
 
-**Total: 7 tasks**
+**Total: 10 tasks**
 
 Ready for code review and merge.
 
