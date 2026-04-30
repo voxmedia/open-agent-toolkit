@@ -634,7 +634,40 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.1');
+  });
+
+  it('preserves the selective collaborative review-pass contract', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillPath = join(
+      repoRoot,
+      '.agents',
+      'skills',
+      'oat-project-design',
+      'SKILL.md',
+    );
+    const referencePath = join(
+      repoRoot,
+      '.agents',
+      'skills',
+      'oat-project-design',
+      'references',
+      'selective-review-pass.md',
+    );
+    const skillContent = await readFile(skillPath, 'utf8');
+    const referenceContent = await readFile(referencePath, 'utf8');
+
+    expect(skillContent).toMatch(/^version:\s*2\.1\.0$/m);
+    expect(skillContent).toMatch(/### Step 4a: Selective Review Pass/);
+    expect(skillContent).toMatch(
+      /any one needs-eyes signal marks the section `needs-eyes`/i,
+    );
+    expect(skillContent).toMatch(
+      /force `Overview \+ Architecture` to `needs-eyes`/i,
+    );
+    expect(skillContent).toMatch(/references\/selective-review-pass\.md/);
+    expect(referenceContent).toMatch(/^## Signal Set$/m);
+    expect(referenceContent).toMatch(/^## Dogfood Notes$/m);
   });
 
   it('reports missing quick-start-specific discovery guidance', async () => {
