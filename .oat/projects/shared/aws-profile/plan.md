@@ -485,16 +485,17 @@ git commit -m "fix(prev1-t03): align plan p02-t01 wording with shipped non-clobb
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                            |
-| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
-| p01    | code     | passed      | 2026-04-28 | reviews/archived/p01-code-review-2026-04-28.md      |
-| p02    | code     | passed      | 2026-04-28 | reviews/archived/p02-code-review-2026-04-28-rev2.md |
-| p03    | code     | passed      | 2026-04-28 | reviews/archived/p03-code-review-2026-04-28.md      |
-| p04    | code     | passed      | 2026-04-28 | reviews/archived/p04-code-review-2026-04-28-rev2.md |
-| p05    | code     | passed      | 2026-04-28 | reviews/archived/p05-code-review-2026-04-28.md      |
-| final  | code     | fixes_added | 2026-04-30 | reviews/archived/final-review-2026-04-30.md         |
-| spec   | artifact | n/a         | -          | -                                                   |
-| design | artifact | n/a         | -          | -                                                   |
+| Scope  | Type     | Status          | Date       | Artifact                                            |
+| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
+| p01    | code     | passed          | 2026-04-28 | reviews/archived/p01-code-review-2026-04-28.md      |
+| p02    | code     | passed          | 2026-04-28 | reviews/archived/p02-code-review-2026-04-28-rev2.md |
+| p03    | code     | passed          | 2026-04-28 | reviews/archived/p03-code-review-2026-04-28.md      |
+| p04    | code     | passed          | 2026-04-28 | reviews/archived/p04-code-review-2026-04-28-rev2.md |
+| p05    | code     | passed          | 2026-04-28 | reviews/archived/p05-code-review-2026-04-28.md      |
+| p-rev1 | code     | passed          | 2026-04-30 | reviews/p-rev1-code-review-2026-04-30.md            |
+| final  | code     | fixes_completed | 2026-04-30 | reviews/archived/final-review-2026-04-30.md         |
+| spec   | artifact | n/a             | -          | -                                                   |
+| design | artifact | n/a             | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.
 

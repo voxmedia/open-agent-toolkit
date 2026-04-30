@@ -13,14 +13,14 @@ oat_generated_at: 2026-04-30
 
 ## Active Project Summary
 
-| Field        | Value       |
-| ------------ | ----------- |
-| Mode         | quick       |
-| Phase        | implement   |
-| Status       | in_progress |
-| HiLL Gate    | n/a         |
-| Current Task | prev1-t01   |
-| Docs Updated | ✓ complete  |
+| Field        | Value      |
+| ------------ | ---------- |
+| Mode         | quick      |
+| Phase        | implement  |
+| Status       | pr_open    |
+| HiLL Gate    | n/a        |
+| Current Task | -          |
+| Docs Updated | ✓ complete |
 
 Details: `.oat/projects/shared/aws-profile/state.md`
 
@@ -35,7 +35,7 @@ Details: `.oat/projects/shared/aws-profile/state.md`
 
 ## Recommended Next Step
 
-**oat-project-implement** - Continue implementation
+**oat-project-revise** - PR open — run oat-project-revise for feedback or oat-project-complete when approved
 
 ## Quick Commands
 

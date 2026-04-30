@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-30
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -142,6 +142,29 @@ _- Outstanding Items_
 #### Outstanding Items
 
 - p02 carried Minor findings: (a) plan p02-t01 Step-1 test description still says "overridden when config provides one" — contradicts implemented behavior; cosmetic drift. (b) Optional completion-path-explicit "both parent env + options" test not yet added; helper-level coverage already pins behavior. Neither blocks.
+
+### Run 2 — 2026-04-30 20:30 (p-rev1 revision)
+
+**Branch:** chore/scope-s3-sync-profile-override
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase  | Implementer | Review | Fix Iterations | Disposition |
+| ------ | ----------- | ------ | -------------- | ----------- |
+| p-rev1 | done        | pass   | 0/2            | merged      |
+
+Tasks: prev1-t01 (commit `41971aca` after merge `21a1aad3` from origin/main), prev1-t02 (`ca3e888d`), prev1-t03 (`652b4361`).
+
+#### Parallel Groups
+
+- Sequential (no parallel groups in p-rev1).
+
+#### Outstanding Items
+
+- None. The carry-over Minor from p02 reviews (plan p02-t01 wording drift) was resolved by prev1-t03.
 
 <!-- orchestration-runs-end -->
 
