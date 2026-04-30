@@ -85,10 +85,12 @@ Present these options to the user, with a recommendation based on the assessment
 
 1. **Full spec-driven workflow** — Discovery → Design (with confirmed requirements & spec.md) → Plan → Implement
    _Best for: complex features, cross-cutting concerns, multiple components, projects needing formal requirements or traceability. Design produces both spec.md and design.md as part of one collaborative conversation._
+   _Design mode choices: collaborative, selective collaborative, or draft-and-review. Selective collaborative is only available here, where the section set is large enough for selective live review to pay off._
    → Use `oat-project-new` (scaffolds spec-driven project)
 
 2. **Quick workflow** — Discovery → [Optional Lightweight Design] → Plan → Implement
    _Best for: bounded features at any size, clear requirements, rapid iteration preferred. Can still produce a design artifact when architecture decisions matter._
+   _Lightweight design keeps the smaller collaborative/draft choice; it does not offer selective collaborative mode._
    → Use `oat-project-quick-start`
 
 3. **Import external plan** — Normalize an existing plan into OAT format → Implement
