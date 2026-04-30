@@ -634,7 +634,34 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.2');
+  });
+
+  it('documents quick-start selective config fallback to collaborative', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillPath = join(
+      repoRoot,
+      '.agents',
+      'skills',
+      'oat-project-quick-start',
+      'SKILL.md',
+    );
+    const content = await readFile(skillPath, 'utf8');
+
+    expect(
+      content,
+      'quick-start must accept workflow.designMode=selective from config',
+    ).toMatch(/\$CONFIG_MODE" = "selective"/);
+    expect(
+      content,
+      'quick-start must treat selective as collaborative for lightweight design',
+    ).toMatch(/treating as collaborative for lightweight design/i);
+    expect(
+      content,
+      'quick-start must point users to full oat-project-design for Selective Collaborative',
+    ).toMatch(
+      /Selective Collaborative is only available in full oat-project-design/,
+    );
   });
 
   it('preserves the selective collaborative review-pass contract', async () => {

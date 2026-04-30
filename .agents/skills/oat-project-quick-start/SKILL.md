@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.0.1
+version: 2.0.2
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 disable-model-invocation: true
@@ -285,9 +285,14 @@ if [ -z "$DESIGN_MODE" ]; then
   else
     # Consult persisted preference (FR15 / Component 14) before prompting
     CONFIG_MODE=$(oat config get workflow.designMode 2>/dev/null || echo "")
-    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "draft" ]; then
+    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "selective" ] || [ "$CONFIG_MODE" = "draft" ]; then
       DESIGN_MODE="$CONFIG_MODE"
-      echo "Using workflow.designMode = ${DESIGN_MODE} from config."
+      if [ "$DESIGN_MODE" = "selective" ]; then
+        DESIGN_MODE="collaborative"
+        echo "Using workflow.designMode = selective from config (treating as collaborative for lightweight design; Selective Collaborative is only available in full oat-project-design)."
+      else
+        echo "Using workflow.designMode = ${DESIGN_MODE} from config."
+      fi
     else
       # Prefer AskUserQuestion for structured multi-choice when available.
       # If AskUserQuestion is unavailable, ask the same question as a plain
