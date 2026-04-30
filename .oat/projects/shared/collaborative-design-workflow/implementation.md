@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-24
-oat_current_task_id: p04-t10
+oat_last_updated: 2026-04-30
+oat_current_task_id: p04-tB
 oat_generated: false
 ---
 
@@ -12,7 +12,7 @@ oat_generated: false
 # Implementation: collaborative-design-workflow
 
 **Started:** 2026-04-15
-**Last Updated:** 2026-04-17
+**Last Updated:** 2026-04-30
 
 ## Review History (pre-implementation)
 
@@ -300,9 +300,15 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ## Phase 4 (p04): Dogfood + regressions + PR
 
-**Status:** in_progress — all implementation work on this repo complete (p01-p03). p04 dogfood and regression tasks (t01-t09) are being validated via the user's separate-repo dogfood pass rather than here. PR (t10) and final review (t11) pending.
+**Status:** in_progress — p01-p03 complete; p04 revision tasks for Selective Collaborative mode are now in implementation before PR creation and final review.
 
 **Started:** 2026-04-24
+
+### Selective Collaborative Revision — 2026-04-30
+
+- `p04-tA` complete in commit `d6e80219`: `workflow.designMode` now accepts `selective` in the config type, config catalog enum, and config-resolution tests. Verification: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts` passed (113 tests).
+- Separate p04 preflight note: the broader CLI test command exposed existing quick-start skill-contract drift (`2.0.1` actual vs `2.0.0` expected). That belongs with `p04-tD`, where the skill validation contract tests are intentionally updated.
+- Next task: `p04-tB` (`oat-project-design` skill body update for Selective Collaborative mode).
 
 ### Phase Summary
 

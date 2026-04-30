@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-tA
-oat_last_commit: 3665b8a8
+oat_current_task: p04-tB
+oat_last_commit: d6e80219
 oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: ['p04']
@@ -15,20 +15,20 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-30T00:00:00Z'
+oat_project_state_updated: '2026-04-30T14:38:00Z'
 oat_generated: false
 oat_orchestration_retry_limit: 2
 ---
 
 # Project State: collaborative-design-workflow
 
-**Status:** Revision in progress — p04 expanded with selective-collaborative-mode tasks (tA..tF) before PR
+**Status:** Revision in progress — p04 expanded with selective-collaborative-mode tasks (tA..tF) before PR; p04-tA complete
 **Started:** 2026-04-14
 **Last Updated:** 2026-04-30
 
 ## Current Phase
 
-Implementation — p01-p03 complete on this branch (24/35 tasks strictly done). p04 originally scoped t01-t11 (dogfood + regression + PR + review). On 2026-04-30 the user opened a revision conversation that surfaced a third design mode (Selective Collaborative); revision was folded into p04 rather than spawning a follow-up project (Option A — single PR, single lockstep version-bump cycle). Six new tasks (p04-tA..tF) inserted between p04-t09 and p04-t10. Next on this branch: implement the revision tasks, then proceed to the original PR creation (t10) and final review (t11).
+Implementation — p01-p03 complete on this branch (25/35 tasks strictly done). p04 originally scoped t01-t11 (dogfood + regression + PR + review). On 2026-04-30 the user opened a revision conversation that surfaced a third design mode (Selective Collaborative); revision was folded into p04 rather than spawning a follow-up project (Option A — single PR, single lockstep version-bump cycle). Six new tasks (p04-tA..tF) inserted between p04-t09 and p04-t10. p04-tA is complete; next on this branch: implement p04-tB, then continue through p04-tF before original PR creation (t10) and final review (t11).
 
 ## Artifacts
 
@@ -54,7 +54,8 @@ Implementation — p01-p03 complete on this branch (24/35 tasks strictly done). 
 - ✓ p03 base tasks (p03-t01/t02) implemented + reviewed (pass) — 5 public packages bumped 0.0.50→0.0.51, `pnpm release:validate` clean
 - ✓ p01-p03 range review (2026-04-24) returned changes_requested — 3 fix tasks added (p03-t03, p03-t04, p03-t05), implemented, re-reviewed (pass)
 - ✓ Revision discovery complete (2026-04-30) — Q1–Q10 locked in `discovery.md`; FR16 + NFR8 added to `spec.md`; Component 15 added to `design.md`; 6 revision tasks (p04-tA..tF) added to `plan.md`
-- ⧗ p04 in progress — original dogfood and regression work (t01-t09) deferred to user's separate-repo pass; revision tasks (tA..tF) pending implementation; PR (t10) + final review (t11) blocked on revision-task completion
+- ✓ p04-tA complete (`d6e80219`) — config type/catalog/resolution now accepts `workflow.designMode: "selective"`
+- ⧗ p04 in progress — original dogfood and regression work (t01-t09) deferred to user's separate-repo pass; revision tasks (tB..tF) pending implementation; PR (t10) + final review (t11) blocked on revision-task completion
 
 ## Blockers
 
@@ -64,7 +65,7 @@ None.
 
 Implement revision tasks p04-tA through p04-tF in dependency order:
 
-- **p04-tA** (config type extension) blocks **p04-tB** (skill body update).
+- ✓ **p04-tA** (config type extension) complete; unblocks **p04-tB** (skill body update).
 - **p04-tC** (reference file) is independent of A/B — can run in parallel with B.
 - **p04-tD** (contract-preservation test) blocks on B + C.
 - **p04-tE** (lockstep bump 0.0.51 → 0.0.52 + AGENTS.md docs) blocks on A–D.
