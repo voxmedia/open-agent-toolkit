@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-30
-oat_current_task_id: p04-tB
+oat_current_task_id: p04-tD
 oat_generated: false
 ---
 
@@ -307,8 +307,9 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 ### Selective Collaborative Revision — 2026-04-30
 
 - `p04-tA` complete in commit `d6e80219`: `workflow.designMode` now accepts `selective` in the config type, config catalog enum, and config-resolution tests. Verification: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts` passed (113 tests).
+- `p04-tB` + `p04-tC` complete in commit `49057a05`: `oat-project-design` now exposes Selective Collaborative mode in Step 1.5, runs Step 4a's section-review plan before drafting, handles selective section iteration, and adds the Step 6 recap for silently drafted sections. The new reference file `.agents/skills/oat-project-design/references/selective-review-pass.md` owns the signal set, grounding/recommendation rules, edge cases, examples, and Dogfood Notes.
 - Separate p04 preflight note: the broader CLI test command exposed existing quick-start skill-contract drift (`2.0.1` actual vs `2.0.0` expected). That belongs with `p04-tD`, where the skill validation contract tests are intentionally updated.
-- Next task: `p04-tB` (`oat-project-design` skill body update for Selective Collaborative mode).
+- Next task: `p04-tD` (skill validation contract test for the Selective Collaborative flow).
 
 ### Phase Summary
 
