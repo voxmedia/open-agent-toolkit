@@ -1297,6 +1297,7 @@ Five regex-based assertions against `.agents/skills/oat-project-design/reference
 - All five lockstep public-package `package.json` files: `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms` — bump `version` from `0.0.51` to `0.0.52`.
 - `packages/cli/assets/public-package-versions.json` (public-package manifest) — sync to `0.0.52`.
 - `AGENTS.md` — update the workflow triage section's mode descriptions to mention selective collaborative mode. Add the docs note from `discovery.md` Q7: "Selective collaborative mode is only available for full spec-driven design, where the section set is large enough for selective live review to pay off. Quick-start lightweight design keeps the smaller collaborative/draft choice."
+- Documentation closeout also expanded the docs app surfaces after `$oat-project-document`: `apps/oat-docs/docs/workflows/projects/design-modes.md`, `apps/oat-docs/docs/workflows/projects/lifecycle.md`, `apps/oat-docs/docs/workflows/projects/index.md`, `apps/oat-docs/docs/cli-utilities/configuration.md`, and `apps/oat-docs/index.md`. This is intentional docs coverage for the shipped mode picker/config behavior, not a separate feature scope.
 
 **Acceptance criteria:**
 
@@ -1304,6 +1305,7 @@ Five regex-based assertions against `.agents/skills/oat-project-design/reference
 - All five public-package versions are at `0.0.52`.
 - `packages/cli/assets/public-package-versions.json` reflects `0.0.52`.
 - AGENTS.md reads coherently with three modes explained.
+- Docs app surfaces document the same three-mode taxonomy and config behavior without contradicting FR16 / Component 15.
 
 **Verification:** `pnpm release:validate` exit 0 (NFR3).
 

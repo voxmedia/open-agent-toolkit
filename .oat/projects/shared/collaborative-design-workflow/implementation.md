@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-30
-oat_current_task_id: p04-t14
+oat_current_task_id: p04-t15
 oat_generated: false
 ---
 
@@ -330,7 +330,7 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 - `p04-tA` complete in commit `d6e80219`: `workflow.designMode` now accepts `selective` in the config type, config catalog enum, and config-resolution tests. Verification: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts` passed (113 tests).
 - `p04-tB` + `p04-tC` complete in commit `49057a05`: `oat-project-design` now exposes Selective Collaborative mode in Step 1.5, runs Step 4a's section-review plan before drafting, handles selective section iteration, and adds the Step 6 recap for silently drafted sections. The new reference file `.agents/skills/oat-project-design/references/selective-review-pass.md` owns the signal set, grounding/recommendation rules, edge cases, examples, and Dogfood Notes.
 - `p04-tD` complete in commit `e0d50a11`: `skills.test.ts` now preserves the Step 4a selective review-pass contract and reference-file shape; the stale quick-start version sentinel now expects the actual `2.0.1` version. Verification: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` passed (27 tests).
-- `p04-tE` complete in commit `9d0dd232`: all five public-package versions and `packages/cli/assets/public-package-versions.json` are now `0.0.52`; `AGENTS.md` documents that Selective Collaborative is only available for full spec-driven design. Verification: `pnpm release:validate` passed for all 5 public packages.
+- `p04-tE` complete in commit `9d0dd232`: all five public-package versions and `packages/cli/assets/public-package-versions.json` are now `0.0.52`; `AGENTS.md` documents that Selective Collaborative is only available for full spec-driven design. Documentation closeout later intentionally expanded this from AGENTS.md-only guidance to docs app surfaces, including `apps/oat-docs/docs/workflows/projects/design-modes.md`, workflow lifecycle/index copy, configuration docs, and the docs app index. Verification: `pnpm release:validate` passed for all 5 public packages.
 - `p04-tF` partial in commit `468ca6a1`: artifact-only classification pass recorded in `references/selective-review-pass.md` Dogfood Notes. Verification: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` passed (27 tests).
 - `p04-tF` closed as sufficient for PR on 2026-04-30 by user decision: this branch has enough dogfood signal to open the PR rather than continue expanding an already-large change set. The remaining live Selective Collaborative provider-skill checks are explicitly deferred follow-up dogfood, not blockers for this PR:
   - Picker taxonomy live paths: `Recommended`, `Available / not recommended`, and `Unavailable`.
@@ -340,10 +340,10 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 - Review received for `p04-tA-tF` on 2026-04-30: artifact `reviews/archived/p04-tA-tF-review-2026-04-30.md` added four review-fix tasks before final review:
   - `p04-t12` complete in commit `d42783b2`: quick-start now accepts persisted `workflow.designMode: selective`, maps it to collaborative for lightweight design, explains that Selective Collaborative is only available in full `oat-project-design`, and validation coverage locks the mapping.
   - `p04-t13` complete in commit `0a1cff5a`: Step 1.5 picker copy now uses canonical "high-risk sections live" / "committed file" wording, the four-state taxonomy is visible near the prompt instructions, and validation coverage now asserts routine/needs-eyes classifications, Section Review Plan reveal, all five canonical reference headers, and clearer failure messages.
-  - `p04-t14` records that documentation closeout intentionally expanded to docs app surfaces, including `design-modes.md`.
+  - `p04-t14` complete in bookkeeping commit: plan and implementation artifacts now record that documentation closeout intentionally expanded to docs app surfaces, including `design-modes.md`, and that those docs are in-scope coverage for the shipped mode picker/config behavior.
   - `p04-t15` clarifies that `oat_blockers: []` is intentional; the remaining live selective dogfood checks are post-merge follow-up items, not blockers for PR #68.
 - Deferred finding: `m3` (`public-package-versions.json` omits `control-plane`) is accepted as out of scope for this PR because it is pre-existing, release validation passes, and changing asset-manifest semantics would broaden the branch.
-- Next task: `p04-t14` (review bookkeeping for docs-surface expansion). After `p04-t14`-`p04-t15`, run targeted re-review, then `p04-t11` final review/merge readiness.
+- Next task: `p04-t15` (review bookkeeping for deferred dogfood blocker metadata). After `p04-t15`, run targeted re-review, then `p04-t11` final review/merge readiness.
 
 ### Phase Summary
 
