@@ -1391,6 +1391,8 @@ Reference this project's spec.md, design.md, and NOTICES.md.
 
 ### Task p04-t11: Run `oat-project-review-provide artifact code` on PR changes + merge
 
+**Note:** Run this after the review-fix tasks added from the p04-tA-tF review (`p04-t12` through `p04-t15`) are implemented and re-reviewed.
+
 **Step 1: Review**
 
 Invoke `oat-project-review-provide` scoped to the PR's code/doc changes. Independent review pass.
@@ -1413,6 +1415,128 @@ When review is `passed`, merge PR. Standard release pipeline picks up the versio
 - PR merged to `main`.
 - Release pipeline publishes new lockstep versions.
 
+### Task p04-t12: (review) Treat quick-start `selective` config as collaborative
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `workflow.designMode: selective` is accepted by config but quick-start Step 2.75a only accepts `collaborative` or `draft`, so persisted `selective` falls through to the picker instead of mapping to collaborative for lightweight design.
+Location: `.agents/skills/oat-project-quick-start/SKILL.md:287`
+
+**Step 2: Implement fix**
+
+Update Step 2.75a to accept `selective` from config and map it to `collaborative` with explicit prose explaining that Selective Collaborative is only available in full `oat-project-design`.
+
+Add or extend a skill validation assertion proving quick-start documents the `selective` -> `collaborative` mapping.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+Expected: skills validation passes and the quick-start mapping assertion fails if the mapping prose is removed.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-quick-start/SKILL.md packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p04-t12): map selective config to collaborative in quick start"
+```
+
+### Task p04-t13: (review) Tighten selective contract checks and picker copy
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-design/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Understand the issue**
+
+Review findings: the selective review-pass contract test omits several required assertions from p04-tD/NFR8, and Step 1.5 picker copy diverges from canonical discovery Q5 wording for the Selective Collaborative option and four-state taxonomy examples.
+Location: `.agents/skills/oat-project-design/SKILL.md:124`, `packages/cli/src/validation/skills.test.ts:640`
+
+**Step 2: Implement fix**
+
+Update Step 1.5 picker prose to use the canonical wording: "high-risk sections live" and "you review the committed file"; keep the four-state taxonomy visible near the prompt instructions.
+
+Extend the contract-preservation test to assert the `routine` literal, the Section Review Plan pre-drafting reveal, and all five canonical reference-file headers: `Signal Set`, `Adequate Grounding`, `Recommendation Rules`, `Edge Cases`, and `Dogfood Notes`. Do not make `## Examples` part of the canonical structural contract.
+
+Add clearer assertion messages where practical so future failures identify which prose contract drifted.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+Expected: skills validation passes and required Step 4a/reference clauses are guarded.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-design/SKILL.md packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p04-t13): tighten selective review contract coverage"
+```
+
+### Task p04-t14: (review) Record docs surface expansion in project bookkeeping
+
+**Files:**
+
+- Modify: `.oat/projects/shared/collaborative-design-workflow/implementation.md`
+- Modify: `.oat/projects/shared/collaborative-design-workflow/plan.md`
+
+**Step 1: Understand the issue**
+
+Review finding: the new docs page and adjacent docs updates are accurate and in scope, but p04-tE only named AGENTS.md and version bumps, leaving the docs expansion implicit.
+Location: `apps/oat-docs/docs/workflows/projects/design-modes.md`
+
+**Step 2: Implement fix**
+
+Record in implementation bookkeeping that p04-tE intentionally expanded from AGENTS.md-only guidance to docs app surfaces after `$oat-project-document`, and note that the content is accurate and in scope.
+
+If needed, add a short plan note under p04-tE clarifying that docs app updates are part of the documentation closeout.
+
+**Step 3: Verify**
+
+Run: `rg -n "design-modes|docs app|documentation closeout" .oat/projects/shared/collaborative-design-workflow/plan.md .oat/projects/shared/collaborative-design-workflow/implementation.md`
+Expected: the docs expansion is visible from project artifacts without reading commit history.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/collaborative-design-workflow/plan.md .oat/projects/shared/collaborative-design-workflow/implementation.md
+git commit -m "chore(p04-t14): record selective docs expansion"
+```
+
+### Task p04-t15: (review) Clarify deferred dogfood blocker metadata
+
+**Files:**
+
+- Modify: `.oat/projects/shared/collaborative-design-workflow/state.md`
+- Modify: `.oat/projects/shared/collaborative-design-workflow/implementation.md`
+
+**Step 1: Understand the issue**
+
+Review finding: `oat_blockers: []` is intentionally clear because the user closed dogfood as sufficient for PR, but the remaining live selective-mode dogfood checks are still deferred follow-up items.
+Location: `.oat/projects/shared/collaborative-design-workflow/state.md:4`
+
+**Step 2: Implement fix**
+
+Clarify that the empty blocker list is intentional: the remaining picker taxonomy, mid-flight elevation, and final-recap checks are post-merge follow-up dogfood, not blockers for PR #68.
+
+Do not re-add an `oat_blockers` entry unless the user changes the disposition.
+
+**Step 3: Verify**
+
+Run: `rg -n "not blockers|post-merge follow-up|oat_blockers" .oat/projects/shared/collaborative-design-workflow/state.md .oat/projects/shared/collaborative-design-workflow/implementation.md`
+Expected: the blocker disposition is explicit in project state/bookkeeping.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/collaborative-design-workflow/state.md .oat/projects/shared/collaborative-design-workflow/implementation.md
+git commit -m "chore(p04-t15): clarify deferred dogfood blocker disposition"
+```
+
 ---
 
 ## Reviews
@@ -1421,19 +1545,19 @@ When review is `passed`, merge PR. Standard release pipeline picks up the versio
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope     | Type     | Status   | Date       | Artifact                                              |
-| --------- | -------- | -------- | ---------- | ----------------------------------------------------- |
-| p01       | code     | passed   | 2026-04-23 | reviews/archived/p01-review-2026-04-23.md             |
-| p02       | code     | passed   | 2026-04-23 | reviews/archived/p02-review-2026-04-23.md             |
-| p03       | code     | passed   | 2026-04-23 | reviews/archived/p03-review-2026-04-23.md             |
-| p01-p03   | code     | passed   | 2026-04-24 | reviews/archived/p01-p03-rereview-2026-04-24.md       |
-| p04       | code     | pending  | -          | -                                                     |
-| p04-tA-tF | code     | received | 2026-04-30 | reviews/p04-tA-tF-review-2026-04-30.md                |
-| final     | code     | pending  | -          | -                                                     |
-| spec      | artifact | pending  | -          | -                                                     |
-| design    | artifact | passed   | 2026-04-17 | reviews/archived/artifact-design-review-2026-04-17.md |
-| plan      | artifact | passed   | 2026-04-17 | reviews/archived/artifact-plan-review-2026-04-17.md   |
-| stale     | artifact | passed   | 2026-04-23 | reviews/archived/staleness-review-2026-04-23.md       |
+| Scope     | Type     | Status      | Date       | Artifact                                              |
+| --------- | -------- | ----------- | ---------- | ----------------------------------------------------- |
+| p01       | code     | passed      | 2026-04-23 | reviews/archived/p01-review-2026-04-23.md             |
+| p02       | code     | passed      | 2026-04-23 | reviews/archived/p02-review-2026-04-23.md             |
+| p03       | code     | passed      | 2026-04-23 | reviews/archived/p03-review-2026-04-23.md             |
+| p01-p03   | code     | passed      | 2026-04-24 | reviews/archived/p01-p03-rereview-2026-04-24.md       |
+| p04       | code     | pending     | -          | -                                                     |
+| p04-tA-tF | code     | fixes_added | 2026-04-30 | reviews/archived/p04-tA-tF-review-2026-04-30.md       |
+| final     | code     | pending     | -          | -                                                     |
+| spec      | artifact | pending     | -          | -                                                     |
+| design    | artifact | passed      | 2026-04-17 | reviews/archived/artifact-design-review-2026-04-17.md |
+| plan      | artifact | passed      | 2026-04-17 | reviews/archived/artifact-plan-review-2026-04-17.md   |
+| stale     | artifact | passed      | 2026-04-23 | reviews/archived/staleness-review-2026-04-23.md       |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1453,11 +1577,11 @@ When review is `passed`, merge PR. Standard release pipeline picks up the versio
 - Phase 1 (p01): 9 tasks — `oat-project-design` rework
 - Phase 2 (p02): 10 tasks — companion skill edits + AGENTS.md + NOTICES.md + CLI config extension (FR15)
 - Phase 3 (p03): 5 tasks — lockstep version bumps + release validation + 3 review fixes from p01-p03 range review (p03-t03, p03-t04, p03-t05)
-- Phase 4 (p04): 11 tasks — dogfood + regressions + PR
+- Phase 4 (p04): 15 tasks — dogfood + regressions + PR + selective-mode review fixes
 
-**Total: 35 tasks** (32 original + 3 review fixes)
+**Total: 39 tasks** (32 original + 3 p01-p03 review fixes + 4 selective-mode review fixes)
 
-Ready for code review and merge.
+Ready for selective-mode review fixes, re-review, final review, and merge.
 
 ---
 

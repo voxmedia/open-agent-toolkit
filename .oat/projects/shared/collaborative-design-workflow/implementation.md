@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-30
-oat_current_task_id: p04-t11
+oat_current_task_id: p04-t12
 oat_generated: false
 ---
 
@@ -118,6 +118,27 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 **Next:** Proceed to p04 (dogfood + regressions + PR). HiLL checkpoint auto-review fires after p04 completes — scope will be `final` (covers p04 only; p01-p03 range is already `passed`).
 
+### Review Received: p04-tA-tF (code) — 2026-04-30
+
+**Review artifact:** `reviews/archived/p04-tA-tF-review-2026-04-30.md`
+
+**Findings:** 0 Critical, 2 Important, 3 Medium, 3 Minor.
+
+**Finding disposition:**
+
+- `I1` Quick-start ignores `workflow.designMode: selective` instead of treating it as collaborative → `convert_to_task` → **p04-t12**.
+- `I2` Contract-preservation test is incomplete relative to p04-tD/NFR8 → `convert_to_task` → **p04-t13**.
+- `M1` Picker copy diverges from canonical Q5 wording and only partially exposes the four-state taxonomy → `convert_to_task` → **p04-t13**.
+- `M2` Docs page/surface updates were not explicitly covered by a plan task → `convert_to_task` → **p04-t14**.
+- `M3` `state.md` has `oat_blockers: []` while live selective dogfood remains deferred → `convert_to_task` → **p04-t15**.
+- `m1` p04-tD negative-test/failure-message coverage is thin → `convert_to_task` → **p04-t13**.
+- `m2` Reference file has an extra `## Examples` header → `resolved_by_task` → **p04-t13** ensures only the five canonical headers are asserted.
+- `m3` `public-package-versions.json` omits `control-plane` → `deferred_with_rationale`; this is pre-existing, release validation passes, and changing asset-manifest semantics would broaden this PR.
+
+**New tasks added:** p04-t12, p04-t13, p04-t14, p04-t15.
+
+**Next:** Execute review-fix tasks via `oat-project-implement`, then re-run `oat-project-review-provide code p04-tA-tF` scoped to the fix tasks before p04-t11 final review.
+
 > This document is used to resume interrupted implementation sessions.
 >
 > Conventions:
@@ -130,14 +151,14 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 
 ## Progress Overview
 
-| Phase                                            | Status      | Tasks | Completed                                                                                                                                        |
-| ------------------------------------------------ | ----------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Phase 1 (p01): oat-project-design rework         | completed   | 9     | 9/9                                                                                                                                              |
-| Phase 2 (p02): Companion skills + AGENTS + CLI   | completed   | 10    | 10/10                                                                                                                                            |
-| Phase 3 (p03): Lockstep version + 3 review fixes | completed   | 5     | 5/5                                                                                                                                              |
-| Phase 4 (p04): Dogfood + regressions + PR        | in_progress | 11    | 0/11 truly complete (dogfood t01-t07 deferred to user's separate-repo pass; t08/t09 regression + t04 FR9 had prose audits only; t10/t11 pending) |
+| Phase                                            | Status      | Tasks | Completed                                                                                                                                                                                   |
+| ------------------------------------------------ | ----------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 1 (p01): oat-project-design rework         | completed   | 9     | 9/9                                                                                                                                                                                         |
+| Phase 2 (p02): Companion skills + AGENTS + CLI   | completed   | 10    | 10/10                                                                                                                                                                                       |
+| Phase 3 (p03): Lockstep version + 3 review fixes | completed   | 5     | 5/5                                                                                                                                                                                         |
+| Phase 4 (p04): Dogfood + regressions + PR        | in_progress | 15    | 0/15 truly complete (dogfood t01-t07 deferred to user's separate-repo pass; t08/t09 regression + t04 FR9 had prose audits only; t10 complete; t11 final review pending after t12-t15 fixes) |
 
-**Total:** 24/35 strictly-complete implementation tasks (all of p01, p02, p03 including the 3 review fixes). p04 PR (t10) and final review (t11) pending; dogfood and regressions handled in user's separate-repo pass.
+**Total:** 24/39 strictly-complete implementation tasks (all of p01, p02, p03 including the 3 review fixes). p04 PR (t10) is complete; selective-mode review fixes (t12-t15) and final review (t11) remain; dogfood and regressions handled in user's separate-repo pass.
 
 ---
 
@@ -316,7 +337,13 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
   - Mid-flight "walk me through every remaining section" elevation behavior.
   - Final user-review recap listing sections drafted without live confirmation.
 - `p04-t10` complete on 2026-04-30: branch pushed to `origin/collaborative-design`; PR #68 opened at `https://github.com/voxmedia/open-agent-toolkit/pull/68` with migration notes covering both v2.0 mode-aware design flow and v2.1 Selective Collaborative mode. Local PR body source written to `pr/project-pr-2026-04-30.md` (local-only per repo config).
-- Next task: `p04-t11` (final `oat-project-review-provide code final`, receive, and merge readiness).
+- Review received for `p04-tA-tF` on 2026-04-30: artifact `reviews/archived/p04-tA-tF-review-2026-04-30.md` added four review-fix tasks before final review:
+  - `p04-t12` maps quick-start `workflow.designMode: selective` to collaborative and adds validation coverage.
+  - `p04-t13` tightens selective contract-preservation assertions and canonical picker copy.
+  - `p04-t14` records that documentation closeout intentionally expanded to docs app surfaces, including `design-modes.md`.
+  - `p04-t15` clarifies that `oat_blockers: []` is intentional; the remaining live selective dogfood checks are post-merge follow-up items, not blockers for PR #68.
+- Deferred finding: `m3` (`public-package-versions.json` omits `control-plane`) is accepted as out of scope for this PR because it is pre-existing, release validation passes, and changing asset-manifest semantics would broaden the branch.
+- Next task: `p04-t12` (review fix for quick-start selective config mapping). After `p04-t12`-`p04-t15`, run targeted re-review, then `p04-t11` final review/merge readiness.
 
 ### Phase Summary
 
@@ -348,10 +375,11 @@ Changes:
 
 No skill version bumps required (both skills already bumped 1.x → 2.0.0 earlier in this PR; AGENTS.md rule is one bump per changed skill in the final PR diff).
 
-**Ready for PR:**
+**Ready for PR / Review Fixes:**
 
-- `p04-t10` Push branch + open PR with migration note.
-- `p04-t11` Final `oat-project-review-provide code final` + receive + merge.
+- `p04-t10` Push branch + open PR with migration note — complete.
+- `p04-t12`-`p04-t15` Review fixes from `p04-tA-tF` review.
+- `p04-t11` Final `oat-project-review-provide code final` + receive + merge after review fixes pass.
 
 **Key files touched (p04 on this repo):**
 

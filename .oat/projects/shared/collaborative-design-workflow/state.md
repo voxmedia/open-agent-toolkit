@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t11
+oat_current_task: p04-t12
 oat_last_commit: 3d170465
 oat_blockers: []
 associated_issues: []
@@ -7,7 +7,7 @@ oat_hill_checkpoints: ['p04']
 oat_hill_completed: []
 oat_parallel_execution: true
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_workflow_mode: spec-driven
 oat_workflow_origin: native
 oat_docs_updated: complete
@@ -15,20 +15,20 @@ oat_pr_status: open
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/68
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-30T16:18:00Z'
+oat_project_state_updated: '2026-04-30T15:20:32Z'
 oat_generated: false
 oat_orchestration_retry_limit: 2
 ---
 
 # Project State: collaborative-design-workflow
 
-**Status:** PR open — p04 selective-collaborative revision tasks complete; remaining live selective-mode dogfood checks are documented as follow-up items
+**Status:** PR open — p04 selective-collaborative revision review fixes queued before final review; remaining live selective-mode dogfood checks are documented as follow-up items
 **Started:** 2026-04-14
 **Last Updated:** 2026-04-30
 
 ## Current Phase
 
-Implementation — PR #68 is open, awaiting final project review. p01-p03 are complete. p04 originally scoped t01-t11 (dogfood + regression + PR + review). On 2026-04-30 the user opened a revision conversation that surfaced a third design mode (Selective Collaborative); revision was folded into p04 rather than spawning a follow-up project (Option A — single PR, single lockstep version-bump cycle). Six revision tasks (p04-tA..tF) were inserted between p04-t09 and p04-t10 and are complete for PR purposes. The remaining live selective-mode checks are documented as deferred dogfood follow-ups; next task is p04-t11 final review.
+Implementation — PR #68 is open, with p04-tA-tF review fixes queued before final review. p01-p03 are complete. p04 originally scoped t01-t11 (dogfood + regression + PR + review). On 2026-04-30 the user opened a revision conversation that surfaced a third design mode (Selective Collaborative); revision was folded into p04 rather than spawning a follow-up project (Option A — single PR, single lockstep version-bump cycle). Six revision tasks (p04-tA..tF) were inserted between p04-t09 and p04-t10 and are complete for PR purposes. The `p04-tA-tF` review added four fix tasks (`p04-t12`-`p04-t15`). The remaining live selective-mode checks are documented as deferred dogfood follow-ups; they are intentionally not blockers for PR #68.
 
 ## Artifacts
 
@@ -60,7 +60,7 @@ Implementation — PR #68 is open, awaiting final project review. p01-p03 are co
 - ✓ p04-tE complete (`9d0dd232`) — lockstep public-package bump to `0.0.52` plus AGENTS.md selective-mode guidance
 - ✓ p04-tF complete for PR (`468ca6a1`) — classification dogfood table recorded; remaining live picker/elevation/final-recap checks documented as follow-up dogfood
 - ✓ p04-t10 complete — PR #68 opened with migration notes
-- ⧗ p04 in progress — final project review pending (p04-t11)
+- ⧗ p04 in progress — p04-tA-tF review fixes queued (p04-t12-p04-t15), then final project review (p04-t11)
 
 ## Deferred Follow-up Dogfood
 
@@ -68,9 +68,11 @@ Implementation — PR #68 is open, awaiting final project review. p01-p03 are co
 - Mid-flight "walk me through every remaining section" elevation behavior.
 - Final user-review recap listing sections drafted without live confirmation.
 
+`oat_blockers` is intentionally empty: on 2026-04-30 the user closed dogfood as sufficient for PR. The items above are post-merge follow-up dogfood, not blockers for PR #68.
+
 ## Next Milestone
 
-Run final review:
+Execute p04-tA-tF review fixes:
 
 - ✓ **p04-tA** (config type extension) complete; unblocks **p04-tB** (skill body update).
 - ✓ **p04-tB** (skill body update) and **p04-tC** (reference file) complete.
@@ -80,6 +82,6 @@ Run final review:
 
 PR #68 is open for review.
 
-- Next: p04-t11 final `oat-project-review-provide code final`, then receive findings if any.
+- Next: p04-t12 review fix, then p04-t13-p04-t15, targeted re-review, and p04-t11 final `oat-project-review-provide code final`.
 - To incorporate PR feedback later: run `oat-project-revise`.
 - When approved and merged: run `oat-project-complete`.
