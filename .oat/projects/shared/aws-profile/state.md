@@ -7,28 +7,28 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-28T23:50:52.480Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-29T03:25:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-04-29T19:29:30.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: aws-profile
 
-**Status:** Implementation Complete (docs synced; ready for PR)
+**Status:** PR open — awaiting human review
 **Started:** 2026-04-28
 **Last Updated:** 2026-04-29
 
 ## Current Phase
 
-Implementation complete — final review passed.
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -45,7 +45,8 @@ Implementation complete — final review passed.
 - ✓ All phases implemented and reviewed (p01–p05 passed)
 - ✓ Final code review passed
 - ✓ Documentation sync complete — existing docs from p05-t01 verified sufficient (0 changes)
-- ⧗ Ready for `oat-project-pr-final`
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -53,4 +54,7 @@ None
 
 ## Next Milestone
 
-`oat-project-pr-final` (docs sync complete; per workflow.postImplementSequence=docs-pr).
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
