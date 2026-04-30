@@ -124,12 +124,17 @@ if [ -z "$DESIGN_MODE" ]; then
       #    Question: "How would you like to work through the design?
       #       1. Collaborative — section-by-section, every section confirmed
       #       2. Selective collaborative — agent drafts routine sections silently
-      #          and walks you through sections that need eyes; you'll see which
-      #          sections will be presented before drafting
-      #       3. Draft-and-review — full draft up front, you review holistically"
+      #          and walks you through high-risk sections live; before drafting,
+      #          you'll see which sections will be presented and why
+      #       3. Draft-and-review — full draft up front, you review the committed file"
       #    Mark exactly one option "(recommended for this design)". Hide or
-      #    label Selective unavailable when grounding is broadly absent. If
-      #    Selective is recommended, add one sentence explaining the section
+      #    label Selective unavailable when grounding is broadly absent. Use
+      #    the four-state taxonomy explicitly:
+      #    - Recommended: "Selective collaborative (recommended for this design)"
+      #    - Available: "Selective collaborative (available)"
+      #    - Available-not-recommended: "Selective collaborative (available, not recommended)"
+      #    - Unavailable: "Selective collaborative (unavailable — insufficient grounding context)"
+      #    If Selective is recommended, add one sentence explaining the section
       #    count and adequate grounding.
       #
       # Result populates DESIGN_MODE

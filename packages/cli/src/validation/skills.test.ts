@@ -684,16 +684,49 @@ describe('validateOatSkills', () => {
     const skillContent = await readFile(skillPath, 'utf8');
     const referenceContent = await readFile(referencePath, 'utf8');
 
-    expect(skillContent).toMatch(/^version:\s*2\.1\.0$/m);
-    expect(skillContent).toMatch(/### Step 4a: Selective Review Pass/);
-    expect(skillContent).toMatch(
-      /any one needs-eyes signal marks the section `needs-eyes`/i,
+    expect(
+      skillContent,
+      'oat-project-design selective-mode contract version must stay explicit',
+    ).toMatch(/^version:\s*2\.1\.0$/m);
+    expect(
+      skillContent,
+      'Step 4a heading must remain present for selective review-pass flow',
+    ).toMatch(/### Step 4a: Selective Review Pass/);
+    expect(skillContent, 'Step 4a must name routine classifications').toMatch(
+      /`routine`/,
     );
-    expect(skillContent).toMatch(
-      /force `Overview \+ Architecture` to `needs-eyes`/i,
-    );
-    expect(skillContent).toMatch(/references\/selective-review-pass\.md/);
+    expect(
+      skillContent,
+      'Step 4a must name needs-eyes classifications',
+    ).toMatch(/`needs-eyes`/);
+    expect(
+      skillContent,
+      'Step 4a must preserve the conservative-bias rule',
+    ).toMatch(/any one needs-eyes signal marks the section `needs-eyes`/i);
+    expect(
+      skillContent,
+      'Step 4a must force at least one live review section',
+    ).toMatch(/force `Overview \+ Architecture` to `needs-eyes`/i);
+    expect(
+      skillContent,
+      'Step 4a must reveal the Section Review Plan before drafting',
+    ).toMatch(/Section Review Plan|Section review plan/);
+    expect(
+      skillContent,
+      'Step 4a must point maintainers to the selective review-pass reference',
+    ).toMatch(/references\/selective-review-pass\.md/);
+    expect(
+      skillContent,
+      'Step 1.5 picker copy must use canonical selective wording',
+    ).toMatch(/high-risk sections live/);
+    expect(
+      skillContent,
+      'Step 1.5 picker copy must use canonical draft review wording',
+    ).toMatch(/you review the committed file/);
     expect(referenceContent).toMatch(/^## Signal Set$/m);
+    expect(referenceContent).toMatch(/^## Adequate Grounding$/m);
+    expect(referenceContent).toMatch(/^## Recommendation Rules$/m);
+    expect(referenceContent).toMatch(/^## Edge Cases$/m);
     expect(referenceContent).toMatch(/^## Dogfood Notes$/m);
   });
 
