@@ -159,7 +159,7 @@ In `archive-utils.test.ts`, add cases that:
 
 - Pass an `archive.awsProfile = "work-sso"` and `archive.awsRegion = "us-east-1"` through `archiveProjectOnCompletion` and assert the spy `execFile` is called with an env containing `AWS_PROFILE=work-sso` and `AWS_REGION=us-east-1` for the `aws sts get-caller-identity` and `aws s3 sync` calls.
 - Same coverage for `ensureS3ArchiveAccess` directly when given the new options.
-- Assert that an existing parent-process `AWS_PROFILE` is preserved (not clobbered by an unset config value) and is overridden when config provides one.
+- Assert that an existing parent-process `AWS_PROFILE` wins over both an unset and a set config value (non-clobbering — config never overrides the shell env). Discovery decision #3.
 - Assert that when neither config nor parent env supply a profile, the spawned env contains no `AWS_PROFILE` key (i.e., we don't inject empty strings).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts`
