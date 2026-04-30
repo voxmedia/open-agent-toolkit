@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-04-30
-oat_current_task_id: p04-t10
+oat_current_task_id: p04-t11
 oat_generated: false
 ---
 
@@ -315,7 +315,8 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
   - Picker taxonomy live paths: `Recommended`, `Available / not recommended`, and `Unavailable`.
   - Mid-flight "walk me through every remaining section" elevation behavior.
   - Final user-review recap listing sections drafted without live confirmation.
-- Next task: `p04-t10` (push/open PR with migration note covering v2.0 mode-aware design flow and v2.1 Selective Collaborative mode).
+- `p04-t10` complete on 2026-04-30: branch pushed to `origin/collaborative-design`; PR #68 opened at `https://github.com/voxmedia/open-agent-toolkit/pull/68` with migration notes covering both v2.0 mode-aware design flow and v2.1 Selective Collaborative mode. Local PR body source written to `pr/project-pr-2026-04-30.md` (local-only per repo config).
+- Next task: `p04-t11` (final `oat-project-review-provide code final`, receive, and merge readiness).
 
 ### Phase Summary
 
