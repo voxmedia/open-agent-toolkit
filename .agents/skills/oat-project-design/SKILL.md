@@ -1,7 +1,7 @@
 ---
 name: oat-project-design
-version: 2.0.1
-description: Use when discovery is complete and implementation-ready decisions are needed. Runs a collaborative, section-by-section conversation by default (with a draft-and-review escape hatch and non-interactive fallback), confirms requirements and produces both `spec.md` and `design.md`, and commits artifacts before the user-review gate.
+version: 2.1.0
+description: Use when discovery is complete and implementation-ready decisions are needed. Runs a collaborative, selective collaborative, or draft-and-review design flow, confirms requirements and produces both `spec.md` and `design.md`, and commits artifacts before the user-review gate.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
@@ -85,7 +85,7 @@ fi
 
 ### Step 1.5: Resolve Interaction Mode
 
-Resolve whether to run the design phase in Collaborative (section-by-section) or Draft-and-review (full draft up front) mode. Argument precedes env var. An **explicit** non-interactive signal forces draft. Persisted config preference is consulted before prompting the user.
+Resolve whether to run the design phase in Collaborative (section-by-section), Selective Collaborative (section-by-section only for sections that need eyes), or Draft-and-review (full draft up front) mode. Argument precedes env var. An **explicit** non-interactive signal forces draft. Persisted config preference is consulted before prompting the user.
 
 > **Tool availability is not the same as interactivity.** If the structured `AskUserQuestion` tool is unavailable but the assistant can still exchange normal chat messages with the user, run Collaborative mode using plain chat prompts. Use Draft-and-review only for explicit non-interactive execution (`OAT_NON_INTERACTIVE=1`) or when no user-response channel exists at all (e.g., a CI job with stdin fully redirected from `/dev/null` and no agent-side user turn).
 
@@ -104,11 +104,17 @@ if [ -z "$DESIGN_MODE" ]; then
   else
     # 3. Consult persisted preference (FR15 / Component 14) before prompting
     CONFIG_MODE=$(oat config get workflow.designMode 2>/dev/null || echo "")
-    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "draft" ]; then
+    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "selective" ] || [ "$CONFIG_MODE" = "draft" ]; then
       DESIGN_MODE="$CONFIG_MODE"
       echo "Using workflow.designMode = ${DESIGN_MODE} from config."
     else
-      # 4. Interactive: prompt the user.
+      # 4. Interactive: run the selective preflight, then prompt the user.
+      #    The preflight uses references/selective-review-pass.md to classify
+      #    sections and determine whether Selective Collaborative is
+      #    recommended, available, available-not-recommended, or unavailable.
+      #    Default recommendation is Collaborative when in doubt; Draft is
+      #    never the default recommendation from the picker.
+      #
       #    - Prefer AskUserQuestion for structured multi-choice when it is
       #      available.
       #    - If AskUserQuestion is unavailable, ask the same question as a
@@ -116,9 +122,15 @@ if [ -z "$DESIGN_MODE" ]; then
       #      to draft mode just because the structured tool is missing.
       #
       #    Question: "How would you like to work through the design?
-      #       1. Collaborative (recommended) — section-by-section, with one approach
-      #          confirmation before drafting
-      #       2. Draft-and-review — full draft up front, you review holistically"
+      #       1. Collaborative — section-by-section, every section confirmed
+      #       2. Selective collaborative — agent drafts routine sections silently
+      #          and walks you through sections that need eyes; you'll see which
+      #          sections will be presented before drafting
+      #       3. Draft-and-review — full draft up front, you review holistically"
+      #    Mark exactly one option "(recommended for this design)". Hide or
+      #    label Selective unavailable when grounding is broadly absent. If
+      #    Selective is recommended, add one sentence explaining the section
+      #    count and adequate grounding.
       #
       # Result populates DESIGN_MODE
       :
@@ -138,6 +150,8 @@ echo "Running in ${DESIGN_MODE} mode."
 5. Interactive prompt (default: Collaborative)
 
 Runtime/context signals always outrank persisted preferences. **Missing `AskUserQuestion` is not a non-interactive signal** — fall through to the plain-chat prompt path instead.
+
+**Selective recommendation states:** `recommended` when grounding is adequate and at least 3 sections (or about 30-40% of sections) classify as routine; `available` when it can run but Collaborative is safer; `available-not-recommended` when savings are marginal; `unavailable` when grounding is broadly absent. Do not offer Selective Collaborative from quick-start — this mode is only for full `oat-project-design`.
 
 **Recovery — draft mode entered by mistake:** If the agent drafted and committed the full design in draft mode because `AskUserQuestion` was unavailable but normal chat was available, do **not** mark the design complete. Treat the committed draft as a starting point and walk it section by section with the user via plain chat — present each section, ask for confirmation or changes, revise and commit on feedback, then move to the next section. Only after the section-by-section pass approves the full artifact should Step 6's user-review gate be considered satisfied.
 
@@ -222,10 +236,10 @@ Transform Key Decisions and Success Criteria into structured requirements.
 - **P1:** Should have — important but not blocking
 - **P2:** Nice to have — future enhancement
 
-**Step 2f: Iterate with user (collaborative mode only)**
+**Step 2f: Iterate with user (collaborative and selective modes only)**
 
 ```
-IF DESIGN_MODE == "collaborative":
+IF DESIGN_MODE == "collaborative" || DESIGN_MODE == "selective":
   Present draft requirements list to user.
   Ask (AskUserQuestion): "Are these requirements complete? Anything missing or unclear?"
   Update spec.md with refinements; update oat_last_updated.
@@ -378,6 +392,16 @@ Draft `design.md` section-by-section (Collaborative mode) or in a single pass (D
 11. **Implementation Phases** — Break work into manageable phases (1-3 days each). Per-phase structure: Goal, Tasks (high-level), Verification.
 12. **Risks and Mitigation** — For each significant risk: Probability | Impact; Mitigation; Contingency.
 
+### Step 4a: Selective Review Pass
+
+If `DESIGN_MODE == "selective"`, classify every section before drafting and present the Section Review Plan to the user. Use `.agents/skills/oat-project-design/references/selective-review-pass.md` for the full signal set, grounding rules, edge cases, and dogfood notes.
+
+The pass returns a table with `Section | Classification | Reason | Signals hit`. Classifications are `routine` or `needs-eyes`. Bias is conservative: any one needs-eyes signal marks the section `needs-eyes`. `Overview + Architecture`, `Security Considerations`, `Performance Considerations`, `Error Handling`, and `Migration Plan` are high-risk-by-default and always `needs-eyes`; if no section is marked `needs-eyes`, force `Overview + Architecture` to `needs-eyes` so the user sees the framing.
+
+Before drafting, print `## Section Review Plan` followed by `Section | Classification | Reason | Signals hit`.
+
+Then ask: "Proceed with this section review plan, or elevate any routine sections to needs-eyes?" If the user elevates sections, update the plan. If every section is `needs-eyes`, say "All sections flagged for review — running as full collaborative" and use the Collaborative branch.
+
 **YAGNI check per section:** If the section would draft a capability `spec.md` doesn't require, cut it. If a component boundary is speculative ("in case we need it later"), cut it.
 
 **Collaborative branch:**
@@ -448,6 +472,41 @@ IF DESIGN_MODE == "collaborative":
     Continue to Step 5 (Self-Review) and Step 6 (User-Review Gate).
 ```
 
+**Selective Collaborative branch:**
+
+```
+IF DESIGN_MODE == "selective":
+  Read spec.md for requirements context; read knowledge base.
+  Run Step 4a if not already run during the picker.
+
+  Do NOT create or write to design.md yet. Draft routine sections
+  silently in memory; present needs-eyes sections inline using the
+  Collaborative approval mechanics.
+
+  For SECTION in shared section list:
+    Draft section content from spec.md + knowledge base.
+    Apply the same YAGNI and not-applicable rules as Collaborative mode.
+
+    IF SECTION classification == "routine":
+      Store the drafted section in the approved-section buffer.
+      Track SECTION in SILENT_SECTIONS for Step 6.
+
+    IF SECTION classification == "needs-eyes":
+      Emit the full section content as a plain assistant message.
+      Ask: "Does this look right, should we adjust, or should I walk
+      through every remaining section?"
+      If user chooses walk-through: mark every remaining section
+        needs-eyes and continue like Collaborative mode.
+      On feedback: revise in context; only final approved text gets
+        written to design.md.
+
+  Once ALL sections are approved or silently accepted:
+    Copy `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`.
+    Write each section into the corresponding template section.
+    Update frontmatter as in Collaborative mode.
+    Continue to Step 5 (Self-Review) and Step 6 (User-Review Gate).
+```
+
 **Draft-and-review branch:**
 
 ```
@@ -495,6 +554,7 @@ Apply fixes inline. Do not re-run self-review. Continue to Step 6 (User-Review G
 By the time Step 6 runs, `design.md` already exists on disk regardless of mode:
 
 - **Collaborative**: written at the end of the Step 4 approval loop, after all sections were confirmed in chat.
+- **Selective Collaborative**: written at the end of the Step 4 selective loop, after `needs-eyes` sections were confirmed and `routine` sections were silently accepted.
 - **Draft-and-review**: written in Step 4 as the one-pass draft.
 
 Step 6 commits the file and then (if a HiLL gate is configured) presents the user-review prompt. This keeps the "written and committed" prompt wording literally accurate.
@@ -538,6 +598,8 @@ Prompt (required wording):
   >
   >  Optional: run `oat-project-review-provide artifact design` for an
   >  independent reviewer pass first."
+
+If `DESIGN_MODE == "selective"` and `SILENT_SECTIONS` is non-empty, append: "Drafted without live confirmation: {SILENT_SECTIONS}. Please review those sections especially carefully in the committed file."
 
 Wait for user response:
 
