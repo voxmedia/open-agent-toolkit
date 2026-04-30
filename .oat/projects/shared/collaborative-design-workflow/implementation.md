@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p04-tF live picker/elevation/final-recap dogfood requires an interactive provider-skill run
+oat_blockers: []
 oat_last_updated: 2026-04-30
-oat_current_task_id: p04-tF
+oat_current_task_id: p04-t10
 oat_generated: false
 ---
 
@@ -312,7 +311,11 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 - `p04-tD` complete in commit `e0d50a11`: `skills.test.ts` now preserves the Step 4a selective review-pass contract and reference-file shape; the stale quick-start version sentinel now expects the actual `2.0.1` version. Verification: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` passed (27 tests).
 - `p04-tE` complete in commit `9d0dd232`: all five public-package versions and `packages/cli/assets/public-package-versions.json` are now `0.0.52`; `AGENTS.md` documents that Selective Collaborative is only available for full spec-driven design. Verification: `pnpm release:validate` passed for all 5 public packages.
 - `p04-tF` partial in commit `468ca6a1`: artifact-only classification pass recorded in `references/selective-review-pass.md` Dogfood Notes. Verification: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` passed (27 tests).
-- Remaining blocker: live Selective Collaborative provider-skill dogfood still needs to exercise picker taxonomy, mid-flight "walk me through every remaining section", and final silent-section recap. These cannot be proven by the CLI because `oat-project-design` is an agent skill, not an executable command.
+- `p04-tF` closed as sufficient for PR on 2026-04-30 by user decision: this branch has enough dogfood signal to open the PR rather than continue expanding an already-large change set. The remaining live Selective Collaborative provider-skill checks are explicitly deferred follow-up dogfood, not blockers for this PR:
+  - Picker taxonomy live paths: `Recommended`, `Available / not recommended`, and `Unavailable`.
+  - Mid-flight "walk me through every remaining section" elevation behavior.
+  - Final user-review recap listing sections drafted without live confirmation.
+- Next task: `p04-t10` (push/open PR with migration note covering v2.0 mode-aware design flow and v2.1 Selective Collaborative mode).
 
 ### Phase Summary
 
@@ -344,7 +347,7 @@ Changes:
 
 No skill version bumps required (both skills already bumped 1.x → 2.0.0 earlier in this PR; AGENTS.md rule is one bump per changed skill in the final PR diff).
 
-**Pending user confirmation:**
+**Ready for PR:**
 
 - `p04-t10` Push branch + open PR with migration note.
 - `p04-t11` Final `oat-project-review-provide code final` + receive + merge.

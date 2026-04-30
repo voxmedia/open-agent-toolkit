@@ -1,8 +1,7 @@
 ---
-oat_current_task: p04-tF
-oat_last_commit: 468ca6a1
-oat_blockers:
-  - p04-tF live picker/elevation/final-recap dogfood requires an interactive provider-skill run
+oat_current_task: p04-t10
+oat_last_commit: 11b3fdb8
+oat_blockers: []
 associated_issues: []
 oat_hill_checkpoints: ['p04']
 oat_hill_completed: []
@@ -16,20 +15,20 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-30T15:35:00Z'
+oat_project_state_updated: '2026-04-30T16:05:00Z'
 oat_generated: false
 oat_orchestration_retry_limit: 2
 ---
 
 # Project State: collaborative-design-workflow
 
-**Status:** Revision in progress — p04 expanded with selective-collaborative-mode tasks (tA..tF) before PR; p04-tA through p04-tE complete; p04-tF partially dogfooded and blocked on live interaction paths
+**Status:** Ready for PR — p04 selective-collaborative revision tasks complete; remaining live selective-mode dogfood checks are documented as follow-up items
 **Started:** 2026-04-14
 **Last Updated:** 2026-04-30
 
 ## Current Phase
 
-Implementation — p01-p03 complete on this branch (29/35 tasks strictly done, plus p04-tF partial dogfood). p04 originally scoped t01-t11 (dogfood + regression + PR + review). On 2026-04-30 the user opened a revision conversation that surfaced a third design mode (Selective Collaborative); revision was folded into p04 rather than spawning a follow-up project (Option A — single PR, single lockstep version-bump cycle). Six new tasks (p04-tA..tF) inserted between p04-t09 and p04-t10. p04-tA through p04-tE are complete; p04-tF has an artifact-only classification pass recorded but still needs live provider-skill dogfood before original PR creation (t10) and final review (t11).
+Implementation — p01-p03 complete on this branch. p04 originally scoped t01-t11 (dogfood + regression + PR + review). On 2026-04-30 the user opened a revision conversation that surfaced a third design mode (Selective Collaborative); revision was folded into p04 rather than spawning a follow-up project (Option A — single PR, single lockstep version-bump cycle). Six revision tasks (p04-tA..tF) were inserted between p04-t09 and p04-t10 and are now complete for PR purposes. The remaining live selective-mode checks are documented as deferred dogfood follow-ups; next task is p04-t10 PR creation, then p04-t11 final review.
 
 ## Artifacts
 
@@ -59,21 +58,23 @@ Implementation — p01-p03 complete on this branch (29/35 tasks strictly done, p
 - ✓ p04-tB/p04-tC complete (`49057a05`) — `oat-project-design` selective flow and `references/selective-review-pass.md` added
 - ✓ p04-tD complete (`e0d50a11`) — skill validation contract covers selective review pass and reference file
 - ✓ p04-tE complete (`9d0dd232`) — lockstep public-package bump to `0.0.52` plus AGENTS.md selective-mode guidance
-- ⧗ p04-tF partial (`468ca6a1`) — classification dogfood table recorded; live picker/elevation/final-recap dogfood still pending
-- ⧗ p04 in progress — original dogfood and regression work (t01-t09) deferred to user's separate-repo pass; PR (t10) + final review (t11) blocked on dogfood completion
+- ✓ p04-tF complete for PR (`468ca6a1`) — classification dogfood table recorded; remaining live picker/elevation/final-recap checks documented as follow-up dogfood
+- ⧗ p04 in progress — ready for PR creation (p04-t10), then final review (p04-t11)
 
-## Blockers
+## Deferred Follow-up Dogfood
 
-- p04-tF still needs an interactive Selective Collaborative run to verify the picker taxonomy paths, mid-flight elevation, and final silent-section recap.
+- Selective Collaborative picker taxonomy live paths: `Recommended`, `Available / not recommended`, and `Unavailable`.
+- Mid-flight "walk me through every remaining section" elevation behavior.
+- Final user-review recap listing sections drafted without live confirmation.
 
 ## Next Milestone
 
-Complete p04-tF live dogfood before PR creation:
+Open the PR, then run final review:
 
 - ✓ **p04-tA** (config type extension) complete; unblocks **p04-tB** (skill body update).
 - ✓ **p04-tB** (skill body update) and **p04-tC** (reference file) complete.
 - ✓ **p04-tD** (contract-preservation test) complete.
 - ✓ **p04-tE** (lockstep bump 0.0.51 → 0.0.52 + AGENTS.md docs) complete.
-- **p04-tF** (dogfood selective mode) blocks on A–E — now unblocked; artifact-only classification pass complete, live picker/elevation/final-recap paths still pending.
+- ✓ **p04-tF** (dogfood selective mode) complete for PR; remaining live picker/elevation/final-recap paths deferred.
 
-After tF, proceed to original p04-t10 (PR with migration note covering both v2.0 mode-aware design flow AND v2.1 selective collaborative mode) and p04-t11 (review + merge). HiLL auto-review fires on p04 completion (scope: final).
+Next: original p04-t10 (PR with migration note covering both v2.0 mode-aware design flow AND v2.1 selective collaborative mode), then p04-t11 (review + merge). HiLL auto-review fires on p04 completion (scope: final).

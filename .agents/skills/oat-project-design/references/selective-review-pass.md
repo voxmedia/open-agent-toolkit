@@ -104,3 +104,9 @@ Classification pass run manually against this project's own `spec.md`, `design.m
 | Risks and Mitigation                                | needs-eyes    | yes       | New user-facing workflow mode and heuristic failure modes.            |
 
 No classification misfires were identified in this artifact-only pass. Live picker taxonomy, mid-flight elevation, and final recap behavior still require an interactive dogfood run because `oat-project-design` is a provider skill, not an executable CLI command.
+
+Deferred follow-up dogfood after this PR opens:
+
+- Exercise picker taxonomy live paths: `Recommended`, `Available / not recommended`, and `Unavailable`.
+- Select "walk me through every remaining section" during a needs-eyes confirmation and verify every remaining section is presented.
+- Confirm the final user-review gate lists sections drafted without live confirmation.
