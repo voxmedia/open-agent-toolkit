@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p04-tF live picker/elevation/final-recap dogfood requires an interactive provider-skill run
 oat_last_updated: 2026-04-30
 oat_current_task_id: p04-tF
 oat_generated: false
@@ -310,7 +311,8 @@ Plan totals: 31 → 32 tasks. Parallelism unchanged (p02's new task stays within
 - `p04-tB` + `p04-tC` complete in commit `49057a05`: `oat-project-design` now exposes Selective Collaborative mode in Step 1.5, runs Step 4a's section-review plan before drafting, handles selective section iteration, and adds the Step 6 recap for silently drafted sections. The new reference file `.agents/skills/oat-project-design/references/selective-review-pass.md` owns the signal set, grounding/recommendation rules, edge cases, examples, and Dogfood Notes.
 - `p04-tD` complete in commit `e0d50a11`: `skills.test.ts` now preserves the Step 4a selective review-pass contract and reference-file shape; the stale quick-start version sentinel now expects the actual `2.0.1` version. Verification: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` passed (27 tests).
 - `p04-tE` complete in commit `9d0dd232`: all five public-package versions and `packages/cli/assets/public-package-versions.json` are now `0.0.52`; `AGENTS.md` documents that Selective Collaborative is only available for full spec-driven design. Verification: `pnpm release:validate` passed for all 5 public packages.
-- Next task: `p04-tF` (manual dogfood of Selective Collaborative mode).
+- `p04-tF` partial in commit `468ca6a1`: artifact-only classification pass recorded in `references/selective-review-pass.md` Dogfood Notes. Verification: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` passed (27 tests).
+- Remaining blocker: live Selective Collaborative provider-skill dogfood still needs to exercise picker taxonomy, mid-flight "walk me through every remaining section", and final silent-section recap. These cannot be proven by the CLI because `oat-project-design` is an agent skill, not an executable command.
 
 ### Phase Summary
 

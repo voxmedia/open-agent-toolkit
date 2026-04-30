@@ -1,7 +1,8 @@
 ---
 oat_current_task: p04-tF
-oat_last_commit: 9d0dd232
-oat_blockers: []
+oat_last_commit: 468ca6a1
+oat_blockers:
+  - p04-tF live picker/elevation/final-recap dogfood requires an interactive provider-skill run
 associated_issues: []
 oat_hill_checkpoints: ['p04']
 oat_hill_completed: []
@@ -15,20 +16,20 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-04-15T02:04:14.716Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-04-30T15:05:00Z'
+oat_project_state_updated: '2026-04-30T15:12:00Z'
 oat_generated: false
 oat_orchestration_retry_limit: 2
 ---
 
 # Project State: collaborative-design-workflow
 
-**Status:** Revision in progress — p04 expanded with selective-collaborative-mode tasks (tA..tF) before PR; p04-tA through p04-tE complete
+**Status:** Revision in progress — p04 expanded with selective-collaborative-mode tasks (tA..tF) before PR; p04-tA through p04-tE complete; p04-tF partially dogfooded and blocked on live interaction paths
 **Started:** 2026-04-14
 **Last Updated:** 2026-04-30
 
 ## Current Phase
 
-Implementation — p01-p03 complete on this branch (29/35 tasks strictly done). p04 originally scoped t01-t11 (dogfood + regression + PR + review). On 2026-04-30 the user opened a revision conversation that surfaced a third design mode (Selective Collaborative); revision was folded into p04 rather than spawning a follow-up project (Option A — single PR, single lockstep version-bump cycle). Six new tasks (p04-tA..tF) inserted between p04-t09 and p04-t10. p04-tA through p04-tE are complete; next on this branch: run p04-tF dogfood before original PR creation (t10) and final review (t11).
+Implementation — p01-p03 complete on this branch (29/35 tasks strictly done, plus p04-tF partial dogfood). p04 originally scoped t01-t11 (dogfood + regression + PR + review). On 2026-04-30 the user opened a revision conversation that surfaced a third design mode (Selective Collaborative); revision was folded into p04 rather than spawning a follow-up project (Option A — single PR, single lockstep version-bump cycle). Six new tasks (p04-tA..tF) inserted between p04-t09 and p04-t10. p04-tA through p04-tE are complete; p04-tF has an artifact-only classification pass recorded but still needs live provider-skill dogfood before original PR creation (t10) and final review (t11).
 
 ## Artifacts
 
@@ -58,11 +59,12 @@ Implementation — p01-p03 complete on this branch (29/35 tasks strictly done). 
 - ✓ p04-tB/p04-tC complete (`49057a05`) — `oat-project-design` selective flow and `references/selective-review-pass.md` added
 - ✓ p04-tD complete (`e0d50a11`) — skill validation contract covers selective review pass and reference file
 - ✓ p04-tE complete (`9d0dd232`) — lockstep public-package bump to `0.0.52` plus AGENTS.md selective-mode guidance
-- ⧗ p04 in progress — original dogfood and regression work (t01-t09) deferred to user's separate-repo pass; revision task p04-tF pending; PR (t10) + final review (t11) blocked on dogfood completion
+- ⧗ p04-tF partial (`468ca6a1`) — classification dogfood table recorded; live picker/elevation/final-recap dogfood still pending
+- ⧗ p04 in progress — original dogfood and regression work (t01-t09) deferred to user's separate-repo pass; PR (t10) + final review (t11) blocked on dogfood completion
 
 ## Blockers
 
-None.
+- p04-tF still needs an interactive Selective Collaborative run to verify the picker taxonomy paths, mid-flight elevation, and final silent-section recap.
 
 ## Next Milestone
 
