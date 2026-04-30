@@ -37,7 +37,7 @@ Implementation — p01-p03 complete on this branch (29/35 tasks strictly done, p
 - **Spec:** `spec.md` (complete — extended 2026-04-30 with FR16 + NFR8)
 - **Design:** `design.md` (complete — extended 2026-04-30 with Component 15)
 - **Plan:** `plan.md` (complete — extended 2026-04-30 with revision tasks p04-tA..tF before p04-t10)
-- **Implementation:** `implementation.md` (scaffolded template — not started; deferred to next session)
+- **Implementation:** `implementation.md` (in progress — p04 selective-mode revision tasks recorded through p04-tF partial dogfood)
 - **Reference materials:** `reference/comparative-analysis.md` plus 9 Superpowers skill source files
 
 ## Progress
@@ -68,12 +68,12 @@ Implementation — p01-p03 complete on this branch (29/35 tasks strictly done, p
 
 ## Next Milestone
 
-Implement revision tasks p04-tA through p04-tF in dependency order:
+Complete p04-tF live dogfood before PR creation:
 
 - ✓ **p04-tA** (config type extension) complete; unblocks **p04-tB** (skill body update).
 - ✓ **p04-tB** (skill body update) and **p04-tC** (reference file) complete.
 - ✓ **p04-tD** (contract-preservation test) complete.
 - ✓ **p04-tE** (lockstep bump 0.0.51 → 0.0.52 + AGENTS.md docs) complete.
-- **p04-tF** (dogfood selective mode) blocks on A–E — now unblocked.
+- **p04-tF** (dogfood selective mode) blocks on A–E — now unblocked; artifact-only classification pass complete, live picker/elevation/final-recap paths still pending.
 
 After tF, proceed to original p04-t10 (PR with migration note covering both v2.0 mode-aware design flow AND v2.1 selective collaborative mode) and p04-t11 (review + merge). HiLL auto-review fires on p04 completion (scope: final).
