@@ -1295,14 +1295,14 @@ Five regex-based assertions against `.agents/skills/oat-project-design/reference
 **Files touched:**
 
 - All five lockstep public-package `package.json` files: `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms` — bump `version` from `0.0.51` to `0.0.52`.
-- `.oat/public-package-versions.json` (manifest) — sync to `0.0.52`.
+- `packages/cli/assets/public-package-versions.json` (public-package manifest) — sync to `0.0.52`.
 - `AGENTS.md` — update the workflow triage section's mode descriptions to mention selective collaborative mode. Add the docs note from `discovery.md` Q7: "Selective collaborative mode is only available for full spec-driven design, where the section set is large enough for selective live review to pay off. Quick-start lightweight design keeps the smaller collaborative/draft choice."
 
 **Acceptance criteria:**
 
 - `pnpm release:validate` passes.
 - All five public-package versions are at `0.0.52`.
-- `.oat/public-package-versions.json` reflects `0.0.52`.
+- `packages/cli/assets/public-package-versions.json` reflects `0.0.52`.
 - AGENTS.md reads coherently with three modes explained.
 
 **Verification:** `pnpm release:validate` exit 0 (NFR3).
