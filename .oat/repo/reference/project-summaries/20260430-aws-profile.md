@@ -2,11 +2,11 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-04-28
+oat_last_updated: 2026-04-30
 oat_generated: true
-oat_summary_last_task: p05-t02
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: prev1-t03
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: ['p-rev1']
 ---
 
 # Summary: aws-profile
@@ -23,7 +23,17 @@ Before this project, the S3 archive sync that runs during `oat-project-complete`
 - **End-to-end precedence** — flag > shell env > config — implemented for both code paths. The sync command builds the precedence by layering the flag onto the parent env up-front (`resolveSyncAwsEnv` in `commands/project/archive/index.ts`), then passes that env into `ensureS3ArchiveAccess` so the preflight `aws sts get-caller-identity` honors flags too.
 - **Completion path stays config-only** (discovery decision #5). `archiveProjectOnCompletion` accepts `awsProfile` / `awsRegion` only as config-derived options; no per-invocation flag, no skill-text change to `oat-project-complete`.
 - **Documentation** — `apps/oat-docs/docs/cli-utilities/configuration.md` and `config-and-local-state.md` describe the new keys, the new flags, the precedence chain, and the explicit "raw access keys remain a shell-env concern" stance from discovery.
-- **Lockstep release validation** — all five public packages bumped 0.0.52 → 0.0.53; `pnpm release:validate` passes.
+- **Lockstep release validation** — all five public packages bumped 0.0.52 → 0.0.55 (initial bump to 0.0.53, then 0.0.54 after a main rebase, then 0.0.55 after a second main merge); `pnpm release:validate` passes against current main.
+
+## Post-PR Revisions (p-rev1)
+
+After PR #67 was opened, a manual final review surfaced three additional findings, which were addressed in revision phase `p-rev1`:
+
+- `prev1-t01` — merged `origin/main` into the branch and bumped lockstep packages 0.0.53 → 0.0.54 to clear failing PR CI / release-dry-run checks (root cause: main caught up to our prior bump).
+- `prev1-t02` — refreshed the project `state.md` body and the `.oat/state.md` dashboard to match the actual post-PR phase status; both had stale "scaffolded template" / `oat-project-document`-recommendation content.
+- `prev1-t03` — fixed historical drift in `plan.md` p02-t01 Step 1 that still described the rejected pre-fix precedence model (clobbering); now matches shipped non-clobbering behavior.
+
+A second `origin/main` merge later in the cycle (after another PR landed) bumped the packages once more from 0.0.54 → 0.0.55. Behavior shipped is unchanged from the original p01–p05 work; the revisions were entirely housekeeping.
 
 ## Key Decisions
 

@@ -9,20 +9,7 @@ oat_generated_at: 2026-04-30
 
 ## Active Project
 
-**aws-profile** (`.oat/projects/shared/aws-profile`)
-
-## Active Project Summary
-
-| Field        | Value      |
-| ------------ | ---------- |
-| Mode         | quick      |
-| Phase        | implement  |
-| Status       | pr_open    |
-| HiLL Gate    | n/a        |
-| Current Task | -          |
-| Docs Updated | ✓ complete |
-
-Details: `.oat/projects/shared/aws-profile/state.md`
+_(not set)_
 
 ## Knowledge Status
 
@@ -30,12 +17,12 @@ Details: `.oat/projects/shared/aws-profile/state.md`
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
 | Age           | 28 days    |
-| Files Changed | 372        |
+| Files Changed | 382        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-revise** - PR open — run oat-project-revise for feedback or oat-project-complete when approved
+**oat-project-open** - Select an existing project to continue work
 
 ## Quick Commands
 
@@ -50,6 +37,5 @@ Details: `.oat/projects/shared/aws-profile/state.md`
 
 ## Available Projects
 
-- **aws-profile** - implement
 - **docs-readability-reorg** - implement
 - **remote-project-management** - discovery
