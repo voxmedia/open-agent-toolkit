@@ -1432,7 +1432,7 @@ When review is `passed`, merge PR. Standard release pipeline picks up the versio
 | spec    | artifact | pending | -          | -                                                     |
 | design  | artifact | passed  | 2026-04-17 | reviews/archived/artifact-design-review-2026-04-17.md |
 | plan    | artifact | passed  | 2026-04-17 | reviews/archived/artifact-plan-review-2026-04-17.md   |
-| stale   | artifact | passed  | 2026-04-23 | reviews/staleness-review-2026-04-23.md                |
+| stale   | artifact | passed  | 2026-04-23 | reviews/archived/staleness-review-2026-04-23.md       |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

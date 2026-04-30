@@ -53,7 +53,7 @@ oat_generated: false
 
 ### Review Received: staleness (artifact) — 2026-04-23
 
-**Review artifact:** `reviews/staleness-review-2026-04-23.md`
+**Review artifact:** `reviews/archived/staleness-review-2026-04-23.md`
 
 **Trigger:** rebase onto `origin/main` after PR #58 (`feat(oat): evolve oat-project-implement to phase-subagent model`).
 
