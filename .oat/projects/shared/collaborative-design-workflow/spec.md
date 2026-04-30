@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-design
 oat_blockers: []
-oat_last_updated: 2026-04-17
+oat_last_updated: 2026-04-30
 oat_generated: false
 ---
 
@@ -219,14 +219,29 @@ Originally: "Design skill runs a sub-project decomposition sanity check." Droppe
 
 **FR15: Persisted design-mode preference via `workflow.designMode` config**
 
-- **Description:** The `.oat/config.json` and `~/.oat/config.json` schema must support a new `workflow.designMode: "collaborative" | "draft"` key. Both `oat-project-design` (full) and `oat-project-quick-start` (lightweight design) consult this persisted preference via `oat config get workflow.designMode` when no explicit override is provided. The separation is deliberate: `OAT_NON_INTERACTIVE=1` is a **runtime context signal** ("no human here") that forces draft and auto-confirms gates; `workflow.designMode` is a **persisted preference** ("I always prefer draft") that only governs mode selection — the user still gets requirements gates, clarifying questions, and HiLL prompts when present.
+- **Description:** The `.oat/config.json` and `~/.oat/config.json` schema must support a new `workflow.designMode: "collaborative" | "selective" | "draft"` key. Both `oat-project-design` (full) and `oat-project-quick-start` (lightweight design) consult this persisted preference via `oat config get workflow.designMode` when no explicit override is provided. The separation is deliberate: `OAT_NON_INTERACTIVE=1` is a **runtime context signal** ("no human here") that forces draft and auto-confirms gates; `workflow.designMode` is a **persisted preference** ("I always prefer this mode") that only governs mode selection — the user still gets requirements gates, clarifying questions, and HiLL prompts when present. Note: `'selective'` is only honored by full `oat-project-design`; lightweight design in `oat-project-quick-start` ignores the value (treated as `'collaborative'`) per FR16 quick-start parity decision.
 - **Acceptance Criteria:**
-  - `OatWorkflowConfig` gains a `designMode?: 'collaborative' | 'draft'` field in `packages/cli/src/config/oat-config.ts`, validated identically to `hillCheckpointDefault` (invalid values are dropped with a warning; missing is OK).
+  - `OatWorkflowConfig` gains a `designMode?: 'collaborative' | 'selective' | 'draft'` field in `packages/cli/src/config/oat-config.ts`, validated identically to `hillCheckpointDefault` (invalid values are dropped with a warning; missing is OK).
   - Existing configs without the key continue to load and resolve unchanged (backward compat).
-  - `oat config get workflow.designMode`, `oat config set workflow.designMode <value>`, `oat config list`, and `oat config describe workflow.designMode` all surface the key.
-  - The mode-choice resolution order in both `oat-project-design` and `oat-project-quick-start` Step 2.75a becomes: (1) `--mode` argument → (2) `OAT_DESIGN_MODE` env var → (3) `OAT_NON_INTERACTIVE=1` or no TTY forces `draft` → (4) `workflow.designMode` from effective config → (5) default `collaborative`. Runtime/context signals always outrank persisted preferences.
-  - CLI tests cover: schema validation accepts `collaborative`/`draft`, rejects other values; merge precedence (user config < repo config) works; missing key leaves effective config silent on the field.
-  - `.oat/config.json` schema documentation in CLI docs updated.
+  - `oat config get workflow.designMode`, `oat config set workflow.designMode <value>`, `oat config list`, and `oat config describe workflow.designMode` all surface the key, including the `selective` value.
+  - The mode-choice resolution order in `oat-project-design` becomes: (1) `--mode` argument → (2) `OAT_DESIGN_MODE` env var → (3) `OAT_NON_INTERACTIVE=1` or no TTY forces `draft` → (4) `workflow.designMode` from effective config → (5) interactive prompt with default tag = `collaborative`. Runtime/context signals always outrank persisted preferences. `oat-project-quick-start` Step 2.75a uses the same order but treats `'selective'` as `'collaborative'`.
+  - CLI tests cover: schema validation accepts `collaborative`/`selective`/`draft`, rejects other values; merge precedence (user config < repo config) works; missing key leaves effective config silent on the field.
+  - `.oat/config.json` schema documentation in CLI docs updated to include `selective`.
+- **Priority:** P0
+
+**FR16: Selective Collaborative mode (third design-mode option)**
+
+- **Description:** `oat-project-design` offers a third mode `selective` between Collaborative (every section confirmed) and Draft-and-review (no confirmations). In selective mode, the agent runs a **selective review pass** before drafting that classifies each design section as `routine` (drafted silently) or `needs-eyes` (presented for live confirmation), with a conservative bias (any one signal trips `needs-eyes`). The classification is revealed up front as a Section Review Plan table, and recapped at the user-review gate. Selective mode is **not** offered in `oat-project-quick-start` lightweight design — the reduced section set already approximates its value prop. See `discovery.md` Revision Q1–Q10 for the full mechanism contract.
+- **Acceptance Criteria:**
+  - Picker copy in `oat-project-design` Step 1.5 lists three options: Collaborative, Selective collaborative, Draft-and-review. Selective option carries a four-state taxonomy (`Recommended` / `Available` / `Available, not recommended` / `Unavailable`) computed from a preflight selective review pass.
+  - **Selective review pass** runs before the picker (not only when selective is chosen). It evaluates: (a) always-flagged section types — Security, Performance, Migration, Error Handling, Overview + Architecture (forced floor); (b) per-section signals (any one trips `needs-eyes`) — user-flagged area, discovery Open Questions, ≥3 spec FRs concentrate, cross-module boundaries, novel pattern vs `conventions.md`/`stack.md`, public API/CLI/config contract changes, new dependency/external service, user-facing default or workflow-semantics changes, grounding context absent (knowledge index AND repo `docs/` AND docs app AND source-level docs all thin in this area).
+  - **Recommendation rule:** recommend selective only when _both_ (i) selective is `Eligible` (grounding adequate) and (ii) classification predicts ≥3 routine sections OR ≥30–40% routine. Never recommend `draft` from the picker.
+  - **Section Review Plan** is rendered up front when selective is chosen — a `Section | Classification | Reason | Signals hit` table — followed by "Proceed with this plan, or elevate any routine section?". Plan is ephemeral (chat-only, not persisted in design.md).
+  - **Final recap** at the user-review gate (Step 6) appends a single line to the gate prompt: "Drafted without live confirmation: [sections]. Please review those especially carefully."
+  - **Failure modes:** All-flagged → collapses to collaborative with one-line note; zero-flagged → minimum-live-review rule forces Overview + Architecture; sparse grounding → selective shown as `Unavailable` with reason.
+  - **Mid-flight elevation:** during any needs-eyes confirmation prompt, an additional choice "walk me through every remaining section" is available; selecting it falls through to collaborative for the remainder. Going the other direction (collaborative → selective mid-flight) is rejected.
+  - **Step 4a contract** present in `oat-project-design/SKILL.md`: header `### Step 4a: Selective Review Pass`, both classifications named (`routine`, `needs-eyes`), conservative-bias rule stated, minimum-live-review rule stated, pre-drafting reveal stated, reference-file pointer present.
+  - **Reference file** at `.agents/skills/oat-project-design/references/selective-review-pass.md` exists with at least these section headers: `## Signal Set`, `## Adequate Grounding`, `## Recommendation Rules`, `## Edge Cases`, `## Dogfood Notes`.
 - **Priority:** P0
 
 ### Non-Functional Requirements
@@ -290,6 +305,19 @@ Originally: "Design skill runs a sub-project decomposition sanity check." Droppe
 **NFR7: (removed — deferred/no-longer-applicable)**
 
 Originally: "Heuristic for 'real architectural decision point' is concrete enough to be followed reliably." Removed when FR3 was rewritten to match Superpowers' actual pattern (one approach-level divergent moment; no per-section heuristic). With no per-section judgment call, no heuristic is needed, and there is nothing to calibrate. NFR7 is intentionally left numbered to preserve stable IDs; do not reuse this ID for new requirements in this project.
+
+**NFR8: Selective review pass classification is conservative + inspectable**
+
+- **Description:** The selective review pass must err on the side of presenting too many sections rather than too few (conservative bias) and must surface its reasoning so users can override before drafting (inspectable). The mechanism is intentionally prose-driven; correctness is judged through dogfood, but the contract that defines the pass must be guarded against silent skill-body drift.
+- **Acceptance Criteria:**
+  - **Conservative bias:** any single needs-eyes signal marks the section `needs-eyes` (no signal-weighting, no signal voting). Documented in Step 4a contract.
+  - **Inspectable up front:** Section Review Plan table renders `Section | Classification | Reason | Signals hit` for every section before drafting begins. Reasons are concrete (cite the specific signal that fired).
+  - **Inspectable at gate:** user-review gate prompt names the silently-drafted sections in a single recap line so reviewers know what to read carefully in the committed file.
+  - **Override available up front:** the Section Review Plan prompt explicitly invites elevation ("Proceed with this plan, or elevate any routine section?").
+  - **Override available mid-flight:** every needs-eyes confirmation prompt offers "walk me through every remaining section" as a choice.
+  - **Contract preservation test:** a regex-based test in the skills validation harness asserts six minimum checks against `oat-project-design/SKILL.md`: Step 4a header present, both classifications named, conservative-bias rule stated, minimum-live-review rule stated, pre-drafting reveal stated, reference-file pointer present.
+  - **Reference file structural check:** the same harness asserts `.agents/skills/oat-project-design/references/selective-review-pass.md` contains the five required section headers (Signal Set / Adequate Grounding / Recommendation Rules / Edge Cases / Dogfood Notes).
+- **Priority:** P1
 
 ## Constraints
 
@@ -399,14 +427,16 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 | FR12 | Quick-start lightweight design offers mode choice                                             | P1       | manual: dogfood both modes                                                       | p02-t02, p02-t03, p02-t04, p02-t05, p04-t06 |
 | FR13 | `oat-project-discover` routing language updated                                               | P0       | manual: skill prose + template inspection                                        | p02-t07                                     |
 | FR14 | Repo-root `NOTICES.md` created for borrowed Superpowers prose                                 | P0       | manual: file exists, format matches spec, AGENTS.md references it                | p02-t08, p02-t09                            |
-| FR15 | Persisted `workflow.designMode` config + skills read it                                       | P0       | unit: CLI config schema/validation; integration: skills consult `oat config get` | p02-t10, p01-t01, p02-t03, p04-t02          |
+| FR15 | Persisted `workflow.designMode` config + skills read it (now includes `selective`)            | P0       | unit: CLI config schema/validation; integration: skills consult `oat config get` | p02-t10, p01-t01, p02-t03, p04-t02, p04-tA  |
+| FR16 | Selective collaborative mode + selective review pass + Section Review Plan + Step 4a contract | P0       | manual: dogfood selective end-to-end; unit: contract preservation test           | p04-tA, p04-tB, p04-tC, p04-tF              |
 | NFR1 | Backward compatibility with spec.md / design.md artifact contract                             | P0       | integration: `oat-project-plan` on existing proj                                 | p04-t08                                     |
 | NFR2 | HiLL semantics preserved across folded spec-HiLL-in-design-HiLL                               | P0       | integration: synthetic state with both HiLLs                                     | p01-t08, p04-t09                            |
-| NFR3 | `pnpm release:validate` passes                                                                | P0       | perf + integration: command exit 0                                               | p03-t01, p03-t02                            |
+| NFR3 | `pnpm release:validate` passes                                                                | P0       | perf + integration: command exit 0                                               | p03-t01, p03-t02, p04-tE                    |
 | NFR4 | Collaborative mode does not meaningfully slow design for simple projects                      | P1       | manual: empirical wall-clock comparison                                          | p04-t02                                     |
-| NFR5 | Skill files remain readable (design skill ≤ 700 lines)                                        | P2       | manual: line count inspection                                                    | p01-t09                                     |
+| NFR5 | Skill files remain readable (design skill ≤ 700 lines)                                        | P2       | manual: line count inspection                                                    | p01-t09, p04-tB                             |
 | NFR6 | Quick-start minimal-ceremony contract preserved for simple requests                           | P1       | manual: dogfood well-understood request                                          | p02-t01, p04-t05                            |
 | NFR7 | _(removed — heuristic no longer needed after FR3 aligned with Superpowers' pattern)_          | —        | —                                                                                | —                                           |
+| NFR8 | Selective review pass classification is conservative + inspectable (contract test + ref file) | P1       | unit: prose-contract regex; manual: dogfood Section Review Plan inspection       | p04-tB, p04-tC, p04-tD, p04-tF              |
 
 ## Open Questions
 
