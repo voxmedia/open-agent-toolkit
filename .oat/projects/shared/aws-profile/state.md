@@ -32,11 +32,11 @@ Implementation — Phase 6 (p-rev1) executing review-fix tasks for the 2026-04-3
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete)
+- **Implementation:** `implementation.md` (complete — p01–p05 + prev1-t01 committed; prev1-t02..t03 in flight)
 
 ## Progress
 
