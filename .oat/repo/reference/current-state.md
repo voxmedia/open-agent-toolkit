@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-04-13 (workflow-friction project landed workflow preference config + review-receive drift fix; wrap-up skill docs synced)
+**Last Updated:** 2026-04-30 (collaborative-design workflow revision added Selective Collaborative design mode; live picker/elevation/final-recap dogfood is still pending before PR)
 
 ## Canonical References
 
@@ -35,6 +35,8 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat-project-import-plan` (import lane: provider plan -> canonical `plan.md`)
   - `oat-project-promote-spec-driven` (in-place promotion from quick/import to spec-driven lifecycle)
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
+  - `oat-project-design` v2.1.0 supports three full-design modes: collaborative, selective collaborative, and draft-and-review. Selective collaborative prints a Section Review Plan, silently drafts routine sections, presents high-risk/uncertain sections for live review, and recaps silently drafted sections at the user-review gate.
+  - Quick-start lightweight design intentionally remains a two-mode surface (collaborative or draft-and-review). If a quick project promotes to spec-driven, selective collaborative becomes available in full design.
   - Completion closeout now auto-refreshes `summary.md`, always archives locally, can upload archives to S3 via `archive.s3Uri` + `archive.s3SyncOnComplete`, and can export summaries via `archive.summaryExportPath`
 - Idea workflow:
   - `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
@@ -108,6 +110,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat project status` (full active-project state, including recommendation)
   - `oat project list` (structured summary listing for tracked projects)
   - `oat config dump` (fully resolved config with source attribution)
+- `workflow.designMode` accepts `collaborative`, `selective`, or `draft`. Runtime non-interactive signals still force draft mode; `selective` is honored only by full `oat-project-design`.
 - The control plane keeps parsing and recommendation logic package-local while the CLI continues to own config resolution and user-facing formatting.
 
 ### Project Management (Utility)
@@ -134,12 +137,14 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - 7 instruction file templates, 3 helper scripts (tracking, providers, file discovery), quality checklist, directory assessment criteria, and bundle-contract regression coverage
 - Reference docs bundled as symlinks (dereferenced during CLI distribution)
 
-### Subagent Orchestration
+### Phase-Subagent Implementation Execution
 
-- `oat-project-subagent-implement` (parallel execution across eligible plan phases/tasks using autonomous worktrees, review gates, and deterministic merge-back; incorporates execution mode selection and dispatch)
-- `oat-worktree-bootstrap-auto` (autonomous worktree bootstrap with rollback safety)
-- `oat_execution_mode` field in `state.md` template; orchestration status fields in `implementation.md` template
-- HiLL checkpoint governance integrated into orchestration policy
+- `oat-project-implement` v2 is the single implementation entry point. It dispatches phase-scoped work to `oat-phase-implementer` when Tier 1 subagent execution is available, and falls back to inline Tier 2 only when delegation is unavailable, unresolved, or explicitly declined.
+- `oat-phase-implementer` (`.agents/agents/oat-phase-implementer.md`) owns phase execution and review-fix work packets. `oat-reviewer` remains the reviewer prompt for per-phase and checkpoint reviews.
+- Parallel execution is declared in `plan.md` frontmatter with `oat_plan_parallel_groups` and validated with `oat project validate-plan --project-path <project-path>`. Empty or missing metadata means fully sequential execution.
+- Parallel groups run worktree-per-phase and fan back into the main worktree in plan order. `oat-worktree-bootstrap-auto` provides autonomous worktree bootstrap with rollback safety.
+- `oat-project-subagent-implement` has been removed. Legacy `oat_execution_mode` state is ignored and removed on the next `oat-project-implement` bookkeeping write.
+- `implementation.md` records phase/group orchestration runs at phase granularity; HiLL checkpoint governance remains integrated into `oat-project-implement` policy.
 
 ### Skill Authoring (Meta)
 
@@ -194,7 +199,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 
 ### Tool Metadata
 
-- 52 skills total; all `oat-*` skills include semver `version:` frontmatter. Mature lifecycle skills are mostly at `1.2.x`, while newer additions such as `oat-wrap-up` may still be at `1.0.x`.
+- 60 skills total; all `oat-*` skills include semver `version:` frontmatter. Mature lifecycle skills are mostly at `1.2.x` or later, while newer additions may still be at `1.0.x`.
 - Most skills define `allowed-tools` in frontmatter as an advisory tool scope (provider-dependent).
   - Read-only skills (e.g., `oat-project-progress`, `oat-project-review-provide`) omit `Write`/`Edit`.
   - Write skills (e.g., `oat-project-discover` → `oat-project-implement`, `oat-project-review-receive`, PR skills) include `Write` and `Bash(git:*)`.
@@ -265,7 +270,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 3. Move through phases (or run router anytime):
    - `oat-project-progress`
    - `oat-project-spec`
-   - `oat-project-design`
+   - `oat-project-design` (choose collaborative, selective collaborative, or draft-and-review for full spec-driven design)
    - `oat-project-plan`
    - `oat-project-implement`
 4. Final review loop (required before PR):
@@ -318,7 +323,7 @@ Interop quickstart:
 - Multi-project model:
   - Core lifecycle switching is implemented (`oat project open/pause`, config-backed active project state); remaining work is broader branch-aware multi-project automation and local/shared model polish
 - Parallel execution + reconciliation:
-  - Worktree bootstrap setup is implemented (`oat-worktree-bootstrap`), but parallel task fan-out + reconcile remains deferred
+  - Phase-level parallel execution is implemented in `oat-project-implement` v2 through plan-declared `oat_plan_parallel_groups`, per-phase worktrees, and ordered fan-in. Remaining work is broader branch-aware automation and continued reconciliation polish for manual/human commits.
 
 ## Notes / Caveats
 

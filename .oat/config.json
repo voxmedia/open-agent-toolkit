@@ -11,6 +11,15 @@
     "s3SyncOnComplete": true,
     "summaryExportPath": ".oat/repo/reference/project-summaries"
   },
+  "tools": {
+    "core": true,
+    "ideas": true,
+    "docs": true,
+    "workflows": true,
+    "utility": true,
+    "project-management": true,
+    "research": true
+  },
   "documentation": {
     "root": "apps/oat-docs",
     "tooling": "fumadocs",

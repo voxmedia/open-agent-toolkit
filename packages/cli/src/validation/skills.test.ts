@@ -634,7 +634,100 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.6');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.2');
+  });
+
+  it('documents quick-start selective config fallback to collaborative', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillPath = join(
+      repoRoot,
+      '.agents',
+      'skills',
+      'oat-project-quick-start',
+      'SKILL.md',
+    );
+    const content = await readFile(skillPath, 'utf8');
+
+    expect(
+      content,
+      'quick-start must accept workflow.designMode=selective from config',
+    ).toMatch(/\$CONFIG_MODE" = "selective"/);
+    expect(
+      content,
+      'quick-start must treat selective as collaborative for lightweight design',
+    ).toMatch(/treating as collaborative for lightweight design/i);
+    expect(
+      content,
+      'quick-start must point users to full oat-project-design for Selective Collaborative',
+    ).toMatch(
+      /Selective Collaborative is only available in full oat-project-design/,
+    );
+  });
+
+  it('preserves the selective collaborative review-pass contract', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillPath = join(
+      repoRoot,
+      '.agents',
+      'skills',
+      'oat-project-design',
+      'SKILL.md',
+    );
+    const referencePath = join(
+      repoRoot,
+      '.agents',
+      'skills',
+      'oat-project-design',
+      'references',
+      'selective-review-pass.md',
+    );
+    const skillContent = await readFile(skillPath, 'utf8');
+    const referenceContent = await readFile(referencePath, 'utf8');
+
+    expect(
+      skillContent,
+      'oat-project-design selective-mode contract version must stay explicit',
+    ).toMatch(/^version:\s*2\.1\.0$/m);
+    expect(
+      skillContent,
+      'Step 4a heading must remain present for selective review-pass flow',
+    ).toMatch(/### Step 4a: Selective Review Pass/);
+    expect(skillContent, 'Step 4a must name routine classifications').toMatch(
+      /`routine`/,
+    );
+    expect(
+      skillContent,
+      'Step 4a must name needs-eyes classifications',
+    ).toMatch(/`needs-eyes`/);
+    expect(
+      skillContent,
+      'Step 4a must preserve the conservative-bias rule',
+    ).toMatch(/any one needs-eyes signal marks the section `needs-eyes`/i);
+    expect(
+      skillContent,
+      'Step 4a must force at least one live review section',
+    ).toMatch(/force `Overview \+ Architecture` to `needs-eyes`/i);
+    expect(
+      skillContent,
+      'Step 4a must reveal the Section Review Plan before drafting',
+    ).toMatch(/Section Review Plan|Section review plan/);
+    expect(
+      skillContent,
+      'Step 4a must point maintainers to the selective review-pass reference',
+    ).toMatch(/references\/selective-review-pass\.md/);
+    expect(
+      skillContent,
+      'Step 1.5 picker copy must use canonical selective wording',
+    ).toMatch(/high-risk sections live/);
+    expect(
+      skillContent,
+      'Step 1.5 picker copy must use canonical draft review wording',
+    ).toMatch(/you review the committed file/);
+    expect(referenceContent).toMatch(/^## Signal Set$/m);
+    expect(referenceContent).toMatch(/^## Adequate Grounding$/m);
+    expect(referenceContent).toMatch(/^## Recommendation Rules$/m);
+    expect(referenceContent).toMatch(/^## Edge Cases$/m);
+    expect(referenceContent).toMatch(/^## Dogfood Notes$/m);
   });
 
   it('reports missing quick-start-specific discovery guidance', async () => {

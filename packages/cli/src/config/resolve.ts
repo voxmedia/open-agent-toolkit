@@ -88,6 +88,7 @@ const DEFAULT_WORKFLOW_CONFIG = {
     reviewExecutionModel: null,
     autoReviewAtHillCheckpoints: null,
     autoNarrowReReviewScope: null,
+    designMode: null,
   },
 } satisfies Record<string, unknown>;
 

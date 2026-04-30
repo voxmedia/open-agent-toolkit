@@ -36,6 +36,7 @@ export type WorkflowReviewExecutionModel =
   | 'subagent'
   | 'inline'
   | 'fresh-session';
+export type WorkflowDesignMode = 'collaborative' | 'selective' | 'draft';
 
 export interface OatWorkflowConfig {
   hillCheckpointDefault?: WorkflowHillCheckpointDefault;
@@ -45,6 +46,7 @@ export interface OatWorkflowConfig {
   reviewExecutionModel?: WorkflowReviewExecutionModel;
   autoReviewAtHillCheckpoints?: boolean;
   autoNarrowReReviewScope?: boolean;
+  designMode?: WorkflowDesignMode;
 }
 
 const VALID_HILL_CHECKPOINT_DEFAULTS: readonly WorkflowHillCheckpointDefault[] =
@@ -55,6 +57,11 @@ const VALID_REVIEW_EXECUTION_MODELS: readonly WorkflowReviewExecutionModel[] = [
   'subagent',
   'inline',
   'fresh-session',
+];
+const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
+  'collaborative',
+  'selective',
+  'draft',
 ];
 
 function normalizeWorkflowConfig(
@@ -110,6 +117,13 @@ function normalizeWorkflowConfig(
 
   if (typeof parsed.autoNarrowReReviewScope === 'boolean') {
     next.autoNarrowReReviewScope = parsed.autoNarrowReReviewScope;
+  }
+
+  if (
+    typeof parsed.designMode === 'string' &&
+    (VALID_DESIGN_MODES as readonly string[]).includes(parsed.designMode)
+  ) {
+    next.designMode = parsed.designMode as WorkflowDesignMode;
   }
 
   return Object.keys(next).length > 0 ? next : undefined;

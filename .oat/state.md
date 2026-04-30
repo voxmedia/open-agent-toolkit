@@ -30,7 +30,7 @@ Details: `.oat/projects/shared/aws-profile/state.md`
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
 | Age           | 28 days    |
-| Files Changed | 371        |
+| Files Changed | 372        |
 | Status        | stale      |
 
 ## Recommended Next Step

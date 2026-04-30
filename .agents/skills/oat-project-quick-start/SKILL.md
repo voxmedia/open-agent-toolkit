@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 1.3.6
+version: 2.0.2
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 disable-model-invocation: true
@@ -170,7 +170,7 @@ git diff --cached --quiet || git commit -m "chore(oat): capture quick-start disc
 
 ### Step 2.5: Decision Point — Design Depth
 
-**Auto-advance rule:** If the request was classified as **well-understood** in Step 2a and discovery surfaced no architecture decisions, component boundary questions, or unexpected complexity, skip this decision point entirely and continue directly to Step 3. This preserves the minimal-ceremony contract for straightforward requests.
+**Auto-advance rule:** If the request was classified as **well-understood** in Step 2a and discovery surfaced no architecture decisions, component boundary questions, or unexpected complexity, skip this decision point entirely and continue directly to Step 2.6 (the requirements gate still fires before plan generation). This preserves the minimal-ceremony contract for straightforward requests.
 
 **Otherwise**, present the user with a choice about how to proceed:
 
@@ -188,15 +188,15 @@ Use `AskUserQuestion` to present this choice.
 - If discovery surfaced architecture choices, component boundaries, or data model questions → recommend "Lightweight design first"
 - If discovery revealed the scope is larger or more complex than initially expected → recommend "Promote to spec-driven"
 
-**If user chooses "Straight to plan":** continue to Step 3.
+**If user chooses "Straight to plan":** continue to Step 2.6 (requirements gate), then Step 3.
 
-**If user chooses "Lightweight design first":** execute Step 2.75 before continuing to Step 3.
+**If user chooses "Lightweight design first":** execute Step 2.75 before continuing to Step 3. The Step 2.6 requirements gate is skipped — Step 2.75's in-conversation design validation covers that ground.
 
 **If user chooses "Promote to spec-driven":**
 
 - Update `discovery.md` frontmatter:
   - `oat_status: complete`
-  - `oat_ready_for: oat-project-spec`
+  - `oat_ready_for: oat-project-design`
   - `oat_last_updated: {today}`
 - Update `state.md`:
   - `oat_workflow_mode: spec-driven`
@@ -211,8 +211,104 @@ git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md" ".oat/state.md"
 git diff --cached --quiet || git commit -m "chore(oat): promote quick-start discovery for {project-name}"
 ```
 
-- Inform the user: "Discovery is complete. Run `oat-project-spec` next to formalize requirements."
+- Inform the user: "Discovery is complete. Run `oat-project-design` next — it will confirm requirements and produce both `spec.md` and `design.md` in one collaborative pass. If you'd rather formalize requirements without designing yet, `oat-project-spec` remains available as an optional standalone step."
 - Stop here. Do not generate a plan.
+
+### Step 2.6: Requirements Gate (Straight-to-Plan Path)
+
+Fires only when the straight-to-plan path was chosen at Step 2.5 (explicit choice or auto-advance). Skip when the user selected "Lightweight design first" (Step 2.75 handles its own in-conversation confirmation) or "Promote to spec-driven".
+
+Single conversational turn — no loop inside the gate. If the user materially redirects scope, route OUT to lightweight design or back to discovery.
+
+> **Tool availability is not the same as interactivity.** If `AskUserQuestion` is unavailable but chat is available, present this gate as a plain chat message and wait for the user's reply. Do not auto-confirm just because the structured question tool is missing.
+
+```
+# Explicit non-interactive fallback FIRST (FR9 contract; same signal as
+# design mode choice). Lack of AskUserQuestion alone is NOT non-interactive
+# — if chat with the user is available, present the gate as a plain chat
+# message and wait for their reply instead.
+if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || no_user_response_channel_exists; then
+  echo "Requirements gate auto-confirmed in non-interactive mode."
+  # proceed to Step 3
+fi
+
+# Interactive bypass (power-user opt-out).
+if [ "${OAT_NO_REQUIREMENTS_GATE:-}" = "1" ] || [ "$ARG_NO_GATE" = "1" ]; then
+  # proceed to Step 3 silently
+fi
+
+# Extract requirements from discovery.md:
+#   - Key Decisions
+#   - Success Criteria
+#   - Constraints
+# Format as bullet list and present (SINGLE TURN):
+#
+#   > "Before I generate the plan, here are the requirements I'm building against:
+#   >
+#   >    Key decisions:
+#   >    - [decision 1]
+#   >    - [decision 2]
+#   >
+#   >    Success criteria:
+#   >    - [criterion 1]
+#   >
+#   >    Constraints:
+#   >    - [constraint 1]
+#   >
+#   >  Does this match what you want?"
+
+# AskUserQuestion multi-choice:
+#   1. Yes — proceed to plan generation
+#   2. Add a minor requirement that still fits this scope (capture inline, proceed — no re-present)
+#   3. Scope needs redirecting — rework discovery or produce a lightweight design first
+#
+# On choice 1: continue to Step 3.
+# On choice 2: prompt once for the addition, append to discovery.md, proceed to Step 3 (do NOT re-present).
+# On choice 3: exit the gate cleanly. Present follow-up choice:
+#   a. Produce a lightweight design first (run Step 2.75)
+#   b. Expand discovery (return to Step 2)
+# Route the user accordingly. Do NOT loop back into the gate.
+```
+
+### Step 2.75a: Lightweight Design Mode Choice
+
+Resolve the interaction mode before drafting. Same mechanics as the full `oat-project-design` skill (Component 1): argument precedes env var, config fallback, **explicit** non-interactive fallback to draft.
+
+> **Tool availability is not the same as interactivity.** If `AskUserQuestion` is unavailable but chat is available, ask the mode-choice question as a plain chat message and wait for the user's reply. Only fall back to draft when `OAT_NON_INTERACTIVE=1` is set or there is no user-response channel at all.
+
+```
+DESIGN_MODE="${ARG_MODE:-${OAT_DESIGN_MODE:-}}"
+if [ -z "$DESIGN_MODE" ]; then
+  if [ "${OAT_NON_INTERACTIVE:-}" = "1" ] || no_user_response_channel_exists; then
+    DESIGN_MODE="draft"
+    echo "Non-interactive context detected. Falling back to draft-and-review mode."
+  else
+    # Consult persisted preference (FR15 / Component 14) before prompting
+    CONFIG_MODE=$(oat config get workflow.designMode 2>/dev/null || echo "")
+    if [ "$CONFIG_MODE" = "collaborative" ] || [ "$CONFIG_MODE" = "selective" ] || [ "$CONFIG_MODE" = "draft" ]; then
+      DESIGN_MODE="$CONFIG_MODE"
+      if [ "$DESIGN_MODE" = "selective" ]; then
+        DESIGN_MODE="collaborative"
+        echo "Using workflow.designMode = selective from config (treating as collaborative for lightweight design; Selective Collaborative is only available in full oat-project-design)."
+      else
+        echo "Using workflow.designMode = ${DESIGN_MODE} from config."
+      fi
+    else
+      # Prefer AskUserQuestion for structured multi-choice when available.
+      # If AskUserQuestion is unavailable, ask the same question as a plain
+      # chat message and wait for the user's reply. Do NOT switch to draft
+      # mode just because the structured tool is missing.
+      #
+      # Prompt (SAME text as oat-project-design Step 1.5):
+      #   "How would you like to work through the lightweight design?
+      #     1. Collaborative (recommended) — section-by-section, one approach confirmation before drafting
+      #     2. Draft-and-review — full draft up front, you review holistically"
+      :
+    fi
+  fi
+fi
+echo "Running in ${DESIGN_MODE} mode."
+```
 
 ### Step 2.75: Lightweight Design (Optional)
 
@@ -242,14 +338,37 @@ Copy template: `.oat/templates/design.md` → `"$PROJECT_PATH/design.md"`
 - Dependencies (captured in discovery instead)
 - Risks and Mitigation (captured in discovery instead)
 
-**Present design incrementally for validation:**
+**Draft the design based on `DESIGN_MODE` (resolved in Step 2.75a):**
 
-1. Draft architecture overview → present to user for validation
-2. Draft component design → present to user for validation
-3. Draft data flow + testing approach → present to user for validation
-4. Finalize `design.md`
+```
+IF DESIGN_MODE == "collaborative":
+  For SECTION in [Overview, Architecture, Component Design, Testing Strategy
+                  (required); Data Models, API Design, Error Handling
+                  (include only when relevant); SKIP Security, Performance,
+                  Deployment, Migration]:
+    Draft section content. Scale each section to its complexity:
+      a few sentences if straightforward, up to 200-300 words if nuanced.
+    Not-applicable sections: state as a single sentence, not empty.
+    Present:
+      "Here's what I have for [section]: [content].
+       Does this look right, or should we adjust before continuing?"
+    Use AskUserQuestion for the validation prompt.
+    Revise inline on feedback. Be ready to go back and clarify if something
+      doesn't make sense. Re-present if substantive.
+    Mark section approved. Move to next.
 
-After each chunk, ask: "Does this look right, or should we adjust before continuing?"
+IF DESIGN_MODE == "draft":
+  Draft all required sections (Overview, Architecture, Component Design,
+    Testing Strategy) and any applicable optional sections (Data Models,
+    API Design, Error Handling) in ONE pass (same reduced section set).
+  Scale each section to its complexity — no per-section prompts fire.
+  Run the FULL 4-check self-review (placeholder + internal consistency +
+    scope + ambiguity). No scaled-down variant — identical to the full
+    oat-project-design self-review.
+  Present the user-review gate wording (adapted for quick-start:
+    no HiLL gate by default; commits-first is still in effect).
+  Produce design.md only — NO spec.md is written by lightweight design.
+```
 
 If `design.md` or `state.md` was updated before one of these validation pauses, commit those artifact changes before waiting for the user response.
 

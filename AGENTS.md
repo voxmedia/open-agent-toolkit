@@ -83,12 +83,14 @@
 
 Present these options to the user, with a recommendation based on the assessment heuristic below:
 
-1. **Full spec-driven workflow** — Discovery → Spec → Design → Plan → Implement
-   _Best for: complex features, cross-cutting concerns, multiple components, projects needing formal requirements or traceability._
+1. **Full spec-driven workflow** — Discovery → Design (with confirmed requirements & spec.md) → Plan → Implement
+   _Best for: complex features, cross-cutting concerns, multiple components, projects needing formal requirements or traceability. Design produces both spec.md and design.md as part of one collaborative conversation._
+   _Design mode choices: collaborative, selective collaborative, or draft-and-review. Selective collaborative is only available here, where the section set is large enough for selective live review to pay off._
    → Use `oat-project-new` (scaffolds spec-driven project)
 
 2. **Quick workflow** — Discovery → [Optional Lightweight Design] → Plan → Implement
    _Best for: bounded features at any size, clear requirements, rapid iteration preferred. Can still produce a design artifact when architecture decisions matter._
+   _Lightweight design keeps the smaller collaborative/draft choice; it does not offer selective collaborative mode._
    → Use `oat-project-quick-start`
 
 3. **Import external plan** — Normalize an existing plan into OAT format → Implement
@@ -149,3 +151,8 @@ Projects live in `.oat/projects/<scope>/<project>/` with:
 - `oat-docs-bootstrap` - Guide users through bootstrapping a docs app end-to-end: preflight, input gathering, scaffold (via `oat docs init`) with capability-gated post-patches, build verification, config inspection, and educational walkthrough.
 - `oat-docs-analyze` - Analyze a docs surface for `index.md` contract coverage, nav drift, and docs app readiness.
 - `oat-docs-apply` - Apply approved docs-analysis recommendations with branch, nav-sync, and PR workflow support.
+
+## External Attributions
+
+Prose adapted from external projects is tracked in the repo-root `NOTICES.md`.
+When borrowing from an external source, add an entry there.

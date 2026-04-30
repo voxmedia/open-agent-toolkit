@@ -29,6 +29,7 @@ This sub-section is the deep technical surface for how tracked OAT projects exec
 ## Go Deeper
 
 - [Lifecycle](lifecycle.md) - End-to-end flow from discovery through completion.
+- [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
 - [HiLL Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
 - [Artifacts](artifacts.md) - What lives in `state.md`, `discovery.md`, `plan.md`, `implementation.md`, and related files.
 - [State Machine](state-machine.md) - Lifecycle and review status transitions across a project.
