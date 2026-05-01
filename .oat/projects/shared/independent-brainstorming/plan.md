@@ -258,13 +258,17 @@ git commit -m "feat(p01-t04): existing-install detection wins over PACK_METADATA
 
 **Goal:** Register the `brainstorm` pack across pack-lifecycle command paths, scaffold the `oat-brainstorm` skill directory with frontmatter and section stubs (so bundle-consistency tests pass), port the visual-companion bundle from `superpowers:brainstorming` (MIT) with OAT-side persistence-path alignment, ship the destinations playbook and the doc-to-path output template, and update `NOTICES.md` attribution.
 
-### Task p02-t01: Register brainstorm pack in manifest constants and PACK_METADATA + scaffold skill directory
+### Task p02-t01: Register brainstorm pack in manifest constants, type union, bundle script, and scaffold skill directory
 
 **Files:**
 
 - Modify: `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` (add `BRAINSTORM_SKILLS = ['oat-brainstorm'] as const`; add `brainstorm` entry to `PACK_METADATA` with `defaultScope: 'user'`)
+- Modify: `packages/cli/src/commands/tools/shared/types.ts` (add `'brainstorm'` to the `PackName` union)
+- Modify: `packages/cli/scripts/bundle-assets.sh` (add `oat-brainstorm` to the `SKILLS=(...)` array, preserving alphabetical position relative to neighbors)
 - Create: `.agents/skills/oat-brainstorm/SKILL.md` (frontmatter + section headers — empty process body, content fills in Phase 3)
 - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts` (extend the manifest constants traversal to include `BRAINSTORM_SKILLS`)
+
+This task makes the pack name a recognized type, registers the skill in both the install-time manifest and the build-time bundle script, and creates the canonical skill file so bundle-consistency tests pass. Per-pack install helpers and dispatcher wiring follow in p02-t02 and p02-t03.
 
 **Step 1: Implement**
 
@@ -285,42 +289,153 @@ Section stubs (empty bodies, content fills in Phase 3): `# Brainstorm`, `## Mode
 
 **Step 2: Verify**
 
+Run: `bash packages/cli/scripts/bundle-assets.sh && ls packages/cli/assets/skills/oat-brainstorm/SKILL.md`
+Expected: bundle script regenerates assets and `oat-brainstorm` is present in the bundled tree.
+
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
 Expected: bundle-consistency test recognizes `oat-brainstorm` as an existing canonical asset under `.agents/skills/`.
 
-Run: `pnpm oat:validate-skills`
-Expected: skill validates against frontmatter contract (placeholder description acceptable at scaffold stage).
+Run: `pnpm oat:validate-skills && pnpm type-check`
+Expected: skill validates against frontmatter contract (placeholder description acceptable at scaffold stage); `PackName` union compiles cleanly across the CLI.
 
 **Step 3: Commit**
 
 ```bash
-git add packages/cli/src/commands/init/tools/shared/skill-manifest.ts packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts .agents/skills/oat-brainstorm/SKILL.md
-git commit -m "feat(p02-t01): register brainstorm pack and scaffold oat-brainstorm skill"
+git add packages/cli/src/commands/init/tools/shared/skill-manifest.ts packages/cli/src/commands/tools/shared/types.ts packages/cli/scripts/bundle-assets.sh packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts .agents/skills/oat-brainstorm/SKILL.md
+git commit -m "feat(p02-t01): register brainstorm pack manifest, type union, bundle script, and scaffold skill"
 ```
 
 ---
 
-### Task p02-t02: Wire brainstorm into install/update/remove pack-name unions and default-on set
+### Task p02-t02: Create per-pack install helper directory for brainstorm
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/init/tools/index.ts` (add `'brainstorm'` to pack-name unions; add picker description: "Always-on brainstorming entry point with visual companion"; add to default-on set in `oat init tools` guided setup)
-- Modify: `packages/cli/src/commands/tools/update/update-tools.ts` (add `brainstorm: BRAINSTORM_SKILLS.map(...)` and `brainstorm: { ... }` entries)
-- Modify: corresponding remove handlers
-- Modify: `packages/cli/src/commands/init/tools/index.test.ts` and `packages/cli/src/commands/tools/update/update-tools.test.ts` and remove tests
-- Modify: `packages/cli/src/commands/help-snapshots.test.ts` if pack-name unions appear in help snapshots
+- Create: `packages/cli/src/commands/init/tools/brainstorm/install-brainstorm.ts`
+- Create: `packages/cli/src/commands/init/tools/brainstorm/install-brainstorm.test.ts`
+- Create: `packages/cli/src/commands/init/tools/brainstorm/index.ts`
+- Create: `packages/cli/src/commands/init/tools/brainstorm/index.test.ts`
+
+Mirror the existing per-pack helper pattern under `packages/cli/src/commands/init/tools/ideas/` and `packages/cli/src/commands/init/tools/docs/`. The new directory exports `installBrainstorm`, an `InstallBrainstormOptions` type, and an `InstallBrainstormResult` type, plus the per-subcommand `index.ts` entry consumed by `runInitTools`.
+
+**Step 1: Write test (RED)**
+
+```typescript
+// install-brainstorm.test.ts
+import { describe, it, expect } from 'vitest';
+import { installBrainstorm } from './install-brainstorm';
+
+describe('installBrainstorm', () => {
+  it('copies oat-brainstorm skill assets to the target root', async () => {
+    // Set up a tmp assetsRoot with bundled oat-brainstorm/SKILL.md
+    // Set up a tmp targetRoot
+    // Call installBrainstorm({ assetsRoot, targetRoot, force: true })
+    // Assert: result.copiedSkills includes 'oat-brainstorm'
+    // Assert: target tree contains <targetRoot>/oat-brainstorm/SKILL.md plus scripts/ and references/
+  });
+
+  it('skips already-current skill assets without force', async () => {
+    // Pre-populate target with current-version oat-brainstorm
+    // Call installBrainstorm({ assetsRoot, targetRoot, force: false })
+    // Assert: result.skippedSkills includes 'oat-brainstorm'
+  });
+});
+```
+
+```typescript
+// index.test.ts
+import { describe, it, expect, vi } from 'vitest';
+import { runInitToolsBrainstorm } from './index';
+
+describe('runInitToolsBrainstorm', () => {
+  it('resolves user scope by default and writes tools.brainstorm config', async () => {
+    // Stub installBrainstorm; assert it's called with the expected target root for user scope
+  });
+});
+```
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/init/tools/brainstorm`
+Expected: new tests fail (RED) — module does not yet exist.
+
+**Step 2: Implement (GREEN)**
+
+Implement `install-brainstorm.ts` mirroring `install-ideas.ts` shape:
+
+```typescript
+import { join } from 'node:path';
+
+import { copyDirWithVersionCheck } from '@commands/init/tools/shared/copy-helpers';
+import { BRAINSTORM_SKILLS } from '@commands/init/tools/shared/skill-manifest';
+
+export { BRAINSTORM_SKILLS };
+
+export interface InstallBrainstormOptions {
+  assetsRoot: string;
+  targetRoot: string;
+  force?: boolean;
+}
+
+export interface InstallBrainstormResult {
+  copiedSkills: string[];
+  updatedSkills: string[];
+  skippedSkills: string[];
+  outdatedSkills: Array<{
+    name: string;
+    installed: string | null;
+    bundled: string | null;
+  }>;
+}
+
+export async function installBrainstorm(
+  options: InstallBrainstormOptions,
+): Promise<InstallBrainstormResult> {
+  // Iterate BRAINSTORM_SKILLS; copy each from <assetsRoot>/skills/<skill>/ to <targetRoot>/<skill>/
+  // Use copyDirWithVersionCheck to handle version comparison + force semantics
+  // Visual-companion bundle (scripts/, references/) ships under the skill directory and copies along with it
+}
+```
+
+Implement `index.ts` entry: subcommand wrapper that resolves scope (consults `resolvePackDefaultScope('brainstorm')` from Phase 1), resolves assets root, calls `installBrainstorm`, and writes `tools.brainstorm: true` to shared config on success.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/init/tools/brainstorm`
+Expected: tests pass (GREEN).
+
+**Step 3: Verify**
+
+Run: `pnpm lint && pnpm type-check`
+Expected: no errors.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/brainstorm/
+git commit -m "feat(p02-t02): add per-pack install helper for brainstorm"
+```
+
+---
+
+### Task p02-t03: Wire brainstorm into runInitTools dispatcher, update/remove handlers, picker description, and default-on set
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/index.ts` (add `installBrainstorm` import alongside other pack imports at lines ~45-57; extend dispatcher dependency interface at lines ~124-126; extend `DEFAULT_DEPENDENCIES` at lines ~228-230; add dispatch branch in the install-flow at lines ~724-757; add interactive-picker description: "Always-on brainstorming entry point with visual companion"; add `'brainstorm'` to the `oat init tools` default-on set)
+- Modify: `packages/cli/src/commands/tools/update/update-tools.ts` (add `brainstorm: BRAINSTORM_SKILLS.map(...)` and corresponding pack metadata entry alongside `core`/`ideas`/`docs`)
+- Modify: corresponding `oat tools remove --pack brainstorm` handlers (typically a sibling file under `commands/tools/remove/`)
+- Modify: `packages/cli/src/commands/init/tools/index.test.ts`, `packages/cli/src/commands/tools/update/update-tools.test.ts`, and the matching remove tests
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts` if the new pack name surfaces in help-text snapshots
 
 **Step 1: Write test (RED)**
 
 ```typescript
 // index.test.ts additions
-it('install command recognizes brainstorm as a pack name', async () => {
-  // Verify install handler accepts 'brainstorm' and routes through standard pack-install flow
+it('install command dispatches to installBrainstorm when brainstorm pack is selected', async () => {
+  // Stub installBrainstorm dependency; invoke install with packs: ['brainstorm']
+  // Assert: stub was called with the expected options (assetsRoot + targetRoot for user scope by default)
 });
 
 it('non-interactive install of brainstorm resolves to user scope by default', async () => {
-  // End-to-end-ish: invoke install command with 'brainstorm' and no --scope flag
-  // Assert: tools.brainstorm config set to true, asset placement at user scope (~/.agents/skills/oat-brainstorm/)
+  // Invoke install command with 'brainstorm' pack and no --scope flag in non-interactive mode
+  // Assert: tools.brainstorm config set to true; asset placement at user scope (~/.agents/skills/oat-brainstorm/)
 });
 
 it('oat init tools default-on set includes brainstorm', () => {
@@ -328,14 +443,14 @@ it('oat init tools default-on set includes brainstorm', () => {
 });
 ```
 
-Plus parallel additions to `update-tools.test.ts` (brainstorm pack updates `oat-brainstorm` skill) and remove-tools tests (brainstorm removal flips `tools.brainstorm` config to false and removes asset directory).
+Plus parallel additions to `update-tools.test.ts` (brainstorm pack updates `oat-brainstorm` skill) and remove tests (brainstorm removal flips `tools.brainstorm` config to false and removes the asset directory).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/init/tools packages/cli/src/commands/tools`
 Expected: new tests fail (RED).
 
 **Step 2: Implement (GREEN)**
 
-Add `'brainstorm'` to all pack-name unions, picker descriptions, and the `oat init tools` default-on set. Populate update and remove handlers with the appropriate pack ↔ skill list and asset paths.
+Add `installBrainstorm` import + dependency wiring to runInitTools. Add a dispatch branch parallel to the existing `installIdeas`/`installDocs` branches. Add `'brainstorm'` to picker pack-list with the description string. Add `'brainstorm'` to the default-on selection set. Populate update and remove handlers with the brainstorm pack-skill mapping and asset paths.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/init/tools packages/cli/src/commands/tools`
 Expected: tests pass (GREEN).
@@ -349,12 +464,12 @@ Expected: full CLI test suite passes including help-snapshot tests.
 
 ```bash
 git add packages/cli/src/commands/init/tools/ packages/cli/src/commands/tools/
-git commit -m "feat(p02-t02): register brainstorm in install/update/remove pack lifecycle"
+git commit -m "feat(p02-t03): wire brainstorm into install/update/remove dispatchers and default-on set"
 ```
 
 ---
 
-### Task p02-t03: Visual-companion script bundle (verbatim from Superpowers)
+### Task p02-t04: Visual-companion script bundle (verbatim from Superpowers)
 
 **Files:**
 
@@ -399,12 +514,12 @@ Expected: server starts, URL responds, frame-template wraps content; clean shutd
 
 ```bash
 git add .agents/skills/oat-brainstorm/scripts/
-git commit -m "feat(p02-t03): import visual-companion script bundle from superpowers (MIT)"
+git commit -m "feat(p02-t04): import visual-companion script bundle from superpowers (MIT)"
 ```
 
 ---
 
-### Task p02-t04: Patch start-server.sh persistence paths to OAT-managed prefixes
+### Task p02-t05: Patch start-server.sh persistence paths to OAT-managed prefixes
 
 **Files:**
 
@@ -448,12 +563,12 @@ Expected: persistence-path tests pass.
 
 ```bash
 git add .agents/skills/oat-brainstorm/scripts/start-server.sh packages/cli/src/integration/visual-companion-smoke.test.ts
-git commit -m "feat(p02-t04): align visual-companion persistence paths with OAT prefixes"
+git commit -m "feat(p02-t05): align visual-companion persistence paths with OAT prefixes"
 ```
 
 ---
 
-### Task p02-t05: Port visual-companion.md guide and update NOTICES.md attribution
+### Task p02-t06: Port visual-companion.md guide and update NOTICES.md attribution
 
 **Files:**
 
@@ -504,12 +619,12 @@ Expected: any remaining mentions are intentional (e.g., explicit references to t
 
 ```bash
 git add .agents/skills/oat-brainstorm/references/visual-companion.md NOTICES.md
-git commit -m "docs(p02-t05): port visual-companion guide and update NOTICES attribution"
+git commit -m "docs(p02-t06): port visual-companion guide and update NOTICES attribution"
 ```
 
 ---
 
-### Task p02-t06: Create destinations playbook with per-destination stanzas
+### Task p02-t07: Create destinations playbook with per-destination stanzas
 
 **Files:**
 
@@ -557,12 +672,12 @@ Run: `pnpm oat:validate-skills` (validates skill bundle including references).
 
 ```bash
 git add .agents/skills/oat-brainstorm/references/destinations.md
-git commit -m "feat(p02-t06): add destinations playbook with per-destination stanzas"
+git commit -m "feat(p02-t07): add destinations playbook with per-destination stanzas"
 ```
 
 ---
 
-### Task p02-t07: Create brainstorm-doc.md output template
+### Task p02-t08: Create brainstorm-doc.md output template
 
 **Files:**
 
@@ -583,7 +698,7 @@ Manual: open template; verify section structure aligns with the synthesized-payl
 
 ```bash
 git add .agents/skills/oat-brainstorm/templates/brainstorm-doc.md
-git commit -m "feat(p02-t07): add brainstorm-doc output template"
+git commit -m "feat(p02-t08): add brainstorm-doc output template"
 ```
 
 ---
@@ -875,31 +990,36 @@ git commit -m "feat(p03-t07): finalize Success Criteria and self-review skill fl
 
 **Files:**
 
-- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (add `brainstorm` to "Bundled packs at a glance" + a dedicated "Brainstorm pack" section parallel to "Core pack" / "Docs pack")
-- Create: `apps/oat-docs/docs/skills/oat-brainstorm.md` (or equivalent location for skill-specific docs — match existing skill-doc layout if one exists; otherwise document the skill's purpose, when-to-use, terminal states, visual companion, attribution)
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (add `brainstorm` to "Bundled packs at a glance" + a dedicated "Brainstorm pack" section parallel to "Core pack" / "Docs pack" — including a brief description of the always-on activation, the visual companion, and the terminal-state picker behavior, plus the install/update/remove story driven by `PACK_METADATA`)
+- Modify: `apps/oat-docs/docs/workflows/skills/index.md` (add `oat-brainstorm` to the existing "Key Skills by Use Case" list — short entry pointing at the brainstorm pack section in `tool-packs.md`)
+
+The reviewed `cli-utilities/index.md` already links to `tool-packs.md` (lines 26 / 31 / 39), so no `cli-utilities/index.md` `## Contents` update is required. No standalone skill-specific page is created — the brainstorm skill's behavior is documented within the brainstorm-pack section of `tool-packs.md` and discoverable via the existing `workflows/skills/index.md` skills surface, in line with `apps/oat-docs/AGENTS.md` navigation rules.
 
 **Step 1: Implement**
 
-`tool-packs.md` additions:
+`cli-utilities/tool-packs.md` additions:
 
 - "Bundled packs at a glance" list: add `brainstorm` — "Always-on brainstorming entry point with visual companion"
-- New "Brainstorm pack" section after "Docs pack": describe the single skill, default user scope behavior driven by `PACK_METADATA`, install/update/remove behavior, default-on in `oat init` guided setup
+- New "Brainstorm pack" section after "Docs pack": describe the single skill, default user scope behavior driven by `PACK_METADATA`, install / update / remove behavior, default-on in `oat init` guided setup, the bundled visual companion (point to `.agents/skills/oat-brainstorm/references/visual-companion.md` for usage details), and the destinations playbook for terminal-state selection.
 
-Skill-specific docs page: describe `oat-brainstorm`'s purpose, the activation model, the terminal-state picker behavior, the visual companion (linking to bundled `references/visual-companion.md`), and the destinations playbook.
+`workflows/skills/index.md` addition (under "Key Skills by Use Case"):
+
+- A bullet describing when to reach for `oat-brainstorm` (project-independent exploratory conversations) and a relative `.md`-suffixed link to the brainstorm pack section in `tool-packs.md` (per the AGENTS.md `[Title](page.md)` convention).
 
 **Step 2: Verify**
 
 Run: `pnpm build:docs`
-Expected: docs site builds without errors; new pages render.
+Expected: docs site builds without errors; new entries render in both pages.
 
-Run: `pnpm --filter oat-docs lint` (or equivalent docs lint)
-Expected: no broken links, no missing nav entries.
+Run: `pnpm --filter oat-docs lint` (or `oat docs nav sync` if the docs app exposes it) and verify no broken links.
+
+Manual check: confirm the `tool-packs.md` brainstorm section is reachable from the `cli-utilities/index.md` "Contents" entry it inherits, and that `workflows/skills/index.md` `## Contents` still renders cleanly with the new bullet in the use-case list.
 
 **Step 3: Commit**
 
 ```bash
-git add apps/oat-docs/docs/cli-utilities/tool-packs.md apps/oat-docs/docs/skills/oat-brainstorm.md
-git commit -m "docs(p04-t01): document brainstorm pack and oat-brainstorm skill"
+git add apps/oat-docs/docs/cli-utilities/tool-packs.md apps/oat-docs/docs/workflows/skills/index.md
+git commit -m "docs(p04-t01): document brainstorm pack in tool-packs and skills index"
 ```
 
 ---
@@ -940,7 +1060,7 @@ git commit -m "test(p04-t02): record dogfood results for all 10 brainstorm scena
 
 ---
 
-### Task p04-t03: Lockstep public-package version bumps
+### Task p04-t03: Lockstep public-package version bumps + regenerate bundled version asset
 
 **Files:**
 
@@ -949,6 +1069,8 @@ git commit -m "test(p04-t02): record dogfood results for all 10 brainstorm scena
 - Modify: `packages/docs-config/package.json` (bump version, lockstep)
 - Modify: `packages/docs-theme/package.json` (bump version, lockstep)
 - Modify: `packages/docs-transforms/package.json` (bump version, lockstep)
+- Modify: `packages/cli/assets/public-package-versions.json` (regenerated by `bundle-assets.sh` from the new versions; tracked-but-generated, so explicitly `git add` after regeneration)
+- Modify: `pnpm-lock.yaml` (regenerated by `pnpm install`)
 
 **Step 1: Implement**
 
@@ -958,17 +1080,28 @@ This project changes `packages/cli/src` (Phase 1, Phase 2), `.agents/skills/` (P
 
 Bump all five package versions by the same SemVer increment (decide minor vs patch based on user-visible behavior; this project ships a new always-on skill + new pack, which is a feature add → minor bump if pre-1.0 conventions allow, otherwise patch).
 
+After bumping the five `package.json` files, regenerate `packages/cli/assets/public-package-versions.json` so the bundled CLI carries the new versions for docs scaffolding (consumed by `packages/cli/src/commands/docs/init/scaffold.ts`):
+
+```bash
+bash packages/cli/scripts/bundle-assets.sh
+```
+
+The regenerated file is tracked-but-generated; without this step the published CLI would scaffold docs with stale package versions.
+
 **Step 2: Verify**
 
 Run: `pnpm install` (refresh lockfile after version changes)
 Expected: lockfile updates; no version-mismatch errors.
 
-Manual: confirm all five `package.json` files are at the same new version.
+Run: `git diff packages/cli/assets/public-package-versions.json`
+Expected: shows the five package versions updated to the new bumped values.
+
+Manual: confirm all five `package.json` files and `public-package-versions.json` are at the same new version.
 
 **Step 3: Commit**
 
 ```bash
-git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml
 git commit -m "chore(p04-t03): lockstep version bump for brainstorm pack release"
 ```
 
@@ -1011,10 +1144,6 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
 | Scope  | Type     | Status          | Date       | Artifact                                              |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------- |
 | p01    | code     | pending         | -          | -                                                     |
@@ -1024,7 +1153,7 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 | final  | code     | pending         | -          | -                                                     |
 | spec   | artifact | pending         | -          | -                                                     |
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
-| plan   | artifact | received        | 2026-05-01 | reviews/artifact-plan-review-2026-05-01.md            |
+| plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1042,11 +1171,11 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 **Summary:**
 
 - Phase 1: 4 tasks — establish `PackMetadata` mechanism (interface, map, interactive picker wiring, non-interactive resolver wiring, migration safety)
-- Phase 2: 7 tasks — register `brainstorm` pack in install/update/remove paths, scaffold `oat-brainstorm` skill directory, port visual-companion bundle from Superpowers (5 files; 1 patched for OAT persistence paths), port visual-companion guide, update `NOTICES.md` attribution, ship destinations playbook and brainstorm-doc output template
+- Phase 2: 8 tasks — register `brainstorm` pack manifest + type union + bundle script + skill scaffold, create per-pack install helper directory, wire dispatcher / update / remove handlers + default-on set, port visual-companion bundle from Superpowers (5 files; 1 patched for OAT persistence paths), port visual-companion guide, update `NOTICES.md` attribution, ship destinations playbook and brainstorm-doc output template
 - Phase 3: 7 tasks — fill in `oat-brainstorm/SKILL.md` end-to-end (mode assertion, progress indicators, activation, pack detection, conversation cadence, destination signal-watching, satisfaction check, synthesis with confirmation, non-fold-back terminal-state handoffs, active-project router + fold-back commit safety contract, success criteria + self-review)
 - Phase 4: 4 tasks — document brainstorm pack and skill in `apps/oat-docs`, run all 10 dogfood scenarios end-to-end, lockstep public-package version bumps, `pnpm release:validate`
 
-**Total: 22 tasks**
+**Total: 23 tasks**
 
 Ready for code review and merge.
 

@@ -48,12 +48,37 @@ oat_generated: false
 
 **Next:** continue to plan generation via `oat-project-quick-start` (re-review optional; the user opted to proceed without re-review for these targeted edits).
 
+### Review Received: plan (artifact)
+
+**Date:** 2026-05-01
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-05-01.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2 (`I1`: pack registration omits bundle-assets / types.ts / per-pack install helper; `I2`: docs task references invented `docs/skills/` path and skips nav contract)
+- Medium: 1 (`M1`: release task omits `public-package-versions.json` regeneration)
+- Minor: 1 (`m1`: plan keeps template review placeholders)
+
+**Disposition:** all four resolved in artifact (`resolve_in_artifact`).
+
+**Edits applied to `plan.md`:**
+
+- `I1`: expanded p02-t01 file list to include `packages/cli/scripts/bundle-assets.sh` (SKILLS array entry) and `packages/cli/src/commands/tools/shared/types.ts` (PackName union); split the previous p02-t02 into a new p02-t02 (per-pack install helper directory under `packages/cli/src/commands/init/tools/brainstorm/`) and a new p02-t03 (runInitTools dispatcher imports + dependency interface + default deps + dispatch branch + update/remove handlers + picker description + default-on set entry); renumbered remaining Phase 2 tasks (visual-companion bundle, persistence paths, guide port, destinations playbook, brainstorm-doc template) to t04 through t08. Phase 2 grew from 7 to 8 tasks; total plan from 22 to 23.
+- `I2`: rewrote p04-t01 file list to use concrete docs paths (`apps/oat-docs/docs/cli-utilities/tool-packs.md` and `apps/oat-docs/docs/workflows/skills/index.md`), dropped the proposed `apps/oat-docs/docs/skills/oat-brainstorm.md` standalone page (no such directory; would have violated the AGENTS.md nav contract), documented why no `cli-utilities/index.md` update is needed (existing link).
+- `M1`: added `packages/cli/assets/public-package-versions.json` to p04-t03 file list, inserted explicit `bash packages/cli/scripts/bundle-assets.sh` regeneration step, updated `git add` commands to stage the regenerated asset.
+- `m1`: stripped the two template placeholder paragraphs from `## Reviews` section (`{Track reviews here...}` and `{Keep both code + artifact rows below...}`).
+
+**No plan tasks created** (artifact reviews resolve in-place per skill convention).
+
+**Next:** continue to implementation via `oat-project-implement` (re-review optional; user can re-run `oat-project-review-provide artifact plan` if they want a confirmation pass).
+
 ## Progress Overview
 
 | Phase   | Status  | Tasks | Completed |
 | ------- | ------- | ----- | --------- |
 | Phase 1 | pending | 4     | 0/4       |
-| Phase 2 | pending | 7     | 0/7       |
+| Phase 2 | pending | 8     | 0/8       |
 | Phase 3 | pending | 7     | 0/7       |
 | Phase 4 | pending | 4     | 0/4       |
 
