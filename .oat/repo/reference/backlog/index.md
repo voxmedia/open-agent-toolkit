@@ -6,7 +6,7 @@
 
 **Review pass: 2026-04-24 (updated 2026-04-27).** Three items closed (`bl-42f9`, `bl-fb3f`, `bl-cbdd`). Three new items added: `bl-b5af` (configurable staleness threshold), `bl-53f0` (project-independent brainstorming mode, imported from the `collaborative-design-workflow` project with auto-triggering note synthesized in), and `bl-3a4a` (sub-project split escape hatch, imported from the `collaborative-design-workflow` project). All remaining items carry a `priority_reviewed` stamp. Full review artifact: `.oat/repo/reviews/backlog-and-roadmap-review-2026-04-24.md`.
 
-- **Top strategic item — `bl-281c`** (now **high** priority): migrate read-only skills to `oat project status --json` and add `npx @open-agent-toolkit/cli` fallback for cloud environments. Retires per-skill bootstrap duplication, enables cloud-env parity, and produces the measurement baseline that gates `bl-931d`.
+- **Control-plane state-read migration — `bl-281c`** (now **medium** priority): the high-leverage `state.md` slice shipped for seven lifecycle skills via concise `oat project status --field`, `--shell`, and `--project-path` reads, with a documented `npx @open-agent-toolkit/cli` shim contract for CI/cloud environments. Remaining scope is incremental: plan.md / implementation.md read surfaces, named candidate skills outside the initial grep scan, and optional consistency polish.
 - **Quick-win batch (now high priority):** `bl-af93` (`oat config unset`), `bl-7e68` (quick-mode routing clarity), and `bl-b5af` (configurable staleness threshold). All S-sized, independent, and addressable as a single "workflow friction polish" PR set. `bl-af93` fixes a dogfooded gap where enum workflow keys have no CLI "unset" path.
 - **In-progress tail — `bl-0ace`:** completion-state CLI helper is ~95% shipped via `oat project complete-state`; remaining work is verifying skill delegation and closing out tests.
 - **Instruction sync polish — `bl-28ce`, `bl-c745`:** follow-ons to the shipped instruction-sync feature. `bl-28ce` persists the default `pointer|symlink|copy` strategy; `bl-c745` adds a per-path / per-file opt-out so Claude-only `CLAUDE.md` files aren't auto-promoted. Best treated as a small bundled effort since both touch the same surface.
@@ -20,26 +20,28 @@
 - **Closed this pass:** `bl-42f9` (PM workflow family — shipped via `oat-pjm-*` skills + `oat backlog/cleanup` CLI + `localPaths` config), `bl-fb3f` (lifecycle follow-through — shipped via the subagent-implement-refactor project), `bl-cbdd` (Codex prompt wrapper — won't-do because `.codex/prompts/` was deprecated).
 
 <!-- OAT BACKLOG-INDEX -->
-| ID | Title | Status | Priority | Scope | Estimate |
-| --- | --- | --- | --- | --- | --- |
-| bl-af93 | Add `oat config unset <key>` command for removing config values | open | high | feature | S |
-| bl-7e68 | Clarify quick-mode resume routing from oat-project-plan | open | high | feature | S |
-| bl-b5af | Add configurable staleness threshold to oat config | open | medium | feature | S |
-| bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote) | open | medium | feature | L |
-| bl-ff5d | Backlog Refinement Flow (Jira ticket generation) | open | medium | feature | L |
-| bl-3a4a | Codified sub-project split escape hatch | open | medium | feature | L |
-| bl-0738 | Define per-phase model selection guidance for phase-subagent dispatch | open | medium | feature | S |
-| bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback | open | medium | initiative | M |
-| bl-0ace | Move oat-project-complete state mutations into a CLI helper | in_progress | medium | feature | M |
-| bl-28ce | Persist instruction sync strategy in config and expose it in init | open | medium | feature | M |
-| bl-53f0 | Project-independent brainstorming mode | open | medium | feature | L |
-| bl-e582 | Wire .oat/repo/reference artifacts into lifecycle skill reads | open | medium | feature | M |
-| bl-3327 | Add dependency intelligence skill family | open | low | feature | L |
-| bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new | open | low | feature | L |
-| bl-c745 | Add per-CLAUDE.md adoption opt-out for instruction sync | open | low | feature | M |
-| bl-f9bd | Deeper staleness detection and strict-mode enforcement | open | low | feature | L |
-| bl-71a1 | Memory system + provider enhancements | open | low | initiative | XL |
-| bl-931d | Optimize control-plane `listProjects()` summary path | open | low | task | M |
+
+| ID      | Title                                                                                | Status      | Priority | Scope      | Estimate |
+| ------- | ------------------------------------------------------------------------------------ | ----------- | -------- | ---------- | -------- |
+| bl-af93 | Add `oat config unset <key>` command for removing config values                      | open        | high     | feature    | S        |
+| bl-7e68 | Clarify quick-mode resume routing from oat-project-plan                              | open        | high     | feature    | S        |
+| bl-b5af | Add configurable staleness threshold to oat config                                   | open        | medium   | feature    | S        |
+| bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote) | open        | medium   | feature    | L        |
+| bl-ff5d | Backlog Refinement Flow (Jira ticket generation)                                     | open        | medium   | feature    | L        |
+| bl-3a4a | Codified sub-project split escape hatch                                              | open        | medium   | feature    | L        |
+| bl-0738 | Define per-phase model selection guidance for phase-subagent dispatch                | open        | medium   | feature    | S        |
+| bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback                   | open        | medium   | initiative | M        |
+| bl-0ace | Move oat-project-complete state mutations into a CLI helper                          | in_progress | medium   | feature    | M        |
+| bl-28ce | Persist instruction sync strategy in config and expose it in init                    | open        | medium   | feature    | M        |
+| bl-53f0 | Project-independent brainstorming mode                                               | open        | medium   | feature    | L        |
+| bl-e582 | Wire .oat/repo/reference artifacts into lifecycle skill reads                        | open        | medium   | feature    | M        |
+| bl-3327 | Add dependency intelligence skill family                                             | open        | low      | feature    | L        |
+| bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new                        | open        | low      | feature    | L        |
+| bl-c745 | Add per-CLAUDE.md adoption opt-out for instruction sync                              | open        | low      | feature    | M        |
+| bl-f9bd | Deeper staleness detection and strict-mode enforcement                               | open        | low      | feature    | L        |
+| bl-71a1 | Memory system + provider enhancements                                                | open        | low      | initiative | XL       |
+| bl-931d | Optimize control-plane `listProjects()` summary path                                 | open        | low      | task       | M        |
+
 <!-- END OAT BACKLOG-INDEX -->
 
 ## Notes
