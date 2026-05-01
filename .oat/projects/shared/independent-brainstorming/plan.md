@@ -1024,6 +1024,7 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 | final  | code     | pending         | -          | -                                                     |
 | spec   | artifact | pending         | -          | -                                                     |
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
+| plan   | artifact | received        | 2026-05-01 | reviews/artifact-plan-review-2026-05-01.md            |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
