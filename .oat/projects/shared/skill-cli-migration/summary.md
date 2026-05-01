@@ -1,9 +1,9 @@
 ---
 oat_generated: true
-oat_generated_at: '2026-04-29T19:23:02Z'
+oat_generated_at: '2026-05-01T00:26:43Z'
 oat_summary_scope: final
 oat_project: .oat/projects/shared/skill-cli-migration
-oat_source_commit: f22b37ce
+oat_source_commit: e49fb0d1
 oat_workflow_mode: quick
 ---
 
@@ -21,7 +21,7 @@ Quick-mode note: this project has discovery, plan, implementation, review, and v
 - Added a `MIGRATED_FIELDS` contract test in `packages/cli/src/commands/project/status.test.ts` so renamed or removed JSON keys fail tests, plus tests for scalar, nested, null/missing, object, shell-safe, invalid shell-assignment, and explicit project-path behavior.
 - Migrated the read paths in `oat-project-progress`, `oat-project-pr-progress`, `oat-project-plan`, `oat-project-pr-final`, `oat-project-review-provide`, `oat-project-reconcile`, and `oat-project-complete` to concise `--field` / `--shell` snippets.
 - Preserved target-worktree review routing by using `--project-path` in path-directed status reads instead of direct `state.md` parsing.
-- Bumped the lockstep public package set from `0.0.50` to `0.0.53` after rebasing onto an `origin/main` already at `0.0.52`, and regenerated public package version metadata.
+- Bumped the lockstep public package set from `0.0.50` to `0.0.56` after rebasing onto an `origin/main` already at `0.0.55`, and regenerated public package version metadata.
 - Published the docs/reference update for `oat project status --field`, `--shell`, `--project-path`, and the `npx`-backed `oat` shim contract for CI/cloud environments.
 - Locked the public `oat project status --help` option contract with an inline help-snapshot test (`prev2-t05`).
 - Hardened the CLI by rejecting the conflicting `--field` + `--shell` combination with a clear error and a regression test (`prev2-t06`).
@@ -32,7 +32,7 @@ Quick-mode note: this project has discovery, plan, implementation, review, and v
 - `pnpm lint`
 - `pnpm format`
 - `pnpm type-check`
-- `pnpm test` (1365 tests)
+- `pnpm test` (1413 tests)
 - `pnpm build`
 - `pnpm release:validate`
 - Live CLI smoke tests for relative and absolute `--project-path` with `--field` and `--shell`

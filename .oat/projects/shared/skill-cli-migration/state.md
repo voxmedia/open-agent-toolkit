@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: f22b37ce
+oat_last_commit: e49fb0d1
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -16,15 +16,15 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/65 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-04-24T19:34:46.867Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-04-29T19:23:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-01T00:26:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: skill-cli-migration
 
-**Status:** PR open — p-rev2 re-review passed; awaiting branch push to refresh PR
+**Status:** PR open — rebased onto origin/main; local validation passed
 **Started:** 2026-04-24
-**Last Updated:** 2026-04-27
+**Last Updated:** 2026-04-30
 
 ## Current Phase
 
@@ -52,7 +52,9 @@ Implementation — PR open, readability revision complete and awaiting review.
 - ✓ PR created
 - ✓ Revision 2 complete (`prev2-t01`-`prev2-t04`)
 - ✓ Revision 2 review fixes complete (`prev2-t05`-`prev2-t07`); p-rev2 re-review passed
-- ⧗ Push branch to refresh PR; awaiting human review
+- ✓ Rebased onto `origin/main` after PR #66, #67, and #68 merged
+- ✓ Local validation passed after rebase
+- ⧗ Awaiting PR CI and human review
 
 ## Blockers
 
@@ -60,7 +62,7 @@ None
 
 ## Next Milestone
 
-Revision complete. Push changes to update the PR branch.
+PR is open for review.
 
 - To incorporate more feedback: run `oat-project-revise`
 - When approved: run `oat-project-complete`

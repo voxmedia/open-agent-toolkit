@@ -1,11 +1,11 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-04-30
+oat_generated_at: 2026-05-01
 ---
 
 # OAT Repo State Dashboard
 
-**Generated:** 2026-04-30
+**Generated:** 2026-05-01
 
 ## Active Project
 
@@ -13,14 +13,14 @@ oat_generated_at: 2026-04-30
 
 ## Active Project Summary
 
-| Field        | Value         |
-| ------------ | ------------- |
-| Mode         | quick         |
-| Phase        | plan          |
-| Status       | complete      |
-| HiLL Gate    | n/a           |
-| Current Task | -             |
-| Docs Updated | ⚠ not yet run |
+| Field        | Value      |
+| ------------ | ---------- |
+| Mode         | quick      |
+| Phase        | implement  |
+| Status       | pr_open    |
+| HiLL Gate    | n/a        |
+| Current Task | -          |
+| Docs Updated | ✓ complete |
 
 Details: `.oat/projects/shared/skill-cli-migration/state.md`
 
@@ -29,13 +29,13 @@ Details: `.oat/projects/shared/skill-cli-migration/state.md`
 | Field         | Value      |
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
-| Age           | 28 days    |
-| Files Changed | 382        |
+| Age           | 29 days    |
+| Files Changed | 386        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-implement** - Start implementation
+**oat-project-revise** - PR open — run oat-project-revise for feedback or oat-project-complete when approved
 
 ## Quick Commands
 
@@ -52,4 +52,4 @@ Details: `.oat/projects/shared/skill-cli-migration/state.md`
 
 - **docs-readability-reorg** - implement
 - **remote-project-management** - discovery
-- **skill-cli-migration** - plan
+- **skill-cli-migration** - implement
