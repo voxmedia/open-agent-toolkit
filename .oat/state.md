@@ -9,20 +9,7 @@ oat_generated_at: 2026-05-01
 
 ## Active Project
 
-**skill-cli-migration** (`.oat/projects/shared/skill-cli-migration`)
-
-## Active Project Summary
-
-| Field        | Value      |
-| ------------ | ---------- |
-| Mode         | quick      |
-| Phase        | implement  |
-| Status       | pr_open    |
-| HiLL Gate    | n/a        |
-| Current Task | -          |
-| Docs Updated | ✓ complete |
-
-Details: `.oat/projects/shared/skill-cli-migration/state.md`
+_(not set)_
 
 ## Knowledge Status
 
@@ -35,7 +22,7 @@ Details: `.oat/projects/shared/skill-cli-migration/state.md`
 
 ## Recommended Next Step
 
-**oat-project-revise** - PR open — run oat-project-revise for feedback or oat-project-complete when approved
+**oat-project-open** - Select an existing project to continue work
 
 ## Quick Commands
 
@@ -52,4 +39,3 @@ Details: `.oat/projects/shared/skill-cli-migration/state.md`
 
 - **docs-readability-reorg** - implement
 - **remote-project-management** - discovery
-- **skill-cli-migration** - implement
