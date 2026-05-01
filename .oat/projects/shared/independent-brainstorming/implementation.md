@@ -75,36 +75,80 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 4     | 0/4       |
-| Phase 2 | pending | 8     | 0/8       |
-| Phase 3 | pending | 7     | 0/7       |
-| Phase 4 | pending | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | pending  | 8     | 0/8       |
+| Phase 3 | pending  | 7     | 0/7       |
+| Phase 4 | pending  | 4     | 0/4       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 4/23 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Orchestration Runs
 
-**Status:** in_progress
+<!-- orchestration-runs-start -->
+
+### Run 1 — 2026-05-01 23:49
+
+**Branch:** feat/independent-brainstorming-mode
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 0/2            | merged      |
+
+#### Parallel Groups
+
+- p01: sequential (no parallel groups declared)
+
+#### Outstanding Items
+
+- Minor findings recorded (not blocking): (1) `PACK_METADATA` mutability comment — advisory follow-up, (2) empty-map guard test will need an update in Phase 2 — handled by Phase 2 plan.
+
+<!-- orchestration-runs-end -->
+
+---
+
+---
+
+## Phase 1: Pack-metadata mechanism
+
+**Status:** complete
 **Started:** 2026-05-01
+**Completed:** 2026-05-01
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Introduced generalized `PackMetadata` mechanism in the installer (interface + empty `PACK_METADATA` map + `resolvePackDefaultScope` helper). No `brainstorm`-specific entry yet — that lands in Phase 2.
+- Wired `resolvePackDefaultScope` into both installer paths: `buildUserScopeChoices` (interactive picker default-checked state) and the non-interactive branch of `resolvePackScopes`.
+- Existing-install detection now short-circuits before `PACK_METADATA` consultation in both paths, so a user with a prior project-scope install doesn't get an unexpected scope migration. The interactive path was already correct (location-first short-circuit in `buildUserScopeChoices`); the non-interactive path required a real reorder.
+- Added regression tests for both interactive and non-interactive scope-resolution paths using stubbed `PACK_METADATA` fixtures with `afterEach` cleanup.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` — added `PackMetadata` interface, `PACK_METADATA` map, `resolvePackDefaultScope` helper.
+- `packages/cli/src/commands/init/tools/shared/pack-metadata.test.ts` (new) — TDD coverage for the helper.
+- `packages/cli/src/commands/init/tools/index.ts` — wired metadata lookup into both picker and non-interactive resolver; preserved existing-install precedence.
+- `packages/cli/src/commands/init/tools/index.test.ts` — added picker + non-interactive defaultScope tests; added migration-safety regression guards.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- `pnpm lint`: pass
+- `pnpm type-check`: pass
+- `pnpm --filter @open-agent-toolkit/cli test`: pass (1424 tests across 160 files)
+- Per-task RED→GREEN cycles confirmed for p01-t01, p01-t02, p01-t03, and the non-interactive branch of p01-t04. The interactive case in p01-t04 was already passing pre-change (existing short-circuit) and serves as a regression guard.
+
+**Commits:** `9602b06f`, `2575b028`, `fb7da4ca`, `fee63c7b`
+
+**Review:** passed (0/0/0/2). Artifact: `reviews/archived/p01-code-review-2026-05-01.md`. Minor findings recorded under Outstanding Items.
 
 **Notes / Decisions:**
 
