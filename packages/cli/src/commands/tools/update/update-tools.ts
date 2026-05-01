@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
 import {
+  BRAINSTORM_SKILLS,
   CORE_SKILLS,
   DOCS_SKILLS,
   DOCS_SCRIPTS,
@@ -93,6 +94,7 @@ const BUNDLED_PACK_MEMBERS: Record<PackName, BundledPackMember[]> = {
       type: 'agent' as const,
     })),
   ],
+  brainstorm: BRAINSTORM_SKILLS.map((name) => ({ name, type: 'skill' })),
 };
 
 const BUNDLED_PACK_ASSETS: Record<PackName, BundledPackAssets> = {
@@ -121,6 +123,10 @@ const BUNDLED_PACK_ASSETS: Record<PackName, BundledPackAssets> = {
     scripts: PROJECT_MANAGEMENT_SCRIPTS,
   },
   research: {
+    templates: [],
+    scripts: [],
+  },
+  brainstorm: {
     templates: [],
     scripts: [],
   },

@@ -1,4 +1,5 @@
 import {
+  BRAINSTORM_SKILLS,
   CORE_SKILLS,
   DOCS_SKILLS,
   IDEA_SKILLS,
@@ -52,6 +53,8 @@ export function canonicalPathsForPack(pack: PackName): string[] {
         ...canonicalSkillPaths(RESEARCH_SKILLS),
         ...canonicalAgentPaths(RESEARCH_AGENTS),
       ]);
+    case 'brainstorm':
+      return canonicalSkillPaths(BRAINSTORM_SKILLS);
   }
 }
 

@@ -29,6 +29,7 @@ export const PACK_METADATA: Record<string, PackMetadata> = {
   // Existing user-eligible packs (ideas, docs, utility, research) are
   // intentionally absent — absence falls back to 'project', preserving
   // current behavior. New packs that want user-default scope add an entry.
+  brainstorm: { name: 'brainstorm', defaultScope: 'user' },
 };
 
 export function resolvePackDefaultScope(packName: string): 'user' | 'project' {
@@ -140,6 +141,10 @@ export const PROJECT_MANAGEMENT_TEMPLATES = [
 ] as const;
 
 export const PROJECT_MANAGEMENT_SCRIPTS = [] as const;
+
+// ── Brainstorm pack ───────────────────────────────────────────────
+
+export const BRAINSTORM_SKILLS = ['oat-brainstorm'] as const;
 
 // ── Research pack ─────────────────────────────────────────────────
 

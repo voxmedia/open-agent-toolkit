@@ -21,7 +21,7 @@ import {
   WORKFLOW_AGENTS,
   WORKFLOW_SKILLS,
 } from '../workflows/install-workflows';
-import { RESEARCH_AGENTS } from './skill-manifest';
+import { BRAINSTORM_SKILLS, RESEARCH_AGENTS } from './skill-manifest';
 
 /**
  * Parse the SKILLS=(...) bash array from bundle-assets.sh.
@@ -158,6 +158,16 @@ describe('bundle-assets.sh consistency', () => {
     ).toEqual([]);
   });
 
+  it('bundles every brainstorm skill', () => {
+    const missing = BRAINSTORM_SKILLS.filter(
+      (skill) => !bundleSkills.includes(skill),
+    );
+    expect(
+      missing,
+      `Missing from bundle-assets.sh SKILLS array: ${missing.join(', ')}`,
+    ).toEqual([]);
+  });
+
   it('bundles every workflow agent', () => {
     const missing = WORKFLOW_AGENTS.filter(
       (agent) => !bundleAgents.includes(agent),
@@ -187,6 +197,7 @@ describe('bundle-assets.sh consistency', () => {
       ...UTILITY_SKILLS,
       ...PROJECT_MANAGEMENT_SKILLS,
       ...RESEARCH_SKILLS,
+      ...BRAINSTORM_SKILLS,
     ]);
     const orphans = bundleSkills.filter((skill) => !allPackSkills.has(skill));
     expect(

@@ -62,6 +62,7 @@ const VALID_PACKS = [
   'utility',
   'project-management',
   'research',
+  'brainstorm',
 ] as const;
 
 export function createToolsRemoveCommand(
@@ -73,7 +74,7 @@ export function createToolsRemoveCommand(
     .argument('[name]', 'Tool name to remove')
     .option(
       '--pack <pack>',
-      'Remove all tools in a pack (core|ideas|docs|workflows|utility|project-management|research)',
+      'Remove all tools in a pack (core|ideas|docs|workflows|utility|project-management|research|brainstorm)',
     )
     .option('--all', 'Remove all installed tools')
     .option('--dry-run', 'Preview removals without applying')

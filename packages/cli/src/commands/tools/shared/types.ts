@@ -7,7 +7,8 @@ export type PackName =
   | 'workflows'
   | 'utility'
   | 'project-management'
-  | 'research';
+  | 'research'
+  | 'brainstorm';
 
 export interface ToolInfo {
   name: string;
