@@ -471,10 +471,13 @@ async function resolvePackScopes(
     return scopes as PackScopeMap;
   }
 
-  // Non-interactive defaults all to project
+  // Non-interactive: consult PACK_METADATA defaultScope for each
+  // user-eligible pack. Absent entries fall back to 'project',
+  // preserving prior installer behavior. Existing-install detection
+  // (handled separately, below) still wins over defaultScope.
   if (!context.interactive) {
     for (const pack of eligiblePacks) {
-      scopes[pack] = 'project';
+      scopes[pack] = resolvePackDefaultScope(pack);
     }
     return scopes as PackScopeMap;
   }

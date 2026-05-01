@@ -921,6 +921,54 @@ describe('PACK_METADATA-driven default scope (interactive picker)', () => {
   });
 });
 
+describe('PACK_METADATA-driven default scope (non-interactive resolver)', () => {
+  const originalKeys = new Set(Object.keys(PACK_METADATA));
+
+  afterEach(() => {
+    for (const key of Object.keys(PACK_METADATA)) {
+      if (!originalKeys.has(key)) {
+        delete PACK_METADATA[key];
+      }
+    }
+  });
+
+  it('non-interactive install resolves to user scope for packs with defaultScope=user', async () => {
+    PACK_METADATA.ideas = { name: 'ideas', defaultScope: 'user' };
+
+    const { command, installIdeas } = createHarness({
+      interactive: false,
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+  });
+
+  it('non-interactive install defaults to project scope for packs without metadata', async () => {
+    // Sanity check that the existing project-default behavior is preserved
+    // for packs that have not opted in to PACK_METADATA.
+    const { command, installDocs } = createHarness({
+      interactive: false,
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(installDocs).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+  });
+});
+
 describe('buildToolPacksSectionBody', () => {
   it('includes all selected packs', () => {
     const body = buildToolPacksSectionBody([
