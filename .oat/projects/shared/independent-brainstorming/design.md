@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-05-01
 oat_generated: false
@@ -192,7 +192,226 @@ The user is told "discovery is seeded — run `oat-project-quick-start` (or `oat
 
 ## Component Design
 
-_Drafted in the next collaborative-design step before approval._
+### Component A: `oat-brainstorm` skill (the dispatcher)
+
+**Purpose:** Dispatcher for project-independent brainstorming conversations. Owns activation, mode assertion, conversational flow, visual-companion offer, destination identification, synthesis, and handoff.
+
+**Responsibilities:**
+
+- Carry the always-on description that fires on exploratory phrasing.
+- Assert brainstorming mode (blocked / allowed activities, self-correction protocol).
+- Run the Superpowers-style conversation cadence: explore → 2-3 approaches with recommendation → scaled-section design presentation.
+- Offer the visual companion (own message, no other content) at activation; consult per-question for browser-vs-terminal routing.
+- Watch for destination-trigger phrases during the conversation and surface them when matched.
+- Read pack-detection signals (`oat config get tools.<pack>`) and active-project state at convergence time.
+- Run the active-project 3-way router when a project is active.
+- Synthesize the conversation into the canonical payload (see Data Models).
+- For each destination, follow the per-destination handoff per the destinations playbook (Component D).
+- For doc-to-path, render the payload into the bundled `brainstorm-doc.md` template and write to the user-specified path.
+- For active-project fold-back, append synthesis to upstream artifact, commit immediately, print handoff prompt.
+- For inline-only, emit a one-paragraph closing summary.
+
+**Inputs / Outputs:**
+
+- **Inputs:** user terminal text + visual-companion `state_dir/events`; `oat config` entries for `tools.*` and `activeProject`; existing artifact state for active project (`state.md`, `discovery.md`, `design.md`); downstream skill files (read-only).
+- **Outputs:** depending on terminal state — appended idea session, scaffolded idea, summarized idea, scoped backlog item, scaffolded project with seeded `discovery.md`, appended fold-back to upstream artifact + commit + handoff prompt, brainstorming-doc artifact at user-specified path, or no artifact (inline only).
+
+**Frontmatter contract:**
+
+```yaml
+---
+name: oat-brainstorm
+version: 1.0.0
+description: <always-on description tuned for exploratory-intent triggers>
+disable-model-invocation: false # always-on
+user-invocable: true # also reachable via /oat-brainstorm
+allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+---
+```
+
+The exact description string is plan-time work — it must be tight enough to avoid over-fire on routine implementation requests. Reference: `superpowers:brainstorming` description as a starting point, adapted for OAT's vocabulary.
+
+**Skill-file structure (sections, following OAT conventions):**
+
+1. Mode Assertion (purpose, blocked/allowed activities, self-correction protocol, recovery)
+2. Progress Indicators (banner + step counters)
+3. Process (numbered steps mapping to Architecture's Data Flow)
+4. Success Criteria
+
+**Internal sub-mechanisms (folded into the skill, not separate components):**
+
+- **Pack-detection bash:** three `oat config get tools.<pack>` calls during step 4 of the process.
+- **Active-project router:** state.md read + 3-way picker during step 6.
+- **Synthesis logic:** payload assembly during step 8.
+- **Doc-to-path mechanism:** path validation + parent-dir creation + write during step 9 when destination is doc-to-path.
+- **Fold-back commit + handoff-prompt emission:** during step 9 when destination is active-project fold-back.
+
+**Dependencies:**
+
+- Visual-companion bundle (Component C) — sibling assets in the same skill directory.
+- Destinations playbook (Component D) — `references/destinations.md` in the same skill directory.
+- `oat config` CLI for pack and active-project signal reads.
+- Read access to downstream skill files (`.agents/skills/oat-idea-*/SKILL.md`, `.agents/skills/oat-pjm-add-backlog-item/SKILL.md`, `.agents/skills/oat-project-*/SKILL.md`).
+- Templates: `.oat/templates/idea-discovery.md`, `.oat/templates/backlog-item.md`, `.oat/templates/discovery.md` (consumed indirectly via the destinations playbook).
+
+**Design decisions:**
+
+- **Always-on activation, not user-invocable-only.** Required by bl-53f0; matches `superpowers:brainstorming` discipline.
+- **Ask-at-end with opportunistic destination surfacing**, not ask-up-front. Validated in design conversation.
+- **Inline-execute downstream skills**, not auto-invoke. Downstream `disable-model-invocation: true` is irrelevant — we read their files and follow their steps, exactly as `oat-idea-new` already chains into `oat-idea-ideate`.
+- **Synthesis with full confirmation only for discrete-field destinations.** Other destinations get minimal confirmation (slug, path, which artifact). See per-destination handoff matrix in Architecture.
+- **Project promotion writes `discovery.md` only**, never partial `design.md`.
+- **Fold-back commits before printing the handoff prompt.** The commit hash is referenced in the prompt; the commit must exist before the user copies the prompt.
+
+### Component B: `brainstorm` tool pack
+
+**Purpose:** New OAT pack that bundles the `oat-brainstorm` skill and its visual-companion assets. Participates in standard pack-lifecycle commands.
+
+**Responsibilities:**
+
+- Be installable via `oat tools install brainstorm` and the unified `oat tools install` interactive picker (default-checked).
+- Be updatable via `oat tools update --pack brainstorm` and `oat tools update --all`.
+- Be removable via `oat tools remove --pack brainstorm` and `oat tools remove --all`.
+- Write `tools.brainstorm: true` to shared repo config on install; rebuild that flag during update/remove map reconciliation.
+- Default scope: user. User-eligible (allows project scope and migration paths consistent with `ideas` / `docs` / `utility` / `research`).
+
+**Manifest entries (concrete deliverables):**
+
+- `BRAINSTORM_SKILLS = ['oat-brainstorm'] as const` exported from `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` (parallels `CORE_SKILLS`, `IDEAS_SKILLS`, etc.).
+- Pack name `'brainstorm'` added to install/update/remove command pack-name unions in `packages/cli/src/commands/init/tools/index.ts`, `packages/cli/src/commands/tools/update/update-tools.ts`, and the corresponding remove paths.
+- Pack description added to interactive-picker descriptions: e.g., "Always-on brainstorming entry point with visual companion."
+- `oat init tools` default-on set updated to include `brainstorm`.
+- Bundle-consistency tests updated to recognize `BRAINSTORM_SKILLS` alongside the existing manifest constants.
+
+**Inputs / Outputs:**
+
+- **Inputs:** pack name (`'brainstorm'`) routed through standard pack-lifecycle commands; install scope (user / project).
+- **Outputs:** canonical asset placement at user scope (`~/.agents/skills/oat-brainstorm/`) or project scope (`.agents/skills/oat-brainstorm/`); `tools.brainstorm` config flag; provider-view sync after install/update/remove.
+
+**Dependencies:**
+
+- Existing pack-lifecycle plumbing. No new infrastructure. Reuses install-state machinery, sync logic, config-write paths, dry-run behavior.
+
+**Design decisions:**
+
+- **Single-skill pack rather than expanding `core`.** Keeps `core` focused on diagnostics + docs; `brainstorm` has its own purpose.
+- **Default user scope, user-eligible.** Mirrors `ideas` / `docs` / `utility` / `research`. Default-on in `oat init` ensures most users get the trigger universally; `--scope project` and removal remain opt-out paths.
+
+### Component C: Visual-companion bundle
+
+**Purpose:** Local browser-based UI for visual brainstorming questions. Direct port of MIT-licensed `superpowers:brainstorming` companion.
+
+**Responsibilities:**
+
+- Local HTTP + WebSocket server that watches a directory for HTML files and serves the newest one to the browser.
+- Helper script (`helper.js`) injected into served pages for client-side interactivity (option selection, event reporting via `state_dir/events`).
+- Frame template (`frame-template.html`) wrapping content fragments in a styled page (CSS theme, header, selection indicator).
+- Bash launchers (`start-server.sh`, `stop-server.sh`) with platform-specific behavior already validated upstream (macOS / Linux / Codex / Windows / Gemini).
+- Reference guide (`visual-companion.md`) describing usage patterns for the agent.
+
+**File set (under `.agents/skills/oat-brainstorm/`):**
+
+```
+oat-brainstorm/
+  SKILL.md
+  scripts/
+    server.cjs              # MIT port, no source changes
+    start-server.sh         # MIT port, persistence-path defaults patched
+    stop-server.sh          # MIT port, no source changes
+    frame-template.html     # MIT port, no source changes
+    helper.js               # MIT port, no source changes
+  references/
+    visual-companion.md     # MIT port, OAT-side path edits
+    destinations.md         # OAT-original (Component D)
+```
+
+**OAT-side modifications (vs Superpowers source):**
+
+- `start-server.sh`: default persistence-path resolution updated from `.superpowers/brainstorm/` to OAT-managed prefixes. Resolution order: if `--project-dir` passed, use `<project-dir>/.oat/brainstorm/`; else if invoked inside an OAT-initialized repo, use `<repo-root>/.oat/brainstorm/`; else use `~/.oat/brainstorm/`.
+- `visual-companion.md`: prose updated to reference OAT path conventions (`.oat/brainstorm/` not `.superpowers/brainstorm/`); example invocations updated to reflect the bundled location relative to the skill directory.
+- No changes to `server.cjs`, `frame-template.html`, `helper.js`, or `stop-server.sh`. These are lifted verbatim.
+
+**Inputs / Outputs:**
+
+- **Inputs:** HTML content fragments (or full HTML documents) written to `screen_dir`; user clicks in the served browser page.
+- **Outputs:** newest HTML served at `http://localhost:<port>`; browser interaction events appended to `state_dir/events` (JSONL); session metadata at `state_dir/server-info`.
+
+**Dependencies:**
+
+- Node.js on PATH for `server.cjs`. Pre-flight check at activation; if missing, the visual-companion offer is suppressed and the skill notes this in a `oat-doctor`-discoverable form.
+- `bash` for launchers (already a hard dependency for OAT).
+
+**Design decisions:**
+
+- **Lift as-is rather than reimplement.** Superpowers is MIT, the implementation is solid, and OAT's needs match closely.
+- **Persistence path alignment** is the only meaningful OAT delta. Aligns with OAT's `.oat/` prefix convention so existing `.gitignore` rules cover the new directory in OAT-initialized repos.
+- **`oat brainstorm visual-server` CLI wrapper deferred** to a follow-up. Bundle ships with raw bash scripts first; wrapper is additive.
+
+**Attribution:**
+
+`NOTICES.md` Superpowers entry extended with a new subsection:
+
+```markdown
+### `brainstorming` skill — visual companion
+
+Source files: `skills/brainstorming/scripts/{server.cjs, start-server.sh,
+  stop-server.sh, frame-template.html, helper.js}` and
+`skills/brainstorming/visual-companion.md`.
+
+Files lifted into OAT (under `.agents/skills/oat-brainstorm/`):
+
+- `scripts/server.cjs`, `scripts/stop-server.sh`, `scripts/frame-template.html`,
+  `scripts/helper.js` — verbatim from upstream.
+- `scripts/start-server.sh` — verbatim except for default persistence-path
+  defaults (`.superpowers/brainstorm/` → OAT-managed prefixes).
+- `references/visual-companion.md` — adapted prose: persistence paths and
+  example invocations updated to OAT conventions.
+
+Consumer OAT skills: `oat-brainstorm`.
+```
+
+### Component D: Destinations playbook (`references/destinations.md`)
+
+**Purpose:** Per-destination lookup that the `oat-brainstorm` skill consults at destination-identification time. Centralizes trigger phrases, required fields, confirmation patterns, and handoff targets so the main `SKILL.md` stays focused on flow.
+
+**Responsibilities:**
+
+- Provide one stanza per terminal state. In a fully-installed repo: 8 destinations covering inline, doc-to-path, capture-as-idea, extend-idea, summarize-idea, backlog-item, project-promotion, plus the active-project 3-way (fold-back / independent-routing-marker / reference-file).
+- Be readable both by the skill (during execution — the skill reads this file as part of its process) and by maintainers (during updates).
+- Include the trigger-phrase set used for opportunistic destination surfacing during the conversation.
+
+**Stanza structure (per destination):**
+
+```markdown
+### Destination: <name>
+
+**Pack required:** <pack name> | always available
+**Trigger phrases:** "<phrase 1>", "<phrase 2>", … (paraphrase-tolerant)
+**Required template fields:** <field 1>, <field 2>, … (linked to source template)
+**Optional template fields:** <field 1>, <field 2>, …
+**Confirmation pattern:** full | minimal | none
+(when full, includes example wording showing the field-by-field display)
+**Handoff target:** <skill name + entry step> | "no downstream skill"
+**If user wants to keep brainstorming after this is offered:**
+<return-to-flow rule, plus any field-probing the skill should do>
+```
+
+A fully-worked example for the scoped-backlog-item destination already appears earlier in this design conversation; the playbook expands each row of the per-destination handoff matrix into a full stanza.
+
+**Inputs / Outputs:**
+
+- **Inputs:** read by `oat-brainstorm` as part of its destination-identification process.
+- **Outputs:** none directly. The playbook is reference content; behavior is executed by the skill.
+
+**Dependencies:**
+
+- Implicit dependencies on the templates the destinations target (`.oat/templates/idea-discovery.md`, `.oat/templates/backlog-item.md`, `.oat/templates/discovery.md`, `.oat/templates/design.md`). The playbook does not duplicate these templates; it points at them.
+
+**Design decisions:**
+
+- **Reference file rather than skill-embedded.** Keeps `SKILL.md` lean and focused on flow. The playbook can grow without bloating the main skill.
+- **Trigger phrases live with the destinations**, not with the conversational flow. Co-locating them with the stanza makes maintenance straightforward — adding a destination automatically adds its trigger set.
+- **Loose phrase matching, not regex.** The skill uses substring + paraphrase tolerance and asks before committing to a destination when ambiguous. Regex would be brittle and over-specify language.
 
 ## Data Models
 
