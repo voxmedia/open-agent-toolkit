@@ -9,7 +9,20 @@ oat_generated_at: 2026-05-01
 
 ## Active Project
 
-_(not set)_
+**independent-brainstorming** (`.oat/projects/shared/independent-brainstorming`)
+
+## Active Project Summary
+
+| Field        | Value         |
+| ------------ | ------------- |
+| Mode         | quick         |
+| Phase        | plan          |
+| Status       | complete      |
+| HiLL Gate    | n/a           |
+| Current Task | -             |
+| Docs Updated | ⚠ not yet run |
+
+Details: `.oat/projects/shared/independent-brainstorming/state.md`
 
 ## Knowledge Status
 
@@ -17,12 +30,12 @@ _(not set)_
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
 | Age           | 29 days    |
-| Files Changed | 386        |
+| Files Changed | 387        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-open** - Select an existing project to continue work
+**oat-project-implement** - Start implementation
 
 ## Quick Commands
 
@@ -38,4 +51,5 @@ _(not set)_
 ## Available Projects
 
 - **docs-readability-reorg** - implement
+- **independent-brainstorming** - plan
 - **remote-project-management** - discovery
