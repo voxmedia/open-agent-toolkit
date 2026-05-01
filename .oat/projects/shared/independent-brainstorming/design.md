@@ -170,6 +170,29 @@ Uniform across spec-driven and quick modes. Differs only in which plan-authoring
 
 5. **Stop.** Skill ends mode assertion. The user runs the plan-authoring skill at their own pace. The brainstorming skill never auto-chains into plan authoring — the deliberate transition is the point.
 
+### Fold-back commit safety contract
+
+The fold-back's "commit immediately" requirement (step 3 above) interacts with the user's working tree. Because brainstorming can fire mid-active-project-work, the chosen upstream artifact may already be dirty when fold-back runs. The skill must handle this explicitly rather than assuming a clean baseline.
+
+1. **Preflight `git status` check** scoped to the selected artifact only:
+
+   ```bash
+   git status --porcelain -- "$ARTIFACT_PATH"
+   ```
+
+   The check happens _before_ any artifact mutation, so the skill can route around the dirty case without having already half-written the synthesis.
+
+2. **If the artifact is clean** (no entry in the porcelain output): append the synthesis, then run `git add -- "$ARTIFACT_PATH"` followed by `git commit`. Staging uses the explicit `--` filename form — never `git add -A`, never directory globs. This is the happy path.
+
+3. **If the artifact is dirty** (any entry in the porcelain output): pause the fold-back and present the user with three options before any mutation occurs:
+   - **Commit current artifact changes first** (recommended when prior changes are unrelated to the brainstorm). Skill commits the existing artifact state with a separate, user-described commit message and then proceeds with fold-back as a new scoped commit on top.
+   - **Include current changes in the fold-back commit.** Skill warns that the commit will mix prior edits with the brainstorm synthesis. User explicitly accepts the mix; commit message is adjusted to acknowledge both.
+   - **Abort fold-back; capture as reference file instead.** Skill switches the destination to "active project: brainstorming reference file" and writes to `<project>/brainstorming/YYYY-MM-DD-<topic>.md`. Upstream artifact is left untouched.
+
+4. **Staging discipline (non-negotiable):** the fold-back commit always stages exactly `git add -- "$ARTIFACT_PATH"`. Other working-tree paths are never touched by this commit. An `-A` add or a directory glob would mix unrelated work into the fold-back commit and break the traceability the handoff prompt depends on.
+
+5. **Handoff prompt prints only after the scoped commit succeeds.** If `git commit` fails (pre-commit hooks reject, signing fails, anything else), the skill surfaces the error and does **not** print the handoff prompt — the prompt references a commit hash, and a missing commit makes the prompt actively misleading. The user must resolve the failure (or re-route via option 3 above) before fold-back can complete.
+
 ### Per-destination handoff matrix
 
 | Destination                                  | Pack required      | Confirmation                                                                    | Handoff target / behavior                                                                                                                                                       |
@@ -283,6 +306,41 @@ The exact description string is plan-time work — it must be tight enough to av
 - `oat init tools` default-on set updated to include `brainstorm`.
 - Bundle-consistency tests updated to recognize `BRAINSTORM_SKILLS` alongside the existing manifest constants.
 
+**Pack-default-scope metadata (concrete deliverable):**
+
+The current installer (`packages/cli/src/commands/init/tools/index.ts`) handles user-eligible packs uniformly: the interactive picker prechecks user scope only when the pack is already installed at user scope (`index.ts:357`), and non-interactive installs default eligible packs to project scope (`index.ts:462`). Following that generic path defeats this pack's "available everywhere" requirement — `brainstorm` would ship default-on but project-scoped, and the always-on trigger would not fire across directories.
+
+Introduce small pack metadata to drive default-scope behavior consistently across both installer paths:
+
+```typescript
+interface PackMetadata {
+  name: string;
+  defaultScope: 'user' | 'project';
+}
+
+const PACK_METADATA: Record<string, PackMetadata> = {
+  brainstorm: { name: 'brainstorm', defaultScope: 'user' },
+  // Existing user-eligible packs (ideas, docs, utility, research) default
+  // to project for now; future packs can opt in to user scope by adding
+  // an entry here. Absence in this map is treated as project-scope default
+  // for backwards compatibility.
+};
+```
+
+Installer changes:
+
+- **Interactive picker** (`index.ts:357` neighborhood): when prompting for scope on a user-eligible pack that is not yet installed, precheck the value of `PACK_METADATA[name]?.defaultScope ?? 'project'` rather than only prechecking when the pack is already at user scope.
+- **Non-interactive resolution** (`index.ts:462` neighborhood): when no `--scope` flag is passed, read `PACK_METADATA[name]?.defaultScope ?? 'project'` and route accordingly. The current "default to project" branch becomes the fallback only when the resolved default is `'project'`.
+
+Test coverage required:
+
+- **Fresh install** (no prior install state) — verifies non-interactive resolution lands at user scope for `brainstorm`.
+- **Migration safety** (existing project-scope install of `brainstorm` re-runs through install) — verifies the existing-install detection still wins over `defaultScope`, so users don't get unexpected scope migrations on re-install.
+- **Non-interactive guided-setup** (`oat init tools` default-on path) — verifies the default-on entry honors `defaultScope: 'user'` for `brainstorm`.
+- **Pack-metadata unit tests** — verifies the lookup returns expected scope per pack name and falls back to `'project'` for absent entries.
+
+Future-proofing note: this metadata mechanism is a candidate to replace `core`'s current always-user-scope special-case in a follow-up. Not in scope for this project, but the abstraction is shaped to support that consolidation later.
+
 **Inputs / Outputs:**
 
 - **Inputs:** pack name (`'brainstorm'`) routed through standard pack-lifecycle commands; install scope (user / project).
@@ -295,7 +353,8 @@ The exact description string is plan-time work — it must be tight enough to av
 **Design decisions:**
 
 - **Single-skill pack rather than expanding `core`.** Keeps `core` focused on diagnostics + docs; `brainstorm` has its own purpose.
-- **Default user scope, user-eligible.** Mirrors `ideas` / `docs` / `utility` / `research`. Default-on in `oat init` ensures most users get the trigger universally; `--scope project` and removal remain opt-out paths.
+- **Default user scope, user-eligible — driven by pack metadata, not generic eligible-pack defaults.** The current installer's generic eligible-pack path defaults to project scope in non-interactive setups, which would silently break the always-on availability rationale. Pack metadata (`PACK_METADATA[name]?.defaultScope`) makes the user-scope default explicit, consumed by both the interactive picker prechecking and the non-interactive resolver. Existing-install detection still wins over `defaultScope`, so users with a prior project-scope install do not get unexpected migrations.
+- **Metadata generalizes a pattern.** `core`'s always-user-scope special-case could be folded into the same metadata mechanism in a follow-up. Out of scope for this project but the abstraction is shaped to support consolidation.
 
 ### Component C: Visual-companion bundle
 
@@ -536,9 +595,9 @@ If `activeProject` config points to a path that doesn't exist or has an unreadab
 - **Persistence path** — when invoked with `--project-dir`, files land under `.oat/brainstorm/<session>/`, not `.superpowers/brainstorm/`.
 - **30-minute idle timeout** behaves as advertised (long-running test or mocked-clock variant).
 
-### Dogfood scenarios (one per terminal state)
+### Dogfood scenarios
 
-Per bl-53f0 acceptance criteria: at least one dogfood scenario per terminal state available in this repo. This repo has all packs installed, so all eight terminal states are covered:
+Per bl-53f0 acceptance criteria: at least one dogfood scenario per terminal state available in this repo. This repo has all packs installed; the matrix below covers every destination family plus the active-project subroutes. Ten scenarios across nine destination families (`inline`, `doc-to-path`, `idea capture`, `idea extend`, `idea summarize`, `backlog item`, `project promotion`, `active-project fold-back`, `active-project reference file`) — `doc-to-path` is split into in-repo and off-repo cases because the path-validation paths diverge. Each row maps to a distinct test path and dropping any would lose coverage:
 
 1. **Inline only** — exploratory conversation that resolves with a one-paragraph summary, no artifact.
 2. **Doc-to-path (in-repo)** — write brainstorm to `docs/scratchpad/<topic>.md`.
