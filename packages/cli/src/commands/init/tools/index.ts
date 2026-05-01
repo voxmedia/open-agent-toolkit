@@ -80,6 +80,7 @@ import {
   RESEARCH_AGENTS,
   RESEARCH_SKILLS,
   UTILITY_SKILLS,
+  resolvePackDefaultScope,
 } from './shared/skill-manifest';
 import { createInitToolsUtilityCommand } from './utility';
 import {
@@ -360,13 +361,24 @@ function buildUserScopeChoices(
 ): MultiSelectChoice<UserEligiblePack>[] {
   return packs.map((pack) => {
     const location = installedPackStates[pack].location;
+    // Existing-install detection wins over PACK_METADATA defaultScope so
+    // re-installs of an already-placed pack do not silently migrate the
+    // user across scopes. When the pack is not yet installed at any
+    // scope, fall back to PACK_METADATA[pack]?.defaultScope (defaults
+    // to 'project' when absent).
+    const checked =
+      location === 'user' || location === 'both'
+        ? true
+        : location === 'not-installed'
+          ? resolvePackDefaultScope(pack) === 'user'
+          : false;
     return {
       label:
         location === 'not-installed'
           ? pack
           : `${pack} (current: ${formatInstalledLocation(location)})`,
       value: pack,
-      checked: location === 'user' || location === 'both',
+      checked,
     };
   });
 }

@@ -9,6 +9,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildToolPacksSectionBody, createInitToolsCommand } from './index';
+import { PACK_METADATA } from './shared/skill-manifest';
 
 interface HarnessOptions {
   scope?: Scope;
@@ -852,6 +853,71 @@ describe('createInitToolsCommand', () => {
     await runCommand(command, [], ['--scope', 'all']);
 
     expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+  });
+});
+
+describe('PACK_METADATA-driven default scope (interactive picker)', () => {
+  // Snapshot real metadata entries so we can restore after each test
+  // without nuking any production opt-ins that other tests depend on.
+  const originalKeys = new Set(Object.keys(PACK_METADATA));
+
+  afterEach(() => {
+    for (const key of Object.keys(PACK_METADATA)) {
+      if (!originalKeys.has(key)) {
+        delete PACK_METADATA[key];
+      }
+    }
+  });
+
+  it('interactive picker prechecks user scope for packs with defaultScope=user when not yet installed', async () => {
+    PACK_METADATA.ideas = { name: 'ideas', defaultScope: 'user' };
+
+    const { command, selectManyWithAbort } = createHarness({
+      interactive: true,
+      packSelection: [['ideas'], ['ideas']],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const choices = selectManyWithAbort.mock.calls[1]?.[1] as Array<{
+      value: string;
+      label: string;
+      checked?: boolean;
+    }>;
+    expect(choices.find((choice) => choice.value === 'ideas')).toEqual(
+      expect.objectContaining({
+        checked: true,
+      }),
+    );
+  });
+
+  it('interactive picker uses default project scope when pack has no metadata entry', async () => {
+    // No PACK_METADATA entry for ideas → falls back to 'project' default.
+    const { command, selectManyWithAbort } = createHarness({
+      interactive: true,
+      packSelection: [['ideas'], []],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const choices = selectManyWithAbort.mock.calls[1]?.[1] as Array<{
+      value: string;
+      label: string;
+      checked?: boolean;
+    }>;
+    expect(choices.find((choice) => choice.value === 'ideas')).toEqual(
+      expect.objectContaining({
+        checked: false,
+      }),
+    );
   });
 });
 
