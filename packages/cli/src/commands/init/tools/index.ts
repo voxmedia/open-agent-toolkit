@@ -471,13 +471,27 @@ async function resolvePackScopes(
     return scopes as PackScopeMap;
   }
 
-  // Non-interactive: consult PACK_METADATA defaultScope for each
-  // user-eligible pack. Absent entries fall back to 'project',
-  // preserving prior installer behavior. Existing-install detection
-  // (handled separately, below) still wins over defaultScope.
+  // Non-interactive resolution.
+  //
+  // Migration-safety contract: existing-install detection wins over
+  // PACK_METADATA defaultScope. If the pack is already installed at any
+  // scope, preserve that placement so re-running `oat init tools`
+  // non-interactively never silently migrates a user's prior install
+  // across scopes. Only when the pack is not yet present do we consult
+  // PACK_METADATA[name]?.defaultScope (with absent entries falling back
+  // to 'project' for backwards compatibility).
   if (!context.interactive) {
     for (const pack of eligiblePacks) {
-      scopes[pack] = resolvePackDefaultScope(pack);
+      const currentLocation = installedPackStates[pack].location;
+      if (currentLocation === 'user') {
+        scopes[pack] = 'user';
+      } else if (currentLocation === 'both') {
+        scopes[pack] = 'both';
+      } else if (currentLocation === 'project') {
+        scopes[pack] = 'project';
+      } else {
+        scopes[pack] = resolvePackDefaultScope(pack);
+      }
     }
     return scopes as PackScopeMap;
   }

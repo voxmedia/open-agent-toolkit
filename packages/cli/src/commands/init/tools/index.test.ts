@@ -969,6 +969,75 @@ describe('PACK_METADATA-driven default scope (non-interactive resolver)', () => 
   });
 });
 
+describe('PACK_METADATA-driven default scope (migration safety)', () => {
+  const originalKeys = new Set(Object.keys(PACK_METADATA));
+
+  afterEach(() => {
+    for (const key of Object.keys(PACK_METADATA)) {
+      if (!originalKeys.has(key)) {
+        delete PACK_METADATA[key];
+      }
+    }
+  });
+
+  it('non-interactive: existing project-scope install wins over defaultScope=user (no migration)', async () => {
+    PACK_METADATA.ideas = { name: 'ideas', defaultScope: 'user' };
+
+    const { command, installIdeas, removeDirectory } = createHarness({
+      interactive: false,
+      toolsByScope: {
+        project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    // Existing project install must be preserved — no removal from project,
+    // and the install must continue to land at the project root.
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    // Should not have removed the existing project install in service of
+    // migrating to user scope based on defaultScope alone.
+    const removedFromProjectIdeasDir = removeDirectory.mock.calls.some(
+      ([target]) =>
+        typeof target === 'string' &&
+        target === '/tmp/workspace/.agents/skills/oat-idea-new',
+    );
+    expect(removedFromProjectIdeasDir).toBe(false);
+  });
+
+  it('interactive: existing project-scope install pre-checks unchecked even when defaultScope=user', async () => {
+    PACK_METADATA.ideas = { name: 'ideas', defaultScope: 'user' };
+
+    const { command, selectManyWithAbort } = createHarness({
+      interactive: true,
+      packSelection: [['ideas'], []],
+      toolsByScope: {
+        project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const choices = selectManyWithAbort.mock.calls[1]?.[1] as Array<{
+      value: string;
+      label: string;
+      checked?: boolean;
+    }>;
+    // Existing project-scope install — defaultScope=user must NOT cause the
+    // user-scope picker to default-check this pack. Existing install wins.
+    expect(choices.find((choice) => choice.value === 'ideas')).toEqual(
+      expect.objectContaining({
+        checked: false,
+        label: 'ideas (current: project)',
+      }),
+    );
+  });
+});
+
 describe('buildToolPacksSectionBody', () => {
   it('includes all selected packs', () => {
     const body = buildToolPacksSectionBody([
