@@ -6,6 +6,35 @@
  * validates that it stays in sync with these lists.
  */
 
+// ── Pack metadata ──────────────────────────────────────────────────
+//
+// PackMetadata generalizes per-pack installer behavior that previously
+// would have required special-casing inside install-flow code paths.
+//
+// `defaultScope` controls the scope the installer chooses when a
+// user-eligible pack is being installed without an explicit `--scope`
+// flag and is not yet present at any scope. Existing-install detection
+// still wins over `defaultScope`, so users with a prior install do not
+// experience scope migrations on re-install.
+//
+// Absence in this map falls back to `'project'` to preserve the prior
+// installer behavior for every pack that hasn't opted in.
+
+export interface PackMetadata {
+  name: string;
+  defaultScope: 'user' | 'project';
+}
+
+export const PACK_METADATA: Record<string, PackMetadata> = {
+  // Existing user-eligible packs (ideas, docs, utility, research) are
+  // intentionally absent — absence falls back to 'project', preserving
+  // current behavior. New packs that want user-default scope add an entry.
+};
+
+export function resolvePackDefaultScope(packName: string): 'user' | 'project' {
+  return PACK_METADATA[packName]?.defaultScope ?? 'project';
+}
+
 // ── Workflow pack ──────────────────────────────────────────────────
 
 export const WORKFLOW_SKILLS = [
