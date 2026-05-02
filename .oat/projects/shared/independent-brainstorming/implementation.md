@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-01
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -78,11 +78,11 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | pending  | 8     | 0/8       |
+| Phase 2 | complete | 8     | 8/8       |
 | Phase 3 | pending  | 7     | 0/7       |
 | Phase 4 | pending  | 4     | 0/4       |
 
-**Total:** 4/23 tasks completed
+**Total:** 12/23 tasks completed
 
 ---
 
@@ -95,21 +95,25 @@ oat_generated: false
 **Branch:** feat/independent-brainstorming-mode
 **Tier:** 1
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+**Phases:** 2 executed, 2 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
-| Phase | Implementer | Review | Fix Iterations | Disposition |
-| ----- | ----------- | ------ | -------------- | ----------- |
-| p01   | DONE        | pass   | 0/2            | merged      |
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p01   | DONE               | pass   | 0/2            | merged      |
+| p02   | DONE_WITH_CONCERNS | pass   | 0/2            | merged      |
 
 #### Parallel Groups
 
-- p01: sequential (no parallel groups declared)
+- p01, p02: sequential (no parallel groups declared)
 
 #### Outstanding Items
 
-- Minor findings recorded (not blocking): (1) `PACK_METADATA` mutability comment — advisory follow-up, (2) empty-map guard test will need an update in Phase 2 — handled by Phase 2 plan.
+- p01 minor findings (recorded, not blocking): (1) `PACK_METADATA` mutability comment — advisory; (2) empty-map guard test update — addressed in p02-t01.
+- p02 minor findings (recorded, not blocking): (1) stub test that's redundant with a real picker test in `commands/init/tools/index.test.ts:918-938` — flagged for cleanup; (2) Mustache placeholders in `brainstorm-doc.md` are convention-only in this repo — advisory; (3) smoke-test cleanup hardening note for visual-companion server — advisory.
+- p02 implementer noted scope expansion in p02-t01 was forced by the `PackName` union extension (cascading exhaustive-switch updates across `BUNDLED_PACK_MEMBERS` / `BUNDLED_PACK_ASSETS` / `install-sync-context` / `scan-tools` / `VALID_PACKS` / `PACK_DESCRIPTIONS`) — confirmed by reviewer as necessary type-completeness work, not scope drift.
+- Pre-existing skill validation failures (`oat-pjm-update-repo-reference`, `oat-project-spec`) predate this run; not in scope.
 
 <!-- orchestration-runs-end -->
 
@@ -193,15 +197,50 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Brainstorm pack registration + skill scaffolding + bundle
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-05-01
+**Completed:** 2026-05-01
 
-### Task p02-t01: {Task Name}
+### Phase Summary
 
-**Status:** pending
-**Commit:** -
+**Outcome (what changed):**
+
+- Registered the `brainstorm` pack across the OAT install/update/remove pipelines: manifest constants (`BRAINSTORM_SKILLS`, `PACK_METADATA[brainstorm]: { defaultScope: 'user' }`), `PackName` union, `bundle-assets.sh` SKILLS array, exhaustive switches across `BUNDLED_PACK_MEMBERS` / `BUNDLED_PACK_ASSETS` / `install-sync-context` / `scan-tools` / `VALID_PACKS` / `PACK_DESCRIPTIONS`, dispatcher imports + dependency interface + default deps + dispatch branch, update/remove handlers, interactive picker description, and `oat init tools` default-on set entry.
+- Created the per-pack install helper at `packages/cli/src/commands/init/tools/brainstorm/` mirroring the existing `ideas/` and `docs/` patterns (`install-brainstorm.ts` + tests + `index.ts` + tests).
+- Ported the visual-companion bundle from `superpowers:brainstorming@5.0.7` (MIT): `server.cjs`, `stop-server.sh`, `frame-template.html`, `helper.js` byte-for-byte verbatim, plus `start-server.sh` patched only in its persistence-path resolution to use OAT-managed prefixes (`.oat/brainstorm/<session-id>/` repo-scope, `~/.oat/brainstorm/<session-id>/` user-scope, `<project-dir>/.oat/brainstorm/<session-id>/` when `--project-dir` is passed).
+- Ported `references/visual-companion.md` with prose updated for OAT path conventions; extended `NOTICES.md` with a "visual companion" subsection enumerating verbatim vs patched files.
+- Created the destinations playbook (`references/destinations.md`) with stanzas for all 9 destination families: name, pack required, trigger phrases, required template fields, optional fields, confirmation pattern, handoff target, and "if user wants to keep brainstorming" rule.
+- Created the doc-to-path output template (`templates/brainstorm-doc.md`) matching the synthesized-payload field set.
+- Scaffolded `.agents/skills/oat-brainstorm/SKILL.md` with frontmatter and section stubs (Mode Assertion, Progress Indicators, Process, Success Criteria) — body content fills in Phase 3.
+
+**Key files touched:**
+
+- `.agents/skills/oat-brainstorm/{SKILL.md, scripts/*, references/*, templates/brainstorm-doc.md}` — skill bundle.
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` — `BRAINSTORM_SKILLS` constant + `PACK_METADATA[brainstorm]` entry.
+- `packages/cli/src/commands/tools/shared/types.ts` — `PackName` union extended with `'brainstorm'`.
+- `packages/cli/scripts/bundle-assets.sh` — SKILLS array entry.
+- `packages/cli/src/commands/init/tools/brainstorm/{install-brainstorm.ts, install-brainstorm.test.ts, index.ts, index.test.ts}` — per-pack install helper.
+- `packages/cli/src/commands/init/tools/index.ts` — runInitTools dispatcher wiring + picker description + default-on set.
+- `packages/cli/src/commands/tools/{update/update-tools.ts, remove handlers}` — pack-name registration in update/remove handlers.
+- Cascading exhaustive-switch updates across pack-aware modules: `BUNDLED_PACK_MEMBERS`, `BUNDLED_PACK_ASSETS`, `install-sync-context`, `scan-tools`, `VALID_PACKS`, `PACK_DESCRIPTIONS`.
+- `NOTICES.md` — visual companion attribution subsection.
+- `packages/cli/src/commands/help-snapshots.test.ts` — 5 help-text snapshots updated for the new pack.
+
+**Verification:**
+
+- `pnpm lint`: pass
+- `pnpm type-check`: pass
+- `pnpm --filter @open-agent-toolkit/cli test`: pass (1449 tests, +5 over Phase 1 baseline)
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`: 13/13 pass
+- `bash packages/cli/scripts/bundle-assets.sh && ls packages/cli/assets/skills/oat-brainstorm/SKILL.md`: bundle regenerates with `oat-brainstorm/{SKILL.md, scripts/, references/, templates/}` placed correctly.
+- `pnpm oat:validate-skills`: `oat-brainstorm` validates cleanly. Pre-existing failures (`oat-pjm-update-repo-reference`, `oat-project-spec`) were present in HEAD `05b658fc` before Phase 2 and are unrelated.
+- Visual-companion smoke test runs the full lifecycle (start, GET /, stop) and exercises all 3 persistence-path branches cleanly.
+
+**Commits:** `16756f94`, `0b6fbc86`, `7a305a6a`, `de83601b`, `6107d57f`, `a2022e67`, `c5dfba2b`, `52ae3e13`
+
+**Review:** passed (0/0/0/3). Artifact: `reviews/archived/p02-code-review-2026-05-01.md`. Reviewer confirmed scope expansion in p02-t01 was necessary type-completeness work (not scope drift), MIT-port files are byte-for-byte verbatim, and `oat-brainstorm` is the only skill validating cleanly that wasn't already (pre-existing failures unrelated). Three minor advisory findings recorded under Outstanding Items.
 
 ---
 

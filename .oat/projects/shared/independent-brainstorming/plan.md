@@ -1148,7 +1148,7 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 | Scope  | Type     | Status          | Date       | Artifact                                              |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------- |
 | p01    | code     | passed          | 2026-05-01 | reviews/archived/p01-code-review-2026-05-01.md        |
-| p02    | code     | pending         | -          | -                                                     |
+| p02    | code     | passed          | 2026-05-01 | reviews/archived/p02-code-review-2026-05-01.md        |
 | p03    | code     | pending         | -          | -                                                     |
 | p04    | code     | pending         | -          | -                                                     |
 | final  | code     | pending         | -          | -                                                     |
