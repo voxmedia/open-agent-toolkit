@@ -1025,15 +1025,15 @@ git commit -m "docs(p04-t01): document brainstorm pack in tool-packs and skills 
 
 ---
 
-### Task p04-t02: Run dogfood scenarios end-to-end and capture results
+### Task p04-t02: Document walkthrough plans for all 10 dogfood scenarios
 
 **Files:**
 
-- Create: `.agents/skills/oat-brainstorm/references/dogfood-results.md` (capture results of the 10 scenarios)
+- Create: `.agents/skills/oat-brainstorm/references/dogfood-results.md` (capture documented walkthrough plans for the 10 scenarios)
 
 **Step 1: Implement**
 
-Run all 10 dogfood scenarios from design Testing Strategy against this repo (which has all packs installed). For each scenario:
+Document walkthrough plans for all 10 dogfood scenarios from design Testing Strategy. This task ships **walkthrough plans**, not live interactive runs — the artifact records the expected setup, brainstorming flow, produced artifact, and contract checks for each scenario so a follow-up live-dogfood task (tracked separately as a backlog item) can exercise them against real `git status` / `git commit` and visual-companion sessions. For each scenario:
 
 1. Inline only — exploratory conversation that resolves with a one-paragraph summary
 2. Doc-to-path (in-repo) — write to `docs/scratchpad/<topic>.md`
@@ -1043,20 +1043,20 @@ Run all 10 dogfood scenarios from design Testing Strategy against this repo (whi
 6. Summarize idea directly — fast-path capture + summarize
 7. Scoped backlog item — produce a `bl-XXXX.md` file with full confirmation pattern
 8. Promote to new OAT project — scaffold a project with seeded `discovery.md` (no `design.md`)
-9. Active project: fold-back — append synthesis, commit, print handoff prompt; verify the handoff prompt's commit hash is correct
+9. Active project: fold-back — append synthesis, commit, print handoff prompt; describe the contract for the handoff prompt's commit hash
 10. Active project: brainstorming reference file — write to `<project>/brainstorming/<topic>.md`
 
-For each scenario record: setup, the brainstorming flow taken, the artifact(s) produced, any issues encountered, and the resolution.
+For each scenario record: setup, the planned brainstorming flow, the expected artifact(s), and the contract checks the walkthrough is asserting. Live execution against real artifacts is out of scope here — see the live-dogfood backlog item for the follow-up.
 
 **Step 2: Verify**
 
-All 10 scenarios complete without skill self-correction-protocol triggers (i.e., the skill stayed in mode the whole time). All produced artifacts validate per their templates.
+All 10 walkthrough plans are present in `dogfood-results.md` with the per-scenario sections (setup, flow, expected artifact, contract checks). The artifact's framing is unambiguously "documented walkthroughs, not completed live runs," and a top-of-file note points readers at the live-dogfood backlog item for the follow-up.
 
 **Step 3: Commit**
 
 ```bash
 git add .agents/skills/oat-brainstorm/references/dogfood-results.md
-git commit -m "test(p04-t02): record dogfood results for all 10 brainstorm scenarios"
+git commit -m "test(p04-t02): document walkthrough plans for all 10 brainstorm scenarios"
 ```
 
 ---

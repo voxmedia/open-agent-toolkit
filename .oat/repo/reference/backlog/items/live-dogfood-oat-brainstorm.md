@@ -1,3 +1,51 @@
+---
+id: bl-7d5b
+title: 'Live dogfood for `oat-brainstorm` (fold-back commit safety + 9 destination families)'
+status: open # open | in_progress | closed | wont_do
+priority: medium # urgent | high | medium | low | none
+scope: task # idea | task | feature | initiative
+scope_estimate: M # XS | S | M | L | XL | XXL
+labels: ['dogfood', 'brainstorming']
+assignee: null
+created: '2026-05-02T19:31:25Z'
+updated: '2026-05-02T19:31:25Z'
+associated_issues: []
+oat_template: true
+oat_template_name: backlog-item
+---
+
+## Description
+
+The `oat-brainstorm` pack shipped in the `independent-brainstorming` project (`bl-53f0`, closed) carries documented walkthrough plans for all 10 dogfood scenarios in `.agents/skills/oat-brainstorm/references/dogfood-results.md`. None of those scenarios were exercised against live LLM conversations, real `git status` / `git commit`, or live visual-companion sessions during the implementation project.
+
+This backlog item tracks the live-dogfood follow-up: actually run the 10 scenarios against a real LLM session with the pack installed, capture artifacts, and especially exercise the **fold-back commit safety contract** at scenario 9 against a real working tree. The fold-back contract is the only branch in the skill that performs scoped `git add -- <path>` + `git commit` on the user's behalf — it is the highest-risk path in the pack and the one most worth running against a real repo before relying on it in production.
+
+## What's still required
+
+The walkthrough plans embedded below describe what the skill _should_ do for each scenario. Live dogfood needs to assert each of these end-to-end. In particular:
+
+1. **Fold-back commit safety contract (scenario 9)** — exercise the dirty-working-tree pre-flight gate, the three options (commit-first / mixed / abort), the scoped `git add -- <plan-path>` staging, and the handoff prompt's commit-hash report. Verify that no unrelated working-tree changes get swept into the fold-back commit.
+2. **Active-project reference file commit (scenario 10)** — exercise the durable-tracked semantics added in `fix(p05-t05)`: scoped staging via `git add -- <reference-path>`, explicit commit with `chore(oat): capture brainstorming reference for <project-name>`, and the post-write confirmation showing the short commit hash.
+3. **Visual companion offer (step 3 of SKILL.md)** — exercise the dynamic `${SKILL_DIR}` resolution path added in `fix(p05-t03)` from a fresh user-scope install (i.e., where the bundled scripts live under `~/.agents/skills/oat-brainstorm/`, not the repo).
+4. **Pack-detection gating (step 4)** — verify that scenarios 4–8 only surface when their respective packs are installed, by repeating the live runs in a repo that does NOT have the gating pack.
+5. **Trigger-phrase activation** — confirm that exploratory phrasing fires the skill and that routine implementation requests do not. Capture any false positives / false negatives for a follow-up tuning task.
+
+After running, append a "Live results" section to `dogfood-results.md` (or fork it into a sibling `dogfood-live-results.md`) that records actual artifacts produced, deviations from the walkthrough plans, and any fold-back-related working-tree issues.
+
+## Acceptance Criteria
+
+- All 10 scenarios run end-to-end against a real LLM session.
+- Fold-back commit (scenario 9) verified against a real working tree, with the handoff prompt's commit-hash output matching `git log -1 --format=%h`.
+- Active-project reference commit (scenario 10) verified against a real working tree, working tree clean after the skill exits.
+- Visual companion (step 3) verified from a fresh user-scope install.
+- Live results recorded alongside (or merged into) `dogfood-results.md`.
+
+## Embedded copy of `dogfood-results.md`
+
+> The full text of `.agents/skills/oat-brainstorm/references/dogfood-results.md` is embedded below verbatim so this backlog item is self-contained for live-dogfood execution. If the canonical file changes, update this section to match.
+
+---
+
 # Dogfood Results — `oat-brainstorm`
 
 > **Walkthrough plans only — not live runs.** This file documents

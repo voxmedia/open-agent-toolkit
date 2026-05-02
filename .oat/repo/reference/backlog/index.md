@@ -30,6 +30,7 @@
 | bl-ff5d | Backlog Refinement Flow (Jira ticket generation)                                     | open        | medium   | feature    | L        |
 | bl-3a4a | Codified sub-project split escape hatch                                              | open        | medium   | feature    | L        |
 | bl-0738 | Define per-phase model selection guidance for phase-subagent dispatch                | open        | medium   | feature    | S        |
+| bl-7d5b | Live dogfood for `oat-brainstorm` (fold-back commit safety + 9 destination families) | open        | medium   | task       | M        |
 | bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback                   | open        | medium   | initiative | M        |
 | bl-0ace | Move oat-project-complete state mutations into a CLI helper                          | in_progress | medium   | feature    | M        |
 | bl-28ce | Persist instruction sync strategy in config and expose it in init                    | open        | medium   | feature    | M        |
