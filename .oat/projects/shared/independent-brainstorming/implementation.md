@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-01
@@ -366,24 +366,62 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- New `oat-brainstorm` skill — always-on, user-invocable dispatcher for project-independent brainstorming conversations. Activates proactively on exploratory phrasing, runs a Superpowers-style design conversation without committing to an idea or project artifact, and ends in a pack-aware terminal-state picker.
+- New `brainstorm` tool pack — single-skill pack, user-eligible, default user scope, default-on in `oat init` guided setup. Available across `oat tools install / update / remove / list / info` lifecycle.
+- New generalized `PackMetadata` mechanism — `PACK_METADATA[name]?.defaultScope` driving both the interactive picker and non-interactive scope resolver. `brainstorm` is the first user-default-scope pack; the abstraction supports future opt-ins (and is shaped to consolidate `core`'s special-case in a follow-up).
+- Visual companion bundle ported from `superpowers:brainstorming@5.0.7` (MIT). Five script files plus the reference guide. Four files byte-for-byte verbatim; `start-server.sh` patched only for OAT-managed persistence-path resolution (`.oat/brainstorm/<session-id>/` repo-scope, `~/.oat/brainstorm/<session-id>/` user-scope, `<project-dir>/.oat/brainstorm/<session-id>/` when `--project-dir` is passed).
+- Per-destination playbook (`destinations.md`) — stanzas for all 9 terminal-state destination families (inline, doc-to-path, capture-as-idea, extend-idea, summarize-idea, backlog-item, project-promotion, active-project fold-back, active-project reference file). Each stanza specifies trigger phrases, required template fields, confirmation pattern, handoff target, and the keep-brainstorming rule.
+- Doc-to-path output template (`brainstorm-doc.md`) — minimal-frontmatter markdown for off-repo destinations.
+- Active-project fold-back commit safety contract — preflight `git status --porcelain` against the selected upstream artifact, scoped staging via `git add --` (never `-A`, never globs), three-option dirty-tree picker, conditional handoff prompt printed only after the scoped commit succeeds. Word-for-word aligned between design and SKILL.md.
+- Documentation in `apps/oat-docs/docs/cli-utilities/tool-packs.md` (new "Brainstorm pack" section) and `apps/oat-docs/docs/workflows/skills/index.md` (entry under "Key Skills by Use Case" + Full Catalog).
+- 10 dogfood scenario walkthroughs documented in `.agents/skills/oat-brainstorm/references/dogfood-results.md` covering all destination families.
+- `NOTICES.md` extended with visual-companion attribution subsection (verbatim files vs patched).
+- 5 lockstep public package version bumps to `0.0.57` plus regenerated `packages/cli/assets/public-package-versions.json`.
+- `.oxfmtrc.jsonc` ignore patterns for bundled MIT-port scripts and bundled docs.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Users get an always-on brainstorming entry point that fires on exploratory phrasing without requiring an existing idea or project record.
+- `oat tools install brainstorm` (default-on in `oat init`) lands the skill at user scope by default — universal availability across directories.
+- `oat tools list / update / remove` recognize the `brainstorm` pack alongside existing packs.
+- Brainstorming conversations end in a pack-filtered terminal-state picker (only outcomes whose packs are installed surface).
+- Active project routing offers a 3-way choice (related → fold-back, independent → other terminal states, supplementary → reference file).
+- Doc-to-path destination supports in-repo and off-repo paths with explicit confirmation when writing outside the repo.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/oat-brainstorm/SKILL.md` — the dispatcher skill (always-on description, mode assertion, full process flow, all handoff branches).
+- `.agents/skills/oat-brainstorm/scripts/{server.cjs, start-server.sh, stop-server.sh, frame-template.html, helper.js}` — visual-companion bundle.
+- `.agents/skills/oat-brainstorm/references/{visual-companion.md, destinations.md, dogfood-results.md}` — per-destination playbook + visual-companion guide + dogfood scenarios.
+- `.agents/skills/oat-brainstorm/templates/brainstorm-doc.md` — doc-to-path output template.
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` — `BRAINSTORM_SKILLS`, `PACK_METADATA`, `resolvePackDefaultScope` helper.
+- `packages/cli/src/commands/init/tools/brainstorm/{install-brainstorm.ts, install-brainstorm.test.ts, index.ts, index.test.ts}` — per-pack install helper.
+- `packages/cli/src/commands/init/tools/index.ts` — runInitTools dispatcher wiring + picker description + default-on set.
+- `packages/cli/src/commands/tools/{shared/types.ts, update/update-tools.ts, remove handlers}` — `PackName` union + update/remove handlers.
+- `packages/cli/scripts/bundle-assets.sh` — SKILLS array entry.
+- `apps/oat-docs/docs/cli-utilities/tool-packs.md`, `apps/oat-docs/docs/workflows/skills/index.md` — documentation.
+- `NOTICES.md` — visual-companion attribution.
+- `.oxfmtrc.jsonc` — ignore patterns for bundled MIT-port and bundled docs.
+- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` — lockstep version bumps to `0.0.57`.
+- `packages/cli/assets/public-package-versions.json` — regenerated.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Per-phase Tier 1 reviews (p01–p04): all passed.
+- Final HiLL-checkpoint review (scope `final`): passed (0/0/0/3, 3 minor cosmetic suggestions, non-blocking).
+- `pnpm release:validate`: pass on all 5 public packages at `0.0.57`.
+- `pnpm format`: pass.
+- `pnpm lint`: pass.
+- `pnpm type-check`: pass.
+- `pnpm build:docs`: pass.
+- `pnpm --filter @open-agent-toolkit/cli test`: pass (1449 tests across 163 files, including the 5-case visual-companion smoke covering all three persistence-path branches).
+- Bundle integrity: `bash packages/cli/scripts/bundle-assets.sh` regenerates assets including `oat-brainstorm/{SKILL.md, scripts/, references/, templates/}` at canonical paths.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- One additive task added during execution: `p04-t05` (`chore(p04-t05): exclude bundled MIT-port scripts and bundled docs from oxfmt`) to address the Phase 3 reviewer's flagged Medium prerequisite (pre-existing format failures on bundled MIT-port files). Captured in plan.md `## Implementation Complete` totals (Phase 4: 5 tasks, total: 24).
+- Implementer scope-expansion in p02-t01: adding `'brainstorm'` to the `PackName` union forced cascading exhaustive-switch updates across `BUNDLED_PACK_MEMBERS`, `BUNDLED_PACK_ASSETS`, `install-sync-context`, `scan-tools`, `VALID_PACKS`, `PACK_DESCRIPTIONS`. The phase reviewer confirmed this as necessary type-completeness work, not scope drift. Documented under p02 Outstanding Items.
+- No design changes during implementation — the design + 4-finding plan-review fix were sufficient.
 
 ## References
 

@@ -1151,7 +1151,7 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 | p02    | code     | passed          | 2026-05-01 | reviews/archived/p02-code-review-2026-05-01.md        |
 | p03    | code     | passed          | 2026-05-01 | reviews/archived/p03-code-review-2026-05-01.md        |
 | p04    | code     | passed          | 2026-05-01 | reviews/archived/p04-code-review-2026-05-01.md        |
-| final  | code     | pending         | -          | -                                                     |
+| final  | code     | passed          | 2026-05-01 | reviews/archived/final-code-review-2026-05-01.md      |
 | spec   | artifact | pending         | -          | -                                                     |
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
 | plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
