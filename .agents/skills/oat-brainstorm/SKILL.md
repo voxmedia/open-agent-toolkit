@@ -380,6 +380,116 @@ Print a pointer to the next skill, e.g.:
 
 End mode assertion.
 
+#### 9h — Active-project router (3-way picker)
+
+This branch fires **only when** `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID == "true"` (both resolved at step 4). It runs **before** the standard pack-filtered terminal-state picker — its outcome controls whether that picker even surfaces.
+
+Ask one question:
+
+> "Is this brainstorm related to the active project at `<ACTIVE_PROJECT>`?"
+
+Three answers, three branches:
+
+1. **Related** → fold-back. Proceed to branch 9i below.
+2. **Independent** → the active project is acknowledged but ignored from this point. Route through the **standard pack-filtered terminal-state picker** as if no active project existed. The picker still includes `Promote to new OAT project` even though there is an active project — independence means the active project doesn't constrain the destination.
+3. **Related but supplementary** → brainstorming reference file. Proceed to branch 9j below.
+
+The 3-way router fires once per session. After convergence resumes (e.g., the user answered "keep going" at step 7 and another convergence later fires), re-evaluate — the user's understanding of the relationship may have shifted.
+
+#### 9i — Active project: fold-back to upstream artifact
+
+Uniform across spec-driven and quick modes. Differs only in which plan-authoring skill the handoff prompt addresses (resolved by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATUS`).
+
+**Step 1 — Pick upstream artifact.** Prefer the most-specific existing one:
+
+- `<ACTIVE_PROJECT>/design.md` if it exists (any mode — quick lightweight design counts).
+- Otherwise `<ACTIVE_PROJECT>/discovery.md`.
+- The user's signal during the conversation can override toward `discovery.md` even when `design.md` exists ("this is foundational" → discovery; "this is a design refinement" → design).
+
+Confirm the chosen artifact with the user (minimal confirmation per `references/destinations.md`). Set `ARTIFACT_PATH` to the absolute path.
+
+**Step 2 — Preflight `git status` check.** Run **before** any artifact mutation, scoped to the chosen artifact only:
+
+```bash
+git status --porcelain -- "$ARTIFACT_PATH"
+```
+
+The check happens before any append, so the skill can route around the dirty case without having half-written the synthesis.
+
+**Step 3 — If the artifact is clean** (no entry in the porcelain output): this is the happy path.
+
+1. Append the synthesis as a clearly-marked section to `ARTIFACT_PATH`:
+
+   ```
+   ## Brainstorming Update: YYYY-MM-DD — <topic>
+   ```
+
+   Section body contains: `chosenDirection` (with rationale), key decisions (extracted from the conversation), and a transcript appendix (`transcriptSessionNote`). Optionally include `openQuestions` and `nextSteps` if surfaced.
+
+2. Stage **only** the artifact:
+
+   ```bash
+   git add -- "$ARTIFACT_PATH"
+   ```
+
+   Use the explicit `--` filename form. **Never `git add -A`. Never directory globs.** Other working-tree paths are not touched by this commit.
+
+3. Commit with the canonical message:
+
+   ```bash
+   git commit -m "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>"
+   ```
+
+   `<artifact-basename>` is `design.md` or `discovery.md` depending on which was chosen. `<project-name>` is the active project's slug.
+
+4. If `git commit` succeeded → proceed to step 5 (handoff prompt).
+
+**Step 4 — If the artifact is dirty** (any entry in the porcelain output): pause the fold-back, present the user with three options before any artifact mutation occurs:
+
+- **Option A — Commit current artifact changes first** (recommended when prior changes are unrelated to the brainstorm). Skill commits the existing artifact state with a separate, user-described commit message (ask the user for a one-line subject), then proceeds with fold-back as a new scoped commit on top.
+- **Option B — Include current changes in the fold-back commit.** Skill warns explicitly: "The fold-back commit will mix prior unrelated edits with the brainstorm synthesis. The handoff prompt's commit hash will reference both. Confirm?" If user accepts, append synthesis, then `git add -- "$ARTIFACT_PATH"`, then commit with an adjusted message acknowledging the mix (e.g., `chore(oat): integrate brainstorm + prior edits into <artifact> for <project-name>`).
+- **Option C — Abort fold-back; capture as reference file instead.** Switch the destination to **branch 9j** (active-project brainstorming reference file). Upstream artifact is left untouched.
+
+After the user picks A or B and the resulting commit succeeds, proceed to step 5. After option C, jump to branch 9j.
+
+**Step 5 — Handoff prompt.** Print **only after the scoped commit succeeds.** If `git commit` failed (pre-commit hooks rejected, signing failed, anything else), surface the error verbatim and **do NOT print the handoff prompt** — the prompt references a commit hash, and a missing commit makes the prompt actively misleading. The user resolves the failure (or re-routes via option C above) before fold-back can complete.
+
+Resolve the handoff target by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATUS`:
+
+| Mode        | PR status                    | Handoff target            |
+| ----------- | ---------------------------- | ------------------------- |
+| spec-driven | none / closed                | `oat-project-plan`        |
+| quick       | none / closed                | `oat-project-quick-start` |
+| either      | open (`oat_pr_status: open`) | `oat-project-revise`      |
+
+Print the handoff prompt template, substituting `<skill-name>`, `<artifact>`, `<hash>`, and `<subject>` from the actual commit:
+
+```
+Run `<skill-name>` with this context:
+
+"A brainstorming session surfaced changes that needed to be folded
+into <artifact>. I've committed the update (commit <hash>: <subject>).
+Integrate the new content into the existing plan as new tasks (or a
+new phase if substantial). Don't refresh the existing plan — preserve
+review tables and any in-progress task state."
+```
+
+After printing the prompt, **stop**. End mode assertion. The user runs the plan-authoring skill at their own pace. The brainstorming skill never auto-chains into plan authoring — the deliberate transition is the point.
+
+#### 9j — Active project: brainstorming reference file
+
+Available regardless of project phase or PR status. No commit required (the reference file is a captured artifact, not an integrated plan change).
+
+The filename was confirmed at step 8 (default `YYYY-MM-DD-<topic>.md`). Resolve the target path:
+
+```
+<ACTIVE_PROJECT>/brainstorming/YYYY-MM-DD-<topic>.md
+```
+
+If `<ACTIVE_PROJECT>/brainstorming/` does not exist, create it (`mkdir -p`). The `brainstorming/` subdirectory is parallel to existing `pr/` and `reviews/` subdirectories — explicit purpose, naturally discoverable.
+
+Render `.agents/skills/oat-brainstorm/templates/brainstorm-doc.md` with the synthesized payload (same shape as the doc-to-path destination) and write to the resolved path. Report the absolute path written. End mode assertion.
+
 ## Success Criteria
 
 _Filled in p03-t07._
