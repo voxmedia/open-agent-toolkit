@@ -22,6 +22,7 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 - `utility` - review and repo-maintenance helpers
 - `project-management` - file-backed backlog/reference skills plus backlog and roadmap templates
 - `research` - research, analysis, comparison, and synthesis skills
+- `brainstorm` - always-on brainstorming entry point with visual companion
 
 ## `oat tools` command group
 
@@ -36,7 +37,7 @@ Purpose:
 Key behavior:
 
 - Scans installed skills and agents across project and user scopes
-- Displays version, pack (`core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
+- Displays version, pack (`core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`, `custom`), and status (`current`, `outdated`, `newer`, `not-bundled`)
 - Supports `--scope` filtering and `--json` output
 
 ### `oat tools outdated`
@@ -67,14 +68,15 @@ Key behavior:
 
 Purpose:
 
-- Install bundled OAT tool packs (`core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`)
+- Install bundled OAT tool packs (`core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`)
 
 Key behavior:
 
 - Same pack selection and install flow as `oat init tools`
-- Pack-oriented install subcommands: `core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`
+- Pack-oriented install subcommands: `core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`
 - Interactive installs show each pack's current install location in the picker so already-installed packs are visible before you submit
-- User-scope follow-up choices are prepopulated from the current install state for user-eligible packs (`ideas`, `docs`, `utility`, `research`)
+- User-scope follow-up choices are prepopulated from the current install state for user-eligible packs (`ideas`, `docs`, `utility`, `research`, `brainstorm`)
+- The `brainstorm` pack defaults to user scope on fresh installs (driven by `PACK_METADATA[brainstorm].defaultScope = 'user'`); existing project-scope installs still take precedence on re-install so users do not get unexpected scope migrations
 - If a user-eligible pack is already installed in both project and user scope, the installer asks whether to keep both installs or normalize the pack to user scope before it makes any cleanup changes
 - Changing a user-eligible pack from project scope to user scope, or back again, is treated as a migration: the old canonical copy is removed so the pack ends in the selected scope instead of accumulating duplicate installs
 - Tracks installed vs bundled skill versions and reports outdated skills
@@ -166,6 +168,60 @@ Key behavior:
   remains available for backward compatibility.
 - `oat tools update --pack docs` and `oat tools remove --pack docs` manage the
   workflow skills as a unit.
+
+## Brainstorm pack
+
+The `brainstorm` pack ships a single skill plus a bundled visual companion for
+project-independent brainstorming conversations:
+
+- **oat-brainstorm** — Always-on brainstorming entry point. Activates on
+  exploratory phrasing ("I've been thinking about", "what if we did", open-ended
+  design questions) and runs a structured Superpowers-style design conversation
+  without committing the user to an idea or project artifact. Ends in a
+  pack-aware terminal-state picker that hands off to existing OAT skills (idea
+  capture, scoped backlog item, project promotion, active-project fold-back,
+  doc-to-path) based on which packs are installed in the current repo. Two
+  base outcomes (inline-only and write a brainstorming doc to a user-specified
+  path) are always available regardless of installed packs.
+
+Key behavior:
+
+- **Default user scope.** The `brainstorm` pack is user-eligible and defaults
+  to user scope so the always-on trigger fires consistently across directories
+  and machines. This is driven by the generalized pack-metadata mechanism
+  (`PACK_METADATA[brainstorm].defaultScope = 'user'`); other user-eligible
+  packs (`ideas`, `docs`, `utility`, `research`) still default to project scope
+  unless their metadata is updated.
+- **Existing-install precedence.** Re-running install on a pack that is
+  already installed at project scope preserves that scope — `defaultScope` only
+  applies to fresh installs. This protects users from unexpected scope
+  migrations.
+- **Default-on in `oat init`.** `brainstorm` is checked by default in the
+  `oat init tools` guided setup, so new repos get the brainstorming entry point
+  out of the box.
+- **Visual companion.** A bundled local browser-based UI (Node-based HTTP +
+  WebSocket server, content-fragment authoring, per-question terminal-vs-browser
+  routing) ships with the skill at `.agents/skills/oat-brainstorm/scripts/`
+  and is documented in
+  `.agents/skills/oat-brainstorm/references/visual-companion.md`. The companion
+  is offered once at activation; the skill consults it per-question when a
+  visual answer would help (mockups, layout comparisons, diagrams). Persistence
+  paths use OAT-managed prefixes (`.oat/brainstorm/<session-id>/` repo-scope
+  or `~/.oat/brainstorm/<session-id>/` user-scope).
+- **Terminal-state picker filtered by `tools.<pack>` config.** When the user
+  converges on a destination, the skill consults `oat config get tools.ideas`,
+  `tools.project-management`, and `tools.workflows` to filter the available
+  terminal states. Pack-gated outcomes (capture-as-idea, scoped backlog item,
+  project promotion, active-project fold-back) only appear when the
+  corresponding pack is installed.
+- **Destinations playbook.** The full set of terminal-state stanzas — trigger
+  phrases, required template fields, confirmation patterns, handoff targets —
+  lives at `.agents/skills/oat-brainstorm/references/destinations.md` and is
+  consulted by the skill at destination-identification time.
+- **Pack lifecycle.** `oat tools install brainstorm`, `oat tools update --pack
+brainstorm`, and `oat tools remove --pack brainstorm` manage the skill plus
+  visual-companion bundle as a unit. Standard config-write semantics
+  (`tools.brainstorm: true` on install) apply.
 
 ### Auto-sync behavior
 

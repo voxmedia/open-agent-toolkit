@@ -29,6 +29,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Verify a claim adversarially: `skeptic`
 - Merge multiple analysis artifacts: `synthesize`
 - Capture or refine ideas: `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
+- Run a project-independent brainstorming conversation: `oat-brainstorm` — always-on entry point that activates on exploratory phrasing, runs a Superpowers-style design conversation, and routes to inline / doc-to-path / idea / backlog item / project handoffs based on installed packs (see [Tool Packs](../../cli-utilities/tool-packs.md) for the brainstorm pack details)
 
 ## If You Are Trying To...
 
@@ -71,6 +72,10 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `oat-idea-ideate`
     - `oat-idea-scratchpad`
     - `oat-idea-summarize`
+
+=== "Brainstorming"
+
+    - `oat-brainstorm`
 
 === "Docs and instructions"
 
