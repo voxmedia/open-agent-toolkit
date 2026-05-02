@@ -397,6 +397,46 @@ Track test execution during implementation.
 - Re-run `oat-project-review-provide code final` (or scoped to p05 fix commits per re-review narrowing) and `oat-project-review-receive` to reach `passed`
 - Then proceed to `oat-project-pr-final`
 
+### Review Received: final (code, re-review v2)
+
+**Date:** 2026-05-02
+**Review artifact:** `reviews/archived/final-review-2026-05-02-v2.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1 (pre-existing `oat-pjm-update-repo-reference` and `oat-project-spec` skill validation failures — unrelated and out of scope)
+
+**Verdict:** **pass.** All 9 prior-final-review findings (I1-I6, M1-M2, m1) confirmed closed by their corresponding p05 fix commits (`98ee69c7..3bf611ad`).
+
+**Action:** `final` review row marked `passed` against this v2 artifact (commit `5ef44230`).
+
+### Review Received: final (code, re-review v3 — cycle-override applied inline)
+
+**Date:** 2026-05-02
+**Review artifact:** `reviews/archived/final-review-2026-05-02-v3.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1 — `I1` (v3): post-final-pass state artifacts stale (`.oat/state.md` shows `Current Task | p05-t01`; project `state.md` body still says "Phase 5 in progress")
+- Medium: 2 — `M1` (v3): `## Implementation Complete` Phase 4 summary still claims "run all 10 dogfood scenarios end-to-end"; `M2` (v3): p05 review row reverted from `passed` back to `pending` somewhere between the v2 review and v3 (likely during a plan.md edit by a p05 task)
+- Minor: 0
+
+**Cycle-override decision:** This was the 4th `final` review cycle, exceeding the bounded-loop limit of 3. The v3 reviewer's own recommendation explicitly said: _"No implementation-code changes appear necessary; the remaining failures are project-state and documentation/bookkeeping drift."_ User chose to apply the three fixes inline as a single bookkeeping commit and skip another formal re-review cycle.
+
+**Edits applied inline (no fix tasks created):**
+
+- `I1` (v3): ran `oat state refresh`; updated project `state.md` body sections (Status / Current Phase / Artifacts / Progress / Next Milestone) to match the now-complete frontmatter.
+- `M1` (v3): updated `## Implementation Complete` Phase 4 line from "run all 10 dogfood scenarios end-to-end" → "document walkthrough plans for all 10 dogfood scenarios (live-dogfood follow-up captured as backlog item `bl-7d5b`)".
+- `M2` (v3): set `p05` Reviews-table row to `passed` against `reviews/archived/p05-code-review-2026-05-02.md`. Also reset `final` row from the v3-introduced `received` back to `passed` against the v2 artifact (the last formally-passing final review).
+
+**No plan tasks created** (cycle-override; user-approved direct fixes).
+
+**Next:** Run `oat-project-pr-final` to generate the PR description and open the PR. The user will manually do _some_ dogfooding via the vault-copied `dogfood-results.md` reference before merging.
+
 ## Final Summary (for PR/docs)
 
 **What shipped:**

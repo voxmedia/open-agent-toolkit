@@ -1499,8 +1499,8 @@ git commit -m "fix(p05-t08): update current-state.md workflow paths and add brai
 | p02    | code     | passed          | 2026-05-01 | reviews/archived/p02-code-review-2026-05-01.md        |
 | p03    | code     | passed          | 2026-05-01 | reviews/archived/p03-code-review-2026-05-01.md        |
 | p04    | code     | passed          | 2026-05-01 | reviews/archived/p04-code-review-2026-05-01.md        |
-| final  | code     | received        | 2026-05-02 | reviews/final-review-2026-05-02-v3.md                 |
-| p05    | code     | pending         | -          | -                                                     |
+| final  | code     | passed          | 2026-05-02 | reviews/archived/final-review-2026-05-02-v2.md        |
+| p05    | code     | passed          | 2026-05-02 | reviews/archived/p05-code-review-2026-05-02.md        |
 | spec   | artifact | pending         | -          | -                                                     |
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
 | plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
@@ -1523,7 +1523,7 @@ git commit -m "fix(p05-t08): update current-state.md workflow paths and add brai
 - Phase 1: 4 tasks — establish `PackMetadata` mechanism (interface, map, interactive picker wiring, non-interactive resolver wiring, migration safety)
 - Phase 2: 8 tasks — register `brainstorm` pack manifest + type union + bundle script + skill scaffold, create per-pack install helper directory, wire dispatcher / update / remove handlers + default-on set, port visual-companion bundle from Superpowers (5 files; 1 patched for OAT persistence paths), port visual-companion guide, update `NOTICES.md` attribution, ship destinations playbook and brainstorm-doc output template
 - Phase 3: 7 tasks — fill in `oat-brainstorm/SKILL.md` end-to-end (mode assertion, progress indicators, activation, pack detection, conversation cadence, destination signal-watching, satisfaction check, synthesis with confirmation, non-fold-back terminal-state handoffs, active-project router + fold-back commit safety contract, success criteria + self-review)
-- Phase 4: 5 tasks — document brainstorm pack and skill in `apps/oat-docs`, run all 10 dogfood scenarios end-to-end, lockstep public-package version bumps, regenerate `public-package-versions.json`, exclude bundled MIT-port scripts + docs from oxfmt (added p04-t05 during execution to address Phase 3-flagged format prerequisite), `pnpm release:validate`
+- Phase 4: 5 tasks — document brainstorm pack and skill in `apps/oat-docs`, document walkthrough plans for all 10 dogfood scenarios (live-dogfood follow-up captured as backlog item `bl-7d5b`), lockstep public-package version bumps, regenerate `public-package-versions.json`, exclude bundled MIT-port scripts + docs from oxfmt (added p04-t05 during execution to address Phase 3-flagged format prerequisite), `pnpm release:validate`
 - Phase 5: 8 tasks — final-review fix tasks for the 6 Important + 2 Medium + 1 Minor findings from `final-review-2026-05-02.md` (config-schema registration, install-lifecycle parity, dynamic skill-dir resolution, gitignore policy, durable-tracked active-project references, state refresh, dogfood walkthrough revision + backlog/vault copy, current-state.md path + pack-list updates)
 
 **Total: 32 tasks**
