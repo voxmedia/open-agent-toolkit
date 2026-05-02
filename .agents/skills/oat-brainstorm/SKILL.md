@@ -76,7 +76,71 @@ The 9-step counter mirrors the Process section below. Subsequent passes through 
 
 ## Process
 
-_Filled in p03-t02 through p03-t06._
+### Step 1: Activate
+
+The skill activates automatically when the user opens an exploratory conversation that matches the always-on description in this file's frontmatter. There are no preconditions to check at activation — pack detection and active-project detection happen at step 4, after the visual-companion offer, so this skill works in any repo regardless of which OAT packs are installed.
+
+If the user invokes the skill explicitly (`/oat-brainstorm` or equivalent provider command), proceed identically. The downstream flow does not branch on activation source.
+
+### Step 2: Mode Banner
+
+Print the phase banner exactly once:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OAT ▸ BRAINSTORM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Then assert brainstorm mode per the **Mode Assertion** section above. The agent should hold itself to the BLOCKED list for the remainder of the conversation and follow the Self-Correction Protocol if it slips.
+
+### Step 3: Visual Companion Offer
+
+This step is **its own message**. Do **not** combine it with the mode banner, with a clarifying question, with a context summary, or with anything else. The message contains only the offer wording below and waits for the user's response before continuing.
+
+**Pre-flight check:** confirm `node` is on PATH:
+
+```bash
+command -v node >/dev/null 2>&1 && echo "available" || echo "missing"
+```
+
+- If `node` is **missing**: skip the offer entirely. Do not print the offer message. Log a one-line note in the conversation that the visual companion is unavailable in this environment (a state `oat-doctor` can pick up later: "visual companion suppressed — node not on PATH"). Proceed to step 4 with `VISUAL_COMPANION = "unavailable"`.
+- If `node` is **available**: print the offer as its own message. Suggested wording (adapt freely; the constraint is "own message, no other content"):
+
+  > "Some of what we're working on might be easier to explain if I can show it in a local web browser — mockups, diagrams, side-by-side comparisons. The visual companion is bundled with this skill (a small Node-based local server). Want me to start it? (Requires opening a `localhost` URL.)"
+
+Wait for the user's response.
+
+- **Accept** → start the visual companion via `.agents/skills/oat-brainstorm/scripts/start-server.sh` (read `.agents/skills/oat-brainstorm/references/visual-companion.md` for the detailed usage guide before serving any content). Set `VISUAL_COMPANION = "active"`. Persistence paths follow the bundled `start-server.sh` resolution (repo-scope `.oat/brainstorm/<session>/`, user-scope `~/.oat/brainstorm/<session>/`, or `--project-dir <path>` override).
+- **Decline** → set `VISUAL_COMPANION = "declined"`. Continue text-only.
+
+The decision applies for the rest of the session. **Per-question routing** still happens at step 5 — even when accepted, each individual question chooses browser-vs-terminal on its own merits.
+
+### Step 4: Pack and Active-Project Detection
+
+Run pack-detection and active-project resolution **once** per session, before the conversation starts. Mirrors the convention used by `oat-project-document`.
+
+```bash
+IDEAS_INSTALLED=$(oat config get tools.ideas 2>/dev/null || echo "false")
+PJM_INSTALLED=$(oat config get tools.project-management 2>/dev/null || echo "false")
+WORKFLOWS_INSTALLED=$(oat config get tools.workflows 2>/dev/null || echo "false")
+ACTIVE_PROJECT=$(oat config get activeProject 2>/dev/null || echo "")
+
+ACTIVE_PROJECT_VALID="false"
+ACTIVE_PROJECT_MODE=""
+ACTIVE_PROJECT_PHASE=""
+ACTIVE_PROJECT_PR_STATUS=""
+
+if [ -n "$ACTIVE_PROJECT" ] && [ -f "$ACTIVE_PROJECT/state.md" ]; then
+  ACTIVE_PROJECT_VALID="true"
+  # Read state.md frontmatter — extract:
+  #   oat_workflow_mode → ACTIVE_PROJECT_MODE        (e.g., "spec-driven", "quick")
+  #   oat_phase         → ACTIVE_PROJECT_PHASE       (e.g., "discovery", "design", "plan", "implement")
+  #   oat_pr_status     → ACTIVE_PROJECT_PR_STATUS   (e.g., "none", "open", "closed")
+fi
+```
+
+Capture the resolved values; the skill consults them at step 9 (destination handoff). Do not surface the active-project router yet — it fires at convergence (step 6/9), after the user has actually been heard out, not at activation.
+
+If `ACTIVE_PROJECT` is set but `state.md` is missing or unreadable, treat the active-project router as inactive (per design's Error Handling: "Active project resolution conflicts"). Print a single warning line and continue with the standard pack-filtered terminal-state picker. The brainstorm is not blocked.
 
 ## Success Criteria
 
