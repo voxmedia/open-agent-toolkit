@@ -45,10 +45,17 @@ describe('resolvePackDefaultScope', () => {
 });
 
 describe('PACK_METADATA', () => {
-  it('starts as an empty map (no real packs opt in yet)', () => {
-    // The mechanism is established in p01; pack registrations land in p02.
-    // This guards against accidental opt-ins arriving without a paired
-    // installer behavior change.
-    expect(Object.keys(PACK_METADATA)).toEqual([]);
+  it('contains only the registered opt-in entries', () => {
+    // The mechanism is established in p01; pack registrations land in p02
+    // and onward. Each opt-in must be paired with installer behavior wiring
+    // in the same PR. This guards against accidental opt-ins.
+    expect(Object.keys(PACK_METADATA).sort()).toEqual(['brainstorm']);
+  });
+
+  it('registers brainstorm with defaultScope=user', () => {
+    expect(PACK_METADATA.brainstorm).toEqual({
+      name: 'brainstorm',
+      defaultScope: 'user',
+    });
   });
 });

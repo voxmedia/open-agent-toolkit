@@ -79,7 +79,7 @@ describe('help output snapshots', () => {
 
       Commands:
         tools       Install OAT tool packs (core, ideas, docs, workflows, utility,
-                    project-management, research)
+                    project-management, research, brainstorm)
       "
     `);
   });
@@ -723,7 +723,8 @@ describe('help output snapshots', () => {
         update [options] [name]  Update installed tools to bundled versions
         remove [options] [name]  Remove installed tools
         install [options]        Install OAT tool packs (core, ideas, docs,
-                                 workflows, utility, project-management, research)
+                                 workflows, utility, project-management, research,
+                                 brainstorm)
         help [command]           display help for command
       "
     `);
@@ -770,7 +771,7 @@ describe('help output snapshots', () => {
       "Usage: oat tools install [options] [command]
 
       Install OAT tool packs (core, ideas, docs, workflows, utility,
-      project-management, research)
+      project-management, research, brainstorm)
 
       Options:
         --no-sync                     Skip auto-sync after install
@@ -787,6 +788,8 @@ describe('help output snapshots', () => {
                                       templates, and scripts
         utility [options]             Install OAT utility skills
         research [options]            Install OAT research skills
+        brainstorm [options]          Install OAT brainstorm skill (always-on entry
+                                      point with visual companion)
       "
     `);
   });
@@ -807,7 +810,7 @@ describe('help output snapshots', () => {
 
       Options:
         --pack <pack>  Remove all tools in a pack
-                       (core|ideas|docs|workflows|utility|project-management|research)
+                       (core|ideas|docs|workflows|utility|project-management|research|brainstorm)
         --all          Remove all installed tools
         --dry-run      Preview removals without applying
         --no-sync      Skip auto-sync after removal
@@ -832,7 +835,7 @@ describe('help output snapshots', () => {
 
       Options:
         --pack <pack>  Update all tools in a pack
-                       (core|ideas|docs|workflows|utility|project-management|research)
+                       (core|ideas|docs|workflows|utility|project-management|research|brainstorm)
         --all          Update all outdated tools
         --dry-run      Preview updates without applying
         --no-sync      Skip auto-sync after update

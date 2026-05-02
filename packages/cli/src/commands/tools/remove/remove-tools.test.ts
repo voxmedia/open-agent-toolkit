@@ -112,6 +112,28 @@ describe('removeTools', () => {
     expect(deps.removedDirs).toHaveLength(2);
   });
 
+  it('removes the brainstorm pack and its skill directory', async () => {
+    const tools = [
+      createTool({ name: 'oat-brainstorm', pack: 'brainstorm' }),
+      createTool({ name: 'oat-idea-new', pack: 'ideas' }),
+    ];
+    const deps = createDeps({ project: tools });
+
+    const result = await removeTools(
+      { kind: 'pack', pack: 'brainstorm' },
+      ['project'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(result.removed.map((t) => t.name)).toEqual(['oat-brainstorm']);
+    expect(deps.removedDirs).toEqual([
+      '/project/.agents/skills/oat-brainstorm',
+    ]);
+  });
+
   it('removes all tools with --all', async () => {
     const tools = [
       createTool({ name: 'oat-idea-new', pack: 'ideas' }),

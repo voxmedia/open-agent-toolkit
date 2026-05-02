@@ -137,7 +137,8 @@ export type OatToolsConfig = Partial<
     | 'workflows'
     | 'utility'
     | 'project-management'
-    | 'research',
+    | 'research'
+    | 'brainstorm',
     boolean
   >
 >;

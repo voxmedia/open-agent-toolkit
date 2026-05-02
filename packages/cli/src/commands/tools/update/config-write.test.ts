@@ -126,6 +126,7 @@ describe('createToolsUpdateCommand config writes', () => {
         utility: false,
         'project-management': true,
         research: false,
+        brainstorm: false,
       },
     });
     expect(process.exitCode).toBeUndefined();

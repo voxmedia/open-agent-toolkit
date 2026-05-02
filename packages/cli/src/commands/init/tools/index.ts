@@ -40,6 +40,12 @@ import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import type { ConcreteScope } from '@shared/types';
 import { Command } from 'commander';
 
+import { createInitToolsBrainstormCommand } from './brainstorm';
+import {
+  installBrainstorm as defaultInstallBrainstorm,
+  type InstallBrainstormOptions,
+  type InstallBrainstormResult,
+} from './brainstorm/install-brainstorm';
 import { createInitToolsCoreCommand } from './core';
 import {
   installCore as defaultInstallCore,
@@ -75,6 +81,7 @@ import {
   type InstallResearchResult,
 } from './research/install-research';
 import {
+  BRAINSTORM_SKILLS,
   DOCS_SKILLS,
   IDEA_SKILLS,
   RESEARCH_AGENTS,
@@ -104,7 +111,8 @@ export type ToolPack =
   | 'workflows'
   | 'utility'
   | 'project-management'
-  | 'research';
+  | 'research'
+  | 'brainstorm';
 
 export interface InitToolsDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -137,6 +145,9 @@ export interface InitToolsDependencies {
   installResearch: (
     options: InstallResearchOptions,
   ) => Promise<InstallResearchResult>;
+  installBrainstorm: (
+    options: InstallBrainstormOptions,
+  ) => Promise<InstallBrainstormResult>;
   copyDirWithStatus: (
     source: string,
     destination: string,
@@ -187,11 +198,12 @@ const ALL_TOOL_PACKS = [
   'utility',
   'project-management',
   'research',
+  'brainstorm',
 ] as const satisfies readonly ToolPack[];
 
 type UserEligiblePack = Extract<
   ToolPack,
-  'ideas' | 'docs' | 'utility' | 'research'
+  'ideas' | 'docs' | 'utility' | 'research' | 'brainstorm'
 >;
 
 const USER_ELIGIBLE_PACK_MEMBERS: Record<
@@ -214,6 +226,10 @@ const USER_ELIGIBLE_PACK_MEMBERS: Record<
     skills: RESEARCH_SKILLS,
     agents: RESEARCH_AGENTS,
   },
+  brainstorm: {
+    skills: BRAINSTORM_SKILLS,
+    agents: [],
+  },
 };
 
 let lastRunInitToolsMetadata: InitToolsRunMetadata | null = null;
@@ -233,6 +249,7 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   installUtility: defaultInstallUtility,
   installProjectManagement: defaultInstallProjectManagement,
   installResearch: defaultInstallResearch,
+  installBrainstorm: defaultInstallBrainstorm,
   copyDirWithStatus,
   removeDirectory: async (target) => {
     await rm(target, { recursive: true, force: true });
@@ -264,6 +281,7 @@ const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
   'docs',
   'utility',
   'research',
+  'brainstorm',
 ]);
 
 type PackScopeMap = Record<ToolPack, PackInstallTarget>;
@@ -350,6 +368,11 @@ function buildPackChoices(
     {
       label: `Research [project|user]${installedPackStates.research.location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates.research.location)})`}`,
       value: 'research',
+      checked: true,
+    },
+    {
+      label: `Brainstorm [project|user]${installedPackStates.brainstorm.location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates.brainstorm.location)})`} — Always-on brainstorming entry point with visual companion`,
+      value: 'brainstorm',
       checked: true,
     },
   ];
@@ -608,6 +631,7 @@ const PACK_DESCRIPTIONS: Record<ToolPack, string> = {
   utility:
     'Standalone utilities (skill authoring, maintainability review, code reviews)',
   research: 'Research, analysis, verification, and synthesis',
+  brainstorm: 'Always-on brainstorming entry point with visual companion',
 };
 
 interface PackScopeInfo {
@@ -689,7 +713,15 @@ export async function runInitTools(
           buildPackChoices(initialPackStates),
           { interactive: context.interactive },
         )) ?? [])
-      : ['core', 'ideas', 'docs', 'workflows', 'utility', 'research'];
+      : [
+          'core',
+          'ideas',
+          'docs',
+          'workflows',
+          'utility',
+          'research',
+          'brainstorm',
+        ];
 
     if (!context.interactive) {
       selectedPacks.push('project-management');
@@ -919,6 +951,23 @@ export async function runInitTools(
       }
     }
 
+    if (selectedPacks.includes('brainstorm')) {
+      for (const targetRoot of packTargets('brainstorm')) {
+        affectedScopes.add(targetRoot === userRoot ? 'user' : 'project');
+        const brainstormResult = await dependencies.installBrainstorm({
+          assetsRoot,
+          targetRoot,
+        });
+        for (const skill of brainstormResult.outdatedSkills) {
+          outdatedSkills.push({
+            ...skill,
+            targetRoot,
+            selectionKey: `${skill.name}:${targetRoot}`,
+          });
+        }
+      }
+    }
+
     if (outdatedSkills.length > 0) {
       reportOutdatedSkills(context, outdatedSkills);
 
@@ -1020,7 +1069,7 @@ export function createInitToolsCommand(
 
   return new Command('tools')
     .description(
-      'Install OAT tool packs (core, ideas, docs, workflows, utility, project-management, research)',
+      'Install OAT tool packs (core, ideas, docs, workflows, utility, project-management, research, brainstorm)',
     )
     .addCommand(createInitToolsCoreCommand())
     .addCommand(createInitToolsIdeasCommand())
@@ -1029,6 +1078,7 @@ export function createInitToolsCommand(
     .addCommand(createInitToolsWorkflowsCommand())
     .addCommand(createInitToolsUtilityCommand())
     .addCommand(createInitToolsResearchCommand())
+    .addCommand(createInitToolsBrainstormCommand())
     .action(async (_options: unknown, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),

@@ -3,6 +3,7 @@ import { DOCS_SKILLS } from '@commands/init/tools/docs/install-docs';
 import { IDEA_SKILLS } from '@commands/init/tools/ideas/install-ideas';
 import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
 import {
+  BRAINSTORM_SKILLS,
   DOCS_SCRIPTS,
   WORKFLOW_AGENTS,
   WORKFLOW_SKILLS,
@@ -205,6 +206,32 @@ describe('updateTools', () => {
     );
     expect(result.current).toHaveLength(0);
     expect(deps.copies).toHaveLength(IDEA_SKILLS.length);
+  });
+
+  it('updates the brainstorm pack to bundled versions', async () => {
+    const tools = BRAINSTORM_SKILLS.map((name) =>
+      createTool({ name, pack: 'brainstorm' }),
+    );
+    const deps = createDeps({ project: tools });
+
+    const result = await updateTools(
+      { kind: 'pack', pack: 'brainstorm' },
+      ['project'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(result.updated.map((tool) => tool.name).sort()).toEqual(
+      [...BRAINSTORM_SKILLS].sort(),
+    );
+    expect(deps.copies).toHaveLength(BRAINSTORM_SKILLS.length);
+    for (const skill of BRAINSTORM_SKILLS) {
+      expect(
+        deps.copies.some((copy) => copy.source.includes(`skills/${skill}`)),
+      ).toBe(true);
+    }
   });
 
   it('installs missing bundled members for a targeted installed pack', async () => {
