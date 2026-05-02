@@ -1,9 +1,8 @@
 ---
 name: oat-project-document
-version: 1.3.0
-description: Run when implementation is complete and documentation needs updating. Analyzes project artifacts to produce documentation update recommendations, then applies approved changes before project completion.
+version: 1.4.0
+description: Use when the user explicitly asks to document, sync docs, or update documentation for an active OAT project — e.g. "document the project", "update the docs", "run oat-project-document". Do NOT auto-invoke just because implementation is complete; wait for an explicit user signal. Analyzes project artifacts, presents a documentation delta plan, and applies approved changes.
 argument-hint: '[project-path] [--auto]'
-disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Glob, Grep, AskUserQuestion, Skill
 ---

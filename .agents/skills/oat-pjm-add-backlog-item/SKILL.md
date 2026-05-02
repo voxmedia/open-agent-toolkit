@@ -1,8 +1,7 @@
 ---
 name: oat-pjm-add-backlog-item
-version: 1.0.0
-description: Use when a new repo backlog item needs to be captured in the file-per-item backlog structure. Creates the item file, regenerates the index, and prompts for curated overview updates.
-disable-model-invocation: true
+version: 1.1.0
+description: Use when the user explicitly asks to add, capture, or track a new repo backlog item — e.g. "add a backlog item for X", "capture that as backlog", "track that follow-up", "file a backlog ticket". Do NOT auto-invoke just because a follow-up was mentioned; wait for an explicit user signal. Creates the item file in the file-per-item backlog structure, regenerates the index, and prompts for curated overview updates.
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 ---
