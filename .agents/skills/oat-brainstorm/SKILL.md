@@ -492,4 +492,17 @@ Render `.agents/skills/oat-brainstorm/templates/brainstorm-doc.md` with the synt
 
 ## Success Criteria
 
-_Filled in p03-t07._
+- ✅ Always-on description fires on exploratory phrasing ("I've been thinking about", "what if we did", "how should we approach", thinking-out-loud) and does NOT fire on routine implementation requests, code-review questions, or work where the user has already named a destination skill.
+- ✅ Phase banner `OAT ▸ BRAINSTORM` is printed exactly once at activation; mode assertion follows immediately.
+- ✅ Visual-companion offer is its own message with no other content. The offer is suppressed entirely (no message printed) when `node` is not on PATH.
+- ✅ Pack and active-project detection (`oat config get tools.<pack>` and `oat config get activeProject`) runs once per session at step 4, before the conversation starts.
+- ✅ Conversation cadence holds the Superpowers contract: one question at a time, multiple-choice preferred, 2-3 distinct approaches with a recommendation, per-question visual-companion routing.
+- ✅ Destination is identified via either trigger-phrase opportunistic surfacing (loose substring + paraphrase tolerance, not regex; ambiguity → ask) or convergence cue (pack-filtered terminal-state picker).
+- ✅ Synthesis payload is built per the design Data Models `SynthesizedPayload` schema: `title`, `summary`, `motivation`, `vision`, `approachesConsidered[]`, `chosenDirection`, `openQuestions[]`, `nextSteps[]`, `transcriptSessionNote`.
+- ✅ Confirmation pattern matches `references/destinations.md`: `full` for scoped backlog item (field-by-field with example wording), `minimal` for slug/path/artifact destinations, `none` for inline-only and summarize-idea-directly.
+- ✅ Each handoff branch (9a-9j) reads the correct downstream `SKILL.md` path and enters at the documented step. Project promotion writes `discovery.md` only — never `design.md` — and does not auto-chain into the next phase.
+- ✅ Doc-to-path validation handles all four cases: path-is-directory, parent-missing (with explicit out-of-repo confirmation), file-already-exists (overwrite or rename), unwritable (surface OS error).
+- ✅ Fold-back commit safety contract honored: preflight `git status --porcelain -- "$ARTIFACT_PATH"` runs before any artifact mutation; clean → append + `git add -- "$ARTIFACT_PATH"` (explicit `--`, never `-A`, never globs) + scoped commit; dirty → three-option picker (commit-prior-first / mix / abort-to-reference-file); handoff prompt prints only after `git commit` succeeds.
+- ✅ Handoff target for fold-back resolves correctly per `oat_workflow_mode` + `oat_pr_status`: `oat-project-plan` (spec-driven, no/closed PR) / `oat-project-quick-start` (quick, no/closed PR) / `oat-project-revise` (either mode, open PR).
+- ✅ Active-project 3-way router (related / independent / supplementary) fires before the standard pack-filtered picker when both `WORKFLOWS_INSTALLED == "true"` and `ACTIVE_PROJECT_VALID == "true"`.
+- ✅ Skill validates cleanly under `pnpm oat:validate-skills` (frontmatter contract, allowed-tools, mode-assertion structure).
