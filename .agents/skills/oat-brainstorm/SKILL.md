@@ -109,7 +109,15 @@ command -v node >/dev/null 2>&1 && echo "available" || echo "missing"
 
 Wait for the user's response.
 
-- **Accept** → start the visual companion via `.agents/skills/oat-brainstorm/scripts/start-server.sh` (read `.agents/skills/oat-brainstorm/references/visual-companion.md` for the detailed usage guide before serving any content). Set `VISUAL_COMPANION = "active"`. Persistence paths follow the bundled `start-server.sh` resolution (repo-scope `.oat/brainstorm/<session>/`, user-scope `~/.oat/brainstorm/<session>/`, or `--project-dir <path>` override).
+- **Accept** → start the visual companion via `${SKILL_DIR}/scripts/start-server.sh` and read `${SKILL_DIR}/references/visual-companion.md` for the detailed usage guide before serving any content. Set `VISUAL_COMPANION = "active"`. Persistence paths follow the bundled `start-server.sh` resolution (repo-scope `.oat/brainstorm/<session>/`, user-scope `~/.oat/brainstorm/<session>/`, or `--project-dir <path>` override).
+
+  **Resolving `${SKILL_DIR}`:** the brainstorm pack defaults to user scope, so a fresh install puts the bundled scripts under `~/.agents/skills/oat-brainstorm/`, not the current repo. Resolve the loaded skill directory before invoking any script. In order:
+  1. If your provider exposes the loaded skill's resolved path (for example via a `${SKILL_DIR}` environment variable, `Skill` invocation context, or equivalent), use it directly.
+  2. Otherwise, try the user-scope path first: `${HOME}/.agents/skills/oat-brainstorm/` (matches the pack default).
+  3. Fall back to the project-scope path: `<repo-root>/.agents/skills/oat-brainstorm/` (set when the pack is explicitly installed at project scope).
+
+  Probe each candidate for the presence of `scripts/start-server.sh` before invoking it. Treat the first match as `${SKILL_DIR}`.
+
 - **Decline** → set `VISUAL_COMPANION = "declined"`. Continue text-only.
 
 The decision applies for the rest of the session. **Per-question routing** still happens at step 5 — even when accepted, each individual question chooses browser-vs-terminal on its own merits.
@@ -289,7 +297,7 @@ The user-supplied path was confirmed at step 8. Validate it before any write (pe
 3. **File already exists** → ask whether to overwrite or pick a different filename. Do not silently overwrite.
 4. **Path is unwritable** (permission denied, read-only filesystem, etc.) → surface the OS error verbatim and ask for an alternative path.
 
-When validation passes, render `.agents/skills/oat-brainstorm/templates/brainstorm-doc.md` with the synthesized payload values (title, summary, motivation, vision, approachesConsidered, chosenDirection, openQuestions, nextSteps, transcriptSessionNote) and write the file. Report the absolute path written. End mode assertion.
+When validation passes, render `${SKILL_DIR}/templates/brainstorm-doc.md` (resolve `${SKILL_DIR}` per the rule in step 3) with the synthesized payload values (title, summary, motivation, vision, approachesConsidered, chosenDirection, openQuestions, nextSteps, transcriptSessionNote) and write the file. Report the absolute path written. End mode assertion.
 
 #### 9c — Capture as new idea
 
@@ -488,7 +496,7 @@ The filename was confirmed at step 8 (default `YYYY-MM-DD-<topic>.md`). Resolve 
 
 If `<ACTIVE_PROJECT>/brainstorming/` does not exist, create it (`mkdir -p`). The `brainstorming/` subdirectory is parallel to existing `pr/` and `reviews/` subdirectories — explicit purpose, naturally discoverable.
 
-Render `.agents/skills/oat-brainstorm/templates/brainstorm-doc.md` with the synthesized payload (same shape as the doc-to-path destination) and write to the resolved path. Report the absolute path written. End mode assertion.
+Render `${SKILL_DIR}/templates/brainstorm-doc.md` (resolve `${SKILL_DIR}` per the rule in step 3) with the synthesized payload (same shape as the doc-to-path destination) and write to the resolved path. Report the absolute path written. End mode assertion.
 
 ## Success Criteria
 
