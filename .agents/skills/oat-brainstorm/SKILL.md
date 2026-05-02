@@ -486,7 +486,7 @@ After printing the prompt, **stop**. End mode assertion. The user runs the plan-
 
 #### 9j — Active project: brainstorming reference file
 
-Available regardless of project phase or PR status. No commit required (the reference file is a captured artifact, not an integrated plan change).
+Available regardless of project phase or PR status. The reference file is a **durable tracked artifact** — after writing it, the skill commits it on the active branch so the working tree is clean when the skill exits and the reference travels with the project.
 
 The filename was confirmed at step 8 (default `YYYY-MM-DD-<topic>.md`). Resolve the target path:
 
@@ -496,7 +496,16 @@ The filename was confirmed at step 8 (default `YYYY-MM-DD-<topic>.md`). Resolve 
 
 If `<ACTIVE_PROJECT>/brainstorming/` does not exist, create it (`mkdir -p`). The `brainstorming/` subdirectory is parallel to existing `pr/` and `reviews/` subdirectories — explicit purpose, naturally discoverable.
 
-Render `${SKILL_DIR}/templates/brainstorm-doc.md` (resolve `${SKILL_DIR}` per the rule in step 3) with the synthesized payload (same shape as the doc-to-path destination) and write to the resolved path. Report the absolute path written. End mode assertion.
+Render `${SKILL_DIR}/templates/brainstorm-doc.md` (resolve `${SKILL_DIR}` per the rule in step 3) with the synthesized payload (same shape as the doc-to-path destination) and write to the resolved path.
+
+After writing, commit the file with scoped staging (mirror the discipline of the active-project fold-back commit safety contract):
+
+```bash
+git add -- "<active-project-relative-path>"
+git commit -m "chore(oat): capture brainstorming reference for <project-name>"
+```
+
+Use only `git add -- <path>` so unrelated working-tree changes are not swept into the commit. After the commit succeeds, capture the short hash via `git rev-parse --short HEAD` and report it alongside the absolute path written (for example: "Wrote `<absolute-path>` and committed as `<hash>`."). End mode assertion.
 
 ## Success Criteria
 
