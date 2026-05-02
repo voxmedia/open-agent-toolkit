@@ -6,9 +6,9 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 
 ## Canonical References
 
-- Workflow lifecycle: `apps/oat-docs/docs/guide/workflow/lifecycle.md`
-- Workflow reviews: `apps/oat-docs/docs/guide/workflow/reviews.md`
-- Workflow PR flow: `apps/oat-docs/docs/guide/workflow/pr-flow.md`
+- Workflow lifecycle: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- Workflow reviews: `apps/oat-docs/docs/workflows/projects/reviews.md`
+- Workflow PR flow: `apps/oat-docs/docs/workflows/projects/pr-flow.md`
 - Roadmap: `.oat/repo/reference/roadmap.md`
 - Backlog index: `.oat/repo/reference/backlog/index.md`
 - Backlog completed summary: `.oat/repo/reference/backlog/completed.md`
@@ -174,7 +174,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat config get`, `oat config set`, `oat config list`, `oat config describe`, `oat config dump`
   - `oat project status`, `oat project list`
   - `oat project archive sync`, `oat project archive sync <project-name>`
-  - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install` (packs: core, ideas, workflows, utility, project-management, research)
+  - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install` (packs: core, ideas, docs, workflows, utility, project-management, research, brainstorm)
 - Provider config model:
   - Project provider enablement lives in `.oat/sync/config.json` (`providers.<name>.enabled`).
   - `oat init --scope project` prompts for provider selection in interactive mode.
