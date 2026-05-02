@@ -272,6 +272,114 @@ The payload is staged in memory only — it is not persisted between conversatio
 
 After confirmation succeeds, proceed to step 9 (handoff).
 
+### Step 9: Handoff
+
+Branch on the destination. Each branch executes its handoff inline using the confirmed payload. The non-fold-back destinations are listed first; the active-project router and fold-back commit safety contract are detailed at the end of this step.
+
+#### 9a — Inline only
+
+Print a one-paragraph closing summary capturing chosen direction (or "no direction selected"), key decisions, and any open questions. End mode assertion. No artifact is written.
+
+#### 9b — Doc-to-path
+
+The user-supplied path was confirmed at step 8. Validate it before any write (per design Error Handling: "Path validation failures (doc-to-path)"):
+
+1. **Path is a directory** → ask the user for a filename, do not write.
+2. **Parent directory missing** → offer to create it. **If outside the current repo, require explicit confirmation** before creating any directory tree (e.g., "That path is outside the current repo at `<resolved-path>`. Create the parent directories there? (y/n)").
+3. **File already exists** → ask whether to overwrite or pick a different filename. Do not silently overwrite.
+4. **Path is unwritable** (permission denied, read-only filesystem, etc.) → surface the OS error verbatim and ask for an alternative path.
+
+When validation passes, render `.agents/skills/oat-brainstorm/templates/brainstorm-doc.md` with the synthesized payload values (title, summary, motivation, vision, approachesConsidered, chosenDirection, openQuestions, nextSteps, transcriptSessionNote) and write the file. Report the absolute path written. End mode assertion.
+
+#### 9c — Capture as new idea
+
+Read `.agents/skills/oat-idea-new/SKILL.md` and execute its **Steps 3 through 7** inline using the confirmed slug as the idea name:
+
+- Step 3: initialize ideas directory (`mkdir -p` for the idea root, copy `ideas-backlog.md` and `ideas-scratchpad.md` from templates if missing).
+- Step 4: scaffold `discovery.md` from the `idea-discovery.md` template.
+- Step 5: update `{IDEAS_ROOT}/backlog.md` with the new entry under **Active Brainstorming**.
+- Step 6: check the scratchpad for a matching unchecked entry; check it off and append `→ started (...)` if found.
+- Step 7: set `oat config set activeIdea "{IDEAS_ROOT}/{idea-name}"`.
+
+Then **seed the scaffolded `discovery.md`** with the synthesized payload — fill the canonical idea-discovery sections from the payload:
+
+- "What's the Idea?" → `summary`
+- "Why Is It Interesting?" → `motivation`
+- "What Would It Look Like?" → `vision`
+- "Notes & Discussion" → first session entry containing `transcriptSessionNote` (and `chosenDirection` / `openQuestions` if surfaced)
+
+After the seed write, offer the user two options:
+
+- **Chain into ideation** → read `.agents/skills/oat-idea-ideate/SKILL.md` and continue from its Step 4 (Start New Session).
+- **Stop here** → end mode assertion; report the idea path.
+
+Do not invoke `oat-idea-ideate` automatically. The handoff is offered, not forced.
+
+#### 9d — Extend existing idea
+
+The "which idea" was confirmed at step 8. Read `.agents/skills/oat-idea-ideate/SKILL.md` and **jump directly to its Step 4 (Start New Session)** with the resolved idea path. Append `transcriptSessionNote` from the payload as the new session's body. Include `chosenDirection`, `openQuestions`, and `nextSteps` in the session entry if they surfaced during convergence (they often do when the user wants the new session to record decisions, not just notes).
+
+End mode assertion when ideation hands control back.
+
+#### 9e — Summarize idea directly
+
+Two-step inline execution, run silently from the user's point of view:
+
+1. **Capture as new idea silently** — execute branch 9c above (Steps 3-7 of `oat-idea-new` plus seed). Do not surface progress detail; this is plumbing for the summary that's coming next.
+2. **Summarize end-to-end** — read `.agents/skills/oat-idea-summarize/SKILL.md` and run its full process. The downstream skill surfaces its own summary for accept/refine review — that is the user's gate.
+
+End mode assertion when `oat-idea-summarize` hands control back.
+
+#### 9f — Scoped backlog item
+
+Read `.agents/skills/oat-pjm-add-backlog-item/SKILL.md` and execute its process **from Step 1**. Pre-fill its early-prompt answers from the confirmed payload:
+
+- `Title` → payload field-by-field title (already user-confirmed at step 8).
+- `Description / context` → user-confirmed description.
+- `Acceptance criteria` → user-confirmed bullet list.
+- `Scope` → user-confirmed sizing (xs / s / m / l / xl).
+- `Priority` → user-confirmed priority (p0 / p1 / p2 / p3).
+- Optional fields (related items, target release, owner) → only if surfaced during synthesis.
+
+The downstream `oat-pjm-add-backlog-item` owns ID generation, file writing under `.oat/repo/reference/backlog/items/`, and backlog-index regeneration. Do not duplicate that logic here.
+
+End mode assertion when the backlog-add hands control back.
+
+#### 9g — Promote to new OAT project
+
+The slug and workflow mode (`quick` vs `spec-driven`) were confirmed at step 8. Run:
+
+```bash
+oat project new <slug> --mode <mode>
+```
+
+This scaffolds the project directory under `.oat/projects/<scope>/<slug>/` with the standard core files (state.md, discovery.md, etc.).
+
+Then **write a field-filled `discovery.md`** at `<project>/discovery.md` using the synthesized payload:
+
+- Initial Request → payload `summary` (and `motivation` if it adds context).
+- Solution Space → render `approachesConsidered[]` (each approach as a sub-section with description + tradeoffs; flag the recommended one).
+- Chosen Direction → payload `chosenDirection.approachName` + `chosenDirection.rationale`. If `chosenDirection` is null, write "No direction selected during brainstorming — discovery phase will choose during approach reaffirmation."
+- Key Decisions → extract from `transcriptSessionNote` and any explicit decisions surfaced in the conversation.
+- Open Questions → payload `openQuestions[]`.
+
+**Do NOT write `design.md`.** Project promotion is `discovery.md`-only. Rationale: a half-populated `design.md` constrains the design phase to a shape the user hasn't deliberately chosen and short-circuits `oat-project-design`'s collaborative cadence. Architectural intent surfaced during brainstorming lands in discovery's `Solution Space` / `Chosen Direction` / `Key Decisions` — exactly where the design phase will read it.
+
+Mark the discovery frontmatter:
+
+- `oat_status: complete`
+- `oat_ready_for: oat-project-quick-start` (when mode is `quick`) or `oat-project-design` (when mode is `spec-driven`)
+
+Update the project's `state.md` (phase=discovery, status=complete) so the project is recognized as ready for the next phase.
+
+Print a pointer to the next skill, e.g.:
+
+> "Project `<slug>` scaffolded with seeded discovery. Run `<oat-project-quick-start | oat-project-design>` when you're ready to continue."
+
+**Stop here. Do NOT inline-execute the next phase.** The deliberate transition is the point — the user runs the next skill at their own pace.
+
+End mode assertion.
+
 ## Success Criteria
 
 _Filled in p03-t07._
