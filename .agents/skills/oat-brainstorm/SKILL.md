@@ -200,6 +200,78 @@ If "keep going", return to step 5. If "wrap up", surface the **pack-filtered ter
 
 Once a destination is identified (either path), proceed to step 7.
 
+### Step 7: Satisfaction Check
+
+Whichever path triggered convergence, ask the user one question — no exceptions:
+
+> "Feel good about where we landed, or want to keep brainstorming and add more detail?"
+
+- **Keep going** → return to step 5 with the destination noted in working memory. While back in step 5, the skill may **proactively probe for required template fields** the destination needs but the conversation hasn't yet covered (per `references/destinations.md` per-destination "If user wants to keep brainstorming after this is offered" rules — e.g., probe for `motivation` and `vision` if a "capture as new idea" destination has been surfaced but the conversation has been thin on those). Do not re-print the visual-companion offer or the pack-detection step; those run once per session.
+- **Wrap up** → continue to step 8 (synthesis).
+
+This step is the user's brake: convergence does not commit them to anything until they explicitly say "wrap up". A trigger phrase is not a contract; it's an opportunistic signal.
+
+### Step 8: Synthesis with Confirmation
+
+Build the canonical synthesized payload from the conversation. Schema (per design Data Models — `SynthesizedPayload`):
+
+```ts
+interface SynthesizedPayload {
+  title: string; // slug-friendly topic name
+  summary: string; // 2-3 sentence overview
+  motivation: string; // why this matters
+  vision: string; // what it would look like if shipped
+  approachesConsidered: Array<{
+    name: string;
+    description: string;
+    tradeoffs: string;
+    recommended: boolean;
+  }>;
+  chosenDirection: {
+    approachName: string; // matches one of approachesConsidered[].name
+    rationale: string;
+  } | null; // null when no direction was chosen
+  openQuestions: string[];
+  nextSteps: string[];
+  transcriptSessionNote: string; // chronological session log for Notes & Discussion sections
+}
+```
+
+The payload is staged in memory only — it is not persisted between conversation turns. If the conversation ends abruptly, the only record is whatever the destination handoff writes (see step 9).
+
+**Confirmation pattern.** Consult `references/destinations.md` for the destination's confirmation pattern:
+
+- **`full`** (currently only `Scoped backlog item`): present the proposed payload **field-by-field** using the example wording from the destination stanza in the playbook. The user confirms or revises each field before any write happens. The exact wording for the scoped-backlog-item case is:
+
+  ```
+  I have what I need to track this as a backlog item. Here is the proposed payload:
+
+    Title:      <title>
+    Description:
+      <description, 2-3 sentences>
+    Acceptance Criteria:
+      - <criterion 1>
+      - <criterion 2>
+    Scope:      <xs|s|m|l|xl>
+    Priority:   <p0|p1|p2|p3>
+
+  Confirm to write this to a new bl-XXXX file, or tell me what to change.
+  ```
+
+  If the user requests changes, apply them to the in-memory payload and re-display the affected fields before continuing.
+
+- **`minimal`** (most destinations): confirm only the slug / path / which artifact / which idea / filename, depending on the destination. Examples:
+  - Capture as new idea → confirm slug.
+  - Extend existing idea → confirm which idea (slug or path).
+  - Doc-to-path → confirm path.
+  - Promote to new project → confirm slug + workflow mode (`quick` vs `spec-driven`, with skill proposing a default based on the chosen direction and scope signals).
+  - Active-project fold-back → confirm which artifact (`design.md` if exists, else `discovery.md`; user signal can override toward `discovery.md` for foundational changes).
+  - Active-project reference file → confirm filename (default `YYYY-MM-DD-<topic>.md`).
+
+- **`none`** (currently `Inline only` and `Summarize idea directly`): no per-field confirmation at this layer. For `Inline only`, write the closing summary directly. For `Summarize idea directly`, hand off — the downstream `oat-idea-summarize` surfaces its own summary for accept/refine review.
+
+After confirmation succeeds, proceed to step 9 (handoff).
+
 ## Success Criteria
 
 _Filled in p03-t07._
