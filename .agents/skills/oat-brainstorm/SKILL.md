@@ -142,6 +142,64 @@ Capture the resolved values; the skill consults them at step 9 (destination hand
 
 If `ACTIVE_PROJECT` is set but `state.md` is missing or unreadable, treat the active-project router as inactive (per design's Error Handling: "Active project resolution conflicts"). Print a single warning line and continue with the standard pack-filtered terminal-state picker. The brainstorm is not blocked.
 
+### Step 5: Free Brainstorming (Superpowers Cadence)
+
+Run the conversation in the Superpowers cadence. The hard rules:
+
+- **One question at a time.** Never bundle multiple questions in a single message. If a topic needs more exploration, break it across multiple turns.
+- **Prefer multiple-choice over open-ended** when possible — easier to answer, faster to converge. Open-ended is fine when the question genuinely needs free-form thought (motivation, vision, "what does X mean to you here").
+- **Propose 2-3 distinct approaches with a recommendation** when an architectural / design choice surfaces. Lead with your recommended option and explain the why; the alternatives exist so the user can push back deliberately.
+- **YAGNI ruthlessly.** When the user adds scope, ask whether it earns its place; do not pad the conversation with hypothetical features.
+- **Be flexible.** If the user contradicts an earlier answer or pivots, follow them — the goal is the destination payload, not consistency for its own sake.
+
+Build the synthesized payload in memory as the conversation progresses. The payload schema (see Synthesis at step 8) covers `title`, `summary`, `motivation`, `vision`, `approachesConsidered[]`, `chosenDirection`, `openQuestions[]`, `nextSteps[]`, and `transcriptSessionNote`. Update fields as user answers land; don't ask for fields that have already been covered.
+
+**Per-question visual-companion routing.** Even when the visual companion is `active`, decide _per question_ whether to use the browser or the terminal. The test: would the user understand this better by seeing it than reading it?
+
+- **Browser** for content that IS visual: mockups, wireframes, layout comparisons, architecture diagrams, side-by-side visual designs. Push an HTML fragment to `screen_dir` (per `references/visual-companion.md`); read interactions back from `state_dir/events` on the next turn.
+- **Terminal** for content that is text: requirements questions, conceptual choices, tradeoff lists, A/B/C/D text options, scope decisions.
+
+A question about a UI topic is not automatically a visual question. "What does 'personality' mean for this widget?" is conceptual — terminal. "Which of these two layouts works better?" is visual — browser.
+
+If the visual companion is `declined` or `unavailable`, route everything to the terminal. The conversation does not stall on missing visuals — describe in prose, sketch in ASCII if it helps, move on.
+
+Stay in this step until either a destination trigger phrase fires (step 6) or a soft convergence cue appears (also step 6).
+
+### Step 6: Destination Identification
+
+Two convergence paths land here. Watch for both during step 5; the conversation does not need to fully exhaust before convergence — opportunistic surfacing is the whole point.
+
+**Path A — trigger phrase fires.** During step 5, on every user message, match the message text against the trigger phrases catalogued in `references/destinations.md`. The matching rules:
+
+- **Loose substring + paraphrase tolerance.** Case-insensitive. "let's track this as a backlog item", "track it", "make a ticket out of this", and "log this as a bl-item" all hit the scoped-backlog-item destination, even though the literal phrasing differs from the playbook examples.
+- **Not regex.** Don't try to over-fit; the playbook phrases are concrete signals, not patterns to compile.
+- **Multiple matches → ask before committing.** If a user message could plausibly map to two destinations (e.g., "save this somewhere" — doc-to-path or active-project reference file?), surface the ambiguity in a single confirmation question: "Sounds like you want to write this to a file — to a path you specify, or as a brainstorming reference under the active project?". Pick whichever the user names; do not silently choose.
+- **Single confident match → surface immediately.** "Sounds like you want to track this as a backlog item — confirm?" Then go to step 7 (satisfaction check) without forcing the user to commit yet.
+
+**Path B — soft convergence cue.** No trigger phrase fired, but the conversation has hit a natural stopping point. Cues to watch for:
+
+- User explicitly says "I'm done", "let's wrap", "I think that covers it", "OK that's enough".
+- Sustained absence of new questions from the user — they're answering, but not adding new directions.
+- User repeats points already made.
+- User asks "so what now?" or "where does this go from here?".
+
+On a soft convergence cue, prompt:
+
+> "I think we've covered the ground here — want to wrap up, or keep going?"
+
+If "keep going", return to step 5. If "wrap up", surface the **pack-filtered terminal-state picker**:
+
+1. Load `references/destinations.md` and assemble the candidate destinations.
+2. Filter by pack:
+   - Always-available: `Inline only`, `Doc-to-path`.
+   - Gated by `IDEAS_INSTALLED == "true"`: `Capture as new idea`, `Extend existing idea`, `Summarize idea directly`.
+   - Gated by `PJM_INSTALLED == "true"`: `Scoped backlog item`.
+   - Gated by `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID != "true"`: `Promote to new OAT project`.
+   - Gated by `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID == "true"`: `Active project: fold-back` and `Active project: brainstorming reference file`. When this branch fires, present the **3-way active-project router first** (see step 9 active-project branches) — its outcome controls whether the rest of the picker is even surfaced.
+3. Present the filtered list to the user. Wait for selection.
+
+Once a destination is identified (either path), proceed to step 7.
+
 ## Success Criteria
 
 _Filled in p03-t07._
