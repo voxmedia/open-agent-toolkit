@@ -5,9 +5,14 @@
  * confirms the URL responds, then stops the server cleanly via
  * `stop-server.sh`. Exercises the lifted-from-Superpowers Node server
  * + bash launcher as a single end-to-end check.
+ *
+ * Also covers OAT-side persistence-path resolution:
+ *   - --project-dir override
+ *   - walk-up detection of .oat/ in cwd ancestor chain
+ *   - fallback to $HOME/.oat/brainstorm/
  */
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -31,7 +36,9 @@ const tempDirs: string[] = [];
 async function makeTempProjectDir(): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'oat-brainstorm-smoke-'));
   tempDirs.push(dir);
-  return dir;
+  // Canonicalize to follow macOS /var → /private/var symlink so prefix
+  // comparisons against the script's `pwd`-resolved cwd succeed.
+  return realpathSync(dir);
 }
 
 interface ServerInfo {
@@ -46,17 +53,31 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function startServer(projectDir: string): Promise<{
+interface StartOptions {
+  projectDir?: string;
+  cwd?: string;
+  homeOverride?: string;
+}
+
+async function startServer(options: StartOptions = {}): Promise<{
   info: ServerInfo;
   rawJson: string;
 }> {
   return await new Promise((resolve, reject) => {
     let stdout = '';
-    const child = spawn(
-      'bash',
-      [join(SCRIPTS_DIR, 'start-server.sh'), '--project-dir', projectDir],
-      { stdio: ['ignore', 'pipe', 'pipe'] },
-    );
+    const args = [join(SCRIPTS_DIR, 'start-server.sh')];
+    if (options.projectDir) {
+      args.push('--project-dir', options.projectDir);
+    }
+    const env = { ...process.env };
+    if (options.homeOverride) {
+      env.HOME = options.homeOverride;
+    }
+    const child = spawn('bash', args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      cwd: options.cwd,
+      env,
+    });
 
     child.stdout.on('data', (chunk: Buffer) => {
       stdout += chunk.toString('utf8');
@@ -72,9 +93,7 @@ async function startServer(projectDir: string): Promise<{
         const parsed = JSON.parse(line) as Record<string, unknown>;
         if (parsed.type !== 'server-started') {
           reject(
-            new Error(
-              `start-server.sh did not report server-started: ${line}`,
-            ),
+            new Error(`start-server.sh did not report server-started: ${line}`),
           );
           return;
         }
@@ -115,7 +134,7 @@ describe('visual-companion server smoke test', () => {
   it('starts the visual-companion server, serves the root URL, and stops cleanly', async () => {
     const projectDir = await makeTempProjectDir();
 
-    const { info } = await startServer(projectDir);
+    const { info } = await startServer({ projectDir });
 
     try {
       expect(info.url).toMatch(/^http:\/\//);
@@ -157,7 +176,7 @@ describe('visual-companion server smoke test', () => {
   it('writes server-info JSON containing state_dir and screen_dir', async () => {
     const projectDir = await makeTempProjectDir();
 
-    const { info } = await startServer(projectDir);
+    const { info } = await startServer({ projectDir });
 
     try {
       const serverInfoPath = join(info.state_dir, 'server-info');
@@ -167,6 +186,85 @@ describe('visual-companion server smoke test', () => {
       };
       expect(parsed.screen_dir).toBe(info.screen_dir);
       expect(parsed.state_dir).toBe(info.state_dir);
+    } finally {
+      const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
+      await stopServer(sessionDir);
+    }
+  }, 30_000);
+});
+
+describe('start-server.sh persistence-path resolution', () => {
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => {
+        await rm(dir, { recursive: true, force: true });
+      }),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('respects --project-dir override (paths land under <project-dir>/.oat/brainstorm/)', async () => {
+    const projectDir = await makeTempProjectDir();
+
+    const { info } = await startServer({ projectDir });
+
+    try {
+      const expectedPrefix = join(projectDir, '.oat', 'brainstorm');
+      expect(info.state_dir.startsWith(expectedPrefix)).toBe(true);
+      expect(info.screen_dir.startsWith(expectedPrefix)).toBe(true);
+    } finally {
+      const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
+      await stopServer(sessionDir);
+    }
+  }, 30_000);
+
+  it('resolves to <repo-root>/.oat/brainstorm/ when invoked inside an OAT-initialized repo', async () => {
+    // Build a repo-like directory: <root>/.oat exists. Run start-server from
+    // a nested subdirectory and assert the script walks up to <root>.
+    const repoRoot = await makeTempProjectDir();
+    mkdirSync(join(repoRoot, '.oat'), { recursive: true });
+    const nestedCwd = join(repoRoot, 'nested', 'work');
+    mkdirSync(nestedCwd, { recursive: true });
+
+    // Override HOME so the fallback path can be unambiguously distinguished
+    // if the walk-up detection were to fail.
+    const homeOverride = await makeTempProjectDir();
+
+    const { info } = await startServer({
+      cwd: nestedCwd,
+      homeOverride,
+    });
+
+    try {
+      const expectedPrefix = join(repoRoot, '.oat', 'brainstorm');
+      expect(
+        info.state_dir.startsWith(expectedPrefix),
+        `expected ${info.state_dir} to start with ${expectedPrefix}`,
+      ).toBe(true);
+      expect(info.screen_dir.startsWith(expectedPrefix)).toBe(true);
+      // Confirm the fallback was *not* chosen.
+      expect(info.state_dir.startsWith(homeOverride)).toBe(false);
+    } finally {
+      const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
+      await stopServer(sessionDir);
+    }
+  }, 30_000);
+
+  it('falls back to $HOME/.oat/brainstorm/ when invoked outside an OAT repo', async () => {
+    // Use a tmp directory with NO .oat/ ancestor. Override HOME so the
+    // assertion is independent of the test runner's actual home.
+    const isolatedCwd = await makeTempProjectDir();
+    const homeOverride = await makeTempProjectDir();
+
+    const { info } = await startServer({
+      cwd: isolatedCwd,
+      homeOverride,
+    });
+
+    try {
+      const expectedPrefix = join(homeOverride, '.oat', 'brainstorm');
+      expect(info.state_dir.startsWith(expectedPrefix)).toBe(true);
+      expect(info.screen_dir.startsWith(expectedPrefix)).toBe(true);
     } finally {
       const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
       await stopServer(sessionDir);

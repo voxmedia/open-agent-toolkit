@@ -5,9 +5,17 @@
 # Starts server on a random high port, outputs JSON with URL.
 # Each session gets its own directory to avoid conflicts.
 #
+# OAT persistence-path resolution (descending priority):
+#   1. --project-dir <path>  → <path>/.oat/brainstorm/<session-id>/
+#   2. invoked inside an OAT-initialized repo (walk-up detection of .oat/)
+#                            → <repo-root>/.oat/brainstorm/<session-id>/
+#   3. fallback              → ~/.oat/brainstorm/<session-id>/
+#
+# Files persist after server stops in all three cases — no /tmp default.
+#
 # Options:
-#   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
-#                         instead of /tmp. Files persist after server stops.
+#   --project-dir <path>  Store session files under <path>/.oat/brainstorm/.
+#                         Overrides repo walk-up detection.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -77,10 +85,30 @@ fi
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
 
+# Resolve OAT-managed persistence prefix.
+#   1. --project-dir <path>      → <path>/.oat/brainstorm/<session-id>/
+#   2. invoked inside an OAT repo (walk-up detection of .oat/ directory)
+#                                → <repo-root>/.oat/brainstorm/<session-id>/
+#   3. fallback                  → ~/.oat/brainstorm/<session-id>/
 if [[ -n "$PROJECT_DIR" ]]; then
-  SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
+  SESSION_DIR="${PROJECT_DIR}/.oat/brainstorm/${SESSION_ID}"
 else
-  SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
+  # Walk up from the current working directory looking for a .oat/ dir.
+  REPO_ROOT=""
+  WALK_DIR="$(pwd)"
+  while [[ -n "$WALK_DIR" && "$WALK_DIR" != "/" ]]; do
+    if [[ -d "$WALK_DIR/.oat" ]]; then
+      REPO_ROOT="$WALK_DIR"
+      break
+    fi
+    WALK_DIR="$(dirname "$WALK_DIR")"
+  done
+
+  if [[ -n "$REPO_ROOT" ]]; then
+    SESSION_DIR="${REPO_ROOT}/.oat/brainstorm/${SESSION_ID}"
+  else
+    SESSION_DIR="${HOME}/.oat/brainstorm/${SESSION_ID}"
+  fi
 fi
 
 STATE_DIR="${SESSION_DIR}/state"
