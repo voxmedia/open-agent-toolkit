@@ -9,6 +9,10 @@ Use the ideas workflow when you need a place to think, sketch, or explore before
 
 Ideas are intentionally lighter than projects: they are usually gitignored, personal, and optimized for brainstorming rather than traceable delivery.
 
+## Not Sure If It's an Idea Yet?
+
+If the thought is still pre-shape — you don't know whether it should land as a quick scratchpad note, a captured idea, a scoped backlog item, or a full project — start with [`oat-brainstorm`](../../cli-utilities/tool-packs.md) instead. It's the always-on, project-independent brainstorming entry point: it activates on exploratory phrasing, runs a structured design conversation, and routes the outcome into the right destination (including this ideas workflow if that's where the brainstorm lands). Use ideas directly when you already know the work is "an idea worth tracking" and you want to capture or extend one without going through the dispatcher.
+
 ## Contents
 
 - [Lifecycle](lifecycle.md) - Capture, ideate, refine, and summarize an idea before promotion or discard.

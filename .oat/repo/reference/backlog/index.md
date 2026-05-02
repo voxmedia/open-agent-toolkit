@@ -33,7 +33,7 @@
 | bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback                   | open        | medium   | initiative | M        |
 | bl-0ace | Move oat-project-complete state mutations into a CLI helper                          | in_progress | medium   | feature    | M        |
 | bl-28ce | Persist instruction sync strategy in config and expose it in init                    | open        | medium   | feature    | M        |
-| bl-53f0 | Project-independent brainstorming mode                                               | open        | medium   | feature    | L        |
+| bl-53f0 | Project-independent brainstorming mode                                               | closed      | medium   | feature    | L        |
 | bl-e582 | Wire .oat/repo/reference artifacts into lifecycle skill reads                        | open        | medium   | feature    | M        |
 | bl-3327 | Add dependency intelligence skill family                                             | open        | low      | feature    | L        |
 | bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new                        | open        | low      | feature    | L        |

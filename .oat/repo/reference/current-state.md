@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-04-30 (collaborative-design workflow revision added Selective Collaborative design mode; live picker/elevation/final-recap dogfood is still pending before PR)
+**Last Updated:** 2026-05-02 (independent-brainstorming shipped a new `brainstorm` pack with the always-on `oat-brainstorm` dispatcher skill, visual-companion bundle ported from Superpowers, and a generalized `PACK_METADATA` default-scope mechanism; lockstep public packages bumped to 0.0.57; pre-existing collaborative-design dogfood still pending)
 
 ## Canonical References
 
@@ -40,6 +40,11 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - Completion closeout now auto-refreshes `summary.md`, always archives locally, can upload archives to S3 via `archive.s3Uri` + `archive.s3SyncOnComplete`, and can export summaries via `archive.summaryExportPath`
 - Idea workflow:
   - `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
+- Brainstorming (always-on):
+  - `oat-brainstorm` (project-independent brainstorming dispatcher, installed via the new `brainstorm` tool pack — user-eligible, default user scope, default-on in `oat init`). Activates proactively on exploratory phrasing; runs Superpowers-style cadence; surfaces a pack-aware terminal-state picker; hands off to existing `oat-idea-*`, `oat-pjm-add-backlog-item`, `oat-project-*` skills.
+  - Bundled visual companion (`scripts/{server.cjs, start-server.sh, stop-server.sh, frame-template.html, helper.js}` + `references/visual-companion.md`) — port of MIT-licensed `superpowers:brainstorming@5.0.7` with OAT-aligned persistence-path resolution. Attribution in `NOTICES.md`.
+  - Active-project routing has 3 sub-options (related → fold-back, independent → other terminal states, supplementary → reference file); fold-back enforces a commit safety contract (preflight `git status --porcelain`, scoped `git add --`, three-option dirty-tree picker, conditional handoff prompt).
+  - Default-scope mechanism (`PACK_METADATA[name]?.defaultScope`, see ADR-017) drives both the interactive picker and the non-interactive resolver; `brainstorm` is the first user-default-scope pack, with `core` as a future consolidation candidate.
 - Review loop:
   - `oat-review-provide` (ad-hoc/non-project review)
   - `oat-review-receive` (ad-hoc local review receive: parse findings, triage, generate standalone tasks)

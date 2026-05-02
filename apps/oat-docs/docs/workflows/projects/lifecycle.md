@@ -210,6 +210,26 @@ See the [Workflow preferences section in the Configuration guide](../../cli-util
 - Projects root is stored in `.oat/config.json` (`projects.root`) and can be read via `oat config get projects.root`.
 - Workflow skills prefer `oat config get activeProject` / `oat config get projects.root` rather than reading pointer files directly.
 
+## Brainstorming integration with the project lifecycle
+
+`oat-brainstorm` (in the `brainstorm` tool pack) interacts with the project lifecycle in two distinct ways: it can **seed a brand new project** from a brainstorming conversation when no project is active, or **fold back into an active project** when one is.
+
+### Seeding a new project from a brainstorm
+
+When the brainstorming destination is "promote to a new OAT project", the dispatcher confirms a project slug and a mode (`quick` vs `spec-driven`) with the user, runs `oat project new <slug> --mode <mode>` to scaffold the project, and writes the new project's `discovery.md` directly from the brainstorming payload — Initial Request, Solution Space with approaches considered, Chosen Direction, Key Decisions, Open Questions. It writes `discovery.md` only (never a partial `design.md`), so the design phase keeps its full collaborative cadence and consumes the brainstorm's architectural intent from discovery's Solution Space and Chosen Direction sections during approach reaffirmation. The dispatcher stops with a pointer to `oat-project-quick-start` or `oat-project-design` — it deliberately does not auto-chain into the next phase, so the user makes that transition consciously.
+
+This is a parallel entry path into the Spec-Driven and Quick lanes, not a new lane: the resulting project follows the normal lane it was scaffolded into. The brainstorm-as-seed step is what changes — the user arrives at `oat-project-quick-start` (or `oat-project-design`) with discovery already populated rather than starting from a blank discovery template.
+
+### Folding back into an active project
+
+When `oat-brainstorm` fires while a project is active, it offers a 3-way picker before any pack-filtered destination shows up:
+
+- **Related to the project** → fold the synthesized brainstorming content back into the most-specific upstream artifact (`design.md` if it exists, otherwise `discovery.md`), commit immediately, and print a handoff prompt for the right plan-authoring skill (`oat-project-plan` for spec-driven, `oat-project-quick-start` for quick, `oat-project-revise` when an open PR exists). The fold-back commit is safety-gated: a preflight `git status --porcelain -- "$ARTIFACT_PATH"` checks for dirty state, staging is exactly `git add -- "$ARTIFACT_PATH"` (never `-A`, never globs), and the handoff prompt only prints after the scoped commit succeeds.
+- **Independent of the project** → the active project is acknowledged but doesn't constrain the picker; brainstorm routes through its standard pack-filtered terminal-state options (new project, backlog item, idea, doc-to-path, inline).
+- **Related but supplementary** → write a brainstorming reference file at `.oat/projects/<scope>/<project>/brainstorming/YYYY-MM-DD-<topic>.md`, alongside `pr/` and `reviews/`. No lifecycle artifact is touched.
+
+The fold-back path is what makes "we got to plan and realized the design missed something" recoverable mid-project: the upstream artifact gets updated and committed cleanly, then the user re-runs plan authoring with a "don't refresh, integrate" context that preserves review-table state.
+
 ## Reference artifacts
 
 - `.oat/projects/<scope>/<project>/spec.md`

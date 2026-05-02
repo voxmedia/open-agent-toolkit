@@ -25,6 +25,16 @@ Each level has its own independent backlog, scratchpad, and active-idea config v
 3. Resume brainstorming: `oat-idea-ideate` (multiple sessions over time)
 4. Finalize: `oat-idea-summarize` (generates summary, updates backlog)
 
+## Relationship to `oat-brainstorm`
+
+The always-on `oat-brainstorm` skill (in the `brainstorm` tool pack) can feed into this workflow. When a brainstorming conversation converges on an ideas-pack destination, the dispatcher follows the same flow above and seeds it with the brainstorming session content:
+
+- **Capture as new idea** — runs `oat-idea-new` Steps 3-7 inline and pre-fills the new idea's `discovery.md` from the brainstorming payload (`What's the Idea?` from the synthesized summary + motivation, `What Would It Look Like?` from the vision, `Open Questions` from the conversation, plus a first session under `Notes & Discussion` headed `### Session: YYYY-MM-DD (seeded from oat-brainstorm)`). The dispatcher then optionally chains into `oat-idea-ideate` Step 4 to keep brainstorming inside the idea, or stops with the session captured.
+- **Extend existing idea** — jumps straight to `oat-idea-ideate` Step 4 (Start New Session) on the chosen idea path and appends the brainstorming transcript as a new session under `Notes & Discussion`.
+- **Summarize directly** — fast path that runs the capture flow silently and then invokes `oat-idea-summarize` end-to-end, producing both the idea record and the summary in one shot. Only offered when the brainstorming conversation produced enough material to summarize directly.
+
+`oat-brainstorm` sets `activeIdea` automatically when its destination lands in this workflow. If the brainstorming conversation converges on a non-ideas destination instead (scoped backlog item, new project, doc-to-path, inline), `oat-brainstorm` does not touch ideas — see [Tool Packs](../../cli-utilities/tool-packs.md) for the full brainstorm pack reference.
+
 ## Directory structure
 
 ```text
@@ -92,6 +102,8 @@ To promote a summarized idea to a Spec-Driven OAT project:
 1. Run the `oat-project-new` skill with the idea name to scaffold the project
 2. Run the `oat-project-discover` skill and use the idea's `summary.md` as the initial request
 3. Update the ideas backlog entry to Archived with reason: promoted to project
+
+If the work hasn't been summarized as an idea yet — or never was an idea to begin with — `oat-brainstorm`'s **"promote to a new OAT project"** destination is a parallel route. The brainstorm dispatcher scaffolds the project via `oat project new <slug> --mode <mode>`, writes the seeded `discovery.md` directly from the brainstorming payload (Initial Request, Solution Space with approaches considered, Chosen Direction, Key Decisions, Open Questions), and stops with a pointer to `oat-project-quick-start` or `oat-project-design`. It deliberately writes `discovery.md` only — never a partial `design.md` — so the design phase keeps its full collaborative cadence.
 
 ## Initialization
 

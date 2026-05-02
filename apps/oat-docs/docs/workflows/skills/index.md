@@ -20,7 +20,8 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Import an existing plan: `oat-project-import-plan`
 - Retroactively capture existing work: `oat-project-capture`
 - Run or receive reviews: `oat-project-review-provide`, `oat-project-review-receive`, or the non-project review variants
-- Manage the repo backlog and reference docs: `oat-pjm-add-backlog-item`, `oat-pjm-update-repo-reference`, `oat-pjm-review-backlog`
+- Capture a scoped, shippable backlog item: `oat-pjm-add-backlog-item` directly when the work is already scoped, or `oat-brainstorm` when the thought hasn't converged yet — the brainstorm dispatcher's "scoped backlog item" destination pre-fills the title / description / acceptance criteria / scope estimate / priority from the conversation and then runs `oat-pjm-add-backlog-item` with confirmed inputs
+- Manage the repo backlog and reference docs: `oat-pjm-update-repo-reference`, `oat-pjm-review-backlog`
 - Work on docs surfaces: `oat-docs-bootstrap` (guided bootstrap of a new docs app), `oat-docs-analyze`, `oat-docs-apply`, and `oat-project-document`
 - Generate a shipping digest or scheduled recap: `oat-wrap-up`
 - Research a topic in depth: `deep-research`
@@ -29,7 +30,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Verify a claim adversarially: `skeptic`
 - Merge multiple analysis artifacts: `synthesize`
 - Capture or refine ideas: `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
-- Run a project-independent brainstorming conversation: `oat-brainstorm` — always-on entry point that activates on exploratory phrasing, runs a Superpowers-style design conversation, and routes to inline / doc-to-path / idea / backlog item / project handoffs based on installed packs (see [Tool Packs](../../cli-utilities/tool-packs.md) for the brainstorm pack details)
+- Run a project-independent brainstorming conversation: `oat-brainstorm` — always-on entry point that activates on exploratory phrasing, runs a structured design conversation (one question at a time, 2-3 approaches with a recommendation, scaled-section design presentation), and routes to inline / doc-to-path / idea / backlog item / project handoffs based on installed packs. See [Tool Packs](../../cli-utilities/tool-packs.md) for the brainstorm pack details.
 
 ## If You Are Trying To...
 

@@ -176,13 +176,14 @@ project-independent brainstorming conversations:
 
 - **oat-brainstorm** — Always-on brainstorming entry point. Activates on
   exploratory phrasing ("I've been thinking about", "what if we did", open-ended
-  design questions) and runs a structured Superpowers-style design conversation
-  without committing the user to an idea or project artifact. Ends in a
-  pack-aware terminal-state picker that hands off to existing OAT skills (idea
-  capture, scoped backlog item, project promotion, active-project fold-back,
-  doc-to-path) based on which packs are installed in the current repo. Two
-  base outcomes (inline-only and write a brainstorming doc to a user-specified
-  path) are always available regardless of installed packs.
+  design questions) and runs a structured design conversation (one question at
+  a time, 2-3 approaches with a recommendation, scaled-section design
+  presentation) without committing the user to an idea or project artifact.
+  Ends in a pack-aware terminal-state picker that hands off to existing OAT
+  skills (idea capture, scoped backlog item, project promotion, active-project
+  fold-back, doc-to-path) based on which packs are installed in the current
+  repo. Two base outcomes (inline-only and write a brainstorming doc to a
+  user-specified path) are always available regardless of installed packs.
 
 Key behavior:
 

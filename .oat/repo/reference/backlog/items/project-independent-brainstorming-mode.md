@@ -1,7 +1,7 @@
 ---
 id: bl-53f0
 title: 'Project-independent brainstorming mode'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
 priority_reviewed: '2026-04-27'
 scope: feature # idea | task | feature | initiative
@@ -9,7 +9,7 @@ scope_estimate: L # XS | S | M | L | XL | XXL
 labels: ['workflow-design', 'ideas', 'brainstorming']
 assignee: null
 created: '2026-04-27T15:47:14Z'
-updated: '2026-04-27T00:00:00Z'
+updated: '2026-05-02T00:00:00Z'
 associated_issues: []
 oat_template: true
 oat_template_name: backlog-item
