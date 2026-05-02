@@ -1150,7 +1150,7 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 | p01    | code     | passed          | 2026-05-01 | reviews/archived/p01-code-review-2026-05-01.md        |
 | p02    | code     | passed          | 2026-05-01 | reviews/archived/p02-code-review-2026-05-01.md        |
 | p03    | code     | passed          | 2026-05-01 | reviews/archived/p03-code-review-2026-05-01.md        |
-| p04    | code     | pending         | -          | -                                                     |
+| p04    | code     | passed          | 2026-05-01 | reviews/archived/p04-code-review-2026-05-01.md        |
 | final  | code     | pending         | -          | -                                                     |
 | spec   | artifact | pending         | -          | -                                                     |
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
@@ -1174,9 +1174,9 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 - Phase 1: 4 tasks — establish `PackMetadata` mechanism (interface, map, interactive picker wiring, non-interactive resolver wiring, migration safety)
 - Phase 2: 8 tasks — register `brainstorm` pack manifest + type union + bundle script + skill scaffold, create per-pack install helper directory, wire dispatcher / update / remove handlers + default-on set, port visual-companion bundle from Superpowers (5 files; 1 patched for OAT persistence paths), port visual-companion guide, update `NOTICES.md` attribution, ship destinations playbook and brainstorm-doc output template
 - Phase 3: 7 tasks — fill in `oat-brainstorm/SKILL.md` end-to-end (mode assertion, progress indicators, activation, pack detection, conversation cadence, destination signal-watching, satisfaction check, synthesis with confirmation, non-fold-back terminal-state handoffs, active-project router + fold-back commit safety contract, success criteria + self-review)
-- Phase 4: 4 tasks — document brainstorm pack and skill in `apps/oat-docs`, run all 10 dogfood scenarios end-to-end, lockstep public-package version bumps, `pnpm release:validate`
+- Phase 4: 5 tasks — document brainstorm pack and skill in `apps/oat-docs`, run all 10 dogfood scenarios end-to-end, lockstep public-package version bumps, regenerate `public-package-versions.json`, exclude bundled MIT-port scripts + docs from oxfmt (added p04-t05 during execution to address Phase 3-flagged format prerequisite), `pnpm release:validate`
 
-**Total: 23 tasks**
+**Total: 24 tasks**
 
 Ready for code review and merge.
 
