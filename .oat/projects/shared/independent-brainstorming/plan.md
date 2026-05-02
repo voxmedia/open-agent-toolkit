@@ -1499,7 +1499,7 @@ git commit -m "fix(p05-t08): update current-state.md workflow paths and add brai
 | p02    | code     | passed          | 2026-05-01 | reviews/archived/p02-code-review-2026-05-01.md        |
 | p03    | code     | passed          | 2026-05-01 | reviews/archived/p03-code-review-2026-05-01.md        |
 | p04    | code     | passed          | 2026-05-01 | reviews/archived/p04-code-review-2026-05-01.md        |
-| final  | code     | fixes_added     | 2026-05-02 | reviews/archived/final-review-2026-05-02.md           |
+| final  | code     | fixes_completed | 2026-05-02 | reviews/archived/final-review-2026-05-02.md           |
 | p05    | code     | pending         | -          | -                                                     |
 | spec   | artifact | pending         | -          | -                                                     |
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
