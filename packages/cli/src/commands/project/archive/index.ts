@@ -21,6 +21,7 @@ import {
   type ExecFileLike,
   parseArchiveSnapshotName,
   resolveLocalArchiveProjectPath,
+  resolvePrimaryRepoRoot,
 } from './archive-utils';
 
 const execFileAsync = promisify(execFileCallback);
@@ -105,6 +106,7 @@ export interface ProjectArchiveCommandDependencies {
   buildRepoArchiveS3Uri: typeof buildRepoArchiveS3Uri;
   buildProjectArchiveS3Uri: typeof buildProjectArchiveS3Uri;
   resolveLocalArchiveProjectPath: typeof resolveLocalArchiveProjectPath;
+  resolvePrimaryRepoRoot: typeof resolvePrimaryRepoRoot;
   execFile: ExecFileLike;
   removeDirectory: typeof rm;
   processEnv: NodeJS.ProcessEnv;
@@ -120,6 +122,7 @@ function defaultDependencies(): ProjectArchiveCommandDependencies {
     buildRepoArchiveS3Uri,
     buildProjectArchiveS3Uri,
     resolveLocalArchiveProjectPath,
+    resolvePrimaryRepoRoot,
     execFile: execFileAsync,
     removeDirectory: rm,
     processEnv: process.env,
@@ -181,7 +184,14 @@ async function listArchiveSnapshots(
   awsEnv: NodeJS.ProcessEnv,
   dependencies: ProjectArchiveCommandDependencies,
 ): Promise<ArchiveSnapshotEntry[]> {
-  const repoPrefix = `${dependencies.buildRepoArchiveS3Uri(s3Uri, repoRoot)}/`;
+  const remoteRepoRoot = await dependencies.resolvePrimaryRepoRoot(repoRoot, {
+    gitExecFile: dependencies.execFile,
+    env: awsEnv,
+  });
+  const repoPrefix = `${dependencies.buildRepoArchiveS3Uri(
+    s3Uri,
+    remoteRepoRoot,
+  )}/`;
   const { stdout } = await dependencies.execFile(
     'aws',
     ['s3', 'ls', repoPrefix],
@@ -201,7 +211,7 @@ async function listArchiveSnapshots(
         ...parsed,
         source: dependencies.buildProjectArchiveS3Uri(
           s3Uri,
-          repoRoot,
+          remoteRepoRoot,
           snapshotName,
         ),
         target: dependencies.resolveLocalArchiveProjectPath(
@@ -440,7 +450,13 @@ export function createProjectArchiveCommand(
               const sourceSummary =
                 appliedSources.length > 0
                   ? appliedSources.join(', ')
-                  : dependencies.buildRepoArchiveS3Uri(s3Uri, repoRoot);
+                  : dependencies.buildRepoArchiveS3Uri(
+                      s3Uri,
+                      await dependencies.resolvePrimaryRepoRoot(repoRoot, {
+                        gitExecFile: dependencies.execFile,
+                        env: awsEnv,
+                      }),
+                    );
 
               if (context.json) {
                 context.logger.json({

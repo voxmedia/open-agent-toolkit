@@ -79,10 +79,18 @@ export interface ArchiveProjectOnCompletionOptions {
   awsRegion?: string | null;
 }
 
-interface ArchiveProjectOnCompletionDependencies extends EnsureS3ArchiveAccessDependencies {
+export interface ResolvePrimaryRepoRootDependencies {
+  gitExecFile?: ExecFileLike;
+  dirExists?: typeof dirExists;
+  env?: NodeJS.ProcessEnv;
+}
+
+interface ArchiveProjectOnCompletionDependencies
+  extends
+    EnsureS3ArchiveAccessDependencies,
+    ResolvePrimaryRepoRootDependencies {
   ensureS3ArchiveAccess?: typeof ensureS3ArchiveAccess;
   execFile?: ExecFileLike;
-  gitExecFile?: ExecFileLike;
   ensureDir?: typeof ensureDir;
   copyDirectory?: typeof copyDirectory;
   removePath?: (
@@ -90,7 +98,6 @@ interface ArchiveProjectOnCompletionDependencies extends EnsureS3ArchiveAccessDe
     options: { recursive: true; force: true },
   ) => Promise<void>;
   copySingleFile?: typeof copySingleFile;
-  dirExists?: typeof dirExists;
   fileExists?: typeof fileExists;
   timestamp?: () => string;
 }
@@ -328,24 +335,10 @@ async function isGitignoredArchivePath(
   }
 }
 
-async function resolveArchiveRepoRoot(
+export async function resolvePrimaryRepoRoot(
   repoRoot: string,
-  archiveProjectPath: string,
-  dependencies: ArchiveProjectOnCompletionDependencies,
+  dependencies: ResolvePrimaryRepoRootDependencies = {},
 ): Promise<string> {
-  try {
-    const archivePathIsGitignored = await isGitignoredArchivePath(
-      repoRoot,
-      archiveProjectPath,
-      dependencies,
-    );
-    if (!archivePathIsGitignored) {
-      return repoRoot;
-    }
-  } catch {
-    return repoRoot;
-  }
-
   const execFile = dependencies.gitExecFile ?? execFileAsync;
 
   try {
@@ -377,6 +370,27 @@ async function resolveArchiveRepoRoot(
   }
 
   return repoRoot;
+}
+
+async function resolveArchiveRepoRoot(
+  repoRoot: string,
+  archiveProjectPath: string,
+  dependencies: ArchiveProjectOnCompletionDependencies,
+): Promise<string> {
+  try {
+    const archivePathIsGitignored = await isGitignoredArchivePath(
+      repoRoot,
+      archiveProjectPath,
+      dependencies,
+    );
+    if (!archivePathIsGitignored) {
+      return repoRoot;
+    }
+  } catch {
+    return repoRoot;
+  }
+
+  return resolvePrimaryRepoRoot(repoRoot, dependencies);
 }
 
 async function resolveUniqueArchivePath(
@@ -446,7 +460,6 @@ export async function archiveProjectOnCompletion(
     archiveProjectPath,
     dependencies,
   );
-
   const archiveBasePath = resolveCompletionArchivePath(
     archiveRepoRoot,
     options.projectsRoot,
@@ -503,9 +516,13 @@ export async function archiveProjectOnCompletion(
     warnings.push(...access.warnings);
 
     if (access.ok) {
+      const remoteRepoRoot = await resolvePrimaryRepoRoot(
+        options.repoRoot,
+        dependencies,
+      );
       s3Path = buildProjectArchiveS3Uri(
         options.s3Uri,
-        options.repoRoot,
+        remoteRepoRoot,
         snapshotName,
       );
 

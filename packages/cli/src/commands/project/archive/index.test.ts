@@ -20,6 +20,7 @@ interface HarnessOptions {
   json?: boolean;
   listOutput?: string;
   preflightError?: Error;
+  primaryRepoRoot?: string;
   projectsRoot?: string;
   processEnv?: NodeJS.ProcessEnv;
 }
@@ -77,6 +78,7 @@ function createHarness(options: HarnessOptions = {}): {
     readOatConfig: vi.fn(async () => config),
     resolveProjectsRoot: vi.fn(async () => projectsRoot),
     ensureS3ArchiveAccess,
+    resolvePrimaryRepoRoot: vi.fn(async () => options.primaryRepoRoot ?? cwd),
     execFile,
     removeDirectory,
     ...(options.processEnv ? { processEnv: options.processEnv } : {}),
@@ -224,6 +226,42 @@ describe('oat project archive sync', () => {
       ],
       expect.objectContaining({
         cwd: '/tmp/workspace/open-agent-toolkit',
+      }),
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('uses the primary repo root slug when syncing from a linked worktree', async () => {
+    const { command, execFile } = createHarness({
+      cwd: '/tmp/worktrees/sc-pinned-cryostat-af7a',
+      primaryRepoRoot: '/tmp/workspace/stoa',
+    });
+
+    await runArchiveSyncCommand(command);
+
+    expect(execFile).toHaveBeenNthCalledWith(
+      1,
+      'aws',
+      ['s3', 'ls', 's3://example-bucket/oat-archive/stoa/projects/'],
+      expect.objectContaining({
+        cwd: '/tmp/worktrees/sc-pinned-cryostat-af7a',
+      }),
+    );
+    expect(execFile).toHaveBeenNthCalledWith(
+      2,
+      'aws',
+      [
+        's3',
+        'sync',
+        's3://example-bucket/oat-archive/stoa/projects/20260401-demo-project',
+        '.oat/projects/archived/demo-project',
+        '--exclude',
+        'reviews/*',
+        '--exclude',
+        'pr/*',
+      ],
+      expect.objectContaining({
+        cwd: '/tmp/worktrees/sc-pinned-cryostat-af7a',
       }),
     );
     expect(process.exitCode).toBe(0);

@@ -12,6 +12,7 @@ import {
   buildProjectArchiveS3Uri,
   ensureS3ArchiveAccess,
   resolveLocalArchiveProjectPath,
+  resolvePrimaryRepoRoot,
 } from './archive-utils';
 
 describe('archive utils', () => {
@@ -44,6 +45,48 @@ describe('archive utils', () => {
     ).toBe(
       's3://example-bucket/oat-archive/open-agent-toolkit/projects/demo-project',
     );
+  });
+
+  it('resolves the primary repo root from a linked git worktree', async () => {
+    const tempRoot = await createRepoRoot();
+    const mainRepoRoot = join(tempRoot, 'stoa');
+    const worktreeRoot = join(tempRoot, 'sc-pinned-cryostat-af7a');
+    await mkdir(join(mainRepoRoot, '.git'), { recursive: true });
+    await mkdir(worktreeRoot, { recursive: true });
+
+    const execFile = vi.fn(async (file: string, args: string[]) => {
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-common-dir'
+      ) {
+        return {
+          stdout: join(mainRepoRoot, '.git'),
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-dir'
+      ) {
+        return {
+          stdout: join(
+            mainRepoRoot,
+            '.git',
+            'worktrees',
+            'sc-pinned-cryostat-af7a',
+          ),
+          stderr: '',
+        };
+      }
+
+      throw new Error(`Unexpected command: ${file} ${args.join(' ')}`);
+    });
+
+    await expect(
+      resolvePrimaryRepoRoot(worktreeRoot, { gitExecFile: execFile }),
+    ).resolves.toBe(mainRepoRoot);
   });
 
   it('resolves local archived project paths from projects.root', () => {
@@ -311,6 +354,101 @@ describe('archive utils', () => {
     await expect(
       readFile(join(result.archivePath, 'summary.md'), 'utf8'),
     ).resolves.toBe('# summary\n');
+  });
+
+  it('uploads completion archives under the primary repo root slug from a linked worktree', async () => {
+    const tempRoot = await createRepoRoot();
+    const mainRepoRoot = join(tempRoot, 'stoa');
+    const worktreeRoot = join(tempRoot, 'sc-pinned-cryostat-af7a');
+    const projectPath = join(
+      worktreeRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'demo',
+    );
+
+    await mkdir(join(mainRepoRoot, '.git'), { recursive: true });
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
+
+    const gitExecFile = vi.fn(async (file: string, args: string[]) => {
+      if (
+        file === 'git' &&
+        args[0] === 'check-ignore' &&
+        args[1] === '--quiet' &&
+        args[2] === '--no-index' &&
+        args[3] === '.oat/projects/archived/demo'
+      ) {
+        return {
+          stdout: '',
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-common-dir'
+      ) {
+        return {
+          stdout: join(mainRepoRoot, '.git'),
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-dir'
+      ) {
+        return {
+          stdout: join(
+            mainRepoRoot,
+            '.git',
+            'worktrees',
+            'sc-pinned-cryostat-af7a',
+          ),
+          stderr: '',
+        };
+      }
+
+      throw new Error(`Unexpected command: ${file} ${args.join(' ')}`);
+    });
+    const execFile = vi.fn(async () => ({ stdout: '', stderr: '' }));
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot: worktreeRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3Uri: 's3://example-bucket/oat-archive',
+        s3SyncOnComplete: true,
+      },
+      {
+        execFile,
+        gitExecFile,
+        ensureS3ArchiveAccess: vi.fn(async () => ({ ok: true, warnings: [] })),
+        timestamp: () => '2026-04-01T12:34:56Z',
+      },
+    );
+
+    expect(result.s3Path).toBe(
+      's3://example-bucket/oat-archive/stoa/projects/20260401-demo',
+    );
+    expect(execFile).toHaveBeenCalledWith(
+      'aws',
+      [
+        's3',
+        'sync',
+        join(mainRepoRoot, '.oat', 'projects', 'archived', 'demo'),
+        's3://example-bucket/oat-archive/stoa/projects/20260401-demo',
+        '--exclude',
+        'reviews/*',
+        '--exclude',
+        'pr/*',
+      ],
+      expect.objectContaining({ cwd: worktreeRoot }),
+    );
   });
 
   it('archives in the current worktree when the archive path is version controlled', async () => {
