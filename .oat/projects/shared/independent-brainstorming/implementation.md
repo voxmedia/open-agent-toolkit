@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-01
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -79,10 +79,10 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 4     | 4/4       |
 | Phase 2 | complete | 8     | 8/8       |
-| Phase 3 | pending  | 7     | 0/7       |
+| Phase 3 | complete | 7     | 7/7       |
 | Phase 4 | pending  | 4     | 0/4       |
 
-**Total:** 12/23 tasks completed
+**Total:** 19/23 tasks completed
 
 ---
 
@@ -95,7 +95,7 @@ oat_generated: false
 **Branch:** feat/independent-brainstorming-mode
 **Tier:** 1
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases:** 2 executed, 2 passed, 0 failed, 0 stopped
+**Phases:** 3 executed, 3 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
@@ -103,16 +103,18 @@ oat_generated: false
 | ----- | ------------------ | ------ | -------------- | ----------- |
 | p01   | DONE               | pass   | 0/2            | merged      |
 | p02   | DONE_WITH_CONCERNS | pass   | 0/2            | merged      |
+| p03   | DONE_WITH_CONCERNS | pass   | 0/2            | merged      |
 
 #### Parallel Groups
 
-- p01, p02: sequential (no parallel groups declared)
+- p01, p02, p03: sequential (no parallel groups declared)
 
 #### Outstanding Items
 
 - p01 minor findings (recorded, not blocking): (1) `PACK_METADATA` mutability comment — advisory; (2) empty-map guard test update — addressed in p02-t01.
 - p02 minor findings (recorded, not blocking): (1) stub test that's redundant with a real picker test in `commands/init/tools/index.test.ts:918-938` — flagged for cleanup; (2) Mustache placeholders in `brainstorm-doc.md` are convention-only in this repo — advisory; (3) smoke-test cleanup hardening note for visual-companion server — advisory.
 - p02 implementer noted scope expansion in p02-t01 was forced by the `PackName` union extension (cascading exhaustive-switch updates across `BUNDLED_PACK_MEMBERS` / `BUNDLED_PACK_ASSETS` / `install-sync-context` / `scan-tools` / `VALID_PACKS` / `PACK_DESCRIPTIONS`) — confirmed by reviewer as necessary type-completeness work, not scope drift.
+- p03 reviewer flagged one Medium: `pnpm format --check` fails on bundled MIT-port files (`frame-template.html`, `helper.js`, `server.cjs`) under `packages/cli/assets/skills/oat-brainstorm/scripts/`. Pre-existing from Phase 2's verbatim port (confirmed via stash test). **Hard prerequisite for `p04-t04` (`pnpm release:validate`)** — Phase 4 implementer must add the bundled scripts path to `.oxfmtrc.jsonc` ignore patterns or fix the format issue before release validation runs.
 - Pre-existing skill validation failures (`oat-pjm-update-repo-reference`, `oat-project-spec`) predate this run; not in scope.
 
 <!-- orchestration-runs-end -->
@@ -241,6 +243,49 @@ oat_generated: false
 **Commits:** `16756f94`, `0b6fbc86`, `7a305a6a`, `de83601b`, `6107d57f`, `a2022e67`, `c5dfba2b`, `52ae3e13`
 
 **Review:** passed (0/0/0/3). Artifact: `reviews/archived/p02-code-review-2026-05-01.md`. Reviewer confirmed scope expansion in p02-t01 was necessary type-completeness work (not scope drift), MIT-port files are byte-for-byte verbatim, and `oat-brainstorm` is the only skill validating cleanly that wasn't already (pre-existing failures unrelated). Three minor advisory findings recorded under Outstanding Items.
+
+---
+
+## Phase 3: Skill flow implementation
+
+**Status:** complete
+**Started:** 2026-05-01
+**Completed:** 2026-05-01
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Filled in `.agents/skills/oat-brainstorm/SKILL.md` end-to-end. Phase 2 left it as a scaffold; Phase 3 turned it into a complete dispatcher. All 7 commits modify the same file (verified — only `SKILL.md` touched across the phase).
+- **Always-on description** is now final: tightly tuned for exploratory phrasing ("I've been thinking about", "what if we did", design uncertainty, thinking-out-loud signals) with explicit "Do NOT use" exclusions for routine implementation requests and named-destination work where the user would invoke a destination skill directly. Adapted from `superpowers:brainstorming` with OAT vocabulary.
+- **Mode Assertion** has all five sub-sections (purpose, blocked, allowed, self-correction protocol, recovery).
+- **Process steps 1-9** are filled in completely with no placeholders.
+- **Visual companion offer** is its own message with a `node` pre-flight check (suppresses offer if missing).
+- **Pack and active-project detection** uses `oat config get tools.<pack>` and `oat config get activeProject` (the canonical patterns).
+- **Conversation cadence** matches Superpowers (one question at a time, 2-3 approaches with recommendation, scaled-section design presentation).
+- **Destination identification** uses opportunistic trigger surfacing against `references/destinations.md` plus convergence cues; ambiguous matches confirmed before commit.
+- **Synthesis with confirmation** consults the destinations playbook for full / minimal / none confirmation pattern; the `SynthesizedPayload` schema matches the design verbatim.
+- **All 9 handoff branches** are present (inline / doc-to-path / capture-as-new-idea / extend-existing-idea / summarize-idea-directly / scoped-backlog-item / promote-to-new-OAT-project / active-project router / fold-back / active-project reference file).
+- **Promote-to-new-OAT-project handoff** writes `discovery.md` only — never `design.md` — and stops with a pointer to `oat-project-quick-start` / `oat-project-design`.
+- **Active-project 3-way router** appears before the standard pack-filtered picker.
+- **Fold-back commit safety contract** is word-for-word aligned with the design's subsection: preflight `git status --porcelain -- "$ARTIFACT_PATH"`, scoped staging `git add -- "$ARTIFACT_PATH"` (never `-A`, never globs), three-option dirty-tree picker, conditional handoff prompt printed only after the scoped commit succeeds.
+- **Success Criteria** items are concrete and testable.
+
+**Key files touched:**
+
+- `.agents/skills/oat-brainstorm/SKILL.md` — exclusively. Phase boundary held cleanly.
+
+**Verification:**
+
+- `pnpm lint`: pass
+- `pnpm type-check`: pass
+- `pnpm --filter @open-agent-toolkit/cli test`: pass (1449 tests)
+- `pnpm oat:validate-skills`: `oat-brainstorm` validates clean. Two pre-existing failures (`oat-pjm-update-repo-reference`, `oat-project-spec`) confirmed unrelated and predate this run.
+- `git show --stat 88a1c829..c3a0596b` confirms the only file changed is `SKILL.md`.
+
+**Commits:** `c9c01382`, `c636540d`, `e788f0ae`, `04668680`, `54cffb7f`, `b47ac1bd`, `c3a0596b`
+
+**Review:** passed (0/0/1/0). Artifact: `reviews/archived/p03-code-review-2026-05-01.md`. The single Medium finding is `pnpm format --check` failing on the bundled MIT-port files (`frame-template.html`, `helper.js`, `server.cjs`) under `packages/cli/assets/skills/oat-brainstorm/scripts/` — confirmed pre-existing from Phase 2's verbatim port via stash test, out-of-scope for Phase 3 but flagged as a **hard prerequisite for `p04-t04` (`pnpm release:validate`)**. Phase 4 implementer must address by adding the bundled scripts path to `.oxfmtrc.jsonc` ignore patterns before running `release:validate`.
 
 ---
 
