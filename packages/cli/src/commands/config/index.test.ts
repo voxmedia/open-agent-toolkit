@@ -296,6 +296,45 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('gets tools.brainstorm default false when not set', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'tools.brainstorm']);
+
+    expect(capture.info[0]).toBe('false');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('sets tools.brainstorm to true in config.json', async () => {
+    const root = await createRepoRoot();
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'tools.brainstorm', 'true']);
+
+    const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      tools: { brainstorm: true },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('gets tools.brainstorm true after setting it', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, tools: { brainstorm: true } })}\n`,
+      'utf8',
+    );
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'tools.brainstorm']);
+
+    expect(capture.info[0]).toBe('true');
+    expect(process.exitCode).toBe(0);
+  });
+
   it('set creates config.json when missing', async () => {
     const root = await createRepoRoot();
     const { command } = createHarness({ cwd: root });

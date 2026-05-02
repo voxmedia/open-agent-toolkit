@@ -43,6 +43,7 @@ type ConfigKey =
   | 'documentation.tooling'
   | 'git.defaultBranch'
   | 'projects.root'
+  | 'tools.brainstorm'
   | 'tools.core'
   | 'tools.docs'
   | 'tools.ideas'
@@ -123,6 +124,7 @@ const KEY_ORDER: ConfigKey[] = [
   'documentation.requireForProjectCompletion',
   'git.defaultBranch',
   'projects.root',
+  'tools.brainstorm',
   'tools.core',
   'tools.docs',
   'tools.ideas',
@@ -307,6 +309,17 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set archive.awsRegion <value>',
     description:
       'AWS region forwarded as AWS_REGION to every `aws` invocation made by the archive S3 sync (completion + `oat project archive sync`). Precedence: per-invocation flag > existing shell env > this config value.',
+  },
+  {
+    key: 'tools.brainstorm',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat tools install / oat tools update',
+    description: 'Whether the brainstorm tool pack is installed.',
   },
   {
     key: 'tools.core',

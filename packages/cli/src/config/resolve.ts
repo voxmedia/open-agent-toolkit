@@ -58,6 +58,7 @@ const DEFAULT_SHARED_CONFIG = {
     requireForProjectCompletion: false,
   },
   tools: {
+    brainstorm: false,
     core: false,
     docs: false,
     ideas: false,

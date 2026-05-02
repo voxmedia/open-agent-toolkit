@@ -213,6 +213,24 @@ describe('oat-config', () => {
     });
   });
 
+  it('preserves tools.brainstorm through readOatConfig round-trip', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await writeOatConfig(repoRoot, {
+      version: 1,
+      tools: {
+        brainstorm: true,
+      },
+    });
+
+    await expect(readOatConfig(repoRoot)).resolves.toEqual({
+      version: 1,
+      tools: {
+        brainstorm: true,
+      },
+    });
+  });
+
   it('drops invalid tools config values during normalization', async () => {
     const repoRoot = await createRepoRoot();
     const configPath = join(repoRoot, '.oat', 'config.json');

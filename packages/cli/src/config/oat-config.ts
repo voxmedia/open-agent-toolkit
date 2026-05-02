@@ -336,6 +336,7 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
       'utility',
       'project-management',
       'research',
+      'brainstorm',
     ] as const;
     const tools: OatToolsConfig = {};
 
