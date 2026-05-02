@@ -1143,6 +1143,354 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 
 ---
 
+## Phase 5: Final-review fixes
+
+**Goal:** Address the 6 Important + 2 Medium + 1 Minor findings from the `final-review-2026-05-02.md` review (does not pass). All 9 findings convert to fix tasks per Step 9 dispositions agreed with the user.
+
+### Task p05-t01: (review) Register `brainstorm` end-to-end in config schema
+
+**Files:**
+
+- Modify: `packages/cli/src/config/oat-config.ts` (~line 330) — add `brainstorm` to the `validPacks` list inside `OatToolsConfig` normalization
+- Modify: `packages/cli/src/config/resolve.ts` (~line 60) — add `brainstorm` to effective defaults
+- Modify: `packages/cli/src/commands/config/index.ts` (~line 46) — add `tools.brainstorm` to the config command key catalog / allowlist
+- Modify: corresponding tests (config get/set tests + a round-trip test for `{ tools: { brainstorm: true } }` surviving `readOatConfig`)
+
+**Step 1: Understand the issue**
+
+Review finding `I1`: `OatToolsConfig` includes `brainstorm`, but config normalization drops it because `validPacks` omits it; effective defaults omit it; the config command key allowlist omits it. `pnpm cli config get tools.brainstorm` returns `Unknown config key`. This contradicts the documented lifecycle claim that standard config-write semantics set `tools.brainstorm: true`.
+
+**Step 2: Implement fix**
+
+Add `brainstorm` to the three config-layer registrations. The `PackName` type already includes it; the gap is in the runtime config schema. Mirror the existing pattern for `ideas`, `docs`, `utility`, `research`, `project-management`.
+
+Verify with a test that exercises the round-trip:
+
+```typescript
+// In a config test file
+it('preserves tools.brainstorm through readOatConfig round-trip', () => {
+  const cfg = { tools: { brainstorm: true } };
+  // write to a temp config file, read back via readOatConfig, assert tools.brainstorm === true
+});
+```
+
+Plus CLI tests:
+
+```typescript
+it('oat config get tools.brainstorm reports the value', async () => {
+  // After install, expect "true" (or "false" / "unset" on a fresh repo)
+});
+
+it('oat config set tools.brainstorm true persists', async () => {
+  // After set, oat config get tools.brainstorm should return true
+});
+```
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test
+pnpm run cli -- config get tools.brainstorm
+pnpm run cli -- config set tools.brainstorm true && pnpm run cli -- config get tools.brainstorm
+```
+
+Expected: tests pass; CLI returns the value (not `Unknown config key`).
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/config/oat-config.ts packages/cli/src/config/resolve.ts packages/cli/src/commands/config/index.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/commands/config/index.test.ts
+git commit -m "fix(p05-t01): register brainstorm pack end-to-end in config schema"
+```
+
+---
+
+### Task p05-t02: (review) Route brainstorm subcommand through standard install lifecycle
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/brainstorm/index.ts` — replace direct copy at line 100 + scope resolution at line 52 with the standard installer flow (existing-install scan, scope precedence, config write, affected-scope tracking)
+- Modify: `packages/cli/src/commands/init/tools/brainstorm/index.test.ts` — add tests for migration safety, config write, affected-scope tracking
+- Modify: any shared installer helper used by other pack subcommands if extracting common logic
+
+**Step 1: Understand the issue**
+
+Review finding `I2`: The pack-specific `oat init tools brainstorm` subcommand resolves scope directly from `PACK_METADATA` and copies assets without running the installed-state scan, scope precedence (existing-install wins over `defaultScope`), `tools.brainstorm: true` config write, or affected-scope sync tracking. This diverges from the documented "existing-install precedence" claim and breaks the lifecycle parity that other pack subcommands have.
+
+**Step 2: Implement fix**
+
+Look at how `commands/init/tools/ideas/index.ts` implements its subcommand. Mirror the structure: invoke the same shared scope-resolution helper that `runInitTools` uses, write `tools.brainstorm: true` to shared config on success, and surface affected-scope tracking. Existing-install detection MUST short-circuit before `PACK_METADATA[brainstorm].defaultScope` is consulted (so a user with a prior project-scope install gets project-scope on re-install).
+
+If `runInitTools`'s scope-resolution logic is currently inlined rather than extracted, extract a shared helper as part of this task and have both `runInitTools` and the brainstorm subcommand call it.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/init/tools/brainstorm
+pnpm --filter @open-agent-toolkit/cli test
+```
+
+Manual integration check: install brainstorm at project scope first, then re-run `oat tools install brainstorm` non-interactively and verify the install stays at project scope (existing-install precedence preserved).
+
+Expected: tests pass; behavior matches the main installer.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/brainstorm/
+git commit -m "fix(p05-t02): route brainstorm subcommand through standard install lifecycle"
+```
+
+---
+
+### Task p05-t03: (review) Resolve skill directory dynamically in SKILL.md visual-companion offer
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md` — process step 3 (visual-companion offer) and any other hard-coded `.agents/skills/oat-brainstorm/scripts/...` paths
+
+**Step 1: Understand the issue**
+
+Review finding `I3`: SKILL.md tells agents to invoke `.agents/skills/oat-brainstorm/scripts/start-server.sh`. The brainstorm pack defaults to user scope, so a fresh install puts that script at `~/.agents/skills/oat-brainstorm/scripts/...` — the path baked into SKILL.md doesn't exist in the most common install case. The reference guide handles this correctly; the top-level skill instruction does not.
+
+**Step 2: Implement fix**
+
+Update process step 3 in SKILL.md to:
+
+1. Resolve the loaded skill directory dynamically — most providers expose this via the skill's resolved path, the `Skill` invocation context, or a documented environment variable (e.g., `${SKILL_DIR}` if available).
+2. Invoke `${SKILL_DIR}/scripts/start-server.sh` and read `${SKILL_DIR}/references/visual-companion.md` relative to the resolved directory.
+3. Document an explicit user-scope / project-scope fallback for providers that don't expose the skill root: try `~/.agents/skills/oat-brainstorm/` first, then fall back to `<repo>/.agents/skills/oat-brainstorm/`.
+
+Audit the rest of SKILL.md for any other hard-coded `.agents/skills/oat-brainstorm/...` paths and apply the same dynamic-resolution rule.
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills`
+Expected: skill validates clean.
+
+Manual: re-read SKILL.md and confirm no other hard-coded operational paths assume project scope.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md
+git commit -m "fix(p05-t03): resolve skill directory dynamically in visual-companion offer"
+```
+
+---
+
+### Task p05-t04: (review) Add `.oat/brainstorm/` to managed gitignore policy
+
+**Files:**
+
+- Modify: `.oat/config.json` `localPaths` array — add `.oat/brainstorm/**` (or equivalent narrow pattern)
+- Run: `oat local apply` (or whatever syncs `localPaths` into the managed `.gitignore` block)
+- Verify: `.gitignore` `# OAT core` managed section includes the path
+
+**Step 1: Understand the issue**
+
+Review finding `I4`: `start-server.sh` writes repo-scoped sessions to `.oat/brainstorm/<session-id>`, and `references/visual-companion.md` claims the path is gitignored, but the managed `.gitignore` section only covers `.oat/**/analysis/`, `.oat/**/pr/`, `.oat/**/reviews/archived/`, and `.oat/ideas/`. `git check-ignore .oat/brainstorm/session/content/page.html` returns exit 1 — visual-companion sessions would land as tracked files.
+
+**Step 2: Implement fix**
+
+Add `.oat/brainstorm/` to the canonical local-paths config (the mechanism that drives the managed gitignore). After updating, run the sync command (`oat local apply` or equivalent) to propagate the change into `.gitignore`'s managed section. Confirm via `git check-ignore`:
+
+```bash
+git check-ignore .oat/brainstorm/session/content/page.html
+# Expected: exit 0 (path is ignored)
+```
+
+If `localPaths` config doesn't currently support `**` glob, fall back to adding `.oat/brainstorm/` directly to the `# OAT core` managed `.gitignore` block via the same mechanism `oat init` uses.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+mkdir -p .oat/brainstorm/test-session/content
+touch .oat/brainstorm/test-session/content/page.html
+git check-ignore .oat/brainstorm/test-session/content/page.html
+rm -rf .oat/brainstorm/test-session
+```
+
+Expected: `git check-ignore` returns exit 0.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/config.json .gitignore
+git commit -m "fix(p05-t04): add .oat/brainstorm/ to managed gitignore policy"
+```
+
+---
+
+### Task p05-t05: (review) Update active-project reference destination to durable-tracked semantics
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md` (~line 481, 486) — active-project reference destination steps
+- Modify: `.agents/skills/oat-brainstorm/references/destinations.md` — active-project reference-file stanza
+
+**Step 1: Understand the issue**
+
+Review finding `M1`: The skill writes `<active-project>/brainstorming/YYYY-MM-DD-<topic>.md` and says no commit is required, but that path isn't in the managed gitignore — files would land as tracked-but-uncommitted, leaving the working tree dirty after the skill exits. Tracked-vs-local semantics are ambiguous.
+
+**Step 2: Implement fix**
+
+Pick durable-tracked semantics (the user-approved disposition):
+
+1. After writing the reference file, the skill **commits** it via `git add -- <reference-path>` + `git commit -m "chore(oat): capture brainstorming reference for <project-name>"`.
+2. Update destinations.md "active-project reference file" stanza confirmation pattern: `minimal (filename)` stays, but the post-write step now includes a commit + emit a confirmation note showing the commit hash.
+3. Update the SKILL.md description to remove the "no commit required" language and document the commit step.
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills`
+Expected: skill validates clean.
+
+Manual re-read: the active-project reference destination's flow now matches the active-project fold-back commit safety contract's discipline (scoped staging, explicit commit, confirmation).
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md .agents/skills/oat-brainstorm/references/destinations.md
+git commit -m "fix(p05-t05): make active-project reference destination commit on write"
+```
+
+---
+
+### Task p05-t06: (review) Refresh OAT state artifacts
+
+**Files:**
+
+- Modify: `.oat/state.md` (regenerated via `oat state refresh`)
+- Modify: `.oat/projects/shared/independent-brainstorming/state.md` body — Current Phase / Progress / Next Milestone sections
+
+**Step 1: Understand the issue**
+
+Review finding `I5`: `.oat/state.md` reports `independent-brainstorming` at phase `plan`, docs "not yet run", recommended next step `oat-project-implement`. Project state frontmatter says implement complete, docs complete. Project state body still says "Discovery / Gathering requirements" — frontmatter and body disagree.
+
+**Step 2: Implement fix**
+
+Run `oat state refresh` to regenerate `.oat/state.md` from current project frontmatter. Then update `state.md`'s human-readable body sections (Current Phase, Progress checklist, Next Milestone) to match the frontmatter:
+
+- Current Phase → "Implementation complete; final review fixes in progress (or PR-ready when complete)"
+- Progress → all checkboxes through implementation marked done
+- Next Milestone → "Run final-review fix tasks via oat-project-implement, then re-review and PR"
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+oat state refresh
+grep -A2 "independent-brainstorming" .oat/state.md
+```
+
+Expected: dashboard reflects current phase + status; recommended next step is no longer `oat-project-implement` from the implement-pending direction.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/state.md .oat/projects/shared/independent-brainstorming/state.md
+git commit -m "fix(p05-t06): refresh OAT state artifacts after docs phase"
+```
+
+---
+
+### Task p05-t07: (review) Revise dogfood claims to walkthrough; add backlog item; copy results to user vault
+
+**Files:**
+
+- Modify: `.oat/projects/shared/independent-brainstorming/plan.md` p04-t02 task body — change wording from "Run all 10 dogfood scenarios end-to-end" to "Document walkthrough plans for all 10 scenarios"
+- Modify: `.agents/skills/oat-brainstorm/references/dogfood-results.md` — keep walkthrough framing; remove any text implying live execution; add explicit "Live dogfood pending — see backlog item" pointer at top
+- Create: `.oat/repo/reference/backlog/items/<slug>.md` — new backlog item titled "Live dogfood for oat-brainstorm" with body containing a copy of `dogfood-results.md` plus framing of what's still required (live brainstorming sessions, real fold-back commit safety contract exercise)
+- Create: `/Users/thomas.stang/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/02 - Projects/Open Agent Toolkit/References/dogfood-results.md` — copy of `.agents/skills/oat-brainstorm/references/dogfood-results.md` so the user has it readily available while testing
+- Run: `oat backlog regenerate-index` after creating the backlog item
+
+**Step 1: Understand the issue**
+
+Review finding `I6`: Plan p04-t02 says to "Run all 10 dogfood scenarios end-to-end and verify produced artifacts." The dogfood artifact says it's documented walkthroughs, not live runs, and explicitly notes the fold-back commit safety contract was never exercised against real `git status` / `git commit`. Plan and artifact disagree.
+
+User-approved path (b): revise plan + dogfood-results to honestly say walkthrough; create a backlog item for live dogfooding (with dogfood-results copy in the body); copy dogfood-results to the user's vault for reference while they manually do _some_ dogfooding before merging.
+
+**Step 2: Implement fix**
+
+1. Update `plan.md` p04-t02 wording to reflect what shipped — walkthrough plans, not live runs. Adjust the "What you're implementing" section, the steps, and the `**Implementer:**` notes if any.
+2. Update `dogfood-results.md` to be unambiguous about its scope: it documents walkthrough plans, not completed live runs. Add a top-of-file note pointing at the new backlog item for live dogfood follow-up.
+3. Use `oat-pjm-add-backlog-item` (or write the item file directly per the backlog template at `.oat/templates/backlog-item.md`) to create the live-dogfood backlog item. Title suggestion: "Live dogfood for `oat-brainstorm` (fold-back commit safety + 9 destination families)". Status: `open`. Priority: `medium`. Labels: `dogfood`, `brainstorming`. Body: copy of `dogfood-results.md` content + "What's still required" framing covering live brainstorming sessions and real fold-back commit-safety exercise.
+4. Copy `.agents/skills/oat-brainstorm/references/dogfood-results.md` to `/Users/thomas.stang/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/02 - Projects/Open Agent Toolkit/References/dogfood-results.md` (creating parent directories if missing). The vault path is outside the repo and the user requested it explicitly.
+5. Run `oat backlog regenerate-index` to refresh the managed backlog index after creating the new item.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+ls "/Users/thomas.stang/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/02 - Projects/Open Agent Toolkit/References/dogfood-results.md"
+oat backlog regenerate-index
+grep -l "Live dogfood" .oat/repo/reference/backlog/items/
+```
+
+Expected: vault file exists; backlog index includes the new item; plan + dogfood-results no longer claim end-to-end live runs.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/independent-brainstorming/plan.md .agents/skills/oat-brainstorm/references/dogfood-results.md .oat/repo/reference/backlog/items/ .oat/repo/reference/backlog/index.md packages/cli/assets/skills/oat-brainstorm/references/dogfood-results.md
+git commit -m "fix(p05-t07): revise dogfood claims to walkthrough and capture live-dogfood backlog item"
+```
+
+(The vault copy at the user's iCloud path is **not** committed — it lives outside the repo by design.)
+
+---
+
+### Task p05-t08: (review) Update current-state.md workflow paths and pack list
+
+**Files:**
+
+- Modify: `.oat/repo/reference/current-state.md` lines 9-11 (Canonical References) — update paths from `apps/oat-docs/docs/guide/workflow/{lifecycle,reviews,pr-flow}.md` to `apps/oat-docs/docs/workflows/projects/{lifecycle,reviews,pr-flow}.md`
+- Modify: `.oat/repo/reference/current-state.md` line 177 (pack list) — add `brainstorm` to the `oat tools install` pack list
+
+**Step 1: Understand the issue**
+
+Two findings combined since they touch the same file:
+
+- Review finding `M2`: Canonical References at `.oat/repo/reference/current-state.md:9-11` point at `apps/oat-docs/docs/guide/workflow/...` — those paths don't exist; the live files are under `apps/oat-docs/docs/workflows/projects/...`.
+- Review finding `m1`: Pack list at `.oat/repo/reference/current-state.md:177` lists `core, ideas, workflows, utility, project-management, research` but omits `brainstorm`. Branch added it; reference is stale.
+
+**Step 2: Implement fix**
+
+1. Update the three Canonical References lines to use the live `apps/oat-docs/docs/workflows/projects/...` paths.
+2. Add `brainstorm` to the pack list at line 177, alphabetical or in the order the new pack appears in `ALL_TOOL_PACKS` per `commands/init/tools/index.ts:201`.
+
+**Step 3: Verify**
+
+Manual:
+
+```bash
+grep -A3 "Canonical References" .oat/repo/reference/current-state.md
+grep "oat tools install" .oat/repo/reference/current-state.md
+test -f apps/oat-docs/docs/workflows/projects/lifecycle.md && echo OK
+test -f apps/oat-docs/docs/workflows/projects/reviews.md && echo OK
+test -f apps/oat-docs/docs/workflows/projects/pr-flow.md && echo OK
+```
+
+Expected: paths exist on disk; pack list includes `brainstorm`.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/repo/reference/current-state.md
+git commit -m "fix(p05-t08): update current-state.md workflow paths and add brainstorm pack"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                              |
@@ -1151,7 +1499,8 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 | p02    | code     | passed          | 2026-05-01 | reviews/archived/p02-code-review-2026-05-01.md        |
 | p03    | code     | passed          | 2026-05-01 | reviews/archived/p03-code-review-2026-05-01.md        |
 | p04    | code     | passed          | 2026-05-01 | reviews/archived/p04-code-review-2026-05-01.md        |
-| final  | code     | received        | 2026-05-02 | reviews/final-review-2026-05-02.md                    |
+| final  | code     | fixes_added     | 2026-05-02 | reviews/archived/final-review-2026-05-02.md           |
+| p05    | code     | pending         | -          | -                                                     |
 | spec   | artifact | pending         | -          | -                                                     |
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
 | plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
@@ -1175,8 +1524,9 @@ If no issues, this task is recorded by `oat-project-implement` as complete via t
 - Phase 2: 8 tasks — register `brainstorm` pack manifest + type union + bundle script + skill scaffold, create per-pack install helper directory, wire dispatcher / update / remove handlers + default-on set, port visual-companion bundle from Superpowers (5 files; 1 patched for OAT persistence paths), port visual-companion guide, update `NOTICES.md` attribution, ship destinations playbook and brainstorm-doc output template
 - Phase 3: 7 tasks — fill in `oat-brainstorm/SKILL.md` end-to-end (mode assertion, progress indicators, activation, pack detection, conversation cadence, destination signal-watching, satisfaction check, synthesis with confirmation, non-fold-back terminal-state handoffs, active-project router + fold-back commit safety contract, success criteria + self-review)
 - Phase 4: 5 tasks — document brainstorm pack and skill in `apps/oat-docs`, run all 10 dogfood scenarios end-to-end, lockstep public-package version bumps, regenerate `public-package-versions.json`, exclude bundled MIT-port scripts + docs from oxfmt (added p04-t05 during execution to address Phase 3-flagged format prerequisite), `pnpm release:validate`
+- Phase 5: 8 tasks — final-review fix tasks for the 6 Important + 2 Medium + 1 Minor findings from `final-review-2026-05-02.md` (config-schema registration, install-lifecycle parity, dynamic skill-dir resolution, gitignore policy, durable-tracked active-project references, state refresh, dogfood walkthrough revision + backlog/vault copy, current-state.md path + pack-list updates)
 
-**Total: 24 tasks**
+**Total: 32 tasks**
 
 Ready for code review and merge.
 

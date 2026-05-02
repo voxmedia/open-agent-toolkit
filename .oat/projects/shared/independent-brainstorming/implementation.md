@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: null
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-05-01
-oat_current_task_id: null
+oat_last_updated: 2026-05-02
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -75,14 +75,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 8     | 8/8       |
-| Phase 3 | complete | 7     | 7/7       |
-| Phase 4 | complete | 5     | 5/5       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 4     | 4/4       |
+| Phase 2 | complete    | 8     | 8/8       |
+| Phase 3 | complete    | 7     | 7/7       |
+| Phase 4 | complete    | 5     | 5/5       |
+| Phase 5 | in_progress | 8     | 0/8       |
 
-**Total:** 24/24 tasks completed
+**Total:** 24/32 tasks completed (Phase 5 fix tasks added from final-review-2026-05-02)
 
 ---
 
@@ -361,6 +362,39 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+
+### Review Received: final (code)
+
+**Date:** 2026-05-02
+**Review artifact:** `reviews/archived/final-review-2026-05-02.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 6
+  - `I1`: `tools.brainstorm` not registered in config schema (`oat-config.ts`, `resolve.ts`, `commands/config/index.ts`)
+  - `I2`: pack-specific brainstorm install bypasses standard lifecycle (existing-install scan, scope precedence, config write)
+  - `I3`: SKILL.md visual-companion path hard-coded to project-scope (breaks under user-scope default install)
+  - `I4`: `.oat/brainstorm/` not actually gitignored despite docs claiming it is
+  - `I5`: OAT state artifacts stale (`.oat/state.md` and project state.md body)
+  - `I6`: plan claimed end-to-end dogfood, artifact is walkthrough — disagreement
+- Medium: 2
+  - `M1`: active-project reference destination tracked-vs-local semantics ambiguous
+  - `M2`: current-state.md workflow path references point at non-existent `apps/oat-docs/docs/guide/workflow/...` paths
+- Minor: 1
+  - `m1`: current-state.md pack list omits `brainstorm`
+
+**Disposition:** all 9 findings converted to fix tasks (user-approved disposition; final-scope minor `m1` explicitly converted per user direction). No deferrals.
+
+**Path (b) chosen for `I6`:** revise plan and dogfood-results to honestly reflect walkthrough; create a dogfood backlog item with a copy of `dogfood-results.md` in its body; copy `dogfood-results.md` to user vault path (`/Users/thomas.stang/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/02 - Projects/Open Agent Toolkit/References/dogfood-results.md`) so it's available while the user manually does _some_ dogfooding before merging.
+
+**New tasks added:** `p05-t01` through `p05-t08` (8 tasks total). Phase 5 created as a "Final-review fixes" phase. Plan total: 24 → 32 tasks.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill. After all p05 tasks complete:
+
+- Update the `final` review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` (or scoped to p05 fix commits per re-review narrowing) and `oat-project-review-receive` to reach `passed`
+- Then proceed to `oat-project-pr-final`
 
 ## Final Summary (for PR/docs)
 
