@@ -1,16 +1,16 @@
 ---
-oat_status: complete
-oat_ready_for: null
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-05-02
-oat_current_task_id: null
+oat_last_updated: 2026-05-03
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
 # Implementation: independent-brainstorming
 
 **Started:** 2026-05-01
-**Last Updated:** 2026-05-01
+**Last Updated:** 2026-05-03
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -75,15 +75,33 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 8     | 8/8       |
-| Phase 3 | complete | 7     | 7/7       |
-| Phase 4 | complete | 5     | 5/5       |
-| Phase 5 | complete | 8     | 8/8       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 4     | 4/4       |
+| Phase 2      | complete    | 8     | 8/8       |
+| Phase 3      | complete    | 7     | 7/7       |
+| Phase 4      | complete    | 5     | 5/5       |
+| Phase 5      | complete    | 8     | 8/8       |
+| Phase p-rev1 | in_progress | 3     | 0/3       |
 
-**Total:** 32/32 tasks completed
+**Total:** 32/35 tasks completed
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-05-03
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Make `oat-brainstorm` explicitly own destinationless "let's brainstorm" / "brainstorm this" phrasing instead of letting `oat-idea-ideate` win by mentioning brainstorming in its description.
+- Narrow `oat-idea-ideate` to existing tracked ideas or explicit scratchpad seeds, with a negative rule for brand-new destinationless brainstorms.
+- Stop offering the visual companion immediately for text-likely brainstorms; classify visual need first, defer silently when text-likely, and resurface only when the conversation turns visual.
+- Remove fixed progress counters that force a visual-companion offer.
+- Refresh bundled assets, skill versions, lockstep public package versions, and release validation for the shipped skill changes.
+
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`
+
+**Next:** Execute revision tasks via the `oat-project-implement` skill.
 
 ---
 

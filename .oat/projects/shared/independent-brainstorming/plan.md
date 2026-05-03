@@ -1491,6 +1491,180 @@ git commit -m "fix(p05-t08): update current-state.md workflow paths and add brai
 
 ---
 
+## Phase p-rev1: Revision 1
+
+Source: inline feedback (2026-05-03)
+
+### Task prev1-t01: (revision) Disambiguate brainstorm routing from tracked idea ideation
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: `.agents/skills/oat-idea-ideate/SKILL.md`
+- Regenerate: `packages/cli/assets/skills/oat-brainstorm/SKILL.md`
+- Regenerate: `packages/cli/assets/skills/oat-idea-ideate/SKILL.md`
+
+**Step 1: Update brainstorm activation contract**
+
+Clarify the `oat-brainstorm` frontmatter and activation prose so it explicitly owns literal destinationless brainstorm phrasing, including:
+
+- "let's brainstorm"
+- "brainstorm this"
+- "brainstorm <topic>"
+- exploratory thinking where the user has not named a destination skill or artifact type
+
+Add a negative routing rule: when the user says brainstorm and does not name `idea`, `backlog`, `project`, `doc`, or another destination, do not infer a destination from likely future outcomes. Run `oat-brainstorm` and defer destination selection until convergence.
+
+**Step 2: Narrow idea ideation scope**
+
+Clarify `oat-idea-ideate` so it applies only when continuing an existing tracked idea or expanding an explicit scratchpad seed from `{IDEAS_ROOT}/scratchpad.md`. Add a negative rule that brand-new, destinationless brainstorms belong to `oat-brainstorm`, not `oat-idea-ideate`.
+
+Keep scratchpad entries in scope because the skill already reads unchecked entries from `{IDEAS_ROOT}/scratchpad.md` and can scaffold from a selected seed.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm oat:validate-skills
+```
+
+Expected: the changed skills validate cleanly. Pre-existing unrelated skill validation failures, if still present, are documented and not introduced by this task.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md .agents/skills/oat-idea-ideate/SKILL.md packages/cli/assets/skills/oat-brainstorm/SKILL.md packages/cli/assets/skills/oat-idea-ideate/SKILL.md
+git commit -m "fix(prev1-t01): disambiguate brainstorm and tracked idea routing"
+```
+
+---
+
+### Task prev1-t02: (revision) Defer visual companion unless the brainstorm is visual-likely
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Regenerate: `packages/cli/assets/skills/oat-brainstorm/SKILL.md`
+- Modify if stale: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
+- Regenerate if docs changed: `packages/cli/assets/docs/cli-utilities/tool-packs.md`
+
+**Step 1: Replace unconditional offer with visual-need assessment**
+
+Before running the Node preflight or printing any visual-companion offer, classify the opening brainstorm topic as:
+
+- **Visual-likely:** UI layout, mockup, wireframe, visual flow, flow chart, architecture diagram, spatial comparison, side-by-side option comparison, or any user request to draw/show/compare visually.
+- **Text-likely:** naming, scope, tradeoffs, requirements, process, policy, strategy, conceptual architecture without a diagram request, or general exploratory discussion.
+
+If the topic is text-likely, skip the visual companion silently and set `VISUAL_COMPANION = "deferred"`. Do not mention the companion merely because Node is available.
+
+**Step 2: Keep visual offer available later**
+
+Add a resurface rule: if the conversation later becomes visual-likely, offer the visual companion as its own message at that point, then run the existing Node preflight and start-server flow only if the user accepts.
+
+Preserve the current constraint that the offer, when made, is its own message and is not combined with a clarifying question.
+
+**Step 3: Remove rigid progress counters that force the offer**
+
+Replace the fixed `[1/9]` through `[9/9]` progress indicators with phase labels or a flexible list that includes "Assess visual need" and an optional "Offer visual companion" branch. The user-facing progress model must not imply that offering the visual companion is always required.
+
+Update the BLOCKED and Self-Correction sections so the invariant is: do not skip the offer when visual content is likely, and do not offer immediately when the topic is text-likely.
+
+**Step 4: Verify**
+
+Manual verification:
+
+```bash
+rg -n "Offering the visual companion|\\[3/9\\]|VISUAL_COMPANION = \"deferred\"|visual-likely|text-likely" .agents/skills/oat-brainstorm/SKILL.md
+```
+
+Expected: no fixed `[3/9] Offering the visual companion...` requirement remains; deferred/resurface behavior is documented.
+
+Run:
+
+```bash
+pnpm oat:validate-skills
+```
+
+Expected: `oat-brainstorm` validates cleanly. Pre-existing unrelated validation failures, if still present, are documented and not introduced by this task.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md packages/cli/assets/skills/oat-brainstorm/SKILL.md apps/oat-docs/docs/cli-utilities/tool-packs.md packages/cli/assets/docs/cli-utilities/tool-packs.md
+git commit -m "fix(prev1-t02): defer brainstorm visual companion until useful"
+```
+
+---
+
+### Task prev1-t03: (revision) Refresh shipped assets, versions, and release validation
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: `.agents/skills/oat-idea-ideate/SKILL.md`
+- Regenerate: `packages/cli/assets/skills/oat-brainstorm/SKILL.md`
+- Regenerate: `packages/cli/assets/skills/oat-idea-ideate/SKILL.md`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Regenerate: `packages/cli/assets/public-package-versions.json`
+
+**Step 1: Bump changed skill frontmatter versions**
+
+Because the final PR changes canonical skill files, bump each changed skill's frontmatter version once for the PR:
+
+- `.agents/skills/oat-brainstorm/SKILL.md`
+- `.agents/skills/oat-idea-ideate/SKILL.md`
+
+Use the smallest appropriate patch-level bump unless the local versioning convention requires otherwise.
+
+**Step 2: Refresh bundled assets**
+
+Run:
+
+```bash
+bash packages/cli/scripts/bundle-assets.sh
+```
+
+Expected: bundled skill assets under `packages/cli/assets/skills/` match the canonical `.agents/skills/` copies.
+
+**Step 3: Bump lockstep public package versions**
+
+Changes under `.agents/skills` are shipped CLI functionality. Bump the lockstep public package set from the current version to the next patch version:
+
+- `packages/cli`
+- `packages/control-plane`
+- `packages/docs-config`
+- `packages/docs-theme`
+- `packages/docs-transforms`
+
+Regenerate or update `packages/cli/assets/public-package-versions.json` so it matches the package versions.
+
+**Step 4: Verify**
+
+Run:
+
+```bash
+pnpm format
+pnpm lint
+pnpm type-check
+pnpm release:validate
+```
+
+Expected: all pass. If validation exposes only pre-existing unrelated skill validation failures, document the exact failures and keep the revision changes narrow.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md .agents/skills/oat-idea-ideate/SKILL.md packages/cli/assets/skills/oat-brainstorm/SKILL.md packages/cli/assets/skills/oat-idea-ideate/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
+git commit -m "chore(prev1-t03): refresh brainstorm revision release assets"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                              |
@@ -1525,10 +1699,11 @@ git commit -m "fix(p05-t08): update current-state.md workflow paths and add brai
 - Phase 3: 7 tasks — fill in `oat-brainstorm/SKILL.md` end-to-end (mode assertion, progress indicators, activation, pack detection, conversation cadence, destination signal-watching, satisfaction check, synthesis with confirmation, non-fold-back terminal-state handoffs, active-project router + fold-back commit safety contract, success criteria + self-review)
 - Phase 4: 5 tasks — document brainstorm pack and skill in `apps/oat-docs`, document walkthrough plans for all 10 dogfood scenarios (live-dogfood follow-up captured as backlog item `bl-7d5b`), lockstep public-package version bumps, regenerate `public-package-versions.json`, exclude bundled MIT-port scripts + docs from oxfmt (added p04-t05 during execution to address Phase 3-flagged format prerequisite), `pnpm release:validate`
 - Phase 5: 8 tasks — final-review fix tasks for the 6 Important + 2 Medium + 1 Minor findings from `final-review-2026-05-02.md` (config-schema registration, install-lifecycle parity, dynamic skill-dir resolution, gitignore policy, durable-tracked active-project references, state refresh, dogfood walkthrough revision + backlog/vault copy, current-state.md path + pack-list updates)
+- Phase p-rev1: 3 tasks — human-feedback revisions for brainstorm skill routing, conditional visual-companion offering, bundled asset refresh, skill version bumps, lockstep package version bump, and release validation
 
-**Total: 32 tasks**
+**Total: 35 tasks**
 
-Ready for code review and merge.
+Revision p-rev1 is pending. Run `oat-project-implement` from `prev1-t01`, then re-review and push the PR update.
 
 ---
 
