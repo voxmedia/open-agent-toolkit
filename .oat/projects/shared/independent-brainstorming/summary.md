@@ -2,11 +2,11 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-02
+oat_last_updated: 2026-05-03
 oat_generated: true
-oat_summary_last_task: p05-t08
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: prev1-t03
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: [p-rev1]
 ---
 
 # Summary: independent-brainstorming
@@ -17,7 +17,7 @@ OAT had two ends of the creative-work spectrum — `oat-idea-*` for lightweight 
 
 ## What Was Implemented
 
-- **New `oat-brainstorm` skill** in a new dedicated `brainstorm` tool pack. User-eligible, default user scope, default-on in `oat init` guided setup. Always-on description (`disable-model-invocation: false`) tuned to fire on exploratory phrasing without competing with destination skills the user invokes directly. Activation is its own message; visual companion is offered up front.
+- **New `oat-brainstorm` skill** in a new dedicated `brainstorm` tool pack. User-eligible, default user scope, default-on in `oat init` guided setup. Always-on description (`disable-model-invocation: false`) tuned to fire on destinationless exploratory phrasing, including literal "let's brainstorm" / "brainstorm this" requests, without competing with destination skills the user invokes directly. Activation is its own message; the visual companion is offered only when the topic is visual-likely and is deferred silently for text-likely brainstorms.
 - **Pack-aware terminal-state picker** (9 destination families): `inline`, `doc-to-path` (in-repo or off-repo), `capture-as-new-idea` (ideas pack), `extend-existing-idea` (ideas pack), `summarize-idea-directly` (ideas pack fast path), `scoped-backlog-item` (project-management pack), `promote-to-new-OAT-project` (workflows pack), and active-project routing with three sub-options (related → fold-back, independent → other terminal states, supplementary → reference file).
 - **Active-project fold-back commit safety contract.** Preflight `git status --porcelain -- "$ARTIFACT_PATH"`, scoped staging via `git add -- "$ARTIFACT_PATH"` (never `-A`, never globs), three-option dirty-tree picker (commit-prior-first / mix / abort-to-reference-file), and a conditional handoff prompt that only prints after the scoped commit succeeds. Word-for-word aligned between design.md and SKILL.md.
 - **Generalized `PackMetadata` mechanism** (`PACK_METADATA[name]?.defaultScope`) that drives both the interactive picker and the non-interactive scope resolver. `brainstorm` is the first user-default-scope pack; existing-install detection short-circuits before metadata lookup so users with prior project-scope installs don't get unexpected migrations. Captured as ADR-017.
@@ -44,6 +44,7 @@ OAT had two ends of the creative-work spectrum — `oat-idea-*` for lightweight 
 - **Phase 2 scope expanded** to cascade `'brainstorm'` through several exhaustive switches (`BUNDLED_PACK_MEMBERS`, `BUNDLED_PACK_ASSETS`, `install-sync-context`, `scan-tools`, `VALID_PACKS`, `PACK_DESCRIPTIONS`) once the `PackName` union was extended. Reviewer confirmed this as necessary type-completeness work, not scope drift.
 - **Phase 4 added p04-t05** during execution to address a Phase 3-flagged Medium prerequisite (`pnpm format --check` failing on bundled MIT-port files). Added narrow `.oxfmtrc.jsonc` `ignorePatterns` for `packages/cli/assets/skills/**/scripts/**` and `packages/cli/assets/docs/**`.
 - **Phase 5 added** during the post-implementation final review when 6 Important + 2 Medium + 1 Minor findings surfaced cross-cutting bugs the per-phase reviews didn't catch (config-schema gap, install-lifecycle bypass, hard-coded skill paths, gitignore claim mismatch, stale state artifacts, dogfood claim/artifact disagreement, ambiguous active-project-reference semantics, broken docs path refs, stale pack list). All 9 converted to fix tasks p05-t01 through p05-t08; all closed in the v2 final re-review.
+- **Revision p-rev1 added** from post-PR dogfood feedback. It tightened skill-routing boundaries so blank-slate brainstorms go to `oat-brainstorm`, tracked idea continuation stays in `oat-idea-ideate`, and visual companion startup is conditional on visual need rather than offered immediately whenever Node is available. The revision also bumped changed skill versions and lockstep public packages to `0.0.60`.
 
 ## Notable Challenges
 
@@ -65,7 +66,7 @@ OAT had two ends of the creative-work spectrum — `oat-idea-*` for lightweight 
 
 ## Integration Notes
 
-- **Always-on description means the skill fires automatically on exploratory phrasing** — agents working in OAT-installed repos will see `oat-brainstorm` activate when users say things like "I've been thinking about", "what if we did", or "how should we approach". The skill's first action is its mode assertion + visual-companion offer, so there's no risk of silent state mutation. If the always-on trigger is firing too aggressively in a particular context, the description string in `.agents/skills/oat-brainstorm/SKILL.md` is the place to tighten language.
+- **Always-on description means the skill fires automatically on destinationless exploratory phrasing** — agents working in OAT-installed repos will see `oat-brainstorm` activate when users say things like "let's brainstorm", "brainstorm this", "I've been thinking about", "what if we did", or "how should we approach" without naming a destination skill. The skill's first action is its mode assertion plus visual-need assessment; the visual companion is offered only for visual-likely topics and deferred for text-likely topics. If the trigger is firing too aggressively in a particular context, the description string in `.agents/skills/oat-brainstorm/SKILL.md` is the place to tighten language.
 - **Pack detection uses `oat config get tools.<pack>`** — same pattern `oat-project-document` already uses. Other skills that need to gate behavior on installed packs should use this signal, not directory heuristics.
 - **`PackMetadata` is the canonical place to register user-default-scope behavior** — adding a new user-default-scope pack is a single entry in `PACK_METADATA[name] = { defaultScope: 'user' }` plus the existing `BRAINSTORM_SKILLS`-style manifest constant.
 - **Active-project brainstorming** has explicit hooks: `<project>/brainstorming/<topic>.md` for reference files (durable-tracked) and the fold-back commit safety contract for direct discovery/design integration. Both paths emit explicit confirmation notes after committing — the skill never leaves the working tree dirty.

@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-03
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -75,16 +75,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 4     | 4/4       |
-| Phase 2      | complete    | 8     | 8/8       |
-| Phase 3      | complete    | 7     | 7/7       |
-| Phase 4      | complete    | 5     | 5/5       |
-| Phase 5      | complete    | 8     | 8/8       |
-| Phase p-rev1 | in_progress | 3     | 0/3       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 4     | 4/4       |
+| Phase 2      | complete | 8     | 8/8       |
+| Phase 3      | complete | 7     | 7/7       |
+| Phase 4      | complete | 5     | 5/5       |
+| Phase 5      | complete | 8     | 8/8       |
+| Phase p-rev1 | complete | 3     | 3/3       |
 
-**Total:** 32/35 tasks completed
+**Total:** 35/35 tasks completed
 
 ### Revision Received: Inline Feedback
 
@@ -101,7 +101,32 @@ oat_generated: false
 
 **New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`
 
-**Next:** Execute revision tasks via the `oat-project-implement` skill.
+**Next:** Revision tasks implemented in commit `42a8d2db`; push the PR update and run a focused re-review.
+
+### Revision Completed: Inline Feedback
+
+**Date:** 2026-05-03
+**Commit:** `42a8d2db` (`fix(prev1): incorporate brainstorm UX revisions`)
+
+**Tasks completed:** `prev1-t01`, `prev1-t02`, `prev1-t03`
+
+**Outcome:**
+
+- `oat-brainstorm` now explicitly owns destinationless "let's brainstorm" / "brainstorm this" / "brainstorm <topic>" phrasing and warns against inferring a destination before convergence.
+- `oat-idea-ideate` now applies only to tracked ideas or explicit scratchpad seeds and routes blank-slate brainstorms back to `oat-brainstorm`.
+- The visual companion is now gated by visual-need assessment. Text-likely brainstorms set `VISUAL_COMPANION = "deferred"` and continue without an immediate offer; the offer resurfaces later only if the conversation turns visual.
+- Fixed progress guidance so there is no mandatory `[3/9] Offering the visual companion...` step.
+- Updated docs and bumped changed skill frontmatter versions plus the lockstep public package versions to `0.0.60`.
+
+**Verification:**
+
+- `pnpm format`: pass
+- `pnpm lint`: pass when run sequentially
+- `pnpm type-check`: pass when run sequentially
+- `pnpm release:validate`: pass for 5 public packages at `0.0.60`
+- `pnpm oat:validate-skills`: expected failure only on pre-existing unrelated skill metadata issues (`oat-pjm-add-backlog-item`, `oat-pjm-update-repo-reference`, `oat-project-document`, `oat-project-pr-final`, `oat-project-spec`, `oat-project-summary`). The new `oat-brainstorm` and `oat-idea-ideate` validation issues were fixed and no longer appear.
+
+**Note:** An initial parallel run of `pnpm lint` and `pnpm type-check` raced `packages/cli/scripts/bundle-assets.sh` against itself because both commands transitively run the CLI build. Sequential reruns passed.
 
 ---
 

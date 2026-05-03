@@ -1494,6 +1494,8 @@ git commit -m "fix(p05-t08): update current-state.md workflow paths and add brai
 ## Phase p-rev1: Revision 1
 
 Source: inline feedback (2026-05-03)
+Status: complete
+Commit: `42a8d2db` (`fix(prev1): incorporate brainstorm UX revisions`)
 
 ### Task prev1-t01: (revision) Disambiguate brainstorm routing from tracked idea ideation
 
@@ -1703,7 +1705,7 @@ git commit -m "chore(prev1-t03): refresh brainstorm revision release assets"
 
 **Total: 35 tasks**
 
-Revision p-rev1 is pending. Run `oat-project-implement` from `prev1-t01`, then re-review and push the PR update.
+Revision p-rev1 is complete. Push the PR update, run a focused re-review of the revision commit(s), then complete the project when approved.
 
 ---
 
