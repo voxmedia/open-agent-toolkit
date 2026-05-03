@@ -1680,6 +1680,7 @@ git commit -m "chore(prev1-t03): refresh brainstorm revision release assets"
 | spec   | artifact | pending         | -          | -                                                     |
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
 | plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
+| prev1  | code     | received        | 2026-05-03 | reviews/prev1-review-2026-05-03.md                    |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
