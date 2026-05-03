@@ -175,10 +175,11 @@ The `brainstorm` pack ships a single skill plus a bundled visual companion for
 project-independent brainstorming conversations:
 
 - **oat-brainstorm** — Always-on brainstorming entry point. Activates on
-  exploratory phrasing ("I've been thinking about", "what if we did", open-ended
-  design questions) and runs a structured design conversation (one question at
-  a time, 2-3 approaches with a recommendation, scaled-section design
-  presentation) without committing the user to an idea or project artifact.
+  destinationless exploratory phrasing ("let's brainstorm", "brainstorm this",
+  "I've been thinking about", "what if we did", open-ended design questions) and
+  runs a structured design conversation (one question at a time, 2-3 approaches
+  with a recommendation, scaled-section design presentation) without committing
+  the user to an idea or project artifact.
   Ends in a pack-aware terminal-state picker that hands off to existing OAT
   skills (idea capture, scoped backlog item, project promotion, active-project
   fold-back, doc-to-path) based on which packs are installed in the current
@@ -205,10 +206,11 @@ Key behavior:
   routing) ships with the skill at `.agents/skills/oat-brainstorm/scripts/`
   and is documented in
   `.agents/skills/oat-brainstorm/references/visual-companion.md`. The companion
-  is offered once at activation; the skill consults it per-question when a
-  visual answer would help (mockups, layout comparisons, diagrams). Persistence
-  paths use OAT-managed prefixes (`.oat/brainstorm/<session-id>/` repo-scope
-  or `~/.oat/brainstorm/<session-id>/` user-scope).
+  is offered only when the topic is visual-likely (mockups, layout comparisons,
+  diagrams, visual option comparisons). Text-likely brainstorms skip the offer
+  and can surface it later if the conversation turns visual. Persistence paths
+  use OAT-managed prefixes (`.oat/brainstorm/<session-id>/` repo-scope or
+  `~/.oat/brainstorm/<session-id>/` user-scope).
 - **Terminal-state picker filtered by `tools.<pack>` config.** When the user
   converges on a destination, the skill consults `oat config get tools.ideas`,
   `tools.project-management`, and `tools.workflows` to filter the available

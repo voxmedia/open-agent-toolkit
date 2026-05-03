@@ -1,7 +1,7 @@
 ---
 name: oat-idea-ideate
-version: 1.2.0
-description: Use when continuing brainstorming for an existing idea or starting from a scratchpad entry. Guides conversational ideation and refinement.
+version: 1.2.1
+description: Use when continuing an existing tracked idea or expanding an explicit scratchpad seed from {IDEAS_ROOT}/scratchpad.md. Do NOT use to start a brand-new, destinationless brainstorm; use oat-brainstorm for that.
 argument-hint: '[--global]'
 disable-model-invocation: true
 user-invocable: true
@@ -10,13 +10,13 @@ allowed-tools: Read, Write, Bash, Glob, AskUserQuestion
 
 # Ideate
 
-Resume brainstorming on an existing idea, or pick one from the scratchpad to start exploring.
+Resume brainstorming on an existing tracked idea, or expand an explicit scratchpad seed into a tracked idea before continuing ideation.
 
 ## Mode Assertion
 
 **OAT MODE: Ideation**
 
-**Purpose:** Lightweight brainstorming through natural, exploratory conversation. Capture the essence of an idea without formal structure or implementation detail.
+**Purpose:** Lightweight brainstorming through natural, exploratory conversation for an idea record that already exists or for a scratchpad seed the user explicitly selects. Capture the essence of that tracked idea without formal structure or implementation detail.
 
 **BLOCKED Activities:**
 
@@ -25,6 +25,7 @@ Resume brainstorming on an existing idea, or pick one from the scratchpad to sta
 - No technical designs or architecture
 - No task breakdowns or plans
 - No forced structure — let the idea breathe
+- No brand-new destinationless brainstorm activation. Use `oat-brainstorm` when the user says "let's brainstorm", "brainstorm this", or otherwise opens exploratory discussion without naming an existing idea or scratchpad seed.
 
 **ALLOWED Activities:**
 
@@ -41,6 +42,7 @@ If you catch yourself:
 - Writing implementation details → STOP (capture as an Open Question instead)
 - Formalizing requirements → STOP (keep it conversational)
 - Creating structured deliverables → STOP (save for project workflow)
+- Treating a generic brainstorm request as a scratchpad entry → STOP. Scratchpad mode requires an actual unchecked entry in `{IDEAS_ROOT}/scratchpad.md` or an explicit user reference to one.
 
 **Recovery:**
 
@@ -89,6 +91,8 @@ Determine whether to operate at project level or user (global) level.
 | `TEMPLATES_ROOT` | `.oat/templates/ideas` | `~/.oat/templates/ideas` |
 
 ### Step 1: Resolve Active Idea
+
+This skill is a resume / expand flow, not a blank-slate brainstorm entry point. If the user has only asked to brainstorm and has not named an existing idea, an active idea, or a scratchpad seed, stop and route to `oat-brainstorm`.
 
 Read `activeIdea` from config:
 

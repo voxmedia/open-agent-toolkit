@@ -1,7 +1,7 @@
 ---
 name: oat-brainstorm
-version: 1.0.0
-description: Use when starting any project-independent brainstorming or exploratory conversation — phrasing like "I've been thinking about", "what if we did", "how should we approach", or thinking-out-loud about an idea / feature / change without a chosen destination. Do NOT use for routine implementation requests or work where the user has already named a destination skill (idea, backlog, project, doc). Routes to inline / doc / idea / backlog / project / active-project handoffs by installed pack.
+version: 1.0.1
+description: Use when starting a project-independent brainstorm without a chosen destination, including "let's brainstorm", "brainstorm this", "brainstorm <topic>", "I've been thinking about", or "what if we did". If no destination skill or artifact type is named, do NOT infer one up front; defer destination selection until convergence. Do NOT use for routine implementation or when the user already named idea, backlog, project, or doc.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -9,13 +9,13 @@ allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 
 # Brainstorm
 
-Project-independent brainstorming dispatcher. Owns the always-on activation, the Superpowers-style conversational cadence, the visual-companion offer, the destination identification, and the per-destination handoff to existing OAT skills.
+Project-independent brainstorming dispatcher. Owns the always-on activation, the Superpowers-style conversational cadence, the visual-need assessment and conditional visual-companion offer, the destination identification, and the per-destination handoff to existing OAT skills.
 
 ## Mode Assertion
 
 **OAT MODE: Brainstorm**
 
-**Purpose:** Run a structured exploratory conversation that does not commit the user to an idea, backlog item, or project artifact up front. Identify the destination at the end (or opportunistically on a clear trigger phrase) and hand off to the right downstream skill — or stay inline / write a doc when no other artifact is wanted.
+**Purpose:** Run a structured exploratory conversation that does not commit the user to an idea, backlog item, or project artifact up front. This skill owns destinationless "let's brainstorm" / "brainstorm this" entry points. Identify the destination at the end (or opportunistically on a clear trigger phrase) and hand off to the right downstream skill — or stay inline / write a doc when no other artifact is wanted.
 
 **BLOCKED Activities:**
 
@@ -23,6 +23,7 @@ Project-independent brainstorming dispatcher. Owns the always-on activation, the
 - No formal requirements / specs / architectural designs (the design phase belongs to `oat-project-design`, not here).
 - No auto-routing to a destination before convergence — the destination is identified at the end of the conversation, not the beginning. Opportunistic surfacing on a clear trigger phrase is allowed; pre-emptively forcing a destination is not.
 - No skipping the visual-companion offer when the conversation is going to involve visual content.
+- No immediate visual-companion offer for text-likely brainstorms. Node availability is not enough; assess visual need first.
 - No fold-back commit on a dirty working tree without running the preflight `git status` check first (see Process step 9 active-project branches).
 - No `git add -A` and no directory globs for the fold-back commit. Staging is always scoped: `git add -- "$ARTIFACT_PATH"`.
 - No printing the fold-back handoff prompt before `git commit` actually succeeds. The prompt references a hash; a missing commit makes the prompt misleading.
@@ -42,6 +43,7 @@ If you catch yourself:
 - Writing implementation code or running build/test commands → STOP. Brainstorming does not produce code; that's the destination skills' job.
 - Forcing a destination before convergence → STOP. Return to free brainstorming and let convergence happen via trigger phrase or natural soft cue.
 - Skipping the visual-companion offer when visual content is coming → STOP. Print the offer as its own message before continuing.
+- Offering the visual companion before a text-likely brainstorm has any visual need → STOP. Set `VISUAL_COMPANION = "deferred"` and continue text-only.
 - Running the fold-back commit on a dirty working tree without preflight → STOP. Re-route through the dirty-tree handler (three-option picker) before any artifact mutation.
 - Staging with `-A` or a directory glob during fold-back → STOP. The fold-back commit must be `git add -- "$ARTIFACT_PATH"` only.
 - Printing the fold-back handoff prompt before the commit succeeds → STOP. Surface the commit error and let the user resolve it before the prompt is emitted.
@@ -50,7 +52,7 @@ If you catch yourself:
 
 1. Acknowledge the deviation in one line.
 2. Return to the missed step in the Process flow.
-3. Re-run the missed step correctly (e.g., re-issue the visual-companion offer as its own message; re-run the preflight `git status` check).
+3. Re-run the missed step correctly (e.g., defer or re-issue the visual-companion offer based on visual need; re-run the preflight `git status` check).
 4. Continue.
 
 ## Progress Indicators (User-Facing)
@@ -61,24 +63,26 @@ If you catch yourself:
   OAT ▸ BRAINSTORM
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Before multi-step work, print step indicators, e.g.:
-  - `[1/9] Activating brainstorm mode…`
-  - `[2/9] Asserting mode (blocked / allowed)…`
-  - `[3/9] Offering the visual companion…`
-  - `[4/9] Detecting installed packs and active project…`
-  - `[5/9] Free brainstorming (Superpowers cadence)…`
-  - `[6/9] Watching for destination signals…`
-  - `[7/9] Satisfaction check…`
-  - `[8/9] Synthesizing payload + confirmation…`
-  - `[9/9] Handoff to destination…`
+- Before multi-step work, print compact phase labels when they help the user track progress, e.g.:
+  - `Activating brainstorm mode…`
+  - `Asserting mode (blocked / allowed)…`
+  - `Assessing visual need…`
+  - `Detecting installed packs and active project…`
+  - `Free brainstorming (Superpowers cadence)…`
+  - `Watching for destination signals…`
+  - `Satisfaction check…`
+  - `Synthesizing payload + confirmation…`
+  - `Handoff to destination…`
 
-The 9-step counter mirrors the Process section below. Subsequent passes through step 5 after a "keep going" answer at step 7 do not re-print the counter.
+Do not use fixed `[N/9]` counters. The visual-companion offer is conditional, so the visible progress model must not imply that an offer always happens.
 
 ## Process
 
 ### Step 1: Activate
 
-The skill activates automatically when the user opens an exploratory conversation that matches the always-on description in this file's frontmatter. There are no preconditions to check at activation — pack detection and active-project detection happen at step 4, after the visual-companion offer, so this skill works in any repo regardless of which OAT packs are installed.
+The skill activates automatically when the user opens an exploratory conversation that matches the always-on description in this file's frontmatter. Literal trigger phrases include "let's brainstorm", "brainstorm this", and "brainstorm <topic>" when the user has not named a destination skill or artifact type. Do not route those blank-slate brainstorms to `oat-idea-ideate` merely because they may later become an idea, backlog item, project, or document.
+
+There are no preconditions to check at activation — pack detection and active-project detection happen at step 4, after visual-need assessment, so this skill works in any repo regardless of which OAT packs are installed.
 
 If the user invokes the skill explicitly (`/oat-brainstorm` or equivalent provider command), proceed identically. The downstream flow does not branch on activation source.
 
@@ -92,9 +96,18 @@ OAT ▸ BRAINSTORM
 
 Then assert brainstorm mode per the **Mode Assertion** section above. The agent should hold itself to the BLOCKED list for the remainder of the conversation and follow the Self-Correction Protocol if it slips.
 
-### Step 3: Visual Companion Offer
+### Step 3: Assess Visual Need and Optional Visual Companion Offer
 
-This step is **its own message**. Do **not** combine it with the mode banner, with a clarifying question, with a context summary, or with anything else. The message contains only the offer wording below and waits for the user's response before continuing.
+Classify the opening brainstorm topic before running the Node preflight or printing any visual-companion offer. Node availability is necessary only if an offer will be made; it is not by itself a reason to interrupt the conversation.
+
+**Visual-likely topics:** UI layout, mockup, wireframe, visual flow, flow chart, architecture diagram, spatial comparison, side-by-side option comparison, or any user request to draw, show, sketch, or compare something visually.
+
+**Text-likely topics:** naming, scope, tradeoffs, requirements, process, policy, strategy, conceptual architecture without a diagram request, or general exploratory discussion.
+
+- If the topic is **text-likely**: skip the visual-companion offer silently and proceed to step 4 with `VISUAL_COMPANION = "deferred"`. Do not mention the visual companion merely because it exists.
+- If the topic is **visual-likely**: the offer step is **its own message**. Do **not** combine it with the mode banner, with a clarifying question, with a context summary, or with anything else. The message contains only the offer wording below and waits for the user's response before continuing.
+
+**Resurface rule:** If `VISUAL_COMPANION = "deferred"` and the conversation later becomes visual-likely, pause before the visual-specific question and offer the visual companion as its own message at that point. Then follow the same preflight / accept / decline flow below.
 
 **Pre-flight check:** confirm `node` is on PATH:
 
@@ -102,7 +115,7 @@ This step is **its own message**. Do **not** combine it with the mode banner, wi
 command -v node >/dev/null 2>&1 && echo "available" || echo "missing"
 ```
 
-- If `node` is **missing**: skip the offer entirely. Do not print the offer message. Log a one-line note in the conversation that the visual companion is unavailable in this environment (a state `oat-doctor` can pick up later: "visual companion suppressed — node not on PATH"). Proceed to step 4 with `VISUAL_COMPANION = "unavailable"`.
+- If `node` is **missing**: skip the offer entirely. Do not print the offer message. Log a one-line note in the conversation that the visual companion is unavailable in this environment (a state `oat-doctor` can pick up later: "visual companion suppressed — node not on PATH"). Proceed with `VISUAL_COMPANION = "unavailable"`.
 - If `node` is **available**: print the offer as its own message. Suggested wording (adapt freely; the constraint is "own message, no other content"):
 
   > "Some of what we're working on might be easier to explain if I can show it in a local web browser — mockups, diagrams, side-by-side comparisons. The visual companion is bundled with this skill (a small Node-based local server). Want me to start it? (Requires opening a `localhost` URL.)"
@@ -120,7 +133,7 @@ Wait for the user's response.
 
 - **Decline** → set `VISUAL_COMPANION = "declined"`. Continue text-only.
 
-The decision applies for the rest of the session. **Per-question routing** still happens at step 5 — even when accepted, each individual question chooses browser-vs-terminal on its own merits.
+The `active`, `declined`, and `unavailable` decisions apply for the rest of the session. The `deferred` state is temporary and may resurface once if the conversation later becomes visual-likely. **Per-question routing** still happens at step 5 — even when accepted, each individual question chooses browser-vs-terminal on its own merits.
 
 ### Step 4: Pack and Active-Project Detection
 
@@ -169,7 +182,7 @@ Build the synthesized payload in memory as the conversation progresses. The payl
 
 A question about a UI topic is not automatically a visual question. "What does 'personality' mean for this widget?" is conceptual — terminal. "Which of these two layouts works better?" is visual — browser.
 
-If the visual companion is `declined` or `unavailable`, route everything to the terminal. The conversation does not stall on missing visuals — describe in prose, sketch in ASCII if it helps, move on.
+If the visual companion is `declined` or `unavailable`, route everything to the terminal. If it is `deferred`, continue in the terminal until the resurface rule from step 3 applies. The conversation does not stall on missing visuals — describe in prose, sketch in ASCII if it helps, move on.
 
 Stay in this step until either a destination trigger phrase fires (step 6) or a soft convergence cue appears (also step 6).
 
@@ -214,7 +227,7 @@ Whichever path triggered convergence, ask the user one question — no exception
 
 > "Feel good about where we landed, or want to keep brainstorming and add more detail?"
 
-- **Keep going** → return to step 5 with the destination noted in working memory. While back in step 5, the skill may **proactively probe for required template fields** the destination needs but the conversation hasn't yet covered (per `references/destinations.md` per-destination "If user wants to keep brainstorming after this is offered" rules — e.g., probe for `motivation` and `vision` if a "capture as new idea" destination has been surfaced but the conversation has been thin on those). Do not re-print the visual-companion offer or the pack-detection step; those run once per session.
+- **Keep going** → return to step 5 with the destination noted in working memory. While back in step 5, the skill may **proactively probe for required template fields** the destination needs but the conversation hasn't yet covered (per `references/destinations.md` per-destination "If user wants to keep brainstorming after this is offered" rules — e.g., probe for `motivation` and `vision` if a "capture as new idea" destination has been surfaced but the conversation has been thin on those). Do not re-run pack detection. Only resurface the visual-companion offer if it was deferred and the conversation has become visual-likely.
 - **Wrap up** → continue to step 8 (synthesis).
 
 This step is the user's brake: convergence does not commit them to anything until they explicitly say "wrap up". A trigger phrase is not a contract; it's an opportunistic signal.
@@ -509,9 +522,10 @@ Use only `git add -- <path>` so unrelated working-tree changes are not swept int
 
 ## Success Criteria
 
-- ✅ Always-on description fires on exploratory phrasing ("I've been thinking about", "what if we did", "how should we approach", thinking-out-loud) and does NOT fire on routine implementation requests, code-review questions, or work where the user has already named a destination skill.
+- ✅ Always-on description fires on destinationless brainstorming phrasing ("let's brainstorm", "brainstorm this", "brainstorm <topic>", "I've been thinking about", "what if we did", "how should we approach", thinking-out-loud) and does NOT fire on routine implementation requests, code-review questions, or work where the user has already named a destination skill.
 - ✅ Phase banner `OAT ▸ BRAINSTORM` is printed exactly once at activation; mode assertion follows immediately.
-- ✅ Visual-companion offer is its own message with no other content. The offer is suppressed entirely (no message printed) when `node` is not on PATH.
+- ✅ Visual-companion offer is conditional on visual need, not Node availability alone. Text-likely brainstorms set `VISUAL_COMPANION = "deferred"` and continue without mentioning the companion.
+- ✅ When a visual-companion offer is made, it is its own message with no other content. The offer is suppressed entirely (no message printed) when `node` is not on PATH.
 - ✅ Pack and active-project detection (`oat config get tools.<pack>` and `oat config get activeProject`) runs once per session at step 4, before the conversation starts.
 - ✅ Conversation cadence holds the Superpowers contract: one question at a time, multiple-choice preferred, 2-3 distinct approaches with a recommendation, per-question visual-companion routing.
 - ✅ Destination is identified via either trigger-phrase opportunistic surfacing (loose substring + paraphrase tolerance, not regex; ambiguity → ask) or convergence cue (pack-filtered terminal-state picker).
