@@ -34,14 +34,19 @@ interface ArchiveSyncOptions {
 }
 
 /**
- * Resolve effective AWS profile/region for an archive sync invocation, honoring
- * the discovery decision #3 precedence: flag > parent shell env > config.
+ * Resolve effective AWS profile/region for an archive sync invocation.
+ *
+ * Precedence (highest first): `--profile`/`--region` flag > `archive.awsProfile`/`archive.awsRegion`
+ * config > parent shell `AWS_PROFILE`/`AWS_REGION` env. Repo config is treated
+ * as deliberate, OAT-archive-scoped intent and wins over ambient shell state —
+ * users who explicitly set `archive.awsProfile` for the repo don't have to
+ * remember to unset `AWS_PROFILE` in every shell. Flag still beats config for
+ * one-off overrides.
  *
  * The returned `env` is suitable for passing into every `aws` spawn in this
- * command. The returned `awsProfile`/`awsRegion` are forwarded to
- * `ensureS3ArchiveAccess` so its non-clobbering merge sees the same source of
- * truth (parent env wins inside the helper, so injecting the flag value into
- * the env up-front is what makes "flag > parent env" hold end-to-end).
+ * command. The returned `awsProfile`/`awsRegion` are also forwarded to
+ * `ensureS3ArchiveAccess` so its preflight `aws sts get-caller-identity` runs
+ * against the same identity.
  */
 function resolveSyncAwsEnv(
   processEnv: NodeJS.ProcessEnv,
@@ -61,30 +66,17 @@ function resolveSyncAwsEnv(
       ? options.region.trim()
       : undefined;
 
-  // Layer the flag onto the parent env BEFORE delegating to buildAwsEnv. The
-  // helper's non-clobbering rule treats parent env as authoritative, so this
-  // is how the flag wins over both parent env and config.
-  const effectiveParent: NodeJS.ProcessEnv = { ...processEnv };
-  if (flagProfile !== undefined) {
-    effectiveParent.AWS_PROFILE = flagProfile;
-  }
-  if (flagRegion !== undefined) {
-    effectiveParent.AWS_REGION = flagRegion;
-  }
-
   const configProfile = config.archive?.awsProfile;
   const configRegion = config.archive?.awsRegion;
 
-  // Forward the same precedence into `awsProfile`/`awsRegion` for downstream
-  // helpers: prefer flag, fall back to config. Parent env is *not* substituted
-  // here because callers will pass the returned `env` (which already has the
-  // flag layered onto a clone of the parent env) as `dependencies.env` to the
-  // helper, so `buildAwsEnv`'s non-clobbering rule preserves "flag > parent
-  // env > config" against `effectiveParent` rather than the raw `process.env`.
+  // Flag beats config; either is forwarded to buildAwsEnv, which clobbers the
+  // parent env entry with the resolved value. When neither flag nor config is
+  // set, awsProfile/awsRegion stay undefined and the parent env passes through
+  // untouched — letting the AWS CLI's own resolution chain take over.
   const awsProfile = flagProfile ?? configProfile ?? undefined;
   const awsRegion = flagRegion ?? configRegion ?? undefined;
 
-  const env = buildAwsEnv(effectiveParent, {
+  const env = buildAwsEnv(processEnv, {
     awsProfile,
     awsRegion,
   });

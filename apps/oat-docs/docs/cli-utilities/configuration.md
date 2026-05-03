@@ -114,17 +114,19 @@ With those values configured:
 - completion also copies `summary.md` into `<archive.summaryExportPath>/20260401-my-project.md`
 - `oat project archive sync` can later pull archive data back down from S3 and materialize the latest snapshot into the local bare archive path `.oat/projects/archived/<project>/`
 - `oat-wrap-up` can write tracked reports into `<archive.wrapUpExportPath>/YYYY-MM-DD-wrap-up-<label>.md`; if the key is unset, the skill uses `.oat/repo/reference/wrap-ups/`
-- every `aws` spawn (preflight `aws sts get-caller-identity`, `aws s3 ls`, `aws s3 sync`) inherits `AWS_PROFILE` / `AWS_REGION` from `archive.awsProfile` / `archive.awsRegion` when the parent shell does not already set them
+- every `aws` spawn (preflight `aws sts get-caller-identity`, `aws s3 ls`, `aws s3 sync`) runs with `AWS_PROFILE` / `AWS_REGION` set from `archive.awsProfile` / `archive.awsRegion` when configured, overriding any value already in the parent shell
 
 ### Credential resolution
 
 Profile and region resolve with the following precedence per `aws` invocation, highest first:
 
 1. CLI flag passed to `oat project archive sync` (`--profile <profile>`, `--region <region>`)
-2. The parent shell's existing `AWS_PROFILE` / `AWS_REGION` env vars
-3. The repo's shared `archive.awsProfile` / `archive.awsRegion` config
+2. The repo's shared `archive.awsProfile` / `archive.awsRegion` config
+3. The parent shell's existing `AWS_PROFILE` / `AWS_REGION` env vars
 
 If none of the three are present for a given var, OAT does not inject it — the AWS CLI's own resolution chain takes over.
+
+`archive.awsProfile` is treated as deliberate, OAT-archive-scoped intent: if the repo declares the identity it wants to archive under, that value wins over whatever profile happens to be in the calling shell. Use `--profile` for one-off overrides; clear `archive.awsProfile` (set it to an empty string) to fall back to shell `AWS_PROFILE`.
 
 The `oat project archive sync` flags only override for that single invocation:
 

@@ -11,6 +11,8 @@ oat_summary_includes_revisions: ['p-rev1']
 
 # Summary: aws-profile
 
+> **Amendment (2026-05-02):** Decision #3 (non-clobbering precedence — config does not override parent shell env) was reversed in a follow-up PR after a real-world friction case where `AWS_PROFILE=voxmedia` in the calling shell silently overrode the repo's configured `archive.awsProfile=tkstang-artifact-sync` and the sync ran against the wrong account/bucket. The shipped precedence is now **flag > config > shell env**: explicit `archive.awsProfile` config is treated as deliberate, repo-scoped intent and clobbers ambient `AWS_PROFILE`. The rest of this summary describes the original 2026-04-30 design and is preserved as-is for historical context.
+
 ## Overview
 
 Before this project, the S3 archive sync that runs during `oat-project-complete` (and the standalone `oat project archive sync` command) used whatever ambient AWS credentials happened to be in the shell — there was no way to scope a different AWS profile or region per repo, and no way to override profile/region for a single run. This project added per-repo config keys and per-invocation CLI flags so users can route the archive sync through a specific AWS identity without exporting environment variables in their shell.

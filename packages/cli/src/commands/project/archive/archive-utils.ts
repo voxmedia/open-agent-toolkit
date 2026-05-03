@@ -30,20 +30,17 @@ export interface EnsureS3ArchiveAccessOptions {
   s3Uri?: string | null;
   syncOnComplete: boolean;
   /**
-   * Config-only fallback AWS profile (e.g., `archive.awsProfile`). This helper
-   * applies the value only when the parent env does not already provide
-   * `AWS_PROFILE`, matching discovery decision #3 ("config does not clobber an
-   * explicit shell env"). Callers that override via flags must layer the
-   * override into `dependencies.env` (the helper's second argument) —
-   * `buildAwsEnv` is non-clobbering and will not overwrite a value already
-   * present in the parent env. Passing a flag value through this option alone
-   * is not sufficient.
+   * AWS profile to apply for this archive op (typically resolved from
+   * `archive.awsProfile` config or a `--profile` flag). When non-empty, this
+   * value clobbers any `AWS_PROFILE` already present in the parent env: an
+   * explicit OAT-archive-scoped profile is treated as deliberate intent and
+   * wins over ambient shell state. An empty/unset value leaves the parent env
+   * untouched.
    */
   awsProfile?: string | null;
   /**
-   * Config-only fallback AWS region. Same non-clobbering semantics as
-   * `awsProfile`: flag-style overrides must be layered into
-   * `dependencies.env`, not passed through this option.
+   * AWS region to apply for this archive op. Same clobber-on-explicit-value
+   * semantics as `awsProfile`.
    */
   awsRegion?: string | null;
 }
@@ -68,13 +65,14 @@ export interface ArchiveProjectOnCompletionOptions {
   summaryExportPath?: string | null;
   /**
    * Config-only AWS profile (`archive.awsProfile`). The completion path has no
-   * flag override; this value is forwarded as-is into the env merge, where the
-   * parent env wins if it already supplies `AWS_PROFILE`. Discovery decision #3.
+   * flag override. When non-empty, this value clobbers any parent-env
+   * `AWS_PROFILE` — repo-scoped archive config is treated as deliberate intent
+   * and wins over ambient shell state.
    */
   awsProfile?: string | null;
   /**
-   * Config-only AWS region (`archive.awsRegion`). Same non-clobbering semantics
-   * as `awsProfile`.
+   * Config-only AWS region (`archive.awsRegion`). Same clobber-on-explicit-value
+   * semantics as `awsProfile`.
    */
   awsRegion?: string | null;
 }
@@ -129,23 +127,19 @@ function normalizeS3Uri(s3Uri: string): string {
 /**
  * Build the env passed to every `aws` spawn in this module.
  *
- * Non-clobbering merge: a non-empty value in `opts` is applied only when
- * `parentEnv` does not already provide that key (treating empty/whitespace
- * parent values as unset). If parent env has a non-empty value, it is left
- * untouched even when `opts` supplies a non-empty value. Callers that need
- * flag-style overrides must set the env entry themselves before calling this
- * helper. This matches discovery decision #3 — config does not clobber an
- * explicit shell env.
- *
- * An empty/whitespace value in `opts` is also treated as unset, and we never
- * inject a key when neither source supplies one — so the spawned process sees
- * the same "unset" signal it would have seen without this plumbing.
+ * Clobber-on-explicit-value merge: a non-empty value in `opts` overwrites the
+ * parent env entry. The merge treats an explicitly supplied profile/region as
+ * deliberate OAT-archive-scoped intent that wins over ambient shell state —
+ * setting `archive.awsProfile` (or passing `--profile`) means "use this for
+ * archive ops, regardless of what AWS_PROFILE is in the shell." Empty or
+ * whitespace-only values in `opts` are treated as unset and leave the parent
+ * env entry alone, so the AWS CLI's own resolution chain (incl. shell
+ * AWS_PROFILE) takes over when neither config nor flag has spoken.
  *
  * Exported as a package-internal helper so the archive sync command (which
- * also spawns `aws`) can layer flag/env/config precedence and produce the same
- * env shape without duplicating this logic. This symbol is **not** part of the
- * public package surface — keep usage limited to files inside
- * `commands/project/archive/`.
+ * also spawns `aws`) can produce the same env shape without duplicating this
+ * logic. This symbol is **not** part of the public package surface — keep
+ * usage limited to files inside `commands/project/archive/`.
  */
 export function buildAwsEnv(
   parentEnv: NodeJS.ProcessEnv,
@@ -153,20 +147,15 @@ export function buildAwsEnv(
 ): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...parentEnv };
 
-  const parentHas = (key: 'AWS_PROFILE' | 'AWS_REGION'): boolean => {
-    const value = parentEnv[key];
-    return typeof value === 'string' && value.trim().length > 0;
-  };
-
   const profile =
     typeof opts.awsProfile === 'string' ? opts.awsProfile.trim() : '';
-  if (profile.length > 0 && !parentHas('AWS_PROFILE')) {
+  if (profile.length > 0) {
     env.AWS_PROFILE = profile;
   }
 
   const region =
     typeof opts.awsRegion === 'string' ? opts.awsRegion.trim() : '';
-  if (region.length > 0 && !parentHas('AWS_REGION')) {
+  if (region.length > 0) {
     env.AWS_REGION = region;
   }
 

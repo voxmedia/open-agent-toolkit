@@ -753,7 +753,7 @@ describe('archive utils', () => {
       expect(env.AWS_PROFILE).toBe('parent-profile');
     });
 
-    it('preserves parent-process AWS_PROFILE when both parent env and config supply a value (parent env wins)', async () => {
+    it('clobbers parent-process AWS_PROFILE when config supplies a value (config wins)', async () => {
       const execFile = vi.fn(async () => ({ stdout: '', stderr: '' }));
 
       await ensureS3ArchiveAccess(
@@ -773,10 +773,10 @@ describe('archive utils', () => {
         (call) => call[0] === 'aws' && call[1][0] === '--version',
       );
       const env = versionCall?.[2]?.env as NodeJS.ProcessEnv;
-      expect(env.AWS_PROFILE).toBe('parent-profile');
+      expect(env.AWS_PROFILE).toBe('config-profile');
     });
 
-    it('preserves parent-process AWS_REGION when both parent env and config supply a value (parent env wins)', async () => {
+    it('clobbers parent-process AWS_REGION when config supplies a value (config wins)', async () => {
       const execFile = vi.fn(async () => ({ stdout: '', stderr: '' }));
 
       await ensureS3ArchiveAccess(
@@ -796,7 +796,7 @@ describe('archive utils', () => {
         (call) => call[0] === 'aws' && call[1][0] === '--version',
       );
       const env = versionCall?.[2]?.env as NodeJS.ProcessEnv;
-      expect(env.AWS_REGION).toBe('eu-west-2');
+      expect(env.AWS_REGION).toBe('us-east-1');
     });
 
     it('does not inject AWS_PROFILE when neither config nor parent env supplies one', async () => {

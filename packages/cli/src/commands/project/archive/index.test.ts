@@ -623,7 +623,7 @@ describe('oat project archive sync', () => {
       expect(process.exitCode).toBe(0);
     });
 
-    it('parent env beats config when no flag', async () => {
+    it('config beats parent env when no flag', async () => {
       const { command, ensureS3ArchiveAccess, execFile } = createHarness({
         config: {
           version: 1,
@@ -643,12 +643,48 @@ describe('oat project archive sync', () => {
 
       await runArchiveSyncCommand(command);
 
-      // ensureS3ArchiveAccess receives the config values; the helper internally
-      // applies non-clobbering merge so parent env wins.
+      // ensureS3ArchiveAccess receives the config values; the helper clobbers
+      // the parent env entry with the resolved value so config wins.
       expect(ensureS3ArchiveAccess).toHaveBeenCalledWith(
         expect.objectContaining({
           awsProfile: 'config-profile',
           awsRegion: 'config-region',
+        }),
+        expect.any(Object),
+      );
+
+      const lsCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'ls',
+      );
+      const syncCall = execFile.mock.calls.find(
+        (call) => call[1][0] === 's3' && call[1][1] === 'sync',
+      );
+      expect(lsCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'config-profile',
+        AWS_REGION: 'config-region',
+      });
+      expect(syncCall?.[2]?.env).toMatchObject({
+        AWS_PROFILE: 'config-profile',
+        AWS_REGION: 'config-region',
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('parent env passes through when neither flag nor config is set', async () => {
+      const { command, ensureS3ArchiveAccess, execFile } = createHarness({
+        processEnv: {
+          PATH: '/usr/bin',
+          AWS_PROFILE: 'env-profile',
+          AWS_REGION: 'env-region',
+        },
+      });
+
+      await runArchiveSyncCommand(command);
+
+      expect(ensureS3ArchiveAccess).toHaveBeenCalledWith(
+        expect.objectContaining({
+          awsProfile: undefined,
+          awsRegion: undefined,
         }),
         expect.any(Object),
       );
