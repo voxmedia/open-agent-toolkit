@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-05-02 (independent-brainstorming shipped a new `brainstorm` pack with the always-on `oat-brainstorm` dispatcher skill, visual-companion bundle ported from Superpowers, and a generalized `PACK_METADATA` default-scope mechanism; lockstep public packages bumped to 0.0.57; pre-existing collaborative-design dogfood still pending)
+**Last Updated:** 2026-05-03 (independent-brainstorming shipped a new `brainstorm` pack with the always-on `oat-brainstorm` dispatcher skill, visual-companion bundle ported from Superpowers, and a generalized `PACK_METADATA` default-scope mechanism; lockstep public packages bumped to 0.0.59 after rebase over `f33c6597`; pre-existing collaborative-design dogfood still pending)
 
 ## Canonical References
 

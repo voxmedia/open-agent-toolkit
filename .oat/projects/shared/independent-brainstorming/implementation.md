@@ -451,7 +451,7 @@ Track test execution during implementation.
 - Documentation in `apps/oat-docs/docs/cli-utilities/tool-packs.md` (new "Brainstorm pack" section) and `apps/oat-docs/docs/workflows/skills/index.md` (entry under "Key Skills by Use Case" + Full Catalog).
 - 10 dogfood scenario walkthroughs documented in `.agents/skills/oat-brainstorm/references/dogfood-results.md` covering all destination families.
 - `NOTICES.md` extended with visual-companion attribution subsection (verbatim files vs patched).
-- 5 lockstep public package version bumps to `0.0.57` plus regenerated `packages/cli/assets/public-package-versions.json`.
+- 5 lockstep public package version bumps to `0.0.59` (rebased over `f33c6597` which had already shipped `0.0.58`).
 - `.oxfmtrc.jsonc` ignore patterns for bundled MIT-port scripts and bundled docs.
 
 **Behavioral changes (user-facing):**
@@ -477,14 +477,13 @@ Track test execution during implementation.
 - `apps/oat-docs/docs/cli-utilities/tool-packs.md`, `apps/oat-docs/docs/workflows/skills/index.md` — documentation.
 - `NOTICES.md` — visual-companion attribution.
 - `.oxfmtrc.jsonc` — ignore patterns for bundled MIT-port and bundled docs.
-- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` — lockstep version bumps to `0.0.57`.
-- `packages/cli/assets/public-package-versions.json` — regenerated.
+- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` — lockstep version bumps to `0.0.59` (post-rebase over `f33c6597`).
 
 **Verification performed:**
 
 - Per-phase Tier 1 reviews (p01–p04): all passed.
 - Final HiLL-checkpoint review (scope `final`): passed (0/0/0/3, 3 minor cosmetic suggestions, non-blocking).
-- `pnpm release:validate`: pass on all 5 public packages at `0.0.57`.
+- `pnpm release:validate`: pass on all 5 public packages at `0.0.59` (post-rebase).
 - `pnpm format`: pass.
 - `pnpm lint`: pass.
 - `pnpm type-check`: pass.
