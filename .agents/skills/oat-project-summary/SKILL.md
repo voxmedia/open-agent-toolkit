@@ -1,7 +1,7 @@
 ---
 name: oat-project-summary
 version: 1.1.0
-description: Use when the user explicitly asks to summarize an OAT project, generate a summary, or capture institutional memory — e.g. "summarize the project", "generate the summary", "run oat-project-summary". Do NOT auto-invoke just because implementation is complete; wait for an explicit user signal. Generates summary.md from project artifacts as institutional memory.
+description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 ---
