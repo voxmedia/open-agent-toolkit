@@ -667,3 +667,65 @@ testing-strategy refinement.
   First live use will be the integration test.
 - The optional `oat brainstorm visual-server` CLI wrapper is deferred per
   design — bundle ships with raw bash scripts.
+
+## Activation Anti-Cases
+
+The Activation Contract (see `SKILL.md`) splits user messages into three
+tiers: **Hard Activation** (banner + mode), **Soft Exploratory Path** (no
+banner; brainstorm-quality response by default; offer mode after ≥2
+sustained exploratory turns), and **No Activation** (advisory / review /
+debug / PR / status / implementation / active-workflow questions never
+auto-activate). These anti-cases are walkthrough specifications for
+verifying the discrimination — each entry captures the input, expected
+behavior, and rationale.
+
+### Hard Activation — banner expected
+
+| Input                                           | Expected                     | Rationale                                                    |
+| ----------------------------------------------- | ---------------------------- | ------------------------------------------------------------ |
+| `/oat-brainstorm`                               | Enter mode and print banner. | Explicit invocation.                                         |
+| "Let's brainstorm how this should work."        | Enter mode and print banner. | Explicit `brainstorm` verb with topic.                       |
+| "Brainstorm this with me."                      | Enter mode and print banner. | Explicit `brainstorm` verb with topic.                       |
+| "Can we brainstorm the schema design?"          | Enter mode and print banner. | Explicit `brainstorm` verb with topic.                       |
+| "Help me brainstorm the rollout plan."          | Enter mode and print banner. | Explicit `brainstorm` verb with topic.                       |
+| "Yeah, use the brainstorm skill." (after offer) | Enter mode and print banner. | User accepts the soft offer — transition to Hard Activation. |
+
+### Soft Exploratory Path — no banner first turn
+
+| Input                                               | Expected                                                                                      | Rationale                                                   |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| "I've been thinking about changing how this works." | No banner. Respond conversationally with options/tradeoffs.                                   | Exploratory but not an explicit brainstorm request.         |
+| "What if we used X instead of Y?"                   | No banner. Respond with tradeoffs, no premature destination.                                  | "What if" is exploratory phrasing, not a `brainstorm` verb. |
+| "Help me think through whether to use X or Y."      | No banner. Respond with brainstorm-quality reasoning inline.                                  | Exploratory intent without the `brainstorm` verb.           |
+| "I'm trying to figure out the right way to do X."   | No banner. Respond with brainstorm-quality reasoning inline.                                  | Exploratory intent without the `brainstorm` verb.           |
+| "I'm not sure how to approach this."                | No banner. Respond with brainstorm-quality reasoning inline.                                  | Exploratory intent without the `brainstorm` verb.           |
+| (After 2+ exploratory turns with no concrete ask)   | Append soft offer once: "If you want, I can switch into structured brainstorm mode for this." | Sustained exploration earns one offer.                      |
+
+### No Activation — direct response, no banner, no offer
+
+| Input                                     | Expected                               | Rationale                                                 |
+| ----------------------------------------- | -------------------------------------- | --------------------------------------------------------- |
+| "What do you think about this direction?" | Direct advisory response. No banner.   | Advisory request — wants an opinion, not a workflow.      |
+| "Thoughts?"                               | Direct advisory response. No banner.   | Advisory request.                                         |
+| "What's your take?"                       | Direct advisory response. No banner.   | Advisory request.                                         |
+| "Does this seem right?"                   | Direct advisory response. No banner.   | Advisory / verification request.                          |
+| "Please review this."                     | Direct review response. No banner.     | Review request — handoff to review skills if appropriate. |
+| "Why is this failing?"                    | Direct debugging response. No banner.  | Debugging — not a brainstorm.                             |
+| "What's the PR status?"                   | Direct status response. No banner.     | Status — not a brainstorm.                                |
+| "What about X?" mid-implementation        | Direct follow-up response. No banner.  | Active-workflow continuation, not a fresh brainstorm.     |
+| "I noticed an issue with the new code."   | Direct diagnostic response. No banner. | Implementation observation, not a brainstorm.             |
+| "How would you fix this?"                 | Direct advisory response. No banner.   | Advisory request.                                         |
+
+### Verification
+
+Live dogfood (tracked under `bl-7d5b`) should exercise each row at least
+once. The live observer records the first-turn response and confirms:
+
+- Hard Activation rows printed the banner exactly once.
+- Soft Exploratory Path rows did NOT print the banner and either gave a
+  brainstorm-quality response or, on turn ≥2, appended the soft offer.
+- No Activation rows did NOT print the banner and did NOT append the soft
+  offer.
+
+If any row regresses, file a follow-up backlog item with the offending
+input, the produced response, and the expected response.

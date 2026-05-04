@@ -174,17 +174,28 @@ Key behavior:
 The `brainstorm` pack ships a single skill plus a bundled visual companion for
 project-independent brainstorming conversations:
 
-- **oat-brainstorm** — Always-on brainstorming entry point. Activates on
-  destinationless exploratory phrasing ("let's brainstorm", "brainstorm this",
-  "I've been thinking about", "what if we did", open-ended design questions) and
-  runs a structured design conversation (one question at a time, 2-3 approaches
-  with a recommendation, scaled-section design presentation) without committing
-  the user to an idea or project artifact.
-  Ends in a pack-aware terminal-state picker that hands off to existing OAT
-  skills (idea capture, scoped backlog item, project promotion, active-project
-  fold-back, doc-to-path) based on which packs are installed in the current
-  repo. Two base outcomes (inline-only and write a brainstorming doc to a
-  user-specified path) are always available regardless of installed packs.
+- **oat-brainstorm** — Brainstorming entry point with an explicit activation
+  contract. The OAT brainstorm banner is a workflow commitment marker, not a
+  response style — the skill enters mode only on **Hard Activation** (explicit
+  `brainstorm` verb: "let's brainstorm", "brainstorm this", "can we brainstorm
+  X", "help me brainstorm X", or `/oat-brainstorm`). Ambiguous exploratory
+  phrasing ("I've been thinking about", "what if we", "help me think through",
+  "thoughts?") follows the **Soft Exploratory Path** — answered conversationally
+  with brainstorm-quality reasoning (options, tradeoffs, no premature
+  implementation, no destination guess) without the banner. After ≥2 sustained
+  exploratory turns the skill offers mode once: _"If you want, I can switch into
+  structured brainstorm mode for this."_ Advisory / review / debug / PR /
+  status / implementation / active-workflow questions ("thoughts?", "what's
+  your take?", "does this seem right?", "why is this failing?") follow **No
+  Activation** — direct response, no banner, no offer.
+  Once entered, brainstorm mode runs a structured design conversation (one
+  question at a time, 2-3 approaches with a recommendation) without committing
+  the user to an idea or project artifact, and ends in a pack-aware
+  terminal-state picker that hands off to existing OAT skills (idea capture,
+  scoped backlog item, project promotion, active-project fold-back,
+  doc-to-path) based on which packs are installed in the current repo. Two base
+  outcomes (inline-only and write a brainstorming doc to a user-specified path)
+  are always available regardless of installed packs.
 
 Key behavior:
 

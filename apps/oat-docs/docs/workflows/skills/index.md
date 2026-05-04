@@ -29,8 +29,8 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Compare options with domain-aware dimensions: `compare`
 - Verify a claim adversarially: `skeptic`
 - Merge multiple analysis artifacts: `synthesize`
-- Capture or refine ideas: `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
-- Run a project-independent brainstorming conversation: `oat-brainstorm` — always-on entry point that activates on destinationless exploratory phrasing such as "let's brainstorm" or "brainstorm this", runs a structured design conversation (one question at a time, 2-3 approaches with a recommendation, scaled-section design presentation), and routes to inline / doc-to-path / idea / backlog item / project handoffs based on installed packs. See [Tool Packs](../../cli-utilities/tool-packs.md) for the brainstorm pack details.
+- Capture or refine ideas: `oat-idea-new` (capture a new idea), `oat-idea-ideate` (resume an existing tracked idea or expand a scratchpad seed — not for blank-slate brainstorms; use `oat-brainstorm` for those), `oat-idea-scratchpad`, `oat-idea-summarize`
+- Run a project-independent brainstorming conversation: `oat-brainstorm` — entry point with an explicit activation contract. Hard Activation fires only on the `brainstorm` verb ("let's brainstorm", "brainstorm this", "can we brainstorm X", "help me brainstorm X", or `/oat-brainstorm`); ambiguous exploratory phrasing answers conversationally without the banner and offers structured mode only after sustained exploration. Once entered, runs a structured design conversation (one question at a time, 2-3 approaches with a recommendation) and routes to inline / doc-to-path / idea / backlog item / project handoffs based on installed packs. See [Tool Packs](../../cli-utilities/tool-packs.md) for the brainstorm pack details.
 
 ## If You Are Trying To...
 

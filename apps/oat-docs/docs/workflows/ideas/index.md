@@ -11,7 +11,9 @@ Ideas are intentionally lighter than projects: they are usually gitignored, pers
 
 ## Not Sure If It's an Idea Yet?
 
-If the thought is still pre-shape — you don't know whether it should land as a quick scratchpad note, a captured idea, a scoped backlog item, or a full project — start with [`oat-brainstorm`](../../cli-utilities/tool-packs.md) instead. It's the always-on, project-independent brainstorming entry point: it activates on destinationless exploratory phrasing like "let's brainstorm" or "brainstorm this", runs a structured design conversation, and routes the outcome into the right destination (including this ideas workflow if that's where the brainstorm lands). Use ideas directly when you already know the work is "an idea worth tracking" and you want to capture or extend one without going through the dispatcher.
+> **Direct entry to `oat-idea-ideate` requires an existing target** — either a tracked idea record or an unchecked scratchpad seed in `{IDEAS_ROOT}/scratchpad.md`. For blank-slate brainstorms, route to [`oat-brainstorm`](../../cli-utilities/tool-packs.md) instead.
+
+If the thought is still pre-shape — you don't know whether it should land as a quick scratchpad note, a captured idea, a scoped backlog item, or a full project — start with [`oat-brainstorm`](../../cli-utilities/tool-packs.md). It's the project-independent brainstorming entry point: Hard Activation fires only on the `brainstorm` verb ("let's brainstorm", "brainstorm this", "can we brainstorm X", "help me brainstorm X", or `/oat-brainstorm`); ambiguous exploratory phrasing answers conversationally without the banner and offers structured mode only after sustained exploration. Once entered, it runs a structured design conversation and routes the outcome into the right destination (including this ideas workflow if that's where the brainstorm lands). Use ideas directly when you already know the work is "an idea worth tracking" and you want to capture or extend one without going through the dispatcher.
 
 ## Contents
 

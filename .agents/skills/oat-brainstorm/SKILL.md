@@ -1,7 +1,7 @@
 ---
 name: oat-brainstorm
 version: 1.0.1
-description: Use when starting a project-independent brainstorm without a chosen destination, including "let's brainstorm", "brainstorm this", "brainstorm <topic>", "I've been thinking about", or "what if we did". If no destination skill or artifact type is named, do NOT infer one up front; defer destination selection until convergence. Do NOT use for routine implementation or when the user already named idea, backlog, project, or doc.
+description: Use when the user explicitly invokes the `brainstorm` verb: `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through", "thoughts?"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -9,21 +9,71 @@ allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 
 # Brainstorm
 
-Project-independent brainstorming dispatcher. Owns the always-on activation, the Superpowers-style conversational cadence, the visual-need assessment and conditional visual-companion offer, the destination identification, and the per-destination handoff to existing OAT skills.
+Project-independent brainstorming dispatcher. Owns the explicit activation gate (see `## Activation Contract`), the Superpowers-style conversational cadence, the visual-need assessment and conditional visual-companion offer, the destination identification, and the per-destination handoff to existing OAT skills.
+
+## Activation Contract
+
+Brainstorm-quality response (options, tradeoffs, open questions, no premature implementation, no destination guess) is the **default** for any exploratory phrasing without a named destination. Mode assertion + banner is **reserved** for explicit hard-activation triggers or user confirmation. The banner is a workflow commitment marker, not a quality marker.
+
+Evaluate this contract before printing the `OAT ▸ BRAINSTORM` banner, asserting brainstorm mode, running pack detection, or offering the visual companion. The contract has three tiers:
+
+### Hard Activation
+
+Enter OAT brainstorm mode immediately when the user invokes `/oat-brainstorm` or uses an explicit `brainstorm` verb with a topic/request. Examples:
+
+- `/oat-brainstorm`
+- "let's brainstorm X"
+- "brainstorm this"
+- "can we brainstorm X?"
+- "help me brainstorm X"
+
+Hard Activation runs the full Process flow below: print the mode banner (Step 2), assess visual need (Step 3), detect packs and active project (Step 4), and proceed.
+
+### Soft Exploratory Path
+
+Do **not** print the banner, assert mode, run pack detection, or offer the visual companion on the first response. Answer normally with brainstorm-quality structure (options, tradeoffs, open questions, no premature implementation, no destination guess). Examples:
+
+- "help me think through..."
+- "I've been thinking about..."
+- "what if we..."
+- "I'm trying to figure out..."
+- "I'm not sure how to approach..."
+
+Track an exploratory-turn counter for the thread. After **≥2 consecutive exploratory turns** with no concrete action requested by the user, append once to your response:
+
+> "If you want, I can switch into structured brainstorm mode for this."
+
+Offer once per thread. If the user accepts (or types `/oat-brainstorm`, "let's brainstorm", etc.), transition to Hard Activation. If the user declines, ignores, or pivots to a non-exploratory request, stay on the Soft Exploratory Path silently.
+
+### No Activation
+
+Do **not** activate or offer brainstorm mode for advisory, review, debug, PR, status, implementation, or active-workflow questions unless the user explicitly asks to brainstorm. Brainstorm-quality reasoning is still allowed for these — just no banner, no mode assertion, no offer. Examples:
+
+- "thoughts?"
+- "what's your take?"
+- "does this seem right?"
+- "please review..."
+- "why is this failing?"
+- "what's the PR status?"
+- "what about X?" during an active artifact / PR / implementation workflow
+- "I noticed an issue..."
+- "how would you fix this?"
+
+These messages get a direct response, not a workflow takeover. If the model has discovered this skill on a No Activation message, the discrimination check failed and the skill should not have been chosen — exit without the banner.
 
 ## Mode Assertion
 
 **OAT MODE: Brainstorm**
 
-**Purpose:** Run a structured exploratory conversation that does not commit the user to an idea, backlog item, or project artifact up front. This skill owns destinationless "let's brainstorm" / "brainstorm this" entry points. Identify the destination at the end (or opportunistically on a clear trigger phrase) and hand off to the right downstream skill — or stay inline / write a doc when no other artifact is wanted.
+**Purpose:** Run a structured exploratory conversation after the **Activation Contract** resolves to Hard Activation or the user accepts the soft offer. This skill owns explicit destinationless brainstorm entry points; ambiguous advisory phrasing stays conversational on the Soft Exploratory Path until the user opts in. Identify the destination at the end (or opportunistically on a clear trigger phrase) and hand off to the right downstream skill — or stay inline / write a doc when no other artifact is wanted.
 
 **BLOCKED Activities:**
 
+- No banner, mode assertion, pack detection, or visual-companion offer for the Soft Exploratory Path or No Activation Path until the user explicitly accepts the soft offer or invokes `/oat-brainstorm`.
 - No implementation code, no scaffolding, no actual feature changes.
 - No formal requirements / specs / architectural designs (the design phase belongs to `oat-project-design`, not here).
 - No auto-routing to a destination before convergence — the destination is identified at the end of the conversation, not the beginning. Opportunistic surfacing on a clear trigger phrase is allowed; pre-emptively forcing a destination is not.
-- No skipping the visual-companion offer when the conversation is going to involve visual content.
-- No immediate visual-companion offer for text-likely brainstorms. Node availability is not enough; assess visual need first.
+- Visual-companion offer must run only when the topic is visual-likely OR the user has explicitly asked for it. Never offer when the topic is text-likely; never skip when the topic is visual-likely.
 - No fold-back commit on a dirty working tree without running the preflight `git status` check first (see Process step 9 active-project branches).
 - No `git add -A` and no directory globs for the fold-back commit. Staging is always scoped: `git add -- "$ARTIFACT_PATH"`.
 - No printing the fold-back handoff prompt before `git commit` actually succeeds. The prompt references a hash; a missing commit makes the prompt misleading.
@@ -40,6 +90,7 @@ Project-independent brainstorming dispatcher. Owns the always-on activation, the
 **Self-Correction Protocol:**
 If you catch yourself:
 
+- Printing the brainstorm banner after a Soft Exploratory Path message ("help me think through...", "I've been thinking about...", "what if we...") or No Activation Path message ("thoughts?", "what's your take?", "does this seem right?", review/debug/PR/status/active-workflow questions) → STOP. Drop back to a conversational response. For Soft Exploratory Path, offer brainstorm mode only after ≥2 sustained exploratory turns; for No Activation Path, never offer.
 - Writing implementation code or running build/test commands → STOP. Brainstorming does not produce code; that's the destination skills' job.
 - Forcing a destination before convergence → STOP. Return to free brainstorming and let convergence happen via trigger phrase or natural soft cue.
 - Skipping the visual-companion offer when visual content is coming → STOP. Print the offer as its own message before continuing.
@@ -56,6 +107,8 @@ If you catch yourself:
 4. Continue.
 
 ## Progress Indicators (User-Facing)
+
+These indicators apply only on Hard Activation (see `## Activation Contract`). On the Soft Exploratory Path or No Activation Path, no banner, no labels, no progress markers — the conversation looks like an ordinary advisory exchange.
 
 - Print a phase banner once at start using horizontal separators, e.g.:
 
@@ -80,11 +133,19 @@ Do not use fixed `[N/9]` counters. The visual-companion offer is conditional, so
 
 ### Step 1: Activate
 
-The skill activates automatically when the user opens an exploratory conversation that matches the always-on description in this file's frontmatter. Literal trigger phrases include "let's brainstorm", "brainstorm this", and "brainstorm <topic>" when the user has not named a destination skill or artifact type. Do not route those blank-slate brainstorms to `oat-idea-ideate` merely because they may later become an idea, backlog item, project, or document.
+Apply the **Activation Contract**. The full Process flow (Steps 2-9) only runs on **Hard Activation**:
+
+- `/oat-brainstorm` invoked.
+- Explicit `brainstorm` verb with a topic/request: "let's brainstorm X", "brainstorm this", "can we brainstorm X?", "help me brainstorm X".
+- The user accepted the soft offer ("If you want, I can switch into structured brainstorm mode for this.") emitted on a Soft Exploratory Path message after ≥2 consecutive exploratory turns.
+
+When Hard Activation triggers, the user has not already named a destination skill or artifact type. Do not route those blank-slate brainstorms to `oat-idea-ideate` merely because they may later become an idea, backlog item, project, or document.
 
 There are no preconditions to check at activation — pack detection and active-project detection happen at step 4, after visual-need assessment, so this skill works in any repo regardless of which OAT packs are installed.
 
-If the user invokes the skill explicitly (`/oat-brainstorm` or equivalent provider command), proceed identically. The downstream flow does not branch on activation source.
+**Soft Exploratory Path** (per Activation Contract): respond conversationally with brainstorm-quality structure (options, tradeoffs, open questions, no premature implementation, no destination guess). Do not print the banner, assert mode, run pack detection, or offer the visual companion. Track an exploratory-turn counter for the thread; on the 2nd+ consecutive exploratory turn with no concrete action requested, append the soft offer once: "If you want, I can switch into structured brainstorm mode for this." If the user accepts, transition to Hard Activation and re-enter Step 2.
+
+**No Activation Path** (per Activation Contract): the discrimination check failed if the model entered this skill for an advisory / review / debug / PR / status / implementation / active-workflow question. Do not print the banner. Respond directly with brainstorm-quality reasoning if it helps, but no banner, no mode assertion, no offer.
 
 ### Step 2: Mode Banner
 
@@ -522,7 +583,7 @@ Use only `git add -- <path>` so unrelated working-tree changes are not swept int
 
 ## Success Criteria
 
-- ✅ Always-on description fires on destinationless brainstorming phrasing ("let's brainstorm", "brainstorm this", "brainstorm <topic>", "I've been thinking about", "what if we did", "how should we approach", thinking-out-loud) and does NOT fire on routine implementation requests, code-review questions, or work where the user has already named a destination skill.
+- ✅ Activation Contract is honored: Hard Activation fires only on explicit brainstorm-verb phrasing or `/oat-brainstorm`; Soft Exploratory Path messages ("help me think through", "I've been thinking about", "what if we") respond conversationally without the banner and offer mode only after ≥2 sustained exploratory turns; No Activation Path messages (advisory / review / debug / PR / status / implementation / active-workflow) get a direct response with no banner and no offer.
 - ✅ Phase banner `OAT ▸ BRAINSTORM` is printed exactly once at activation; mode assertion follows immediately.
 - ✅ Visual-companion offer is conditional on visual need, not Node availability alone. Text-likely brainstorms set `VISUAL_COMPANION = "deferred"` and continue without mentioning the companion.
 - ✅ When a visual-companion offer is made, it is its own message with no other content. The offer is suppressed entirely (no message printed) when `node` is not on PATH.
