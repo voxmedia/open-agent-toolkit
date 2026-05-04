@@ -1670,8 +1670,8 @@ git commit -m "chore(prev1-t03): refresh brainstorm revision release assets"
 ## Phase p-rev2: Revision 2
 
 Source: inline feedback (2026-05-04) — activation contract tightening; absorbs the three non-blocking minors from `prev1-review-2026-05-03.md`
-Status: complete
-Commit: `589434ce` (`fix(prev2): tighten brainstorm activation contract`)
+Status: fix tasks added (review of `589434ce` and follow-ups; see prev2-t04..t08)
+Commits: `589434ce`, `4f7a6bfb`, `88c9df56`, `04911d33` (`fix(prev2): tighten brainstorm activation contract` + YAML repair + `bl-f19a` capture + skill metadata fix)
 
 ### Task prev2-t01: (revision) Tighten brainstorm activation contract
 
@@ -1844,6 +1844,181 @@ git commit -m "fix(prev2): tighten brainstorm activation contract"
 
 ---
 
+### Task prev2-t04: (review) Remove `thoughts?` from Soft Exploratory examples
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
+
+**Step 1: Understand the issue**
+
+Review finding (`prev2-review-2026-05-04.md` I1): the frontmatter description and the tool-packs catalog entry both list `"thoughts?"` in the ambiguous/soft-exploratory examples while the SKILL.md body and `dogfood-results.md` anti-cases classify it as **No Activation**. Same word, two contradictory paths — preserves the trigger-happy failure mode prev2 is meant to remove.
+
+**Step 2: Implement fix**
+
+- In `.agents/skills/oat-brainstorm/SKILL.md` frontmatter description, remove `"thoughts?"` from the ambiguous-exploratory parenthetical. Keep the rest of the description intact (length and lead-word constraints).
+- In `.agents/skills/oat-brainstorm/SKILL.md` body, ensure the Soft Exploratory Path examples list does NOT contain `"thoughts?"` (it currently appears under No Activation, which is correct — verify no duplicate exists).
+- In `apps/oat-docs/docs/cli-utilities/tool-packs.md` brainstorm pack section, remove `"thoughts?"` from the soft/ambiguous example list. The advisory list (No Activation) keeps it.
+
+**Step 3: Verify**
+
+```bash
+rg -n 'thoughts\?' .agents/skills/oat-brainstorm/SKILL.md \
+                  apps/oat-docs/docs/cli-utilities/tool-packs.md \
+                  .agents/skills/oat-brainstorm/references/dogfood-results.md
+pnpm oat:validate-skills
+```
+
+Expected: `thoughts?` appears only in No Activation / advisory contexts. Validator passes.
+
+**Step 4: Commit**
+
+Folded into the combined `fix(prev2-review)` commit at the end of this fix-task batch.
+
+---
+
+### Task prev2-t05: (review) Make visual-companion smoke tests pass under `CODEX_CI=1`
+
+**Files:**
+
+- Modify: `packages/cli/src/integration/visual-companion-smoke.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (`prev2-review-2026-05-04.md` I2): `start-server.sh` auto-sets `FOREGROUND=true` when `CODEX_CI` is present, but the smoke tests spawn the script and resolve only on the child process `close` event. Under Codex CI the foreground server never closes, all 5 smoke tests time out at 30s, and `pnpm --filter @open-agent-toolkit/cli test` fails. Verified: with `env -u CODEX_CI`, the same suite passes 5/5.
+
+**Step 2: Implement fix**
+
+In the test harness, spawn `start-server.sh` with `CODEX_CI` scrubbed from the child environment so the script picks the default background path. Preferred form: pass `env: { ...process.env, CODEX_CI: undefined }` (or equivalent removal) to the spawn options.
+
+Do NOT change `start-server.sh`'s runtime behavior — keeping the foreground fallback for real Codex usage is intentional.
+
+**Step 3: Verify**
+
+```bash
+CODEX_CI=1 pnpm --filter @open-agent-toolkit/cli exec vitest run src/integration/visual-companion-smoke.test.ts
+```
+
+Expected: 5/5 pass with `CODEX_CI=1` set, no `env -u` needed.
+
+Also confirm normal-environment tests still pass:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test
+```
+
+**Step 4: Commit**
+
+Folded into the combined `fix(prev2-review)` commit.
+
+---
+
+### Task prev2-t06: (review) Rebase against `origin/main` and resolve lockstep version conflicts
+
+**Files:**
+
+- All 5 lockstep `package.json` files
+- Any other files conflicting after rebase
+
+**Step 1: Understand the issue**
+
+Review finding (`prev2-review-2026-05-04.md` I3): `gh pr view 70 --json mergeStateStatus` reports `DIRTY`. PR #73 (and any subsequent PRs) shipped lockstep bumps to `main` while this branch went `0.0.61 → 0.0.62`. PR cannot merge until rebased.
+
+**Step 2: Implement fix**
+
+```bash
+git fetch origin main
+git rebase origin/main
+# resolve conflicts in package.json files: keep our higher version, but bump
+# above whatever main has if needed (e.g., main 0.0.60 + our content changes
+# = 0.0.63 here since this revision adds new shipped content via prev2-t04)
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
+git rebase --continue
+```
+
+After rebase:
+
+- Run `pnpm install` to refresh lockfile if needed.
+- Run `pnpm release:validate` to confirm all 5 packages tarball cleanly at the new version.
+- Force-push `--force-with-lease` to update the PR.
+
+**Step 3: Verify**
+
+```bash
+gh pr view 70 --json mergeStateStatus
+pnpm release:validate
+```
+
+Expected: `mergeStateStatus` reports `CLEAN` (or `BEHIND` until CI re-runs); `release:validate` passes for all 5 packages at the new lockstep version.
+
+**Step 4: Commit**
+
+The rebase produces commits implicitly via `git rebase --continue`; no separate `git commit` is needed for the resolution. The follow-up content-bump (if any) and the `fix(prev2-review)` combined commit ride on top.
+
+---
+
+### Task prev2-t07: (review) Refresh OAT bookkeeping after follow-up commits
+
+**Files:**
+
+- Modify: `.oat/projects/shared/independent-brainstorming/state.md`
+- Modify: `.oat/projects/shared/independent-brainstorming/plan.md` (`## Implementation Complete` summary)
+- Modify: `.oat/state.md` (auto-regenerated)
+
+**Step 1: Understand the issue**
+
+Review finding (`prev2-review-2026-05-04.md` m1): `state.md` still has `oat_last_commit: 589434ce` and the Next Milestone references commit `589434ce`, but HEAD now includes `4f7a6bfb` (YAML repair), `88c9df56` (bl-f19a capture), `04911d33` (skill metadata fix), and `40f11e1a` (review record). The `## Implementation Complete` summary in `plan.md` also stops at p-rev1 with `Total: 35 tasks`, while p-rev2 brought the project to 38/38 (and review fix tasks now bring it to 43).
+
+**Step 2: Implement fix**
+
+- Update `state.md` frontmatter: `oat_last_commit` to current HEAD (post-rebase), `oat_project_state_updated` to current ISO timestamp, `oat_phase_status` and `oat_current_task` reflect the in-progress fix tasks.
+- Update `state.md` body: Next Milestone reflects fix-task execution + re-review.
+- Update `plan.md` `## Implementation Complete` summary: add p-rev2 line, update total, update closing message.
+- Run `pnpm run cli -- state refresh` to regenerate `.oat/state.md`.
+
+**Step 3: Verify**
+
+```bash
+grep "oat_last_commit\|oat_project_state_updated" .oat/projects/shared/independent-brainstorming/state.md
+grep "Total:" .oat/projects/shared/independent-brainstorming/plan.md
+pnpm run cli -- state refresh
+```
+
+**Step 4: Commit**
+
+Folded into the post-fix bookkeeping commit (same pattern prev1 / prev2 used).
+
+---
+
+### Task prev2-t08: (review) Fix inline-code spacing in `bl-f19a` backlog item
+
+**Files:**
+
+- Modify: `.oat/repo/reference/backlog/items/strict-yaml-validation-in-validate-skills.md`
+
+**Step 1: Understand the issue**
+
+Review finding (`prev2-review-2026-05-04.md` m2): the description has run-together inline code: `` `verb:`was ``, ``scalar.`pnpm`` `, ` raised`mapping ``. Three missing spaces.
+
+**Step 2: Implement fix**
+
+Add a single space before each opening backtick that follows non-whitespace and after each closing backtick that precedes non-whitespace, in the affected sentences. No content changes beyond spacing.
+
+**Step 3: Verify**
+
+```bash
+grep -nE 'verb:.was|scalar\..pnpm|raised.mapping' .oat/repo/reference/backlog/items/strict-yaml-validation-in-validate-skills.md
+```
+
+Expected: no matches (after fix); the prose now has spaces around inline code spans.
+
+**Step 4: Commit**
+
+Folded into the combined `fix(prev2-review)` commit.
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                              |
@@ -1857,8 +2032,8 @@ git commit -m "fix(prev2): tighten brainstorm activation contract"
 | spec   | artifact | pending         | -          | -                                                     |
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
 | plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
-| prev1  | code     | passed          | 2026-05-03 | reviews/prev1-review-2026-05-03.md                    |
-| prev2  | code     | received        | 2026-05-04 | reviews/prev2-review-2026-05-04.md                    |
+| prev1  | code     | passed          | 2026-05-03 | reviews/archived/prev1-review-2026-05-03.md           |
+| prev2  | code     | fixes_added     | 2026-05-04 | reviews/archived/prev2-review-2026-05-04.md           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1881,10 +2056,11 @@ git commit -m "fix(prev2): tighten brainstorm activation contract"
 - Phase 4: 5 tasks — document brainstorm pack and skill in `apps/oat-docs`, document walkthrough plans for all 10 dogfood scenarios (live-dogfood follow-up captured as backlog item `bl-7d5b`), lockstep public-package version bumps, regenerate `public-package-versions.json`, exclude bundled MIT-port scripts + docs from oxfmt (added p04-t05 during execution to address Phase 3-flagged format prerequisite), `pnpm release:validate`
 - Phase 5: 8 tasks — final-review fix tasks for the 6 Important + 2 Medium + 1 Minor findings from `final-review-2026-05-02.md` (config-schema registration, install-lifecycle parity, dynamic skill-dir resolution, gitignore policy, durable-tracked active-project references, state refresh, dogfood walkthrough revision + backlog/vault copy, current-state.md path + pack-list updates)
 - Phase p-rev1: 3 tasks — human-feedback revisions for brainstorm skill routing, conditional visual-companion offering, bundled asset refresh, skill version bumps, lockstep package version bump, and release validation
+- Phase p-rev2: 3 tasks completed (activation contract tightening) + 5 review-fix tasks added (`prev2-t04..t08`) from `prev2-review-2026-05-04.md` — `thoughts?` cleanup, `CODEX_CI=1` test compatibility, rebase + lockstep resolution, OAT bookkeeping refresh, `bl-f19a` markdown polish
 
-**Total: 35 tasks**
+**Total: 43 tasks**
 
-Revision p-rev1 is complete. Push the PR update, run a focused re-review of the revision commit(s), then complete the project when approved.
+Revision p-rev2 fix tasks are queued. Execute via `oat-project-implement`, then re-run `oat-project-review-provide code prev2` to reach `passed`.
 
 ---
 

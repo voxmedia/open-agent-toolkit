@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 589434ce
+oat_current_task: prev2-t04
+oat_last_commit: 40f11e1a
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -9,7 +9,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -18,7 +18,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/70' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-01T14:44:50.508Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-04T17:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-04T20:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -59,8 +59,8 @@ The project is back in `pr_open` state and ready for a PR update plus a focused 
 - ✓ Final review passed (v2 artifact; v3 cycle-override applied inline for bookkeeping drift)
 - ✓ PR created
 - ✓ Revision p-rev1 implemented (3/3 tasks complete; review passed)
-- ✓ Revision p-rev2 implemented (3/3 tasks complete — activation contract tightening)
-- ⧗ Awaiting focused re-review on prev2 commit + PR update
+- ✓ Revision p-rev2 implemented (3/3 original tasks complete — activation contract tightening)
+- ⧗ Review prev2 received (3 Important + 2 Minor findings converted to 5 fix tasks `prev2-t04..t08`); awaiting fix-task execution + re-review
 
 ## Blockers
 
@@ -68,6 +68,6 @@ None
 
 ## Next Milestone
 
-Push the PR update and run a focused re-review of the `prev2` commit (`589434ce`). When approved, run `oat-project-complete`.
+Execute the 5 prev2 review-fix tasks (`prev2-t04..t08`) via `oat-project-implement`, then re-run `oat-project-review-provide code prev2` + `oat-project-review-receive` to reach `passed`. The branch also needs a rebase against `origin/main` (covered by `prev2-t06`) before the PR can merge.
 
 The user has noted they will manually do _some_ dogfooding using the vault-copied `dogfood-results.md` reference (`/Users/thomas.stang/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/02 - Projects/Open Agent Toolkit/References/dogfood-results.md`) before merging.

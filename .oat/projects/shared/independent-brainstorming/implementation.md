@@ -75,17 +75,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 4     | 4/4       |
-| Phase 2      | complete | 8     | 8/8       |
-| Phase 3      | complete | 7     | 7/7       |
-| Phase 4      | complete | 5     | 5/5       |
-| Phase 5      | complete | 8     | 8/8       |
-| Phase p-rev1 | complete | 3     | 3/3       |
-| Phase p-rev2 | complete | 3     | 3/3       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 4     | 4/4       |
+| Phase 2      | complete    | 8     | 8/8       |
+| Phase 3      | complete    | 7     | 7/7       |
+| Phase 4      | complete    | 5     | 5/5       |
+| Phase 5      | complete    | 8     | 8/8       |
+| Phase p-rev1 | complete    | 3     | 3/3       |
+| Phase p-rev2 | in_progress | 8     | 3/8       |
 
-**Total:** 38/38 tasks completed
+**Total:** 38/43 tasks completed (5 review-fix tasks queued; prev2-t04..t08)
 
 ### Revision Received: Inline Feedback
 
@@ -175,6 +175,29 @@ oat_generated: false
 - `pnpm type-check`: pass (10 packages).
 - `pnpm --filter @open-agent-toolkit/cli test`: pass (1463 tests across 163 files).
 - `pnpm oat:validate-skills`: `oat-brainstorm` and `oat-idea-ideate` validate clean. Pre-existing 6 unrelated failures unchanged (`oat-pjm-add-backlog-item`, `oat-pjm-update-repo-reference`, `oat-project-document`, `oat-project-pr-final`, `oat-project-spec`, `oat-project-summary`).
+
+### Review Received: prev2
+
+**Date:** 2026-05-04
+**Review artifact:** `reviews/archived/prev2-review-2026-05-04.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 3 (`I1`: `thoughts?` contradicts No Activation; `I2`: visual-companion smoke tests fail under `CODEX_CI=1`; `I3`: PR #70 DIRTY against `origin/main`)
+- Medium: 0
+- Minor: 2 (`m1`: state.md / plan.md bookkeeping drift; `m2`: `bl-f19a` markdown spacing)
+
+**Disposition:** all 5 findings converted to fix tasks (no deferrals; both minors have `Negligible` scope and are likely future cleanup).
+
+**New tasks added:** `prev2-t04`, `prev2-t05`, `prev2-t06`, `prev2-t07`, `prev2-t08`
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill. After completion, run `oat-project-review-provide code prev2` then `oat-project-review-receive` to reach `passed`.
+
+After the fix tasks are complete:
+
+- Update the prev2 review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code prev2` then `oat-project-review-receive` to reach `passed`
 
 ---
 
