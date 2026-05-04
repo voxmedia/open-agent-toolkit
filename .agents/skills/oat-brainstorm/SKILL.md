@@ -1,7 +1,7 @@
 ---
 name: oat-brainstorm
 version: 1.0.1
-description: Use when the user explicitly invokes the `brainstorm` verb: `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through", "thoughts?"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
+description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through", "thoughts?"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
