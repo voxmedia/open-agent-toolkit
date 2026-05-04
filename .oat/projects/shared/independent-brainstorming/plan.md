@@ -1858,7 +1858,7 @@ git commit -m "fix(prev2): tighten brainstorm activation contract"
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
 | plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
 | prev1  | code     | passed          | 2026-05-03 | reviews/prev1-review-2026-05-03.md                    |
-| prev2  | code     | pending         | -          | -                                                     |
+| prev2  | code     | received        | 2026-05-04 | reviews/prev2-review-2026-05-04.md                    |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
