@@ -48,7 +48,7 @@ activation: agent-requested
     );
   });
 
-  it('renders always activation without applyTo and round-trips to always', () => {
+  it('renders always activation with repo-wide applyTo and round-trips to always', () => {
     const canonical = `---
 description: Always apply
 activation: always
@@ -61,8 +61,43 @@ activation: always
       '.agents/rules/always-rule.md',
     );
 
-    expect(rendered).not.toContain('applyTo:');
+    expect(rendered).toContain('description: Always apply');
+    expect(rendered).toContain('applyTo: "**"');
     expect(parseCopilotRuleToCanonical(rendered)).toBe(canonical);
+  });
+
+  it('parses repo-wide applyTo as always activation', () => {
+    const provider = `---
+description: General rules
+applyTo: "**"
+---
+
+# General Rules`;
+
+    expect(parseCopilotRuleToCanonical(provider)).toBe(`---
+description: General rules
+activation: always
+---
+
+# General Rules`);
+  });
+
+  it('keeps non-repo-wide applyTo as glob activation', () => {
+    const provider = `---
+description: Frontend rules
+applyTo: src/**/*.tsx
+---
+
+# Frontend Rules`;
+
+    expect(parseCopilotRuleToCanonical(provider)).toBe(`---
+description: Frontend rules
+globs:
+  - src/**/*.tsx
+activation: glob
+---
+
+# Frontend Rules`);
   });
 
   it('rejects canonical comma-containing globs that Copilot cannot represent', () => {

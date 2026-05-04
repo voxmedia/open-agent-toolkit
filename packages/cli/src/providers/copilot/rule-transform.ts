@@ -48,6 +48,10 @@ function parseApplyTo(value: unknown): string[] | undefined {
   return globs.length > 0 ? globs : undefined;
 }
 
+function isRepoWideApplyTo(globs: string[] | undefined): boolean {
+  return globs?.length === 1 && globs[0] === '**';
+}
+
 export function transformCanonicalToCopilotRule(
   canonicalContent: string,
   canonicalPath?: string,
@@ -64,9 +68,16 @@ export function transformCanonicalToCopilotRule(
             : {}),
           applyTo: rule.globs.join(','),
         }
-      : rule.description !== undefined
-        ? { description: rule.description }
-        : null;
+      : rule.activation === 'always'
+        ? {
+            ...(rule.description !== undefined
+              ? { description: rule.description }
+              : {}),
+            applyTo: '**',
+          }
+        : rule.description !== undefined
+          ? { description: rule.description }
+          : null;
 
   return appendGeneratedMarker(
     renderMarkdownWithFrontmatter(frontmatter, rule.body),
@@ -82,8 +93,8 @@ export function parseCopilotRuleToCanonical(providerContent: string): string {
   return renderCanonicalRuleMarkdown(
     {
       ...(description !== undefined ? { description } : {}),
-      ...(globs !== undefined ? { globs } : {}),
-      activation: globs ? 'glob' : 'always',
+      ...(globs !== undefined && !isRepoWideApplyTo(globs) ? { globs } : {}),
+      activation: globs && !isRepoWideApplyTo(globs) ? 'glob' : 'always',
     },
     body,
   );

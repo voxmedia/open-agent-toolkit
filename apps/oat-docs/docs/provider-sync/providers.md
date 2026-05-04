@@ -25,6 +25,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Project: `.agents/skills` -> `.github/skills`, `.agents/agents` -> `.github/agents`, `.agents/rules` -> `.github/instructions`
     - User: `~/.agents/skills` -> `~/.copilot/skills`, `~/.agents/agents` -> `~/.copilot/agents`
     - Rule files render as `.github/instructions/*.instructions.md`
+    - Canonical always-on rules render with `applyTo: "**"` so Copilot activates them repo-wide; provider rules with exactly `applyTo: "**"` adopt back to `activation: always`
     - Comma-containing globs are not supported for Copilot rule sync because Copilot uses a comma-separated `applyTo` field
 
 === "Gemini"

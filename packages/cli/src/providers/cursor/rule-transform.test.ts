@@ -20,6 +20,7 @@ activation: always
     );
 
     expect(rendered).toContain('alwaysApply: true');
+    expect(rendered).not.toContain('globs:');
     expect(parseCursorRuleToCanonical(rendered)).toBe(canonical);
   });
 
