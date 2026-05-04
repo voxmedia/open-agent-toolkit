@@ -83,9 +83,9 @@ oat_generated: false
 | Phase 4      | complete | 5     | 5/5       |
 | Phase 5      | complete | 8     | 8/8       |
 | Phase p-rev1 | complete | 3     | 3/3       |
-| Phase p-rev2 | pending  | 3     | 0/3       |
+| Phase p-rev2 | complete | 3     | 3/3       |
 
-**Total:** 35/38 tasks completed (3 prev2 tasks pending)
+**Total:** 38/38 tasks completed
 
 ### Revision Received: Inline Feedback
 
@@ -146,6 +146,35 @@ oat_generated: false
 **New tasks added:** `prev2-t01`, `prev2-t02`, `prev2-t03`
 
 **Next:** Implement the revision and push the PR update; have Codex run a focused re-review.
+
+### Revision Completed: Activation Contract Tightening
+
+**Date:** 2026-05-04
+**Commit:** `589434ce` (`fix(prev2): tighten brainstorm activation contract`)
+
+**Tasks completed:** `prev2-t01`, `prev2-t02`, `prev2-t03`
+
+**Outcome:**
+
+- `oat-brainstorm` frontmatter description tightened to explicit `brainstorm`-verb triggers only. Weak generic openers ("I've been thinking about", "what if we did") removed from the discovery surface.
+- Added a new `## Activation Contract` section before Mode Assertion that establishes the behavior-vs-mode distinction: brainstorm-quality response is the default for any exploratory phrasing; banner + mode is reserved for explicit Hard Activation or user-confirmed escalation.
+- Three-tier contract: **Hard Activation** (explicit `brainstorm` verb or `/oat-brainstorm` → banner + mode), **Soft Exploratory Path** ("help me think through", "I've been thinking", "what if we" → no banner; brainstorm-quality response by default; offer mode after ≥2 sustained exploratory turns), **No Activation** (advisory / review / debug / PR / status / implementation / active-workflow questions → direct response, no banner, no offer).
+- BLOCKED Activities: collapsed the two redundant visual-companion rules into one combined rule (resolves prev1-review minor #1); added a new top rule that suppresses banner / mode / pack detection / visual offer for Soft and No Activation paths.
+- Self-Correction Protocol: new top rule for printing the banner on Soft / No Activation paths.
+- Step 1 Activate: rewritten to gate the Process flow on the Activation Contract; documents the soft-offer escalation path explicitly.
+- Progress Indicators: added a gating note that the indicators apply only on Hard Activation.
+- `references/dogfood-results.md`: added an Activation Anti-Cases section with 12 walkthrough rows across the three tiers (6 Hard Activation, 6 Soft Exploratory Path including the post-2-turn offer, 10 No Activation).
+- Docs: `apps/oat-docs/docs/cli-utilities/tool-packs.md` brainstorm pack section rewritten to reflect the contract; `apps/oat-docs/docs/workflows/skills/index.md` adds the "resume an existing idea or expand a scratchpad seed" hint to the `oat-idea-ideate` catalog entry (resolves prev1-review minor #2); `apps/oat-docs/docs/workflows/ideas/index.md` adds an explicit direct-entry note that `oat-idea-ideate` requires an existing target (resolves prev1-review minor #3).
+- 5 lockstep public packages bumped `0.0.60` → `0.0.61`. Per AGENTS.md the skill `version:` field is PR-scoped and was already bumped during prev1; `oat-brainstorm/SKILL.md` stays at `1.0.1`.
+
+**Verification:**
+
+- `pnpm release:validate`: pass on all 5 public packages at `0.0.61`.
+- `pnpm format`: pass.
+- `pnpm lint`: pass (0 warnings, 0 errors).
+- `pnpm type-check`: pass (10 packages).
+- `pnpm --filter @open-agent-toolkit/cli test`: pass (1463 tests across 163 files).
+- `pnpm oat:validate-skills`: `oat-brainstorm` and `oat-idea-ideate` validate clean. Pre-existing 6 unrelated failures unchanged (`oat-pjm-add-backlog-item`, `oat-pjm-update-repo-reference`, `oat-project-document`, `oat-project-pr-final`, `oat-project-spec`, `oat-project-summary`).
 
 ---
 

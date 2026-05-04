@@ -1670,8 +1670,8 @@ git commit -m "chore(prev1-t03): refresh brainstorm revision release assets"
 ## Phase p-rev2: Revision 2
 
 Source: inline feedback (2026-05-04) — activation contract tightening; absorbs the three non-blocking minors from `prev1-review-2026-05-03.md`
-Status: pending
-Commits: TBD
+Status: complete
+Commit: `589434ce` (`fix(prev2): tighten brainstorm activation contract`)
 
 ### Task prev2-t01: (revision) Tighten brainstorm activation contract
 
@@ -1857,7 +1857,8 @@ git commit -m "fix(prev2): tighten brainstorm activation contract"
 | spec   | artifact | pending         | -          | -                                                     |
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
 | plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
-| prev1  | code     | received        | 2026-05-03 | reviews/prev1-review-2026-05-03.md                    |
+| prev1  | code     | passed          | 2026-05-03 | reviews/prev1-review-2026-05-03.md                    |
+| prev2  | code     | pending         | -          | -                                                     |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
