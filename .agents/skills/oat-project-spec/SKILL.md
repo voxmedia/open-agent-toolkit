@@ -1,7 +1,7 @@
 ---
 name: oat-project-spec
-version: 2.0.0
-description: Optional standalone skill for formalizing requirements into a structured spec.md when discovery is complete but you're not ready to design yet. Independent of the design workflow — oat-project-design confirms requirements automatically and does not require this skill to be run first.
+version: 2.0.1
+description: Use when discovery is complete but you're not ready to design yet, and you want to formalize requirements into a structured spec.md as an optional standalone step. Independent of the design workflow — oat-project-design confirms requirements automatically and does not require this skill to be run first.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion

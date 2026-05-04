@@ -1,7 +1,8 @@
 ---
 name: oat-project-pr-final
-version: 1.4.0
+version: 1.4.1
 description: Use when the user requests or confirms opening the final PR for an active OAT project — e.g. "open the final PR", "ship it", "run oat-project-pr-final", or confirms a previously offered final-PR step. Do NOT auto-invoke when phases are marked complete. Generates the final lifecycle PR description from artifacts and creates the PR.
+disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 ---
