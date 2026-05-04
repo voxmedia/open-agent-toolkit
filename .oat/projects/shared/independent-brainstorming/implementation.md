@@ -83,8 +83,9 @@ oat_generated: false
 | Phase 4      | complete | 5     | 5/5       |
 | Phase 5      | complete | 8     | 8/8       |
 | Phase p-rev1 | complete | 3     | 3/3       |
+| Phase p-rev2 | pending  | 3     | 0/3       |
 
-**Total:** 35/35 tasks completed
+**Total:** 35/38 tasks completed (3 prev2 tasks pending)
 
 ### Revision Received: Inline Feedback
 
@@ -127,6 +128,24 @@ oat_generated: false
 - `pnpm oat:validate-skills`: expected failure only on pre-existing unrelated skill metadata issues (`oat-pjm-add-backlog-item`, `oat-pjm-update-repo-reference`, `oat-project-document`, `oat-project-pr-final`, `oat-project-spec`, `oat-project-summary`). The new `oat-brainstorm` and `oat-idea-ideate` validation issues were fixed and no longer appear.
 
 **Note:** An initial parallel run of `pnpm lint` and `pnpm type-check` raced `packages/cli/scripts/bundle-assets.sh` against itself because both commands transitively run the CLI build. Sequential reruns passed.
+
+### Revision Received: Activation Contract Tightening
+
+**Date:** 2026-05-04
+**Source:** inline conversation (continued dogfood pass after `prev1-review-2026-05-03.md`)
+
+**Changes requested:**
+
+- Tighten `oat-brainstorm` activation: drop weak conversational openers ("I've been thinking about", "what if we did") from the frontmatter description because they are too generic and cause the always-on skill to fire on ordinary advisory conversation.
+- Establish behavior-vs-mode separation: brainstorm-quality response (options, tradeoffs, no premature implementation) is the default for any exploratory phrasing; the OAT brainstorm banner + mode assertion is reserved for explicit hard-activation triggers or user confirmation.
+- Add an Activation Contract section with three tiers: Hard Activation (banner + mode), Soft Exploratory Path (no banner; brainstorm-quality response by default; offer mode after ≥2 sustained exploratory turns), No Activation (advisory/review/debug/PR/status/implementation/active-workflow questions never auto-activate).
+- Add anti-cases to dogfood-results.md so the activation discrimination is dogfood-testable.
+- Absorb the three non-blocking minors from `prev1-review-2026-05-03.md` (BLOCKED visual-companion redundancy in `oat-brainstorm/SKILL.md`, missing "resume an existing idea" hint in `apps/oat-docs/docs/workflows/skills/index.md`, missing direct-entry note in `apps/oat-docs/docs/workflows/ideas/index.md`).
+- Bump the 5 lockstep public packages to `0.0.61`. Per AGENTS.md the skill `version:` bump is PR-scoped and was already applied during prev1, so `oat-brainstorm/SKILL.md` stays at `1.0.1`.
+
+**New tasks added:** `prev2-t01`, `prev2-t02`, `prev2-t03`
+
+**Next:** Implement the revision and push the PR update; have Codex run a focused re-review.
 
 ---
 

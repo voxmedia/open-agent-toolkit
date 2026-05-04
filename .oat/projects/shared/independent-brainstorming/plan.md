@@ -1667,6 +1667,183 @@ git commit -m "chore(prev1-t03): refresh brainstorm revision release assets"
 
 ---
 
+## Phase p-rev2: Revision 2
+
+Source: inline feedback (2026-05-04) — activation contract tightening; absorbs the three non-blocking minors from `prev1-review-2026-05-03.md`
+Status: pending
+Commits: TBD
+
+### Task prev2-t01: (revision) Tighten brainstorm activation contract
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: `.agents/skills/oat-brainstorm/references/dogfood-results.md`
+
+**Step 1: Tighten frontmatter description**
+
+Reduce the `description:` value to explicit brainstorm-verb activation only. Drop weak conversational openers ("I've been thinking about", "what if we did") from the frontmatter. The frontmatter is the discovery surface; soft-path examples belong in the SKILL.md body, not in the trigger string.
+
+Hard-trigger language in frontmatter:
+
+- `/oat-brainstorm`
+- `let's brainstorm`
+- `brainstorm this`
+- `brainstorm <topic>`
+- `can we brainstorm <topic>`
+- `help me brainstorm <topic>`
+
+Add explicit negative scope to the frontmatter: do NOT activate for review, debugging, PR status, implementation, advisory ("thoughts?", "what's your take?"), or active-workflow questions unless the user explicitly asks to brainstorm.
+
+**Step 2: Add Activation Contract section**
+
+Insert a new `## Activation Contract` section immediately after the Mode Assertion BLOCKED/ALLOWED block and before the `## Self-Correction` and Process flow. The section must establish the behavior-vs-mode distinction up front:
+
+> Brainstorm-quality response (options, tradeoffs, open questions, no premature implementation, no destination guess) is the **default** for any exploratory phrasing without a named destination. Mode assertion + banner is **reserved** for explicit hard-activation triggers or user confirmation. The banner is a workflow commitment marker, not a quality marker.
+
+Then three subsections in this order:
+
+1. **Hard Activation** — enter OAT brainstorm mode immediately when the user invokes `/oat-brainstorm` or uses an explicit `brainstorm` verb with a topic/request. Examples: "let's brainstorm X", "brainstorm this", "can we brainstorm X?", "help me brainstorm X".
+
+2. **Soft Exploratory Path** — do not show the banner on the first response. Answer normally with brainstorm-quality structure. Examples: "help me think through...", "I've been thinking about...", "what if we...", "I'm trying to figure out...", "I'm not sure how to approach...". After ≥2 consecutive exploratory turns with no concrete action requested, append once: _"If you want, I can switch into structured brainstorm mode for this."_ Only enter brainstorm mode if the user confirms.
+
+3. **No Activation** — do not activate or offer brainstorm mode for advisory, review, debug, PR, status, implementation, or active-workflow questions unless the user explicitly asks to brainstorm. Examples: "thoughts?", "what's your take?", "does this seem right?", "please review...", "why is this failing?", "what's the PR status?", "what about X?" during an active artifact/PR/implementation workflow. Brainstorm-quality reasoning is still allowed for these — just no banner, no mode assertion, no offer.
+
+**Step 3: Update BLOCKED Activities and Self-Correction**
+
+Add to BLOCKED Activities:
+
+- No banner or mode assertion for the Soft Exploratory Path or No Activation Path until the user explicitly accepts the brainstorm offer or invokes `/oat-brainstorm`.
+
+Collapse the existing two redundant visual-companion BLOCKED rules into one (resolves prev1 review Minor #1):
+
+- `Visual companion offer must run only when the topic is visual-likely OR the user has explicitly asked for it. Never offer when the topic is text-likely; never skip when the topic is visual-likely.`
+
+Add to Self-Correction:
+
+- Printing the brainstorm banner after a Soft Exploratory Path message ("help me think through...", "thoughts?", "what's your take?", "I've been thinking...") → STOP. Drop back to a conversational response and offer brainstorm mode only after ≥2 sustained exploratory turns.
+
+**Step 4: Update Step 1: Activate**
+
+Rewrite Step 1 so it gates on the Activation Contract:
+
+- Hard activation triggers run the existing Step 2 (Mode Banner) and Step 3+ flow unchanged.
+- Soft Exploratory Path messages skip Steps 2-4 entirely. Respond conversationally with brainstorm-quality restraint. Track the exploratory-turn counter; on the 2nd+ exploratory turn with no concrete action request, append the soft offer once.
+- No Activation messages skip the entire skill flow — this skill should not have been chosen. Note this in the SKILL.md so future reviewers can verify the discrimination.
+
+**Step 5: Add anti-cases to dogfood-results.md**
+
+Append an `## Activation Anti-Cases` section to `references/dogfood-results.md` covering the cases below. Each entry: input → expected behavior (banner / no banner) → rationale.
+
+- "What do you think about this direction?" → no banner; advisory.
+- "I've been thinking about changing how this works." → no banner on first response; soft path.
+- "Help me think through whether to use X or Y." → no banner; soft path with brainstorm-quality reasoning.
+- "Thoughts?" → no banner; advisory.
+- "What's your take?" → no banner; advisory.
+- "Does this seem right?" → no banner; advisory.
+- "Why is this failing?" → no banner; debugging.
+- "What's the PR status?" → no banner; status.
+- "What about X?" mid-implementation → no banner; active-workflow follow-up.
+- "Let's brainstorm how this should work." → enter brainstorm mode and print banner.
+- "Can we brainstorm the schema design?" → enter brainstorm mode and print banner.
+- "Help me brainstorm the rollout plan." → enter brainstorm mode and print banner.
+- "Yeah, use the brainstorm skill." (after soft offer) → enter brainstorm mode and print banner.
+
+**Step 6: Verify**
+
+```bash
+pnpm oat:validate-skills
+```
+
+Expected: `oat-brainstorm` and `oat-idea-ideate` validate cleanly. Pre-existing unrelated failures unchanged.
+
+**Step 7: Commit**
+
+The commit step is folded into the single combined `fix(prev2)` commit at the end of the phase to match the prev1 pattern.
+
+---
+
+### Task prev2-t02: (revision) Update docs to match new activation contract
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
+- Modify: `apps/oat-docs/docs/workflows/skills/index.md` (resolves prev1 review Minor #2)
+- Modify: `apps/oat-docs/docs/workflows/ideas/index.md` (resolves prev1 review Minor #3)
+
+**Step 1: tool-packs.md brainstorm description**
+
+Replace the broad activation language ("destinationless exploratory phrasing", weak openers like "I've been thinking about", "what if we did") with the tightened activation model:
+
+- Hard activation: explicit `brainstorm` verb with a topic, or `/oat-brainstorm`.
+- Soft path: ambiguous exploratory phrasing answered conversationally without the banner; mode-switch offered only after sustained exploration.
+- No activation for review/debug/PR/status/implementation/advisory questions.
+
+Make clear the banner is a workflow commitment marker, not a response style.
+
+**Step 2: workflows/skills/index.md catalog hint**
+
+Update the `oat-idea-ideate` catalog entry to add the "resume an existing idea or expand a scratchpad seed — not for blank-slate brainstorms" hint flagged by the prev1 review.
+
+**Step 3: workflows/ideas/index.md direct-entry note**
+
+Add an explicit one-line note at the top of the direct-entry section that direct entry to `oat-idea-ideate` requires an existing tracked idea or a scratchpad seed; for blank-slate exploration, route to `oat-brainstorm`.
+
+**Step 4: Verify**
+
+```bash
+pnpm build:docs
+```
+
+Expected: docs build passes.
+
+---
+
+### Task prev2-t03: (revision) Lockstep version bump 0.0.60 → 0.0.61 + release validation
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+
+**Step 1: Bump versions**
+
+All five public packages from `0.0.60` to `0.0.61`. Skill `version:` in `oat-brainstorm/SKILL.md` is NOT bumped — per AGENTS.md the skill version bump is PR-scoped and was already applied during prev1 (currently `1.0.1`).
+
+**Step 2: Run release validation**
+
+```bash
+pnpm release:validate
+pnpm format
+pnpm lint
+pnpm type-check
+pnpm --filter @open-agent-toolkit/cli test
+pnpm oat:validate-skills
+```
+
+Expected: all pass except the documented six pre-existing unrelated `oat-pjm-add-backlog-item`, `oat-pjm-update-repo-reference`, `oat-project-document`, `oat-project-pr-final`, `oat-project-spec`, `oat-project-summary` validation failures.
+
+**Step 3: Single combined commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md \
+        .agents/skills/oat-brainstorm/references/dogfood-results.md \
+        apps/oat-docs/docs/cli-utilities/tool-packs.md \
+        apps/oat-docs/docs/workflows/skills/index.md \
+        apps/oat-docs/docs/workflows/ideas/index.md \
+        packages/cli/package.json \
+        packages/control-plane/package.json \
+        packages/docs-config/package.json \
+        packages/docs-theme/package.json \
+        packages/docs-transforms/package.json
+git commit -m "fix(prev2): tighten brainstorm activation contract"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                              |
