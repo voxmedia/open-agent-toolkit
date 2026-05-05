@@ -2033,7 +2033,7 @@ Folded into the combined `fix(prev2-review)` commit.
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
 | plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
 | prev1  | code     | passed          | 2026-05-03 | reviews/archived/prev1-review-2026-05-03.md           |
-| prev2  | code     | fixes_completed | 2026-05-04 | reviews/archived/prev2-review-2026-05-04.md           |
+| prev2  | code     | received        | 2026-05-05 | reviews/prev2-review-2026-05-05.md                    |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
