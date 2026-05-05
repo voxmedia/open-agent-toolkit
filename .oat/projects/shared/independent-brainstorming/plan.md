@@ -2033,7 +2033,7 @@ Folded into the combined `fix(prev2-review)` commit.
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
 | plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
 | prev1  | code     | passed          | 2026-05-03 | reviews/archived/prev1-review-2026-05-03.md           |
-| prev2  | code     | received        | 2026-05-05 | reviews/prev2-review-2026-05-05.md                    |
+| prev2  | code     | passed          | 2026-05-05 | reviews/archived/prev2-review-2026-05-05.md           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -2060,7 +2060,7 @@ Folded into the combined `fix(prev2-review)` commit.
 
 **Total: 43 tasks (43/43 complete)**
 
-Revision p-rev2 fix tasks are complete (commit `877fbdc5`). Awaiting orchestrator push + `oat-project-review-provide code prev2` + `oat-project-review-receive` to reach `passed`.
+Revision p-rev2 fix tasks are complete (commits `877fbdc5`, `8bd61257`) and re-review passed (`prev2-review-2026-05-05.md`). PR #70 is `CLEAN` and ready for human review/merge.
 
 ---
 
