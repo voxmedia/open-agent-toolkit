@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-04
-oat_current_task_id: prev2-t04
+oat_last_updated: 2026-05-05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -75,17 +75,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 4     | 4/4       |
-| Phase 2      | complete    | 8     | 8/8       |
-| Phase 3      | complete    | 7     | 7/7       |
-| Phase 4      | complete    | 5     | 5/5       |
-| Phase 5      | complete    | 8     | 8/8       |
-| Phase p-rev1 | complete    | 3     | 3/3       |
-| Phase p-rev2 | in_progress | 8     | 3/8       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 4     | 4/4       |
+| Phase 2      | complete | 8     | 8/8       |
+| Phase 3      | complete | 7     | 7/7       |
+| Phase 4      | complete | 5     | 5/5       |
+| Phase 5      | complete | 8     | 8/8       |
+| Phase p-rev1 | complete | 3     | 3/3       |
+| Phase p-rev2 | complete | 8     | 8/8       |
 
-**Total:** 38/43 tasks completed (5 review-fix tasks queued; prev2-t04..t08)
+**Total:** 43/43 tasks completed
 
 ### Revision Received: Inline Feedback
 
@@ -198,6 +198,34 @@ After the fix tasks are complete:
 
 - Update the prev2 review row status to `fixes_completed`
 - Re-run `oat-project-review-provide code prev2` then `oat-project-review-receive` to reach `passed`
+
+### Revision Completed: prev2 Review Fixes
+
+**Date:** 2026-05-05
+**Commit:** `877fbdc5` (`fix(prev2-review): apply review findings`)
+
+**Tasks completed:** `prev2-t04`, `prev2-t05`, `prev2-t06`, `prev2-t07`, `prev2-t08`
+
+**Outcome:**
+
+- prev2-t04 (I1): removed `thoughts?` from the Soft Exploratory Path example list in both `oat-brainstorm/SKILL.md` frontmatter and `apps/oat-docs/docs/cli-utilities/tool-packs.md`. The classification is now consistent — `thoughts?` appears only in No Activation / advisory contexts.
+- prev2-t05 (I2): scrubbed `CODEX_CI` from the spawned child env in `packages/cli/src/integration/visual-companion-smoke.test.ts`. `start-server.sh` runtime behavior is intentionally unchanged (foreground fallback for real Codex usage). All 5 smoke tests now pass under `CODEX_CI=1`.
+- prev2-t06 (I3): rebased onto `origin/main` (177d67f5). No conflicts — the prev2 branch was already ahead. Bumped lockstep `0.0.62 → 0.0.63` to cover the new shipped content from prev2-t04/t05; regenerated `packages/cli/assets/public-package-versions.json`. Push deferred to the orchestrator.
+- prev2-t07 (m1): refreshed `state.md` (`oat_last_commit`, `oat_project_state_updated`, body, Next Milestone), `plan.md` `## Implementation Complete` totals, and `implementation.md` Progress Overview. `.oat/state.md` regenerated via `pnpm run cli -- state refresh`.
+- prev2-t08 (m2): repaired the inline-code spacing in `.oat/repo/reference/backlog/items/strict-yaml-validation-in-validate-skills.md` line 21. The original sentence was being collapsed by `oxfmt` because of the unparseable nested escaped-backtick code span; restructured the example into a fenced YAML code block, which preserves the trailing prose spacing through the formatter.
+
+**Verification:**
+
+- `pnpm release:validate`: pass on all 5 public packages at `0.0.63`.
+- `pnpm format`: pass.
+- `pnpm lint`: pass (0 warnings, 0 errors).
+- `pnpm type-check`: pass (10 packages).
+- `pnpm --filter @open-agent-toolkit/cli test`: pass (1465 tests across 163 files; visual-companion smoke 5/5 included).
+- `CODEX_CI=1 pnpm --filter @open-agent-toolkit/cli exec vitest run src/integration/visual-companion-smoke.test.ts`: 5/5 pass.
+- `pnpm oat:validate-skills`: 48/48 pass.
+- `gh pr view 70 --json mergeStateStatus`: `DIRTY` (expected — orchestrator will push and CI will re-run).
+
+**Next:** Orchestrator force-pushes the rebased branch (`--force-with-lease`), then re-runs `oat-project-review-provide code prev2` + `oat-project-review-receive` to reach `passed`.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev2-t04
-oat_last_commit: 40f11e1a
+oat_current_task: null
+oat_last_commit: 877fbdc5
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -18,24 +18,25 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/70' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-01T14:44:50.508Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-04T20:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-05T01:10:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: independent-brainstorming
 
-**Status:** Revision complete; PR open
+**Status:** Revision fix tasks complete; PR awaiting push + re-review
 **Started:** 2026-05-01
-**Last Updated:** 2026-05-04
+**Last Updated:** 2026-05-05
 
 ## Current Phase
 
-Two post-PR revision passes have been implemented:
+Two post-PR revision passes plus a follow-up review-fix batch have been implemented:
 
 - `p-rev1` (3/3 complete; commit `42a8d2db`; review `prev1-review-2026-05-03.md` passed) — disambiguated brainstorm vs. tracked-idea routing, deferred the visual companion until visual-likely, dropped fixed `[N/9]` progress counters, lockstep `0.0.60`.
-- `p-rev2` (3/3 complete; commit `589434ce`) — tightened the activation contract with three tiers (Hard Activation / Soft Exploratory Path / No Activation), absorbed the three non-blocking minors from the prev1 review, lockstep `0.0.61`.
+- `p-rev2` (3/3 original tasks complete; commit `589434ce`) — tightened the activation contract with three tiers (Hard Activation / Soft Exploratory Path / No Activation), absorbed the three non-blocking minors from the prev1 review, lockstep `0.0.61`.
+- `p-rev2` review fix batch (5/5 complete; commit `877fbdc5`) — addressed the 3 Important + 2 Minor findings from `prev2-review-2026-05-04.md`: removed `thoughts?` from the Soft list (I1), scrubbed `CODEX_CI` from the smoke-test child env (I2), rebased onto `origin/main` cleanly (I3), refreshed OAT bookkeeping (m1), repaired `bl-f19a` markdown spacing (m2). Lockstep bumped `0.0.62 → 0.0.63`.
 
-The project is back in `pr_open` state and ready for a PR update plus a focused re-review of the prev2 commit.
+The project is back in `pr_open` state and ready for the orchestrator to push the rebased branch + run a focused re-review of the prev2 fix commit.
 
 ## Artifacts
 
@@ -60,7 +61,8 @@ The project is back in `pr_open` state and ready for a PR update plus a focused 
 - ✓ PR created
 - ✓ Revision p-rev1 implemented (3/3 tasks complete; review passed)
 - ✓ Revision p-rev2 implemented (3/3 original tasks complete — activation contract tightening)
-- ⧗ Review prev2 received (3 Important + 2 Minor findings converted to 5 fix tasks `prev2-t04..t08`); awaiting fix-task execution + re-review
+- ✓ Revision p-rev2 review-fix batch implemented (5/5 tasks complete — `thoughts?` cleanup, CODEX_CI test compat, rebase + lockstep `0.0.63`, bookkeeping refresh, `bl-f19a` markdown polish)
+- ⧗ Awaiting orchestrator push + re-review
 
 ## Blockers
 
@@ -68,6 +70,6 @@ None
 
 ## Next Milestone
 
-Execute the 5 prev2 review-fix tasks (`prev2-t04..t08`) via `oat-project-implement`, then re-run `oat-project-review-provide code prev2` + `oat-project-review-receive` to reach `passed`. The branch also needs a rebase against `origin/main` (covered by `prev2-t06`) before the PR can merge.
+Orchestrator force-pushes the rebased branch (`--force-with-lease`), then re-runs `oat-project-review-provide code prev2` + `oat-project-review-receive` to reach `passed` and unblock the PR for merge.
 
 The user has noted they will manually do _some_ dogfooding using the vault-copied `dogfood-results.md` reference (`/Users/thomas.stang/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/02 - Projects/Open Agent Toolkit/References/dogfood-results.md`) before merging.

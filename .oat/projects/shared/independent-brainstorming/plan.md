@@ -1669,9 +1669,9 @@ git commit -m "chore(prev1-t03): refresh brainstorm revision release assets"
 
 ## Phase p-rev2: Revision 2
 
-Source: inline feedback (2026-05-04) — activation contract tightening; absorbs the three non-blocking minors from `prev1-review-2026-05-03.md`
-Status: fix tasks added (review of `589434ce` and follow-ups; see prev2-t04..t08)
-Commits: `589434ce`, `4f7a6bfb`, `88c9df56`, `04911d33` (`fix(prev2): tighten brainstorm activation contract` + YAML repair + `bl-f19a` capture + skill metadata fix)
+Source: inline feedback (2026-05-04) — activation contract tightening; absorbs the three non-blocking minors from `prev1-review-2026-05-03.md`; review-fix batch from `prev2-review-2026-05-04.md`
+Status: complete (8/8 tasks: prev2-t01..t08)
+Commits: `589434ce`, `4f7a6bfb`, `88c9df56`, `04911d33` (`fix(prev2): tighten brainstorm activation contract` + YAML repair + `bl-f19a` capture + skill metadata fix), `877fbdc5` (`fix(prev2-review): apply review findings`)
 
 ### Task prev2-t01: (revision) Tighten brainstorm activation contract
 
@@ -2033,7 +2033,7 @@ Folded into the combined `fix(prev2-review)` commit.
 | design | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-design-review-2026-05-01.md |
 | plan   | artifact | fixes_completed | 2026-05-01 | reviews/archived/artifact-plan-review-2026-05-01.md   |
 | prev1  | code     | passed          | 2026-05-03 | reviews/archived/prev1-review-2026-05-03.md           |
-| prev2  | code     | fixes_added     | 2026-05-04 | reviews/archived/prev2-review-2026-05-04.md           |
+| prev2  | code     | fixes_completed | 2026-05-04 | reviews/archived/prev2-review-2026-05-04.md           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -2056,11 +2056,11 @@ Folded into the combined `fix(prev2-review)` commit.
 - Phase 4: 5 tasks — document brainstorm pack and skill in `apps/oat-docs`, document walkthrough plans for all 10 dogfood scenarios (live-dogfood follow-up captured as backlog item `bl-7d5b`), lockstep public-package version bumps, regenerate `public-package-versions.json`, exclude bundled MIT-port scripts + docs from oxfmt (added p04-t05 during execution to address Phase 3-flagged format prerequisite), `pnpm release:validate`
 - Phase 5: 8 tasks — final-review fix tasks for the 6 Important + 2 Medium + 1 Minor findings from `final-review-2026-05-02.md` (config-schema registration, install-lifecycle parity, dynamic skill-dir resolution, gitignore policy, durable-tracked active-project references, state refresh, dogfood walkthrough revision + backlog/vault copy, current-state.md path + pack-list updates)
 - Phase p-rev1: 3 tasks — human-feedback revisions for brainstorm skill routing, conditional visual-companion offering, bundled asset refresh, skill version bumps, lockstep package version bump, and release validation
-- Phase p-rev2: 3 tasks completed (activation contract tightening) + 5 review-fix tasks added (`prev2-t04..t08`) from `prev2-review-2026-05-04.md` — `thoughts?` cleanup, `CODEX_CI=1` test compatibility, rebase + lockstep resolution, OAT bookkeeping refresh, `bl-f19a` markdown polish
+- Phase p-rev2: 3 original tasks (activation contract tightening) + 5 review-fix tasks (`prev2-t04..t08`) — `thoughts?` cleanup, `CODEX_CI=1` test compatibility, clean rebase against `origin/main` with lockstep `0.0.62 → 0.0.63`, OAT bookkeeping refresh, `bl-f19a` markdown polish
 
-**Total: 43 tasks**
+**Total: 43 tasks (43/43 complete)**
 
-Revision p-rev2 fix tasks are queued. Execute via `oat-project-implement`, then re-run `oat-project-review-provide code prev2` to reach `passed`.
+Revision p-rev2 fix tasks are complete (commit `877fbdc5`). Awaiting orchestrator push + `oat-project-review-provide code prev2` + `oat-project-review-receive` to reach `passed`.
 
 ---
 
