@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-03
-oat_current_task_id: null
+oat_last_updated: 2026-05-04
+oat_current_task_id: prev2-t04
 oat_generated: false
 ---
 
