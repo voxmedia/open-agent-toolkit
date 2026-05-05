@@ -179,8 +179,8 @@ project-independent brainstorming conversations:
   response style — the skill enters mode only on **Hard Activation** (explicit
   `brainstorm` verb: "let's brainstorm", "brainstorm this", "can we brainstorm
   X", "help me brainstorm X", or `/oat-brainstorm`). Ambiguous exploratory
-  phrasing ("I've been thinking about", "what if we", "help me think through",
-  "thoughts?") follows the **Soft Exploratory Path** — answered conversationally
+  phrasing ("I've been thinking about", "what if we", "help me think through")
+  follows the **Soft Exploratory Path** — answered conversationally
   with brainstorm-quality reasoning (options, tradeoffs, no premature
   implementation, no destination guess) without the banner. After ≥2 sustained
   exploratory turns the skill offers mode once: _"If you want, I can switch into

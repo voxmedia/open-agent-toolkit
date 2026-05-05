@@ -69,7 +69,15 @@ async function startServer(options: StartOptions = {}): Promise<{
     if (options.projectDir) {
       args.push('--project-dir', options.projectDir);
     }
-    const env = { ...process.env };
+    // Scrub CODEX_CI from the spawned child env: start-server.sh auto-sets
+    // FOREGROUND=true when CODEX_CI is present (intentional behavior for
+    // real Codex usage), but the smoke harness resolves on the child's
+    // `close` event — a foreground server never closes, so all 5 smoke
+    // tests would time out under Codex CI. Removing CODEX_CI here keeps
+    // the script's runtime behavior intact while letting the test harness
+    // observe the normal background-launcher path.
+    const { CODEX_CI: _codexCi, ...envWithoutCodexCi } = process.env;
+    const env: NodeJS.ProcessEnv = { ...envWithoutCodexCi };
     if (options.homeOverride) {
       env.HOME = options.homeOverride;
     }

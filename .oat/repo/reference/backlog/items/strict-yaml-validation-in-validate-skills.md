@@ -18,7 +18,13 @@ oat_template_name: backlog-item
 
 `pnpm oat:validate-skills` currently checks SKILL.md frontmatter against a small set of rules (length cap, required fields, lead-word constraint on `description`, etc.) but does **not** parse the frontmatter as YAML. As a result, frontmatter that fails actual YAML parsing — for example a bare colon mid-scalar that produces `mapping values are not allowed in this context` — passes the validator and ships, only failing later in consumers that load the YAML (provider sync, skill resolver, IDE integrations).
 
-Concrete instance that motivated this item: `prev2` of the `independent-brainstorming` PR introduced an unquoted scalar that read `description: Use when the user explicitly invokes the \`brainstorm\` verb: \`/oat-brainstorm\`, ...`. The bare `verb:`was parsed as a nested mapping inside the scalar.`pnpm oat:validate-skills`returned exit 0; downstream consumers raised`mapping values are not allowed in this context`. Fixed in commit `4f7a6bfb`, but the validator gap remains.
+Concrete instance that motivated this item: `prev2` of the `independent-brainstorming` PR introduced an unquoted scalar that read:
+
+```yaml
+description: Use when the user explicitly invokes the `brainstorm` verb: `/oat-brainstorm`, ...
+```
+
+The bare `verb:` was parsed as a nested mapping inside the scalar. `pnpm oat:validate-skills` returned exit 0; downstream consumers raised `mapping values are not allowed in this context`. Fixed in commit `4f7a6bfb`, but the validator gap remains.
 
 ## What's still required
 
