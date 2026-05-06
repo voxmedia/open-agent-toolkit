@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-04T14:47:00.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-04T14:47:33Z'
+oat_project_state_updated: '2026-05-06T22:44:25Z'
 oat_generated: false
 ---
 
@@ -24,7 +24,7 @@ oat_generated: false
 
 **Status:** Discovery
 **Started:** 2026-05-04
-**Last Updated:** 2026-05-04
+**Last Updated:** 2026-05-06
 
 ## Current Phase
 
