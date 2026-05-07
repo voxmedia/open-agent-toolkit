@@ -78,11 +78,18 @@ The backlog contains **{N} items** ({breakdown by section}) spanning {N} themes:
 Legend:  ──▶  hard dependency (must complete first)
          - -▶  soft dependency (beneficial but not required)
 
-{Render the full dependency graph here}
+{Render the full dependency graph here using bare IDs}
 
 {Group independent items at the bottom}
 {item} [independent]
 ```
+
+**ID legend** (every ID used above must appear here):
+
+| ID    | Title        |
+| ----- | ------------ |
+| {BNN} | {Item Title} |
+| ...   | ...          |
 
 ---
 
@@ -95,8 +102,13 @@ These are independent work streams that can be tackled concurrently without conf
 {Brief description of this work stream}
 
 ```
-{Item sequence with arrows showing internal ordering}
+{Item sequence with arrows showing internal ordering — bare IDs OK inside the diagram}
 ```
+
+**Items in this lane:**
+
+- **{BNN}** — {Title}
+- ...
 
 **Total estimated effort:** {Low/Medium/High}
 **Cross-lane dependencies:** {Any connections to other lanes}
@@ -132,10 +144,10 @@ These are independent work streams that can be tackled concurrently without conf
 
 ### How backlog items map to roadmap phases
 
-| Roadmap Phase | Status   | Backlog Items   | Notes   |
-| ------------- | -------- | --------------- | ------- |
-| {Phase name}  | {Status} | {BNN, BNN, ...} | {Notes} |
-| ...           | ...      | ...             | ...     |
+| Roadmap Phase | Status   | Backlog Items                            | Notes   |
+| ------------- | -------- | ---------------------------------------- | ------- |
+| {Phase name}  | {Status} | **{BNN}** — {Title}; **{BNN}** — {Title} | {Notes} |
+| ...           | ...      | ...                                      | ...     |
 
 ### Gaps: Roadmap items without backlog coverage
 

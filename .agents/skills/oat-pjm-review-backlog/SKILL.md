@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-review-backlog
-version: 1.0.0
+version: 1.1.0
 description: Use when prioritizing the file-backed repo backlog or evaluating roadmap alignment. Produces value-effort ratings, dependency mapping, and execution recommendations.
 argument-hint: '[backlog-root] [--roadmap=<path>] [--output=<path>]'
 disable-model-invocation: true
@@ -17,6 +17,25 @@ Analyze the file-backed backlog under `.oat/repo/reference/backlog/` to produce 
 **OAT MODE: Backlog Review**
 
 **Purpose:** Review active backlog item files, evaluate roadmap alignment, and recommend a practical execution order.
+
+## Reference Format Convention
+
+Whenever a backlog item is referenced — in the written review document, in chat output, or in the inline summary at the end — it **must include both the ID and a human-readable title**. Bare IDs like `bl-281c` are not acceptable in user-facing output, because readers do not have a board lookup in front of them.
+
+Use one of these formats:
+
+- **Inline / prose:** `` `bl-281c` (control-plane state-read migration) ``
+- **Tables / lists:** `**bl-281c** — Control-plane state-read migration`
+- **Compact lists where space is tight (e.g., dependency graphs):** an ID-only token is acceptable **only if** a legend in the same section maps every ID to its title.
+
+This convention applies equally to:
+
+- The "Top recommended next actions" summary
+- Risks, gaps, and quick-wins callouts
+- Any chat-level commentary about specific items
+- All tables and item references in the written review document
+
+If a title is missing from frontmatter, derive a short noun phrase from the item filename or `## Description` heading rather than falling back to a bare ID.
 
 ## Progress Indicators (User-Facing)
 
@@ -162,6 +181,8 @@ After writing the review, provide:
 - Top 3 recommended next actions
 - Key risks or gaps discovered
 
+When listing specific items in this summary, follow the **Reference Format Convention** above — every backlog item must appear as `` `bl-XXXX` (human-readable title) `` (or the bold-with-em-dash variant in tables). Do not emit bare IDs.
+
 ## Success Criteria
 
 - Every active backlog item file has a value-effort rating with rationale
@@ -169,3 +190,4 @@ After writing the review, provide:
 - Parallel lanes and execution waves are actionable
 - Roadmap alignment gaps are surfaced when roadmap input is present
 - Output document follows the review template structure
+- Every user-facing reference to a backlog item pairs the ID with a human-readable title (per the Reference Format Convention)
