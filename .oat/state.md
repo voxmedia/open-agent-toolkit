@@ -1,41 +1,28 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-05-05
+oat_generated_at: 2026-05-08
 ---
 
 # OAT Repo State Dashboard
 
-**Generated:** 2026-05-05
+**Generated:** 2026-05-08
 
 ## Active Project
 
-**independent-brainstorming** (`.oat/projects/shared/independent-brainstorming`)
-
-## Active Project Summary
-
-| Field        | Value       |
-| ------------ | ----------- |
-| Mode         | quick       |
-| Phase        | implement   |
-| Status       | in_progress |
-| HiLL Gate    | n/a         |
-| Current Task | -           |
-| Docs Updated | ✓ complete  |
-
-Details: `.oat/projects/shared/independent-brainstorming/state.md`
+_(not set)_
 
 ## Knowledge Status
 
 | Field         | Value      |
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
-| Age           | 33 days    |
-| Files Changed | 417        |
+| Age           | 36 days    |
+| Files Changed | 419        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-implement** - Continue implementation
+**oat-project-open** - Select an existing project to continue work
 
 ## Quick Commands
 
@@ -51,5 +38,4 @@ Details: `.oat/projects/shared/independent-brainstorming/state.md`
 ## Available Projects
 
 - **docs-readability-reorg** - implement
-- **independent-brainstorming** - implement
 - **remote-project-management** - discovery
