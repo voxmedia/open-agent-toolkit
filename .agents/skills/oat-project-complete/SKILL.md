@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.4.4
+version: 1.4.5
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -379,9 +379,55 @@ echo "Project archived to $ARCHIVE_PATH"
 
 - Always archive locally first. The local archive is the authoritative completion artifact even when remote sync is also configured.
 - If `archive.summaryExportPath` is configured and `summary.md` exists after archive, copy it to `{repoRoot}/{archive.summaryExportPath}/YYYYMMDD-{PROJECT_NAME}.md`.
-- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, sync the archived project to `{archive.s3Uri}/{repo-slug}/{PROJECT_NAME}/`. The S3 sync excludes process artifacts (`reviews/*`, `pr/*`) — only core deliverables (discovery, spec, design, plan, implementation, summary, state) are uploaded. The CLI enforces this via `S3_ARCHIVE_SYNC_EXCLUDES` in `archive-utils.ts`.
+- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, sync the archived project to `{archive.s3Uri}/{repo-slug}/projects/YYYYMMDD-{PROJECT_NAME}/`. The S3 sync excludes process artifacts (`reviews/*`, `pr/*`) — only core deliverables (discovery, spec, design, plan, implementation, summary, state) are uploaded. The CLI enforces this via `S3_ARCHIVE_SYNC_EXCLUDES` in `archive-utils.ts`.
 - If AWS CLI is missing or unusable for that S3 sync, warn and continue. Completion must not fail after the local archive succeeds.
 - If `archive.s3SyncOnComplete` is false or `archive.s3Uri` is unset, skip remote sync without prompting.
+
+**AWS credential handling for archive S3 sync (required):**
+
+When `archive.s3SyncOnComplete=true` and `archive.s3Uri` is set, the agent MUST honor the repo's archive-scoped AWS credentials instead of falling back to whatever shell profile/region happens to be active. The contract mirrors `buildAwsEnv` in `packages/cli/src/commands/project/archive/archive-utils.ts`.
+
+- **Read both keys from OAT config before any AWS CLI call:**
+
+  ```bash
+  ARCHIVE_AWS_PROFILE=$(oat config get archive.awsProfile 2>/dev/null || true)
+  ARCHIVE_AWS_REGION=$(oat config get archive.awsRegion 2>/dev/null || true)
+  ```
+
+- **Apply them to every `aws` invocation tied to archive sync** — preflight checks (`aws --version`, `aws sts get-caller-identity`), bucket access probes (`aws s3 ls`), and the actual `aws s3 sync`. Do not mix configured values across some calls and ambient values across others.
+- **Configured archive values WIN over ambient shell AWS env vars.** A non-empty `archive.awsProfile` overrides any `AWS_PROFILE` or `AWS_DEFAULT_PROFILE` already exported in the shell. A non-empty `archive.awsRegion` overrides `AWS_REGION` and `AWS_DEFAULT_REGION`. Treat the repo's archive-scoped declaration as deliberate intent — users should not have to unset shell env vars to get correct archive credentials. Empty/unset config values fall through to the AWS CLI's normal resolution chain.
+- **Prefer the OAT CLI when it is available.** If you delegate archive sync to an `oat project archive ...` invocation, the CLI applies the canonical handling for you (config-resolved profile/region clobber the spawned env). Do not pass `--profile` / `--region` flags unless the user asked for a one-off override different from the repo config.
+- **Manual AWS CLI fallback** — when no OAT command wraps the operation and the agent must call `aws` directly, pass the configured profile/region explicitly. Either use flags:
+
+  ```bash
+  AWS_FLAGS=()
+  if [[ -n "$ARCHIVE_AWS_PROFILE" ]]; then
+    AWS_FLAGS+=(--profile "$ARCHIVE_AWS_PROFILE")
+  fi
+  if [[ -n "$ARCHIVE_AWS_REGION" ]]; then
+    AWS_FLAGS+=(--region "$ARCHIVE_AWS_REGION")
+  fi
+
+  aws "${AWS_FLAGS[@]}" sts get-caller-identity
+  aws "${AWS_FLAGS[@]}" s3 sync \
+    "$ARCHIVE_PATH" \
+    "${ARCHIVE_S3_URI%/}/${REPO_SLUG}/projects/${SNAPSHOT_NAME}/" \
+    --exclude 'reviews/*' --exclude 'pr/*'
+  ```
+
+  …or set the equivalent env vars for the spawned process so the same precedence applies:
+
+  ```bash
+  AWS_ENV=()
+  [[ -n "$ARCHIVE_AWS_PROFILE" ]] && AWS_ENV+=("AWS_PROFILE=$ARCHIVE_AWS_PROFILE")
+  [[ -n "$ARCHIVE_AWS_REGION" ]] && AWS_ENV+=("AWS_REGION=$ARCHIVE_AWS_REGION")
+  env "${AWS_ENV[@]}" aws s3 sync ...
+  ```
+
+  Both shapes are acceptable; the AWS CLI treats `--profile` / `--region` and `AWS_PROFILE` / `AWS_REGION` env as higher precedence than `AWS_DEFAULT_*`, so the configured values win.
+
+- **Report the resolved profile/region in the completion summary** so the user can confirm the right identity ran the sync, e.g. `Archive S3 sync used AWS profile=tkstang-artifact-sync region=us-east-1`. Do not echo raw access keys, session tokens, or any value from `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN`. If `archive.awsProfile` or `archive.awsRegion` is unset, report `<unset; using shell default>` for that field.
+- **AccessDenied troubleshooting** — if `aws s3 sync` returns AccessDenied, confirm before retrying that the spawn actually used `archive.awsProfile` (not the ambient shell profile). A common pitfall is invoking `aws s3 sync` without flags from a shell where `AWS_PROFILE` points at an unrelated identity; rerun with the configured profile/region applied as above.
 
 **Worktree durability guard (required):**
 
@@ -488,6 +534,7 @@ Show user:
 
 - "Project **{PROJECT_NAME}** marked as complete."
 - If archived: "Archived location: **{PROJECT_PATH}**"
+- If S3 archive sync ran: include the resolved AWS profile and region used (e.g. `Archive S3 sync: profile=<archive.awsProfile> region=<archive.awsRegion>`). Show `<unset; using shell default>` for any field the config did not provide. Never echo raw credentials (`AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, etc.).
 - Include commit hash and push result for the bookkeeping changes.
 - If PR was opened: include the PR URL.
 - If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.

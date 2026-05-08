@@ -62,6 +62,7 @@ On completion, OAT now treats archive handling as part of the closeout lifecycle
 
 - Local archive is always written to `.oat/projects/archived/<project>/`.
 - If `.oat/config.json` enables `archive.s3SyncOnComplete` and sets `archive.s3Uri`, completion also attempts an S3 upload for a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/`.
+- If `.oat/config.json` sets `archive.awsProfile` and/or `archive.awsRegion`, those values are forwarded to every `aws` invocation triggered by completion (preflight checks + `aws s3 sync`) and override any ambient shell `AWS_PROFILE` / `AWS_DEFAULT_PROFILE` / `AWS_REGION` / `AWS_DEFAULT_REGION` values. The repo's archive-scoped credentials are treated as deliberate intent so users don't have to unset shell env vars before running completion. See [`config-and-local-state.md`](../../cli-utilities/config-and-local-state.md) for the full precedence chain.
 - If `.oat/config.json` sets `archive.summaryExportPath`, completion copies `summary.md` to `<archive.summaryExportPath>/20260401-<project>.md`.
 - Missing or unusable AWS CLI configuration produces warnings during completion instead of blocking closeout.
 - `oat project archive sync` can later sync all archived projects, or one named archived project, back down from S3; it selects the latest dated remote snapshot and materializes it into the local bare archive tree.

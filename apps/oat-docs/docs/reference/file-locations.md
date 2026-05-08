@@ -21,7 +21,7 @@ For detailed `.oat/` tree semantics, see:
 - Local runtime config (per-developer state): `.oat/config.local.json`
 - Active idea: `activeIdea` in `.oat/config.local.json` (repo) or `~/.oat/config.json` (user)
 - Projects root config: `projects.root` in `.oat/config.json` (read via `oat config get projects.root`)
-- Archive config: `archive.s3Uri`, `archive.s3SyncOnComplete`, `archive.summaryExportPath`, and `archive.wrapUpExportPath` in `.oat/config.json`
+- Archive config: `archive.s3Uri`, `archive.s3SyncOnComplete`, `archive.summaryExportPath`, `archive.wrapUpExportPath`, `archive.awsProfile`, and `archive.awsRegion` in `.oat/config.json`
 - Project manifests/config: `.oat/sync/`
 
 Config discovery via CLI:
