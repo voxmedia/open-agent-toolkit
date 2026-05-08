@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.6
+version: 2.0.7
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -23,7 +23,7 @@ Execute the implementation plan task-by-task with full state tracking.
 **Purpose:** Execute plan tasks with TDD discipline, track progress, handle blockers.
 
 **CRITICAL — Bookkeeping commits are mandatory, not optional.**
-After every code commit and after every phase/review-fix completion, you MUST commit the OAT tracking files (`implementation.md`, `state.md`, `plan.md`) as a separate bookkeeping commit. Do not defer, batch, or skip these commits under the reasoning that they "aren't related to the implementation." Skipping a bookkeeping commit is the primary cause of cross-session state drift and will cause the next implementation run to fail bookkeeping cross-checks. If bookkeeping commits feel frequent, that is the intended design — they are cheap and they prevent drift.
+After every code commit and after every phase/review-fix completion, you MUST commit the OAT tracking files (project: `implementation.md`, `state.md`, `plan.md`; repo dashboard: `.oat/state.md`) as a separate bookkeeping commit. Refresh the repo dashboard with `oat state refresh` immediately before staging so `.oat/state.md` reflects the just-completed phase/task. Do not defer, batch, or skip these commits under the reasoning that they "aren't related to the implementation." Skipping a bookkeeping commit (or skipping the dashboard refresh) is the primary cause of cross-session state drift and will cause the next implementation run to fail bookkeeping cross-checks. If bookkeeping commits feel frequent, that is the intended design — they are cheap and they prevent drift.
 
 **CRITICAL — Review boundaries require a committed artifact baseline.**
 Do not enter checkpoint review, final review, revise, or PR-final handoff with dirty core project artifacts (`discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`, `state.md`, plus `.oat/state.md` when refreshed). If one of those boundaries is next and artifact bookkeeping is still uncommitted, stop and create the bookkeeping commit first.
@@ -646,7 +646,8 @@ For each phase that completed:
 **Bookkeeping commit (mandatory):**
 
 ```bash
-git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md
+oat state refresh
+git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md .oat/state.md
 git commit -m "chore(oat): bookkeeping after {pNN} {pass|fail}"
 ```
 
@@ -719,14 +720,15 @@ When pausing:
 
 **DO NOT SKIP.** This commit prevents state drift across sessions.
 
-After phase summary and task pointer advancement, commit all modified OAT tracking files:
+After phase summary and task pointer advancement, refresh the repo dashboard and commit all modified OAT tracking files:
 
 ```bash
-git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
+oat state refresh
+git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md" .oat/state.md
 git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for {phase} completion"
 ```
 
-Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
+Do not use `git add -A` or glob patterns. Only commit the four files listed above (three project artifacts plus the regenerated repo dashboard).
 
 **Note on HiLL types:**
 
@@ -852,14 +854,15 @@ Implementation - Tasks complete; awaiting final review.
 
 **DO NOT SKIP.** This commit prevents state drift across sessions.
 
-After updating state.md to reflect implementation completion, commit all modified OAT tracking files:
+After updating state.md to reflect implementation completion, refresh the repo dashboard and commit all modified OAT tracking files:
 
 ```bash
-git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
+oat state refresh
+git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md" .oat/state.md
 git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for implementation complete"
 ```
 
-Do not use `git add -A` or glob patterns. Only commit the three OAT project files listed above.
+Do not use `git add -A` or glob patterns. Only commit the four files listed above (three project artifacts plus the regenerated repo dashboard).
 
 ### Step 13: Final Verification
 
