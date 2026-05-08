@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-05-03 (independent-brainstorming shipped a new `brainstorm` pack with the always-on `oat-brainstorm` dispatcher skill, visual-companion bundle ported from Superpowers, and a generalized `PACK_METADATA` default-scope mechanism; lockstep public packages bumped to 0.0.59 after rebase over `f33c6597`; pre-existing collaborative-design dogfood still pending)
+**Last Updated:** 2026-05-07 (independent-brainstorming shipped a new `brainstorm` pack with the `oat-brainstorm` dispatcher skill, visual-companion bundle ported from Superpowers, generalized `PACK_METADATA` default-scope mechanism, and a three-tier Activation Contract gating mode entry; lockstep public packages bumped to 0.0.64; PR #70 open and clean against main; pre-existing collaborative-design dogfood still pending)
 
 ## Canonical References
 
@@ -41,7 +41,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - Idea workflow:
   - `oat-idea-new`, `oat-idea-ideate`, `oat-idea-scratchpad`, `oat-idea-summarize`
 - Brainstorming (always-on):
-  - `oat-brainstorm` (project-independent brainstorming dispatcher, installed via the new `brainstorm` tool pack — user-eligible, default user scope, default-on in `oat init`). Activates proactively on exploratory phrasing; runs Superpowers-style cadence; surfaces a pack-aware terminal-state picker; hands off to existing `oat-idea-*`, `oat-pjm-add-backlog-item`, `oat-project-*` skills.
+  - `oat-brainstorm` (project-independent brainstorming dispatcher, installed via the new `brainstorm` tool pack — user-eligible, default user scope, default-on in `oat init`). Activation is gated by a three-tier **Activation Contract**: explicit `brainstorm` verb (`/oat-brainstorm`, "let's brainstorm", "can we brainstorm X", "help me brainstorm X") prints the OAT banner and runs the structured flow; ambiguous exploratory phrasing ("help me think through", "I've been thinking", "what if we") answers conversationally with brainstorm-quality structure but no banner, offering structured mode only after ≥2 sustained exploratory turns; advisory / review / debug / PR / status / active-workflow questions never auto-activate. Once active, runs Superpowers-style cadence and surfaces a pack-aware terminal-state picker that hands off to existing `oat-idea-*`, `oat-pjm-add-backlog-item`, `oat-project-*` skills.
   - Bundled visual companion (`scripts/{server.cjs, start-server.sh, stop-server.sh, frame-template.html, helper.js}` + `references/visual-companion.md`) — port of MIT-licensed `superpowers:brainstorming@5.0.7` with OAT-aligned persistence-path resolution. Attribution in `NOTICES.md`.
   - Active-project routing has 3 sub-options (related → fold-back, independent → other terminal states, supplementary → reference file); fold-back enforces a commit safety contract (preflight `git status --porcelain`, scoped `git add --`, three-option dirty-tree picker, conditional handoff prompt).
   - Default-scope mechanism (`PACK_METADATA[name]?.defaultScope`, see ADR-017) drives both the interactive picker and the non-interactive resolver; `brainstorm` is the first user-default-scope pack, with `core` as a future consolidation candidate.
