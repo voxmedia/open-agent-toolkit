@@ -153,4 +153,57 @@ describe('review skill contracts', () => {
       'Warning: Proceeding without summary generation.',
     );
   });
+
+  it('syncs the open PR description after archive so blob links keep resolving', () => {
+    const skillPath = repoFilePath(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const content = readFileSync(skillPath, 'utf8');
+
+    // Pre-mutation capture so Step 11.5 can branch on the original PR state.
+    expect(content).toContain('WAS_PR_OPEN_AT_START');
+
+    // Step 7 must drop archived-artifact References when SHOULD_ARCHIVE is true.
+    expect(content).toContain(
+      '**Archive-aware References (required when `SHOULD_ARCHIVE` is `true`):**',
+    );
+    expect(content).toContain(
+      '`plan.md`, `implementation.md`, `discovery.md`, `spec.md`, `design.md`, `summary.md`, `references/imported-plan.md`',
+    );
+    expect(content).toContain(
+      'Add a canonical project-record bullet** when `archive.summaryExportPath` is configured and `summary.md` exists',
+    );
+
+    // Regression guard: the project-record link must target the current/head
+    // branch ({BRANCH}), not the base branch. The summary export is committed
+    // on the feature branch during Step 10 and only reaches the base branch
+    // after merge, so a `blob/{BASE_BRANCH}/...` link 404s the entire time
+    // the PR is open — the exact failure mode this whole step exists to fix.
+    expect(content).toContain(
+      '{REPO_WEB}/blob/{BRANCH}/${SUMMARY_EXPORT_PATH}/${YYYYMMDD}-${PROJECT_NAME}.md',
+    );
+    expect(content).not.toContain(
+      '{REPO_WEB}/blob/{BASE_BRANCH}/${SUMMARY_EXPORT_PATH}',
+    );
+    expect(content).toContain(
+      'Anti-pattern: do **not** point this link at the base branch',
+    );
+
+    // Existing pr-final body must be regenerated when archiving so links stay valid.
+    expect(content).toContain(
+      'When `SHOULD_ARCHIVE` is `true`, regenerate it (overwrite). The existing artifact was authored by `oat-project-pr-final` before any archive intent existed',
+    );
+
+    // Step 11.5 contract.
+    expect(content).toContain(
+      '### Step 11.5: Sync Open-PR Description on GitHub (Conditional)',
+    );
+    expect(content).toContain(
+      '**Run only when `WAS_PR_OPEN_AT_START="true"` AND `SHOULD_ARCHIVE="true"`.**',
+    );
+    expect(content).toContain('gh pr edit "$PR_REF" --body-file "$TMP_BODY"');
+    expect(content).toContain(
+      'If `gh pr edit` fails (e.g. PR was merged between Step 2 and now',
+    );
+  });
 });

@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.4.5
+version: 1.4.7
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -27,7 +27,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[3/6] Completing lifecycle…`
   - `[4/6] Generating PR description + archiving…`
   - `[5/6] Refreshing dashboard + committing…`
-  - `[6/6] Opening PR…`
+  - `[6/6] Opening PR or syncing description…`
 
 ## Process
 
@@ -63,6 +63,17 @@ Ask all user questions at once so the user can answer them in a single interacti
 - Fallback: present as a plain-text conversational prompt
 
 Before asking the batched questions, read `oat_pr_status` and `oat_pr_url` from `state.md` frontmatter.
+
+**Capture pre-mutation PR state for later steps.** The skill mutates `state.md` (Step 5) and the project tree (Step 8) before Step 11.5 needs to know whether the PR was already open at the start. Persist that decision in a shell variable now:
+
+```bash
+WAS_PR_OPEN_AT_START="false"
+if [[ "${oat_pr_status:-}" == "open" ]]; then
+  WAS_PR_OPEN_AT_START="true"
+fi
+```
+
+Use the same `state.md` read you already perform for `oat_pr_status`/`oat_pr_url` — do not re-read after Step 5. Step 11.5 (Sync Open-PR Description on GitHub) consumes this value.
 
 **Workflow preference checks (before asking questions):**
 
@@ -299,7 +310,29 @@ fi
 
 5. **Write PR description artifact** — write to `{PROJECT_PATH}/pr/project-pr-YYYY-MM-DD.md` following the template and policies from `oat-project-pr-final` Step 4 (frontmatter policy, reference links policy, local path exclusion).
 
-If a PR description artifact already exists at `{PROJECT_PATH}/pr/project-pr-*.md`, skip generation and use the existing one instead.
+If a PR description artifact already exists at `{PROJECT_PATH}/pr/project-pr-*.md`:
+
+- When `SHOULD_ARCHIVE` is `true`, regenerate it (overwrite). The existing artifact was authored by `oat-project-pr-final` before any archive intent existed and links to artifact paths that will be local-only after Step 8. Regenerating ensures Step 11 / Step 11.5 push a body whose links still resolve on the remote.
+- When `SHOULD_ARCHIVE` is `false`, skip generation and use the existing artifact as-is. No archive means the existing blob links remain valid.
+
+**Archive-aware References (required when `SHOULD_ARCHIVE` is `true`):**
+
+When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,discovery,spec,design,summary}.md` will move to a gitignored archive location in Step 8. After commit + push (Step 10), those paths no longer exist on the branch and any blob link to them returns 404 on GitHub. The PR description must anticipate this:
+
+- **Drop References bullets** that point to artifacts about to become local-only:
+  - `plan.md`, `implementation.md`, `discovery.md`, `spec.md`, `design.md`, `summary.md`, `references/imported-plan.md`
+  - Active `reviews/` (the active project tree, including `reviews/`, moves with the archive)
+- **Add a canonical project-record bullet** when `archive.summaryExportPath` is configured and `summary.md` exists:
+  - Resolve the export filename: `${SUMMARY_EXPORT_PATH}/$(date +%Y%m%d)-${PROJECT_NAME}.md` (matches `archive-utils.ts` naming).
+  - Reference it as a tracked, post-archive blob link, e.g.:
+    `- Project record: [${SUMMARY_EXPORT_PATH}/${YYYYMMDD}-${PROJECT_NAME}.md]({REPO_WEB}/blob/{BRANCH}/${SUMMARY_EXPORT_PATH}/${YYYYMMDD}-${PROJECT_NAME}.md)`
+  - Use the **current/head branch** for the blob link (the same `{BRANCH}` value used by `oat-project-pr-final` Step 4 for every other reference). Step 8 creates the export on the current checkout and Step 10 commits + pushes it on the feature branch, so the link resolves immediately while the PR is open and continues to resolve after merge once the file lands on the base branch.
+  - Anti-pattern: do **not** point this link at the base branch (`main` / resolved default branch). The export does not exist on the base branch until the PR merges, so a `blob/main/...` link 404s for the entire window the PR is open — the same class of broken link this whole step exists to prevent.
+  - When `archive.summaryExportPath` is unset or `summary.md` is missing, omit this bullet rather than emit a broken link.
+- **Keep References bullets** that resolve independently of the archive: backlog item links under `.oat/repo/reference/backlog/`, decision-record links under `.oat/repo/reference/decisions/`, repo-reference docs, ticket URLs, and anything else under tracked paths outside the project directory.
+- Apply the existing `localPaths`-based exclusion rule from `oat-project-pr-final` Step 4 on top of these rules — it already covers `.oat/**/pr` and `.oat/**/reviews/archived` and may catch additional patterns configured per repo.
+
+Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path under `.oat/projects/archived/<name>/...`. That path is gitignored on every checkout and never reaches the remote.
 
 ### Step 8: Archive Project (Conditional)
 
@@ -528,6 +561,46 @@ gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 
 Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
 
+### Step 11.5: Sync Open-PR Description on GitHub (Conditional)
+
+**Run only when `WAS_PR_OPEN_AT_START="true"` AND `SHOULD_ARCHIVE="true"`.**
+
+When the PR was already open at the start of this skill (typically because `oat-project-pr-final` ran earlier in the lifecycle) AND we just archived, the GitHub PR description authored by `oat-project-pr-final` still points to the active artifact paths. Step 8 moved those artifacts to a gitignored archive location and Step 10 pushed the move, so any blob link in the open PR body now 404s. Push the regenerated archive-aware body to the existing PR.
+
+Skip this step when:
+
+- The PR was not yet open at the start (`WAS_PR_OPEN_AT_START="false"`) — Step 11 already created the PR with the archive-aware body.
+- No archive happened (`SHOULD_ARCHIVE="false"`) — the original blob links still resolve.
+- `IS_SHARED_PROJECT="false"` — non-shared projects are not archived in this skill, so no link breakage.
+
+Steps:
+
+1. Locate the PR description artifact at `{PROJECT_PATH}/pr/project-pr-*.md`. After Step 8, `PROJECT_PATH` points at the archived location, so the artifact lives at `{ARCHIVE_PATH}/pr/project-pr-*.md`.
+2. Strip YAML frontmatter (everything from the opening `---` through and including the closing `---`) and write the result to a temporary file. Verify the temp file does not start with YAML frontmatter keys.
+3. Resolve the open PR. Prefer the tracked URL captured in Step 2:
+
+   ```bash
+   PR_REF="${oat_pr_url:-}"
+   if [[ -z "$PR_REF" ]]; then
+     # Fall back to the head branch — gh auto-resolves to the open PR for the current branch.
+     PR_REF=$(git rev-parse --abbrev-ref HEAD)
+   fi
+   ```
+
+4. Push the updated body:
+
+   ```bash
+   gh pr edit "$PR_REF" --body-file "$TMP_BODY"
+   ```
+
+5. Clean up the temp file.
+
+Failure handling:
+
+- If `gh` is missing, warn and print the path to the regenerated artifact body so the user can paste it into the PR manually. Do not fail the skill.
+- If `gh pr edit` fails (e.g. PR was merged between Step 2 and now, or the auth token lacks edit permission), warn and continue. Step 12's completion summary should call out that the PR body was not updated and surface the artifact path so the user can update it manually.
+- Never re-archive or re-commit on failure here — the lifecycle bookkeeping in Step 10 already shipped.
+
 ### Step 12: Confirm to User
 
 Show user:
@@ -538,3 +611,4 @@ Show user:
 - Include commit hash and push result for the bookkeeping changes.
 - If PR was opened: include the PR URL.
 - If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.
+- If Step 11.5 ran, report whether the PR description was synced (e.g. `PR description synced: <PR URL>`) or warn that the sync failed and surface the artifact path so the user can update it manually.
