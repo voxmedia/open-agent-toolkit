@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.3
+version: 1.0.4
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -178,9 +178,11 @@ Phase-to-skill mapping for HiLL override:
 | Phase     | Skill                  |
 | --------- | ---------------------- |
 | discovery | `oat-project-discover` |
-| spec      | `oat-project-spec`     |
+| spec      | `oat-project-design`   |
 | design    | `oat-project-design`   |
 | plan      | `oat-project-plan`     |
+
+Note: a `spec` HiLL phase only appears in legacy projects scaffolded before requirements confirmation was folded into `oat-project-design`. New projects scaffold with `['discovery', 'design']` HiLL checkpoints, so `spec` falls through to `oat-project-design` here as a graceful migration. The standalone `oat-project-spec` skill remains available as an opt-in for users who want to formalize requirements separately.
 
 Note: `implement` is intentionally omitted. Implementation-phase checkpoints are handled by `oat_plan_hill_phases` in plan.md (plan-phase-level gates), not by the workflow-level `oat_hill_checkpoints` in state.md.
 
@@ -196,9 +198,9 @@ Otherwise, look up the target skill from the routing table for the current `oat_
 | Current Phase | Phase Status | Boundary Tier        | Target Skill               |
 | ------------- | ------------ | -------------------- | -------------------------- |
 | discovery     | in_progress  | tier 3 (template)    | `oat-project-discover`     |
-| discovery     | in_progress  | tier 2 (substantive) | `oat-project-spec`         |
-| discovery     | complete     | tier 1               | `oat-project-spec`         |
-| spec          | in_progress  | tier 3               | `oat-project-spec`         |
+| discovery     | in_progress  | tier 2 (substantive) | `oat-project-design`       |
+| discovery     | complete     | tier 1               | `oat-project-design`       |
+| spec          | in_progress  | tier 3               | `oat-project-design`       |
 | spec          | in_progress  | tier 2               | `oat-project-design`       |
 | spec          | complete     | tier 1               | `oat-project-design`       |
 | design        | in_progress  | tier 3               | `oat-project-design`       |

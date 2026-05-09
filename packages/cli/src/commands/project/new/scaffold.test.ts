@@ -360,7 +360,7 @@ describe('scaffoldProject', () => {
     expect(state).toContain('oat_workflow_mode: spec-driven');
     expect(state).toContain('oat_phase: discovery');
     expect(state).toContain(
-      '- **Spec:** `spec.md` (scaffolded template — not started)',
+      '- **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)',
     );
     expect(state).toContain(
       '- **Implementation:** `implementation.md` (scaffolded template — not started)',

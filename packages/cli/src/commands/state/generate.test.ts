@@ -220,6 +220,60 @@ describe('generateStateDashboard', () => {
     expect(result.stalenessStatus).toBe('aging');
   });
 
+  it('routes spec-driven discovery:complete to oat-project-design (spec is folded into design)', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+
+    await writeStateFile(root, '.oat/projects/shared/spec-folded-proj', {
+      oat_phase: 'discovery',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'spec-driven',
+      oat_hill_checkpoints: '["discovery", "design"]',
+      oat_hill_completed: '["discovery"]',
+    });
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/spec-folded-proj',
+    });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-05-09',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('oat-project-design');
+    expect(result.recommendedStep).not.toBe('oat-project-spec');
+    expect(result.recommendedReason?.toLowerCase()).toContain('design');
+  });
+
+  it('routes legacy spec-driven spec:in_progress projects to oat-project-design as graceful migration', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+
+    await writeStateFile(root, '.oat/projects/shared/legacy-spec-proj', {
+      oat_phase: 'spec',
+      oat_phase_status: 'in_progress',
+      oat_workflow_mode: 'spec-driven',
+      // Legacy projects scaffolded before the design-folds-spec consolidation
+      // still list spec as a HiLL checkpoint. Routing should still send them
+      // to oat-project-design rather than the deprecated standalone path.
+      oat_hill_checkpoints: '["discovery", "spec", "design"]',
+      oat_hill_completed: '["discovery"]',
+    });
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/legacy-spec-proj',
+    });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-05-09',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('oat-project-design');
+    expect(result.recommendedStep).not.toBe('oat-project-spec');
+  });
+
   it('routes computeNextStep correctly for spec-driven/quick/import modes with HiLL gating', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);

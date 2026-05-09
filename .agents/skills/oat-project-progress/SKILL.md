@@ -1,6 +1,6 @@
 ---
 name: oat-project-progress
-version: 1.2.3
+version: 1.2.4
 description: Use when resuming work, checking status, or unsure which OAT skill to run next. Evaluates project progress and routes to the appropriate next step.
 disable-model-invocation: true
 user-invocable: true
@@ -186,7 +186,7 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 - In that case, do **not** advance to the next phase even if `oat_phase_status: complete`.
 - Recommend continuing the current phase skill to capture explicit approval:
   - discovery gate pending -> `oat-project-discover`
-  - spec gate pending -> `oat-project-spec`
+  - spec gate pending (legacy projects only — newly scaffolded projects no longer use a spec HiLL gate) -> `oat-project-design`
   - design gate pending -> `oat-project-design`
 
 **Drift detection (apply before routing `implement | in_progress`):**
@@ -226,8 +226,8 @@ Routing matrix by mode:
 | oat_phase | oat_phase_status | Next Skill                                                                                                                                                                                                           |
 | --------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | discovery | in_progress      | Continue `oat-project-discover`                                                                                                                                                                                      |
-| discovery | complete         | `oat-project-spec`                                                                                                                                                                                                   |
-| spec      | in_progress      | Continue `oat-project-spec`                                                                                                                                                                                          |
+| discovery | complete         | `oat-project-design` (folds requirements confirmation in; standalone `oat-project-spec` remains an opt-in alternative)                                                                                               |
+| spec      | in_progress      | `oat-project-design` (legacy phase — design reuses any existing `spec.md`)                                                                                                                                           |
 | spec      | complete         | `oat-project-design`                                                                                                                                                                                                 |
 | design    | in_progress      | Continue `oat-project-design`                                                                                                                                                                                        |
 | design    | complete         | `oat-project-plan`                                                                                                                                                                                                   |
@@ -282,8 +282,8 @@ Workflow:
   oat-project-import-plan       - Import an external markdown plan and normalize plan.md
   oat-project-promote-spec-driven - Promote quick/import project to spec-driven lifecycle
   oat-project-discover          - Start discovery phase (requirements gathering)
-  oat-project-spec              - Create specification from discovery
-  oat-project-design            - Create technical design from spec
+  oat-project-design            - Confirm requirements + create technical design (folds spec authoring inline)
+  oat-project-spec              - Optional standalone specification (most projects skip this — design handles it)
   oat-project-plan              - Create implementation plan from design (spec-driven mode)
   oat-project-implement         - Execute implementation plan (sequential or parallel)
   oat-project-reconcile         - Reconcile manual/human commits with plan tasks

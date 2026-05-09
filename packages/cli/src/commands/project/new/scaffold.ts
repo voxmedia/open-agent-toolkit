@@ -59,14 +59,14 @@ const STATE_TEMPLATE_BY_MODE: Record<
   StateTemplateContent
 > = {
   'spec-driven': {
-    hillCheckpoints: "['discovery', 'spec', 'design']",
+    hillCheckpoints: "['discovery', 'design']",
     phase: 'discovery',
     status: 'Discovery',
     currentPhase:
       'Discovery - Gathering requirements and understanding the problem space',
     artifacts: [
       '- **Discovery:** `discovery.md` (in_progress)',
-      '- **Spec:** `spec.md` (scaffolded template — not started)',
+      '- **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)',
       '- **Design:** `design.md` (scaffolded template — not started)',
       '- **Plan:** `plan.md` (scaffolded template — not started)',
       '- **Implementation:** `implementation.md` (scaffolded template — not started)',
@@ -76,7 +76,7 @@ const STATE_TEMPLATE_BY_MODE: Record<
       '- ✓ Downstream lifecycle files scaffolded',
       '- ⧗ Awaiting user input',
     ],
-    nextMilestone: 'Complete discovery and move to specification phase',
+    nextMilestone: 'Complete discovery and move to design phase',
   },
   quick: {
     hillCheckpoints: '[]',

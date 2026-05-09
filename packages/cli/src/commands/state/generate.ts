@@ -324,9 +324,14 @@ function computeNextStep(
     phaseInHillList(state.phase, state.hillCheckpoints) &&
     !phaseInHillList(state.phase, state.hillCompleted)
   ) {
+    // Spec is no longer a discrete HiLL checkpoint in newly-scaffolded projects —
+    // requirements confirmation is folded into oat-project-design. Legacy
+    // projects whose state.md still lists `spec` in oat_hill_checkpoints route
+    // to oat-project-design here so they finish through the consolidated flow
+    // rather than being pushed back at the deprecated standalone skill.
     const phaseSkillMap: Record<string, string> = {
       discovery: 'oat-project-discover',
-      spec: 'oat-project-spec',
+      spec: 'oat-project-design',
       design: 'oat-project-design',
       plan: 'oat-project-plan',
       implement: 'oat-project-implement',
@@ -345,12 +350,16 @@ function computeNextStep(
       reason: 'Continue discovery phase',
     },
     'spec-driven:discovery:complete': {
-      step: 'oat-project-spec',
-      reason: 'Create specification from discovery',
+      step: 'oat-project-design',
+      reason:
+        'Confirm requirements and produce design (spec is folded into design)',
     },
+    // Legacy projects whose phase still reads `spec` route to design — the
+    // consolidated oat-project-design skill handles existing spec.md gracefully.
     'spec-driven:spec:in_progress': {
-      step: 'oat-project-spec',
-      reason: 'Continue specification phase',
+      step: 'oat-project-design',
+      reason:
+        'Continue into design (spec is folded into design — legacy phase)',
     },
     'spec-driven:spec:complete': {
       step: 'oat-project-design',
