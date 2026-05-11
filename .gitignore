@@ -70,6 +70,7 @@ yarn-error.log*
 .oat/**/analysis/
 .oat/**/pr/
 .oat/**/reviews/archived/
+.oat/repo/reviews/**
 .oat/brainstorm/
 .oat/ideas/
 # END OAT local paths
