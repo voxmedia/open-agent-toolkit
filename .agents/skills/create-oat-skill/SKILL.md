@@ -1,6 +1,6 @@
 ---
 name: create-oat-skill
-version: 1.2.1
+version: 1.3.0
 description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
@@ -51,6 +51,7 @@ If not provided, ask the user for:
 - Description using the create-agnostic-skill formula: `Use when [trigger condition]. [What it does for disambiguation].`
 - Whether this is `oat-*` (should be for this skill)
 - Whether it needs project context (`activeProject` in `.oat/config.local.json`) or is repo-level
+- Whether it dispatches OAT subagents/workers/reviewers, and if so which roles, what fallback is acceptable, and whether authorization covers the full run or only a narrower checkpoint
 
 ### Step 2: Draft the Skill Using the OAT Template
 
@@ -61,6 +62,7 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 - `## Mode Assertion`
 - `## Progress Indicators (User-Facing)` (with separator banner)
 - `### Step 0: Resolve Active Project` (if project-scoped)
+- `### Step 0.5: Capability Detection and Tier Selection` (if the skill dispatches subagents/workers/reviewers)
 - `## Success Criteria`
 
 **Required frontmatter metadata:**
@@ -103,6 +105,19 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
   - Codex: use structured user-input tooling when available in the current host/runtime
   - Fallback: ask in plain conversational text
 - Do not hard-code a specific Codex question tool name in the skill text unless the host/runtime contract is guaranteed.
+
+**Subagent/worker availability (required when the skill delegates):**
+
+- Follow the delegation guidance from `.agents/skills/create-agnostic-skill/SKILL.md`.
+- Add a pre-work capability step before any edits, artifact writes, external side effects, test runs, or long-running work.
+- Distinguish `available`, `authorization required`, and `not resolved`; authorization-required is not the same as unavailable.
+- If authorization is required, ask once at skill start and state the approval scope:
+  - Which roles are authorized (for example, `oat-phase-implementer`, `oat-reviewer`, or generic workers)
+  - Whether approval applies to the whole run, one phase, one review, or one checkpoint
+  - What fallback is selected if the user declines
+- Lock the selected tier for the run unless the user explicitly changes execution mode.
+- Fail closed before side effects if delegation is required for correctness and authorization remains unresolved.
+- For Codex, mention multi-agent spawning generically. Do not pin a custom `agent_type` unless the role is guaranteed by the active host config or the skill instructs the agent how to fall back to built-in roles/self-contained prompts.
 
 ### Step 4: Create Files
 

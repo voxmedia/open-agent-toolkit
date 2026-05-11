@@ -21,6 +21,7 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - Keep prerequisites and expected artifacts concrete.
 - Spell out blocked vs allowed activities for state-advancing skills.
 - Define user-facing progress indicators for longer workflows.
+- Define a pre-work capability and authorization gate for skills that delegate to subagents, workers, or reviewers.
 - Keep output obligations explicit so downstream skills and users know what changed.
 
 ## Contract components
@@ -28,6 +29,7 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - Mode assertion (purpose, blocked/allowed activities)
 - Preconditions and required artifacts
 - User-facing progress indicator expectations
+- Delegation capability detection and fallback behavior, when the skill dispatches helper agents
 - Output obligations
 - Escalation/guardrail behavior
 
@@ -58,6 +60,21 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - Use `create-oat-skill` when the new skill belongs to an OAT lifecycle or maintenance flow.
 - Use `create-agnostic-skill` when you want a reusable workflow skill that is not OAT-specific.
 - Use existing lifecycle skills as examples for progress banners, prerequisites, and artifact updates.
+
+## Delegation-Capable Skills
+
+Skills that dispatch subagents, workers, reviewers, or fresh-context helper sessions need a capability model before work starts. Do not assume delegation is available, and do not silently downgrade just because the runtime needs user authorization.
+
+At minimum, the skill contract should:
+
+- Probe whether the host can dispatch the required helper role(s).
+- Distinguish `available`, `authorization required`, and `not resolved`.
+- Ask once at skill start when authorization is required, with the approval scope stated clearly.
+- Lock the selected tier for the run unless the user explicitly changes execution mode.
+- Stop before side effects if delegation is required for correctness and authorization remains unresolved.
+- Document the fallback path and any quality or independence tradeoff.
+
+Use `create-agnostic-skill` or `create-oat-skill` as the starting point; both include the current delegation guidance and optional capability-detection template.
 
 ## Reading project state
 

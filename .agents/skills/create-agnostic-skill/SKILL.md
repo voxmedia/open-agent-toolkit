@@ -1,6 +1,6 @@
 ---
 name: create-agnostic-skill
-version: 1.2.1
+version: 1.3.0
 description: Use when adding a reusable workflow skill for AI coding agents. Scaffolds a new .agents/skills skill using the Agent Skills open standard.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
@@ -60,6 +60,7 @@ If not provided in arguments, ask for:
 - **Model invocation**: Should the agent be able to invoke this automatically? (default: no)
 - **User invocable**: (Claude Code only) Should this appear in the `/` menu? (default: yes)
 - **Tool restrictions**: (Claude Code only) Which tools should the skill be allowed to use?
+- **Delegation**: Will the skill dispatch subagents or require a fresh-context worker/reviewer? If yes, define the capability probe, authorization gate, fallback tier, and approval scope.
 - **Supporting files**: Does the skill need templates, scripts, or reference files?
 
 ### Step 2: Apply Progressive Disclosure
@@ -295,8 +296,61 @@ Do **not** hard-code a specific Codex question tool name in skill prose unless t
 
 **When NOT to:**
 
-- Autonomous/subagent skills — use argument defaults or flags to drive decisions instead of prompting mid-execution
+- Long-running autonomous skills after work has started — resolve required decisions in a pre-work gate, then lock the choice for the run
 - Questions with open-ended answers — just ask conversationally in the skill prose
+
+### Delegation and Subagent Capability
+
+Skills that dispatch subagents, reviewers, workers, or fresh-context helper sessions must define a pre-work capability model. Do not let generated skills assume delegation is available, silently downgrade because authorization is required, or ask repeated approval questions mid-run.
+
+**When to include this section:**
+
+- The skill uses provider subagents, task workers, reviewers, or multi-agent execution
+- The skill's quality depends on fresh context or isolated review/implementation
+- The skill has a fallback mode when delegation is unavailable
+
+**Required guidance for delegation-capable skills:**
+
+1. **Probe before work starts.** Check whether the host can dispatch the needed worker/reviewer and whether dispatch requires user authorization.
+2. **Separate capability states.** Report `available`, `authorization required`, or `not resolved`; do not treat authorization-required as unavailable.
+3. **Ask once when authorization is required.** Use a concise question that names the delegation scope for the run. Approval should cover the stated worker roles and phases; a decline should select the documented fallback.
+4. **Lock the tier.** Once selected, keep the execution mode for the run unless the user explicitly changes it.
+5. **Fail closed before side effects.** If delegation is required for correctness and authorization is unresolved, stop before edits, writes, external side effects, or long-running work.
+6. **Document fallback behavior.** If inline or single-agent execution is acceptable, explain when it applies. If it changes quality, artifact freshness, or review independence, say so.
+
+**Portable provider wording:**
+
+- Claude Code: use Task/subagent dispatch when available; if the skill benefits from structured prompts, include `AskUserQuestion` in `allowed-tools`.
+- Cursor: use the provider's explicit agent invocation or natural-language agent handoff when supported.
+- Codex: use multi-agent spawning when available; if the host requires explicit user authorization before spawning, ask before falling back.
+- Fallback: use inline/single-agent execution only when the user declines delegation or the runtime truly cannot dispatch the required agent.
+
+**Good pre-work pattern:**
+
+```markdown
+### Step 0.5: Capability Detection
+
+Before edits, writes, external side effects, or long-running work, detect whether the required helper agents are available.
+
+- Available without authorization → Tier 1: delegated execution.
+- Authorization required → ask once: "Authorize `{worker/reviewer}` delegation for this run?"
+  - Approved → Tier 1.
+  - Declined → Tier 2: documented fallback.
+- Not resolved / unsupported → Tier 2: documented fallback.
+
+Report:
+
+`Selected: Tier {1|2} — {Delegated|Fallback}; Reason: {available|authorized|user declined delegation|dispatch unavailable|required role unresolved}`
+
+Lock the selected tier for the run.
+```
+
+**Anti-patterns:**
+
+- Selecting inline fallback just because the user did not pre-mention subagents, when the skill itself requires delegation and authorization can be requested
+- Asking for authorization after implementation or review has already started
+- Re-asking for each phase when the first approval explicitly covered the run
+- Hiding fallback quality differences from the user
 
 ### Progress Feedback
 

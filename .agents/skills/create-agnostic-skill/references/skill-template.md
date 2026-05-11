@@ -13,11 +13,12 @@ Adjust based on complexity—not all sections are required:
 5. **Arguments** - Parameters parsed from `$ARGUMENTS`
 6. **Prerequisites** - Required setup or context (if applicable)
 7. **Workflow/Steps** - Numbered steps using "Step 1, 2, 3..." naming
-8. **Quality Standards** - Checklist format for docs skills (if applicable)
-9. **Examples** - Both "Basic Usage" and "Conversational" styles
-10. **Reference** - Links to relevant documentation
-11. **Troubleshooting** - Common issues and solutions
-12. **Success Criteria** - Checklist of completion conditions
+8. **Capability Detection** - Required before work starts if the skill dispatches subagents/workers/reviewers
+9. **Quality Standards** - Checklist format for docs skills (if applicable)
+10. **Examples** - Both "Basic Usage" and "Conversational" styles
+11. **Reference** - Links to relevant documentation
+12. **Troubleshooting** - Common issues and solutions
+13. **Success Criteria** - Checklist of completion conditions
 
 ## Annotated Template
 
@@ -86,6 +87,24 @@ Parse from `$ARGUMENTS`:
 - **--optional-flag**: (optional) Description with default value noted
 
 ## Workflow
+
+<!-- Include this Step 0.5 only if the skill dispatches subagents, workers, reviewers, or fresh-context helpers. -->
+
+### Step 0.5: Capability Detection
+
+Before edits, writes, external side effects, or long-running work, detect whether required helper agents are available.
+
+- Available without authorization → Tier 1: delegated execution.
+- Authorization required → ask once: "Authorize `{worker/reviewer}` delegation for this run?"
+  - Approved → Tier 1.
+  - Declined → Tier 2: documented fallback.
+- Not resolved / unsupported → Tier 2: documented fallback.
+
+Report the selected tier and reason before starting work:
+
+`Selected: Tier {1|2} — {Delegated|Fallback}; Reason: {available|authorized|user declined delegation|dispatch unavailable|required role unresolved}`
+
+Lock the selected tier for the run unless the user explicitly changes it.
 
 ### Step 1: First Step Title
 

@@ -78,6 +78,37 @@ If `PROJECT_PATH` is missing/invalid:
 - Persist with `oat config set activeProject "$PROJECT_PATH"`.
 - TODO(back-compat): validate `oat config` exists on older target branches before relying on this snippet.
 
+<!-- Include this step only if the skill dispatches subagents, workers, reviewers, or fresh-context helpers. -->
+
+### Step 0.5: Capability Detection and Tier Selection
+
+Before edits, artifact writes, external side effects, test runs, or long-running work, detect whether required helper agents are available.
+
+Detection logic:
+
+- If the host can dispatch the required role(s) without extra authorization → Tier 1.
+- If the host can dispatch the required role(s) but requires user authorization, ask once before continuing:
+
+  ```
+  This skill normally delegates {implementation/review/analysis} to {role list}. Authorize delegated execution for this run?
+  ```
+
+  - Approved → Tier 1.
+  - Declined → Tier 2.
+
+- If the host cannot dispatch the required role(s), or a required role is unresolved → Tier 2.
+
+Report:
+
+```
+[preflight] Checking subagent availability…
+  → {role list}: {available | authorization required | not resolved}
+  → Selected: Tier {1 | 2} — {Subagents | Inline}
+  → Reason: {available without auth | authorized | user declined delegation | dispatch unavailable | required role unresolved}
+```
+
+Lock the selected tier for the run unless the user explicitly changes execution mode. If delegation is required for correctness and authorization is unresolved, stop before side effects instead of silently falling back.
+
 ### Step 1: {First Step}
 
 {Instructions…}
