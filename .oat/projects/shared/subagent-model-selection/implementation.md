@@ -146,7 +146,8 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - Manual final review: 0 Critical, 0 Important, 0 Medium, 1 Minor in `reviews/archived/final-review-2026-05-13-v2.md`.
 - Receive-review disposition: converted `m1` to `p04-t01`.
 - Phase p04: completed in `05b5ca08`; phase review passed with 0 Critical, 0 Important, 0 Minor in `reviews/archived/p04-review-2026-05-13.md`.
-- Next: final code re-review.
+- Final re-review: initial v3 found a Minor stale state count, fixed in `c1c27bc0`; v4 passed with 0 Critical, 0 Important, 0 Minor in `reviews/final-review-2026-05-13-v4.md`.
+- Next: final PR/readiness path.
 
 <!-- orchestration-runs-end -->
 
@@ -154,7 +155,7 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 
 ## Implementation Log
 
-Implementation tasks completed on 2026-05-13. Final review receive added one Minor review-fix task, now completed and awaiting final re-review.
+Implementation tasks completed on 2026-05-13. Final review receive added one Minor review-fix task, now completed with final re-review passed.
 
 ### Review Received: final
 
@@ -174,7 +175,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 
 - `m1` -> converted: add `dispatch_control` and `dispatch_rationale` fields to the `oat-project-implement` Phase Scope and Review Scope templates.
 
-**Next:** Re-run final code review.
+**Next:** Final PR/readiness path.
 
 ## Deviations from Plan
 
@@ -192,6 +193,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 | final         | `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm build`; sync dry-run; `pnpm release:validate` | yes    | no     | Full branch verification                               |
 | final-receive | Final review finding disposition                                                                 | yes    | no     | Added `p04-t01` for the accepted Minor finding         |
 | p04           | `grep -q "dispatch_control"`; `grep -q "dispatch_rationale"`; `git diff --check`                 | yes    | no     | Final review fix scope template consistency            |
+| final-v4      | `git diff --check`; `validate-plan`; state count grep                                            | yes    | no     | Final re-review bookkeeping correction                 |
 
 ## Final Summary (for PR/docs)
 
@@ -199,6 +201,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 
 - Override-only Dispatch Profile guidance for plan templates, plan writing, and imported plans.
 - Runtime dispatch-selection guidance for `oat-project-implement`, including lowest-confident-tier selection, `host-auto`, dispatch notes, and confidence-based escalation.
+- Dispatch fields in `oat-project-implement` phase/review scope templates so downstream agents receive resolved dispatch context when the orchestrator has it.
 - Agent and review guidance for dispatch confidence reporting, strongest-available review execution, and Dispatch Profile override review advisories.
 
 **Behavioral changes (user-facing):**

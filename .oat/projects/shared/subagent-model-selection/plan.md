@@ -361,15 +361,15 @@ git commit -m "fix(p04-t01): add dispatch fields to scope templates"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                              |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | passed          | 2026-05-13 | reviews/archived/p01-review-2026-05-13-v2.md          |
-| p02    | code     | passed          | 2026-05-13 | reviews/archived/p02-review-2026-05-13.md             |
-| p03    | code     | passed          | 2026-05-13 | reviews/archived/p03-review-2026-05-13-v2.md          |
-| p04    | code     | passed          | 2026-05-13 | reviews/archived/p04-review-2026-05-13.md             |
-| final  | code     | fixes_completed | 2026-05-13 | reviews/archived/final-review-2026-05-13-v2.md        |
-| design | artifact | passed          | 2026-05-12 | reviews/archived/artifact-design-review-2026-05-12.md |
-| plan   | artifact | passed          | 2026-05-12 | reviews/archived/artifact-plan-review-2026-05-12.md   |
+| Scope  | Type     | Status | Date       | Artifact                                              |
+| ------ | -------- | ------ | ---------- | ----------------------------------------------------- |
+| p01    | code     | passed | 2026-05-13 | reviews/archived/p01-review-2026-05-13-v2.md          |
+| p02    | code     | passed | 2026-05-13 | reviews/archived/p02-review-2026-05-13.md             |
+| p03    | code     | passed | 2026-05-13 | reviews/archived/p03-review-2026-05-13-v2.md          |
+| p04    | code     | passed | 2026-05-13 | reviews/archived/p04-review-2026-05-13.md             |
+| final  | code     | passed | 2026-05-13 | reviews/final-review-2026-05-13-v4.md                 |
+| design | artifact | passed | 2026-05-12 | reviews/archived/artifact-design-review-2026-05-12.md |
+| plan   | artifact | passed | 2026-05-12 | reviews/archived/artifact-plan-review-2026-05-12.md   |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
