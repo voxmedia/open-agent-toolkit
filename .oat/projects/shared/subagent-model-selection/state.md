@@ -22,13 +22,13 @@ oat_generated: false
 
 # Project State: subagent-model-selection
 
-**Status:** Plan complete after runtime-selection pivot
+**Status:** Ready for implementation
 **Started:** 2026-05-04
 **Last Updated:** 2026-05-12
 
 ## Current Phase
 
-Plan complete - ready for implementation after active artifact reviews are archived as passed.
+Plan complete - ready for implementation.
 
 ## Artifacts
 
@@ -44,6 +44,7 @@ Plan complete - ready for implementation after active artifact reviews are archi
 - Design rewritten to runtime selection
 - Plan regenerated
 - Implementation tracker reset to p01-t01
+- Design and plan artifact reviews archived as passed
 
 ## Blockers
 
@@ -51,4 +52,4 @@ None
 
 ## Next Milestone
 
-Archive received artifact reviews as passed, then start implementation with `oat-project-implement`.
+Start implementation with `oat-project-implement`.

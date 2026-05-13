@@ -322,14 +322,14 @@ git commit -m "feat(p03-t02): add Dispatch Profile override review advisory"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                     |
-| ------ | -------- | -------- | ---------- | -------------------------------------------- |
-| p01    | code     | pending  | -          | -                                            |
-| p02    | code     | pending  | -          | -                                            |
-| p03    | code     | pending  | -          | -                                            |
-| final  | code     | pending  | -          | -                                            |
-| design | artifact | received | 2026-05-12 | reviews/artifact-design-review-2026-05-12.md |
-| plan   | artifact | received | 2026-05-12 | reviews/artifact-plan-review-2026-05-12.md   |
+| Scope  | Type     | Status  | Date       | Artifact                                              |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                     |
+| p02    | code     | pending | -          | -                                                     |
+| p03    | code     | pending | -          | -                                                     |
+| final  | code     | pending | -          | -                                                     |
+| design | artifact | passed  | 2026-05-12 | reviews/archived/artifact-design-review-2026-05-12.md |
+| plan   | artifact | passed  | 2026-05-12 | reviews/archived/artifact-plan-review-2026-05-12.md   |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -351,7 +351,7 @@ Follow-up items to file at project completion:
 - Optional future: hard-vs-soft Dispatch Profile constraint syntax.
 - Optional future: persistent dispatch decision history if live logs are insufficient.
 
-Ready for implementation after received artifact reviews are archived as passed.
+Ready for implementation.
 
 ---
 
