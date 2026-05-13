@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 16b030d2
+oat_current_task: null
+oat_last_commit: 05b5ca08
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'bl-0738' }
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged - actual PR state fo
 oat_pr_url: null # null | string - tracked PR URL when a PR exists
 oat_project_created: '2026-05-04T14:47:00.831Z' # ISO 8601 UTC timestamp - set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp - set when project is completed/archived
-oat_project_state_updated: '2026-05-13T15:34:06Z'
+oat_project_state_updated: '2026-05-13T16:18:00Z'
 oat_generated: false
 ---
 
 # Project State: subagent-model-selection
 
-**Status:** Review fix task added
+**Status:** Review fix completed
 **Started:** 2026-05-04
 **Last Updated:** 2026-05-13
 
 ## Current Phase
 
-Final review received; one Minor finding converted to `p04-t01`.
+Review fix task complete; awaiting final code re-review.
 
 ## Artifacts
 
@@ -36,7 +36,7 @@ Final review received; one Minor finding converted to `p04-t01`.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; runtime-selection model)
 - **Plan:** `plan.md` (complete; 3 phases / 7 tasks)
-- **Implementation:** `implementation.md` (review fix task pending)
+- **Implementation:** `implementation.md` (review fix task complete; final re-review pending)
 
 ## Progress
 
@@ -51,6 +51,7 @@ Final review received; one Minor finding converted to `p04-t01`.
 - Phase 3 completed with a passed re-review after syncing managed Codex role exports
 - Implementation tasks complete
 - Manual final review received with one Minor finding converted to `p04-t01`
+- Phase 4 review fix completed and passed phase review
 
 ## Blockers
 
@@ -58,4 +59,4 @@ None
 
 ## Next Milestone
 
-Execute `p04-t01` with `oat-project-implement`.
+Run final code re-review.

@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -22,14 +22,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | complete    | 2     | 2/2       |
-| Phase 4 | in_progress | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | complete | 1     | 1/1       |
 
-**Total:** 7/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ---
 
@@ -94,13 +94,14 @@ oat_generated: false
 
 ## Phase 4: Final review fixes
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-13
+**Completed:** 2026-05-13
 
 ### Task p04-t01: (review) Add dispatch fields to scope templates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 05b5ca08
 
 ---
 
@@ -144,7 +145,8 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - Auto final review: passed with 0 Critical, 0 Important, 1 Minor in `reviews/archived/final-review-2026-05-13.md`; the Minor bookkeeping drift was addressed during final closeout.
 - Manual final review: 0 Critical, 0 Important, 0 Medium, 1 Minor in `reviews/archived/final-review-2026-05-13-v2.md`.
 - Receive-review disposition: converted `m1` to `p04-t01`.
-- Next: execute `p04-t01`.
+- Phase p04: completed in `05b5ca08`; phase review passed with 0 Critical, 0 Important, 0 Minor in `reviews/archived/p04-review-2026-05-13.md`.
+- Next: final code re-review.
 
 <!-- orchestration-runs-end -->
 
@@ -152,7 +154,7 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 
 ## Implementation Log
 
-Implementation tasks completed on 2026-05-13. Final review receive added one Minor review-fix task.
+Implementation tasks completed on 2026-05-13. Final review receive added one Minor review-fix task, now completed and awaiting final re-review.
 
 ### Review Received: final
 
@@ -172,7 +174,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 
 - `m1` -> converted: add `dispatch_control` and `dispatch_rationale` fields to the `oat-project-implement` Phase Scope and Review Scope templates.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
+**Next:** Re-run final code review.
 
 ## Deviations from Plan
 
@@ -189,6 +191,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 | p03           | Plan grep checks; project sync dry-run; `pnpm release:validate`                                  | yes    | no     | Agent/review guidance and generated Codex role exports |
 | final         | `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm build`; sync dry-run; `pnpm release:validate` | yes    | no     | Full branch verification                               |
 | final-receive | Final review finding disposition                                                                 | yes    | no     | Added `p04-t01` for the accepted Minor finding         |
+| p04           | `grep -q "dispatch_control"`; `grep -q "dispatch_rationale"`; `git diff --check`                 | yes    | no     | Final review fix scope template consistency            |
 
 ## Final Summary (for PR/docs)
 
