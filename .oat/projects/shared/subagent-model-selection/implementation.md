@@ -16,94 +16,72 @@ oat_generated: false
 >
 > Conventions:
 >
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> - `oat_current_task_id` always points at the next plan task to do.
+> - Reviews are tracked in `plan.md` under `## Reviews`.
+> - Dispatch decisions should be recorded in phase notes when useful.
 
 ## Progress Overview
 
 | Phase   | Status  | Tasks | Completed |
 | ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 2     | 0/2       |
+| Phase 1 | pending | 3     | 0/3       |
 | Phase 2 | pending | 2     | 0/2       |
-| Phase 3 | pending | 4     | 0/4       |
-| Phase 4 | pending | 4     | 0/4       |
+| Phase 3 | pending | 2     | 0/2       |
 
-**Total:** 0/12 tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-05-04
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/7 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 1: Override-only plan syntax and authoring guidance
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p01-t01: Update plan template with override-only Dispatch Profile guidance
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t02: Update plan-writing skill for runtime-selection defaults
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t03: Update import-plan handling for explicit dispatch hints
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Runtime dispatch selection and escalation
+
+**Status:** pending
+**Started:** -
+
+### Task p02-t01: Add runtime dispatch-selection policy to `oat-project-implement`
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Add confidence-based escalation and dispatch history notes
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Agent dispatch guidance and plan-review advisory
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Update phase implementer and reviewer dispatch guidance
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Add override-row advisory to `oat-project-review-provide`
 
 **Status:** pending
 **Commit:** -
@@ -112,15 +90,11 @@ oat_generated: false
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
+_Each run from `oat-project-implement` appends an entry below with run header, phase outcomes, dispatch notes, outstanding items, and verification._
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+_No implementation runs yet after the runtime-selection pivot._
 
 <!-- orchestration-runs-end -->
 
@@ -128,46 +102,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
-
-### 2026-05-04
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-05-04
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+No implementation tasks have started after the runtime-selection pivot.
 
 ## Deviations from Plan
-
-Document any deviations from the original plan.
 
 | Task | Planned | Actual | Reason |
 | ---- | ------- | ------ | ------ |
@@ -175,12 +112,9 @@ Document any deviations from the original plan.
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| -     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
@@ -203,10 +137,10 @@ Track test execution during implementation.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Pivoted from invocation-cap preflight to runtime lowest-confident-tier dispatch before implementation started.
 
 ## References
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`

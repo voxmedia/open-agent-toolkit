@@ -19,13 +19,13 @@ oat_template: false
 
 > Execute this plan using `oat-project-implement` — sequential, no parallelism declared.
 
-**Goal:** Add an optional, plan-authored Dispatch Profile to OAT so users can review and approve per-phase model/effort choices before dispatch, with silent escalation within their invocation cap and explicit gates only when escalation would cross the cap.
+**Goal:** Add runtime dispatch-selection guidance to OAT so phase implementation uses the lowest available model/effort that can confidently complete the task, review uses the strongest available tier, and every dispatch logs the selected control and rationale.
 
-**Architecture:** Prompt/skill/template guidance only. The profile lives in `plan.md`, a resolver in `oat-project-implement` reads it at runtime, and `oat-phase-implementer` / `oat-reviewer` receive resolved tier parameters per dispatch. No new components, no library code.
+**Architecture:** Prompt/skill/template guidance only. `plan.md` supports optional user-authored Dispatch Profile overrides, but this plan intentionally has no Dispatch Profile rows because runtime selection is the default. The orchestrator chooses/logs dispatch controls at runtime and escalates based on confidence or review outcomes.
 
-**Tech Stack:** Skill prompts (Markdown), agent prompts (Markdown), plan template (Markdown). Verification is by file inspection + scenario walkthrough against fixture plans.
+**Tech Stack:** Skill prompts (Markdown), agent prompts (Markdown), plan template (Markdown). Verification is by file inspection plus scenario walkthroughs against fixture plans.
 
-**Commit Convention:** `{type}(p{NN}-t{NN}): {description}` — e.g., `feat(p01-t01): add Dispatch Profile section to plan template`
+**Commit Convention:** `{type}(p{NN}-t{NN}): {description}` — e.g., `feat(p01-t01): document override-only Dispatch Profile syntax`
 
 ## Planning Checklist
 
@@ -33,16 +33,7 @@ oat_template: false
 - [x] `oat_plan_hill_phases` set in frontmatter (empty = every phase)
 - [x] Parallelism evaluated (see Parallelism section)
 - [x] `oat_plan_parallel_groups` set in frontmatter
-
----
-
-## Dispatch Profile
-
-| Phase | Claude model | Codex effort | Rationale                                                                                                                                                                        |
-| ----- | ------------ | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| p03   | opus         | xhigh        | encodes resolver, preflight gate, approval state, and escalation logic in `oat-project-implement` prompts — cross-cutting orchestrator behavior that downstream phases depend on |
-
-Other phases run on `auto`. Decision-rule justification: p01/p02/p04 are skill-text additions following existing structural conventions; complexity is medium and well-bounded. p03 introduces new resolution logic and a multi-trigger escalation flow into the orchestrator skill — it's the architectural backbone of the feature and warrants top-tier dispatch.
+- [x] Dispatch Profile omitted intentionally; runtime selection is the default
 
 ---
 
@@ -52,20 +43,17 @@ Sequential, no parallel groups declared.
 
 **Dependency / write-set analysis:**
 
-- p01 and p02 both edit `.agents/skills/oat-project-plan-writing/SKILL.md` → must run sequentially (shared file).
-- p03 depends on p01 (resolver needs the format spec) and edits `.agents/skills/oat-project-implement/SKILL.md` → after p01/p02.
-- p04 tasks touch four different files (`oat-phase-implementer`, `oat-reviewer`, `oat-project-import-plan`, `oat-project-review-provide`). They depend on p03 (subagent dispatch rules reference resolver outputs; import preservation references the proposal contract from p02; review advisory references the format from p01).
-
-**Why not parallelize p04 tasks across worktrees:**
-The four p04 tasks are genuinely file-disjoint and could run in separate worktrees. Keeping them sequential because (a) the project is small (4 short tasks), (b) each task is a short prompt edit that's easier to validate against the cumulative state of the previous task, and (c) HiLL pause-per-phase is the quick-mode default — splitting p04 into a parallel group adds worktree-orchestration overhead with marginal time savings.
+- p01 edits the plan/template/import authoring surfaces that define override syntax. p02 depends on that terminology.
+- p02 edits `oat-project-implement` and defines runtime selection/escalation behavior. p03 agent/review guidance references that orchestrator behavior.
+- p03 edits three mostly independent prompt files, but keeping it sequential makes the final review easier and avoids unnecessary worktree overhead for short prompt edits.
 
 ---
 
-## Phase 1: Dispatch Profile format spec + plan template
+## Phase 1: Override-only plan syntax and authoring guidance
 
-Adds the format definition for the Dispatch Profile table and surfaces it in the plan template so users discover the feature when authoring plans.
+Documents the optional Dispatch Profile as a user-authored override surface and removes generated recommendation behavior from planning.
 
-### Task p01-t01: Update plan template with Dispatch Profile section
+### Task p01-t01: Update plan template with override-only Dispatch Profile guidance
 
 **Files:**
 
@@ -73,44 +61,33 @@ Adds the format definition for the Dispatch Profile table and surfaces it in the
 
 **Step 1: Edit**
 
-Add a new optional section to the plan template, positioned after `## Planning Checklist` and before `## Phase 1`:
+Update the optional Dispatch Profile section in the plan template:
 
-```markdown
-## Dispatch Profile
-
-_Optional. Pin per-phase model/effort targets for phases that should run at a non-default tier. Phases not listed run on `auto` (provider/runtime picks)._
-
-| Phase | Claude model              | Codex effort                   | Rationale                      |
-| ----- | ------------------------- | ------------------------------ | ------------------------------ |
-| pNN   | haiku\|sonnet\|opus\|auto | low\|medium\|high\|xhigh\|auto | why this tier suits this phase |
-
-**Cell rules:**
-
-- Blank or `auto` = defer to provider/runtime.
-- A phase not in the table = `auto` for both providers.
-- Rationale is optional but recommended. If you can't explain why, the row probably shouldn't exist.
-
-Omit this section entirely when no phases need a non-default tier.
-```
+- Describe it as user-authored constraints/preferences only.
+- State that the section should be omitted when runtime selection should choose the tier.
+- Keep columns: `Phase`, `Claude model`, `Codex effort`, `Rationale`.
+- State that blank/`auto` means no explicit constraint for that provider.
+- Avoid language that suggests the planner should generate rows by default.
 
 **Step 2: Verify**
 
 ```bash
-grep -q "## Dispatch Profile" .oat/templates/plan.md && grep -q "Blank or \`auto\`" .oat/templates/plan.md
+grep -q "override" .oat/templates/plan.md
+grep -q "runtime selection" .oat/templates/plan.md
 ```
 
-Expected: exits 0 (both grep patterns found).
+Expected: both commands exit 0.
 
 **Step 3: Commit**
 
 ```bash
 git add .oat/templates/plan.md
-git commit -m "feat(p01-t01): add Dispatch Profile section to plan template"
+git commit -m "feat(p01-t01): document override-only Dispatch Profile syntax"
 ```
 
 ---
 
-### Task p01-t02: Add Dispatch Profile format spec to plan-writing skill
+### Task p01-t02: Update plan-writing skill for runtime-selection defaults
 
 **Files:**
 
@@ -118,332 +95,37 @@ git commit -m "feat(p01-t01): add Dispatch Profile section to plan template"
 
 **Step 1: Edit**
 
-Add a new section to the skill (positioned with the other canonical-format sections) documenting the Dispatch Profile format:
+Add/update Dispatch Profile guidance:
 
-1. **Format definition** — same table structure as the template.
-2. **Validation rules:**
-   - Phase IDs match `pNN` format used elsewhere in the plan.
-   - Claude model cell: one of `haiku`, `sonnet`, `opus`, `auto`, or blank.
-   - Codex effort cell: one of `low`, `medium`, `high`, `xhigh`, `auto`, or blank.
-   - Rationale: free text, optional.
-3. **Per-provider tier ordering** (for resolver comparison): `haiku < sonnet < opus`; `low < medium < high < xhigh`. Cite this so downstream skills can refer to it.
-4. **"No row = auto"** principle — phases not in the table run on `auto`.
-5. **Section omission** — when no rows are warranted (all phases on auto), the section header is omitted entirely.
-
-Reference `design.md` §3.1 for the canonical wording; skill text should be a tightened version, not a copy.
+- The planner omits `## Dispatch Profile` by default.
+- The section is only for explicit user constraints/preferences.
+- Remove any per-phase proposal step or generated recommendation behavior.
+- Warn that routine hand-tuning can be worse than runtime selection.
+- Keep validation rules for explicit rows:
+  - Phase IDs match real `pNN` phases.
+  - Claude model cell: `haiku`, `sonnet`, `opus`, `auto`, or blank.
+  - Codex effort cell: `low`, `medium`, `high`, `xhigh`, `auto`, or blank.
+  - Rationale is recommended.
 
 **Step 2: Verify**
 
 ```bash
-grep -q "Dispatch Profile" .agents/skills/oat-project-plan-writing/SKILL.md && grep -q "haiku < sonnet < opus" .agents/skills/oat-project-plan-writing/SKILL.md
+grep -q "override" .agents/skills/oat-project-plan-writing/SKILL.md
+grep -q "runtime selection" .agents/skills/oat-project-plan-writing/SKILL.md
 ```
 
-Expected: exits 0. Also bump skill `version:` in frontmatter per AGENTS.md guidance.
+Expected: both commands exit 0. Also bump the skill frontmatter `version:` per AGENTS.md guidance.
 
 **Step 3: Commit**
 
 ```bash
 git add .agents/skills/oat-project-plan-writing/SKILL.md
-git commit -m "feat(p01-t02): add Dispatch Profile format spec to plan-writing skill"
+git commit -m "feat(p01-t02): make Dispatch Profile override-only"
 ```
 
 ---
 
-## Phase 2: Per-phase proposal step in plan-writing skill
-
-Adds the proposal behavior — analyze each phase as it's authored and emit a Dispatch Profile row only when analysis clearly suggests a non-default tier.
-
-### Task p02-t01: Add tier heuristic decision rule to plan-writing skill
-
-**Files:**
-
-- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
-
-**Step 1: Edit**
-
-Add a "Tier heuristic" subsection inside the Dispatch Profile section. Content per `design.md` §3.6:
-
-- **Mechanical (1–2 files, scaffolding, clear spec)** → propose row at `haiku` / `low` with rationale grounded in scope signals.
-- **Integration / debugging / pattern-matching (multi-file, judgment but not architectural)** → no row, stays `auto`.
-- **Architectural (cross-cutting refactor, design judgment, broad codebase touch)** → propose row at `opus` / `xhigh` with rationale grounded in scope/risk signals.
-- **Uncertain — can't write a defensible rationale** → no row.
-
-State the underlying rule explicitly: "`auto` means the analysis didn't find a strong reason to deviate from defaults. The bar for proposing a row is being able to write a defensible rationale."
-
-**Step 2: Verify**
-
-```bash
-grep -q "Tier heuristic" .agents/skills/oat-project-plan-writing/SKILL.md && grep -q "Architectural" .agents/skills/oat-project-plan-writing/SKILL.md
-```
-
-Expected: exits 0.
-
-**Step 3: Commit**
-
-```bash
-git add .agents/skills/oat-project-plan-writing/SKILL.md
-git commit -m "feat(p02-t01): add tier heuristic to plan-writing skill"
-```
-
----
-
-### Task p02-t02: Add per-phase proposal step and reusable contract
-
-**Files:**
-
-- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
-
-**Step 1: Edit**
-
-Add a "Per-phase proposal step" subsection describing the workflow:
-
-1. After authoring each phase's content (tasks, verification, commits), analyze the phase against the tier heuristic.
-2. If the analysis produces a defensible deviation from typical, append a row to the running `## Dispatch Profile` table.
-3. Typical phases get no row.
-4. After all phases authored, omit the section entirely if no rows were emitted.
-
-Add a "Proposal contract" subsection so other skills can reuse the unit:
-
-- **Input:** phase content + optional pre-baked rationale signals (used by import-plan).
-- **Output:** `{ claude_model, codex_effort, rationale }` or `null`.
-
-**Step 2: Verify**
-
-```bash
-grep -q "Per-phase proposal step" .agents/skills/oat-project-plan-writing/SKILL.md && grep -q "Proposal contract" .agents/skills/oat-project-plan-writing/SKILL.md
-```
-
-Expected: exits 0. Bump skill `version:` per AGENTS.md.
-
-**Step 3: Verify by sanity walkthrough**
-
-Mentally walk through authoring this very plan with the heuristic applied:
-
-- p01, p02, p04 phases → typical → no rows.
-- p03 → architectural → row with opus/xhigh.
-  Expected outcome matches the Dispatch Profile at the top of this plan.
-
-**Step 4: Commit**
-
-```bash
-git add .agents/skills/oat-project-plan-writing/SKILL.md
-git commit -m "feat(p02-t02): add per-phase proposal step + contract"
-```
-
----
-
-## Phase 3: Resolver, preflight gate, approval state, and tier escalation in `oat-project-implement`
-
-Adds the runtime behavior. This is the architectural core — orchestrator reads the profile, resolves tiers per phase, runs preflight, holds approvals, and handles escalation. Dispatched at `opus`/`xhigh` per the Dispatch Profile.
-
-### Task p03-t01: Add resolver to `oat-project-implement`
-
-**Files:**
-
-- Modify: `.agents/skills/oat-project-implement/SKILL.md`
-
-**Step 1: Edit**
-
-Add a "Dispatch tier resolver" section to the skill, codifying the procedure from `design.md` §3.2:
-
-- **Inputs:** `phase_id`, `invocation = {provider, tier}`, parsed profile from `plan.md`, session-local approvals map.
-- **Outputs:** `{ dispatch_tier, review_tier }`.
-- **Logic:** the four-case resolution from design (auto / below-cap / above-cap-with-approval / above-cap-needs-approval).
-- **Notes:** per-provider tier ordering referenced from `oat-project-plan-writing`; resolver is a documented procedure, not code.
-
-**Step 2: Verify**
-
-```bash
-grep -q "Dispatch tier resolver" .agents/skills/oat-project-implement/SKILL.md && grep -q "needs_approval" .agents/skills/oat-project-implement/SKILL.md
-```
-
-Expected: exits 0.
-
-**Step 3: Commit**
-
-```bash
-git add .agents/skills/oat-project-implement/SKILL.md
-git commit -m "feat(p03-t01): add dispatch-tier resolver to oat-project-implement"
-```
-
----
-
-### Task p03-t02: Add preflight scan and batched approval gate
-
-**Files:**
-
-- Modify: `.agents/skills/oat-project-implement/SKILL.md`
-
-**Step 1: Edit**
-
-Add a "Preflight scan" section codifying `design.md` §3.3:
-
-- **Trigger:** once at run start, before phase 1 dispatches. Re-fires on resume for still-pending flagged phases.
-- **UX:** the four-option batched gate from design (downgrade-flagged, abort, approve-specific, approve-all), with `(1)` and `(2)` listed first per Codex's long-plan guardrail. Include the "Phases on auto: …" footer.
-- **Behavior on each option:**
-  - Downgrade → replace target with invocation tier for the run.
-  - Abort → exit cleanly.
-  - Approve specific / all → record session-local approval(s).
-
-**Step 2: Verify**
-
-```bash
-grep -q "Preflight scan" .agents/skills/oat-project-implement/SKILL.md && grep -q "Phases on auto" .agents/skills/oat-project-implement/SKILL.md
-```
-
-Expected: exits 0.
-
-**Step 3: Commit**
-
-```bash
-git add .agents/skills/oat-project-implement/SKILL.md
-git commit -m "feat(p03-t02): add preflight scan and approval gate"
-```
-
----
-
-### Task p03-t03: Add session-local approval state
-
-**Files:**
-
-- Modify: `.agents/skills/oat-project-implement/SKILL.md`
-
-**Step 1: Edit**
-
-Add an "Approval state" subsection codifying `design.md` §3.4:
-
-- Session-local in first pass; held in orchestrator memory; cleared at run end.
-- Forward-compatible schema documented (do not write to `implementation.md` in first pass).
-- Resume re-prompts; prior session approvals not assumed valid.
-
-**Step 2: Verify**
-
-```bash
-grep -q "Approval state" .agents/skills/oat-project-implement/SKILL.md && grep -q "session-local" .agents/skills/oat-project-implement/SKILL.md
-```
-
-Expected: exits 0.
-
-**Step 3: Commit**
-
-```bash
-git add .agents/skills/oat-project-implement/SKILL.md
-git commit -m "feat(p03-t03): add session-local approval state"
-```
-
----
-
-### Task p03-t04: Add unified tier-escalation flow
-
-**Files:**
-
-- Modify: `.agents/skills/oat-project-implement/SKILL.md`
-
-**Step 1: Edit**
-
-Add a "Tier escalation" section codifying `design.md` §3.3a:
-
-- **Two triggers:** implementer-initiated (BLOCKED with reasoning), orchestrator-detected (N=2 consecutive review-cycle failures on the same phase).
-- **Resolution:** compute next tier up; if ≤ resolved phase ceiling → escalate silently with log entry; if > ceiling → fire preflight-style gate; if at top-of-scale → non-escalation response (context/stop/split/plan-wrong).
-- **Retry-budget interaction:** escalations count against `oat_orchestration_retry_limit` as redispatches.
-- **Log entry format example:** `Phase 3 escalated to sonnet after 2 review-cycle failures`.
-
-**Step 2: Verify**
-
-```bash
-grep -q "Tier escalation" .agents/skills/oat-project-implement/SKILL.md && grep -q "review-cycle failures" .agents/skills/oat-project-implement/SKILL.md
-```
-
-Expected: exits 0. Bump skill `version:` per AGENTS.md.
-
-**Step 3: Verify by scenario walkthrough**
-
-Read the modified skill end-to-end. Mentally walk the design's Testing Strategy scenarios and confirm the skill text covers each case:
-
-- Empty profile, all-auto, below-cap, above-cap-approved, above-cap-downgraded, above-cap-aborted.
-- Mid-run BLOCKED at ceiling vs within cap.
-- Repeated review-failure silent escalation vs gate-on-cap-crossing.
-- Cross-provider portability, malformed cell, resume re-prompt.
-
-Note any scenario the skill text doesn't clearly cover and add clarification before commit.
-
-**Step 4: Commit**
-
-```bash
-git add .agents/skills/oat-project-implement/SKILL.md
-git commit -m "feat(p03-t04): add unified tier-escalation flow"
-```
-
----
-
-## Phase 4: Subagent dispatch rules, import integration, and plan-review advisory
-
-Wires the resolved tier parameters through the dispatched roles, adds import-plan preservation/signal-injection, and adds the plan-review advisory.
-
-### Task p04-t01: Add `dispatch_tier` parameter to `oat-phase-implementer`
-
-**Files:**
-
-- Modify: `.agents/agents/oat-phase-implementer.md`
-
-**Step 1: Edit**
-
-Per `design.md` §3.5, add to the agent prompt:
-
-- Receives `dispatch_tier` parameter from the orchestrator; runs at that tier.
-- No internal model selection.
-- BLOCKED-with-reasoning report mentions the tier; orchestrator decides next steps.
-- Implementer does not manage its own tier across retries; orchestrator handles escalation.
-
-**Step 2: Verify**
-
-```bash
-grep -q "dispatch_tier" .agents/agents/oat-phase-implementer.md
-```
-
-Expected: exits 0.
-
-**Step 3: Commit**
-
-```bash
-git add .agents/agents/oat-phase-implementer.md
-git commit -m "feat(p04-t01): add dispatch_tier parameter to phase implementer"
-```
-
----
-
-### Task p04-t02: Add `review_tier` parameter to `oat-reviewer`
-
-**Files:**
-
-- Modify: `.agents/agents/oat-reviewer.md`
-
-**Step 1: Edit**
-
-Per `design.md` §3.5, add to the agent prompt:
-
-- Receives `review_tier` parameter; runs at that tier.
-- Includes the semantics note: meaningful only on approved-escalation phases; matches invocation tier in the default case; passed always to keep the dispatch site uniform.
-- Role scope: only per-phase `oat-reviewer` participates in the dispatch profile. Non-phase reviewer contexts run at invocation tier (no profile read).
-
-**Step 2: Verify**
-
-```bash
-grep -q "review_tier" .agents/agents/oat-reviewer.md
-```
-
-Expected: exits 0.
-
-**Step 3: Commit**
-
-```bash
-git add .agents/agents/oat-reviewer.md
-git commit -m "feat(p04-t02): add review_tier parameter to reviewer"
-```
-
----
-
-### Task p04-t03: Add preservation short-circuit and signal injection to `oat-project-import-plan`
+### Task p01-t03: Update import-plan handling for explicit dispatch hints
 
 **Files:**
 
@@ -451,30 +133,154 @@ git commit -m "feat(p04-t02): add review_tier parameter to reviewer"
 
 **Step 1: Edit**
 
-Per `design.md` §3.6, add a "Dispatch Profile handling" section:
+Add/update Dispatch Profile import handling:
 
-- **Preservation:** if source has a recognizable OAT-format `## Dispatch Profile` section, preserve as-is; skip the proposal step for those phases; surface preservation in the import summary.
-- **Signal injection:** if source has foreign-format model/effort hints, parse them and feed into `oat-project-plan-writing`'s proposal step as additional rationale signals. The proposal logic still runs and produces its own decision.
-- **Reference, don't duplicate:** the proposal logic itself lives in `oat-project-plan-writing`. Import-plan adds layers on top.
+- Preserve recognizable OAT-format `## Dispatch Profile` rows as user-authored constraints/preferences.
+- Treat foreign model/effort hints as constraints only when the source clearly presents them that way.
+- Otherwise preserve the hint as rationale/context and let runtime selection decide.
+- Do not generate recommendation rows during import.
 
 **Step 2: Verify**
 
 ```bash
-grep -q "Dispatch Profile" .agents/skills/oat-project-import-plan/SKILL.md && grep -q "Preservation" .agents/skills/oat-project-import-plan/SKILL.md
+grep -q "Dispatch Profile" .agents/skills/oat-project-import-plan/SKILL.md
+grep -q "runtime selection" .agents/skills/oat-project-import-plan/SKILL.md
 ```
 
-Expected: exits 0. Bump skill `version:` per AGENTS.md.
+Expected: both commands exit 0. Also bump the skill frontmatter `version:` per AGENTS.md guidance.
 
 **Step 3: Commit**
 
 ```bash
 git add .agents/skills/oat-project-import-plan/SKILL.md
-git commit -m "feat(p04-t03): add Dispatch Profile preservation + signal injection to import-plan"
+git commit -m "feat(p01-t03): preserve dispatch overrides during import"
 ```
 
 ---
 
-### Task p04-t04: Add plan-review tier advisory to `oat-project-review-provide`
+## Phase 2: Runtime dispatch selection and escalation
+
+Adds the runtime policy to `oat-project-implement`: choose the lowest confident tier, log the rationale, use host-auto when controls are unavailable, and escalate based on evidence.
+
+### Task p02-t01: Add runtime dispatch-selection policy to `oat-project-implement`
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 1: Edit**
+
+Add a "Runtime dispatch selection" section:
+
+- Inputs: phase ID, phase scope, optional Dispatch Profile row, host-exposed provider controls, prior outcomes.
+- Selection rule:
+  - valid override row + host can honor it -> use requested control
+  - no override -> choose lowest available tier/model/effort that can confidently complete the phase
+  - host does not expose explicit controls -> use `host-auto` and log rationale
+  - low confidence -> choose stronger available tier rather than knowingly underpower
+- Dispatch log format examples:
+  - `Dispatching p01 with low/haiku: template edits are mechanical and file-local.`
+  - `Dispatching p02 with host-auto: Codex host does not expose per-dispatch effort; rationale maps to standard effort.`
+
+**Step 2: Verify**
+
+```bash
+grep -q "Runtime dispatch selection" .agents/skills/oat-project-implement/SKILL.md
+grep -q "host-auto" .agents/skills/oat-project-implement/SKILL.md
+```
+
+Expected: both commands exit 0.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md
+git commit -m "feat(p02-t01): add runtime dispatch selection policy"
+```
+
+---
+
+### Task p02-t02: Add confidence-based escalation and dispatch history notes
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 1: Edit**
+
+Add/update escalation guidance:
+
+- Escalate when the implementer reports low confidence, reports reasoning/capability blockage, or a phase fails substantive review twice.
+- Re-dispatch at the next stronger available control when available.
+- Count escalation redispatches against the existing bounded retry budget.
+- If already at strongest available control, provide context, split the phase, revise the plan, or stop for user direction.
+- Record compact dispatch notes in `implementation.md` when practical.
+
+**Step 2: Verify**
+
+```bash
+grep -q "low confidence" .agents/skills/oat-project-implement/SKILL.md
+grep -q "Dispatch:" .agents/skills/oat-project-implement/SKILL.md
+```
+
+Expected: both commands exit 0. Also bump the skill frontmatter `version:` per AGENTS.md guidance.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md
+git commit -m "feat(p02-t02): add confidence-based dispatch escalation"
+```
+
+---
+
+## Phase 3: Agent dispatch guidance and plan-review advisory
+
+Aligns dispatched agents and review checks with the runtime-selection model.
+
+### Task p03-t01: Update phase implementer and reviewer dispatch guidance
+
+**Files:**
+
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `.agents/agents/oat-reviewer.md`
+
+**Step 1: Edit**
+
+Update the phase implementer prompt:
+
+- Include confidence (`high`, `medium`, `low`) in implementation and fix reports.
+- If blocked because more reasoning/capability is needed, say that explicitly.
+- Include the current dispatch control if it was provided by the orchestrator.
+- Do not keep retrying at the same capability when the issue is reasoning capacity rather than missing context.
+
+Update reviewer guidance:
+
+- Reviews, re-reviews, and review-fix evaluation should run at the strongest available tier/control unless explicitly constrained.
+- If the host uses `host-auto`, the reviewer should still receive the rationale that review is judgment-heavy.
+- Do not read `plan.md` Dispatch Profile rows to self-select a tier; the orchestrator owns dispatch control.
+
+**Step 2: Verify**
+
+```bash
+grep -q "Confidence" .agents/agents/oat-phase-implementer.md
+grep -q "reasoning" .agents/agents/oat-phase-implementer.md
+grep -q "strongest available" .agents/agents/oat-reviewer.md
+grep -q "host-auto" .agents/agents/oat-reviewer.md
+```
+
+Expected: both commands exit 0.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md
+git commit -m "feat(p03-t01): align phase agents with runtime dispatch policy"
+```
+
+---
+
+### Task p03-t02: Add override-row advisory to `oat-project-review-provide`
 
 **Files:**
 
@@ -482,31 +288,34 @@ git commit -m "feat(p04-t03): add Dispatch Profile preservation + signal injecti
 
 **Step 1: Edit**
 
-Per `design.md` §3.7, add a "Dispatch Profile advisory" section to the review checklist:
+Add a "Dispatch Profile override advisory" to artifact plan review:
 
-- For each row in the plan's `## Dispatch Profile`, evaluate against phase scope and complexity.
-- **Important** findings: bottom-tier choice on multi-file/integration/cross-cutting work; missing or generic rationale on low-tier row; architecture phase with low-tier row.
-- **Minor** findings: mid-tier on architecture phase; rationale present but doesn't address scope.
-- **Silent (no flag):** high-tier rows; phases not in the table.
-- Output format uses standard review-finding format with `dispatch-profile` category.
+- Missing Dispatch Profile section is normal and should not be flagged.
+- Important:
+  - invalid phase ID
+  - unknown active-provider tier
+  - low-tier override for multi-file integration, architecture, or review-heavy work
+  - low-tier override with missing/generic rationale
+- Medium:
+  - malformed but recoverable table structure
+  - mid-tier override for architecture-heavy work without convincing rationale
+- Minor:
+  - rationale present but weakly tied to phase scope
 
 **Step 2: Verify**
 
 ```bash
-grep -q "Dispatch Profile advisory" .agents/skills/oat-project-review-provide/SKILL.md && grep -q "dispatch-profile" .agents/skills/oat-project-review-provide/SKILL.md
+grep -q "Dispatch Profile override advisory" .agents/skills/oat-project-review-provide/SKILL.md
+grep -q "invalid phase" .agents/skills/oat-project-review-provide/SKILL.md
 ```
 
-Expected: exits 0. Bump skill `version:` per AGENTS.md.
+Expected: both commands exit 0. Also bump the skill frontmatter `version:` per AGENTS.md guidance.
 
-**Step 3: Verify by scenario walkthrough**
-
-Construct a small fixture plan with one row of each category (high, mid-arch, bottom-cross-cutting, missing-rationale, no-table) and walk through the advisory rules mentally; confirm the expected flags match `design.md` §3.7.
-
-**Step 4: Commit**
+**Step 3: Commit**
 
 ```bash
 git add .agents/skills/oat-project-review-provide/SKILL.md
-git commit -m "feat(p04-t04): add Dispatch Profile advisory to plan review"
+git commit -m "feat(p03-t02): add Dispatch Profile override review advisory"
 ```
 
 ---
@@ -518,12 +327,11 @@ git commit -m "feat(p04-t04): add Dispatch Profile advisory to plan review"
 | p01    | code     | pending  | -          | -                                            |
 | p02    | code     | pending  | -          | -                                            |
 | p03    | code     | pending  | -          | -                                            |
-| p04    | code     | pending  | -          | -                                            |
 | final  | code     | pending  | -          | -                                            |
 | design | artifact | received | 2026-05-12 | reviews/artifact-design-review-2026-05-12.md |
 | plan   | artifact | received | 2026-05-12 | reviews/artifact-plan-review-2026-05-12.md   |
 
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+**Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
 ---
 
@@ -531,20 +339,19 @@ git commit -m "feat(p04-t04): add Dispatch Profile advisory to plan review"
 
 **Summary:**
 
-- Phase 1: 2 tasks — Dispatch Profile format spec + plan template update
-- Phase 2: 2 tasks — Per-phase proposal step + tier heuristic in plan-writing skill
-- Phase 3: 4 tasks — Resolver, preflight gate, approval state, escalation flow in `oat-project-implement`
-- Phase 4: 4 tasks — Subagent dispatch rules + import-plan integration + plan-review advisory
+- Phase 1: 3 tasks - Override-only plan syntax and authoring/import guidance
+- Phase 2: 2 tasks - Runtime dispatch selection and escalation in `oat-project-implement`
+- Phase 3: 2 tasks - Agent reporting, reviewer tiering, and plan-review advisory
 
-**Total: 12 tasks across 4 phases.**
+**Total: 7 tasks across 3 phases.**
 
 Follow-up items to file at project completion:
 
-- Backlog item: `minimum_dispatch_tier` (plan-level floor, deferred from this project's discovery).
-- Optional future: persist approvals across resume in `implementation.md` if real workflows need it.
-- Optional future: standalone "propose dispatch profile for existing plan" command.
+- Backlog item: `minimum_dispatch_tier` (plan-level floor, deferred from this project).
+- Optional future: hard-vs-soft Dispatch Profile constraint syntax.
+- Optional future: persistent dispatch decision history if live logs are insufficient.
 
-Ready for code review and merge.
+Ready for implementation after received artifact reviews are archived as passed.
 
 ---
 
