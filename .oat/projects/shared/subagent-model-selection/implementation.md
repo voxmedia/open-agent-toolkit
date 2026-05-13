@@ -1,16 +1,16 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-12
-oat_current_task_id: p03-t01
+oat_last_updated: 2026-05-13
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: subagent-model-selection
 
 **Started:** 2026-05-04
-**Last Updated:** 2026-05-12
+**Last Updated:** 2026-05-13
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -22,13 +22,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 2     | 0/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 2     | 2/2       |
 
-**Total:** 5/7 tasks completed
+**Total:** 7/7 tasks completed
 
 ---
 
@@ -75,18 +75,19 @@ oat_generated: false
 
 ## Phase 3: Agent dispatch guidance and plan-review advisory
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-13
+**Completed:** 2026-05-13
 
 ### Task p03-t01: Update phase implementer and reviewer dispatch guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 13cc8802
 
 ### Task p03-t02: Add override-row advisory to `oat-project-review-provide`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 378ea010
 
 ---
 
@@ -120,13 +121,22 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - Verification: p02 grep checks passed for `Runtime dispatch selection`, `host-auto`, `low confidence`, and `Dispatch:`.
 - Next: `p03-t01`.
 
+#### Phase p03 result
+
+- Implementer: DONE with high confidence; scoped tasks complete in `13cc8802` and `378ea010`.
+- Review: initial p03 review found 0 Critical, 1 Important, 0 Minor in `reviews/p03-review-2026-05-13.md`.
+- Fix loop: `d3d20bb7` synced managed Codex role exports for `oat-phase-implementer` and `oat-reviewer`.
+- Re-review: passed with 0 Critical, 0 Important, 0 Minor in `reviews/p03-review-2026-05-13-v2.md`.
+- Verification: p03 grep checks passed; `pnpm run cli -- sync --scope project --dry-run` reports the managed Codex role files in sync; `pnpm release:validate` passed.
+- Next: final code review.
+
 <!-- orchestration-runs-end -->
 
 ---
 
 ## Implementation Log
 
-No implementation tasks have started after the runtime-selection pivot.
+Implementation tasks completed on 2026-05-13. Final code review remains pending.
 
 ## Deviations from Plan
 
@@ -136,28 +146,43 @@ No implementation tasks have started after the runtime-selection pivot.
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| -     | -         | -      | -      | -        |
+| Phase | Tests Run                                                       | Passed | Failed | Coverage                                               |
+| ----- | --------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------ |
+| p01   | Plan grep checks; `pnpm release:validate` after fix             | yes    | no     | Prompt/template behavior and release guardrail         |
+| p02   | Plan grep checks                                                | yes    | no     | Runtime dispatch policy markers                        |
+| p03   | Plan grep checks; project sync dry-run; `pnpm release:validate` | yes    | no     | Agent/review guidance and generated Codex role exports |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Override-only Dispatch Profile guidance for plan templates, plan writing, and imported plans.
+- Runtime dispatch-selection guidance for `oat-project-implement`, including lowest-confident-tier selection, `host-auto`, dispatch notes, and confidence-based escalation.
+- Agent and review guidance for dispatch confidence reporting, strongest-available review execution, and Dispatch Profile override review advisories.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Planners omit Dispatch Profile rows by default; explicit rows are treated as user constraints/preferences.
+- Implement orchestration now documents runtime provider-control selection and escalation instead of precomputing a cap during planning.
+- Codex managed role exports are synced with canonical phase implementer and reviewer guidance.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.oat/templates/plan.md` - optional override-only Dispatch Profile template guidance.
+- `.agents/skills/oat-project-plan-writing/SKILL.md` - plan authoring rules for runtime-selection defaults.
+- `.agents/skills/oat-project-import-plan/SKILL.md` - import handling and reporting for dispatch hints.
+- `.agents/skills/oat-project-implement/SKILL.md` - runtime dispatch selection and escalation policy.
+- `.agents/agents/oat-phase-implementer.md` and `.agents/agents/oat-reviewer.md` - phase/reporting and review-tier guidance.
+- `.agents/skills/oat-project-review-provide/SKILL.md` - Dispatch Profile override advisory for plan artifact review.
+- `.codex/agents/oat-phase-implementer.toml` and `.codex/agents/oat-reviewer.toml` - synced Codex role exports.
+- `packages/*/package.json` - lockstep public package version bump to `0.0.61`.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Phase grep checks from `plan.md`.
+- `pnpm run cli -- project validate-plan --project-path .oat/projects/shared/subagent-model-selection`.
+- `pnpm run cli -- sync --scope project --dry-run`.
+- `pnpm release:validate`.
 
 **Design deltas (if any):**
 
