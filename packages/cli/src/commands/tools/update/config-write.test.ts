@@ -2,8 +2,24 @@ import type { ToolInfo } from '@commands/tools/shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { readOatConfig, writeOatConfig, resolveProjectRoot, resolveScopeRoot } =
-  vi.hoisted(() => ({
+const {
+  readOatConfig,
+  writeOatConfig,
+  resolveProjectRoot,
+  resolveScopeRoot,
+  buildCommandContext,
+  loggerCapture,
+} = vi.hoisted(() => {
+  const loggerCapture = {
+    info: [] as string[],
+    warn: [] as string[],
+    error: [] as string[],
+    success: [] as string[],
+    debug: [] as string[],
+    jsonPayloads: [] as unknown[],
+  };
+
+  return {
     readOatConfig: vi.fn(async () => ({ version: 1 as const })),
     writeOatConfig: vi.fn(async () => {}),
     resolveProjectRoot: vi.fn(async (cwd: string) => cwd),
@@ -11,7 +27,42 @@ const { readOatConfig, writeOatConfig, resolveProjectRoot, resolveScopeRoot } =
       (scope: 'project' | 'user', cwd: string, home: string) =>
         scope === 'project' ? cwd : home,
     ),
-  }));
+    buildCommandContext: vi.fn((options) => ({
+      scope: options.scope ?? 'all',
+      dryRun: options.dryRun ?? false,
+      verbose: options.verbose ?? false,
+      json: options.json ?? false,
+      cwd: options.cwd ?? process.cwd(),
+      home: '/tmp/home',
+      interactive: false,
+      logger: {
+        debug(message: string) {
+          loggerCapture.debug.push(message);
+        },
+        info(message: string) {
+          loggerCapture.info.push(message);
+        },
+        warn(message: string) {
+          loggerCapture.warn.push(message);
+        },
+        error(message: string) {
+          loggerCapture.error.push(message);
+        },
+        success(message: string) {
+          loggerCapture.success.push(message);
+        },
+        json(payload: unknown) {
+          loggerCapture.jsonPayloads.push(payload);
+        },
+      },
+    })),
+    loggerCapture,
+  };
+});
+
+vi.mock('@app/command-context', () => ({
+  buildCommandContext,
+}));
 
 vi.mock('@config/oat-config', () => ({
   readOatConfig,
@@ -71,6 +122,13 @@ describe('createToolsUpdateCommand config writes', () => {
     writeOatConfig.mockClear();
     resolveProjectRoot.mockClear();
     resolveScopeRoot.mockClear();
+    buildCommandContext.mockClear();
+    loggerCapture.info.length = 0;
+    loggerCapture.warn.length = 0;
+    loggerCapture.error.length = 0;
+    loggerCapture.success.length = 0;
+    loggerCapture.debug.length = 0;
+    loggerCapture.jsonPayloads.length = 0;
   });
 
   afterEach(() => {
@@ -104,6 +162,10 @@ describe('createToolsUpdateCommand config writes', () => {
       copyDirWithStatus: vi.fn(async () => 'updated' as const),
       copyFileWithStatus: vi.fn(async () => 'updated' as const),
       fileExists: vi.fn(async () => true),
+      applyOatCoreGitignore: vi.fn(async () => ({
+        action: 'updated' as const,
+        entries: ['.oat/state.md'],
+      })),
     };
 
     const command = createToolsUpdateCommand(dependencies, {
@@ -129,6 +191,132 @@ describe('createToolsUpdateCommand config writes', () => {
         brainstorm: false,
       },
     });
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('backfills project gitignore when workflows pack is installed', async () => {
+    const applyOatCoreGitignore = vi.fn(async () => ({
+      action: 'updated' as const,
+      entries: ['.oat/state.md'],
+    }));
+    const dependencies: UpdateToolsDependencies = {
+      scanTools: vi.fn(async (options) =>
+        options.scope === 'project'
+          ? [
+              createTool({
+                name: 'oat-project-new',
+                pack: 'workflows',
+              }),
+            ]
+          : [],
+      ),
+      resolveScopeRoot: vi.fn(async (scope, cwd, home) =>
+        scope === 'project' ? cwd : home,
+      ),
+      resolveAssetsRoot: vi.fn(async () => '/assets'),
+      copyDirWithStatus: vi.fn(async () => 'updated' as const),
+      copyFileWithStatus: vi.fn(async () => 'updated' as const),
+      fileExists: vi.fn(async () => true),
+      applyOatCoreGitignore,
+    };
+
+    const command = createToolsUpdateCommand(dependencies, {
+      runSync: vi.fn(async () => {}),
+    });
+
+    await runCommand(
+      command,
+      ['--pack', 'workflows', '--no-sync'],
+      ['--scope', 'project', '--cwd', '/tmp/workspace'],
+    );
+
+    expect(applyOatCoreGitignore).toHaveBeenCalledWith('/tmp/workspace');
+    expect(loggerCapture.info).toContain(
+      'Updated .gitignore OAT core section (1 entries).',
+    );
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('does not log gitignore backfill when the OAT core section is already current', async () => {
+    const applyOatCoreGitignore = vi.fn(async () => ({
+      action: 'no-change' as const,
+      entries: ['.oat/state.md'],
+    }));
+    const dependencies: UpdateToolsDependencies = {
+      scanTools: vi.fn(async (options) =>
+        options.scope === 'project'
+          ? [
+              createTool({
+                name: 'oat-project-new',
+                pack: 'workflows',
+              }),
+            ]
+          : [],
+      ),
+      resolveScopeRoot: vi.fn(async (scope, cwd, home) =>
+        scope === 'project' ? cwd : home,
+      ),
+      resolveAssetsRoot: vi.fn(async () => '/assets'),
+      copyDirWithStatus: vi.fn(async () => 'updated' as const),
+      copyFileWithStatus: vi.fn(async () => 'updated' as const),
+      fileExists: vi.fn(async () => true),
+      applyOatCoreGitignore,
+    };
+
+    const command = createToolsUpdateCommand(dependencies, {
+      runSync: vi.fn(async () => {}),
+    });
+
+    await runCommand(
+      command,
+      ['--pack', 'workflows', '--no-sync'],
+      ['--scope', 'project', '--cwd', '/tmp/workspace'],
+    );
+
+    expect(applyOatCoreGitignore).toHaveBeenCalledWith('/tmp/workspace');
+    expect(loggerCapture.info).not.toContain(
+      'Updated .gitignore OAT core section (1 entries).',
+    );
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('does not backfill project gitignore for non-workflow updates', async () => {
+    const applyOatCoreGitignore = vi.fn(async () => ({
+      action: 'updated' as const,
+      entries: ['.oat/state.md'],
+    }));
+    const dependencies: UpdateToolsDependencies = {
+      scanTools: vi.fn(async (options) =>
+        options.scope === 'project'
+          ? [
+              createTool({
+                name: 'oat-pjm-add-backlog-item',
+                pack: 'project-management',
+              }),
+            ]
+          : [],
+      ),
+      resolveScopeRoot: vi.fn(async (scope, cwd, home) =>
+        scope === 'project' ? cwd : home,
+      ),
+      resolveAssetsRoot: vi.fn(async () => '/assets'),
+      copyDirWithStatus: vi.fn(async () => 'updated' as const),
+      copyFileWithStatus: vi.fn(async () => 'updated' as const),
+      fileExists: vi.fn(async () => true),
+      applyOatCoreGitignore,
+    };
+
+    const command = createToolsUpdateCommand(dependencies, {
+      runSync: vi.fn(async () => {}),
+    });
+
+    await runCommand(
+      command,
+      ['--pack', 'project-management', '--no-sync'],
+      ['--scope', 'project', '--cwd', '/tmp/workspace'],
+    );
+
+    expect(applyOatCoreGitignore).not.toHaveBeenCalled();
     expect(process.exitCode).toBeUndefined();
   });
 });

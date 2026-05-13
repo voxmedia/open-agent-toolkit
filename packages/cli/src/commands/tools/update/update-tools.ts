@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import type { ApplyOatCoreResult } from '@commands/init/gitignore';
 import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
 import {
   BRAINSTORM_SKILLS,
@@ -54,6 +55,7 @@ export interface UpdateToolsDependencies {
     force: boolean,
   ) => Promise<CopyStatus>;
   fileExists: (path: string) => Promise<boolean>;
+  applyOatCoreGitignore?: (repoRoot: string) => Promise<ApplyOatCoreResult>;
 }
 
 interface ToolEntry {

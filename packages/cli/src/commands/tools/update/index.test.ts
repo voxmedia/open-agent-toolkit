@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildSyncSubprocessArgs,
   formatUpdatedToolMessage,
+  shouldBackfillWorkflowGitignore,
   shouldRefreshCoreDocs,
 } from './index';
 import type { UpdateResult, UpdateTarget } from './update-tools';
@@ -61,6 +62,68 @@ describe('shouldRefreshCoreDocs', () => {
     });
 
     expect(shouldRefreshCoreDocs(target, result)).toBe(false);
+  });
+});
+
+describe('shouldBackfillWorkflowGitignore', () => {
+  it('backfills when project-scoped workflow tools are installed', () => {
+    expect(
+      shouldBackfillWorkflowGitignore(
+        createResult({
+          current: [
+            {
+              name: 'oat-project-new',
+              type: 'skill',
+              scope: 'project',
+              version: '1.0.0',
+              bundledVersion: '1.0.0',
+              pack: 'workflows',
+              status: 'current',
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('does not backfill for non-workflow packs', () => {
+    expect(
+      shouldBackfillWorkflowGitignore(
+        createResult({
+          updated: [
+            {
+              name: 'oat-docs',
+              type: 'skill',
+              scope: 'user',
+              version: '1.0.0',
+              bundledVersion: '2.0.0',
+              pack: 'core',
+              status: 'outdated',
+            },
+          ],
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it('does not backfill for user-scoped workflow-pack skills', () => {
+    expect(
+      shouldBackfillWorkflowGitignore(
+        createResult({
+          newer: [
+            {
+              name: 'oat-project-progress',
+              type: 'skill',
+              scope: 'user',
+              version: '2.0.0',
+              bundledVersion: '1.0.0',
+              pack: 'workflows',
+              status: 'newer',
+            },
+          ],
+        }),
+      ),
+    ).toBe(false);
   });
 });
 

@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process';
 import { join } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
+import { applyOatCoreGitignore } from '@commands/init/gitignore';
 import {
   copyDirWithStatus,
   copyFileWithStatus,
@@ -39,6 +40,7 @@ const defaultDependencies: UpdateToolsDependencies = {
   copyDirWithStatus,
   copyFileWithStatus,
   fileExists,
+  applyOatCoreGitignore,
 };
 
 export function buildSyncSubprocessArgs(
@@ -124,6 +126,23 @@ export function createToolsUpdateCommand(
         dependencies,
       );
       const assetsRoot = dryRun ? null : await dependencies.resolveAssetsRoot();
+
+      if (
+        !dryRun &&
+        shouldBackfillWorkflowGitignore(result) &&
+        dependencies.applyOatCoreGitignore
+      ) {
+        const repoRoot = await resolveProjectRoot(context.cwd);
+        const gitignoreResult =
+          await dependencies.applyOatCoreGitignore(repoRoot);
+        if (gitignoreResult.action !== 'no-change') {
+          const verb =
+            gitignoreResult.action === 'created' ? 'Created' : 'Updated';
+          logger.info(
+            `${verb} .gitignore OAT core section (${gitignoreResult.entries.length} entries).`,
+          );
+        }
+      }
 
       // Refresh ~/.oat/docs/ when the core pack is explicitly updated or
       // reconciled through --all (D3 requirement).
@@ -224,6 +243,17 @@ export function createToolsUpdateCommand(
         logger.info('No tools to update.');
       }
     });
+}
+
+/**
+ * @internal Exported for focused unit coverage. Current/newer workflow tools
+ * intentionally trigger this path so older installs can repair a missing OAT
+ * core .gitignore section even when their workflow pack is already current.
+ */
+export function shouldBackfillWorkflowGitignore(result: UpdateResult): boolean {
+  return [...result.updated, ...result.current, ...result.newer].some(
+    (tool) => tool.scope === 'project' && tool.pack === 'workflows',
+  );
 }
 
 export function shouldRefreshCoreDocs(

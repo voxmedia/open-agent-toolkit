@@ -8,6 +8,7 @@
 
 - **Control-plane state-read migration — `bl-281c`** (now **medium** priority): the high-leverage `state.md` slice shipped for seven lifecycle skills via concise `oat project status --field`, `--shell`, and `--project-path` reads, with a documented `npx @open-agent-toolkit/cli` shim contract for CI/cloud environments. Remaining scope is incremental: plan.md / implementation.md read surfaces, named candidate skills outside the initial grep scan, and optional consistency polish.
 - **Quick-win batch (now high priority):** `bl-af93` (`oat config unset`), `bl-7e68` (quick-mode routing clarity), and `bl-b5af` (configurable staleness threshold). All S-sized, independent, and addressable as a single "workflow friction polish" PR set. `bl-af93` fixes a dogfooded gap where enum workflow keys have no CLI "unset" path.
+- **Generated dashboard conflict polish — `bl-86e9` (new, medium):** follow-up to untracking the generated root `.oat/state.md`. Adds an explicit `oat state resolve --refresh` style helper for branches or downstream repos that still hit dashboard conflicts while replaying older tracked state commits, while refusing to discard project-level `.oat/projects/**/state.md` semantics.
 - **In-progress tail — `bl-0ace`:** completion-state CLI helper is ~95% shipped via `oat project complete-state`; remaining work is verifying skill delegation and closing out tests.
 - **Instruction sync polish — `bl-28ce`, `bl-c745`:** follow-ons to the shipped instruction-sync feature. `bl-28ce` persists the default `pointer|symlink|copy` strategy; `bl-c745` adds a per-path / per-file opt-out so Claude-only `CLAUDE.md` files aren't auto-promoted. Best treated as a small bundled effort since both touch the same surface.
 - **Model-selection guidance — `bl-0738`:** recast from "reasoning budget" to "per-phase model selection" to match actual harness constraints — Claude Code exposes only model choice (`haiku|sonnet|opus`), not thinking budget; Codex auto-chooses `reasoning_effort`. Scope is documentation, agent defaults, and surfaced rationale, not behavior change.
@@ -26,6 +27,7 @@
 | bl-af93 | Add `oat config unset <key>` command for removing config values                      | open        | high     | feature    | S        |
 | bl-7e68 | Clarify quick-mode resume routing from oat-project-plan                              | open        | high     | feature    | S        |
 | bl-b5af | Add configurable staleness threshold to oat config                                   | open        | medium   | feature    | S        |
+| bl-86e9 | Add oat state conflict resolver command                                              | open        | medium   | task       | S        |
 | bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote) | open        | medium   | feature    | L        |
 | bl-ff5d | Backlog Refinement Flow (Jira ticket generation)                                     | open        | medium   | feature    | L        |
 | bl-3a4a | Codified sub-project split escape hatch                                              | open        | medium   | feature    | L        |
