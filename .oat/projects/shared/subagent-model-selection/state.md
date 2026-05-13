@@ -35,7 +35,7 @@ Review fix task complete; awaiting final code re-review.
 - **Discovery:** `discovery.md` (complete; pivot recorded)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; runtime-selection model)
-- **Plan:** `plan.md` (complete; 3 phases / 7 tasks)
+- **Plan:** `plan.md` (complete; 4 phases / 8 tasks)
 - **Implementation:** `implementation.md` (review fix task complete; final re-review pending)
 
 ## Progress
