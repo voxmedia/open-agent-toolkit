@@ -159,6 +159,45 @@ Forbidden: Selected: Tier 2 — Inline because the user did not separately menti
 
 **Legacy state migration:** If `state.md` contains `oat_execution_mode: subagent-driven`, silently ignore it. On the next bookkeeping write, remove that key. Do not redirect to `oat-project-subagent-implement` — that skill is deprecated.
 
+### Runtime dispatch selection
+
+Before each phase implementation dispatch, choose and log the phase's runtime dispatch control. This is separate from the Tier 1/Tier 2 execution mode above: Tier 1/Tier 2 decides whether OAT uses subagents or inline fallback; runtime dispatch selection decides the model/effort/control guidance to use for the specific phase when the host exposes that control.
+
+Use these inputs:
+
+- phase ID
+- phase scope, including task count, file boundaries, verification commands, and integration risk
+- optional `## Dispatch Profile` row in `plan.md`
+- host-exposed provider controls, if any
+- prior outcomes for the phase, including review results and failed retries
+
+Selection rule:
+
+1. If a valid Dispatch Profile override row applies and the host can honor it, use the requested provider control and log that the choice came from the override.
+2. If no override applies, choose the lowest available tier/model/effort that can confidently complete the phase.
+3. If the host does not expose explicit model/effort controls, use `host-auto` and log the rationale that would have mapped to the host's standard effort/model choice.
+4. If confidence is low, choose a stronger available control before dispatch rather than knowingly underpowering the phase.
+
+Log the choice before dispatch in this shape:
+
+```text
+Dispatching {phase_id} with {dispatch_control}: {short rationale grounded in phase scope}.
+```
+
+Examples:
+
+```text
+Dispatching p01 with low/haiku: template edits are mechanical and file-local.
+Dispatching p02 with host-auto: Codex host does not expose per-dispatch effort; rationale maps to standard effort.
+```
+
+Include the resolved dispatch control and rationale in the Phase Scope / Review Scope packet when practical:
+
+```yaml
+dispatch_control: { provider-specific tier or host-auto }
+dispatch_rationale: { short rationale }
+```
+
 ### Dry-Run Mode
 
 When the skill is invoked with `--dry-run`:
