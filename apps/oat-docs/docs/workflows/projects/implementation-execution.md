@@ -36,25 +36,34 @@ The selected tier is reported to the user and locked for the remainder of the ru
 
 ### Runtime dispatch selection
 
-Tier selection decides whether OAT uses native subagents or inline fallback. Runtime dispatch selection is separate: it decides which provider-specific model, effort, or host control to use for a specific phase when the host exposes that control.
+Tier selection decides whether OAT uses native subagents or inline fallback. Runtime dispatch selection is separate: it decides which provider-specific model and effort controls to use for a specific phase when the host exposes those axes.
 
-The default rule is conservative: use the lowest available model/effort/control that can confidently complete the phase. Escalate before dispatch when the phase is high-risk, broad, cross-cutting, or when retry evidence suggests the current control is underpowered.
+The default rule is conservative: use the lowest available model and/or effort that can confidently complete the phase. Escalate before dispatch when the phase is high-risk, broad, cross-cutting, or when retry evidence suggests the current control is underpowered.
 
 The orchestrator considers, in order:
 
 1. A valid `## Dispatch Profile` override row in `plan.md`, if present and the host can honor it.
 2. The phase's files, risk, requirements, and recent review/fix-loop evidence.
-3. The host's actual control surface.
+3. The host's actual control surface by axis.
 
-When the host exposes multiple controls, the orchestrator records the actual selected values. In Codex, the normal model choice is inherited unless the user requested a model override or the phase clearly requires one; implementation dispatch should still choose and pass the lowest sufficient `reasoning_effort` for the phase.
+Model and effort are separate axes. Each axis logs one of four states:
 
-If the host does not expose per-dispatch control, the orchestrator records `host-auto` and includes the rationale in user-visible dispatch notes. For example:
+- `selected:<value>` — the host exposes the axis and the orchestrator chose a value.
+- `inherited` — the host exposes the axis and the orchestrator deliberately defers to the parent session.
+- `not-applicable` — this host/API has no meaningful per-dispatch concept for that axis.
+- `host-auto` — exceptional; the host uses that axis internally but the orchestrator cannot read or pin it.
+
+In Codex, the normal model choice is inherited unless the user requested a model override or the phase clearly requires one; implementation dispatch should still choose and pass the lowest sufficient `reasoning_effort` for the phase. In Claude Code, subagent model selection is a model axis when available; the separate effort axis is `not-applicable`.
+
+Examples:
 
 ```text
-Dispatching p02 with host-auto: host does not expose per-dispatch effort; rationale maps to standard effort.
+Dispatching p01 with model_axis=selected:sonnet, effort_axis=not-applicable: Claude Code implementation dispatch for multi-file integration with mock wiring.
+Dispatching p02 with model_axis=inherited, effort_axis=selected:medium: Codex implementation dispatch for shared TypeScript/config substrate.
+Dispatching p03 with model_axis=host-auto, effort_axis=host-auto: host does not expose readable or pinnable dispatch controls; rationale maps to standard effort.
 ```
 
-Phase scope packets include implementation `dispatch_control` and `dispatch_rationale` when the orchestrator has resolved them. Review dispatches inherit the parent session controls unless the user explicitly requests a review override; their review scope should record this as `model=inherited, reasoning_effort=inherited`.
+Phase scope packets include implementation `model_axis`, `effort_axis`, and `dispatch_rationale` when the orchestrator has resolved them. Review dispatches inherit the parent session controls unless the user explicitly requests a review override; their review scope should record this as `model_axis=inherited, effort_axis=inherited`.
 
 ### Dispatch Profile overrides
 
@@ -70,7 +79,7 @@ For each phase in the plan (whether sequential or inside a parallel group):
 2. **Dispatch `oat-phase-implementer`** with a Phase Scope block (project path, phase id, artifact paths, commit convention, workflow mode, and dispatch context when known).
 3. **Receive the summary:** `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED`.
    - `BLOCKED` stops the run and surfaces the blocker to the user.
-4. **Dispatch `oat-reviewer`** with a Review Scope block (phase id, commit range, optional files-changed hint, and inherited review dispatch context). Review dispatches inherit the parent session's model/effort/control unless the user explicitly requested an override. The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet with `fork_context: false`, omit `model` and `reasoning_effort` overrides, and record `dispatch_control: model=inherited, reasoning_effort=inherited` so the reviewer reads git/OAT artifacts directly instead of inheriting the orchestration thread. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
+4. **Dispatch `oat-reviewer`** with a Review Scope block (phase id, commit range, optional files-changed hint, and inherited review dispatch context). Review dispatches inherit the parent session's model and effort axes unless the user explicitly requested an override. The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet with `fork_context: false`, omit `model` and `reasoning_effort` overrides, and record `model_axis=inherited, effort_axis=inherited` so the reviewer reads git/OAT artifacts directly instead of inheriting the orchestration thread. In Claude Code, do not pass a per-review model override by default. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
 5. **Parse the verdict:** zero Critical + zero Important findings → `pass`; otherwise `fail`.
 6. **On fail, run the bounded fix loop** (see below).
 7. **Update artifacts** (`implementation.md`, `plan.md` review row, `state.md`) and make the mandatory bookkeeping commit.

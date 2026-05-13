@@ -33,7 +33,11 @@ You will be given a "Phase Scope" block including:
 - **artifact_paths**: Paths to `plan.md`, `design.md`, `spec.md`, `implementation.md`, `discovery.md` (whichever exist for the project's mode)
 - **commit_convention**: Commit message format from plan.md (e.g., `feat({scope}): {description}`)
 - **workflow_mode**: `spec-driven` | `quick` | `import` (default `spec-driven`)
-- **dispatch_control**: Optional current dispatch control selected by the orchestrator (for example, provider-specific tier/effort or `host-auto`)
+- **model_axis**: Optional model dispatch state selected by the orchestrator (`selected:<value>`, `inherited`, `not-applicable`, or `host-auto`)
+- **effort_axis**: Optional effort dispatch state selected by the orchestrator (`selected:<value>`, `inherited`, `not-applicable`, or `host-auto`)
+- **dispatch_rationale**: Optional short rationale for the model/effort axis choices
+
+When the orchestrator provides a selected model axis and the host dispatch API exposes that model parameter, the dispatch should pass the selected model value. For example, Claude Code implementation dispatch may use `model_axis=selected:sonnet` with `effort_axis=not-applicable`; Codex implementation dispatch may use `model_axis=inherited` with `effort_axis=selected:medium`.
 
 If `mode: fix`, the block also includes:
 
@@ -120,7 +124,8 @@ Report format:
 **Tasks executed:** {N} of {N}
 **Commits:** {sha1}..{shaN}
 **Confidence:** high | medium | low
-**Dispatch control:** {dispatch_control if provided, otherwise "not provided"}
+**Model axis:** {model_axis if provided, otherwise "not provided"}
+**Effort axis:** {effort_axis if provided, otherwise "not provided"}
 
 ### Task Outcomes
 
@@ -185,7 +190,8 @@ If a fix introduces a regression or doesn't address its finding, either re-fix w
 **Findings addressed:** {N} critical, {N} important
 **Commits:** {sha1}..{shaN}
 **Confidence:** high | medium | low
-**Dispatch control:** {dispatch_control if provided, otherwise "not provided"}
+**Model axis:** {model_axis if provided, otherwise "not provided"}
+**Effort axis:** {effort_axis if provided, otherwise "not provided"}
 
 ### Fix Outcomes
 

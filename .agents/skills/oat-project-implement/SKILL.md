@@ -161,49 +161,56 @@ Forbidden: Selected: Tier 2 — Inline because the user did not separately menti
 
 ### Runtime dispatch selection
 
-Before each phase implementation dispatch, choose and log the phase's runtime dispatch control. This is separate from the Tier 1/Tier 2 execution mode above: Tier 1/Tier 2 decides whether OAT uses subagents or inline fallback; runtime dispatch selection decides the model/effort/control guidance to use for the specific phase when the host exposes that control.
+Before each phase implementation dispatch, choose and log the phase's runtime dispatch controls. This is separate from the Tier 1/Tier 2 execution mode above: Tier 1/Tier 2 decides whether OAT uses subagents or inline fallback; runtime dispatch selection decides the model and effort controls to use for the specific phase when the host exposes them.
 
 Use these inputs:
 
 - phase ID
 - phase scope, including task count, file boundaries, verification commands, and integration risk
 - optional `## Dispatch Profile` row in `plan.md`
-- host-exposed provider controls, if any
+- host-exposed provider controls, by axis
 - prior outcomes for the phase, including review results and failed retries
 
 Selection rule:
 
 1. If a valid Dispatch Profile override row applies and the host can honor it, use the requested provider control and log that the choice came from the override.
-2. If no override applies, choose the lowest available tier/model/effort that can confidently complete the phase.
-3. If the host exposes multiple controls, log the actual selected values. In Codex, prefer `model=inherited` unless the user requested a model override or the phase clearly requires one; choose and pass `reasoning_effort=low|medium|high|xhigh` from phase complexity.
-4. If the host does not expose explicit model/effort controls, use `host-auto` and log the rationale that would have mapped to the host's standard effort/model choice.
-5. If confidence is low, choose a stronger available control before dispatch rather than knowingly underpowering the phase.
+2. If no override applies, choose the lowest available model and/or effort that can confidently complete the phase.
+3. Treat model and effort as separate axes. Each axis logs exactly one state:
+   - `selected:<value>` — host exposes the axis and the orchestrator chose a value.
+   - `inherited` — host exposes the axis and the orchestrator deliberately defers to the parent session.
+   - `not-applicable` — this host/API has no meaningful per-dispatch concept for that axis.
+   - `host-auto` — exceptional; the host uses that axis internally but the orchestrator cannot read or pin it.
+4. In Codex, the model axis normally logs `inherited`; choose and pass `reasoning_effort=low|medium|high|xhigh` on the effort axis from phase complexity.
+5. In Claude Code, when subagent model selection is available, choose the lowest sufficient model on the model axis; the effort axis is `not-applicable` because Claude Code does not expose a separate `reasoning_effort` control for subagent dispatch.
+6. If a host uses model/effort internally but exposes neither axis to the orchestrator, log `model_axis=host-auto, effort_axis=host-auto` and include the rationale that would have informed selection.
+7. If confidence is low, choose a stronger available control before dispatch rather than knowingly underpowering the phase.
 
 Log the choice before dispatch in this shape:
 
 ```text
-Dispatching {phase_id} with {dispatch_control}: {short rationale grounded in phase scope}.
+Dispatching {phase_id} with model_axis={state}, effort_axis={state}: {short rationale grounded in phase scope}.
 ```
 
 Examples:
 
 ```text
-Dispatching p01 with low/haiku: template edits are mechanical and file-local.
-Dispatching p02 with model=inherited, reasoning_effort=medium: shared TypeScript/config substrate with cross-file contracts.
-Dispatching p03 with host-auto: host does not expose per-dispatch effort; rationale maps to standard effort.
+Dispatching p01 with model_axis=selected:haiku, effort_axis=not-applicable: Claude Code implementation dispatch for mechanical template edits.
+Dispatching p02 with model_axis=selected:sonnet, effort_axis=not-applicable: Claude Code implementation dispatch for multi-file integration with mock wiring.
+Dispatching p03 with model_axis=inherited, effort_axis=selected:medium: Codex implementation dispatch for shared TypeScript/config substrate with cross-file contracts.
+Dispatching p04 with model_axis=host-auto, effort_axis=host-auto: host does not expose readable or pinnable dispatch controls; rationale maps to standard effort.
 ```
 
 Use `low` for trivial docs-only, narrow single-file, or mechanical changes; `medium` for normal multi-file implementation and moderate integration risk; `high` or `xhigh` for broad architecture, security/auth/redaction boundaries, subtle state behavior, or repeated substantive review failures.
 
-Include the resolved implementation dispatch control and rationale in the Phase Scope packet when known; omit these fields when the host/orchestrator does not provide them. Reserve `host-auto` for hosts that truly do not expose relevant controls; inherited controls are still explicit dispatch controls when the host can name them.
+Include the resolved implementation dispatch axes and rationale in the Phase Scope packet when known. Reserve `host-auto` for an axis the host uses internally but the orchestrator cannot read or pin; use `inherited` for deliberate inheritance and `not-applicable` when an axis is not meaningful for that host/API.
 
 ```yaml
-dispatch_control:
-  { provider-specific tier/model/effort, inherited controls, or host-auto }
+model_axis: { selected:<value> | inherited | not-applicable | host-auto }
+effort_axis: { selected:<value> | inherited | not-applicable | host-auto }
 dispatch_rationale: { short rationale }
 ```
 
-Review dispatch is intentionally different. A reviewer should inherit the parent session's model/effort/control unless the user explicitly requests a review override. In Codex, omit `model` and `reasoning_effort` overrides when spawning `oat-reviewer`, and log review scope as `dispatch_control: model=inherited, reasoning_effort=inherited`.
+Review dispatch is intentionally different. A reviewer should inherit the parent session's model and effort axes unless the user explicitly requests a review override. In Codex, omit `model` and `reasoning_effort` overrides when spawning `oat-reviewer`; in Claude Code, do not pass a per-review model override. Log review scope as `model_axis=inherited, effort_axis=inherited`.
 
 ### Dry-Run Mode
 
@@ -479,7 +486,8 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
      discovery: {PROJECT_PATH}/discovery.md
    commit_convention: {from plan.md header}
    workflow_mode: {from state.md or plan.md frontmatter}
-   dispatch_control: {provider-specific tier/model/effort, inherited controls, or host-auto; omit if unknown}
+   model_axis: {selected:<value> | inherited | not-applicable | host-auto; omit if unknown}
+   effort_axis: {selected:<value> | inherited | not-applicable | host-auto; omit if unknown}
    dispatch_rationale: {short rationale; omit if unknown}
    ```
 
@@ -520,8 +528,8 @@ When escalation is needed:
 1. If a stronger available control exists, re-dispatch at the next stronger control and include the reason in the scope packet.
 2. Count the escalation redispatch against the existing bounded retry budget. Escalation changes the control; it does not create extra retry attempts.
 3. Record a compact note in `implementation.md` when practical:
-   - `Dispatch: p03 escalated to xhigh/opus after repeated review failures.`
-   - `Dispatch: p02 remained host-auto; no explicit stronger control is exposed by this host.`
+   - `Dispatch: p03 escalated to model_axis=selected:opus, effort_axis=selected:xhigh after repeated review failures.`
+   - `Dispatch: p02 remained model_axis=host-auto, effort_axis=host-auto; no explicit stronger control is exposed by this host.`
 4. If the phase is already at the strongest available control, do not invent a stronger tier. Provide more context, split the phase, revise the plan, or stop for user direction.
 
 #### Dispatch Retry (Transient Failures)
@@ -547,12 +555,13 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   workflow_mode: {from state.md}
   artifact_paths: {same as Phase Scope}
   tasks_in_scope: {list of pNN-tNN IDs in the phase}
-  dispatch_control: model=inherited, reasoning_effort=inherited
+  model_axis: inherited
+  effort_axis: inherited
   dispatch_rationale: review dispatch inherits parent session controls
   ```
 
   - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
-  - For Codex Tier 1 review dispatches, omit `model` and `reasoning_effort` overrides in the `spawn_agent` call. `host-auto` is not the right label when the review is intentionally inheriting parent controls.
+  - For Codex Tier 1 review dispatches, omit `model` and `reasoning_effort` overrides in the `spawn_agent` call. For Claude Code review dispatches, do not pass a per-review model override. `host-auto` is not the right label when the review is intentionally inheriting parent controls.
   - Treat the commit range as authoritative for review scope. `files_changed` is optional orientation metadata only.
   - If a Codex reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the Tier 1 review dispatch as failed for this phase and perform the review inline instead of waiting indefinitely.
 
