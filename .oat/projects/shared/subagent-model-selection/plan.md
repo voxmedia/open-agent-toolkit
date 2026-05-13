@@ -513,15 +513,15 @@ git commit -m "feat(p04-t04): add Dispatch Profile advisory to plan review"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| p02    | code     | pending  | -          | -                                          |
-| p03    | code     | pending  | -          | -                                          |
-| p04    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| design | artifact | pending  | -          | -                                          |
-| plan   | artifact | received | 2026-05-12 | reviews/artifact-plan-review-2026-05-12.md |
+| Scope  | Type     | Status   | Date       | Artifact                                     |
+| ------ | -------- | -------- | ---------- | -------------------------------------------- |
+| p01    | code     | pending  | -          | -                                            |
+| p02    | code     | pending  | -          | -                                            |
+| p03    | code     | pending  | -          | -                                            |
+| p04    | code     | pending  | -          | -                                            |
+| final  | code     | pending  | -          | -                                            |
+| design | artifact | received | 2026-05-12 | reviews/artifact-design-review-2026-05-12.md |
+| plan   | artifact | received | 2026-05-12 | reviews/artifact-plan-review-2026-05-12.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
