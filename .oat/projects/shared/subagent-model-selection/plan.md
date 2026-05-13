@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-05-12
+oat_last_updated: 2026-05-13
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p03']
@@ -322,16 +322,53 @@ git commit -m "feat(p03-t02): add Dispatch Profile override review advisory"
 
 ---
 
+## Phase 4: Final review fixes
+
+Addresses final review findings before PR readiness.
+
+### Task p04-t01: (review) Add dispatch fields to scope templates
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: `dispatch_control` is documented as an agent input, but the orchestrator's Phase Scope and Review Scope packet templates omit `dispatch_control` and `dispatch_rationale`.
+Location: `.agents/skills/oat-project-implement/SKILL.md:461`
+
+**Step 2: Implement fix**
+
+Add `dispatch_control:` and `dispatch_rationale:` to both the Phase Scope and Review Scope template blocks, with wording that they may be omitted when unknown. Keep the existing runtime-selection guidance authoritative.
+
+**Step 3: Verify**
+
+```bash
+grep -q "dispatch_control" .agents/skills/oat-project-implement/SKILL.md
+grep -q "dispatch_rationale" .agents/skills/oat-project-implement/SKILL.md
+```
+
+Expected: both commands exit 0.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md
+git commit -m "fix(p04-t01): add dispatch fields to scope templates"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                              |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | passed   | 2026-05-13 | reviews/p01-review-2026-05-13-v2.md                   |
-| p02    | code     | passed   | 2026-05-13 | reviews/p02-review-2026-05-13.md                      |
-| p03    | code     | passed   | 2026-05-13 | reviews/p03-review-2026-05-13-v2.md                   |
-| final  | code     | received | 2026-05-13 | reviews/final-review-2026-05-13-v2.md                 |
-| design | artifact | passed   | 2026-05-12 | reviews/archived/artifact-design-review-2026-05-12.md |
-| plan   | artifact | passed   | 2026-05-12 | reviews/archived/artifact-plan-review-2026-05-12.md   |
+| Scope  | Type     | Status      | Date       | Artifact                                              |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------- |
+| p01    | code     | passed      | 2026-05-13 | reviews/archived/p01-review-2026-05-13-v2.md          |
+| p02    | code     | passed      | 2026-05-13 | reviews/archived/p02-review-2026-05-13.md             |
+| p03    | code     | passed      | 2026-05-13 | reviews/archived/p03-review-2026-05-13-v2.md          |
+| final  | code     | fixes_added | 2026-05-13 | reviews/archived/final-review-2026-05-13-v2.md        |
+| design | artifact | passed      | 2026-05-12 | reviews/archived/artifact-design-review-2026-05-12.md |
+| plan   | artifact | passed      | 2026-05-12 | reviews/archived/artifact-plan-review-2026-05-12.md   |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -344,8 +381,9 @@ git commit -m "feat(p03-t02): add Dispatch Profile override review advisory"
 - Phase 1: 3 tasks - Override-only plan syntax and authoring/import guidance
 - Phase 2: 2 tasks - Runtime dispatch selection and escalation in `oat-project-implement`
 - Phase 3: 2 tasks - Agent reporting, reviewer tiering, and plan-review advisory
+- Phase 4: 1 task - Final review fix for dispatch scope template consistency
 
-**Total: 7 tasks across 3 phases.**
+**Total: 8 tasks across 4 phases.**
 
 Follow-up items to file at project completion:
 
