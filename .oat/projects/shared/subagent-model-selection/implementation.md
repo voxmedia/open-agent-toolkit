@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-12
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -25,10 +25,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 2     | 0/2       |
-| Phase 3 | pending     | 2     | 0/2       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 2     | 0/2       |
 
-**Total:** 3/7 tasks completed
+**Total:** 5/7 tasks completed
 
 ---
 
@@ -57,25 +57,26 @@ oat_generated: false
 
 ## Phase 2: Runtime dispatch selection and escalation
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-13
+**Completed:** 2026-05-13
 
 ### Task p02-t01: Add runtime dispatch-selection policy to `oat-project-implement`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 518cc4f7
 
 ### Task p02-t02: Add confidence-based escalation and dispatch history notes
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 93f7fb58
 
 ---
 
 ## Phase 3: Agent dispatch guidance and plan-review advisory
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-05-13
 
 ### Task p03-t01: Update phase implementer and reviewer dispatch guidance
 
@@ -111,6 +112,13 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - Re-review: passed with 0 Critical, 0 Important, 0 Minor in `reviews/p01-review-2026-05-13-v2.md`.
 - Verification: p01 grep checks passed; `pnpm release:validate` passed for all five public packages at `0.0.61`.
 - Next: `p02-t01`.
+
+#### Phase p02 result
+
+- Implementer: DONE with high confidence; scoped tasks complete in `518cc4f7` and `93f7fb58`.
+- Review: passed with 0 Critical, 0 Important, 0 Minor in `reviews/p02-review-2026-05-13.md`.
+- Verification: p02 grep checks passed for `Runtime dispatch selection`, `host-auto`, `low confidence`, and `Dispatch:`.
+- Next: `p03-t01`.
 
 <!-- orchestration-runs-end -->
 
