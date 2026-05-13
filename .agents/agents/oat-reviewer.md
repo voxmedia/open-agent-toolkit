@@ -44,6 +44,11 @@ You will be given a "Review Scope" block including:
 - **workflow_mode**: `spec-driven` | `quick` | `import` (default to `spec-driven` if absent)
 - **artifact_paths**: Paths to available artifacts (spec/design/plan/implementation/discovery/import reference)
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope)
+- **dispatch_control**: Optional current dispatch control selected by the orchestrator (for example, provider-specific tier/effort or `host-auto`)
+
+## Dispatch Control
+
+Reviews, re-reviews, and review-fix evaluation should run at the strongest available tier/control unless the user explicitly constrained the review dispatch. If the host uses `host-auto`, the review scope should still include the rationale that review is judgment-heavy and benefits from the strongest available capability. Do not read `plan.md` Dispatch Profile rows to self-select a tier; the orchestrator owns dispatch control.
 
 ## Mode Contract
 
