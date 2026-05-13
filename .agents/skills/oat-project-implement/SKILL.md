@@ -175,8 +175,9 @@ Selection rule:
 
 1. If a valid Dispatch Profile override row applies and the host can honor it, use the requested provider control and log that the choice came from the override.
 2. If no override applies, choose the lowest available tier/model/effort that can confidently complete the phase.
-3. If the host does not expose explicit model/effort controls, use `host-auto` and log the rationale that would have mapped to the host's standard effort/model choice.
-4. If confidence is low, choose a stronger available control before dispatch rather than knowingly underpowering the phase.
+3. If the host exposes multiple controls, log the actual selected values. In Codex, prefer `model=inherited` unless the user requested a model override or the phase clearly requires one; choose and pass `reasoning_effort=low|medium|high|xhigh` from phase complexity.
+4. If the host does not expose explicit model/effort controls, use `host-auto` and log the rationale that would have mapped to the host's standard effort/model choice.
+5. If confidence is low, choose a stronger available control before dispatch rather than knowingly underpowering the phase.
 
 Log the choice before dispatch in this shape:
 
@@ -188,15 +189,21 @@ Examples:
 
 ```text
 Dispatching p01 with low/haiku: template edits are mechanical and file-local.
-Dispatching p02 with host-auto: Codex host does not expose per-dispatch effort; rationale maps to standard effort.
+Dispatching p02 with model=inherited, reasoning_effort=medium: shared TypeScript/config substrate with cross-file contracts.
+Dispatching p03 with host-auto: host does not expose per-dispatch effort; rationale maps to standard effort.
 ```
 
-Include the resolved dispatch control and rationale in the Phase Scope / Review Scope packet when known; omit these fields when the host/orchestrator does not provide them.
+Use `low` for trivial docs-only, narrow single-file, or mechanical changes; `medium` for normal multi-file implementation and moderate integration risk; `high` or `xhigh` for broad architecture, security/auth/redaction boundaries, subtle state behavior, or repeated substantive review failures.
+
+Include the resolved implementation dispatch control and rationale in the Phase Scope packet when known; omit these fields when the host/orchestrator does not provide them. Reserve `host-auto` for hosts that truly do not expose relevant controls; inherited controls are still explicit dispatch controls when the host can name them.
 
 ```yaml
-dispatch_control: { provider-specific tier or host-auto }
+dispatch_control:
+  { provider-specific tier/model/effort, inherited controls, or host-auto }
 dispatch_rationale: { short rationale }
 ```
+
+Review dispatch is intentionally different. A reviewer should inherit the parent session's model/effort/control unless the user explicitly requests a review override. In Codex, omit `model` and `reasoning_effort` overrides when spawning `oat-reviewer`, and log review scope as `dispatch_control: model=inherited, reasoning_effort=inherited`.
 
 ### Dry-Run Mode
 
@@ -472,7 +479,7 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
      discovery: {PROJECT_PATH}/discovery.md
    commit_convention: {from plan.md header}
    workflow_mode: {from state.md or plan.md frontmatter}
-   dispatch_control: {provider-specific tier or host-auto; omit if unknown}
+   dispatch_control: {provider-specific tier/model/effort, inherited controls, or host-auto; omit if unknown}
    dispatch_rationale: {short rationale; omit if unknown}
    ```
 
@@ -528,6 +535,7 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
 **Dispatch:**
 
 - Use the same tier that was selected at start.
+- Inherit the parent session's model/effort/control for review. Do not choose a separate reviewer model or reasoning effort unless the user explicitly requests an override.
 - Tier 1: dispatch `oat-reviewer` via provider-native subagent mechanism with Review Scope:
 
   ```
@@ -539,11 +547,12 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   workflow_mode: {from state.md}
   artifact_paths: {same as Phase Scope}
   tasks_in_scope: {list of pNN-tNN IDs in the phase}
-  dispatch_control: {provider-specific tier or host-auto; omit if unknown}
-  dispatch_rationale: {short rationale; omit if unknown}
+  dispatch_control: model=inherited, reasoning_effort=inherited
+  dispatch_rationale: review dispatch inherits parent session controls
   ```
 
   - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
+  - For Codex Tier 1 review dispatches, omit `model` and `reasoning_effort` overrides in the `spawn_agent` call. `host-auto` is not the right label when the review is intentionally inheriting parent controls.
   - Treat the commit range as authoritative for review scope. `files_changed` is optional orientation metadata only.
   - If a Codex reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the Tier 1 review dispatch as failed for this phase and perform the review inline instead of waiting indefinitely.
 

@@ -20,7 +20,7 @@ oat_template: false
 
 > Execute this plan using `oat-project-implement` — sequential, no parallelism declared.
 
-**Goal:** Add runtime dispatch-selection guidance to OAT so phase implementation uses the lowest available model/effort that can confidently complete the task, review uses the strongest available tier, and every dispatch logs the selected control and rationale.
+**Goal:** Add runtime dispatch-selection guidance to OAT so phase implementation uses the lowest available model/effort that can confidently complete the task, review inherits the parent session controls unless explicitly overridden by the user, and every dispatch logs the selected control and rationale.
 
 **Architecture:** Prompt/skill/template guidance only. `plan.md` supports optional user-authored Dispatch Profile overrides, but this plan intentionally has no Dispatch Profile rows because runtime selection is the default. The orchestrator chooses/logs dispatch controls at runtime and escalates based on confidence or review outcomes.
 
@@ -258,8 +258,8 @@ Update the phase implementer prompt:
 
 Update reviewer guidance:
 
-- Reviews, re-reviews, and review-fix evaluation should run at the strongest available tier/control unless explicitly constrained.
-- If the host uses `host-auto`, the reviewer should still receive the rationale that review is judgment-heavy.
+- Reviews, re-reviews, and review-fix evaluation should inherit the parent session controls unless the user explicitly requested a review override.
+- In Codex, review dispatch should omit `model` and `reasoning_effort` overrides and record `dispatch_control: model=inherited, reasoning_effort=inherited`.
 - Do not read `plan.md` Dispatch Profile rows to self-select a tier; the orchestrator owns dispatch control.
 
 **Step 2: Verify**
@@ -267,8 +267,8 @@ Update reviewer guidance:
 ```bash
 grep -q "Confidence" .agents/agents/oat-phase-implementer.md
 grep -q "reasoning" .agents/agents/oat-phase-implementer.md
-grep -q "strongest available" .agents/agents/oat-reviewer.md
-grep -q "host-auto" .agents/agents/oat-reviewer.md
+grep -q "reasoning_effort=inherited" .agents/agents/oat-reviewer.md
+grep -q "orchestrator owns dispatch control" .agents/agents/oat-reviewer.md
 ```
 
 Expected: both commands exit 0.
@@ -368,6 +368,8 @@ Source: inline dogfood feedback (2026-05-13)
 **Files:**
 
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `.codex/agents/oat-reviewer.toml` (generated sync output)
 - Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
 - Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
 

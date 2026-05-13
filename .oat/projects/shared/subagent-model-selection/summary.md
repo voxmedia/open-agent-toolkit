@@ -5,8 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-05-13
 oat_generated: true
 oat_summary_last_task: p04-t01
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: ['prev1-t01']
 ---
 
 # Summary: subagent-model-selection
@@ -23,9 +23,11 @@ The plan template, plan-writing skill, and import-plan skill now treat `## Dispa
 
 `oat-project-implement` now documents runtime dispatch selection alongside its Tier 1/Tier 2 execution-mode selection. Tier selection still decides whether OAT uses subagents or inline fallback. Runtime dispatch selection decides the phase-specific model/effort/control when the host exposes one, records `host-auto` when the host owns the choice, and includes dispatch rationale in orchestration notes.
 
+Revision 1 clarified the implementation/review split in the implement skill, reviewer agent prompt, and docs: implementation dispatch chooses and logs the lowest sufficient available control, while review dispatch inherits the parent session's model/effort/control unless the user explicitly requests an override. In Codex, implementation usually uses `model=inherited` plus an explicit phase-appropriate `reasoning_effort`, and review omits `model` and `reasoning_effort` overrides while logging `model=inherited, reasoning_effort=inherited`.
+
 The phase implementer and reviewer prompts now report confidence and escalation-relevant concerns. `oat-project-review-provide` also has a Dispatch Profile override advisory so artifact-plan reviews do not flag missing dispatch rows as defects.
 
-The final review pass added one consistency fix: `oat-project-implement` phase and review scope templates now include `dispatch_control` and `dispatch_rationale` fields when known, so downstream agents receive the dispatch context the orchestrator has resolved.
+The final review pass added one consistency fix: `oat-project-implement` phase and review scope templates now include `dispatch_control` and `dispatch_rationale` fields when known, so downstream agents receive the dispatch context the orchestrator has resolved. The revision refined that context so review scope records inherited controls instead of implying a separately selected review effort.
 
 Documentation and repo reference artifacts were updated after implementation: the docs app now explains runtime dispatch selection, and `bl-0738` is closed in the file-backed backlog.
 
@@ -34,6 +36,7 @@ Documentation and repo reference artifacts were updated after implementation: th
 - **Runtime selection over planned caps:** precomputing caps depended on reading a value the host cannot authoritatively expose. Runtime selection avoids encoding a false source of truth in `plan.md`.
 - **Override-only Dispatch Profile:** a missing dispatch profile is expected. Rows should exist only when the user has an explicit constraint or preference that runtime selection should honor.
 - **Provider-neutral language:** the guidance uses "model/effort/control" and `host-auto` so Claude-family model selection, Codex effort selection, and host-managed dispatch all fit the same contract.
+- **Review inherits:** OAT review dispatch does not choose a separate model or effort by default. It inherits the parent session controls and records that inheritance explicitly.
 - **Escalate on evidence:** retry/fix-loop evidence and high-risk scope justify stronger available control before redispatch; escalation is bounded by the existing retry loop instead of creating a separate retry budget.
 
 ## Notable Challenges
@@ -41,6 +44,8 @@ Documentation and repo reference artifacts were updated after implementation: th
 The main design challenge was discovering that the earlier cap mechanism depended on a value the orchestrator could not reliably read. The project pivoted before implementation started, which kept the change mostly to prompt, template, docs, and bookkeeping surfaces rather than needing to unwind code written against the wrong abstraction.
 
 Final review processing found one Minor gap in the scope templates and one stale state count during re-review. Both were fixed and the final v4 review passed with no findings.
+
+Post-PR dogfood feedback found that review dispatch guidance could be misread as selecting reviewer effort separately. Revision 1 tightened the language so implementation effort selection and review inheritance are distinct.
 
 ## Integration Notes
 

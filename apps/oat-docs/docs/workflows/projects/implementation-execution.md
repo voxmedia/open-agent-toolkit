@@ -46,19 +46,21 @@ The orchestrator considers, in order:
 2. The phase's files, risk, requirements, and recent review/fix-loop evidence.
 3. The host's actual control surface.
 
+When the host exposes multiple controls, the orchestrator records the actual selected values. In Codex, the normal model choice is inherited unless the user requested a model override or the phase clearly requires one; implementation dispatch should still choose and pass the lowest sufficient `reasoning_effort` for the phase.
+
 If the host does not expose per-dispatch control, the orchestrator records `host-auto` and includes the rationale in user-visible dispatch notes. For example:
 
 ```text
-Dispatching p02 with host-auto: Codex host does not expose per-dispatch effort; rationale maps to standard effort.
+Dispatching p02 with host-auto: host does not expose per-dispatch effort; rationale maps to standard effort.
 ```
 
-Phase and review scope packets include `dispatch_control` and `dispatch_rationale` when the orchestrator has resolved them. They are omitted when the host or runtime cannot provide the fields.
+Phase scope packets include implementation `dispatch_control` and `dispatch_rationale` when the orchestrator has resolved them. Review dispatches inherit the parent session controls unless the user explicitly requests a review override; their review scope should record this as `model=inherited, reasoning_effort=inherited`.
 
 ### Dispatch Profile overrides
 
 `plan.md` should omit `## Dispatch Profile` by default. Missing dispatch rows are normal, because runtime selection has fresher phase context and host capability information at execution time.
 
-Add Dispatch Profile rows only when the user has an explicit constraint or preference, such as "use the strongest available reviewer for the security phase" or "keep documentation-only phases on the lowest tier." Override rows should include a rationale explaining why runtime selection should not decide on its own.
+Add Dispatch Profile rows only when the user has an explicit constraint or preference, such as "use high reasoning effort for the security implementation phase" or "keep documentation-only phases on the lowest tier." Override rows should include a rationale explaining why runtime selection should not decide on its own.
 
 ### Per-phase loop
 
@@ -68,7 +70,7 @@ For each phase in the plan (whether sequential or inside a parallel group):
 2. **Dispatch `oat-phase-implementer`** with a Phase Scope block (project path, phase id, artifact paths, commit convention, workflow mode, and dispatch context when known).
 3. **Receive the summary:** `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED`.
    - `BLOCKED` stops the run and surfaces the blocker to the user.
-4. **Dispatch `oat-reviewer`** with a Review Scope block (phase id, commit range, optional files-changed hint, and dispatch context when known). The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet and keep fresh context (`fork_context: false`) so the reviewer reads git/OAT artifacts directly instead of inheriting the orchestration thread. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
+4. **Dispatch `oat-reviewer`** with a Review Scope block (phase id, commit range, optional files-changed hint, and inherited review dispatch context). Review dispatches inherit the parent session's model/effort/control unless the user explicitly requested an override. The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet with `fork_context: false`, omit `model` and `reasoning_effort` overrides, and record `dispatch_control: model=inherited, reasoning_effort=inherited` so the reviewer reads git/OAT artifacts directly instead of inheriting the orchestration thread. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
 5. **Parse the verdict:** zero Critical + zero Important findings → `pass`; otherwise `fail`.
 6. **On fail, run the bounded fix loop** (see below).
 7. **Update artifacts** (`implementation.md`, `plan.md` review row, `state.md`) and make the mandatory bookkeeping commit.
