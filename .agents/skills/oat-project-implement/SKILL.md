@@ -191,7 +191,7 @@ Dispatching p01 with low/haiku: template edits are mechanical and file-local.
 Dispatching p02 with host-auto: Codex host does not expose per-dispatch effort; rationale maps to standard effort.
 ```
 
-Include the resolved dispatch control and rationale in the Phase Scope / Review Scope packet when practical:
+Include the resolved dispatch control and rationale in the Phase Scope / Review Scope packet when known; omit these fields when the host/orchestrator does not provide them.
 
 ```yaml
 dispatch_control: { provider-specific tier or host-auto }
@@ -472,6 +472,8 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
      discovery: {PROJECT_PATH}/discovery.md
    commit_convention: {from plan.md header}
    workflow_mode: {from state.md or plan.md frontmatter}
+   dispatch_control: {provider-specific tier or host-auto; omit if unknown}
+   dispatch_rationale: {short rationale; omit if unknown}
    ```
 
 2. Dispatch `oat-phase-implementer` (Tier 1 via provider-native subagent mechanism) with the Phase Scope block as input.
@@ -537,6 +539,8 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   workflow_mode: {from state.md}
   artifact_paths: {same as Phase Scope}
   tasks_in_scope: {list of pNN-tNN IDs in the phase}
+  dispatch_control: {provider-specific tier or host-auto; omit if unknown}
+  dispatch_rationale: {short rationale; omit if unknown}
   ```
 
   - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
