@@ -22,11 +22,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 3     | 0/3       |
-| Phase 2 | pending | 2     | 0/2       |
-| Phase 3 | pending | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 3     | 0/3       |
+| Phase 2 | pending     | 2     | 0/2       |
+| Phase 3 | pending     | 2     | 0/2       |
 
 **Total:** 0/7 tasks completed
 
@@ -34,8 +34,8 @@ oat_generated: false
 
 ## Phase 1: Override-only plan syntax and authoring guidance
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-05-13
 
 ### Task p01-t01: Update plan template with override-only Dispatch Profile guidance
 
@@ -94,7 +94,13 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 
 <!-- orchestration-runs-start -->
 
-_No implementation runs yet after the runtime-selection pivot._
+### Run: 2026-05-13T04:13:19Z
+
+- Tier: 1 — Subagents (`oat-phase-implementer` + `oat-reviewer`)
+- Dispatch: p01 uses `host-auto` in Codex multi-agent; rationale: prompt/template edits are mechanical and file-local, so the lowest confident host-selected effort is appropriate.
+- HiLL checkpoints: final phase only (`p03`) from `workflow.hillCheckpointDefault`.
+- Auto-review at HiLL checkpoints: enabled from `workflow.autoReviewAtHillCheckpoints`.
+- Starting from: `p01-t01`.
 
 <!-- orchestration-runs-end -->
 

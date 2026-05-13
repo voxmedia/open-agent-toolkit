@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-05-12
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: []
+oat_plan_hill_phases: ['p03']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
@@ -29,8 +30,9 @@ oat_template: false
 
 ## Planning Checklist
 
-- [x] HiLL checkpoints confirmed with user (default = pause every phase, quick mode)
-- [x] `oat_plan_hill_phases` set in frontmatter (empty = every phase)
+- [x] HiLL checkpoints confirmed from `workflow.hillCheckpointDefault` (final phase only)
+- [x] `oat_plan_hill_phases` set in frontmatter (`["p03"]` = final phase only)
+- [x] Auto-review at HiLL checkpoints enabled from `workflow.autoReviewAtHillCheckpoints`
 - [x] Parallelism evaluated (see Parallelism section)
 - [x] `oat_plan_parallel_groups` set in frontmatter
 - [x] Dispatch Profile omitted intentionally; runtime selection is the default
