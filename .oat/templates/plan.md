@@ -51,6 +51,18 @@ Default is `[]` (fully sequential, no worktrees). Only declare parallelism when 
 
 ---
 
+## Dispatch Profile
+
+_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
+
+Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
+
+| Phase | Claude model              | Codex effort                   | Rationale                     |
+| ----- | ------------------------- | ------------------------------ | ----------------------------- |
+| pNN   | haiku\|sonnet\|opus\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
+
+---
+
 ## Phase 1: {Phase Name}
 
 ### Task p01-t01: {Task Name}
