@@ -233,6 +233,7 @@ Report:
 
 - source imported path
 - normalized phases/tasks count
+- Dispatch Profile handling: preserved/mapped/omitted; foreign hints kept as rationale when not explicit constraints
 - first task ID
 - active project pointer path
 - dashboard refresh status
