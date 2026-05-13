@@ -497,6 +497,24 @@ If Tier 2 is selected, do not dispatch. Instead:
   - Recommended next step (plan fix, external resolution, user guidance)
     Do not proceed to subsequent phases while a phase is blocked.
 
+#### Confidence-Based Dispatch Escalation
+
+Escalate the runtime dispatch control when there is evidence that the current control is underpowered:
+
+- implementer reports low confidence
+- implementer reports a reasoning or capability blockage
+- the same phase fails substantive review twice
+- the fix loop repeats the same class of error
+
+When escalation is needed:
+
+1. If a stronger available control exists, re-dispatch at the next stronger control and include the reason in the scope packet.
+2. Count the escalation redispatch against the existing bounded retry budget. Escalation changes the control; it does not create extra retry attempts.
+3. Record a compact note in `implementation.md` when practical:
+   - `Dispatch: p03 escalated to xhigh/opus after repeated review failures.`
+   - `Dispatch: p02 remained host-auto; no explicit stronger control is exposed by this host.`
+4. If the phase is already at the strongest available control, do not invent a stronger tier. Provide more context, split the phase, revise the plan, or stop for user direction.
+
 #### Dispatch Retry (Transient Failures)
 
 If a Tier 1 dispatch fails (agent did not resolve, returned empty, etc.), retry exactly once. If the second attempt also fails, treat the phase as `failed` via the same mechanism as fix-loop retry exhaustion (see Step 7 below). Tier is never silently downgraded.
@@ -657,6 +675,10 @@ Append a new entry to the `## Orchestration Runs` section between the `<!-- orch
 
 - Group {N} [{phase list}]: worktree-based, merged in order
 - {singleton phases}: sequential
+
+#### Dispatch Notes
+
+- Dispatch: {phase dispatch control and rationale, including escalation notes when applicable}
 
 #### Outstanding Items
 
