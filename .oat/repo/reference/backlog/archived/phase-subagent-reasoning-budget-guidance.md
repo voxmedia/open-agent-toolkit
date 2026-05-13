@@ -1,7 +1,7 @@
 ---
 id: bl-0738
 title: 'Define per-phase model selection guidance for phase-subagent dispatch'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
 priority_reviewed: '2026-04-24'
 scope: feature # idea | task | feature | initiative
@@ -13,7 +13,7 @@ labels:
   - topic/model-selection
 assignee: null
 created: '2026-04-17T20:34:12Z'
-updated: '2026-04-24T00:00:00Z'
+updated: '2026-05-13T16:30:18Z'
 associated_issues: []
 oat_template: true
 oat_template_name: backlog-item
@@ -56,3 +56,9 @@ No CLI helper in the first pass. A `recommend-models` command can be revisited l
 ## Priority Review (2026-04-24)
 
 Recast from "reasoning-budget" to "model-selection" to match actual harness capabilities. Kept at medium priority — the change is clarifying rather than behavioral, and it unblocks consistent phase dispatch without needing code changes.
+
+## Completed (2026-05-13)
+
+Shipped via the `subagent-model-selection` project. The final implementation pivoted from authoring precomputed model caps to runtime selection: `oat-project-implement` now chooses the lowest available model/effort/control that can confidently complete each phase, honors explicit Dispatch Profile overrides only when present, records `host-auto` when the host owns the choice, and passes resolved dispatch context to phase/review scope packets when known.
+
+The first-pass scope is prompt, skill, template, and documentation guidance. No CLI helper was added.

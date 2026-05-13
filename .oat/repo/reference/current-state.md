@@ -148,12 +148,13 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 ### Phase-Subagent Implementation Execution
 
 - `oat-project-implement` v2 is the single implementation entry point. It dispatches phase-scoped work to `oat-phase-implementer` when Tier 1 subagent execution is available, and falls back to inline Tier 2 only when delegation is unavailable, unresolved, or explicitly declined.
+- Runtime dispatch selection is resolved at phase execution time: use the lowest available provider control that can confidently complete the phase, honor explicit Dispatch Profile overrides only when present, and record `host-auto` when the host does not expose per-dispatch model/effort control.
 - `oat-phase-implementer` (`.agents/agents/oat-phase-implementer.md`) owns phase execution and review-fix work packets. `oat-reviewer` remains the reviewer prompt for per-phase and checkpoint reviews.
 - Parallel execution is declared in `plan.md` frontmatter with `oat_plan_parallel_groups` and validated with `oat project validate-plan --project-path <project-path>`. Empty or missing metadata means fully sequential execution.
 - Parallel groups run worktree-per-phase and fan back into the main worktree in plan order. `oat-worktree-bootstrap-auto` provides autonomous worktree bootstrap with rollback safety.
 - Autonomous bootstrap now checks inherited cleanliness before the all-scope sync run, commits dirty sync-managed paths as `chore: run sync` when needed, and reports `sync_commit: pass | fail | skip`.
 - `oat-project-subagent-implement` has been removed. Legacy `oat_execution_mode` state is ignored and removed on the next `oat-project-implement` bookkeeping write.
-- `implementation.md` records phase/group orchestration runs at phase granularity; HiLL checkpoint governance remains integrated into `oat-project-implement` policy.
+- `implementation.md` records phase/group orchestration runs at phase granularity, including dispatch rationale when useful; HiLL checkpoint governance remains integrated into `oat-project-implement` policy.
 
 ### Skill Authoring (Meta)
 
