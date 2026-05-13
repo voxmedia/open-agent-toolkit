@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.2
+version: 1.3.3
 description: Use when completed work in an active OAT project needs a quality gate before merge. Performs a lifecycle-scoped review after a task, phase, or full implementation, unlike oat-review-provide.
 disable-model-invocation: true
 user-invocable: true
@@ -408,6 +408,24 @@ Files changed: {FILE_COUNT}
 
 Proceed with review?
 ```
+
+### Step 4.1: Dispatch Profile Override Advisory (Artifact Plan Only)
+
+When reviewing `artifact plan`, apply this Dispatch Profile override advisory:
+
+- A missing `## Dispatch Profile` section is normal and must not be flagged.
+- Important findings:
+  - invalid phase ID that does not match a real plan phase
+  - unknown active-provider tier value
+  - low-tier override for multi-file integration, architecture, or review-heavy work
+  - low-tier override with missing or generic rationale
+- Medium findings:
+  - malformed but recoverable Dispatch Profile table structure
+  - mid-tier override for architecture-heavy work without convincing rationale
+- Minor findings:
+  - rationale is present but weakly tied to phase scope
+
+Include this advisory in the Review Scope metadata for artifact plan reviews so the reviewer evaluates explicit override rows without treating omitted rows as a gap.
 
 ### Step 4.5: Gather Deferred Findings Ledger (Final Scope Only)
 
