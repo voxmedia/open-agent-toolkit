@@ -128,7 +128,8 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - Fix loop: `d3d20bb7` synced managed Codex role exports for `oat-phase-implementer` and `oat-reviewer`.
 - Re-review: passed with 0 Critical, 0 Important, 0 Minor in `reviews/p03-review-2026-05-13-v2.md`.
 - Verification: p03 grep checks passed; `pnpm run cli -- sync --scope project --dry-run` reports the managed Codex role files in sync; `pnpm release:validate` passed.
-- Next: final code review.
+- Final review: passed with 0 Critical, 0 Important, 1 Minor in `reviews/final-review-2026-05-13.md`; the Minor bookkeeping drift was addressed during final closeout.
+- Next: PR readiness.
 
 <!-- orchestration-runs-end -->
 
@@ -136,7 +137,7 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 
 ## Implementation Log
 
-Implementation tasks completed on 2026-05-13. Final code review remains pending.
+Implementation tasks completed on 2026-05-13. Final code review passed with no blocking findings.
 
 ## Deviations from Plan
 
@@ -146,11 +147,12 @@ Implementation tasks completed on 2026-05-13. Final code review remains pending.
 
 ## Test Results
 
-| Phase | Tests Run                                                       | Passed | Failed | Coverage                                               |
-| ----- | --------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------ |
-| p01   | Plan grep checks; `pnpm release:validate` after fix             | yes    | no     | Prompt/template behavior and release guardrail         |
-| p02   | Plan grep checks                                                | yes    | no     | Runtime dispatch policy markers                        |
-| p03   | Plan grep checks; project sync dry-run; `pnpm release:validate` | yes    | no     | Agent/review guidance and generated Codex role exports |
+| Phase | Tests Run                                                                                        | Passed | Failed | Coverage                                               |
+| ----- | ------------------------------------------------------------------------------------------------ | ------ | ------ | ------------------------------------------------------ |
+| p01   | Plan grep checks; `pnpm release:validate` after fix                                              | yes    | no     | Prompt/template behavior and release guardrail         |
+| p02   | Plan grep checks                                                                                 | yes    | no     | Runtime dispatch policy markers                        |
+| p03   | Plan grep checks; project sync dry-run; `pnpm release:validate`                                  | yes    | no     | Agent/review guidance and generated Codex role exports |
+| final | `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm build`; sync dry-run; `pnpm release:validate` | yes    | no     | Full branch verification                               |
 
 ## Final Summary (for PR/docs)
 
