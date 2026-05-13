@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.1
+version: 1.2.2
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -50,6 +50,30 @@ Runtime routing note:
 - Declare parallelism via `oat_plan_parallel_groups` in plan.md frontmatter (empty = sequential; nested arrays of phase IDs = parallel groups). `oat-project-implement` reads this field to choose sequential vs worktree-isolated parallel execution.
 
 Additional frontmatter keys (`oat_phase`, `oat_phase_status`, `oat_blockers`, `oat_last_updated`, `oat_generated`, `oat_template`, `oat_import_reference`, `oat_import_source_path`, `oat_import_provider`) are set by calling skills as needed.
+
+### Dispatch Profile Overrides
+
+`## Dispatch Profile` is optional and should be omitted by default. Runtime selection chooses the lowest available tier/model/effort that can confidently complete each phase.
+
+Only include the section when the user has explicit constraints or preferences. Routine hand-tuning can be worse than runtime selection because the orchestrator has fresher phase context and host capability information at dispatch time.
+
+If a user-authored override is needed, use this table shape:
+
+```markdown
+## Dispatch Profile
+
+| Phase | Claude model              | Codex effort                   | Rationale                     |
+| ----- | ------------------------- | ------------------------------ | ----------------------------- |
+| pNN   | haiku\|sonnet\|opus\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
+```
+
+Validation rules for explicit rows:
+
+- `Phase` must match a real `pNN` phase in the plan.
+- `Claude model` must be `haiku`, `sonnet`, `opus`, `auto`, or blank.
+- `Codex effort` must be `low`, `medium`, `high`, `xhigh`, `auto`, or blank.
+- Blank or `auto` means no explicit constraint for that provider.
+- `Rationale` is recommended and should explain why runtime selection should not decide on its own.
 
 ### Stable Task IDs
 
