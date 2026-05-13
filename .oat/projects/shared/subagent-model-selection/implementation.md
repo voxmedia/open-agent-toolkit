@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -22,15 +22,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | complete    | 2     | 2/2       |
-| Phase 4 | complete    | 1     | 1/1       |
-| p-rev1  | in_progress | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | complete | 1     | 1/1       |
+| p-rev1  | complete | 1     | 1/1       |
 
-**Total:** 8/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -108,13 +108,14 @@ oat_generated: false
 
 ## Phase p-rev1: Revision 1
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-13
+**Completed:** 2026-05-13
 
 ### Task prev1-t01: (revision) Clarify implementation reasoning effort versus review inheritance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8ce52f04
 
 ---
 
@@ -162,13 +163,26 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - Final re-review: initial v3 found a Minor stale state count, fixed in `c1c27bc0`; v4 passed with 0 Critical, 0 Important, 0 Minor in `reviews/archived/final-review-2026-05-13-v4.md`.
 - Next: final PR/readiness path.
 
+### Run: 2026-05-13T23:19:11Z
+
+- Tier: 2 — Inline revision task after inline dogfood feedback.
+- Dispatch: prev1-t01 used parent session execution; implementation guidance now distinguishes phase implementation effort selection from review inheritance.
+
+#### Phase p-rev1 result
+
+- Implementer: inline revision completed in `8ce52f04`.
+- Scope: clarified `oat-project-implement`, `oat-reviewer`, generated Codex reviewer export, docs, project plan, and project summary.
+- Verification: revision grep checks passed; old strongest-review wording absent; `pnpm build:docs` passed; `pnpm run cli -- project validate-plan --project-path .oat/projects/shared/subagent-model-selection` passed; `pnpm run cli -- sync --scope project --dry-run` reported no changes; `pnpm release:validate` passed for public packages at `0.0.70`; `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main` passed; `git diff --check` passed.
+- Review: no separate reviewer dispatch for this inline clarification; validated by focused grep checks and build/sync/release guardrails.
+- Next: update PR #79.
+
 <!-- orchestration-runs-end -->
 
 ---
 
 ## Implementation Log
 
-Implementation tasks completed on 2026-05-13. Final review receive added one Minor review-fix task, now completed with final re-review passed.
+Implementation tasks completed on 2026-05-13. Final review receive added one Minor review-fix task, now completed with final re-review passed. Revision 1 clarified the implementation reasoning-effort versus review inheritance guidance after dogfood feedback.
 
 ### Revision Received: Inline Feedback
 
@@ -183,7 +197,9 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 
 **New tasks added:** prev1-t01
 
-**Next:** Execute revision task via `oat-project-implement`.
+**Resolved in:** `8ce52f04`
+
+**Next:** Update PR #79.
 
 ### Review Received: final
 
@@ -213,15 +229,16 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 
 ## Test Results
 
-| Phase         | Tests Run                                                                                        | Passed | Failed | Coverage                                               |
-| ------------- | ------------------------------------------------------------------------------------------------ | ------ | ------ | ------------------------------------------------------ |
-| p01           | Plan grep checks; `pnpm release:validate` after fix                                              | yes    | no     | Prompt/template behavior and release guardrail         |
-| p02           | Plan grep checks                                                                                 | yes    | no     | Runtime dispatch policy markers                        |
-| p03           | Plan grep checks; project sync dry-run; `pnpm release:validate`                                  | yes    | no     | Agent/review guidance and generated Codex role exports |
-| final         | `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm build`; sync dry-run; `pnpm release:validate` | yes    | no     | Full branch verification                               |
-| final-receive | Final review finding disposition                                                                 | yes    | no     | Added `p04-t01` for the accepted Minor finding         |
-| p04           | `grep -q "dispatch_control"`; `grep -q "dispatch_rationale"`; `git diff --check`                 | yes    | no     | Final review fix scope template consistency            |
-| final-v4      | `git diff --check`; `validate-plan`; state count grep                                            | yes    | no     | Final re-review bookkeeping correction                 |
+| Phase         | Tests Run                                                                                                                      | Passed | Failed | Coverage                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | ------------------------------------------------------ |
+| p01           | Plan grep checks; `pnpm release:validate` after fix                                                                            | yes    | no     | Prompt/template behavior and release guardrail         |
+| p02           | Plan grep checks                                                                                                               | yes    | no     | Runtime dispatch policy markers                        |
+| p03           | Plan grep checks; project sync dry-run; `pnpm release:validate`                                                                | yes    | no     | Agent/review guidance and generated Codex role exports |
+| final         | `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm build`; sync dry-run; `pnpm release:validate`                               | yes    | no     | Full branch verification                               |
+| final-receive | Final review finding disposition                                                                                               | yes    | no     | Added `p04-t01` for the accepted Minor finding         |
+| p04           | `grep -q "dispatch_control"`; `grep -q "dispatch_rationale"`; `git diff --check`                                               | yes    | no     | Final review fix scope template consistency            |
+| final-v4      | `git diff --check`; `validate-plan`; state count grep                                                                          | yes    | no     | Final re-review bookkeeping correction                 |
+| p-rev1        | Revision grep checks; docs build; validate-plan; sync dry-run; release validation; skill version guardrail; `git diff --check` | yes    | no     | Reasoning-effort/review-inheritance guidance           |
 
 ## Final Summary (for PR/docs)
 
@@ -230,13 +247,14 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 - Override-only Dispatch Profile guidance for plan templates, plan writing, and imported plans.
 - Runtime dispatch-selection guidance for `oat-project-implement`, including lowest-confident-tier selection, `host-auto`, dispatch notes, and confidence-based escalation.
 - Dispatch fields in `oat-project-implement` phase/review scope templates so downstream agents receive resolved dispatch context when the orchestrator has it.
-- Revision clarification pending: implementation dispatch may choose explicit reasoning effort when supported; review dispatch should inherit parent controls by default.
-- Agent and review guidance for dispatch confidence reporting, strongest-available review execution, and Dispatch Profile override review advisories.
+- Revision clarification: implementation dispatch may choose explicit reasoning effort when supported; review dispatch inherits parent controls by default.
+- Agent and review guidance for dispatch confidence reporting, review inheritance, and Dispatch Profile override review advisories.
 
 **Behavioral changes (user-facing):**
 
 - Planners omit Dispatch Profile rows by default; explicit rows are treated as user constraints/preferences.
 - Implement orchestration now documents runtime provider-control selection and escalation instead of precomputing a cap during planning.
+- Codex implementation dispatch should normally use `model=inherited` plus an explicit phase-appropriate `reasoning_effort`; Codex review dispatch should omit model/effort overrides and log `model=inherited, reasoning_effort=inherited`.
 - Codex managed role exports are synced with canonical phase implementer and reviewer guidance.
 
 **Key files / modules:**
@@ -248,7 +266,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 - `.agents/agents/oat-phase-implementer.md` and `.agents/agents/oat-reviewer.md` - phase/reporting and review-tier guidance.
 - `.agents/skills/oat-project-review-provide/SKILL.md` - Dispatch Profile override advisory for plan artifact review.
 - `.codex/agents/oat-phase-implementer.toml` and `.codex/agents/oat-reviewer.toml` - synced Codex role exports.
-- `packages/*/package.json` - lockstep public package version bump to `0.0.61`.
+- `packages/*/package.json` - lockstep public package version bump to `0.0.70`.
 
 **Verification performed:**
 
