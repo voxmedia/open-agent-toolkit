@@ -326,7 +326,7 @@ git commit -m "feat(p03-t02): add Dispatch Profile override review advisory"
 
 | Scope  | Type     | Status  | Date       | Artifact                                              |
 | ------ | -------- | ------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                     |
+| p01    | code     | passed  | 2026-05-13 | reviews/p01-review-2026-05-13-v2.md                   |
 | p02    | code     | pending | -          | -                                                     |
 | p03    | code     | pending | -          | -                                                     |
 | final  | code     | pending | -          | -                                                     |

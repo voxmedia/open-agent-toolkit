@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-12
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,40 +24,41 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 0/3       |
-| Phase 2 | pending     | 2     | 0/2       |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | in_progress | 2     | 0/2       |
 | Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 0/7 tasks completed
+**Total:** 3/7 tasks completed
 
 ---
 
 ## Phase 1: Override-only plan syntax and authoring guidance
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-13
+**Completed:** 2026-05-13
 
 ### Task p01-t01: Update plan template with override-only Dispatch Profile guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 28061a13
 
 ### Task p01-t02: Update plan-writing skill for runtime-selection defaults
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 12769786
 
 ### Task p01-t03: Update import-plan handling for explicit dispatch hints
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ffd5edea
 
 ---
 
 ## Phase 2: Runtime dispatch selection and escalation
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-05-13
 
 ### Task p02-t01: Add runtime dispatch-selection policy to `oat-project-implement`
 
@@ -101,6 +102,15 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - HiLL checkpoints: final phase only (`p03`) from `workflow.hillCheckpointDefault`.
 - Auto-review at HiLL checkpoints: enabled from `workflow.autoReviewAtHillCheckpoints`.
 - Starting from: `p01-t01`.
+
+#### Phase p01 result
+
+- Implementer: DONE_WITH_CONCERNS; scoped tasks complete in `28061a13`, `12769786`, and `ffd5edea`.
+- Review: initial p01 review found 0 Critical, 1 Important, 1 Minor in `reviews/p01-review-2026-05-13.md`.
+- Fix loop: `f624a367` resolved the lockstep public package version bump and import summary reporting gaps.
+- Re-review: passed with 0 Critical, 0 Important, 0 Minor in `reviews/p01-review-2026-05-13-v2.md`.
+- Verification: p01 grep checks passed; `pnpm release:validate` passed for all five public packages at `0.0.61`.
+- Next: `p02-t01`.
 
 <!-- orchestration-runs-end -->
 
