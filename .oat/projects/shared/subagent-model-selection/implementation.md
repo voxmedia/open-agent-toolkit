@@ -146,7 +146,7 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - Manual final review: 0 Critical, 0 Important, 0 Medium, 1 Minor in `reviews/archived/final-review-2026-05-13-v2.md`.
 - Receive-review disposition: converted `m1` to `p04-t01`.
 - Phase p04: completed in `05b5ca08`; phase review passed with 0 Critical, 0 Important, 0 Minor in `reviews/archived/p04-review-2026-05-13.md`.
-- Final re-review: initial v3 found a Minor stale state count, fixed in `c1c27bc0`; v4 passed with 0 Critical, 0 Important, 0 Minor in `reviews/final-review-2026-05-13-v4.md`.
+- Final re-review: initial v3 found a Minor stale state count, fixed in `c1c27bc0`; v4 passed with 0 Critical, 0 Important, 0 Minor in `reviews/archived/final-review-2026-05-13-v4.md`.
 - Next: final PR/readiness path.
 
 <!-- orchestration-runs-end -->
