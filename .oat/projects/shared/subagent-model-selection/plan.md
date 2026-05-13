@@ -401,6 +401,56 @@ git commit -m "fix(prev1-t01): clarify review effort inheritance"
 
 ---
 
+## Phase p-rev2: Revision 2
+
+Source: inline Claude Code dogfood feedback (2026-05-13)
+
+### Task prev2-t01: (revision) Split dispatch logging into model and effort axes
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `.codex/agents/oat-phase-implementer.toml` (generated sync output if changed)
+- Modify: `.codex/agents/oat-reviewer.toml` (generated sync output if changed)
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
+
+**Step 1: Replace single-axis dispatch labels**
+
+Define model and effort as separate dispatch axes. Each axis should log one of: `selected:<value>`, `inherited`, `not-applicable`, or `host-auto`. Reserve `host-auto` for the exceptional case where the host owns an axis and the orchestrator cannot read or pin it; do not use it for deliberate inheritance.
+
+**Step 2: Add provider-specific examples**
+
+Clarify:
+
+- Claude Code exposes a model axis for subagents and does not expose a separate `reasoning_effort` axis; implementation dispatch should choose the lowest sufficient model when available and log effort as `not-applicable`.
+- Codex exposes a `reasoning_effort` axis and normally inherits the session model; implementation dispatch should choose/pass the lowest sufficient effort when supported.
+- Reviewer dispatch inherits both axes by default unless the user explicitly requests an override.
+
+**Step 3: Verify**
+
+```bash
+grep -q "model_axis" .agents/skills/oat-project-implement/SKILL.md
+grep -q "effort_axis" .agents/skills/oat-project-implement/SKILL.md
+grep -q "not-applicable" .agents/skills/oat-project-implement/SKILL.md
+grep -q "model_axis=inherited, effort_axis=inherited" .agents/skills/oat-project-implement/SKILL.md
+grep -q "model axis" apps/oat-docs/docs/workflows/projects/implementation-execution.md
+pnpm build:docs
+```
+
+Expected: all commands exit 0.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .codex/agents/oat-phase-implementer.toml .codex/agents/oat-reviewer.toml apps/oat-docs/docs/workflows/projects/implementation-execution.md .oat/projects/shared/subagent-model-selection/summary.md
+git commit -m "fix(prev2-t01): split dispatch model and effort axes"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status | Date       | Artifact                                              |
@@ -426,8 +476,9 @@ git commit -m "fix(prev1-t01): clarify review effort inheritance"
 - Phase 3: 2 tasks - Agent reporting, reviewer tiering, and plan-review advisory
 - Phase 4: 1 task - Final review fix for dispatch scope template consistency
 - Phase p-rev1: 1 task - Dogfood revision clarifying implementation effort selection vs review inheritance
+- Phase p-rev2: 1 task - Dogfood revision splitting dispatch logging into model and effort axes
 
-**Total: 9 tasks across 5 phases.**
+**Total: 10 tasks across 6 phases.**
 
 Follow-up items to file at project completion:
 

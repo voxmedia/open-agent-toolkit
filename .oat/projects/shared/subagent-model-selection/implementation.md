@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: null
+oat_current_task_id: prev2-t01
 oat_generated: false
 ---
 
@@ -22,15 +22,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 2     | 2/2       |
-| Phase 4 | complete | 1     | 1/1       |
-| p-rev1  | complete | 1     | 1/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | complete    | 2     | 2/2       |
+| Phase 4 | complete    | 1     | 1/1       |
+| p-rev1  | complete    | 1     | 1/1       |
+| p-rev2  | in_progress | 1     | 0/1       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/10 tasks completed
 
 ---
 
@@ -119,6 +120,18 @@ oat_generated: false
 
 ---
 
+## Phase p-rev2: Revision 2
+
+**Status:** in_progress
+**Started:** 2026-05-13
+
+### Task prev2-t01: (revision) Split dispatch logging into model and effort axes
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with run header, phase outcomes, dispatch notes, outstanding items, and verification._
@@ -200,6 +213,22 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 **Resolved in:** `8ce52f04`
 
 **Next:** Update PR #79.
+
+### Revision Received: Inline Claude Code Feedback
+
+**Date:** 2026-05-13
+**Source:** inline Claude Code dogfood feedback
+
+**Changes requested:**
+
+- Split dispatch logging into independent model and effort axes.
+- Treat Claude Code model selection as a real model axis when available, while effort remains `not-applicable`.
+- Reserve `host-auto` for axes the host owns but the orchestrator cannot read or pin.
+- Keep review dispatch inheriting both axes unless the user explicitly requests an override.
+
+**New tasks added:** prev2-t01
+
+**Next:** Execute revision task via `oat-project-implement`.
 
 ### Review Received: final
 
