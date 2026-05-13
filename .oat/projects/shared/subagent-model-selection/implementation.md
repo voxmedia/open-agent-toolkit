@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -22,14 +22,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 2     | 2/2       |
-| Phase 4 | complete | 1     | 1/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | complete    | 2     | 2/2       |
+| Phase 4 | complete    | 1     | 1/1       |
+| p-rev1  | in_progress | 1     | 0/1       |
 
-**Total:** 8/8 tasks completed
+**Total:** 8/9 tasks completed
 
 ---
 
@@ -105,6 +106,18 @@ oat_generated: false
 
 ---
 
+## Phase p-rev1: Revision 1
+
+**Status:** in_progress
+**Started:** 2026-05-13
+
+### Task prev1-t01: (revision) Clarify implementation reasoning effort versus review inheritance
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with run header, phase outcomes, dispatch notes, outstanding items, and verification._
@@ -157,6 +170,21 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 
 Implementation tasks completed on 2026-05-13. Final review receive added one Minor review-fix task, now completed with final re-review passed.
 
+### Revision Received: Inline Feedback
+
+**Date:** 2026-05-13
+**Source:** inline dogfood feedback
+
+**Changes requested:**
+
+- Clarify that implementation subagents should choose and log the lowest sufficient reasoning effort when the host exposes that control.
+- Clarify that review subagents should inherit the parent session's model/effort controls and should not receive separate reasoning-effort overrides unless explicitly requested.
+- Reserve `host-auto` for hosts that truly do not expose model/effort controls.
+
+**New tasks added:** prev1-t01
+
+**Next:** Execute revision task via `oat-project-implement`.
+
 ### Review Received: final
 
 **Date:** 2026-05-13
@@ -202,6 +230,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 - Override-only Dispatch Profile guidance for plan templates, plan writing, and imported plans.
 - Runtime dispatch-selection guidance for `oat-project-implement`, including lowest-confident-tier selection, `host-auto`, dispatch notes, and confidence-based escalation.
 - Dispatch fields in `oat-project-implement` phase/review scope templates so downstream agents receive resolved dispatch context when the orchestrator has it.
+- Revision clarification pending: implementation dispatch may choose explicit reasoning effort when supported; review dispatch should inherit parent controls by default.
 - Agent and review guidance for dispatch confidence reporting, strongest-available review execution, and Dispatch Profile override review advisories.
 
 **Behavioral changes (user-facing):**

@@ -359,6 +359,46 @@ git commit -m "fix(p04-t01): add dispatch fields to scope templates"
 
 ---
 
+## Phase p-rev1: Revision 1
+
+Source: inline dogfood feedback (2026-05-13)
+
+### Task prev1-t01: (revision) Clarify implementation reasoning effort versus review inheritance
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
+
+**Step 1: Tighten implementation dispatch guidance**
+
+Clarify that when the host exposes dispatch controls, phase implementation dispatch should log the actual selected controls. In Codex, prefer `model=inherited` unless an override is justified, but choose and pass `reasoning_effort` per phase complexity when supported. Reserve `host-auto` for hosts that do not expose the relevant controls.
+
+**Step 2: Tighten review dispatch guidance**
+
+Clarify that review dispatches should inherit the parent session controls unless the user explicitly requests an override. In Codex, omit `model` and `reasoning_effort` overrides for reviewer subagents and log `model=inherited, reasoning_effort=inherited`.
+
+**Step 3: Verify**
+
+```bash
+grep -q "reasoning_effort=inherited" .agents/skills/oat-project-implement/SKILL.md
+grep -q "host-auto" .agents/skills/oat-project-implement/SKILL.md
+grep -q "Review dispatches inherit" apps/oat-docs/docs/workflows/projects/implementation-execution.md
+pnpm build:docs
+```
+
+Expected: all commands exit 0.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md apps/oat-docs/docs/workflows/projects/implementation-execution.md .oat/projects/shared/subagent-model-selection/summary.md
+git commit -m "fix(prev1-t01): clarify review effort inheritance"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status | Date       | Artifact                                              |
@@ -383,8 +423,9 @@ git commit -m "fix(p04-t01): add dispatch fields to scope templates"
 - Phase 2: 2 tasks - Runtime dispatch selection and escalation in `oat-project-implement`
 - Phase 3: 2 tasks - Agent reporting, reviewer tiering, and plan-review advisory
 - Phase 4: 1 task - Final review fix for dispatch scope template consistency
+- Phase p-rev1: 1 task - Dogfood revision clarifying implementation effort selection vs review inheritance
 
-**Total: 8 tasks across 4 phases.**
+**Total: 9 tasks across 5 phases.**
 
 Follow-up items to file at project completion:
 
