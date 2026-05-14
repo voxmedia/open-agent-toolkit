@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: null
+oat_current_task_id: prev4-t01
 oat_generated: false
 ---
 
@@ -22,17 +22,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 2     | 2/2       |
-| Phase 4 | complete | 1     | 1/1       |
-| p-rev1  | complete | 1     | 1/1       |
-| p-rev2  | complete | 1     | 1/1       |
-| p-rev3  | complete | 1     | 1/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | complete    | 2     | 2/2       |
+| Phase 4 | complete    | 1     | 1/1       |
+| p-rev1  | complete    | 1     | 1/1       |
+| p-rev2  | complete    | 1     | 1/1       |
+| p-rev3  | complete    | 1     | 1/1       |
+| p-rev4  | in_progress | 1     | 0/1       |
 
-**Total:** 11/11 tasks completed
+**Total:** 11/12 tasks completed
 
 ---
 
@@ -144,6 +145,18 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 6e49cca0
+
+---
+
+## Phase p-rev4: Revision 4
+
+**Status:** in_progress
+**Started:** 2026-05-14
+
+### Task prev4-t01: (revision) Add Codex spawn-agent pre-dispatch parameter assertion
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -289,6 +302,21 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 **Resolved in:** `6e49cca0`
 
 **Next:** Update PR #79.
+
+### Revision Received: Live Codex Dogfood Feedback
+
+**Date:** 2026-05-14
+**Source:** live Codex dogfood feedback
+
+**Changes requested:**
+
+- Fix drift where the log says `effort_axis=selected:medium` but the spawned Codex agent reports high effort.
+- Add a Codex pre-dispatch assertion requiring selected effort to be passed as the top-level `reasoning_effort` argument to `spawn_agent`.
+- Treat mismatched spawned effort as an orchestration deviation to stop, record, and redispatch before continuing.
+
+**New tasks added:** prev4-t01
+
+**Next:** Execute revision task via `oat-project-implement`.
 
 ### Review Received: final
 

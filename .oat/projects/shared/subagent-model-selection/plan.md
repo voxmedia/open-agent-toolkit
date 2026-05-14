@@ -506,6 +506,47 @@ git commit -m "fix(prev3-t01): wire selected model axis to dispatch call"
 
 ---
 
+## Phase p-rev4: Revision 4
+
+Source: live Codex dogfood feedback (2026-05-14)
+
+### Task prev4-t01: (revision) Add Codex spawn-agent pre-dispatch parameter assertion
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
+
+**Step 1: Tighten Codex selected-effort execution**
+
+Add a Codex-specific pre-dispatch assertion near the Tier 1 phase dispatch instructions:
+
+- If `effort_axis=selected:<value>` for implementation dispatch, the `spawn_agent` call must include `reasoning_effort: "<value>"`.
+- If the spawned Codex status reports a different effort than the selected value, treat it as an orchestration deviation: stop, record it in `implementation.md`, and redispatch with corrected parameters before continuing.
+- Do not rely on the Phase Scope packet alone to apply selected effort; the selected effort must be a top-level `spawn_agent` argument.
+
+**Step 2: Verify**
+
+```bash
+grep -q "pre-dispatch assertion" .agents/skills/oat-project-implement/SKILL.md
+grep -q "reasoning_effort: \"<value>\"" .agents/skills/oat-project-implement/SKILL.md
+grep -q "top-level `spawn_agent` argument" .agents/skills/oat-project-implement/SKILL.md
+pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
+pnpm release:validate
+pnpm build:docs
+```
+
+Expected: all commands exit 0.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md .oat/projects/shared/subagent-model-selection/summary.md
+git commit -m "fix(prev4-t01): assert Codex selected effort before dispatch"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status | Date       | Artifact                                              |
@@ -533,8 +574,9 @@ git commit -m "fix(prev3-t01): wire selected model axis to dispatch call"
 - Phase p-rev1: 1 task - Dogfood revision clarifying implementation effort selection vs review inheritance
 - Phase p-rev2: 1 task - Dogfood revision splitting dispatch logging into model and effort axes
 - Phase p-rev3: 1 task - Follow-up review fix for selected-axis dispatch wiring and design audit trail
+- Phase p-rev4: 1 task - Live dogfood fix for Codex selected-effort spawn-agent assertion
 
-**Total: 11 tasks across 7 phases.**
+**Total: 12 tasks across 8 phases.**
 
 Follow-up items to file at project completion:
 
