@@ -33,7 +33,7 @@ You will be given a "Phase Scope" block including:
 - **effort_axis**: Optional effort dispatch state selected by the orchestrator (`selected:<value>`, `inherited`, `not-applicable`, or `host-auto`)
 - **dispatch_rationale**: Optional short rationale for the model/effort axis choices
 
-When the orchestrator provides a selected model axis and the host dispatch API exposes that model parameter, the dispatch should pass the selected model value. For example, Claude Code implementation dispatch may use `model_axis=selected:sonnet` with `effort_axis=not-applicable`; Codex implementation dispatch may use `model_axis=inherited` with `effort_axis=selected:medium`.
+The `model_axis` and `effort_axis` fields describe the dispatch state the orchestrator already chose; they are descriptive context for your report, not actions for you to take. Echo whatever values were provided in your summary under `Model axis` / `Effort axis`. If neither field is in your scope packet, report both as "not provided."
 
 If `mode: fix`, the block also includes:
 

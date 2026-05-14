@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.8
+version: 2.0.9
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -184,6 +184,12 @@ Selection rule:
 5. In Claude Code, when subagent model selection is available, choose the lowest sufficient model on the model axis; the effort axis is `not-applicable` because Claude Code does not expose a separate `reasoning_effort` control for subagent dispatch.
 6. If a host uses model/effort internally but exposes neither axis to the orchestrator, log `model_axis=host-auto, effort_axis=host-auto` and include the rationale that would have informed selection.
 7. If confidence is low, choose a stronger available control before dispatch rather than knowingly underpowering the phase.
+
+**Passing axis values to the host dispatch API.** The log shape and the actual dispatch call must agree: never log a `selected:<value>` axis without passing the corresponding parameter on the dispatch invocation, and never pass an explicit parameter that the log does not reflect.
+
+- **Claude Code implementer dispatch:** when `model_axis=selected:<value>`, pass `model: "<value>"` on the Task tool call. When `model_axis=inherited`, omit the `model` parameter so Claude Code uses its own default. `effort_axis=not-applicable` for both cases because the Task tool exposes no per-dispatch `reasoning_effort` control.
+- **Codex implementer dispatch:** when `effort_axis=selected:<value>`, pass `reasoning_effort: "<value>"` on the `spawn_agent` call. `model_axis=inherited` is the normal case; omit the `model` override unless the user explicitly requested one.
+- **Reviewer dispatch on either host:** use `model_axis=inherited, effort_axis=inherited`. Omit `model` and, on Codex, `reasoning_effort` overrides entirely.
 
 Log the choice before dispatch in this shape:
 

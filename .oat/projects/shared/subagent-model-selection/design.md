@@ -25,6 +25,26 @@ Instead, OAT adopts the Superpowers-style policy:
 
 This keeps the useful user-facing property (tier decisions are visible) while removing brittle precomputed tier math.
 
+## Revision 2: Two-axis dispatch logging (2026-05-13)
+
+After implementation and final review, dogfooding surfaced a follow-up gap: the original single-axis `dispatch_control` field collapsed model selection and reasoning-effort into one label, and used `host-auto` whenever any axis was not exposed. That hid the fact that Claude Code's Task tool exposes model selection even though it does not expose a separate `reasoning_effort` control, so dispatches could log `host-auto` while a real per-subagent `model` parameter went unused.
+
+The contract evolved to two independent axes, each with one of four states:
+
+- `selected:<value>` — host exposes the axis and the orchestrator chose a value.
+- `inherited` — host exposes the axis and the orchestrator deliberately defers to the parent session.
+- `not-applicable` — this host/API has no meaningful per-dispatch concept for that axis.
+- `host-auto` — exceptional; the host uses the axis internally but the orchestrator cannot read or pin it.
+
+The orchestrator skill (`.agents/skills/oat-project-implement/SKILL.md`) is the canonical reference for the current contract. The following subsections of this design document use the original single-axis vocabulary and should be read with the two-axis contract in mind:
+
+- Section 3.2, "Runtime selection" — the dispatch decision block now records `model_axis` and `effort_axis` instead of a single `dispatch_control` field. The dispatch log examples at the end of Section 3.2 reflect the pre-revision shape; current examples live in the orchestrator skill.
+- Section 3.5, "`oat-reviewer` guidance" — reviewer dispatch is now `model_axis=inherited, effort_axis=inherited` on every host. The original statement that Codex hosts without per-dispatch reviewer effort should log `host-auto` is superseded.
+- Error Handling, "Host does not expose model/effort controls" — `host-auto` is now per-axis; `not-applicable` is the right label when an axis has no concept on the host, such as Claude Code `reasoning_effort`.
+- Testing Strategy, "Host-auto only" row — read the scenario as axis-specific: the unavailable axis logs `not-applicable` or `host-auto` per the contract, while the other axis logs `selected:<value>` or `inherited` as appropriate.
+
+Revision 2 is documentation-only relative to the design's chosen direction: override-only profile plus runtime selection. The underlying policy is unchanged.
+
 ## Architecture
 
 ### Approach

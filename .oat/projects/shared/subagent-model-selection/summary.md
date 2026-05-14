@@ -27,6 +27,8 @@ Revision 1 clarified the implementation/review split in the implement skill, rev
 
 Revision 2 split the dispatch label into `model_axis` and `effort_axis` so hosts that expose only one control are not mislabeled as `host-auto`. Claude Code implementation dispatch can select a subagent model while marking effort as `not-applicable`; Codex implementation dispatch usually inherits model and selects `reasoning_effort`. Review dispatch inherits both axes by default.
 
+Revision 3 tightened the host-call wiring and design audit trail: `model_axis=selected:<value>` now explicitly requires passing the corresponding Claude Code Task `model` parameter for implementation dispatch, and the design artifact now flags its older single-axis sections as superseded by the two-axis contract.
+
 The phase implementer and reviewer prompts now report confidence and escalation-relevant concerns. `oat-project-review-provide` also has a Dispatch Profile override advisory so artifact-plan reviews do not flag missing dispatch rows as defects.
 
 The final review pass added one consistency fix: `oat-project-implement` phase and review scope templates include dispatch context fields when known, so downstream agents receive the dispatch context the orchestrator has resolved. Revision 2 refined that context into separate `model_axis`, `effort_axis`, and `dispatch_rationale` fields.
