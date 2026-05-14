@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: prev3-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -22,17 +22,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | complete    | 2     | 2/2       |
-| Phase 4 | complete    | 1     | 1/1       |
-| p-rev1  | complete    | 1     | 1/1       |
-| p-rev2  | complete    | 1     | 1/1       |
-| p-rev3  | in_progress | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | complete | 1     | 1/1       |
+| p-rev1  | complete | 1     | 1/1       |
+| p-rev2  | complete | 1     | 1/1       |
+| p-rev3  | complete | 1     | 1/1       |
 
-**Total:** 10/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ---
 
@@ -136,13 +136,14 @@ oat_generated: false
 
 ## Phase p-rev3: Revision 3
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-13
+**Completed:** 2026-05-14
 
 ### Task prev3-t01: (revision) Wire selected model axis to host dispatch calls and document design drift
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6e49cca0
 
 ---
 
@@ -216,13 +217,26 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - Review: no separate reviewer dispatch for this inline clarification; validated by focused grep checks and build/sync/release guardrails.
 - Next: update PR #79.
 
+### Run: 2026-05-14T00:36:50Z
+
+- Tier: 2 — Inline revision task after follow-up review feedback.
+- Dispatch: prev3-t01 used parent session execution; guidance now requires selected axis logs to match actual host dispatch parameters.
+
+#### Phase p-rev3 result
+
+- Implementer: inline revision completed in `6e49cca0`.
+- Scope: tied `model_axis=selected:<value>` to passing Claude Code Task `model`, reframed phase implementer axis fields as descriptive context, added a Revision 2 design audit-trail note, bumped touched canonical skill/agent versions, and synced the generated Codex phase implementer role.
+- Verification: task grep checks passed; `pnpm run cli -- sync --scope project --dry-run` reported no changes; `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main` passed; `pnpm release:validate` passed for public packages at `0.0.70`; `pnpm build:docs` passed; `git diff --check` passed.
+- Review: no separate reviewer dispatch for this inline clarification; validated by focused grep checks and build/sync/release guardrails.
+- Next: update PR #79.
+
 <!-- orchestration-runs-end -->
 
 ---
 
 ## Implementation Log
 
-Implementation tasks completed on 2026-05-13. Final review receive added one Minor review-fix task, now completed with final re-review passed. Revision 1 clarified the implementation reasoning-effort versus review inheritance guidance after dogfood feedback. Revision 2 split dispatch logging into model and effort axes after Claude Code dogfood feedback.
+Implementation tasks completed on 2026-05-13. Final review receive added one Minor review-fix task, now completed with final re-review passed. Revision 1 clarified the implementation reasoning-effort versus review inheritance guidance after dogfood feedback. Revision 2 split dispatch logging into model and effort axes after Claude Code dogfood feedback. Revision 3 wired selected axis values to host dispatch parameters and documented the design audit trail.
 
 ### Revision Received: Inline Feedback
 
@@ -272,7 +286,9 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 
 **New tasks added:** prev3-t01
 
-**Next:** Execute revision task via `oat-project-implement`.
+**Resolved in:** `6e49cca0`
+
+**Next:** Update PR #79.
 
 ### Review Received: final
 
@@ -313,6 +329,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 | final-v4      | `git diff --check`; `validate-plan`; state count grep                                                                          | yes    | no     | Final re-review bookkeeping correction                 |
 | p-rev1        | Revision grep checks; docs build; validate-plan; sync dry-run; release validation; skill version guardrail; `git diff --check` | yes    | no     | Reasoning-effort/review-inheritance guidance           |
 | p-rev2        | Two-axis grep checks; docs build; validate-plan; sync dry-run; release validation; skill version guardrail; `git diff --check` | yes    | no     | Model/effort axis dispatch guidance                    |
+| p-rev3        | Selected-axis grep checks; sync dry-run; skill version guardrail; release validation; docs build; `git diff --check`           | yes    | no     | Selected axis dispatch-call wiring and design note     |
 
 ## Final Summary (for PR/docs)
 
@@ -321,7 +338,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 - Override-only Dispatch Profile guidance for plan templates, plan writing, and imported plans.
 - Runtime dispatch-selection guidance for `oat-project-implement`, including lowest-confident model/effort axis selection, `host-auto`, dispatch notes, and confidence-based escalation.
 - Dispatch fields in `oat-project-implement` phase/review scope templates so downstream agents receive resolved model/effort axis context when the orchestrator has it.
-- Revision clarifications: implementation dispatch may choose explicit reasoning effort or model when supported; review dispatch inherits parent controls by default.
+- Revision clarifications: implementation dispatch may choose explicit reasoning effort or model when supported, selected axes must be passed to the host dispatch API, and review dispatch inherits parent controls by default.
 - Agent and review guidance for dispatch confidence reporting, review inheritance, two-axis dispatch state, and Dispatch Profile override review advisories.
 
 **Behavioral changes (user-facing):**
@@ -329,7 +346,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 - Planners omit Dispatch Profile rows by default; explicit rows are treated as user constraints/preferences.
 - Implement orchestration now documents runtime provider-control selection and escalation instead of precomputing a cap during planning.
 - Codex implementation dispatch should normally use `model_axis=inherited` plus explicit phase-appropriate `effort_axis=selected:<reasoning_effort>`; Codex review dispatch should omit model/effort overrides and log `model_axis=inherited, effort_axis=inherited`.
-- Claude Code implementation dispatch should use a selected model axis when available and `effort_axis=not-applicable`; Claude Code review dispatch should inherit the model axis by default.
+- Claude Code implementation dispatch should use a selected model axis when available, pass the corresponding Task `model` parameter, and set `effort_axis=not-applicable`; Claude Code review dispatch should inherit the model axis by default.
 - Codex managed role exports are synced with canonical phase implementer and reviewer guidance.
 
 **Key files / modules:**
