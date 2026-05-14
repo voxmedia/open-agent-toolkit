@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: null
+oat_current_task_id: prev3-t01
 oat_generated: false
 ---
 
@@ -22,16 +22,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 2     | 2/2       |
-| Phase 4 | complete | 1     | 1/1       |
-| p-rev1  | complete | 1     | 1/1       |
-| p-rev2  | complete | 1     | 1/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | complete    | 2     | 2/2       |
+| Phase 4 | complete    | 1     | 1/1       |
+| p-rev1  | complete    | 1     | 1/1       |
+| p-rev2  | complete    | 1     | 1/1       |
+| p-rev3  | in_progress | 1     | 0/1       |
 
-**Total:** 10/10 tasks completed
+**Total:** 10/11 tasks completed
 
 ---
 
@@ -130,6 +131,18 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** aa06e926
+
+---
+
+## Phase p-rev3: Revision 3
+
+**Status:** in_progress
+**Started:** 2026-05-13
+
+### Task prev3-t01: (revision) Wire selected model axis to host dispatch calls and document design drift
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -245,6 +258,21 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 **Resolved in:** `aa06e926`
 
 **Next:** Update PR #79.
+
+### Revision Received: Follow-up Review Feedback
+
+**Date:** 2026-05-13
+**Source:** inline follow-up review feedback
+
+**Changes requested:**
+
+- Explicitly tie `model_axis=selected:<value>` to passing the corresponding host dispatch parameter.
+- Add a design audit-trail note explaining that the original single-axis design sections are superseded by the two-axis contract.
+- Reword phase implementer dispatch-axis text as descriptive context rather than an action the dispatched implementer can take.
+
+**New tasks added:** prev3-t01
+
+**Next:** Execute revision task via `oat-project-implement`.
 
 ### Review Received: final
 

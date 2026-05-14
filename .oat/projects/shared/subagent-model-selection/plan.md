@@ -451,6 +451,61 @@ git commit -m "fix(prev2-t01): split dispatch model and effort axes"
 
 ---
 
+## Phase p-rev3: Revision 3
+
+Source: inline follow-up review feedback (2026-05-13)
+
+### Task prev3-t01: (revision) Wire selected model axis to host dispatch calls and document design drift
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `.codex/agents/oat-phase-implementer.toml` (generated sync output)
+- Modify: `.oat/projects/shared/subagent-model-selection/design.md`
+- Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
+
+**Step 1: Tie selected axes to host dispatch calls**
+
+Clarify that the dispatch log and actual host invocation must agree:
+
+- Claude Code implementation dispatch with `model_axis=selected:<value>` must pass `model: "<value>"` on the Task tool call.
+- Claude Code implementation dispatch with `model_axis=inherited` must omit the Task tool `model` parameter.
+- Codex implementation dispatch with `effort_axis=selected:<value>` must pass `reasoning_effort: "<value>"` on `spawn_agent`.
+- Review dispatch on either host inherits both axes and omits reviewer model/effort overrides by default.
+
+**Step 2: Fix phase implementer framing**
+
+Replace the misleading implementer prompt instruction that appears to ask the dispatched implementer to pass its own model parameter. The model/effort axis fields are descriptive context for the implementer report; dispatch responsibility belongs to the orchestrator.
+
+**Step 3: Document design revision 2**
+
+Add a design audit-trail subsection explaining that single-axis `dispatch_control` sections are superseded by the two-axis model/effort contract, and point readers to `oat-project-implement` as the canonical current reference.
+
+**Step 4: Verify**
+
+```bash
+grep -q "never log a \`selected:<value>\` axis without passing" .agents/skills/oat-project-implement/SKILL.md
+grep -q "model_axis=selected:<value>" .agents/skills/oat-project-implement/SKILL.md
+grep -q "descriptive context for your report" .agents/agents/oat-phase-implementer.md
+grep -q "Revision 2: Two-axis dispatch logging" .oat/projects/shared/subagent-model-selection/design.md
+pnpm run cli -- sync --scope project --dry-run
+pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
+pnpm release:validate
+pnpm build:docs
+```
+
+Expected: all commands exit 0.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md .agents/agents/oat-phase-implementer.md .codex/agents/oat-phase-implementer.toml .oat/projects/shared/subagent-model-selection/design.md .oat/projects/shared/subagent-model-selection/summary.md
+git commit -m "fix(prev3-t01): wire selected model axis to dispatch call"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status | Date       | Artifact                                              |
@@ -477,8 +532,9 @@ git commit -m "fix(prev2-t01): split dispatch model and effort axes"
 - Phase 4: 1 task - Final review fix for dispatch scope template consistency
 - Phase p-rev1: 1 task - Dogfood revision clarifying implementation effort selection vs review inheritance
 - Phase p-rev2: 1 task - Dogfood revision splitting dispatch logging into model and effort axes
+- Phase p-rev3: 1 task - Follow-up review fix for selected-axis dispatch wiring and design audit trail
 
-**Total: 10 tasks across 6 phases.**
+**Total: 11 tasks across 7 phases.**
 
 Follow-up items to file at project completion:
 
