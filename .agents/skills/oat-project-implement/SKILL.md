@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.9
+version: 2.0.10
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -187,8 +187,8 @@ Selection rule:
 
 **Passing axis values to the host dispatch API.** The log shape and the actual dispatch call must agree: never log a `selected:<value>` axis without passing the corresponding parameter on the dispatch invocation, and never pass an explicit parameter that the log does not reflect.
 
-- **Claude Code implementer dispatch:** when `model_axis=selected:<value>`, pass `model: "<value>"` on the Task tool call. When `model_axis=inherited`, omit the `model` parameter so Claude Code uses its own default. `effort_axis=not-applicable` for both cases because the Task tool exposes no per-dispatch `reasoning_effort` control.
-- **Codex implementer dispatch:** when `effort_axis=selected:<value>`, pass `reasoning_effort: "<value>"` on the `spawn_agent` call. `model_axis=inherited` is the normal case; omit the `model` override unless the user explicitly requested one.
+- **Claude Code implementer/fix dispatch:** when `model_axis=selected:<value>`, pass `model: "<value>"` on the Task tool call. When `model_axis=inherited`, omit the `model` parameter so Claude Code uses its own default. `effort_axis=not-applicable` for both cases because the Task tool exposes no per-dispatch `reasoning_effort` control.
+- **Codex implementer/fix dispatch:** when `effort_axis=selected:<value>`, pass `reasoning_effort: "<value>"` as a top-level `spawn_agent` argument. `model_axis=inherited` is the normal case; omit the `model` override unless the user explicitly requested one. Do not rely on the Phase Scope packet alone to apply selected effort.
 - **Reviewer dispatch on either host:** use `model_axis=inherited, effort_axis=inherited`. Omit `model` and, on Codex, `reasoning_effort` overrides entirely.
 
 Log the choice before dispatch in this shape:
@@ -497,9 +497,18 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
    dispatch_rationale: {short rationale; omit if unknown}
    ```
 
-2. Dispatch `oat-phase-implementer` (Tier 1 via provider-native subagent mechanism) with the Phase Scope block as input.
+2. Perform a pre-dispatch assertion against the host invocation parameters. The Phase Scope fields are audit/context fields; selected axes must also be represented in the actual host dispatch call.
+   - Codex implementer/fix dispatch:
+     - If `effort_axis=selected:<value>`, the `spawn_agent` call MUST include top-level `reasoning_effort: "<value>"`.
+     - If the spawned Codex status reports a different effort than the selected value (for example, the log says `effort_axis=selected:medium` but the spawn result reports `gpt-5.5 high`), treat this as an orchestration deviation. Stop, record the deviation in `implementation.md`, and redispatch with corrected parameters before continuing. Do not use work from the mismatched dispatch.
+     - If `effort_axis=inherited`, omit `reasoning_effort`.
+   - Claude Code implementer/fix dispatch:
+     - If `model_axis=selected:<value>`, the Task tool call MUST include `model: "<value>"`.
+     - If `model_axis=inherited`, omit `model`.
 
-3. Receive the structured summary (DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED).
+3. Dispatch `oat-phase-implementer` (Tier 1 via provider-native subagent mechanism) with the Phase Scope block as input and with the asserted host invocation parameters.
+
+4. Receive the structured summary (DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED).
 
 **Tier 2 dispatch (inline fallback):**
 
@@ -588,13 +597,14 @@ On reviewer verdict `fail`, run a bounded fix loop.
 
 1. Read `oat_orchestration_retry_limit` from `state.md` frontmatter (default: `2`, range 0–5).
 2. For each retry (up to the limit):
-   a. Dispatch `oat-phase-implementer` in `fix` mode (Tier 1) OR read the agent and apply fixes inline (Tier 2), with: - `review_artifact`: the path written by the reviewer - `findings`: the Critical + Important findings list - `prior_summary`: the last implementer summary
-   b. Receive the fix summary.
-   c. Re-dispatch the reviewer with the updated commit range.
-   d. Parse the new verdict.
-   e. If pass → exit the loop successfully.
-   f. If fail and retries remain → continue.
-   g. If fail and retries exhausted → exit the loop with terminal verdict `failed`.
+   a. Select/log fix dispatch axes from the fix scope, then perform the same pre-dispatch assertion used for implementation dispatch. A Codex fix dispatch with `effort_axis=selected:<value>` MUST pass top-level `reasoning_effort: "<value>"` on `spawn_agent`; a Claude Code fix dispatch with `model_axis=selected:<value>` MUST pass `model: "<value>"` on the Task call.
+   b. Dispatch `oat-phase-implementer` in `fix` mode (Tier 1) OR read the agent and apply fixes inline (Tier 2), with: - `review_artifact`: the path written by the reviewer - `findings`: the Critical + Important findings list - `prior_summary`: the last implementer summary
+   c. Receive the fix summary.
+   d. Re-dispatch the reviewer with the updated commit range.
+   e. Parse the new verdict.
+   f. If pass → exit the loop successfully.
+   g. If fail and retries remain → continue.
+   h. If fail and retries exhausted → exit the loop with terminal verdict `failed`.
 
 **Terminal `failed` handling:**
 

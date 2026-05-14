@@ -29,6 +29,8 @@ Revision 2 split the dispatch label into `model_axis` and `effort_axis` so hosts
 
 Revision 3 tightened the host-call wiring and design audit trail: `model_axis=selected:<value>` now explicitly requires passing the corresponding Claude Code Task `model` parameter for implementation dispatch, and the design artifact now flags its older single-axis sections as superseded by the two-axis contract.
 
+Revision 4 extended that assertion to Codex implementer and fix dispatches after live dogfooding showed a selected medium effort being logged while the spawned worker used high effort. The skill now requires selected effort to be passed as the top-level `reasoning_effort` argument and treats mismatched spawned effort as an orchestration deviation.
+
 The phase implementer and reviewer prompts now report confidence and escalation-relevant concerns. `oat-project-review-provide` also has a Dispatch Profile override advisory so artifact-plan reviews do not flag missing dispatch rows as defects.
 
 The final review pass added one consistency fix: `oat-project-implement` phase and review scope templates include dispatch context fields when known, so downstream agents receive the dispatch context the orchestrator has resolved. Revision 2 refined that context into separate `model_axis`, `effort_axis`, and `dispatch_rationale` fields.
