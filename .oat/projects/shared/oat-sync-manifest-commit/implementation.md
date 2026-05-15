@@ -715,7 +715,25 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - `I1` converted to `p04-t02` — update the SKILL.md reference command and scoping prose.
 - `m1` converted to `p04-t03` — remove duplicated provider setup / sync docs while editing the same skill.
 
-**Next:** Phase 4 fix tasks are complete and the final review row is marked `fixes_completed`. Re-run `oat-project-review-provide code final`, then `oat-project-review-receive` if the re-review reports findings.
+**Next:** Phase 4 fix tasks are complete, final re-review passed, and the final review row is marked `passed`. PR #81 is open for review.
+
+---
+
+## Review Received: final (code, re-review)
+
+**Date:** 2026-05-15
+**Review artifact:** `reviews/archived/final-review-2026-05-15-v3.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Disposition:** final re-review passed. No additional fix tasks required.
+
+**Status:** Final review marked `passed` in plan.md Reviews table. PR #81 remains open for review.
 
 ---
 

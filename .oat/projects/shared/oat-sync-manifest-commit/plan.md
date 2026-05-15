@@ -543,16 +543,16 @@ git commit -m "docs(p04-t03): remove duplicate bootstrap sync docs"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                            |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
-| p01    | code     | passed          | 2026-05-15 | reviews/archived/p01-review-2026-05-15.md           |
-| p02    | code     | passed          | 2026-05-15 | reviews/archived/p02-review-2026-05-15.md           |
-| p03    | code     | passed          | 2026-05-15 | reviews/archived/p03-review-2026-05-15.md           |
-| p04    | code     | passed          | 2026-05-15 | reviews/p04-review-2026-05-15-v2.md                 |
-| final  | code     | fixes_completed | 2026-05-15 | reviews/archived/final-review-2026-05-15-v2.md      |
-| plan   | artifact | passed          | 2026-05-14 | reviews/archived/artifact-plan-review-2026-05-14.md |
-| spec   | artifact | pending         | -          | -                                                   |
-| design | artifact | pending         | -          | -                                                   |
+| Scope  | Type     | Status  | Date       | Artifact                                            |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01    | code     | passed  | 2026-05-15 | reviews/archived/p01-review-2026-05-15.md           |
+| p02    | code     | passed  | 2026-05-15 | reviews/archived/p02-review-2026-05-15.md           |
+| p03    | code     | passed  | 2026-05-15 | reviews/archived/p03-review-2026-05-15.md           |
+| p04    | code     | passed  | 2026-05-15 | reviews/archived/p04-review-2026-05-15-v2.md        |
+| final  | code     | passed  | 2026-05-15 | reviews/archived/final-review-2026-05-15-v3.md      |
+| plan   | artifact | passed  | 2026-05-14 | reviews/archived/artifact-plan-review-2026-05-14.md |
+| spec   | artifact | pending | -          | -                                                   |
+| design | artifact | pending | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
