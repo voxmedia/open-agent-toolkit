@@ -1,13 +1,13 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_workflow_mode: import # spec-driven | quick | import
 oat_workflow_origin: imported # native | imported
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-13T16:51:19.847Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-14T19:40:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-15T00:45:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-sync-manifest-commit
 
-**Status:** Plan Complete — Ready for Implementation
+**Status:** Implementation In Progress
 **Started:** 2026-05-13
 **Last Updated:** 2026-05-14
 
 ## Current Phase
 
-Plan complete. Source plan normalized from `references/imported-plan.md` into a 3-phase / 9-task `plan.md`. Ready for `oat-project-implement`.
+Implementation in progress. Source plan normalized from `references/imported-plan.md` into a 3-phase / 9-task `plan.md`. Current task: `p01-t01`.
 
 ## Artifacts
 
@@ -43,7 +43,7 @@ Plan complete. Source plan normalized from `references/imported-plan.md` into a 
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External plan imported and normalized
-- ⧗ Awaiting implementation
+- ⧗ Implementation in progress
 
 ## Blockers
 
@@ -51,4 +51,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` to execute the plan, starting at `p01-t01`.
+Complete Phase 1 bootstrap root-cause tasks, starting at `p01-t01`.

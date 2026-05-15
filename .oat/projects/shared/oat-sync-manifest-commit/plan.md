@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-05-13
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: []
+oat_plan_hill_phases: ['p03']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: []
 oat_plan_source: imported
 oat_import_reference: references/imported-plan.md
@@ -29,8 +30,8 @@ oat_template: false
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user (deferred to `oat-project-implement` Step 2.5)
-- [ ] Set `oat_plan_hill_phases` in frontmatter (deferred)
+- [x] Confirmed HiLL checkpoints from `workflow.hillCheckpointDefault=final`
+- [x] Set `oat_plan_hill_phases` in frontmatter (`["p03"]`)
 - [ ] Evaluated phases for parallelism opportunities
 - [ ] Set `oat_plan_parallel_groups` in frontmatter (kept `[]` — phases share lockstep version bumps that need ordering)
 
