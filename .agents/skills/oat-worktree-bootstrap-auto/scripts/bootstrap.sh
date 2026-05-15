@@ -169,6 +169,29 @@ else
   fi
 fi
 
+# ─── Step 4.5: Commit Sync Output ───────────────────────────────────────────
+SYNC_PATHS=(.oat/sync/manifest.json .claude .cursor .codex)
+SYNC_DIRTY=$(git status --porcelain -- "${SYNC_PATHS[@]}" 2>/dev/null || true)
+if [[ -n "$SYNC_DIRTY" ]]; then
+  git add -- "${SYNC_PATHS[@]}" 2>/dev/null || true
+  if ! git diff --cached --quiet -- "${SYNC_PATHS[@]}"; then
+    if git commit -m "chore: run sync" -- "${SYNC_PATHS[@]}" >/dev/null 2>&1; then
+      CHECK_RESULTS["sync_commit"]="pass"
+    else
+      CHECK_RESULTS["sync_commit"]="fail"
+      if [[ "$BASELINE_POLICY" == "strict" ]]; then
+        HAS_ERROR=true
+      else
+        WARNINGS+=("sync_commit: commit failed")
+      fi
+    fi
+  else
+    CHECK_RESULTS["sync_commit"]="skip"
+  fi
+else
+  CHECK_RESULTS["sync_commit"]="skip"
+fi
+
 # ─── Step 5: Return Structured Status ───────────────────────────────────────
 if [[ "$HAS_ERROR" == true ]]; then
   STATUS="error"
@@ -189,6 +212,7 @@ checks:
   tests: ${CHECK_RESULTS[tests]:-skip}
   git_clean: ${CHECK_RESULTS[git_clean]:-skip}
   provider_sync: ${CHECK_RESULTS[provider_sync]:-skip}
+  sync_commit: ${CHECK_RESULTS[sync_commit]:-skip}
 warnings: [$(IFS=','; echo "${WARNINGS[*]:-}")]
 error: ${HAS_ERROR:+baseline check failed under strict policy}
 baseline_policy: $BASELINE_POLICY
