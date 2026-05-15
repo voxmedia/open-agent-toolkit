@@ -2,11 +2,13 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-05-07 (independent-brainstorming shipped a new `brainstorm` pack with the `oat-brainstorm` dispatcher skill, visual-companion bundle ported from Superpowers, generalized `PACK_METADATA` default-scope mechanism, and a three-tier Activation Contract gating mode entry; lockstep public packages bumped to 0.0.64; PR #70 open and clean against main; pre-existing collaborative-design dogfood still pending)
+**Last Updated:** 2026-05-15 (sync-manifest containment shipped: autonomous worktree bootstrap commits sync-managed output after all-scope sync, project entry skills preflight inherited dirty git state before scaffolding, and the five public packages are bumped in lockstep to 0.1.0)
 
 ## Canonical References
 
 - Workflow lifecycle: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- Implementation execution: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Provider manifest and drift: `apps/oat-docs/docs/provider-sync/manifest-and-drift.md`
 - Workflow reviews: `apps/oat-docs/docs/workflows/projects/reviews.md`
 - Workflow PR flow: `apps/oat-docs/docs/workflows/projects/pr-flow.md`
 - Roadmap: `.oat/repo/reference/roadmap.md`
@@ -33,6 +35,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat-project-open`, `oat-project-clear-active`, `oat-project-complete` (active project lifecycle management)
   - `oat-project-quick-start` (quick lane: synthesize/backfill discovery -> plan -> implement, with optional design when warranted)
   - `oat-project-import-plan` (import lane: provider plan -> canonical `plan.md`)
+  - Project entry skills (`oat-project-new`, `oat-project-quick-start`, and `oat-project-import-plan`) now preflight inherited git state before scaffolding. Dirty worktrees surface a Commit now / Proceed anyway / Abort choice, with sync-managed paths called out as typical `oat sync` output.
   - `oat-project-promote-spec-driven` (in-place promotion from quick/import to spec-driven lifecycle)
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
   - `oat-project-design` v2.1.0 supports three full-design modes: collaborative, selective collaborative, and draft-and-review. Selective collaborative prints a Section Review Plan, silently drafts routine sections, presents high-risk/uncertain sections for live review, and recaps silently drafted sections at the user-review gate.
@@ -148,6 +151,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - `oat-phase-implementer` (`.agents/agents/oat-phase-implementer.md`) owns phase execution and review-fix work packets. `oat-reviewer` remains the reviewer prompt for per-phase and checkpoint reviews.
 - Parallel execution is declared in `plan.md` frontmatter with `oat_plan_parallel_groups` and validated with `oat project validate-plan --project-path <project-path>`. Empty or missing metadata means fully sequential execution.
 - Parallel groups run worktree-per-phase and fan back into the main worktree in plan order. `oat-worktree-bootstrap-auto` provides autonomous worktree bootstrap with rollback safety.
+- Autonomous bootstrap now checks inherited cleanliness before the all-scope sync run, commits dirty sync-managed paths as `chore: run sync` when needed, and reports `sync_commit: pass | fail | skip`.
 - `oat-project-subagent-implement` has been removed. Legacy `oat_execution_mode` state is ignored and removed on the next `oat-project-implement` bookkeeping write.
 - `implementation.md` records phase/group orchestration runs at phase granularity; HiLL checkpoint governance remains integrated into `oat-project-implement` policy.
 

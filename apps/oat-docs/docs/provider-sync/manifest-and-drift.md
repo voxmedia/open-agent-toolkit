@@ -28,6 +28,8 @@ Tracks managed mappings so the CLI can:
 
 Install-triggered auto-sync narrows that removal scope further: after `oat tools install <pack>`, the follow-up sync only plans removals for canonical entries from the installed pack. This protects unrelated provider views if the current worktree has stale manifest entries for other packs whose canonical assets are missing locally.
 
+Autonomous worktree bootstrap also treats sync output as setup state. `oat-worktree-bootstrap-auto` checks inherited cleanliness before the all-scope sync run, then commits dirty sync-managed output as `chore: run sync` when needed. The commit is scoped to existing or tracked sync paths (`.oat/sync/manifest.json`, `.claude`, `.cursor`, `.codex`) and reports the result as `sync_commit: pass | fail | skip` in its structured status.
+
 For transformed mappings such as project-scoped rules, the manifest stores hashes for the rendered provider output that was actually written, not the canonical source markdown. This keeps drift detection aligned with the on-disk managed file.
 
 ## Drift states

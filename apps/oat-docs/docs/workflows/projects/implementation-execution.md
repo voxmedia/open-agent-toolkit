@@ -75,6 +75,8 @@ oat_plan_parallel_groups: [['p02', 'p03'], ['p04', 'p05']]
 ### How a parallel group runs
 
 1. **Bootstrap worktrees** via `oat-worktree-bootstrap-auto`, one per phase, branch name `{project-name}/{pNN}`.
+   - The bootstrap checks inherited git cleanliness before the all-scope provider sync sweep.
+   - If that sync leaves `.oat/sync/manifest.json` or provider directories dirty, bootstrap commits only existing or tracked sync-managed paths (`.oat/sync/manifest.json`, `.claude`, `.cursor`, `.codex`) as `chore: run sync` and reports `sync_commit: pass | fail | skip`.
    - If any bootstrap fails, cancel successful worktrees and **degrade the entire group** to sequential inline execution.
 2. **Concurrent dispatch** of `oat-phase-implementer` into each worktree (Tier 1 only — Tier 2 cannot run concurrently and also degrades to sequential).
 3. **Wait for terminal verdicts** (`pass` or `failed`) across every phase in the group.

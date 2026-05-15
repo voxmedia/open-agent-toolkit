@@ -110,7 +110,7 @@ See [Implementation Execution](implementation-execution.md) for the full executi
 
 ### Quick lane diagram
 
-1. `oat-project-quick-start` (adaptive discovery — provide a project name and optional description; if only the name is provided, quick-start asks for the missing description before discovery. Well-understood requests synthesize quickly, exploratory requests invest in solution space exploration)
+1. `oat-project-quick-start` (adaptive discovery — provide a project name and optional description; if only the name is provided, quick-start asks for the missing description before discovery. Well-understood requests synthesize quickly, exploratory requests invest in solution space exploration. Before scaffolding, the skill checks inherited git state and asks whether to commit, proceed, or abort when the worktree is already dirty.)
 2. Decision point: straight to plan, optional lightweight `design.md`, or promote to spec-driven
 3. Implement: `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)
 4. `oat-project-review-provide` / `oat-project-pr-final`
@@ -118,7 +118,7 @@ See [Implementation Execution](implementation-execution.md) for the full executi
 
 ### Import lane diagram
 
-1. `oat-project-import-plan`
+1. `oat-project-import-plan` (checks inherited git state before import scaffolding so sync-generated or unrelated dirty files do not silently roll into project bookkeeping)
 2. Implement: `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)
 3. `oat-project-review-provide` / `oat-project-pr-final`
 4. Optional `oat-project-promote-spec-driven` to switch project mode to spec-driven lifecycle
@@ -198,6 +198,7 @@ Capture lane progression:
 - Keep `state.md`, `plan.md`, and `implementation.md` synchronized.
 - Stop at configured HiLL checkpoints.
 - Do not move lifecycle forward when required review gates are unresolved.
+- Project entry skills (`oat-project-new`, `oat-project-quick-start`, and `oat-project-import-plan`) surface inherited dirty git state before scaffolding. If the dirty list includes `.oat/sync/manifest.json`, `.claude/`, `.cursor/`, or `.codex/`, the skill calls out that those paths are typically sync output and offers Commit now, Proceed anyway, or Abort.
 
 ## Reducing lifecycle friction with workflow preferences
 
