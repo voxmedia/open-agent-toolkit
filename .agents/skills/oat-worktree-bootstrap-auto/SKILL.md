@@ -204,14 +204,15 @@ SYNC_PATHS=(.oat/sync/manifest.json .claude .cursor .codex)
 SYNC_STAGE_PATHS=(existing-or-tracked sync paths)
 git status --porcelain -- "${SYNC_STAGE_PATHS[@]}"
 git add -A -- "${SYNC_STAGE_PATHS[@]}"
-git commit -m "chore: run sync" -- "${SYNC_STAGE_PATHS[@]}"
+git commit -m "chore: run sync"
 ```
 
-Use a staged-diff guard so no empty commit is created. The commit must remain
-scoped to `.oat/sync/manifest.json`, `.claude`, `.cursor`, and `.codex`;
-orchestrators can rely on `chore: run sync` touching only sync-managed paths.
-If no scoped path is dirty, or staging produces no diff, report
-`sync_commit: skip`.
+Use a staged-diff guard so no empty commit is created. The scoped
+`git add -A -- "${SYNC_STAGE_PATHS[@]}"` determines what enters the commit;
+do not pass sync pathspecs to `git commit`, because empty provider directories
+can make the commit fail. Orchestrators can rely on `chore: run sync` touching
+only sync-managed paths. If no scoped path is dirty, or staging produces no
+diff, report `sync_commit: skip`.
 
 ### Step 5: Return Structured Status
 
