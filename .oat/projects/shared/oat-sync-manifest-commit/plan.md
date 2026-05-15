@@ -430,17 +430,128 @@ If validation produced no file changes, no commit. If it required follow-up edit
 
 ---
 
+## Phase 4: Review Fixes
+
+### Task p04-t01: (review) Fix post-sync commit pathspec handling
+
+**Files:**
+
+- Modify: `.agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`
+
+**Step 1: Understand the issue**
+
+Review finding: `git commit -m "chore: run sync" -- "${SYNC_STAGE_PATHS[@]}"` fails when any sync-managed provider directory exists on disk but has no tracked or staged files. Empty `.claude` or `.cursor` directories can poison the whole commit even when `.oat/sync/manifest.json` is staged.
+
+Location: `.agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh:188`
+
+**Step 2: Implement fix**
+
+Remove the pathspec from the `git commit` invocation. Keep scoping on the preceding `git add -A -- "${SYNC_STAGE_PATHS[@]}"`, which is the step that determines what enters the index.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh
+```
+
+Expected: no syntax errors.
+
+Run a temp-repo smoke check with empty `.claude/skills` and `.cursor/rules`, a dirty `.oat/sync/manifest.json`, and no provider file changes.
+
+Expected: `git commit -m "chore: run sync"` succeeds, commits the staged manifest, and leaves the sync-managed worktree clean.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh
+git commit -m "fix(p04-t01): fix sync commit pathspec handling"
+```
+
+---
+
+### Task p04-t02: (review) Update bootstrap docs for commit scoping
+
+**Files:**
+
+- Modify: `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: the SKILL.md reference sequence repeats the same broken `git commit -- "${SYNC_STAGE_PATHS[@]}"` command, so agents following the prose can reproduce the runtime bug.
+
+Location: `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md:200`
+
+**Step 2: Implement fix**
+
+Update the documented command to `git commit -m "chore: run sync"` and clarify that sync scoping is enforced by the scoped `git add`, not by re-passing pathspecs to `git commit`.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md
+```
+
+Expected: formatting passes and the docs no longer include `git commit -m "chore: run sync" -- "${SYNC_STAGE_PATHS[@]}"`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-worktree-bootstrap-auto/SKILL.md
+git commit -m "docs(p04-t02): document sync commit scoping"
+```
+
+---
+
+### Task p04-t03: (review) Remove duplicated provider setup docs
+
+**Files:**
+
+- Modify: `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: Step 3 still duplicates Step 4 provider directory creation and `oat sync --scope all`, which can read as instructing agents to run provider setup and sync twice.
+
+Location: `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md:158`
+
+**Step 2: Implement fix**
+
+Keep the executable provider setup and all-scope sync sequence in Step 4. Leave Step 3 focused on baseline checks, with a short transition noting that `git_clean` runs after provider directory creation but before the Step 4 sync.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md
+```
+
+Expected: formatting passes and provider setup / all-scope sync are documented once in the runnable sequence.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-worktree-bootstrap-auto/SKILL.md
+git commit -m "docs(p04-t03): remove duplicate bootstrap sync docs"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                            |
-| ------ | -------- | -------- | ---------- | --------------------------------------------------- |
-| p01    | code     | passed   | 2026-05-15 | reviews/archived/p01-review-2026-05-15.md           |
-| p02    | code     | passed   | 2026-05-15 | reviews/archived/p02-review-2026-05-15.md           |
-| p03    | code     | passed   | 2026-05-15 | reviews/archived/p03-review-2026-05-15.md           |
-| final  | code     | received | 2026-05-15 | reviews/final-review-2026-05-15-v2.md               |
-| plan   | artifact | passed   | 2026-05-14 | reviews/archived/artifact-plan-review-2026-05-14.md |
-| spec   | artifact | pending  | -          | -                                                   |
-| design | artifact | pending  | -          | -                                                   |
+| Scope  | Type     | Status      | Date       | Artifact                                            |
+| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01    | code     | passed      | 2026-05-15 | reviews/archived/p01-review-2026-05-15.md           |
+| p02    | code     | passed      | 2026-05-15 | reviews/archived/p02-review-2026-05-15.md           |
+| p03    | code     | passed      | 2026-05-15 | reviews/archived/p03-review-2026-05-15.md           |
+| final  | code     | fixes_added | 2026-05-15 | reviews/archived/final-review-2026-05-15-v2.md      |
+| plan   | artifact | passed      | 2026-05-14 | reviews/archived/artifact-plan-review-2026-05-14.md |
+| spec   | artifact | pending     | -          | -                                                   |
+| design | artifact | pending     | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -453,8 +564,9 @@ If validation produced no file changes, no commit. If it required follow-up edit
 - Phase 1: 4 tasks — bootstrap root-cause fix (reorder check, post-sync commit, docs, version bump)
 - Phase 2: 3 tasks — inherited-git-state preflight added to three project entry skills (+ allowed-tools fix on `oat-project-new`)
 - Phase 3: 2 tasks — lockstep public package version bumps and pre-PR validation sweep
+- Phase 4: 3 tasks — review fixes for sync commit pathspec handling and bootstrap docs
 
-**Total: 9 tasks**
+**Total: 12 tasks**
 
 Ready for implementation.
 

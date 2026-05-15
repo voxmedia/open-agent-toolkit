@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -29,8 +29,9 @@ oat_generated: false
 | Phase 1 | complete | 4     | 4/4       |
 | Phase 2 | complete | 3     | 3/3       |
 | Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | pending  | 3     | 0/3       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/12 tasks completed
 
 ---
 
@@ -427,6 +428,116 @@ oat_generated: false
 
 ---
 
+## Phase 4: Review Fixes
+
+**Status:** pending
+**Started:** -
+**Completed:** -
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Pending.
+
+**Key files touched:**
+
+- Pending.
+
+**Verification:**
+
+- Pending.
+
+**Notes / Decisions:**
+
+- Added from independent second final review `reviews/archived/final-review-2026-05-15-v2.md`.
+
+### Task p04-t01: (review) Fix post-sync commit pathspec handling
+
+**Status:** pending
+**Commit:** -
+
+**Outcome (required when completed):**
+
+- Bootstrap sync commits no longer fail when sync-managed provider directories exist but contain no tracked or staged files.
+
+**Files changed:**
+
+- `.agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`
+
+**Verification:**
+
+- Run: `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`
+- Result: pending
+- Run: temp-repo smoke check with empty `.claude/skills`, empty `.cursor/rules`, and dirty `.oat/sync/manifest.json`
+- Result: pending
+
+**Notes / Decisions:**
+
+- The review found that commit scoping belongs on the preceding `git add -A -- "${SYNC_STAGE_PATHS[@]}"`; re-passing pathspecs to `git commit` rejects empty provider directories.
+
+**Issues Encountered:**
+
+- Pending.
+
+---
+
+### Task p04-t02: (review) Update bootstrap docs for commit scoping
+
+**Status:** pending
+**Commit:** -
+
+**Outcome (required when completed):**
+
+- SKILL.md no longer documents the broken pathspec-scoped `git commit` command and explains that sync scoping is enforced by scoped staging.
+
+**Files changed:**
+
+- `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- Result: pending
+
+**Notes / Decisions:**
+
+- This tracks the Important review finding from the second final pass.
+
+**Issues Encountered:**
+
+- Pending.
+
+---
+
+### Task p04-t03: (review) Remove duplicated provider setup docs
+
+**Status:** pending
+**Commit:** -
+
+**Outcome (required when completed):**
+
+- Provider directory creation and `oat sync --scope all` are documented once in the runnable sequence, with Step 3 focused on baseline checks.
+
+**Files changed:**
+
+- `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- Result: pending
+
+**Notes / Decisions:**
+
+- Converted the final-scope Minor finding into a task because the fix is small and touches the same document as p04-t02.
+
+**Issues Encountered:**
+
+- Pending.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -499,6 +610,7 @@ _- Outstanding Items_
 #### Outstanding Items
 
 - Non-blocking Minor from review: Step 3 docs duplicate Step 4 provider-sync commands in `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`.
+- Superseded by p04-t03 from the independent second final review.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
@@ -543,6 +655,35 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Disposition:** final review passed. The remaining Minor docs duplication in `oat-worktree-bootstrap-auto/SKILL.md` is non-blocking and may be handled as follow-up cleanup if desired.
 
 **Status:** Final review marked `passed` in plan.md Reviews table.
+
+---
+
+## Review Received: final (code, independent second pass)
+
+**Date:** 2026-05-15
+**Review artifact:** `reviews/archived/final-review-2026-05-15-v2.md`
+
+**Findings:**
+
+- Critical: 1 (`C1`)
+- Important: 1 (`I1`)
+- Medium: 0
+- Minor: 1 (`m1`)
+
+**New tasks added:** `p04-t01`, `p04-t02`, `p04-t03`
+
+**Disposition:**
+
+- `C1` converted to `p04-t01` — remove the `git commit` pathspec that fails on empty provider directories.
+- `I1` converted to `p04-t02` — update the SKILL.md reference command and scoping prose.
+- `m1` converted to `p04-t03` — remove duplicated provider setup / sync docs while editing the same skill.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update the final review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final`, then `oat-project-review-receive` to reach `passed`
 
 ---
 
