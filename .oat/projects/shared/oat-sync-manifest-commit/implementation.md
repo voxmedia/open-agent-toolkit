@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete | 4     | 4/4       |
 | Phase 2 | complete | 3     | 3/3       |
 | Phase 3 | complete | 2     | 2/2       |
-| Phase 4 | pending  | 3     | 0/3       |
+| Phase 4 | complete | 3     | 3/3       |
 
-**Total:** 9/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ---
 
@@ -430,36 +430,49 @@ oat_generated: false
 
 ## Phase 4: Review Fixes
 
-**Status:** pending
-**Started:** -
-**Completed:** -
+**Status:** complete
+**Started:** 2026-05-15
+**Completed:** 2026-05-15
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- Pending.
+- Removed the empty-directory-prone provider pathspecs from the runtime sync commit path.
+- Added concrete staged-file isolation so `chore: run sync` commits only sync-managed files even if unrelated files were already staged.
+- Updated `oat-worktree-bootstrap-auto` docs to describe the file-list isolation strategy and removed duplicated provider setup / all-scope sync instructions.
 
 **Key files touched:**
 
-- Pending.
+- `.agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh` - sync commit now derives concrete staged sync-managed files and commits only that list.
+- `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md` - docs now describe the Step 4 sequence and staged-file isolation behavior.
 
 **Verification:**
 
-- Pending.
+- Run: `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`
+- Result: pass
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- Result: pass
+- Run: `! rg -n 'git commit -m "chore: run sync" -- "\$\{SYNC_STAGE_PATHS\[@\]\}"' .agents/skills/oat-worktree-bootstrap-auto/SKILL.md .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`
+- Result: pass
+- Run: temp-repo clean-index smoke with empty `.claude/skills`, empty `.cursor/rules`, and dirty `.oat/sync/manifest.json`
+- Result: pass; sync commit contained only `.oat/sync/manifest.json`.
+- Run: temp-repo dirty-index smoke with unrelated staged file plus dirty manifest
+- Result: pass; sync commit contained only `.oat/sync/manifest.json` and left `unrelated/file.txt` staged.
 
 **Notes / Decisions:**
 
 - Added from independent second final review `reviews/archived/final-review-2026-05-15-v2.md`.
+- First p04 review failed because the no-pathspec commit could include unrelated already-staged files. The fix loop now derives concrete staged sync-managed files before committing.
 
 ### Task p04-t01: (review) Fix post-sync commit pathspec handling
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7481565b; follow-up fix 736be408
 
 **Outcome (required when completed):**
 
-- Bootstrap sync commits no longer fail when sync-managed provider directories exist but contain no tracked or staged files.
+- Bootstrap sync commits no longer fail when sync-managed provider directories exist but contain no tracked or staged files, and they do not include unrelated already-staged files.
 
 **Files changed:**
 
@@ -468,28 +481,31 @@ oat_generated: false
 **Verification:**
 
 - Run: `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`
-- Result: pending
+- Result: pass
 - Run: temp-repo smoke check with empty `.claude/skills`, empty `.cursor/rules`, and dirty `.oat/sync/manifest.json`
-- Result: pending
+- Result: pass; sync commit contained only `.oat/sync/manifest.json`.
+- Run: temp-repo dirty-index smoke check with unrelated staged file and dirty `.oat/sync/manifest.json`
+- Result: pass; sync commit contained only `.oat/sync/manifest.json`, leaving unrelated staged work staged.
 
 **Notes / Decisions:**
 
-- The review found that commit scoping belongs on the preceding `git add -A -- "${SYNC_STAGE_PATHS[@]}"`; re-passing pathspecs to `git commit` rejects empty provider directories.
+- Commit scoping uses `git add -A -- "${SYNC_STAGE_PATHS[@]}"`, then derives concrete staged sync-managed files with `git diff --cached --name-only -z --no-renames -- "${SYNC_STAGE_PATHS[@]}"`.
+- This avoids empty directory pathspec failures without committing the whole index.
 
 **Issues Encountered:**
 
-- Pending.
+- Initial p04 fix passed the empty-provider-dir scenario but failed review because an unscoped commit could include unrelated already-staged files. Fixed in 736be408.
 
 ---
 
 ### Task p04-t02: (review) Update bootstrap docs for commit scoping
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 25e28a19; follow-up fix f4155bb8
 
 **Outcome (required when completed):**
 
-- SKILL.md no longer documents the broken pathspec-scoped `git commit` command and explains that sync scoping is enforced by scoped staging.
+- SKILL.md no longer documents the broken directory-pathspec commit command and now explains the concrete staged-file isolation strategy.
 
 **Files changed:**
 
@@ -498,22 +514,22 @@ oat_generated: false
 **Verification:**
 
 - Run: `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
-- Result: pending
+- Result: pass
 
 **Notes / Decisions:**
 
-- This tracks the Important review finding from the second final pass.
+- This tracks the Important review finding from the second final pass and the follow-up Important finding from the first p04 review.
 
 **Issues Encountered:**
 
-- Pending.
+- Initial docs fix overstated scoped staging safety before an unscoped commit. Fixed in f4155bb8.
 
 ---
 
 ### Task p04-t03: (review) Remove duplicated provider setup docs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 97636d72
 
 **Outcome (required when completed):**
 
@@ -526,7 +542,7 @@ oat_generated: false
 **Verification:**
 
 - Run: `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
-- Result: pending
+- Result: pass
 
 **Notes / Decisions:**
 
@@ -534,7 +550,7 @@ oat_generated: false
 
 **Issues Encountered:**
 
-- Pending.
+- None.
 
 ---
 
@@ -547,6 +563,27 @@ _- Parallel Groups list_
 _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
+
+### Run 4 — 2026-05-15 23:32
+
+**Branch:** fix/oat-sync-manifest-commit
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p04   | DONE        | pass   | 1/2            | completed   |
+
+#### Parallel Groups
+
+- p04: sequential on orchestration branch
+
+#### Outstanding Items
+
+- No permanent automated regression test was added for the bootstrap shell commit-isolation logic; p04 was verified with focused temp-repo smoke checks and passed re-review.
 
 ### Run 3 — 2026-05-15 03:05
 
