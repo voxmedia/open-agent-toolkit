@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | pending  | N     | 0/N       |
+| Phase 2 | complete | 3     | 3/3       |
 
-**Total:** 4/9 tasks completed
+**Total:** 7/9 tasks completed
 
 ---
 
@@ -183,15 +183,138 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Project Entry Skill Preflight
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-05-15
+**Completed:** 2026-05-15
 
-### Task p02-t01: {Task Name}
+### Phase Summary (fill when phase is complete)
 
-**Status:** pending
-**Commit:** -
+**Outcome (what changed):**
+
+- Added inherited-git-state preflight gates to `oat-project-quick-start`, `oat-project-new`, and `oat-project-import-plan`.
+- Each gate runs `git status --porcelain`, surfaces dirty state, calls out sync-managed generated paths, offers Commit now / Proceed anyway / Abort, and preserves the explicit-choice requirement except non-interactive/no-response fallback.
+- `oat-project-new` now allows general `Bash` because the skill body already invokes `oat` and now requires `git status`.
+- Skill versions bumped as planned: quick-start `2.0.2` -> `2.1.0`, new `1.2.0` -> `1.3.0`, import-plan `1.2.1` -> `1.3.0`.
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-quick-start/SKILL.md` - added Step 0 preflight and version bump.
+- `.agents/skills/oat-project-new/SKILL.md` - added Step 0 preflight, widened allowed tools, and bumped version.
+- `.agents/skills/oat-project-import-plan/SKILL.md` - added Step 0 preflight, refreshed progress indicators, and bumped version.
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-project-quick-start/SKILL.md`
+- Result: pass
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-project-new/SKILL.md`
+- Result: pass
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-project-import-plan/SKILL.md`
+- Result: pass
+- Run: targeted `rg` checks for required version, preflight heading, no-advance gate, renamed Step 0.5, and progress indicator updates in each changed skill.
+- Result: pass
+- Run: `git diff --check` on each changed skill.
+- Result: pass
+
+**Notes / Decisions:**
+
+- The planned targeted `pnpm format:fix <file>` command failed for each Phase 2 skill because Turborepo treated the path as a task name. Used `pnpm exec oxfmt --write <file>` and `pnpm exec oxfmt --check <file>` instead.
+- Full interactive skill invocation branch testing was not run from this phase implementer context; verification focused on the committed skill instructions and formatting.
+
+### Task p02-t01: Add Step 0 preflight to `oat-project-quick-start`
+
+**Status:** completed
+**Commit:** ff3ca7fb
+
+**Outcome (required when completed):**
+
+- Added the inherited git-state preflight before active-project resolution, renamed the previous resolver step to Step 0.5, added a `[0/6]` progress indicator, and bumped the skill version to `2.1.0`.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-quick-start/SKILL.md`
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-project-quick-start/SKILL.md`
+- Result: pass
+- Run: targeted `rg` checks for version, preflight heading, no-advance gate, Step 0.5, and `[0/6]` indicator.
+- Result: pass
+- Run: `git diff --check -- .agents/skills/oat-project-quick-start/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Used direct `oxfmt` after the planned targeted `pnpm format:fix <file>` command failed under Turbo.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
+### Task p02-t02: Add Step 0 preflight to `oat-project-new` + widen allowed-tools
+
+**Status:** completed
+**Commit:** c6cae0ea
+
+**Outcome (required when completed):**
+
+- Added the inherited git-state preflight before projects-root resolution, renamed the previous resolver step to Step 0.5, widened `allowed-tools` to `Bash`, added a `[0/3]` progress indicator, and bumped the skill version to `1.3.0`.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-new/SKILL.md`
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-project-new/SKILL.md`
+- Result: pass
+- Run: targeted `rg` checks for version, allowed-tools, preflight heading, no-advance gate, Step 0.5, and `[0/3]` indicator.
+- Result: pass
+- Run: `git diff --check -- .agents/skills/oat-project-new/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Used direct `oxfmt` after the planned targeted `pnpm format:fix <file>` command failed under Turbo.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
+### Task p02-t03: Add Step 0 preflight to `oat-project-import-plan`
+
+**Status:** completed
+**Commit:** 7421b365
+
+**Outcome (required when completed):**
+
+- Added the inherited git-state preflight before active-project resolution, renamed the previous resolver step to Step 0.5, updated progress indicators to include preflight and implementation tracker steps, and bumped the skill version to `1.3.0`.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-import-plan/SKILL.md`
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-project-import-plan/SKILL.md`
+- Result: pass
+- Run: targeted `rg` checks for version, preflight heading, no-advance gate, Step 0.5, `[0/6]`, and `[6/6]` indicators.
+- Result: pass
+- Run: `git diff --check -- .agents/skills/oat-project-import-plan/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Used direct `oxfmt` after the planned targeted `pnpm format:fix <file>` command failed under Turbo.
+
+**Issues Encountered:**
+
+- None.
 
 ---
 
