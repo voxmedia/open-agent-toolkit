@@ -328,6 +328,27 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
+### Run 2 — 2026-05-15 01:09
+
+**Branch:** fix/oat-sync-manifest-commit
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p02   | DONE_WITH_CONCERNS | pass   | 0/2            | completed   |
+
+#### Parallel Groups
+
+- p02: sequential on orchestration branch
+
+#### Outstanding Items
+
+- None. Implementer concern about not running full interactive skill-invocation smoke tests was accepted by review as non-blocking for Markdown instruction changes.
+
 ### Run 1 — 2026-05-15 00:56
 
 **Branch:** fix/oat-sync-manifest-commit
