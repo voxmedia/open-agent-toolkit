@@ -185,7 +185,7 @@ fi
 if [[ -n "$SYNC_DIRTY" ]]; then
   git add -A -- "${SYNC_STAGE_PATHS[@]}" 2>/dev/null || true
   if ! git diff --cached --quiet -- "${SYNC_STAGE_PATHS[@]}"; then
-    if git commit -m "chore: run sync" -- "${SYNC_STAGE_PATHS[@]}" >/dev/null 2>&1; then
+    if git commit -m "chore: run sync" >/dev/null 2>&1; then
       CHECK_RESULTS["sync_commit"]="pass"
     else
       CHECK_RESULTS["sync_commit"]="fail"
