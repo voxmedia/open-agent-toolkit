@@ -158,15 +158,12 @@ Execute in the target worktree directory:
 pnpm run worktree:init          # install + build + sync
 oat status --scope project
 pnpm test
-mkdir -p .claude/skills .cursor/rules
-git status --porcelain
-oat sync --scope all
 ```
 
-`git status --porcelain` is the `git_clean` baseline check. It runs after
-`worktree:init` and provider directory creation, but before the all-scope sync
-sweep, so it measures inherited worktree state plus setup output rather than
-the sync sweep's generated output.
+Continue to Step 4 for provider directory setup, the `git_clean` baseline
+check, and the all-scope sync. The `git_clean` check must run after provider
+directory creation but before the all-scope sync sweep, so it measures inherited
+worktree state plus setup output rather than the sync sweep's generated output.
 
 Check behavior per baseline policy:
 
@@ -182,18 +179,15 @@ Check behavior per baseline policy:
   - If active project with `implementation.md` exists → append timestamped baseline-failure note.
   - Otherwise → console output only (no fallback file creation).
 
-### Step 4: Create Provider Directories
+### Step 4: Create Provider Directories and Sync
 
-Worktrees do not inherit gitignored provider directories. Create them if missing:
+Worktrees do not inherit gitignored provider directories. Create them if
+missing, run the `git_clean` baseline check, and then run sync:
 
 ```bash
 mkdir -p "{target-path}/.claude/skills"
 mkdir -p "{target-path}/.cursor/rules"
-```
-
-Then re-run sync to establish symlinks:
-
-```bash
+git status --porcelain
 oat sync --scope all
 ```
 
