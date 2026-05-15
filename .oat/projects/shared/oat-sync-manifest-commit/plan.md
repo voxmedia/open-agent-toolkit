@@ -436,7 +436,7 @@ If validation produced no file changes, no commit. If it required follow-up edit
 | ------ | -------- | ------- | ---------- | --------------------------------------------------- |
 | p01    | code     | passed  | 2026-05-15 | reviews/p01-review-2026-05-15.md                    |
 | p02    | code     | passed  | 2026-05-15 | reviews/p02-review-2026-05-15.md                    |
-| p03    | code     | pending | -          | -                                                   |
+| p03    | code     | passed  | 2026-05-15 | reviews/p03-review-2026-05-15.md                    |
 | final  | code     | pending | -          | -                                                   |
 | plan   | artifact | passed  | 2026-05-14 | reviews/archived/artifact-plan-review-2026-05-14.md |
 | spec   | artifact | pending | -          | -                                                   |
