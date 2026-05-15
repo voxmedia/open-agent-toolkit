@@ -171,11 +171,21 @@ fi
 
 # ─── Step 4.5: Commit Sync Output ───────────────────────────────────────────
 SYNC_PATHS=(.oat/sync/manifest.json .claude .cursor .codex)
-SYNC_DIRTY=$(git status --porcelain -- "${SYNC_PATHS[@]}" 2>/dev/null || true)
+SYNC_STAGE_PATHS=()
+for sync_path in "${SYNC_PATHS[@]}"; do
+  if [[ -e "$sync_path" ]] || [[ -n "$(git ls-files -- "$sync_path")" ]]; then
+    SYNC_STAGE_PATHS+=("$sync_path")
+  fi
+done
+
+SYNC_DIRTY=""
+if [[ ${#SYNC_STAGE_PATHS[@]} -gt 0 ]]; then
+  SYNC_DIRTY=$(git status --porcelain -- "${SYNC_STAGE_PATHS[@]}" 2>/dev/null || true)
+fi
 if [[ -n "$SYNC_DIRTY" ]]; then
-  git add -- "${SYNC_PATHS[@]}" 2>/dev/null || true
-  if ! git diff --cached --quiet -- "${SYNC_PATHS[@]}"; then
-    if git commit -m "chore: run sync" -- "${SYNC_PATHS[@]}" >/dev/null 2>&1; then
+  git add -A -- "${SYNC_STAGE_PATHS[@]}" 2>/dev/null || true
+  if ! git diff --cached --quiet -- "${SYNC_STAGE_PATHS[@]}"; then
+    if git commit -m "chore: run sync" -- "${SYNC_STAGE_PATHS[@]}" >/dev/null 2>&1; then
       CHECK_RESULTS["sync_commit"]="pass"
     else
       CHECK_RESULTS["sync_commit"]="fail"
