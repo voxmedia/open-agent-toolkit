@@ -152,11 +152,12 @@ fi
 
 run_check "project_status" oat status --scope project
 run_check "tests" pnpm test
-run_check "git_clean" test -z "$(git status --porcelain)"
 
 # ─── Step 4: Create Provider Directories ────────────────────────────────────
 mkdir -p "$TARGET_PATH/.claude/skills"
 mkdir -p "$TARGET_PATH/.cursor/rules"
+run_check "git_clean" test -z "$(git status --porcelain)"
+
 if oat sync --scope all >/dev/null 2>&1; then
   CHECK_RESULTS["provider_sync"]="pass"
 else
