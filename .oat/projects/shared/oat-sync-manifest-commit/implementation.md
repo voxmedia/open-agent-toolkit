@@ -3,14 +3,14 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
 # Implementation: oat-sync-manifest-commit
 
 **Started:** 2026-05-13
-**Last Updated:** 2026-05-13
+**Last Updated:** 2026-05-15
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,75 +24,162 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | pending  | N     | 0/N       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 4/9 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Bootstrap Root-Cause Fix
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-13
+**Completed:** 2026-05-15
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- `git_clean` now runs after `worktree:init` and provider directory creation but before `oat sync --scope all`.
+- Bootstrap now commits dirty sync-managed output as `chore: run sync` and reports `sync_commit: pass | fail | skip`.
+- The sync commit is path-scoped to existing or tracked sync paths so unrelated staged work is not included.
+- `oat-worktree-bootstrap-auto` docs now describe the reordered checks, post-sync commit, and structured status field.
+- Skill version bumped from `1.2.2` to `1.3.0`.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `.agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh` - reordered baseline clean check and added scoped post-sync commit handling.
+- `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md` - documented behavior and bumped skill version.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`
+- Result: pass
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- Result: pass
+- Run: focused temp-repo shell check of sync commit block with unrelated staged file
+- Result: pass; `chore: run sync` committed only `.claude/generated.md` and left `unrelated/file.txt` staged.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- The planned targeted `pnpm format:fix .agents/skills/oat-worktree-bootstrap-auto/SKILL.md` command failed because Turborepo treated the path as a task name. Used `pnpm exec oxfmt --write .agents/skills/oat-worktree-bootstrap-auto/SKILL.md` instead.
+- A focused behavior check found that passing missing provider directories directly to `git add` could skip existing dirty sync paths. Added existing-or-tracked path filtering and follow-up commits to fix script/docs.
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Reorder `git_clean` check before all-scope sync in bootstrap.sh
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** f54bf2fa
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- `git_clean` now measures the inherited base plus setup output before the all-scope sync sweep can dirty generated paths.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `.agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh` - moved clean check to run after provider directory creation and before `oat sync --scope all`.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`
+- Result: pass
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- No automated bash harness exists for this script; behavioral verification completed after p01-t02 when the sync commit block existed.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- None.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add post-sync commit block to bootstrap.sh
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9c7dd890; follow-up fix 68728e55
 
-**Notes:**
+**Outcome (required when completed):**
 
-- {Notes will be added during implementation}
+- Bootstrap commits dirty sync-managed output as `chore: run sync` and emits `sync_commit: pass | fail | skip`.
+- Sync staging filters to existing or tracked sync paths before `git add -A`, avoiding failures from missing provider directories while preserving deletion handling.
+
+**Files changed:**
+
+- `.agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh` - added post-sync commit handling and structured status output.
+
+**Verification:**
+
+- Run: `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`
+- Result: pass
+- Run: focused temp-repo shell check of sync commit block with unrelated staged file
+- Result: pass; sync commit included only sync-managed output and did not commit unrelated staged work.
+
+**Notes / Decisions:**
+
+- Used `git commit -m "chore: run sync" -- "${SYNC_STAGE_PATHS[@]}"` to keep the runtime commit path-scoped.
+
+**Issues Encountered:**
+
+- Initial implementation passed missing provider dirs to `git add`, which could prevent staging existing dirty sync paths. Fixed in 68728e55.
+
+---
+
+### Task p01-t03: Update bootstrap SKILL.md docs
+
+**Status:** completed
+**Commit:** d174b002; follow-up fix dff0fc4f
+
+**Outcome (required when completed):**
+
+- Skill docs now describe the reordered baseline checks, the post-sync commit contract, and `sync_commit` status semantics.
+
+**Files changed:**
+
+- `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md` - documented new bootstrap behavior and sync commit structured status.
+
+**Verification:**
+
+- Run: `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- Result: pass
+
+**Notes / Decisions:**
+
+- Docs were updated after the p01-t02 follow-up fix to describe existing-or-tracked sync path staging.
+
+**Issues Encountered:**
+
+- Planned targeted `pnpm format:fix <file>` command failed under Turborepo; used direct `pnpm exec oxfmt --write <file>` instead.
+
+---
+
+### Task p01-t04: Bump `oat-worktree-bootstrap-auto` skill version
+
+**Status:** completed
+**Commit:** 40ddcc70
+
+**Outcome (required when completed):**
+
+- `oat-worktree-bootstrap-auto` frontmatter version is now `1.3.0`.
+
+**Files changed:**
+
+- `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md` - bumped frontmatter version.
+
+**Verification:**
+
+- Run: `head -10 .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- Result: pass; output showed `version: 1.3.0`.
+
+**Notes / Decisions:**
+
+- Version bump kept separate from behavior/docs commits as planned.
+
+**Issues Encountered:**
+
+- None.
 
 ---
 
@@ -152,28 +239,32 @@ Chronological log of implementation progress.
 
 ### 2026-05-13
 
-**Session Start:** {time}
+**Session Start:** prior session
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Reorder `git_clean` check before all-scope sync in bootstrap.sh - f54bf2fa
+- [x] p01-t02: Add post-sync commit block to bootstrap.sh - 9c7dd890; follow-up fix 68728e55
+- [x] p01-t03: Update bootstrap SKILL.md docs - d174b002; follow-up fix dff0fc4f
+- [x] p01-t04: Bump `oat-worktree-bootstrap-auto` skill version - 40ddcc70
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Bootstrap now checks inherited cleanliness before all-scope sync.
+- Bootstrap now commits sync-managed output as `chore: run sync` and reports `sync_commit`.
+- Docs and skill version reflect the behavior change.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Runtime sync commits are path-scoped to existing or tracked sync paths to avoid missing-path `git add` failures and unrelated staged-file inclusion.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Phase 2 can start at `p02-t01`.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
+**Session End:** 2026-05-15
 
 ---
 
@@ -189,41 +280,45 @@ Chronological log of implementation progress.
 
 Document any deviations from the original plan.
 
-| Task | Planned | Actual | Reason |
-| ---- | ------- | ------ | ------ |
-| -    | -       | -      | -      |
+| Task    | Planned                                                               | Actual                                                                        | Reason                                                                                                                             |
+| ------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| p01-t03 | `pnpm format:fix .agents/skills/oat-worktree-bootstrap-auto/SKILL.md` | `pnpm exec oxfmt --write .agents/skills/oat-worktree-bootstrap-auto/SKILL.md` | The Turborepo script treated the file path as a task name and failed.                                                              |
+| p01-t02 | Scratch bootstrap scenario                                            | Focused temp-repo behavior check of sync commit block                         | Avoided running the full bootstrap/test workflow from inside the phase worktree; verified the risky commit-path behavior directly. |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                                                                                                                                                                                     | Passed | Failed | Coverage                                    |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------------------------- |
+| 1     | `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`; `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`; focused temp-repo sync commit check; `head -10 .agents/skills/oat-worktree-bootstrap-auto/SKILL.md` | 4      | 0      | Phase verification + focused behavior smoke |
+| 2     | -                                                                                                                                                                                                                                                             | -      | -      | -                                           |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Phase 1 bootstrap root-cause fix: pre-sync `git_clean`, post-sync `chore: run sync`, and `sync_commit` structured status.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Autonomous worktree bootstrap is designed to leave sync-managed output committed instead of leaking `.oat/sync/manifest.json` or provider-dir changes into later workflow commits.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh` - bootstrap behavior.
+- `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md` - skill docs and version.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`
+- `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- Focused temp-repo sync commit behavior check.
+- `head -10 .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- None for Phase 1 behavior. Verification used a focused temp-repo commit-path check instead of a full scratch bootstrap run.
 
 ## References
 
