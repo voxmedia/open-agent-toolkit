@@ -198,15 +198,18 @@ SYNC_PATHS=(.oat/sync/manifest.json .claude .cursor .codex)
 SYNC_STAGE_PATHS=(existing-or-tracked sync paths)
 git status --porcelain -- "${SYNC_STAGE_PATHS[@]}"
 git add -A -- "${SYNC_STAGE_PATHS[@]}"
-git commit -m "chore: run sync"
+STAGED_SYNC_FILES=(staged sync-managed files from git diff --cached)
+git commit -m "chore: run sync" -- "${STAGED_SYNC_FILES[@]}"
 ```
 
-Use a staged-diff guard so no empty commit is created. The scoped
-`git add -A -- "${SYNC_STAGE_PATHS[@]}"` determines what enters the commit;
-do not pass sync pathspecs to `git commit`, because empty provider directories
-can make the commit fail. Orchestrators can rely on `chore: run sync` touching
-only sync-managed paths. If no scoped path is dirty, or staging produces no
-diff, report `sync_commit: skip`.
+Use a staged-diff guard so no empty commit is created. After scoped staging,
+derive the concrete staged sync-managed files from
+`git diff --cached --name-only --no-renames -- "${SYNC_STAGE_PATHS[@]}"` and
+commit only those file paths. Do not pass provider directory pathspecs to
+`git commit`, because empty provider directories can make the commit fail. This
+file-list isolation is what keeps `chore: run sync` limited to sync-managed
+paths even if unrelated files were already staged. If no scoped path is dirty,
+or staging produces no diff, report `sync_commit: skip`.
 
 ### Step 5: Return Structured Status
 
