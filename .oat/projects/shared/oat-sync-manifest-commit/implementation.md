@@ -124,6 +124,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ---
 
+## Review Received: plan (artifact)
+
+**Date:** 2026-05-14
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-05-14.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1 (`I1`)
+- Medium: 1 (`M1`)
+- Minor: 1 (`m1`)
+
+**Disposition:** all `resolve_in_artifact`, applied directly. No fix tasks added to plan.
+
+- `I1` — state.md body rewritten to reflect plan-complete status (Current Phase, Artifacts, Progress, Next Milestone).
+- `M1` — `pnpm --filter @open-agent-toolkit/cli test` appended to p03-t02's pre-PR validation sweep (run before `pnpm release:validate`).
+- `m1` — "Implementation Complete" → "Plan Summary"; "Ready for code review and merge" → "Ready for implementation".
+
+**Status:** Review marked `passed` in plan.md Reviews table.
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.

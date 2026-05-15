@@ -16,33 +16,34 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-13T16:51:19.847Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-13T16:52:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-14T19:40:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-sync-manifest-commit
 
-**Status:** Plan Import
+**Status:** Plan Complete — Ready for Implementation
 **Started:** 2026-05-13
-**Last Updated:** 2026-05-13
+**Last Updated:** 2026-05-14
 
 ## Current Phase
 
-Plan import - Waiting to normalize an external plan into OAT format
+Plan complete. Source plan normalized from `references/imported-plan.md` into a 3-phase / 9-task `plan.md`. Ready for `oat-project-implement`.
 
 ## Artifacts
 
 - **Discovery:** N/A (import mode)
 - **Spec:** N/A (import mode)
-- **Design:** N/A (import mode)
-- **Plan:** `plan.md` (scaffolded template — awaiting imported content)
-- **Implementation:** `implementation.md` (scaffolded template — awaiting imported plan)
+- **Design:** N/A (import mode — see `references/imported-plan.md` for design rationale)
+- **Plan:** `plan.md` (normalized from imported source)
+- **Implementation:** `implementation.md` (scaffolded; first task pointer: `p01-t01`)
 
 ## Progress
 
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
-- ⧗ Awaiting external plan import
+- ✓ External plan imported and normalized
+- ⧗ Awaiting implementation
 
 ## Blockers
 
@@ -50,4 +51,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-import-plan` to normalize the external plan
+Run `oat-project-implement` to execute the plan, starting at `p01-t01`.

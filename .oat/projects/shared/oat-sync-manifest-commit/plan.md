@@ -394,7 +394,7 @@ git commit -m "chore(p03-t01): lockstep version bump for sync-manifest-commit ch
 
 ---
 
-### Task p03-t02: Run `pnpm release:validate`
+### Task p03-t02: Run pre-PR validation sweep
 
 **Files:** none (validation only)
 
@@ -404,13 +404,16 @@ N/A — gate.
 
 **Step 2: Implement (GREEN)**
 
-Run:
+Run, in order:
 
 ```bash
+pnpm --filter @open-agent-toolkit/cli test
 pnpm release:validate
 ```
 
-Expected: exits 0. Resolve any release-validation findings before proceeding to PR. If validation fails, treat findings as additional tasks added to this phase (per the standard `oat-project-implement` fix-loop).
+Both must exit 0. The CLI test sweep catches regressions in the sync engine and command surface that the touched skills could indirectly affect (e.g., `packages/cli/src/commands/sync`, helpers referenced by bootstrap docs). `pnpm release:validate` then gates the lockstep public-package release.
+
+Resolve any findings before proceeding to PR. If either step fails, treat findings as additional tasks added to this phase (per the standard `oat-project-implement` fix-loop).
 
 **Step 3: Refactor**
 
@@ -418,7 +421,7 @@ None.
 
 **Step 4: Verify**
 
-`pnpm release:validate` returns exit 0 (re-run after any fix).
+Both commands return exit 0 (re-run after any fix). Parity check against `references/imported-plan.md` "Validation" section — both commands listed there are now exercised.
 
 **Step 5: Commit**
 
@@ -428,31 +431,31 @@ If validation produced no file changes, no commit. If it required follow-up edit
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| p02    | code     | pending  | -          | -                                          |
-| p03    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| plan   | artifact | received | 2026-05-14 | reviews/artifact-plan-review-2026-05-14.md |
-| spec   | artifact | pending  | -          | -                                          |
-| design | artifact | pending  | -          | -                                          |
+| Scope  | Type     | Status  | Date       | Artifact                                            |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                   |
+| p02    | code     | pending | -          | -                                                   |
+| p03    | code     | pending | -          | -                                                   |
+| final  | code     | pending | -          | -                                                   |
+| plan   | artifact | passed  | 2026-05-14 | reviews/archived/artifact-plan-review-2026-05-14.md |
+| spec   | artifact | pending | -          | -                                                   |
+| design | artifact | pending | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 ---
 
-## Implementation Complete
+## Plan Summary
 
 **Summary:**
 
 - Phase 1: 4 tasks — bootstrap root-cause fix (reorder check, post-sync commit, docs, version bump)
 - Phase 2: 3 tasks — inherited-git-state preflight added to three project entry skills (+ allowed-tools fix on `oat-project-new`)
-- Phase 3: 2 tasks — lockstep public package version bumps and release validation
+- Phase 3: 2 tasks — lockstep public package version bumps and pre-PR validation sweep
 
 **Total: 9 tasks**
 
-Ready for code review and merge.
+Ready for implementation.
 
 ---
 
