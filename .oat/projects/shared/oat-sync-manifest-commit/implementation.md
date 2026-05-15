@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-13
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,8 +28,9 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 4     | 4/4       |
 | Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 2     | 2/2       |
 
-**Total:** 7/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -318,6 +319,114 @@ oat_generated: false
 
 ---
 
+## Phase 3: Lockstep Release Validation
+
+**Status:** complete
+**Started:** 2026-05-15
+**Completed:** 2026-05-15
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Bumped the five public packages from `0.0.69` to `0.1.0` in lockstep:
+  `@open-agent-toolkit/cli`, `@open-agent-toolkit/control-plane`,
+  `@open-agent-toolkit/docs-config`, `@open-agent-toolkit/docs-theme`, and
+  `@open-agent-toolkit/docs-transforms`.
+- Updated the CLI skill-validation test expectation for the Phase 2
+  `oat-project-quick-start` version bump from `2.0.2` to `2.1.0`.
+- Completed the required pre-PR validation sweep.
+
+**Key files touched:**
+
+- `packages/cli/package.json` - bumped package version to `0.1.0`.
+- `packages/control-plane/package.json` - bumped package version to `0.1.0`.
+- `packages/docs-config/package.json` - bumped package version to `0.1.0`.
+- `packages/docs-theme/package.json` - bumped package version to `0.1.0`.
+- `packages/docs-transforms/package.json` - bumped package version to `0.1.0`.
+- `packages/cli/src/validation/skills.test.ts` - updated quick-start skill version contract expectation.
+
+**Verification:**
+
+- Run: package-version parity check for all five public package manifests
+- Result: pass; all five reported `0.1.0`.
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: fail on first run; stale quick-start skill version expectation still required `2.0.2`.
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass after updating the expectation; 163 test files and 1468 tests passed.
+- Run: `pnpm release:validate`
+- Result: pass; five public packages validated at `0.1.0`.
+
+**Notes / Decisions:**
+
+- No generated sync output changed during Phase 3.
+- `packages/cli/assets/public-package-versions.json` was not changed; `pnpm release:validate` passed without requiring a bundled asset update.
+
+### Task p03-t01: Bump five public package versions
+
+**Status:** completed
+**Commit:** d21ed28b
+
+**Outcome (required when completed):**
+
+- The five public package manifests now share the same `0.1.0` version.
+
+**Files changed:**
+
+- `packages/cli/package.json`
+- `packages/control-plane/package.json`
+- `packages/docs-config/package.json`
+- `packages/docs-theme/package.json`
+- `packages/docs-transforms/package.json`
+
+**Verification:**
+
+- Run: package-version parity check for all five public package manifests
+- Result: pass; all five reported `0.1.0`.
+
+**Notes / Decisions:**
+
+- Followed the plan's minor-increment rule for the current `0.0.x` package set.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
+### Task p03-t02: Run pre-PR validation sweep
+
+**Status:** completed
+**Commit:** c1aa2444
+
+**Outcome (required when completed):**
+
+- The required CLI test sweep and release validation now pass.
+- Validation required updating the quick-start skill contract test to the Phase 2 version `2.1.0`.
+
+**Files changed:**
+
+- `packages/cli/src/validation/skills.test.ts`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: fail on first run; stale quick-start skill version expectation still required `2.0.2`.
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass after updating the expectation; 163 test files and 1468 tests passed.
+- Run: `pnpm release:validate`
+- Result: pass; five public packages validated at `0.1.0`.
+
+**Notes / Decisions:**
+
+- The validation follow-up stayed narrow to the failing assertion introduced by the earlier skill version bump.
+
+**Issues Encountered:**
+
+- None after the test expectation was updated.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -449,6 +558,7 @@ Document any deviations from the original plan.
 | ------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | p01-t03 | `pnpm format:fix .agents/skills/oat-worktree-bootstrap-auto/SKILL.md` | `pnpm exec oxfmt --write .agents/skills/oat-worktree-bootstrap-auto/SKILL.md` | The Turborepo script treated the file path as a task name and failed.                                                              |
 | p01-t02 | Scratch bootstrap scenario                                            | Focused temp-repo behavior check of sync commit block                         | Avoided running the full bootstrap/test workflow from inside the phase worktree; verified the risky commit-path behavior directly. |
+| p03-t02 | Validation-only if clean                                              | Updated `packages/cli/src/validation/skills.test.ts`                          | The required CLI test sweep found a stale hard-coded quick-start skill version expectation after the Phase 2 version bump.         |
 
 ## Test Results
 
@@ -457,22 +567,31 @@ Track test execution during implementation.
 | Phase | Tests Run                                                                                                                                                                                                                                                     | Passed | Failed | Coverage                                    |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------------------------- |
 | 1     | `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`; `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`; focused temp-repo sync commit check; `head -10 .agents/skills/oat-worktree-bootstrap-auto/SKILL.md` | 4      | 0      | Phase verification + focused behavior smoke |
-| 2     | -                                                                                                                                                                                                                                                             | -      | -      | -                                           |
+| 2     | `pnpm exec oxfmt --check` on all three changed project entry skills; targeted `rg` checks for required sections/version/step indicators; `git diff --check` on all three changed skills                                                                       | 9      | 0      | Phase verification                          |
+| 3     | package-version parity check; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm release:validate`                                                                                                                                                           | 3      | 1      | Phase verification + release gate           |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
 - Phase 1 bootstrap root-cause fix: pre-sync `git_clean`, post-sync `chore: run sync`, and `sync_commit` structured status.
+- Phase 2 project entry preflight: inherited git-state gates for `oat-project-quick-start`, `oat-project-new`, and `oat-project-import-plan`; `oat-project-new` also widens `allowed-tools` to match the commands it already invokes.
+- Phase 3 release readiness: five public package manifests bumped in lockstep to `0.1.0`, with CLI tests and release validation passing.
 
 **Behavioral changes (user-facing):**
 
 - Autonomous worktree bootstrap is designed to leave sync-managed output committed instead of leaking `.oat/sync/manifest.json` or provider-dir changes into later workflow commits.
+- Project entry skills now surface inherited dirty git state before scaffolding so sync-generated output can be committed or explicitly acknowledged instead of silently rolling into project bookkeeping.
 
 **Key files / modules:**
 
 - `.agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh` - bootstrap behavior.
 - `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md` - skill docs and version.
+- `.agents/skills/oat-project-quick-start/SKILL.md` - quick workflow preflight and version.
+- `.agents/skills/oat-project-new/SKILL.md` - spec-driven project preflight, allowed-tools widening, and version.
+- `.agents/skills/oat-project-import-plan/SKILL.md` - import workflow preflight and version.
+- `packages/*/package.json` for the five public packages - lockstep release version.
+- `packages/cli/src/validation/skills.test.ts` - updated quick-start version contract test.
 
 **Verification performed:**
 
@@ -480,10 +599,17 @@ Track test execution during implementation.
 - `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
 - Focused temp-repo sync commit behavior check.
 - `head -10 .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- `pnpm exec oxfmt --check` on all three changed project entry skills.
+- Targeted `rg` checks and `git diff --check` for the project entry skill edits.
+- Package-version parity check for all five public packages.
+- `pnpm --filter @open-agent-toolkit/cli test`
+- `pnpm release:validate`
 
 **Design deltas (if any):**
 
-- None for Phase 1 behavior. Verification used a focused temp-repo commit-path check instead of a full scratch bootstrap run.
+- Phase 1 verification used a focused temp-repo commit-path check instead of a full scratch bootstrap run.
+- Phase 2 verification focused on committed skill instructions and formatting rather than full interactive skill invocation smoke tests.
+- Phase 3 validation required updating a stale CLI test expectation for the quick-start skill version bump.
 
 ## References
 
