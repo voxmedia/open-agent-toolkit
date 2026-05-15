@@ -201,9 +201,10 @@ After sync completes, commit sync-managed output if any scoped path is dirty:
 
 ```bash
 SYNC_PATHS=(.oat/sync/manifest.json .claude .cursor .codex)
-git status --porcelain -- "${SYNC_PATHS[@]}"
-git add -- "${SYNC_PATHS[@]}"
-git commit -m "chore: run sync" -- "${SYNC_PATHS[@]}"
+SYNC_STAGE_PATHS=(existing-or-tracked sync paths)
+git status --porcelain -- "${SYNC_STAGE_PATHS[@]}"
+git add -A -- "${SYNC_STAGE_PATHS[@]}"
+git commit -m "chore: run sync" -- "${SYNC_STAGE_PATHS[@]}"
 ```
 
 Use a staged-diff guard so no empty commit is created. The commit must remain
