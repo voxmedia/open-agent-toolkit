@@ -434,10 +434,10 @@ If validation produced no file changes, no commit. If it required follow-up edit
 
 | Scope  | Type     | Status  | Date       | Artifact                                            |
 | ------ | -------- | ------- | ---------- | --------------------------------------------------- |
-| p01    | code     | passed  | 2026-05-15 | reviews/p01-review-2026-05-15.md                    |
-| p02    | code     | passed  | 2026-05-15 | reviews/p02-review-2026-05-15.md                    |
-| p03    | code     | passed  | 2026-05-15 | reviews/p03-review-2026-05-15.md                    |
-| final  | code     | passed  | 2026-05-15 | reviews/final-review-2026-05-15.md                  |
+| p01    | code     | passed  | 2026-05-15 | reviews/archived/p01-review-2026-05-15.md           |
+| p02    | code     | passed  | 2026-05-15 | reviews/archived/p02-review-2026-05-15.md           |
+| p03    | code     | passed  | 2026-05-15 | reviews/archived/p03-review-2026-05-15.md           |
+| final  | code     | passed  | 2026-05-15 | reviews/archived/final-review-2026-05-15.md         |
 | plan   | artifact | passed  | 2026-05-14 | reviews/archived/artifact-plan-review-2026-05-14.md |
 | spec   | artifact | pending | -          | -                                                   |
 | design | artifact | pending | -          | -                                                   |

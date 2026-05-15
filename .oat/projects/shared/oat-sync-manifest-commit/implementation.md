@@ -531,7 +531,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Review Received: final (code)
 
 **Date:** 2026-05-15
-**Review artifact:** `reviews/final-review-2026-05-15.md`
+**Review artifact:** `reviews/archived/final-review-2026-05-15.md`
 
 **Findings:**
 
