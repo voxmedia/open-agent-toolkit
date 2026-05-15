@@ -428,14 +428,15 @@ If validation produced no file changes, no commit. If it required follow-up edit
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                   |
+| ------ | -------- | -------- | ---------- | ------------------------------------------ |
+| p01    | code     | pending  | -          | -                                          |
+| p02    | code     | pending  | -          | -                                          |
+| p03    | code     | pending  | -          | -                                          |
+| final  | code     | pending  | -          | -                                          |
+| plan   | artifact | received | 2026-05-14 | reviews/artifact-plan-review-2026-05-14.md |
+| spec   | artifact | pending  | -          | -                                          |
+| design | artifact | pending  | -          | -                                          |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
