@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p02-t01
+oat_last_commit: e605c01f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -16,7 +16,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-13T16:51:19.847Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-15T00:45:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-15T00:56:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -24,11 +24,11 @@ oat_generated: false
 
 **Status:** Implementation In Progress
 **Started:** 2026-05-13
-**Last Updated:** 2026-05-14
+**Last Updated:** 2026-05-15
 
 ## Current Phase
 
-Implementation in progress. Source plan normalized from `references/imported-plan.md` into a 3-phase / 9-task `plan.md`. Current task: `p01-t01`.
+Implementation in progress. Source plan normalized from `references/imported-plan.md` into a 3-phase / 9-task `plan.md`. Phase 1 passed review; current task: `p02-t01`.
 
 ## Artifacts
 
@@ -36,13 +36,14 @@ Implementation in progress. Source plan normalized from `references/imported-pla
 - **Spec:** N/A (import mode)
 - **Design:** N/A (import mode — see `references/imported-plan.md` for design rationale)
 - **Plan:** `plan.md` (normalized from imported source)
-- **Implementation:** `implementation.md` (scaffolded; first task pointer: `p01-t01`)
+- **Implementation:** `implementation.md` (Phase 1 complete; next task pointer: `p02-t01`)
 
 ## Progress
 
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External plan imported and normalized
+- ✓ Phase 1 bootstrap root-cause fix complete
 - ⧗ Implementation in progress
 
 ## Blockers
@@ -51,4 +52,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 bootstrap root-cause tasks, starting at `p01-t01`.
+Complete Phase 2 project entry skill preflight tasks, starting at `p02-t01`.

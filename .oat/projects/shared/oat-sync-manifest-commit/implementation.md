@@ -205,6 +205,27 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
+### Run 1 — 2026-05-15 00:56
+
+**Branch:** fix/oat-sync-manifest-commit
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 0/2            | completed   |
+
+#### Parallel Groups
+
+- p01: sequential on orchestration branch
+
+#### Outstanding Items
+
+- Non-blocking Minor from review: Step 3 docs duplicate Step 4 provider-sync commands in `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`.
+
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
 <!-- orchestration-runs-end -->
