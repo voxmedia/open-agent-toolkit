@@ -715,12 +715,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - `I1` converted to `p04-t02` — update the SKILL.md reference command and scoping prose.
 - `m1` converted to `p04-t03` — remove duplicated provider setup / sync docs while editing the same skill.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
-
-After the fix tasks are complete:
-
-- Update the final review row status to `fixes_completed`
-- Re-run `oat-project-review-provide code final`, then `oat-project-review-receive` to reach `passed`
+**Next:** Phase 4 fix tasks are complete and the final review row is marked `fixes_completed`. Re-run `oat-project-review-provide code final`, then `oat-project-review-receive` if the re-review reports findings.
 
 ---
 
@@ -781,11 +776,12 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                                                                                                                                                     | Passed | Failed | Coverage                                    |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------------------------- |
-| 1     | `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`; `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`; focused temp-repo sync commit check; `head -10 .agents/skills/oat-worktree-bootstrap-auto/SKILL.md` | 4      | 0      | Phase verification + focused behavior smoke |
-| 2     | `pnpm exec oxfmt --check` on all three changed project entry skills; targeted `rg` checks for required sections/version/step indicators; `git diff --check` on all three changed skills                                                                       | 9      | 0      | Phase verification                          |
-| 3     | package-version parity check; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm release:validate`                                                                                                                                                           | 3      | 1      | Phase verification + release gate           |
+| Phase | Tests Run                                                                                                                                                                                                                                                                       | Passed | Failed | Coverage                                    |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------------------------- |
+| 1     | `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`; `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`; focused temp-repo sync commit check; `head -10 .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`                   | 4      | 0      | Phase verification + focused behavior smoke |
+| 2     | `pnpm exec oxfmt --check` on all three changed project entry skills; targeted `rg` checks for required sections/version/step indicators; `git diff --check` on all three changed skills                                                                                         | 9      | 0      | Phase verification                          |
+| 3     | package-version parity check; `pnpm --filter @open-agent-toolkit/cli test`; `pnpm release:validate`                                                                                                                                                                             | 3      | 1      | Phase verification + release gate           |
+| 4     | `bash -n .agents/skills/oat-worktree-bootstrap-auto/scripts/bootstrap.sh`; `pnpm exec oxfmt --check .agents/skills/oat-worktree-bootstrap-auto/SKILL.md`; targeted `rg` check for removed directory-pathspec commit; focused clean-index and dirty-index temp-repo smoke checks | 5      | 0      | Phase review-fix verification               |
 
 ## Final Summary (for PR/docs)
 
@@ -794,10 +790,12 @@ Track test execution during implementation.
 - Phase 1 bootstrap root-cause fix: pre-sync `git_clean`, post-sync `chore: run sync`, and `sync_commit` structured status.
 - Phase 2 project entry preflight: inherited git-state gates for `oat-project-quick-start`, `oat-project-new`, and `oat-project-import-plan`; `oat-project-new` also widens `allowed-tools` to match the commands it already invokes.
 - Phase 3 release readiness: five public package manifests bumped in lockstep to `0.1.0`, with CLI tests and release validation passing.
+- Phase 4 review fixes: sync commits now derive concrete staged sync-managed files before committing, which preserves empty-provider-dir support while excluding unrelated already-staged files.
 
 **Behavioral changes (user-facing):**
 
 - Autonomous worktree bootstrap is designed to leave sync-managed output committed instead of leaking `.oat/sync/manifest.json` or provider-dir changes into later workflow commits.
+- The generated `chore: run sync` commit is isolated to sync-managed files even when the worktree index already contains unrelated staged work.
 - Project entry skills now surface inherited dirty git state before scaffolding so sync-generated output can be committed or explicitly acknowledged instead of silently rolling into project bookkeeping.
 
 **Key files / modules:**
@@ -821,12 +819,14 @@ Track test execution during implementation.
 - Package-version parity check for all five public packages.
 - `pnpm --filter @open-agent-toolkit/cli test`
 - `pnpm release:validate`
+- Focused Phase 4 temp-repo smoke checks for empty provider directories, unrelated already-staged files, and sync-managed deletion handling.
 
 **Design deltas (if any):**
 
 - Phase 1 verification used a focused temp-repo commit-path check instead of a full scratch bootstrap run.
 - Phase 2 verification focused on committed skill instructions and formatting rather than full interactive skill invocation smoke tests.
 - Phase 3 validation required updating a stale CLI test expectation for the quick-start skill version bump.
+- No permanent automated regression test was added for the bootstrap shell commit-isolation logic; Phase 4 was verified with focused temp-repo smoke checks and passed p04 re-review.
 
 ## References
 
