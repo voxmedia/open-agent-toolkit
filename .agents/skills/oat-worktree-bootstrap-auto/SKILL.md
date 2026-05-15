@@ -158,8 +158,15 @@ Execute in the target worktree directory:
 pnpm run worktree:init          # install + build + sync
 oat status --scope project
 pnpm test
+mkdir -p .claude/skills .cursor/rules
 git status --porcelain
+oat sync --scope all
 ```
+
+`git status --porcelain` is the `git_clean` baseline check. It runs after
+`worktree:init` and provider directory creation, but before the all-scope sync
+sweep, so it measures inherited worktree state plus setup output rather than
+the sync sweep's generated output.
 
 Check behavior per baseline policy:
 
@@ -190,6 +197,21 @@ Then re-run sync to establish symlinks:
 oat sync --scope all
 ```
 
+After sync completes, commit sync-managed output if any scoped path is dirty:
+
+```bash
+SYNC_PATHS=(.oat/sync/manifest.json .claude .cursor .codex)
+git status --porcelain -- "${SYNC_PATHS[@]}"
+git add -- "${SYNC_PATHS[@]}"
+git commit -m "chore: run sync" -- "${SYNC_PATHS[@]}"
+```
+
+Use a staged-diff guard so no empty commit is created. The commit must remain
+scoped to `.oat/sync/manifest.json`, `.claude`, `.cursor`, and `.codex`;
+orchestrators can rely on `chore: run sync` touching only sync-managed paths.
+If no scoped path is dirty, or staging produces no diff, report
+`sync_commit: skip`.
+
 ### Step 5: Return Structured Status
 
 Return a structured status object (for orchestrator consumption):
@@ -207,6 +229,7 @@ checks:
   tests: pass | fail | skip
   git_clean: pass | fail | skip
   provider_sync: pass | fail | skip
+  sync_commit: pass | fail | skip
 warnings: [] # List of warning messages (allow-failing mode)
 error: null # Error message (strict mode failure)
 reason: null # Structured reason on failure (e.g., base-mismatch)
@@ -221,6 +244,8 @@ baseline_policy: strict | allow-failing
 - `success`: All checks passed and Step 2.7 base-resolution verification passed.
 - `warning`: Some checks failed under `allow-failing` policy (Step 2.7 still passed).
 - `error`: A baseline check failed under `strict` policy, or worktree creation failed.
+- `error`: `sync_commit` failed under `strict` policy.
+- `warning`: `sync_commit` failed under `allow-failing` policy.
 - `failed` (with `reason: base-mismatch`): Step 2.7 base-resolution verification failed. Callers should treat this distinctly from a generic baseline error — it is a contract violation, not a flaky check.
 
 ## Error Handling
