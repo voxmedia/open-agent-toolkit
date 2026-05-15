@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 8d3e8dc9
+oat_last_commit: ff96457a
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
