@@ -185,7 +185,14 @@ fi
 if [[ -n "$SYNC_DIRTY" ]]; then
   git add -A -- "${SYNC_STAGE_PATHS[@]}" 2>/dev/null || true
   if ! git diff --cached --quiet -- "${SYNC_STAGE_PATHS[@]}"; then
-    if git commit -m "chore: run sync" >/dev/null 2>&1; then
+    STAGED_SYNC_FILES=()
+    while IFS= read -r -d '' staged_sync_file; do
+      STAGED_SYNC_FILES+=("$staged_sync_file")
+    done < <(git diff --cached --name-only -z --no-renames -- "${SYNC_STAGE_PATHS[@]}")
+
+    if [[ ${#STAGED_SYNC_FILES[@]} -eq 0 ]]; then
+      CHECK_RESULTS["sync_commit"]="skip"
+    elif git commit -m "chore: run sync" -- "${STAGED_SYNC_FILES[@]}" >/dev/null 2>&1; then
       CHECK_RESULTS["sync_commit"]="pass"
     else
       CHECK_RESULTS["sync_commit"]="fail"
