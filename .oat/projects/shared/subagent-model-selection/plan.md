@@ -592,6 +592,57 @@ git commit -m "fix(prev5-t01): make Codex effort dispatch payload-first"
 
 ---
 
+## Phase p-rev6: Revision 6
+
+Source: inline Codex dogfood feedback (2026-05-16)
+
+### Task prev6-t01: (revision) Use Codex effort-specific implementer variants
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.codex/config.toml`
+- Add: `.codex/agents/oat-phase-implementer-low.toml`
+- Add: `.codex/agents/oat-phase-implementer-medium.toml`
+- Add: `.codex/agents/oat-phase-implementer-high.toml`
+- Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
+
+**Step 1: Replace per-call effort override as the standard Codex path**
+
+Revise the Codex selected-effort dispatch contract:
+
+- Keep base `oat-phase-implementer` as the inherited-effort role.
+- Add configured Codex role variants for `low`, `medium`, and `high`, each setting `model_reasoning_effort`.
+- Map `effort_axis=selected:low|medium|high` to `agent_type=oat-phase-implementer-low|medium|high`.
+- Do not use top-level `reasoning_effort` as the standard selected-effort mechanism because dogfooding showed it can be inconsistent.
+- Treat `xhigh` as inherited-only: use it only when the parent/orchestrator session is already xhigh; otherwise stop for user re-invocation, split the phase, or choose the strongest configured variant (`high`) when sufficient.
+- Keep the post-spawn verification gate: selected-effort variant must match the returned spawn status before waiting on the agent.
+
+**Step 2: Verify**
+
+```bash
+grep -q "oat-phase-implementer-low" .agents/skills/oat-project-implement/SKILL.md
+grep -q "model_reasoning_effort = \"low\"" .codex/agents/oat-phase-implementer-low.toml
+grep -q "model_reasoning_effort = \"medium\"" .codex/agents/oat-phase-implementer-medium.toml
+grep -q "model_reasoning_effort = \"high\"" .codex/agents/oat-phase-implementer-high.toml
+grep -q "oat-phase-implementer-low" .codex/config.toml
+pnpm run cli -- sync --scope project --dry-run
+pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
+pnpm release:validate
+pnpm build:docs
+```
+
+Expected: all commands exit 0.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md .codex/config.toml .codex/agents/oat-phase-implementer-low.toml .codex/agents/oat-phase-implementer-medium.toml .codex/agents/oat-phase-implementer-high.toml .oat/projects/shared/subagent-model-selection/summary.md
+git commit -m "fix(prev6-t01): use Codex effort-specific implementer roles"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status | Date       | Artifact                                              |
@@ -621,8 +672,9 @@ git commit -m "fix(prev5-t01): make Codex effort dispatch payload-first"
 - Phase p-rev3: 1 task - Follow-up review fix for selected-axis dispatch wiring and design audit trail
 - Phase p-rev4: 1 task - Live dogfood fix for Codex selected-effort spawn-agent assertion
 - Phase p-rev5: 1 task - Repeated dogfood fix requiring Codex selected-effort dispatch to be payload-first
+- Phase p-rev6: 1 task - Codex selected effort now maps to configured low/medium/high implementer variants
 
-**Total: 13 tasks across 9 phases.**
+**Total: 14 tasks across 10 phases.**
 
 Follow-up items to file at project completion:
 

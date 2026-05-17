@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev6-t01
 oat_last_commit: 8e1c4715
 oat_blockers: []
 associated_issues:
@@ -8,7 +8,7 @@ oat_hill_checkpoints: ['p03']
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: complete # null | skipped | complete - documentation sync status
@@ -22,13 +22,13 @@ oat_generated: false
 
 # Project State: subagent-model-selection
 
-**Status:** Revision complete; PR open
+**Status:** Revision in progress; PR open
 **Started:** 2026-05-04
 **Last Updated:** 2026-05-13
 
 ## Current Phase
 
-Revision task `prev5-t01` tightened Codex selected-effort dispatch to be payload-first.
+Revision task `prev6-t01` is mapping Codex selected effort to configured implementer role variants.
 
 ## Artifacts
 
@@ -64,6 +64,8 @@ Revision task `prev5-t01` tightened Codex selected-effort dispatch to be payload
 - Revision 4 completed in `92bf3490`; Codex selected effort now requires matching top-level `spawn_agent.reasoning_effort` for implementer and fix dispatches
 - Repeated Codex dogfood feedback converted to `prev5-t01`
 - Revision 5 completed in `8e1c4715`; selected effort must be derived from the actual Codex `spawn_agent` payload before logging, and spawn-status mismatches are a post-spawn verification gate
+- Codex effort variant feedback converted to `prev6-t01`
+- Revision 6 in progress; selected low/medium/high effort should use configured `oat-phase-implementer-{effort}` roles
 
 ## Blockers
 
@@ -71,4 +73,4 @@ None
 
 ## Next Milestone
 
-Update PR #79 with revision commit `8e1c4715`.
+Complete and push revision 6, then update PR #79.
