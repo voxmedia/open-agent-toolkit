@@ -571,7 +571,7 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
      - If `model_axis=selected:<value>`, the Task tool call MUST include `model: "<value>"`.
      - If `model_axis=inherited`, omit `model`.
 
-3. Dispatch `oat-phase-implementer` (Tier 1 via provider-native subagent mechanism) with the Phase Scope block as input and with the asserted host invocation parameters.
+3. Dispatch the selected implementer role (Tier 1 via provider-native subagent mechanism) — the role asserted in the pre-dispatch step above (e.g., `oat-phase-implementer-low`, `oat-phase-implementer-medium`, `oat-phase-implementer-high`, or base `oat-phase-implementer` for inherited effort) — with the Phase Scope block as input and with the asserted host invocation parameters.
 
 4. Receive the structured summary (DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED).
 
