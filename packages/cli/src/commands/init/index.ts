@@ -296,9 +296,14 @@ async function collectStraysDefault(
     scope === 'project' &&
     adaptersToScan.some((adapter) => adapter.name === 'codex')
   ) {
+    const codexExtensionPlan = await computeCodexProjectExtensionPlan(
+      scopeRoot,
+      canonicalEntries,
+    );
     const codexStrays = await detectCodexRoleStrays(
       scopeRoot,
       canonicalEntries,
+      new Set(codexExtensionPlan.managedRoles),
     );
     for (const stray of codexStrays) {
       candidates.push({

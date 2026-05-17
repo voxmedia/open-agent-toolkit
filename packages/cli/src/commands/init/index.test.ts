@@ -571,6 +571,166 @@ config_file = "agents/reviewer.toml"
     });
   });
 
+  it('does not offer managed Codex effort-variant roles as adoptable strays', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-init-managed-variants-'));
+    tempDirs.push(root);
+
+    // Write a minimal canonical oat-phase-implementer.md so
+    // computeCodexProjectExtensionPlan can derive the effort variants.
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'agents', 'oat-phase-implementer.md'),
+      [
+        '---',
+        'name: oat-phase-implementer',
+        'description: Implements a single plan phase.',
+        '---',
+        '',
+        '## Role',
+        '',
+        'Implementer body.',
+      ].join('\n'),
+      'utf8',
+    );
+
+    // Write the generated effort-variant .toml files (simulating a prior sync).
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+    for (const variant of ['low', 'medium', 'high']) {
+      await writeFile(
+        join(root, '.codex', 'agents', `oat-phase-implementer-${variant}.toml`),
+        [
+          `# oat-role: oat-phase-implementer-${variant}`,
+          `# oat-managed: true`,
+          `model_reasoning_effort = "${variant}"`,
+          `developer_instructions = "Implementer body."`,
+        ].join('\n'),
+        'utf8',
+      );
+    }
+
+    // Write a genuine orphan that should still be flagged as stray.
+    await writeFile(
+      join(root, '.codex', 'agents', 'old-orphan.toml'),
+      'developer_instructions = "leftover"\n',
+      'utf8',
+    );
+
+    const codexOnlyAdapter: ProviderAdapter = {
+      name: 'codex',
+      displayName: 'Codex CLI',
+      defaultStrategy: 'auto',
+      projectMappings: [],
+      userMappings: [],
+      detect: async () => true,
+    };
+
+    const canonicalEntry: CanonicalEntry = {
+      name: 'oat-phase-implementer.md',
+      type: 'agent',
+      canonicalPath: join(
+        root,
+        '.agents',
+        'agents',
+        'oat-phase-implementer.md',
+      ),
+      isFile: true,
+    };
+
+    const selectManyWithAbort = vi.fn(async () => [] as string[]);
+    const capture = createLoggerCapture();
+
+    // Build a command with useDefaultCollectStrays and scanCanonical returning
+    // the canonical entry so computeCodexProjectExtensionPlan discovers the
+    // effort variants as managed, preventing them from appearing as strays.
+    const testCommand = createInitCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: (globalOptions.scope ?? 'project') as Scope,
+        dryRun: false,
+        verbose: globalOptions.verbose ?? false,
+        json: globalOptions.json ?? false,
+        cwd: globalOptions.cwd ?? root,
+        home: '/tmp/home',
+        interactive: true,
+        logger: capture.logger,
+      }),
+      resolveScopeRoot: vi.fn(async (scope: 'project' | 'user') =>
+        scope === 'project' ? root : '/tmp/home',
+      ),
+      ensureCanonicalDirs: vi.fn(async () => undefined),
+      loadManifest: vi.fn(async () => createEmptyManifest()),
+      saveManifest: vi.fn(async () => undefined),
+      scanCanonical: vi.fn(async () => [canonicalEntry]),
+      getAdapters: () => [codexOnlyAdapter],
+      loadSyncConfig: vi.fn(async () => DEFAULT_SYNC_CONFIG),
+      saveSyncConfig: vi.fn(
+        async (_path: string, config: SyncConfig) => config,
+      ),
+      getConfigAwareAdapters: vi.fn(async () => ({
+        activeAdapters: [codexOnlyAdapter],
+        detectedUnset: ['codex'],
+        detectedDisabled: [],
+      })),
+      isHookInstalled: vi.fn(async () => true),
+      getHookInstallInfo: vi.fn(async () => ({
+        hookPath: `${root}/.git/hooks/pre-commit`,
+        suggestedHooksPath: null,
+        suggestedHookPath: null,
+      })),
+      configureLocalHooksPath: vi.fn(async () => undefined),
+      installHook: vi.fn(async () => `${root}/.git/hooks/pre-commit`),
+      uninstallHook: vi.fn(async () => undefined),
+      applyOatCoreGitignore: vi.fn(async () => ({
+        action: 'no-change' as const,
+        entries: [],
+      })),
+      dirExists: vi.fn(async () => true),
+      confirmAction: vi.fn(async () => false),
+      selectProvidersWithAbort: vi.fn(async () => null),
+      selectManyWithAbort,
+      adoptStray: vi.fn(
+        async (_scopeRoot, _stray, manifest: Manifest) => manifest,
+      ),
+      readOatConfig: vi.fn(async () => ({ version: 1 })),
+      resolveLocalPaths: vi.fn(() => [] as string[]),
+      addLocalPaths: vi.fn(async (_r: string, paths: string[]) => ({
+        added: paths,
+        all: paths,
+      })),
+      applyGitignore: vi.fn(async () => ({ action: 'no-change' as const })),
+      detectDefaultBranch: vi.fn(() => 'main'),
+      detectExistingDocs: vi.fn(async () => null),
+      fileExists: vi.fn(async () => false),
+      inputWithDefault: vi.fn(async () => null),
+      selectWithAbort: vi.fn(async () => null),
+      runGuidedSetup: vi.fn(async () => undefined),
+      runToolPacks: vi.fn(async () => []),
+      runProviderSync: vi.fn(async () => undefined),
+    });
+
+    await runInitCommand(testCommand, { globalArgs: ['--scope', 'project'] });
+
+    // Only the genuine orphan should appear in the adoption prompt;
+    // the three generated effort-variant roles must NOT appear.
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
+    const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
+      label: string;
+      description?: string;
+    }>;
+    const choiceDescriptions = choices.map((c) => c.description ?? '');
+    expect(choiceDescriptions.some((d) => d.includes('old-orphan'))).toBe(true);
+    expect(
+      choiceDescriptions.some((d) => d.includes('oat-phase-implementer-low')),
+    ).toBe(false);
+    expect(
+      choiceDescriptions.some((d) =>
+        d.includes('oat-phase-implementer-medium'),
+      ),
+    ).toBe(false);
+    expect(
+      choiceDescriptions.some((d) => d.includes('oat-phase-implementer-high')),
+    ).toBe(false);
+  });
+
   it('supports skip-all by leaving checklist empty', async () => {
     const { command, selectManyWithAbort, adoptStray } = createHarness({
       interactive: true,
