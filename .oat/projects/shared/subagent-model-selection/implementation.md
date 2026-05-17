@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-13
-oat_current_task_id: null
+oat_last_updated: 2026-05-17
+oat_current_task_id: prev7-t03
 oat_generated: false
 ---
 
 # Implementation: subagent-model-selection
 
 **Started:** 2026-05-04
-**Last Updated:** 2026-05-13
+**Last Updated:** 2026-05-17
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -22,20 +22,21 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 2     | 2/2       |
-| Phase 4 | complete | 1     | 1/1       |
-| p-rev1  | complete | 1     | 1/1       |
-| p-rev2  | complete | 1     | 1/1       |
-| p-rev3  | complete | 1     | 1/1       |
-| p-rev4  | complete | 1     | 1/1       |
-| p-rev5  | complete | 1     | 1/1       |
-| p-rev6  | complete | 1     | 1/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | complete    | 2     | 2/2       |
+| Phase 4 | complete    | 1     | 1/1       |
+| p-rev1  | complete    | 1     | 1/1       |
+| p-rev2  | complete    | 1     | 1/1       |
+| p-rev3  | complete    | 1     | 1/1       |
+| p-rev4  | complete    | 1     | 1/1       |
+| p-rev5  | complete    | 1     | 1/1       |
+| p-rev6  | complete    | 1     | 1/1       |
+| p-rev7  | in_progress | 5     | 2/5       |
 
-**Total:** 14/14 tasks completed
+**Total:** 16/19 tasks completed
 
 ---
 
@@ -186,6 +187,38 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** f8d52b49
+
+---
+
+## Phase p-rev7: Revision 7
+
+**Status:** in_progress
+**Started:** 2026-05-17
+
+### Task prev7-t01: (revision) Use structured dispatch log blocks
+
+**Status:** completed
+**Commit:** 36098f2e
+
+### Task prev7-t02: (review) Fix escalation example + state per-provider escalation termini
+
+**Status:** completed
+**Commit:** 04d9e0c6
+
+### Task prev7-t03: (review) Update stale one-line dispatch references
+
+**Status:** pending
+**Commit:** -
+
+### Task prev7-t04: (review) Make review effort axis host-conditional
+
+**Status:** pending
+**Commit:** -
+
+### Task prev7-t05: (review) Clarify implementer role dispatch wording
+
+**Status:** pending
+**Commit:** -
 
 ---
 
