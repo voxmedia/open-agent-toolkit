@@ -850,6 +850,53 @@ git commit -m "fix(prev7-t05): clarify selected implementer role wording"
 
 ---
 
+## Phase p-rev8: Revision 8
+
+Teach `oat status` about generated Codex role variants so they are not misclassified as stray.
+
+### Task prev8-t01: (revision) Teach oat status about generated Codex role variants
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/shared/codex-strays.ts`
+- Modify: `packages/cli/src/commands/status/index.ts`
+- Modify: `packages/cli/src/commands/shared/codex-strays.test.ts` (create if absent)
+- Conditional: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` — lockstep public-package version bump only if `pnpm release:validate` requires one.
+
+**Step 1: Understand the issue**
+
+`oat status --scope project` flags the generated Codex effort-variant role files (`oat-phase-implementer-{low,medium,high}.toml`) as `⚠ stray — provider entry is unmanaged`, while `oat sync` correctly treats them as managed. Root cause: `detectCodexRoleStrays` (`packages/cli/src/commands/shared/codex-strays.ts`) flags a Codex role as stray when its name is absent from `existingCanonicalRoles`, which is built only from `.agents/agents/*.md` canonical sources. The effort variants are generated-derived (no canonical `.md`), so they fail the predicate. The `CodexExtensionPlan.managedRoles` list — which `oat sync` consults and which includes the variants — is never passed to `detectCodexRoleStrays` by `status/index.ts`.
+
+**Step 2: Implement fix**
+
+- Extend `detectCodexRoleStrays` to accept a managed-role-names set (`managedRoleNames: Set<string>`, or the `CodexExtensionPlan`). A role whose name is in that set is not flagged stray even without a canonical `.md` source.
+- In `status/index.ts`, compute the Codex extension plan the same way `sync/index.ts` does, and pass its `managedRoles` into `detectCodexRoleStrays`.
+- Extend the `codex-strays` unit test: a generated variant present in `managedRoles` is NOT flagged stray; a genuinely orphaned Codex role (no canonical source, not in `managedRoles`) IS still flagged stray.
+- Run `pnpm release:validate`; if it requires a public-package version bump, bump all five lockstep packages together per AGENTS.md.
+
+**Step 3: Verify**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/codex-strays.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+pnpm lint
+pnpm run cli -- status --scope project
+pnpm run cli -- sync --scope project --dry-run
+pnpm release:validate
+```
+
+Expected: tests pass; `oat status --scope project` no longer lists the three `oat-phase-implementer-{low,medium,high}.toml` files as stray; `oat sync` dry-run still clean; release validation passes.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/shared/codex-strays.ts packages/cli/src/commands/status/index.ts packages/cli/src/commands/shared/codex-strays.test.ts
+# include the five lockstep package.json files only if release:validate required a bump
+git commit -m "fix(prev8-t01): teach oat status about generated Codex role variants"
+```
+
+---
+
 ## Reviews
 
 | Scope       | Type     | Status          | Date       | Artifact                                              |
@@ -882,8 +929,9 @@ git commit -m "fix(prev7-t05): clarify selected implementer role wording"
 - Phase p-rev5: 1 task - Repeated dogfood fix requiring Codex selected-effort dispatch to be payload-first
 - Phase p-rev6: 1 task - Codex selected effort now maps to configured low/medium/high implementer variants
 - Phase p-rev7: 5 tasks - Structured dispatch blocks plus review coherence fixes
+- Phase p-rev8: 1 task - Teach `oat status` to recognize generated Codex role variants as managed
 
-**Total: 19 tasks across 11 phases.**
+**Total: 20 tasks across 12 phases.**
 
 Follow-up items to file at project completion:
 

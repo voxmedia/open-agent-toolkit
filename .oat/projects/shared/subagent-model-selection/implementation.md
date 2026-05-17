@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-17
-oat_current_task_id: null
+oat_current_task_id: prev8-t01
 oat_generated: false
 ---
 
@@ -22,21 +22,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 2     | 2/2       |
-| Phase 4 | complete | 1     | 1/1       |
-| p-rev1  | complete | 1     | 1/1       |
-| p-rev2  | complete | 1     | 1/1       |
-| p-rev3  | complete | 1     | 1/1       |
-| p-rev4  | complete | 1     | 1/1       |
-| p-rev5  | complete | 1     | 1/1       |
-| p-rev6  | complete | 1     | 1/1       |
-| p-rev7  | complete | 5     | 5/5       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | complete    | 2     | 2/2       |
+| Phase 4 | complete    | 1     | 1/1       |
+| p-rev1  | complete    | 1     | 1/1       |
+| p-rev2  | complete    | 1     | 1/1       |
+| p-rev3  | complete    | 1     | 1/1       |
+| p-rev4  | complete    | 1     | 1/1       |
+| p-rev5  | complete    | 1     | 1/1       |
+| p-rev6  | complete    | 1     | 1/1       |
+| p-rev7  | complete    | 5     | 5/5       |
+| p-rev8  | in_progress | 1     | 0/1       |
 
-**Total:** 19/19 tasks completed
+**Total:** 19/20 tasks completed
 
 ---
 
@@ -220,6 +221,18 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 80d2ebb3
+
+---
+
+## Phase p-rev8: Revision 8
+
+**Status:** in_progress
+**Started:** 2026-05-17
+
+### Task prev8-t01: (revision) Teach oat status about generated Codex role variants
+
+**Status:** pending
+**Commit:** -
 
 ---
 
