@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.14
+version: 2.0.15
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -185,7 +185,7 @@ Selection rule:
 6. If a host uses model/effort internally but exposes neither axis to the orchestrator, log `model_axis=host-auto, effort_axis=host-auto` and include the rationale that would have informed selection.
 7. If confidence is low, choose a stronger available control before dispatch rather than knowingly underpowering the phase.
 
-**Payload-first dispatch invariant.** Select dispatch controls, construct the actual host dispatch argument map, then print the dispatch log from that argument map. Do not print a `Dispatching ... effort_axis=selected:<value>` or `Dispatching ... model_axis=selected:<value>` line until the corresponding host-tool selection is present in the argument map you are about to call. A selected axis that exists only in the Phase Scope text is invalid; if you cannot or will not pass the host-tool selection, log that axis as `inherited`, `not-applicable`, or `host-auto` instead of `selected:<value>`.
+**Payload-first dispatch invariant.** Select dispatch controls, construct the actual host dispatch argument map, then print the dispatch log from that argument map. Do not emit an `OAT Dispatch:` block with a `Model axis: selected:<value>` or `Effort axis: selected:<value>` field until the corresponding host-tool selection is present in the argument map you are about to call. A selected axis that exists only in the Phase Scope text is invalid; if you cannot or will not pass the host-tool selection, log that axis as `inherited`, `not-applicable`, or `host-auto` instead of `selected:<value>`.
 
 **Passing axis values to the host dispatch API.** The log shape and the actual dispatch call must agree: never log a `selected:<value>` axis without passing the corresponding parameter on the dispatch invocation, and never pass an explicit parameter that the log does not reflect.
 
@@ -563,7 +563,7 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
 
 2. Perform a pre-dispatch assertion against the host invocation parameters. The Phase Scope fields are audit/context fields; selected axes must also be represented in the actual host dispatch call.
    - Codex implementer/fix dispatch:
-     - Build the `spawn_agent` argument map before logging the dispatch. If `effort_axis=selected:low|medium|high`, the argument map MUST use the matching `agent_type`: `"oat-phase-implementer-low"`, `"oat-phase-implementer-medium"`, or `"oat-phase-implementer-high"`. Then derive the `Dispatching ... effort_axis=selected:<value>` line from that same argument map.
+     - Build the `spawn_agent` argument map before logging the dispatch. If `effort_axis=selected:low|medium|high`, the argument map MUST use the matching `agent_type`: `"oat-phase-implementer-low"`, `"oat-phase-implementer-medium"`, or `"oat-phase-implementer-high"`. Then derive the `OAT Dispatch:` block `Effort axis:` field from that same argument map.
      - Example selected low payload shape: `agent_type: "oat-phase-implementer-low"` and a Phase Scope message containing `effort_axis: selected:low`.
      - Immediately after spawning, compare the returned Codex status line with the selected effort before waiting on the agent. If the spawned status reports a different effort than the selected value (for example, the log says `effort_axis=selected:medium` but the spawn result reports `gpt-5.5 high`), treat this as an orchestration deviation. Stop, record the deviation in `implementation.md`, and redispatch with corrected parameters before continuing. Do not use work from the mismatched dispatch.
      - If `effort_axis=inherited`, use base `agent_type: "oat-phase-implementer"` and omit `reasoning_effort`.
