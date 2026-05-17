@@ -547,6 +547,49 @@ git commit -m "fix(prev4-t01): assert Codex selected effort before dispatch"
 
 ---
 
+## Phase p-rev5: Revision 5
+
+Source: repeated live Codex dogfood feedback (2026-05-16)
+
+### Task prev5-t01: (revision) Make Codex selected-effort dispatch payload-first
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
+
+**Step 1: Tighten Codex selected-effort execution again**
+
+Revise the dispatch instructions so selected effort cannot be represented only in human-readable text:
+
+- Require the orchestrator to build the actual `spawn_agent` argument map before printing the dispatch log.
+- Require `effort_axis=selected:<value>` to be derived from a top-level `reasoning_effort: "<value>"` entry in that argument map.
+- State that a selected axis that exists only in the Phase Scope packet is invalid.
+- State that if the orchestrator cannot or will not pass the host-tool parameter, the axis must be logged as `inherited`, `not-applicable`, or `host-auto` instead of `selected:<value>`.
+- Include a concrete Codex payload shape showing `agent_type`, top-level `reasoning_effort`, and matching Phase Scope text.
+
+**Step 2: Verify**
+
+```bash
+grep -q "Payload-first dispatch invariant" .agents/skills/oat-project-implement/SKILL.md
+grep -q "Build the `spawn_agent` argument map before logging" .agents/skills/oat-project-implement/SKILL.md
+grep -q "reasoning_effort: \"low\"" .agents/skills/oat-project-implement/SKILL.md
+pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
+pnpm release:validate
+pnpm build:docs
+```
+
+Expected: all commands exit 0.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md .oat/projects/shared/subagent-model-selection/summary.md
+git commit -m "fix(prev5-t01): make Codex effort dispatch payload-first"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status | Date       | Artifact                                              |
@@ -575,8 +618,9 @@ git commit -m "fix(prev4-t01): assert Codex selected effort before dispatch"
 - Phase p-rev2: 1 task - Dogfood revision splitting dispatch logging into model and effort axes
 - Phase p-rev3: 1 task - Follow-up review fix for selected-axis dispatch wiring and design audit trail
 - Phase p-rev4: 1 task - Live dogfood fix for Codex selected-effort spawn-agent assertion
+- Phase p-rev5: 1 task - Repeated dogfood fix requiring Codex selected-effort dispatch to be payload-first
 
-**Total: 12 tasks across 8 phases.**
+**Total: 13 tasks across 9 phases.**
 
 Follow-up items to file at project completion:
 
