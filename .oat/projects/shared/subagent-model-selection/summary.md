@@ -31,6 +31,8 @@ Revision 3 tightened the host-call wiring and design audit trail: `model_axis=se
 
 Revision 4 extended that assertion to Codex implementer and fix dispatches after live dogfooding showed a selected medium effort being logged while the spawned worker used high effort. The skill now requires selected effort to be passed as the top-level `reasoning_effort` argument and treats mismatched spawned effort as an orchestration deviation.
 
+Revision 5 tightened the same Codex path again after repeated dogfooding showed `effort_axis=selected:low|medium` still being logged while spawned workers used high effort. The skill now requires payload-first dispatch: build the `spawn_agent` argument map first, include top-level `reasoning_effort` there, then derive the dispatch log from that payload. It also promotes mismatch handling into a post-spawn verification gate before waiting on the agent. A selected effort that exists only in Phase Scope text is explicitly invalid.
+
 The phase implementer and reviewer prompts now report confidence and escalation-relevant concerns. `oat-project-review-provide` also has a Dispatch Profile override advisory so artifact-plan reviews do not flag missing dispatch rows as defects.
 
 The final review pass added one consistency fix: `oat-project-implement` phase and review scope templates include dispatch context fields when known, so downstream agents receive the dispatch context the orchestrator has resolved. Revision 2 refined that context into separate `model_axis`, `effort_axis`, and `dispatch_rationale` fields.

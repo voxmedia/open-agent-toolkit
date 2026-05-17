@@ -567,6 +567,7 @@ Revise the dispatch instructions so selected effort cannot be represented only i
 - State that a selected axis that exists only in the Phase Scope packet is invalid.
 - State that if the orchestrator cannot or will not pass the host-tool parameter, the axis must be logged as `inherited`, `not-applicable`, or `host-auto` instead of `selected:<value>`.
 - Include a concrete Codex payload shape showing `agent_type`, top-level `reasoning_effort`, and matching Phase Scope text.
+- Promote the existing mismatch rule into a post-spawn verification gate: compare the returned Codex status line before waiting on the agent, stop on mismatch, record the orchestration deviation, and redispatch.
 
 **Step 2: Verify**
 
@@ -574,6 +575,7 @@ Revise the dispatch instructions so selected effort cannot be represented only i
 grep -q "Payload-first dispatch invariant" .agents/skills/oat-project-implement/SKILL.md
 grep -q "Build the `spawn_agent` argument map before logging" .agents/skills/oat-project-implement/SKILL.md
 grep -q "reasoning_effort: \"low\"" .agents/skills/oat-project-implement/SKILL.md
+grep -q "Post-spawn verification gate" .agents/skills/oat-project-implement/SKILL.md
 pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
 pnpm release:validate
 pnpm build:docs

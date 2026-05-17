@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.10
+version: 2.0.11
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -185,13 +185,40 @@ Selection rule:
 6. If a host uses model/effort internally but exposes neither axis to the orchestrator, log `model_axis=host-auto, effort_axis=host-auto` and include the rationale that would have informed selection.
 7. If confidence is low, choose a stronger available control before dispatch rather than knowingly underpowering the phase.
 
+**Payload-first dispatch invariant.** Select dispatch controls, construct the actual host dispatch argument map, then print the dispatch log from that argument map. Do not print a `Dispatching ... effort_axis=selected:<value>` or `Dispatching ... model_axis=selected:<value>` line until the corresponding host-tool parameter is present in the argument map you are about to call. A selected axis that exists only in the Phase Scope text is invalid; if you cannot or will not pass the host-tool parameter, log that axis as `inherited`, `not-applicable`, or `host-auto` instead of `selected:<value>`.
+
 **Passing axis values to the host dispatch API.** The log shape and the actual dispatch call must agree: never log a `selected:<value>` axis without passing the corresponding parameter on the dispatch invocation, and never pass an explicit parameter that the log does not reflect.
 
 - **Claude Code implementer/fix dispatch:** when `model_axis=selected:<value>`, pass `model: "<value>"` on the Task tool call. When `model_axis=inherited`, omit the `model` parameter so Claude Code uses its own default. `effort_axis=not-applicable` for both cases because the Task tool exposes no per-dispatch `reasoning_effort` control.
-- **Codex implementer/fix dispatch:** when `effort_axis=selected:<value>`, pass `reasoning_effort: "<value>"` as a top-level `spawn_agent` argument. `model_axis=inherited` is the normal case; omit the `model` override unless the user explicitly requested one. Do not rely on the Phase Scope packet alone to apply selected effort.
+- **Codex implementer/fix dispatch:** when `effort_axis=selected:<value>`, pass `reasoning_effort: "<value>"` as a top-level `spawn_agent` argument. `model_axis=inherited` is the normal case; omit the `model` override unless the user explicitly requested one. Do not rely on the Phase Scope packet alone to apply selected effort. The Codex spawn result must show the selected effort, such as `(gpt-5.5 low)` for `effort_axis=selected:low`.
 - **Reviewer dispatch on either host:** use `model_axis=inherited, effort_axis=inherited`. Omit `model` and, on Codex, `reasoning_effort` overrides entirely.
 
-Log the choice before dispatch in this shape:
+Codex selected-effort implementer/fix dispatch shape:
+
+```yaml
+agent_type: oat-phase-implementer
+reasoning_effort: low # or medium/high/xhigh; sibling of agent_type and message/items
+message: |
+  Phase Scope:
+    model_axis: inherited
+    effort_axis: selected:low
+    ...
+```
+
+Invalid Codex selected-effort dispatch shape:
+
+```yaml
+agent_type: oat-phase-implementer
+message: |
+  Phase Scope:
+    effort_axis: selected:low
+```
+
+The invalid shape only tells the spawned agent what effort the orchestrator intended; it does not select Codex reasoning effort.
+
+**Post-spawn verification gate.** After any Codex implementer/fix `spawn_agent` call with `effort_axis=selected:<value>`, immediately inspect the returned spawn status before waiting for work or updating the plan. If the status shows a different effort, such as `effort_axis=selected:low` followed by `(gpt-5.5 high)`, this is an orchestration deviation. Stop using that agent, record the mismatch in `implementation.md`, and redispatch with a corrected top-level `reasoning_effort` argument. Do not continue to `wait_agent`, phase bookkeeping, or the next phase with a mismatched selected-effort dispatch.
+
+After the payload-first check, log the choice before dispatch in this shape:
 
 ```text
 Dispatching {phase_id} with model_axis={state}, effort_axis={state}: {short rationale grounded in phase scope}.
@@ -499,8 +526,9 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
 
 2. Perform a pre-dispatch assertion against the host invocation parameters. The Phase Scope fields are audit/context fields; selected axes must also be represented in the actual host dispatch call.
    - Codex implementer/fix dispatch:
-     - If `effort_axis=selected:<value>`, the `spawn_agent` call MUST include top-level `reasoning_effort: "<value>"`.
-     - If the spawned Codex status reports a different effort than the selected value (for example, the log says `effort_axis=selected:medium` but the spawn result reports `gpt-5.5 high`), treat this as an orchestration deviation. Stop, record the deviation in `implementation.md`, and redispatch with corrected parameters before continuing. Do not use work from the mismatched dispatch.
+     - Build the `spawn_agent` argument map before logging the dispatch. If `effort_axis=selected:<value>`, the argument map MUST include top-level `reasoning_effort: "<value>"`. Then derive the `Dispatching ... effort_axis=selected:<value>` line from that same argument map.
+     - Example selected low payload shape: `agent_type: "oat-phase-implementer"`, top-level `reasoning_effort: "low"`, and a Phase Scope message containing `effort_axis: selected:low`.
+     - Immediately after spawning, compare the returned Codex status line with the selected effort before waiting on the agent. If the spawned status reports a different effort than the selected value (for example, the log says `effort_axis=selected:medium` but the spawn result reports `gpt-5.5 high`), treat this as an orchestration deviation. Stop, record the deviation in `implementation.md`, and redispatch with corrected parameters before continuing. Do not use work from the mismatched dispatch.
      - If `effort_axis=inherited`, omit `reasoning_effort`.
    - Claude Code implementer/fix dispatch:
      - If `model_axis=selected:<value>`, the Task tool call MUST include `model: "<value>"`.
