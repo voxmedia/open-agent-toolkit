@@ -46,6 +46,8 @@ interface DesiredCodexRole {
   content: string;
 }
 
+const PHASE_IMPLEMENTER_EFFORT_VARIANTS = ['low', 'medium', 'high'] as const;
+
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex');
 }
@@ -93,6 +95,55 @@ function normalizeManagedRolesConfig(
   }));
 }
 
+function codexEffortVariantContent(
+  baseContent: string,
+  baseRoleName: string,
+  variantRoleName: string,
+  effort: string,
+): string {
+  return baseContent
+    .replace(`# oat-role: ${baseRoleName}`, `# oat-role: ${variantRoleName}`)
+    .replace(
+      'developer_instructions =',
+      `model_reasoning_effort = "${effort}"\ndeveloper_instructions =`,
+    );
+}
+
+function codexEffortVariantDescription(effort: string): string {
+  if (effort === 'low') {
+    return 'OAT phase implementer pinned to low reasoning effort for narrow mechanical implementation or fix phases.';
+  }
+  if (effort === 'medium') {
+    return 'OAT phase implementer pinned to medium reasoning effort for normal multi-file implementation or fix phases.';
+  }
+  return 'OAT phase implementer pinned to high reasoning effort for broad, subtle, or higher-risk implementation or fix phases.';
+}
+
+function codexEffortVariantsFromBase(
+  exported: DesiredCodexRole,
+): DesiredCodexRole[] {
+  if (exported.roleName !== 'oat-phase-implementer') {
+    return [];
+  }
+
+  return PHASE_IMPLEMENTER_EFFORT_VARIANTS.map((effort) => {
+    const variantRoleName = `${exported.roleName}-${effort}`;
+    const configFile = `agents/${variantRoleName}.toml`;
+    return {
+      roleName: variantRoleName,
+      description: codexEffortVariantDescription(effort),
+      configFile,
+      rolePath: join(dirname(exported.rolePath), `${variantRoleName}.toml`),
+      content: codexEffortVariantContent(
+        exported.content,
+        exported.roleName,
+        variantRoleName,
+        effort,
+      ),
+    };
+  });
+}
+
 async function desiredRolesFromCanonical(
   canonicalEntries: CanonicalEntry[],
   scopeRoot: string,
@@ -118,6 +169,8 @@ async function desiredRolesFromCanonical(
       rolePath: join(scopeRoot, '.codex', exported.configFile),
       content: exported.content,
     });
+
+    roles.push(...codexEffortVariantsFromBase(roles[roles.length - 1]!));
   }
 
   return roles.sort((left, right) =>

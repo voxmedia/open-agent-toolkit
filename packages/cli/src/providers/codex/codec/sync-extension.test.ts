@@ -76,6 +76,64 @@ describe('codex sync extension', () => {
     );
   });
 
+  it('generates effort-specific codex variants for oat-phase-implementer', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalFile = join(canonicalDir, 'oat-phase-implementer.md');
+    await writeFile(
+      canonicalFile,
+      canonicalAgentFileContent('oat-phase-implementer'),
+    );
+
+    const canonicalEntries: CanonicalEntry[] = [
+      {
+        name: 'oat-phase-implementer.md',
+        type: 'agent',
+        canonicalPath: canonicalFile,
+        isFile: true,
+      },
+    ];
+
+    const plan = await computeCodexProjectExtensionPlan(root, canonicalEntries);
+    const rolePaths = plan.operations
+      .filter((op) => op.target === 'role')
+      .map((op) => op.path);
+
+    expect(rolePaths).toContain('.codex/agents/oat-phase-implementer.toml');
+    expect(rolePaths).toContain('.codex/agents/oat-phase-implementer-low.toml');
+    expect(rolePaths).toContain(
+      '.codex/agents/oat-phase-implementer-medium.toml',
+    );
+    expect(rolePaths).toContain(
+      '.codex/agents/oat-phase-implementer-high.toml',
+    );
+    expect(plan.managedRoles).toEqual([
+      'oat-phase-implementer',
+      'oat-phase-implementer-high',
+      'oat-phase-implementer-low',
+      'oat-phase-implementer-medium',
+    ]);
+
+    const applyResult = await applyCodexProjectExtensionPlan(root, plan);
+    expect(applyResult.failed).toBe(0);
+
+    const lowRole = await readFile(
+      join(root, '.codex', 'agents', 'oat-phase-implementer-low.toml'),
+      'utf8',
+    );
+    const configFile = await readFile(
+      join(root, '.codex', 'config.toml'),
+      'utf8',
+    );
+
+    expect(lowRole).toContain('# oat-role: oat-phase-implementer-low');
+    expect(lowRole).toContain('model_reasoning_effort = "low"');
+    expect(configFile).toContain('[agents.oat-phase-implementer-low]');
+  });
+
   it('does not remove unrelated managed roles during partial install-triggered sync', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);

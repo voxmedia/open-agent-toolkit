@@ -25,13 +25,15 @@ The plan template, plan-writing skill, and import-plan skill now treat `## Dispa
 
 Revision 1 clarified the implementation/review split in the implement skill, reviewer agent prompt, and docs: implementation dispatch chooses and logs the lowest sufficient available control, while review dispatch inherits the parent session's model/effort/control unless the user explicitly requests an override.
 
-Revision 2 split the dispatch label into `model_axis` and `effort_axis` so hosts that expose only one control are not mislabeled as `host-auto`. Claude Code implementation dispatch can select a subagent model while marking effort as `not-applicable`; Codex implementation dispatch usually inherits model and selects `reasoning_effort`. Review dispatch inherits both axes by default.
+Revision 2 split the dispatch label into `model_axis` and `effort_axis` so hosts that expose only one control are not mislabeled as `host-auto`. Claude Code implementation dispatch can select a subagent model while marking effort as `not-applicable`; Codex implementation dispatch usually inherits model and selects an implementation effort. Review dispatch inherits both axes by default.
 
 Revision 3 tightened the host-call wiring and design audit trail: `model_axis=selected:<value>` now explicitly requires passing the corresponding Claude Code Task `model` parameter for implementation dispatch, and the design artifact now flags its older single-axis sections as superseded by the two-axis contract.
 
 Revision 4 extended that assertion to Codex implementer and fix dispatches after live dogfooding showed a selected medium effort being logged while the spawned worker used high effort. The skill now requires selected effort to be passed as the top-level `reasoning_effort` argument and treats mismatched spawned effort as an orchestration deviation.
 
 Revision 5 tightened the same Codex path again after repeated dogfooding showed `effort_axis=selected:low|medium` still being logged while spawned workers used high effort. The skill now requires payload-first dispatch: build the `spawn_agent` argument map first, include top-level `reasoning_effort` there, then derive the dispatch log from that payload. It also promotes mismatch handling into a post-spawn verification gate before waiting on the agent. A selected effort that exists only in Phase Scope text is explicitly invalid.
+
+Revision 6 replaced the per-call Codex effort override as the standard selected-effort mechanism. Codex selected `low`, `medium`, and `high` effort now maps to configured `oat-phase-implementer-low`, `oat-phase-implementer-medium`, and `oat-phase-implementer-high` roles with `model_reasoning_effort` set in `.codex/agents/*.toml`; the base `oat-phase-implementer` role represents inherited effort. `xhigh` is inherited-only and should come from an xhigh parent/orchestrator session rather than a normal selected variant.
 
 The phase implementer and reviewer prompts now report confidence and escalation-relevant concerns. `oat-project-review-provide` also has a Dispatch Profile override advisory so artifact-plan reviews do not flag missing dispatch rows as defects.
 
@@ -44,7 +46,7 @@ Documentation and repo reference artifacts were updated after implementation: th
 - **Runtime selection over planned caps:** precomputing caps depended on reading a value the host cannot authoritatively expose. Runtime selection avoids encoding a false source of truth in `plan.md`.
 - **Override-only Dispatch Profile:** a missing dispatch profile is expected. Rows should exist only when the user has an explicit constraint or preference that runtime selection should honor.
 - **Two-axis dispatch state:** model and effort are logged independently as `selected:<value>`, `inherited`, `not-applicable`, or `host-auto`, so partial host control surfaces are represented accurately.
-- **Provider-neutral language:** the guidance uses separate model and effort axes so Claude-family model selection, Codex effort selection, and host-managed dispatch all fit the same contract.
+- **Provider-neutral language:** the guidance uses separate model and effort axes so Claude-family model selection, Codex effort-specific roles, and host-managed dispatch all fit the same contract.
 - **Review inherits:** OAT review dispatch does not choose a separate model or effort by default. It inherits the parent session controls and records that inheritance explicitly.
 - **Escalate on evidence:** retry/fix-loop evidence and high-risk scope justify stronger available control before redispatch; escalation is bounded by the existing retry loop instead of creating a separate retry budget.
 

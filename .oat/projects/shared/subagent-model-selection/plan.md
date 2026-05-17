@@ -605,6 +605,9 @@ Source: inline Codex dogfood feedback (2026-05-16)
 - Add: `.codex/agents/oat-phase-implementer-low.toml`
 - Add: `.codex/agents/oat-phase-implementer-medium.toml`
 - Add: `.codex/agents/oat-phase-implementer-high.toml`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
 - Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
 
 **Step 1: Replace per-call effort override as the standard Codex path**
@@ -617,6 +620,7 @@ Revise the Codex selected-effort dispatch contract:
 - Do not use top-level `reasoning_effort` as the standard selected-effort mechanism because dogfooding showed it can be inconsistent.
 - Treat `xhigh` as inherited-only: use it only when the parent/orchestrator session is already xhigh; otherwise stop for user re-invocation, split the phase, or choose the strongest configured variant (`high`) when sufficient.
 - Keep the post-spawn verification gate: selected-effort variant must match the returned spawn status before waiting on the agent.
+- Generate the effort variants through the Codex sync extension so they are managed provider views rather than unmanaged `.codex/agents` files.
 
 **Step 2: Verify**
 
@@ -626,6 +630,7 @@ grep -q "model_reasoning_effort = \"low\"" .codex/agents/oat-phase-implementer-l
 grep -q "model_reasoning_effort = \"medium\"" .codex/agents/oat-phase-implementer-medium.toml
 grep -q "model_reasoning_effort = \"high\"" .codex/agents/oat-phase-implementer-high.toml
 grep -q "oat-phase-implementer-low" .codex/config.toml
+pnpm exec vitest run packages/cli/src/providers/codex/codec/sync-extension.test.ts
 pnpm run cli -- sync --scope project --dry-run
 pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
 pnpm release:validate
@@ -637,7 +642,7 @@ Expected: all commands exit 0.
 **Step 3: Commit**
 
 ```bash
-git add .agents/skills/oat-project-implement/SKILL.md .codex/config.toml .codex/agents/oat-phase-implementer-low.toml .codex/agents/oat-phase-implementer-medium.toml .codex/agents/oat-phase-implementer-high.toml .oat/projects/shared/subagent-model-selection/summary.md
+git add .agents/skills/oat-project-implement/SKILL.md .codex/config.toml .codex/agents/oat-phase-implementer-low.toml .codex/agents/oat-phase-implementer-medium.toml .codex/agents/oat-phase-implementer-high.toml packages/cli/src/providers/codex/codec/sync-extension.ts packages/cli/src/providers/codex/codec/sync-extension.test.ts apps/oat-docs/docs/workflows/projects/implementation-execution.md .oat/projects/shared/subagent-model-selection/summary.md
 git commit -m "fix(prev6-t01): use Codex effort-specific implementer roles"
 ```
 
