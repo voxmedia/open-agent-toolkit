@@ -37,6 +37,8 @@ Revision 6 replaced the per-call Codex effort override as the standard selected-
 
 Revision 7 changed dispatch logging from compact one-line messages to structured `OAT Dispatch` blocks with `Host`, `Model axis`, `Effort axis`, `Dispatch target`, and `Rationale` fields. The field names stay provider-neutral while the dispatch target records the concrete host mechanism, such as a Claude Code Task model selection or a Codex effort-specific implementer role.
 
+Revision 8 fixed a classification bug surfaced by dogfooding: `oat status` and `oat init` flagged the generated Codex effort-variant role files (`oat-phase-implementer-{low,medium,high}.toml`) as stray because `detectCodexRoleStrays` built its "managed" set only from canonical `.agents/agents/*.md` sources and never consulted the Codex extension plan's `managedRoles`. Both call sites now pass `managedRoles` to `detectCodexRoleStrays`, so generated-derived role files are no longer misclassified as adoptable strays.
+
 The phase implementer and reviewer prompts now report confidence and escalation-relevant concerns. `oat-project-review-provide` also has a Dispatch Profile override advisory so artifact-plan reviews do not flag missing dispatch rows as defects.
 
 The final review pass added one consistency fix: `oat-project-implement` phase and review scope templates include dispatch context fields when known, so downstream agents receive the dispatch context the orchestrator has resolved. Revision 2 refined that context into separate `model_axis`, `effort_axis`, and `dispatch_rationale` fields.

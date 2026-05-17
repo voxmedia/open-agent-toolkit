@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-17
-oat_current_task_id: prev8-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -22,22 +22,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | complete    | 2     | 2/2       |
-| Phase 4 | complete    | 1     | 1/1       |
-| p-rev1  | complete    | 1     | 1/1       |
-| p-rev2  | complete    | 1     | 1/1       |
-| p-rev3  | complete    | 1     | 1/1       |
-| p-rev4  | complete    | 1     | 1/1       |
-| p-rev5  | complete    | 1     | 1/1       |
-| p-rev6  | complete    | 1     | 1/1       |
-| p-rev7  | complete    | 5     | 5/5       |
-| p-rev8  | in_progress | 2     | 1/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | complete | 1     | 1/1       |
+| p-rev1  | complete | 1     | 1/1       |
+| p-rev2  | complete | 1     | 1/1       |
+| p-rev3  | complete | 1     | 1/1       |
+| p-rev4  | complete | 1     | 1/1       |
+| p-rev5  | complete | 1     | 1/1       |
+| p-rev6  | complete | 1     | 1/1       |
+| p-rev7  | complete | 5     | 5/5       |
+| p-rev8  | complete | 2     | 2/2       |
 
-**Total:** 20/21 tasks completed
+**Total:** 21/21 tasks completed
 
 ---
 
@@ -226,8 +226,9 @@ oat_generated: false
 
 ## Phase p-rev8: Revision 8
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-17
+**Completed:** 2026-05-17
 
 ### Task prev8-t01: (revision) Teach oat status about generated Codex role variants
 
@@ -236,8 +237,8 @@ oat_generated: false
 
 ### Task prev8-t02: (revision) Apply the managed-roles stray fix to the oat init call site
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** df239e65
 
 ---
 
@@ -374,6 +375,19 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - Scope: replaced stale one-line dispatch-log references with structured `OAT Dispatch:` block references (t03); made review-dispatch effort axis host-conditional — `not-applicable` on Claude Code, `inherited` on Codex — across the skill, `oat-reviewer` agent, generated Codex view, docs, and summary (t04); reworded the loop dispatch step to name the asserted implementer role (t05). `oat-project-implement` skill bumped to `2.0.15`.
 - Verification: all task grep checks passed; `pnpm run cli -- sync --scope project --dry-run` reports managed views in sync; `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main` passed; `pnpm build:docs` passed (t04).
 - Review: range-review fixes are closed out by the pending `prev1-prev7` re-review rather than a separate per-phase reviewer dispatch, consistent with prior revision phases.
+- Next: re-review the `prev1-prev7` fix commits, then update PR #79.
+
+### Run: 2026-05-17T22:00:49Z
+
+- Tier: 1 — Subagents (`oat-phase-implementer` + `oat-reviewer`).
+- Dispatch: p-rev8 tasks dispatched to `oat-phase-implementer` with `model_axis=selected:sonnet, effort_axis=not-applicable` (Claude Code); reviews dispatched to `oat-reviewer` with `model_axis=inherited, effort_axis=not-applicable`.
+
+#### Phase p-rev8 result
+
+- Implementer: DONE with high confidence; `prev8-t01` complete in `d907f42f`, `prev8-t02` complete in `df239e65`.
+- Scope: taught `oat status` (`prev8-t01`) and `oat init` (`prev8-t02`) to recognize generated Codex effort-variant role files (`oat-phase-implementer-{low,medium,high}.toml`) as managed rather than stray, by passing the Codex extension plan's `managedRoles` to `detectCodexRoleStrays`. Added unit tests for both call sites.
+- Review: `prev8-t01` reviewed — passed (0 Critical/Important/Medium, 1 Minor: the `oat init` parity gap, converted to `prev8-t02`). `prev8-t02` reviewed — passed (0 Critical/Important/Medium, 1 Minor: non-blocking test-harness duplication).
+- Verification: `codex-strays` and `init` test suites pass; type-check and lint clean; `oat status --scope project` reports no strays; `oat sync --scope project --dry-run` clean; `pnpm release:validate` passed (no version bump required).
 - Next: re-review the `prev1-prev7` fix commits, then update PR #79.
 
 <!-- orchestration-runs-end -->

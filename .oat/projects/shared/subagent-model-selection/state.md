@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev8-t02
+oat_current_task: null
 oat_last_commit: 36098f2e
 oat_blockers: []
 associated_issues:
@@ -8,7 +8,7 @@ oat_hill_checkpoints: ['p03']
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: complete # null | skipped | complete - documentation sync status
@@ -16,19 +16,19 @@ oat_pr_status: open # null | ready | open | closed | merged - actual PR state fo
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/79' # null | string - tracked PR URL when a PR exists
 oat_project_created: '2026-05-04T14:47:00.831Z' # ISO 8601 UTC timestamp - set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp - set when project is completed/archived
-oat_project_state_updated: '2026-05-17T22:00:49Z'
+oat_project_state_updated: '2026-05-17T22:11:17Z'
 oat_generated: false
 ---
 
 # Project State: subagent-model-selection
 
-**Status:** Revision 8 in progress; PR open
+**Status:** Revision 8 complete; PR open
 **Started:** 2026-05-04
 **Last Updated:** 2026-05-17
 
 ## Current Phase
 
-Revision `p-rev8` — `prev8-t01` (teach `oat status` about generated Codex role variants) is complete in `d907f42f` and passed review. `prev8-t02` (apply the same fix to the `oat init` call site) is next. The `prev1-prev7` range-review fixes are implemented (`fixes_completed`) and still await their re-review.
+Revision `p-rev8` is complete — `prev8-t01` (`d907f42f`) and `prev8-t02` (`df239e65`) both implemented and review-passed; `oat status` and `oat init` no longer misclassify generated Codex role variants as stray. The `prev1-prev7` range-review fixes are implemented (`fixes_completed`) and still await their re-review.
 
 ## Artifacts
 
@@ -75,6 +75,7 @@ Revision `p-rev8` — `prev8-t01` (teach `oat status` about generated Codex role
 - Dogfood finding: `oat status` misclassifies generated Codex effort-variant role files as stray; converted to `prev8-t01`
 - `prev8-t01` completed in `d907f42f`; `oat status` no longer flags the variants. Review passed (0 Critical/Important/Medium, 1 Minor)
 - `prev8` review Minor: `oat init` shares the same defect at a second call site; converted to `prev8-t02`
+- `prev8-t02` completed in `df239e65`; `oat init` now recognizes the managed variants. Review passed (0 Critical/Important/Medium, 1 non-blocking Minor)
 
 ## Blockers
 
@@ -82,4 +83,4 @@ None
 
 ## Next Milestone
 
-Implement `prev8-t02`, then re-review the `prev1-prev7` fix commits and update PR #79.
+Re-review the `prev1-prev7` fix commits, then update PR #79 with the `p-rev7` and `p-rev8` work.
