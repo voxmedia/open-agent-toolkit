@@ -22,19 +22,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | complete    | 2     | 2/2       |
-| Phase 4 | complete    | 1     | 1/1       |
-| p-rev1  | complete    | 1     | 1/1       |
-| p-rev2  | complete    | 1     | 1/1       |
-| p-rev3  | complete    | 1     | 1/1       |
-| p-rev4  | complete    | 1     | 1/1       |
-| p-rev5  | in_progress | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | complete | 1     | 1/1       |
+| p-rev1  | complete | 1     | 1/1       |
+| p-rev2  | complete | 1     | 1/1       |
+| p-rev3  | complete | 1     | 1/1       |
+| p-rev4  | complete | 1     | 1/1       |
+| p-rev5  | complete | 1     | 1/1       |
 
-**Total:** 12/13 tasks completed
+**Total:** 13/13 tasks completed
 
 ---
 
@@ -164,14 +164,14 @@ oat_generated: false
 
 ## Phase p-rev5: Revision 5
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-16
-**Completed:** pending
+**Completed:** 2026-05-16
 
 ### Task prev5-t01: (revision) Make Codex selected-effort dispatch payload-first
 
-**Status:** in_progress
-**Commit:** pending
+**Status:** completed
+**Commit:** 8e1c4715
 
 ---
 
@@ -278,11 +278,11 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 
 #### Phase p-rev5 result
 
-- Implementer: inline revision in progress.
-- Scope: changed `oat-project-implement` so Codex implementer/fix dispatch must construct the `spawn_agent` argument map before logging dispatch, include top-level `reasoning_effort` for selected effort, derive the log from that payload, and treat Phase Scope-only selected effort as invalid.
-- Verification: pending.
+- Implementer: inline revision completed in `8e1c4715`.
+- Scope: changed `oat-project-implement` so Codex implementer/fix dispatch must construct the `spawn_agent` argument map before logging dispatch, include top-level `reasoning_effort` for selected effort, derive the log from that payload, treat Phase Scope-only selected effort as invalid, and perform a post-spawn status check before waiting on the agent.
+- Verification: focused grep checks passed; `git diff --check` passed; `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main` passed; `pnpm release:validate` passed for public packages at `0.0.70`; `pnpm build:docs` passed after rerun.
 - Review: no separate reviewer dispatch for this inline clarification; validation will use focused grep checks plus release/docs guardrails.
-- Next: run verification and commit.
+- Next: update PR #79.
 
 <!-- orchestration-runs-end -->
 
@@ -371,12 +371,13 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 - Fix repeated drift where the log says `effort_axis=selected:low` or `effort_axis=selected:medium` but the spawned Codex agent reports high effort.
 - Make the Codex selected-effort path payload-first so the actual `spawn_agent` arguments are constructed before logging.
 - Treat selected effort that exists only in the Phase Scope packet as invalid.
+- Promote mismatch handling into a post-spawn verification gate before waiting on the agent.
 
 **New tasks added:** prev5-t01
 
-**Resolved in:** pending
+**Resolved in:** `8e1c4715`
 
-**Next:** Verify and commit revision 5.
+**Next:** Update PR #79.
 
 ### Review Received: final
 
@@ -419,7 +420,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 | p-rev2        | Two-axis grep checks; docs build; validate-plan; sync dry-run; release validation; skill version guardrail; `git diff --check` | yes    | no     | Model/effort axis dispatch guidance                    |
 | p-rev3        | Selected-axis grep checks; sync dry-run; skill version guardrail; release validation; docs build; `git diff --check`           | yes    | no     | Selected axis dispatch-call wiring and design note     |
 | p-rev4        | Codex selected-effort grep checks; skill version guardrail; release validation; docs build; `git diff --check`                 | yes    | no     | Codex selected effort pre-dispatch assertion           |
-| p-rev5        | Pending                                                                                                                        | no     | no     | Codex payload-first selected effort dispatch           |
+| p-rev5        | Payload-first grep checks; skill version guardrail; release validation; docs build after rerun; `git diff --check`             | yes    | no     | Codex payload-first selected effort dispatch           |
 
 ## Final Summary (for PR/docs)
 
@@ -428,7 +429,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 - Override-only Dispatch Profile guidance for plan templates, plan writing, and imported plans.
 - Runtime dispatch-selection guidance for `oat-project-implement`, including lowest-confident model/effort axis selection, `host-auto`, dispatch notes, and confidence-based escalation.
 - Dispatch fields in `oat-project-implement` phase/review scope templates so downstream agents receive resolved model/effort axis context when the orchestrator has it.
-- Revision clarifications: implementation and fix dispatch may choose explicit reasoning effort or model when supported, selected axes must be passed to the host dispatch API, Codex selected effort must be payload-first, mismatched spawned effort is an orchestration deviation, and review dispatch inherits parent controls by default.
+- Revision clarifications: implementation and fix dispatch may choose explicit reasoning effort or model when supported, selected axes must be passed to the host dispatch API, Codex selected effort must be payload-first, mismatched spawned effort is a post-spawn orchestration deviation, and review dispatch inherits parent controls by default.
 - Agent and review guidance for dispatch confidence reporting, review inheritance, two-axis dispatch state, and Dispatch Profile override review advisories.
 
 **Behavioral changes (user-facing):**
