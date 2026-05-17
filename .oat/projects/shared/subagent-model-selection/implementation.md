@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-17
-oat_current_task_id: prev7-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -22,21 +22,21 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | complete    | 2     | 2/2       |
-| Phase 4 | complete    | 1     | 1/1       |
-| p-rev1  | complete    | 1     | 1/1       |
-| p-rev2  | complete    | 1     | 1/1       |
-| p-rev3  | complete    | 1     | 1/1       |
-| p-rev4  | complete    | 1     | 1/1       |
-| p-rev5  | complete    | 1     | 1/1       |
-| p-rev6  | complete    | 1     | 1/1       |
-| p-rev7  | in_progress | 5     | 2/5       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | complete | 1     | 1/1       |
+| p-rev1  | complete | 1     | 1/1       |
+| p-rev2  | complete | 1     | 1/1       |
+| p-rev3  | complete | 1     | 1/1       |
+| p-rev4  | complete | 1     | 1/1       |
+| p-rev5  | complete | 1     | 1/1       |
+| p-rev6  | complete | 1     | 1/1       |
+| p-rev7  | complete | 5     | 5/5       |
 
-**Total:** 16/19 tasks completed
+**Total:** 19/19 tasks completed
 
 ---
 
@@ -192,8 +192,9 @@ oat_generated: false
 
 ## Phase p-rev7: Revision 7
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-17
+**Completed:** 2026-05-17
 
 ### Task prev7-t01: (revision) Use structured dispatch log blocks
 
@@ -207,18 +208,18 @@ oat_generated: false
 
 ### Task prev7-t03: (review) Update stale one-line dispatch references
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ac1bb5fd
 
 ### Task prev7-t04: (review) Make review effort axis host-conditional
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 170ae71e
 
 ### Task prev7-t05: (review) Clarify implementer role dispatch wording
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 80d2ebb3
 
 ---
 
@@ -343,6 +344,19 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 - Verification: focused grep checks passed; `git diff --check` passed; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/sync-extension.test.ts` passed (full CLI suite: 163 files, 1469 tests); `pnpm run cli -- sync --scope project --dry-run` passed with variants managed and in sync; `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main` passed; `pnpm build:docs` passed; `pnpm release:validate` passed after rerun outside concurrent docs build.
 - Review: no separate reviewer dispatch for this inline clarification; validated by tests plus sync/release/docs guardrails.
 - Next: update PR #79.
+
+### Run: 2026-05-17T21:10:15Z
+
+- Tier: 1 — Subagents (`oat-phase-implementer`).
+- Dispatch: p-rev7 review-fix tasks dispatched to `oat-phase-implementer` with `model_axis=selected:sonnet, effort_axis=not-applicable` (Claude Code); rationale: moderate doc-contract edits applying already-decided range-review fixes.
+
+#### Phase p-rev7 result
+
+- Implementer: DONE with high confidence; review-fix tasks `prev7-t03`, `prev7-t04`, `prev7-t05` complete in `ac1bb5fd`, `170ae71e`, `80d2ebb3`.
+- Scope: replaced stale one-line dispatch-log references with structured `OAT Dispatch:` block references (t03); made review-dispatch effort axis host-conditional — `not-applicable` on Claude Code, `inherited` on Codex — across the skill, `oat-reviewer` agent, generated Codex view, docs, and summary (t04); reworded the loop dispatch step to name the asserted implementer role (t05). `oat-project-implement` skill bumped to `2.0.15`.
+- Verification: all task grep checks passed; `pnpm run cli -- sync --scope project --dry-run` reports managed views in sync; `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main` passed; `pnpm build:docs` passed (t04).
+- Review: range-review fixes are closed out by the pending `prev1-prev7` re-review rather than a separate per-phase reviewer dispatch, consistent with prior revision phases.
+- Next: re-review the `prev1-prev7` fix commits, then update PR #79.
 
 <!-- orchestration-runs-end -->
 
