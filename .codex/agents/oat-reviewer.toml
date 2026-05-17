@@ -46,7 +46,7 @@ You will be given a "Review Scope" block including:
 
 ## Dispatch Control
 
-Reviews, re-reviews, and review-fix evaluation inherit the parent session's model and effort axes unless the user explicitly requested a review override. In Codex, the orchestrator should omit `model` and `reasoning_effort` overrides when spawning this reviewer; in Claude Code, it should not pass a per-review model override. The review scope should record `model_axis=inherited, effort_axis=inherited`. Do not read `plan.md` Dispatch Profile rows to self-select a tier; the orchestrator owns dispatch control.
+Reviews, re-reviews, and review-fix evaluation inherit the parent session's model and effort axes unless the user explicitly requested a review override. In Codex, the orchestrator should omit `model` and `reasoning_effort` overrides when spawning this reviewer; in Claude Code, it should not pass a per-review model override. The review scope should record `model_axis=inherited` and `effort_axis=inherited` on hosts that expose an effort axis (such as Codex), or `effort_axis=not-applicable` on hosts that do not (such as Claude Code). Do not read `plan.md` Dispatch Profile rows to self-select a tier; the orchestrator owns dispatch control.
 
 ## Mode Contract
 

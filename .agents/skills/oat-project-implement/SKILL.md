@@ -193,7 +193,7 @@ Selection rule:
 - **Codex implementer/fix dispatch:** when `effort_axis=selected:low|medium|high`, dispatch the matching configured role: `agent_type: "oat-phase-implementer-low"`, `agent_type: "oat-phase-implementer-medium"`, or `agent_type: "oat-phase-implementer-high"`. Those roles set `model_reasoning_effort` in `.codex/agents/*.toml`. Use the base `agent_type: "oat-phase-implementer"` only for `effort_axis=inherited`. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent in some Codex runs.
 - **Codex xhigh:** do not create or select an `xhigh` implementer variant. Use `xhigh` only when the parent/orchestrator session is already xhigh and therefore `effort_axis=inherited` on the base role is the correct representation. If a phase appears to require xhigh while the parent is not xhigh, choose `selected:high` only if high is sufficient; otherwise split/revise the phase or stop for user re-invocation at xhigh.
 - **Claude Code `opus`:** unlike Codex `xhigh`, `opus` is directly selectable. Claude Code exposes `opus` through the Task tool's `model` parameter, so OAT may select it when available (`model_axis=selected:opus`) — including as a terminal escalation step. There is no `opus` inherited-only restriction; the `xhigh` rule above is specific to Codex's effort-variant mechanism, not a general "never select the maximum tier" rule.
-- **Reviewer dispatch on either host:** use `model_axis=inherited, effort_axis=inherited`. Omit `model` and, on Codex, `reasoning_effort` overrides entirely.
+- **Reviewer dispatch on either host:** use `model_axis=inherited` by default. For `effort_axis`: use `inherited` on hosts that expose an effort axis (such as Codex); use `not-applicable` on hosts that do not expose a meaningful effort axis (such as Claude Code). Omit `model` and, on Codex, `reasoning_effort` overrides entirely.
 
 Codex selected-effort implementer/fix dispatch shape:
 
@@ -280,7 +280,7 @@ effort_axis: { selected:<value> | inherited | not-applicable | host-auto }
 dispatch_rationale: { short rationale }
 ```
 
-Review dispatch is intentionally different. A reviewer should inherit the parent session's model and effort axes unless the user explicitly requests a review override. In Codex, omit `model` and `reasoning_effort` overrides when spawning `oat-reviewer`; in Claude Code, do not pass a per-review model override. Log review scope as `model_axis=inherited, effort_axis=inherited`.
+Review dispatch is intentionally different. A reviewer should inherit the parent session's model and effort axes unless the user explicitly requests a review override. In Codex, omit `model` and `reasoning_effort` overrides when spawning `oat-reviewer`; in Claude Code, do not pass a per-review model override. Log review scope as `model_axis=inherited` and `effort_axis=inherited` on hosts that expose an effort axis (such as Codex), or `effort_axis=not-applicable` on hosts that do not (such as Claude Code).
 
 ### Dry-Run Mode
 
@@ -639,7 +639,7 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   artifact_paths: {same as Phase Scope}
   tasks_in_scope: {list of pNN-tNN IDs in the phase}
   model_axis: inherited
-  effort_axis: inherited
+  effort_axis: inherited   # on Codex; use not-applicable on Claude Code
   dispatch_rationale: review dispatch inherits parent session controls
   ```
 

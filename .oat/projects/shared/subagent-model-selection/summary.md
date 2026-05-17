@@ -49,7 +49,7 @@ Documentation and repo reference artifacts were updated after implementation: th
 - **Override-only Dispatch Profile:** a missing dispatch profile is expected. Rows should exist only when the user has an explicit constraint or preference that runtime selection should honor.
 - **Two-axis dispatch state:** model and effort are logged independently as `selected:<value>`, `inherited`, `not-applicable`, or `host-auto`, so partial host control surfaces are represented accurately.
 - **Provider-neutral language:** the guidance uses separate model and effort axes so Claude-family model selection, Codex effort-specific roles, and host-managed dispatch all fit the same contract.
-- **Review inherits:** OAT review dispatch does not choose a separate model or effort by default. It inherits the parent session controls and records that inheritance explicitly.
+- **Review inherits:** OAT review dispatch does not choose a separate model or effort by default. It inherits the parent session controls and records that inheritance explicitly. On hosts with no effort axis (such as Claude Code), review dispatch records `effort_axis=not-applicable` rather than `inherited`.
 - **Escalate on evidence:** retry/fix-loop evidence and high-risk scope justify stronger available control before redispatch; escalation is bounded by the existing retry loop instead of creating a separate retry budget.
 
 ## Notable Challenges
