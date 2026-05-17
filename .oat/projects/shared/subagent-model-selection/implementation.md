@@ -441,6 +441,35 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 
 **Next:** Update PR #79.
 
+### Review Received: prev1-prev7
+
+**Date:** 2026-05-17
+**Review artifact:** reviews/archived/range-review-2026-05-17.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 2
+- Minor: 2
+
+**New tasks added:** prev7-t02, prev7-t03, prev7-t04, prev7-t05
+
+**Finding disposition map:**
+
+- `I1` -> converted: fix the invalid `effort_axis=selected:xhigh` escalation example.
+- `M1` -> converted: update stale one-line `Dispatching ...` references to the structured `OAT Dispatch` block.
+- `M2` -> converted: make review-dispatch effort axis host-conditional (`inherited` where effort exists, `not-applicable` where it does not).
+- `m1` -> converted: reword generic base implementer dispatch wording to refer to the selected/asserted implementer role.
+- `m2` -> deferred/no-action: earlier revision commits did not bump versions in the same commit, but cumulative PR-scoped skill version bumps are monotonic and pass the guardrail; no code or doc fix is useful for this range.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update the `prev1-prev7` review row status to `fixes_completed`.
+- Re-run `oat-project-review-provide code prev1-prev7` then `oat-project-review-receive` to reach `passed`.
+
 ### Review Received: final
 
 **Date:** 2026-05-13

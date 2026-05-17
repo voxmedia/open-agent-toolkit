@@ -695,20 +695,163 @@ git add .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project
 git commit -m "fix(prev7-t01): use structured dispatch log blocks"
 ```
 
+### Task prev7-t02: (review) Fix xhigh escalation example
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
+
+**Step 1: Understand the issue**
+
+Review finding: the escalation history-note example still uses `effort_axis=selected:xhigh`, which contradicts the inherited-only xhigh contract.
+Location: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 2: Implement fix**
+
+Replace the invalid selected-xhigh example with a contract-legal escalation example, such as selected `high`, and describe any escalation beyond high as inherited-only xhigh via user re-invocation, phase split, or revision.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+grep -q "selected:high" .agents/skills/oat-project-implement/SKILL.md
+! grep -q "selected:xhigh" .agents/skills/oat-project-implement/SKILL.md
+```
+
+Expected: both checks exit 0.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md .oat/projects/shared/subagent-model-selection/summary.md
+git commit -m "fix(prev7-t02): correct xhigh escalation example"
+```
+
+### Task prev7-t03: (review) Update stale one-line dispatch references
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: two invariant passages still refer to the old `Dispatching ... model_axis=..., effort_axis=...` one-line log shape even though prev7 made `OAT Dispatch` blocks canonical.
+Location: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 2: Implement fix**
+
+Rewrite the payload-first and pre-dispatch assertion passages to refer to the structured `OAT Dispatch:` block and its `Model axis:` / `Effort axis:` fields.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+grep -q "OAT Dispatch" .agents/skills/oat-project-implement/SKILL.md
+! grep -q "Dispatching .*effort_axis" .agents/skills/oat-project-implement/SKILL.md
+```
+
+Expected: both checks exit 0.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md
+git commit -m "fix(prev7-t03): update stale dispatch log references"
+```
+
+### Task prev7-t04: (review) Make review effort axis host-conditional
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `.codex/agents/oat-reviewer.toml`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
+
+**Step 1: Understand the issue**
+
+Review finding: review dispatch currently records `effort_axis=inherited` on every host, but Claude Code has no per-dispatch effort axis and should therefore record `effort_axis=not-applicable`.
+Location: `.agents/skills/oat-project-implement/SKILL.md`, `.agents/agents/oat-reviewer.md`, generated Codex reviewer view, and docs.
+
+**Step 2: Implement fix**
+
+Make review-dispatch effort-axis wording host-conditional:
+
+- `model_axis=inherited` by default for review dispatch.
+- `effort_axis=inherited` on hosts that expose an effort axis, such as Codex.
+- `effort_axis=not-applicable` on hosts that do not expose a meaningful effort axis, such as Claude Code.
+- Re-run project sync so managed views stay aligned.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+grep -q "effort_axis=not-applicable" .agents/skills/oat-project-implement/SKILL.md
+grep -q "effort_axis=inherited" .agents/skills/oat-project-implement/SKILL.md
+pnpm run cli -- sync --scope project --dry-run
+pnpm build:docs
+```
+
+Expected: all commands exit 0.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md .agents/agents/oat-reviewer.md .codex/agents/oat-reviewer.toml apps/oat-docs/docs/workflows/projects/implementation-execution.md .oat/projects/shared/subagent-model-selection/summary.md
+git commit -m "fix(prev7-t04): make review effort axis host-conditional"
+```
+
+### Task prev7-t05: (review) Clarify implementer role dispatch wording
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: one loop step still says to dispatch base `oat-phase-implementer` generically even though Codex selected effort uses `oat-phase-implementer-low|medium|high` variants.
+Location: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 2: Implement fix**
+
+Reword the step to dispatch the asserted phase-implementer role or the implementer role selected by pre-dispatch assertion.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+grep -q "selected implementer role" .agents/skills/oat-project-implement/SKILL.md
+```
+
+Expected: command exits 0.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md
+git commit -m "fix(prev7-t05): clarify selected implementer role wording"
+```
+
 ---
 
 ## Reviews
 
-| Scope       | Type     | Status   | Date       | Artifact                                              |
-| ----------- | -------- | -------- | ---------- | ----------------------------------------------------- |
-| p01         | code     | passed   | 2026-05-13 | reviews/archived/p01-review-2026-05-13-v2.md          |
-| p02         | code     | passed   | 2026-05-13 | reviews/archived/p02-review-2026-05-13.md             |
-| p03         | code     | passed   | 2026-05-13 | reviews/archived/p03-review-2026-05-13-v2.md          |
-| p04         | code     | passed   | 2026-05-13 | reviews/archived/p04-review-2026-05-13.md             |
-| final       | code     | passed   | 2026-05-13 | reviews/archived/final-review-2026-05-13-v4.md        |
-| design      | artifact | passed   | 2026-05-12 | reviews/archived/artifact-design-review-2026-05-12.md |
-| plan        | artifact | passed   | 2026-05-12 | reviews/archived/artifact-plan-review-2026-05-12.md   |
-| prev1-prev7 | code     | received | 2026-05-17 | reviews/range-review-2026-05-17.md                    |
+| Scope       | Type     | Status      | Date       | Artifact                                              |
+| ----------- | -------- | ----------- | ---------- | ----------------------------------------------------- |
+| p01         | code     | passed      | 2026-05-13 | reviews/archived/p01-review-2026-05-13-v2.md          |
+| p02         | code     | passed      | 2026-05-13 | reviews/archived/p02-review-2026-05-13.md             |
+| p03         | code     | passed      | 2026-05-13 | reviews/archived/p03-review-2026-05-13-v2.md          |
+| p04         | code     | passed      | 2026-05-13 | reviews/archived/p04-review-2026-05-13.md             |
+| final       | code     | passed      | 2026-05-13 | reviews/archived/final-review-2026-05-13-v4.md        |
+| design      | artifact | passed      | 2026-05-12 | reviews/archived/artifact-design-review-2026-05-12.md |
+| plan        | artifact | passed      | 2026-05-12 | reviews/archived/artifact-plan-review-2026-05-12.md   |
+| prev1-prev7 | code     | fixes_added | 2026-05-17 | reviews/archived/range-review-2026-05-17.md           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -728,9 +871,9 @@ git commit -m "fix(prev7-t01): use structured dispatch log blocks"
 - Phase p-rev4: 1 task - Live dogfood fix for Codex selected-effort spawn-agent assertion
 - Phase p-rev5: 1 task - Repeated dogfood fix requiring Codex selected-effort dispatch to be payload-first
 - Phase p-rev6: 1 task - Codex selected effort now maps to configured low/medium/high implementer variants
-- Phase p-rev7: 1 task - Dispatch logs now use structured provider-neutral blocks
+- Phase p-rev7: 5 tasks - Structured dispatch blocks plus review coherence fixes
 
-**Total: 15 tasks across 11 phases.**
+**Total: 19 tasks across 11 phases.**
 
 Follow-up items to file at project completion:
 
