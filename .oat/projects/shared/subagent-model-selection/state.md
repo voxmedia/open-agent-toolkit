@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev8-t01
+oat_current_task: prev8-t02
 oat_last_commit: 36098f2e
 oat_blockers: []
 associated_issues:
@@ -16,7 +16,7 @@ oat_pr_status: open # null | ready | open | closed | merged - actual PR state fo
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/79' # null | string - tracked PR URL when a PR exists
 oat_project_created: '2026-05-04T14:47:00.831Z' # ISO 8601 UTC timestamp - set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp - set when project is completed/archived
-oat_project_state_updated: '2026-05-17T21:35:03Z'
+oat_project_state_updated: '2026-05-17T22:00:49Z'
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision `p-rev8` (`prev8-t01`) — teach `oat status` to recognize generated Codex role variants as managed. The `prev1-prev7` range-review fixes are implemented (`fixes_completed`) and still await their re-review.
+Revision `p-rev8` — `prev8-t01` (teach `oat status` about generated Codex role variants) is complete in `d907f42f` and passed review. `prev8-t02` (apply the same fix to the `oat init` call site) is next. The `prev1-prev7` range-review fixes are implemented (`fixes_completed`) and still await their re-review.
 
 ## Artifacts
 
@@ -73,6 +73,8 @@ Revision `p-rev8` (`prev8-t01`) — teach `oat status` to recognize generated Co
 - `prev7-t02` completed in `04d9e0c6`; escalation example corrected and per-provider escalation termini stated
 - `p-rev7` review fixes `prev7-t03/t04/t05` completed in `ac1bb5fd`, `170ae71e`, `80d2ebb3`; `prev1-prev7` review row now `fixes_completed`
 - Dogfood finding: `oat status` misclassifies generated Codex effort-variant role files as stray; converted to `prev8-t01`
+- `prev8-t01` completed in `d907f42f`; `oat status` no longer flags the variants. Review passed (0 Critical/Important/Medium, 1 Minor)
+- `prev8` review Minor: `oat init` shares the same defect at a second call site; converted to `prev8-t02`
 
 ## Blockers
 
@@ -80,4 +82,4 @@ None
 
 ## Next Milestone
 
-Implement `prev8-t01`, then re-review the `prev1-prev7` fix commits and update PR #79.
+Implement `prev8-t02`, then re-review the `prev1-prev7` fix commits and update PR #79.

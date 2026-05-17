@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-17
-oat_current_task_id: prev8-t01
+oat_current_task_id: prev8-t02
 oat_generated: false
 ---
 
@@ -35,9 +35,9 @@ oat_generated: false
 | p-rev5  | complete    | 1     | 1/1       |
 | p-rev6  | complete    | 1     | 1/1       |
 | p-rev7  | complete    | 5     | 5/5       |
-| p-rev8  | in_progress | 1     | 0/1       |
+| p-rev8  | in_progress | 2     | 1/2       |
 
-**Total:** 19/20 tasks completed
+**Total:** 20/21 tasks completed
 
 ---
 
@@ -230,6 +230,11 @@ oat_generated: false
 **Started:** 2026-05-17
 
 ### Task prev8-t01: (revision) Teach oat status about generated Codex role variants
+
+**Status:** completed
+**Commit:** d907f42f
+
+### Task prev8-t02: (revision) Apply the managed-roles stray fix to the oat init call site
 
 **Status:** pending
 **Commit:** -

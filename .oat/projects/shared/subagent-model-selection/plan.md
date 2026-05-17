@@ -895,6 +895,42 @@ git add packages/cli/src/commands/shared/codex-strays.ts packages/cli/src/comman
 git commit -m "fix(prev8-t01): teach oat status about generated Codex role variants"
 ```
 
+### Task prev8-t02: (revision) Apply the managed-roles stray fix to the oat init call site
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/index.ts`
+- Modify: the colocated `oat init` test (extend coverage for the managed-variant case)
+
+**Step 1: Understand the issue**
+
+The `prev8-t01` review found a second call site of the same bug: `oat init` (`packages/cli/src/commands/init/index.ts`, around line 299) calls `detectCodexRoleStrays` on the 2-arg form without `managedRoleNames`. `prev8-t01` fixed `oat status`; `oat init` still misclassifies the generated Codex effort-variant role files (`oat-phase-implementer-{low,medium,high}.toml`) as adoptable strays even though the sync extension manages them.
+
+**Step 2: Implement fix**
+
+- Make the `oat init` stray check aware of managed Codex roles, consistent with the `prev8-t01` fix to `status/index.ts`: pass the Codex extension plan's `managedRoles` as the `managedRoleNames` argument to `detectCodexRoleStrays`.
+- If `oat init` does not already have the Codex extension plan available at that call site, compute it using the same `computeCodexProjectExtensionPlan` pattern used by `status/index.ts` and `sync/index.ts`. If the init context genuinely cannot produce an extension plan, return `NEEDS_CONTEXT`/`BLOCKED` rather than guessing.
+- Extend the colocated `oat init` test so the managed-variant case is covered: generated variants are not offered as adoptable strays; a genuine orphan still is.
+
+**Step 3: Verify**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init
+pnpm --filter @open-agent-toolkit/cli type-check
+pnpm lint
+pnpm run cli -- sync --scope project --dry-run
+pnpm release:validate
+```
+
+Expected: tests pass; `oat sync` dry-run clean; release validation passes.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/
+git commit -m "fix(prev8-t02): apply managed-roles stray fix to oat init"
+```
+
 ---
 
 ## Reviews
@@ -929,9 +965,9 @@ git commit -m "fix(prev8-t01): teach oat status about generated Codex role varia
 - Phase p-rev5: 1 task - Repeated dogfood fix requiring Codex selected-effort dispatch to be payload-first
 - Phase p-rev6: 1 task - Codex selected effort now maps to configured low/medium/high implementer variants
 - Phase p-rev7: 5 tasks - Structured dispatch blocks plus review coherence fixes
-- Phase p-rev8: 1 task - Teach `oat status` to recognize generated Codex role variants as managed
+- Phase p-rev8: 2 tasks - Teach `oat status` and `oat init` to recognize generated Codex role variants as managed
 
-**Total: 20 tasks across 12 phases.**
+**Total: 21 tasks across 12 phases.**
 
 Follow-up items to file at project completion:
 
