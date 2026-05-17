@@ -52,6 +52,7 @@ async function fileExists(path: string): Promise<boolean> {
 async function detectFromConfig(
   scopeRoot: string,
   existingCanonicalRoles: Set<string>,
+  managedRoleNames: Set<string>,
 ): Promise<CodexRoleStray[]> {
   const configPath = join(scopeRoot, '.codex', 'config.toml');
   if (!(await fileExists(configPath))) {
@@ -75,7 +76,10 @@ async function detectFromConfig(
 
   const strays: CodexRoleStray[] = [];
   for (const [roleName, value] of Object.entries(agents)) {
-    if (existingCanonicalRoles.has(roleName)) {
+    if (
+      existingCanonicalRoles.has(roleName) ||
+      managedRoleNames.has(roleName)
+    ) {
       continue;
     }
 
@@ -116,6 +120,7 @@ async function detectFromConfig(
 async function detectFromAgentsDirectory(
   scopeRoot: string,
   existingCanonicalRoles: Set<string>,
+  managedRoleNames: Set<string>,
 ): Promise<CodexRoleStray[]> {
   const agentsDir = join(scopeRoot, '.codex', 'agents');
 
@@ -136,7 +141,10 @@ async function detectFromAgentsDirectory(
     }
 
     const roleName = entry.name.replace(/\.toml$/i, '');
-    if (existingCanonicalRoles.has(roleName)) {
+    if (
+      existingCanonicalRoles.has(roleName) ||
+      managedRoleNames.has(roleName)
+    ) {
       continue;
     }
 
@@ -152,10 +160,19 @@ async function detectFromAgentsDirectory(
 export async function detectCodexRoleStrays(
   scopeRoot: string,
   canonicalEntries: CanonicalEntry[],
+  managedRoleNames: Set<string> = new Set(),
 ): Promise<CodexRoleStray[]> {
   const roleNames = canonicalRoleNames(canonicalEntries);
-  const configStrays = await detectFromConfig(scopeRoot, roleNames);
-  const dirStrays = await detectFromAgentsDirectory(scopeRoot, roleNames);
+  const configStrays = await detectFromConfig(
+    scopeRoot,
+    roleNames,
+    managedRoleNames,
+  );
+  const dirStrays = await detectFromAgentsDirectory(
+    scopeRoot,
+    roleNames,
+    managedRoleNames,
+  );
 
   const merged = new Map<string, CodexRoleStray>();
   for (const stray of [...configStrays, ...dirStrays]) {

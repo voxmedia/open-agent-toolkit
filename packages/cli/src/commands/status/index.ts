@@ -118,6 +118,7 @@ interface StatusDependencies {
   detectCodexRoleStrays: (
     scopeRoot: string,
     canonicalEntries: CanonicalEntry[],
+    managedRoleNames?: Set<string>,
   ) => Promise<CodexRoleStray[]>;
   computeCodexProjectExtensionPlan: (
     scopeRoot: string,
@@ -439,6 +440,7 @@ async function collectScopeReports(
     const codexStrays = await dependencies.detectCodexRoleStrays(
       scopeRoot,
       canonicalEntries,
+      new Set(codexExtensionPlan.managedRoles),
     );
     for (const codexStray of codexStrays) {
       const report: DriftReport = {

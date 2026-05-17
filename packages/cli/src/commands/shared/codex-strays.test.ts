@@ -84,6 +84,61 @@ describe('detectCodexRoleStrays', () => {
 
     expect(strays).toEqual([]);
   });
+
+  it('does not flag generated variants that are in managedRoles', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-strays-'));
+    tempDirs.push(root);
+
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+    // Effort variants — no canonical .md counterpart, but listed in managedRoles
+    for (const variant of ['low', 'medium', 'high']) {
+      await writeFile(
+        join(root, '.codex', 'agents', `oat-phase-implementer-${variant}.toml`),
+        `model_reasoning_effort = "${variant}"`,
+        'utf8',
+      );
+    }
+
+    const managedRoleNames = new Set([
+      'oat-phase-implementer-low',
+      'oat-phase-implementer-medium',
+      'oat-phase-implementer-high',
+    ]);
+
+    const strays = await detectCodexRoleStrays(root, [], managedRoleNames);
+
+    expect(strays).toEqual([]);
+  });
+
+  it('still flags genuinely orphaned roles not in managedRoles', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-strays-'));
+    tempDirs.push(root);
+
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+    // Generated variant — should be excluded via managedRoles
+    await writeFile(
+      join(root, '.codex', 'agents', 'oat-phase-implementer-low.toml'),
+      'model_reasoning_effort = "low"',
+      'utf8',
+    );
+    // Truly orphaned role — no canonical source, not in managedRoles
+    await writeFile(
+      join(root, '.codex', 'agents', 'old-orphan.toml'),
+      'developer_instructions = "leftover"',
+      'utf8',
+    );
+
+    const managedRoleNames = new Set(['oat-phase-implementer-low']);
+
+    const strays = await detectCodexRoleStrays(root, [], managedRoleNames);
+
+    expect(strays).toEqual([
+      {
+        roleName: 'old-orphan',
+        providerPath: '.codex/agents/old-orphan.toml',
+      },
+    ]);
+  });
 });
 
 describe('regenerateCodexAfterAdoption', () => {
