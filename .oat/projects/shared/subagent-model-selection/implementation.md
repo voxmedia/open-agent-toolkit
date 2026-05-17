@@ -423,6 +423,24 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 
 **Next:** Update PR #79.
 
+### Revision Received: Structured Dispatch Log Feedback
+
+**Date:** 2026-05-17
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Replace compact one-line dispatch examples with a consistent structured block.
+- Keep `Model axis` and `Effort axis` as the cross-host field names.
+- Include `Host`, `Dispatch target`, and `Rationale` so Claude Code and Codex dispatch behavior are easier to compare.
+- Clarify that Codex `xhigh` remains inherited-only rather than a selectable implementer variant.
+
+**New tasks added:** prev7-t01
+
+**Resolved in:** `36098f2e`
+
+**Next:** Update PR #79.
+
 ### Review Received: final
 
 **Date:** 2026-05-13
@@ -466,6 +484,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 | p-rev4        | Codex selected-effort grep checks; skill version guardrail; release validation; docs build; `git diff --check`                 | yes    | no     | Codex selected effort pre-dispatch assertion           |
 | p-rev5        | Payload-first grep checks; skill version guardrail; release validation; docs build after rerun; `git diff --check`             | yes    | no     | Codex payload-first selected effort dispatch           |
 | p-rev6        | Grep checks; full CLI test run; sync dry-run; skill version guardrail; release validation; docs build; `git diff --check`      | yes    | no     | Codex effort-specific implementer variants             |
+| p-rev7        | Grep checks; sync dry-run; skill version guardrail; docs build; release validation; `git diff --check`                         | yes    | no     | Structured dispatch log blocks                         |
 
 ## Final Summary (for PR/docs)
 
@@ -483,6 +502,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 - Implement orchestration now documents runtime provider-control selection and escalation instead of precomputing a cap during planning.
 - Codex implementation and fix dispatch should normally use `model_axis=inherited` plus explicit phase-appropriate `effort_axis=selected:low|medium|high` mapped to `oat-phase-implementer-low|medium|high`; Codex review dispatch should use the inherited base role and log `model_axis=inherited, effort_axis=inherited`.
 - Claude Code implementation dispatch should use a selected model axis when available, pass the corresponding Task `model` parameter, and set `effort_axis=not-applicable`; Claude Code review dispatch should inherit the model axis by default.
+- Dispatch logs now use a structured `OAT Dispatch` block with `Host`, `Model axis`, `Effort axis`, `Dispatch target`, and `Rationale`.
 - Codex managed role exports are synced with canonical phase implementer and reviewer guidance.
 
 **Key files / modules:**

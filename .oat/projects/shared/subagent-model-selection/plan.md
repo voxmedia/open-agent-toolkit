@@ -648,6 +648,55 @@ git commit -m "fix(prev6-t01): use Codex effort-specific implementer roles"
 
 ---
 
+## Phase p-rev7: Revision 7
+
+Source: inline dispatch-log readability feedback (2026-05-17)
+
+### Task prev7-t01: (revision) Use structured dispatch log blocks
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `.oat/templates/plan.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: `.oat/projects/shared/subagent-model-selection/design.md`
+- Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
+
+**Step 1: Replace one-line dispatch examples**
+
+Revise the user-facing dispatch log guidance:
+
+- Replace `Dispatching pNN with model_axis=..., effort_axis=...` examples with a structured `OAT Dispatch` block.
+- Keep `Model axis` and `Effort axis` as the field names so each axis can still be `selected:<value>`, `inherited`, `not-applicable`, or `host-auto`.
+- Include `Host`, `Dispatch target`, and `Rationale` so Claude Code and Codex behavior are comparable while preserving host-specific mechanics.
+- Clarify in plan-writing/template guidance that Codex `xhigh` is inherited-only, not a selectable implementer variant.
+- Add a design audit-trail note for the structured block and Codex role-variant pivot.
+
+**Step 2: Verify**
+
+```bash
+grep -q "OAT Dispatch: Phase" .agents/skills/oat-project-implement/SKILL.md
+grep -q "Dispatch target: oat-phase-implementer-medium" .agents/skills/oat-project-implement/SKILL.md
+grep -q "OAT Dispatch: Phase" apps/oat-docs/docs/workflows/projects/implementation-execution.md
+grep -q "xhigh is inherited-only" .agents/skills/oat-project-plan-writing/SKILL.md
+pnpm run cli -- sync --scope project --dry-run
+pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
+pnpm build:docs
+pnpm release:validate
+```
+
+Expected: all commands exit 0.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md .oat/templates/plan.md apps/oat-docs/docs/workflows/projects/implementation-execution.md .oat/projects/shared/subagent-model-selection/design.md .oat/projects/shared/subagent-model-selection/summary.md
+git commit -m "fix(prev7-t01): use structured dispatch log blocks"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status | Date       | Artifact                                              |
@@ -678,8 +727,9 @@ git commit -m "fix(prev6-t01): use Codex effort-specific implementer roles"
 - Phase p-rev4: 1 task - Live dogfood fix for Codex selected-effort spawn-agent assertion
 - Phase p-rev5: 1 task - Repeated dogfood fix requiring Codex selected-effort dispatch to be payload-first
 - Phase p-rev6: 1 task - Codex selected effort now maps to configured low/medium/high implementer variants
+- Phase p-rev7: 1 task - Dispatch logs now use structured provider-neutral blocks
 
-**Total: 14 tasks across 10 phases.**
+**Total: 15 tasks across 11 phases.**
 
 Follow-up items to file at project completion:
 
