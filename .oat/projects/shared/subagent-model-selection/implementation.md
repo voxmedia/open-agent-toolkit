@@ -22,20 +22,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | complete    | 2     | 2/2       |
-| Phase 4 | complete    | 1     | 1/1       |
-| p-rev1  | complete    | 1     | 1/1       |
-| p-rev2  | complete    | 1     | 1/1       |
-| p-rev3  | complete    | 1     | 1/1       |
-| p-rev4  | complete    | 1     | 1/1       |
-| p-rev5  | complete    | 1     | 1/1       |
-| p-rev6  | in_progress | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | complete | 1     | 1/1       |
+| p-rev1  | complete | 1     | 1/1       |
+| p-rev2  | complete | 1     | 1/1       |
+| p-rev3  | complete | 1     | 1/1       |
+| p-rev4  | complete | 1     | 1/1       |
+| p-rev5  | complete | 1     | 1/1       |
+| p-rev6  | complete | 1     | 1/1       |
 
-**Total:** 13/14 tasks completed
+**Total:** 14/14 tasks completed
 
 ---
 
@@ -178,14 +178,14 @@ oat_generated: false
 
 ## Phase p-rev6: Revision 6
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-05-16
-**Completed:** pending
+**Completed:** 2026-05-16
 
 ### Task prev6-t01: (revision) Use Codex effort-specific implementer variants
 
-**Status:** in_progress
-**Commit:** pending
+**Status:** completed
+**Commit:** f8d52b49
 
 ---
 
@@ -305,11 +305,11 @@ _Each run from `oat-project-implement` appends an entry below with run header, p
 
 #### Phase p-rev6 result
 
-- Implementer: inline revision in progress.
-- Scope: add `oat-phase-implementer-low`, `oat-phase-implementer-medium`, and `oat-phase-implementer-high` Codex role variants and update the skill so selected `low|medium|high` effort dispatch uses those role names instead of top-level per-call `reasoning_effort`.
-- Verification: pending.
-- Review: no separate reviewer dispatch for this inline clarification; validation will use focused grep checks plus sync/release/docs guardrails.
-- Next: run verification and commit.
+- Implementer: inline revision completed in `f8d52b49`.
+- Scope: add managed `oat-phase-implementer-low`, `oat-phase-implementer-medium`, and `oat-phase-implementer-high` Codex role variants through the Codex sync extension, update docs, and update the skill so selected `low|medium|high` effort dispatch uses those role names instead of top-level per-call `reasoning_effort`.
+- Verification: focused grep checks passed; `git diff --check` passed; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/sync-extension.test.ts` passed (full CLI suite: 163 files, 1469 tests); `pnpm run cli -- sync --scope project --dry-run` passed with variants managed and in sync; `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main` passed; `pnpm build:docs` passed; `pnpm release:validate` passed after rerun outside concurrent docs build.
+- Review: no separate reviewer dispatch for this inline clarification; validated by tests plus sync/release/docs guardrails.
+- Next: update PR #79.
 
 <!-- orchestration-runs-end -->
 
@@ -419,9 +419,9 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 
 **New tasks added:** prev6-t01
 
-**Resolved in:** pending
+**Resolved in:** `f8d52b49`
 
-**Next:** Verify and commit revision 6.
+**Next:** Update PR #79.
 
 ### Review Received: final
 
@@ -465,7 +465,7 @@ Implementation tasks completed on 2026-05-13. Final review receive added one Min
 | p-rev3        | Selected-axis grep checks; sync dry-run; skill version guardrail; release validation; docs build; `git diff --check`           | yes    | no     | Selected axis dispatch-call wiring and design note     |
 | p-rev4        | Codex selected-effort grep checks; skill version guardrail; release validation; docs build; `git diff --check`                 | yes    | no     | Codex selected effort pre-dispatch assertion           |
 | p-rev5        | Payload-first grep checks; skill version guardrail; release validation; docs build after rerun; `git diff --check`             | yes    | no     | Codex payload-first selected effort dispatch           |
-| p-rev6        | Pending                                                                                                                        | no     | no     | Codex effort-specific implementer variants             |
+| p-rev6        | Grep checks; full CLI test run; sync dry-run; skill version guardrail; release validation; docs build; `git diff --check`      | yes    | no     | Codex effort-specific implementer variants             |
 
 ## Final Summary (for PR/docs)
 
