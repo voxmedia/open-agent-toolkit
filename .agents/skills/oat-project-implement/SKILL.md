@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.13
+version: 2.0.14
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -192,6 +192,7 @@ Selection rule:
 - **Claude Code implementer/fix dispatch:** when `model_axis=selected:<value>`, pass `model: "<value>"` on the Task tool call. When `model_axis=inherited`, omit the `model` parameter so Claude Code uses its own default. `effort_axis=not-applicable` for both cases because the Task tool exposes no per-dispatch `reasoning_effort` control.
 - **Codex implementer/fix dispatch:** when `effort_axis=selected:low|medium|high`, dispatch the matching configured role: `agent_type: "oat-phase-implementer-low"`, `agent_type: "oat-phase-implementer-medium"`, or `agent_type: "oat-phase-implementer-high"`. Those roles set `model_reasoning_effort` in `.codex/agents/*.toml`. Use the base `agent_type: "oat-phase-implementer"` only for `effort_axis=inherited`. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent in some Codex runs.
 - **Codex xhigh:** do not create or select an `xhigh` implementer variant. Use `xhigh` only when the parent/orchestrator session is already xhigh and therefore `effort_axis=inherited` on the base role is the correct representation. If a phase appears to require xhigh while the parent is not xhigh, choose `selected:high` only if high is sufficient; otherwise split/revise the phase or stop for user re-invocation at xhigh.
+- **Claude Code `opus`:** unlike Codex `xhigh`, `opus` is directly selectable. Claude Code exposes `opus` through the Task tool's `model` parameter, so OAT may select it when available (`model_axis=selected:opus`) — including as a terminal escalation step. There is no `opus` inherited-only restriction; the `xhigh` rule above is specific to Codex's effort-variant mechanism, not a general "never select the maximum tier" rule.
 - **Reviewer dispatch on either host:** use `model_axis=inherited, effort_axis=inherited`. Omit `model` and, on Codex, `reasoning_effort` overrides entirely.
 
 Codex selected-effort implementer/fix dispatch shape:
@@ -604,10 +605,13 @@ Escalate the runtime dispatch control when there is evidence that the current co
 
 When escalation is needed:
 
-1. If a stronger available control exists, re-dispatch at the next stronger control and include the reason in the scope packet.
+1. If a stronger available control exists, re-dispatch at the next stronger control and include the reason in the scope packet. The escalation ladder is provider-specific:
+   - **Codex:** `selected:low → selected:medium → selected:high → exhausted`. `high` is the strongest control OAT can select. Beyond `high`: if the parent/orchestrator session is already `xhigh`, dispatch uses `effort_axis=inherited`; otherwise escalation is exhausted — stop, split the phase, or ask the user to re-invoke at `xhigh` (see step 4).
+   - **Claude Code:** `selected:haiku → selected:sonnet → selected:opus`. `opus` is a selectable terminal step when available (and not capped by a future Claude-specific ceiling).
 2. Count the escalation redispatch against the existing bounded retry budget. Escalation changes the control; it does not create extra retry attempts.
 3. Record a compact note in `implementation.md` when practical:
-   - `Dispatch: p03 escalated to model_axis=selected:opus, effort_axis=selected:xhigh after repeated review failures.`
+   - `Dispatch: p03 escalated to model_axis=selected:opus, effort_axis=not-applicable after repeated review failures.` (Claude Code)
+   - `Dispatch: p03 escalated to effort_axis=selected:high, model_axis=inherited after repeated review failures.` (Codex)
    - `Dispatch: p02 remained model_axis=host-auto, effort_axis=host-auto; no explicit stronger control is exposed by this host.`
 4. If the phase is already at the strongest available control, do not invent a stronger tier. Provide more context, split the phase, revise the plan, or stop for user direction.
 

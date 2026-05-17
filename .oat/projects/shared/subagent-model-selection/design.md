@@ -62,6 +62,12 @@ The field names stay provider-neutral: `Model axis` and `Effort axis` still use 
 
 Codex selected effort now uses generated role variants for `low`, `medium`, and `high`; the base `oat-phase-implementer` role represents inherited effort. `xhigh` is inherited-only and can be honored only when the parent/orchestrator session is already xhigh.
 
+## Revision 4: Per-provider escalation termini (2026-05-17)
+
+Dispatch escalation tops out differently per provider — by mechanism, not policy. Codex effort variants (`-low/-medium/-high` role files) have no `-xhigh` variant, so autonomous escalation tops at `selected:high`. Beyond `high`: if the parent/orchestrator session is already `xhigh`, dispatch uses `effort_axis=inherited`; otherwise escalation is exhausted — stop, split the phase, or have the user re-invoke at `xhigh`. Claude Code exposes `opus` directly through the Task `model` parameter, so OAT may select `opus` as a terminal escalation step when available; there is no `opus` inherited-only restriction.
+
+A `workflow.dispatchCeiling` config (user-declared cap on the dispatch tier) was considered and deferred. It is meaningful only for Claude Code — Codex's parent session is already the structural cap — so it is a Claude-specific cost knob, not a cross-provider ceiling, and is not required for dispatch correctness. To be filed as a backlog item at project closeout.
+
 ## Architecture
 
 ### Approach

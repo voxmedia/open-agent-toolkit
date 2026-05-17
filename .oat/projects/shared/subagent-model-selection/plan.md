@@ -695,38 +695,48 @@ git add .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project
 git commit -m "fix(prev7-t01): use structured dispatch log blocks"
 ```
 
-### Task prev7-t02: (review) Fix xhigh escalation example
+### Task prev7-t02: (review) Fix escalation example + state per-provider escalation termini
 
 **Files:**
 
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
-- Modify: `.oat/projects/shared/subagent-model-selection/summary.md`
+- Modify: `.oat/projects/shared/subagent-model-selection/design.md`
 
 **Step 1: Understand the issue**
 
-Review finding: the escalation history-note example still uses `effort_axis=selected:xhigh`, which contradicts the inherited-only xhigh contract.
+Review finding: the escalation history-note example uses `effort_axis=selected:xhigh` (contradicts the inherited-only xhigh contract) and mixes a Claude model axis with a Codex effort axis on one dispatch line, which cannot co-occur. The skill also never states the escalation terminus per provider, so the contradiction can recur.
 Location: `.agents/skills/oat-project-implement/SKILL.md`
 
 **Step 2: Implement fix**
 
-Replace the invalid selected-xhigh example with a contract-legal escalation example, such as selected `high`, and describe any escalation beyond high as inherited-only xhigh via user re-invocation, phase split, or revision.
+a. Fix the escalation example: replace the single mixed-provider line with two provider-correct lines — a Claude Code escalation (`model_axis=selected:opus, effort_axis=not-applicable`) and a Codex escalation (`effort_axis=selected:high, model_axis=inherited`).
+
+b. Add a per-provider escalation ladder to the escalation section: Codex `low → medium → high → exhausted` (high is the strongest selectable; beyond high use `inherited` if the parent is xhigh, else stop/split/reinvoke); Claude Code `haiku → sonnet → opus` (opus is a selectable terminal step when available).
+
+c. Add a Claude-side companion to the Codex xhigh rule: `opus` is directly selectable via the Task `model` parameter and is NOT subject to an inherited-only restriction; the xhigh rule is specific to Codex's variant mechanism.
+
+d. Add a Revision 4 note to `design.md` recording the per-provider escalation termini and the deferral of `workflow.dispatchCeiling`.
+
+e. Bump the `oat-project-implement` skill `version:` per AGENTS.md.
 
 **Step 3: Verify**
 
 Run:
 
 ```bash
-grep -q "selected:high" .agents/skills/oat-project-implement/SKILL.md
 ! grep -q "selected:xhigh" .agents/skills/oat-project-implement/SKILL.md
+grep -q "escalation ladder is provider-specific" .agents/skills/oat-project-implement/SKILL.md
+grep -q "Claude Code exposes .opus." .agents/skills/oat-project-implement/SKILL.md
+grep -q "Revision 4" .oat/projects/shared/subagent-model-selection/design.md
 ```
 
-Expected: both checks exit 0.
+Expected: all four checks exit 0.
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/oat-project-implement/SKILL.md .oat/projects/shared/subagent-model-selection/summary.md
-git commit -m "fix(prev7-t02): correct xhigh escalation example"
+git add .agents/skills/oat-project-implement/SKILL.md .oat/projects/shared/subagent-model-selection/design.md
+git commit -m "fix(prev7-t02): correct escalation example + state per-provider termini"
 ```
 
 ### Task prev7-t03: (review) Update stale one-line dispatch references
