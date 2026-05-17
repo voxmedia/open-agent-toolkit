@@ -61,6 +61,8 @@ Blank or `auto` means there is no explicit constraint for that provider. Do not 
 | ----- | ------------------------- | ------------------------------ | ----------------------------- |
 | pNN   | haiku\|sonnet\|opus\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
 
+Codex `low`, `medium`, and `high` effort values map to effort-specific implementer roles. `xhigh` is inherited-only: it can be honored only when the parent/orchestrator session is already xhigh, not by selecting an `xhigh` implementer variant.
+
 ---
 
 ## Phase 1: {Phase Name}

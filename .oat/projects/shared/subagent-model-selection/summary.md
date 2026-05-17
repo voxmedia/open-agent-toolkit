@@ -35,6 +35,8 @@ Revision 5 tightened the same Codex path again after repeated dogfooding showed 
 
 Revision 6 replaced the per-call Codex effort override as the standard selected-effort mechanism. Codex selected `low`, `medium`, and `high` effort now maps to configured `oat-phase-implementer-low`, `oat-phase-implementer-medium`, and `oat-phase-implementer-high` roles with `model_reasoning_effort` set in `.codex/agents/*.toml`; the base `oat-phase-implementer` role represents inherited effort. `xhigh` is inherited-only and should come from an xhigh parent/orchestrator session rather than a normal selected variant.
 
+Revision 7 changed dispatch logging from compact one-line messages to structured `OAT Dispatch` blocks with `Host`, `Model axis`, `Effort axis`, `Dispatch target`, and `Rationale` fields. The field names stay provider-neutral while the dispatch target records the concrete host mechanism, such as a Claude Code Task model selection or a Codex effort-specific implementer role.
+
 The phase implementer and reviewer prompts now report confidence and escalation-relevant concerns. `oat-project-review-provide` also has a Dispatch Profile override advisory so artifact-plan reviews do not flag missing dispatch rows as defects.
 
 The final review pass added one consistency fix: `oat-project-implement` phase and review scope templates include dispatch context fields when known, so downstream agents receive the dispatch context the orchestrator has resolved. Revision 2 refined that context into separate `model_axis`, `effort_axis`, and `dispatch_rationale` fields.

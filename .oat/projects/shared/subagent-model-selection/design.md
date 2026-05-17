@@ -45,6 +45,23 @@ The orchestrator skill (`.agents/skills/oat-project-implement/SKILL.md`) is the 
 
 Revision 2 is documentation-only relative to the design's chosen direction: override-only profile plus runtime selection. The underlying policy is unchanged.
 
+## Revision 3: Structured dispatch blocks and Codex role variants (2026-05-17)
+
+Further dogfooding showed that one-line dispatch messages were easy to skim past and made Claude Code and Codex behavior look less comparable than the underlying two-axis contract. The current orchestrator guidance therefore logs dispatch decisions as a structured block:
+
+```text
+OAT Dispatch: Phase pNN implementation
+Host: Codex
+Model axis: inherited
+Effort axis: selected:medium
+Dispatch target: oat-phase-implementer-medium
+Rationale: moderate multi-file work; medium is the lowest sufficient Codex effort.
+```
+
+The field names stay provider-neutral: `Model axis` and `Effort axis` still use `selected:<value>`, `inherited`, `not-applicable`, or `host-auto`. The `Dispatch target` field records the host-specific mechanism that makes the axis state real, such as Claude Code's `oat-phase-implementer` Task dispatch with `model: "sonnet"` or Codex's `oat-phase-implementer-medium` role variant.
+
+Codex selected effort now uses generated role variants for `low`, `medium`, and `high`; the base `oat-phase-implementer` role represents inherited effort. `xhigh` is inherited-only and can be honored only when the parent/orchestrator session is already xhigh.
+
 ## Architecture
 
 ### Approach

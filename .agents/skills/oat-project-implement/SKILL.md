@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.12
+version: 2.0.13
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -219,22 +219,57 @@ The invalid shape relies on per-call override behavior that has proven inconsist
 
 **Post-spawn verification gate.** After any Codex implementer/fix `spawn_agent` call with `effort_axis=selected:<value>`, immediately inspect the returned spawn status before waiting for work or updating the plan. If the status shows a different effort, such as `effort_axis=selected:low` followed by `(gpt-5.5 high)`, this is an orchestration deviation. Stop using that agent, record the mismatch in `implementation.md`, and redispatch with the correct effort-specific `agent_type`. Do not continue to `wait_agent`, phase bookkeeping, or the next phase with a mismatched selected-effort dispatch.
 
-After the payload-first check, log the choice before dispatch in this shape:
+After the payload-first check, log the choice before dispatch in this structured shape:
 
 ```text
-Dispatching {phase_id} with model_axis={state}, effort_axis={state}: {short rationale grounded in phase scope}.
+OAT Dispatch: Phase {phase_id} {implementation | fix | review}
+Host: {Claude Code | Codex | Cursor | other host}
+Model axis: { selected:<value> | inherited | not-applicable | host-auto }
+Effort axis: { selected:<value> | inherited | not-applicable | host-auto }
+Dispatch target: {host-specific subagent/role/tool target}
+Rationale: {short rationale grounded in phase scope}
 ```
 
 Examples:
 
 ```text
-Dispatching p01 with model_axis=selected:haiku, effort_axis=not-applicable: Claude Code implementation dispatch for mechanical template edits.
-Dispatching p02 with model_axis=selected:sonnet, effort_axis=not-applicable: Claude Code implementation dispatch for multi-file integration with mock wiring.
-Dispatching p03 with model_axis=inherited, effort_axis=selected:medium: Codex implementation dispatch for shared TypeScript/config substrate with cross-file contracts.
-Dispatching p04 with model_axis=host-auto, effort_axis=host-auto: host does not expose readable or pinnable dispatch controls; rationale maps to standard effort.
+OAT Dispatch: Phase p01 implementation
+Host: Claude Code
+Model axis: selected:haiku
+Effort axis: not-applicable
+Dispatch target: oat-phase-implementer
+Rationale: mechanical template edits; haiku is the lowest sufficient Claude model.
+
+OAT Dispatch: Phase p02 implementation
+Host: Claude Code
+Model axis: selected:sonnet
+Effort axis: not-applicable
+Dispatch target: oat-phase-implementer
+Rationale: multi-file integration with mock wiring; sonnet is the lowest sufficient Claude model.
+
+OAT Dispatch: Phase p03 implementation
+Host: Codex
+Model axis: inherited
+Effort axis: selected:medium
+Dispatch target: oat-phase-implementer-medium
+Rationale: shared TypeScript/config substrate with cross-file contracts; medium is the lowest sufficient Codex effort.
+
+OAT Dispatch: Phase p04 implementation
+Host: Other
+Model axis: host-auto
+Effort axis: host-auto
+Dispatch target: host default
+Rationale: host does not expose readable or pinnable dispatch controls; rationale maps to standard effort.
+
+OAT Dispatch: Phase p05 review
+Host: Codex
+Model axis: inherited
+Effort axis: inherited
+Dispatch target: oat-reviewer
+Rationale: reviewer dispatches inherit parent controls by default.
 ```
 
-Use `low` for trivial docs-only, narrow single-file, or mechanical changes; `medium` for normal multi-file implementation and moderate integration risk; `high` or `xhigh` for broad architecture, security/auth/redaction boundaries, subtle state behavior, or repeated substantive review failures.
+Use `low` for trivial docs-only, narrow single-file, or mechanical changes; `medium` for normal multi-file implementation and moderate integration risk; `high` for broad architecture, security/auth/redaction boundaries, subtle state behavior, or repeated substantive review failures. Use inherited `xhigh` only when the parent/orchestrator session is already xhigh.
 
 Include the resolved implementation dispatch axes and rationale in the Phase Scope packet when known. Reserve `host-auto` for an axis the host uses internally but the orchestrator cannot read or pin; use `inherited` for deliberate inheritance and `not-applicable` when an axis is not meaningful for that host/API.
 

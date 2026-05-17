@@ -55,12 +55,36 @@ Model and effort are separate axes. Each axis logs one of four states:
 
 In Codex, the normal model choice is inherited unless the user requested a model override or the phase clearly requires one. Implementation dispatch maps selected `low`, `medium`, and `high` effort to configured Codex implementer roles (`oat-phase-implementer-low`, `oat-phase-implementer-medium`, and `oat-phase-implementer-high`) rather than relying on per-call effort overrides. The base `oat-phase-implementer` role represents inherited effort. `xhigh` is inherited-only: use it when the parent/orchestrator session is already xhigh, otherwise split/revise the phase or stop for user re-invocation instead of inventing an `xhigh` variant. In Claude Code, subagent model selection is a model axis when available; the separate effort axis is `not-applicable`.
 
-Examples:
+Dispatch logs use a consistent structured block so provider behavior is comparable without flattening the model and effort axes:
 
 ```text
-Dispatching p01 with model_axis=selected:sonnet, effort_axis=not-applicable: Claude Code implementation dispatch for multi-file integration with mock wiring.
-Dispatching p02 with model_axis=inherited, effort_axis=selected:medium: Codex implementation dispatch for shared TypeScript/config substrate.
-Dispatching p03 with model_axis=host-auto, effort_axis=host-auto: host does not expose readable or pinnable dispatch controls; rationale maps to standard effort.
+OAT Dispatch: Phase p01 implementation
+Host: Claude Code
+Model axis: selected:sonnet
+Effort axis: not-applicable
+Dispatch target: oat-phase-implementer
+Rationale: multi-file integration with mock wiring; sonnet is the lowest sufficient Claude model.
+
+OAT Dispatch: Phase p02 implementation
+Host: Codex
+Model axis: inherited
+Effort axis: selected:medium
+Dispatch target: oat-phase-implementer-medium
+Rationale: shared TypeScript/config substrate; medium is the lowest sufficient Codex effort.
+
+OAT Dispatch: Phase p03 review
+Host: Codex
+Model axis: inherited
+Effort axis: inherited
+Dispatch target: oat-reviewer
+Rationale: reviewer dispatches inherit parent controls by default.
+
+OAT Dispatch: Phase p04 implementation
+Host: Other
+Model axis: host-auto
+Effort axis: host-auto
+Dispatch target: host default
+Rationale: host does not expose readable or pinnable dispatch controls; rationale maps to standard effort.
 ```
 
 Phase scope packets include implementation `model_axis`, `effort_axis`, and `dispatch_rationale` when the orchestrator has resolved them. Review dispatches inherit the parent session controls unless the user explicitly requests a review override; their review scope should record this as `model_axis=inherited, effort_axis=inherited`.

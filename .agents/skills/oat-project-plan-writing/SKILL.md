@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.2
+version: 1.2.3
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -71,7 +71,7 @@ Validation rules for explicit rows:
 
 - `Phase` must match a real `pNN` phase in the plan.
 - `Claude model` must be `haiku`, `sonnet`, `opus`, `auto`, or blank.
-- `Codex effort` must be `low`, `medium`, `high`, `xhigh`, `auto`, or blank.
+- `Codex effort` must be `low`, `medium`, `high`, `xhigh`, `auto`, or blank. In Codex, `low`, `medium`, and `high` map to effort-specific implementer roles. Codex xhigh is inherited-only; `xhigh` can be honored only by inheriting an already-xhigh parent/orchestrator session, not by selecting an `xhigh` implementer variant.
 - Blank or `auto` means no explicit constraint for that provider.
 - `Rationale` is recommended and should explain why runtime selection should not decide on its own.
 
