@@ -16,7 +16,7 @@ oat_pr_status: open # null | ready | open | closed | merged - actual PR state fo
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/79' # null | string - tracked PR URL when a PR exists
 oat_project_created: '2026-05-04T14:47:00.831Z' # ISO 8601 UTC timestamp - set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp - set when project is completed/archived
-oat_project_state_updated: '2026-05-18T00:31:41Z'
+oat_project_state_updated: '2026-05-18T14:56:30Z'
 oat_generated: false
 ---
 
@@ -77,6 +77,8 @@ All revision work (`p-rev1` through `p-rev8`) is complete and reviewed. The cons
 - `prev8` review Minor: `oat init` shares the same defect at a second call site; converted to `prev8-t02`
 - `prev8-t02` completed in `df239e65`; `oat init` now recognizes the managed variants. Review passed (0 Critical/Important/Medium, 1 non-blocking Minor)
 - Consolidated `prev1-prev8` re-review passed clean (0 findings, 36 commits); `prev1-prev7` and `prev1-prev8` review rows both `passed`
+- Rebased onto `origin/main` twice (#80 state-gitignore, #81 sync-state containment); public packages re-bumped to `0.1.1`
+- Documentation re-synced post-`prev8`: docs app provider-sync + implementation-execution pages and repo-reference `current-state.md` updated for two-axis dispatch, Codex role variants, and managed-role `oat status`/`oat init`
 
 ## Blockers
 
