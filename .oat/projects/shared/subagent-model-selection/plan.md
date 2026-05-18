@@ -945,6 +945,7 @@ git commit -m "fix(prev8-t02): apply managed-roles stray fix to oat init"
 | design      | artifact | passed          | 2026-05-12 | reviews/archived/artifact-design-review-2026-05-12.md |
 | plan        | artifact | passed          | 2026-05-12 | reviews/archived/artifact-plan-review-2026-05-12.md   |
 | prev1-prev7 | code     | fixes_completed | 2026-05-17 | reviews/archived/range-review-2026-05-17.md           |
+| prev1-prev8 | code     | received        | 2026-05-17 | reviews/range-review-2026-05-17.md                    |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
