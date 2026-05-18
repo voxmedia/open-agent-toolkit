@@ -1,9 +1,9 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.3.0
+version: 1.4.0
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
-disable-model-invocation: true
+disable-model-invocation: false
 user-invocable: false
 allowed-tools: Read, Write, Bash, Glob, Grep
 ---
@@ -11,6 +11,8 @@ allowed-tools: Read, Write, Bash, Glob, Grep
 # Autonomous Worktree Bootstrap
 
 Non-interactive worktree bootstrap for orchestrator and subagent execution flows. Creates or reuses a worktree, runs baseline checks, and reports structured status — all without user prompts.
+
+This skill is **model-invocable** (`disable-model-invocation: false`): orchestrators such as `oat-project-implement` invoke it programmatically when a parallel phase group needs autonomous worktree bootstrap. It is **not** user-invocable (`user-invocable: false`) — it has no interactive surface and is never offered as a slash command.
 
 > ⚠️ **When not to substitute.** This skill is the **only** supported mechanism for orchestrator-driven worktree creation in OAT skills. Host-native isolation primitives — Claude Code's `Agent({ isolation: "worktree" })`, Cursor's worktree-isolated agent invocations, and equivalents in other hosts — are **not** substitutes. They may use the primary repo's checkout (often `main`) as the base regardless of the caller's current branch, silently producing a worktree at the wrong base. OAT orchestrators dispatching mid-run from a feature branch MUST go through this skill with an explicit `--base` so the resulting worktree contains the orchestrator's prior commits.
 
