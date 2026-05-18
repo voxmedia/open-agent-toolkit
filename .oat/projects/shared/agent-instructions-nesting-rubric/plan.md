@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-05-18
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p01'] # pause after the substantive rubric rewrite for review
+oat_plan_hill_phases: ['p02'] # stop only after the final phase (user arg + workflow.hillCheckpointDefault=final)
+oat_auto_review_at_hill_checkpoints: true # auto-run lifecycle review at HiLL checkpoints (from config)
 oat_plan_parallel_groups: [] # fully sequential — see Parallelism
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null
