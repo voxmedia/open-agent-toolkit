@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-18
@@ -251,6 +251,27 @@ edits and no fix tasks required. `design` and `plan` Reviews-table rows set to
 
 **Next:** Proceed to `oat-project-implement` to execute the 3-task plan.
 
+### Review Received: final (code, auto-invocation)
+
+**Date:** 2026-05-18
+**Review artifact:** `reviews/final-review-2026-05-18.md`
+
+**Findings:** 0 Critical, 0 Important, 0 Medium, 1 Minor
+
+**Disposition (auto-disposition mode — `oat_review_invocation: auto`):** Final review
+passed — zero Critical/Important/Medium. All 5 discovery Success Criteria verified met.
+`final` Reviews-table row set to `passed`.
+
+**Deferred Findings (Minor):**
+
+- Residual "starting at depth 1–2" phrasing in the "Decomposing Broad Recommendations"
+  section (`directory-assessment-criteria.md:67`). Deferred — not converted to a fix
+  task. Rationale: the phrase is sweep-start guidance immediately followed by "keep
+  decomposing deeper", so it is coherent with the every-depth model rather than a
+  leftover gate; the reviewer assessed it non-blocking optional polish in both the p01
+  phase review and the final review. Genuinely ambiguous, non-actionable finding — no
+  defect to fix.
+
 ---
 
 ## Orchestration Runs
@@ -352,24 +373,47 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Revised the `oat-agent-instructions-analyze` directory-assessment rubric so it no
+  longer gates nested instruction-file recommendations behind a parent source-file
+  count. The "more than 50 source files" entry condition is removed; no file-count
+  number remains as a trigger anywhere in the rubric.
+- "Distinct Domain Boundary" is now the depth-agnostic primary trigger for nested
+  files (strengthened Moderate → Strong, with a nested `packages/<pkg>/src/<domain>/`
+  example). Indicator 5's file count is softened to a non-threshold illustration and
+  flagged as never sufficient alone.
+- Decomposition now triggers on heterogeneity (distinct sub-areas), not file count.
+- New "Nested Instruction Files (Progressive Specificity)" section documents the
+  inherit-and-delta model and includes a worked bigquery-sync-style example.
+- Exclusions reframed around "nothing distinct to capture" with an explicit
+  anti-sprawl guard.
+- `SKILL.md` Step 4 reframed as a per-directory walk at every depth; skill `version:`
+  bumped 1.9.0 → 1.10.0; five lockstep public packages bumped 0.1.0 → 0.1.1.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat-agent-instructions-analyze` will now surface a moderately sized, domain-specific
+  subdirectory (e.g. ~10–20 files with distinct conventions) as a coverage-gap
+  candidate for its own nested `AGENTS.md`, even when its parent package is small —
+  instead of dismissing it because no app/package exceeds 50 files.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/oat-agent-instructions-analyze/references/directory-assessment-criteria.md` — rubric rewrite
+- `.agents/skills/oat-agent-instructions-analyze/SKILL.md` — Step 4 framing + version bump
+- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` — lockstep version bump
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm lint` (10/10), `pnpm type-check` (10/10), `pnpm test` (1474 tests passed),
+  `pnpm build` (5/5), `pnpm release:check-versions`, `pnpm release:validate` — all pass.
+- Phase reviews p01 + p02 passed; final-scope code review passed (0 Critical/Important/
+  Medium, 1 Minor deferred with rationale).
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- None. The §13 cross-reference uses the bundled doc's actual section title
+  "Scoped Files (When and How)" rather than design.md's em-dash phrasing — a faithful
+  rendering, not a behavior change.
 
 ## References
 

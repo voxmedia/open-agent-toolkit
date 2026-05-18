@@ -7,7 +7,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -16,19 +16,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-18T04:57:11.440Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-18T06:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-18T06:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: agent-instructions-nesting-rubric
 
-**Status:** Implementation in progress
+**Status:** Implementation complete
 **Started:** 2026-05-18
 **Last Updated:** 2026-05-18
 
 ## Current Phase
 
-Implement - All phases complete (p01, p02 passed); awaiting final review
+Implementation complete - All phases and final review passed; ready for PR
 
 ## Artifacts
 
@@ -46,7 +46,8 @@ Implement - All phases complete (p01, p02 passed); awaiting final review
 - ✓ Design + plan artifact reviews passed (0 findings)
 - ✓ Phase 1 implemented and review passed
 - ✓ Phase 2 implemented and review passed
-- ⧗ Awaiting final review
+- ✓ Final review passed (0 Critical/Important/Medium; 1 Minor deferred)
+- ✓ Final verification passed (lint, type-check, 1474 tests, build)
 
 ## Blockers
 
@@ -54,4 +55,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` to execute the 3-task plan
+Create the final PR (`oat-project-pr-final`) when ready
