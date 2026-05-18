@@ -222,12 +222,13 @@ git commit -m "chore(release): bump lockstep public package versions for analyze
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                     |
+| ------ | -------- | -------- | ---------- | -------------------------------------------- |
+| p01    | code     | pending  | -          | -                                            |
+| p02    | code     | pending  | -          | -                                            |
+| final  | code     | pending  | -          | -                                            |
+| design | artifact | received | 2026-05-18 | reviews/artifact-design-review-2026-05-18.md |
+| plan   | artifact | received | 2026-05-18 | reviews/artifact-plan-review-2026-05-18.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
