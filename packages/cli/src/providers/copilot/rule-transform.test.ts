@@ -62,7 +62,7 @@ activation: always
     );
 
     expect(rendered).toContain('description: Always apply');
-    expect(rendered).toContain('applyTo: "**"');
+    expect(rendered).toContain("applyTo: '**'");
     expect(parseCopilotRuleToCanonical(rendered)).toBe(canonical);
   });
 

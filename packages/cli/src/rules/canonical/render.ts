@@ -21,7 +21,12 @@ export function renderMarkdownWithFrontmatter(
     return normalizedBody;
   }
 
-  const frontmatterYaml = YAML.stringify(frontmatter).trimEnd();
+  // singleQuote keeps generated YAML frontmatter aligned with oxfmt/Prettier
+  // formatting (singleQuote: true) so consumer repos don't see drift between
+  // `oat sync` output and their markdown formatter on each commit.
+  const frontmatterYaml = YAML.stringify(frontmatter, {
+    singleQuote: true,
+  }).trimEnd();
   return `---\n${frontmatterYaml}\n---\n\n${normalizedBody}`;
 }
 
