@@ -2,11 +2,26 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-13
+oat_last_updated: 2026-05-18
 oat_generated: true
-oat_summary_last_task: p04-t01
-oat_summary_revision_count: 1
-oat_summary_includes_revisions: ['prev1-t01']
+oat_summary_last_task: prev8-t02
+oat_summary_revision_count: 8
+oat_summary_includes_revisions:
+  [
+    'prev1-t01',
+    'prev2-t01',
+    'prev3-t01',
+    'prev4-t01',
+    'prev5-t01',
+    'prev6-t01',
+    'prev7-t01',
+    'prev7-t02',
+    'prev7-t03',
+    'prev7-t04',
+    'prev7-t05',
+    'prev8-t01',
+    'prev8-t02',
+  ]
 ---
 
 # Summary: subagent-model-selection
@@ -61,6 +76,8 @@ The main design challenge was discovering that the earlier cap mechanism depende
 Final review processing found one Minor gap in the scope templates and one stale state count during re-review. Both were fixed and the final v4 review passed with no findings.
 
 Post-PR dogfood feedback found that review dispatch guidance could be misread as selecting reviewer effort separately. Revision 1 tightened the language so implementation effort selection and review inheritance are distinct.
+
+Eight revision rounds followed in total, each from dogfooding the feature on real runs: the dispatch contract was refined incrementally (two-axis logging, host-wired selected axes, payload-first Codex effort, effort-specific Codex implementer role variants, and structured `OAT Dispatch` blocks). Revision 8 fixed a related defect surfaced while dogfooding — `oat status` and `oat init` misclassified the generated Codex role variants as stray — by teaching `detectCodexRoleStrays` about the Codex extension plan's managed roles. A consolidated `prev1-prev8` re-review passed with zero findings, and the branch was rebased onto current `main` before completion.
 
 ## Integration Notes
 
