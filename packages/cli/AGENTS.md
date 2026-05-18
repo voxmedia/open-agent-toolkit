@@ -8,8 +8,9 @@ Maintain consistent, safe CLI behavior across commands and modules.
 
 ## Read first
 
-- `docs/oat/cli/design-principles.md`
-- `docs/oat/cli/provider-interop/index.md` (for provider-interop surfaces)
+- `packages/cli/README.md` (CLI package overview and instruction-sync surfaces)
+- `apps/oat-docs/docs/contributing/design-principles.md` (cross-cutting CLI design principles)
+- `apps/oat-docs/docs/provider-sync/index.md` (for provider-interop surfaces)
 
 ## Package commands
 
