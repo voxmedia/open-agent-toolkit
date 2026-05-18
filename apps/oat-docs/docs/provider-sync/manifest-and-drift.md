@@ -59,6 +59,12 @@ For rules, adoption maps provider-native files back into `.agents/rules/*.md`:
 
 After adoption, `oat sync` regenerates the managed provider copies from the canonical rule file.
 
+### Generated provider roles
+
+Some Codex roles are **generated-derived** — produced by the Codex sync extension rather than mapped 1:1 from a canonical `.agents/agents/*.md` file. The effort-specific implementer variants (`oat-phase-implementer-low`, `oat-phase-implementer-medium`, `oat-phase-implementer-high`) are the current example.
+
+`oat status` and `oat init` treat any role listed in the Codex extension plan's `managedRoles` set as managed, so generated variants are **not** reported as `stray` and are **not** offered for adoption — even though they have no canonical `.agents` source. A genuinely orphaned Codex role (no canonical source and not in `managedRoles`) is still flagged.
+
 ## Reference artifacts
 
 - `.oat/projects/<scope>/<project>/spec.md` (FR2, FR3, FR6)

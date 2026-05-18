@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-05-15 (sync-manifest containment shipped: autonomous worktree bootstrap commits sync-managed output after all-scope sync, project entry skills preflight inherited dirty git state before scaffolding, and the five public packages are bumped in lockstep to 0.1.0)
+**Last Updated:** 2026-05-18 (runtime dispatch selection landed: two-axis `model_axis`/`effort_axis` logging in structured `OAT Dispatch` blocks, Codex effort-specific implementer role variants, host-conditional review dispatch, and `oat status`/`oat init` recognition of generated Codex roles as managed)
 
 ## Canonical References
 
@@ -148,7 +148,9 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 ### Phase-Subagent Implementation Execution
 
 - `oat-project-implement` v2 is the single implementation entry point. It dispatches phase-scoped work to `oat-phase-implementer` when Tier 1 subagent execution is available, and falls back to inline Tier 2 only when delegation is unavailable, unresolved, or explicitly declined.
-- Runtime dispatch selection is resolved at phase execution time: use the lowest available provider control that can confidently complete the phase, honor explicit Dispatch Profile overrides only when present, and record `host-auto` when the host does not expose per-dispatch model/effort control.
+- Runtime dispatch selection is resolved at phase execution time: choose the lowest available control that can confidently complete the phase, and honor explicit `## Dispatch Profile` overrides only when present. Model and effort are independent dispatch axes — `model_axis` and `effort_axis` — each logged as `selected:<value>`, `inherited`, `not-applicable`, or `host-auto`. Dispatch decisions are recorded as structured `OAT Dispatch` blocks (`Host` / `Model axis` / `Effort axis` / `Dispatch target` / `Rationale`).
+- Codex selected effort maps to generated `oat-phase-implementer-{low,medium,high}` role variants; `xhigh` is inherited-only. Review dispatch is host-conditional (`effort_axis=inherited` on Codex, `not-applicable` on Claude Code). Escalation termini are provider-specific: Codex `low→medium→high`, Claude Code `haiku→sonnet→opus`.
+- `oat status` and `oat init` recognize generated Codex role variants as managed via the Codex extension plan's `managedRoles`, so generated-derived role files are not misclassified as strays.
 - `oat-phase-implementer` (`.agents/agents/oat-phase-implementer.md`) owns phase execution and review-fix work packets. `oat-reviewer` remains the reviewer prompt for per-phase and checkpoint reviews.
 - Parallel execution is declared in `plan.md` frontmatter with `oat_plan_parallel_groups` and validated with `oat project validate-plan --project-path <project-path>`. Empty or missing metadata means fully sequential execution.
 - Parallel groups run worktree-per-phase and fan back into the main worktree in plan order. `oat-worktree-bootstrap-auto` provides autonomous worktree bootstrap with rollback safety.

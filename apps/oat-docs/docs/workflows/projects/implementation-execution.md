@@ -122,6 +122,15 @@ On a `fail` verdict:
 
 Tier is never silently downgraded. If a Tier 1 dispatch has a transient failure, the orchestrator retries exactly once; a second failure is treated the same as fix-loop exhaustion for that phase.
 
+### Escalation termini
+
+When escalation re-dispatches at a stronger control, the ladder is provider-specific:
+
+- **Codex:** `selected:low → selected:medium → selected:high`. `high` is the strongest selectable effort variant. Beyond `high`, dispatch uses `effort_axis=inherited` only when the parent session is already `xhigh`; otherwise escalation is exhausted — stop, split the phase, or have the user re-invoke at `xhigh`.
+- **Claude Code:** `selected:haiku → selected:sonnet → selected:opus`. `opus` is directly selectable via the Task `model` parameter — there is no inherited-only restriction.
+
+Escalation re-dispatches still count against the bounded retry budget; escalation changes the dispatch control, it does not grant extra retry attempts.
+
 ## Plan-declared parallelism
 
 Phases whose task file sets do not overlap may execute concurrently. Declare this in `plan.md` frontmatter:
