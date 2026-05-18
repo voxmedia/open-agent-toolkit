@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.9.0
+version: 1.10.0
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true
@@ -294,7 +294,7 @@ Any discrepancy that would cause agents to follow the wrong pattern should be fl
 
 ### Step 4: Assess Coverage Gaps
 
-Walk the directory tree and evaluate each directory against `references/directory-assessment-criteria.md`.
+Walk the directory tree and evaluate **each directory against `references/directory-assessment-criteria.md`, per-directory and at every depth**. The walk descends into subdirectories recursively — it is not limited to top-level apps and packages. A nested domain subdirectory such as `packages/<pkg>/src/<domain>/` is in scope and is assessed with the same primary indicators as a top-level package; the size of a directory's parent never gates whether that directory is evaluated.
 
 Before general coverage-gap analysis, assess **provider baseline gaps** for every active provider.
 These checks are mandatory even when the missing file does not appear in the discovered inventory.
