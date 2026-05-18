@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-18
-oat_current_task_id: p02-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | pending  | 1     | 0/1       |
+| Phase 2 | complete | 1     | 1/1       |
 
-**Total:** 2/3 tasks completed
+**Total:** 3/3 tasks completed
 
 ---
 
@@ -160,13 +160,71 @@ oat_generated: false
 
 ## Phase 2: Release Bookkeeping
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-05-18
+**Completed:** 2026-05-18
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- The five lockstep public packages (`packages/cli`, `packages/control-plane`,
+  `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms`) were
+  version-bumped together by one patch release (`0.1.0` -> `0.1.1`) to represent the
+  Phase 1 `.agents/skills` content change, which counts as shipped CLI functionality per
+  the repo release policy.
+
+**Key files touched:**
+
+- `packages/cli/package.json`, `packages/control-plane/package.json`,
+  `packages/docs-config/package.json`, `packages/docs-theme/package.json`,
+  `packages/docs-transforms/package.json` — `version` field only.
+
+**Verification:**
+
+- All five package versions equal `0.1.1` — pass.
+- `pnpm release:check-versions` — pass (`version bump check passed`).
+- `pnpm release:validate` — pass (release validation passed for 5 public packages).
+- `pnpm lint` — pass (0 warnings, 0 errors across all packages).
 
 ### Task p02-t01: Bump Lockstep Public-Package Versions and Validate
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 7562dcb6
+
+**Outcome (required when completed):**
+
+- All five lockstep public packages bumped from `0.1.0` to `0.1.1` in lockstep. All five
+  packages were confirmed at `0.1.0` before the bump; a single patch increment landed all
+  on the same `0.1.1` version. Only the `version` field was edited in each file.
+
+**Files changed:**
+
+- `packages/cli/package.json` — version `0.1.0` -> `0.1.1`
+- `packages/control-plane/package.json` — version `0.1.0` -> `0.1.1`
+- `packages/docs-config/package.json` — version `0.1.0` -> `0.1.1`
+- `packages/docs-theme/package.json` — version `0.1.0` -> `0.1.1`
+- `packages/docs-transforms/package.json` — version `0.1.0` -> `0.1.1`
+
+**Verification:**
+
+- Run: version-print loop over the five packages — Result: pass, all print `0.1.1`.
+- Run: `pnpm release:check-versions` — Result: pass (`version bump check passed`).
+- Run: `pnpm release:validate` — Result: pass (`release validation passed for 5 public
+packages`; all five tgz packs validated).
+- Run: `pnpm lint` — Result: pass (`Found 0 warnings and 0 errors` for all 5 packages;
+  10/10 turbo tasks successful).
+
+**Notes / Decisions:**
+
+- The pre-commit hook emitted a non-blocking advisory (`oat: managed provider views are
+out of sync - run 'oat sync --scope project'`). No skill files were touched in this
+  phase; the advisory is unrelated to p02-t01 scope and the commit succeeded. Flagged for
+  awareness, not action within this phase.
+
+**Issues Encountered:**
+
+- None.
 
 ---
 
@@ -210,17 +268,18 @@ _- Outstanding Items_
 **Branch:** fix/agent-instructions-nesting-heuristic
 **Tier:** 1 (subagents)
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases:** 1 of 2 executed, 1 passed, 0 failed, 0 stopped
+**Phases:** 2 of 2 executed, 2 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
 | Phase | Implementer | Review | Fix Iterations | Disposition |
 | ----- | ----------- | ------ | -------------- | ----------- |
 | p01   | DONE        | pass   | 0/2            | merged      |
+| p02   | DONE        | pass   | 0/2            | merged      |
 
 #### Parallel Groups
 
-- p01: sequential (no parallel groups declared)
+- p01, p02: sequential (no parallel groups declared)
 
 #### Outstanding Items
 
