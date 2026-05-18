@@ -22,5 +22,20 @@
     "mode": "full",
     "formats": [],
     "artifactPath": ".oat/repo/knowledge/"
+  },
+  "agentInstructions": {
+    "lastRunAt": "2026-05-18T03:31:11Z",
+    "commitHash": "f3ea8f007f545638a6b9ad86712cf94df98e9758",
+    "baseBranch": "main",
+    "mode": "full",
+    "formats": ["agents_md", "claude", "codex", "cursor"],
+    "artifactPath": ".oat/repo/analysis/agent-instructions-2026-05-18-0326.md"
+  },
+  "agentInstructionsApply": {
+    "lastRunAt": "2026-05-18T04:28:13Z",
+    "commitHash": "a8e52f21552d0003076d5673b5b0829d320f815d",
+    "baseBranch": "main",
+    "mode": "apply",
+    "formats": ["agents_md", "claude", "codex", "cursor"]
   }
 }
