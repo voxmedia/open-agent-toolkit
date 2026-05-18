@@ -1,116 +1,246 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-03-24
-oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
-oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
+oat_generated_at: 2026-05-17
+oat_source_head_sha: f3ea8f007f545638a6b9ad86712cf94df98e9758
+oat_source_main_merge_base_sha: f3ea8f007f545638a6b9ad86712cf94df98e9758
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
 # Coding Conventions
 
-**Analysis Date:** 2026-03-24
+**Analysis Date:** 2026-05-17
 
 ## Naming Patterns
 
 **Files:**
 
-- Mostly kebab-case or descriptive lowercase file names such as `command-context.ts`, `search-config.ts`, and `remark-links.ts`.
-- Tests are generally co-located and use `.test.ts` suffix.
-- Barrel exports use `index.ts`.
+- Source files and test files use `camelCase` names: `logger.ts`, `create-program.ts`, `sync-config.ts`
+- Test files follow the pattern `<module>.test.ts` and are colocated with source files in the same directory (`packages/cli/src/ui/logger.test.ts`, `packages/cli/src/ui/spinner.test.ts`)
+- Type definition files named with `.types.ts` suffix: `packages/cli/src/manifest/manifest.types.ts`, `packages/cli/src/drift/drift.types.ts`
+- Utility/helper modules use descriptive names: `command-context.ts`, `create-logger.ts`, `bundle-consistency.test.ts`
 
 **Functions:**
 
-- camelCase for runtime helpers and factories, for example `createDocsConfig`, `createProgram`, `generateThinIndex`.
-- `create*`, `resolve*`, `read*`, and `detect*` prefixes are common.
+- Factory/creation functions use `create*` or `build*` prefix: `createProgram()` (`packages/cli/src/app/create-program.ts`), `createLogger()` (`packages/cli/src/ui/logger.ts`), `buildCommandContext()` (`packages/cli/src/app/command-context.ts`), `createSpinner()` (`packages/cli/src/ui/spinner.ts`)
+- Helper/utility functions use descriptive verbs: `normalizeArgv()`, `stateLabel()`, `serializeMeta()` (see `packages/cli/src/ui/logger.ts`)
+- Async functions return `Promise<T>` with no special naming prefix (distinction is by type signature)
+- Private functions typically use `camelCase` with lowercase start (example: `writeStdout()`, `writeStderr()` in `packages/cli/src/ui/logger.ts`)
 
 **Variables:**
 
-- camelCase in implementation code.
-- UPPER_SNAKE_CASE is reserved for constant tables or config-like values.
+- `camelCase` for local variables and parameters: `json`, `verbose`, `cwd`, `repoRoot`, `projectDir`
+- `UPPER_SNAKE_CASE` for compile-time constants: `PROGRAM_NAME`, `PROGRAM_DESCRIPTION`, `SCOPE_CHOICES` (see `packages/cli/src/app/create-program.ts`)
+- Boolean variables/parameters often prefixed with `is*` or `has*`: `interactive`, `dryRun`
+- Array variables use plural names: `tempDirs`, `options`, `entries`
 
 **Types:**
 
-- PascalCase for interfaces and type aliases such as `CommandContext`, `BrandingConfig`, and `SearchConfig`.
+- Interfaces named with `PascalCase`: `CliLogger`, `CommandContext`, `GlobalOptions`, `DoctorCheck`, `Spinner` (see `packages/cli/src/ui/logger.ts`, `packages/cli/src/app/command-context.ts`)
+- Type aliases use `PascalCase`: `CheckStatus`, `ResolvedConfigSource`, `WorkflowHillCheckpointDefault`
+- Interface names often reflect their purpose: `<Domain><Purpose>Config`, `<Action><Result>Options`, `<Entity><Descriptor>`
+- No `I` prefix convention for interfaces (example: `CliLogger` not `ICliLogger`)
 
 ## Code Style
 
 **Formatting:**
 
-- Primary tools: `oxfmt` and `oxlint`
-- Indentation is 2 spaces.
-- The codebase uses ESM, single quotes, trailing commas, and semicolons.
+- Tool: `oxfmt` (v0.36.0+)
+- Configuration: `.oxfmtrc.jsonc`
+- Key settings:
+  - Print width: 80 characters
+  - Indentation: 2 spaces (not tabs)
+  - Semicolons: enabled
+  - Quotes: single quotes for JS/TS (`'string'`), single quotes in JSX (`jsxSingleQuote: true`)
+  - Trailing commas: all (even in function parameters)
+  - Arrow function parens: always (even single params)
+  - Line ending: LF
+  - Import sorting: enabled
+  - JSON formatting: enabled (via `oxfmt`)
+  - Markdown formatting: enabled (via `oxfmt`)
+- Run locally: `pnpm format` to check, `pnpm format:fix` to auto-fix
+- Git hooks enforce formatting via `lint-staged` on `*.{ts,tsx,js,jsx,json,md}` files
 
 **Linting:**
 
-- `oxlint` is the repo-wide linter.
-- `typescript-eslint/no-explicit-any` is occasionally suppressed with a local rationale when library typings are awkward.
-- Formatting and linting are wired into per-package scripts and root Turbo tasks.
+- Tool: `oxlint` (v1.51.0+)
+- Configuration: `.oxlintrc.json`
+- Key rules:
+  - Correctness violations: **error**
+  - Suspicious patterns: **error**
+  - `eslint/prefer-const`: error
+  - `eslint/prefer-template`: error (enforce template literals over string concatenation)
+  - `eslint/eqeqeq`: error with `"smart"` mode (allow `==` for null checks)
+  - `eslint/no-empty`: error
+  - `typescript/no-explicit-any`: warning (relaxed in test files)
+  - `typescript/no-non-null-assertion`: off (allows `!` operator)
+  - `typescript/no-extra-non-null-assertion`: off
+  - `typescript/no-unnecessary-type-constraint`: error
+  - Test files (`.test.ts`, `.spec.ts`) exempt from `no-explicit-any` and `no-unsafe-optional-chaining` rules
+- Run locally: `pnpm lint` to check, `pnpm lint:fix` to auto-fix
+- Git pre-commit hooks run `oxlint --fix` via lint-staged on staged files
+- Language targets: `node: true`, `es2024: true` environment
 
 ## Import Organization
 
 **Order:**
 
-1. Node built-ins
-2. Third-party packages
-3. Internal type/value imports
-4. Local relative imports inside the same package
+1. Node.js built-in imports (`import { ... } from 'node:...'`)
+2. Third-party dependencies (`import chalk from 'chalk'`)
+3. TypeScript aliases (`import type { ... } from '@ui/...'`, `import { createLogger } from '@config/...'`)
+4. Relative imports (`./.../`) — not used in CLI source per convention (see below)
+
+Evidence from files:
+
+- `packages/cli/src/ui/logger.ts`: Node imports, then third-party (chalk), then no local imports
+- `packages/cli/src/app/command-context.ts`: Node imports, then third-party, then aliases
+- `packages/cli/src/config/sync-config.ts`: Node imports, third-party (zod), then aliases
 
 **Path Aliases:**
 
-- `packages/cli` relies heavily on TypeScript path aliases such as `@commands/*`, `@providers/*`, `@ui/*`, and `@fs/*`.
-- The repo guidance prefers same-directory `./...` imports locally and aliases for anything outside the current directory.
-- Parent-relative imports are intentionally discouraged in repo instructions.
+Defined in `packages/cli/tsconfig.json`:
+
+- `@app/*` → `src/app/*`
+- `@commands/*` → `src/commands/*`
+- `@config/*` → `src/config/*`
+- `@drift/*` → `src/drift/*`
+- `@engine/*` → `src/engine/*`
+- `@errors/*` → `src/errors/*`
+- `@fs/*` → `src/fs/*`
+- `@manifest/*` → `src/manifest/*`
+- `@providers/*` → `src/providers/*`
+- `@agents/*` → `src/agents/*`
+- `@rules/*` → `src/rules/*`
+- `@shared/*` → `src/shared/*`
+- `@ui/*` → `src/ui/*`
+- `@validation/*` → `src/validation/*`
+
+**Import Convention Policy:**
+
+Per `packages/cli/AGENTS.md`:
+
+- Use only `./...` relative imports for modules in the same directory
+- Use TypeScript aliases for anything outside the current directory
+- **Never use** `../...` parent-relative imports
+- **Never use** `src/...` absolute path imports
+- **Never use** catch-all aliases like `@/*`
 
 ## Error Handling
 
 **Patterns:**
 
-- CLI code uses `CliError` for expected user-facing failures and exit-code control.
-- Build/test/library code generally relies on thrown `Error` objects or framework defaults.
-- Commands tend to convert thrown errors into logger output at the command boundary.
+- Custom error class: `CliError` extends `Error` (`packages/cli/src/errors/cli-error.ts`)
+- `CliError` takes:
+  - `message: string` (required)
+  - `exitCode: 1 | 2` (optional, defaults to 1)
+  - Exit code 1 = actionable user error
+  - Exit code 2 = system/runtime error
+- Example usage:
+  ```typescript
+  throw new CliError('bad input', 2); // system error
+  throw new CliError('user provided invalid value'); // defaults to exit code 1
+  ```
+- Schema validation errors use `zod` with custom error messages: `SyncConfigSchema.parse(data)` throws `ZodError`
+- File I/O errors propagate as-is (not wrapped)
+- Async functions do not suppress errors; they propagate naturally through `Promise` chain
+- Error handling in tests: use `expect(() => { ... }).not.toThrow()` or `expect(() => { ... }).toThrow(...)`
 
 ## Logging
 
-**Framework:** Custom logger/spinner layer in the CLI; framework defaults elsewhere.
+**Framework:** Custom `CliLogger` implementation (not `console` directly)
 
 **Patterns:**
 
-- CLI output is intentionally structured for human and JSON modes.
-- The docs packages are small libraries and generally avoid their own logging.
-- CI relies on command output from pnpm scripts and GitHub Actions.
+- All CLI output routed through injected `CliLogger` instance (from `@ui/logger` via `CommandContext`)
+- Logger methods:
+  - `debug(message, meta?)`: Gray text to stdout (only when `--verbose`)
+  - `info(message, meta?)`: Cyan text to stdout
+  - `warn(message, meta?)`: Yellow text to stderr
+  - `error(message, meta?)`: Red text to stderr
+  - `success(message, meta?)`: Green text to stdout
+  - `json(payload)`: Pretty-printed JSON to stdout (2-space indent)
+- When `--json` flag passed: info/warn/success messages suppressed, errors output as structured JSON objects
+- Metadata (second parameter) is optional and serialized as JSON inline: `logger.info('msg', { code: 'E_TEST' })`
+- Never use direct `console.*` calls in commands; always use injected logger
+
+Evidence: `packages/cli/src/ui/logger.ts` implements this pattern; `packages/cli/src/ui/logger.test.ts` validates behavior.
 
 ## Comments
 
 **When to Comment:**
 
-- Comments are used sparingly to explain non-obvious transforms, runtime assumptions, or linter suppressions.
-- Repo-level instructions emphasize comments that explain why, not trivial line-by-line behavior.
+- JSDoc/TSDoc blocks for public functions and types (especially those exported from modules)
+- Inline comments for complex logic or non-obvious intent (not for obvious code)
+- "Why" comments preferred over "what" comments (the code shows what, comments explain why)
 
 **JSDoc/TSDoc:**
 
-- Public library and plugin code uses concise docblocks where behavior is subtle, especially in remark plugins and React wrappers.
-- Many internal helpers rely on clear naming instead of heavy annotation.
+- Used extensively for public APIs and complex functions
+- Example patterns from codebase:
+
+  ```typescript
+  /**
+   * Single source of truth for all bundled skill/asset lists per pack.
+   *
+   * Runtime installers and tests import from here.
+   * `bundle-assets.sh` maintains its own bash array — `bundle-consistency.test.ts`
+   * validates that it stays in sync with these lists.
+   */
+  export const SKILL_MANIFEST = { ... }
+  ```
+
+  (from `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`)
+
+- `@internal` tag used to mark exported functions that are internal implementation details (example: `packages/cli/src/commands/tools/update/index.ts`)
+- Parameter and return types documented when not self-evident
 
 ## Function Design
 
-**Size:** Most functions are modest in size, with larger orchestration modules in the CLI command and state-generation areas.
+**Size:** Functions kept relatively short and focused
 
-**Parameters:** Object parameters are common for config-style APIs; smaller helpers still use positional arguments.
+- Small utility functions (3-20 lines): trivial helpers like `stripAnsi()`, `stateLabel()` (see `packages/cli/src/ui/ansi.ts`, `packages/cli/src/ui/output.ts`)
+- Medium functions (20-50 lines): feature implementations like `createLogger()` (see `packages/cli/src/ui/logger.ts`)
+- Larger functions (50+ lines): complex logic broken into helpers or refactored into separate modules
 
-**Return Values:** Explicit interfaces are common for factory/config results, especially in the docs packages.
+**Parameters:**
+
+- Keep parameter count low (3-5 typical)
+- When many options needed, use an options object: `interface CreateLoggerOptions { json: boolean; verbose: boolean }`
+- Use destructuring to extract options in function body
+- Optional parameters use `?:` syntax in interface definitions
+
+**Return Values:**
+
+- Functions return specific types (not `any`)
+- Async functions return `Promise<T>` where `T` is the specific result type
+- Functions that don't return a value explicitly return `void`
+- Error conditions throw `CliError` (not return error objects)
 
 ## Module Design
 
-**Exports:** Each package exposes a small `index.ts` barrel and keeps implementation files private behind that boundary.
+**Exports:**
 
-**Barrel Files:** Barrels are the default package entrypoints in `packages/docs-*` and many CLI submodules.
+- One primary export per module when possible
+- Factory functions exported as named exports: `export function createLogger(...) { ... }`
+- Types/interfaces exported as named exports: `export interface CliLogger { ... }`
+- Barrel files (`index.ts`) re-export related functionality: `export { createLogger }; export type { CliLogger };`
+- Use explicit `export type { ... }` for types to enable tree-shaking
 
-## Repo-Specific Guidance
+Evidence: `packages/cli/src/ui/index.ts` exports both types and implementations:
 
-- Root `AGENTS.md` requires same-directory imports where possible and explicit aliases otherwise.
-- OAT workflow artifacts are markdown-first and meant to stay readable to humans and tools.
-- Manual edits to generated content should be avoided; regenerate instead.
+```typescript
+export type { CliLogger } from './logger';
+export { createLogger } from './logger';
+export type { Spinner } from './spinner';
+export { createSpinner } from './spinner';
+```
+
+**Barrel Files:**
+
+- Used at domain boundaries to control public API surface
+- Example: `packages/cli/src/ui/index.ts` exposes logger, spinner, output formatters
+- `packages/cli/src/config/index.ts` exposes config management functions
+- Barrel files simplify imports: `import { createLogger } from '@ui'` instead of `import { createLogger } from '@ui/logger'`
 
 ---
 
-_Convention analysis: 2026-03-24_
+_Convention analysis: 2026-05-17_

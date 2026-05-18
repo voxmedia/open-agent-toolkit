@@ -1,108 +1,145 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-03-24
-oat_source_head_sha: 539d8ac2b1ba2d2315bac69753ded87509967c6b
-oat_source_main_merge_base_sha: 146eed87a123f0b31d60726a4acfd6d7c83d1478
+oat_generated_at: 2026-05-17
+oat_source_head_sha: f3ea8f007f545638a6b9ad86712cf94df98e9758
+oat_source_main_merge_base_sha: f3ea8f007f545638a6b9ad86712cf94df98e9758
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
 # External Integrations
 
-**Analysis Date:** 2026-03-24
+**Analysis Date:** 2026-05-17
 
 ## APIs & External Services
 
-**Developer Tool Ecosystem:**
+**Version Control & Repository Management:**
 
-- Claude, Cursor, Codex, Copilot, and Gemini provider surfaces are supported as filesystem-based integration targets rather than hosted API integrations.
-  - SDK/Client: none at runtime in this repo for those providers
-  - Auth: handled externally by the installed tools, not by OAT itself
+- GitHub GraphQL API - Used for collecting PR review comments and repository metadata
+  - Client: `gh` CLI via `execFile` (Node.js child process)
+  - Auth: GitHub CLI authentication (configured in user's `.config/gh/` or similar; uses `gh api graphql`)
+  - Usage location: `packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts`
+  - Implementation: Uses `gh api graphql` command to query merged PRs and review comments, with support for pagination via GraphQL cursors
 
-**Documentation Tooling:**
+**Agent/Provider Integrations:**
 
-- Fumadocs - used to build the reference docs app and scaffold similar apps
-  - SDK/Client: `fumadocs-core`, `fumadocs-mdx`, `fumadocs-ui`
-  - Auth: none
+- Claude Code
+  - Configuration: `.claude/` directory marker for detection
+  - File mappings: `packages/cli/src/providers/claude/paths.ts`
+  - Implementation: Provider adapter at `packages/cli/src/providers/claude/adapter.ts`
+
+- GitHub Copilot
+  - Configuration: `.copilot/`, `.github/copilot-instructions.md`, `.github/agents`, `.github/skills`, `.github/instructions` directory markers
+  - File mappings: `packages/cli/src/providers/copilot/paths.ts`
+  - Implementation: Provider adapter at `packages/cli/src/providers/copilot/adapter.ts`
+  - Rule format: Custom rule format in `.github/` that is normalized to canonical format via `packages/cli/src/providers/copilot/rule-transform.ts`
+
+- Gemini CLI
+  - Configuration: `.gemini` directory marker for detection
+  - File mappings: `packages/cli/src/providers/gemini/paths.ts`
+  - Implementation: Provider adapter at `packages/cli/src/providers/gemini/adapter.ts`
+
+- Cursor IDE
+  - Configuration: `.cursor` directory marker for detection
+  - File mappings: `packages/cli/src/providers/cursor/paths.ts`
+  - Implementation: Provider adapter at `packages/cli/src/providers/cursor/adapter.ts`
+
+- Codex CLI
+  - Configuration: `.codex` directory marker for detection
+  - File mappings: `packages/cli/src/providers/codex/paths.ts`
+  - Implementation: Provider adapter at `packages/cli/src/providers/codex/adapter.ts`
+
+**Linear (Planned Integration):**
+
+- Linear MCP Server
+  - Endpoint: `https://mcp.linear.app/mcp` (official MCP server)
+  - Auth: Linear API key or OAuth token configured in agent MCP settings
+  - Status: Design phase; handover document at `.oat/projects/shared/remote-project-management/linear-integration-discovery-handover.md`
+  - Use case: Bidirectional sync of backlog items ↔ Linear issues, status tracking via GitHub integration
 
 ## Data Storage
 
 **Databases:**
 
-- None
+- Not detected - OAT is a CLI-based toolkit without persistent data storage; state is stored in markdown files within project directories
 
 **File Storage:**
 
-- Local filesystem only
-- Repo-owned state is stored under `.oat/`, provider directories, and generated assets in `packages/cli/assets/`
+- Local filesystem only - All projects, state files, skills, and agents are stored in local `.oat/` and `.agents/` directories and version-controlled via git
 
 **Caching:**
 
-- Turborepo local cache via `.turbo/`
-- No dedicated application cache service
+- Not detected
 
 ## Authentication & Identity
 
 **Auth Provider:**
 
-- None managed by the application itself
-  - Implementation: users authenticate with external AI tools or GitHub/npm outside this repo
+- Provider-based authentication
+  - Implementation: Per-provider configuration (e.g., `.claude/`, `.copilot/` directories managed by respective tools)
+  - GitHub: Uses user's configured `gh` CLI authentication for GraphQL queries
+  - Credentials: Managed by provider tools, not by OAT
+  - No centralized auth system; each provider handles its own credentials
 
 ## Monitoring & Observability
 
 **Error Tracking:**
 
-- None built into the repo
+- Not detected - No external error tracking service integration
 
 **Logs:**
 
-- CLI logger output to terminal
-- CI logs via GitHub Actions
+- CLI logger via `context.logger` in `packages/cli/src/app/command-context.ts`
+- All CLI output routed through logger utilities, no external logging service
 
 ## CI/CD & Deployment
 
 **Hosting:**
 
-- Docs site targets GitHub Pages via `apps/oat-docs`
+- GitHub Pages - OAT docs site deployed to GitHub Pages
+  - Workflow: `.github/workflows/deploy-docs.yml`
+  - Build artifact: `apps/oat-docs/out/` (static build output)
+  - Trigger: Push to main on docs paths or manual workflow_dispatch
 
 **CI Pipeline:**
 
-- GitHub Actions CI in `.github/workflows/ci.yml`
-- GitHub Actions docs deployment in `.github/workflows/deploy-docs.yml`
+- GitHub Actions
+  - CI workflow: `.github/workflows/ci.yml` - Runs on push to main and all PRs
+    - Steps: checkout, setup pnpm, install, check (lint/format), type-check, test, build, skill validation, release validation
+  - Release workflow: `.github/workflows/release.yml` - Creates tags and publishes packages on push to main
+    - Uses npm trusted publishing via GitHub OIDC
+    - Supports manual reruns from existing release tags
+  - Release dry-run: `.github/workflows/release-dry-run.yml` - Validates package changes on PRs
+  - Docs deployment: `.github/workflows/deploy-docs.yml` - Builds and deploys docs to GitHub Pages
+
+**Package Registry:**
+
+- npm - Publishable packages under `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms`
+  - Lockstep versioning: All five public packages must share version bumps for released content
+  - Repository: GitHub (voxmedia/open-agent-toolkit)
 
 ## Environment Configuration
 
 **Required env vars:**
 
-- No globally required runtime env vars for core local development
-- Common optional vars include:
-  - `GIT_HOOKS` for hook setup control
-  - `OAT_ASSETS_DIR` for docs/CLI scaffold tests and asset overrides
-  - `OAT_PROJECTS_ROOT` for project root overrides
+- Not detected - No environment variables required for core functionality
+- GitHub CLI (`gh`) uses standard authentication configured outside the toolkit
 
 **Secrets location:**
 
-- No active secret-backed runtime integration in the current repo
-- npm publishing now targets GitHub OIDC trusted publishing after a one-time
-  manual bootstrap under `@open-agent-toolkit/*`
+- GitHub Actions secrets: Used in CI/CD workflows for npm publishing via OIDC
+- No local secrets files required or supported; credentials managed by provider tools
 
 ## Webhooks & Callbacks
 
 **Incoming:**
 
-- None
+- Not detected
 
 **Outgoing:**
 
-- None at runtime
-
-## Integration Notes
-
-- The CLI integrates primarily with repository layout and local tool installations rather than hosted APIs.
-- The docs libraries are conventional npm-style code libraries with framework integrations, not service clients.
-- Public package publishing is partially configured: GitHub release workflows
-  exist, but the first live publish still requires manual npm bootstrap and
-  post-bootstrap trust setup.
+- GitHub GraphQL queries only (read-only) for PR comment collection
+- No webhook subscriptions or outgoing callbacks
 
 ---
 
-_Integration audit: 2026-03-24_
+_Integration audit: 2026-05-17_
