@@ -935,17 +935,17 @@ git commit -m "fix(prev8-t02): apply managed-roles stray fix to oat init"
 
 ## Reviews
 
-| Scope       | Type     | Status          | Date       | Artifact                                              |
-| ----------- | -------- | --------------- | ---------- | ----------------------------------------------------- |
-| p01         | code     | passed          | 2026-05-13 | reviews/archived/p01-review-2026-05-13-v2.md          |
-| p02         | code     | passed          | 2026-05-13 | reviews/archived/p02-review-2026-05-13.md             |
-| p03         | code     | passed          | 2026-05-13 | reviews/archived/p03-review-2026-05-13-v2.md          |
-| p04         | code     | passed          | 2026-05-13 | reviews/archived/p04-review-2026-05-13.md             |
-| final       | code     | passed          | 2026-05-13 | reviews/archived/final-review-2026-05-13-v4.md        |
-| design      | artifact | passed          | 2026-05-12 | reviews/archived/artifact-design-review-2026-05-12.md |
-| plan        | artifact | passed          | 2026-05-12 | reviews/archived/artifact-plan-review-2026-05-12.md   |
-| prev1-prev7 | code     | fixes_completed | 2026-05-17 | reviews/archived/range-review-2026-05-17.md           |
-| prev1-prev8 | code     | received        | 2026-05-17 | reviews/range-review-2026-05-17.md                    |
+| Scope       | Type     | Status | Date       | Artifact                                              |
+| ----------- | -------- | ------ | ---------- | ----------------------------------------------------- |
+| p01         | code     | passed | 2026-05-13 | reviews/archived/p01-review-2026-05-13-v2.md          |
+| p02         | code     | passed | 2026-05-13 | reviews/archived/p02-review-2026-05-13.md             |
+| p03         | code     | passed | 2026-05-13 | reviews/archived/p03-review-2026-05-13-v2.md          |
+| p04         | code     | passed | 2026-05-13 | reviews/archived/p04-review-2026-05-13.md             |
+| final       | code     | passed | 2026-05-13 | reviews/archived/final-review-2026-05-13-v4.md        |
+| design      | artifact | passed | 2026-05-12 | reviews/archived/artifact-design-review-2026-05-12.md |
+| plan        | artifact | passed | 2026-05-12 | reviews/archived/artifact-plan-review-2026-05-12.md   |
+| prev1-prev7 | code     | passed | 2026-05-17 | reviews/archived/range-review-2026-05-17.md           |
+| prev1-prev8 | code     | passed | 2026-05-17 | reviews/archived/range-review-2026-05-17-v2.md        |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 

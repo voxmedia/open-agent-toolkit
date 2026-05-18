@@ -549,6 +549,24 @@ After the fix tasks are complete:
 - Update the `prev1-prev7` review row status to `fixes_completed`.
 - Re-run `oat-project-review-provide code prev1-prev7` then `oat-project-review-receive` to reach `passed`.
 
+### Review Received: prev1-prev8
+
+**Date:** 2026-05-17
+**Review artifact:** reviews/archived/range-review-2026-05-17-v2.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** none — consolidated re-review of `prev1` through `prev8` (range `491faa17..HEAD`, 36 commits) passed clean.
+
+**Finding disposition map:** n/a (zero findings).
+
+**Next:** `prev1-prev7` and `prev1-prev8` review rows marked `passed`; update PR #79 with the `p-rev7` and `p-rev8` work.
+
 ### Review Received: final
 
 **Date:** 2026-05-13

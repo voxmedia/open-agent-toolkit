@@ -16,7 +16,7 @@ oat_pr_status: open # null | ready | open | closed | merged - actual PR state fo
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/79' # null | string - tracked PR URL when a PR exists
 oat_project_created: '2026-05-04T14:47:00.831Z' # ISO 8601 UTC timestamp - set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp - set when project is completed/archived
-oat_project_state_updated: '2026-05-17T22:11:17Z'
+oat_project_state_updated: '2026-05-18T00:31:41Z'
 oat_generated: false
 ---
 
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision `p-rev8` is complete — `prev8-t01` (`d907f42f`) and `prev8-t02` (`df239e65`) both implemented and review-passed; `oat status` and `oat init` no longer misclassify generated Codex role variants as stray. The `prev1-prev7` range-review fixes are implemented (`fixes_completed`) and still await their re-review.
+All revision work (`p-rev1` through `p-rev8`) is complete and reviewed. The consolidated `prev1-prev8` re-review passed clean (0 findings); `prev1-prev7` and `prev1-prev8` review rows are both `passed`. Remaining: update PR #79 with the `p-rev7` and `p-rev8` commits.
 
 ## Artifacts
 
@@ -76,6 +76,7 @@ Revision `p-rev8` is complete — `prev8-t01` (`d907f42f`) and `prev8-t02` (`df2
 - `prev8-t01` completed in `d907f42f`; `oat status` no longer flags the variants. Review passed (0 Critical/Important/Medium, 1 Minor)
 - `prev8` review Minor: `oat init` shares the same defect at a second call site; converted to `prev8-t02`
 - `prev8-t02` completed in `df239e65`; `oat init` now recognizes the managed variants. Review passed (0 Critical/Important/Medium, 1 non-blocking Minor)
+- Consolidated `prev1-prev8` re-review passed clean (0 findings, 36 commits); `prev1-prev7` and `prev1-prev8` review rows both `passed`
 
 ## Blockers
 
@@ -83,4 +84,4 @@ None
 
 ## Next Milestone
 
-Re-review the `prev1-prev7` fix commits, then update PR #79 with the `p-rev7` and `p-rev8` work.
+Update PR #79 with the `p-rev7` and `p-rev8` work.
