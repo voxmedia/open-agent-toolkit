@@ -272,6 +272,28 @@ passed — zero Critical/Important/Medium. All 5 discovery Success Criteria veri
   phase review and the final review. Genuinely ambiguous, non-actionable finding — no
   defect to fix.
 
+### Review Received: final (code, manual — v2)
+
+**Date:** 2026-05-18
+**Review artifact:** `reviews/archived/final-review-2026-05-18-v2.md`
+
+**Findings:** 0 Critical, 0 Important, 0 Medium, 1 Minor
+
+**Disposition:** Independent manual final-scope re-review. Passed — zero
+Critical/Important/Medium; all requirements verified implemented. The one Minor
+(`m1`) was fixed directly per user direction rather than converted to a plan task:
+stale post-implementation prose corrected in `state.md` (implementation artifact
+status), `plan.md` (Planning Checklist HiLL-checkpoint wording → `['p02']`), and
+`implementation.md` (References — quick mode has no `spec.md`). Frontmatter and
+workflow state were already correct; only human-readable prose lagged. `final`
+Reviews-table row set to `passed`. Review cycle 2 of 3 for `final` scope.
+
+**Deferred Findings (Minor):**
+
+- Residual "starting at depth 1–2" phrasing (`directory-assessment-criteria.md:67`) —
+  re-evaluated by this review and confirmed still acceptable to defer (depth/sweep-start
+  guidance, not a gate; consistent with the prior disposition).
+
 ---
 
 ## Orchestration Runs
@@ -419,4 +441,4 @@ Track test execution during implementation.
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md` (quick mode — no `spec.md`)

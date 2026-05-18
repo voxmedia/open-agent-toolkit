@@ -37,8 +37,8 @@ content, `chore(release): …` for version bookkeeping.
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user (quick mode; one checkpoint after Phase 1)
-- [x] Set `oat_plan_hill_phases` in frontmatter (`['p01']`)
+- [x] Confirmed HiLL checkpoints with user (quick mode; stop only after the final phase)
+- [x] Set `oat_plan_hill_phases` in frontmatter (`['p02']`)
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter (`[]` — sequential)
 
@@ -223,13 +223,13 @@ git commit -m "chore(release): bump lockstep public package versions for analyze
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                              |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | passed   | 2026-05-18 | reviews/p01-review-2026-05-18.md                      |
-| p02    | code     | passed   | 2026-05-18 | reviews/p02-review-2026-05-18.md                      |
-| final  | code     | received | 2026-05-18 | reviews/final-review-2026-05-18-v2.md                 |
-| design | artifact | passed   | 2026-05-18 | reviews/archived/artifact-design-review-2026-05-18.md |
-| plan   | artifact | passed   | 2026-05-18 | reviews/archived/artifact-plan-review-2026-05-18.md   |
+| Scope  | Type     | Status | Date       | Artifact                                              |
+| ------ | -------- | ------ | ---------- | ----------------------------------------------------- |
+| p01    | code     | passed | 2026-05-18 | reviews/archived/p01-review-2026-05-18.md             |
+| p02    | code     | passed | 2026-05-18 | reviews/archived/p02-review-2026-05-18.md             |
+| final  | code     | passed | 2026-05-18 | reviews/archived/final-review-2026-05-18-v2.md        |
+| design | artifact | passed | 2026-05-18 | reviews/archived/artifact-design-review-2026-05-18.md |
+| plan   | artifact | passed | 2026-05-18 | reviews/archived/artifact-plan-review-2026-05-18.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
