@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.15
+version: 2.0.16
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -180,7 +180,7 @@ Selection rule:
    - `inherited` — host exposes the axis and the orchestrator deliberately defers to the parent session.
    - `not-applicable` — this host/API has no meaningful per-dispatch concept for that axis.
    - `host-auto` — exceptional; the host uses that axis internally but the orchestrator cannot read or pin it.
-4. In Codex, the model axis normally logs `inherited`; choose `effort_axis=selected:low|medium|high` from phase complexity and dispatch the matching effort-specific implementer role. Use `effort_axis=inherited` for the base implementer role.
+4. In Codex implementation/fix dispatch, the model axis normally logs `inherited`; choose `effort_axis=selected:low|medium|high` from phase complexity and dispatch the matching effort-specific implementer role. Treat `effort_axis=inherited` as the parent-session ceiling path, not a neutral default.
 5. In Claude Code, when subagent model selection is available, choose the lowest sufficient model on the model axis; the effort axis is `not-applicable` because Claude Code does not expose a separate `reasoning_effort` control for subagent dispatch.
 6. If a host uses model/effort internally but exposes neither axis to the orchestrator, log `model_axis=host-auto, effort_axis=host-auto` and include the rationale that would have informed selection.
 7. If confidence is low, choose a stronger available control before dispatch rather than knowingly underpowering the phase.
@@ -190,7 +190,8 @@ Selection rule:
 **Passing axis values to the host dispatch API.** The log shape and the actual dispatch call must agree: never log a `selected:<value>` axis without passing the corresponding parameter on the dispatch invocation, and never pass an explicit parameter that the log does not reflect.
 
 - **Claude Code implementer/fix dispatch:** when `model_axis=selected:<value>`, pass `model: "<value>"` on the Task tool call. When `model_axis=inherited`, omit the `model` parameter so Claude Code uses its own default. `effort_axis=not-applicable` for both cases because the Task tool exposes no per-dispatch `reasoning_effort` control.
-- **Codex implementer/fix dispatch:** when `effort_axis=selected:low|medium|high`, dispatch the matching configured role: `agent_type: "oat-phase-implementer-low"`, `agent_type: "oat-phase-implementer-medium"`, or `agent_type: "oat-phase-implementer-high"`. Those roles set `model_reasoning_effort` in `.codex/agents/*.toml`. Use the base `agent_type: "oat-phase-implementer"` only for `effort_axis=inherited`. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent in some Codex runs.
+- **Codex implementer/fix dispatch:** default to a selected effort. Classify phase complexity, choose the lowest sufficient `effort_axis=selected:low|medium|high`, and dispatch the matching configured role: `agent_type: "oat-phase-implementer-low"`, `agent_type: "oat-phase-implementer-medium"`, or `agent_type: "oat-phase-implementer-high"`. Those roles set `model_reasoning_effort` in `.codex/agents/*.toml`. Use the base `agent_type: "oat-phase-implementer"` only when `effort_axis=inherited` is intentionally selected for an allowed reason below. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent in some Codex runs.
+- **Codex inherited effort is the ceiling path:** because inherited effort follows the parent/orchestrator session and may be `xhigh`, do not use `effort_axis=inherited` merely because it is valid, convenient, or avoids choosing a selected effort. Use inherited effort for Codex implementer/fix dispatch only when the user explicitly requested inherited/default parent controls; a valid Dispatch Profile row explicitly requests inherited/default controls; the phase requires the parent-session ceiling and `selected:high` is insufficient; or the selected-effort roles are unavailable or fail to resolve. The dispatch rationale must cite the allowed reason. For ceiling-needed dispatch, explain why `selected:high` is insufficient.
 - **Codex xhigh:** do not create or select an `xhigh` implementer variant. Use `xhigh` only when the parent/orchestrator session is already xhigh and therefore `effort_axis=inherited` on the base role is the correct representation. If a phase appears to require xhigh while the parent is not xhigh, choose `selected:high` only if high is sufficient; otherwise split/revise the phase or stop for user re-invocation at xhigh.
 - **Claude Code `opus`:** unlike Codex `xhigh`, `opus` is directly selectable. Claude Code exposes `opus` through the Task tool's `model` parameter, so OAT may select it when available (`model_axis=selected:opus`) — including as a terminal escalation step. There is no `opus` inherited-only restriction; the `xhigh` rule above is specific to Codex's effort-variant mechanism, not a general "never select the maximum tier" rule.
 - **Reviewer dispatch on either host:** use `model_axis=inherited` by default. For `effort_axis`: use `inherited` on hosts that expose an effort axis (such as Codex); use `not-applicable` on hosts that do not expose a meaningful effort axis (such as Claude Code). Omit `model` and, on Codex, `reasoning_effort` overrides entirely.
@@ -230,6 +231,8 @@ Effort axis: { selected:<value> | inherited | not-applicable | host-auto }
 Dispatch target: {host-specific subagent/role/tool target}
 Rationale: {short rationale grounded in phase scope}
 ```
+
+For Codex implementation/fix dispatches, the rationale must include the phase complexity class that drove the selected effort (for example, mechanical, normal multi-file, or broad/high-risk). If `Effort axis: inherited`, the rationale must also cite the allowed reason for using the parent-session ceiling instead of `selected:low|medium|high`.
 
 Examples:
 
@@ -563,10 +566,11 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
 
 2. Perform a pre-dispatch assertion against the host invocation parameters. The Phase Scope fields are audit/context fields; selected axes must also be represented in the actual host dispatch call.
    - Codex implementer/fix dispatch:
+     - Before building the `spawn_agent` argument map, classify the phase complexity and choose the lowest sufficient selected effort (`low`, `medium`, or `high`) when the matching effort-specific role is available.
      - Build the `spawn_agent` argument map before logging the dispatch. If `effort_axis=selected:low|medium|high`, the argument map MUST use the matching `agent_type`: `"oat-phase-implementer-low"`, `"oat-phase-implementer-medium"`, or `"oat-phase-implementer-high"`. Then derive the `OAT Dispatch:` block `Effort axis:` field from that same argument map.
      - Example selected low payload shape: `agent_type: "oat-phase-implementer-low"` and a Phase Scope message containing `effort_axis: selected:low`.
      - Immediately after spawning, compare the returned Codex status line with the selected effort before waiting on the agent. If the spawned status reports a different effort than the selected value (for example, the log says `effort_axis=selected:medium` but the spawn result reports `gpt-5.5 high`), treat this as an orchestration deviation. Stop, record the deviation in `implementation.md`, and redispatch with corrected parameters before continuing. Do not use work from the mismatched dispatch.
-     - If `effort_axis=inherited`, use base `agent_type: "oat-phase-implementer"` and omit `reasoning_effort`.
+     - If `effort_axis=inherited`, use base `agent_type: "oat-phase-implementer"` and omit `reasoning_effort`. This is the parent-session ceiling path, so the dispatch rationale MUST cite the explicit user/Dispatch Profile override, explain why `selected:high` is insufficient, or record that the selected-effort roles are unavailable or failed to resolve.
    - Claude Code implementer/fix dispatch:
      - If `model_axis=selected:<value>`, the Task tool call MUST include `model: "<value>"`.
      - If `model_axis=inherited`, omit `model`.
