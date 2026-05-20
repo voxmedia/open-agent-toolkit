@@ -27,12 +27,12 @@ oat_generated: false
 | Phase                                   | Status  | Tasks | Completed |
 | --------------------------------------- | ------- | ----- | --------- |
 | Phase 1: Schema & pure-logic foundation | pending | 6     | 0/6       |
-| Phase 2: oat-project-split skill        | pending | 6     | 0/6       |
+| Phase 2: oat-project-split skill        | pending | 7     | 0/7       |
 | Phase 3: Listings & dashboard filter    | pending | 3     | 0/3       |
 | Phase 4: Integration hooks              | pending | 4     | 0/4       |
 | Phase 5: Reconcile + dogfood + ship     | pending | 5     | 0/5       |
 
-**Total:** 0/24 tasks completed
+**Total:** 0/25 tasks completed
 **Parallel groups:** `[['p02', 'p03']]` (after p01 completes)
 
 ---
@@ -66,6 +66,36 @@ oat_generated: false
 **No fix tasks added** (artifact review — findings resolved as direct edits to `plan.md`).
 
 **Next:** Re-run `oat-project-review-provide artifact plan` to verify the edits, or proceed to `oat-project-implement` with the corrected plan.
+
+### Review Received: plan (artifact, re-review v2)
+
+**Date:** 2026-05-20
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-05-20-v2.md`
+**Review type:** `artifact` (invocation: `manual`)
+**Review cycle:** 2 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 0
+- Minor: 0
+
+**Disposition map:**
+
+- `I1` — `p01-t06` scheduled CLI orchestration before its helpers and omitted command registration — `resolve_in_artifact` — **reshaped `p01-t06`** to ship only `evaluate-signals` + `validate-plan` (pure-logic-only deps); **added `p02-t07`** at end of Phase 2 to ship `oat project split run` after `write-parent`/`seed-children`/`finalize`/`resume` exist; both tasks now include `packages/cli/src/commands/project/index.ts` registration.
+- `I2` — State-validation tasks targeted files that don't own validation — `resolve_in_artifact` — **introduced `packages/cli/src/validation/project-state.ts`** as the dedicated cross-field validator (joins existing `validation/skills.ts`); `frontmatter.ts` now only recognizes new fields; `p01-t01`/`p01-t02` include an audit-then-wire step listing the lifecycle call sites (`commands/project/new/`, `commands/project/complete-state/`, the discovery-status-transition path).
+- `I3` — Stale `packages/cli/src/projects/list/` path in `p03-t03` — `resolve_in_artifact` — corrected to `packages/cli/src/commands/project/list.integration.test.ts`. (Same path correction applied to `p02-t06`'s integration test directory as a consistency carryover.)
+
+**Plan delta:**
+
+- Phase 1 stays at 6 tasks (p01-t06 reshaped, scope narrowed).
+- Phase 2 grew from 6 → 7 tasks (added `p02-t07` for `oat project split run`).
+- Total task count: 24 → 25.
+
+**No fix tasks added** (artifact review — findings resolved as direct edits to `plan.md`).
+
+**Next:** Re-run `oat-project-review-provide artifact plan` to verify the v2 edits, or proceed to `oat-project-implement` with the corrected plan.
 
 ---
 

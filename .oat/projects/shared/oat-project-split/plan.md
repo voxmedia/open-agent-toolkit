@@ -62,18 +62,24 @@ Pure TypeScript primitives, OAT template additions, and a thin CLI surface (`p01
 
 ### Task p01-t01: Add `oat_kind` + `decomposition` phase to OAT state schema
 
+**Where validation lives:** Cross-field state-validation rules introduced by this project live in a **new dedicated module** at `packages/cli/src/validation/project-state.ts` (alongside the existing `validation/skills.ts`). Field _recognition_ stays in `packages/cli/src/commands/shared/frontmatter.ts`. Lifecycle commands that mutate state (`commands/project/new/`, `commands/project/complete-state/`, and any others discovered during the audit step below) call the new validator at their write boundaries.
+
 **Files:**
 
 - Modify: `.oat/templates/state.md` (add `oat_kind` field, default `implementation`; document `decomposition` as valid `oat_phase` value)
-- Modify: `packages/cli/src/commands/shared/frontmatter.ts` (frontmatter parsing — recognize `oat_kind` and the `decomposition` phase value)
-- Modify: `packages/cli/src/commands/project/complete-state/state-utils.ts` (state-update helper — accept the new phase value and cross-validate against `oat_kind`)
+- Modify: `packages/cli/src/commands/shared/frontmatter.ts` (field recognition only — accept `oat_kind` and the `decomposition` phase value; no validation logic added here)
+- Create: `packages/cli/src/validation/project-state.ts` + `packages/cli/src/validation/project-state.test.ts` (the dedicated validator: `oat_kind` enum, `decomposition`-requires-coordination, defaults)
+- Modify: lifecycle commands identified during the audit step that scaffold or transition state (start the audit at `commands/project/new/` and `commands/project/complete-state/`; widen if other commands write state.md) to call the new validator at their write boundaries.
 
-**Step 1: Write test (RED)**
+**Step 1: Audit + write tests (RED)**
+
+First, audit the lifecycle commands under `packages/cli/src/commands/project/` that read or write `state.md` frontmatter. Identify the call sites that must invoke `validation/project-state.ts`. Document the audit list in the commit message.
+
+Then write tests in the new validator module:
 
 ```typescript
-// packages/cli/src/commands/shared/frontmatter.test.ts
-//   + packages/cli/src/commands/project/complete-state/state-utils.test.ts
-describe('state frontmatter — coordination additions', () => {
+// packages/cli/src/validation/project-state.test.ts
+describe('validateProjectState — coordination additions', () => {
   it('accepts oat_kind: coordination on a project state', () => {
     /* … */
   });
@@ -89,14 +95,16 @@ describe('state frontmatter — coordination additions', () => {
 });
 ```
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/frontmatter.test.ts src/commands/project/complete-state/state-utils.test.ts`
+Also write call-site tests in each lifecycle command's test file that confirm the new validator is invoked at the write boundary (e.g., a `commands/project/new/scaffold.test.ts` assertion that an `oat_kind: coordination` scaffold round-trips through the validator).
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/ src/commands/project/`
 Expected: Tests fail (RED).
 
-**Step 2: Implement (GREEN)** — Add `oat_kind` recognition (`"coordination" | "implementation"`, default `"implementation"`) to the frontmatter parser; extend the accepted `oat_phase` values to include `"decomposition"`; add cross-field validation in the state-utils helper that `decomposition` requires `oat_kind == "coordination"`.
+**Step 2: Implement (GREEN)** — Add `oat_kind` recognition to `frontmatter.ts` (no validation logic — just field shape). Implement `validation/project-state.ts` with the cross-field rules. Wire it into the audit-identified lifecycle commands.
 
 Run the same vitest command. Expected: GREEN.
 
-**Step 3: Refactor** — Move the cross-field validator into a single helper if duplicated.
+**Step 3: Refactor** — Keep the validator as the single source of truth; callers stay thin.
 
 **Step 4: Verify**
 
@@ -106,26 +114,34 @@ Expected: No errors.
 **Step 5: Commit**
 
 ```bash
-git add .oat/templates/state.md packages/cli/src/commands/shared/frontmatter.ts packages/cli/src/commands/shared/frontmatter.test.ts packages/cli/src/commands/project/complete-state/state-utils.ts packages/cli/src/commands/project/complete-state/state-utils.test.ts
-git commit -m "feat(p01-t01): add oat_kind and decomposition phase to OAT state frontmatter"
+git add .oat/templates/state.md \
+  packages/cli/src/commands/shared/frontmatter.ts packages/cli/src/commands/shared/frontmatter.test.ts \
+  packages/cli/src/validation/project-state.ts packages/cli/src/validation/project-state.test.ts \
+  packages/cli/src/commands/project/  # lifecycle call sites identified during the audit
+git commit -m "feat(p01-t01): add oat_kind + decomposition validation in validation/project-state.ts"
 ```
 
 ---
 
 ### Task p01-t02: Add parent/sibling/depends-on + inherited-revalidated fields
 
+**Where validation lives:** Linkage rules and the inherited-context revalidation gate are added to **`packages/cli/src/validation/project-state.ts`** (the module introduced in `p01-t01`). Field recognition stays in `frontmatter.ts`. The revalidation gate is enforced by whichever lifecycle command/path transitions a discovery's `oat_status` to `complete` — the implementer audits and wires it at that real call site (Step 1 below).
+
 **Files:**
 
 - Modify: `.oat/templates/state.md` (add `oat_parent`, `oat_siblings`, `oat_depends_on`, `oat_children` — all optional in the template)
-- Modify: `packages/cli/src/commands/shared/frontmatter.ts` (frontmatter parsing — recognize the new optional fields, including `oat_inherited_context_revalidated`)
-- Modify: `packages/cli/src/commands/project/complete-state/state-utils.ts` (validation: parent must exist with `oat_kind: coordination`; siblings DAG; reject `oat_status: complete` on a child discovery while `oat_inherited_context_revalidated == false`)
+- Modify: `packages/cli/src/commands/shared/frontmatter.ts` (recognize the new optional fields, including `oat_inherited_context_revalidated`; no validation logic added here)
+- Modify: `packages/cli/src/validation/project-state.ts` + tests (add linkage rules: parent must exist with `oat_kind: coordination`; sibling DAG; reject `oat_status: complete` on a child discovery while `oat_inherited_context_revalidated == false`)
+- Modify: the lifecycle command/path that transitions discovery's `oat_status` to `complete` — audited at Step 1 — to call the new validator before allowing the transition.
 
-**NOT** modified: `.oat/templates/discovery.md` — the `oat_inherited_context_revalidated` flag is **not** added to the shared discovery template. It is written **only by the split child seeder** (`p02-t03`) onto split-created child discoveries. The TS validation activates only when the field is present (i.e., when `oat_parent` is set), keeping ordinary single-project discovery untouched.
+**NOT** modified: `.oat/templates/discovery.md` — the `oat_inherited_context_revalidated` flag is **not** added to the shared discovery template. It is written **only by the split child seeder** (`p02-t03`) onto split-created child discoveries. The validator activates only when the field is present (i.e., when `oat_parent` is set), keeping ordinary single-project discovery untouched.
 
-**Step 1: Write test (RED)**
+**Step 1: Audit + write tests (RED)**
+
+Audit: find the lifecycle code path(s) that mutate `oat_status` on a `discovery.md`. Candidate call sites to start the audit: `commands/project/complete-state/`, plus any helper invoked by the discovery → next-phase transition. Document the audit list in the commit message.
 
 ```typescript
-// packages/cli/src/commands/project/complete-state/state-utils.test.ts (additions)
+// packages/cli/src/validation/project-state.test.ts (additions)
 describe('child linkage validation', () => {
   it('rejects oat_parent pointing to a non-coordination project', () => {
     /* … */
@@ -145,11 +161,13 @@ describe('child linkage validation', () => {
 });
 ```
 
+Also write call-site tests at the audited discovery-completion transition path that confirm the validator is invoked.
+
 Expected: RED.
 
-**Step 2: Implement (GREEN)** — Add the new optional fields to `.oat/templates/state.md` and to the frontmatter parser; add the linkage and revalidation validation rules to state-utils per Data Models in `design.md`. **Do not modify `.oat/templates/discovery.md`.**
+**Step 2: Implement (GREEN)** — Add the new optional fields to `.oat/templates/state.md` and to the frontmatter parser; add the linkage and revalidation rules to `validation/project-state.ts` per Data Models in `design.md`. Wire the discovery-completion call site to invoke the validator. **Do not modify `.oat/templates/discovery.md`.**
 
-**Step 3 / 4 / 5:** Refactor as needed; `pnpm lint && pnpm type-check`; commit as `feat(p01-t02): add parent/sibling/depends-on + inherited-revalidated fields`.
+**Step 3 / 4 / 5:** Refactor as needed; `pnpm lint && pnpm type-check`; commit as `feat(p01-t02): add parent/sibling/depends-on + inherited-revalidated validation`.
 
 ---
 
@@ -300,23 +318,24 @@ Expected: RED.
 
 ---
 
-### Task p01-t06: Expose split primitives via `oat project split` CLI subcommands
+### Task p01-t06: Expose `evaluate-signals` + `validate-plan` via `oat project split` CLI subcommands
+
+**Scope:** This task ships **only** the two pure-logic-backed subcommands (`evaluate-signals`, `validate-plan`). The orchestration subcommand `oat project split run` lives in `p02-t07`, after the orchestration helpers (`write-parent.ts`, `seed-children.ts`, `finalize.ts`, `resume.ts`) exist in Phase 2. Splitting the CLI surface this way preserves Phase 1's role as the unblocker for both `p02` and `p03`.
 
 **Files:**
 
-- Create: `packages/cli/src/commands/project/split/index.ts` (top-level subcommand wiring)
+- Create: `packages/cli/src/commands/project/split/index.ts` (subcommand router wiring `evaluate-signals` + `validate-plan`)
 - Create: `packages/cli/src/commands/project/split/evaluate-signals.ts`
 - Create: `packages/cli/src/commands/project/split/validate-plan.ts`
-- Create: `packages/cli/src/commands/project/split/run.ts` (orchestrates the end-to-end split given a `ChildPlan`)
-- Create: `packages/cli/src/commands/project/split/__tests__/{index,evaluate-signals,validate-plan,run}.test.ts`
-
-These are thin adapters that expose the Phase 1 pure-logic modules (`signals.ts`, `child-plan.ts`, `validation.ts`) as CLI subcommands. The `oat-project-split` skill (Phase 2) and the integration hooks in `oat-project-discover` / `oat-brainstorm` (Phase 4) invoke these subcommands rather than calling TS directly — Markdown skills run in the LLM context and can only call CLI surfaces.
+- Create: `packages/cli/src/commands/project/split/__tests__/{index,evaluate-signals,validate-plan}.test.ts`
+- **Modify:** `packages/cli/src/commands/project/index.ts` — register `split` alongside the existing project subcommands (`archive`, `complete-state`, `list`, `new`, `open`, `pause`, `set-mode`, `status`, `validate-plan`).
 
 **Subcommand contract:**
 
-- `oat project split evaluate-signals --fired <comma-list>` → emits JSON `{ fired, triggered, confidence }`. Used by `oat-project-discover`'s mid-stream and convergence hooks.
-- `oat project split validate-plan --plan-file <path>` → emits JSON validation result (or non-zero exit on failure). Used at the pre-write checkpoint.
-- `oat project split run --plan-file <path> [--non-interactive]` → executes the full split flow (parent write, child seed, parent completion, active-child selection, dashboard refresh). Used by the split skill itself.
+- `oat project split evaluate-signals --fired <comma-list>` → emits JSON `{ fired, triggered, confidence }`. Adapter over `signals.ts` (`p01-t03`). Used by `oat-project-discover`'s mid-stream and convergence hooks.
+- `oat project split validate-plan --plan-file <path>` → emits JSON validation result (or non-zero exit on failure). Adapter over `child-plan.ts` (`p01-t04`) + `validation.ts` (`p01-t05`). Used at the pre-write checkpoint.
+
+Both depend **only on Phase 1 pure-logic modules** — no Phase 2 helpers are referenced, so Phase 1 can go green independently of Phase 2.
 
 **Step 1: Write test (RED)**
 
@@ -341,12 +360,9 @@ describe('oat project split validate-plan', () => {
   });
 });
 
-// packages/cli/src/commands/project/split/__tests__/run.test.ts
-describe('oat project split run', () => {
-  it('produces parent + N children + activates initial child for a valid plan', () => {
-    /* … */
-  });
-  it('fails fast in --non-interactive mode when payload origin is detected', () => {
+// packages/cli/src/commands/project/split/__tests__/index.test.ts
+describe('oat project split (subcommand router)', () => {
+  it('registers under `oat project split` and lists the two ready subcommands', () => {
     /* … */
   });
 });
@@ -355,9 +371,9 @@ describe('oat project split run', () => {
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/split/`
 Expected: RED.
 
-**Step 2: Implement (GREEN)** — Wire the subcommand handlers as thin adapters over `signals.ts`, `child-plan.ts`, `validation.ts`, `write-parent.ts`, `seed-children.ts`, `finalize.ts`, and `resume.ts`. JSON output for `evaluate-signals` and `validate-plan` is the stable contract Markdown skills consume.
+**Step 2: Implement (GREEN)** — Implement the two subcommand handlers as thin adapters over `signals.ts`, `child-plan.ts`, `validation.ts`. Register `split` in `packages/cli/src/commands/project/index.ts`. The `run` subcommand is intentionally **not** wired here — it lands in `p02-t07`.
 
-**Step 3 / 4 / 5:** Refactor; `pnpm lint && pnpm type-check`; commit as `feat(p01-t06): expose split primitives via oat project split CLI subcommands`.
+**Step 3 / 4 / 5:** Refactor; `pnpm lint && pnpm type-check`; commit as `feat(p01-t06): add oat project split CLI surface for evaluate-signals and validate-plan`.
 
 ---
 
@@ -486,7 +502,7 @@ Expected: RED.
 
 **Files:**
 
-- Create: `packages/cli/src/projects/split/__tests__/integration/*.test.ts`
+- Create: `packages/cli/src/commands/project/split/__tests__/integration/*.test.ts`
 
 **Step 1: Write tests (RED)** — Mirror the Integration Tests Key Test Cases in `design.md`:
 
@@ -505,6 +521,49 @@ Expected: RED for any case not already passing from the unit-level tests.
 **Step 2: Implement (GREEN)** — Wire up any missing skill-level glue so the end-to-end cases pass.
 
 **Step 3 / 4 / 5:** `pnpm lint && pnpm type-check`; commit as `test(p02-t06): integration suite for oat-project-split`.
+
+---
+
+### Task p02-t07: Add `oat project split run` subcommand (orchestrated end-to-end split)
+
+**Why this is in Phase 2, not Phase 1:** `run` wires over the orchestration helpers `write-parent.ts` (`p02-t02`), `seed-children.ts` (`p02-t03`), `finalize.ts` (`p02-t04`), and `resume.ts` (`p02-t05`). It cannot exist before those — which is why `p01-t06` deliberately ships only `evaluate-signals` + `validate-plan`, keeping Phase 1 independent of Phase 2.
+
+**Files:**
+
+- Create: `packages/cli/src/commands/project/split/run.ts`
+- Create: `packages/cli/src/commands/project/split/__tests__/run.test.ts`
+- Modify: `packages/cli/src/commands/project/split/index.ts` — register the third subcommand alongside the existing `evaluate-signals` + `validate-plan` from `p01-t06`.
+
+**Subcommand contract:**
+
+- `oat project split run --plan-file <path> [--non-interactive]` → executes the full split flow (validate `ChildPlan`, write coordination parent, scaffold + seed children, finalize parent terminal state, activate initial child, refresh dashboard). On `--non-interactive`: a declared payload proceeds; a detected payload writes the `## Detected Split Recommendation` section to the active discovery and exits non-zero.
+
+**Step 1: Write test (RED)**
+
+```typescript
+// packages/cli/src/commands/project/split/__tests__/run.test.ts
+describe('oat project split run', () => {
+  it('produces parent + N children + activates initial child for a valid plan', () => {
+    /* … */
+  });
+  it('asserts the coordination-parent file invariant (no spec/design/plan/implementation)', () => {
+    /* … */
+  });
+  it('fails fast in --non-interactive mode when payload origin is detected-*', () => {
+    /* … */
+  });
+  it('resumes a partial prior run when the parent exists but children are incomplete', () => {
+    /* … */
+  });
+});
+```
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/split/__tests__/run.test.ts`
+Expected: RED.
+
+**Step 2: Implement (GREEN)** — Wire `run.ts` as a thin orchestrator that calls `write-parent.ts`, `seed-children.ts`, `finalize.ts`, and (when partial state is detected) `resume.ts`. The skill SKILL.md from `p02-t01`–`p02-t05` invokes this subcommand as its single entry point for executing a confirmed `ChildPlan`.
+
+**Step 3 / 4 / 5:** Refactor; `pnpm lint && pnpm type-check`; commit as `feat(p02-t07): add oat project split run subcommand orchestrating the end-to-end split`.
 
 ---
 
@@ -568,7 +627,7 @@ Verification: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/command
 
 **Files:**
 
-- Create: `packages/cli/src/projects/list/__tests__/integration.test.ts`
+- Create: `packages/cli/src/commands/project/list.integration.test.ts`
 
 **Step 1: Write test (RED)** — Fixture repo with a synthetic coordination parent + children; run `oat project list` and `oat state refresh`; assert (a) default `list` output omits the parent, (b) `--include-coordination` includes it, (c) the regenerated `.oat/state.md` contains a `## Decompositions` section listing the parent.
 
@@ -760,16 +819,16 @@ Sequential, final phase. Dogfood scenarios validate the lived experience; `bl-3a
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                      |
-| ------ | -------- | -------- | ---------- | --------------------------------------------- |
-| p01    | code     | pending  | -          | -                                             |
-| p02    | code     | pending  | -          | -                                             |
-| p03    | code     | pending  | -          | -                                             |
-| p04    | code     | pending  | -          | -                                             |
-| p05    | code     | pending  | -          | -                                             |
-| final  | code     | pending  | -          | -                                             |
-| plan   | artifact | received | 2026-05-20 | reviews/artifact-plan-review-2026-05-20-v2.md |
-| design | artifact | pending  | -          | -                                             |
+| Scope  | Type     | Status          | Date       | Artifact                                               |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------ |
+| p01    | code     | pending         | -          | -                                                      |
+| p02    | code     | pending         | -          | -                                                      |
+| p03    | code     | pending         | -          | -                                                      |
+| p04    | code     | pending         | -          | -                                                      |
+| p05    | code     | pending         | -          | -                                                      |
+| final  | code     | pending         | -          | -                                                      |
+| plan   | artifact | fixes_completed | 2026-05-20 | reviews/archived/artifact-plan-review-2026-05-20-v2.md |
+| design | artifact | pending         | -          | -                                                      |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -780,12 +839,12 @@ Sequential, final phase. Dogfood scenarios validate the lived experience; `bl-3a
 **Summary:**
 
 - Phase 1: 6 tasks — schema additions, pure-logic foundation (signal evaluator, ChildPlan normalization, DAG/collision validation), and CLI exposure via `oat project split`
-- Phase 2: 6 tasks — `oat-project-split` skill end-to-end (parent writer, child seeder, completion+activation, resume, integration suite)
+- Phase 2: 7 tasks — `oat-project-split` skill end-to-end (parent writer, child seeder, completion+activation, resume, integration suite, and `oat project split run` CLI orchestration)
 - Phase 3: 3 tasks — `oat project list` filter and dashboard `## Decompositions` section
 - Phase 4: 4 tasks — detection hook in discover, declared-mode + picker option in brainstorm, skill-simulation tests
 - Phase 5: 5 tasks — `bl-3a4a` reconciliation, three dogfood scenarios, SKILL + lockstep version bumps
 
-**Total: 24 tasks**
+**Total: 25 tasks**
 
 Ready for code review and merge.
 
