@@ -42,8 +42,8 @@ oat_template: false
 
 **Reasoning.** After p01 lands the pure-logic foundation, p02 (the split skill) and p03 (listings/dashboard filter) have **disjoint write boundaries** and independent verification:
 
-- p02 writes only inside `.agents/skills/oat-project-split/` (new files) and possibly small adapters in `packages/cli/src/projects/split/` (new files).
-- p03 writes inside `packages/cli/src/projects/list/` and `packages/cli/src/state/dashboard/` (existing files; modifications).
+- p02 writes only inside `.agents/skills/oat-project-split/` (new files) and the split-skill helper modules under `packages/cli/src/commands/project/split/` (new files; created in `p01-t06`).
+- p03 writes inside `packages/cli/src/commands/project/list.ts` and `packages/cli/src/commands/state/generate.ts` (existing files; modifications).
 
 p02's tests are skill + integration fixtures; p03's tests are CLI unit tests. Neither phase depends on the other's output for verification.
 
@@ -58,7 +58,7 @@ p02's tests are skill + integration fixtures; p03's tests are CLI unit tests. Ne
 
 ## Phase 1: Schema & pure-logic foundation
 
-Pure TypeScript primitives and OAT template additions. No skill changes yet. All five tasks unblock both p02 and p03.
+Pure TypeScript primitives, OAT template additions, and a thin CLI surface (`p01-t06`) so the Phase 2 skill and Phase 4 hooks can invoke the primitives. No skill prose changes in this phase. All six tasks unblock both p02 and p03.
 
 ### Task p01-t01: Add `oat_kind` + `decomposition` phase to OAT state schema
 
