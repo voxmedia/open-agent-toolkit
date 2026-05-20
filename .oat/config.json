@@ -32,9 +32,9 @@
     ".oat/**/analysis",
     ".oat/**/pr",
     ".oat/**/reviews/archived",
-    ".oat/repo/reviews",
     ".oat/brainstorm",
-    ".oat/ideas"
+    ".oat/ideas",
+    ".oat/repo/reviews"
   ],
   "workflow": {
     "archiveOnComplete": true,
