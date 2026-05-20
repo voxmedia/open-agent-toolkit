@@ -760,16 +760,16 @@ Sequential, final phase. Dogfood scenarios validate the lived experience; `bl-3a
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                            |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                   |
-| p02    | code     | pending         | -          | -                                                   |
-| p03    | code     | pending         | -          | -                                                   |
-| p04    | code     | pending         | -          | -                                                   |
-| p05    | code     | pending         | -          | -                                                   |
-| final  | code     | pending         | -          | -                                                   |
-| plan   | artifact | fixes_completed | 2026-05-20 | reviews/archived/artifact-plan-review-2026-05-20.md |
-| design | artifact | pending         | -          | -                                                   |
+| Scope  | Type     | Status   | Date       | Artifact                                      |
+| ------ | -------- | -------- | ---------- | --------------------------------------------- |
+| p01    | code     | pending  | -          | -                                             |
+| p02    | code     | pending  | -          | -                                             |
+| p03    | code     | pending  | -          | -                                             |
+| p04    | code     | pending  | -          | -                                             |
+| p05    | code     | pending  | -          | -                                             |
+| final  | code     | pending  | -          | -                                             |
+| plan   | artifact | received | 2026-05-20 | reviews/artifact-plan-review-2026-05-20-v2.md |
+| design | artifact | pending  | -          | -                                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
