@@ -26,14 +26,46 @@ oat_generated: false
 
 | Phase                                   | Status  | Tasks | Completed |
 | --------------------------------------- | ------- | ----- | --------- |
-| Phase 1: Schema & pure-logic foundation | pending | 5     | 0/5       |
+| Phase 1: Schema & pure-logic foundation | pending | 6     | 0/6       |
 | Phase 2: oat-project-split skill        | pending | 6     | 0/6       |
 | Phase 3: Listings & dashboard filter    | pending | 3     | 0/3       |
 | Phase 4: Integration hooks              | pending | 4     | 0/4       |
 | Phase 5: Reconcile + dogfood + ship     | pending | 5     | 0/5       |
 
-**Total:** 0/23 tasks completed
+**Total:** 0/24 tasks completed
 **Parallel groups:** `[['p02', 'p03']]` (after p01 completes)
+
+---
+
+## Reviews Received
+
+### Review Received: plan (artifact)
+
+**Date:** 2026-05-20
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-05-20.md`
+**Review type:** `artifact` (invocation: `manual`)
+
+**Findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 0
+- Minor: 0
+
+**Disposition map:**
+
+- `I1` — Missing production invocation path for split helpers — `resolve_in_artifact` — added new task **`p01-t06`** (CLI subcommands `oat project split evaluate-signals / validate-plan / run`); updated `p02-t02`–`p02-t05` to orchestrate via the CLI; updated `p04-t01` to call `pnpm run cli -- project split evaluate-signals`.
+- `I2` — Speculative / wrong file paths — `resolve_in_artifact` — corrected paths in `p01-t01` (frontmatter + state-utils, not `state/schema.ts`), `p01-t02`, `p03-t01` (`commands/project/list.ts`), `p03-t02` (`commands/state/generate.ts`), plus their verification commands.
+- `I3` — Revalidation flag leaks into global discovery template — `resolve_in_artifact` — removed `.oat/templates/discovery.md` modification from `p01-t02`; made `p02-t03` explicit that the seeded child discovery is written from scratch (not copied from the template), with `oat_inherited_context_revalidated: false` written by the seeder only.
+
+**Plan delta:**
+
+- Phase 1 grew from 5 → 6 tasks (added `p01-t06`).
+- Total task count: 23 → 24.
+
+**No fix tasks added** (artifact review — findings resolved as direct edits to `plan.md`).
+
+**Next:** Re-run `oat-project-review-provide artifact plan` to verify the edits, or proceed to `oat-project-implement` with the corrected plan.
 
 ---
 
