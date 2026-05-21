@@ -341,6 +341,68 @@ describe('oat project split run', () => {
     ).resolves.toBe(true);
   });
 
+  it('converts the active detected discovery project into the coordination parent', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const parentRoot = join(repoRoot, '.oat', 'projects', 'shared', 'umbrella');
+    await mkdir(parentRoot, { recursive: true });
+    await writeFile(
+      join(parentRoot, 'state.md'),
+      [
+        '---',
+        'oat_phase: discovery',
+        'oat_phase_status: in_progress',
+        'oat_workflow_mode: quick',
+        '---',
+        '',
+        '# Project State: umbrella',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(parentRoot, 'discovery.md'),
+      '# Discovery: umbrella\n\nExisting detected discovery context.\n',
+      'utf8',
+    );
+    await writeFile(join(parentRoot, 'plan.md'), '# Plan\n', 'utf8');
+    await writeFile(
+      join(parentRoot, 'implementation.md'),
+      '# Implementation\n',
+      'utf8',
+    );
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/umbrella' })}\n`,
+      'utf8',
+    );
+    const planFile = await writePlanFile(
+      repoRoot,
+      document({ origin: 'detected-mid-stream', interactive: true }),
+    );
+    const { command } = createHarness(repoRoot);
+
+    await runCommand(command, ['--plan-file', planFile]);
+
+    expect(process.exitCode).toBe(0);
+    const parentState = await readFile(join(parentRoot, 'state.md'), 'utf8');
+    expect(parentState).toContain('oat_kind: coordination');
+    expect(parentState).toContain('oat_phase: decomposition');
+    expect(parentState).toContain('oat_phase_status: complete');
+    await expect(exists(join(parentRoot, 'plan.md'))).resolves.toBe(false);
+    await expect(exists(join(parentRoot, 'implementation.md'))).resolves.toBe(
+      false,
+    );
+    await expect(
+      exists(join(repoRoot, '.oat', 'projects', 'shared', 'foundation')),
+    ).resolves.toBe(true);
+    const localConfig = JSON.parse(
+      await readFile(join(repoRoot, '.oat', 'config.local.json'), 'utf8'),
+    ) as { activeProject: string };
+    expect(localConfig.activeProject).toBe('.oat/projects/shared/foundation');
+  });
+
   it('rejects invalid origins before writing projects', async () => {
     const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
     tempDirs.push(repoRoot);

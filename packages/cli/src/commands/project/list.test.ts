@@ -218,7 +218,18 @@ describe('oat project list', () => {
   it('shows coordination parents when --include-coordination is passed', async () => {
     const { command, capture } = createHarness({
       cwd: '/repo',
-      projects: [projectSummary('coordination-parent')],
+      projects: [
+        {
+          ...projectSummary('coordination-parent'),
+          phase: 'decomposition',
+          phaseStatus: 'complete',
+          recommendation: {
+            skill: 'none',
+            reason:
+              'Coordination decomposition is complete; continue one of the child implementation projects',
+          },
+        },
+      ],
       projectMetadata: {
         'coordination-parent': {
           kind: 'coordination',
@@ -230,7 +241,10 @@ describe('oat project list', () => {
 
     await runCommand(command, ['--include-coordination']);
 
-    expect(capture.info.join('\n')).toContain('coordination-parent');
+    const output = capture.info.join('\n');
+    expect(output).toContain('coordination-parent');
+    expect(output).toContain('decomposition (complete)');
+    expect(output).toContain('none');
     expect(process.exitCode).toBe(0);
   });
 

@@ -198,6 +198,34 @@ describe('oat project status', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('prints completed decomposition coordination status as inert', async () => {
+    const projectPath = '.oat/projects/shared/platform-split';
+    const projectState = makeProjectState(projectPath);
+    projectState.name = 'platform-split';
+    projectState.phase = 'decomposition';
+    projectState.phaseStatus = 'complete';
+    projectState.recommendation = {
+      skill: 'none',
+      reason:
+        'Coordination decomposition is complete; continue one of the child implementation projects',
+    };
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      activeProjectPath: projectPath,
+      projectState,
+    });
+
+    await runCommand(command, []);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('Phase: decomposition (complete)');
+    expect(output).toContain('Recommendation: none');
+    expect(output).toContain(
+      'continue one of the child implementation projects',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
   it('reports unset status when no active project is configured', async () => {
     const { command, capture, getProjectState } = createHarness({
       cwd: '/repo',

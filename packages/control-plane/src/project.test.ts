@@ -199,6 +199,51 @@ oat_template: false
       lifecycle: 'active',
     });
   });
+
+  it('preserves completed decomposition coordination parents in state and summaries', async () => {
+    const repoRoot = await createDir('oat-control-plane-coordination-');
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const projectDir = join(projectsRoot, 'platform-split');
+
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await Promise.all([
+      mkdir(projectsRoot, { recursive: true }),
+      writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        `${JSON.stringify({ version: 1 })}\n`,
+        'utf8',
+      ),
+    ]);
+    await createProject(
+      projectsRoot,
+      'platform-split',
+      'decomposition',
+      'complete',
+    );
+
+    const projectState = await getProjectState(projectDir);
+    expect(projectState).toMatchObject({
+      name: 'platform-split',
+      phase: 'decomposition',
+      phaseStatus: 'complete',
+      recommendation: {
+        skill: 'none',
+        reason:
+          'Coordination decomposition is complete; continue one of the child implementation projects',
+      },
+    });
+
+    const projects = await listProjects(projectsRoot);
+    expect(projects).toHaveLength(1);
+    expect(projects[0]).toMatchObject({
+      name: 'platform-split',
+      phase: 'decomposition',
+      phaseStatus: 'complete',
+      recommendation: {
+        skill: 'none',
+      },
+    });
+  });
 });
 
 async function createProject(

@@ -1,5 +1,5 @@
 import { appendFile, readFile, readdir, stat } from 'node:fs/promises';
-import { isAbsolute, join } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
 
 import {
   buildCommandContext,
@@ -160,6 +160,75 @@ function formatResumePreview(partial: PartialSplit): string[] {
   ];
 }
 
+function isDetectedOrigin(document: SplitPlanDocument): boolean {
+  return (
+    document.origin === 'detected-mid-stream' ||
+    document.origin === 'detected-convergence'
+  );
+}
+
+function normalizeProjectPath(path: string): string {
+  return path.split('\\').join('/');
+}
+
+function toRepoRelativeProjectPath(
+  repoRoot: string,
+  projectPath: string,
+): string {
+  const absoluteProjectPath = isAbsolute(projectPath)
+    ? projectPath
+    : join(repoRoot, projectPath);
+  return normalizeProjectPath(relative(repoRoot, absoluteProjectPath));
+}
+
+async function isActiveDetectedParentProject(
+  repoRoot: string,
+  parentPath: string,
+  document: SplitPlanDocument,
+): Promise<boolean> {
+  if (!isDetectedOrigin(document)) {
+    return false;
+  }
+
+  const localConfig = await readOatLocalConfig(repoRoot);
+  if (!localConfig.activeProject) {
+    return false;
+  }
+
+  return (
+    toRepoRelativeProjectPath(repoRoot, localConfig.activeProject) ===
+    toRepoRelativeProjectPath(repoRoot, parentPath)
+  );
+}
+
+async function runFreshSplit(
+  document: SplitPlanDocument,
+  repoRoot: string,
+  projectsRoot: string,
+  dependencies: Pick<RunSplitDependencies, 'readdir'>,
+  options: { allowExistingParent?: boolean } = {},
+): Promise<void> {
+  const slugs = await existingProjectSlugs(
+    repoRoot,
+    projectsRoot,
+    dependencies,
+  );
+  if (options.allowExistingParent) {
+    slugs.delete(document.plan.parentSlug);
+  }
+  const validation = validateChildPlan(document.plan, slugs);
+  if (!validation.ok) {
+    throw new Error(
+      `Split plan validation failed: ${validation.errors
+        .map((error) => error.message)
+        .join('; ')}`,
+    );
+  }
+  await writeCoordinationParent(document, { repoRoot, projectsRoot });
+  await seedChildren(document.plan, { repoRoot, projectsRoot });
+  await finalizeSplit(document.plan, { repoRoot, projectsRoot });
+}
+
 export function createProjectSplitRunCommand(
   overrides: Partial<RunSplitDependencies> = {},
 ): Command {
@@ -223,10 +292,51 @@ export function createProjectSplitRunCommand(
           ? parentPath
           : join(repoRoot, parentPath);
         if (await exists(absoluteParentPath, dependencies)) {
-          const partial = await detectPartialSplit(parentPath, {
-            repoRoot,
-            projectsRoot,
-          });
+          let partial: PartialSplit | null = null;
+          let convertActiveDetectedParent = false;
+          try {
+            partial = await detectPartialSplit(parentPath, {
+              repoRoot,
+              projectsRoot,
+            });
+          } catch (error) {
+            if (
+              error instanceof SplitResumeError &&
+              error.message === 'Split resume requires a coordination parent' &&
+              (await isActiveDetectedParentProject(
+                repoRoot,
+                parentPath,
+                document,
+              ))
+            ) {
+              convertActiveDetectedParent = true;
+            } else {
+              throw error;
+            }
+          }
+
+          if (convertActiveDetectedParent) {
+            await runFreshSplit(
+              document,
+              repoRoot,
+              projectsRoot,
+              dependencies,
+              {
+                allowExistingParent: true,
+              },
+            );
+            await dependencies.refreshDashboard({ repoRoot });
+            context.logger.info('Split completed.');
+            process.exitCode = 0;
+            return;
+          }
+
+          if (!partial) {
+            throw new SplitResumeError(
+              'Cannot resume split without recovered partial state.',
+            );
+          }
+
           for (const line of formatResumePreview(partial)) {
             context.logger.info(line);
           }
@@ -251,22 +361,7 @@ export function createProjectSplitRunCommand(
           }
           await continueSplitResume(partial, { repoRoot, projectsRoot });
         } else {
-          const slugs = await existingProjectSlugs(
-            repoRoot,
-            projectsRoot,
-            dependencies,
-          );
-          const validation = validateChildPlan(document.plan, slugs);
-          if (!validation.ok) {
-            throw new Error(
-              `Split plan validation failed: ${validation.errors
-                .map((error) => error.message)
-                .join('; ')}`,
-            );
-          }
-          await writeCoordinationParent(document, { repoRoot, projectsRoot });
-          await seedChildren(document.plan, { repoRoot, projectsRoot });
-          await finalizeSplit(document.plan, { repoRoot, projectsRoot });
+          await runFreshSplit(document, repoRoot, projectsRoot, dependencies);
         }
 
         await dependencies.refreshDashboard({ repoRoot });

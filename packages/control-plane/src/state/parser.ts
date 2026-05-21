@@ -11,7 +11,14 @@ import type {
   WorkflowMode,
 } from '../types';
 
-const PHASES = ['discovery', 'spec', 'design', 'plan', 'implement'] as const;
+const PHASES = [
+  'discovery',
+  'spec',
+  'design',
+  'plan',
+  'implement',
+  'decomposition',
+] as const;
 const PHASE_STATUSES = ['in_progress', 'complete', 'pr_open'] as const;
 const EXECUTION_MODES = ['single-thread', 'subagent-driven'] as const;
 const WORKFLOW_MODES = ['spec-driven', 'quick', 'import'] as const;

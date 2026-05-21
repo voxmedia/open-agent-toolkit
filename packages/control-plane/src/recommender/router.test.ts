@@ -154,6 +154,32 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-implement');
   });
 
+  it('returns an inert recommendation for completed decomposition coordination parents', () => {
+    const state = makeState({
+      phase: 'decomposition',
+      phaseStatus: 'complete',
+      workflowMode: 'quick',
+    });
+
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'none',
+      reason:
+        'Coordination decomposition is complete; continue one of the child implementation projects',
+    });
+  });
+
+  it('routes in-progress decomposition coordination parents back to split', () => {
+    const state = makeState({
+      phase: 'decomposition',
+      phaseStatus: 'in_progress',
+      workflowMode: 'quick',
+    });
+
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'oat-project-split',
+    });
+  });
+
   it('applies the HiLL override before normal routing', () => {
     const state = makeState({
       phase: 'design',

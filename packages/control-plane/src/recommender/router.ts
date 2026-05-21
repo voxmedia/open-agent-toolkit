@@ -8,14 +8,20 @@ import type {
   WorkflowMode,
 } from '../types';
 
-const CURRENT_PHASE_SKILLS: Record<Exclude<Phase, 'implement'>, string> = {
+const CURRENT_PHASE_SKILLS: Record<
+  Exclude<Phase, 'implement' | 'decomposition'>,
+  string
+> = {
   discovery: 'oat-project-discover',
   spec: 'oat-project-spec',
   design: 'oat-project-design',
   plan: 'oat-project-plan',
 };
 
-const CURRENT_ARTIFACT_BY_PHASE: Record<Phase, ArtifactStatus['type']> = {
+const CURRENT_ARTIFACT_BY_PHASE: Record<
+  Exclude<Phase, 'decomposition'>,
+  ArtifactStatus['type']
+> = {
   discovery: 'discovery',
   spec: 'spec',
   design: 'design',
@@ -74,6 +80,10 @@ const IMPORT_ROUTES: Partial<Record<EarlyPhaseKey, string>> = {
 export function recommendSkill(
   state: Omit<ProjectState, 'recommendation'>,
 ): SkillRecommendation {
+  if (state.phase === 'decomposition') {
+    return getDecompositionRecommendation(state);
+  }
+
   const hillOverride = getHillOverride(state);
   if (hillOverride) {
     return hillOverride;
@@ -105,10 +115,27 @@ export function recommendSkill(
   };
 }
 
+function getDecompositionRecommendation(
+  state: Omit<ProjectState, 'recommendation'>,
+): SkillRecommendation {
+  if (state.phaseStatus === 'complete') {
+    return {
+      skill: 'none',
+      reason:
+        'Coordination decomposition is complete; continue one of the child implementation projects',
+    };
+  }
+
+  return {
+    skill: 'oat-project-split',
+    reason: 'Continue decomposing this coordination project',
+  };
+}
+
 function getHillOverride(
   state: Omit<ProjectState, 'recommendation'>,
 ): SkillRecommendation | null {
-  if (state.phase === 'implement') {
+  if (state.phase === 'implement' || state.phase === 'decomposition') {
     return null;
   }
 
@@ -223,8 +250,13 @@ function isProcessedReviewStatus(review: ReviewStatus): boolean {
 function getCurrentArtifact(
   state: Omit<ProjectState, 'recommendation'>,
 ): ArtifactStatus | undefined {
+  if (state.phase === 'decomposition') {
+    return undefined;
+  }
+  const phase = state.phase;
+
   return state.artifacts.find(
-    (artifact) => artifact.type === CURRENT_ARTIFACT_BY_PHASE[state.phase],
+    (artifact) => artifact.type === CURRENT_ARTIFACT_BY_PHASE[phase],
   );
 }
 
@@ -247,6 +279,9 @@ function getEarlyPhaseRoute(
 
   if (state.phase === 'implement') {
     return 'oat-project-implement';
+  }
+  if (state.phase === 'decomposition') {
+    return getDecompositionRecommendation(state).skill;
   }
 
   return CURRENT_PHASE_SKILLS[state.phase];

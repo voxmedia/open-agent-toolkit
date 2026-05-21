@@ -1,4 +1,10 @@
-export type Phase = 'discovery' | 'spec' | 'design' | 'plan' | 'implement';
+export type Phase =
+  | 'discovery'
+  | 'spec'
+  | 'design'
+  | 'plan'
+  | 'implement'
+  | 'decomposition';
 
 export type PhaseStatus = 'in_progress' | 'complete' | 'pr_open';
 

@@ -136,6 +136,23 @@ oat_workflow_mode: quick
     });
   });
 
+  it('preserves decomposition phase values for coordination parents', () => {
+    const content = `---
+oat_phase: decomposition
+oat_phase_status: complete
+oat_execution_mode: single-thread
+oat_workflow_mode: quick
+---
+`;
+
+    expect(parseStateFrontmatter(content)).toMatchObject({
+      phase: 'decomposition',
+      phaseStatus: 'complete',
+      executionMode: 'single-thread',
+      workflowMode: 'quick',
+    });
+  });
+
   it('treats template placeholders and malformed YAML as empty/default values', () => {
     const placeholderContent = `---
 oat_hill_checkpoints: { OAT_HILL_CHECKPOINTS }

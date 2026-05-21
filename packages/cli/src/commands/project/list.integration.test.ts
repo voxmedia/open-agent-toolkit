@@ -123,6 +123,8 @@ describe('oat project list coordination integration', () => {
     ]);
     expect(fullList.exitCode).toBe(0);
     expect(fullList.stdout).toContain('platform-split');
+    expect(fullList.stdout).toContain('decomposition (complete)');
+    expect(fullList.stdout).toContain('none');
 
     const refresh = await runCli(root, ['state', 'refresh']);
     expect(refresh.exitCode).toBe(0);
