@@ -17,10 +17,9 @@
   "sortPackageJson": {},
   "ignorePatterns": [
     "dist/",
+    "packages/cli/assets/**",
     "packages/cli/assets/templates/**/*.yml",
     ".oat/templates/**/*.yml",
     "packages/cli/src/commands/docs/migrate/fixtures/**",
-    "packages/cli/assets/skills/**/scripts/**",
-    "packages/cli/assets/docs/**",
   ],
 }

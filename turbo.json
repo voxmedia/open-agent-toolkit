@@ -16,10 +16,10 @@
       "outputs": ["dist/**", "assets/**"]
     },
     "check": {
-      "dependsOn": ["build"]
+      "dependsOn": ["^build"]
     },
     "check:fix": {
-      "dependsOn": ["build"]
+      "dependsOn": ["^build"]
     },
     "dev": {
       // Never cache dev server — always run fresh
@@ -33,16 +33,16 @@
       "outputs": []
     },
     "lint": {
-      "dependsOn": ["build"]
+      "dependsOn": ["^build"]
     },
     "lint:fix": {
-      "dependsOn": ["build"]
+      "dependsOn": ["^build"]
     },
     "format": {
-      "dependsOn": ["build"]
+      "dependsOn": ["^build"]
     },
     "format:fix": {
-      "dependsOn": ["build"]
+      "dependsOn": ["^build"]
     },
     "type-check": {
       "dependsOn": ["^build"]
