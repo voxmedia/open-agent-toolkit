@@ -7,6 +7,7 @@ import { createProjectNewCommand } from './new';
 import { createProjectOpenCommand } from './open';
 import { createProjectPauseCommand } from './pause';
 import { createProjectSetModeCommand } from './set-mode';
+import { createProjectSplitCommand } from './split';
 import { createProjectStatusCommand } from './status';
 import { createProjectValidatePlanCommand } from './validate-plan';
 
@@ -20,6 +21,7 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectOpenCommand())
     .addCommand(createProjectPauseCommand())
     .addCommand(createProjectSetModeCommand())
+    .addCommand(createProjectSplitCommand())
     .addCommand(createProjectStatusCommand())
     .addCommand(createProjectValidatePlanCommand());
 }
