@@ -241,7 +241,7 @@ Expected: GREEN.
 
 ---
 
-### Task p01-t04: `ChildPlan` normalization module + unit tests
+### Task p01-t04: `SplitPlanDocument` normalization module + unit tests
 
 **Files:**
 
@@ -251,14 +251,17 @@ Expected: GREEN.
 **Step 1: Write test (RED)**
 
 ```typescript
-describe('normalizeChildPlan', () => {
-  it('normalizes declared SplitPayload into a ChildPlan with foundationChild slug', () => {
+describe('buildSplitPlanDocument', () => {
+  it('normalizes declared SplitPayload into a SplitPlanDocument with foundationChild slug', () => {
     /* … */
   });
   it('normalizes detected-convergence SplitPayload (no declaredChildren) using priorDiscovery', () => {
     /* … */
   });
-  it('produces equivalent ChildPlan for all four origins given equivalent inputs', () => {
+  it('produces equivalent ChildPlan payloads for all four origins given equivalent inputs', () => {
+    /* … */
+  });
+  it('preserves origin and interactive metadata for command-level non-interactive handling', () => {
     /* … */
   });
   it('resolves initialActiveChild to foundationChild when present', () => {
@@ -272,9 +275,9 @@ describe('normalizeChildPlan', () => {
 
 Expected: RED.
 
-**Step 2: Implement (GREEN)** — Define `SplitPayload` and `ChildPlan` interfaces per design Component 1; implement `normalizeChildPlan(payload: SplitPayload): ChildPlan` with the three input-source branches collapsing to one output.
+**Step 2: Implement (GREEN)** — Define `SplitPayload`, `ChildPlan`, and `SplitPlanDocument` interfaces per design Component 1; implement `buildSplitPlanDocument(payload: SplitPayload): SplitPlanDocument` with the input-source branches collapsing to one normalized `ChildPlan` while preserving `origin` and `interactive` metadata. Expose a small `normalizeChildPlan` helper only if useful internally; the command boundary consumes the full `SplitPlanDocument`.
 
-**Step 3 / 4 / 5:** Refactor; `pnpm lint && pnpm type-check`; commit as `feat(p01-t04): add ChildPlan normalization for all SplitPayload origins`.
+**Step 3 / 4 / 5:** Refactor; `pnpm lint && pnpm type-check`; commit as `feat(p01-t04): add SplitPlanDocument normalization for all payload origins`.
 
 ---
 
@@ -333,7 +336,7 @@ Expected: RED.
 **Subcommand contract:**
 
 - `oat project split evaluate-signals --fired <comma-list>` → emits JSON `{ fired, triggered, confidence }`. Adapter over `signals.ts` (`p01-t03`). Used by `oat-project-discover`'s mid-stream and convergence hooks.
-- `oat project split validate-plan --plan-file <path>` → emits JSON validation result (or non-zero exit on failure). Adapter over `child-plan.ts` (`p01-t04`) + `validation.ts` (`p01-t05`). Used at the pre-write checkpoint.
+- `oat project split validate-plan --plan-file <path>` → reads a `SplitPlanDocument`, validates `origin` + `interactive`, then validates `plan` via `child-plan.ts` (`p01-t04`) + `validation.ts` (`p01-t05`). Emits JSON validation result (or non-zero exit on failure). Used at the pre-write checkpoint and by `run`.
 
 Both depend **only on Phase 1 pure-logic modules** — no Phase 2 helpers are referenced, so Phase 1 can go green independently of Phase 2.
 
@@ -352,7 +355,10 @@ describe('oat project split evaluate-signals', () => {
 
 // packages/cli/src/commands/project/split/__tests__/validate-plan.test.ts
 describe('oat project split validate-plan', () => {
-  it('returns ok: true for a well-formed ChildPlan', () => {
+  it('returns ok: true for a well-formed SplitPlanDocument', () => {
+    /* … */
+  });
+  it('returns errors[] when origin or interactive metadata is missing', () => {
     /* … */
   });
   it('returns errors[] for cycles in oat_depends_on', () => {
@@ -379,7 +385,7 @@ Expected: RED.
 
 ## Phase 2: `oat-project-split` skill
 
-Implements the standalone skill plus the underlying step-by-step library functions. The skill is a Markdown skill; it orchestrates via the `oat project split run` CLI command introduced in `p01-t06`, which internally invokes the functions implemented in `p02-t02`–`p02-t05`. The skill never calls TS directly. **HiLL checkpoint fires after this phase merges back from the p02/p03 parallel group.**
+Implements the standalone skill plus the underlying step-by-step library functions. The skill is a Markdown skill; it orchestrates via the `oat project split run` CLI command introduced in `p02-t07`, which internally invokes the functions implemented in `p02-t02`–`p02-t05`. The skill never calls TS directly. **HiLL checkpoint fires after this phase merges back from the p02/p03 parallel group.**
 
 ### Task p02-t01: Create `oat-project-split` SKILL.md skeleton
 
@@ -417,7 +423,11 @@ Expected: validation passes.
 - Create: `packages/cli/src/projects/split/write-parent.ts`
 - Create: `packages/cli/src/projects/split/__tests__/write-parent.test.ts`
 
-**Step 1: Write test (RED)** — Fixture test: invoke `writeCoordinationParent(plan, ctx)` against a temp `.oat/projects/<scope>/` directory; assert the parent dir contains `discovery.md` + `state.md` only, with `oat_kind: coordination`, populated `oat_children`, and an integration-sketch section in `discovery.md`. Crucially, **assert `spec.md` / `design.md` / `plan.md` / `implementation.md` are absent**.
+**Step 1: Write test (RED)** — Fixture test: invoke `writeCoordinationParent(document, ctx)` against a temp `.oat/projects/<scope>/` directory; assert the parent dir contains `discovery.md`, `state.md`, and `references/split-plan.json`, with `oat_kind: coordination`, populated `oat_children`, and an integration-sketch section in `discovery.md`. Crucially, **assert `spec.md` / `design.md` / `plan.md` / `implementation.md` are absent**.
+
+Also assert that `references/split-plan.json` exists and contains the full
+`SplitPlanDocument` (origin, interactive, normalized child plan) before any
+child writes occur.
 
 ```bash
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/projects/split/__tests__/write-parent.test.ts
@@ -430,7 +440,8 @@ Expected: RED.
 1. Call `oat project new <parentSlug> --mode quick` (existing CLI).
 2. Re-flag the scaffolded `state.md`: set `oat_kind: coordination`, `oat_workflow_mode: quick`, populate `oat_children` from `plan.children[].slug` in `plan.children[].order`.
 3. Delete `spec.md` (if present), `design.md` (if present), `plan.md`, `implementation.md`.
-4. Populate the parent's `discovery.md` with broad context + integration-sketch section (if `plan.integrationSketch`).
+4. Write `references/split-plan.json` with the validated `SplitPlanDocument`.
+5. Populate the parent's `discovery.md` with broad context + integration-sketch section (if `plan.integrationSketch`).
 
 Expected: GREEN.
 
@@ -470,11 +481,11 @@ Expected: GREEN.
 - Create: `packages/cli/src/projects/split/finalize.ts`
 - Create: `packages/cli/src/projects/split/__tests__/finalize.test.ts`
 
-**Step 1: Write test (RED)** — Assert parent transitions `oat_phase: discovery → decomposition`, `oat_phase_status: in_progress → complete`; assert `activeProject` is set to `plan.initialActiveChild`.
+**Step 1: Write test (RED)** — Assert parent transitions `oat_phase: discovery → decomposition`, `oat_phase_status: in_progress → complete`; assert `.oat/config.local.json.activeProject` is set to the repo-relative child path `.oat/projects/<scope>/<plan.initialActiveChild>`, not the bare slug.
 
 Expected: RED.
 
-**Step 2: Implement (GREEN)** — `finalizeSplit(plan, ctx)`: update parent `state.md` to terminal; call `oat config set activeProject <plan.initialActiveChild>`.
+**Step 2: Implement (GREEN)** — `finalizeSplit(plan, ctx)`: update parent `state.md` to terminal; activate the child by calling `oat project open <plan.initialActiveChild>` or by setting `activeProject` to the resolved repo-relative path `.oat/projects/<scope>/<plan.initialActiveChild>`.
 
 **Step 3 / 4 / 5:** Refactor; `pnpm lint && pnpm type-check`; commit as `feat(p02-t04): finalize split — parent terminal + active child selection`.
 
@@ -488,11 +499,11 @@ Expected: RED.
 - Create: `packages/cli/src/projects/split/resume.ts`
 - Create: `packages/cli/src/projects/split/__tests__/resume.test.ts`
 
-**Step 1: Write test (RED)** — Fixture: parent created with `oat_kind: coordination`, `oat_phase: decomposition`, `oat_phase_status: in_progress`, `oat_children: ['a', 'b', 'c']`, but only `a/` and `b/` exist on disk. Assert `detectPartialSplit(<parent-path>)` returns the reconstructed `ChildPlan` with `c` missing; assert `resumeSplit` completes `c` and finalizes the parent. Also test: re-invocation on a completed parent (`status: complete`) is a User Error, not resume.
+**Step 1: Write test (RED)** — Fixture: parent created with `oat_kind: coordination`, `oat_phase: decomposition`, `oat_phase_status: in_progress`, `oat_children: ['a', 'b', 'c']`, and `references/split-plan.json`, but only `a/` and `b/` exist on disk. Assert `detectPartialSplit(<parent-path>)` reads the persisted `SplitPlanDocument`, returns the reconstructed `ChildPlan` with `c` missing, and preserves `c`'s original inherited context and dependencies; assert `resumeSplit` completes `c` and finalizes the parent. Also test: re-invocation on a completed parent (`status: complete`) is a User Error, not resume. Add a failure test for missing/invalid `references/split-plan.json` — resume must abort rather than guessing from `oat_children` alone.
 
 Expected: RED.
 
-**Step 2: Implement (GREEN)** — `detectPartialSplit` reads parent + scans `oat_children` against disk; `resumeSplit` runs `seedChildren` for missing slugs and then `finalizeSplit`. Surface the reconstructed plan to the user before any writes (per design: "user must approve the recovered plan").
+**Step 2: Implement (GREEN)** — `detectPartialSplit` reads parent + `references/split-plan.json`, validates the persisted `SplitPlanDocument`, and scans `oat_children` against disk; `resumeSplit` runs `seedChildren` for missing slugs using the persisted child seed data and then `finalizeSplit`. Surface the reconstructed plan to the user before any writes (per design: "user must approve the recovered plan").
 
 **Step 3 / 4 / 5:** Refactor; `pnpm lint && pnpm type-check`; commit as `feat(p02-t05): implement resume mode for partial splits`.
 
@@ -515,6 +526,7 @@ Expected: RED.
 7. Non-interactive detected (`OAT_NON_INTERACTIVE=1`, `## Detected Split Recommendation` section, non-zero exit).
 8. Re-invocation on completed parent (User Error).
 9. Post-manual-mutation validation.
+10. Durable split-plan invariant: successful and interrupted runs persist `references/split-plan.json`, and resume uses it rather than deriving child seed data from slugs only.
 
 Expected: RED for any case not already passing from the unit-level tests.
 
@@ -536,7 +548,7 @@ Expected: RED for any case not already passing from the unit-level tests.
 
 **Subcommand contract:**
 
-- `oat project split run --plan-file <path> [--non-interactive]` → executes the full split flow (validate `ChildPlan`, write coordination parent, scaffold + seed children, finalize parent terminal state, activate initial child, refresh dashboard). On `--non-interactive`: a declared payload proceeds; a detected payload writes the `## Detected Split Recommendation` section to the active discovery and exits non-zero.
+- `oat project split run --plan-file <path> [--non-interactive]` → reads and validates a `SplitPlanDocument`, then executes the full split flow (write coordination parent, persist `references/split-plan.json`, scaffold + seed children, finalize parent terminal state, activate initial child via repo-relative project path, refresh dashboard). On `--non-interactive`: `origin: declared` proceeds; `origin: detected-mid-stream` or `origin: detected-convergence` writes the `## Detected Split Recommendation` section to the active discovery and exits non-zero before any split writes.
 
 **Step 1: Write test (RED)**
 
@@ -552,6 +564,12 @@ describe('oat project split run', () => {
   it('fails fast in --non-interactive mode when payload origin is detected-*', () => {
     /* … */
   });
+  it('proceeds in --non-interactive mode when payload origin is declared', () => {
+    /* … */
+  });
+  it('persists references/split-plan.json before child writes for resume', () => {
+    /* … */
+  });
   it('resumes a partial prior run when the parent exists but children are incomplete', () => {
     /* … */
   });
@@ -561,7 +579,7 @@ describe('oat project split run', () => {
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/split/__tests__/run.test.ts`
 Expected: RED.
 
-**Step 2: Implement (GREEN)** — Wire `run.ts` as a thin orchestrator that calls `write-parent.ts`, `seed-children.ts`, `finalize.ts`, and (when partial state is detected) `resume.ts`. The skill SKILL.md from `p02-t01`–`p02-t05` invokes this subcommand as its single entry point for executing a confirmed `ChildPlan`.
+**Step 2: Implement (GREEN)** — Wire `run.ts` as a thin orchestrator that calls `write-parent.ts`, `seed-children.ts`, `finalize.ts`, and (when partial state is detected) `resume.ts`. The skill SKILL.md from `p02-t01`–`p02-t05` invokes this subcommand as its single entry point for executing a confirmed `SplitPlanDocument`.
 
 **Step 3 / 4 / 5:** Refactor; `pnpm lint && pnpm type-check`; commit as `feat(p02-t07): add oat project split run subcommand orchestrating the end-to-end split`.
 
@@ -658,11 +676,13 @@ Sequential after the p02/p03 parallel group merges. **HiLL checkpoint fires afte
 
 Expected: RED for the SKILL.md prose not yet covering all branches.
 
-**Step 2: Implement (GREEN)** — Add prose + bash invocations into `oat-project-discover/SKILL.md`. The skill calls the signal evaluator via the CLI surface introduced in `p01-t06`:
+**Step 2: Implement (GREEN)** — Add prose + shell invocations into `oat-project-discover/SKILL.md`. The skill calls the signal evaluator via the installed CLI surface introduced in `p01-t06`:
 
 ```bash
-pnpm run cli -- project split evaluate-signals --fired "<comma-list>"
+oat project split evaluate-signals --fired "<comma-list>"
 ```
+
+Use `pnpm run cli -- project split evaluate-signals --fired "<comma-list>"` only as a local-development fallback when the installed `oat` command is unavailable.
 
 It parses the JSON output (`{ fired, triggered, confidence }`) and shapes the prompt — high-confidence wording when `confidence == "high"`, soft wording when `confidence == "soft"`, no prompt when `confidence == "below"`. Convergence and non-interactive branches use the same CLI; non-interactive writes a `## Detected Split Recommendation` section and exits non-zero.
 
@@ -704,7 +724,7 @@ Expected: RED.
 
 Expected: RED.
 
-**Step 2: Implement (GREEN)** — Add the conditional picker case. Reuse the signal evaluator (p01-t03) for the "scope is large" decision.
+**Step 2: Implement (GREEN)** — Add the conditional picker case. Reuse `oat project split evaluate-signals` (p01-t06 over p01-t03) for the "scope is large" decision.
 
 **Step 3:** Bump SKILL.md `version:`.
 
@@ -819,16 +839,16 @@ Sequential, final phase. Dogfood scenarios validate the lived experience; `bl-3a
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                      |
-| ------ | -------- | -------- | ---------- | --------------------------------------------- |
-| p01    | code     | pending  | -          | -                                             |
-| p02    | code     | pending  | -          | -                                             |
-| p03    | code     | pending  | -          | -                                             |
-| p04    | code     | pending  | -          | -                                             |
-| p05    | code     | pending  | -          | -                                             |
-| final  | code     | pending  | -          | -                                             |
-| plan   | artifact | received | 2026-05-20 | reviews/artifact-plan-review-2026-05-20-v3.md |
-| design | artifact | pending  | -          | -                                             |
+| Scope  | Type     | Status          | Date       | Artifact                                               |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------ |
+| p01    | code     | pending         | -          | -                                                      |
+| p02    | code     | pending         | -          | -                                                      |
+| p03    | code     | pending         | -          | -                                                      |
+| p04    | code     | pending         | -          | -                                                      |
+| p05    | code     | pending         | -          | -                                                      |
+| final  | code     | pending         | -          | -                                                      |
+| plan   | artifact | fixes_completed | 2026-05-20 | reviews/archived/artifact-plan-review-2026-05-20-v3.md |
+| design | artifact | pending         | -          | -                                                      |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

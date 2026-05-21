@@ -36,10 +36,11 @@ resolution machinery exists or is needed.
 Three trigger surfaces feed the skill: **declared** (the user states
 multi-project intent up front; detection is skipped and umbrella framing runs
 from turn 1), **detected mid-stream** (a silent codified signal self-check
-inside `oat-project-discover` — threshold ≥2 of four signals, with two
-load-bearing), and **detected at convergence** (an always-visible scope-check
-confirmation at end-of-discovery, plus a conditional split option in the
-`oat-brainstorm` destination picker when accumulated scope is large).
+inside `oat-project-discover`, backed by a shared CLI-accessible evaluator —
+threshold ≥2 of four signals, with two load-bearing), and **detected at
+convergence** (an always-visible scope-check confirmation at end-of-discovery,
+plus a conditional split option in the `oat-brainstorm` destination picker when
+accumulated scope is large).
 Non-interactive behavior is asymmetric: a declared run proceeds; a detected
 split with no user present records the detection and fails fast — never
 silently deciding either way.
@@ -61,14 +62,16 @@ its logic.
 
 - **`oat-project-split` skill** — the standalone skill; owns split mechanics
   end-to-end.
-- **Codified-signal evaluator** — small inline logic that scores four signals
+- **Codified-signal evaluator** — small pure-logic module plus CLI adapter
+  (`oat project split evaluate-signals`) that scores four signals
   (independently shippable deliverables, no shared design surface,
   separate-PRs expectation, distinct subsystems) against a threshold (≥2, with
-  signals 1+2 load-bearing). Lives _inside_ `oat-project-discover`'s detection
-  hook; not a separate tool.
+  signals 1+2 load-bearing). The discover/brainstorm hooks invoke this shared
+  evaluator; they own prompt timing and never duplicate threshold logic.
 - **Coordination parent writer** — internal step of the split skill; produces
   the `oat_kind: coordination` parent record with broad discovery,
-  integration-sketch section, and child registry in `state.md` frontmatter.
+  integration-sketch section, child registry in `state.md` frontmatter, and the
+  durable `references/split-plan.json` resume source.
 - **Child scaffolder + seeder** — internal step of the split skill; calls
   `oat project new` per child and seeds each `discovery.md` with the
   7 distilled sections plus parent/sibling backlinks.
@@ -123,13 +126,16 @@ its logic.
 3. **Optional broad discovery** — single user choice: split with the context
    we have, or run one round of broad cross-cutting discovery first. The skill
    proceeds once the choice is made.
-4. **Child enumeration** — the split skill resolves the child list (from
-   declared input, prior discovery, or the cross-cutting round).
+4. **Payload normalization** — the split skill resolves the child list (from
+   declared input, prior discovery, or the cross-cutting round), then writes a
+   `SplitPlanDocument` containing trigger metadata (`origin`, `interactive`)
+   plus the normalized `ChildPlan`.
 5. **Coordination parent write** — scaffold the parent project, then normalize
    it as coordination-only: set `oat_kind: coordination` in `state.md`, ensure
    `spec` / `design` / `plan` / `implementation` files are absent, populate
    `discovery.md` with the broad context plus an integration-sketch section,
-   and write the child registry to `state.md` frontmatter.
+   write the child registry to `state.md` frontmatter, and persist the
+   `SplitPlanDocument` at `references/split-plan.json` before any child writes.
 6. **Children scaffold + seed** — for each child: `oat project new <child>`,
    write seeded `discovery.md` (7 distilled sections), set
    `oat_parent` / `oat_siblings` / `oat_depends_on` in `state.md`.
@@ -138,8 +144,8 @@ its logic.
    never relocated; it remains at `.oat/projects/<scope>/<parent>/` for the
    lifetime of the repo.
 8. **Activation** — choose initial active child by dependency/value order
-   (foundation child first if present); set `activeProject` to it; siblings
-   remain parked.
+   (foundation child first if present); set `activeProject` to the
+   repo-relative child project path; siblings remain parked.
 9. **Dashboard refresh** — `oat state refresh`.
 
 ## Component Design
@@ -153,14 +159,15 @@ projects with a coordination-only parent.
 
 - Accept a trigger payload from one of four origins.
 - Run the optional broad-discovery round if the user requests it.
-- **Normalize all inputs to a single `ChildPlan` before any filesystem write.**
-  Three sources funnel in — _declared children_ (provided by the user),
+- **Normalize all inputs to a single `SplitPlanDocument` before any filesystem
+  write.** Three sources funnel in — _declared children_ (provided by the user),
   _inferred children_ (worked out interactively after a detection trigger),
   and _post-broad-discovery children_ (when the optional cross-cutting round
   ran). Normalization distills inherited context per child, applies the
   ordering rules, marks the foundation child if present, and resolves the
-  initial active child. **Writes never happen against raw input — only against
-  the normalized plan.**
+  initial active child while preserving trigger metadata needed for
+  non-interactive behavior. **Writes never happen against raw input — only
+  against the normalized document.**
 - Scaffold the parent and normalize it as coordination-only.
 - Scaffold and seed each child with the 7-section distilled `discovery.md` +
   backlinks.
@@ -198,6 +205,12 @@ interface ChildPlan {
   integrationSketch?: string; //  optional; lives as a section in parent discovery.md
   initialActiveChild: string; //  slug
 }
+
+interface SplitPlanDocument {
+  origin: SplitPayload['origin'];
+  interactive: boolean;
+  plan: ChildPlan;
+}
 ```
 
 **Dependencies:** `oat project new`, `oat state refresh`,
@@ -214,11 +227,13 @@ interface ChildPlan {
   detects an incomplete prior run (parent created but not yet at the terminal
   state, or children incompletely scaffolded) and offers to resume from the
   failure point rather than re-running from scratch.
-- **One write-time plan, many input shapes.** `ChildPlan` is the single source
-  of truth for what gets written; the `SplitPayload` origin only determines how
-  `ChildPlan` is _built_. This prevents partial/inconsistent writes when input
-  shapes evolve and gives the skill a single checkpoint for validation before
-  any project directory is touched.
+- **One write-time document, many input shapes.** `SplitPlanDocument` is the
+  single source of truth for what gets written; `ChildPlan` remains the
+  normalized child graph inside it, while `origin` and `interactive` remain
+  available to command handlers that must enforce non-interactive behavior.
+  This prevents partial/inconsistent writes when input shapes evolve and gives
+  the skill a single checkpoint for validation before any project directory is
+  touched.
 
 ### Component 2: Detection hook in `oat-project-discover`
 
@@ -262,14 +277,16 @@ interface SignalEvaluation {
 }
 ```
 
-**Dependencies:** `oat-project-split` skill (delegation target).
+**Dependencies:** `oat-project-split` skill (delegation target) and
+`oat project split evaluate-signals` (shared evaluator adapter).
 
 **Design Decisions:**
 
 - Silent mid-stream + always-visible convergence pairs zero-friction detection
   with a non-skippable backstop for false negatives.
-- Signal evaluation is inline pseudocode inside the skill, not a separate
-  tool — keeps the dependency surface small.
+- Signal evaluation is shared pure logic with a thin CLI adapter. The hook
+  still owns when to prompt and how to word the prompt; the adapter only
+  prevents threshold drift across discover and brainstorm entry paths.
 
 ### Component 3: Brainstorm integration in `oat-brainstorm`
 
@@ -331,8 +348,9 @@ render logic and to the dashboard generator's section grouping.
 
 ## Data Models
 
-Three new/modified data shapes land on disk; `ChildPlan` and `SplitPayload`
-are in-memory only and live in Component Design above.
+Four new/modified data shapes land on disk; `ChildPlan` and `SplitPayload`
+remain conceptual inputs/outputs in Component Design above, while the
+persisted `SplitPlanDocument` is the durable resume source.
 
 ### Model 1: Coordination parent `state.md` frontmatter
 
@@ -449,6 +467,42 @@ type SeededChildDiscoverySection =
   child is the owner thereafter — subsequent lifecycle skills may edit
   freely.
 
+### Model 4: Persisted split plan document
+
+**Purpose:** Preserve the exact normalized plan needed for write execution,
+non-interactive origin handling, and resume after partial filesystem writes.
+
+**Schema:**
+
+```typescript
+interface SplitPlanDocument {
+  origin:
+    | 'declared'
+    | 'detected-mid-stream'
+    | 'detected-convergence'
+    | 'brainstorm-picker';
+  interactive: boolean;
+  plan: ChildPlan;
+}
+```
+
+**Validation Rules:**
+
+- `origin` and `interactive` MUST be present.
+- `plan` MUST pass `ChildPlan` validation before any parent or child write.
+- `interactive == false` with `origin` beginning `detected-` MUST fail before
+  split writes and record `## Detected Split Recommendation` in the active
+  discovery.
+
+**Storage:**
+
+- **Location:** `.oat/projects/<scope>/<parent-slug>/references/split-plan.json`.
+- **Persistence:** Written before the first child scaffold. Resume reads this
+  file as the durable source for child inherited context, dependencies, order,
+  foundation child, and initial active child. If the file is missing or fails
+  validation, resume aborts with a user-actionable error instead of guessing
+  from `oat_children` alone.
+
 ## Error Handling
 
 ### Error Categories
@@ -483,7 +537,9 @@ never leave partial state on disk.
 - **Partial split in progress** — parent exists (with `oat_kind: coordination`)
   but `oat_phase: decomposition` and `oat_phase_status: in_progress`, OR
   `oat_children` lists slugs that don't yet exist on disk. On re-invocation
-  against this parent, the skill enters **resume mode** (see Retry Logic).
+  against this parent, the skill enters **resume mode** and reads
+  `references/split-plan.json` as the durable reconstruction source (see Retry
+  Logic).
 - **Filesystem write failure** mid-write (disk full, permission denied,
   etc.). The skill halts at the failed write, leaves partial state in place,
   surfaces the OS error verbatim, and offers resume.
@@ -506,10 +562,13 @@ not retry:
 
 - On invocation, the skill checks for a partial prior run against the target
   parent.
-- If a partial state is detected, it diffs the reconstructed `ChildPlan`
-  against on-disk reality, identifies missing/incomplete children, and offers
-  to continue from the failure point — but only after the user confirms the
-  recovered plan matches their original intent.
+- If a partial state is detected, it reads `references/split-plan.json`, diffs
+  the persisted `ChildPlan` against on-disk reality, identifies
+  missing/incomplete children, and offers to continue from the failure point —
+  but only after the user confirms the recovered plan matches their original
+  intent.
+- If the persisted split plan is missing or invalid, resume aborts. The skill
+  never reconstructs child seed content from `oat_children` slugs alone.
 - Resume is a deliberate choice; the user must approve the recovered plan
   before any further writes resume.
 - The cross-child `oat_depends_on` manual-edit flow (per Data Models, Model 2

@@ -97,6 +97,37 @@ oat_generated: false
 
 **Next:** Re-run `oat-project-review-provide artifact plan` to verify the v2 edits, or proceed to `oat-project-implement` with the corrected plan.
 
+### Review Received: plan (artifact, re-review v3)
+
+**Date:** 2026-05-20
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-05-20-v3.md`
+**Review type:** `artifact` (invocation: `manual`)
+**Review cycle:** 3 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 4
+- Medium: 0
+- Minor: 0
+
+**Disposition map:**
+
+- `I1` — `oat project split run --plan-file` could not enforce declared-vs-detected non-interactive behavior after normalization — `resolve_in_artifact` — introduced `SplitPlanDocument` as the command-boundary shape carrying `origin`, `interactive`, and the normalized `ChildPlan`; updated validation and run tasks to consume this document and test declared/detected non-interactive behavior at the actual CLI boundary.
+- `I2` — `finalizeSplit` wrote the active project as a slug instead of a repo-relative project path — `resolve_in_artifact` — updated `p02-t04` to activate via `oat project open <child>` or a resolved `.oat/projects/<scope>/<child>` path, with a test against `.oat/config.local.json.activeProject`.
+- `I3` — resume lacked durable child seed data — `resolve_in_artifact` — added `references/split-plan.json` on the coordination parent as the persisted `SplitPlanDocument`; updated parent writer, resume, integration tests, and design storage/error-handling rules to use it instead of reconstructing from `oat_children` slugs.
+- `I4` — signal evaluator surface drifted from the accepted architecture — `resolve_in_artifact` — updated `design.md` to explicitly bless the shared pure-logic module plus `oat project split evaluate-signals` CLI adapter; updated hook tasks to use installed `oat` CLI syntax with `pnpm run cli --` only as a local-development fallback.
+
+**Plan/design delta:**
+
+- Phase/task counts unchanged: total remains 25 tasks.
+- `p01-t04`, `p01-t06`, `p02-t02`, `p02-t04`, `p02-t05`, `p02-t06`, `p02-t07`, `p04-t01`, and `p04-t03` were refined in place.
+- `design.md` now documents `SplitPlanDocument`, `references/split-plan.json`, CLI-backed signal evaluation, and repo-relative active child activation.
+
+**No fix tasks added** (artifact review — findings resolved as direct edits to `plan.md` and `design.md`).
+
+**Next:** This was the third plan review cycle. Do not continue automatic plan re-review looping without explicit user override; proceed with implementation or perform a manual approval check.
+
 ---
 
 ## Phase 1: {Phase Name}
