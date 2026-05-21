@@ -9,7 +9,7 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
 import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
-import { assertValidProjectStateContent } from '@validation/project-state';
+import { assertValidProjectStateFilesystemContent } from '@validation/project-state';
 import { Command } from 'commander';
 
 import { renderCompletedProjectState } from './state-utils';
@@ -73,7 +73,10 @@ async function runProjectCompleteState(
       nowUtc: now.toISOString(),
       today: now.toISOString().slice(0, 10),
     });
-    assertValidProjectStateContent(updatedContent, { filePath: statePath });
+    await assertValidProjectStateFilesystemContent(updatedContent, {
+      filePath: statePath,
+      projectPath: targetProjectPath,
+    });
     await dependencies.writeFile(statePath, updatedContent, 'utf8');
 
     if (context.json) {

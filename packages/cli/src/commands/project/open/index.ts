@@ -28,7 +28,7 @@ import {
 } from '@config/oat-config';
 import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
-import { assertValidProjectStateContent } from '@validation/project-state';
+import { assertValidProjectStateFilesystemContent } from '@validation/project-state';
 import { Command } from 'commander';
 
 interface ProjectOpenOptions {
@@ -79,6 +79,7 @@ const DEFAULT_DEPENDENCIES: ProjectOpenDependencies = {
 
 async function maybeResumePausedProject(
   statePath: string,
+  projectPath: string,
   dependencies: ProjectOpenDependencies,
 ): Promise<boolean> {
   const stateContent = await dependencies.readFile(statePath, 'utf8');
@@ -108,7 +109,10 @@ async function maybeResumePausedProject(
 
   if (nextBlock !== frontmatter) {
     const nextContent = replaceFrontmatter(stateContent, nextBlock);
-    assertValidProjectStateContent(nextContent, { filePath: statePath });
+    await assertValidProjectStateFilesystemContent(nextContent, {
+      filePath: statePath,
+      projectPath,
+    });
     await dependencies.writeFile(statePath, nextContent, 'utf8');
   }
 
@@ -162,6 +166,7 @@ async function runProjectOpen(
 
     const resumedFromPaused = await maybeResumePausedProject(
       statePath,
+      fullProjectPath,
       dependencies,
     );
 

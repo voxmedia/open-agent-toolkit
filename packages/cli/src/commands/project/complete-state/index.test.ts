@@ -12,12 +12,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createProjectCompleteStateCommand } from './index';
 
-function buildStateContent(): string {
+function buildStateContent(extraFrontmatter: string[] = []): string {
   return [
     '---',
     'oat_current_task: p02-t01',
     'oat_phase: implement',
     'oat_phase_status: in_progress',
+    ...extraFrontmatter,
     'oat_project_completed: null',
     'oat_project_state_updated: "2026-04-13T18:17:21.000Z"',
     'oat_generated: false',
@@ -164,6 +165,27 @@ describe('oat project complete-state', () => {
     expect(capture.error[0]).toContain(
       'oat_phase: decomposition requires oat_kind: coordination',
     );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects completed-state writes when child oat_parent is missing', async () => {
+    const root = await createRepoRoot();
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'child');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(
+      join(projectPath, 'state.md'),
+      buildStateContent(['oat_parent: missing-parent']),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness(root);
+    await runCommand(command, ['.oat/projects/shared/child']);
+
+    const state = await readFile(join(projectPath, 'state.md'), 'utf8');
+    expect(capture.error[0]).toContain(
+      'oat_parent missing-parent must reference an existing project',
+    );
+    expect(state).toContain('oat_project_completed: null');
     expect(process.exitCode).toBe(1);
   });
 
