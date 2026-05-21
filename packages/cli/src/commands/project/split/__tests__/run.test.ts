@@ -14,6 +14,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { createProjectStatusCommand } from '@commands/project/status';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -132,6 +133,34 @@ async function runCommand(command: Command, args: string[]): Promise<void> {
   });
 }
 
+async function runStatusCommand(
+  repoRoot: string,
+  args: string[],
+): Promise<LoggerCapture> {
+  const capture = createLoggerCapture();
+  const command = createProjectStatusCommand({
+    buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+      scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
+      dryRun: false,
+      verbose: false,
+      json: globalOptions.json ?? false,
+      cwd: repoRoot,
+      home: join(repoRoot, 'home'),
+      interactive: !(globalOptions.json ?? false),
+      logger: capture.logger,
+    }),
+    resolveProjectRoot: async () => repoRoot,
+  });
+  const program = new Command().name('oat').option('--json').exitOverride();
+  const project = new Command('project');
+  project.addCommand(command);
+  program.addCommand(project);
+  await program.parseAsync(['--json', 'project', 'status', ...args], {
+    from: 'user',
+  });
+  return capture;
+}
+
 describe('oat project split run', () => {
   const tempDirs: string[] = [];
   let originalExitCode: number | undefined;
@@ -163,10 +192,11 @@ describe('oat project split run', () => {
     tempDirs.push(repoRoot);
     await seedTemplates(repoRoot);
     const planFile = await writePlanFile(repoRoot, document());
-    const { command } = createHarness(repoRoot);
+    const { capture, command } = createHarness(repoRoot);
 
     await runCommand(command, ['--plan-file', planFile]);
 
+    expect(capture.error).toEqual([]);
     expect(process.exitCode).toBe(0);
     const localConfig = JSON.parse(
       await readFile(join(repoRoot, '.oat', 'config.local.json'), 'utf8'),
@@ -178,6 +208,37 @@ describe('oat project split run', () => {
     await expect(
       exists(join(repoRoot, '.oat', 'projects', 'shared', 'docs')),
     ).resolves.toBe(true);
+  });
+
+  it('seeds the active child with quick routing state for project status', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const planFile = await writePlanFile(repoRoot, document());
+    const { command } = createHarness(repoRoot);
+
+    await runCommand(command, ['--plan-file', planFile]);
+
+    const statusCapture = await runStatusCommand(repoRoot, [
+      '--project-path',
+      '.oat/projects/shared/foundation',
+    ]);
+    expect(statusCapture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: {
+        phase: 'discovery',
+        workflowMode: 'quick',
+        recommendation: {
+          skill: 'oat-project-plan',
+        },
+      },
+    });
+    await expect(
+      readFile(
+        join(repoRoot, '.oat', 'projects', 'shared', 'foundation', 'plan.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('oat_plan_source: quick');
   });
 
   it('asserts the coordination-parent file invariant', async () => {

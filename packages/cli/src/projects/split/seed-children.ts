@@ -25,7 +25,13 @@ function readObjectFrontmatter(
 ): Record<string, unknown> {
   const block = getFrontmatterBlock(content);
   if (!block) {
+    if (content.startsWith('---\n---')) {
+      return {};
+    }
     throw new Error(`${filePath} is missing frontmatter`);
+  }
+  if (block.trim().length === 0) {
+    return {};
   }
   const parsed: unknown = YAML.parse(block);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -34,20 +40,20 @@ function readObjectFrontmatter(
   return parsed as Record<string, unknown>;
 }
 
-async function updateStateLinks(
-  statePath: string,
+async function updateFrontmatter(
+  filePath: string,
   updates: Record<string, unknown>,
 ): Promise<void> {
-  const content = await readFile(statePath, 'utf8');
-  const frontmatter = readObjectFrontmatter(content, statePath);
+  const content = await readFile(filePath, 'utf8');
+  const frontmatter = readObjectFrontmatter(content, filePath);
   for (const [key, value] of Object.entries(updates)) {
     frontmatter[key] = value;
   }
-  await writeFile(
-    statePath,
-    replaceFrontmatter(content, YAML.stringify(frontmatter).trimEnd()),
-    'utf8',
-  );
+  const nextBlock = YAML.stringify(frontmatter).trimEnd();
+  const nextContent = getFrontmatterBlock(content)
+    ? replaceFrontmatter(content, nextBlock)
+    : content.replace(/^---\n---/, `---\n${nextBlock}\n---`);
+  await writeFile(filePath, nextContent, 'utf8');
 }
 
 function bulletList(items: string[]): string {
@@ -127,10 +133,16 @@ export async function seedChildren(
       .map((candidate) => candidate.slug)
       .filter((slug) => slug !== child.slug);
 
-    await updateStateLinks(join(childRoot, 'state.md'), {
+    await updateFrontmatter(join(childRoot, 'state.md'), {
+      oat_phase: 'discovery',
+      oat_workflow_mode: 'quick',
+      oat_hill_checkpoints: [],
       oat_parent: plan.parentSlug,
       oat_siblings: siblings,
       oat_depends_on: child.knownDependencies,
+    });
+    await updateFrontmatter(join(childRoot, 'plan.md'), {
+      oat_plan_source: 'quick',
     });
     await writeFile(
       join(childRoot, 'discovery.md'),

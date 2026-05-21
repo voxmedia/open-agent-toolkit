@@ -11,15 +11,12 @@ oat_siblings:
 oat_depends_on:
   - dogfood-config-unset
 oat_children: []
-oat_hill_checkpoints:
-  OAT_HILL_CHECKPOINTS: null
+oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
-oat_phase:
-  OAT_PHASE: null
+oat_phase: discovery
 oat_phase_status: in_progress
-oat_workflow_mode:
-  OAT_WORKFLOW_MODE: null
+oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
 oat_pr_status: null
