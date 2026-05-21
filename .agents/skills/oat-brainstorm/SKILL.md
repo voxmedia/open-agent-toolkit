@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.0.2
+version: 1.0.3
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -28,6 +28,21 @@ Enter OAT brainstorm mode immediately when the user invokes `/oat-brainstorm` or
 - "help me brainstorm X"
 
 Hard Activation runs the full Process flow below: print the mode banner (Step 2), assess visual need (Step 3), detect packs and active project (Step 4), and proceed.
+
+### Declared Multi-Project Mode
+
+If the opening request explicitly says the scope is multiple projects, several sub-projects, an umbrella project, or otherwise declares decomposition intent, still enter brainstorm mode through Hard Activation, but switch the conversation shape immediately to umbrella framing. This is a first-class split path, not an ordinary destination guess.
+
+Do not treat ambiguous exploratory phrasing as declared mode. Put another way: do not treat ambiguous exploratory phrasing as declared mode. Messages like "help me think through a broad thing", "what if this has multiple parts", or "this might get big" remain on the Soft Exploratory Path unless the user explicitly declares that the desired outcome is multiple projects.
+
+In declared mode, ask this boundary question before ordinary free brainstorming:
+
+> "Do you already know the child projects, or should we decompose the scope together?"
+
+- If the user already knows the children, capture light parent-level context: shared context, child list, dependencies, sequencing, and integration risks.
+- If the children are unknown, brainstorm the boundaries first until a child list is clear.
+
+Once the child list is clear, invoke `oat-project-split` with a `SplitPayload` using `origin: "declared"`, `interactive: true`, `declaredChildren`, and the parent/umbrella slug when known. The brainstorm hook only frames and hands off; `oat-project-split` owns normalization, parent writing, child scaffolding, and activation.
 
 ### Soft Exploratory Path
 
