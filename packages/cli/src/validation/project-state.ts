@@ -1,4 +1,10 @@
 import {
+  readdir as defaultReaddir,
+  readFile as defaultReadFile,
+} from 'node:fs/promises';
+import { basename, join } from 'node:path';
+
+import {
   getFrontmatterBlock,
   isProjectStateKind,
   isProjectStatePhase,
@@ -43,6 +49,16 @@ export interface AssertProjectStateContentOptions {
   filePath?: string;
   slug?: string;
   relatedProjects?: ProjectStateSnapshot[];
+}
+
+export interface AssertProjectStateFilesystemContentOptions extends Omit<
+  AssertProjectStateContentOptions,
+  'relatedProjects'
+> {
+  projectPath: string;
+  projectsRoot?: string;
+  readdir?: typeof defaultReaddir;
+  readFile?: typeof defaultReadFile;
 }
 
 function readStringField(
@@ -128,6 +144,13 @@ function validateChildLinkage(
   const parent = relatedProjects.find(
     (project) => project.slug === state.oat_parent,
   );
+
+  if (!parent && input.relatedProjects !== undefined) {
+    errors.push({
+      code: 'parent-missing',
+      message: `oat_parent ${state.oat_parent} must reference an existing project`,
+    });
+  }
 
   if (parent && readKind(parent.frontmatter) !== 'coordination') {
     errors.push({
@@ -318,4 +341,54 @@ export function assertValidProjectStateContent(
   if (!result.ok) {
     throw new Error(result.errors.map((error) => error.message).join('; '));
   }
+}
+
+export async function readRelatedProjectStateSnapshots(options: {
+  projectsRoot: string;
+  currentProjectSlug: string;
+  readdir?: typeof defaultReaddir;
+  readFile?: typeof defaultReadFile;
+}): Promise<ProjectStateSnapshot[]> {
+  const readdir = options.readdir ?? defaultReaddir;
+  const readFile = options.readFile ?? defaultReadFile;
+  const snapshots: ProjectStateSnapshot[] = [];
+  const entries = await readdir(options.projectsRoot, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.name === options.currentProjectSlug) {
+      continue;
+    }
+
+    const statePath = join(options.projectsRoot, entry.name, 'state.md');
+    try {
+      const content = await readFile(statePath, 'utf8');
+      snapshots.push({
+        slug: entry.name,
+        frontmatter: parseFrontmatterObject(content, statePath),
+      });
+    } catch {
+      continue;
+    }
+  }
+
+  return snapshots;
+}
+
+export async function assertValidProjectStateFilesystemContent(
+  content: string,
+  options: AssertProjectStateFilesystemContentOptions,
+): Promise<void> {
+  const slug = options.slug ?? basename(options.projectPath);
+  const relatedProjects = await readRelatedProjectStateSnapshots({
+    projectsRoot: options.projectsRoot ?? join(options.projectPath, '..'),
+    currentProjectSlug: slug,
+    readdir: options.readdir,
+    readFile: options.readFile,
+  });
+
+  assertValidProjectStateContent(content, {
+    filePath: options.filePath,
+    slug,
+    relatedProjects,
+  });
 }

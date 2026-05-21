@@ -1,9 +1,29 @@
-import { describe, expect, it } from 'vitest';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  assertValidProjectStateFilesystemContent,
   assertValidProjectStateContent,
   validateProjectState,
 } from './project-state';
+
+function stateContent(frontmatter: Record<string, unknown>): string {
+  return [
+    '---',
+    ...Object.entries(frontmatter).map(([key, value]) =>
+      Array.isArray(value)
+        ? `${key}: [${value.join(', ')}]`
+        : `${key}: ${String(value)}`,
+    ),
+    '---',
+    '',
+    '# State',
+    '',
+  ].join('\n');
+}
 
 describe('validateProjectState - coordination additions', () => {
   it('accepts oat_kind: coordination on a project state', () => {
@@ -80,6 +100,15 @@ describe('validateProjectState - coordination additions', () => {
 });
 
 describe('child linkage validation', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
   it('rejects oat_parent pointing to a non-coordination project', () => {
     const result = validateProjectState({
       slug: 'child-a',
@@ -102,6 +131,23 @@ describe('child linkage validation', () => {
     expect(result.ok).toBe(false);
     expect(result.errors).toEqual([
       expect.objectContaining({ code: 'parent-not-coordination' }),
+    ]);
+  });
+
+  it('rejects oat_parent that is absent from supplied related projects', () => {
+    const result = validateProjectState({
+      slug: 'child-a',
+      frontmatter: {
+        oat_parent: 'missing-parent',
+        oat_siblings: [],
+        oat_depends_on: [],
+      },
+      relatedProjects: [],
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toEqual([
+      expect.objectContaining({ code: 'parent-missing' }),
     ]);
   });
 
@@ -180,5 +226,52 @@ describe('child linkage validation', () => {
     });
 
     expect(result).toMatchObject({ ok: true });
+  });
+
+  it('filesystem validation rejects a missing parent project directory', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-state-validation-'));
+    tempDirs.push(root);
+    const projectsRoot = join(root, '.oat', 'projects', 'shared');
+    const childPath = join(projectsRoot, 'child');
+    await mkdir(childPath, { recursive: true });
+
+    await expect(
+      assertValidProjectStateFilesystemContent(
+        stateContent({
+          oat_parent: 'missing-parent',
+        }),
+        {
+          filePath: join(childPath, 'discovery.md'),
+          projectPath: childPath,
+        },
+      ),
+    ).rejects.toThrow(/must reference an existing project/);
+  });
+
+  it('filesystem validation rejects a parent that is not coordination kind', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-state-validation-'));
+    tempDirs.push(root);
+    const projectsRoot = join(root, '.oat', 'projects', 'shared');
+    const childPath = join(projectsRoot, 'child');
+    const parentPath = join(projectsRoot, 'parent');
+    await mkdir(childPath, { recursive: true });
+    await mkdir(parentPath, { recursive: true });
+    await writeFile(
+      join(parentPath, 'state.md'),
+      stateContent({ oat_kind: 'implementation' }),
+      'utf8',
+    );
+
+    await expect(
+      assertValidProjectStateFilesystemContent(
+        stateContent({
+          oat_parent: 'parent',
+        }),
+        {
+          filePath: join(childPath, 'discovery.md'),
+          projectPath: childPath,
+        },
+      ),
+    ).rejects.toThrow(/must reference a coordination project/);
   });
 });

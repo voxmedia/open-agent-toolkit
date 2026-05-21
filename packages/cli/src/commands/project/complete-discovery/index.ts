@@ -1,9 +1,8 @@
 import {
-  readdir as defaultReaddir,
   readFile as defaultReadFile,
   writeFile as defaultWriteFile,
 } from 'node:fs/promises';
-import { basename, isAbsolute, join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import {
   buildCommandContext,
@@ -15,10 +14,7 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
 import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
-import {
-  assertValidProjectStateContent,
-  type ProjectStateSnapshot,
-} from '@validation/project-state';
+import { assertValidProjectStateFilesystemContent } from '@validation/project-state';
 import { Command } from 'commander';
 import YAML from 'yaml';
 
@@ -31,7 +27,6 @@ interface ProjectCompleteDiscoveryDependencies {
   resolveProjectRoot: (cwd: string) => Promise<string>;
   readFile: typeof defaultReadFile;
   writeFile: typeof defaultWriteFile;
-  readdir: typeof defaultReaddir;
   dirExists: typeof dirExists;
   fileExists: typeof fileExists;
   now: () => Date;
@@ -42,7 +37,6 @@ const DEFAULT_DEPENDENCIES: ProjectCompleteDiscoveryDependencies = {
   resolveProjectRoot,
   readFile: defaultReadFile,
   writeFile: defaultWriteFile,
-  readdir: defaultReaddir,
   dirExists,
   fileExists,
   now: () => new Date(),
@@ -89,36 +83,6 @@ function renderDiscoveryComplete(
   );
 }
 
-async function readRelatedProjectSnapshots(
-  projectsRoot: string,
-  currentProjectSlug: string,
-  dependencies: ProjectCompleteDiscoveryDependencies,
-): Promise<ProjectStateSnapshot[]> {
-  const snapshots: ProjectStateSnapshot[] = [];
-  const entries = await dependencies.readdir(projectsRoot, {
-    withFileTypes: true,
-  });
-
-  for (const entry of entries) {
-    if (!entry.isDirectory() || entry.name === currentProjectSlug) {
-      continue;
-    }
-
-    const statePath = join(projectsRoot, entry.name, 'state.md');
-    if (!(await dependencies.fileExists(statePath))) {
-      continue;
-    }
-
-    const content = await dependencies.readFile(statePath, 'utf8');
-    snapshots.push({
-      slug: entry.name,
-      frontmatter: parseFrontmatterObject(content, statePath),
-    });
-  }
-
-  return snapshots;
-}
-
 async function runProjectCompleteDiscovery(
   projectPath: string,
   options: ProjectCompleteDiscoveryOptions,
@@ -144,16 +108,9 @@ async function runProjectCompleteDiscovery(
       readyFor: options.readyFor ?? 'oat-project-design',
       today: now.toISOString().slice(0, 10),
     });
-    const relatedProjects = await readRelatedProjectSnapshots(
-      join(targetProjectPath, '..'),
-      basename(targetProjectPath),
-      dependencies,
-    );
-
-    assertValidProjectStateContent(updatedContent, {
+    await assertValidProjectStateFilesystemContent(updatedContent, {
       filePath: discoveryPath,
-      slug: basename(targetProjectPath),
-      relatedProjects,
+      projectPath: targetProjectPath,
     });
     await dependencies.writeFile(discoveryPath, updatedContent, 'utf8');
 
