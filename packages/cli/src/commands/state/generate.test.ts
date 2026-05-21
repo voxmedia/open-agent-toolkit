@@ -323,6 +323,47 @@ describe('generateStateDashboard', () => {
     expect(dashboard).toContain('**proj-b** - implement');
   });
 
+  it('groups completed coordination parents into a Decompositions section', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+
+    await writeStateFile(root, '.oat/projects/shared/platform-split', {
+      oat_kind: 'coordination',
+      oat_phase: 'decomposition',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'quick',
+    });
+    for (const child of ['api-foundation', 'docs-refresh', 'dashboard-work']) {
+      await writeStateFile(root, `.oat/projects/shared/${child}`, {
+        oat_kind: 'implementation',
+        oat_phase: 'discovery',
+        oat_phase_status: 'in_progress',
+        oat_parent: 'platform-split',
+      });
+    }
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-05-20',
+      git: mockGit,
+    });
+
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    const activeProjects = dashboard.slice(
+      dashboard.indexOf('## Available Projects'),
+      dashboard.indexOf('## Decompositions'),
+    );
+    const decompositions = dashboard.slice(
+      dashboard.indexOf('## Decompositions'),
+    );
+
+    expect(activeProjects).toContain('**api-foundation** - discovery');
+    expect(activeProjects).toContain('**docs-refresh** - discovery');
+    expect(activeProjects).toContain('**dashboard-work** - discovery');
+    expect(activeProjects).not.toContain('platform-split');
+    expect(decompositions).toContain('**platform-split** - decomposition');
+  });
+
   it('keeps active project when another project is paused', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);

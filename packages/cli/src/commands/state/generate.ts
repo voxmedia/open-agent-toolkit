@@ -62,6 +62,11 @@ interface StalenessInfo {
   status: string;
 }
 
+interface ProjectListSections {
+  active: string;
+  decompositions: string;
+}
+
 const defaultGit: GitOperations = {
   isGitRepo(root: string): boolean {
     try {
@@ -430,30 +435,68 @@ function computeNextStep(
   return { step: 'oat-project-progress', reason: 'Check current progress' };
 }
 
+function isTerminalCoordinationProject(
+  kind: string,
+  phase: string,
+  phaseStatus: string,
+): boolean {
+  return (
+    kind === 'coordination' &&
+    phase === 'decomposition' &&
+    phaseStatus === 'complete'
+  );
+}
+
 async function listAvailableProjects(
   repoRoot: string,
   projectsRoot: string,
-): Promise<string> {
+): Promise<ProjectListSections> {
   const fullRoot = join(repoRoot, projectsRoot);
   try {
     const entries = await readdir(fullRoot, { withFileTypes: true });
     const dirs = entries.filter((e) => e.isDirectory());
 
-    if (dirs.length === 0) return '*(No projects found)*';
+    if (dirs.length === 0) {
+      return {
+        active: '*(No projects found)*',
+        decompositions: '*(No decompositions found)*',
+      };
+    }
 
     const lines: string[] = [];
+    const decompositions: string[] = [];
     for (const dir of dirs) {
       const stateFile = join(fullRoot, dir.name, 'state.md');
       if (await fileExists(stateFile)) {
         const phase =
           (await parseFrontmatterField(stateFile, 'oat_phase')) || 'unknown';
-        lines.push(`- **${dir.name}** - ${phase}`);
+        const phaseStatus =
+          (await parseFrontmatterField(stateFile, 'oat_phase_status')) ||
+          'in_progress';
+        const kind =
+          (await parseFrontmatterField(stateFile, 'oat_kind')) ||
+          'implementation';
+        const line = `- **${dir.name}** - ${phase}`;
+        if (isTerminalCoordinationProject(kind, phase, phaseStatus)) {
+          decompositions.push(line);
+        } else {
+          lines.push(line);
+        }
       }
     }
 
-    return lines.length > 0 ? lines.join('\n') : '*(No projects found)*';
+    return {
+      active: lines.length > 0 ? lines.join('\n') : '*(No projects found)*',
+      decompositions:
+        decompositions.length > 0
+          ? decompositions.join('\n')
+          : '*(No decompositions found)*',
+    };
   } catch {
-    return '*(No projects directory found)*';
+    return {
+      active: '*(No projects directory found)*',
+      decompositions: '*(No decompositions found)*',
+    };
   }
 }
 
@@ -463,7 +506,7 @@ function buildDashboardMarkdown(
   knowledge: KnowledgeStatus,
   staleness: StalenessInfo,
   nextStep: { step: string; reason: string },
-  projectsList: string,
+  projectsList: ProjectListSections,
   generatedDate: string,
 ): string {
   const timestamp = `${generatedDate}`;
@@ -560,7 +603,12 @@ function buildDashboardMarkdown(
 
   lines.push('## Available Projects');
   lines.push('');
-  lines.push(projectsList);
+  lines.push(projectsList.active);
+  lines.push('');
+
+  lines.push('## Decompositions');
+  lines.push('');
+  lines.push(projectsList.decompositions);
   lines.push('');
 
   return lines.join('\n');
