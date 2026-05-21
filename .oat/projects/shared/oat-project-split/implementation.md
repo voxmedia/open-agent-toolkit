@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-21
-oat_current_task_id: null
+oat_current_task_id: p-rev1-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                   | Status | Tasks | Completed |
-| --------------------------------------- | ------ | ----- | --------- |
-| Phase 1: Schema & pure-logic foundation | passed | 6     | 6/6       |
-| Phase 2: oat-project-split skill        | passed | 7     | 7/7       |
-| Phase 3: Listings & dashboard filter    | passed | 3     | 3/3       |
-| Phase 4: Integration hooks              | passed | 4     | 4/4       |
-| Phase 5: Reconcile + dogfood + ship     | passed | 5     | 5/5       |
+| Phase                                   | Status  | Tasks | Completed |
+| --------------------------------------- | ------- | ----- | --------- |
+| Phase 1: Schema & pure-logic foundation | passed  | 6     | 6/6       |
+| Phase 2: oat-project-split skill        | passed  | 7     | 7/7       |
+| Phase 3: Listings & dashboard filter    | passed  | 3     | 3/3       |
+| Phase 4: Integration hooks              | passed  | 4     | 4/4       |
+| Phase 5: Reconcile + dogfood + ship     | passed  | 5     | 5/5       |
+| Review Fixes: Final review polish       | pending | 2     | 0/2       |
 
-**Total:** 25/25 tasks completed
+**Total:** 25/27 tasks completed
 **Parallel groups:** `[['p02', 'p03']]` (after p01 completes)
 
 ---
@@ -657,6 +658,32 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Added transcript + stubbed AskUserQuestion hook fixtures for discover and brainstorm split handoffs.
 - Deduplicated split signals before threshold evaluation.
 
+### Review Received: final (v3 independent re-evaluation)
+
+**Date:** 2026-05-21
+**Review artifact:** `reviews/archived/final-code-review-2026-05-21-v3.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 4
+
+**New tasks added:** `p-rev1-t01`, `p-rev1-t02`
+
+**Converted Minor findings:**
+
+- `m2` — stale declared dogfood display note.
+- `m4` — stale declared dogfood state-body limitation note.
+
+**Deferred Findings (Minor):**
+
+- `m1` — `validate-plan` rejects persisted split plans after run. Deferred because it is a moderate CLI semantics/API change (`--for-resume` / `--allow-existing`) rather than a small polish edit, and current `run` behavior is correct.
+- `m3` — active detected-parent conversion UX logging. Deferred because it is non-blocking command UX polish and should be handled with a focused follow-up test rather than blocking final closeout.
+
+**Next:** Execute review-fix tasks via the `oat-project-implement` skill, then mark final review fixes completed and re-review if needed.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -722,6 +749,7 @@ Track test execution during implementation.
 | 1     | -                                                                                                  | -      | -      | -                                              |
 | 2     | -                                                                                                  | -      | -      | -                                              |
 | 5     | Focused CLI/control-plane split/status/list tests; format; package type-checks; release validation | yes    | 0      | p05 review-fix and dogfood regression coverage |
+| final | Review receive converted selected Minor findings to dogfood annotation tasks                       | n/a    | n/a    | bookkeeping only                               |
 
 ## Final Summary (for PR/docs)
 

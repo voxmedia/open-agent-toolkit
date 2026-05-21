@@ -838,6 +838,68 @@ Sequential, final phase. Dogfood scenarios validate the lived experience; `bl-3a
 
 ---
 
+## Revision Phase 1: Final review polish
+
+Final review polish tasks from `final-code-review-2026-05-21-v3.md`.
+
+### Task p-rev1-t01: (review) Annotate fixed coordination list display dogfood note
+
+**Files:**
+
+- Modify: `.oat/projects/shared/oat-project-split/dogfood/declared.md`
+
+**Step 1: Understand the issue**
+
+Review finding: `dogfood/declared.md` still says `project list --include-coordination` displays coordination parents as `discovery (complete)` with `oat-project-plan`, but current behavior is fixed.
+Location: `.oat/projects/shared/oat-project-split/dogfood/declared.md:218`
+
+**Step 2: Implement fix**
+
+Annotate the evidence note to clarify that the limitation was observed during the live dogfood run and was fixed later. State the current behavior: `project list --include-coordination` shows coordination parents as `decomposition (complete)` with recommendation `none`.
+
+**Step 3: Verify**
+
+Run: `pnpm run cli -- project list --include-coordination`
+Expected: coordination parents render as `decomposition (complete)` with recommendation `none`.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/oat-project-split/dogfood/declared.md
+git commit -m "fix(p-rev1-t01): annotate coordination list dogfood note"
+```
+
+---
+
+### Task p-rev1-t02: (review) Annotate fixed coordination parent state-body dogfood note
+
+**Files:**
+
+- Modify: `.oat/projects/shared/oat-project-split/dogfood/declared.md`
+
+**Step 1: Understand the issue**
+
+Review finding: `dogfood/declared.md` still contains an earlier rough-edge note that parent `state.md` prose described scaffolded plan/implementation artifacts, but the current parent writer now renders coordination-specific `N/A` artifact prose.
+Location: `.oat/projects/shared/oat-project-split/dogfood/declared.md:54`
+
+**Step 2: Implement fix**
+
+Annotate the dogfood note to clarify the symptom was fixed by the coordination-parent state-body update. Reference that current generated parent state bodies list spec/design/plan/implementation as `N/A (coordination parent)`.
+
+**Step 3: Verify**
+
+Run: `rg -n "N/A \\(coordination parent\\)|project list --include-coordination" .oat/projects/shared/oat-project-split/dogfood/declared.md`
+Expected: declared dogfood evidence records both historical observations and current fixed behavior.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/oat-project-split/dogfood/declared.md
+git commit -m "fix(p-rev1-t02): annotate coordination state dogfood note"
+```
+
+---
+
 ## Reviews
 
 | Scope    | Type     | Status          | Date       | Artifact                                               |
@@ -847,7 +909,7 @@ Sequential, final phase. Dogfood scenarios validate the lived experience; `bl-3a
 | p03      | code     | passed          | 2026-05-21 | reviews/p03-review-2026-05-21.md                       |
 | p04      | code     | passed          | 2026-05-21 | reviews/p04-review-2026-05-21-v2.md                    |
 | p05      | code     | passed          | 2026-05-21 | reviews/p05-review-2026-05-21-v4.md                    |
-| final    | code     | received        | 2026-05-21 | reviews/final-code-review-2026-05-21-v3.md             |
+| final    | code     | fixes_added     | 2026-05-21 | reviews/archived/final-code-review-2026-05-21-v3.md    |
 | p01-r1   | code     | fixes_completed | 2026-05-21 | reviews/p01-review-2026-05-21.md                       |
 | p01-r2   | code     | fixes_completed | 2026-05-21 | reviews/p01-review-2026-05-21-v2.md                    |
 | p02-r1   | code     | fixes_completed | 2026-05-21 | reviews/p02-review-2026-05-21.md                       |
@@ -872,8 +934,9 @@ Sequential, final phase. Dogfood scenarios validate the lived experience; `bl-3a
 - Phase 3: 3 tasks — `oat project list` filter and dashboard `## Decompositions` section
 - Phase 4: 4 tasks — detection hook in discover, declared-mode + picker option in brainstorm, skill-simulation tests
 - Phase 5: 5 tasks — `bl-3a4a` reconciliation, three dogfood scenarios, SKILL + lockstep version bumps
+- Review Fixes: 2 tasks — final review dogfood evidence annotations
 
-**Total: 25 tasks**
+**Total: 27 tasks**
 
 Ready for code review and merge.
 
