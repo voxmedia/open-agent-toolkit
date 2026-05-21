@@ -3,7 +3,10 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import type { SplitPayload } from '../../projects/split/child-plan';
+import {
+  buildSplitPlanDocument,
+  type SplitPayload,
+} from '../../projects/split/child-plan';
 import { evaluateSignals, type Signal } from '../../projects/split/signals';
 
 const brainstormSkillPath = fileURLToPath(
@@ -104,5 +107,37 @@ describe('oat-brainstorm split handoff hooks', () => {
 
     expect(outcome.options).not.toContain('Promote to N projects');
     expect(skill).toContain('Below 2 split signals, do not show this option');
+  });
+
+  it('normalizes the brainstorm picker payload before split execution', () => {
+    const outcome = simulateBrainstormPicker([
+      'expect-separate-prs',
+      'distinct-subsystems',
+    ]);
+
+    expect(outcome.payload).toBeDefined();
+
+    const document = buildSplitPlanDocument({
+      ...outcome.payload!,
+      inferredChildren: [
+        {
+          slug: 'foundation-child',
+          inheritedContext: 'Shared brainstorm context.',
+          foundation: true,
+        },
+        {
+          slug: 'separate-followup',
+          inheritedContext: 'Follow-up brainstorm context.',
+          knownDependencies: ['foundation-child'],
+        },
+      ],
+    });
+
+    expect(document.origin).toBe('brainstorm-picker');
+    expect(document.plan.initialActiveChild).toBe('foundation-child');
+    expect(document.plan.children.map((child) => child.slug)).toEqual([
+      'foundation-child',
+      'separate-followup',
+    ]);
   });
 });

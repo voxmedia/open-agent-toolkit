@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import { buildSplitPlanDocument } from '../../projects/split/child-plan';
 import { evaluateSignals, type Signal } from '../../projects/split/signals';
 
 const discoverSkillPath = fileURLToPath(
@@ -92,5 +93,34 @@ describe('oat-project-discover split detection hook', () => {
     expect(outcome.exitCode).toBe(1);
     expect(readDiscoverSkill()).toContain('## Detected Split Recommendation');
     expect(readDiscoverSkill()).toContain('exit 1');
+  });
+
+  it('can hand a detected mid-stream transcript to the split plan normalizer', () => {
+    const document = buildSplitPlanDocument({
+      origin: 'detected-mid-stream',
+      interactive: true,
+      parentSlug: 'broad-discovery',
+      inferredChildren: [
+        {
+          slug: 'workflow-foundation',
+          inheritedContext: 'Shared workflow context from discovery.',
+          foundation: true,
+        },
+        {
+          slug: 'docs-followup',
+          inheritedContext: 'Docs context from discovery.',
+          knownDependencies: ['workflow-foundation'],
+        },
+      ],
+      integrationSketch: 'Foundation ships before docs follow-up.',
+    });
+
+    expect(document.origin).toBe('detected-mid-stream');
+    expect(document.interactive).toBe(true);
+    expect(document.plan.initialActiveChild).toBe('workflow-foundation');
+    expect(document.plan.children.map((child) => child.slug)).toEqual([
+      'workflow-foundation',
+      'docs-followup',
+    ]);
   });
 });
