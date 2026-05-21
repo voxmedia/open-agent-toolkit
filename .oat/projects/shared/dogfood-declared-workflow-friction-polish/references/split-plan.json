@@ -1,0 +1,33 @@
+{
+  "origin": "declared",
+  "interactive": true,
+  "plan": {
+    "parentSlug": "dogfood-declared-workflow-friction-polish",
+    "children": [
+      {
+        "slug": "dogfood-config-unset",
+        "description": "Add an oat config unset command for removing config values.",
+        "inheritedContext": "Backlog quick-win batch context: remove workflow friction by adding a small config mutation helper.",
+        "knownDependencies": [],
+        "order": 1
+      },
+      {
+        "slug": "dogfood-quick-routing",
+        "description": "Clarify quick-mode resume routing from oat-project-plan.",
+        "inheritedContext": "Backlog quick-win batch context: clarify quick-mode routing once config helper assumptions are known.",
+        "knownDependencies": ["dogfood-config-unset"],
+        "order": 2
+      },
+      {
+        "slug": "dogfood-staleness-threshold",
+        "description": "Add configurable staleness threshold to oat config.",
+        "inheritedContext": "Backlog quick-win batch context: add a user-configurable threshold after config command semantics are clear.",
+        "knownDependencies": ["dogfood-config-unset"],
+        "order": 3
+      }
+    ],
+    "foundationChild": "dogfood-config-unset",
+    "integrationSketch": "Ship the config command first, then use the clarified config semantics for quick-mode routing guidance and staleness-threshold configuration.",
+    "initialActiveChild": "dogfood-config-unset"
+  }
+}
