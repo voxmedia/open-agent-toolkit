@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-20
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | --------------------------------------- | ------- | ----- | --------- |
 | Phase 1: Schema & pure-logic foundation | passed  | 6     | 6/6       |
 | Phase 2: oat-project-split skill        | passed  | 7     | 7/7       |
-| Phase 3: Listings & dashboard filter    | pending | 3     | 0/3       |
+| Phase 3: Listings & dashboard filter    | passed  | 3     | 3/3       |
 | Phase 4: Integration hooks              | pending | 4     | 0/4       |
 | Phase 5: Reconcile + dogfood + ship     | pending | 5     | 0/5       |
 
-**Total:** 13/25 tasks completed
+**Total:** 16/25 tasks completed
 **Parallel groups:** `[['p02', 'p03']]` (after p01 completes)
 
 ---
@@ -348,6 +348,43 @@ oat_generated: false
 
 ### Task p03-t01: `oat project list` filter + `--include-coordination` flag
 
+**Status:** completed
+**Commit:** `c74fb982`
+
+---
+
+### Task p03-t02: Dashboard `## Decompositions` section
+
+**Status:** completed
+**Commit:** `bdffa118`
+
+---
+
+### Task p03-t03: List + dashboard end-to-end test
+
+**Status:** completed
+**Commit:** `f320170f`
+
+**Outcome:**
+
+- Terminal coordination parents are hidden from default project listings, exposed via `--include-coordination`, and grouped under `## Decompositions` in the dashboard.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/list.test.ts src/commands/state/generate.test.ts src/commands/project/list.integration.test.ts`
+- Result: pass, 3 files / 27 tests.
+- Run: `pnpm lint && pnpm type-check`
+- Result: pass.
+
+---
+
+## Phase 4: Integration hooks
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Detection hook in `oat-project-discover`
+
 **Status:** pending
 **Commit:** -
 
@@ -407,6 +444,27 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 #### Outstanding Items
 
 - Medium p02 review finding remains: p02-t06 does not mirror the full planned integration matrix. Hook wording/picker coverage is expected in p04.
+
+### Run 3 — 2026-05-20 22:19
+
+**Branch:** chore/orient-subproject-split-backlog
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p03   | DONE        | pass   | 0/2            | completed   |
+
+#### Parallel Groups
+
+- p03: sequential after p02 because the declared p02/p03 worktree group degraded before p02 dispatch.
+
+#### Outstanding Items
+
+- None.
 
 <!-- orchestration-runs-end -->
 
