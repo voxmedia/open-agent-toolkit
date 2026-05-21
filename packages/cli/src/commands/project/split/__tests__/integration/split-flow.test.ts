@@ -253,6 +253,7 @@ describe('oat-project-split integration fixtures', () => {
     await resumeSplit(
       join(repoRoot, '.oat', 'projects', 'shared', document.plan.parentSlug),
       { repoRoot },
+      { confirmed: true },
     );
 
     for (const child of document.plan.children) {
