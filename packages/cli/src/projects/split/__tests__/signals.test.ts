@@ -23,7 +23,7 @@ describe('evaluateSignals', () => {
     ).toBe('soft');
   });
 
-  it('triggered === (fired.length >= 2)', () => {
+  it('triggered === (unique fired.length >= 2)', () => {
     const cases: Signal[][] = [
       [],
       ['independently-shippable'],
@@ -36,7 +36,21 @@ describe('evaluateSignals', () => {
     ];
 
     for (const fired of cases) {
-      expect(evaluateSignals({ fired }).triggered).toBe(fired.length >= 2);
+      expect(evaluateSignals({ fired }).triggered).toBe(
+        new Set(fired).size >= 2,
+      );
     }
+  });
+
+  it('deduplicates fired signals before evaluating confidence', () => {
+    expect(
+      evaluateSignals({
+        fired: ['independently-shippable', 'independently-shippable'],
+      }),
+    ).toEqual({
+      fired: ['independently-shippable'],
+      triggered: false,
+      confidence: 'below',
+    });
   });
 });

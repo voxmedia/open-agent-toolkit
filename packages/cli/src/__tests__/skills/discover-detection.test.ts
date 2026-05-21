@@ -1,183 +1,145 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-
 import { describe, expect, it } from 'vitest';
 
-import { buildSplitPlanDocument } from '../../projects/split/child-plan';
-import { evaluateSignals, type Signal } from '../../projects/split/signals';
+import {
+  runDiscoverDetectionFixture,
+  type TranscriptFixture,
+} from './split-flow-fixtures';
 
-const discoverSkillPath = fileURLToPath(
-  new URL(
-    '../../../../../.agents/skills/oat-project-discover/SKILL.md',
-    import.meta.url,
-  ),
-);
+const baseChildren = [
+  {
+    slug: 'workflow-foundation',
+    description: 'Shared workflow foundation',
+    inheritedContext: 'Discovery captured shared workflow context.',
+    foundation: true,
+  },
+  {
+    slug: 'docs-followup',
+    description: 'Docs follow-up',
+    inheritedContext: 'Discovery captured docs rollout context.',
+    knownDependencies: ['workflow-foundation'],
+  },
+];
 
-function readDiscoverSkill(): string {
-  return readFileSync(discoverSkillPath, 'utf8');
-}
-
-function simulateDiscoverDetection(
-  fired: Signal[],
-  options: { nonInteractive?: boolean } = {},
-): { prompt: string | null; writesRecommendation: boolean; exitCode: number } {
-  const evaluation = evaluateSignals({ fired });
-
-  if (!evaluation.triggered) {
-    return { prompt: null, writesRecommendation: false, exitCode: 0 };
-  }
-
-  if (options.nonInteractive) {
-    return {
-      prompt: null,
-      writesRecommendation: true,
-      exitCode: 1,
-    };
-  }
-
+function fixtureFor(
+  transcript: TranscriptFixture['transcript'],
+): TranscriptFixture {
   return {
-    prompt:
-      evaluation.confidence === 'high'
-        ? 'This looks like multiple independent projects. Split now?'
-        : 'This may be multiple projects. Split, continue discovery, or keep one project?',
-    writesRecommendation: false,
-    exitCode: 0,
+    transcript,
+    parentSlug: 'broad-discovery',
+    discoveryPath: '.oat/projects/shared/broad-discovery',
+    children: baseChildren,
+    inheritedContext: 'Shared parent context from discovery.',
+    integrationSketch: 'Foundation ships before docs follow-up.',
   };
 }
 
-function simulateDiscoverConvergence(
-  fired: Signal[],
-  options: { nonInteractive?: boolean } = {},
-): {
-  prompt: string | null;
-  writesRecommendation: boolean;
-  proceedsAsOneProject: boolean;
-  exitCode: number;
-} {
-  const evaluation = evaluateSignals({ fired });
-
-  if (options.nonInteractive) {
-    return evaluation.triggered
-      ? {
-          prompt: null,
-          writesRecommendation: true,
-          proceedsAsOneProject: false,
-          exitCode: 1,
-        }
-      : {
-          prompt: null,
-          writesRecommendation: false,
-          proceedsAsOneProject: true,
-          exitCode: 0,
-        };
-  }
-
-  return {
-    prompt:
-      'This reads as one cohesive project — proceed, or split into multiple?',
-    writesRecommendation: false,
-    proceedsAsOneProject: evaluation.confidence === 'below',
-    exitCode: 0,
-  };
-}
-
-describe('oat-project-discover split detection hook', () => {
-  it('allows the documented pnpm local-development fallback', () => {
-    expect(readDiscoverSkill()).toContain('Bash(pnpm:*)');
-    expect(readDiscoverSkill()).toContain(
-      'pnpm run cli -- project split evaluate-signals',
+describe('oat-project-discover transcript split detection hook', () => {
+  it('uses high-confidence wording when the transcript fires both load-bearing signals', () => {
+    const outcome = runDiscoverDetectionFixture(
+      fixtureFor([
+        {
+          speaker: 'user',
+          text: 'This has two independently shippable tracks.',
+        },
+        {
+          speaker: 'assistant',
+          text: 'The tracks have no shared design surface.',
+        },
+      ]),
+      { 'discover-split-offer': 'broad-first' },
     );
-  });
 
-  it('surfaces high-confidence wording when load-bearing signals 1 and 2 fire', () => {
-    const outcome = simulateDiscoverDetection([
-      'independently-shippable',
-      'no-shared-design-surface',
-    ]);
-
-    expect(outcome.prompt).toContain(
+    expect(outcome.confidence).toBe('high');
+    expect(outcome.triggered).toBe(true);
+    expect(outcome.decision).toBe('broad-first');
+    expect(outcome.asked).toHaveLength(1);
+    expect(outcome.asked[0]).toMatchObject({
+      id: 'discover-split-offer',
+      response: 'broad-first',
+    });
+    expect(outcome.asked[0]?.prompt).toContain(
       'looks like multiple independent projects',
     );
-    expect(readDiscoverSkill()).toContain('high-confidence');
-    expect(readDiscoverSkill()).toContain(
-      'This looks like multiple independent projects',
-    );
+    expect(outcome.payload).toBeUndefined();
   });
 
-  it('surfaces soft wording when only signals 3 and 4 fire', () => {
-    const outcome = simulateDiscoverDetection([
-      'expect-separate-prs',
-      'distinct-subsystems',
-    ]);
-
-    expect(outcome.prompt).toContain('may be multiple projects');
-    expect(readDiscoverSkill()).toContain('soft');
-    expect(readDiscoverSkill()).toContain('This may be multiple projects');
-  });
-
-  it('does not surface a split offer when fewer than two signals fire', () => {
-    expect(simulateDiscoverDetection([]).prompt).toBeNull();
-    expect(
-      simulateDiscoverDetection(['distinct-subsystems']).prompt,
-    ).toBeNull();
-    expect(readDiscoverSkill()).toContain(
-      'Below 2 signals, do not surface a split offer',
-    );
-  });
-
-  it('records a split recommendation and exits non-zero in non-interactive mode', () => {
-    const outcome = simulateDiscoverDetection(
-      ['independently-shippable', 'no-shared-design-surface'],
-      { nonInteractive: true },
+  it('uses soft wording when the transcript fires non-load-bearing signals', () => {
+    const outcome = runDiscoverDetectionFixture(
+      fixtureFor([
+        {
+          speaker: 'user',
+          text: 'Reviewers will probably expect separate PRs.',
+        },
+        {
+          speaker: 'assistant',
+          text: 'The work spans distinct subsystems in different packages.',
+        },
+      ]),
+      { 'discover-split-offer': 'keep-one-project' },
     );
 
-    expect(outcome.prompt).toBeNull();
-    expect(outcome.writesRecommendation).toBe(true);
-    expect(outcome.exitCode).toBe(1);
-    expect(readDiscoverSkill()).toContain('## Detected Split Recommendation');
-    expect(readDiscoverSkill()).toContain('exit 1');
+    expect(outcome.confidence).toBe('soft');
+    expect(outcome.triggered).toBe(true);
+    expect(outcome.decision).toBe('keep-one-project');
+    expect(outcome.asked[0]?.prompt).toContain('may be multiple projects');
+    expect(outcome.payload).toBeUndefined();
   });
 
-  it('fails fast for non-interactive convergence detection before prompting', () => {
-    const outcome = simulateDiscoverConvergence(
-      ['expect-separate-prs', 'distinct-subsystems'],
-      { nonInteractive: true },
+  it('does not ask for a split decision below the signal threshold', () => {
+    const outcome = runDiscoverDetectionFixture(
+      fixtureFor([
+        {
+          speaker: 'user',
+          text: 'This touches a distinct subsystem, but the rest is one workflow.',
+        },
+      ]),
+      {},
     );
 
-    expect(outcome.prompt).toBeNull();
-    expect(outcome.writesRecommendation).toBe(true);
-    expect(outcome.proceedsAsOneProject).toBe(false);
-    expect(outcome.exitCode).toBe(1);
-    expect(readDiscoverSkill()).toContain('Non-interactive convergence branch');
-    expect(readDiscoverSkill()).toContain(
-      'proceed as one cohesive project without prompting',
-    );
+    expect(outcome.confidence).toBe('below');
+    expect(outcome.triggered).toBe(false);
+    expect(outcome.asked).toEqual([]);
+    expect(outcome.payload).toBeUndefined();
+    expect(outcome.document).toBeUndefined();
   });
 
-  it('can hand a detected mid-stream transcript to the split plan normalizer', () => {
-    const document = buildSplitPlanDocument({
+  it('turns a stubbed split response into a detected mid-stream SplitPlanDocument', () => {
+    const outcome = runDiscoverDetectionFixture(
+      fixtureFor([
+        {
+          speaker: 'user',
+          text: 'The workflow foundation and docs rollout can ship independently.',
+        },
+        {
+          speaker: 'assistant',
+          text: 'They have no shared design surface and should become separate PRs.',
+        },
+      ]),
+      { 'discover-split-offer': 'split-now' },
+    );
+
+    expect(outcome.decision).toBe('split-now');
+    expect(outcome.payload).toMatchObject({
       origin: 'detected-mid-stream',
       interactive: true,
-      parentSlug: 'broad-discovery',
-      inferredChildren: [
-        {
-          slug: 'workflow-foundation',
-          inheritedContext: 'Shared workflow context from discovery.',
-          foundation: true,
-        },
-        {
-          slug: 'docs-followup',
-          inheritedContext: 'Docs context from discovery.',
-          knownDependencies: ['workflow-foundation'],
-        },
-      ],
-      integrationSketch: 'Foundation ships before docs follow-up.',
+      priorDiscovery: {
+        path: '.oat/projects/shared/broad-discovery',
+      },
     });
-
-    expect(document.origin).toBe('detected-mid-stream');
-    expect(document.interactive).toBe(true);
-    expect(document.plan.initialActiveChild).toBe('workflow-foundation');
-    expect(document.plan.children.map((child) => child.slug)).toEqual([
+    expect(
+      outcome.payload?.inferredChildren?.map((child) => child.slug),
+    ).toEqual(['workflow-foundation', 'docs-followup']);
+    expect(outcome.document).toMatchObject({
+      origin: 'detected-mid-stream',
+      interactive: true,
+      plan: {
+        parentSlug: 'broad-discovery',
+        foundationChild: 'workflow-foundation',
+        initialActiveChild: 'workflow-foundation',
+        integrationSketch: 'Foundation ships before docs follow-up.',
+      },
+    });
+    expect(outcome.document?.plan.children.map((child) => child.slug)).toEqual([
       'workflow-foundation',
       'docs-followup',
     ]);

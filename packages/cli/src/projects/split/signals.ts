@@ -16,7 +16,7 @@ const LOAD_BEARING: ReadonlySet<Signal> = new Set([
 ]);
 
 export function evaluateSignals(input: { fired: Signal[] }): SignalEvaluation {
-  const fired = [...input.fired];
+  const fired = [...new Set(input.fired)];
   const triggered = fired.length >= 2;
   const loadBearingCount = fired.filter((signal) =>
     LOAD_BEARING.has(signal),

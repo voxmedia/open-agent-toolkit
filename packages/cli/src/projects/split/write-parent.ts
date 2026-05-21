@@ -7,6 +7,7 @@ import {
 } from '@commands/project/new/scaffold';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
+import { assertValidProjectStateFilesystemContent } from '@validation/project-state';
 import YAML from 'yaml';
 
 import type { SplitPlanDocument } from './child-plan';
@@ -227,6 +228,13 @@ export async function writeCoordinationParent(
     ['spec.md', 'design.md', 'plan.md', 'implementation.md'].map((file) =>
       rm(join(parentRoot, file), { force: true }),
     ),
+  );
+  await assertValidProjectStateFilesystemContent(
+    await readFile(statePath, 'utf8'),
+    {
+      filePath: statePath,
+      projectPath: parentRoot,
+    },
   );
 
   return {

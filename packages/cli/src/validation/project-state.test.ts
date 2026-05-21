@@ -45,6 +45,7 @@ describe('validateProjectState - coordination additions', () => {
           oat_kind: 'coordination',
           oat_phase: 'decomposition',
           oat_phase_status: 'complete',
+          oat_children: ['child-a'],
         },
       }),
     ).toMatchObject({ ok: true });
@@ -64,6 +65,25 @@ describe('validateProjectState - coordination additions', () => {
       expect.objectContaining({
         code: 'decomposition-requires-coordination',
       }),
+      expect.objectContaining({
+        code: 'decomposition-requires-children',
+      }),
+    ]);
+  });
+
+  it('rejects decomposition coordination parents without children', () => {
+    const result = validateProjectState({
+      frontmatter: {
+        oat_kind: 'coordination',
+        oat_phase: 'decomposition',
+        oat_phase_status: 'complete',
+        oat_children: [],
+      },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toEqual([
+      expect.objectContaining({ code: 'decomposition-requires-children' }),
     ]);
   });
 
@@ -273,5 +293,36 @@ describe('child linkage validation', () => {
         },
       ),
     ).rejects.toThrow(/must reference a coordination project/);
+  });
+
+  it('filesystem validation rejects executable artifacts on coordination parents', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-state-validation-'));
+    tempDirs.push(root);
+    const parentPath = join(
+      root,
+      '.oat',
+      'projects',
+      'shared',
+      'coordination-parent',
+    );
+    await mkdir(parentPath, { recursive: true });
+    await writeFile(join(parentPath, 'plan.md'), '# Plan drift\n', 'utf8');
+
+    await expect(
+      assertValidProjectStateFilesystemContent(
+        stateContent({
+          oat_kind: 'coordination',
+          oat_phase: 'decomposition',
+          oat_phase_status: 'complete',
+          oat_children: ['child-a'],
+        }),
+        {
+          filePath: join(parentPath, 'state.md'),
+          projectPath: parentPath,
+        },
+      ),
+    ).rejects.toThrow(
+      /coordination projects must not contain executable phase artifacts: plan\.md/,
+    );
   });
 });

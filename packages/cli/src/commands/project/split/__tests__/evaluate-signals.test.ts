@@ -78,4 +78,20 @@ describe('oat project split evaluate-signals', () => {
     expect(capture.error[0]).toContain('Invalid signal');
     expect(process.exitCode).toBe(1);
   });
+
+  it('deduplicates repeated signals before evaluating threshold', async () => {
+    const { command, capture } = createHarness();
+
+    await runCommand(command, [
+      '--fired',
+      'independently-shippable,independently-shippable',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      fired: ['independently-shippable'],
+      triggered: false,
+      confidence: 'below',
+    });
+    expect(process.exitCode).toBe(0);
+  });
 });

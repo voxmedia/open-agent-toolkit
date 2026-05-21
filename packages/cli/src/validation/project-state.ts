@@ -237,6 +237,22 @@ function validateInheritedContextGate(
   }
 }
 
+function validateCoordinationParent(
+  state: NormalizedProjectState,
+  errors: ProjectStateValidationError[],
+): void {
+  if (state.oat_phase !== 'decomposition') {
+    return;
+  }
+
+  if (state.oat_children.length === 0) {
+    errors.push({
+      code: 'decomposition-requires-children',
+      message: 'oat_phase: decomposition requires non-empty oat_children',
+    });
+  }
+}
+
 function parseFrontmatterObject(
   content: string,
   filePath: string,
@@ -318,6 +334,7 @@ export function validateProjectState(
 
   validateChildLinkage(input, state, errors);
   validateInheritedContextGate(input.frontmatter, state, errors);
+  validateCoordinationParent(state, errors);
 
   return {
     ok: errors.length === 0,
@@ -386,9 +403,45 @@ export async function assertValidProjectStateFilesystemContent(
     readFile: options.readFile,
   });
 
-  assertValidProjectStateContent(content, {
-    filePath: options.filePath,
+  const frontmatter = parseFrontmatterObject(
+    content,
+    options.filePath ?? 'state.md',
+  );
+  const result = validateProjectState({
+    frontmatter,
     slug,
     relatedProjects,
   });
+  const errors = [...result.errors];
+
+  if (
+    result.state.oat_kind === 'coordination' ||
+    result.state.oat_phase === 'decomposition'
+  ) {
+    const readdir = options.readdir ?? defaultReaddir;
+    const entries = await readdir(options.projectPath, {
+      withFileTypes: true,
+    });
+    const executableArtifacts = new Set([
+      'spec.md',
+      'design.md',
+      'plan.md',
+      'implementation.md',
+    ]);
+    const presentExecutableArtifacts = entries
+      .filter((entry) => entry.isFile() && executableArtifacts.has(entry.name))
+      .map((entry) => entry.name)
+      .sort();
+
+    if (presentExecutableArtifacts.length > 0) {
+      errors.push({
+        code: 'coordination-parent-no-executable-artifacts',
+        message: `coordination projects must not contain executable phase artifacts: ${presentExecutableArtifacts.join(', ')}`,
+      });
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(errors.map((error) => error.message).join('; '));
+  }
 }
