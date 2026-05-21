@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import type { SplitPayload } from '../../projects/split/child-plan';
+import { evaluateSignals, type Signal } from '../../projects/split/signals';
 
 const brainstormSkillPath = fileURLToPath(
   new URL(
@@ -37,6 +38,28 @@ function simulateDeclaredBrainstormHandoff(): {
   };
 }
 
+function simulateBrainstormPicker(fired: Signal[]): {
+  options: string[];
+  payload?: SplitPayload;
+} {
+  const evaluation = evaluateSignals({ fired });
+  const options = ['Inline only', 'Doc-to-path', 'Promote to new OAT project'];
+
+  if (!evaluation.triggered) {
+    return { options };
+  }
+
+  return {
+    options: [...options, 'Promote to N projects'],
+    payload: {
+      origin: 'brainstorm-picker',
+      parentSlug: 'umbrella-project',
+      inferredChildren: [{ slug: 'first-child' }, { slug: 'second-child' }],
+      interactive: true,
+    },
+  };
+}
+
 describe('oat-brainstorm split handoff hooks', () => {
   it('enters declared multi-project mode with umbrella framing and origin declared', () => {
     const outcome = simulateDeclaredBrainstormHandoff();
@@ -59,5 +82,27 @@ describe('oat-brainstorm split handoff hooks', () => {
     expect(skill).toContain(
       'do not treat ambiguous exploratory phrasing as declared mode',
     );
+  });
+
+  it('adds a Promote to N projects picker option when split signals trigger', () => {
+    const outcome = simulateBrainstormPicker([
+      'independently-shippable',
+      'no-shared-design-surface',
+    ]);
+    const skill = readBrainstormSkill();
+
+    expect(outcome.options).toContain('Promote to N projects');
+    expect(outcome.payload?.origin).toBe('brainstorm-picker');
+    expect(skill).toContain('Promote to N projects');
+    expect(skill).toContain('origin: "brainstorm-picker"');
+    expect(skill).toContain('oat project split evaluate-signals');
+  });
+
+  it('does not show the N-projects picker option for small scope', () => {
+    const outcome = simulateBrainstormPicker(['distinct-subsystems']);
+    const skill = readBrainstormSkill();
+
+    expect(outcome.options).not.toContain('Promote to N projects');
+    expect(skill).toContain('Below 2 split signals, do not show this option');
   });
 });
