@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-20
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase                                   | Status  | Tasks | Completed |
 | --------------------------------------- | ------- | ----- | --------- |
 | Phase 1: Schema & pure-logic foundation | passed  | 6     | 6/6       |
-| Phase 2: oat-project-split skill        | pending | 7     | 0/7       |
+| Phase 2: oat-project-split skill        | passed  | 7     | 7/7       |
 | Phase 3: Listings & dashboard filter    | pending | 3     | 0/3       |
 | Phase 4: Integration hooks              | pending | 4     | 0/4       |
 | Phase 5: Reconcile + dogfood + ship     | pending | 5     | 0/5       |
 
-**Total:** 6/25 tasks completed
+**Total:** 13/25 tasks completed
 **Parallel groups:** `[['p02', 'p03']]` (after p01 completes)
 
 ---
@@ -267,10 +267,86 @@ oat_generated: false
 
 ## Phase 2: oat-project-split skill
 
+**Status:** passed
+**Started:** 2026-05-20
+**Completed:** 2026-05-20
+**Review:** `reviews/p02-review-2026-05-21-v3.md` (passed with 0 Critical, 0 Important)
+
+### Task p02-t01: Create `oat-project-split` SKILL.md skeleton
+
+**Status:** completed
+**Commit:** `5906e31f`
+
+---
+
+### Task p02-t02: Coordination parent writer (scaffold + normalize)
+
+**Status:** completed
+**Commit:** `0650238b`, fix `31baa6ae`
+
+---
+
+### Task p02-t03: Child scaffolder + seeder
+
+**Status:** completed
+**Commit:** `59efcd24`
+
+---
+
+### Task p02-t04: Parent completion + active-child selection
+
+**Status:** completed
+**Commit:** `6c13120d`
+
+---
+
+### Task p02-t05: Resume mode (partial-state detection + reconstruction)
+
+**Status:** completed
+**Commit:** `4acf4533`, fix `16810d27`
+
+---
+
+### Task p02-t06: Integration test suite (fixture-based)
+
+**Status:** completed
+**Commit:** `2fb86442`, fix `b49de59f`
+
+---
+
+### Task p02-t07: Add `oat project split run` subcommand (orchestrated end-to-end split)
+
+**Status:** completed
+**Commit:** `2467d7f6`, fixes `123c7c0b`, `9a32d92b`
+
+**Outcome:**
+
+- Standalone `oat-project-split` skill and `oat project split run` now create coordination parents, seed children, finalize active child selection, persist/resume durable split plans, enforce effective non-interactive detected fail-fast behavior, and require explicit confirmation before resume writes.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/projects/split/ src/commands/project/split/`
+- Result: pass, 12 files / 49 tests.
+- Run: `pnpm oat:validate-skills`
+- Result: pass, 49 oat-\* skills validated.
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit --pretty false`
+- Result: pass.
+
+**Notes:**
+
+- The declared p02/p03 parallel group degraded to sequential because worktree bootstrap baseline reported Codex provider drift/missing entries in the phase worktree.
+- Medium p02 review finding remains: p02-t06 does not mirror the full planned integration matrix; hook wording/picker assertions are expected in p04.
+
+---
+
+## Phase 3: Listings & dashboard filter
+
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: Create `oat-project-split` SKILL.md skeleton
+### Task p03-t01: `oat project list` filter + `--include-coordination` flag
 
 **Status:** pending
 **Commit:** -
@@ -309,6 +385,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 #### Outstanding Items
 
 - Minor review finding remains: duplicate fired signals can still falsely cross the split threshold.
+
+### Run 2 — 2026-05-20 22:09
+
+**Branch:** chore/orient-subproject-split-backlog
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p02   | DONE_WITH_CONCERNS | pass   | 2/2            | completed   |
+
+#### Parallel Groups
+
+- Declared group `[p02, p03]` degraded to sequential before phase dispatch.
+- Reason: `oat-worktree-bootstrap-auto` created p02/p03 worktrees at the correct base, but strict baseline failed during `oat status --scope project` because Codex provider entries were missing/drifted in the worktree.
+
+#### Outstanding Items
+
+- Medium p02 review finding remains: p02-t06 does not mirror the full planned integration matrix. Hook wording/picker coverage is expected in p04.
 
 <!-- orchestration-runs-end -->
 

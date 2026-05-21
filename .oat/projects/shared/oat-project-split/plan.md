@@ -843,7 +843,7 @@ Sequential, final phase. Dogfood scenarios validate the lived experience; `bl-3a
 | Scope  | Type     | Status          | Date       | Artifact                                               |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------ |
 | p01    | code     | passed          | 2026-05-21 | reviews/p01-review-2026-05-21-v3.md                    |
-| p02    | code     | pending         | -          | -                                                      |
+| p02    | code     | passed          | 2026-05-21 | reviews/p02-review-2026-05-21-v3.md                    |
 | p03    | code     | pending         | -          | -                                                      |
 | p04    | code     | pending         | -          | -                                                      |
 | p05    | code     | pending         | -          | -                                                      |
