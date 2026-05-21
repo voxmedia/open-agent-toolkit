@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-20
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1: Schema & pure-logic foundation | passed  | 6     | 6/6       |
 | Phase 2: oat-project-split skill        | passed  | 7     | 7/7       |
 | Phase 3: Listings & dashboard filter    | passed  | 3     | 3/3       |
-| Phase 4: Integration hooks              | pending | 4     | 0/4       |
+| Phase 4: Integration hooks              | passed  | 4     | 4/4       |
 | Phase 5: Reconcile + dogfood + ship     | pending | 5     | 0/5       |
 
-**Total:** 16/25 tasks completed
+**Total:** 20/25 tasks completed
 **Parallel groups:** `[['p02', 'p03']]` (after p01 completes)
 
 ---
@@ -385,6 +385,57 @@ oat_generated: false
 
 ### Task p04-t01: Detection hook in `oat-project-discover`
 
+**Status:** completed
+**Commit:** `356ba9aa`, fix `e8aac7a1`
+
+---
+
+### Task p04-t02: Declared-mode + boundary question in `oat-brainstorm`
+
+**Status:** completed
+**Commit:** `7e8db68c`
+
+---
+
+### Task p04-t03: Conditional "Promote to N projects" picker option in `oat-brainstorm`
+
+**Status:** completed
+**Commit:** `3c41fc75`
+
+---
+
+### Task p04-t04: Skill-simulation integration tests for the hooks
+
+**Status:** completed
+**Commit:** `51c5c530`
+
+**Outcome:**
+
+- `oat-project-discover` and `oat-brainstorm` now delegate split detection/handoff to the split skill instead of duplicating split mechanics, including non-interactive detected fail-fast behavior.
+- Brainstorm supports declared multi-project intent and conditional `Promote to N projects` handoff.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/__tests__/skills/discover-detection.test.ts src/__tests__/skills/brainstorm-handoff.test.ts`
+- Result: pass.
+- Run: `pnpm oat:validate-skills`
+- Result: pass.
+- Run: `pnpm lint && pnpm type-check`
+- Result: pass.
+
+**Notes:**
+
+- Medium p04 review finding remains: tests are helper/string based rather than full transcript/AskUserQuestion fixtures.
+
+---
+
+## Phase 5: Reconcile + dogfood + ship
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Reconcile `bl-3a4a` backlog item
+
 **Status:** pending
 **Commit:** -
 
@@ -465,6 +516,27 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 #### Outstanding Items
 
 - None.
+
+### Run 4 — 2026-05-20 22:38
+
+**Branch:** chore/orient-subproject-split-backlog
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p04   | DONE        | pass   | 1/2            | completed   |
+
+#### Parallel Groups
+
+- p04: sequential
+
+#### Outstanding Items
+
+- Medium p04 review finding remains: hook tests do not use full transcript/AskUserQuestion fixtures.
 
 <!-- orchestration-runs-end -->
 
