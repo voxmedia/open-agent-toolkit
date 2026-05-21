@@ -1,0 +1,33 @@
+{
+  "origin": "declared",
+  "interactive": true,
+  "plan": {
+    "parentSlug": "live-dogfood-declared-workflow-friction-polish",
+    "children": [
+      {
+        "slug": "live-dogfood-declared-config-unset",
+        "description": "Foundation child: handle unset config values cleanly and define status semantics.",
+        "inheritedContext": "Workflow-friction polish from the OAT workflow backlog. Shared constraint: keep this child independently shippable and avoid creating a shared design surface. This child owns clean unset config handling and status semantics that downstream routing wording can rely on.",
+        "knownDependencies": [],
+        "order": 1
+      },
+      {
+        "slug": "live-dogfood-declared-quick-routing",
+        "description": "Depends on config-unset: ensure quick-mode projects route to the right next skill.",
+        "inheritedContext": "Workflow-friction polish from the OAT workflow backlog. Shared constraint: keep this child independently shippable and avoid creating a shared design surface. This child should revalidate config semantics from live-dogfood-declared-config-unset before tightening quick-mode next-skill routing.",
+        "knownDependencies": ["live-dogfood-declared-config-unset"],
+        "order": 2
+      },
+      {
+        "slug": "live-dogfood-declared-staleness-threshold",
+        "description": "Independent child: tune knowledge staleness threshold messaging.",
+        "inheritedContext": "Workflow-friction polish from the OAT workflow backlog. Shared constraint: keep this child independently shippable and avoid creating a shared design surface. This child is independent of the config and quick-routing sequence and owns knowledge staleness threshold messaging cleanup.",
+        "knownDependencies": [],
+        "order": 3
+      }
+    ],
+    "foundationChild": "live-dogfood-declared-config-unset",
+    "integrationSketch": "Keep the children independently shippable. The only sequencing constraint is config semantics before quick-mode routing wording; staleness threshold messaging can proceed independently. Avoid creating a shared design surface across the three children.",
+    "initialActiveChild": "live-dogfood-declared-config-unset"
+  }
+}
