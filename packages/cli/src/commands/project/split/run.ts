@@ -14,6 +14,7 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import type { SplitPlanDocument } from '../../../projects/split/child-plan';
+import { validateSplitPlanDocumentShape } from '../../../projects/split/document-validation';
 import { finalizeSplit } from '../../../projects/split/finalize';
 import { resumeSplit, SplitResumeError } from '../../../projects/split/resume';
 import { seedChildren } from '../../../projects/split/seed-children';
@@ -53,21 +54,6 @@ const DEFAULT_DEPENDENCIES: RunSplitDependencies = {
   },
   processEnv: process.env,
 };
-
-function isDocument(value: unknown): value is SplitPlanDocument {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return false;
-  }
-  const document = value as Partial<SplitPlanDocument>;
-  return (
-    typeof document.origin === 'string' &&
-    typeof document.interactive === 'boolean' &&
-    Boolean(document.plan) &&
-    typeof document.plan?.parentSlug === 'string' &&
-    Array.isArray(document.plan?.children) &&
-    typeof document.plan?.initialActiveChild === 'string'
-  );
-}
 
 async function exists(
   path: string,
@@ -159,16 +145,22 @@ export function createProjectSplitRunCommand(
         );
         const raw = await dependencies.readFile(options.planFile, 'utf8');
         const parsed: unknown = JSON.parse(raw);
-        if (!isDocument(parsed)) {
-          throw new Error('Invalid SplitPlanDocument');
+        const documentShape = validateSplitPlanDocumentShape(parsed);
+        if (!documentShape.ok) {
+          throw new Error(
+            `Invalid SplitPlanDocument: ${documentShape.errors
+              .map((error) => error.message)
+              .join('; ')}`,
+          );
         }
+        const document = documentShape.document;
 
         if (
           options.nonInteractive &&
-          (parsed.origin === 'detected-mid-stream' ||
-            parsed.origin === 'detected-convergence')
+          (document.origin === 'detected-mid-stream' ||
+            document.origin === 'detected-convergence')
         ) {
-          await recordDetectedRecommendation(repoRoot, parsed, dependencies);
+          await recordDetectedRecommendation(repoRoot, document, dependencies);
           context.logger.error(
             'Detected split requires interactive confirmation; recommendation recorded.',
           );
@@ -176,7 +168,7 @@ export function createProjectSplitRunCommand(
           return;
         }
 
-        const parentPath = join(projectsRoot, parsed.plan.parentSlug)
+        const parentPath = join(projectsRoot, document.plan.parentSlug)
           .split('\\')
           .join('/');
         const absoluteParentPath = isAbsolute(parentPath)
@@ -190,7 +182,7 @@ export function createProjectSplitRunCommand(
             projectsRoot,
             dependencies,
           );
-          const validation = validateChildPlan(parsed.plan, slugs);
+          const validation = validateChildPlan(document.plan, slugs);
           if (!validation.ok) {
             throw new Error(
               `Split plan validation failed: ${validation.errors
@@ -198,9 +190,9 @@ export function createProjectSplitRunCommand(
                 .join('; ')}`,
             );
           }
-          await writeCoordinationParent(parsed, { repoRoot, projectsRoot });
-          await seedChildren(parsed.plan, { repoRoot, projectsRoot });
-          await finalizeSplit(parsed.plan, { repoRoot, projectsRoot });
+          await writeCoordinationParent(document, { repoRoot, projectsRoot });
+          await seedChildren(document.plan, { repoRoot, projectsRoot });
+          await finalizeSplit(document.plan, { repoRoot, projectsRoot });
         }
 
         await dependencies.refreshDashboard({ repoRoot });

@@ -71,6 +71,7 @@ const document: SplitPlanDocument = {
 async function seedPartialParent(
   repoRoot: string,
   phaseStatus = 'in_progress',
+  splitDocument: SplitPlanDocument = document,
 ): Promise<string> {
   const parentRoot = join(repoRoot, '.oat', 'projects', 'shared', 'umbrella');
   await mkdir(join(parentRoot, 'references'), { recursive: true });
@@ -86,7 +87,7 @@ async function seedPartialParent(
   );
   await writeFile(
     join(parentRoot, 'references', 'split-plan.json'),
-    `${JSON.stringify(document, null, 2)}\n`,
+    `${JSON.stringify(splitDocument, null, 2)}\n`,
     'utf8',
   );
   await mkdir(join(repoRoot, '.oat', 'projects', 'shared', 'a'), {
@@ -164,5 +165,56 @@ describe('split resume', () => {
     await expect(detectPartialSplit(parentRoot, { repoRoot })).rejects.toThrow(
       /split-plan\.json/,
     );
+  });
+
+  it('rejects persisted resume data with invalid child graph values', async () => {
+    const cases: Array<[string, SplitPlanDocument, RegExp]> = [
+      [
+        'dependency',
+        {
+          ...document,
+          plan: {
+            ...document.plan,
+            children: document.plan.children.map((child) =>
+              child.slug === 'c'
+                ? { ...child, knownDependencies: ['missing'] }
+                : child,
+            ),
+          },
+        },
+        /Dependency missing is not a sibling/,
+      ],
+      [
+        'foundation',
+        {
+          ...document,
+          plan: { ...document.plan, foundationChild: 'missing' },
+        },
+        /foundationChild is not in children/,
+      ],
+      [
+        'initial active',
+        {
+          ...document,
+          plan: { ...document.plan, initialActiveChild: 'missing' },
+        },
+        /initialActiveChild is not in children/,
+      ],
+    ];
+
+    for (const [name, splitDocument, message] of cases) {
+      const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-resume-'));
+      tempDirs.push(repoRoot);
+      const parentRoot = await seedPartialParent(
+        repoRoot,
+        'in_progress',
+        splitDocument,
+      );
+
+      await expect(
+        detectPartialSplit(parentRoot, { repoRoot }),
+        name,
+      ).rejects.toThrow(message);
+    }
   });
 });

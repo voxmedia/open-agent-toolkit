@@ -140,7 +140,7 @@ describe('oat project split run', () => {
 
   async function writePlanFile(
     repoRoot: string,
-    payload: SplitPlanDocument,
+    payload: unknown,
   ): Promise<string> {
     const planFile = join(repoRoot, 'split-plan.json');
     await writeFile(planFile, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
@@ -235,6 +235,28 @@ describe('oat project split run', () => {
     await expect(
       exists(join(repoRoot, '.oat', 'projects', 'shared', 'umbrella')),
     ).resolves.toBe(true);
+  });
+
+  it('rejects invalid origins before writing projects', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const planFile = await writePlanFile(repoRoot, {
+      ...document(),
+      origin: 'not-a-real-origin',
+    });
+    const { capture, command } = createHarness(repoRoot);
+
+    await runCommand(command, ['--plan-file', planFile]);
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.error.join('\n')).toContain('Invalid SplitPlanDocument');
+    expect(capture.error.join('\n')).toContain(
+      'SplitPlanDocument origin is required',
+    );
+    await expect(
+      exists(join(repoRoot, '.oat', 'projects', 'shared', 'umbrella')),
+    ).resolves.toBe(false);
   });
 
   it('persists split-plan.json and resumes partial prior runs', async () => {

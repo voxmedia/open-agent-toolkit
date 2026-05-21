@@ -5,8 +5,10 @@ import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import YAML from 'yaml';
 
 import type { ChildPlan, SplitPlanDocument } from './child-plan';
+import { validateSplitPlanDocumentShape } from './document-validation';
 import { finalizeSplit } from './finalize';
 import { seedChildren } from './seed-children';
+import { validateChildPlan } from './validation';
 import type { SplitProjectContext } from './write-parent';
 
 export class SplitResumeError extends Error {
@@ -37,21 +39,6 @@ function readObjectFrontmatter(
     throw new SplitResumeError(`${filePath} frontmatter must be an object`);
   }
   return parsed as Record<string, unknown>;
-}
-
-function isSplitPlanDocument(value: unknown): value is SplitPlanDocument {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return false;
-  }
-  const document = value as Partial<SplitPlanDocument>;
-  return (
-    typeof document.origin === 'string' &&
-    typeof document.interactive === 'boolean' &&
-    Boolean(document.plan) &&
-    typeof document.plan?.parentSlug === 'string' &&
-    Array.isArray(document.plan?.children) &&
-    typeof document.plan?.initialActiveChild === 'string'
-  );
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -115,22 +102,34 @@ export async function detectPartialSplit(
       `Cannot resume split without valid references/split-plan.json: ${message}`,
     );
   }
-  if (!isSplitPlanDocument(parsed)) {
+  const documentShape = validateSplitPlanDocumentShape(parsed);
+  if (!documentShape.ok) {
     throw new SplitResumeError(
-      'Cannot resume split without valid references/split-plan.json',
+      `Cannot resume split without valid references/split-plan.json: ${documentShape.errors
+        .map((error) => error.message)
+        .join('; ')}`,
+    );
+  }
+  const document = documentShape.document;
+  const validation = validateChildPlan(document.plan, new Set());
+  if (!validation.ok) {
+    throw new SplitResumeError(
+      `Cannot resume split with invalid references/split-plan.json: ${validation.errors
+        .map((error) => error.message)
+        .join('; ')}`,
     );
   }
 
   const missingChildren: string[] = [];
-  for (const child of parsed.plan.children) {
+  for (const child of document.plan.children) {
     if (!(await exists(join(context.repoRoot, projectsRoot, child.slug)))) {
       missingChildren.push(child.slug);
     }
   }
 
   return {
-    document: parsed,
-    plan: parsed.plan,
+    document,
+    plan: document.plan,
     missingChildren,
     parentProjectPath,
     projectsRoot,
