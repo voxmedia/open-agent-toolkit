@@ -120,6 +120,18 @@ async function recordDetectedRecommendation(
   );
 }
 
+function isEffectivelyNonInteractive(
+  options: RunSplitOptions,
+  context: CommandContext,
+  processEnv: NodeJS.ProcessEnv,
+): boolean {
+  return (
+    options.nonInteractive === true ||
+    context.interactive === false ||
+    processEnv.OAT_NON_INTERACTIVE === '1'
+  );
+}
+
 export function createProjectSplitRunCommand(
   overrides: Partial<RunSplitDependencies> = {},
 ): Command {
@@ -156,7 +168,11 @@ export function createProjectSplitRunCommand(
         const document = documentShape.document;
 
         if (
-          options.nonInteractive &&
+          isEffectivelyNonInteractive(
+            options,
+            context,
+            dependencies.processEnv,
+          ) &&
           (document.origin === 'detected-mid-stream' ||
             document.origin === 'detected-convergence')
         ) {

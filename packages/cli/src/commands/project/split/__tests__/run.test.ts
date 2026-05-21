@@ -85,7 +85,13 @@ function document(
   };
 }
 
-function createHarness(repoRoot: string): {
+function createHarness(
+  repoRoot: string,
+  overrides: {
+    interactive?: boolean;
+    processEnv?: NodeJS.ProcessEnv;
+  } = {},
+): {
   capture: LoggerCapture;
   command: Command;
 } {
@@ -98,13 +104,13 @@ function createHarness(repoRoot: string): {
       json: false,
       cwd: repoRoot,
       home: join(repoRoot, 'home'),
-      interactive: true,
+      interactive: overrides.interactive ?? true,
       logger: capture.logger,
     }),
     resolveProjectRoot: async () => repoRoot,
     resolveProjectsRoot: async () => '.oat/projects/shared',
     refreshDashboard: async () => {},
-    processEnv: {},
+    processEnv: overrides.processEnv ?? {},
   });
   return { capture, command };
 }
@@ -209,6 +215,38 @@ describe('oat project split run', () => {
     const { command } = createHarness(repoRoot);
 
     await runCommand(command, ['--plan-file', planFile, '--non-interactive']);
+
+    expect(process.exitCode).toBe(1);
+    await expect(
+      exists(join(repoRoot, '.oat', 'projects', 'shared', 'umbrella')),
+    ).resolves.toBe(false);
+    await expect(
+      readFile(join(activeRoot, 'discovery.md'), 'utf8'),
+    ).resolves.toContain('## Detected Split Recommendation');
+  });
+
+  it('fails fast for detected origins when OAT_NON_INTERACTIVE=1', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const activeRoot = join(repoRoot, '.oat', 'projects', 'shared', 'active');
+    await mkdir(activeRoot, { recursive: true });
+    await writeFile(join(activeRoot, 'discovery.md'), '# Discovery\n', 'utf8');
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/active' })}\n`,
+      'utf8',
+    );
+    const planFile = await writePlanFile(
+      repoRoot,
+      document({ origin: 'detected-convergence', interactive: false }),
+    );
+    const { command } = createHarness(repoRoot, {
+      processEnv: { OAT_NON_INTERACTIVE: '1' },
+    });
+
+    await runCommand(command, ['--plan-file', planFile]);
 
     expect(process.exitCode).toBe(1);
     await expect(
