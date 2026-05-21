@@ -5,6 +5,7 @@ import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { generateStateDashboard } from '@commands/state/generate';
 import { setActiveProject } from '@config/oat-config';
 import { fileExists } from '@fs/io';
+import { assertValidProjectStateContent } from '@validation/project-state';
 
 export type ProjectScaffoldMode = 'spec-driven' | 'quick' | 'import';
 
@@ -199,6 +200,9 @@ async function scaffoldModeTemplates(
       nowUtc,
       mode,
     );
+    if (templateFile === 'state.md') {
+      assertValidProjectStateContent(rendered, { filePath: dest });
+    }
     await writeFile(dest, rendered, 'utf8');
     createdFiles.push(templateFile);
   }

@@ -130,6 +130,30 @@ describe('oat project pause', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('rejects pause writes that would preserve invalid decomposition state', async () => {
+    const root = await createRepoRoot();
+    const statePath = await writeProjectState(root, 'demo');
+    const state = await readFile(statePath, 'utf8');
+    await writeFile(
+      statePath,
+      state.replace('oat_phase: implement', 'oat_phase: decomposition'),
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/demo' })}\n`,
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root });
+    await runCommand(command, []);
+
+    expect(capture.error[0]).toContain(
+      'oat_phase: decomposition requires oat_kind: coordination',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it('pauses named project without clearing pointer when different project is active', async () => {
     const root = await createRepoRoot();
     await writeProjectState(root, 'alpha');

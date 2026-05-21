@@ -419,6 +419,37 @@ describe('scaffoldProject', () => {
     );
   });
 
+  it('rejects a scaffolded state that uses decomposition without coordination kind', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    await writeFile(
+      join(repoRoot, '.oat', 'templates', 'state.md'),
+      [
+        '---',
+        'oat_phase: decomposition',
+        'oat_phase_status: complete',
+        'oat_workflow_mode: {OAT_WORKFLOW_MODE}',
+        '---',
+        '',
+        '# {Project Name} state.md',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await expect(
+      scaffoldProject({
+        repoRoot,
+        projectName: 'invalid-decomposition',
+        mode: 'quick',
+        refreshDashboard: false,
+        setActive: false,
+        today: '2026-02-16',
+      }),
+    ).rejects.toThrow(
+      /oat_phase: decomposition requires oat_kind: coordination/,
+    );
+  });
+
   it('creates import mode artifacts only and sets references dir', async () => {
     const repoRoot = await createRepoRoot();
     tempDirs.push(repoRoot);

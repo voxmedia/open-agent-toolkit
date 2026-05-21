@@ -161,6 +161,25 @@ describe('oat project open', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('rejects resume writes that would preserve invalid decomposition state', async () => {
+    const root = await createRepoRoot();
+    const statePath = await writeProjectState(root, 'paused-demo', 'paused');
+    const state = await readFile(statePath, 'utf8');
+    await writeFile(
+      statePath,
+      state.replace('oat_phase: plan', 'oat_phase: decomposition'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root });
+    await runCommand(command, ['paused-demo']);
+
+    expect(capture.error[0]).toContain(
+      'oat_phase: decomposition requires oat_kind: coordination',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it('errors when project does not exist', async () => {
     const root = await createRepoRoot();
     const { command, capture } = createHarness({ cwd: root });

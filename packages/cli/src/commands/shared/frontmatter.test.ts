@@ -5,6 +5,9 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  isProjectStateFrontmatterField,
+  isProjectStateKind,
+  isProjectStatePhase,
   getAgentVersion,
   getFrontmatterBlock,
   getFrontmatterField,
@@ -170,6 +173,21 @@ describe('frontmatter', () => {
       await expect(
         getAgentVersion('/nonexistent/agent.md'),
       ).resolves.toBeNull();
+    });
+  });
+
+  describe('project state recognition', () => {
+    it('recognizes the coordination kind field and values', () => {
+      expect(isProjectStateFrontmatterField('oat_kind')).toBe(true);
+      expect(isProjectStateKind('implementation')).toBe(true);
+      expect(isProjectStateKind('coordination')).toBe(true);
+      expect(isProjectStateKind('other')).toBe(false);
+    });
+
+    it('recognizes decomposition as a project state phase value', () => {
+      expect(isProjectStatePhase('decomposition')).toBe(true);
+      expect(isProjectStatePhase('discovery')).toBe(true);
+      expect(isProjectStatePhase('unknown')).toBe(false);
     });
   });
 });

@@ -3,10 +3,11 @@ oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
+oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_hill_checkpoints: { OAT_HILL_CHECKPOINTS } # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: { OAT_PHASE } # Current phase: discovery | spec | design | plan | implement
+oat_phase: { OAT_PHASE } # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import

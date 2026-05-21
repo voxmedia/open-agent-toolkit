@@ -145,6 +145,28 @@ describe('oat project complete-state', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('rejects completed-state writes that would preserve invalid decomposition state', async () => {
+    const root = await createRepoRoot();
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(
+      join(projectPath, 'state.md'),
+      buildStateContent().replace(
+        'oat_phase: implement',
+        'oat_phase: decomposition',
+      ),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness(root);
+    await runCommand(command, ['.oat/projects/shared/demo']);
+
+    expect(capture.error[0]).toContain(
+      'oat_phase: decomposition requires oat_kind: coordination',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it('passes archived status through to the rendered body text', async () => {
     const root = await createRepoRoot();
     const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');

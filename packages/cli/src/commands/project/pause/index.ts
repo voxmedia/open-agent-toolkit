@@ -24,6 +24,7 @@ import {
 } from '@config/oat-config';
 import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
+import { assertValidProjectStateContent } from '@validation/project-state';
 import { Command } from 'commander';
 
 interface ProjectPauseOptions {
@@ -147,11 +148,9 @@ async function runProjectPause(
     }
 
     if (nextBlock !== frontmatter) {
-      await dependencies.writeFile(
-        statePath,
-        replaceFrontmatter(content, nextBlock),
-        'utf8',
-      );
+      const nextContent = replaceFrontmatter(content, nextBlock);
+      assertValidProjectStateContent(nextContent, { filePath: statePath });
+      await dependencies.writeFile(statePath, nextContent, 'utf8');
     }
 
     const pointerCleared = activeProject === projectPath;
