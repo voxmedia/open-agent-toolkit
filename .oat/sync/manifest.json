@@ -1301,7 +1301,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-05-02T01:02:30.379Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-split",
+      "providerPath": ".claude/skills/oat-project-split",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-05-21T02:25:56.069Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-split",
+      "providerPath": ".cursor/skills/oat-project-split",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-05-21T02:25:56.070Z"
     }
   ],
-  "lastUpdated": "2026-05-02T01:02:30.379Z"
+  "lastUpdated": "2026-05-21T02:25:56.070Z"
 }
