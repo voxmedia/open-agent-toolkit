@@ -647,6 +647,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - `project split validate-plan` reports slug collisions for detected active-parent conversion plans before run, while `project split run` succeeds by design.
 - Installed `oat` command lagged the local CLI during dogfood; dogfood used the local `pnpm exec tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts` path.
 
+### Final Review — 2026-05-21
+
+**Review:** `reviews/final-code-review-2026-05-21-v2.md` (passed with 0 Critical, 0 Important)
+
+**Fix summary:**
+
+- Enforced coordination-parent invariants in state/filesystem validation.
+- Added transcript + stubbed AskUserQuestion hook fixtures for discover and brainstorm split handoffs.
+- Deduplicated split signals before threshold evaluation.
+
 <!-- orchestration-runs-end -->
 
 ---
