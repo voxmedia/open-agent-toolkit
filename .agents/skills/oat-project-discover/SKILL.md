@@ -1,10 +1,10 @@
 ---
 name: oat-project-discover
-version: 2.0.0
+version: 2.0.1
 description: Use when starting a project or when requirements are still unclear. Runs structured discovery to gather requirements, constraints, and context.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion
 ---
 
 # Discovery Phase
@@ -342,13 +342,11 @@ If discovery is not configured as a HiLL checkpoint, or user explicitly approves
 
 ### Step 12: Mark Discovery Complete
 
-Update frontmatter:
+Use the CLI completion boundary so split-created child discoveries cannot
+complete until inherited context has been revalidated:
 
-```yaml
----
-oat_status: complete
-oat_ready_for: oat-project-design
----
+```bash
+oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-design
 ```
 
 ### Step 13: Update Project State

@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.1.0
+version: 2.1.1
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 disable-model-invocation: true
@@ -211,10 +211,12 @@ Use `AskUserQuestion` to present this choice.
 
 **If user chooses "Promote to spec-driven":**
 
-- Update `discovery.md` frontmatter:
-  - `oat_status: complete`
-  - `oat_ready_for: oat-project-design`
-  - `oat_last_updated: {today}`
+- Complete discovery through the CLI validation boundary:
+
+```bash
+oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-design
+```
+
 - Update `state.md`:
   - `oat_workflow_mode: spec-driven`
   - `oat_phase: discovery`
@@ -285,6 +287,13 @@ fi
 #   a. Produce a lightweight design first (run Step 2.75)
 #   b. Expand discovery (return to Step 2)
 # Route the user accordingly. Do NOT loop back into the gate.
+```
+
+Before continuing to Step 3, complete discovery through the CLI validation
+boundary:
+
+```bash
+oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-quick-start
 ```
 
 ### Step 2.75a: Lightweight Design Mode Choice

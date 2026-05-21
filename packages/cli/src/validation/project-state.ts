@@ -41,6 +41,8 @@ export interface ProjectStateValidationResult {
 
 export interface AssertProjectStateContentOptions {
   filePath?: string;
+  slug?: string;
+  relatedProjects?: ProjectStateSnapshot[];
 }
 
 function readStringField(
@@ -307,7 +309,11 @@ export function assertValidProjectStateContent(
 ): void {
   const filePath = options.filePath ?? 'state.md';
   const frontmatter = parseFrontmatterObject(content, filePath);
-  const result = validateProjectState({ frontmatter });
+  const result = validateProjectState({
+    frontmatter,
+    slug: options.slug,
+    relatedProjects: options.relatedProjects,
+  });
 
   if (!result.ok) {
     throw new Error(result.errors.map((error) => error.message).join('; '));
