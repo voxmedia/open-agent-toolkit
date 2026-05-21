@@ -47,7 +47,10 @@ Retrying the same command standalone succeeded.
 
 This was not a full live `oat-brainstorm` conversation. I could not honestly exercise an interactive agent-to-agent brainstorm inside this phase runner. The exercised path starts at the command boundary that the `oat-project-split` skill invokes after declared umbrella framing has produced the persisted plan.
 
+No live umbrella-framing prompt, boundary question, or brainstorm confirmation flow was observed in this p05 run. Treat the declared-entry dogfood as limited until tracked follow-up `bl-074b` runs the live session and records the prompt wording, confirmation flow, invoked split payload, and resulting tree.
+
 ## Followups / Rough Edges
 
 - Parent `state.md` body still says the parent has scaffolded `plan.md` and `implementation.md` artifacts even though the file invariant correctly removes them. The frontmatter and filesystem are correct; the human-readable template body is stale for coordination parents.
-- Child `state.md` frontmatter renders unresolved template placeholders for `oat_phase` and `oat_workflow_mode` as nested YAML objects. The child project is still discoverable by `project list`, but the state writer should normalize those fields for seeded split children.
+- Child routing bug found during this dogfood pass was fixed in `fix(p05-t02)`: split-seeded children now write scalar `oat_phase: discovery`, scalar `oat_workflow_mode: quick`, scalar `oat_plan_source: quick`, and `project status --project-path .oat/projects/shared/dogfood-config-unset --json` reports `workflowMode: "quick"` with quick-mode routing.
+- Live declared entry-path coverage remains a release follow-up: `.oat/repo/reference/backlog/items/live-dogfood-oat-project-split-entry-paths.md` (`bl-074b`).

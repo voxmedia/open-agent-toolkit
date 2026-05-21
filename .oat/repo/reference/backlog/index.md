@@ -25,6 +25,7 @@
 | ------- | ------------------------------------------------------------------------------------ | ----------- | -------- | ---------- | -------- |
 | bl-af93 | Add `oat config unset <key>` command for removing config values                      | open        | high     | feature    | S        |
 | bl-7e68 | Clarify quick-mode resume routing from oat-project-plan                              | open        | high     | feature    | S        |
+| bl-074b | Live dogfood for `oat-project-split` declared and detected entry paths               | open        | high     | task       | S        |
 | bl-b5af | Add configurable staleness threshold to oat config                                   | open        | medium   | feature    | S        |
 | bl-86e9 | Add oat state conflict resolver command                                              | open        | medium   | task       | S        |
 | bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote) | open        | medium   | feature    | L        |
