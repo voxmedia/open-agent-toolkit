@@ -140,6 +140,32 @@ describe('oat-project-split integration fixtures', () => {
     expect(parentState['oat_kind']).toBe('coordination');
     expect(parentState['oat_phase']).toBe('decomposition');
     expect(parentState['oat_phase_status']).toBe('complete');
+    const parentDiscovery = await readFile(
+      join(parentRoot, 'discovery.md'),
+      'utf8',
+    );
+    expect(parentDiscovery).toContain('## Split Rationale');
+    expect(parentDiscovery).toContain('## Ordered Children');
+    expect(parentDiscovery).toContain(
+      `1. ${document.plan.foundationChild}: No description provided.`,
+    );
+    expect(parentDiscovery).toContain('Dependencies: None');
+    expect(parentDiscovery).toContain(
+      `Dependencies: ${document.plan.foundationChild}`,
+    );
+    expect(parentDiscovery).toContain('## Inherited Broad Context');
+    expect(parentDiscovery).toContain('Foundation context');
+    expect(parentDiscovery).toContain('API context');
+    expect(parentDiscovery).toContain('Docs context');
+    expect(parentDiscovery).toContain('## Shared Constraints');
+    expect(parentDiscovery).toContain(
+      `- Foundation child: ${document.plan.foundationChild}`,
+    );
+    expect(parentDiscovery).toContain(
+      `- Initial active child: ${document.plan.initialActiveChild}`,
+    );
+    expect(parentDiscovery).toContain('## Integration Sketch');
+    expect(parentDiscovery).toContain('Foundation ships before API and docs.');
 
     for (const child of document.plan.children) {
       await expect(

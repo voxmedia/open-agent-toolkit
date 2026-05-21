@@ -55,11 +55,32 @@ function projectPathFor(projectsRoot: string, slug: string): string {
 
 function renderParentDiscovery(document: SplitPlanDocument): string {
   const { plan } = document;
-  const children = plan.children
+  const orderedChildren = plan.children
+    .slice()
+    .sort((left, right) => left.order - right.order);
+  const childSlugs = orderedChildren.map((child) => child.slug);
+  const childSummary = orderedChildren
+    .map((child) => {
+      const siblings = childSlugs.filter((slug) => slug !== child.slug);
+      return [
+        `${child.order}. ${child.slug}: ${child.description ?? 'No description provided.'}`,
+        `   - Dependencies: ${child.knownDependencies.length > 0 ? child.knownDependencies.join(', ') : 'None'}`,
+        `   - Siblings: ${siblings.length > 0 ? siblings.join(', ') : 'None'}`,
+        `   - Inherited context: ${child.inheritedContext || 'None provided.'}`,
+      ].join('\n');
+    })
+    .join('\n');
+  const inheritedContext = orderedChildren
     .map(
       (child) =>
-        `- ${child.slug}: ${child.description ?? 'No description provided.'}`,
+        `- ${child.slug}: ${child.inheritedContext || 'None provided.'}`,
     )
+    .join('\n');
+  const sharedConstraints = [
+    plan.foundationChild ? `- Foundation child: ${plan.foundationChild}` : null,
+    `- Initial active child: ${plan.initialActiveChild}`,
+  ]
+    .filter((line): line is string => Boolean(line))
     .join('\n');
 
   return [
@@ -76,10 +97,19 @@ function renderParentDiscovery(document: SplitPlanDocument): string {
     '',
     `Origin: ${document.origin}`,
     `Interactive: ${document.interactive ? 'true' : 'false'}`,
+    `Why: ${plan.integrationSketch ?? 'Split child scopes were captured in a coordination parent for tracked sequencing and integration.'}`,
     '',
-    '## Child Projects',
+    '## Ordered Children',
     '',
-    children,
+    childSummary,
+    '',
+    '## Inherited Broad Context',
+    '',
+    inheritedContext || 'No inherited broad context provided.',
+    '',
+    '## Shared Constraints',
+    '',
+    sharedConstraints || 'No shared constraints provided.',
     '',
     '## Integration Sketch',
     '',

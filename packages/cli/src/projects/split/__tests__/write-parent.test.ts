@@ -115,6 +115,20 @@ describe('writeCoordinationParent', () => {
     expect(state['oat_children']).toEqual(['foundation', 'docs']);
 
     const discovery = await readFile(join(parentRoot, 'discovery.md'), 'utf8');
+    expect(discovery).toContain('## Split Rationale');
+    expect(discovery).toContain('Why: Ship foundation before docs.');
+    expect(discovery).toContain('## Ordered Children');
+    expect(discovery).toContain('1. foundation: Shared foundation');
+    expect(discovery).toContain('2. docs: Docs rollout');
+    expect(discovery).toContain('Dependencies: foundation');
+    expect(discovery).toContain('Siblings: foundation');
+    expect(discovery).toContain('Inherited context: Docs context');
+    expect(discovery).toContain('## Inherited Broad Context');
+    expect(discovery).toContain('- foundation: Foundation context');
+    expect(discovery).toContain('- docs: Docs context');
+    expect(discovery).toContain('## Shared Constraints');
+    expect(discovery).toContain('- Foundation child: foundation');
+    expect(discovery).toContain('- Initial active child: foundation');
     expect(discovery).toContain('## Integration Sketch');
     expect(discovery).toContain('Ship foundation before docs.');
 
