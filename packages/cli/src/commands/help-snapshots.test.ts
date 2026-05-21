@@ -582,19 +582,21 @@ describe('help output snapshots', () => {
       Manage OAT project workflows
 
       Options:
-        -h, --help                               display help for command
+        -h, --help                                   display help for command
 
       Commands:
-        archive                                  Manage archived project data
-        complete-state [options] <project-path>  Update a project state.md to the completed lifecycle shape
-        list                                     List tracked OAT projects
-        new [options] <name>                     Create or update an OAT project scaffold
-        open [options] <name>                    Open or switch to an OAT project
-        pause [options] [name]                   Pause an OAT project
-        set-mode <mode>                          [deprecated] No-op. Execution mode is no longer selectable.
-        status [options]                         Show the current OAT project state
-        validate-plan [options]                  Validate plan.md parallelism metadata against the plan phase list
-        help [command]                           display help for command
+        archive                                      Manage archived project data
+        complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
+        complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
+        list [options]                               List tracked OAT projects
+        new [options] <name>                         Create or update an OAT project scaffold
+        open [options] <name>                        Open or switch to an OAT project
+        pause [options] [name]                       Pause an OAT project
+        set-mode <mode>                              [deprecated] No-op. Execution mode is no longer selectable.
+        split                                        Evaluate, validate, and run oat-project-split payloads
+        status [options]                             Show the current OAT project state
+        validate-plan [options]                      Validate plan.md parallelism metadata against the plan phase list
+        help [command]                               display help for command
       "
     `);
   });

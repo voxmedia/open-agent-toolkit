@@ -50,6 +50,7 @@ SKILLS=(
   oat-project-review-receive
   oat-project-review-receive-remote
   oat-project-spec
+  oat-project-split
   oat-project-summary
   oat-repo-knowledge-index
   oat-review-provide
