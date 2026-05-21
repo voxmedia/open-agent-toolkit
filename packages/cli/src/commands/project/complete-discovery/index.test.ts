@@ -150,9 +150,18 @@ describe('oat project complete-discovery', () => {
       'utf8',
     );
     await writeFile(
+      join(projectPath, 'state.md'),
+      buildStateContent({
+        oat_kind: 'implementation',
+        oat_parent: 'parent',
+        oat_siblings: [],
+        oat_depends_on: [],
+      }),
+      'utf8',
+    );
+    await writeFile(
       join(projectPath, 'discovery.md'),
       buildDiscoveryContent({
-        oat_parent: 'parent',
         oat_inherited_context_revalidated: false,
       }),
       'utf8',

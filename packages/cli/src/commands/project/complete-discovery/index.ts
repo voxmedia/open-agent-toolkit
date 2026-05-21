@@ -83,6 +83,37 @@ function renderDiscoveryComplete(
   );
 }
 
+function renderFrontmatterDocument(
+  frontmatter: Record<string, unknown>,
+): string {
+  return `---\n${YAML.stringify(frontmatter).trimEnd()}\n---\n`;
+}
+
+async function buildDiscoveryValidationContent(
+  content: string,
+  options: {
+    discoveryPath: string;
+    projectPath: string;
+    dependencies: ProjectCompleteDiscoveryDependencies;
+  },
+): Promise<string> {
+  const discoveryFrontmatter = parseFrontmatterObject(
+    content,
+    options.discoveryPath,
+  );
+  const statePath = join(options.projectPath, 'state.md');
+  if (!(await options.dependencies.fileExists(statePath))) {
+    return content;
+  }
+
+  const stateContent = await options.dependencies.readFile(statePath, 'utf8');
+  const stateFrontmatter = parseFrontmatterObject(stateContent, statePath);
+  return renderFrontmatterDocument({
+    ...stateFrontmatter,
+    ...discoveryFrontmatter,
+  });
+}
+
 async function runProjectCompleteDiscovery(
   projectPath: string,
   options: ProjectCompleteDiscoveryOptions,
@@ -108,7 +139,15 @@ async function runProjectCompleteDiscovery(
       readyFor: options.readyFor ?? 'oat-project-design',
       today: now.toISOString().slice(0, 10),
     });
-    await assertValidProjectStateFilesystemContent(updatedContent, {
+    const validationContent = await buildDiscoveryValidationContent(
+      updatedContent,
+      {
+        discoveryPath,
+        projectPath: targetProjectPath,
+        dependencies,
+      },
+    );
+    await assertValidProjectStateFilesystemContent(validationContent, {
       filePath: discoveryPath,
       projectPath: targetProjectPath,
     });
